@@ -32,6 +32,8 @@ export type SupplyDemandDimensionConfig = {
 };
 
 export type SupplyDemandComparisonRow = {
+  supplyUnavailable?: boolean;
+  supplyUnavailableReason?: string;
   id: string;
   label: string;
   psychologistsCount: number;
@@ -42,6 +44,9 @@ export type SupplyDemandComparisonRow = {
 };
 
 export const getSupplyDemandStatus = (row: SupplyDemandComparisonRow) => {
+  if (row.supplyUnavailable) {
+    return { className: "bg-surface-muted text-muted", label: "Sem histórico" };
+  }
   if (row.searchesCount > 0 && row.psychologistsCount === 0) {
     return {
       className: "bg-danger-soft text-danger",
@@ -94,15 +99,22 @@ export const getSupplyDemandStatus = (row: SupplyDemandComparisonRow) => {
 
 export const buildSupplyDemandRows = (config: SupplyDemandDimensionConfig) =>
   config.demand.items.map<SupplyDemandComparisonRow>((demandItem) => {
-    const supplyItem = findSupplyItem(demandItem, config.supply.items);
+    const supplyItem: PsychologistsDashboardBreakdownItem = findSupplyItem(
+      demandItem,
+      config.supply.items,
+    );
 
     return {
       id: demandItem.id,
       label: demandItem.label,
       psychologistsCount: supplyItem.count,
       psychologistsPercentage: supplyItem.percentage,
+      supplyUnavailable: supplyItem.unavailable === true,
+      supplyUnavailableReason: supplyItem.unavailable_reason,
       searchesPerPsychologist:
-        supplyItem.count > 0 ? toOneDecimal(demandItem.count / supplyItem.count) : null,
+        !supplyItem.unavailable && supplyItem.count > 0
+          ? toOneDecimal(demandItem.count / supplyItem.count)
+          : null,
       searchesCount: demandItem.count,
       searchesPercentage: demandItem.percentage,
     };
@@ -112,6 +124,7 @@ export const getSupplyDemandSortValue = (
   row: SupplyDemandComparisonRow,
   sortKey: SupplyDemandSortKey,
 ) => {
+  if (row.supplyUnavailable && sortKey !== "searches") return Number.NEGATIVE_INFINITY;
   if (sortKey === "psychologists") return row.psychologistsCount;
   if (sortKey === "searches_per_psychologist") {
     if (row.searchesPerPsychologist !== null) return row.searchesPerPsychologist;
@@ -149,19 +162,31 @@ export const SupplyDemandCountCell = ({
   count,
   label,
   percentage,
+  unavailable = false,
+  unavailableReason,
 }: {
   count: number;
   label: string;
   percentage: number;
+  unavailable?: boolean;
+  unavailableReason?: string;
 }) => (
   <div>
     <div className="flex items-center justify-between gap-3 text-xs lg:justify-center">
       <span className="font-bold text-muted lg:hidden">{label}</span>
       <span className="inline-flex items-baseline gap-1 text-base font-semibold text-foreground lg:justify-center lg:text-center">
-        <span>{numberFormatter.format(count)}</span>
-        <span className="text-sm font-medium text-muted">
-          ({formatPercentageValue(percentage)})
-        </span>
+        {unavailable ? (
+          <span title={unavailableReason}>
+            —<span className="sr-only"> Histórico indisponível</span>
+          </span>
+        ) : (
+          <>
+            <span>{numberFormatter.format(count)}</span>
+            <span className="text-sm font-medium text-muted">
+              ({formatPercentageValue(percentage)})
+            </span>
+          </>
+        )}
       </span>
     </div>
   </div>
@@ -200,6 +225,8 @@ export const SupplyDemandListRow = ({ row }: { row: SupplyDemandComparisonRow })
         count={row.psychologistsCount}
         label="Psicólogos"
         percentage={row.psychologistsPercentage}
+        unavailable={row.supplyUnavailable}
+        unavailableReason={row.supplyUnavailableReason}
       />
       <SearchesPerPsychologistCell row={row} />
       <div className="flex flex-col items-start gap-1 lg:items-end">

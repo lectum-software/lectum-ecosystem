@@ -116,6 +116,7 @@ export type AdminPsychologistsDashboardProfileCrossMatrixResults = {
 export type AdminPsychologistsDashboardPlanSegment = "all" | "courtesy" | "free" | "subscribers";
 
 export type AdminPsychologistsDashboardPlanSegmentSummary = {
+  unavailable_reason?: string | null;
   device_usage: AdminPsychologistsDashboardDeviceUsage;
   id: AdminPsychologistsDashboardPlanSegment;
   label: string;
@@ -140,6 +141,14 @@ export type AdminPsychologistsDashboardPlanSegmentSummary = {
 };
 
 export type AdminPsychologistsDashboardSummary = {
+  plan_history?: {
+    coverage_started_at: Date | null;
+    classification_at: Date;
+    current_known: boolean;
+    previous_known: boolean;
+    unknown_psychologists: number;
+    description: string;
+  };
   cards: {
     churn: AdminPsychologistsDashboardMetric;
     courtesy_psychologists: AdminPsychologistsDashboardMetric;

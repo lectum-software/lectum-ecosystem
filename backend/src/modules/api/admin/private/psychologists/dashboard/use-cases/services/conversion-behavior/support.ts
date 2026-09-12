@@ -15,7 +15,7 @@ import {
   PRESENTATION_VIDEO_POSITION_CATEGORY_CONFIG,
   PRESENTATION_VIDEO_POSITION_CATEGORY_ORDER,
 } from "../cross-matrix/config";
-import { pickCurrentPlan } from "../plan/segments";
+import { getPlanSegmentAt, pickCurrentPlan } from "../plan/segments";
 
 export const PROFILE_CONVERSION_BEHAVIOR_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+profile_view_event+page_view_event+profile_video_watch_session+important_action_event+content_attention_session+content_video_watch_session+community_post.media_type+post_reply.media_type+post_vote+post_save+post_reply_save+post_share+shared_psychologist_public_ranking_helper`;
 
@@ -332,15 +332,16 @@ export const formatProfileConversionBehaviorOpeningsValue = (value: number | nul
     : "0 aberturas";
 
 export const describeProfileConversionBehaviorDominantPlan = (
-  profiles: AdminPsychologistProfileRecord[],
+  profiles: Pick<AdminPsychologistProfileRecord, "plan_history">[],
   date: Date,
 ): ProfileConversionBehaviorSemanticSignal & { value: number } => {
   const counts = new Map<string, { count: number; label: string }>();
 
   for (const profile of profiles) {
     const plan = pickCurrentPlan(profile, date);
-    const key = plan?.plan.slug ?? "none";
-    const label = plan?.plan.name?.trim() || "Sem plano";
+    const unknown = getPlanSegmentAt(profile, date) === "unknown";
+    const key = unknown ? "unknown" : (plan?.plan.slug ?? "none");
+    const label = unknown ? "Plano desconhecido" : plan?.plan.name?.trim() || "Sem plano";
     const current = counts.get(key) ?? { count: 0, label };
     counts.set(key, { ...current, count: current.count + 1 });
   }

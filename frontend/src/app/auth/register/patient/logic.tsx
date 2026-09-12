@@ -9,6 +9,12 @@ import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
 import { resolveRegisterErrorMessage } from "@/app/auth/register/error-message";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
+import {
+  type AdultDeclarationForm,
+  AdultDeclarationModal,
+} from "@/components/legal/adult-declaration-modal";
+import { LegalRegistrationNotice } from "@/components/legal/registration-notice";
+import { adultConfirmedSchema } from "@/components/legal/use-form";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
@@ -18,7 +24,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { buildAuthRouteWithRedirect, resolveAuthReturnTo } from "@/utils/auth-redirect";
 import { fingerprint } from "@/utils/fingerprint";
 import { buildTrustedGoogleLoginUrl } from "@/utils/trusted-navigation";
-import { type RegisterPatientForm, TERMS_VERSION, useForm } from "./use-form";
+import { LEGACY_TERMS_VERSION, type RegisterPatientForm, useForm } from "./use-form";
 
 const PATIENT_EMAIL_FORM_ID = "patient-email-register-form";
 
@@ -33,6 +39,7 @@ export const RegisterPatientLogic = () => {
   const { Form, formProps, hook } = useForm();
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
+  const [adultReviewOpen, setAdultReviewOpen] = useState(false);
   const [emailFormOpen, setEmailFormOpen] = useState(false);
 
   const { registerPatient } = useAuth({
@@ -53,6 +60,7 @@ export const RegisterPatientLogic = () => {
   const isPending = registerPatient.isPending || googlePending;
 
   const handleSubmit = (data: RegisterPatientForm) => {
+    if (!adultConfirmedSchema.safeParse(data.adult_confirmed).success) return;
     setApiError(null);
     const analyticsIdentity = getOrCreateAnalyticsIdentity();
     registerPatient.mutate({
@@ -62,7 +70,8 @@ export const RegisterPatientLogic = () => {
       password_confirm: data.password_confirm,
       role: "paciente",
       terms_accepted: true,
-      terms_version: TERMS_VERSION,
+      terms_version: LEGACY_TERMS_VERSION,
+      adult_confirmed: data.adult_confirmed,
       ...(analyticsIdentity
         ? {
             analytics_session_id: analyticsIdentity.sessionId,
@@ -72,22 +81,20 @@ export const RegisterPatientLogic = () => {
     });
   };
 
-  const handleGoogleRegister = async () => {
+  const handleGoogleRegister = async (values: AdultDeclarationForm) => {
+    if (!adultConfirmedSchema.safeParse(values.adult_confirmed).success) return;
+    setAdultReviewOpen(false);
     try {
       setGooglePending(true);
       setApiError(null);
-      hook.setValue("terms_accepted", true, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true,
-      });
 
       const currentDeviceId = await fingerprint();
       const query = new URLSearchParams({
         intent: "register",
         role: "paciente",
         terms_accepted: "true",
-        terms_version: TERMS_VERSION,
+        terms_version: LEGACY_TERMS_VERSION,
+        adult_confirmed: String(values.adult_confirmed),
       });
       const analyticsIdentity = getOrCreateAnalyticsIdentity();
       if (analyticsIdentity) {
@@ -107,6 +114,12 @@ export const RegisterPatientLogic = () => {
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
+      {adultReviewOpen ? (
+        <AdultDeclarationModal
+          onClose={() => setAdultReviewOpen(false)}
+          onSubmit={handleGoogleRegister}
+        />
+      ) : null}
       <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 pb-1 pt-5 sm:pb-2 sm:pt-6">
         <Logo className="mx-auto mb-5 mt-1 w-[132px] sm:mb-6 sm:w-[144px]" priority />
 
@@ -122,7 +135,7 @@ export const RegisterPatientLogic = () => {
             <Button
               className="mt-5 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
               disabled={isPending}
-              onClick={handleGoogleRegister}
+              onClick={() => setAdultReviewOpen(true)}
               type="button"
               variant="outline"
             >
@@ -134,9 +147,7 @@ export const RegisterPatientLogic = () => {
               {googlePending ? "Conectando com Google" : "Criar conta com Google"}
             </Button>
 
-            <p className="mx-auto mt-2 max-w-[280px] text-center text-[10px] leading-4 text-subtle">
-              Ao continuar, você aceita os Termos e a Privacidade.
-            </p>
+            <LegalRegistrationNotice />
 
             {apiError ? (
               <InlineAlert className="mt-4" variant="error">

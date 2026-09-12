@@ -29,6 +29,7 @@ export type AdminPsychologistsDashboardMetric = {
   id: string;
   label: string;
   previous_value: number;
+  previous_unavailable?: boolean;
   previous_value_count?: number;
   source: string;
   trend: AdminPsychologistsDashboardTrend;
@@ -40,6 +41,8 @@ export type AdminPsychologistsDashboardMetric = {
 };
 
 export type AdminPsychologistsDashboardDailyPoint = {
+  plan_history_known?: boolean;
+  churn_history_known?: boolean;
   churn: number;
   courtesy_psychologists: number;
   date: string;
@@ -51,6 +54,8 @@ export type AdminPsychologistsDashboardDailyPoint = {
 };
 
 export type AdminPsychologistsDashboardPsychologist = {
+  plan_history_known?: boolean;
+  plan_history_unavailable_reason?: string;
   avatar: string | null;
   city: string | null;
   created_at: Date;
@@ -79,6 +84,8 @@ export type AdminPsychologistsDashboardRankingItem = {
 };
 
 export type AdminPsychologistsDashboardBreakdownItem = {
+  unavailable?: boolean;
+  unavailable_reason?: string;
   count: number;
   id: string;
   label: string;

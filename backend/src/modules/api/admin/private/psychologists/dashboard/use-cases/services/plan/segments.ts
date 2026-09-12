@@ -2,6 +2,10 @@ import {
   type AdminPsychologistWhatsappTrafficOriginSourceId,
   isPaidProfessionalSubscription,
 } from "@/utils/admin-psychologist-analytics";
+import {
+  isPlanHistoryKnownAt,
+  professionalSubscriptionsAt,
+} from "@/utils/professional-plan-history";
 import type { AdminPsychologistsDashboardPlanSegment } from "../../../DTOs/IAdminPsychologistsDashboardDTO";
 import type {
   AdminPsychologistProfileRecord,
@@ -9,6 +13,8 @@ import type {
   AdminPsychologistWhatsappTrafficActionRecord,
 } from "../../../repositories/interfaces/IAdminPsychologistsDashboardRepository";
 import { COURTESY_SUBSCRIPTION_SOURCE, FREE_PLAN_SLUG, STATUS_ACTIVE } from "../support/constants";
+
+type PlanProfile = Pick<AdminPsychologistProfileRecord, "plan_history">;
 
 export const profileCreatedUntil = (profile: AdminPsychologistProfileRecord, date: Date) =>
   profile.user.createdAt <= date;
@@ -32,10 +38,12 @@ export const isPaidGatewaySubscription = (subscription: AdminPsychologistSubscri
 const isCourtesySubscription = (subscription: AdminPsychologistSubscriptionRecord) =>
   subscription.source === COURTESY_SUBSCRIPTION_SOURCE && isProfessionalPlan(subscription);
 
-export const activeSubscriptionsAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
-  profile.subscriptions.filter((subscription) => subscriptionActiveAt(subscription, date));
+export const activeSubscriptionsAt = (profile: PlanProfile, date: Date) =>
+  professionalSubscriptionsAt(profile.plan_history, date).filter((subscription) =>
+    subscriptionActiveAt(subscription, date),
+  );
 
-export const pickCurrentPlan = (profile: AdminPsychologistProfileRecord, date: Date) => {
+export const pickCurrentPlan = (profile: PlanProfile, date: Date) => {
   const active = activeSubscriptionsAt(profile, date);
   if (active.length === 0) return null;
 
@@ -48,13 +56,14 @@ export const pickCurrentPlan = (profile: AdminPsychologistProfileRecord, date: D
   })[0];
 };
 
-export const hasActiveFreeAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
+export const hasActiveFreeAt = (profile: PlanProfile, date: Date) =>
   activeSubscriptionsAt(profile, date).some(isFreeSubscription);
 
-const getPlanSegmentAt = (
-  profile: AdminPsychologistProfileRecord,
+export const getPlanSegmentAt = (
+  profile: PlanProfile,
   date: Date,
-): "courtesy" | "free" | "none" | "subscriber" => {
+): "courtesy" | "free" | "none" | "subscriber" | "unknown" => {
+  if (!isPlanHistoryKnownAt(profile.plan_history, date)) return "unknown";
   const activeSubscriptions = activeSubscriptionsAt(profile, date);
 
   if (activeSubscriptions.some(isPaidGatewaySubscription)) return "subscriber";
@@ -64,17 +73,17 @@ const getPlanSegmentAt = (
   return "none";
 };
 
-export const hasActiveSubscriberAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
+export const hasActiveSubscriberAt = (profile: PlanProfile, date: Date) =>
   getPlanSegmentAt(profile, date) === "subscriber";
 
-export const hasActiveCourtesyAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
+export const hasActiveCourtesyAt = (profile: PlanProfile, date: Date) =>
   getPlanSegmentAt(profile, date) === "courtesy";
 
-export const hasCurrentFreePlanAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
+export const hasCurrentFreePlanAt = (profile: PlanProfile, date: Date) =>
   getPlanSegmentAt(profile, date) === "free";
 
 const profileMatchesPlanSegment = (
-  profile: AdminPsychologistProfileRecord,
+  profile: PlanProfile,
   date: Date,
   segment: AdminPsychologistsDashboardPlanSegment,
 ) => {

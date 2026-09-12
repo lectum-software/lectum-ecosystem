@@ -1,4 +1,10 @@
 const keys = {
+  legal: {
+    root: () => ["legal"],
+    current: () => ["legal", "current"],
+    document: (id: string) => ["legal", "document", id],
+    status: (userId: string) => ["legal", "status", userId],
+  },
   auth: {
     root: () => ["auth_hydrate"],
     hydrate: (cache?: unknown) => ["auth_hydrate", cache],

@@ -7,7 +7,11 @@ import type {
   PsychologistsDashboardBreakdownItem,
   PsychologistsDashboardDailyPoint,
 } from "@/api/req/psychologists";
-import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
+import {
+  aggregateCalendarChartPoints,
+  buildRoundedChartTicks,
+  buildSmoothSvgPath,
+} from "@/lib/chart-time-series";
 
 import {
   CARD_ORDER,
@@ -57,15 +61,25 @@ export const TimelineChart = ({
     );
   }
 
-  const chartPoints = aggregateCalendarChartPoints(points, CARD_ORDER, {
-    metricAggregations: {
-      churn: "last",
-      courtesy_psychologists: "last",
-      free_psychologists: "last",
-      subscriber_psychologists: "last",
-      total_psychologists: "last",
+  const chartPoints = aggregateCalendarChartPoints(
+    points.map((point) => ({
+      ...point,
+      plan_history_coverage: Number(point.plan_history_known !== false),
+      churn_history_coverage: Number(point.churn_history_known !== false),
+    })),
+    [...CARD_ORDER, "plan_history_coverage", "churn_history_coverage"] as const,
+    {
+      metricAggregations: {
+        plan_history_coverage: "last",
+        churn_history_coverage: "last",
+        churn: "last",
+        courtesy_psychologists: "last",
+        free_psychologists: "last",
+        subscriber_psychologists: "last",
+        total_psychologists: "last",
+      },
     },
-  });
+  );
   const maxValue = Math.max(
     1,
     ...chartPoints.flatMap((point) => series.map((item) => point[item.key])),
@@ -76,7 +90,7 @@ export const TimelineChart = ({
     padding.left +
     (chartPoints.length <= 1 ? chartWidth / 2 : (index * chartWidth) / (chartPoints.length - 1));
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
-  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
+  const gridValues = buildRoundedChartTicks(maxValue);
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
   const dateLabels = chartPoints.flatMap((point, index) =>
     index % labelStep === 0 || index === chartPoints.length - 1
@@ -117,10 +131,19 @@ export const TimelineChart = ({
           })}
 
           {series.map((item) => {
-            const linePoints = chartPoints.map((point, index) => ({
-              x: getX(index),
-              y: getY(point[item.key]),
-            }));
+            const linePoints = chartPoints.flatMap((point, index) => {
+              const known =
+                item.key === "churn"
+                  ? point.churn_history_coverage
+                  : [
+                        "courtesy_psychologists",
+                        "free_psychologists",
+                        "subscriber_psychologists",
+                      ].includes(item.key)
+                    ? point.plan_history_coverage
+                    : 1;
+              return known ? [{ date: point.date, x: getX(index), y: getY(point[item.key]) }] : [];
+            });
             const path = buildSmoothSvgPath(linePoints);
 
             return (
@@ -139,7 +162,7 @@ export const TimelineChart = ({
                     cx={point.x}
                     cy={point.y}
                     fill="var(--admin-surface)"
-                    key={`${item.key}-${chartPoints[index].date}`}
+                    key={`${item.key}-${point.date}`}
                     opacity={index === linePoints.length - 1 ? "1" : "0.72"}
                     r={index === linePoints.length - 1 ? "3.1" : "2.1"}
                     stroke={item.color}
@@ -188,10 +211,12 @@ export const PanelTitle = ({
 );
 
 export const PlanSegmentSelect = ({
+  historyKnown = true,
   id,
   onChange,
   value,
 }: {
+  historyKnown?: boolean;
   id: string;
   onChange: (value: PlanSegmentFilter) => void;
   value: PlanSegmentFilter;
@@ -206,7 +231,7 @@ export const PlanSegmentSelect = ({
         value={value}
       >
         {PLAN_SEGMENT_FILTER_OPTIONS.map((option) => (
-          <option key={option.id} value={option.id}>
+          <option disabled={!historyKnown && option.id !== "all"} key={option.id} value={option.id}>
             {option.label}
           </option>
         ))}

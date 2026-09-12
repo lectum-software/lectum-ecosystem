@@ -283,3 +283,9 @@ export const buildSmoothSvgPath = (points: readonly SvgChartPoint[]) => {
     )} ${formatSvgCoordinate(point.x)},${formatSvgCoordinate(point.y)}`;
   }, "");
 };
+
+// Rounded axes with small values must not render repeated lines/React keys.
+export const buildRoundedChartTicks = (maximum: number): number[] => {
+  const limit = Number.isFinite(maximum) ? Math.max(1, maximum) : 1;
+  return [...new Set([0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(limit * ratio)))];
+};

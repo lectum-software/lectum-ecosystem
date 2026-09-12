@@ -1,4 +1,5 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import type { ProfessionalPlanHistory } from "@/utils/professional-plan-history";
 import type {
   AdminPsychologistsDashboardDateRange,
   AdminPsychologistsDashboardDirectoryFilters,
@@ -9,6 +10,7 @@ export type AdminPsychologistSubscriptionRecord = {
   current_period_end: Date | null;
   gateway: string | null;
   gateway_subscription_id?: string | null;
+  has_gateway_subscription_id?: boolean;
   grant_started_at: Date | null;
   id: string;
   plan: {
@@ -52,6 +54,7 @@ export type AdminPsychologistProfileRecord = {
   show_experience_tag: boolean;
   social_value: boolean;
   subscriptions: AdminPsychologistSubscriptionRecord[];
+  plan_history?: ProfessionalPlanHistory;
   target_audience: Prisma.JsonValue | null;
   updatedAt: Date;
   user: {
@@ -439,7 +442,11 @@ export interface IAdminPsychologistsDashboardRepository {
     psychologistIds: string[],
   ): Promise<AdminPsychologistProfileTrafficPlatformDataset>;
   listDeletedPsychologistAccounts(): Promise<AdminPsychologistDeletedAccountRecord[]>;
-  listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
+  listPsychologistSignupDates(): Promise<{ user: { createdAt: Date } }[]>;
+  listPsychologistProfiles(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistProfileRecord[]>;
+  planHistoryCoverage(): Promise<Date | null>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(
     range: AdminPsychologistsDashboardDateRange,

@@ -249,6 +249,7 @@ export const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologi
           />
           {conversionJourney === "registration" ? (
             <PlanSegmentSelect
+              historyKnown={summary.plan_history?.current_known !== false}
               id="pre-signup-conversion-plan-segment"
               onChange={setPreSignupConversionPlanSegment}
               value={preSignupConversionPlanSegment}
@@ -472,6 +473,7 @@ export const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologi
               title="Modo de cadastro"
             />
             <PlanSegmentSelect
+              historyKnown={summary.plan_history?.current_known !== false}
               id="signup-method-plan-segment"
               onChange={setSignupMethodPlanSegment}
               value={signupMethodPlanSegment}
@@ -491,9 +493,10 @@ export const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologi
             <PanelTitle
               description={selectedPeriodLabel}
               icon={Smartphone}
-              title="Devices e sistemas"
+              title="Dispositivos e sistemas"
             />
             <PlanSegmentSelect
+              historyKnown={summary.plan_history?.current_known !== false}
               id="device-usage-plan-segment"
               onChange={setDeviceUsagePlanSegment}
               value={deviceUsagePlanSegment}
@@ -510,6 +513,7 @@ export const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologi
               title="Uso da plataforma"
             />
             <PlanSegmentSelect
+              historyKnown={summary.plan_history?.current_known !== false}
               id="platform-usage-plan-segment"
               onChange={setPlatformUsagePlanSegment}
               value={platformUsagePlanSegment}

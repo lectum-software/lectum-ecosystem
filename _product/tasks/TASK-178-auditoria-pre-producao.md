@@ -1452,3 +1452,47 @@ digitação, limpeza nativa e0/1/2/1000. JSX de apresentação original compilad
 sem query/API substituída: não é teste doTab completo. Campo313px em390 e1198px em1280,
 sem overflow. Fontes inline e callback/paginação preservados. Bump368 único. Próximo passo:
 pushhomolog, smoke /tmp/lectum-audit-368-smoke-curl-homolog.json e busca real publicada.
+
+## Decisões executáveis aprovadas em 12/09/2026 — métricas e governança legal
+
+- Totais atuais separados e rotulados; filtros aplicados a métricas do período.
+- Coleta de métricas independente do plano; acesso profissional pago pode consultar eventos reais
+  anteriores à assinatura. Classificação histórica não transforma gratuito em pago retroativamente.
+- Contas a partir de 18 anos, mediante declaração explícita; não é comprovação de idade/identidade.
+- Minutas completas com campos [CNPJ], [ENDERECO_EMPRESARIAL] etc. somente como rascunhos no Admin.
+- Gestão de rascunho, publicação imutável, duplicação para nova versão, histórico de aceites e
+  solicitação no frontend. Publicação requer preencher campos e confirmar revisão jurídica.
+- Política de Privacidade recebe ciência, não consentimento genérico para marketing/dados de saúde.
+- Extensão expressamente solicitada pelo usuário supera o escopo estático original da TASK-41;
+  aprovação jurídica final e documentos públicos aprovados não são presumidos.
+
+### Aceite desta implementação
+
+- [x] Totais atuais e períodos históricos separados sem reconstrução fictícia.
+- [x] Métricas gratuitas preservadas e retrospectiva paga verificada com eventos reais.
+- [x] Minutas completas editáveis como rascunhos pelo Admin.
+- [x] Versões publicadas imutáveis, edição concorrente protegida e histórico consultável.
+- [x] Aceite explícito de versão/hash atuais, ciência da privacidade e declaração de maioridade.
+- [x] Mudança de versão solicita novo aceite sem registrar consentimento por mera navegação.
+- [x] Migration aditiva executada via db:migrate local; sem reset de ambiente publicado.
+- [x] Checks/builds e testes de banco/Browser reais concluídos no candidato integrado.
+
+Deploy: tabelas novas, sem backfill de aceite legado e sem env obrigatória. Backend primeiro;
+consumidores degradam durante rollout. Nenhuma minuta é publicada/aceita automaticamente.
+Sem documentos publicados o produto preserva compatibilidade, sinalizando indisponibilidade legal;
+esta condição não autoriza produção. Rollback de aplicação mantém as tabelas/evidências.
+Builder deste cliente expôs somente @mui/material sem relação com Quick Copy; fallback local
+Configurações.png, Cadastro de Paciente.jpg e padrões existentes, sem novo design system.
+
+### Evidência final do candidato 0.1.369
+
+- Imagem backend linux/amd64: `sha256:9fc56106011739146dfa1e865c7412a29889a19b319bcd882637fa17f752ab49`.
+- PostgreSQL/HTTP reais e isolados: 107 verificações legais, 18 de coleta gratuita/upgrade e 40 de histórico de planos; 165 aprovadas, sem falhas ou skips.
+- `pnpm check`: 1.577 testes, 1.571 aprovados, zero falhas; seis skips preexistentes de drawtext no video. Backend Prisma/TypeScript/Biome e builds frontend/Admin/backend Docker aprovados.
+- Ambas as migrations executadas com `pnpm --dir backend db:migrate` no PostgreSQL local descartável; nenhuma alteração destrutiva em ambiente publicado.
+- Browser local em 390px e 1280px: cadastro 18+, rascunho completo, conflito de edição, publicação de fixtures locais sem efeito jurídico, duplicação, histórico, nova versão durante o aceite, adiar sem consentimento e leitura exata da versão anterior.
+- Dashboard real: períodos anteriores à cobertura mostram plano desconhecido, sem zero fictício; filtros de planos indisponíveis desabilitados e visão Todos mantida. Avisos de chaves duplicadas/graduação do gráfico corrigidos e revalidados sem novos avisos.
+- Relatórios locais: `/tmp/lectum-369-browser-evidence.md`, `/tmp/lectum-369-legal-integrated-confirmed.log`, `/tmp/lectum-369-free-integrated-confirmed.log` e `/tmp/lectum-c7-369-pg/summary.json`.
+- O aceite acima é da implementação e da validação local. Push/smoke de homologação serão registrados no encerramento e em `/tmp/lectum-audit-369-smoke-curl-homolog.json`; não são presumidos por estes checks. A TASK-178 geral não é declarada concluída por este recorte.
+
+**ALERTA DE DEPLOY:** duas migrations aditivas antes do backend; a captura inicial de histórico usa trava de escrita breve, com limite de espera de 5s e de execução de 60s. Se houver disputa de locks, interromper e diagnosticar a migration, nunca resetar. Não há env obrigatória nova. Preservar as tabelas em eventual rollback. Atualizar Admin/frontend antes de publicar o par Termos/Privacidade; não publicar minutas com placeholders nem confundir autodeclaração com comprovação de idade.

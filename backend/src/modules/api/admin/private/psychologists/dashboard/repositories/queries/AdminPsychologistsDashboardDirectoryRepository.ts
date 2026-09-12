@@ -21,8 +21,21 @@ import {
   toDirectoryFilterItem,
   toStaticDirectoryFilterItem,
 } from "../support/dashboard-selects";
+import { loadPlanHistoryByProfile } from "./plan-history";
+
+const profilePopulationWhere = {
+  deleted: false,
+  user: { active: true, deleted: false, role: "psicologo" },
+};
 
 export class AdminPsychologistsDashboardDirectoryRepository {
+  async planHistoryCoverage() {
+    const coverage = await prisma.professional_plan_history_coverage.findUnique({
+      where: { id: 1 },
+    });
+    return coverage?.started_at ?? null;
+  }
+
   async listDirectoryFilters() {
     const [specialties, services, approaches, languages, targetAudiences] = await Promise.all([
       prisma.specialty.findMany({
@@ -92,53 +105,65 @@ export class AdminPsychologistsDashboardDirectoryRepository {
     };
   }
 
-  async listPsychologistProfiles() {
+  async listPsychologistSignupDates() {
+    // Resolve the existing calendar before loading any history, without fetching profiles twice.
     return prisma.psychologist_profile.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-      where: {
-        deleted: false,
-        user: {
-          active: true,
-          deleted: false,
-          role: "psicologo",
-        },
-      },
-      select: {
-        ...profileBaseSelect,
-        subscriptions: {
+      where: profilePopulationWhere,
+      select: { user: { select: { createdAt: true } } },
+    });
+  }
+
+  async listPsychologistProfiles(range: AdminPsychologistsDashboardDateRange) {
+    return prisma.$transaction(
+      async (transaction) => {
+        const profiles = await transaction.psychologist_profile.findMany({
           orderBy: {
             createdAt: "desc",
           },
-          where: {
-            deleted: false,
-            plan: {
-              active: true,
-              deleted: false,
-            },
-          },
+          where: profilePopulationWhere,
           select: {
-            createdAt: true,
-            current_period_end: true,
-            gateway: true,
-            gateway_subscription_id: true,
-            grant_started_at: true,
-            id: true,
-            plan: {
+            ...profileBaseSelect,
+            subscriptions: {
+              orderBy: {
+                createdAt: "desc",
+              },
+              where: {
+                deleted: false,
+                plan: {
+                  active: true,
+                  deleted: false,
+                },
+              },
               select: {
-                name: true,
-                price_cents: true,
-                slug: true,
+                createdAt: true,
+                current_period_end: true,
+                gateway: true,
+                gateway_subscription_id: true,
+                grant_started_at: true,
+                id: true,
+                plan: {
+                  select: {
+                    name: true,
+                    price_cents: true,
+                    slug: true,
+                  },
+                },
+                source: true,
+                status: true,
+                updatedAt: true,
               },
             },
-            source: true,
-            status: true,
-            updatedAt: true,
           },
-        },
+        });
+        const histories = await loadPlanHistoryByProfile(
+          transaction,
+          profiles.map((profile) => profile.id),
+          range,
+        );
+        return profiles.map((profile) => ({ ...profile, plan_history: histories.get(profile.id) }));
       },
-    });
+      { isolationLevel: "RepeatableRead" },
+    );
   }
 
   async listDeletedPsychologistAccounts() {

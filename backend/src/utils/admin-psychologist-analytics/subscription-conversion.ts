@@ -13,6 +13,7 @@ export type AdminPsychologistAnalyticsSubscription = {
   current_period_end?: Date | null;
   gateway?: string | null;
   gateway_subscription_id?: string | null;
+  has_gateway_subscription_id?: boolean;
   grant_started_at?: Date | null;
   plan: {
     price_cents: number;
@@ -206,7 +207,8 @@ export const isPaidProfessionalSubscription = (
   const hasMercadoPagoOrigin =
     source === PAID_SOURCE ||
     gateway === PAID_SOURCE ||
-    Boolean(subscription.gateway_subscription_id);
+    Boolean(subscription.gateway_subscription_id) ||
+    subscription.has_gateway_subscription_id === true;
 
   return (
     hasMercadoPagoOrigin &&

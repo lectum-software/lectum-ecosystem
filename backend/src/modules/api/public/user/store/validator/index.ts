@@ -26,6 +26,7 @@ export const schema: IValidatorRequest = {
   ],
 
   body: [
+    { key: "adult_confirmed", custom: z.boolean().optional() },
     //*
     {
       key: "name",

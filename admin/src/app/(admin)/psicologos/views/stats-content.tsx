@@ -175,6 +175,7 @@ export const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard
               </div>
             </div>
             <PlanSegmentSelect
+              historyKnown={summary.plan_history?.current_known !== false}
               id="supply-demand-plan-segment"
               onChange={setPlanSegment}
               value={planSegment}

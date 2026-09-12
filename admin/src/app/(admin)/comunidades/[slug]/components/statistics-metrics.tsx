@@ -9,6 +9,12 @@ import {
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 import {
+  COMMUNITY_CURRENT_TOTALS_DESCRIPTION,
+  communityStatisticScopeLabel,
+  communityStatisticSeriesLabel,
+  isCurrentCommunityTotal,
+} from "../../modules/statistics-scope";
+import {
   cardClass,
   numberFormatter,
   percentageFormatter,
@@ -65,6 +71,9 @@ export const CommunityStatisticsMetricToggleCard = ({
 }) => {
   const Icon = metric.icon;
   const formattedValue = numberFormatter.format(metric.value);
+  const isCurrentTotal = isCurrentCommunityTotal(metric.id);
+  const scopeLabel = communityStatisticScopeLabel(metric.id);
+  const comparison = isCurrentTotal ? undefined : metric.comparison;
   const detailTitle = metric.details
     ?.map(
       (detail) =>
@@ -73,10 +82,10 @@ export const CommunityStatisticsMetricToggleCard = ({
         )}%)`,
     )
     .join(". ");
-  const comparisonTitle = metric.comparison
+  const comparisonTitle = comparison
     ? `${formatCommunityStatisticsComparisonChange(
-        metric.comparison.change_percent,
-      )} vs. ${formatCommunityStatisticsPreviousPeriod(metric.comparison)}`
+        comparison.change_percent,
+      )} vs. ${formatCommunityStatisticsPreviousPeriod(comparison)}`
     : null;
 
   return (
@@ -94,6 +103,9 @@ export const CommunityStatisticsMetricToggleCard = ({
         ": " +
         formattedValue +
         ". " +
+        scopeLabel +
+        ". " +
+        (isCurrentTotal ? "Sem filtro de período. " : "") +
         (comparisonTitle ? `${comparisonTitle}. ` : "") +
         (detailTitle ? `${detailTitle}. ` : "") +
         (active ? "Visível no gráfico" : "Oculto no gráfico")
@@ -113,11 +125,14 @@ export const CommunityStatisticsMetricToggleCard = ({
         <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
           {metric.label}
         </span>
+        <span className="mt-1 block text-xs font-bold text-muted">{scopeLabel}</span>
         <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
           {formattedValue}
         </span>
-        {metric.comparison ? (
-          <CommunityStatisticsMetricComparisonLine comparison={metric.comparison} />
+        {isCurrentTotal ? (
+          <span className="mt-3 block text-xs leading-5 text-muted">Sem filtro de período</span>
+        ) : comparison ? (
+          <CommunityStatisticsMetricComparisonLine comparison={comparison} />
         ) : null}
         {metric.details?.length ? (
           <span className="mt-3 grid gap-1">
@@ -319,7 +334,8 @@ export const CommunityStatisticsSeriesChart = ({
                   strokeWidth="1.45"
                 >
                   <title>
-                    {point.tooltipLabel} · {metric.label}: {numberFormatter.format(value)}
+                    {point.tooltipLabel} · {communityStatisticSeriesLabel(metric.id, metric.label)}:{" "}
+                    {numberFormatter.format(value)}
                   </title>
                 </circle>
               );
@@ -442,6 +458,11 @@ export const CommunityStatisticsSegment = ({
             ) : null}
           </div>
           <p className="mt-1 text-xs font-bold leading-5 text-muted">{description}</p>
+          {metrics.some((metric) => isCurrentCommunityTotal(metric.id)) ? (
+            <p className="mt-2 text-xs leading-5 text-muted">
+              {COMMUNITY_CURRENT_TOTALS_DESCRIPTION}
+            </p>
+          ) : null}
         </div>
         <CommunityStatisticsDateFilters {...dateFilters} />
       </div>

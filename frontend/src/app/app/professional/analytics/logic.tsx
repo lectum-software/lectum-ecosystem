@@ -34,6 +34,7 @@ export const ProfessionalAnalyticsLogic = () => {
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
   const shouldShowError = Boolean(errorMessage && !isProfessionalPlanError);
   const isAnalyticsPreview = data?.access.mode === "preview" || isProfessionalPlanError;
+  const visibleData = isAnalyticsPreview ? undefined : data;
 
   return (
     <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>
@@ -68,26 +69,29 @@ export const ProfessionalAnalyticsLogic = () => {
             className="grid min-w-0 grid-cols-2 items-stretch gap-3"
             aria-label="Cards de analytics"
           >
-            {metricCards(data).map((metric) => (
+            {metricCards(visibleData).map((metric) => (
               <MetricCard key={metric.id} locked={isAnalyticsPreview} metric={metric} />
             ))}
           </section>
         ) : null}
 
         {!analytics.isLoading && !shouldShowError ? (
-          <TrafficSourceSection locked={isAnalyticsPreview} traffic={getTrafficSources(data)} />
+          <TrafficSourceSection
+            locked={isAnalyticsPreview}
+            traffic={getTrafficSources(visibleData)}
+          />
         ) : null}
 
         {!shouldShowError ? (
           <PresentationVideoAnalyticsSection
             locked={isAnalyticsPreview}
-            video={data?.presentation_video}
+            video={visibleData?.presentation_video}
           />
         ) : null}
 
         {!shouldShowError ? (
           <CommunityActivitySection
-            communities={getCommunitiesAnalytics(data)}
+            communities={getCommunitiesAnalytics(visibleData)}
             locked={isAnalyticsPreview}
           />
         ) : null}

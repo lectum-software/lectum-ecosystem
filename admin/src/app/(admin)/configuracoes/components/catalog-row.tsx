@@ -1,5 +1,6 @@
 "use client";
 import { Edit3, GripVertical, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import Link from "next/link";
 import type { PointerEvent, ReactNode } from "react";
 import type { AdminSettingsCatalogOption, AdminSettingsSpecialty } from "@/api/req/settings";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,12 @@ export const SettingsHeader = () => (
           Gerencie as opções de filtros disponíveis na busca de psicólogos e nos formulários de
           perfil profissional.
         </p>
+        <Link
+          className="mt-4 inline-flex min-h-11 items-center rounded-control border border-border px-4 text-sm font-semibold text-primary hover:bg-primary-soft"
+          href="/configuracoes/documentos-legais"
+        >
+          Termos, Privacidade e aceites
+        </Link>
       </div>
     </div>
   </section>

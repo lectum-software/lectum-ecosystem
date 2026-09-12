@@ -22,6 +22,7 @@ export type RegisterPatientPayload = {
   password: string;
   password_confirm: string;
   role: "paciente";
+  adult_confirmed: boolean;
   terms_accepted: true;
   terms_version: string;
   analytics_visitor_id?: string;
@@ -36,6 +37,7 @@ export type RegisterPsychologistPayload = {
   password: string;
   password_confirm: string;
   role: "psicologo";
+  adult_confirmed: boolean;
   terms_accepted: true;
   terms_version: string;
   analytics_visitor_id?: string;

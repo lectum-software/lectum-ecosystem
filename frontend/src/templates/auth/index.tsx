@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from "react";
+import { LegalLinks } from "@/components/legal/links";
 import { cn } from "@/lib/utils";
 
 type AuthTemplateProps = PropsWithChildren<{
@@ -13,7 +14,7 @@ export const AuthTemplate = ({ children, contentClassName }: AuthTemplateProps) 
           {children}
         </section>
         <footer className="pb-1 pt-3 text-center text-[11px] leading-5 text-subtle sm:text-xs">
-          © 2026 Lectum. Todos os direitos reservados.
+          <LegalLinks className="mb-3" newTab />© 2026 Lectum. Todos os direitos reservados.
         </footer>
       </div>
     </main>

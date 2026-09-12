@@ -247,6 +247,7 @@ export const DashboardProfileConversionCard = ({
           title="Indicadores dos psicólogos"
         />
         <PlanSegmentSelect
+          historyKnown={summary.plan_history?.current_known !== false}
           id="profile-conversion-plan-segment"
           onChange={setProfileConversionPlanSegment}
           value={profileConversionPlanSegment}

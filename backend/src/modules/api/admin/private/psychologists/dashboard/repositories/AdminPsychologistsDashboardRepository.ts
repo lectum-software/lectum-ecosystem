@@ -15,6 +15,10 @@ export class AdminPsychologistsDashboardRepository
 
   private readonly metricsRepository = new AdminPsychologistsDashboardMetricsRepository();
 
+  planHistoryCoverage() {
+    return this.directoryRepository.planHistoryCoverage();
+  }
+
   listDirectoryFilters(
     ...args: Parameters<AdminPsychologistsDashboardDirectoryRepository["listDirectoryFilters"]>
   ): ReturnType<AdminPsychologistsDashboardDirectoryRepository["listDirectoryFilters"]> {
@@ -25,6 +29,10 @@ export class AdminPsychologistsDashboardRepository
     ...args: Parameters<AdminPsychologistsDashboardDirectoryRepository["listPsychologistProfiles"]>
   ): ReturnType<AdminPsychologistsDashboardDirectoryRepository["listPsychologistProfiles"]> {
     return this.directoryRepository.listPsychologistProfiles(...args);
+  }
+
+  listPsychologistSignupDates() {
+    return this.directoryRepository.listPsychologistSignupDates();
   }
 
   listDeletedPsychologistAccounts(

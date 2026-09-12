@@ -94,6 +94,7 @@ export const DashboardTrafficSourcesCard = ({
           </p>
         </div>
         <PlanSegmentSelect
+          historyKnown={summary.plan_history?.current_known !== false}
           id="traffic-source-plan-segment"
           onChange={setTrafficPlanSegment}
           value={trafficPlanSegment}

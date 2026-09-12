@@ -1,3 +1,4 @@
+import { LegalError } from "@/modules/legal/contracts";
 //Repository
 
 //Libs
@@ -91,6 +92,8 @@ export default async (data: IStoreDTO) => {
       device_id: device.id,
     });
   } catch (storeError) {
+    if (storeError instanceof LegalError)
+      return { status: storeError.status, ...error(storeError.code) };
     if (isPrismaErrorCode(storeError, "P2002")) {
       return {
         status: 400,

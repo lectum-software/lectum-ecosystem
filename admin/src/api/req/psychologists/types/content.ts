@@ -376,6 +376,14 @@ export type AdminPsychologistActivities = {
 };
 
 export type AdminPsychologistsDashboard = {
+  plan_history?: {
+    coverage_started_at: string | null;
+    classification_at: string;
+    current_known: boolean;
+    previous_known: boolean;
+    unknown_psychologists: number;
+    description: string;
+  };
   cards: {
     churn: PsychologistsDashboardMetric;
     courtesy_psychologists: PsychologistsDashboardMetric;

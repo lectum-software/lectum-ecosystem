@@ -81,6 +81,7 @@ export const adminNavItems = [
       { label: "Filtros", href: "/configuracoes" },
       { label: "SEO / Metadados", href: "/configuracoes/seo-metadados" },
       { label: "Assinatura", href: "/configuracoes/assinatura" },
+      { label: "Documentos legais", href: "/configuracoes/documentos-legais" },
     ],
   },
 ] as const;

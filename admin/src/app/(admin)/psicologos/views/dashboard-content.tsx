@@ -26,6 +26,7 @@ export const DashboardContent = ({
   const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
     ...CARD_ORDER,
   ]);
+  const historyKey = summary.plan_history?.current_known === false ? "unknown" : "known";
   const activeMetricKeys = CARD_ORDER.filter((key) => visibleMetricKeys.includes(key));
   const toggleMetric = (metricKey: DashboardMetricKey) => {
     setVisibleMetricKeys((current) => {
@@ -38,6 +39,22 @@ export const DashboardContent = ({
 
   return (
     <div className="space-y-7">
+      {summary.plan_history ? (
+        <aside className="rounded-card border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
+          <p>{summary.plan_history.description}</p>
+          <p>
+            {summary.plan_history.coverage_started_at
+              ? `Cobertura observada desde ${new Date(summary.plan_history.coverage_started_at).toLocaleString("pt-BR")}.`
+              : "Cobertura histórica ainda indisponível."}
+          </p>
+          {!summary.plan_history.current_known ? (
+            <p>
+              Filtros por plano indisponíveis nessa data. A visão Todos permanece disponível sem
+              atribuir planos desconhecidos.
+            </p>
+          ) : null}
+        </aside>
+      ) : null}
       {!hasDashboardRecords(summary) ? <EmptyState period={summary.period} /> : null}
 
       <section className="space-y-4">
@@ -52,14 +69,20 @@ export const DashboardContent = ({
           />
           <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
         </DashboardOverviewPanel>
-        <DashboardTrafficSourcesCard summary={summary} />
+        <DashboardTrafficSourcesCard
+          key={`DashboardTrafficSourcesCard:${historyKey}`}
+          summary={summary}
+        />
         <DashboardProfileConversionBehaviorFunnelCard summary={summary} />
-        <DashboardProfileConversionCard summary={summary} />
+        <DashboardProfileConversionCard
+          key={`DashboardProfileConversionCard:${historyKey}`}
+          summary={summary}
+        />
       </section>
 
-      <StatsContent summary={summary} />
+      <StatsContent key={`StatsContent:${historyKey}`} summary={summary} />
 
-      <ConversionAndUsageBlocks summary={summary} />
+      <ConversionAndUsageBlocks key={`ConversionAndUsageBlocks:${historyKey}`} summary={summary} />
     </div>
   );
 };

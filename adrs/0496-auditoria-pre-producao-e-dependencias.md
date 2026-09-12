@@ -1309,3 +1309,73 @@ Evidência Browser da comunidade de auditoria: input sem nome acessível; singul
 de label sr-only/ícone decorativo e PT-BR. Se separar apresentação da query, manter componente
 pequeno junto da view, sem nova fundação nem API/client duplicado. Build e Browser local/mobile
 mais revalidação publicada; nenhum impacto de env/banco/provider. Rollback só altera apresentação.
+
+### Governança legal e métricas — decisão de 12/09/2026 após 0.1.368
+
+Usuário autorizou separar totais atuais de séries, preservar métricas gratuitas para consulta
+posterior paga sem mudar plano histórico, minutas completas e CMS legal. Uma versão publicada
+não pode ser editada; SHA-256 e aceite por documento preservam o texto consultado. CAS evita
+perda de edição; locks transacionais ordenados coordenam publicação e aceite do conjunto atual.
+Política é ciência, não consentimento universal LGPD. Idade é autodeclaração 18+.
+Minutas com placeholders são rascunhos; preenchimento e confirmação de revisão são obrigatórios
+para publicar. Não migrar logs de termos pendentes como prova de aceite. Modal solicita aceite
+e permite adiar, sem bloquear direitos/saída ou falsificar aceite automático.
+Rollout aditivo, nenhuma env nova obrigatória, sem reset; db:migrate apenas local. Backend antes
+dos consumidores; ambos toleram disponibilidade parcial durante rollout. Sem pacotes novos.
+
+### Execução 369 — governança legal e maioridade (12/09/2026)
+
+Por decisão expressa do usuário, a extensão da TASK178 entrega CMS jurídico completo e
+minutas v0.2 editáveis com placeholders. Os quatro apps permanecem independentes: o Admin
+leva cópia editorial no próprio código; o build não depende de `_product/`. Nenhum package/env
+novo. Nenhum rascunho/aceite será semeado ou publicado automaticamente em ambiente publicado.
+
+Versões publicadas são imutáveis inclusive por trigger; alterações exigem novo rascunho.
+CAS protege edições concorrentes. Aceite dos Termos e ciência da Privacidade são ações
+separadas, vinculadas a ID, hash SHA256 do texto/título/resumo, horário de servidor e conta.
+Não há IP/fingerprint na prova. Evidência legada genérica não recebe backfill de aceite atual.
+Modal pode ser adiado sem efeitos; mudança do par exige revisão e409limpa confirmações.
+
+18+ é autodeclaração, não identidade verificada. Frontend novo sempre exige declaração;
+backend tolera ausência em clientes antigos só antes da ativação do par publicado. False
+é recusado. Flags novas usam Zodboolean estrito, sem coerção do parser legado global.
+Privacidade é aviso/ciência: não cria consentimento genérico de marketing ou dados sensíveis.
+
+A validação local real detectou duas falhas e gerou correções: resultado void do advisorylock
+não pode ser desserializado por queryRaw (agora executeRaw); GoogleStrategy não deve derrubar
+o backend inteiro sem credenciais (registro somente quando configurado; rotas503seguras).
+90 casos PG/HTTP e17 contratos passaram no candidato corrigido anterior ao C7; a versãofinal
+terá rerun próprio. Browser390/1280validou cadastro, drafts/CAS, modal,409, hashpersistido,
+adiamento, nova versão, leitura exata antiga/noindex e consulta de aceites. Só fixtures
+explicitamente não vinculantes foram publicadas no banco descartável; minutas reais não.
+
+Limite: textos ainda exigem revisão factual/jurídica e substituição dos placeholders antes
+da publicação. Este trabalho não atesta Google real, dispositivos Safari/iOS/Android físicos
+ou conformidade integral pelo mero funcionamento do registro de aceite.
+
+#### Integração369 — história observada e testes de apresentação
+
+C7 passa a registrar catálogo e assinaturas separadamente, na mesma transação das escritas,
+com baseline observado e início explícito de cobertura. Não se atribui a assinatura atual
+às datas anteriores à adoção. As fontes existentes de entitlement continuam autoritativas;
+história é usada para classificação analítica, nunca para conceder plano/acesso. Antes da
+cobertura, cartões e séries indicam ausência de histórico em vez de zero ou gratuito.
+Métricas coletadas anteriormente permanecem disponíveis após upgrade, independentemente
+do início da cobertura de planos.
+
+Os harnesses de renderização jurídica foram centralizados em `admin/scripts/legal-policy.test.mjs`
+e `frontend/scripts/legal.test.mjs`, junto aos testes de apresentação já existentes. Contêm
+compilação de JSX e entradas hostis literais para verificar escape; não são código de UI nem
+simulam API/DB. O checker de segurança de produto não foi relaxado. Minutas e template Admin
+mantêm o mesmo texto; linguagem editorial desnecessária sobre arquitetura foi simplificada.
+
+
+### Validação integrada 0.1.369 e adoção
+
+- Candidato final backend `sha256:9fc56106011739146dfa1e865c7412a29889a19b319bcd882637fa17f752ab49`: 107 casos legais + 18 de analytics gratuito/upgrade + 40 de histórico em PostgreSQL/HTTP reais, sem mocks, falhas ou skips. Os casos não alegam checkout, OAuth real, revisão jurídica nem Safari/iOS/Android físicos.
+- `pnpm check` passou integralmente (1.577 testes, 1.571 pass, zero fail, seis skips preexistentes de video); builds Docker backend, frontend e Admin aprovados. As duas migrations foram aplicadas via `db:migrate` somente ao PostgreSQL descartável. Histórico anterior à cobertura permanece desconhecido; não há backfill fabricado.
+- Paginação keyset de histórico preserva todos os eventos da janela e o predecessor de cada assinatura/plano. O snapshot usa RepeatableRead; tamanho total ainda depende da população/janela, não se declara benchmark de escala. Disponibilidade acompanha os DTOs/indicadores e impede filtros e taxas fictícios.
+- Browser real local 390/1280 validou o CMS, a leitura pública exata, o reaceite concorrente e o dashboard. Corrigidas chaves React exclusivas por componente e ticks inteiros duplicados com helper compartilhado; testes focais e nova navegação sem avisos confirmaram o ajuste. Tradução de Dispositivos e sistemas mantida em PT-BR.
+- Harnesses de compilação/entrada hostil ficam em `admin/scripts` e `frontend/scripts`, fora das árvores de runtime. Nenhum verificador de segurança foi relaxado. O dev Admin final usou cópia sanitizada da fonte em `/tmp`, com mesmos packages e API/PostgreSQL locais reais, sem credenciais/instruções privadas.
+- Deploy: migrations aditivas antes do backend, com lock_timeout=5s e statement_timeout=60s na captura histórica. Em falha de lock, diagnosticar estado Prisma e planejar retomada; nunca resetar. Sem novas envs obrigatórias. Rollback de apps preserva tabelas/evidências. Minutas permanecem rascunhos até revisão/publicação explícita; publicar o par somente após atualizar os consumidores.
+- Bump único para 0.1.369 nos cinco manifests. O push em homolog dispara deploy automático; smoke posterior e versões efetivas são evidência separada, não inferida dos builds locais.

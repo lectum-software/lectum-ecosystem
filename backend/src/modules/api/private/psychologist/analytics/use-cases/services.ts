@@ -120,6 +120,9 @@ export const index = async (data: IPsychologistAnalyticsIndexDTO) => {
 
   const repository = new PsychologistAnalyticsRepository();
   const hasEntitlement = await repository.hasProfessionalEntitlement(data.auth.id);
+  if (!hasEntitlement) {
+    return { status: 403, ...error("professional_analytics_professional_plan", {}) };
+  }
 
   const period = buildPeriod(normalizePeriod(data.q.period), data.q);
   if (!period) {

@@ -11,6 +11,8 @@ datasource db {
 }
 
 model user {
+  legal_acceptances legal_acceptance[]
+
   id                                      String                        @id @default(cuid())
   deleted                                 Boolean                       @default(false)
   deletedAt                               DateTime?                     @map("deleted_at")
@@ -452,6 +454,7 @@ model psychologist_profile {
   user                            user                          @relation("psychologist_profile_user", fields: [user_id], references: [id], onDelete: Cascade)
   subscriptions                   professional_subscription[]   @relation("professional_subscription_psychologist")
   registry_checks                 professional_registry_check[] @relation("professional_registry_check_psychologist")
+  subscription_history            professional_subscription_history[]
 
   @@index([user_id])
   @@index([published, deleted])
@@ -675,29 +678,29 @@ model subscription_plan {
 }
 
 model professional_subscription {
-  id                      String               @id @default(cuid())
-  internal_id             Int                  @unique @default(autoincrement()) @map("internal_id")
-  deleted                 Boolean              @default(false)
-  deletedAt               DateTime?            @map("deleted_at")
-  updatedAt               DateTime             @default(now()) @updatedAt @map("updated_at")
-  createdAt               DateTime             @default(now()) @map("created_at")
-  psychologist_id         String
-  plan_id                 String
-  status                  String               @default("inativa")
-  source                  String               @default("legacy")
-  gateway                 String?
-  gateway_subscription_id String?
-  current_period_end      DateTime?
+  id                       String               @id @default(cuid())
+  internal_id              Int                  @unique @default(autoincrement()) @map("internal_id")
+  deleted                  Boolean              @default(false)
+  deletedAt                DateTime?            @map("deleted_at")
+  updatedAt                DateTime             @default(now()) @updatedAt @map("updated_at")
+  createdAt                DateTime             @default(now()) @map("created_at")
+  psychologist_id          String
+  plan_id                  String
+  status                   String               @default("inativa")
+  source                   String               @default("legacy")
+  gateway                  String?
+  gateway_subscription_id  String?
+  current_period_end       DateTime?
   billing_issue_started_at DateTime?
   billing_grace_ends_at    DateTime?
   billing_downgraded_at    DateTime?
   billing_last_notice_key  String?
-  grant_reason            String?
-  grant_notes             String?
-  granted_by              String?
-  grant_started_at        DateTime?
-  psychologist            psychologist_profile @relation("professional_subscription_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
-  plan                    subscription_plan    @relation("professional_subscription_plan", fields: [plan_id], references: [id])
+  grant_reason             String?
+  grant_notes              String?
+  granted_by               String?
+  grant_started_at         DateTime?
+  psychologist             psychologist_profile @relation("professional_subscription_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  plan                     subscription_plan    @relation("professional_subscription_plan", fields: [plan_id], references: [id])
 
   @@index([psychologist_id, status])
   @@index([plan_id])
@@ -706,6 +709,52 @@ model professional_subscription {
   @@index([status, billing_grace_ends_at])
   @@index([billing_last_notice_key, billing_grace_ends_at])
   @@map("professional_subscriptions")
+}
+
+// Observed coverage only: no subscription state is inferred before started_at.
+model professional_plan_history_coverage {
+  id         Int      @id
+  started_at DateTime @db.Timestamp(3)
+
+  @@map("professional_plan_history_coverage")
+}
+
+// Independent source snapshots avoid races between catalog and subscription writes.
+model subscription_plan_history {
+  id          BigInt   @id @default(autoincrement())
+  plan_id     String
+  observed_at DateTime @db.Timestamp(3)
+  observation String
+  deleted     Boolean
+  active      Boolean
+  slug        String
+  name        String
+  price_cents Int
+
+  @@index([plan_id, observed_at, id], map: "plan_history_lookup_idx")
+  @@map("subscription_plan_history")
+}
+
+model professional_subscription_history {
+  id                          BigInt               @id @default(autoincrement())
+  subscription_id             String
+  psychologist_id             String
+  plan_id                     String
+  observed_at                 DateTime             @db.Timestamp(3)
+  observation                 String
+  deleted                     Boolean
+  source_created_at           DateTime             @db.Timestamp(3)
+  status                      String
+  source                      String
+  gateway                     String?
+  has_gateway_subscription_id Boolean
+  current_period_end          DateTime?            @db.Timestamp(3)
+  grant_started_at            DateTime?            @db.Timestamp(3)
+  psychologist                psychologist_profile @relation(fields: [psychologist_id], references: [id], onDelete: Cascade)
+
+  @@index([psychologist_id, observed_at, id], map: "subscription_history_profile_idx")
+  @@index([subscription_id, observed_at, id], map: "subscription_history_lookup_idx")
+  @@map("professional_subscription_history")
 }
 
 model billing_address {
@@ -1456,4 +1505,43 @@ model log__user {
 
   @@index([ref_id])
   @@map("log__users")
+}
+
+model legal_document_version {
+  id                    String             @id @default(cuid())
+  kind                  String
+  version               Int
+  status                String             @default("draft")
+  revision              Int                @default(1)
+  title                 String
+  body                  String
+  change_summary        String
+  content_hash          String
+  created_by_admin_id   String
+  updated_by_admin_id   String
+  published_by_admin_id String?
+  published_at          DateTime?
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @default(now()) @updatedAt @map("updated_at")
+  acceptances           legal_acceptance[]
+
+  @@unique([kind, version])
+  @@index([kind, status, published_at])
+  @@map("legal_document_versions")
+}
+
+model legal_acceptance {
+  id              String                 @id @default(cuid())
+  user_id         String
+  document_id     String
+  document_hash   String
+  action          String
+  adult_confirmed Boolean
+  accepted_at     DateTime               @default(now())
+  user            user                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  document        legal_document_version @relation(fields: [document_id], references: [id], onDelete: Restrict)
+
+  @@unique([user_id, document_id])
+  @@index([document_id, accepted_at])
+  @@map("legal_acceptances")
 }

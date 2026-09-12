@@ -1,10 +1,8 @@
 //Client
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
-
 //Objects
 import type { user, user_token } from "@/interfaces/objects";
-
 //Utils
 import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateToken";
 import {
@@ -14,6 +12,7 @@ import {
   PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
+import { assertAdultRegistration } from "@/modules/legal/registration";
 //
 import { loginInclude } from "@/query/login";
 import { withInvalidatedRecovery } from "@/utils/account-credentials";
@@ -144,12 +143,14 @@ export class LoginRepository implements ILoginRepository {
         professional_first_name,
         professional_last_name,
         terms_accepted,
+        adult_confirmed,
         terms_version,
         analytics_session_id,
         analytics_visitor_id,
         ...userData
       } = data.b;
       const role = userData.role || "paciente";
+      await assertAdultRegistration(adult_confirmed, tx);
       const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
         analytics_session_id,
         analytics_visitor_id,
@@ -218,6 +219,19 @@ export class LoginRepository implements ILoginRepository {
         });
       }
 
+      if (adult_confirmed === true) {
+        await tx.user_background.create({
+          data: {
+            user_id: user.id,
+            type: "adult_declaration",
+            data: {
+              declared_at: new Date().toISOString(),
+              minimum_age: 18,
+              source: "registration",
+            },
+          },
+        });
+      }
       if (terms_accepted) {
         await tx.user_background.create({
           data: {

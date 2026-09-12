@@ -1,6 +1,7 @@
 //Lib
 import { type Response, Router } from "express";
-
+import { send } from "@/helpers/return";
+import { error } from "@/helpers/translate";
 //Middlewares
 import passport from "@/modules/api/middlewares/_auth/passport";
 import { isPublishedRuntime } from "@/utils/runtime-config";
@@ -8,7 +9,11 @@ import {
   GOOGLE_AUTH_FALLBACK_MESSAGE,
   resolveGoogleCallbackFailureMessage,
 } from "../utils/callback-error";
-import { parseGoogleHttpUrl, sanitizeGoogleCallbackTarget } from "../utils/config";
+import {
+  isGoogleOAuthConfigured,
+  parseGoogleHttpUrl,
+  sanitizeGoogleCallbackTarget,
+} from "../utils/config";
 import {
   GOOGLE_DELETE_REAUTH_STATE_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
@@ -21,6 +26,12 @@ import {
 //Route Infos
 const routes = Router();
 
+routes.use((_req, res, next) => {
+  if (!isGoogleOAuthConfigured()) {
+    return send(res, { status: 503, ...error("google_oauth_not_configured", {}) });
+  }
+  next();
+});
 routes.use(passport.initialize());
 
 type GoogleCallbackQuery = Record<string, string | string[] | undefined>;

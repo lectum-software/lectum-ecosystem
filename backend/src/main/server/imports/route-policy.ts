@@ -9,6 +9,7 @@ export type MountedRoutePolicyRecord = {
 };
 
 const userAuthOnlyPrivateRoutes = [
+  "/api/private/legal",
   "/api/private/user/favorites",
   "/api/private/user/reviews",
   "/api/private/video-assets",

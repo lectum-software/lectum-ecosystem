@@ -284,6 +284,7 @@ export const getMetricValueParts = (
   metric: PsychologistsDashboardMetric,
   options?: { totalPsychologists?: number },
 ) => {
+  if (metric.unavailable) return { main: "—", rate: null };
   const planShareRate = getPlanShareRate(metric, options?.totalPsychologists);
 
   if (planShareRate !== null) {
@@ -312,6 +313,8 @@ export const getMetricValueParts = (
 };
 
 export const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
+  if (metric.previous_unavailable && !metric.unavailable)
+    return <span className="text-[0.68rem] font-bold text-muted">Sem histórico anterior</span>;
   if (metric.unavailable)
     return (
       <span className="whitespace-nowrap text-[0.68rem] font-bold text-warning">Indisponível</span>
@@ -362,7 +365,7 @@ export const MetricCard = ({
           : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
       )}
       onClick={onToggle}
-      title={`${metric.label}: ${formattedValue}. ${
+      title={`${metric.label}: ${formattedValue}. ${metric.unavailable_reason ?? ""} ${
         active ? "Visível no gráfico" : "Oculto no gráfico"
       }`}
       type="button"
@@ -393,7 +396,7 @@ export const MetricCard = ({
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
           <TrendBadge metric={metric} />
           <span className="min-w-0 truncate text-[0.68rem] font-medium text-muted">
-            vs. período anterior
+            {!metric.unavailable && !metric.previous_unavailable ? "vs. período anterior" : ""}
           </span>
         </div>
         <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>

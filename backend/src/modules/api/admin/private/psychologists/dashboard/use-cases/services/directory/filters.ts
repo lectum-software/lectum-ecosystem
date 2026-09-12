@@ -1,4 +1,8 @@
 import { crpExperienceYears } from "@/utils/professional-experience";
+import {
+  isPlanHistoryKnownAt,
+  PLAN_HISTORY_UNAVAILABLE_REASON,
+} from "@/utils/professional-plan-history";
 import type {
   AdminPsychologistsDashboardBooleanBreakdown,
   AdminPsychologistsDashboardBreakdownItem,
@@ -312,6 +316,9 @@ export const buildFeatureBreakdown = (
   date: Date,
 ): AdminPsychologistsDashboardBreakdownItem[] => {
   const total = profiles.length;
+  const verifiedUnavailable = profiles.some(
+    (profile) => !isPlanHistoryKnownAt(profile.plan_history, date),
+  );
   const items: AdminPsychologistsDashboardBreakdownItem[] = [
     {
       count: profiles.filter(isAvailableToday).length,
@@ -324,6 +331,9 @@ export const buildFeatureBreakdown = (
       id: "verified",
       label: "Somente verificados",
       percentage: 0,
+      ...(verifiedUnavailable
+        ? { unavailable: true, unavailable_reason: PLAN_HISTORY_UNAVAILABLE_REASON }
+        : {}),
     },
     {
       count: profiles.filter(isMoreExperienced).length,

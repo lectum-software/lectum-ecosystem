@@ -21,6 +21,7 @@ const GOOGLE_OAUTH_STATE_IV_BYTES = 12;
 const GOOGLE_OAUTH_STATE_TAG_BYTES = 16;
 const GOOGLE_OAUTH_STATE_MAX_LENGTH = 16_384;
 const ALLOWED_QUERY_KEYS = new Set([
+  "adult_confirmed",
   "analytics_session_id",
   "analytics_visitor_id",
   "callbackUrl",

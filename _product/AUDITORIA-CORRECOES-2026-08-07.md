@@ -157,3 +157,19 @@ Este é o resumo simples. As decisões técnicas estão no
 - O uso dos vídeos demonstrativos precisa de autorização do responsável antes de produção.
 - O número público de WhatsApp do suporte CFP aguarda uma fonte operacional aprovada.
 - Credencial antiga encontrada apenas em arquivo local ignorado deve ser revogada se ainda estiver ativa.
+
+
+## Atualização 0.1.369 — termos, cadastro e métricas
+
+1. Cadastro com declaração obrigatória de 18 anos no aplicativo.
+2. Termos e Privacidade completos como minutas editáveis no Admin, com campos `[CNPJ]` e similares fáceis de encontrar.
+3. Documentos publicados preservados; alterações geram novas versões.
+4. Histórico da versão aceita por cada usuário, sem aceite automático ou retroativo.
+5. Aviso de nova versão com confirmações separadas; adiar não registra concordância.
+6. Proteção contra perda de alterações quando duas pessoas editam o mesmo rascunho.
+7. Métricas coletadas no gratuito preservadas e liberadas após assinatura, sem inventar resultados antigos.
+8. Totais atuais separados das atividades do período nos painéis.
+9. Histórico de planos real; períodos sem informação deixam isso claro em vez de exibir números enganosos.
+10. Ajustes mobile, mensagens em português e correção de avisos nos gráficos.
+
+Validação local: builds e checks aprovados; 165 verificações adicionais com banco real. Sem reset e sem publicação automática de termos. A revisão jurídica e o preenchimento dos dados empresariais continuam necessários antes da publicação dos documentos.

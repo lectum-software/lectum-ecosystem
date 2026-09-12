@@ -1,4 +1,8 @@
 import { endOfDate, parseDateOnly, startOfDate, toDateKey } from "@/utils/date-range";
+import {
+  isPlanHistoryKnownAt,
+  professionalSubscriptionsAt,
+} from "@/utils/professional-plan-history";
 import type {
   AdminPsychologistsDashboardBreakdownItem,
   AdminPsychologistsDashboardDailyPoint,
@@ -7,7 +11,6 @@ import type {
 import type {
   AdminPsychologistDeletedAccountRecord,
   AdminPsychologistProfileRecord,
-  AdminPsychologistSubscriptionRecord,
 } from "../../../repositories/interfaces/IAdminPsychologistsDashboardRepository";
 import {
   activeSubscriptionsAt,
@@ -19,7 +22,7 @@ import {
   profileCreatedUntil,
 } from "../plan/segments";
 import { dateInRange } from "../pre-signup/conversion";
-import { STATUS_ACTIVE, STATUS_CANCELLED } from "../support/constants";
+import { STATUS_CANCELLED } from "../support/constants";
 import { roundPercent, safePercentage } from "../support/metrics";
 
 const activeProfessionalSubscriptionsAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
@@ -39,62 +42,58 @@ export const hasVerifiedEntitlementAt = (profile: AdminPsychologistProfileRecord
   );
 };
 
-const flattenSubscriptions = (profiles: AdminPsychologistProfileRecord[]) =>
-  profiles.flatMap((profile) => profile.subscriptions);
-
-const paidGatewayCanceledInRange = (
-  subscriptions: AdminPsychologistSubscriptionRecord[],
-  range: AdminPsychologistsDashboardDateRange,
-) =>
-  subscriptions.filter(
-    (item) =>
-      isPaidGatewaySubscription(item) &&
-      item.status === STATUS_CANCELLED &&
-      dateInRange(item.updatedAt, range),
-  );
-
-const paidGatewaySubscriptionInOpeningBaseAt = (
-  subscription: AdminPsychologistSubscriptionRecord,
-  date: Date,
-) => {
-  if (!isPaidGatewaySubscription(subscription)) return false;
-  if (subscription.createdAt > date) return false;
-  if (subscription.current_period_end && subscription.current_period_end <= date) return false;
-  if (subscription.status === STATUS_ACTIVE) return true;
-
-  return subscription.status === STATUS_CANCELLED && subscription.updatedAt > date;
-};
-
-/**
- * Churn V1 do Admin Psicólogos:
- * cancelamentos reais de assinaturas profissionais originadas no gateway Mercado Pago no período
- * divididos pela base paga ativa no início do período. Novas assinaturas iniciadas dentro do
- * período não entram no denominador. Cortesias/admin_grant e plano gratuito não entram no
- * numerador nem denominador.
- */
+/** Churn keeps the existing numerator/denominator; only its evidence becomes historical. */
 export const calculateChurnPercent = (
-  profiles: AdminPsychologistProfileRecord[],
+  profiles: Pick<AdminPsychologistProfileRecord, "plan_history">[],
   range: AdminPsychologistsDashboardDateRange,
 ) => {
-  const subscriptions = flattenSubscriptions(profiles);
-  const openingBase = subscriptions.filter((item) =>
-    paidGatewaySubscriptionInOpeningBaseAt(item, range.start),
-  );
-  const denominator = openingBase.length;
-  const canceled = paidGatewayCanceledInRange(subscriptions, range).length;
-
-  if (denominator === 0) {
-    return {
-      canceled,
-      denominator,
-      value: 0,
-    };
+  const known =
+    profiles.length > 0 &&
+    profiles.every((profile) => isPlanHistoryKnownAt(profile.plan_history, range.start));
+  const openingBase = profiles
+    .flatMap((profile) => activeSubscriptionsAt(profile, range.start))
+    .filter(isPaidGatewaySubscription);
+  const canceledIds = new Set<string>();
+  for (const profile of profiles) {
+    const history = profile.plan_history;
+    if (!history) continue;
+    const ordered = [...history.subscriptions].sort(
+      (left, right) =>
+        left.observed_at.getTime() - right.observed_at.getTime() ||
+        (left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
+    );
+    const previousStatus = new Map<string, string>();
+    for (const row of ordered) {
+      const previous = previousStatus.get(row.subscription_id);
+      previousStatus.set(row.subscription_id, row.status);
+      if (
+        row.observation !== "update_observed" ||
+        previous === undefined ||
+        previous === STATUS_CANCELLED ||
+        row.status !== STATUS_CANCELLED ||
+        row.deleted ||
+        row.observed_at < range.start ||
+        row.observed_at > range.end
+      )
+        continue;
+      const atCancellation = professionalSubscriptionsAt(
+        { ...history, subscriptions: [row] },
+        row.observed_at,
+      ).find((subscription) => subscription.id === row.subscription_id);
+      if (
+        atCancellation &&
+        isPaidGatewaySubscription({ ...atCancellation, status: STATUS_CANCELLED })
+      ) {
+        canceledIds.add(row.subscription_id);
+      }
+    }
   }
-
+  const denominator = openingBase.length;
   return {
-    canceled,
+    canceled: canceledIds.size,
     denominator,
-    value: roundPercent((canceled / denominator) * 100),
+    known,
+    value: denominator === 0 ? 0 : roundPercent((canceledIds.size / denominator) * 100),
   };
 };
 
@@ -117,6 +116,7 @@ export const deletedAccountInRange = (
 ) => Boolean(account.deletedAt && dateInRange(account.deletedAt, range));
 
 export const buildTimeline = (params: {
+  planHistoryCoverage?: Date | null;
   deletedAccounts?: AdminPsychologistDeletedAccountRecord[];
   labels: string[];
   profiles: AdminPsychologistProfileRecord[];
@@ -145,6 +145,12 @@ export const buildTimeline = (params: {
         hasActiveCourtesyAt(profile, dayEnd),
       ).length,
       date,
+      plan_history_known:
+        Boolean(params.planHistoryCoverage && params.planHistoryCoverage <= dayEnd) &&
+        params.profiles.every((profile) => isPlanHistoryKnownAt(profile.plan_history, dayEnd)),
+      churn_history_known:
+        Boolean(params.planHistoryCoverage && params.planHistoryCoverage <= dayStart) &&
+        params.profiles.every((profile) => isPlanHistoryKnownAt(profile.plan_history, dayStart)),
       deleted_accounts: getDateCount(deletedAccountsByDate, date),
       free_psychologists: profilesCreatedUntilDay.filter((profile) =>
         hasCurrentFreePlanAt(profile, dayEnd),

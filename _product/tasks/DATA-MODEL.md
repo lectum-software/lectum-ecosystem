@@ -1254,3 +1254,24 @@ cliques WhatsApp, mantendo `whatsapp_clicks` preenchido somente quando o item me
 persistidos sem origem de video registrada. Cliques WhatsApp de Perfil e Favoritos usam somente
 `important_action_event.action_type=whatsapp_click` com `target_type="psychologist"`, `target_id` do psicologo e
 contexto de pagina/caminho real; `contact_request` continua sendo total geral e nao e redistribuido sem origem.
+
+## Governança legal versionada — decisão de 12/09/2026 (TASK-178)
+
+`legal_document_version`: tipo terms/privacy, número sequencial por tipo, estado draft/published,
+título, corpo textual, resumo de alterações, hash SHA-256, revisão otimista, datas e autoria Admin.
+Publicação é imediata e imutável; nova alteração exige outro rascunho. Sem exclusão pela API.
+`legal_acceptance`: usuário, documento exato, hash, instante de registro no servidor, ação
+terms_accept/privacy_acknowledge e declaração de maioridade. Unique usuário/documento; retries
+não alteram o primeiro aceite. Sem IP, fingerprint, credenciais ou backfill de evidência antiga.
+Tabelas são expansão aditiva. Restrição imutável no banco protege documentos publicados e
+atualizações de aceite. Exclusão definitiva do usuário continua sujeita ao fluxo de privacidade
+existente; cascade das evidências não transforma seus logs antigos em consentimento novo.
+
+### TASK-178 — história observada de planos (0.1.369)
+
+- `professional_plan_history_coverage`: início verificável da cobertura (uma linha).
+- `subscription_plan_history`: revisões observadas de atributos do catálogo que afetam a classificação.
+- `professional_subscription_history`: revisões observadas da assinatura, com vínculo ao perfil e exclusão em cascata ao apagar esse perfil.
+- Baseline e triggers transacionais não alteram assinatura, pagamento ou entitlement. Antes da cobertura, o plano é desconhecido, não gratuito/pago presumido.
+- Atualizações relevantes e exclusões geram novas observações; IDs de gateway, documentos pessoais e notas não são copiados para a história.
+- A cobertura de classificação não corta os eventos de Analytics já coletados. A leitura paga pode apresentar eventos anteriores ao upgrade, sem fabricar eventos ausentes.

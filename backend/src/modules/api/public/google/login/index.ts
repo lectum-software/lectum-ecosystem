@@ -3,9 +3,9 @@ import { Router } from "express";
 import { getLimiter } from "@/external/limiter";
 import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
-
 //Middlewares
 import passport from "@/modules/api/middlewares/_auth/passport";
+import { isGoogleOAuthConfigured } from "../utils/config";
 import {
   createGoogleDeleteReauthStateCookie,
   createGoogleOAuthState,
@@ -20,6 +20,12 @@ import {
 const routes = Router();
 const limiter = getLimiter({ window: 5, max: 30 });
 
+routes.use((_req, res, next) => {
+  if (!isGoogleOAuthConfigured()) {
+    return send(res, { status: 503, ...error("google_oauth_not_configured", {}) });
+  }
+  next();
+});
 routes.use(passport.initialize());
 
 //Routes

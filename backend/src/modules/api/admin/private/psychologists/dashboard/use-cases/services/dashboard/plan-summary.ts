@@ -2,6 +2,10 @@ import {
   summarizePlatformUsage,
   summarizePsychologistWhatsappTrafficOrigins,
 } from "@/utils/admin-psychologist-analytics";
+import {
+  isPlanHistoryKnownAt,
+  PLAN_HISTORY_UNAVAILABLE_REASON,
+} from "@/utils/professional-plan-history";
 import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminPsychologistsDashboardDateRange,
@@ -292,8 +296,13 @@ export const buildPsychologistsList = (
 ): AdminPsychologistsDashboardPsychologist[] =>
   profiles.slice(0, 5).map((profile) => {
     const plan = pickCurrentPlan(profile, date);
+    const planHistoryKnown = isPlanHistoryKnownAt(profile.plan_history, date);
 
     return {
+      plan_history_known: planHistoryKnown,
+      ...(!planHistoryKnown
+        ? { plan_history_unavailable_reason: PLAN_HISTORY_UNAVAILABLE_REASON }
+        : {}),
       avatar: profile.user.avatar,
       city: profile.professional_address_city,
       created_at: profile.user.createdAt,
@@ -313,7 +322,7 @@ export const buildPsychologistsList = (
 export const roundRankingScore = (value: number) => Math.round(value * 1000) / 10;
 
 export const getAllPeriodStartDate = (
-  profiles: AdminPsychologistProfileRecord[],
+  profiles: { user: { createdAt: Date } }[],
   deletedAccounts: AdminPsychologistDeletedAccountRecord[] = [],
 ) =>
   [

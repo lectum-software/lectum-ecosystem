@@ -16,6 +16,12 @@ import {
   numberFormatter,
   percentageFormatter,
 } from "../modules/statistics-config";
+import {
+  COMMUNITY_CURRENT_TOTALS_DESCRIPTION,
+  communityStatisticScopeLabel,
+  communityStatisticSeriesLabel,
+  isCurrentCommunityTotal,
+} from "../modules/statistics-scope";
 
 import { CardShell } from "./common";
 
@@ -34,6 +40,11 @@ export const DashboardStatisticCard = ({
 }) => {
   const Icon = item.icon;
   const formattedValue = numberFormatter.format(item.value);
+  const isCurrentTotal = isCurrentCommunityTotal(item.id);
+  const scopeLabel = communityStatisticScopeLabel(item.id);
+  const comparisonTitle = isCurrentTotal
+    ? "Sem filtro de período"
+    : `${formatChange(item.changePercent)} vs. ${previousLabel}`;
   const detailTitle = item.details
     ?.map(
       (detail) =>
@@ -53,9 +64,7 @@ export const DashboardStatisticCard = ({
           : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
       )}
       onClick={() => onToggle(item.id)}
-      title={`${item.label}: ${formattedValue}. ${formatChange(
-        item.changePercent,
-      )} vs. ${previousLabel}. ${detailTitle ? `${detailTitle}. ` : ""}${
+      title={`${item.label}: ${formattedValue}. ${scopeLabel}. ${comparisonTitle}. ${detailTitle ? `${detailTitle}. ` : ""}${
         selected ? "Visível no gráfico" : "Oculto no gráfico"
       }`}
       type="button"
@@ -72,26 +81,31 @@ export const DashboardStatisticCard = ({
         <span className="block max-w-full break-words text-xs font-semibold leading-snug text-foreground">
           {item.label}
         </span>
+        <span className="mt-1 block text-xs font-medium text-muted">{scopeLabel}</span>
         <span className="mt-2 block text-2xl font-semibold leading-none text-foreground">
           {formattedValue}
         </span>
-        <span className="mt-3 block text-xs leading-5">
-          <span
-            className={cn(
-              "font-semibold",
-              item.changePercent === null
-                ? "text-muted"
-                : item.changePercent > 0
-                  ? "text-success"
-                  : item.changePercent < 0
-                    ? "text-danger"
-                    : "text-muted",
-            )}
-          >
-            {formatChange(item.changePercent)}
+        {isCurrentTotal ? (
+          <span className="mt-3 block text-xs leading-5 text-muted">Sem filtro de período</span>
+        ) : (
+          <span className="mt-3 block text-xs leading-5">
+            <span
+              className={cn(
+                "font-semibold",
+                item.changePercent === null
+                  ? "text-muted"
+                  : item.changePercent > 0
+                    ? "text-success"
+                    : item.changePercent < 0
+                      ? "text-danger"
+                      : "text-muted",
+              )}
+            >
+              {formatChange(item.changePercent)}
+            </span>
+            <span className="ml-1 font-medium text-muted">vs. {previousLabel}</span>
           </span>
-          <span className="ml-1 font-medium text-muted">vs. {previousLabel}</span>
-        </span>
+        )}
 
         {item.details?.length ? (
           <span className="mt-3 grid gap-1">
@@ -301,7 +315,8 @@ export const DashboardStatisticsLineChart = ({
                   strokeWidth="1.45"
                 >
                   <title>
-                    {point.tooltipLabel} · {item.label}: {numberFormatter.format(value)}
+                    {point.tooltipLabel} · {communityStatisticSeriesLabel(item.id, item.label)}:{" "}
+                    {numberFormatter.format(value)}
                   </title>
                 </circle>
               );
@@ -355,6 +370,9 @@ export const DashboardStatisticsSection = ({
         </div>
         {filters ? <div className="w-full min-w-0 xl:max-w-xl">{filters}</div> : null}
       </div>
+      {metrics.some((item) => isCurrentCommunityTotal(item.id)) ? (
+        <p className="mt-3 text-xs leading-5 text-muted">{COMMUNITY_CURRENT_TOTALS_DESCRIPTION}</p>
+      ) : null}
       {counterLayout === "grid" ? (
         <DashboardStatisticsMetricGrid
           metrics={metrics}

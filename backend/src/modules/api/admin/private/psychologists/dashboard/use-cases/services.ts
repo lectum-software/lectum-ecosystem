@@ -18,6 +18,7 @@ import {
 } from "./services/dashboard/plan-summary";
 import { buildConversionBySignupMethod } from "./services/dashboard/statistics";
 import { buildFilterSearches } from "./services/directory/filters";
+import { applyPlanHistoryAvailability } from "./services/plan/history-availability";
 import {
   collectWhatsappTrafficTargetIds,
   hasActiveCourtesyAt,
@@ -45,14 +46,15 @@ export const buildPsychologistsDashboard = async (
   query: AdminPsychologistsDashboardQuery,
 ): Promise<Resolve> => {
   const repository = new AdminPsychologistsDashboardRepository();
-  const [profiles, directoryFilters, deletedAccounts] = await Promise.all([
-    repository.listPsychologistProfiles(),
+  const [signupDates, directoryFilters, deletedAccounts, planHistoryCoverage] = await Promise.all([
+    repository.listPsychologistSignupDates(),
     repository.listDirectoryFilters(),
     repository.listDeletedPsychologistAccounts(),
+    repository.planHistoryCoverage(),
   ]);
   const resolvedPeriod = resolvePeriod(
     query ?? {},
-    getAllPeriodStartDate(profiles, deletedAccounts),
+    getAllPeriodStartDate(signupDates, deletedAccounts),
   );
   if (!resolvedPeriod.success) {
     return {
@@ -62,6 +64,10 @@ export const buildPsychologistsDashboard = async (
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
+  const profiles = await repository.listPsychologistProfiles({
+    start: previous.start,
+    end: current.end,
+  });
 
   const currentNewSignups = profiles.filter((profile) =>
     dateInRange(profile.user.createdAt, current),
@@ -348,6 +354,7 @@ export const buildPsychologistsDashboard = async (
     statistics,
     timeline: {
       points: buildTimeline({
+        planHistoryCoverage,
         deletedAccounts,
         labels,
         profiles,
@@ -570,6 +577,8 @@ export const buildPsychologistsDashboard = async (
         : []),
     ],
   };
+
+  applyPlanHistoryAvailability(summary, profiles, current, previous, planHistoryCoverage);
 
   return {
     status: 200,

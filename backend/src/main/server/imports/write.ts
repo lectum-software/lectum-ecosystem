@@ -28,6 +28,7 @@ import apiAdminPrivatePsychologistsList from "@/modules/api/admin/private/psycho
 import apiAdminPrivatePsychologistsProfileEdit from "@/modules/api/admin/private/psychologists/profile-edit";
 import apiAdminPrivatePsychologistsRegistryVerification from "@/modules/api/admin/private/psychologists/registry-verification";
 import apiAdminPrivateSettingsCatalogs from "@/modules/api/admin/private/settings/catalogs";
+import apiAdminPrivateSettingsLegal from "@/modules/api/admin/private/settings/legal";
 import apiAdminPrivateSettingsSeo from "@/modules/api/admin/private/settings/seo";
 import apiAdminPrivateSettingsSubscriptionPlan from "@/modules/api/admin/private/settings/subscription-plan";
 import apiAdminPrivateTrafficExport from "@/modules/api/admin/private/traffic/export";
@@ -45,6 +46,7 @@ import apiPrivateAuthNeedReset from "@/modules/api/private/auth/need_reset";
 import apiPrivateAuthReset from "@/modules/api/private/auth/reset";
 import apiPrivateCommunity from "@/modules/api/private/community";
 import apiPrivateDirectoryPsychologists from "@/modules/api/private/directory/psychologists";
+import apiPrivateLegal from "@/modules/api/private/legal";
 import apiPrivateNotificationClean from "@/modules/api/private/notification/clean";
 import apiPrivateNotificationClick from "@/modules/api/private/notification/click";
 import apiPrivateNotificationIndex from "@/modules/api/private/notification/index";
@@ -86,6 +88,7 @@ import apiPublicGoogleCallback from "@/modules/api/public/google/callback";
 import apiPublicGoogleLink from "@/modules/api/public/google/link";
 import apiPublicGoogleLogin from "@/modules/api/public/google/login";
 import apiPublicGoogleMe from "@/modules/api/public/google/me";
+import apiPublicLegal from "@/modules/api/public/legal";
 import apiPublicSeoCommunity from "@/modules/api/public/seo/community";
 import apiPublicSeoCommunityPost from "@/modules/api/public/seo/community-post";
 import apiPublicSeoMetadata from "@/modules/api/public/seo/metadata";
@@ -187,6 +190,8 @@ mountRoute("/api/public/seo/community-post", apiPublicSeoCommunityPost);
 mountRoute("/api/public/seo/metadata", apiPublicSeoMetadata);
 mountRoute("/api/public/seo/psychologist", apiPublicSeoPsychologist);
 mountRoute("/api/public/user", apiPublicUser);
+mountRoute("/api/public/legal", apiPublicLegal);
+mountAuthOnlyRoute("/api/private/legal", apiPrivateLegal);
 mountRoute("/api/public/video-assets", optionalAuth, apiPublicVideoAssets);
 mountRoute("/api/public/video-stream/webhook", apiPublicVideoStreamWebhook);
 mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);
@@ -218,6 +223,7 @@ mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsEngag
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsFeedback);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsActivities);
 mountRoute("/api/admin/private/settings/catalogs", apiAdminPrivateSettingsCatalogs);
+mountRoute("/api/admin/private/settings/legal", apiAdminPrivateSettingsLegal);
 mountRoute("/api/admin/private/settings/seo", apiAdminPrivateSettingsSeo);
 mountRoute(
   "/api/admin/private/settings/subscription-plan",

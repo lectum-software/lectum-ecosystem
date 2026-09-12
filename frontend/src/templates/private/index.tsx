@@ -8,6 +8,8 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
 import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
+import { LegalAcceptanceRequest } from "@/components/legal/acceptance-request";
+import { canPromptLegalOnPath } from "@/components/legal/policy";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Logo, LogoIcon } from "@/components/ui/logo";
 import { PageShell } from "@/components/ui/page-shell";
@@ -513,6 +515,9 @@ export const PrivateTemplate = ({
         {children}
       </PageShell>
       {navigationMarkup}
+      {sessionUser?.id && !sessionUser.need_reset && canPromptLegalOnPath(normalizedPathname) ? (
+        <LegalAcceptanceRequest key={sessionUser.id} userId={sessionUser.id} />
+      ) : null}
     </>
   );
 };

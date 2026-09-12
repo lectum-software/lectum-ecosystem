@@ -1,3 +1,4 @@
+import { LegalError } from "@/modules/legal/contracts";
 //Libs
 
 import "@/config/dotenv";
@@ -11,7 +12,10 @@ import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
 //Repositories
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
-import { getGoogleOAuthCallbackUrl } from "@/modules/api/public/google/utils/config";
+import {
+  getGoogleOAuthCallbackUrl,
+  isGoogleOAuthConfigured,
+} from "@/modules/api/public/google/utils/config";
 import {
   GOOGLE_DELETE_REAUTH_STATE_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
@@ -78,414 +82,429 @@ const resolveGoogleProfessionalNameParts = (profile: Profile) => {
 };
 
 // Estratégia Google
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID_API_USER!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET_API_USER!,
-      callbackURL: getGoogleOAuthCallbackUrl(),
-      passReqToCallback: true,
-    },
-    async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {
-      try {
-        const state = resolveGoogleCallbackState(req);
-        const device_id = state?.device_id;
-        let deleteToken: string | undefined;
-        let intent: string | undefined;
-        let linkToken: string | undefined;
-        let role: UserRole | undefined;
-        let termsAccepted = false;
-        let termsVersion: string | undefined;
-        let analyticsVisitorId: string | undefined;
-        let analyticsSessionId: string | undefined;
+if (isGoogleOAuthConfigured()) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID_API_USER!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET_API_USER!,
+        callbackURL: getGoogleOAuthCallbackUrl(),
+        passReqToCallback: true,
+      },
+      async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {
+        try {
+          const state = resolveGoogleCallbackState(req);
+          const device_id = state?.device_id;
+          let deleteToken: string | undefined;
+          let intent: string | undefined;
+          let linkToken: string | undefined;
+          let role: UserRole | undefined;
+          let termsAccepted = false;
+          let adultConfirmed: boolean | undefined;
+          let termsVersion: string | undefined;
+          let analyticsVisitorId: string | undefined;
+          let analyticsSessionId: string | undefined;
 
-        if (state) {
-          role = parseUserRole(state.query.role);
-          termsAccepted = state.query.terms_accepted === "true";
-          termsVersion = state.query.terms_version;
-          analyticsVisitorId = state.query.analytics_visitor_id;
-          analyticsSessionId = state.query.analytics_session_id;
-          intent = state.query.intent;
-          linkToken = state.query.link_token;
-          deleteToken = state.query.delete_token;
-        }
-        //
-
-        if (!device_id)
-          return done(null, {
-            status: 404,
-            ...error("device_id_not_found", {}),
-            type: 3,
-          });
-
-        const googleEmail = profile.emails?.[0];
-        const profileJson = (profile._json ?? {}) as { email_verified?: boolean };
-        const email = googleEmail?.value;
-        const emailVerified = googleEmail?.verified === true || profileJson.email_verified === true;
-        if (!email || !emailVerified)
-          return done(null, {
-            status: 404,
-            ...error("google_email_not_authorized", {}),
-            type: 3,
-          });
-
-        const googleDisplayName = profile.displayName?.trim();
-        const googleProfessionalName = resolveGoogleProfessionalNameParts(profile);
-        const googleName = googleDisplayName;
-        const googleAvatar = profile.photos?.[0]?.value;
-        const googleNameForRole = (targetRole?: string | null) =>
-          targetRole === "psicologo"
-            ? buildProfessionalFullDisplayName({
-                fallbackName: googleDisplayName || email,
-                firstName: googleProfessionalName.firstName,
-                lastName: googleProfessionalName.lastName,
-              })
-            : googleDisplayName || email;
-
-        const repo = new LoginRepository(device_id, [
-          { model: "company", columns: ["ai_api_key"] },
-        ]);
-
-        if (intent === "link") {
-          if (!linkToken) {
-            return done(null, {
-              status: 400,
-              ...error("google_link_invalid", {}),
-              type: 3,
-            });
+          if (state) {
+            role = parseUserRole(state.query.role);
+            termsAccepted = state.query.terms_accepted === "true";
+            termsVersion = state.query.terms_version;
+            adultConfirmed =
+              state.query.adult_confirmed === undefined
+                ? undefined
+                : state.query.adult_confirmed === "true";
+            analyticsVisitorId = state.query.analytics_visitor_id;
+            analyticsSessionId = state.query.analytics_session_id;
+            intent = state.query.intent;
+            linkToken = state.query.link_token;
+            deleteToken = state.query.delete_token;
           }
+          //
 
-          let payload: GoogleLinkPayload;
-
-          try {
-            payload = jwt.verify(linkToken, getJwtSecret(), {
-              algorithms: [JWT_ALGORITHM],
-            }) as GoogleLinkPayload;
-          } catch {
-            return done(null, {
-              status: 400,
-              ...error("google_link_expired", {}),
-              type: 3,
-            });
-          }
-
-          if (
-            payload.intent !== "link_google" ||
-            payload.device_id !== device_id ||
-            !payload.user_id ||
-            !payload.email
-          ) {
-            return done(null, {
-              status: 400,
-              ...error("google_link_invalid", {}),
-              type: 3,
-            });
-          }
-
-          if (payload.email.toLowerCase() !== email.toLowerCase()) {
-            return done(null, {
-              status: 400,
-              ...error("google_link_email_mismatch", {}),
-              type: 3,
-            });
-          }
-
-          let linkedUser = await repo.findByEmail({ b: { email: payload.email } });
-
-          if (!linkedUser || linkedUser.id !== payload.user_id) {
+          if (!device_id)
             return done(null, {
               status: 404,
-              ...error("account_not_found", {}),
+              ...error("device_id_not_found", {}),
               type: 3,
             });
-          }
 
-          linkedUser = await repo.reactivateExpiredSuspension(linkedUser);
-
-          if (!linkedUser.active) {
-            return done(null, inactiveUserResponse());
-          }
-
-          const profileUpdate: { avatar?: string | null; name?: string; provider?: string } = {
-            provider: "google",
-          };
-
-          const linkedUserGoogleName = googleNameForRole(linkedUser.role);
-
-          if (
-            (googleName || linkedUser.role === "psicologo") &&
-            (!linkedUser.name || linkedUser.provider === "google")
-          ) {
-            profileUpdate.name = linkedUserGoogleName;
-          }
-
-          if (googleAvatar && !linkedUser.avatar) {
-            profileUpdate.avatar = googleAvatar;
-          }
-
-          linkedUser = await repo.update({
-            p: { id: linkedUser.id! },
-            b: profileUpdate,
-            auth: linkedUser,
-          });
-
-          if (!linkedUser) {
+          const googleEmail = profile.emails?.[0];
+          const profileJson = (profile._json ?? {}) as { email_verified?: boolean };
+          const email = googleEmail?.value;
+          const emailVerified =
+            googleEmail?.verified === true || profileJson.email_verified === true;
+          if (!email || !emailVerified)
             return done(null, {
               status: 404,
-              ...error("account_not_found", {}),
+              ...error("google_email_not_authorized", {}),
               type: 3,
+            });
+
+          const googleDisplayName = profile.displayName?.trim();
+          const googleProfessionalName = resolveGoogleProfessionalNameParts(profile);
+          const googleName = googleDisplayName;
+          const googleAvatar = profile.photos?.[0]?.value;
+          const googleNameForRole = (targetRole?: string | null) =>
+            targetRole === "psicologo"
+              ? buildProfessionalFullDisplayName({
+                  fallbackName: googleDisplayName || email,
+                  firstName: googleProfessionalName.firstName,
+                  lastName: googleProfessionalName.lastName,
+                })
+              : googleDisplayName || email;
+
+          const repo = new LoginRepository(device_id, [
+            { model: "company", columns: ["ai_api_key"] },
+          ]);
+
+          if (intent === "link") {
+            if (!linkToken) {
+              return done(null, {
+                status: 400,
+                ...error("google_link_invalid", {}),
+                type: 3,
+              });
+            }
+
+            let payload: GoogleLinkPayload;
+
+            try {
+              payload = jwt.verify(linkToken, getJwtSecret(), {
+                algorithms: [JWT_ALGORITHM],
+              }) as GoogleLinkPayload;
+            } catch {
+              return done(null, {
+                status: 400,
+                ...error("google_link_expired", {}),
+                type: 3,
+              });
+            }
+
+            if (
+              payload.intent !== "link_google" ||
+              payload.device_id !== device_id ||
+              !payload.user_id ||
+              !payload.email
+            ) {
+              return done(null, {
+                status: 400,
+                ...error("google_link_invalid", {}),
+                type: 3,
+              });
+            }
+
+            if (payload.email.toLowerCase() !== email.toLowerCase()) {
+              return done(null, {
+                status: 400,
+                ...error("google_link_email_mismatch", {}),
+                type: 3,
+              });
+            }
+
+            let linkedUser = await repo.findByEmail({ b: { email: payload.email } });
+
+            if (!linkedUser || linkedUser.id !== payload.user_id) {
+              return done(null, {
+                status: 404,
+                ...error("account_not_found", {}),
+                type: 3,
+              });
+            }
+
+            linkedUser = await repo.reactivateExpiredSuspension(linkedUser);
+
+            if (!linkedUser.active) {
+              return done(null, inactiveUserResponse());
+            }
+
+            const profileUpdate: { avatar?: string | null; name?: string; provider?: string } = {
+              provider: "google",
+            };
+
+            const linkedUserGoogleName = googleNameForRole(linkedUser.role);
+
+            if (
+              (googleName || linkedUser.role === "psicologo") &&
+              (!linkedUser.name || linkedUser.provider === "google")
+            ) {
+              profileUpdate.name = linkedUserGoogleName;
+            }
+
+            if (googleAvatar && !linkedUser.avatar) {
+              profileUpdate.avatar = googleAvatar;
+            }
+
+            linkedUser = await repo.update({
+              p: { id: linkedUser.id! },
+              b: profileUpdate,
+              auth: linkedUser,
+            });
+
+            if (!linkedUser) {
+              return done(null, {
+                status: 404,
+                ...error("account_not_found", {}),
+                type: 3,
+              });
+            }
+
+            if (
+              linkedUser.id &&
+              linkedUser.role === "psicologo" &&
+              (googleProfessionalName.firstName || googleProfessionalName.lastName)
+            ) {
+              await prisma.psychologist_profile.updateMany({
+                where: {
+                  user_id: linkedUser.id,
+                  deleted: false,
+                  OR: [
+                    { professional_first_name: null },
+                    { professional_first_name: "" },
+                    { professional_last_name: null },
+                    { professional_last_name: "" },
+                  ],
+                },
+                data: {
+                  professional_first_name: googleProfessionalName.firstName || undefined,
+                  professional_last_name: googleProfessionalName.lastName || undefined,
+                },
+              });
+            }
+
+            linkedUser = await repo.hidrate(linkedUser, device_id);
+
+            return done(null, {
+              ...msg("google_link_success", {}),
+              data: linkedUser,
             });
           }
 
-          if (
-            linkedUser.id &&
-            linkedUser.role === "psicologo" &&
-            (googleProfessionalName.firstName || googleProfessionalName.lastName)
-          ) {
-            await prisma.psychologist_profile.updateMany({
-              where: {
-                user_id: linkedUser.id,
-                deleted: false,
-                OR: [
-                  { professional_first_name: null },
-                  { professional_first_name: "" },
-                  { professional_last_name: null },
-                  { professional_last_name: "" },
-                ],
-              },
+          if (intent === "delete_account") {
+            if (!deleteToken) {
+              return done(null, {
+                status: 400,
+                ...error("account_delete_google_reauth_invalid", {}),
+                type: 3,
+              });
+            }
+
+            let payload: GoogleDeleteAccountPayload;
+
+            try {
+              payload = jwt.verify(deleteToken, getJwtSecret(), {
+                algorithms: [JWT_ALGORITHM],
+              }) as GoogleDeleteAccountPayload;
+            } catch {
+              return done(null, {
+                status: 400,
+                ...error("account_delete_google_reauth_expired", {}),
+                type: 3,
+              });
+            }
+
+            if (
+              payload.intent !== "delete_account_google_reauth" ||
+              payload.device_id !== device_id ||
+              !payload.user_id ||
+              !payload.email
+            ) {
+              return done(null, {
+                status: 400,
+                ...error("account_delete_google_reauth_invalid", {}),
+                type: 3,
+              });
+            }
+
+            if (payload.email.toLowerCase() !== email.toLowerCase()) {
+              return done(null, {
+                status: 400,
+                ...error("account_delete_google_reauth_email_mismatch", {}),
+                type: 3,
+              });
+            }
+
+            let reauthUser = await repo.findByEmail({ b: { email: payload.email } });
+
+            if (
+              !reauthUser ||
+              reauthUser.id !== payload.user_id ||
+              reauthUser.provider !== "google"
+            ) {
+              return done(null, {
+                status: 404,
+                ...error("account_not_found", {}),
+                type: 3,
+              });
+            }
+
+            reauthUser = await repo.reactivateExpiredSuspension(reauthUser);
+
+            if (!reauthUser.active) {
+              return done(null, inactiveUserResponse());
+            }
+
+            const now = new Date();
+            await prisma.user_background.create({
               data: {
-                professional_first_name: googleProfessionalName.firstName || undefined,
-                professional_last_name: googleProfessionalName.lastName || undefined,
+                user_id: reauthUser.id!,
+                type: "account_delete_reauth",
+                device_id,
+                data: {
+                  email,
+                  provider: "google",
+                  verified_at: now.toISOString(),
+                  expires_at: new Date(now.getTime() + 10 * 60 * 1000).toISOString(),
+                },
               },
             });
-          }
 
-          linkedUser = await repo.hidrate(linkedUser, device_id);
+            reauthUser = await repo.hidrate(reauthUser, device_id);
 
-          return done(null, {
-            ...msg("google_link_success", {}),
-            data: linkedUser,
-          });
-        }
-
-        if (intent === "delete_account") {
-          if (!deleteToken) {
             return done(null, {
-              status: 400,
-              ...error("account_delete_google_reauth_invalid", {}),
-              type: 3,
+              ...msg("account_delete_google_reauth_success", {}),
+              data: reauthUser,
             });
           }
 
-          let payload: GoogleDeleteAccountPayload;
+          let user = await repo.findByEmail({ b: { email } });
+          const isRegistrationIntent = intent === "register" || (Boolean(role) && termsAccepted);
 
-          try {
-            payload = jwt.verify(deleteToken, getJwtSecret(), {
-              algorithms: [JWT_ALGORITHM],
-            }) as GoogleDeleteAccountPayload;
-          } catch {
-            return done(null, {
-              status: 400,
-              ...error("account_delete_google_reauth_expired", {}),
-              type: 3,
-            });
+          if (!user) {
+            if (!isRegistrationIntent) {
+              return done(null, {
+                status: 404,
+                ...error("account_not_registered", {}),
+                type: 3,
+              });
+            }
+
+            if (!role || !termsAccepted) {
+              return done(null, {
+                status: 400,
+                ...error(!role ? "role_not_authorized" : "terms_required", {}),
+                type: 3,
+              });
+            }
+
+            try {
+              user = await repo.store({
+                b: {
+                  name: googleNameForRole(role),
+                  professional_first_name:
+                    role === "psicologo" ? googleProfessionalName.firstName : undefined,
+                  professional_last_name:
+                    role === "psicologo" ? googleProfessionalName.lastName : undefined,
+                  email,
+                  avatar: googleAvatar,
+                  provider: "google",
+                  role,
+                  terms_accepted: termsAccepted,
+                  adult_confirmed: adultConfirmed,
+                  terms_version: termsVersion,
+                  analytics_visitor_id: analyticsVisitorId,
+                  analytics_session_id: analyticsSessionId,
+                },
+              });
+            } catch (storeError) {
+              if (storeError instanceof LegalError)
+                return done(null, {
+                  status: storeError.status,
+                  ...error(storeError.code),
+                  type: 3,
+                });
+              if (!isPrismaErrorCode(storeError, "P2002")) throw storeError;
+              user = await repo.findByEmail({ b: { email } });
+            }
+          } else {
+            user = await repo.reactivateExpiredSuspension(user);
+
+            if (!user.active) {
+              return done(null, inactiveUserResponse());
+            }
+
+            const profileUpdate: { name?: string; avatar?: string | null; provider?: string } = {};
+
+            const userGoogleName = googleNameForRole(user.role);
+
+            if (
+              (googleName || user.role === "psicologo") &&
+              (!user.name || user.provider === "google")
+            ) {
+              profileUpdate.name = userGoogleName;
+            }
+
+            if (googleAvatar && !user.avatar) {
+              profileUpdate.avatar = googleAvatar;
+            }
+
+            if (user.provider !== "google") {
+              profileUpdate.provider = "google";
+            }
+
+            if (Object.keys(profileUpdate).length > 0 && user.id) {
+              user = await repo.update({
+                p: { id: user.id },
+                b: profileUpdate,
+                auth: user,
+              });
+            }
+
+            if (
+              user?.id &&
+              user.role === "psicologo" &&
+              (googleProfessionalName.firstName || googleProfessionalName.lastName)
+            ) {
+              await prisma.psychologist_profile.updateMany({
+                where: {
+                  user_id: user.id,
+                  deleted: false,
+                  OR: [
+                    { professional_first_name: null },
+                    { professional_first_name: "" },
+                    { professional_last_name: null },
+                    { professional_last_name: "" },
+                  ],
+                },
+                data: {
+                  professional_first_name: googleProfessionalName.firstName || undefined,
+                  professional_last_name: googleProfessionalName.lastName || undefined,
+                },
+              });
+            }
           }
 
-          if (
-            payload.intent !== "delete_account_google_reauth" ||
-            payload.device_id !== device_id ||
-            !payload.user_id ||
-            !payload.email
-          ) {
-            return done(null, {
-              status: 400,
-              ...error("account_delete_google_reauth_invalid", {}),
-              type: 3,
-            });
-          }
-
-          if (payload.email.toLowerCase() !== email.toLowerCase()) {
-            return done(null, {
-              status: 400,
-              ...error("account_delete_google_reauth_email_mismatch", {}),
-              type: 3,
-            });
-          }
-
-          let reauthUser = await repo.findByEmail({ b: { email: payload.email } });
-
-          if (
-            !reauthUser ||
-            reauthUser.id !== payload.user_id ||
-            reauthUser.provider !== "google"
-          ) {
+          if (!user)
             return done(null, {
               status: 404,
-              ...error("account_not_found", {}),
+              ...error("not_found", {}),
               type: 3,
             });
-          }
-
-          reauthUser = await repo.reactivateExpiredSuspension(reauthUser);
-
-          if (!reauthUser.active) {
-            return done(null, inactiveUserResponse());
-          }
-
-          const now = new Date();
-          await prisma.user_background.create({
-            data: {
-              user_id: reauthUser.id!,
-              type: "account_delete_reauth",
-              device_id,
-              data: {
-                email,
-                provider: "google",
-                verified_at: now.toISOString(),
-                expires_at: new Date(now.getTime() + 10 * 60 * 1000).toISOString(),
-              },
-            },
-          });
-
-          reauthUser = await repo.hidrate(reauthUser, device_id);
-
-          return done(null, {
-            ...msg("account_delete_google_reauth_success", {}),
-            data: reauthUser,
-          });
-        }
-
-        let user = await repo.findByEmail({ b: { email } });
-        const isRegistrationIntent = intent === "register" || (Boolean(role) && termsAccepted);
-
-        if (!user) {
-          if (!isRegistrationIntent) {
-            return done(null, {
-              status: 404,
-              ...error("account_not_registered", {}),
-              type: 3,
-            });
-          }
-
-          if (!role || !termsAccepted) {
-            return done(null, {
-              status: 400,
-              ...error(!role ? "role_not_authorized" : "terms_required", {}),
-              type: 3,
-            });
-          }
-
-          try {
-            user = await repo.store({
-              b: {
-                name: googleNameForRole(role),
-                professional_first_name:
-                  role === "psicologo" ? googleProfessionalName.firstName : undefined,
-                professional_last_name:
-                  role === "psicologo" ? googleProfessionalName.lastName : undefined,
-                email,
-                avatar: googleAvatar,
-                provider: "google",
-                role,
-                terms_accepted: termsAccepted,
-                terms_version: termsVersion,
-                analytics_visitor_id: analyticsVisitorId,
-                analytics_session_id: analyticsSessionId,
-              },
-            });
-          } catch (storeError) {
-            if (!isPrismaErrorCode(storeError, "P2002")) throw storeError;
-            user = await repo.findByEmail({ b: { email } });
-          }
-        } else {
-          user = await repo.reactivateExpiredSuspension(user);
 
           if (!user.active) {
             return done(null, inactiveUserResponse());
           }
 
-          const profileUpdate: { name?: string; avatar?: string | null; provider?: string } = {};
+          user = await repo.hidrate(user, device_id);
 
-          const userGoogleName = googleNameForRole(user.role);
-
-          if (
-            (googleName || user.role === "psicologo") &&
-            (!user.name || user.provider === "google")
-          ) {
-            profileUpdate.name = userGoogleName;
-          }
-
-          if (googleAvatar && !user.avatar) {
-            profileUpdate.avatar = googleAvatar;
-          }
-
-          if (user.provider !== "google") {
-            profileUpdate.provider = "google";
-          }
-
-          if (Object.keys(profileUpdate).length > 0 && user.id) {
-            user = await repo.update({
-              p: { id: user.id },
-              b: profileUpdate,
-              auth: user,
-            });
-          }
-
-          if (
-            user?.id &&
-            user.role === "psicologo" &&
-            (googleProfessionalName.firstName || googleProfessionalName.lastName)
-          ) {
-            await prisma.psychologist_profile.updateMany({
-              where: {
-                user_id: user.id,
-                deleted: false,
-                OR: [
-                  { professional_first_name: null },
-                  { professional_first_name: "" },
-                  { professional_last_name: null },
-                  { professional_last_name: "" },
-                ],
-              },
-              data: {
-                professional_first_name: googleProfessionalName.firstName || undefined,
-                professional_last_name: googleProfessionalName.lastName || undefined,
-              },
-            });
-          }
-        }
-
-        if (!user)
+          return done(null, {
+            ...msg("login_success", {}),
+            data: user,
+          });
+        } catch (err) {
+          console.error(
+            "[GOOGLE_AUTH] Falha inesperada na autenticação.",
+            toSafeErrorLog(err, "GoogleAuthError"),
+          );
           return done(null, {
             status: 404,
-            ...error("not_found", {}),
+            ...error("google_unexpected_error", {}),
             type: 3,
           });
-
-        if (!user.active) {
-          return done(null, inactiveUserResponse());
         }
-
-        user = await repo.hidrate(user, device_id);
-
-        return done(null, {
-          ...msg("login_success", {}),
-          data: user,
-        });
-      } catch (err) {
-        console.error(
-          "[GOOGLE_AUTH] Falha inesperada na autenticação.",
-          toSafeErrorLog(err, "GoogleAuthError"),
-        );
-        return done(null, {
-          status: 404,
-          ...error("google_unexpected_error", {}),
-          type: 3,
-        });
-      }
-    },
-  ),
-);
+      },
+    ),
+  );
+}
 
 // Estratégia JWT
 const jwtOptions = {
