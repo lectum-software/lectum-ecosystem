@@ -67,6 +67,11 @@ escrita em dados publicados foi executado.
 - Envs: `R2_TO_STREAM_STARTUP_MIGRATION` é opcional e tem fallback seguro `auto`; em homologação
   publicada roda o lote de startup, em produção não roda sem opt-in explícito. O backend precisa
   manter as envs Stream já existentes configuradas; isso não é uma nova exigência deste deploy.
+  Complemento 2026-09-12: em runtime publicado, a flag backend legada
+  `CLOUDFLARE_STREAM_ENABLED` nao desativa mais a configuracao; se as credenciais obrigatorias
+  estiverem ausentes ou invalidas, `/ready` deve retornar 503 em vez de deixar uploads de video
+  falharem apenas no composer.
+
 - Compatibilidade entre versões: frontend novo sempre chama Stream; backend novo recusa legado de
   vídeo. Frontend antigo que tentar R2 para vídeo recebe erro público seguro em vez de criar objeto.
 - Ordem: publicar backend e frontend em `homolog`, validar `/health`, `/ready`, `/ping`, `/version`

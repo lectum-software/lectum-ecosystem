@@ -1932,3 +1932,23 @@ Uma task só pode ser marcada como concluída quando:
   `pnpm --dir backend video:migrate-r2-to-stream -- --dry-run --limit=5` e depois
   `pnpm --dir backend video:migrate-r2-to-stream -- --apply --confirm=homolog --limit=5`, repetindo
   lotes até zerar candidatos e sem apagar origens/capas R2.
+
+
+## Correcao operacional em 2026-09-12: Stream obrigatorio em runtime publicado
+
+- Ajuste pos-feedback do erro de resposta com midia: a captura anexada foi usada somente como
+  evidencia visual do composer mobile; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Como novos videos nao podem mais cair para R2, o backend publicado passa a tratar Cloudflare Stream
+  como dependencia obrigatoria independentemente da flag legada `CLOUDFLARE_STREAM_ENABLED`. Em
+  local/CI a flag continua controlando opt-in; em homologacao/producao, `/ready` falha se as
+  credenciais Stream obrigatorias estiverem ausentes ou invalidas.
+- O frontend mantem o fluxo Stream obrigatorio para video, mas deixa de transformar o erro semantico
+  `video_stream_unavailable` em mensagem generica de conexao no upload de midia.
+- Nao ha schema/migration, env obrigatoria nova, package novo, mock, seed, reset ou limpeza de dados.
+  As envs Stream ja existentes continuam necessarias para ambientes publicados.
+- Criterios de aceite:
+  - [x] Runtime publicado ignora a flag backend legada falsa e usa Stream quando as credenciais estao completas.
+  - [x] Runtime publicado marca readiness indisponivel quando a configuracao Stream obrigatoria esta incompleta.
+  - [x] Composer nao acusa conexao do usuario quando o backend informa indisponibilidade semantica do Stream.
+  - [x] Documentacao e ADR registram o impacto operacional sem expor valores de segredo.
+- Validacoes locais executadas em 2026-09-12: focused Stream backend, focused limites frontend, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `pnpm check:version`. Versao sincronizada: 0.1.372.

@@ -390,11 +390,13 @@ Templates/shells devem viver em `frontend/src/templates`.
   uploads, status e exclusão permanecem sob autenticação obrigatória.
 - Safari/iPhone usa HLS nativo; Chrome/Android/Admin usa `hls.js` quando MSE está disponível. Em
   nenhum caso o download/original é habilitado pelo token.
-- O backend precisa manter a configuração Stream ativa para upload, associação e playback. A flag
-  pública de upload não controla mais a escolha de transporte: novos vídeos sempre dependem do
-  Stream. Rollback de escrita não deve recriar fallback R2; se o Stream publicado ficar indisponível,
-  bloquear temporariamente novos vídeos é mais seguro do que gerar arquivos originais em R2. Nunca
-  apagar ativos Stream ou objetos R2 no rollback.
+- O backend precisa manter a configuracao Stream ativa para upload, associacao e playback. A flag
+  publica de upload nao controla mais a escolha de transporte: novos videos sempre dependem do
+  Stream. Em runtime publicado, a flag backend legada `CLOUDFLARE_STREAM_ENABLED` nao pode
+  desativar essa dependencia; `/ready` deve falhar se a configuracao Stream obrigatoria estiver
+  incompleta. Rollback de escrita nao deve recriar fallback R2; se o Stream publicado ficar
+  indisponivel, bloquear temporariamente novos videos e mais seguro do que gerar arquivos originais
+  em R2. Nunca apagar ativos Stream ou objetos R2 no rollback.
 - O backfill de referências R2 existentes pertence à TASK-165. A partir de 2026-09-12, depois do
   inventário e da decisão ADR-0497, o backend dispara no boot de **homologação** um lote em
   background de R2 -> Stream com lock transacional, referência determinística e sem apagar R2; a API

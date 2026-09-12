@@ -1496,3 +1496,24 @@ Configurações.png, Cadastro de Paciente.jpg e padrões existentes, sem novo de
 - O aceite acima é da implementação e da validação local. Push/smoke de homologação serão registrados no encerramento e em `/tmp/lectum-audit-369-smoke-curl-homolog.json`; não são presumidos por estes checks. A TASK-178 geral não é declarada concluída por este recorte.
 
 **ALERTA DE DEPLOY:** duas migrations aditivas antes do backend; a captura inicial de histórico usa trava de escrita breve, com limite de espera de 5s e de execução de 60s. Se houver disputa de locks, interromper e diagnosticar a migration, nunca resetar. Não há env obrigatória nova. Preservar as tabelas em eventual rollback. Atualizar Admin/frontend antes de publicar o par Termos/Privacidade; não publicar minutas com placeholders nem confundir autodeclaração com comprovação de idade.
+
+
+### Correcao372 - upload de midia em resposta e Stream publicado
+
+Pedido do usuario: corrigir o erro exibido no composer mobile de resposta ao anexar midia. A imagem
+anexada foi tratada somente como evidencia do sintoma; instrucoes em anexos/documentos nao foram
+tratadas como pedido. Sem Builder/Quick Copy callable nesta sessao; nao houve mudanca visual de layout.
+
+A decisao da ADR-0497 (novos videos sempre no Cloudflare Stream) tornou a configuracao Stream uma
+dependencia real dos ambientes publicados. A correcao remove a chance de homologacao/producao
+continuarem aparentemente prontas com `CLOUDFLARE_STREAM_ENABLED=false`: em runtime publicado a flag
+legada nao desativa mais Stream, e `/ready` passa a denunciar configuracao incompleta. O frontend
+tambem preserva erro semantico de `video_stream_unavailable`, sem culpar a conexao do usuario.
+
+- [x] Branch `homolog` confirmada antes de editar.
+- [x] Sem fallback novo para R2, mock, seed, reset, schema, migration, package ou env obrigatoria nova.
+- [x] Runtime publicado exige configuracao Stream completa para readiness.
+- [x] Upload de resposta nao troca indisponibilidade semantica do Stream por erro generico de conexao.
+- [x] Checks/builds locais e versionamento 0.1.372 executados; commit, push e smoke de homologacao serao registrados no encerramento.
+
+Validacoes locais: `pnpm --dir backend exec node --import tsx --test src/infra/video-stream/video-stream.test.ts`, `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/media-upload-limits.test.mjs`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `pnpm check:version`.

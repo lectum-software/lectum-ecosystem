@@ -49,9 +49,19 @@ const createConfig = (): VideoStreamConfig => {
 };
 
 describe("Cloudflare Stream configuration", () => {
-  it("fica desabilitada por padrão e falha fechada quando incompleta", () => {
+  it("fica desabilitada por padrao local e obrigatoria em runtime publicado", () => {
     assert.equal(isVideoStreamEnabled({}), false);
+    assert.equal(isVideoStreamEnabled({ CLOUDFLARE_STREAM_ENABLED: "true" }), true);
+    assert.equal(isVideoStreamEnabled({ CLOUDFLARE_STREAM_ENABLED: "false" }), false);
+    assert.equal(
+      isVideoStreamEnabled({ CLOUDFLARE_STREAM_ENABLED: "false", NODE_ENV: "production" }),
+      true,
+    );
     assert.equal(getVideoStreamConfig({ CLOUDFLARE_STREAM_ENABLED: "true" }), null);
+    assert.equal(
+      getVideoStreamConfig({ CLOUDFLARE_STREAM_ENABLED: "false", NODE_ENV: "production" }),
+      null,
+    );
   });
 
   it("aceita configuração completa e converte origens em hostnames", () => {
@@ -78,6 +88,24 @@ describe("Cloudflare Stream configuration", () => {
     ]);
     assert.equal(config.playbackTtlSeconds, 1_800);
     assert.equal(getVideoStreamMaxDurationSeconds(env), 720);
+  });
+
+  it("ignora a flag legada desligada quando o runtime publicado tem credenciais completas", () => {
+    const { pem } = createSigningMaterial();
+    const config = getVideoStreamConfig({
+      CLOUDFLARE_STREAM_ACCOUNT_ID: "account_123",
+      CLOUDFLARE_STREAM_API_TOKEN: "private-api-token",
+      CLOUDFLARE_STREAM_CUSTOMER_CODE: "customer_code_123",
+      CLOUDFLARE_STREAM_ENABLED: "false",
+      CLOUDFLARE_STREAM_SIGNING_KEY_ID: "signing_key_123",
+      CLOUDFLARE_STREAM_SIGNING_PRIVATE_KEY_BASE64: Buffer.from(pem).toString("base64"),
+      CLOUDFLARE_STREAM_WEBHOOK_SECRET: "webhook-secret",
+      NODE_ENV: "production",
+      WEB_URL: "https://homolog.lectum.com.br",
+    });
+
+    assert.ok(config);
+    assert.deepEqual(config.allowedOrigins, ["homolog.lectum.com.br"]);
   });
 });
 

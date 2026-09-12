@@ -22,8 +22,14 @@ export type VideoStreamConfig = {
 
 const enabledValues = new Set(["1", "true", "yes"]);
 
-export const isVideoStreamEnabled = (env: NodeJS.ProcessEnv = process.env) =>
-  enabledValues.has(env.CLOUDFLARE_STREAM_ENABLED?.trim().toLowerCase() ?? "");
+export const isVideoStreamEnabled = (env: NodeJS.ProcessEnv = process.env) => {
+  // ADR-0497 encerrou o fallback R2 para novos videos. Em runtime publicado,
+  // Stream passa a ser dependencia obrigatoria mesmo se a flag legada estiver
+  // ausente ou com valor falso; a flag permanece como opt-in apenas em local/CI.
+  if (isPublishedRuntime(env.NODE_ENV)) return true;
+
+  return enabledValues.has(env.CLOUDFLARE_STREAM_ENABLED?.trim().toLowerCase() ?? "");
+};
 
 const safeIdentifier = (value: string | undefined, max = 128) => {
   const normalized = value?.trim() ?? "";

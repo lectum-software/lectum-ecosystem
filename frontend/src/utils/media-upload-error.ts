@@ -54,6 +54,10 @@ export const resolveMediaUploadError = (error: unknown) => {
 
   if (apiSizeLimitMessage) return apiSizeLimitMessage;
 
+  if (code === "video_stream_unavailable") {
+    return "O envio de v\u00eddeo est\u00e1 indispon\u00edvel no momento. Tente novamente em instantes.";
+  }
+
   const message = safeApiMessage || "Não foi possível anexar a mídia agora. Tente novamente.";
   const normalized = message.toLowerCase();
 
