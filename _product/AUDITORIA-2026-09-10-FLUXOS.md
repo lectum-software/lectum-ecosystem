@@ -233,3 +233,13 @@ após publicação,sem mutação.26cenários PostgreSQL isolado cobrem transaç�
 regra e ausência de roubo tardio, gravação/reload e restauração da ordem; Cancelar/Salvar
 na regra temporária aprovados. Regra original preservada. Remoção de QA359 aguarda
 confirmação manual pois a aba ficou sem resposta no diálogo; limpeza ainda não atestada.
+
+360: leitura normal do indicador de ações no Admin apósreload/preset7d aprovada;
+backend/frontend/Admin360 e health/ready200.14casos de cálculo/buildQuality reais,
+inclusiveJScompilado; sem SQL/provider/telemetria simulada ou eventos publicados de teste.
+
+
+C4-psicólogo361:12casos de mapper/agregador real seminfra aprovados;sem alteração dequeries,
+período,autorização ou fórmula deordenação. Leitura normal QA antesdeploy registrada;
+zero elegível não foi fabricado em homolog. C4-paciente permanece em aberto separadamente.
+359:cancelamento manual liberou aba;2regras presentes,limpezaQA359 ainda não confirmada.

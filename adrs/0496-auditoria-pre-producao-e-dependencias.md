@@ -1167,3 +1167,17 @@ esta decisão o explicita sem mudar a base existente. Preservar sessionKey, unav
 arredondamento, eventos brutos e outros consumidores de actionSessionKeys. Não usar
 clamp100 para encobrir população divergente. Validação pura do helper e buildQuality,
 sem provider/DB/HTTP; não atestar ocorrências no ambiente publicado sem evidência.
+
+
+### Contagens elegíveis361 — decisão prévia
+
+C4-psicólogo: chave ausente nos mapas gerados por consultas bem-sucedidas significa
+zero relações elegíveis, não indisponibilidade nem prova de legado sem cobertura.
+Usar valueFromMap existente apenas para comentários/salvamentos do mapper de post.
+Extrair esse mapper puro do orquestrador para post-publication.ts, mantendo reexport,
+tipos e helpers existentes; direção única e testes sem infraestrutura/credenciais.
+Nenhuma nova camada genérica ou consulta. Não transformar exceção de query em zero.
+Preservar período da coorte de publicações, não acrescentar datas a suas interações.
+Uma mudança temporal/um fallback legado exige decisão separada e sinal de cobertura;
+não inferir requisitos pelo vazio. Ranking mantém fórmula, com valores corrigidos.
+O caminho de paciente usa população temporal distinta e permanece separado na pendência.

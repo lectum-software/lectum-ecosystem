@@ -2211,3 +2211,34 @@ pela ferramenta não aplicaram recorte custom; não contar essa tentativa como f
 funcional nem como defeito do produto. Baselineválido é o preset7d selecionado, com
 captura DOM mínima sem pessoas/cookies (/tmp/lectum-task178-action-rate-360/browser-before.json).
 Nenhum evento fabricado nem acesso ao banco publicado. Publicação360 pendente.
+
+360/15147caa:push concluído;smoke5/5 às01:46:53UTC12/09,backend/front/Admin360,
+health/ready200,Nextversions no-store/noindex. /tmp/lectum-audit-360-smoke-curl-homolog.json;
+rollouts001–003registram convergência gradual, sem indisponibilidade de saúde observada.
+14casos também passaram noJScompilado real (/tmp/lectum-360-action-rate-compiled.log).
+ApósreloadAdmin360,reaplicado7d06–12/09:16,6%, igual à leitura antes, sem erro observado.
+Esse exemplo não prova impacto nos registros publicados, só leitura normal; interseção
+foi demonstrada por cálculos reais unitários, não por produção artificial de eventos.
+
+
+## Contagens elegíveis361
+
+C4-psicólogo:consulta bem-sucedida sem relações retorna zero, sem contador agregado alternativo.
+Período continua filtrando criação das publicações; comentários/salvamentos semdatas,
+exclusões existentes preservadas. Paciente é caminho separado ainda pendente.
+Mapper puro extraído com reexport na fachada, sem bootstrap de banco nos testes.
+12testes reais passaram (baseline5pass/7fail), também noJScompilado;checkglobal
+1257testes/1251pass/0fail/6skipsdrawtext;buildPrisma/TS/Biome aprovado.
+LateralGauss37arquivos:20integrais/17parciais,3979/8983linhas;19integrais comhash
+atual conferido,publications.tsbaseline não creditado como versão posterior ao patch.
+Relatório/readlist em /tmp/lectum-task178-period-counts-361. Não é ampliação certificada
+para toda aplicação nem prova de dados afetados em homolog. LeituraBrowserQA antes360:
+1comentário e1salvamento no post, nenhuma mutação. Publicação361 ainda pendente.
+
+359:usuário cancelou a confirmação nativa, aba voltou a responder e asduasregras
+continuaram presentes. Falha de controle do diálogo pela ferramenta,não travamento
+da aplicação demonstrado. Limpeza manual só QA359 solicitada e ainda não comprovada.
+
+361 revisão independente:3fontes focais integrais646linhas,4integrais incluindo helper,
+hashes atuais conferidos. Extração muda somente2expressões;wiring/reexport/queries e
+score preservados por fonte/diff. Unitários não executam o orquestrador async/HTTP.

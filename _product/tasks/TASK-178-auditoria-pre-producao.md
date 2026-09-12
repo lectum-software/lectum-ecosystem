@@ -1136,10 +1136,45 @@ fabricar números; testes puros reais do cálculo/buildQuality, não mocks de AP
 - [x] Ausência de base continua indisponível; zero observado e arredondamento preservados.
 - [x] Períodos atual/anterior e demais métricas preservados por testes focais reais.
 - [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
-- [ ] Commit/push e cinco GETs de smoke de homologação registrados.
+- [x] Commit/push e cinco GETs de smoke de homologação registrados.
 
 360:14testes puros aprovados (baseline7pass/7fail), incluindo56combinações de conjuntos;
 checkglobal1245testes/1239pass/6skipsdrawtext preexistentes; backendbuild aprovado.
 Prisma generate/TypeScript/Biome incluídos. Nenhuma migration necessária. Revisão
 independente de3fontes completas e hashes conferidos,sem regressão concreta identificada.
 Leitura normal do Admin359 em7dias06–12/09:16,6%; não é prova de ocorrência acima de100.
+
+360/15147caa: push concluído; smoke5/5 às01:46:53UTC12/09(11/09 local), backend/frontend/
+Admin360 e health/ready200. Nextversions no-store/noindex. BrowserAdmin apósreload e
+reaplicação7d06–12/09 mostrou16,6%sem erro; mesmo valor de antes, portanto esse exemplo
+não demonstra população divergente no ambiente publicado. Os14casos também passaram
+no JavaScript compilado real. Última prova privada de vídeo segue338; não inferir360.
+
+
+### Continuação361 — zero elegível nas publicações do psicólogo
+
+C4-psicólogo: ausência de relações elegíveis em consulta bem-sucedida deve gerar zero,
+não substituir a fonte pelos contadores persistidos do post. Reutilizar valueFromMap.
+O período atual filtra criação das publicações; comentários/salvamentos são consultados
+sem datas. Preservar essa semântica, a exclusão de comentários do autor e de relações
+excluídas, queries, ranking, filtros, paginação, sources e contrato. Não generalizar
+implicitamente para publicações do paciente (consulta distinta, item C4-paciente aberto).
+Extrair apenas o mapper puro de post para módulo adjacente, preservando seu export na
+fachada; testar a implementação real sem importar/bootstrap de repository/DB.
+Backend independente, sem UI, migration, env, package ou reparo de dados históricos.
+Rollback apenas de código; leituras/ordenação derivadas podem mudar pelos valores corrigidos.
+
+- [x] Zero elegível e valor positivo preservam a mesma fonte de comentários/salvamentos.
+- [x] Mapper real, contrato e campos não afetados cobertos por testes focais.
+- [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
+- [ ] Commit/push, versões e smoke normal publicados registrados.
+
+361:12testes reais de mapper/agregador, baseline5pass/7fail e correção12pass, inclusive
+JavaScript compilado. Checkglobal1257testes/1251pass/6skipsdrawtext preexistentes,
+backendbuild aprovado. Extração sem alteração de queries/score/replymapper. Antes em
+homolog360:post QA com1comentário/1salvamento; apenas leitura, sem reproduzir erro por mutação.
+
+359 atualização do diálogo: usuário confirmou que viu a confirmação e cancelou.
+A aba voltou a responder e manteve as duas regras. Não é prova de travamento da aplicação;
+o diálogo não estava acessível pela ferramenta. Solicitada limpeza manual apenas QA359,
+ainda não confirmada. Ordem original/texto original preservados.

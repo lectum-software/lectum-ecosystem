@@ -273,10 +273,13 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 151. **Regras pelo teclado:** controles Subir/Descer permitem ordenar sem depender de arrastar.
 152. **Envios sobrepostos:** regras bloqueiam novas ações durante todo o salvamento; falha parcial exige consultar o que foi realmente salvo.
 153. **Formulários de regras:** campos e cancelamento ficam protegidos até o envio terminar.
-359: publicada; teclado, foco, bloqueios e gravação conferidos no Admin. Remoção do item temporário aguarda confirmação manual na aba sem resposta.
+359: publicada; teclado, foco, bloqueios e gravação conferidos no Admin. O usuário cancelou o diálogo nativo e liberou a aba; limpeza do item temporário ainda não confirmada.
 
 154. **Taxa de ações:** conta apenas sessões pertencentes à base do indicador, evitando percentuais inflados.
-360: 14 testes focais, check global e build aprovados; publicação pendente.
+360: publicada; 14 testes focais, check global, build e leitura do indicador no Admin aprovados.
+
+155. **Contagens das publicações:** ausência de comentários ou salvamentos elegíveis não reaproveita totais antigos no detalhe do psicólogo.
+361: correção local validada; publicação pendente.
 
 ## Ainda pendente
 
