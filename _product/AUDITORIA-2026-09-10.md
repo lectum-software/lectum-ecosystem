@@ -260,7 +260,10 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 
 146. **Mapas do Admin:** corrigida uma chave repetida que podia mostrar a contagem de uma região em outras duas.
 
-356: testes e comparação local aprovados; aguardando publicação.
+356: publicada e mapa conferido; testes locais preservam a associação correta por região.
+
+147. **Mensagem de erro das opções de edição:** não informa mais que o perfil inteiro falhou quando apenas os catálogos não carregaram.
+357: testes e comparação móvel/desktop aprovados; publicação pendente.
 
 ## Ainda pendente
 

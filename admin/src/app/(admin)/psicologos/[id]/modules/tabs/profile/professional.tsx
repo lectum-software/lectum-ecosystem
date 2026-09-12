@@ -9,9 +9,10 @@ import { useAdminPsychologistUpdateProfessionalData } from "@/api/callers/psycho
 import { useAdminSettingsCatalogs } from "@/api/callers/settings";
 import { resolveApiError } from "@/api/handle";
 import type { AdminPsychologistDetail } from "@/api/req/psychologists";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { SelectController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
-import { Badge, ErrorState } from "../../components/shared";
+import { Badge } from "../../components/shared";
 import {
   EMPTY_SELECT_OPTION,
   getStaticOptionLabel,
@@ -368,7 +369,11 @@ export const ProfileProfessionalEditForm = ({
     <FormProvider {...form}>
       <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         {catalogError ? (
-          <ErrorState message={catalogError} onRetry={() => void catalogsQuery.refetch()} />
+          <AdminQueryErrorState
+            message={catalogError}
+            onRetry={() => void catalogsQuery.refetch()}
+            title="Não foi possível carregar as opções de edição"
+          />
         ) : null}
         <SelectController<ProfileProfessionalDataFormValues>
           disabled={disabled}

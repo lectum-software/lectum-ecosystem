@@ -1119,3 +1119,9 @@ componentes reais; a colisão reproduzida localmente não comprova dados afetado
 356:base de176geometrias preservada,12testes passados,pares móveis/desktop revisados.
 QuickCopy listado pelo Builder,mas leitura do recurso recusada por espaço divergente;
 fallback de protótipos locais documentado. Zero mudanças territoriais/de negócio/API.
+
+### Contexto de erro357
+
+Utilizar o componente compartilhado AdminQueryErrorState diretamente no erro de catálogos,
+com título específico. ErrorState do detalhe continua reservado à falha de carregar o
+psicólogo. Nenhuma alteração de refetch, tratamento seguro de erro ou persistência.

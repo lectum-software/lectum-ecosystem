@@ -1034,9 +1034,29 @@ referências locais e componentes reais usados, sem código gerado como fonte fi
 - [x] Contagem nominal destaca somente a região correspondente nos dois mapas.
 - [x] Geometria, identificadores originais e origem desconhecida preservados.
 - [x] Contratos, Browser local móvel/desktop e check/build registrados.
-- [ ] Smoke e conferência publicada356 registrados.
+- [x] Smoke e conferência publicada356 registrados.
 
 355/5f595dac:smoke5/5 às23:51:58UTC11/09;backend/front/Admin355,health/ready200.
 Admin móvel publicado:resumo22sem classificação incompleta,filhos0/2/9/10/1 preservados.
 356:12contratos aprovados (baseline5pass/7fail),check1204/1198pass/6skips,buildAdmin aprovado.
 Pares Browser390×844/991×964:mesma geometria/layout,somente duasmarcações indevidas removidas.
+
+### Continuação357 — contexto do erro de catálogos
+
+A348-02: falha ao carregar as opções do formulário profissional usa título de falha do
+perfil inteiro, embora o perfil já esteja carregado. Reusar AdminQueryErrorState com
+contexto de opções de edição; preservar mensagem sanitizada, refetch e formulário.
+Sem nova estrutura, env, API, dados ou dependência. Não provocar indisponibilidade do
+serviço publicado para reproduzir; testar componente/caller e fluxo normal real.
+
+- [x] Erro de catálogo informa opções de edição, sem alegar perda/falha do perfil.
+- [x] Mensagem sanitizada e tentativa novamente preservadas.
+- [x] Contratos, Browser local e build/check aprovados.
+- [ ] Smoke e conferência publicada357 registrados.
+
+356/a184a563:5GETs aprovados em12/09 às00:03:15UTC (11/09 local),trêsapps356,health/ready200.
+Mapa publicado:alternância Estados/Países funcional. Intervalo padrão mudou na virada UTC;
+antes/depois não comparam o mesmo período e não comprovam contagens idênticas.
+357:3contratos AST passados (baseline1pass/2fail),check1207/1201pass/6skipsdrawtext;
+buildAdmin aprovado. Pares390×844/991×964:mesma geometria,apenas título corrigido;
+clique e Enter exercitaram callback unitário real,sem API simulada/nem falha provocada em homolog.

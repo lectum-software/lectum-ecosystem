@@ -202,3 +202,7 @@ Baseline real354:22cliques e breakdown herdado de10. Reteste publicado pendente.
 
 A342-09: publicado e conferido355. DATA01: corrigido356nos dois mapas,12testes reais de
 componentes/dataset e comparação local aprovados;reteste publicado pendente,semdados afetados confirmados no ar.
+
+
+DATA01:publicado356,mapa de tráfego conferido; colisões cobertas nos componentes reais locais.
+A348-02:corrigido357,contratos/callbackunitário/Browserlocal/check/build passados;reteste normal apósdeploy pendente.

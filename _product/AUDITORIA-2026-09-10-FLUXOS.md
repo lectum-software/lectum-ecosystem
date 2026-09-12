@@ -212,3 +212,9 @@ Rota/middleware autenticado não substituídos: cobertura HTTP específica conti
 C12/354:22contratos de deltas e11cenários repository/PG real em imagem imutável aprovados.
 Concorrência de gravação/histórico,omissão de seleções e rollback provados somente no
 laboratório isolado. HTTP autenticado e formulário já obsoleto não equivalem a essa prova.
+
+
+356: mapa publicado de tráfego alternou Estados/Países; intervalo mudou na virada UTC,
+portanto contagens antes/depois não são comparação equivalente. Nenhuma origem alterada.
+357: estado de erro de catálogos com título próprio e callback unitário acessível local;
+refetch/fluxo normal publicado ainda pendentes,não simulado como API nem forçado em homolog.

@@ -331,6 +331,7 @@ admin/pnpm-workspace.yaml	parent;config342;conteudo_integral_sem_truncamento;sem
 admin/postcss.config.mjs	Socrates;admin275;fonte_congelada_integral	dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde	true
 admin/public/logo-icon.svg	Bacon;assets348;inspecao_visual_individual;ICO6frames;report_parent_integral;revisao_composta_XML_estrutural_e_PNGs_embutidos_vistos;305310bytes_base64_nao_lidos_como_texto	6ec042b1a33047c5fe890b189eef43ff4f0eeee0e94a47fb69150961d82645db	true
 admin/public/logo-light.png	Bacon;assets348;inspecao_visual_individual;ICO6frames;report_parent_integral	ed464c01a6b40525d2edac8ce85eec6fd8041521c5deda584b3ba246204daf84	true
+admin/scripts/catalog-error.test.mjs	parent;catalogos357;leitura_integral_fonte_e_delta;contratos_AST_e_componente_local_sem_HTTP	f5a79fd4b44689ec15d1063110f77ce664c7be24ea64b41db242853ab89cffba	false
 admin/scripts/community-edit-form.test.mjs	;parent348;leitura_integral_mais_delta_wrapper_e_resolucao_de_teste	78f5cf516a9331e399681e85fce6d48c3ea67e6872c563acbc377e36d361a72e	false
 admin/scripts/content-distribution.test.mjs	parent;350;autoria_e_revisao_integral;8testes_reais_AST_SSR_sem_API	5ba1825a298141a07d8c4a6b25ac7151d43492f7250c433c7f0260f3da505387	false
 admin/scripts/remove-production-source-maps.mjs	principal;integral	8768250e8f02b26a221d44f4b5983835f0324910175efb0403dc1e8b6b80e263	true
@@ -562,7 +563,7 @@ admin/src/app/(admin)/pacientes/views/dashboard-content.tsx	Socrates;admin275;fo
 admin/src/app/(admin)/pacientes/views/statistics.tsx	Socrates;admin275;fonte_congelada_integral	eff9967ce991078fcd59d93fe09c90945d5619665cc374ac6c6985a059e37ca8	true
 admin/src/app/(admin)/psicologos/[id]/client.tsx	Socrates;admin275;fonte_congelada_integral	d4cce903f7692bdaed94526805e3a9f3961fef002fb7d7fbd63fe470b73dcd79	true
 admin/src/app/(admin)/psicologos/[id]/modules/components/detail-header.tsx	Socrates;admin275;fonte_congelada_integral	bac049a87fdb98c0cf8a5733e301512e41539983f370053acd0c44a3d3464e60	true
-admin/src/app/(admin)/psicologos/[id]/modules/components/shared.tsx	Socrates;admin275;fonte_congelada_integral	81bd437e2e3b5d4ffd5adea6fb0dc7b1a48e7f3f18f301ed2c49ee7dac8ae390	true
+admin/src/app/(admin)/psicologos/[id]/modules/components/shared.tsx	parent;catalogos357;leitura_integral_fonte_e_delta;contratos_AST_e_componente_local_sem_HTTP	81bd437e2e3b5d4ffd5adea6fb0dc7b1a48e7f3f18f301ed2c49ee7dac8ae390	true
 admin/src/app/(admin)/psicologos/[id]/modules/support/config.ts	Socrates;admin275;fonte_congelada_integral	0a16970cb8a8a9a63293098d88afcba0f6a4c91def57a406e8e8ca3a580687fb	true
 admin/src/app/(admin)/psicologos/[id]/modules/support/date-period.tsx	Socrates;admin275;fonte_congelada_integral	25e0e8943d2ee932465ed818464bf7b0339cd97ae2a7909dbfa7a2bef18edbc8	true
 admin/src/app/(admin)/psicologos/[id]/modules/support/formatters.ts	Socrates;admin275;fonte_congelada_integral	ceef106c3ebfe46a4f6da0a0048815d94df648e7a09f3e9503407e03f6e0aca2	true
@@ -580,7 +581,7 @@ admin/src/app/(admin)/psicologos/[id]/modules/tabs/general/metrics.tsx	Socrates;
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/general/status.tsx	Socrates;admin275;fonte_congelada_integral	28caa8a1aa85972e9a04db53e718cadd1febc647aeb09506349c02174fa78266	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/profile/index.tsx	Socrates;admin275;fonte_congelada_integral	eea167a20e1357ab2616e6062d830083daf7d20464454de278dcdc4e58b8adfe	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/profile/personal.tsx	Socrates;admin275;fonte_congelada_integral	06e71b6e96694a90f8bb4688ddee6bf360527a09dea99487977ff87ee5f22e79	true
-admin/src/app/(admin)/psicologos/[id]/modules/tabs/profile/professional.tsx	Socrates;admin275;fonte_congelada_integral | Socrates;A34205_347;baseline_integral_diff_e_testes_integrais;parent_review	ac97dfab721c096e767a45938217fef267fc94ceb7bacb09722491fce5692531	true
+admin/src/app/(admin)/psicologos/[id]/modules/tabs/profile/professional.tsx	parent;catalogos357;leitura_integral_fonte_e_delta;contratos_AST_e_componente_local_sem_HTTP	96b97ce1bfbe47000b98cb87fec0ecec16fce9b21a638243eb50865c44460189	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/publications/accessibility.test.mjs	Socrates;A34205_347;baseline_integral_diff_e_testes_integrais;parent_review	ac6be1e20e2f6fab0b4f4980da4c5d011d2ac8da6315193a5791971a67ad9bec	false
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/publications/index.tsx	Socrates;admin275;fonte_congelada_integral | Socrates;A34205_347;baseline_integral_diff_e_testes_integrais;parent_review	3f398c95526bd7f40caddf18562b8cddd7487a644564eedbf9a7fc35f043750a	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/publications/media.tsx	Socrates;admin275;fonte_congelada_integral	2e39a2fa3493065cb0735e04aa6e09bcf786056ac1c4ead3890db58875486165	true
@@ -648,7 +649,7 @@ admin/src/components/admin-shell/error-splash.tsx	Socrates;admin275;fonte_congel
 admin/src/components/admin-shell/loading-splash.tsx	Socrates;admin275;fonte_congelada_integral	f328a81e8f7a07e62831ea2c91198f9e502efbf4fca511ff13d9ce5618135ecc	true
 admin/src/components/admin-shell/nav.ts	Socrates;admin275;fonte_congelada_integral	b58763ac583813f765e13fa168854e5c1b44b80e936319c15001886705209604	true
 admin/src/components/admin-shell/pagination.tsx	Socrates;admin275;fonte_congelada_integral	b6d941f3fbf6dde05ef7c6297d8b706d098a1778147f0356465b46a2f0ce4eb7	true
-admin/src/components/admin-shell/query-error-state.tsx	Socrates;admin275;fonte_congelada_integral	9e0f751b7c93728358d99e90cc3a1af36bf78ce64f4d0d06acaf9edc04184cff	true
+admin/src/components/admin-shell/query-error-state.tsx	parent;catalogos357;leitura_integral_fonte_e_delta;contratos_AST_e_componente_local_sem_HTTP	9e0f751b7c93728358d99e90cc3a1af36bf78ce64f4d0d06acaf9edc04184cff	true
 admin/src/components/admin-shell/shell.test.mjs	Gauss_parent;menu346;base_integral_e_diff_final	e9c24759277e732d08655ee63f7c18b10e79239cbe9c29575b20d33c5e790100	false
 admin/src/components/admin-shell/shell.tsx	Socrates;admin275;fonte_congelada_integral | Gauss_parent;menu346;base_integral_e_diff_final	2c9ed31a45358c47f1dcb9408b6566cc1b8115dac03ae2fcbc53460f4ddf86b7	true
 admin/src/components/admin-stream-video.tsx	Socrates;admin275;fonte_congelada_integral	2f5124c7de4498d5f888e4cb9cffeb179ba3d98eb7d32b876c3164370a39f04e	true

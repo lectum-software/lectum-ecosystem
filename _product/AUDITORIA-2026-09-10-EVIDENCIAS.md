@@ -2067,3 +2067,23 @@ Artefato:/tmp/lectum-audit-355-smoke-curl-homolog.json. Serviço privado de víd
   Nenhuma dessasorigens sofre a colisão; não afirmar que dados afetados foram vistos no ar.
 - Artefatos:/tmp/lectum-task178-world-map-356. Sem schema/env/package/API alterado.
 - Publicação356 ainda pendente neste registro.
+
+### Publicação356 concluída
+
+a184a563;5GETs públicos em12/09/2026 às00:03:15UTC (11/09 local),backend/front/Admin356,
+health/ready200,Nextno-store/noindex. Tráfego autenticado: alternância Estados/Países funciona.
+Na virada UTC o intervalo padrão mudou de13/08–11/09 para14/08–12/09 e o total121→118;
+as capturas publicadas não são comparação do mesmo intervalo. Não atribuir isso à correção
+cartográfica. Casos de colisão têm prova local, não dados fabricados em homolog.
+Artefatos:/tmp/lectum-audit-356-smoke-curl-homolog.json e /tmp/lectum-task178-world-map-356.
+
+## Contexto de erro de catálogos357
+
+- Leitura integral do formulário profissional, wrapper de erro, componente compartilhado e teste novo.
+- Erro de opções usa AdminQueryErrorState com título específico; ErrorState do perfil permanece.
+- Três contratos estáticos AST do caller real:baseline1pass/2fail,final3pass. Não são teste de HTTP.
+- Componente real no Browser local390×844/991×964:pares antes/depois mostram apenas título diferente,
+  sem deslocamento/overflow. Clique e Enter chamam callback unitário (contador2),não refetch real.
+- Check global1207tests/1201pass/6skipsdrawtext; Adminbuild aprovado.
+- Sem migration,env,dependência,contratoAPI ou mudança de dados. Sem indisponibilidade provocada.
+- Artefatos:/tmp/lectum-task178-catalog-error-357; publicação/reteste normal pendentes.
