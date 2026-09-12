@@ -1167,7 +1167,7 @@ Rollback apenas de código; leituras/ordenação derivadas podem mudar pelos val
 - [x] Zero elegível e valor positivo preservam a mesma fonte de comentários/salvamentos.
 - [x] Mapper real, contrato e campos não afetados cobertos por testes focais.
 - [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
-- [ ] Commit/push, versões e smoke normal publicados registrados.
+- [x] Commit/push, versões e smoke normal publicados registrados.
 
 361:12testes reais de mapper/agregador, baseline5pass/7fail e correção12pass, inclusive
 JavaScript compilado. Checkglobal1257testes/1251pass/6skipsdrawtext preexistentes,
@@ -1178,3 +1178,34 @@ homolog360:post QA com1comentário/1salvamento; apenas leitura, sem reproduzir e
 A aba voltou a responder e manteve as duas regras. Não é prova de travamento da aplicação;
 o diálogo não estava acessível pela ferramenta. Solicitada limpeza manual apenas QA359,
 ainda não confirmada. Ordem original/texto original preservados.
+
+
+### Continuação362 — zero elegível nas publicações do paciente
+
+C4-paciente:preservar as relações carregadas pelo bundle como fonte única de comentários
+e salvamentos, inclusive quando nenhuma é elegível. Diferente do psicólogo, consultas
+destas relações recebem intervalo e excluem autoria/salvamento próprio. Não alterar
+essas consultas, semântica temporal, criação de publicações, views/votos/denúncias,
+compartilhamentos de resposta, agrupadores, ordenação, métricas/sources ou contrato.
+Reusar padrão local `map.get(id) ?? 0` dos demais campos; nenhum helper/camada extra.
+Testar builder puro já existente sem importar repository em runtime. Backend somente,
+sem UI, migration, package, env ou backfill; rollback de código, sem tocar contadores.
+A versão361 deve ter publicação verificada antes do push seguinte.
+
+- [x] Ausência de relações mantém zero real, valores positivos e separação por publicação.
+- [x] Contrato, campos não afetados, agrupadores e ordenação preservados em teste puro.
+- [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
+- [ ] Commit/push, smoke, versões e leitura normal da conta QA registrados.
+
+361/b9c89301 publicado:smoke5/5 às02:07:40UTC12/09,backend/frontend/Admin361,
+health/ready200,Nextversionsno-store/noindex. Leitura normal QA apósreload manteve3itens
+no períodoall;post passou de1para0comentários,1salvamento e demais números iguais.
+Respostas permaneceram iguais. Nenhuma mutação ou interação de teste criada para causar
+essa diferença. Prova do fluxo normal e diferença exibida, não auditoria de todas as
+relações históricas. Serviço privado de vídeo ainda requer comprovação separada.
+
+362:12testes puros passaram,baseline6pass/6fail e final12pass, tambémJScompilado.
+Checkglobal1269testes/1263pass/0fail/6skipsdrawtext;backendbuildPrisma/TS/Biome aprovado.
+Primeira execução parou na documentação:operador de código fora de crases foi marcado
+pelo check deencoding. Corrigido apenasMarkdown, sem enfraquecer verificador; repetição
+integral passou. Sem mutações publicadas. QA antes362:1comentário/0salvamentos.

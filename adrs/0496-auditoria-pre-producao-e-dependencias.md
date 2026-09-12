@@ -1181,3 +1181,13 @@ Preservar período da coorte de publicações, não acrescentar datas a suas int
 Uma mudança temporal/um fallback legado exige decisão separada e sinal de cobertura;
 não inferir requisitos pelo vazio. Ranking mantém fórmula, com valores corrigidos.
 O caminho de paciente usa população temporal distinta e permanece separado na pendência.
+
+
+### Contagens do paciente362 — decisão prévia
+
+C4-paciente mantém a fonte explícita do bundle:ausência de relações retornadas por
+consultas bem-sucedidas vira zero, não contador agregado. O caller utiliza intervalos
+e exclui relações próprias; não espelhar a semântica temporal do psicólogo nem unificar
+queries. O builder já é puro:alterar apenas2fallbacks, sem extração/helper/infra novos.
+Campos restantes e agrupadores/ordenação preservados; contadores históricos não são
+corrigidos ou apagados. Testes tipados do builder real não certificam queries ou E2E.

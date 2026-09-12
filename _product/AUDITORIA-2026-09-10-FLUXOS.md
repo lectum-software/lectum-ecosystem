@@ -243,3 +243,16 @@ C4-psicólogo361:12casos de mapper/agregador real seminfra aprovados;sem altera�
 período,autorização ou fórmula deordenação. Leitura normal QA antesdeploy registrada;
 zero elegível não foi fabricado em homolog. C4-paciente permanece em aberto separadamente.
 359:cancelamento manual liberou aba;2regras presentes,limpezaQA359 ainda não confirmada.
+
+361/b9c89301:smoke5/5,backend/frontend/Admin361 às02:07:40UTC12/09,health/ready200;
+no-store/noindexNext. Apósreload daspublicaçõesQA emall,postcomentários1→0,1salvamento
+e demais métricas preservadas;respostas iguais. Nenhuma mutação publicada para fabricar
+a diferença. Não é prova de integridade de todas as relações ou de serviço privado vídeo.
+
+C4-paciente362:builder puro existente, somente2fallbacks removidos.12testes reais,
+baseline6pass/6fail→12pass, tambémJScompilado.1269testes/1263pass/6skipsdrawtext no
+checkglobal;backendbuildPrisma/TS/Biome aprovado. Repetição integral apósformatar operador
+inline na documentação que ativara checkencoding;nenhum verificador enfraquecido.
+Queries temporais/exclusões próprias preservadas; sem novaextração/package/env/migration.
+QA antes:1comentário/0salvamentos. Fluxo publicado só leitura;sem simular oufabricar eventos.
+Deploy362 pendente,privadovídeo sem nova comprovação. Artefatos /tmp/lectum-task178-patient-counts-362.

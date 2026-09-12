@@ -29,8 +29,8 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C12 | Edição parcial pode regravar campos omitidos a partir de snapshot antigo. | Corrigido/publicado354;22contratos,11cenários PG real;smoke5/5 e ediçãoQA restaurada. Não cobre formulário já obsoleto antes de chegar ao backend. |
 | C13 | Campo chamado cpf_masked retornava todos os dígitos. | Corrigido345 com máscara compartilhada; contratos/build aprovados. Endpoint administrativo; nenhum vazamento público demonstrado. |
 | C15 | Numerador e denominador de taxa de ação usam conjuntos diferentes de sessões. | Corrigido/publicado360 mantendo base de visualizações;14testes puros/check/build e smoke aprovados. Leitura normal Admin conferida; sem ocorrência publicada acima de100 comprovada. |
-| C4-psicólogo | Consulta sem relações elegíveis reutiliza contadores agregados do post. | Corrigido361 localmente;12testes/check/build aprovados,deploy pendente. Período filtra criação das publicações, não todas as interações. |
-| C4-paciente | Zero de relações no intervalo pode virar contagem acumulada. | Fonte; consulta distinta do psicólogo, ainda não alterada nem validada. |
+| C4-psicólogo | Consulta sem relações elegíveis reutiliza contadores agregados do post. | Corrigido/publicado361;12testes/check/build/smoke aprovados. QA:comentários1→0,demais números preservados. Período filtra criação das publicações, não todas as interações. |
+| C4-paciente | Zero de relações no intervalo pode virar contagem acumulada. | Corrigido362 localmente;12testes reais/check/build aprovados,deploy pendente. Consultas temporais e exclusões próprias preservadas. |
 | C5 | Atividade pode incluir publicações anteriores ao intervalo. | Fonte; separar histórico de tráfego e atividade do período. |
 | C6 | Views por conteúdo podem incluir visitas ao perfil. | Fonte; filtrar pelo alvo correto preservando atribuição histórica. |
 | C18 | Limite de consultas CFP não reserva a tentativa antes do efeito externo. | Fonte; tratar concorrência sem chamadas pagas de teste. |

@@ -84,7 +84,7 @@ export const buildPublications = (
           id: "comments",
           label: "Comentários",
           source: "post_reply.post_id",
-          value: commentsByPost.get(post.id) ?? post.replies_count,
+          value: commentsByPost.get(post.id) ?? 0,
         }),
         downvotes: publicationMetric({
           id: "downvotes",
@@ -102,7 +102,7 @@ export const buildPublications = (
           id: "saves",
           label: "Salvamentos",
           source: "post_save.post_id",
-          value: savesByPost.get(post.id) ?? post.saves_count,
+          value: savesByPost.get(post.id) ?? 0,
         }),
         shares: publicationMetric({
           id: "shares",

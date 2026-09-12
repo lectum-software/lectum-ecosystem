@@ -2233,7 +2233,7 @@ LateralGauss37arquivos:20integrais/17parciais,3979/8983linhas;19integrais comhas
 atual conferido,publications.tsbaseline não creditado como versão posterior ao patch.
 Relatório/readlist em /tmp/lectum-task178-period-counts-361. Não é ampliação certificada
 para toda aplicação nem prova de dados afetados em homolog. LeituraBrowserQA antes360:
-1comentário e1salvamento no post, nenhuma mutação. Publicação361 ainda pendente.
+1comentário e1salvamento no post, nenhuma mutação. Publicação361 confirmada abaixo.
 
 359:usuário cancelou a confirmação nativa, aba voltou a responder e asduasregras
 continuaram presentes. Falha de controle do diálogo pela ferramenta,não travamento
@@ -2242,3 +2242,21 @@ da aplicação demonstrado. Limpeza manual só QA359 solicitada e ainda não com
 361 revisão independente:3fontes focais integrais646linhas,4integrais incluindo helper,
 hashes atuais conferidos. Extração muda somente2expressões;wiring/reexport/queries e
 score preservados por fonte/diff. Unitários não executam o orquestrador async/HTTP.
+
+361/b9c89301:smoke5/5,backend/frontend/Admin361 às02:07:40UTC12/09,health/ready200;
+no-store/noindexNext. Apósreload daspublicaçõesQA emall,postcomentários1→0,1salvamento
+e demais métricas preservadas;respostas iguais. Nenhuma mutação publicada para fabricar
+a diferença. Não é prova de integridade de todas as relações ou de serviço privado vídeo.
+
+C4-paciente362:builder puro existente, somente2fallbacks removidos.12testes reais,
+baseline6pass/6fail→12pass, tambémJScompilado.1269testes/1263pass/6skipsdrawtext no
+checkglobal;backendbuildPrisma/TS/Biome aprovado. Repetição integral apósformatar operador
+inline na documentação que ativara checkencoding;nenhum verificador enfraquecido.
+Queries temporais/exclusões próprias preservadas; sem novaextração/package/env/migration.
+QA antes:1comentário/0salvamentos. Fluxo publicado só leitura;sem simular oufabricar eventos.
+Deploy362 pendente,privadovídeo sem nova comprovação. Artefatos /tmp/lectum-task178-patient-counts-362.
+
+362 revisão independente:2fontes focais integrais418linhas,4suportes parciais;
+hashes focais atuais conferidos. Sem regressão bloqueante identificada. Teste começa
+no bundle pronto; datas,exclusões e variante parent_reply conferidos apenas em fonte,
+não em SQL/HTTP. Variante não recebeu cenário dedicado, sem mudança no agrupamento.

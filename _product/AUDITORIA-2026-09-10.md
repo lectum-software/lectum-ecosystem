@@ -279,7 +279,10 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 360: publicada; 14 testes focais, check global, build e leitura do indicador no Admin aprovados.
 
 155. **Contagens das publicações:** ausência de comentários ou salvamentos elegíveis não reaproveita totais antigos no detalhe do psicólogo.
-361: correção local validada; publicação pendente.
+361: publicada; testes/check/build e leitura QA aprovados.
+
+156. **Publicações do paciente:** comentários e salvamentos sem registros elegíveis também permanecem em zero.
+362: testes/check/build aprovados; publicação pendente.
 
 ## Ainda pendente
 
