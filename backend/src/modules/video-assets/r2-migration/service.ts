@@ -47,7 +47,7 @@ export class R2ToStreamMigrationService {
   private readonly migrationRepository = new R2VideoMigrationRepository();
   private readonly videoAssetRepository = new VideoAssetRepository();
 
-  constructor(private readonly provider: CloudflareStreamAdapter) {}
+  constructor(private readonly provider: CloudflareStreamAdapter | null) {}
 
   private async activateProviderAsset(
     candidate: LegacyVideoCandidate,
@@ -55,6 +55,7 @@ export class R2ToStreamMigrationService {
     publicUrl: string,
   ) {
     if (isCloudflareStreamVideoUid(asset.provider_uid)) return asset;
+    if (!this.provider) throw new VideoStreamProviderError("import_video_contract", null);
 
     let createdNow = false;
     let details = await this.provider.findVideoByCreator(asset.id);
@@ -78,6 +79,8 @@ export class R2ToStreamMigrationService {
   }
 
   private async syncProviderAsset(asset: VideoAssetRecord) {
+    if (!this.provider) throw new VideoStreamProviderError("get_video_contract", null);
+
     const details = await this.provider.getVideo(asset.provider_uid);
     const updated = await this.videoAssetRepository.applyProviderUpdate(
       asset,

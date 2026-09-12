@@ -1,5 +1,6 @@
 import { error, msg } from "@/helpers/translate";
 import { notifyPostShared, notifyPostVote } from "@/main/notification/domain-events";
+import { videoStreamUploadRequired } from "@/modules/video-assets/upload-policy";
 import type {
   IPostReportDTO,
   IPostShareDTO,
@@ -55,6 +56,8 @@ export const uploadReplyMedia = async (data: IPostUploadReplyMediaDTO) => {
 
   const key = data.file?.path || data.file?.key;
   const mediaType = mediaTypeFromMime(data.file?.mimetype);
+
+  if (mediaType === "video") return videoStreamUploadRequired();
 
   if (!key?.startsWith("posts/media/") || !mediaType) {
     return {

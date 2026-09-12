@@ -2,6 +2,7 @@ import { error, msg } from "@/helpers/translate";
 import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { notifyNewCommunityPost } from "@/main/notification/domain-events";
 import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
+import { videoStreamUploadRequired } from "@/modules/video-assets/upload-policy";
 import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import { type ModerationResult, moderatePatientText } from "@/utils/content-moderation";
 import {
@@ -470,6 +471,8 @@ export const uploadPostMedia = async (data: ICommunityUploadPostMediaDTO) => {
 
   const key = data.file?.path || data.file?.key;
   const mediaType = mediaTypeFromMime(data.file?.mimetype);
+
+  if (mediaType === "video") return videoStreamUploadRequired();
 
   if (!key?.startsWith("posts/media/") || !mediaType) {
     return {

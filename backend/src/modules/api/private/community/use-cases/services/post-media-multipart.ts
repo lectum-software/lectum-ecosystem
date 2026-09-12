@@ -5,11 +5,16 @@ import {
   abortPublicMultipartUpload,
   completePublicMultipartUpload,
   createPublicMultipartUpload,
+  inspectPublicMultipartUploadSession,
   PublicMultipartInfrastructureError,
   PublicMultipartValidationError,
   uploadPublicMultipartPart,
 } from "@/config/multer/public-multipart";
 import { error, msg } from "@/helpers/translate";
+import {
+  isVideoAssetUploadMimeType,
+  videoStreamUploadRequired,
+} from "@/modules/video-assets/upload-policy";
 import { publicFileUrl } from "@/utils/public-origin";
 import type {
   ICommunityAbortPostMediaMultipartDTO,
@@ -136,15 +141,6 @@ export const initiatePostMediaMultipartUpload = async (
     });
     return invalidUpload();
   }
-  if (size > COMMUNITY_POST_MEDIA_MULTIPART_LIMIT_BYTES) {
-    logMultipartUpload("INITIATE_REJECTED", {
-      ...uploadLogContext,
-      reason: "file_size",
-      sizeBytes: size,
-    });
-    return fileLimitExceeded();
-  }
-
   const mediaType = COMMUNITY_POST_MEDIA_TYPE_BY_MIME.get(mimeType);
   const extension = COMMUNITY_POST_MEDIA_EXTENSION_BY_MIME[mimeType];
   if (!mediaType || !extension) {
@@ -155,6 +151,23 @@ export const initiatePostMediaMultipartUpload = async (
       sizeBytes: size,
     });
     return unexpectedType(mimeType);
+  }
+  if (mediaType === "video") {
+    logMultipartUpload("INITIATE_REJECTED", {
+      ...uploadLogContext,
+      mimeType,
+      reason: "request",
+      sizeBytes: size,
+    });
+    return videoStreamUploadRequired();
+  }
+  if (size > COMMUNITY_POST_MEDIA_MULTIPART_LIMIT_BYTES) {
+    logMultipartUpload("INITIATE_REJECTED", {
+      ...uploadLogContext,
+      reason: "file_size",
+      sizeBytes: size,
+    });
+    return fileLimitExceeded();
   }
 
   try {
@@ -201,6 +214,25 @@ export const uploadPostMediaMultipartPart = async (
     });
     return invalidUpload();
   }
+  try {
+    const session = inspectPublicMultipartUploadSession({
+      ...multipartContext(data),
+      operation: "part",
+      sessionId: normalizeText(data.b.uploadSessionId),
+    });
+    if (isVideoAssetUploadMimeType(session.mimeType)) {
+      logMultipartUpload("PART_REJECTED", {
+        ...uploadLogContext,
+        mimeType: session.mimeType,
+        reason: "request",
+      });
+      return videoStreamUploadRequired();
+    }
+  } catch (uploadError) {
+    const response = knownMultipartFailure(uploadError);
+    if (response) return response;
+    throw uploadError;
+  }
 
   try {
     const uploaded = await uploadPublicMultipartPart({
@@ -237,6 +269,20 @@ export const completePostMediaMultipartUpload = async (
   }
 
   try {
+    const session = inspectPublicMultipartUploadSession({
+      ...multipartContext(data),
+      operation: "complete",
+      sessionId: normalizeText(data.b.uploadSessionId),
+    });
+    if (isVideoAssetUploadMimeType(session.mimeType)) {
+      logMultipartUpload("COMPLETE_REJECTED", {
+        ...uploadLogContext,
+        mimeType: session.mimeType,
+        reason: "request",
+      });
+      return videoStreamUploadRequired();
+    }
+
     const completed = await completePublicMultipartUpload({
       ...multipartContext(data),
       parts: data.b.parts,

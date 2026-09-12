@@ -1875,3 +1875,45 @@ Uma task só pode ser marcada como concluída quando:
   preservando a protecao da rota privada. A conferencia visual autenticada fica para homologacao
   porque nao ha sessao real de psicologo disponivel sem criar mock.
 - Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Correção operacional em 2026-09-12: vídeos sempre no Cloudflare Stream
+
+- Ajuste pós-feedback das TASK-163/TASK-165/TASK-171/TASK-173: vídeos enviados após a implementação
+  do Stream ainda podiam cair no R2 por causa do fallback temporário de provisão inicial. Esse
+  fallback explica por que, na mesma internet, alguns vídeos travavam enquanto outros tocavam bem:
+  vídeos R2 entregam o arquivo original, sem HLS adaptativo/transcodificação do Cloudflare Stream.
+- A captura/vídeo anexado pelo usuário foi tratado somente como evidência do sintoma; instruções em
+  anexos/documentos não foram tratadas como pedido.
+- Inventário read-only em homologação via APIs disponíveis: página/lista de psicólogos com 16 perfis
+  lidos, 11 vídeos de perfil ainda R2 e 5 Stream; feed de comunidades com 10 vídeos de post, 1 R2 e
+  9 Stream; respostas dos posts do feed com 11 vídeos, 2 R2 e 9 Stream.
+- O frontend deixa de consultar flag pública ou fallback para upload de vídeo: apresentação, post e
+  resposta chamam sempre `uploadVideoAsset`/TUS/Stream para MIME `video/*`. Imagens continuam nos
+  transportes R2 existentes.
+- O backend recusa clientes antigos que tentarem enviar vídeo pelos endpoints R2 antes de
+  criar/associar objeto: multipart/serviços respondem `video_upload_stream_required` e endpoints
+  single bloqueiam vídeo no parser de MIME. Leitura de URLs R2 legadas permanece compatível até
+  backfill.
+- O comando `video:migrate-r2-to-stream` passa a permitir `--dry-run` sem provider Stream local para
+  inventário seguro; `--apply` segue exigindo provider real e confirmação explícita do ambiente.
+- Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, limpeza de bucket ou
+  exclusão de objetos. Rollback simples reverte o bloqueio de escrita, mas não deve apagar ativos
+  Stream nem objetos R2.
+- Critérios de aceite:
+  - [x] Novos uploads de vídeo de apresentação, post e resposta não têm fallback frontend para R2.
+  - [x] Endpoints legados backend recusam vídeo antes de gravar/associar R2 e preservam imagens.
+  - [x] Inventário read-only das superfícies de psicólogos e comunidade foi executado sem escrita.
+  - [ ] Migração dos R2 existentes em homologação: pendente de terminal/runtime do backend com
+        credenciais reais de banco/R2/Stream para executar o runbook da TASK-165.
+- Validações locais: testes focados frontend/backend de Stream; `pnpm --dir frontend check`;
+  `pnpm --dir frontend build`; `pnpm --dir backend check`; `pnpm --dir backend build`;
+  `pnpm --dir backend video:migrate-r2-to-stream -- --help`; `pnpm --dir admin check`;
+  `pnpm check:encoding`; `pnpm check:adrs`; `pnpm check:tasks`; `git diff --check`; `pnpm check`;
+  `pnpm version:bump` para `0.1.370`; `pnpm check:version`.
+- A instalação local do backend foi sincronizada com o lockfile via
+  `pnpm --dir backend install --frozen-lockfile` antes da suíte completa, sem alterar manifests.
+- Commit/push e smoke de homologação serão registrados após deploy. O runbook pendente deve rodar
+  no container do backend:
+  `pnpm --dir backend video:migrate-r2-to-stream -- --dry-run --limit=5` e depois
+  `pnpm --dir backend video:migrate-r2-to-stream -- --apply --confirm=homolog --limit=5`, repetindo
+  lotes até zerar candidatos e sem apagar origens/capas R2.

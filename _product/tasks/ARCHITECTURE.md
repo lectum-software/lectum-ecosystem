@@ -377,24 +377,24 @@ Templates/shells devem viver em `frontend/src/templates`.
 - O token Cloudflare é um JWT assinado, não criptografado. Portanto, seu payload técnico pode ser
   decodificado pelo cliente; o UID do provider não é uma credencial e jamais deve ser usado como
   autorização. A segurança vem da assinatura RS256, expiração, allowed origins e decisão do backend.
-- Campos legados (`video_url`, `media_url`) armazenam somente a referência estável Lectum
-  `/api/private/video-assets/:id/playback`. Vídeos R2 antigos seguem legíveis durante rollout.
-- Exceção operacional das TASK-171/TASK-173: enquanto os endpoints legados de vídeo de
-  apresentação, posts e respostas existirem, o frontend pode cair para upload multipart/R2 somente
-  quando a provisão inicial da URL TUS do Stream falhar antes de qualquer byte ser enviado ao
-  provider. A exceção vale para `profile_presentation`, `community_post` e `community_reply`, não
-  mascara erros 400/401/403/413/422 nem falhas de upload/processamento TUS, e deve ser removida
-  após a provisão Stream ficar estável.
+- Campos de vídeo novos (`video_url`, `media_url`) armazenam somente a referência estável Lectum
+  `/api/private/video-assets/:id/playback`. Vídeos R2 antigos seguem legíveis apenas como legado
+  de leitura/migração durante rollout.
+- A partir de 2026-09-12, não existe fallback de escrita de vídeo para R2. O frontend envia todo
+  vídeo de apresentação, post e resposta pelo Cloudflare Stream; se a provisão/upload/processamento
+  do Stream falhar, a operação falha de forma segura e pode ser tentada novamente, sem gravar R2.
+  Os endpoints legados de vídeo recusam clientes antigos com erro público seguro; R2 permanece
+  permitido somente para imagens e para servir origens legadas até a migração TASK-165.
 - O endpoint canônico de emissão é `GET /api/public/video-assets/:id/playback`. O path privado
   persistido é tratado como identificador opaco e alias read-only temporário para compatibilidade;
   uploads, status e exclusão permanecem sob autenticação obrigatória.
 - Safari/iPhone usa HLS nativo; Chrome/Android/Admin usa `hls.js` quando MSE está disponível. Em
   nenhum caso o download/original é habilitado pelo token.
-- A feature flag pública e a flag backend começam desativadas. Rollout: migration/backend →
-  credenciais/signing/webhook/origens → backend flag → frontend flag. Depois que o primeiro ativo
-  Stream for associado, rollback de escrita desliga somente a flag pública; o backend/configuração
-  Stream deve continuar ativo para reproduzir referências existentes. Nunca apagar ativos Stream
-  ou objetos R2 no rollback.
+- O backend precisa manter a configuração Stream ativa para upload, associação e playback. A flag
+  pública de upload não controla mais a escolha de transporte: novos vídeos sempre dependem do
+  Stream. Rollback de escrita não deve recriar fallback R2; se o Stream publicado ficar indisponível,
+  bloquear temporariamente novos vídeos é mais seguro do que gerar arquivos originais em R2. Nunca
+  apagar ativos Stream ou objetos R2 no rollback.
 - O backfill de referências R2 existentes pertence à TASK-165 e nunca roda no boot/deploy. Usar a
   operação compilada `video:migrate-r2-to-stream` em dry-run e lotes pequenos, com confirmação
   explícita do ambiente para qualquer escrita.

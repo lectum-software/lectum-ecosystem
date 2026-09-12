@@ -3,9 +3,6 @@ const VIDEO_ASSET_REFERENCE =
 
 export const TUS_CHUNK_SIZE_BYTES = 5 * 1024 * 1024;
 
-export const isCloudflareStreamUploadEnabled = () =>
-  process.env.NEXT_PUBLIC_CLOUDFLARE_STREAM_ENABLED?.trim().toLowerCase() === "true";
-
 export const videoAssetIdFromReference = (value?: string | null) => {
   const raw = value?.trim();
   if (!raw || raw.length > 8192 || raw.includes("\\")) return null;
@@ -38,22 +35,6 @@ export const shouldFallbackToLegacyVideoPlayback = ({
   code?: string;
   status?: number;
 }) => status === 404 && !code;
-
-export const shouldFallbackToLegacyVideoUpload = ({ status }: { status?: number }) =>
-  status === undefined ||
-  status === 404 ||
-  status === 405 ||
-  status === 408 ||
-  status === 429 ||
-  (typeof status === "number" && status >= 500);
-
-export const shouldFallbackToLegacyVideoUploadAfterProvisionError = ({
-  isProvisionError,
-  status,
-}: {
-  isProvisionError: boolean;
-  status?: number;
-}) => isProvisionError && shouldFallbackToLegacyVideoUpload({ status });
 
 export const shouldCleanupVideoAssetAfterFailure = (uploadCompleted: boolean, error: unknown) =>
   !uploadCompleted || (error instanceof DOMException && error.name === "AbortError");

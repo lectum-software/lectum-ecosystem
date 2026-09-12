@@ -76,14 +76,7 @@ routes.post(
   authorizeReplyMediaUpload,
   publicMulter({
     single: "media",
-    allowed: [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "video/mp4",
-      "video/webm",
-      "video/quicktime",
-    ],
+    allowed: ["image/jpeg", "image/png", "image/webp"],
     size: UPLOAD_LIMITS.postReply.simpleMb,
   }),
   uploadReplyMedia,

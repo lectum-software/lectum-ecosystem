@@ -1,0 +1,93 @@
+# ADR-0497: Novos vídeos sempre pelo Cloudflare Stream
+
+## Status
+
+Accepted
+
+## Task relacionada
+
+Correção operacional 2026-09-12 sobre TASK-163, TASK-165, TASK-171 e TASK-173.
+
+## Contexto
+
+Depois da ativação do Cloudflare Stream, alguns vídeos recentes continuaram aparecendo em URLs
+legadas do R2. A causa arquitetural era a exceção criada para tolerar falhas de provisão inicial do
+Stream: quando o frontend recebia erro antes do TUS, ele voltava para os endpoints single/multipart
+em R2 de vídeo de apresentação, post ou resposta.
+
+Esses vídeos R2 entregam o arquivo original, sem transcodificação e sem HLS adaptativo. Por isso,
+com a mesma internet, um vídeo em Stream pode tocar melhor enquanto um vídeo R2 com bitrate,
+resolução, codec ou `moov atom` menos favoráveis pode travar.
+
+Em 2026-09-12 foi feito inventário somente leitura nas superfícies publicadas de homologação via
+APIs públicas/autenticadas disponíveis ao ambiente: página/lista de psicólogos, feed de comunidade e
+respostas de posts. O inventário identificou vídeos R2 ainda associados nessas superfícies, mas a
+execução local do backfill oficial não tinha as credenciais válidas do banco publicado nem as envs
+Cloudflare Stream necessárias para aplicar a migração. Nenhum reset, seed, exclusão de bucket ou
+escrita em dados publicados foi executado.
+
+## Decisão
+
+- Encerrar as exceções das ADRs 0487 e 0489: novos uploads de vídeo não têm mais fallback de escrita
+  para R2.
+- Frontend de apresentação, post e resposta sempre usa `uploadVideoAsset`/TUS/Cloudflare Stream para
+  MIME `video/*`; falhas de provisão, upload ou processamento falham de forma segura para nova
+  tentativa, sem chamar transporte legado de vídeo.
+- Backend rejeita clientes antigos que tentarem usar os endpoints legados de vídeo em R2 antes de
+  gravar objeto novo ou associar URL R2. Nos fluxos multipart e serviços internos, a resposta é
+  `video_upload_stream_required`; nos endpoints single protegidos por parser, vídeo deixa de ser MIME
+  permitido para impedir a escrita já no filtro de upload.
+- Endpoints e multipart legados continuam disponíveis apenas para imagens e para abortar sessões
+  antigas; leitura de URLs R2 existentes permanece compatível até migração.
+- O comando oficial `video:migrate-r2-to-stream` continua sendo o caminho de backfill. O modo
+  `--dry-run` pode rodar sem provider Stream para inventário seguro; `--apply` continua exigindo
+  provider Stream real e confirmação explícita do ambiente.
+
+## Consequências
+
+- A plataforma para de criar novos vídeos R2 nos fluxos afetados, mesmo se frontend e backend forem
+  atualizados em momentos diferentes.
+- Se o Stream publicado estiver indisponível, novos vídeos ficam temporariamente bloqueados em vez de
+  gerar arquivo original no R2. Isso é intencional porque preserva a arquitetura alvo, evita nova
+  dívida de migração e reduz travamentos por arquivo original.
+- Vídeos R2 existentes continuam tocando pelo caminho legado até o backfill; eles não são apagados e
+  podem continuar apresentando performance inferior ao Stream.
+- ADR-0487 e ADR-0489 ficam superseded apenas na parte de fallback R2. Decisões ainda válidas sobre
+  mensagens públicas seguras, limpeza best effort e não exposição de provider permanecem aplicáveis.
+
+## Produção e rollout
+
+- Compatibilidade com dados existentes: aditiva. Nenhum schema/migration; URLs R2 legadas continuam
+  legíveis e migráveis pela TASK-165.
+- Envs: nenhuma env nova. O backend precisa manter as envs Stream já existentes configuradas; isso
+  não é uma nova exigência deste deploy.
+- Compatibilidade entre versões: frontend novo sempre chama Stream; backend novo recusa legado de
+  vídeo. Frontend antigo que tentar R2 para vídeo recebe erro público seguro em vez de criar objeto.
+- Ordem: publicar backend e frontend em `homolog`, validar `/health`, `/ready`, `/ping`, `/version`
+  e então executar o runbook da TASK-165 em lotes pequenos dentro do ambiente com secrets reais.
+- Rollback: reverter este commit reabriria o fallback R2; se rollback for inevitável, não apagar
+  ativos Stream nem objetos R2. Preferir manter bloqueio temporário de novos vídeos a voltar a criar
+  R2.
+
+## Validação
+
+- Inventário read-only em homologação:
+  - página/lista de psicólogos: 16 perfis lidos, 11 vídeos de perfil ainda em R2 e 5 em Stream;
+  - feed de comunidade: 10 vídeos de post lidos, 1 ainda em R2 e 9 em Stream;
+  - respostas de posts do feed: 11 vídeos de resposta lidos, 2 ainda em R2 e 9 em Stream.
+- Tentativa local do backfill oficial foi interrompida sem escrita porque o ambiente local não tinha
+  credenciais válidas do banco publicado nem envs Stream.
+- Validações automatizadas desta correção ficam registradas no fechamento operacional da task.
+
+## Pendências
+
+- Executar, no container/runtime do backend de homologação com secrets reais, após o deploy:
+
+```bash
+pnpm --dir backend video:migrate-r2-to-stream -- --dry-run --limit=5
+pnpm --dir backend video:migrate-r2-to-stream -- --apply --confirm=homolog --limit=5
+```
+
+- Repetir lotes até o dry-run retornar `candidates_in_batch: 0`, sem apagar objetos/capas R2.
+- Após homologação aprovada, repetir o runbook em produção somente por promoção revisada
+  `homolog` → `main` e janela operacional própria.

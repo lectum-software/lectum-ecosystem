@@ -102,7 +102,7 @@ const main = async () => {
   if (options.apply) assertApplySafety(options.confirmEnvironment, detectedEnvironment);
 
   const provider = getVideoStreamProvider();
-  if (!provider) {
+  if (options.apply && !provider) {
     throw new R2ToStreamOperationError(
       "Cloudflare Stream não está habilitado ou possui configuração incompleta.",
     );

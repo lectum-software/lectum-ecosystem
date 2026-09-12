@@ -83,14 +83,7 @@ routes.post(
   multer({
     single: "media",
     feature: "posts",
-    allowed: [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "video/mp4",
-      "video/webm",
-      "video/quicktime",
-    ],
+    allowed: ["image/jpeg", "image/png", "image/webp"],
     size: UPLOAD_LIMITS.community.postMediaMb,
   }),
   uploadPostMedia,

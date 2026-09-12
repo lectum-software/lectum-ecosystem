@@ -470,6 +470,22 @@ export const uploadPublicMultipartPart = async (
   }
 };
 
+export const inspectPublicMultipartUploadSession = (
+  input: MultipartContext & {
+    operation: "abort" | "complete" | "part";
+    sessionId: string;
+  },
+) => {
+  const session = readSession(input.sessionId, input, input.operation);
+
+  return {
+    chunkSize: session.chunkSize,
+    key: session.key,
+    mimeType: session.mimeType,
+    size: session.size,
+  };
+};
+
 export const completePublicMultipartUpload = async (
   input: MultipartContext & {
     parts: PublicMultipartPartReference[];

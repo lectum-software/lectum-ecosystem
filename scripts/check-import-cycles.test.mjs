@@ -49,8 +49,9 @@ for (const specifier of localWorkerSpecifiers) {
     const expected = ts.resolveModuleName(specifier, workerPath, options, ts.sys).resolvedModule;
     assert.ok(expected);
     assert.equal(expected.isExternalLibraryImport, false);
-    assert.ok(videoFiles.has(expected.resolvedFileName));
-    assert.equal(resolve(specifier), expected.resolvedFileName);
+    const expectedSource = path.normalize(expected.resolvedFileName);
+    assert.ok(videoFiles.has(expectedSource));
+    assert.equal(resolve(specifier), expectedSource);
   });
 }
 

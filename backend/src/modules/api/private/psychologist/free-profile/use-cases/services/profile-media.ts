@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { videoStreamUploadRequired } from "@/modules/video-assets/upload-policy";
 import type {
   IFreeProfessionalProfileRemoveAvatarDTO,
   IFreeProfessionalProfileRemoveCoverImageDTO,
@@ -97,25 +98,7 @@ export const uploadVideo = async (data: IFreeProfessionalProfileUploadVideoDTO) 
   const access = await resolveProfileVideoAccess(data.auth);
   if (!access.allowed) return access.response;
 
-  const key = data.file?.path || data.file?.key;
-  if (!key?.startsWith("psychologist/video/")) {
-    return {
-      status: 400,
-      ...error("upload_error", {}),
-    };
-  }
-
-  const videoUrl = publicFileUrl(key);
-  const updated = await access.repository.updateVideo(data.auth.id!, videoUrl);
-
-  return {
-    status: 200,
-    ...msg("professional_profile_video_uploaded", {}),
-    data: {
-      video_url: videoUrl,
-      profile: updated,
-    },
-  };
+  return videoStreamUploadRequired();
 };
 
 export const uploadCoverImage = async (data: IFreeProfessionalProfileUploadCoverImageDTO) => {

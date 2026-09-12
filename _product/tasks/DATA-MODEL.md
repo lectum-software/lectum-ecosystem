@@ -242,13 +242,10 @@ durante o rollout. Ao concluir a troca, os outros `video_assets` de apresentaç�
 aposentados logicamente na mesma transação; a exclusão física no Stream e a remoção da mídia R2
 substituída são best effort posteriores ao commit.
 
-Complemento TASK-171: se a provisão inicial do Stream para `profile_presentation` estiver
-indisponível antes de qualquer upload TUS, a troca do vídeo de apresentação pode usar
-temporariamente o caminho legado multipart/R2 da TASK-157. Nesse caso `video_url` volta a armazenar
-uma URL pública R2 legada já suportada por leitura/limpeza/migração; a exceção não cria novo schema,
-não mascara validação, autenticação, autorização ou limite de arquivo, e segue a mesma fronteira
-operacional estendida a posts/respostas na TASK-173. Uploads Stream que já começaram ou chegaram ao
-processamento não caem para R2 para evitar dois candidatos concorrentes de vídeo.
+Complemento 2026-09-12: a exceção temporária da TASK-171 está encerrada. Novos vídeos de
+apresentação sempre usam Cloudflare Stream; os endpoints legados single/multipart de vídeo recusam
+clientes antigos com erro público seguro e não gravam novas URLs R2. URLs R2 existentes continuam
+legíveis apenas para reprodução legado, auditoria e migração TASK-165, sem apagar objetos/capas.
 
 Regra complementar de identidade profissional (TASK-34, atualizada em 2026-07-11): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` quando houver assinatura profissional ativa não gratuita com `crp_status="aprovado"` ou `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Complemento de cortesia: uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`, plano não gratuito, status vigente) também bloqueia CPF, Regional do CRP e Nº de registro CRP na edição do psicólogo, mesmo sem preencher artificialmente `cfp_verified_at`, porque o Admin passa a ser a fonte operacional desses campos durante a cortesia. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados.
 
@@ -683,18 +680,16 @@ Complemento 2026-06-22: posts de comunidade passam a suportar carrossel de image
 - `community_post.media_url`/`media_type` permanecem como compatibilidade e refletem a primeira midia ativa; `thumbnail_url` acompanha videos; os DTOs passam a retornar tambem `media_items` ordenado por `position` com `thumbnail_url`.
 - Edicao de post substitui o conjunto anterior do carrossel com soft delete dos itens antigos; remocao usa `mediaItems:null` e/ou `mediaUrl:null`/`mediaType:null`.
 
-Complemento TASK-163: imagens e carrosséis continuam no R2. Quando a flag Stream estiver ativa,
-vídeo único usa upload TUS direto e `community_post.media_url` recebe a referência interna de um
-`video_asset` pronto, do autor e do contexto da comunidade; `thumbnail_url=null`, pois a capa
-assinada é derivada no playback. O backend continua aceitando as URLs R2 legadas durante o rollout.
+Complemento TASK-163/2026-09-12: imagens e carrosséis continuam no R2. Vídeo único usa sempre
+upload TUS direto e `community_post.media_url` recebe a referência interna de um `video_asset`
+pronto, do autor e do contexto da comunidade; `thumbnail_url=null`, pois a capa assinada é derivada
+no playback. O backend continua aceitando as URLs R2 legadas durante o rollout.
 
-Complemento TASK-173: se a provisão inicial do Stream para `community_post` estiver indisponível
-antes de qualquer upload TUS, a criação/edição de post pode usar temporariamente o upload legado
-multipart/R2 já existente. Nesse caso `community_post.media_url` volta a armazenar uma URL pública
-R2 válida de `/public/files/posts/media/` e `thumbnail_url` pode receber a miniatura gerada no
-navegador. A exceção não cria schema, endpoint, provider ou bucket novo, não mascara validação,
-autenticação, autorização ou limite de arquivo, e não vale para falhas depois que o upload TUS já
-começou.
+Complemento 2026-09-12: a exceção temporária da TASK-173 está encerrada para
+`community_post`. Novos vídeos de post sempre usam Cloudflare Stream; os transportes R2 de post
+(single/multipart) permanecem somente para imagens e recusam vídeo com erro público seguro. URLs R2
+legadas em posts continuam legíveis e são migradas pelo comando seguro da TASK-165, sem apagar
+origem ou miniatura.
 
 Complemento TASK-176 (2026-09-08): o render social owner-only resolve videos de posts pelo primeiro
 `community_post_media` ativo quando houver carrossel/colecao retornada no post; o fallback legado
@@ -744,13 +739,11 @@ Complemento TASK-163: novos vídeos de resposta podem usar referência interna d
 seguem aceitos. Remover o conteúdo e remover o ativo são operações separadas para não apagar um
 vídeo ainda associado por engano.
 
-Complemento TASK-173: se a provisão inicial do Stream para `community_reply` estiver indisponível
-antes de qualquer upload TUS, comentários/respostas com vídeo podem usar temporariamente o upload
-legado single/multipart em R2. Nesse caso `post_reply.media_url` volta a armazenar uma URL pública
-R2 válida de `/public/files/posts/media/` e `thumbnail_url` pode receber a miniatura gerada no
-navegador. A exceção não cria schema, endpoint, provider ou bucket novo, não mascara validação,
-autenticação, autorização ou limite de arquivo, e não vale para falhas depois que o upload TUS já
-começou.
+Complemento 2026-09-12: a exceção temporária da TASK-173 está encerrada para
+`community_reply`. Novos vídeos de comentários/respostas sempre usam Cloudflare Stream; os
+transportes R2 de resposta (single/multipart) permanecem somente para imagens e recusam vídeo com
+erro público seguro. URLs R2 legadas em respostas continuam legíveis e são migradas pelo comando
+seguro da TASK-165, sem apagar origem ou miniatura.
 
 Complemento 2026-07-01: autoações autenticadas do autor sobre o próprio `community_post` ou
 `post_reply` (comentar no próprio post/comentário, upvote ativo, salvamento ou compartilhamento do

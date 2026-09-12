@@ -1,8 +1,6 @@
 import { Router } from "express";
 import multer from "@/config/multer";
 import { UPLOAD_LIMITS } from "@/config/multer/limits";
-import { createMultipartChunkMiddleware } from "@/config/multer/multipart-chunk";
-import { uploadConcurrencyMiddleware } from "@/config/multer/upload-concurrency";
 import {
   abortProfileVideoMultipartUpload,
   completeProfileVideoMultipartUpload,
@@ -22,14 +20,9 @@ import {
   videoMultipartAbortValidator,
   videoMultipartCompleteValidator,
   videoMultipartInitiateValidator,
-  videoMultipartPartValidator,
 } from "./validator";
 
 const routes = Router();
-const videoMultipartChunkMiddleware = createMultipartChunkMiddleware({
-  maxFileSizeMb: UPLOAD_LIMITS.psychologist.videoMultipartChunkMb,
-  scope: "psychologist_profile_video",
-});
 
 routes.get("", show);
 routes.put("", update);
@@ -58,28 +51,14 @@ routes.post(
   videoMultipartInitiateValidator,
   initiateProfileVideoMultipartUpload,
 );
-routes.post(
-  "/video/multipart/part",
-  uploadConcurrencyMiddleware,
-  videoMultipartChunkMiddleware,
-  videoMultipartPartValidator,
-  uploadProfileVideoMultipartPart,
-);
+routes.post("/video/multipart/part", uploadProfileVideoMultipartPart);
 routes.post(
   "/video/multipart/complete",
   videoMultipartCompleteValidator,
   completeProfileVideoMultipartUpload,
 );
 routes.delete("/video/multipart", videoMultipartAbortValidator, abortProfileVideoMultipartUpload);
-routes.post(
-  "/video",
-  multer({
-    single: "video",
-    allowed: ["video/mp4", "video/webm", "video/quicktime"],
-    size: UPLOAD_LIMITS.psychologist.videoSimpleMb,
-  }),
-  uploadVideo,
-);
+routes.post("/video", uploadVideo);
 routes.post(
   "/video/cover",
   multer({

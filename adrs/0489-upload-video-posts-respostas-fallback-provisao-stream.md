@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded
+
+Superseded pela ADR-0497 em 2026-09-12 para encerrar o fallback de escrita de vídeo em R2.
 
 ## Task relacionada
 

@@ -1,4 +1,3 @@
-import { getApiErrorStatus } from "@/api/errors";
 import { callEndpoint } from "@/api/generator";
 import type {
   FreeProfessionalProfile,
@@ -8,28 +7,14 @@ import type {
   FreeProfessionalProfileCoverImageUpload,
   FreeProfessionalProfilePayload,
   FreeProfessionalProfileVideoCoverUpload,
-  FreeProfessionalProfileVideoMultipartCompletePayload,
-  FreeProfessionalProfileVideoMultipartInitiatePayload,
-  FreeProfessionalProfileVideoMultipartInitiateResponse,
-  FreeProfessionalProfileVideoMultipartPartResponse,
   FreeProfessionalProfileVideoRemoval,
   FreeProfessionalProfileVideoUpload,
 } from "@/api/generator/types/free-profile";
 import { handleReq } from "@/api/handle";
 import { deleteVideoAsset } from "@/api/req/video-assets";
-import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
-import { uploadFileMultipart } from "@/utils/multipart-upload";
-import {
-  PROFILE_VIDEO_MULTIPART_THRESHOLD_BYTES,
-  withProfileVideoFileType,
-} from "@/utils/profile-video-upload";
-import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
-import { isVideoAssetUploadProvisionError, uploadVideoAsset } from "@/utils/video-asset-upload";
-import {
-  isCloudflareStreamUploadEnabled,
-  shouldFallbackToLegacyVideoUpload,
-  videoAssetIdFromReference,
-} from "@/utils/video-stream";
+import { withProfileVideoFileType } from "@/utils/profile-video-upload";
+import { uploadVideoAsset } from "@/utils/video-asset-upload";
+import { videoAssetIdFromReference } from "@/utils/video-stream";
 
 const route = "/api/private/psychologist/free-profile";
 
@@ -69,198 +54,24 @@ export const deletePsychologistFreeProfileCoverImage = async () => {
   return handleReq<FreeProfessionalProfileCoverImageRemoval>({ ...handle, hideError: true });
 };
 
-const uploadPsychologistFreeProfileVideoSingle = async (
-  file: File,
-  onProgress?: (percentage: number) => void,
-  signal?: AbortSignal,
-) => {
-  throwIfMediaUploadCanceled(signal);
-  const body = new FormData();
-  const { file: uploadFile } = withProfileVideoFileType(file);
-  body.append("video", uploadFile);
-
-  const handle = callEndpoint({
-    route: `${route}/video`,
-    method: "POST",
-    body,
-    config: {
-      onUploadProgress: (progressEvent) => {
-        if (!progressEvent.total) return;
-        onProgress?.(Math.round((progressEvent.loaded / progressEvent.total) * 100));
-      },
-      signal,
-      timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS,
-    },
-  });
-  return handleReq<FreeProfessionalProfileVideoUpload>({ ...handle, hideError: true });
-};
-
-const initiateProfileVideoMultipartUpload = (
-  body: FreeProfessionalProfileVideoMultipartInitiatePayload,
-  signal?: AbortSignal,
-) => {
-  const handle = callEndpoint({
-    route: `${route}/video/multipart/initiate`,
-    method: "POST",
-    body,
-    config: { signal, timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
-  });
-  return handleReq<FreeProfessionalProfileVideoMultipartInitiateResponse>({
-    ...handle,
-    hideError: true,
-  });
-};
-
-const uploadProfileVideoMultipartPart = (
-  sessionId: string,
-  partNumber: number,
-  chunk: Blob,
-  fileName: string,
-  onProgress: (loadedBytes: number) => void,
-  signal?: AbortSignal,
-) => {
-  const body = new FormData();
-  body.append("uploadSessionId", sessionId);
-  body.append("partNumber", String(partNumber));
-  body.append("chunk", chunk, fileName);
-
-  const handle = callEndpoint({
-    route: `${route}/video/multipart/part`,
-    method: "POST",
-    body,
-    config: {
-      onUploadProgress: (progressEvent) => onProgress(progressEvent.loaded),
-      signal,
-      timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS,
-    },
-  });
-  return handleReq<FreeProfessionalProfileVideoMultipartPartResponse>({
-    ...handle,
-    hideError: true,
-  });
-};
-
-const completeProfileVideoMultipartUpload = (
-  body: FreeProfessionalProfileVideoMultipartCompletePayload,
-  signal?: AbortSignal,
-) => {
-  const handle = callEndpoint({
-    route: `${route}/video/multipart/complete`,
-    method: "POST",
-    body,
-    config: { signal, timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
-  });
-  return handleReq<FreeProfessionalProfileVideoUpload>({ ...handle, hideError: true });
-};
-
-const abortProfileVideoMultipartUpload = (sessionId: string) => {
-  const handle = callEndpoint({
-    route: `${route}/video/multipart`,
-    method: "DELETE",
-    body: { uploadSessionId: sessionId },
-    config: { timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
-  });
-  return handleReq<{ aborted: boolean }>({ ...handle, hideError: true });
-};
-
-const uploadPsychologistFreeProfileVideoMultipart = async (
-  file: File,
-  onProgress?: (percentage: number) => void,
-  signal?: AbortSignal,
-) => {
-  const { mimeType } = withProfileVideoFileType(file);
-
-  return uploadFileMultipart({
-    abort: abortProfileVideoMultipartUpload,
-    complete: ({ parts, sessionId }) =>
-      completeProfileVideoMultipartUpload(
-        {
-          parts,
-          uploadSessionId: sessionId,
-        },
-        signal,
-      ),
-    file,
-    initiate: () =>
-      initiateProfileVideoMultipartUpload(
-        {
-          fileName: file.name || "video",
-          mimeType,
-          size: file.size,
-        },
-        signal,
-      ),
-    mimeType,
-    onProgress,
-    signal,
-    uploadPart: ({ chunk, fileName, onProgress: onChunkProgress, partNumber, sessionId }) =>
-      uploadProfileVideoMultipartPart(
-        sessionId,
-        partNumber,
-        chunk,
-        fileName,
-        onChunkProgress,
-        signal,
-      ),
-  });
-};
-
-const uploadPsychologistFreeProfileVideoLegacy = async (
-  file: File,
-  onProgress?: (percentage: number) => void,
-  signal?: AbortSignal,
-) => {
-  if (file.size <= PROFILE_VIDEO_MULTIPART_THRESHOLD_BYTES) {
-    return uploadPsychologistFreeProfileVideoSingle(file, onProgress, signal);
-  }
-
-  try {
-    return await uploadPsychologistFreeProfileVideoMultipart(file, onProgress, signal);
-  } catch (uploadError) {
-    throwIfMediaUploadCanceled(signal);
-    const status = getApiErrorStatus(uploadError);
-    if (status === 404 || status === 405) {
-      throw new Error("O envio deste vídeo está sendo atualizado. Tente novamente em instantes.");
-    }
-
-    throw uploadError;
-  }
-};
-
 export const uploadPsychologistFreeProfileVideo = async (
   file: File,
   onProgress?: (percentage: number) => void,
   signal?: AbortSignal,
 ) => {
-  if (isCloudflareStreamUploadEnabled()) {
-    const { file: uploadFile } = withProfileVideoFileType(file);
-    try {
-      const uploaded = await uploadVideoAsset({
-        file: uploadFile,
-        onProgress,
-        purpose: "profile_presentation",
-        signal,
-      });
-      const profile = await getPsychologistFreeProfile();
+  const { file: uploadFile } = withProfileVideoFileType(file);
+  const uploaded = await uploadVideoAsset({
+    file: uploadFile,
+    onProgress,
+    purpose: "profile_presentation",
+    signal,
+  });
+  const profile = await getPsychologistFreeProfile();
 
-      return {
-        profile,
-        video_url: uploaded.media_url,
-      } satisfies FreeProfessionalProfileVideoUpload;
-    } catch (streamError) {
-      throwIfMediaUploadCanceled(signal);
-      if (
-        !isVideoAssetUploadProvisionError(streamError) ||
-        !shouldFallbackToLegacyVideoUpload({ status: getApiErrorStatus(streamError) })
-      ) {
-        throw streamError;
-      }
-
-      return uploadPsychologistFreeProfileVideoLegacy(uploadFile, onProgress, signal);
-    }
-  }
-
-  return uploadPsychologistFreeProfileVideoLegacy(file, onProgress, signal);
+  return {
+    profile,
+    video_url: uploaded.media_url,
+  } satisfies FreeProfessionalProfileVideoUpload;
 };
 
 export const uploadPsychologistFreeProfileVideoCover = async (file: File) => {

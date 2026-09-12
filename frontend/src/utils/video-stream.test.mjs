@@ -9,8 +9,6 @@ import {
   selectAdaptiveVideoPlaybackAdapter,
   shouldCleanupVideoAssetAfterFailure,
   shouldFallbackToLegacyVideoPlayback,
-  shouldFallbackToLegacyVideoUpload,
-  shouldFallbackToLegacyVideoUploadAfterProvisionError,
   TUS_CHUNK_SIZE_BYTES,
   videoAssetIdFromReference,
   videoAssetPlaybackApiPaths,
@@ -48,69 +46,40 @@ describe("Cloudflare Stream frontend contract", () => {
     assert.equal(shouldFallbackToLegacyVideoPlayback({ status: 401 }), false);
   });
 
-  it("usa upload legado apenas quando a provisao Stream fica indisponivel", () => {
-    assert.equal(shouldFallbackToLegacyVideoUpload({}), true);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 404 }), true);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 405 }), true);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 408 }), true);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 429 }), true);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 500 }), true);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 503 }), true);
-
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 400 }), false);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 401 }), false);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 403 }), false);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 413 }), false);
-    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 422 }), false);
-  });
-
-  it("restringe fallback legado a erro de provisao antes do envio TUS", () => {
-    assert.equal(
-      shouldFallbackToLegacyVideoUploadAfterProvisionError({
-        isProvisionError: true,
-      }),
-      true,
-    );
-    assert.equal(
-      shouldFallbackToLegacyVideoUploadAfterProvisionError({
-        isProvisionError: true,
-        status: 503,
-      }),
-      true,
-    );
-
-    assert.equal(
-      shouldFallbackToLegacyVideoUploadAfterProvisionError({
-        isProvisionError: false,
-        status: 503,
-      }),
-      false,
-    );
-    assert.equal(
-      shouldFallbackToLegacyVideoUploadAfterProvisionError({
-        isProvisionError: true,
-        status: 413,
-      }),
-      false,
-    );
-  });
-
-  it("posts e respostas preservam upload de video quando a provisao Stream falha", () => {
+  it("mantem novos uploads de video sempre no Cloudflare Stream", () => {
+    const streamSource = readSource("./video-stream.ts");
+    const profileSource = readSource("../api/req/psychologist-free-profile/index.ts");
     const communitySource = readSource("../api/req/community/index.ts");
     const postsSource = readSource("../api/req/posts/index.ts");
+    const replyStreamSource = readSource("../api/req/posts/reply-stream-upload.ts");
 
-    assert.match(communitySource, /catch \(streamError\)/);
-    assert.match(communitySource, /isVideoAssetUploadProvisionError\(streamError\)/);
-    assert.match(communitySource, /shouldFallbackToLegacyVideoUploadAfterProvisionError/);
-    assert.match(communitySource, /uploadCommunityPostMediaSingle\(slug, uploadFile/);
-    assert.match(communitySource, /uploadCommunityPostMediaMultipart\(slug, uploadFile/);
+    assert.doesNotMatch(streamSource, /shouldFallbackToLegacyVideoUpload/);
 
-    assert.match(postsSource, /catch \(streamError\)/);
-    assert.match(postsSource, /isVideoAssetUploadProvisionError\(streamError\)/);
-    assert.match(postsSource, /shouldFallbackToLegacyVideoUploadAfterProvisionError/);
-    assert.match(postsSource, /shouldUseMultipartReplyUpload\(uploadFile\)/);
-    assert.match(postsSource, /uploadPostReplyMediaSingle\(id, uploadFile/);
-    assert.match(postsSource, /uploadPostReplyMediaMultipart\(id, uploadFile/);
+    const profileUpload = profileSource.split(
+      "export const uploadPsychologistFreeProfileVideo =",
+    )[1];
+    assert.match(profileUpload, /uploadVideoAsset\(\{/);
+    assert.match(profileUpload, /purpose: "profile_presentation"/);
+    assert.doesNotMatch(profileUpload, /uploadPsychologistFreeProfileVideoLegacy|shouldFallback/);
+
+    const communityUpload = communitySource.split("export const uploadCommunityPostMedia =")[1];
+    assert.match(communityUpload, /if \(mimeType\.startsWith\("video\/"\)\)/);
+    assert.match(communityUpload, /uploadVideoAsset\(\{/);
+    assert.match(communityUpload, /purpose: "community_post"/);
+    assert.doesNotMatch(
+      communityUpload,
+      /catch \(streamError\)|isVideoAssetUploadProvisionError|shouldFallback/,
+    );
+
+    const replyUpload = postsSource.split("export const uploadPostReplyMedia =")[1];
+    assert.match(replyUpload, /uploadReplyVideoToStream\(\{/);
+    assert.doesNotMatch(
+      replyUpload,
+      /catch \(streamError\)|isVideoAssetUploadProvisionError|shouldFallback/,
+    );
+
+    assert.match(replyStreamSource, /purpose: "community_reply"/);
+    assert.doesNotMatch(replyStreamSource, /isCloudflareStreamUploadEnabled|shouldFallback/);
   });
 
   it("seleciona HLS nativo no Safari e HLS.js em navegadores MSE", () => {

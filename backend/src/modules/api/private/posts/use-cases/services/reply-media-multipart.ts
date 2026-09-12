@@ -12,6 +12,7 @@ import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { error, msg } from "@/helpers/translate";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { videoStreamUploadRequired } from "@/modules/video-assets/upload-policy";
 import type {
   IPostAbortReplyMediaMultipartDTO,
   IPostCompleteReplyMediaMultipartDTO,
@@ -289,8 +290,9 @@ export const initiateReplyMediaMultipartUpload = async (
   const mediaType = mediaTypeFromMime(mimeType);
 
   if (!Number.isInteger(size) || size <= 0) return invalidReplyMedia();
-  if (size > POST_REPLY_MEDIA_UPLOAD_LIMIT_BYTES) return fileLimitExceeded();
   if (!ALLOWED_REPLY_MEDIA_MIME_TYPES.has(mimeType) || !mediaType) return unexpectedType(mimeType);
+  if (mediaType === "video") return videoStreamUploadRequired();
+  if (size > POST_REPLY_MEDIA_UPLOAD_LIMIT_BYTES) return fileLimitExceeded();
   if (!isR2Configured()) return uploadUnavailable();
 
   const key = createReplyMediaKey(mimeType);
@@ -348,6 +350,7 @@ export const uploadReplyMediaMultipartPart = async (
   if (!session || !partNumber || !isSessionOwner(session, data) || !chunk?.length) {
     return invalidReplyMedia();
   }
+  if (session.mediaType === "video") return videoStreamUploadRequired();
 
   if (
     chunk.length > POST_REPLY_MEDIA_MULTIPART_CHUNK_LIMIT_MB * 1024 * 1024 ||
@@ -408,6 +411,7 @@ export const completeReplyMediaMultipartUpload = async (
 
   const session = verifySessionToken(normalizeSessionToken(data.b.uploadSessionId));
   if (!session || !isSessionOwner(session, data)) return invalidReplyMedia();
+  if (session.mediaType === "video") return videoStreamUploadRequired();
 
   const completedParts = verifyCompleteParts(session, data.b.parts);
   if (!completedParts?.length) return invalidReplyMedia();

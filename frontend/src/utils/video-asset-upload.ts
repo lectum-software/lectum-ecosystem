@@ -37,10 +37,6 @@ export class VideoAssetUploadProvisionError extends Error {
   }
 }
 
-export const isVideoAssetUploadProvisionError = (
-  error: unknown,
-): error is VideoAssetUploadProvisionError => error instanceof VideoAssetUploadProvisionError;
-
 const wait = (milliseconds: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
     if (signal?.aborted) {

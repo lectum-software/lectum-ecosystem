@@ -1,12 +1,18 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it } from "node:test";
 import { resolveUploadLimits } from "@/config/multer/limits";
 import {
   getVideoAssetUploadFailure,
   getVideoAssetUploadLimitBytes,
   getVideoAssetUploadLimitMegabytes,
+  isVideoAssetUploadMimeType,
   validateVideoAssetUploadMetadata,
+  videoStreamUploadRequired,
 } from "./upload-policy";
+
+const readBackendFile = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 
 describe("video asset upload policy", () => {
   it("resolve cada finalidade pela env total correspondente", () => {
@@ -53,6 +59,8 @@ describe("video asset upload policy", () => {
   it("normaliza MIME permitido e recusa metadados inválidos", () => {
     const purpose = "community_post";
 
+    assert.equal(isVideoAssetUploadMimeType(" Video/QuickTime; charset=binary "), true);
+    assert.equal(isVideoAssetUploadMimeType("image/png"), false);
     assert.equal(
       validateVideoAssetUploadMetadata({
         mimeType: " Video/QuickTime; charset=binary ",
@@ -68,6 +76,58 @@ describe("video asset upload policy", () => {
     assert.deepEqual(
       validateVideoAssetUploadMetadata({ mimeType: "video/mp4", purpose, size: 0 }),
       { accepted: false, reason: "invalid_metadata" },
+    );
+  });
+
+  it("expoe erro seguro quando cliente antigo tenta enviar video fora do Stream", () => {
+    const response = videoStreamUploadRequired();
+    assert.equal(response.status, 409);
+    assert.equal(response.success, false);
+    assert.equal(response.code, "video_upload_stream_required");
+    assert.deepEqual(response.data, {});
+
+    const translations = JSON.parse(readBackendFile("locales/pt/translation.json"));
+    assert.equal(
+      translations.error.video_upload_stream_required,
+      "Envie vídeos pelo fluxo de streaming. Atualize a página e tente novamente.",
+    );
+  });
+
+  it("bloqueia upload legado de video em R2 nos endpoints de escrita", () => {
+    const communityRoutes = readBackendFile("src/modules/api/private/community/index.ts");
+    const postsRoutes = readBackendFile("src/modules/api/private/posts/index.ts");
+    const profileRoutes = readBackendFile(
+      "src/modules/api/private/psychologist/free-profile/index.ts",
+    );
+    const profileMediaService = readBackendFile(
+      "src/modules/api/private/psychologist/free-profile/use-cases/services/profile-media.ts",
+    );
+    const profileMultipartService = readBackendFile(
+      "src/modules/api/private/psychologist/free-profile/use-cases/services/profile-video-multipart.ts",
+    );
+    const communityMultipartService = readBackendFile(
+      "src/modules/api/private/community/use-cases/services/post-media-multipart.ts",
+    );
+    const replyMultipartService = readBackendFile(
+      "src/modules/api/private/posts/use-cases/services/reply-media-multipart.ts",
+    );
+
+    assert.match(communityRoutes, /allowed: \["image\/jpeg", "image\/png", "image\/webp"\]/);
+    assert.match(postsRoutes, /allowed: \["image\/jpeg", "image\/png", "image\/webp"\]/);
+    assert.doesNotMatch(communityRoutes, /allowed: \[[^\]]*video\/mp4/s);
+    assert.doesNotMatch(postsRoutes, /allowed: \[[^\]]*video\/mp4/s);
+    assert.doesNotMatch(profileRoutes, /single: "video"[\s\S]*allowed:/);
+
+    assert.match(profileMediaService, /return videoStreamUploadRequired\(\);/);
+    assert.match(profileMultipartService, /return videoStreamUploadRequired\(\);/);
+    assert.match(
+      communityMultipartService,
+      /mediaType === "video"[\s\S]*videoStreamUploadRequired/,
+    );
+    assert.match(replyMultipartService, /mediaType === "video"[\s\S]*videoStreamUploadRequired/);
+    assert.match(
+      replyMultipartService,
+      /session\.mediaType === "video"[\s\S]*videoStreamUploadRequired/,
     );
   });
 

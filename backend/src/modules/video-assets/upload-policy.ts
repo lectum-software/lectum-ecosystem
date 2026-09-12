@@ -1,4 +1,5 @@
 import { type resolveUploadLimits, UPLOAD_LIMITS } from "@/config/multer/limits";
+import { error } from "@/helpers/translate";
 import type { VideoAssetPurpose } from "@/infra/video-stream";
 
 const MEBIBYTE = 1024 * 1024;
@@ -32,6 +33,14 @@ export type VideoAssetUploadFailure = {
 };
 
 const normalizeMimeType = (value: string) => value.trim().toLowerCase().split(";", 1)[0] ?? "";
+
+export const videoStreamUploadRequired = () => ({
+  status: 409,
+  ...error("video_upload_stream_required", {}),
+});
+
+export const isVideoAssetUploadMimeType = (value: string) =>
+  VIDEO_MIME_TYPES.has(normalizeMimeType(value));
 
 export const getVideoAssetUploadLimitMegabytes = (
   purpose: VideoAssetPurpose,

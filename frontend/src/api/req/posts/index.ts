@@ -41,10 +41,8 @@ import {
   MEDIA_UPLOAD_CLEANUP_TIMEOUT_MS,
   throwIfMediaUploadCanceled,
 } from "@/utils/upload-lifecycle";
-import { isVideoAssetUploadProvisionError } from "@/utils/video-asset-upload";
-import { shouldFallbackToLegacyVideoUploadAfterProvisionError } from "@/utils/video-stream";
 import { withReplyMediaFileType } from "./reply-media-file";
-import { uploadReplyVideoToStreamWhenEnabled } from "./reply-stream-upload";
+import { uploadReplyVideoToStream } from "./reply-stream-upload";
 
 const REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
 const shouldUseMultipartReplyUpload = (file: File) =>
@@ -322,26 +320,14 @@ export const uploadPostReplyMedia = async (
   signal?: AbortSignal,
 ) => {
   const { file: uploadFile, mimeType } = withReplyMediaFileType(file);
-  try {
-    const streamUpload = await uploadReplyVideoToStreamWhenEnabled({
-      file: uploadFile,
-      mimeType,
-      onProgress,
-      postId: id,
-      signal,
-    });
-    if (streamUpload) return streamUpload;
-  } catch (streamError) {
-    throwIfMediaUploadCanceled(signal);
-    if (
-      !shouldFallbackToLegacyVideoUploadAfterProvisionError({
-        isProvisionError: isVideoAssetUploadProvisionError(streamError),
-        status: getApiErrorStatus(streamError),
-      })
-    ) {
-      throw streamError;
-    }
-  }
+  const streamUpload = await uploadReplyVideoToStream({
+    file: uploadFile,
+    mimeType,
+    onProgress,
+    postId: id,
+    signal,
+  });
+  if (streamUpload) return streamUpload;
 
   if (shouldUseMultipartReplyUpload(uploadFile)) {
     try {

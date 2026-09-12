@@ -1,7 +1,6 @@
 import { uploadVideoAsset } from "@/utils/video-asset-upload";
-import { isCloudflareStreamUploadEnabled } from "@/utils/video-stream";
 
-export const uploadReplyVideoToStreamWhenEnabled = async ({
+export const uploadReplyVideoToStream = async ({
   file,
   mimeType,
   onProgress,
@@ -14,7 +13,7 @@ export const uploadReplyVideoToStreamWhenEnabled = async ({
   postId: string;
   signal?: AbortSignal;
 }) => {
-  if (!isCloudflareStreamUploadEnabled() || !mimeType.startsWith("video/")) return null;
+  if (!mimeType.startsWith("video/")) return null;
 
   const uploaded = await uploadVideoAsset({
     contextId: postId,
