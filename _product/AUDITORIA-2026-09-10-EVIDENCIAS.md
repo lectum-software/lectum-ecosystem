@@ -2128,3 +2128,44 @@ Artefatos:/tmp/lectum-audit-357-smoke-curl-homolog.json,
   removidos; o teste não alterou banco publicado, schema ou env e não adicionou dependências.
 - Limites: não é E2E HTTP de moderação, não cobre todos os escritores antigos, não acrescenta
   versão da sessão administrativa nem repara contador histórico. Publicação358 ainda pendente.
+
+
+358/80721abd:push concluído; smoke público5/5 às00:55:07UTC de12/09(11/09 local).
+Backend,frontend,Admin0.1.358;health/ready200;Nextversions no-store/noindex.
+Primeira leitura encontrou apenas backend357,sem falha de saúde; rollout preservado
+em /tmp/lectum-audit-358-smoke-rollout-001.json. Resultado final no
+/tmp/lectum-audit-358-smoke-curl-homolog.json. Não confirma versão privada de vídeo
+nem decisões HTTP de moderação.
+
+359/A342-02:baseline Browser real na comunidade exclusiva auditoria-lectum-178,
+com regra original preservada e uma regra temporária QA359 criada pelo fluxo normal.
+Sem botão Subir/Descer na árvore acessível. Capturas aceitas em
+/tmp/lectum-task178-rule-order-359/{published-before,mobile-before,desktop-before}.png.
+Captura desktop nativa do painel ficou cortada e foi substituída por screenshot do
+viewport inteiro via mesmo Browser; captura cortada não serve como evidência desktop.
+Fonte RulesManager526linhas lida integralmente; TASK52 requer controles acessíveis.
+QuickCopy consultado novamente,recusado por espaço divergente. Referência local
+_product/proto/admin/Comunidades/Comunidades - Detalhes.png inspecionada; preservar
+composição/tokens existentes,sem redesenho. PreflightProductDesign não possui contexto salvo.
+358 Browser publicado: aba Denúncias da comunidade QA carregou normalmente:1denúncia
+improcedente,zero pendentes,conteúdo e histórico próprios visíveis. Nenhuma decisão,
+revisão,remoção ou conta externa foi alterada; isso testa leitura normal,não concorrência HTTP.
+
+359 Browser local: controles reais importados no harness isolado, sem API/Prisma/hooks
+simulados. Enter e Espaço acionaram callback puro duas vezes, extremos/lista única
+corretamente desabilitados. Estado disabled fornecido ao componente não acionou callback.
+Viewports medidos:390×844 e991×964; sem overflow observado. Isso não comprova foco
+do RulesManager nem persistência: serão conferidos no fluxo real após deploy.
+Formulário RuleEditForm real: vazio recebeu Informe a descrição e não enviou; texto
+válido acionou1callback unitário mantido pendente, desabilitando campo/Cancelar/Salvar.
+Conclusão manual desse callback liberou o formulário. Nenhuma chamada de rede/mock deAPI.
+
+359 validação local final:20/20 testes (planejamento,payload real,ref síncrona,allSettled,
+SSR/controles,handlers originais RHF e contratos do Manager). Checkglobal1231testes,
+1225pass,0fail,6skipsdrawtext preexistentes. BuildAdmin aprovado. Logs
+/tmp/lectum-359-{root-check,admin-build,rules-final}.log. Bump359 executado uma única vez.
+Mendel releu5/5arquivos editados; Socrates revisou4/4fontes sem regressão bloqueante.
+Limite700 é por arquivo,não orçamento de leitura; leitura complementar corrigiu o
+corte inicial de42linhas do segundo revisor. Parent revisou diff,helpers/forms/testes
+e executou componentes reais locais. Sem migração,envnova,pacote,API simulada ouDB.
+Foco real do Manager e persistência/reload são reteste pósdeploy,não certificados porSSR.

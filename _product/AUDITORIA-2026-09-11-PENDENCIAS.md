@@ -208,3 +208,8 @@ DATA01:publicado356,mapa de tráfego conferido; colisões cobertas nos component
 A348-02:corrigido357,contratos/callbackunitário/Browserlocal/check/build passados;reteste normal apósdeploy pendente.
 
 A348-02:publicado357;catálogo real e Cancelar conferidos,sem escrever dados. Estado de erro fica coberto localmente.
+
+C9/C10:358 publicado(80721abd),5GETs e leitura normal QA aprovados. Cenários transacionais
+26/26 em PostgreSQL descartável; não houve decisão concorrente HTTP no ambiente publicado.
+A342-02:359 em implementação; baseline real e referência visual registrados. Uma regra
+QA359 temporária foi adicionada pelo formulário normal para testar ordem e depois remover.

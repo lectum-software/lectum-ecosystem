@@ -224,3 +224,7 @@ refetch/fluxo normal publicado ainda pendentes,não simulado como API nem força
 C9/C10–358:26cenários locais usam repositories reais, banco isolado e callbacks de projeções
 reais. Conflitos,remoções,contadores,before/after e revisões cobertos no limite transacional;
 rotas/middlewares e a UI publicada não foram substituídos por mocks nem certificados como E2E.
+
+358:smoke público completo; leitura normal de Denúncias da comunidade QA confirmada
+após publicação,sem mutação.26cenários PostgreSQL isolado cobrem transações;não equivalem
+à concorrência provocada no Admin publicado.359 ordenação acessível segue em execução.

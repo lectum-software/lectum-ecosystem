@@ -1076,7 +1076,7 @@ existentes nem chamadas a publicado. Testes locais não certificam todo fluxo HT
 - [x] Contagem usa estado corrente e apenas respostas realmente removidas, sem perda/duplicação.
 - [x] Auditoria e estados são atômicos; revisão explícita e autoria inicial preservadas.
 - [x] Contratos, teste PostgreSQL real isolado e backend check/build registrados.
-- [ ] Smoke de publicação358 registrado.
+- [x] Smoke de publicação358 registrado.
 
 358:26/26 cenários PostgreSQL real passaram (baseline8pass/18fail),4contratos estáticos de
 callers,check1211/1205pass/6skipsdrawtext,buildbackend eDocker aprovados. Nenhuma operação
@@ -1085,3 +1085,23 @@ Revisão já iniciada/concluída é noop sem novo log apenas quando data/autoria
 campos legados nulos continuam sendo preenchidos, mantendo resolved. Notas permanecem revisáveis.
 A proteção é transacional dos caminhos alterados; não é versionamento completo da sessão UI
 nem certificação de todos os escritores/versões antigas. Nenhum reparo de contagem histórica.
+
+### Continuação359 — ordenar regras sem depender de arrastar
+
+A342-02/TASK-52: acrescentar Subir/Descer com botões nativos contextuais, mantendo o
+mesmo payload/caller e arraste existentes. Índice visual define limites, não position
+persistido. Bloquear reentrada, CRUD e novo arraste durante TODO o lote de gravações;
+aguardar todas as respostas inclusive quando uma falhar. Não prometer atomicidade de
+endpoints individuais. Reconciliação após falha deve refletir estado real, não um rollback
+fictício. Preservar foco na regra movida sem roubá-lo posteriormente; anunciar estado em PT-BR.
+Formulários RHF/Zod/controllers mantidos, com proteção durante envio. Mobile-first390px,
+ícones Lucide/tokens/estrutura existentes. Captura antes em comunidade QA; referência
+local Comunidades - Detalhes.png. QuickCopy consultado: espaço Builder divergente.
+Sem backend, migration, package, env obrigatória ou dados históricos alterados. Deploy
+Admin independente; rollback de código não desfaz posições já persistidas.
+
+- [x] Subir/Descer nativos, extremos e bloqueios validados em lógica, SSR e Browser local.
+- [x] Ref e lote aguardado preservam conteúdo/ativo/título; contratos puros aprovados.
+- [x] Formulários reais RHF e callbacks locais validados; foco/anúncio revisados em fonte.
+- [ ] Foco e gravações integrados confirmados no Browser publicado, sem induzir falha do serviço.
+- [ ] Check/build, commit/push e smoke; ordem real QA confirmada após reload e restaurada.

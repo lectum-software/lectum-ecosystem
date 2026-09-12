@@ -268,7 +268,12 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 148. **Decisões simultâneas:** ações conflitantes sobre a mesma denúncia não sobrescrevem a decisão confirmada.
 149. **Contagem de respostas:** remoções concorrentes ou repetidas não recuperam contagens antigas nem descontam duas vezes.
 150. **Histórico de moderação:** usa os dados da alteração efetiva e não duplica um início de revisão já registrado.
-358: 26 cenários com banco real isolado passaram; publicação pendente.
+358: publicada; 26 cenários com banco real isolado passaram. Saúde e versões públicas conferidas.
+
+151. **Regras pelo teclado:** controles Subir/Descer permitem ordenar sem depender de arrastar.
+152. **Envios sobrepostos:** regras bloqueiam novas ações durante todo o salvamento; falha parcial exige consultar o que foi realmente salvo.
+153. **Formulários de regras:** campos e cancelamento ficam protegidos até o envio terminar.
+359: 20 testes focais, check global, build e componentes no Browser local aprovados; publicação pendente.
 
 ## Ainda pendente
 

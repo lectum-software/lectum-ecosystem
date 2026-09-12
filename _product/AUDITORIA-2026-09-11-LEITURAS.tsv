@@ -333,6 +333,7 @@ admin/public/logo-icon.svg	Bacon;assets348;inspecao_visual_individual;ICO6frames
 admin/public/logo-light.png	Bacon;assets348;inspecao_visual_individual;ICO6frames;report_parent_integral	ed464c01a6b40525d2edac8ce85eec6fd8041521c5deda584b3ba246204daf84	true
 admin/scripts/catalog-error.test.mjs	parent;catalogos357;leitura_integral_fonte_e_delta;contratos_AST_e_componente_local_sem_HTTP	f5a79fd4b44689ec15d1063110f77ce664c7be24ea64b41db242853ab89cffba	false
 admin/scripts/community-edit-form.test.mjs	;parent348;leitura_integral_mais_delta_wrapper_e_resolucao_de_teste	78f5cf516a9331e399681e85fce6d48c3ea67e6872c563acbc377e36d361a72e	false
+admin/scripts/community-rule-order.test.mjs	Mendel;regras359;final_integral;parent_diff_e_componentes_e_testes_revisados	0ff6b9cabe97d7f7eb47eab715428421e4466429c034e842ceb75465cd438829	false
 admin/scripts/content-distribution.test.mjs	parent;350;autoria_e_revisao_integral;8testes_reais_AST_SSR_sem_API	5ba1825a298141a07d8c4a6b25ac7151d43492f7250c433c7f0260f3da505387	false
 admin/scripts/remove-production-source-maps.mjs	principal;integral	8768250e8f02b26a221d44f4b5983835f0324910175efb0403dc1e8b6b80e263	true
 admin/scripts/sync-route-group-manifests.mjs	Socrates;admin275;fonte_congelada_integral	f9e91db6f102668531e44df1f54e6b3bd1da1eb394b0cb95b687cac5bb77994c	true
@@ -407,7 +408,9 @@ admin/src/app/(admin)/comunidades/[slug]/components/content-shared.tsx	Socrates;
 admin/src/app/(admin)/comunidades/[slug]/components/highlights.tsx	Socrates;admin275;fonte_congelada_integral	1acdca66a4c57798f67e22e0bf682c5225f87dc2a36d448689680eadb53189b4	true
 admin/src/app/(admin)/comunidades/[slug]/components/mentors-and-posts.tsx	Socrates;admin275;fonte_congelada_integral	286c710e0dfec3a5c70a9cc64714416fb3bbb254d9a36d0683da23a4dda7e8a5	true
 admin/src/app/(admin)/comunidades/[slug]/components/report-cards.tsx	Euclid;denuncias;integral	abe8d45dc4caa8d0e558c16d2bd7947d6c6860eeef0b2e0a5f40740bcaf4baf4	true
-admin/src/app/(admin)/comunidades/[slug]/components/rules-manager.tsx	Socrates;admin275;fonte_congelada_integral	a0be67699f9929f8015e4b7fcd567037a4371c3739bdba7bcb54d78afbd6d35a	true
+admin/src/app/(admin)/comunidades/[slug]/components/rule-forms.tsx	Mendel;regras359;final_integral;parent_diff_e_componentes_e_testes_revisados	c84c97a1ef8e2b3437eec7041effbd103003c718d5788ef9da39a3406cc0d53b	false
+admin/src/app/(admin)/comunidades/[slug]/components/rule-order-controls.tsx	Mendel;regras359;final_integral;parent_diff_e_componentes_e_testes_revisados	3530e60e47d89155d06f33f9f5d3311e05d09d85a3f193716fc58e5a7f3366d2	false
+admin/src/app/(admin)/comunidades/[slug]/components/rules-manager.tsx	Socrates;admin275;fonte_congelada_integral | Mendel;regras359;final_integral;parent_diff_e_componentes_e_testes_revisados	884e653bb3b8c938ee8fb6568e08a7933bd7e1ebbe08636a234633ea6533ff9c	true
 admin/src/app/(admin)/comunidades/[slug]/components/statistics-activity-hours.tsx	Socrates;admin275;fonte_congelada_integral	44f3eb15c9b1741a49513a112de346635365a131e2f383aac1155d433c7a8ec7	true
 admin/src/app/(admin)/comunidades/[slug]/components/statistics-coverage.tsx	Socrates;admin275;fonte_congelada_integral	b60a3e312a2dd0a98b2f4bdc1609b571d77cc668961181d46e104d0cacf7046e	true
 admin/src/app/(admin)/comunidades/[slug]/components/statistics-formats.tsx	Socrates;admin275;fonte_congelada_integral	45a7f42caf1947f2d1171aec06b99900ee086673c7c1a62ff49836f95ab81894	true
@@ -421,6 +424,7 @@ admin/src/app/(admin)/comunidades/[slug]/conteudo/[type]/[id]/modules/content-su
 admin/src/app/(admin)/comunidades/[slug]/conteudo/[type]/[id]/modules/video-support.ts	Socrates;admin275;fonte_congelada_integral	c4280e9da61bfde5c0a201bf3214d4c76418626ca3c7122e0bcbe8590f477f4e	true
 admin/src/app/(admin)/comunidades/[slug]/conteudo/[type]/[id]/page.tsx	Socrates;admin275;fonte_congelada_integral	b17d626d6ebf4f75dba51214e32e7002164a1472c9bb0921bc9e3254bed416bb	true
 admin/src/app/(admin)/comunidades/[slug]/modules/detail-support.tsx	Euclid;denuncias;integral | Euclid;conteudo328;integral	ee59f16b9eef68d3d78f9a5cf677b76241a7ace1665860b8dac6cfdce2943777	true
+admin/src/app/(admin)/comunidades/[slug]/modules/rule-order.ts	Mendel;regras359;final_integral;parent_diff_e_componentes_e_testes_revisados	444f5043507fe5912fe83bd656ec52a41b6ec2afcd637ff9d518d64c7c754bac	false
 admin/src/app/(admin)/comunidades/[slug]/modules/statistics-support.ts	Socrates;admin275;fonte_congelada_integral	6464da9aa50c7543fbe8e1822e00ee78c17d53d6f83b5bf52e5c4ceb242f99f2	true
 admin/src/app/(admin)/comunidades/[slug]/page.tsx	Socrates;admin275;fonte_congelada_integral	0d10785d7e54b5b477f66e181cd1f2c22eeb2dc897b275d05883bf1710a8d18f	true
 admin/src/app/(admin)/comunidades/[slug]/views/activities-tab.tsx	Socrates;admin275;fonte_congelada_integral	f3009752ae46562f5bf7749a554f7f72de7a5a8916220ed5889e092cf8112782	true

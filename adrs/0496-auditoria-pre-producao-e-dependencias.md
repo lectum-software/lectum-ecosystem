@@ -1140,3 +1140,20 @@ que excede retries não equivale a decisão válida nem promete sucesso. Noop de
 duplica histórico, mas preserva preenchimento de campos legados nulos sem reabrir evento resolvido.
 26cenários PostgreSQL reais e4contratos aprovados; semmigration/env. Rollout tolera apps antigos;
 a proteção transacional completa exige backendnovo em todas as réplicas. Não repara passado.
+
+
+### Ordenação acessível359 — decisão prévia
+
+Adicionar controles de teclado/toque ao fluxo existente, sem substituir arraste e sem
+novo endpoint. Um lote local bloqueia ações conflitantes e aguarda todas as gravações,
+mesmo em falha. Cada PUT continua individual: não prometer atomicidade entre regras
+nem proteção de outro administrador/aba; reconciliar estado real após falha. Preservar
+conteúdo/active/title do payload existente. Foco/aviso PT-BR e formulários pendentes
+seguem componentes/RHF/controllers já adotados. Sem env/migration/package.
+
+359: manager491linhas; forms/controlador visual/planejamento separados por responsabilidade.
+Sem mudança de caller/payload. Refetch compartilha o SLUG da query ativa do pai e usa
+throwOnError; renderização normal segue props do pai, sem preferência permanente por
+cache separado. Foco one-shot apenas no gesto inicial, nunca recriado depois do await.
+20contratos e Browser local/RHF aprovados; sem promessa de ordenação atômica entre
+abas,administradores ou navegações que desmontem o Manager.
