@@ -306,7 +306,10 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 167. **Ranking público:** ações antigas do próprio profissional deixam de aumentar sua pontuação e exposição.
 168. **Interações recebidas:** ações recentes em publicações antigas passam a aparecer no período correto.
 
-367: 78 cenários de banco isolado, check e builds aprovados; publicação em andamento. Sem apagar histórico ou alterar os pesos dos rankings.
+367/515e1bf5: publicada; 78 cenários de banco isolado, check/build e smoke5/5 aprovados. Ranking conferido no Admin; histórico e pesos preservados.
+
+169. **Busca acessível:** o campo do ranking ganha nome para leitores de tela; singular/plural e “Pontuação” ficam em português.
+368: checks, build e validação local mobile/desktop aprovados; publicação em andamento.
 
 ## Ainda pendente
 

@@ -1425,3 +1425,30 @@ Checkglobal1432tests/1426pass/0fail/6skipsdrawtextpreexistentes, builds local/Do
 Revisão independente C25/checker sem regressão; integração C23/C8 revisada pelo principal.
 Sem env/package/migration novos; bump367 executado uma única vez. Publicação e smoke são
 a próxima etapa; o resultado será registrado em /tmp/lectum-audit-367-smoke-curl-homolog.json.
+
+### Correção368 — controle acessível do ranking
+
+O Browser real confirmou na comunidade de auditoria: campo de busca sem nome acessível,
+contador “1 psicólogos” e rótulo/descrição “Score”. Corrigir o nome do campo pelo padrão já
+existente de busca no Admin, singular/plural e “Pontuação”, sem alterar cálculo, ordenação,
+filtros ou paginação. Reusar a estrutura visual atual; referência consultada no inventário e
+PNG de Detalhes de Comunidades. Mobile-first: validar largura390 e desktop, digitação/limpeza.
+Sem dependências/envs/migrations. Apenas Admin funcionalmente afetado; cinco manifests versionados.
+
+- [x] Campo de busca com nome acessível e ícone decorativo oculto da árvore acessível.
+- [x] Contador e pontuação em PT-BR, preservando valores/callbacks.
+- [x] Testes, Admincheck/build e Browser local aprovados.
+Builder consultado novamente: somente DS global @mui/material7.3.2, sem Quick Copy Lectum
+ativo nesta conexão. Mantidos PNG local e componentes/tokens já existentes; sem pull que altere branch.
+
+367/515e1bf5 publicado: smoke5/5 em 2026-09-12T15:02:05.520087+00:00; backend/frontend/Admin367, health/ready200.
+Browser Admin ranking da comunidade de auditoria carregou após reload, pontuação17, sem erro.
+Houve502 durante substituição do backend, preservado em /tmp/lectum-audit-367-smoke-during-rollout.json;
+o smoke final recuperou. Vídeo privado continua sem nova prova de versão.
+
+368:12 guardasAST aprovadas (baseline6/12); checkglobal1444tests/1438pass/0fail/6skips
+drawtextpreexistentes. Adminbuild aprovado. Browserlocal390/1280 conferiu nome acessível,
+digitação, limpeza nativa e0/1/2/1000. JSX de apresentação original compilado separadamente,
+sem query/API substituída: não é teste doTab completo. Campo313px em390 e1198px em1280,
+sem overflow. Fontes inline e callback/paginação preservados. Bump368 único. Próximo passo:
+pushhomolog, smoke /tmp/lectum-audit-368-smoke-curl-homolog.json e busca real publicada.

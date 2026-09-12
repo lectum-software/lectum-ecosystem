@@ -49,19 +49,25 @@ export const RankingTab = ({ slug }: { slug: string }) => {
         <div>
           <h2 className="text-lg font-black text-foreground">Ranking da comunidade</h2>
           <p className="mt-1 text-sm text-muted">
-            Todos os psicólogos participantes recebem uma posição, inclusive com score zero.
+            Todos os psicólogos participantes recebem uma posição, inclusive com pontuação zero.
           </p>
         </div>
         <StatusBadge tone="muted">
-          {numberFormatter.format(result.data?.count ?? 0)} psicólogos
+          {numberFormatter.format(result.data?.count ?? 0)}{" "}
+          {result.data?.count === 1 ? "psicólogo" : "psicólogos"}
         </StatusBadge>
       </div>
       <label className="relative mt-5 block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+        <span className="sr-only">Buscar psicólogo participante</span>
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+        />
         <input
           className="h-11 w-full rounded-control border border-border bg-surface pl-10 pr-3 text-sm font-bold outline-none transition focus:border-primary"
           onChange={(event) => updateQuery({ q: event.target.value })}
           placeholder="Buscar psicólogo participante"
+          type="search"
           value={query.q ?? ""}
         />
       </label>
@@ -120,7 +126,7 @@ export const RankingTab = ({ slug }: { slug: string }) => {
                   <strong className="block text-2xl text-foreground">
                     {numberFormatter.format(item.score)}
                   </strong>
-                  <span className="font-bold text-muted">Score</span>
+                  <span className="font-bold text-muted">Pontuação</span>
                 </span>
                 <span className="font-black">
                   <RankingTrend item={item} />

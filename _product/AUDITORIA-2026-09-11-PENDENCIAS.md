@@ -226,3 +226,8 @@ QA359 temporária foi adicionada pelo formulário normal para testar ordem e dep
   equivalentes. C2 preserva exclusão intencional de visitas de perfil sem atribuição comunitária.
 - Checkglobal/build aprovados; publicação/smoke367 ainda será executado. Isto fecha essas correções,
   não a auditoria geral nem as dependências externas descritas nas seções anteriores.
+
+367/515e1bf5 publicado: smoke5/5 em 2026-09-12T15:02:05.520087+00:00; backend/frontend/Admin367, health/ready200.
+Browser Admin ranking da comunidade de auditoria carregou após reload, pontuação17, sem erro.
+Houve502 durante substituição do backend, preservado em /tmp/lectum-audit-367-smoke-during-rollout.json;
+o smoke final recuperou. Vídeo privado continua sem nova prova de versão.

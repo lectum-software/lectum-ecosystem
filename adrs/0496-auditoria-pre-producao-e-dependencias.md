@@ -1301,3 +1301,11 @@ O guard dos probes valida o ambiente descartável completo antes dos imports. PA
 variável do sistema/container, não uma nova configuração de produto: o checker de envs
 reconhece essa distinção, mantendo a proibição em módulos client e a exigência de documentar
 novas variáveis da aplicação. Três testes do scanner verificam essas fronteiras.
+
+###368 — correção de acessibilidade e idioma no ranking
+
+Evidência Browser da comunidade de auditoria: input sem nome acessível; singular incorreto;
+“Score” visível. Preservar fonte de dados, algoritmo, filtro e paginação. Aplicar padrão local
+de label sr-only/ícone decorativo e PT-BR. Se separar apresentação da query, manter componente
+pequeno junto da view, sem nova fundação nem API/client duplicado. Build e Browser local/mobile
+mais revalidação publicada; nenhum impacto de env/banco/provider. Rollback só altera apresentação.

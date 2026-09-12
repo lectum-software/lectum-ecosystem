@@ -2417,3 +2417,24 @@ Fontes de produção conferidas após os testes: `/tmp/lectum-367-production-fre
 Sem nova UI/rota, env obrigatória, package ou migration; rollback restaura apenas o cálculo.
 Smoke pós-push: `/tmp/lectum-audit-367-smoke-curl-homolog.json` (a executar após publicar).
 Os testes isolados não concluem homologação funcional geral nem autorizam produção.
+
+367/515e1bf5 publicado: smoke5/5 em 2026-09-12T15:02:05.520087+00:00; backend/frontend/Admin367, health/ready200.
+Browser Admin ranking da comunidade de auditoria carregou após reload, pontuação17, sem erro.
+Houve502 durante substituição do backend, preservado em /tmp/lectum-audit-367-smoke-during-rollout.json;
+o smoke final recuperou. Vídeo privado continua sem nova prova de versão.
+
+###368 — ranking acessível e PT-BR
+
+Fonte inline preservada; label sr-only, Search aria-hidden, input search, singularcount1 e
+Pontuação. Guardas AST12/12 (baseline6pass/6fail) não são evidência de execução de queries.
+O primeiro check apontou palavra negada em comentário do teste; comentário foi esclarecido,
+sem modificar o scanner nem dispensar proteção. Check final1444/1438pass/0fail/6skipsdrawtext:
+`/tmp/lectum-368-root-check-final.log`. Adminbuild: `/tmp/lectum-368-admin-build.log`.
+Browserlocal usa somente JSX de apresentação original compilado, com React/lucide/StatusBadge/
+formatter reais, sem API/query/provider substituído. Artefatos `/tmp/lectum-368-ui` e imagens
+mobile.png/desktop.png. Em390/1280 sem overflow, input313/1198px. Contagens0/1/2/1000 e nome
+acessível conferidos. Digitação atualizou o valor; fill vazio do driver não confirmou alteração,
+e limpeza nativa pelo X confirmou valor vazio. Viewport restaurado ao padrão.
+Isso não certifica Safari/iOS/Android nem a query doTab; busca publicada será verificada após
+push. Builder retornou só DSglobalMUI, não QuickCopyLectum; PNG local do inventário consultado.
+Sem schema/env/package/deployorder novo; somente versão sincronizada nas quatro aplicações.
