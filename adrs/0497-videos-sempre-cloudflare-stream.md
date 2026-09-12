@@ -42,6 +42,10 @@ escrita em dados publicados foi executado.
 - O comando oficial `video:migrate-r2-to-stream` continua sendo o caminho de backfill. O modo
   `--dry-run` pode rodar sem provider Stream para inventário seguro; `--apply` continua exigindo
   provider Stream real e confirmação explícita do ambiente.
+- Como o ambiente local não tem acesso aos secrets publicados, o backend também passa a iniciar um
+  lote de backfill em background no boot da API de homologação. Esse lote usa o mesmo serviço oficial,
+  limite de 50 candidatos, lock transacional, provider Stream real do runtime e nunca apaga objetos ou
+  capas R2. Produção permanece em skip seguro por padrão e só roda com opt-in operacional explícito.
 
 ## Consequências
 
@@ -50,8 +54,9 @@ escrita em dados publicados foi executado.
 - Se o Stream publicado estiver indisponível, novos vídeos ficam temporariamente bloqueados em vez de
   gerar arquivo original no R2. Isso é intencional porque preserva a arquitetura alvo, evita nova
   dívida de migração e reduz travamentos por arquivo original.
-- Vídeos R2 existentes continuam tocando pelo caminho legado até o backfill; eles não são apagados e
-  podem continuar apresentando performance inferior ao Stream.
+- Vídeos R2 existentes continuam tocando pelo caminho legado até o backfill de startup/manual
+  associar uma referência Stream pronta; eles não são apagados e podem continuar apresentando
+  performance inferior ao Stream enquanto pendentes.
 - ADR-0487 e ADR-0489 ficam superseded apenas na parte de fallback R2. Decisões ainda válidas sobre
   mensagens públicas seguras, limpeza best effort e não exposição de provider permanecem aplicáveis.
 
@@ -59,12 +64,14 @@ escrita em dados publicados foi executado.
 
 - Compatibilidade com dados existentes: aditiva. Nenhum schema/migration; URLs R2 legadas continuam
   legíveis e migráveis pela TASK-165.
-- Envs: nenhuma env nova. O backend precisa manter as envs Stream já existentes configuradas; isso
-  não é uma nova exigência deste deploy.
+- Envs: `R2_TO_STREAM_STARTUP_MIGRATION` é opcional e tem fallback seguro `auto`; em homologação
+  publicada roda o lote de startup, em produção não roda sem opt-in explícito. O backend precisa
+  manter as envs Stream já existentes configuradas; isso não é uma nova exigência deste deploy.
 - Compatibilidade entre versões: frontend novo sempre chama Stream; backend novo recusa legado de
   vídeo. Frontend antigo que tentar R2 para vídeo recebe erro público seguro em vez de criar objeto.
 - Ordem: publicar backend e frontend em `homolog`, validar `/health`, `/ready`, `/ping`, `/version`
-  e então executar o runbook da TASK-165 em lotes pequenos dentro do ambiente com secrets reais.
+  e acompanhar os logs `[R2_STREAM_STARTUP_MIGRATION_*]`. O runbook manual da TASK-165 permanece
+  disponível para dry-run/reexecução em lotes pequenos dentro do ambiente com secrets reais.
 - Rollback: reverter este commit reabriria o fallback R2; se rollback for inevitável, não apagar
   ativos Stream nem objetos R2. Preferir manter bloqueio temporário de novos vídeos a voltar a criar
   R2.
@@ -76,12 +83,14 @@ escrita em dados publicados foi executado.
   - feed de comunidade: 10 vídeos de post lidos, 1 ainda em R2 e 9 em Stream;
   - respostas de posts do feed: 11 vídeos de resposta lidos, 2 ainda em R2 e 9 em Stream.
 - Tentativa local do backfill oficial foi interrompida sem escrita porque o ambiente local não tinha
-  credenciais válidas do banco publicado nem envs Stream.
+  credenciais válidas do banco publicado nem envs Stream; por isso, a aplicação do backfill foi
+  movida para o boot seguro do backend em homologação.
 - Validações automatizadas desta correção ficam registradas no fechamento operacional da task.
 
-## Pendências
+## Operação manual complementar
 
-- Executar, no container/runtime do backend de homologação com secrets reais, após o deploy:
+- Se for preciso reexecutar ou auditar fora do startup, usar no container/runtime do backend de
+  homologação com secrets reais:
 
 ```bash
 pnpm --dir backend video:migrate-r2-to-stream -- --dry-run --limit=5

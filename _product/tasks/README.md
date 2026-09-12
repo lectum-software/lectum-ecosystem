@@ -1896,6 +1896,11 @@ Uma task só pode ser marcada como concluída quando:
   backfill.
 - O comando `video:migrate-r2-to-stream` passa a permitir `--dry-run` sem provider Stream local para
   inventário seguro; `--apply` segue exigindo provider real e confirmação explícita do ambiente.
+- Complemento solicitado em 2026-09-12: como o ambiente local não tem acesso aos secrets publicados,
+  o backend passa a iniciar no boot da API um lote de backfill R2 -> Stream em background quando o
+  runtime detectado for homologação. A API não bloqueia `/health`/`/ready`; o lote usa lock
+  transacional, limite 50, referências determinísticas e não apaga objetos/capas R2. Produção fica em
+  skip seguro por padrão e só roda com opt-in explícito por `R2_TO_STREAM_STARTUP_MIGRATION`.
 - Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, limpeza de bucket ou
   exclusão de objetos. Rollback simples reverte o bloqueio de escrita, mas não deve apagar ativos
   Stream nem objetos R2.
@@ -1903,13 +1908,23 @@ Uma task só pode ser marcada como concluída quando:
   - [x] Novos uploads de vídeo de apresentação, post e resposta não têm fallback frontend para R2.
   - [x] Endpoints legados backend recusam vídeo antes de gravar/associar R2 e preservam imagens.
   - [x] Inventário read-only das superfícies de psicólogos e comunidade foi executado sem escrita.
-  - [ ] Migração dos R2 existentes em homologação: pendente de terminal/runtime do backend com
-        credenciais reais de banco/R2/Stream para executar o runbook da TASK-165.
+  - [x] Boot da API em homologação dispara backfill R2 -> Stream em background usando o runtime com
+        credenciais reais, sem bloquear a API e sem apagar R2.
+  - [ ] Migração dos R2 existentes em homologação: pendente até o lote de startup no runtime do
+        backend com credenciais reais de banco/R2/Stream concluir, ou execução manual do runbook da
+        TASK-165.
 - Validações locais: testes focados frontend/backend de Stream; `pnpm --dir frontend check`;
   `pnpm --dir frontend build`; `pnpm --dir backend check`; `pnpm --dir backend build`;
   `pnpm --dir backend video:migrate-r2-to-stream -- --help`; `pnpm --dir admin check`;
   `pnpm check:encoding`; `pnpm check:adrs`; `pnpm check:tasks`; `git diff --check`; `pnpm check`;
   `pnpm version:bump` para `0.1.370`; `pnpm check:version`.
+- Validações locais do complemento de startup: teste focado
+  `pnpm --dir backend exec node --import tsx --test src/modules/video-assets/r2-migration/startup.test.ts`;
+  `pnpm --dir backend check` (após reexecutar e confirmar isoladamente um timeout transitório de
+  `scripts/optional-auth-failure.test.mjs`); `pnpm --dir backend build`;
+  `pnpm --dir backend video:migrate-r2-to-stream -- --help`; `pnpm check:env`;
+  `pnpm check:adrs`; `pnpm check:tasks`; `pnpm check:encoding`; `git diff --check`;
+  `pnpm version:bump` para `0.1.371`; `pnpm check:version`; `pnpm check`.
 - A instalação local do backend foi sincronizada com o lockfile via
   `pnpm --dir backend install --frozen-lockfile` antes da suíte completa, sem alterar manifests.
 - Commit/push e smoke de homologação serão registrados após deploy. O runbook pendente deve rodar

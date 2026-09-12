@@ -4,4 +4,6 @@ export * from "./policy";
 export * from "./repository";
 export * from "./service";
 export * from "./source";
+export * from "./startup";
+export * from "./startup-policy";
 export * from "./types";

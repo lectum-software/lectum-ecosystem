@@ -62,7 +62,7 @@ Regras:
 
 - Não retornar nem exibir stack trace, SQL, nomes internos, mensagens cruas de provider, URLs internas, token, segredo ou PII.
 - Logs devem usar contexto mínimo, identificadores de correlação e dados sanitizados.
-- Jobs, campanhas e migrações de dados que possam produzir efeitos reais começam desabilitados e exigem ativação explícita depois de inspecionar registros pendentes.
+- Jobs, campanhas e migrações de dados que possam produzir efeitos reais começam desabilitados e exigem ativação explícita depois de inspecionar registros pendentes. Exceções de startup só são permitidas com inventário prévio, ADR, lock/idempotência, skip seguro por ambiente e opção de pausa documentada.
 - Para mudança backend, validar `/health` (processo) e `/ready` (dependências) após deploy em homologação.
 - Toda task deve declarar riscos de deploy, rollback e ações manuais; “nenhum” também deve ser registrado quando confirmado.
 
@@ -395,9 +395,12 @@ Templates/shells devem viver em `frontend/src/templates`.
   Stream. Rollback de escrita não deve recriar fallback R2; se o Stream publicado ficar indisponível,
   bloquear temporariamente novos vídeos é mais seguro do que gerar arquivos originais em R2. Nunca
   apagar ativos Stream ou objetos R2 no rollback.
-- O backfill de referências R2 existentes pertence à TASK-165 e nunca roda no boot/deploy. Usar a
-  operação compilada `video:migrate-r2-to-stream` em dry-run e lotes pequenos, com confirmação
-  explícita do ambiente para qualquer escrita.
+- O backfill de referências R2 existentes pertence à TASK-165. A partir de 2026-09-12, depois do
+  inventário e da decisão ADR-0497, o backend dispara no boot de **homologação** um lote em
+  background de R2 -> Stream com lock transacional, referência determinística e sem apagar R2; a API
+  não deve depender desse backfill para ficar pronta. Produção permanece em skip seguro salvo opt-in
+  operacional explícito. O comando compilado `video:migrate-r2-to-stream` continua disponível para
+  dry-run e execução manual em lotes, com confirmação explícita do ambiente para qualquer escrita.
 - A importação por link reconstrói a origem com o `BASE` atual, valida o objeto no R2 e exige
   `HEAD`/`GET Range` antes de chamar Stream. `creator` e `migration_key` determinísticos permitem
   retomada; resposta ambígua do provider falha fechada.

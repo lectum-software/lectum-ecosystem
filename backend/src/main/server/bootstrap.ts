@@ -14,6 +14,7 @@ import {
   stopPostShareArtifactCleanupScheduler,
 } from "@/main/post-share-artifacts/cleanup";
 import { soc } from "@/main/socket/state";
+import { startR2ToStreamStartupMigration } from "@/modules/video-assets/r2-migration/startup";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import app from "./app";
 import { env } from "./environment";
@@ -24,6 +25,7 @@ const server = app.listen(env.PORT, () => {
   startNotificationCampaignScheduler();
   startBillingDunningScheduler();
   startPostShareArtifactCleanupScheduler();
+  startR2ToStreamStartupMigration();
 });
 
 let shuttingDown = false;
