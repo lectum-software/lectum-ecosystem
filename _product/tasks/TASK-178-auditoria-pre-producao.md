@@ -1276,7 +1276,7 @@ regras em vez de duplicar fixtures ou criar infraestrutura paralela.
 - [x] Ações, autores e subtotais respeitam intervalo inclusivo e média da faixa.
 - [x] Histórico de tráfego/formatos e correção363 preservados, sem mutar entradas.
 - [x] Testes reais, revisão independente, check global e backend build aprovados.
-- [ ] Commit/push, versões, health/ready e leitura normal publicados registrados.
+- [x] Commit/push, versões, health/ready e leitura normal publicados registrados.
 
 364:29testes reais de contexto/célula/tráfego aprovados;17C6preservados e12C5novos.
 BaselineC5:6pass/6fail;depois12pass. Inclusão dos extremos, criação própria de resposta,
@@ -1288,3 +1288,52 @@ comunitária. Nenhum conteúdo/atividade foi criado ou alterado para produzir es
 eBiome aprovados. 29testes compilados reais passaram. Revisão independente3fontes/1563linhas
 sem regressão identificada, hashes atuais conferidos eledger atualizado. Bump364único/checkversion
 feito, nenhum outrobumpparaestecommit. Nenhuma migration/env/package nova. Publicação pendente.
+
+364/c4d3aa3e:commit/push/deployconfirmados. Smoke5/5 backend/frontend/Admin364,
+health/ready200 eNextversionsno-store/noindex. Apósreload+reaplicarHoje12/09,descrição
+AX/title manteve22conteúdos históricos(7posts/15respostas) e demais números;atividade
+passou de6para0profissionais e de1,2para0ações por profissional. Sem mutações publicadas.
+Resultado é leitura normal agregada, não certificação de todas as consultas históricas.
+
+### Continuação365 — precedência e confirmação do registro profissional
+
+Decisão do usuário em12/09:seguir a melhor estrutura. Adotar precedência conservadora:
+rejeição manual persistida só pode ser revertida por nova revisão humana. Confirmação
+automática não pode substituir identidade já aprovada, evidência CFP ou cortesia ativa.
+Retry idêntico deve devolver a confirmação original sem regravar identidade/data;
+resultado alternativo não é retry. Revalidar a consulta persistida dentro da transação,
+serializar a escrita do perfil e confirmar o histórico atomicamente. Decisões humanas
+concorrentes devem validar o snapshot antes de escrever; rejeitar decisão obsoleta sem
+auditoria de uma alteração inexistente. Busca não deve trocar CPF de perfil rejeitado.
+Não introduzir KYC, desfazer aprovações anteriores, alterar direitos legados ou resolver
+C17-A/C18 nesta correção. Sem migration, env, package ou UI nova; contrato de sucesso
+preservado e conflito com mensagem curta PTBR. Rollback de código apenas. Testes em
+PostgreSQL descartável isolado e imagem imutável, sem configuração publicada ou provider.
+
+- [x] Aprovação/rejeição/cortesia protegidas contra confirmação alternativa.
+- [x] Retry exato idempotente e confirmação/histórico atômicos sob concorrência real.
+- [x] Decisão humana obsoleta não sobrescreve registro nem cria histórico enganoso.
+- [x] Testes reais, revisão independente e checks/build registrados.
+- [ ] Commit/push, versões e smoke publicados registrados.
+
+365 detalhe de borda:edição de perfil também usava o bloqueio calculado antes da
+transação. Revalidar CPF/CRP na mesma escrita; manter demais campos editáveis. O campo
+identity_fields_locked existente deve refletir aprovação/evidência/rejeição mesmo após
+retorno ao plano gratuito ou com identidade parcial; sem isso o formulário promete uma
+alteração que o backend descarta. Cadastro gratuito pendente segue editável. Reusar helper
+transacional Serializable existente com retries limitados, sem criar infra de locks.
+
+365:6testes puros aprovados. Checkglobal1304testes/1298pass/0fail/6skipsdrawtextpreexistentes,
+Prisma/TS/Biome/buildlocal e Docker365 aprovados. Primeira execução encontrou probe em
+edição; repetição integral passou, sem relaxar check. Bump365executado uma única vez;
+checkversionaprovado. Nenhuma migration/env/package nova. Prova PG/deploy ainda pendentes.
+
+365:38cenários emPostgreSQL descartável real passaram na imagem imutável final
+93e2c5f0d97ec6d4253598d94bf0ca4e6773e42eef47241be50dd2a80d92ad4c.
+Baseline358:7pass/31fail. Falha de escrita do histórico provocada por constraint local
+confirmou rollback de perfil/histórico; ocorreu códigoP2039, nãoP2004 suposto inicialmente
+pelo teste. Expectativa corrigida com identificação da constraint, sem mudar produto.
+Seis testes puros também passaram noJScompilado da imagem, sem rede. Revisão independente
+Mendel15arquivos(11integrais/4parciais),hashes conferidos/ledger; sem bloqueante novo.
+Gauss9fontesdraft(5integrais/4parciais),diagnóstico dewriters eprecedência sem bloqueante;
+não equivale a teste universal. Nenhuma mutação ou consultaCFP publicada. Pushpendente.

@@ -288,7 +288,10 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 363: publicada; 17 testes focais/check/build/revisão/smoke aprovados e valores conferidos no Admin.
 
 158. **Atividade do período:** publicações antigas deixam de contar como ações recentes; o histórico continua disponível nos relatórios de conteúdo.
-364: 29 testes focais, revisão/check/build aprovados; publicação em andamento.
+364: publicada; 29 testes focais/revisão/check/build/smoke aprovados e filtro Hoje conferido no Admin.
+
+159. **Registro profissional protegido:** confirmação repetida não troca CPF/CRP nem desfaz reprovação manual; decisões simultâneas não sobrescrevem uma à outra.
+365: 38 cenários em banco isolado, testes/check/build e revisão aprovados; publicação pendente.
 
 ## Ainda pendente
 

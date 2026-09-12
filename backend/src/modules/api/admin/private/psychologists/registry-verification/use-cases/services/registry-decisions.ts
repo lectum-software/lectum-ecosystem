@@ -121,15 +121,15 @@ export const approveRegistryVerification = async (
     );
   }
 
-  const previous = await repository.getPreviousProfile(profile.id);
-  if (!previous) return notFound();
+  const previous = profile;
 
   const checkedAt = new Date();
   const crp = buildCrp(regionalCrp, registrationNumber);
   if (!crp) return serviceError(400, "admin_registry_verification_approval_invalid");
 
   const actor = toActor(data.auth ?? data.admin);
-  await repository.approveManual(profile.id, {
+  const decision = await repository.approveManual(profile.id, {
+    expectedProfile: previous,
     checkedAt,
     cpf,
     crp,
@@ -161,6 +161,8 @@ export const approveRegistryVerification = async (
     regionalCrp,
   });
 
+  if (!decision) return serviceError(409, "admin_registry_verification_changed");
+
   const updatedProfile = await repository.findPsychologist(data.p.id);
 
   return {
@@ -190,14 +192,14 @@ export const rejectRegistryVerification = async (
   const reason = trimOrNull(data.b.reason);
   if (!reason) return serviceError(400, "admin_registry_verification_rejection_invalid");
 
-  const previous = await repository.getPreviousProfile(profile.id);
-  if (!previous) return notFound();
+  const previous = profile;
 
   const checkedAt = new Date();
   const { regional_crp, registration_number } = splitCrp(previous.crp);
   const actor = toActor(data.auth ?? data.admin);
 
-  await repository.rejectManual(profile.id, {
+  const decision = await repository.rejectManual(profile.id, {
+    expectedProfile: previous,
     checkedAt,
     cpf: onlyDigits(previous.cpf) || null,
     raw: {
@@ -222,6 +224,8 @@ export const rejectRegistryVerification = async (
     registrationNumber: registration_number,
     regionalCrp: regional_crp,
   });
+
+  if (!decision) return serviceError(409, "admin_registry_verification_changed");
 
   const updatedProfile = await repository.findPsychologist(data.p.id);
 

@@ -1,18 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { error, msg } from "@/helpers/translate";
-import type { professional_registry_check } from "@/interfaces/objects";
-import { normalizeCrpRegistrationNumber } from "@/utils/professional-registry";
 import type {
-  CfpResult,
   CfpSearchAttempts,
   ICfpConfirmDTO,
   ICfpSearchDTO,
   StoredRegistryCheckRaw,
 } from "../DTOs/ICfpDTO";
+import { extractStoredResults } from "../domain/stored-results";
 import {
   InfoSimplesCfpProvider,
   InfoSimplesCfpProviderError,
-  normalizeCfpResults,
 } from "../providers/InfoSimplesCfpProvider";
 import { CfpRepository } from "../repositories/CfpRepository";
 
@@ -103,35 +100,6 @@ const logProviderUnavailable = (err: unknown, traceId: string) => {
     reason: "unknown",
     traceId,
   });
-};
-
-const asStoredRaw = (value: unknown): StoredRegistryCheckRaw | null => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-
-  const raw = value as Partial<StoredRegistryCheckRaw>;
-  if (raw.provider !== "infosimples") return null;
-
-  return raw as StoredRegistryCheckRaw;
-};
-
-const normalizeResultRegistrationNumber = (result: CfpResult): CfpResult => ({
-  ...result,
-  registro: normalizeCrpRegistrationNumber(result.registro),
-});
-
-const extractStoredResults = (check: professional_registry_check): CfpResult[] => {
-  const raw = asStoredRaw(check.raw);
-  if (Array.isArray(raw?.normalized_results)) {
-    return raw.normalized_results.map(normalizeResultRegistrationNumber);
-  }
-
-  if (raw?.response && typeof raw.response === "object") {
-    return normalizeCfpResults(raw.response as Parameters<typeof normalizeCfpResults>[0]).map(
-      normalizeResultRegistrationNumber,
-    );
-  }
-
-  return [];
 };
 
 const createStoredRaw = (props: {
@@ -509,17 +477,28 @@ export const confirm = async (data: ICfpConfirmDTO) => {
     };
   }
 
-  const updatedProfile = await repository.confirmResult({
+  const outcome = await repository.confirmResult({
     check,
     result: selected,
   });
 
-  return {
-    status: 200,
-    ...msg("cfp_confirm_success", {}),
-    data: {
-      result: selected,
-      profile: updatedProfile,
-    },
-  };
+  if (!outcome.ok) {
+    const code =
+      outcome.reason === "profile_locked"
+        ? "cfp_confirmation_locked"
+        : outcome.reason === "result_not_active"
+          ? "cfp_result_not_active"
+          : "cfp_result_not_found";
+    return {
+      status:
+        outcome.reason === "profile_locked"
+          ? 409
+          : outcome.reason === "result_not_active"
+            ? 400
+            : 404,
+      ...error(code, {}),
+    };
+  }
+
+  return { status: 200, ...msg("cfp_confirm_success", {}), data: outcome.data };
 };

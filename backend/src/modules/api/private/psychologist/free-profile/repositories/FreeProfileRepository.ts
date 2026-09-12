@@ -1,6 +1,8 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { retireOwnedVideoAssetReference } from "@/modules/video-assets/lifecycle";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import { automaticRegistryIdentityWhere } from "@/utils/professional-registry-write";
 import type {
   FreeProfessionalProfileResponse,
   FreeProfessionalProfileUpdateBody,
@@ -46,7 +48,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
     const profile = existing?.psychologist_profile;
     if (!existing || !profile) return null;
 
-    await prisma.$transaction(async (tx) => {
+    await withSerializableTransaction(async (tx) => {
       await tx.user.update({
         where: { id: userId },
         data: { name: body.name },
@@ -60,12 +62,10 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           headline: body.headline,
           bio: body.bio,
           modality: body.modality,
-          cpf: options.lockIdentityFields ? undefined : body.cpf,
           birthdate: body.birthdate,
           gender: body.gender,
           race_color: body.race_color,
           religion: body.religion,
-          crp: options.lockIdentityFields ? undefined : buildCrp(body.crp_region, body.crp_number),
           whatsapp: body.whatsapp,
           languages: body.languages as Prisma.InputJsonValue,
           video_url: options.canUploadVideo ? undefined : null,
@@ -90,6 +90,15 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           published: body.published,
         },
       });
+
+      if (!options.lockIdentityFields) {
+        // The profile update above holds its row; recheck identity protection in the same
+        // transaction instead of trusting the entitlement snapshot taken by the service.
+        await tx.psychologist_profile.updateMany({
+          where: automaticRegistryIdentityWhere(profile.id),
+          data: { cpf: body.cpf, crp: buildCrp(body.crp_region, body.crp_number) },
+        });
+      }
 
       const relationDeletedAt = new Date();
 

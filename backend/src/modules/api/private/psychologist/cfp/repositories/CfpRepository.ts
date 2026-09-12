@@ -1,13 +1,20 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_registry_check, psychologist_profile } from "@/interfaces/objects";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";
 import {
   buildCrpFromRegistryResult,
   normalizeCrpRegistrationNumber,
 } from "@/utils/professional-registry";
-import { activeProfessionalCourtesyEntitlementWhere } from "@/utils/subscription-entitlement";
-import type { CfpResult, CfpSearchBody, StoredRegistryCheckRaw } from "../DTOs/ICfpDTO";
+import { automaticRegistryIdentityWhere } from "@/utils/professional-registry-write";
+import type {
+  CfpConfirmationOutcome,
+  CfpResult,
+  CfpSearchBody,
+  StoredRegistryCheckRaw,
+} from "../DTOs/ICfpDTO";
+import { asStoredRaw, extractStoredResults } from "../domain/stored-results";
 import type { ICfpRepository } from "./interfaces/ICfpRepository";
 
 const normalizeDigits = (value?: string | null) => (value || "").replace(/\D/g, "");
@@ -50,19 +57,7 @@ export class CfpRepository implements ICfpRepository {
       data: {
         cpf,
       },
-      where: {
-        id: props.psychologistId,
-        deleted: false,
-        cfp_verified_at: null,
-        crp_status: {
-          not: "aprovado",
-        },
-        NOT: {
-          subscriptions: {
-            some: activeProfessionalCourtesyEntitlementWhere(),
-          },
-        },
-      },
+      where: automaticRegistryIdentityWhere(props.psychologistId),
     });
   }
 
@@ -99,60 +94,83 @@ export class CfpRepository implements ICfpRepository {
     });
   }
 
-  async confirmResult(props: { check: professional_registry_check; result: CfpResult }): Promise<{
-    id: string;
-    cpf: string | null;
-    crp: string | null;
-    crp_status: string;
-    cfp_verified_at: Date | null;
-  }> {
-    const raw = props.check.raw as StoredRegistryCheckRaw | null;
-    const confirmedAt = new Date();
-    const cpf = normalizeDigits(props.check.cpf) || null;
-    const crp =
-      buildCrpFromRegistryResult(props.result) ||
-      normalizeCrpRegistrationNumber(props.check.registro) ||
-      null;
-    const crpRegistrationDate = parseCrpRegistrationDate(props.result.data_inscricao);
-
-    return prisma.$transaction(async (tx) => {
-      await tx.professional_registry_check.update({
+  async confirmResult(props: {
+    check: professional_registry_check;
+    result: CfpResult;
+  }): Promise<CfpConfirmationOutcome> {
+    return withSerializableTransaction<CfpConfirmationOutcome>(async (tx) => {
+      const check = await tx.professional_registry_check.findFirst({
         where: {
           id: props.check.id!,
-        },
-        data: {
-          raw: {
-            ...(raw || {
-              provider: "infosimples",
-              request: {},
-              response: null,
-              normalized_results: [],
-            }),
-            confirmed_result_key: props.result.key,
-            confirmed_at: confirmedAt.toISOString(),
-          } as Prisma.InputJsonValue,
+          psychologist_id: props.check.psychologist_id!,
+          deleted: false,
         },
       });
+      if (!check) return { ok: false, reason: "check_not_found" };
+      const result = extractStoredResults(check).find((item) => item.key === props.result.key);
+      if (!result) return { ok: false, reason: "result_not_found" };
+      if (!result.active) return { ok: false, reason: "result_not_active" };
 
-      return tx.psychologist_profile.update({
-        where: {
-          id: props.check.psychologist_id!,
-        },
-        data: {
-          cpf,
-          crp,
-          crp_registration_date: crpRegistrationDate,
-          crp_status: "aprovado",
-          cfp_verified_at: confirmedAt,
-        },
+      const raw = asStoredRaw(check.raw)!;
+      const confirmedAt = new Date();
+      const identity = {
+        cpf: normalizeDigits(check.cpf) || null,
+        crp:
+          buildCrpFromRegistryResult(result) ||
+          normalizeCrpRegistrationNumber(check.registro) ||
+          null,
+        crp_registration_date: parseCrpRegistrationDate(result.data_inscricao),
+      };
+      // Claim the profile before changing the check. Concurrent confirmations and human
+      // decisions serialize on this row; a losing confirmation must not rewrite history.
+      const updated = await tx.psychologist_profile.updateMany({
+        where: automaticRegistryIdentityWhere(check.psychologist_id),
+        data: { ...identity, crp_status: "aprovado", cfp_verified_at: confirmedAt },
+      });
+      const profile = await tx.psychologist_profile.findFirst({
+        where: { id: check.psychologist_id, deleted: false },
         select: {
           id: true,
           cpf: true,
           crp: true,
+          crp_registration_date: true,
           crp_status: true,
           cfp_verified_at: true,
         },
       });
+      if (!profile) return { ok: false, reason: "profile_locked" };
+
+      if (updated.count === 0) {
+        // Re-read after waiting on the profile, rather than trusting the pre-lock snapshot.
+        const confirmed = await tx.professional_registry_check.findFirst({
+          where: { id: check.id, psychologist_id: check.psychologist_id, deleted: false },
+        });
+        const confirmedRaw = asStoredRaw(confirmed?.raw);
+        const exactRetry =
+          profile.crp_status === "aprovado" &&
+          profile.cfp_verified_at !== null &&
+          confirmedRaw?.confirmed_result_key === result.key &&
+          confirmedRaw.confirmed_at === profile.cfp_verified_at.toISOString() &&
+          profile.cpf === identity.cpf &&
+          profile.crp === identity.crp &&
+          (profile.crp_registration_date?.getTime() ?? null) ===
+            (identity.crp_registration_date?.getTime() ?? null);
+        if (!exactRetry) return { ok: false, reason: "profile_locked" };
+      } else {
+        // A missing/deleted check causes rollback, never an approval without its evidence.
+        await tx.professional_registry_check.update({
+          where: { id: check.id, psychologist_id: check.psychologist_id, deleted: false },
+          data: {
+            raw: {
+              ...raw,
+              confirmed_result_key: result.key,
+              confirmed_at: confirmedAt.toISOString(),
+            } as Prisma.InputJsonValue,
+          },
+        });
+      }
+      const { crp_registration_date: _registrationDate, ...publicProfile } = profile;
+      return { ok: true, data: { result, profile: publicProfile } };
     });
   }
 }

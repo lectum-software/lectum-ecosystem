@@ -79,3 +79,10 @@ export interface ICfpConfirmDTO {
   b: CfpConfirmBody;
   auth: user;
 }
+
+export type CfpConfirmationOutcome =
+  | { ok: true; data: CfpConfirmResponse }
+  | {
+      ok: false;
+      reason: "profile_locked" | "check_not_found" | "result_not_found" | "result_not_active";
+    };

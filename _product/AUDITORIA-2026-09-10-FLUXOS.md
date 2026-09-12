@@ -267,3 +267,15 @@ Backend/frontend/Admin363,health/ready200;Nextversionsno-store/noindex. Browsern
 emTodooperíodo:descriçõesAX/title das3categorias mostram9,1→2;12,9→0,6;6,3→2,3views/conteúdo.
 Demais textos/contagens iguais. Evidência antes/depois no diretórioC6;sem requestparalelo
 ou mutação publicada. Limite: não é auditoria de todas as relações históricas nem de vídeo privado.
+
+364/c4d3aa3e:push/deployconfirmados;5GETs públicos em /tmp/lectum-audit-364-smoke-curl-homolog.json,
+backend/frontend/Admin364,health/ready200,Nextversionsno-store/noindex. Browsernormal,
+apósreload+Hoje12/09:22conteúdos(7posts/15respostas) mantidos;autores ativos6→0,ações
+porprofissional1,2→0;demais textos iguais. Semmutação, semAPIparalela/estadointerno.
+Antes/depois: /tmp/lectum-task178-community-activity-364/browser-{before,after}.json.
+Serviço privado de vídeo não verificado neste smoke;última prova fornecida338.
+
+365/C17-B:confirmação de registro validada em PostgreSQL real isolado(38cenários),
+incluindo disputaautomática/manual, idempotência, proteçãoCPF/CRP noautosserviço e rollback.
+Nenhuma chamada aoCFP ou alteração de registro emhomolog para fabricar essa prova.
+Teste de providercomregistroreal/C17-A permanece separado. Deploy/smoke pendentes.

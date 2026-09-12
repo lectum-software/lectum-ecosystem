@@ -120,8 +120,6 @@ export const hasText = (value?: string | null) => Boolean(value?.trim());
 
 export const isProfessionalIdentityLocked = ({
   cfpVerifiedAt,
-  cpf,
-  crp,
   crpStatus,
   isFree,
   source,
@@ -132,16 +130,11 @@ export const isProfessionalIdentityLocked = ({
   crpStatus?: string | null;
   isFree: boolean;
   source?: string | null;
-}) => {
-  const hasAdministrativeCourtesy = !isFree && source === "admin_grant";
-  const hasVerifiedRegistryIdentity =
-    !isFree &&
-    (Boolean(cfpVerifiedAt) || crpStatus === "aprovado") &&
-    onlyDigits(cpf).length === 11 &&
-    hasText(crp);
-
-  return hasAdministrativeCourtesy || hasVerifiedRegistryIdentity;
-};
+}) =>
+  Boolean(cfpVerifiedAt) ||
+  crpStatus === "aprovado" ||
+  crpStatus === "rejeitado" ||
+  (!isFree && source === "admin_grant");
 
 export const buildActivationPendingFields = ({
   address,

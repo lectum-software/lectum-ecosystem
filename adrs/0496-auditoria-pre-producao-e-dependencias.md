@@ -1212,3 +1212,30 @@ de post/resposta e dateInRange existente, após filtro de autores. Não acrescen
 célula usa os mesmos valores no subtotal. Formato continua histórico, com disponibilidade
 de conteúdo, evitando metadado contraditório sem atividade nova. Nenhuma fórmula ou
 threshold novo. Testes puros do contexto+célula reutilizam fixtures locais; não são E2E.
+
+### 365 — decisão C17-B e persistência segura do registro
+
+O usuário autorizou seguir a melhor estrutura em12/09. Uma reprovação manual persistida
+não é revogada por resultado automático posterior:exige revisão humana. Também ficam
+protegidos identidade aprovada, evidência CFP e cortesia ativa. Nenhuma nova comprovação
+de identidade da pessoa, revogação/backfill ou alteração de direitos legados é introduzida.
+
+Reusar transações Prisma e escrita condicional do perfil, como nos controles concorrentes
+já existentes, em vez de criar lock distribuído, tabela ou serviço. Confirmar perfil e
+histórico juntos; reler o resultado persistido e só admitir retry sem escrita quando a
+confirmação e a identidade atuais forem exatamente as mesmas. Revisão humana usa snapshot
+condicional para não aplicar uma decisão antiga depois de outra aprovação/edição. Conflitos
+retornam mensagem PTBR curta e não entram no histórico como sucesso. Busca preserva CPF
+rejeitado. Manter normalização e compatibilidade do resultado armazenado, sem resolver
+ambiguidade C17-A ou consumo/reserva C18. Testar concorrência PostgreSQL em rede local
+isolada, sem provider e sem credenciais publicadas. Sem migration/env/package/UI;rollback
+somente código, não reescrita de dados. Aceites continuam abertos até prova executada.
+
+365: predicado compartilhado também aplicado no autosserviço, após escrita geral que
+serializa a linha. A flag identity_fields_locked existente deixa de liberar registro
+aprovado/evidenciado/rejeitado só porque está gratuito ou incompleto. Pendentes gratuitos
+continuam editáveis. Identidade protegida incompleta exige correção humana; não libera
+substituição automática nem revoga direitos. Entitlement manual é rechecado no CAS e sua
+consulta usa período corrente, não o instante do boot. Precedência de exibição de CRP
+histórico versus correção humana é C14 separado, não alterada. Primeira revisão de fonte
+Gauss não encontrou bloqueante nos trechos lidos; não atesta execução concorrente.

@@ -2328,3 +2328,41 @@ caso de teste apósfim é defensivo e não reprodução dessa query.
 aprovados. RevisãoGauss3fontes finais/1563linhas, hashes atuais conferidos noledger.
 Relatório/tmp/lectum-task178-community-activity-364-review/report.md. Nenhuma regressão
 identificada; revisão estática não substitui testes/Browser. Publicação pendente.
+
+364/c4d3aa3e:push/deployconfirmados;5GETs públicos em /tmp/lectum-audit-364-smoke-curl-homolog.json,
+backend/frontend/Admin364,health/ready200,Nextversionsno-store/noindex. Browsernormal,
+apósreload+Hoje12/09:22conteúdos(7posts/15respostas) mantidos;autores ativos6→0,ações
+porprofissional1,2→0;demais textos iguais. Semmutação, semAPIparalela/estadointerno.
+Antes/depois: /tmp/lectum-task178-community-activity-364/browser-{before,after}.json.
+Serviço privado de vídeo não verificado neste smoke;última prova fornecida338.
+
+### 365 — registro profissional e precedência humana (C17-B)
+
+Decisão12/09:rejeição manual persistida exige nova revisão humana; não é KYC. Reuso de
+Serializable com retries limitados, escrita condicional do perfil e evidência na mesma
+transação. Retry exige mesma consulta/chave/identidade/status/data e não regrava. Decisões
+manuais com snapshot obsoleto retornam conflito sem auditoria falsa; conferem entitlement
+corrente. Busca/edição do perfil também preservam identidade protegida. Booleano existente
+de editabilidade acompanha a regra inclusive em downgrade/identidade incompleta; demais
+campos permanecem editáveis. Nenhuma aprovação foi revogada, nenhum dado publicado alterado.
+Sem nova env/package/migration/reset. Precedência visual do CRP histórico permanece C14,
+sem manipular histórico nesta correção. Rollback somente código.
+
+Seis testes puros da extração real passaram:normalização/chave, compatibilidade legada,
+lista vazia, revisão humana, atividade falsa e ausência de evidência. Checkglobal1304testes,
+1298pass/0fail/6skipsdrawtextpreexistentes;Prisma/TS/Biome aprovados. Primeira execução pegou
+probe ainda sendo editado, com formatação/variáveis temporárias; repetição integral passou.
+Buildlocal e Docker365 aprovados, hash da imagem final registrado no log. Validação real
+PostgreSQL e publicação ainda pendentes nesta anotação; não são certificadas por testes puros.
+
+365 complemento:38/38cenários PostgreSQL reais passaram com Prisma/repos/code da imagem
+imutável365 sha256:93e2c5f0d97ec6d4253598d94bf0ca4e6773e42eef47241be50dd2a80d92ad4c.
+Baseline358 corrigido:7pass/31fail. Não são31vulnerabilidades distintas; cenários da mesma
+família. Snapshot/rowlocks reais validaram disputas, idempotência, ações humanas obsoletas,
+edição concorrente e travas. Constraint de teste local confirmou rollback; expectativa
+inicialP2004 corrigida para identificar a constraint; código observadoP2039, sem alteração do produto. Recursos
+isolados removidos pelo identificador da execução; nenhuma limpeza no ambiente publicado.
+Seis testes da extração também passaram compilados na imagem sem rede. Logs/readlist em
+/tmp/lectum-task178-registry-365-tests/. RevisãoMendel15arquivos,11integrais/4parciais ehashes
+conferidos;Gaussdiagnóstico/draftfocal. Nenhum bloqueante novo. Serviço privado vídeo e
+múltiplas assinaturas históricas não certificados por este conjunto. Publicação pendente.

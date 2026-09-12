@@ -1,6 +1,11 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import {
+  activeProfessionalCourtesyEntitlementWhere,
+  activeProfessionalEntitlementWhere,
+  activeSubscriptionPeriodWhere,
+} from "@/utils/subscription-entitlement";
 
 const registryCheckSelect = {
   checked_at: true,
@@ -14,62 +19,64 @@ const registryCheckSelect = {
   uf: true,
 } satisfies Prisma.professional_registry_checkSelect;
 
-const profileSelect = {
-  cfp_verified_at: true,
-  cpf: true,
-  crp: true,
-  crp_registration_date: true,
-  crp_status: true,
-  id: true,
-  registry_checks: {
-    orderBy: [{ checked_at: "desc" as const }, { createdAt: "desc" as const }],
-    select: registryCheckSelect,
-    take: 8,
-    where: {
-      deleted: false,
-    },
-  },
-  subscriptions: {
-    orderBy: {
-      createdAt: "desc" as const,
-    },
-    where: {
-      ...activeSubscriptionPeriodWhere(),
-      plan: {
-        active: true,
+const profileSelect = () =>
+  ({
+    cfp_verified_at: true,
+    cpf: true,
+    crp: true,
+    crp_registration_date: true,
+    crp_status: true,
+    id: true,
+    registry_checks: {
+      orderBy: [{ checked_at: "desc" as const }, { createdAt: "desc" as const }],
+      select: registryCheckSelect,
+      take: 8,
+      where: {
         deleted: false,
       },
     },
-    select: {
-      createdAt: true,
-      current_period_end: true,
-      grant_notes: true,
-      grant_reason: true,
-      grant_started_at: true,
-      granted_by: true,
-      id: true,
-      plan: {
-        select: {
-          name: true,
-          slug: true,
+    subscriptions: {
+      orderBy: {
+        createdAt: "desc" as const,
+      },
+      where: {
+        ...activeSubscriptionPeriodWhere(),
+        plan: {
+          active: true,
+          deleted: false,
         },
       },
-      source: true,
-      status: true,
+      select: {
+        createdAt: true,
+        current_period_end: true,
+        grant_notes: true,
+        grant_reason: true,
+        grant_started_at: true,
+        granted_by: true,
+        id: true,
+        plan: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+        source: true,
+        status: true,
+      },
+      take: 5,
     },
-    take: 5,
-  },
-  user: {
-    select: {
-      active: true,
-      email: true,
-      id: true,
-      name: true,
-      role: true,
+    user: {
+      select: {
+        active: true,
+        email: true,
+        id: true,
+        name: true,
+        role: true,
+      },
     },
-  },
-  user_id: true,
-} satisfies Prisma.psychologist_profileSelect;
+    user_id: true,
+    updatedAt: true,
+  }) satisfies Prisma.psychologist_profileSelect;
 
 const previousProfileSelect = {
   cfp_verified_at: true,
@@ -79,10 +86,11 @@ const previousProfileSelect = {
   crp_status: true,
   id: true,
   user_id: true,
+  updatedAt: true,
 } satisfies Prisma.psychologist_profileSelect;
 
 export type AdminPsychologistRegistryVerificationRecord = Prisma.psychologist_profileGetPayload<{
-  select: typeof profileSelect;
+  select: ReturnType<typeof profileSelect>;
 }>;
 
 export type AdminPsychologistRegistryVerificationCheck =
@@ -97,6 +105,7 @@ export type AdminRegistryVerificationManualAudit = Prisma.InputJsonObject;
 
 export type ApproveManualRegistryVerificationArgs = {
   checkedAt: Date;
+  expectedProfile: AdminPsychologistRegistryVerificationPreviousRecord;
   cpf: string;
   crp: string;
   raw: AdminRegistryVerificationManualAudit;
@@ -107,6 +116,7 @@ export type ApproveManualRegistryVerificationArgs = {
 
 export type RejectManualRegistryVerificationArgs = {
   checkedAt: Date;
+  expectedProfile: AdminPsychologistRegistryVerificationPreviousRecord;
   cpf: string | null;
   raw: AdminRegistryVerificationManualAudit;
   registrationNumber: string | null;
@@ -117,6 +127,25 @@ export type UpdateRegistryIdentityArgs = {
   crp: string;
   registrationDate: Date;
 };
+
+// A decision is valid only for the snapshot reviewed by the administrator.
+// Comparing the identity as well as updatedAt also protects sub-millisecond races.
+const unchangedProfileWhere = (
+  id: string,
+  previous: AdminPsychologistRegistryVerificationPreviousRecord,
+): Prisma.psychologist_profileWhereInput => ({
+  id,
+  deleted: false,
+  updatedAt: previous.updatedAt,
+  cpf: previous.cpf,
+  crp: previous.crp,
+  crp_registration_date: previous.crp_registration_date,
+  crp_status: previous.crp_status,
+  cfp_verified_at: previous.cfp_verified_at,
+  user: { active: true, deleted: false, role: "psicologo" },
+  subscriptions: { some: activeProfessionalEntitlementWhere() },
+  NOT: { subscriptions: { some: activeProfessionalCourtesyEntitlementWhere() } },
+});
 
 export class AdminPsychologistRegistryVerificationRepository {
   async findPsychologist(id: string): Promise<AdminPsychologistRegistryVerificationRecord | null> {
@@ -130,7 +159,7 @@ export class AdminPsychologistRegistryVerificationRepository {
           role: "psicologo",
         },
       },
-      select: profileSelect,
+      select: profileSelect(),
     });
   }
 
@@ -147,21 +176,18 @@ export class AdminPsychologistRegistryVerificationRepository {
   }
 
   async approveManual(profileId: string, args: ApproveManualRegistryVerificationArgs) {
-    return prisma.$transaction(async (tx) => {
-      await tx.psychologist_profile.update({
-        where: {
-          id: profileId,
-        },
+    return withSerializableTransaction(async (tx) => {
+      const updated = await tx.psychologist_profile.updateMany({
+        where: unchangedProfileWhere(profileId, args.expectedProfile),
         data: {
           cpf: args.cpf,
           crp: args.crp,
           crp_registration_date: args.registrationDate,
           crp_status: "aprovado",
         },
-        select: {
-          id: true,
-        },
       });
+
+      if (updated.count === 0) return null;
 
       return tx.professional_registry_check.create({
         data: {
@@ -180,18 +206,15 @@ export class AdminPsychologistRegistryVerificationRepository {
   }
 
   async rejectManual(profileId: string, args: RejectManualRegistryVerificationArgs) {
-    return prisma.$transaction(async (tx) => {
-      await tx.psychologist_profile.update({
-        where: {
-          id: profileId,
-        },
+    return withSerializableTransaction(async (tx) => {
+      const updated = await tx.psychologist_profile.updateMany({
+        where: unchangedProfileWhere(profileId, args.expectedProfile),
         data: {
           crp_status: "rejeitado",
         },
-        select: {
-          id: true,
-        },
       });
+
+      if (updated.count === 0) return null;
 
       return tx.professional_registry_check.create({
         data: {
