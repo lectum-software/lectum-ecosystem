@@ -70,10 +70,13 @@ export type AdminModerationReportMutationResult = {
 
 export type TransactionClient = Prisma.TransactionClient;
 
-export type ResolveReportUpheldInput = {
-  audit: AdminModerationReportAudit;
+export type ResolveReportInput = {
+  reportId: string;
+  prepareAudit: (currentReport: AdminPostReportRecord) => AdminModerationReportAudit | null;
+};
+
+export type ResolveReportUpheldInput = ResolveReportInput & {
   measure: "none" | "remove_content";
-  report: AdminPostReportRecord;
 };
 
 export const activitySafeSnapshot = (event: {
@@ -103,6 +106,8 @@ export const reportTargetWhere = (report: AdminPostReportRecord) => ({
 });
 
 export const reportContentIsAvailable = (report: AdminPostReportRecord) => {
+  if (report.post.id !== report.post_id) return false;
+  if (report.reply_id && (!report.reply || report.reply.post_id !== report.post_id)) return false;
   if (report.reply) {
     return (
       !report.reply.deleted &&

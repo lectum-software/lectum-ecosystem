@@ -13,7 +13,9 @@ import type {
   IAdminModerationSummaryDTO,
 } from "../../DTOs/IAdminModerationDTO";
 import { AdminModerationRepository } from "../../repositories/AdminModerationRepository";
+import type { AdminModerationEventAuditBuilder } from "../../repositories/interfaces/IAdminModerationRepository";
 import { AdminModerationCommunitySuggestionsRepository } from "../../repositories/queries/AdminModerationCommunitySuggestionsRepository";
+import { activitySafeSnapshot, safeJsonObject } from "../../repositories/support/moderation-query";
 import { mapReportAlert } from "./alert-signals";
 
 import {
@@ -188,6 +190,11 @@ export const showEvent = async (data: IAdminModerationEventDTO): Promise<Resolve
   };
 };
 
+const buildEventAudit: AdminModerationEventAuditBuilder = (before, after) => ({
+  safeBefore: safeJsonObject(activitySafeSnapshot(before)),
+  safeAfter: safeJsonObject(activitySafeSnapshot(after)),
+});
+
 export const reviewEvent = async (data: IAdminModerationEventDTO): Promise<Resolve> => {
   const admin = data.admin ?? data.auth;
   if (!admin?.id) {
@@ -198,7 +205,10 @@ export const reviewEvent = async (data: IAdminModerationEventDTO): Promise<Resol
   }
 
   const repository = new AdminModerationRepository();
-  const event = await repository.markReviewing(data.p.id, admin.id);
+  const event = await repository.markReviewing(data.p.id, {
+    adminId: admin.id,
+    buildAudit: buildEventAudit,
+  });
   if (!event) {
     return {
       status: 404,
@@ -232,7 +242,11 @@ export const resolveEvent = async (data: IAdminModerationResolveDTO): Promise<Re
   }
 
   const repository = new AdminModerationRepository();
-  const event = await repository.resolveEvent(data.p.id, { adminId: admin.id, note });
+  const event = await repository.resolveEvent(data.p.id, {
+    adminId: admin.id,
+    note,
+    buildAudit: buildEventAudit,
+  });
   if (!event) {
     return {
       status: 404,
@@ -257,6 +271,8 @@ export const resolveReport = async (data: IAdminModerationReportResolveDTO): Pro
       ...error("token_not_authorized", {}),
     };
   }
+
+  const adminId = admin.id;
 
   const reason = data.b.reason?.trim();
   if (!reason) {
@@ -289,22 +305,26 @@ export const resolveReport = async (data: IAdminModerationReportResolveDTO): Pro
     }
 
     const result = await repository.resolveReportDismissed({
-      audit: createReportAudit({
-        action: "moderation_report_dismissed",
-        adminId: admin.id,
-        changedFields: ["Status da denuncia"],
-        metadata: {
-          resolution: "dismissed",
-        },
-        reason,
-        report,
-        safeAfter: {
-          "Status da denuncia": "Improcedente",
-          ...safeReportTargetSummary(report),
-        },
-      }),
-      report,
+      reportId: report.id,
+      prepareAudit: (currentReport) => {
+        if (postReportStatusGroup(currentReport.status) !== "pending") return null;
+        return createReportAudit({
+          action: "moderation_report_dismissed",
+          adminId,
+          changedFields: ["Status da denuncia"],
+          metadata: {
+            resolution: "dismissed",
+          },
+          reason,
+          report: currentReport,
+          safeAfter: {
+            "Status da denuncia": "Improcedente",
+            ...safeReportTargetSummary(currentReport),
+          },
+        });
+      },
     });
+    if (!result) return invalidReportStatus();
 
     return {
       status: 200,
@@ -324,33 +344,37 @@ export const resolveReport = async (data: IAdminModerationReportResolveDTO): Pro
 
   const measure = data.b.measure === "remove_content" ? "remove_content" : "none";
   const result = await repository.resolveReportUpheld({
-    audit: createReportAudit({
-      action:
-        measure === "remove_content"
-          ? "moderation_report_content_removed"
-          : "moderation_report_upheld",
-      adminId: admin.id,
-      changedFields:
-        measure === "remove_content"
-          ? ["Status da denuncia", "Conteudo denunciado"]
-          : ["Status da denuncia"],
-      metadata: {
-        measure,
-        resolution: "upheld",
-        requested_status: requestedStatus,
-      },
-      reason,
-      report,
-      safeAfter: {
-        "Medida aplicada":
-          measure === "remove_content" ? "Remover conteudo denunciado" : "Manter conteudo",
-        "Status da denuncia": "Procedente",
-        ...safeReportTargetSummary(report),
-      },
-    }),
+    reportId: report.id,
+    prepareAudit: (currentReport) => {
+      if (postReportStatusGroup(currentReport.status) !== "pending") return null;
+      return createReportAudit({
+        action:
+          measure === "remove_content"
+            ? "moderation_report_content_removed"
+            : "moderation_report_upheld",
+        adminId,
+        changedFields:
+          measure === "remove_content"
+            ? ["Status da denuncia", "Conteudo denunciado"]
+            : ["Status da denuncia"],
+        metadata: {
+          measure,
+          resolution: "upheld",
+          requested_status: requestedStatus,
+        },
+        reason,
+        report: currentReport,
+        safeAfter: {
+          "Medida aplicada":
+            measure === "remove_content" ? "Remover conteudo denunciado" : "Manter conteudo",
+          "Status da denuncia": "Procedente",
+          ...safeReportTargetSummary(currentReport),
+        },
+      });
+    },
     measure,
-    report,
   });
+  if (!result) return invalidReportStatus();
 
   return {
     status: 200,

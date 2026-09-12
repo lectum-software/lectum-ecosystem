@@ -263,7 +263,12 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 356: publicada e mapa conferido; testes locais preservam a associação correta por região.
 
 147. **Mensagem de erro das opções de edição:** não informa mais que o perfil inteiro falhou quando apenas os catálogos não carregaram.
-357: testes e comparação móvel/desktop aprovados; publicação pendente.
+357: publicada; catálogo real e Cancelar conferidos sem alterar o perfil.
+
+148. **Decisões simultâneas:** ações conflitantes sobre a mesma denúncia não sobrescrevem a decisão confirmada.
+149. **Contagem de respostas:** remoções concorrentes ou repetidas não recuperam contagens antigas nem descontam duas vezes.
+150. **Histórico de moderação:** usa os dados da alteração efetiva e não duplica um início de revisão já registrado.
+358: 26 cenários com banco real isolado passaram; publicação pendente.
 
 ## Ainda pendente
 

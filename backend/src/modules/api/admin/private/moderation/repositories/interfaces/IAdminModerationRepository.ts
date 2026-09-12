@@ -445,6 +445,11 @@ export type ReplyTargetRecord = {
   };
 };
 
+export type AdminModerationEventAuditBuilder = (
+  before: AdminModerationEventDetailRecord,
+  after: AdminModerationEventDetailRecord,
+) => { safeBefore: Prisma.InputJsonObject; safeAfter: Prisma.InputJsonObject };
+
 export interface IAdminModerationRepository {
   countPending(): Promise<number>;
   countPendingPostReports(): Promise<number>;
@@ -467,7 +472,10 @@ export interface IAdminModerationRepository {
     cutoff: Date,
     limit?: number,
   ): Promise<AdminUncoveredPatientPostRecord[]>;
-  markReviewing(id: string, adminId: string): Promise<AdminModerationEventDetailRecord | null>;
+  markReviewing(
+    id: string,
+    input: { adminId: string; buildAudit: AdminModerationEventAuditBuilder },
+  ): Promise<AdminModerationEventDetailRecord | null>;
   countProfileViewsByPsychologist(
     psychologistIds: string[],
   ): Promise<AdminPsychologistMetricCountRecord[]>;
@@ -476,6 +484,6 @@ export interface IAdminModerationRepository {
   ): Promise<AdminPsychologistMetricCountRecord[]>;
   resolveEvent(
     id: string,
-    input: { adminId: string; note: string },
+    input: { adminId: string; note: string; buildAudit: AdminModerationEventAuditBuilder },
   ): Promise<AdminModerationEventDetailRecord | null>;
 }

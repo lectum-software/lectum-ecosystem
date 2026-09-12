@@ -1125,3 +1125,18 @@ fallback de protótipos locais documentado. Zero mudanças territoriais/de negó
 Utilizar o componente compartilhado AdminQueryErrorState diretamente no erro de catálogos,
 com título específico. ErrorState do detalhe continua reservado à falha de carregar o
 psicólogo. Nenhuma alteração de refetch, tratamento seguro de erro ou persistência.
+
+### Concorrência de moderação358 — decisão prévia
+
+Reutilizar withSerializableTransaction nos limites de gravação administrativos. Releitura,
+elegibilidade e criação pura de before/after pertencem a cada tentativa, sem efeitos externos.
+Não basta envolver snapshots pré-carregados; não recomputar históricos/reparar dados antigos.
+Conflito retorna erro existente409; decisões deliberadamente revisáveis continuam revisáveis.
+Validação isolada usa imagem real/Prisma/PostgreSQL descartável, sem HTTP/provider ou mocks.
+
+358 validada:callbacks puros de serviço recebem registros da tentativa corrente; sem imports
+de serviços pelo repository. Conflito de intenção retorna409 existente. Contenção técnica
+que excede retries não equivale a decisão válida nem promete sucesso. Noop de revisão não
+duplica histórico, mas preserva preenchimento de campos legados nulos sem reabrir evento resolvido.
+26cenários PostgreSQL reais e4contratos aprovados; semmigration/env. Rollout tolera apps antigos;
+a proteção transacional completa exige backendnovo em todas as réplicas. Não repara passado.

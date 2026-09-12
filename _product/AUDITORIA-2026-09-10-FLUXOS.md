@@ -218,3 +218,9 @@ laboratório isolado. HTTP autenticado e formulário já obsoleto não equivalem
 portanto contagens antes/depois não são comparação equivalente. Nenhuma origem alterada.
 357: estado de erro de catálogos com título próprio e callback unitário acessível local;
 refetch/fluxo normal publicado ainda pendentes,não simulado como API nem forçado em homolog.
+
+357:fluxo normal de edição profissional/catalogo/Cancelar conferido noAdminhomolog;nenhuma gravação.
+
+C9/C10–358:26cenários locais usam repositories reais, banco isolado e callbacks de projeções
+reais. Conflitos,remoções,contadores,before/after e revisões cobertos no limite transacional;
+rotas/middlewares e a UI publicada não foram substituídos por mocks nem certificados como E2E.

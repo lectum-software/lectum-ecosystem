@@ -1,14 +1,14 @@
 import prisma from "@/infra/database/prisma";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import {
-  type AdminPostReportRecord,
+  type AdminModerationEventAuditBuilder,
   adminModerationEventDetailSelect,
   adminPostReportSelect,
 } from "../interfaces/IAdminModerationRepository";
 import {
   ACTIVE_POST_REPORT_STATUSES,
-  type AdminModerationReportAudit,
   type AdminModerationReportMutationResult,
-  activitySafeSnapshot,
+  type ResolveReportInput,
   type ResolveReportUpheldInput,
   reportContentIsAvailable,
   reportTargetWhere,
@@ -65,26 +65,33 @@ export class AdminModerationResolutionRepository {
     });
   }
 
-  async resolveReportDismissed(input: {
-    audit: AdminModerationReportAudit;
-    report: AdminPostReportRecord;
-  }): Promise<AdminModerationReportMutationResult> {
-    return prisma.$transaction(async (transaction) => {
-      const report = await transaction.post_report.update({
-        data: {
-          status: "rejeitada",
-        },
+  async resolveReportDismissed(
+    input: ResolveReportInput,
+  ): Promise<AdminModerationReportMutationResult | null> {
+    return withSerializableTransaction(async (transaction) => {
+      const current = await transaction.post_report.findFirst({
         select: adminPostReportSelect,
-        where: {
-          id: input.report.id,
-        },
+        where: { deleted: false, id: input.reportId },
+      });
+      if (!current) return null;
+      const audit = input.prepareAudit(current);
+      if (!audit) return null;
+
+      const affected = await transaction.post_report.updateMany({
+        data: { status: "rejeitada" },
+        where: { deleted: false, id: current.id, status: current.status },
+      });
+      if (affected.count === 0) return null;
+      const report = await transaction.post_report.findUniqueOrThrow({
+        select: adminPostReportSelect,
+        where: { id: current.id },
       });
 
-      await this.dependency.createReportAuditLog(transaction, input.audit);
+      await this.dependency.createReportAuditLog(transaction, audit);
 
       return {
         affectedReportsCount: 1,
-        contentAlreadyUnavailable: !reportContentIsAvailable(input.report),
+        contentAlreadyUnavailable: !reportContentIsAvailable(current),
         contentRemoved: false,
         report,
       };
@@ -93,12 +100,26 @@ export class AdminModerationResolutionRepository {
 
   async resolveReportUpheld(
     input: ResolveReportUpheldInput,
-  ): Promise<AdminModerationReportMutationResult> {
-    return prisma.$transaction(async (transaction) => {
-      const wasAvailable = reportContentIsAvailable(input.report);
+  ): Promise<AdminModerationReportMutationResult | null> {
+    return withSerializableTransaction(async (transaction) => {
+      const current = await transaction.post_report.findFirst({
+        select: adminPostReportSelect,
+        where: { deleted: false, id: input.reportId },
+      });
+      if (!current) return null;
+      const audit = input.prepareAudit(current);
+      if (!audit) return null;
+
+      // Claim the eligible report before changing its target or related reports.
+      const claimed = await transaction.post_report.updateMany({
+        data: { status: "resolvida" },
+        where: { deleted: false, id: current.id, status: current.status },
+      });
+      if (claimed.count === 0) return null;
+      const wasAvailable = reportContentIsAvailable(current);
       const contentRemoved =
         input.measure === "remove_content" && wasAvailable
-          ? await this.dependency.softDeleteReportTargetContent(transaction, input.report)
+          ? await this.dependency.softDeleteReportTargetContent(transaction, current)
           : false;
 
       const affectedReports =
@@ -108,41 +129,35 @@ export class AdminModerationResolutionRepository {
                 status: "resolvida",
               },
               where: {
-                ...reportTargetWhere(input.report),
+                ...reportTargetWhere(current),
+                id: { not: current.id },
                 status: {
                   in: ACTIVE_POST_REPORT_STATUSES,
                 },
               },
             })
-          : await transaction.post_report.updateMany({
-              data: {
-                status: "resolvida",
-              },
-              where: {
-                deleted: false,
-                id: input.report.id,
-              },
-            });
+          : { count: 0 };
+      const affectedReportsCount = claimed.count + affectedReports.count;
 
       const report = await transaction.post_report.findUniqueOrThrow({
         select: adminPostReportSelect,
         where: {
-          id: input.report.id,
+          id: current.id,
         },
       });
 
       await this.dependency.createReportAuditLog(transaction, {
-        ...input.audit,
+        ...audit,
         metadata: {
-          ...(input.audit.metadata ?? {}),
-          affected_reports_count: affectedReports.count,
+          ...(audit.metadata ?? {}),
+          affected_reports_count: affectedReportsCount,
           content_already_unavailable: !wasAvailable,
           content_removed: contentRemoved,
         },
       });
 
       return {
-        affectedReportsCount: affectedReports.count,
+        affectedReportsCount,
         contentAlreadyUnavailable: !wasAvailable,
         contentRemoved,
         report,
@@ -150,8 +165,11 @@ export class AdminModerationResolutionRepository {
     });
   }
 
-  markReviewing(id: string, adminId: string) {
-    return prisma.$transaction(async (transaction) => {
+  markReviewing(
+    id: string,
+    input: { adminId: string; buildAudit: AdminModerationEventAuditBuilder },
+  ) {
+    return withSerializableTransaction(async (transaction) => {
       const event = await transaction.content_moderation_event.findFirst({
         select: adminModerationEventDetailSelect,
         where: {
@@ -160,21 +178,28 @@ export class AdminModerationResolutionRepository {
         },
       });
       if (!event) return null;
+      if (
+        (event.status === "resolved" || event.status === "reviewing") &&
+        event.reviewed_at &&
+        event.reviewed_by_admin_id
+      )
+        return event;
 
       const updated = await transaction.content_moderation_event.update({
         data: {
           reviewed_at: event.reviewed_at ?? new Date(),
-          reviewed_by_admin_id: event.reviewed_by_admin_id ?? adminId,
+          reviewed_by_admin_id: event.reviewed_by_admin_id ?? input.adminId,
           status: event.status === "resolved" ? "resolved" : "reviewing",
         },
         select: adminModerationEventDetailSelect,
         where: { id },
       });
+      const audit = input.buildAudit(event, updated);
 
       await transaction.admin_activity_log.create({
         data: {
           action: "content_moderation_review_started",
-          admin_id: adminId,
+          admin_id: input.adminId,
           area: "moderacao",
           changed_fields: [
             "content_moderation_event.status",
@@ -182,8 +207,8 @@ export class AdminModerationResolutionRepository {
           ],
           domain: "content_moderation",
           metadata: safeJsonObject({ community_id: updated.community_id }),
-          safe_after: safeJsonObject(activitySafeSnapshot(updated)),
-          safe_before: safeJsonObject(activitySafeSnapshot(event)),
+          safe_after: audit.safeAfter,
+          safe_before: audit.safeBefore,
           source: "admin_panel",
           target_id: id,
           target_type: "content_moderation_event",
@@ -194,8 +219,11 @@ export class AdminModerationResolutionRepository {
     });
   }
 
-  resolveEvent(id: string, input: { adminId: string; note: string }) {
-    return prisma.$transaction(async (transaction) => {
+  resolveEvent(
+    id: string,
+    input: { adminId: string; note: string; buildAudit: AdminModerationEventAuditBuilder },
+  ) {
+    return withSerializableTransaction(async (transaction) => {
       const event = await transaction.content_moderation_event.findFirst({
         select: adminModerationEventDetailSelect,
         where: {
@@ -217,6 +245,7 @@ export class AdminModerationResolutionRepository {
         select: adminModerationEventDetailSelect,
         where: { id },
       });
+      const audit = input.buildAudit(event, updated);
 
       await transaction.admin_activity_log.create({
         data: {
@@ -231,8 +260,8 @@ export class AdminModerationResolutionRepository {
           domain: "content_moderation",
           metadata: safeJsonObject({ community_id: updated.community_id }),
           reason: input.note,
-          safe_after: safeJsonObject(activitySafeSnapshot(updated)),
-          safe_before: safeJsonObject(activitySafeSnapshot(event)),
+          safe_after: audit.safeAfter,
+          safe_before: audit.safeBefore,
           source: "admin_panel",
           target_id: id,
           target_type: "content_moderation_event",

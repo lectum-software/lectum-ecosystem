@@ -2087,3 +2087,44 @@ Artefatos:/tmp/lectum-audit-356-smoke-curl-homolog.json e /tmp/lectum-task178-wo
 - Check global1207tests/1201pass/6skipsdrawtext; Adminbuild aprovado.
 - Sem migration,env,dependência,contratoAPI ou mudança de dados. Sem indisponibilidade provocada.
 - Artefatos:/tmp/lectum-task178-catalog-error-357; publicação/reteste normal pendentes.
+
+### Publicação357 concluída
+
+7eade25b emhomolog;5GETs públicos aprovados em2026-09-12T00:29:07.235720+00:00,backend/front/Admin357,
+health/ready200 e Nextno-store/noindex. No rollout, health retornou502uma vez e emseguida
+ready200; a verificação final passou nos cinco endpoints. Não ocultar essa indisponibilidade transitória.
+Admin357:perfil próprio da auditoria,edição profissional,catalogo de especialidades real carregado,
+abrir/recolher e Cancelar sem alterações. Isso cobre fluxo normal; erro local não foi provocado no servidor.
+Artefatos:/tmp/lectum-audit-357-smoke-curl-homolog.json,
+/tmp/lectum-audit-357-smoke-rollout-002.json e /tmp/lectum-task178-catalog-error-357/published-form.json.
+
+## Concorrência de moderação358
+
+- Nove fontes lidas integralmente pelo Socrates, diff revisto pelo principal. Tipagem do adminId
+  capturada em const pelo principal após primeiro TypeScript apontar perda de narrowing no callback.
+- Transações serializáveis reutilizam helper existente. Cada tentativa relê registro/contador,
+  revalida intenção, prepara before e persiste estado/histórico juntos. Sem provider dentro de retries.
+- Comunidades continuam permitindo revisão explícita/reabertura; callback corrente não transforma
+  uma confirmação inicial antiga em permissão de revisar a decisão recém-confirmada.
+- Noop de início de revisão não cria log novo quando data/autoria já presentes; resolved legado
+  com campos nulos continua preenchível sem regredir. Resolução permite nova nota, como antes.
+- Quatro contratos AST cobrem callbacks/política corrente, sete limites serializáveis, projeção
+  de conteúdo e resposta409. Não provam banco/HTTP por si próprios.
+- Vinte e seis cenários executaram repositories/Prisma/PostgreSQL reais, imagem imutável, rede
+  Docker internal, configuração temporária exclusiva, sem host.env/HTTP/providers/overlays.
+  Baseline354 tem mesmas fontes backend da357 exceto manifest:8pass/18fail. Final358:26pass/0fail.
+- Inclui barreiras reais de row lock (sem substituir Prisma), decisões concorrentes, árvores
+  disjuntas/sobrepostas, repetição, writers de moderação/comunidades, piso zero, before atualizado,
+  transferência do alvo para outra comunidade, rollback por FK, revisão/reabertura e autoria inicial.
+- O monitor da barreira renova snapshot estatístico dentro de sua transação conforme
+  [PostgreSQL17](https://www.postgresql.org/docs/17/monitoring-stats.html).
+  Primeiros ensaios abortaram por suposição incorreta de comunidade vazia após migrations e
+  snapshot estatístico congelado; não são prova da aplicação. Baseline final usa o mesmo probe26
+  da correção, com adapter explícito dos contratos internos de cada versão, nunca overlay de fonte.
+- Imagem final:a8ec663fb1b632ddd4c3edf18a7eb5c17f0de050a7c3cdbce744abdbd5b5f285.
+  Artefatos:/tmp/lectum-task178-moderation-358 (baseline-26-final.log,final-26.log,contracts.log),
+  /tmp/lectum-task178-c9-c10-358 (fonte/proveniência), /tmp/lectum-358-*-build.log.
+- Check1211tests/1205pass/6skipsdrawtext,backendbuild/Docker aprovados. Recursos descartáveis
+  removidos; o teste não alterou banco publicado, schema ou env e não adicionou dependências.
+- Limites: não é E2E HTTP de moderação, não cobre todos os escritores antigos, não acrescenta
+  versão da sessão administrativa nem repara contador histórico. Publicação358 ainda pendente.

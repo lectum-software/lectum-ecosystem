@@ -1052,7 +1052,7 @@ serviço publicado para reproduzir; testar componente/caller e fluxo normal real
 - [x] Erro de catálogo informa opções de edição, sem alegar perda/falha do perfil.
 - [x] Mensagem sanitizada e tentativa novamente preservadas.
 - [x] Contratos, Browser local e build/check aprovados.
-- [ ] Smoke e conferência publicada357 registrados.
+- [x] Smoke e conferência publicada357 registrados.
 
 356/a184a563:5GETs aprovados em12/09 às00:03:15UTC (11/09 local),trêsapps356,health/ready200.
 Mapa publicado:alternância Estados/Países funcional. Intervalo padrão mudou na virada UTC;
@@ -1060,3 +1060,28 @@ antes/depois não comparam o mesmo período e não comprovam contagens idêntica
 357:3contratos AST passados (baseline1pass/2fail),check1207/1201pass/6skipsdrawtext;
 buildAdmin aprovado. Pares390×844/991×964:mesma geometria,apenas título corrigido;
 clique e Enter exercitaram callback unitário real,sem API simulada/nem falha provocada em homolog.
+
+### Continuação358 — concorrência de moderação e remoção administrativa
+
+C9/C10: proteger decisão elegível, contador e histórico contra snapshots externos obsoletos.
+Reusar transações serializáveis existentes; reler os alvos e preparar auditoria pura dentro
+ de cada tentativa. Nenhum provider/HTTP dentro de retries. Preservar aliases de status,
+ revisão explícita em comunidades, piso zero e forma das respostas; conflito usa409seguro.
+Sem migration,package,env ou reparo de dados antigos. Backend pode ser implantado sozinho;
+rollback de código não requer reversão de dados, não desfaz decisões já confirmadas.
+Validação transacional somente em PostgreSQL descartável local identificado, sem credenciais
+existentes nem chamadas a publicado. Testes locais não certificam todo fluxo HTTP/Admin.
+
+- [x] Decisões concorrentes não sobrescrevem decisão inelegível nem geram histórico falso.
+- [x] Contagem usa estado corrente e apenas respostas realmente removidas, sem perda/duplicação.
+- [x] Auditoria e estados são atômicos; revisão explícita e autoria inicial preservadas.
+- [x] Contratos, teste PostgreSQL real isolado e backend check/build registrados.
+- [ ] Smoke de publicação358 registrado.
+
+358:26/26 cenários PostgreSQL real passaram (baseline8pass/18fail),4contratos estáticos de
+callers,check1211/1205pass/6skipsdrawtext,buildbackend eDocker aprovados. Nenhuma operação
+HTTP de moderação, remoção publicada ou credencial de ambiente usada pelo laboratório.
+Revisão já iniciada/concluída é noop sem novo log apenas quando data/autoria estão presentes;
+campos legados nulos continuam sendo preenchidos, mantendo resolved. Notas permanecem revisáveis.
+A proteção é transacional dos caminhos alterados; não é versionamento completo da sessão UI
+nem certificação de todos os escritores/versões antigas. Nenhum reparo de contagem histórica.

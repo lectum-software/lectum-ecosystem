@@ -290,10 +290,14 @@ export const removeContent = async (data: IAdminCommunityRemoveContentDTO): Prom
     const removed = await repository.removePostContent({
       adminId: admin.id,
       communityId: community.id,
-      post,
+      postId: post.id,
       reason: data.b.reason,
-      safeBefore: contentSafeBefore(item),
+      buildSafeBefore: (currentPost, currentCommunity) =>
+        contentSafeBefore(mapPostContent(currentCommunity, currentPost)),
     });
+    if (!removed) {
+      return { status: 409, ...error("admin_community_content_remove_unavailable", {}) };
+    }
     const payload: AdminCommunityRemoveContentDTO = {
       affected_reports_count: removed.affectedReportsCount,
       affected_replies_count: removed.affectedRepliesCount,
@@ -332,9 +336,13 @@ export const removeContent = async (data: IAdminCommunityRemoveContentDTO): Prom
     adminId: admin.id,
     communityId: community.id,
     reason: data.b.reason,
-    reply,
-    safeBefore: contentSafeBefore(item),
+    replyId: reply.id,
+    buildSafeBefore: (currentReply, currentCommunity) =>
+      contentSafeBefore(mapReplyContent(currentCommunity, currentReply)),
   });
+  if (!removed) {
+    return { status: 409, ...error("admin_community_content_remove_unavailable", {}) };
+  }
   const payload: AdminCommunityRemoveContentDTO = {
     affected_reports_count: removed.affectedReportsCount,
     affected_replies_count: removed.affectedRepliesCount,

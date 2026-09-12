@@ -16,7 +16,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | A342-06 | Contador de cliques de Posts inclui cliques das Respostas. | Corrigido/publicado350;8/8testes;reteste contaQA,smoke5/5. Nãozero comprovado localmente. |
 | A342-07 | Cores de donut e legenda divergem quando há categorias zeradas. | Corrigido/publicado349; seis testes e Browser local/homolog375×812 e1265×889; smoke5/5. |
 | A342-08 | Menu mobile permite Tab para conteúdo atrás do modal. | Reproduzido no Admin344: Tab atravessa o menu e alcança a busca atrás do overlay. Corrigido346; contenção/Escape/retorno/resize/histórico repetidos no Admin publicado. |
-| A342-09 | Métrica agrupada herda detalhes apenas da primeira origem. | Fonte; agregar detalhes coerentemente com o total. |
+| A342-09 | Métrica agrupada herda detalhes apenas da primeira origem. | Corrigido/publicado355;12contratos e resumo real conferido sem atribuir origem desconhecida. |
 
 ## Backend
 
@@ -25,7 +25,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C17-A | Confirmação não aplica toda a compatibilidade/inequivocidade documentada. | Fonte; P2 proposto. Definir desambiguação antes de criar bloqueio mais amplo. Não é KYC/IDOR comprovado. |
 | C17-B | Confirmação por outro caminho pode substituir CPF/CRP protegido. | Fonte; P2 proposto. Preservar trava transacional e idempotência sem revogar aprovações existentes. |
 | C20 | Normalização estrutural deve evitar acesso a propriedades herdadas. | Fonte; impacto HTTP não comprovado. Nenhum teste/receita de exploração executado. Restrições operacionais anteriores permanecem. |
-| C9/C10 | Decisões concorrentes de moderação podem reutilizar contador/snapshot antigo. | Fonte; planejar escrita atômica e coerência da auditoria, sem remover conteúdo real para testar. |
+| C9/C10 | Decisões concorrentes de moderação podem reutilizar contador/snapshot antigo. | Corrigido358:26cenários PostgreSQL real isolado e4contratos; check/build/Docker passados. Publicação pendente; sem remoção publicada para testar. |
 | C12 | Edição parcial pode regravar campos omitidos a partir de snapshot antigo. | Corrigido/publicado354;22contratos,11cenários PG real;smoke5/5 e ediçãoQA restaurada. Não cobre formulário já obsoleto antes de chegar ao backend. |
 | C13 | Campo chamado cpf_masked retornava todos os dígitos. | Corrigido345 com máscara compartilhada; contratos/build aprovados. Endpoint administrativo; nenhum vazamento público demonstrado. |
 | C15 | Numerador e denominador de taxa de ação usam conjuntos diferentes de sessões. | Fonte; uniformizar universo, não apenas limitar percentual. |
@@ -206,3 +206,5 @@ componentes/dataset e comparação local aprovados;reteste publicado pendente,se
 
 DATA01:publicado356,mapa de tráfego conferido; colisões cobertas nos componentes reais locais.
 A348-02:corrigido357,contratos/callbackunitário/Browserlocal/check/build passados;reteste normal apósdeploy pendente.
+
+A348-02:publicado357;catálogo real e Cancelar conferidos,sem escrever dados. Estado de erro fica coberto localmente.

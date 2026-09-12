@@ -58,14 +58,26 @@ export class AdminModerationMutationSupportRepository {
     transaction: TransactionClient,
     report: AdminPostReportRecord,
   ) {
+    const post = await transaction.community_post.findFirst({
+      select: { id: true, replies_count: true },
+      where: {
+        id: report.post_id,
+        deleted: false,
+        status: "publicado",
+        community: { deleted: false },
+      },
+    });
+    if (!post || report.post.id !== post.id) return false;
+    if (report.reply_id && (!report.reply || report.reply.post_id !== post.id)) return false;
     const now = new Date();
 
     if (report.reply) {
-      const replyIds = await this.findReplyTreeIds(
-        transaction,
-        report.reply.post_id,
-        report.reply.id,
-      );
+      const reply = await transaction.post_reply.findFirst({
+        select: { id: true },
+        where: { deleted: false, id: report.reply.id, post_id: post.id },
+      });
+      if (!reply) return false;
+      const replyIds = await this.findReplyTreeIds(transaction, post.id, reply.id);
       if (replyIds.length === 0) return false;
 
       const deletedReplies = await transaction.post_reply.updateMany({
@@ -78,23 +90,29 @@ export class AdminModerationMutationSupportRepository {
           id: {
             in: replyIds,
           },
-          post_id: report.reply.post_id,
+          post_id: post.id,
         },
       });
 
       if (deletedReplies.count > 0) {
         await transaction.community_post.update({
           data: {
-            replies_count: Math.max(0, report.reply.post.replies_count - deletedReplies.count),
+            replies_count: Math.max(0, post.replies_count - deletedReplies.count),
           },
           where: {
-            id: report.reply.post_id,
+            id: post.id,
           },
         });
       }
 
       return deletedReplies.count > 0;
     }
+
+    const deletedPost = await transaction.community_post.updateMany({
+      data: { deleted: true, deletedAt: now, status: "removido" },
+      where: { id: post.id, deleted: false, status: "publicado" },
+    });
+    if (deletedPost.count === 0) return false;
 
     const deletedReplies = await transaction.post_reply.updateMany({
       data: {
@@ -103,19 +121,16 @@ export class AdminModerationMutationSupportRepository {
       },
       where: {
         deleted: false,
-        post_id: report.post.id,
+        post_id: post.id,
       },
     });
 
     await transaction.community_post.update({
       data: {
-        deleted: true,
-        deletedAt: now,
-        replies_count: Math.max(0, report.post.replies_count - deletedReplies.count),
-        status: "removido",
+        replies_count: Math.max(0, post.replies_count - deletedReplies.count),
       },
       where: {
-        id: report.post.id,
+        id: post.id,
       },
     });
 

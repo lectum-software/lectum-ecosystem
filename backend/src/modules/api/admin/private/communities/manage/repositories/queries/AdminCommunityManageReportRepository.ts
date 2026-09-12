@@ -1,6 +1,13 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { activeReportStatuses, adminCommunityReportSelect } from "../support/manage-selects";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import {
+  type AdminCommunityRecord,
+  type AdminCommunityReportRecord,
+  activeReportStatuses,
+  adminCommunityReportSelect,
+  adminCommunitySelect,
+} from "../support/manage-selects";
 
 import type { AdminCommunityManageCoreRepository } from "./AdminCommunityManageCoreRepository";
 
@@ -38,7 +45,13 @@ export class AdminCommunityManageReportRepository {
     reason: string;
     resolution: "dismissed" | "pending" | "upheld";
     review: boolean;
-    safeBefore: Prisma.InputJsonObject;
+    prepareAudit: (
+      currentReports: AdminCommunityReportRecord[],
+      currentCommunity: AdminCommunityRecord,
+    ) => {
+      previousResolution: "dismissed" | "pending" | "upheld";
+      safeBefore: Prisma.InputJsonObject;
+    } | null;
     targetId: string;
     targetType: "comment" | "post" | "reply";
   }) {
@@ -69,20 +82,31 @@ export class AdminCommunityManageReportRepository {
           ? "resolvida"
           : "pendente";
 
-    return prisma.$transaction(async (transaction) => {
+    return withSerializableTransaction(async (transaction) => {
+      const community = await transaction.community.findFirst({
+        select: adminCommunitySelect,
+        where: { id: input.communityId, deleted: false },
+      });
+      if (!community) return null;
       const existingReports = await transaction.post_report.findMany({
-        select: {
-          id: true,
-          post_id: true,
-          reply_id: true,
-          status: true,
-        },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: adminCommunityReportSelect,
         where: {
           deleted: false,
           ...targetWhere,
         },
       });
       if (existingReports.length === 0) return null;
+      const audit = input.prepareAudit(existingReports, community);
+      // The confirmation authorizes this intent, not a different decision after a retry.
+      if (
+        !audit ||
+        audit.previousResolution !== input.previousResolution ||
+        input.review !== (audit.previousResolution !== "pending") ||
+        (!input.review && input.resolution === "pending") ||
+        (input.review && input.resolution === audit.previousResolution)
+      )
+        return null;
 
       const affectedReports = await transaction.post_report.updateMany({
         data: {
@@ -104,6 +128,7 @@ export class AdminCommunityManageReportRepository {
               }),
         },
       });
+      if (affectedReports.count === 0) return null;
 
       await this.dependency.createContentActivityLog(transaction, {
         action: input.review
@@ -121,7 +146,7 @@ export class AdminCommunityManageReportRepository {
           content_type: targetType === "post" ? "post" : "comment",
           existing_reports_count: existingReports.length,
           post_id: existingReports[0]?.post_id ?? null,
-          previous_resolution: input.previousResolution,
+          previous_resolution: audit.previousResolution,
           resolution: input.resolution,
           review: input.review,
         },
@@ -130,7 +155,7 @@ export class AdminCommunityManageReportRepository {
           status,
           status_group: input.resolution,
         },
-        safeBefore: input.safeBefore,
+        safeBefore: audit.safeBefore,
       });
 
       return {

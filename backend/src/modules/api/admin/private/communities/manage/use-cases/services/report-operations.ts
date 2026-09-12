@@ -228,14 +228,29 @@ export const resolveReports = async (data: IAdminCommunityResolveReportsDTO): Pr
     reason: data.b.reason,
     review: isRevision,
     resolution: data.b.resolution,
-    safeBefore: reportGroupSafeBefore(targetGroup),
+    prepareAudit: (currentReports, currentCommunity) => {
+      const currentGroup = groupReportsByContent(
+        currentReports.map((report) => mapReport(currentCommunity, report)),
+      ).find((item) => item.content.type === targetType && item.content.id === data.p.targetId);
+      if (!currentGroup) return null;
+      if (
+        !isRevision &&
+        ((data.b.resolution === "dismissed" && !currentGroup.capabilities.can_resolve_dismissed) ||
+          (data.b.resolution === "upheld" && !currentGroup.capabilities.can_resolve_upheld))
+      )
+        return null;
+      return {
+        previousResolution: currentGroup.status_group,
+        safeBefore: reportGroupSafeBefore(currentGroup),
+      };
+    },
     targetId: targetGroup.content.id,
     targetType: targetGroup.content.type,
   });
   if (!resolved) {
     return {
-      status: 404,
-      ...error("admin_community_report_invalid_target", {}),
+      status: 409,
+      ...error("admin_community_report_invalid_status", {}),
     };
   }
 
