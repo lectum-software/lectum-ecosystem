@@ -2387,3 +2387,33 @@ Browser homolog Admin Moderação mostrou dia11 nos inputs/eixo e dia10 no títu
 Componente real local, sem API simulada, validado390/1280px e troca de período/data; título
 agora coincide com os inputs. Fonte visual local Admin/Dashboard; Quick Copy indisponível
 nesta sessão. Não houve redesenho. Publicação/smoke ainda pendentes.
+
+366/4bb4e258: pushconcluído;5GETs aprovados em2026-09-12T14:33:11.753040+00:00. Backend/frontend/Admin366,health/ready200.
+Datas do Admin conferidas após reautenticação: denúncia11set,operacionais21ago–11set,
+sensível10ago, títulos iguais aos controles/eixos. Captura real sem mutação de conteúdo.
+
+### 0.1.367 — correções C23/C25/C8
+
+Produção derivada: WhatsApp comunitário nos três consumidores existentes (peso6 preservado),
+exclusão de autoações legadas do ranking público e interações recebidas por data do evento,
+inclusive em conteúdo antigo. Nenhum histórico reescrito, permissão ampliada ou provider acionado.
+
+Imagem linux/amd64 `sha256:897573dcc6f0cc607bd31a10251462fc535aa9f522448d52c23a629b646ebce9`:
+- C23:31/31, `/tmp/lectum-c23-pg-367-XuXdhU/367.log`.
+- C25:17/17, `/tmp/lectum-task178-public-ranking-self-actions-367-tests/final367.log`.
+- C8:30/30, `/tmp/lectum-task178-received-interactions-367/candidate-367.log`.
+Todos executaram repositórios/loaders compilados e PostgreSQL real efêmero, guard completo de
+ambiente antes dos imports, sem overlays de produção/mocks/HTTP e com cleanup confirmado.
+Baseline366 imutável: C25=10pass/7fail e C8=7pass/23fail, mesmos testes. C23baseline abortou
+por helper ausente, com diagnóstico explícito; não equivale a provar31 regressões antigas.
+
+Rootcheck1432/1426pass/0fail/6skipsdrawtextpreexistentes: `/tmp/lectum-367-root-check.log`.
+Buildlocal e Docker: `/tmp/lectum-367-backend-build.log`, `/tmp/lectum-367-docker-build.log`.
+SeletorC8=20 testes (10puros+10guardasestáticas); contadorC23=12; scanner env=3.
+O scanner reconhece PATH de sistema, mas mantém proibição client e variáveis novas documentadas.
+Revisão independente C25/checker: `/tmp/lectum-task178-public-ranking-self-actions-367-tests/independent-review.md`.
+Fontes de produção conferidas após os testes: `/tmp/lectum-367-production-freeze.json`.
+
+Sem nova UI/rota, env obrigatória, package ou migration; rollback restaura apenas o cálculo.
+Smoke pós-push: `/tmp/lectum-audit-367-smoke-curl-homolog.json` (a executar após publicar).
+Os testes isolados não concluem homologação funcional geral nem autorizam produção.

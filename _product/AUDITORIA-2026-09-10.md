@@ -300,7 +300,13 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 164. **Campos com zero ou “não”:** as validações deixam de ignorar limites zero e valores falsos.
 165. **CPF inválido:** sequências de dígitos repetidos são recusadas pelo validador.
 
-366: correções implementadas; check/build, 78 cenários de banco isolado e UI local aprovados. Publicação em validação.
+366/4bb4e258: publicada; check/build, 78 cenários de banco isolado, UI local e smoke5/5 aprovados. Datas conferidas no Admin de homologação.
+
+166. **Ranking comunitário:** cliques de WhatsApp vinculados ao conteúdo passam a contar para o autor correto, sem contar seus próprios cliques.
+167. **Ranking público:** ações antigas do próprio profissional deixam de aumentar sua pontuação e exposição.
+168. **Interações recebidas:** ações recentes em publicações antigas passam a aparecer no período correto.
+
+367: 78 cenários de banco isolado, check e builds aprovados; publicação em andamento. Sem apagar histórico ou alterar os pesos dos rankings.
 
 ## Ainda pendente
 

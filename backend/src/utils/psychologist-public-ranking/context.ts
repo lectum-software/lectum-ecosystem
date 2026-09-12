@@ -56,6 +56,7 @@ export const getRankingContext = async (
         by: ["psychologist_id"],
         where: {
           deleted: false,
+          user_id: { not: { equals: prisma.psychologist_favorite.fields.psychologist_id } },
           psychologist_id: {
             in: psychologistIds,
           },
@@ -72,6 +73,10 @@ export const getRankingContext = async (
         where: {
           channel: "whatsapp",
           deleted: false,
+          OR: [
+            { user_id: null },
+            { user_id: { not: { equals: prisma.contact_request.fields.psychologist_id } } },
+          ],
           psychologist_id: {
             in: psychologistIds,
           },
@@ -105,6 +110,18 @@ export const getRankingContext = async (
           psychologist_id: {
             in: psychologistIds,
           },
+          AND: [
+            {
+              OR: [
+                { viewer_id: null },
+                {
+                  viewer_id: {
+                    not: { equals: prisma.profile_video_watch_session.fields.psychologist_id },
+                  },
+                },
+              ],
+            },
+          ],
           OR: [
             {
               watched_seconds: {
@@ -141,6 +158,12 @@ export const getRankingContext = async (
                 in: psychologistIds,
               },
               source: SEARCH_RESULT_SOURCE,
+              OR: [
+                { viewer_id: null },
+                {
+                  viewer_id: { not: { equals: prisma.profile_view_event.fields.psychologist_id } },
+                },
+              ],
             },
             select: {
               createdAt: true,

@@ -1363,7 +1363,7 @@ mas retira a proteção nova. Sem mudança de UI estrutural.
 - [x] Correção humana do CRP é exibida sem reverter aprovação ou evidência histórica.
 - [x] Gráfico usa intervalo/fuso coerentes, se defeito confirmado.
 - [x] Regressões reais, checks/build e revisão aprovados.
-- [ ] Commit/push e smoke publicado registrados.
+- [x] Commit/push e smoke publicado registrados.
 
 C19 complemento executável: o MVP não usa OTP novo (ADR0022), mas a rota legada de
 confirmação continua montada. Salvar um novo WhatsApp deve invalidar códigos pendentes;
@@ -1388,4 +1388,40 @@ Checkglobal1397tests/1391pass/0fail/6skipsdrawtextpreexistentes; backendfinal661
 Prisma/TS/Biome/buildlocal+Docker e Admincheck/build aprovados. UI real local validada
 mobile/desktop; três fusos no formatter. C21/C22:42 novos testes+14base, sem provider.
 Revisões independentes de C18/C19, rowlock e retry sem novo bloqueante. Sem migration/env
-ou package novo; bump366executado uma vez. Commit/push/smoke ainda pendentes.
+ou package novo; bump366executado uma vez. Commit/push/smoke concluídos abaixo.
+
+### Continuação367 — rankings com eventos reais
+
+C23: alimentar cliques WhatsApp comunitários somente por important_action_event rastreável
+para post/resposta de autoria elegível, no período/comunidade atuais; compartilhar agregação
+nos três consumidores. Preservar peso6, elegibilidade, punições e desempates. Não distribuir
+contatos genéricos ou inventar eventos ausentes. Excluir autoações autenticadas.
+C25: ranking público deve excluir eventos legados do próprio profissional por comparação
+ator/alvo de cada linha, preservando terceiros/anônimos, OR de consumo e cold-start.
+Leitura derivada somente; sem migration, env, backfill, reset ou reescrita de eventos. Rollout
+independente; rollback apenas volta ao cálculo anterior. Validar PostgreSQL real isolado,
+sem chamadas externas, e manter366imutável como baseline.
+
+- [x] WhatsApp comunitário chega aos três scores com paridade e isolamento de período/alvo.
+- [x] Autoações legadas não contam no ranking público; terceiros/anônimos preservados.
+- [x] Regressões PostgreSQL, checks/build e revisão aprovados.
+
+C8: os cards de interações recebidas no período devem incluir eventos novos em conteúdo
+antigo elegível. Separar IDs históricos autorais/comunidade das publicações produzidas no
+intervalo. Manter datas dos eventos atual/anterior, exclusões e métricas de produção/cobertura.
+Não reinterpretar coortes nem fórmulas aproximadas sem requisito específico.
+- [x] Interações recebidas em conteúdo anterior aparecem no período correto sem ampliar autoria/comunidade.
+
+366/4bb4e258: pushhomolog concluído;smoke5/5 em2026-09-12T14:33:11.753040+00:00.
+Backend/frontend/Admin366;health/ready200 eNextversionsno-store/noindex. BrowserAdmin
+Moderação autenticado conferiu títulos iguais aos inputs/eixos (11set,21ago–11set,10ago).
+Vídeo privado não recebeu prova de versão adicional. Nenhuma mutação cadastral publicada.
+
+367: imagem AMD64897573dcc6f0cc607bd31a10251462fc535aa9f522448d52c23a629b646ebce9,
+78/78 contratos PG reais aprovados: C23=31,C25=17,C8=30. Baseline366: C25 falha7/17;
+C8 falha23/30, mesmos contratos. C23baseline interrompida por helper ainda inexistente,
+não contabilizada como regressão por asserção. Recursos descartáveis limpos em todos os casos.
+Checkglobal1432tests/1426pass/0fail/6skipsdrawtextpreexistentes, builds local/Docker aprovados.
+Revisão independente C25/checker sem regressão; integração C23/C8 revisada pelo principal.
+Sem env/package/migration novos; bump367 executado uma única vez. Publicação e smoke são
+a próxima etapa; o resultado será registrado em /tmp/lectum-audit-367-smoke-curl-homolog.json.

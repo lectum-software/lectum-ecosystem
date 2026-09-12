@@ -9,6 +9,7 @@ import {
   resolveCommunityFilterIds,
   uniqueCommunityReferences,
 } from "./community-coverage";
+import { selectReceivedInteractionContentIds } from "./received-interaction-content";
 
 type StatisticsProfile = NonNullable<
   Awaited<ReturnType<AdminPsychologistEngagementRepository["findPsychologist"]>>
@@ -207,9 +208,11 @@ export const loadAdminPsychologistStatisticsData = async ({
 
   const replyIds = communityReplies.map((reply) => reply.id);
 
-  const previousPostIds = previousCommunityPosts.map((post) => post.id);
-
-  const previousReplyIds = previousCommunityReplies.map((reply) => reply.id);
+  const receivedInteractionContentIds = selectReceivedInteractionContentIds({
+    allPosts,
+    allReplies,
+    communityFilterIds,
+  });
 
   const allPostIds = allPosts.map((post) => post.id);
 
@@ -242,13 +245,42 @@ export const loadAdminPsychologistStatisticsData = async ({
     contentPostWhatsappClicks,
     contentReplyWhatsappClicks,
   ] = await Promise.all([
-    repository.listPostSaves(postIds, period.current.start, period.current.end),
-    repository.listReplySaves(replyIds, period.current.start, period.current.end),
-    repository.listCommentsReceived(postIds, userId, period.current.start, period.current.end),
-    repository.listPostVotes(postIds, period.current.start, period.current.end),
-    repository.listReplyVotes(replyIds, period.current.start, period.current.end),
-    repository.listPostShareEvents(postIds, period.current.start, period.current.end),
-    repository.listReplyShareEvents(replyIds, period.current.start, period.current.end),
+    repository.listPostSaves(
+      receivedInteractionContentIds.postIds,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listReplySaves(
+      receivedInteractionContentIds.replyIds,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listCommentsReceived(
+      receivedInteractionContentIds.postIds,
+      userId,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listPostVotes(
+      receivedInteractionContentIds.postIds,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listReplyVotes(
+      receivedInteractionContentIds.replyIds,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listPostShareEvents(
+      receivedInteractionContentIds.postIds,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listReplyShareEvents(
+      receivedInteractionContentIds.replyIds,
+      period.current.start,
+      period.current.end,
+    ),
     repository.listPostSavesByUser(userId, period.current.start, period.current.end),
     repository.listReplySavesByUser(userId, period.current.start, period.current.end),
     repository.listPostVotesByUser(userId, period.current.start, period.current.end),
@@ -256,18 +288,42 @@ export const loadAdminPsychologistStatisticsData = async ({
     repository.listPostShareEventsByUser(userId, period.current.start, period.current.end),
     repository.listReplyShareEventsByUser(userId, period.current.start, period.current.end),
     repository.listReportsByUser(userId, period.current.start, period.current.end),
-    repository.listPostSaves(previousPostIds, period.previous.start, period.previous.end),
-    repository.listReplySaves(previousReplyIds, period.previous.start, period.previous.end),
+    repository.listPostSaves(
+      receivedInteractionContentIds.postIds,
+      period.previous.start,
+      period.previous.end,
+    ),
+    repository.listReplySaves(
+      receivedInteractionContentIds.replyIds,
+      period.previous.start,
+      period.previous.end,
+    ),
     repository.listCommentsReceived(
-      previousPostIds,
+      receivedInteractionContentIds.postIds,
       userId,
       period.previous.start,
       period.previous.end,
     ),
-    repository.listPostVotes(previousPostIds, period.previous.start, period.previous.end),
-    repository.listReplyVotes(previousReplyIds, period.previous.start, period.previous.end),
-    repository.listPostShareEvents(previousPostIds, period.previous.start, period.previous.end),
-    repository.listReplyShareEvents(previousReplyIds, period.previous.start, period.previous.end),
+    repository.listPostVotes(
+      receivedInteractionContentIds.postIds,
+      period.previous.start,
+      period.previous.end,
+    ),
+    repository.listReplyVotes(
+      receivedInteractionContentIds.replyIds,
+      period.previous.start,
+      period.previous.end,
+    ),
+    repository.listPostShareEvents(
+      receivedInteractionContentIds.postIds,
+      period.previous.start,
+      period.previous.end,
+    ),
+    repository.listReplyShareEvents(
+      receivedInteractionContentIds.replyIds,
+      period.previous.start,
+      period.previous.end,
+    ),
     repository.countPostViews(allPostIds, period.current.start, period.current.end),
     repository.countReplyViews(allReplyIds, period.current.start, period.current.end),
     repository.countPostWhatsappClicks(postIds, period.current.start, period.current.end),

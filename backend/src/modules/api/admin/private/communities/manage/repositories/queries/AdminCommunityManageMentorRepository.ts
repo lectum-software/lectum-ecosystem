@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { getCommunityMentorWhatsappClickCounts } from "@/utils/community-mentor-ranking";
 import {
   type AdminCommunityMentorMetrics,
   adminCommunityMentorRemovedPostsPenalty,
@@ -40,6 +41,7 @@ export class AdminCommunityManageMentorRepository {
       removedPostParticipation,
       postActivityDays,
       replyActivityDays,
+      whatsappClickCounts,
     ] = await Promise.all([
       prisma.community_post.groupBy({
         _count: {
@@ -307,6 +309,7 @@ export class AdminCommunityManageMentorRepository {
           },
         },
       }),
+      getCommunityMentorWhatsappClickCounts(mentorIds, publishedPostFilter, createdAtWindow),
     ]);
 
     const activeDaysByMentorId = new Map<string, Set<string>>();
@@ -323,6 +326,10 @@ export class AdminCommunityManageMentorRepository {
       days.add(date.toISOString().slice(0, 10));
       activeDaysByMentorId.set(mentorId, days);
     };
+
+    for (const [mentorId, count] of whatsappClickCounts) {
+      metrics(mentorId).community_whatsapp_clicks = count;
+    }
 
     for (const item of postParticipation)
       metrics(item.author_id).posts_published = item._count.author_id;

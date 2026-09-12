@@ -33,14 +33,14 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C4-paciente | Zero de relações no intervalo pode virar contagem acumulada. | Corrigido/publicado362;12testes reais/check/build/smoke e leitura QA aprovados. Consultas temporais e exclusões próprias preservadas. |
 | C5 | Atividade pode incluir publicações anteriores ao intervalo. | Publicado364/c4d3aa3e;29testes/check/build/revisão/smoke aprovados. Hoje12/09:22conteúdos preservados;6→0autores ativos,1,2→0ações por profissional. Sem mutações publicadas. |
 | C6 | Views por conteúdo podem incluir visitas ao perfil. | Publicado363/5b9511f4;17testes, check/build/revisão/smoke e leitura AX publicados aprovados. Razões corrigidas e dataset histórico/atribuição preservados. |
-| C18 | Limite de consultas CFP não reservava a tentativa antes do efeito externo. | Corrigido366; 20 cenários PG reais passaram3vezes, incluindo perfis independentes. Sem consulta paga; publicação pendente. |
+| C18 | Limite de consultas CFP não reservava a tentativa antes do efeito externo. | Corrigido366; 20 cenários PG reais passaram3vezes, incluindo perfis independentes. Sem consulta paga; publicado4bb4e258,smoke5/5. |
 | C16 | Despublicação de perfil impede remover a própria relação de follow. | Corrigido/publicado353; dez cenários service/repository em PostgreSQL local real,smoke5/5. Sem E2E autenticado equivalente. |
 | C24 | Data de registro de hoje pode ser recusada pela manhã. | Corrigido346; comparação civil em São Paulo, 11 contratos em3fusos e build. |
 
 ## Hipóteses que exigem rastreio antes de mudar regras
 
 - Universo histórico de membros, origem de tráfego, coortes e scores (C1/C2/C7/C8/C11).
-- C3/C14/C19 corrigidos366: fuso e resumo/CRP atuais testados; WhatsApp20 e registro38 cenários PG aprovados; publicação pendente.
+- C3/C14/C19 corrigidos366: fuso e resumo/CRP atuais testados; WhatsApp20 e registro38 cenários PG aprovados; publicado4bb4e258,smoke5/5.
 - C21/C22 corrigidos366: 42 testes novos +14base aprovados; min0 tem consumidores ativos. CPF/max0/condições genéricas cobertos como contrato, sem alegar exploração publicada.
 - Métricas de mentoria e filtros de eventos próprios no ranking (C23/C25).
 - Sucesso parcial de mutations encadeadas, idiomas, fallback de slices e listas administrativas.
@@ -214,3 +214,15 @@ C9/C10:358 publicado(80721abd),5GETs e leitura normal QA aprovados. Cenários tr
 26/26 em PostgreSQL descartável; não houve decisão concorrente HTTP no ambiente publicado.
 A342-02:359 em implementação; baseline real e referência visual registrados. Uma regra
 QA359 temporária foi adicionada pelo formulário normal para testar ordem e depois remover.
+
+## Atualização técnica367 — pronta para publicar
+
+- C23 corrigido: cliques WhatsApp rastreáveis alimentam os três rankings comunitários;31/31checksPG.
+- C25 corrigido: autoações antigas excluídas por ator/alvo;17/17checksPG, baseline366falhava7.
+- C8 corrigido: eventos recebidos em conteúdo antigo entram no período;30/30checksPG, baseline366falhava23.
+- Sem reset, backfill, migration, provider ou env obrigatória. Histórico preservado.
+- C1/C7/C11 não recebem fórmulas novas por suposição: total atual versus histórico, classificação
+  de assinatura e estimativas de visibilidade têm contratos distintos; não foram certificados como
+  equivalentes. C2 preserva exclusão intencional de visitas de perfil sem atribuição comunitária.
+- Checkglobal/build aprovados; publicação/smoke367 ainda será executado. Isto fecha essas correções,
+  não a auditoria geral nem as dependências externas descritas nas seções anteriores.

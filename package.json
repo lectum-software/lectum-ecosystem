@@ -1,6 +1,6 @@
 {
   "name": "lectum-ecosystem",
-  "version": "0.1.366",
+  "version": "0.1.367",
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
@@ -9,7 +9,7 @@
     "check": "pnpm check:version && pnpm check:secrets && pnpm check:encoding && pnpm check:adrs && pnpm check:tasks && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles && pnpm check:frontend && pnpm check:backend && pnpm check:admin && pnpm check:video",
     "check:adrs": "node scripts/check-adrs.mjs",
     "check:deploy-branch": "node scripts/check-deploy-branch.mjs",
-    "check:env": "node scripts/check-env-examples.mjs",
+    "check:env": "node --test scripts/check-env-examples.test.mjs && node scripts/check-env-examples.mjs",
     "check:tasks": "node scripts/check-product-tasks.mjs",
     "check:encoding": "node scripts/check-text-encoding.mjs",
     "check:source-safety": "node scripts/check-source-safety.mjs",

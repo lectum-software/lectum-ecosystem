@@ -1280,3 +1280,24 @@ Evita conflitos SSI de predicado entre usuários, sem mutex de processo/Redis/ta
 Teste inalterado passou três vezes (20/20 cada); WhatsApp20 e registro38 também passaram
 na imagem final d1b58ed0d6acf2c6f43ff7663cf20f46053f30e90bf9ea9dbfb0b4fed38b56a1.
 Todas as réplicas antigas devem ser substituídas: elas não participam do lock novo.
+
+###367 — completar agregação e excluir autoações legadas
+
+Aplicar o contrato existente DATA-MODEL/TASK27 e ADR0194, sem criar nova fórmula: agregar
+whatsapp_click rastreável ao autor de post/resposta comunitários no helper de ranking e
+usar o mesmo resultado nos três consumidores. Eventos genéricos não têm atribuição segura.
+Ranking público filtra ator igual ao alvo por field reference Prisma; NULL continua anônimo.
+Não comparar com quem consulta nem excluir todos os candidatos entre si. Sem escrita histórica,
+novas permissões, envs, packages ou tabelas. Provar com o banco real descartável antes do push.
+
+C8/367: “recebidos no período” significa a data da interação, não a criação do conteúdo
+alvo. Reutilizar universos históricos elegíveis já carregados, preservando filtro da comunidade;
+produção e cobertura continuam no intervalo original. Comparar atual/anterior pelo mesmo
+critério, sem alteração de pesos ou criação de dados. Não alterar C1/C7/C11 por suposição.
+C25 usa not.equals com field reference (forma tipada do Prisma7), mantendo OR explícito de
+NULL nos atores opcionais. Referência: https://www.prisma.io/docs/orm/v7/reference/prisma-client-reference#compare-columns-in-the-same-table
+
+O guard dos probes valida o ambiente descartável completo antes dos imports. PATH é
+variável do sistema/container, não uma nova configuração de produto: o checker de envs
+reconhece essa distinção, mantendo a proibição em módulos client e a exigência de documentar
+novas variáveis da aplicação. Três testes do scanner verificam essas fronteiras.

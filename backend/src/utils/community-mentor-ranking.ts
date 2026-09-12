@@ -1,5 +1,65 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import {
+  COMMUNITY_MENTOR_WHATSAPP_POST_TARGET_TYPES,
+  COMMUNITY_MENTOR_WHATSAPP_REPLY_TARGET_TYPES,
+  countCommunityMentorWhatsappClicks,
+} from "./community-mentor-whatsapp-counts";
+
+export const getCommunityMentorWhatsappClickCounts = async (
+  mentorIds: string[],
+  publishedPostFilter: Prisma.community_postWhereInput,
+  occurredAtWindow?: Prisma.DateTimeFilter,
+): Promise<Map<string, number>> => {
+  const uniqueMentorIds = [...new Set(mentorIds.filter(Boolean))];
+  if (uniqueMentorIds.length === 0) return new Map();
+
+  // Content may predate the ranking period; the event timestamp defines attribution.
+  const [posts, replies] = await Promise.all([
+    prisma.community_post.findMany({
+      where: {
+        AND: [publishedPostFilter, { author_id: { in: uniqueMentorIds } }],
+      },
+      select: { id: true, author_id: true },
+    }),
+    prisma.post_reply.findMany({
+      where: {
+        author_id: { in: uniqueMentorIds },
+        deleted: false,
+        post: publishedPostFilter,
+      },
+      select: { id: true, author_id: true },
+    }),
+  ]);
+  const targetFilters: Prisma.important_action_eventWhereInput[] = [];
+
+  if (posts.length > 0) {
+    targetFilters.push({
+      target_id: { in: posts.map((post) => post.id) },
+      target_type: { in: [...COMMUNITY_MENTOR_WHATSAPP_POST_TARGET_TYPES] },
+    });
+  }
+  if (replies.length > 0) {
+    targetFilters.push({
+      target_id: { in: replies.map((reply) => reply.id) },
+      target_type: { in: [...COMMUNITY_MENTOR_WHATSAPP_REPLY_TARGET_TYPES] },
+    });
+  }
+  if (targetFilters.length === 0) return new Map();
+
+  const groups = await prisma.important_action_event.groupBy({
+    by: ["target_type", "target_id", "user_id"],
+    where: {
+      action_type: "whatsapp_click",
+      deleted: false,
+      occurred_at: occurredAtWindow,
+      OR: targetFilters,
+    },
+    _count: { _all: true },
+  });
+
+  return countCommunityMentorWhatsappClicks(posts, replies, groups);
+};
 
 const TOP_MENTOR_UPVOTE_WEIGHT = 2;
 const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
@@ -112,6 +172,7 @@ export const getCommunityMentorRankingSignals = async (
     removedPostParticipation,
     postActivityDays,
     replyActivityDays,
+    whatsappClickCounts,
   ] = await Promise.all([
     prisma.community_post.groupBy({
       by: ["author_id"],
@@ -366,6 +427,7 @@ export const getCommunityMentorRankingSignals = async (
         createdAt: true,
       },
     }),
+    getCommunityMentorWhatsappClickCounts(uniqueMentorIds, publishedPostFilter),
   ]);
 
   const metricsByMentorId = new Map<string, TopMentorMutableMetrics>();
@@ -384,6 +446,10 @@ export const getCommunityMentorRankingSignals = async (
     existing.add(date.toISOString().slice(0, 10));
     activeDaysByMentorId.set(mentorId, existing);
   };
+
+  for (const [mentorId, count] of whatsappClickCounts) {
+    getMetrics(mentorId).community_whatsapp_clicks = count;
+  }
 
   for (const item of postParticipation) {
     getMetrics(item.author_id).posts_published = item._count.author_id;

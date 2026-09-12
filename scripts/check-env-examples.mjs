@@ -1,4 +1,4 @@
-import { readFile, readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -6,7 +6,9 @@ import { fileURLToPath } from "node:url";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceExtensions = new Set([".cjs", ".js", ".mjs", ".sh", ".ts", ".tsx"]);
 const ignoredSegments = new Set([".next", "coverage", "dist", "generated", "node_modules"]);
-const platformVariables = new Set(["CI", "NODE_ENV"]);
+// PATH is supplied by the operating system/container, not an application secret
+// or a deploy setting. Client modules are still checked separately below.
+const platformVariables = new Set(["CI", "NODE_ENV", "PATH"]);
 const applicationDefinitions = [
   {
     example: "backend/.env.example",
@@ -82,7 +84,7 @@ const collectEnvironmentReferences = (content, { isShell = false } = {}) => {
     /\benv\(\s*["']([A-Z][A-Z0-9_]*)["']\s*\)/g,
   ];
 
-  if (isShell) patterns.push(/\$\{([A-Z][A-Z0-9_]*)(?=[:}?+\-])/g);
+  if (isShell) patterns.push(/\$\{([A-Z][A-Z0-9_]*)(?=[:}?+-])/g);
 
   for (const pattern of patterns) {
     for (const match of content.matchAll(pattern)) references.add(match[1]);
@@ -114,16 +116,14 @@ for (const definition of applicationDefinitions) {
 
       const content = await readFile(absolutePath, "utf8");
       const relativePath = path.relative(repositoryRoot, absolutePath);
-      for (const key of collectEnvironmentReferences(content, { isShell: absolutePath.endsWith(".sh") })) {
+      for (const key of collectEnvironmentReferences(content, {
+        isShell: absolutePath.endsWith(".sh"),
+      })) {
         if (!references.has(key)) references.set(key, new Set());
         references.get(key).add(relativePath);
 
         const isClientModule = /^\s*["']use client["'];/u.test(content.replace(/^\uFEFF/, ""));
-        if (
-          isClientModule &&
-          key !== "NODE_ENV" &&
-          !key.startsWith("NEXT_PUBLIC_")
-        ) {
+        if (isClientModule && key !== "NODE_ENV" && !key.startsWith("NEXT_PUBLIC_")) {
           failures.push(`${relativePath}: ${key} não pode ser lida em módulo de navegador.`);
         }
       }
@@ -131,11 +131,7 @@ for (const definition of applicationDefinitions) {
   }
 
   for (const [key, files] of references) {
-    if (
-      platformVariables.has(key) ||
-      verifiedBuildConstants.has(key) ||
-      documentedKeys.has(key)
-    ) {
+    if (platformVariables.has(key) || verifiedBuildConstants.has(key) || documentedKeys.has(key)) {
       continue;
     }
 
@@ -147,7 +143,7 @@ for (const definition of applicationDefinitions) {
 
 if (failures.length > 0) {
   console.error("[env-examples] Variáveis não documentadas podem quebrar homologação/produção:\n");
-  failures.forEach((failure) => console.error(`- ${failure}`));
+  for (const failure of failures) console.error(`- ${failure}`);
   process.exitCode = 1;
 } else {
   console.log(
