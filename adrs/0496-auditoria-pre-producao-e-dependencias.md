@@ -1201,3 +1201,14 @@ quebraria outra métrica. Filtrar pelo predicado composto dos classificadores ex
 de post/resposta, depois do filtro atual de autores/IDs. Coorte/denominador, período,
 arredondamento e null sem base preservados; não somar médias arredondadas para inferir
 contagem. Nenhuma query/dado histórico modificado. C5 é decisão separada.
+
+
+### Atividade temporal364 — decisão prévia
+
+C5 restaura contrato das TASK123/125/126: autoria no período, diferente do universo
+histórico que pode receber tráfego hoje. Recortar em memória usando createdAt próprio
+de post/resposta e dateInRange existente, após filtro de autores. Não acrescentar gte
+às queries históricas. Contexto retorna contagens de posts/respostas de atividade;
+célula usa os mesmos valores no subtotal. Formato continua histórico, com disponibilidade
+de conteúdo, evitando metadado contraditório sem atividade nova. Nenhuma fórmula ou
+threshold novo. Testes puros do contexto+célula reutilizam fixtures locais; não são E2E.

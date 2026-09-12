@@ -285,7 +285,10 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 362: publicada; testes/check/build/smoke e leitura normal QA aprovados.
 
 157. **Visualizações de conteúdo:** visitas ao perfil não inflam a média de leitura de posts e respostas.
-363: 17 testes focais, check global, build e revisão aprovados; publicação em andamento.
+363: publicada; 17 testes focais/check/build/revisão/smoke aprovados e valores conferidos no Admin.
+
+158. **Atividade do período:** publicações antigas deixam de contar como ações recentes; o histórico continua disponível nos relatórios de conteúdo.
+364: 29 testes focais, revisão/check/build aprovados; publicação em andamento.
 
 ## Ainda pendente
 

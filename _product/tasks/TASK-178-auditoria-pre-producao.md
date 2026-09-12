@@ -1226,7 +1226,7 @@ antes da validação do deploy362. C5 segue revisão independente, não misturar
 - [x] Visitas ao perfil não aumentam visualizações médias de posts/respostas.
 - [x] Aliases de conteúdo, atribuição ao perfil, filtros e ausência de base preservados.
 - [x] Testes reais, revisão independente e backend/global checks/build aprovados.
-- [ ] Commit/push, smoke, versões e leitura normal publicados registrados.
+- [x] Commit/push, smoke, versões e leitura normal publicados registrados.
 
 362/7921abef:commit/pushconcluídos,smoke5/5 registrado em /tmp/lectum-audit-362-smoke-curl-homolog.json,
 backend/frontend/Admin362,health/ready200,Nextversionsno-store/noindex. Apósreload,
@@ -1255,3 +1255,36 @@ pelo glob vigente do backend, sem registro adicional ou alteração de script.
 363:revisão independente Gauss leu3fontes finais/1447linhas; hashes atuais conferidos
 e integrados ao ledger. Sem regressão introduzida identificada. Bump único363/checkversion
 aprovados; build repetido na363 e17testes compilados passaram. Publicação pendente.
+
+363/5b9511f4:commit/push e deploy conferidos; smoke5/5 backend/frontend/Admin363,
+health/ready200,Nextversionsno-store/noindex. Reload normal emTodooperíodo confirmou
+no title/descrição AX:9,1→2;12,9→0,6;6,3→2,3viewsporconteúdo, mantendo os outros textos
+e contagens. Sem mutações publicadas. Prova privada do serviço de vídeo segue separada.
+
+### Continuação364 — atividade autoral no período
+
+C5: reutilizar dateInRange inclusivo, já adotado em profile/activity, para derivar
+posts/respostas de atividade sem mudar o dataset histórico de tráfego. Contar ações,
+autores e subtotais do mesmo recorte. Média segue todos os profissionais da faixa;
+classificador e arredondamento preservados. Células de formato mantêm base histórica
+e disponibilidade de conteúdo, não ausência de atividade recente. Nenhuma mudança de
+query, coorte, telemetria, contrato externo, UI, ranking, package, migration ou env.
+Rollback somente código. Verificar grafo runtime puro antes de testes. Reutilizar
+fixtures unitárias existentes de comunidade, renomeando o teste para refletir as duas
+regras em vez de duplicar fixtures ou criar infraestrutura paralela.
+
+- [x] Ações, autores e subtotais respeitam intervalo inclusivo e média da faixa.
+- [x] Histórico de tráfego/formatos e correção363 preservados, sem mutar entradas.
+- [x] Testes reais, revisão independente, check global e backend build aprovados.
+- [ ] Commit/push, versões, health/ready e leitura normal publicados registrados.
+
+364:29testes reais de contexto/célula/tráfego aprovados;17C6preservados e12C5novos.
+BaselineC5:6pass/6fail;depois12pass. Inclusão dos extremos, criação própria de resposta,
+subtotais/autores/média dafaixa, zero/null e base histórica/formato cobertos sem mocks.
+Browserantes364:Hoje(12/09),22conteúdos/6autores/1,2ações por profissional na descrição
+comunitária. Nenhum conteúdo/atividade foi criado ou alterado para produzir esse baseline.
+
+364:checkglobal1298testes/1292pass/0fail/6skipsdrawtextpreexistentes;backendbuildPrisma/TS
+eBiome aprovados. 29testes compilados reais passaram. Revisão independente3fontes/1563linhas
+sem regressão identificada, hashes atuais conferidos eledger atualizado. Bump364único/checkversion
+feito, nenhum outrobumpparaestecommit. Nenhuma migration/env/package nova. Publicação pendente.

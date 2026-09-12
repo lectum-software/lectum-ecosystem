@@ -261,3 +261,9 @@ Deploy362 pendente,privadovídeo sem nova comprovação. Artefatos /tmp/lectum-t
 health/ready200,Nextversionsno-store/noindex. BrowserQA apósreload manteve1comentário/
 0salvamentos e demais métricas; registro não demonstra divergência prévia. Sem mutações.
 Vídeo privado permanece sem comprovação deversão além338; não presumir362.
+
+363/5b9511f4 publicado:5GETs públicos aprovados em /tmp/lectum-audit-363-smoke-curl-homolog.json.
+Backend/frontend/Admin363,health/ready200;Nextversionsno-store/noindex. Browsernormal
+emTodooperíodo:descriçõesAX/title das3categorias mostram9,1→2;12,9→0,6;6,3→2,3views/conteúdo.
+Demais textos/contagens iguais. Evidência antes/depois no diretórioC6;sem requestparalelo
+ou mutação publicada. Limite: não é auditoria de todas as relações históricas nem de vídeo privado.

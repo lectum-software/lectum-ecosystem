@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { buildCommunityTrafficPlatformMetrics } from "../traffic/community";
+import { buildCommunitiesBehaviorCell } from "./community-favorite-cells";
 import { buildProfileConversionBehaviorRowContext } from "./context";
 
 type ContextInput = Parameters<typeof buildProfileConversionBehaviorRowContext>[0];
@@ -383,4 +384,206 @@ test("calcular contexto e atribuição não altera entradas nem outras métricas
   assert.equal(result.communityAttentionPerContent, 12);
   assert.equal(result.communityEngagementActions, 2);
   assert.equal(result.communityViewsPerContent, 1);
+});
+
+const activityRange = input(dataset()).params.range;
+const beforeActivityRange = new Date(activityRange.start.getTime() - 1);
+const afterActivityRange = new Date(activityRange.end.getTime() + 1);
+type BehaviorContext = ReturnType<typeof buildProfileConversionBehaviorRowContext>;
+
+const cellMetric = (result: BehaviorContext, id: string) => {
+  const metric = buildCommunitiesBehaviorCell(result).metrics.find((item) => item.id === id);
+  assert.ok(metric, id);
+  return metric;
+};
+
+const activityValues = (result: BehaviorContext) =>
+  [
+    "activity_posts",
+    "activity_replies",
+    "activity_actions",
+    "activity_active_psychologists",
+    "activity_actions_per_psychologist",
+  ].map((id) => cellMetric(result, id).value);
+
+for (const [label, createdAt] of [
+  ["antes do início", beforeActivityRange],
+  ["após o fim", afterActivityRange],
+] as const) {
+  test(`atividade exclui post e resposta ${label} sem excluir a base de conteúdo`, () => {
+    const result = context(
+      dataset({ posts: [{ ...post(), createdAt }], replies: [{ ...reply(), createdAt }] }),
+    );
+
+    assert.equal(result.communityContentCount, 2);
+    assert.deepEqual(activityValues(result), [0, 0, 0, 0, 0]);
+    assert.equal(result.rowActivityActions, 0);
+    assert.equal(result.rowActivityAuthorIds.size, 0);
+    assert.notEqual(result.activityUnavailableReason, null);
+  });
+}
+
+for (const [label, createdAt] of [
+  ["início", activityRange.start],
+  ["fim", activityRange.end],
+] as const) {
+  test(`atividade inclui post e resposta exatamente no ${label} do intervalo`, () => {
+    const result = context(
+      dataset({ posts: [{ ...post(), createdAt }], replies: [{ ...reply(), createdAt }] }),
+    );
+
+    assert.deepEqual(activityValues(result), [1, 1, 2, 1, 2]);
+    assert.equal(result.rowActivityActions, 2);
+    assert.deepEqual([...result.rowActivityAuthorIds], [AUTHOR_ID]);
+    assert.equal(result.activityUnavailableReason, null);
+  });
+}
+
+test("resposta nova em post antigo conta pela criação própria, não pela criação do post", () => {
+  const oldPost = { ...post(), createdAt: beforeActivityRange };
+  const newReply = reply();
+  newReply.post.createdAt = beforeActivityRange;
+  const result = context(dataset({ posts: [oldPost], replies: [newReply] }));
+
+  assert.equal(result.communityContentCount, 2);
+  assert.deepEqual(activityValues(result), [0, 1, 1, 1, 1]);
+  assert.equal(result.rowActivityActions, 1);
+});
+
+test("subtotais de atividade da célula e total do contexto usam o mesmo recorte", () => {
+  const result = context(
+    dataset({
+      posts: [post(), { ...post("post-old"), createdAt: beforeActivityRange }],
+      replies: [
+        reply(),
+        reply("reply-second"),
+        { ...reply("reply-old"), createdAt: beforeActivityRange },
+        { ...reply("reply-future"), createdAt: afterActivityRange },
+      ],
+    }),
+  );
+
+  assert.equal(result.communityContentCount, 6);
+  assert.deepEqual(activityValues(result), [1, 2, 3, 1, 3]);
+  assert.equal(result.rowActivityActions, 3);
+  const posts = cellMetric(result, "activity_posts").value;
+  const replies = cellMetric(result, "activity_replies").value;
+  assert.equal(typeof posts, "number");
+  assert.equal(typeof replies, "number");
+  assert.equal(Number(posts) + Number(replies), result.rowActivityActions);
+});
+
+test("autores ativos são únicos, da coorte e com autoria dentro do período", () => {
+  const result = context(
+    dataset({
+      posts: [
+        post(),
+        post("post-second", "second-author"),
+        { ...post("post-old", "inactive-author"), createdAt: beforeActivityRange },
+        post("post-outside", "outside-cohort"),
+      ],
+      replies: [reply(), reply("reply-second", "second-author")],
+    }),
+    [profile(), profile("second-author"), profile("inactive-author")],
+  );
+
+  assert.equal(result.communityContentCount, 5);
+  assert.deepEqual([...result.rowActivityAuthorIds].sort(), [AUTHOR_ID, "second-author"].sort());
+  assert.deepEqual(activityValues(result), [2, 2, 4, 2, 1.3]);
+});
+
+test("média da atividade inclui todos os três profissionais e arredonda um terço para 0.3", () => {
+  const result = context(dataset({ posts: [post()] }), [
+    profile(),
+    profile("inactive-second"),
+    profile("inactive-third"),
+  ]);
+
+  assert.deepEqual(activityValues(result), [1, 0, 1, 1, 0.3]);
+  assert.equal(result.activityPerPsychologist, 0.3);
+  const level = cellMetric(result, "community_activity_level");
+  assert.equal(level.value, 0.3);
+  assert.equal(level.display_value, "Baixa atividade");
+  assert.equal(level.tone, "below");
+});
+
+test("coorte sem autoria mantém atividade zero, não média desconhecida", () => {
+  const result = context(dataset());
+
+  assert.deepEqual(activityValues(result), [0, 0, 0, 0, 0]);
+  assert.equal(result.activityPerPsychologist, 0);
+  assert.notEqual(result.activityUnavailableReason, null);
+  assert.equal(cellMetric(result, "activity_actions_per_psychologist").unavailable_reason, null);
+  assert.equal(cellMetric(result, "community_activity_level").display_value, "Sem atividade");
+  assert.equal(cellMetric(result, "community_activity_level").tone, "zero");
+});
+
+test("ausência de coorte mantém média null e disponibilidade vazia", () => {
+  const result = context(dataset({ posts: [post()], replies: [reply()] }), []);
+
+  assert.deepEqual(activityValues(result), [0, 0, 0, 0, null]);
+  assert.equal(result.activityPerPsychologist, null);
+  assert.equal(result.activityUnavailableReason, result.emptyRowReason);
+  assert.notEqual(cellMetric(result, "activity_actions_per_psychologist").unavailable_reason, null);
+  assert.equal(
+    cellMetric(result, "community_post_format").unavailable_reason,
+    result.emptyRowReason,
+  );
+});
+
+test("histórico conserva formatos e tráfego disponíveis mesmo sem atividade nova", () => {
+  const source = input(
+    dataset({
+      posts: [{ ...post(), createdAt: beforeActivityRange, media_type: "video" }],
+      replies: [{ ...reply(), createdAt: beforeActivityRange }],
+      pageViews: [view("post", "post-unit"), view("psychologist", AUTHOR_ID, 1000)],
+      attentionSessions: [{ attention_seconds: 20, target_id: "post-unit", target_type: "post" }],
+    }),
+  );
+  const before = structuredClone(source);
+  const result = buildProfileConversionBehaviorRowContext(source);
+
+  assert.deepEqual(
+    result.rowCommunityTrafficDataset,
+    source.params.communityTrafficPlatformMetricDataset,
+  );
+  assert.equal(result.communityContentCount, 2);
+  assert.equal(result.communityViewsPerContent, 0.5);
+  assert.equal(result.communityAttentionPerContent, 10);
+  for (const id of ["community_post_format", "community_reply_format"]) {
+    const metric = cellMetric(result, id);
+    assert.equal(metric.value, 1);
+    assert.equal(metric.unavailable_reason, result.communityContentUnavailableReason);
+    assert.equal(metric.unavailable_reason, null);
+  }
+  assert.equal(
+    cellMetric(result, "community_post_format").display_value,
+    result.communityPostFormatSignal.label,
+  );
+  assert.equal(
+    cellMetric(result, "community_reply_format").display_value,
+    result.communityReplyFormatSignal.label,
+  );
+  assert.equal(
+    metricValue(result.rowCommunityTrafficDataset, "community_post_video", "profile_accesses"),
+    1,
+  );
+  assert.deepEqual(source, before);
+  assert.deepEqual(activityValues(result), [0, 0, 0, 0, 0]);
+  assert.equal(cellMetric(result, "community_activity_level").display_value, "Sem atividade");
+});
+
+test("classificador vigente mantém limiares de atividade padrão e muito ativa", () => {
+  for (const [count, label, tone] of [
+    [3, "Atividade padrão", "standard"],
+    [10, "Muito ativo", "above"],
+  ] as const) {
+    const result = context(
+      dataset({ posts: Array.from({ length: count }, (_, i) => post(`p-${i}`)) }),
+    );
+    const level = cellMetric(result, "community_activity_level");
+    assert.equal(level.value, count);
+    assert.equal(level.display_value, label);
+    assert.equal(level.tone, tone);
+  }
 });

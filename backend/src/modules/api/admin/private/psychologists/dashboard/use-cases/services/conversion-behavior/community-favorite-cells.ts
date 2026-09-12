@@ -43,6 +43,8 @@ export const buildCommunitiesBehaviorCell = (
     profileFollows,
     rowActivityActions,
     rowActivityAuthorIds,
+    rowActivityPostCount,
+    rowActivityReplyCount,
     rowCommunityTrafficDataset,
   } = context;
 
@@ -94,7 +96,7 @@ export const buildCommunitiesBehaviorCell = (
         label: "Formato posts",
         source: "community_post.media_type",
         tone: communityPostFormatSignal.tone,
-        unavailable_reason: activityUnavailableReason,
+        unavailable_reason: communityContentUnavailableReason,
         value: rowCommunityTrafficDataset.posts.length,
       }),
       buildProfileConversionBehaviorMetric({
@@ -104,7 +106,7 @@ export const buildCommunitiesBehaviorCell = (
         label: "Formato respostas",
         source: "post_reply.media_type",
         tone: communityReplyFormatSignal.tone,
-        unavailable_reason: activityUnavailableReason,
+        unavailable_reason: communityContentUnavailableReason,
         value: rowCommunityTrafficDataset.replies.length,
       }),
       buildProfileConversionBehaviorMetric({
@@ -188,7 +190,7 @@ export const buildCommunitiesBehaviorCell = (
         label: "Posts",
         source: "community_post.author_id",
         unavailable_reason: activityUnavailableReason,
-        value: rowCommunityTrafficDataset.posts.length,
+        value: rowActivityPostCount,
       }),
       buildProfileConversionBehaviorMetric({
         description: "Quantidade de respostas publicadas por psicólogos da categoria.",
@@ -196,7 +198,7 @@ export const buildCommunitiesBehaviorCell = (
         label: "Respostas",
         source: "post_reply.author_id",
         unavailable_reason: activityUnavailableReason,
-        value: rowCommunityTrafficDataset.replies.length,
+        value: rowActivityReplyCount,
       }),
       buildProfileConversionBehaviorMetric({
         description: "Profissionais da categoria que publicaram post ou resposta no período.",

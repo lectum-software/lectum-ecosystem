@@ -2302,3 +2302,29 @@ Revisão363:3fontes finais lidas porGauss/1447linhas, SHA atual conferido; relat
 /tmp/lectum-task178-community-views-363-review/report.md. Sem regressão identificada.
 Global1286/1280pass/0fail/6skipspreexistentes, build363 e17testes compilados aprovados.
 O formato da assertion foi corrigido e relido; nenhuma redução da cobertura de testes.
+
+363/5b9511f4 publicado:5GETs públicos aprovados em /tmp/lectum-audit-363-smoke-curl-homolog.json.
+Backend/frontend/Admin363,health/ready200;Nextversionsno-store/noindex. Browsernormal
+emTodooperíodo:descriçõesAX/title das3categorias mostram9,1→2;12,9→0,6;6,3→2,3views/conteúdo.
+Demais textos/contagens iguais. Evidência antes/depois no diretórioC6;sem requestparalelo
+ou mutação publicada. Limite: não é auditoria de todas as relações históricas nem de vídeo privado.
+
+
+### C5 — atividade do intervalo364
+
+Contexto deriva autoria inclusiva no período via dateInRange existente. Total/autores/
+subtotais usam a mesma base; média permanece por todos os profissionais da faixa.
+Formato usa disponibilidade histórica e não a atividade recente. Sem queries/migration/
+envs/packages/UI/contrato alterados. 12novos testes +17C6:baseline23pass6fail,final29pass.
+Sem infraestrutura/mocks; grafo estático adicional25módulos puros conferido porSocrates
+antes do baseline. Principal confirmou esse artefato na integração. Teste renomeado
+para community-behavior.test.ts, reutilizando fixtures/C6 sem duplicação; somenteformatação
+Biome adicional. Artefatos/tmp/lectum-task178-community-activity-364/ e logs364.
+Browsernormalantes364:Hoje12/09, descrição acessível mostra22conteúdos,6autores ativos,
+1,2ações/profissional; sem mutação. A consulta selecionada já limita fim de criação;
+caso de teste apósfim é defensivo e não reprodução dessa query.
+
+364:checkglobal1298/1292pass/0fail/6skipspreexistentes;build364 e29testescompilados
+aprovados. RevisãoGauss3fontes finais/1563linhas, hashes atuais conferidos noledger.
+Relatório/tmp/lectum-task178-community-activity-364-review/report.md. Nenhuma regressão
+identificada; revisão estática não substitui testes/Browser. Publicação pendente.

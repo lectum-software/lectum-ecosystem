@@ -17,6 +17,7 @@ import type {
   AdminPsychologistTrafficCommunityReplyRecord,
   AdminPsychologistWhatsappTrafficActionRecord,
 } from "../../../repositories/interfaces/IAdminPsychologistsDashboardRepository";
+import { dateInRange } from "../pre-signup/conversion";
 import {
   filterCommunityTrafficPlatformMetricDataset,
   isCommunityTrafficContentTargetType,
@@ -387,13 +388,20 @@ export const buildProfileConversionBehaviorRowContext = ({
         ? "Nenhum conteúdo autoral de comunidade foi publicado por esta categoria no período."
         : null;
 
+  const rowActivityPosts = rowCommunityTrafficDataset.posts.filter((post) =>
+    dateInRange(post.createdAt, params.range),
+  );
+  const rowActivityReplies = rowCommunityTrafficDataset.replies.filter((reply) =>
+    dateInRange(reply.createdAt, params.range),
+  );
   const rowActivityAuthorIds = new Set([
-    ...rowCommunityTrafficDataset.posts.map((post) => post.author_id),
-    ...rowCommunityTrafficDataset.replies.map((reply) => reply.author_id),
+    ...rowActivityPosts.map((post) => post.author_id),
+    ...rowActivityReplies.map((reply) => reply.author_id),
   ]);
 
-  const rowActivityActions =
-    rowCommunityTrafficDataset.posts.length + rowCommunityTrafficDataset.replies.length;
+  const rowActivityPostCount = rowActivityPosts.length;
+  const rowActivityReplyCount = rowActivityReplies.length;
+  const rowActivityActions = rowActivityPostCount + rowActivityReplyCount;
 
   const activityPerPsychologist =
     row.count > 0 ? roundOneDecimal(rowActivityActions / row.count) : null;
@@ -629,6 +637,8 @@ export const buildProfileConversionBehaviorRowContext = ({
     profileWhatsappRate,
     rowActivityActions,
     rowActivityAuthorIds,
+    rowActivityPostCount,
+    rowActivityReplyCount,
     rowCommunityTrafficDataset,
     videoAverageWatchSeconds,
     videoEngagementActions,
