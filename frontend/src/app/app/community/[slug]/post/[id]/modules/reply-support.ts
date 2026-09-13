@@ -70,7 +70,7 @@ export type ReplyMediaPermission = {
 export const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
 
 export const REPLY_MEDIA_UPLOAD_ERROR_MESSAGE =
-  "Não foi possível enviar a mídia. Verifique sua conexão e tente novamente.";
+  "Não foi possível enviar a mídia agora. Tente novamente em instantes.";
 
 export const REPLY_PUBLISH_ERROR_MESSAGE =
   "Não foi possível publicar sua resposta agora. Verifique sua conexão e tente novamente.";

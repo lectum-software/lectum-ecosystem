@@ -128,3 +128,15 @@ pnpm --dir backend video:migrate-r2-to-stream -- --apply --confirm=homolog --lim
 - A provisao basica tambem usa `creator`, `allowedOrigins`, `requireSignedURLs`,
   `maxDurationSeconds`, `expiry` e metadados internos controlados. Nao ha fallback R2, migration,
   env nova ou exposicao de token/erro tecnico ao usuario.
+
+## Complemento operacional 2026-09-12: copy de falha de upload sem culpar internet
+
+- A UI nao deve inferir que falhas de upload de midia em resposta sao causadas pela conexao do
+  usuario. Em especial, erros transientes do transporte direto, do backend ou do provider continuam
+  sem expor detalhes tecnicos, mas tambem sem orientar "verifique sua conexao" quando essa causa nao
+  foi comprovada.
+- A mensagem generica do composer passa a ser neutra: "Não foi possível enviar a mídia agora. Tente
+  novamente em instantes."
+- Erros semanticamente conhecidos, como `video_stream_unavailable`, seguem com copy propria de
+  indisponibilidade do envio de video. Esta decisao nao altera armazenamento, nao reabre fallback R2 e
+  nao muda o contrato POST direto/TUS decidido no complemento anterior.

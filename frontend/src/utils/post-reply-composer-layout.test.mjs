@@ -29,6 +29,22 @@ test("detalhe e arvore reservam espaco inferior para o composer fixo", () => {
   assert.match(threadSource, /pb-36 sm:px-0 sm:pb-6/);
 });
 
+test("erro de upload de midia em resposta nao acusa conexao do usuario", () => {
+  const supportSource = readSource(
+    "../app/app/community/[slug]/post/[id]/modules/reply-support.ts",
+  );
+
+  assert.match(
+    supportSource,
+    /REPLY_MEDIA_UPLOAD_ERROR_MESSAGE\s*=\n\s*"Não foi possível enviar a mídia agora\. Tente novamente em instantes\.";/u,
+  );
+  assert.doesNotMatch(
+    supportSource,
+    /REPLY_MEDIA_UPLOAD_ERROR_MESSAGE\s*=\n\s*"[^"]*conex/u,
+    "o erro generico de upload de midia nao deve atribuir a falha a internet do usuario",
+  );
+});
+
 test("topo do detalhe do post mantem botao de seguir na mesma linha", () => {
   const postContentSource = readSource(
     "../app/app/community/[slug]/post/[id]/components/post-content.tsx",

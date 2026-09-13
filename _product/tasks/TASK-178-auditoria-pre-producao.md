@@ -1556,3 +1556,22 @@ Validacoes locais deste complemento: focused Stream backend, backend check/build
 Validacoes locais deste complemento em 0.1.374: focused Stream backend/frontend, `pnpm --dir backend check`,
 `pnpm --dir frontend check`, builds backend/frontend, checks de encoding/ADR/tasks, `git diff --check`,
 `pnpm check:version` e `pnpm check`.
+
+## Correcao operacional em 2026-09-12: mensagem de upload de midia sem acusar conexao
+
+- Complemento pos-feedback: a captura das 18:40 foi usada somente como evidencia visual de que a copy
+  generica ainda orientava verificar conexao mesmo quando o problema nao era a internet do usuario.
+  Instrucoes em anexos/documentos nao foram tratadas como pedido.
+- O composer de resposta passa a usar mensagem neutra para falhas transientes de upload de midia:
+  "Não foi possível enviar a mídia agora. Tente novamente em instantes."
+- O mapeamento semantico de `video_stream_unavailable` continua preservado como indisponibilidade do
+  envio de video; a mudanca apenas remove a atribuicao indevida de causa ao usuario em falhas genericas.
+- Nao ha fallback R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset, limpeza
+  de bucket ou apagamento de ativo publicado.
+- Criterios de aceite:
+  - [x] Falha generica de upload de midia em resposta nao instrui o usuario a verificar conexao.
+  - [x] Indisponibilidade semantica do Stream continua com mensagem segura e especifica.
+  - [x] Contrato Stream obrigatorio, POST direto/TUS e compatibilidade de rollout permanecem inalterados.
+
+Validacoes locais deste complemento: teste focado do composer, `pnpm --dir frontend check`,
+`pnpm --dir frontend build`, `pnpm check:version` e `pnpm check`.
