@@ -9,10 +9,27 @@ import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import { resolveProfileVideoAccess } from "../../psychologist/free-profile/use-cases/services/profile-video-policy";
 import type { IVideoAssetActionDTO, IVideoAssetUploadDTO } from "../DTOs/IVideoAssetsDTO";
 
+const VIDEO_UPLOAD_METHODS_HEADER = "x-lectum-video-upload-methods";
+
 const uploadNotAllowed = () => ({
   status: 403,
   ...error("video_upload_not_allowed", {}),
 });
+
+const parseAcceptedVideoUploadMethods = (value: string | string[] | undefined) => {
+  const raw = Array.isArray(value) ? value.join(",") : (value ?? "");
+  const methods = new Set(
+    raw
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean),
+  );
+
+  return {
+    basic: methods.has("basic"),
+    tus: methods.has("tus"),
+  };
+};
 
 const resolveUploadContext = async (data: IVideoAssetUploadDTO) => {
   const ownerId = data.auth.id;
@@ -54,6 +71,9 @@ export const createUpload = async (data: IVideoAssetUploadDTO) => {
 
   return provisionVideoAssetUpload({
     ...context,
+    acceptedUploadMethods: parseAcceptedVideoUploadMethods(
+      data.headers?.[VIDEO_UPLOAD_METHODS_HEADER],
+    ),
     mimeType: data.b.mimeType,
     purpose: data.b.purpose,
     size: Number(data.b.size),

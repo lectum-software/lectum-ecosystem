@@ -9,6 +9,7 @@ export interface IVideoAssetUploadDTO {
     purpose: VideoAssetPurpose;
     size: number;
   };
+  headers?: Record<string, string | string[] | undefined>;
 }
 
 export interface IVideoAssetActionDTO {

@@ -6,6 +6,7 @@ export const VIDEO_ASSET_PURPOSES = [
 
 export type VideoAssetPurpose = (typeof VIDEO_ASSET_PURPOSES)[number];
 export type VideoAssetStatus = "canceled" | "error" | "processing" | "ready" | "uploading";
+export type VideoAssetUploadMethod = "basic" | "tus";
 
 export type VideoStreamDetails = {
   durationSeconds: number | null;
@@ -22,10 +23,12 @@ export type ProvisionVideoUploadInput = {
   maxDurationSeconds: number;
   purpose: VideoAssetPurpose;
   sizeBytes: number;
+  uploadMethod: VideoAssetUploadMethod;
 };
 
 export type ProvisionedVideoUpload = {
   providerUid: string;
+  uploadMethod: VideoAssetUploadMethod;
   uploadUrl: string;
 };
 

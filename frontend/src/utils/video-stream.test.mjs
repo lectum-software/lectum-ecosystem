@@ -107,6 +107,19 @@ describe("Cloudflare Stream frontend contract", () => {
     assert.equal(shouldCleanupVideoAssetAfterFailure(true, new Error("processing timeout")), false);
   });
 
+  it("negocia upload básico do Stream sem quebrar backend antigo", () => {
+    const requestSource = readSource("../api/req/video-assets/index.ts");
+    const uploadSource = readSource("./video-asset-upload.ts");
+
+    assert.match(requestSource, /"X-Lectum-Video-Upload-Methods": ACCEPTED_VIDEO_UPLOAD_METHODS/);
+    assert.match(requestSource, /const ACCEPTED_VIDEO_UPLOAD_METHODS = "basic,tus"/);
+    assert.match(uploadSource, /provisioned\.upload_method === "basic"/);
+    assert.match(uploadSource, /uploadBasicDirect\(\{/);
+    assert.match(uploadSource, /uploadTus\(\{/);
+    assert.match(uploadSource, /new FormData\(\)/);
+    assert.match(uploadSource, /request\.open\("POST", uploadUrl\)/);
+  });
+
   it("cleanup usa endpoint de tentativa sem fallback para remoção explícita", () => {
     const source = readSource("../api/req/video-assets/index.ts");
     const cleanupRequest = source

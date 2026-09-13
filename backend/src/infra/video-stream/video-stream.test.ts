@@ -140,6 +140,7 @@ describe("Cloudflare Stream direct upload", () => {
       maxDurationSeconds: 600,
       purpose: "profile_presentation",
       sizeBytes: 222_553_640,
+      uploadMethod: "tus",
     });
 
     assert.equal(
@@ -165,7 +166,62 @@ describe("Cloudflare Stream direct upload", () => {
     );
     assert.deepEqual(result, {
       providerUid: "0123456789abcdef0123456789abcdef",
+      uploadMethod: "tus",
       uploadUrl: "https://upload.videodelivery.net/tus/capability-value",
+    });
+    assert.doesNotMatch(JSON.stringify(result), /private-api-token/);
+  });
+
+  it("provisiona direct upload basico quando o cliente suporta POST do Stream", async () => {
+    const config = createConfig();
+    let capturedUrl = "";
+    let capturedInit: RequestInit | undefined;
+    const fetcher = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      capturedUrl = String(input);
+      capturedInit = init;
+      return Response.json(
+        {
+          result: {
+            uid: "0123456789abcdef0123456789abcdef",
+            uploadURL: "https://upload.videodelivery.net/direct-capability-value",
+          },
+          success: true,
+        },
+        { status: 200 },
+      );
+    }) as typeof fetch;
+    const adapter = new CloudflareStreamAdapter(config, fetcher);
+    const expiresAt = new Date("2030-01-02T03:04:05.000Z");
+
+    const result = await adapter.provisionUpload({
+      assetId: "asset_internal_123",
+      expiresAt,
+      maxDurationSeconds: 600,
+      purpose: "community_reply",
+      sizeBytes: 12_000_000,
+      uploadMethod: "basic",
+    });
+
+    assert.equal(
+      capturedUrl,
+      "https://api.cloudflare.com/client/v4/accounts/account_123/stream/direct_upload",
+    );
+    const headers = new Headers(capturedInit?.headers);
+    assert.equal(headers.get("authorization"), "Bearer private-api-token");
+    assert.equal(headers.get("content-type"), "application/json");
+    assert.equal(headers.get("upload-creator"), "asset_internal_123");
+    const body = JSON.parse(String(capturedInit?.body));
+    assert.deepEqual(body.allowedOrigins, config.allowedOrigins);
+    assert.equal(body.creator, "asset_internal_123");
+    assert.equal(body.expiry, "2030-01-02T03:04:05.000Z");
+    assert.equal(body.maxDurationSeconds, 600);
+    assert.equal(body.requireSignedURLs, true);
+    assert.equal(body.thumbnailTimestampPct, 0.1);
+    assert.equal(body.meta.upload_method, "basic");
+    assert.deepEqual(result, {
+      providerUid: "0123456789abcdef0123456789abcdef",
+      uploadMethod: "basic",
+      uploadUrl: "https://upload.videodelivery.net/direct-capability-value",
     });
     assert.doesNotMatch(JSON.stringify(result), /private-api-token/);
   });
@@ -203,6 +259,7 @@ describe("Cloudflare Stream direct upload", () => {
       maxDurationSeconds: 600,
       purpose: "community_reply",
       sizeBytes: 5_242_880,
+      uploadMethod: "tus",
     });
 
     assert.deepEqual(calls, [
@@ -211,6 +268,7 @@ describe("Cloudflare Stream direct upload", () => {
     ]);
     assert.deepEqual(result, {
       providerUid: "fedcba9876543210fedcba9876543210",
+      uploadMethod: "tus",
       uploadUrl: "https://upload.videodelivery.net/tus/capability-value",
     });
   });
@@ -233,6 +291,7 @@ describe("Cloudflare Stream direct upload", () => {
         maxDurationSeconds: 600,
         purpose: "community_post",
         sizeBytes: 5_242_880,
+        uploadMethod: "tus",
       }),
       VideoStreamProviderError,
     );

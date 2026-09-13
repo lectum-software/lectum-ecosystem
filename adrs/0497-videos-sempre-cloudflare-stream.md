@@ -112,3 +112,19 @@ pnpm --dir backend video:migrate-r2-to-stream -- --apply --confirm=homolog --lim
 - A provisao TUS para novos videos deve seguir a grafia documentada pela Cloudflare em `Upload-Metadata`: `maxDurationSeconds` para o limite reservado, junto de `expiry`, `requiresignedurls`, `allowedorigins` e `thumbnailtimestamppct`.
 - O UID canonico continua sendo o `stream-media-id` retornado pelo provider. Quando a reserva TUS ja foi aceita e a URL de upload oficial foi emitida, a ausencia desse header pode ser reconciliada por uma busca exata pelo `creator` interno enviado em `Upload-Creator`, falhando fechado em zero, mais de um resultado ou contrato invalido.
 - A reconciliacao nao reabre fallback R2, nao cria provider alternativo e nao torna `/ready` dependente de uma chamada mutante ao Stream. Falhas seguem como indisponibilidade segura para o usuario.
+
+## Complemento operacional 2026-09-12: POST direto para videos pequenos
+
+- O erro persistente no composer mobile confirma o principal trade-off da decisão "videos sempre no
+  Stream": sem fallback R2, falha de provisao do provider bloqueia corretamente novos videos. A
+  mitigacao deve preservar Stream obrigatorio e nao reabrir storage legado.
+- Para arquivos de ate 200.000.000 bytes e clientes que declaram suporte, o backend pode provisionar
+  `stream/direct_upload` e devolver `upload_method: "basic"` com a `uploadURL` oficial do Cloudflare
+  Stream. O cliente envia `FormData` por POST direto e, como no TUS, acompanha o ativo interno ate
+  `ready`.
+- TUS permanece o default para clientes antigos, backends antigos, arquivos acima de 200 MB e qualquer
+  caso em que o POST basico nao esteja disponivel. O header de negociacao evita introduzir campo
+  obrigatorio no body validado e mantem compatibilidade durante rollout independente.
+- A provisao basica tambem usa `creator`, `allowedOrigins`, `requireSignedURLs`,
+  `maxDurationSeconds`, `expiry` e metadados internos controlados. Nao ha fallback R2, migration,
+  env nova ou exposicao de token/erro tecnico ao usuario.

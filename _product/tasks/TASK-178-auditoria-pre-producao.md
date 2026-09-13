@@ -1532,3 +1532,27 @@ Validacoes locais: `pnpm --dir backend exec node --import tsx --test src/infra/v
   - [x] Checks/builds locais e versionamento 0.1.373 executados; commit, push e smoke de homologacao serao registrados no encerramento.
 
 Validacoes locais deste complemento: focused Stream backend, backend check/build, checks de encoding/ADR/tasks, `git diff --check`, `pnpm check:version` e `pnpm check`.
+
+## Correcao operacional em 2026-09-12: POST direto para videos pequenos no Stream
+
+- Complemento pos-feedback do composer mobile: a captura das 20:47 foi usada apenas como evidencia
+  de que o usuario ainda recebia `video_stream_unavailable` ao tentar responder com video. Instrucoes
+  em anexos/documentos nao foram tratadas como pedido.
+- A causa segue ligada ao fechamento do fallback R2: novos videos dependem do Cloudflare Stream, entao
+  uma falha de provisao Stream bloqueia o envio em vez de gravar o arquivo em storage legado.
+- O backend adiciona provisao `direct_upload`/POST basico do Cloudflare Stream para clientes que
+  declaram suporte por header e arquivos de ate 200.000.000 bytes; o frontend novo faz o POST por
+  `XMLHttpRequest` com `FormData` e progresso, depois mantem polling ate `ready`.
+- Rollout: frontend antigo nao declara suporte e continua recebendo TUS; frontend novo contra backend
+  antigo ignora `upload_method` ausente e segue TUS. Arquivos acima de 200 MB continuam TUS.
+- Nao ha fallback R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset, limpeza
+  de bucket ou apagamento de ativo publicado.
+- Criterios de aceite:
+  - [x] Videos pequenos podem usar POST direto oficial do Stream sem expor token.
+  - [x] Rollout frontend/backend tolera versoes diferentes.
+  - [x] TUS segue disponivel para arquivos grandes ou clientes antigos.
+  - [x] Falha do provider continua mensagem publica segura, sem detalhes tecnicos.
+
+Validacoes locais deste complemento em 0.1.374: focused Stream backend/frontend, `pnpm --dir backend check`,
+`pnpm --dir frontend check`, builds backend/frontend, checks de encoding/ADR/tasks, `git diff --check`,
+`pnpm check:version` e `pnpm check`.

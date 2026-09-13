@@ -4,6 +4,7 @@ import type {
   ImportVideoByUrlInput,
   ProvisionedVideoUpload,
   ProvisionVideoUploadInput,
+  VideoAssetUploadMethod,
   VideoStreamDetails,
 } from "./types";
 
@@ -19,6 +20,11 @@ type CloudflareVideo = {
 type CloudflareEnvelope<T> = {
   result?: T;
   success?: boolean;
+};
+
+type CloudflareDirectUploadResult = {
+  uid?: unknown;
+  uploadURL?: unknown;
 };
 
 const API_BASE = "https://api.cloudflare.com/client/v4";
@@ -80,6 +86,24 @@ const buildUploadMetadata = (input: ProvisionVideoUploadInput, allowedOrigins: r
     `thumbnailtimestamppct ${encodeMetadataValue("0.1")}`,
     `expiry ${encodeMetadataValue(input.expiresAt.toISOString())}`,
   ].join(",");
+
+const buildDirectUploadBody = (
+  input: ProvisionVideoUploadInput,
+  allowedOrigins: readonly string[],
+) => ({
+  allowedOrigins,
+  creator: input.assetId,
+  expiry: input.expiresAt.toISOString(),
+  maxDurationSeconds: input.maxDurationSeconds,
+  meta: {
+    lectum_asset_id: input.assetId,
+    name: `lectum-${input.purpose}-${input.assetId}`,
+    operation: "direct_creator_upload",
+    upload_method: "basic" satisfies VideoAssetUploadMethod,
+  },
+  requireSignedURLs: true,
+  thumbnailTimestampPct: 0.1,
+});
 
 const isCloudflareDirectUploadUrl = (value: string) => {
   try {
@@ -156,7 +180,9 @@ export class CloudflareStreamAdapter {
     return response;
   }
 
-  async provisionUpload(input: ProvisionVideoUploadInput): Promise<ProvisionedVideoUpload> {
+  private async provisionTusUpload(
+    input: ProvisionVideoUploadInput,
+  ): Promise<ProvisionedVideoUpload> {
     const response = await this.request(
       "?direct_user=true",
       {
@@ -177,7 +203,9 @@ export class CloudflareStreamAdapter {
       throw new VideoStreamProviderError("provision_upload_contract", response.status);
     }
 
-    if (isCloudflareStreamVideoUid(providerUid)) return { providerUid, uploadUrl };
+    if (isCloudflareStreamVideoUid(providerUid)) {
+      return { providerUid, uploadMethod: "tus", uploadUrl };
+    }
 
     let details: VideoStreamDetails | null = null;
     try {
@@ -188,7 +216,51 @@ export class CloudflareStreamAdapter {
 
     if (!details) throw new VideoStreamProviderError("provision_upload_contract", response.status);
 
-    return { providerUid: details.providerUid, uploadUrl };
+    return { providerUid: details.providerUid, uploadMethod: "tus", uploadUrl };
+  }
+
+  private async provisionBasicUpload(
+    input: ProvisionVideoUploadInput,
+  ): Promise<ProvisionedVideoUpload> {
+    const response = await this.request(
+      "/direct_upload",
+      {
+        body: JSON.stringify(buildDirectUploadBody(input, this.config.allowedOrigins)),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Upload-Creator": input.assetId,
+        },
+      },
+      "provision_direct_upload",
+    );
+
+    let envelope: CloudflareEnvelope<CloudflareDirectUploadResult>;
+    try {
+      envelope = (await response.json()) as CloudflareEnvelope<CloudflareDirectUploadResult>;
+    } catch {
+      throw new VideoStreamProviderError("provision_direct_upload_contract", response.status);
+    }
+
+    const providerUid = typeof envelope.result?.uid === "string" ? envelope.result.uid.trim() : "";
+    const uploadUrl =
+      typeof envelope.result?.uploadURL === "string" ? envelope.result.uploadURL.trim() : "";
+
+    if (
+      envelope.success !== true ||
+      !isCloudflareStreamVideoUid(providerUid) ||
+      !isCloudflareDirectUploadUrl(uploadUrl)
+    ) {
+      throw new VideoStreamProviderError("provision_direct_upload_contract", response.status);
+    }
+
+    return { providerUid, uploadMethod: "basic", uploadUrl };
+  }
+
+  async provisionUpload(input: ProvisionVideoUploadInput): Promise<ProvisionedVideoUpload> {
+    return input.uploadMethod === "basic"
+      ? this.provisionBasicUpload(input)
+      : this.provisionTusUpload(input);
   }
 
   async importVideoByUrl(input: ImportVideoByUrlInput): Promise<VideoStreamDetails> {

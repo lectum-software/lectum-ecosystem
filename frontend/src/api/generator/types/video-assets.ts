@@ -1,6 +1,7 @@
 export type VideoAssetPurpose = "profile_presentation" | "community_post" | "community_reply";
 
 export type VideoAssetStatus = "uploading" | "processing" | "ready" | "error" | "canceled";
+export type VideoAssetUploadMethod = "basic" | "tus";
 
 export type VideoAssetUploadRequest = {
   contextId?: string;
@@ -14,6 +15,7 @@ export type VideoAssetUploadResponse = {
   expires_at: string;
   max_file_size: number;
   status: "uploading";
+  upload_method?: VideoAssetUploadMethod;
   upload_url: string;
 };
 

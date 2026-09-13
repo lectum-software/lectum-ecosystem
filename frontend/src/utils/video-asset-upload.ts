@@ -111,6 +111,60 @@ const uploadTus = ({
     upload.start();
   });
 
+const uploadBasicDirect = ({
+  file,
+  onProgress,
+  signal,
+  uploadUrl,
+}: {
+  file: File;
+  onProgress?: (percentage: number) => void;
+  signal?: AbortSignal;
+  uploadUrl: string;
+}) =>
+  new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const request = new XMLHttpRequest();
+    const settle = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener("abort", abort);
+      callback();
+    };
+
+    function abort() {
+      if (settled) return;
+      request.abort();
+      settle(() => reject(canceledError()));
+    }
+
+    request.upload.onprogress = (event) => {
+      if (!event.lengthComputable || event.total <= 0) return;
+      onProgress?.(Math.min(95, Math.round((event.loaded / event.total) * 95)));
+    };
+    request.onerror = () =>
+      settle(() => reject(new Error("Não foi possível enviar o vídeo. Tente novamente.")));
+    request.onabort = () => settle(() => reject(canceledError()));
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300) {
+        settle(resolve);
+        return;
+      }
+      settle(() => reject(new Error("Não foi possível enviar o vídeo. Tente novamente.")));
+    };
+
+    if (signal?.aborted) {
+      abort();
+      return;
+    }
+
+    signal?.addEventListener("abort", abort, { once: true });
+    const body = new FormData();
+    body.append("file", file, file.name || "video");
+    request.open("POST", uploadUrl);
+    request.send(body);
+  });
+
 type ReadyVideoAsset = VideoAssetStatusResponse & {
   media_url: string;
   status: "ready";
@@ -171,7 +225,11 @@ export const uploadVideoAsset = async ({
 
   let uploadCompleted = false;
   try {
-    await uploadTus({ file, onProgress, signal, uploadUrl: provisioned.upload_url });
+    if (provisioned.upload_method === "basic") {
+      await uploadBasicDirect({ file, onProgress, signal, uploadUrl: provisioned.upload_url });
+    } else {
+      await uploadTus({ file, onProgress, signal, uploadUrl: provisioned.upload_url });
+    }
     uploadCompleted = true;
     return await waitUntilReady(provisioned.asset_id, onProgress, signal);
   } catch (error) {

@@ -9,6 +9,7 @@ import {
   normalizeVideoAssetPlaybackReference,
   type VideoAssetPurpose,
   type VideoAssetStatus,
+  type VideoAssetUploadMethod,
   VideoStreamProviderError,
   verifyVideoStreamWebhook,
   videoAssetPlaybackReference,
@@ -22,6 +23,7 @@ import type { VideoAssetCancelOptions, VideoAssetProviderUpdate, VideoAssetRecor
 import { getVideoAssetUploadFailure, validateVideoAssetUploadMetadata } from "./upload-policy";
 
 const PROVIDER_SYNC_INTERVAL_MS = 10_000;
+const CLOUDFLARE_BASIC_DIRECT_UPLOAD_LIMIT_BYTES = 200_000_000;
 
 const streamUnavailable = () => ({
   status: 503,
@@ -59,12 +61,14 @@ const safeProviderLog = (errorValue: unknown) => {
 };
 
 export const provisionVideoAssetUpload = async ({
+  acceptedUploadMethods,
   contextId,
   mimeType: rawMimeType,
   ownerId,
   purpose,
   size,
 }: {
+  acceptedUploadMethods?: { basic?: boolean; tus?: boolean };
   contextId: string;
   mimeType: string;
   ownerId: string;
@@ -96,6 +100,7 @@ export const provisionVideoAssetUpload = async ({
   const traceId = randomUUID();
   const expiresAt = new Date(Date.now() + config.uploadExpirySeconds * 1_000);
   const startedAt = Date.now();
+  const uploadMethods = resolveProvisionUploadMethods({ acceptedUploadMethods, size });
 
   const reservation = await repository.reserveUpload({
     contextId,
@@ -119,15 +124,37 @@ export const provisionVideoAssetUpload = async ({
     traceId,
   });
 
+  let lastProviderError: unknown = null;
   let provisionedUid: string | null = null;
   try {
-    const provisioned = await provider.provisionUpload({
-      assetId,
-      expiresAt,
-      maxDurationSeconds: getVideoStreamMaxDurationSeconds(),
-      purpose,
-      sizeBytes: size,
-    });
+    let provisioned: Awaited<ReturnType<typeof provider.provisionUpload>> | null = null;
+    for (const uploadMethod of uploadMethods) {
+      try {
+        provisioned = await provider.provisionUpload({
+          assetId,
+          expiresAt,
+          maxDurationSeconds: getVideoStreamMaxDurationSeconds(),
+          purpose,
+          sizeBytes: size,
+          uploadMethod,
+        });
+        break;
+      } catch (providerError) {
+        lastProviderError = providerError;
+        console.warn("[VIDEO_STREAM_UPLOAD_PROVISION_METHOD_FAILED]", {
+          ...safeProviderLog(providerError),
+          purpose,
+          traceId,
+          uploadMethod,
+        });
+      }
+    }
+
+    if (!provisioned) {
+      throw lastProviderError instanceof Error
+        ? lastProviderError
+        : new VideoStreamProviderError("provision_upload", null);
+    }
 
     provisionedUid = provisioned.providerUid;
     const activated = await repository.activateUploadReservation(assetId, ownerId, provisionedUid);
@@ -138,6 +165,7 @@ export const provisionVideoAssetUpload = async ({
       purpose,
       sizeBytes: size,
       traceId,
+      uploadMethod: provisioned.uploadMethod,
     });
 
     return {
@@ -148,6 +176,7 @@ export const provisionVideoAssetUpload = async ({
         expires_at: expiresAt.toISOString(),
         max_file_size: limitBytes,
         status: "uploading",
+        upload_method: provisioned.uploadMethod,
         upload_url: provisioned.uploadUrl,
       },
     };
@@ -166,6 +195,25 @@ export const provisionVideoAssetUpload = async ({
     });
     return streamUnavailable();
   }
+};
+
+const resolveProvisionUploadMethods = ({
+  acceptedUploadMethods,
+  size,
+}: {
+  acceptedUploadMethods?: { basic?: boolean; tus?: boolean };
+  size: number;
+}): VideoAssetUploadMethod[] => {
+  const acceptsTus = acceptedUploadMethods?.tus !== false;
+  const methods: VideoAssetUploadMethod[] = [];
+
+  if (acceptedUploadMethods?.basic === true && size <= CLOUDFLARE_BASIC_DIRECT_UPLOAD_LIMIT_BYTES) {
+    methods.push("basic");
+  }
+
+  if (acceptsTus) methods.push("tus");
+
+  return methods.length > 0 ? methods : ["tus"];
 };
 
 const shouldSync = (asset: VideoAssetRecord) =>

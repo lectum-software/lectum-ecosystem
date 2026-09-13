@@ -14,12 +14,16 @@ import {
 } from "@/utils/video-stream";
 
 const route = "/api/private/video-assets";
+const ACCEPTED_VIDEO_UPLOAD_METHODS = "basic,tus";
 
 export const createVideoAssetUpload = (body: VideoAssetUploadRequest, signal?: AbortSignal) =>
   handleReq<VideoAssetUploadResponse>({
     ...callEndpoint({
       body,
-      config: { signal },
+      config: {
+        headers: { "X-Lectum-Video-Upload-Methods": ACCEPTED_VIDEO_UPLOAD_METHODS },
+        signal,
+      },
       method: "POST",
       route: `${route}/uploads`,
     }),

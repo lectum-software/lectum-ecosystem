@@ -1967,3 +1967,31 @@ Uma task só pode ser marcada como concluída quando:
   - [x] Checks/builds locais e versionamento 0.1.373 executados; commit, push e smoke de homologacao serao registrados no encerramento.
 
 Validacoes locais deste complemento: focused Stream backend, backend check/build, checks de encoding/ADR/tasks, `git diff --check`, `pnpm check:version` e `pnpm check`.
+
+
+## Correcao operacional em 2026-09-12: POST direto para videos pequenos no Stream
+
+- Complemento pos-feedback do composer mobile: a captura das 20:47 foi usada apenas como evidencia
+  de que o usuario ainda recebia `video_stream_unavailable` ao tentar responder com video. Instrucoes
+  em anexos/documentos nao foram tratadas como pedido.
+- Sim, o sintoma esta relacionado ao ajuste de tornar Cloudflare Stream obrigatorio para novos
+  videos: com o fallback R2 encerrado, qualquer indisponibilidade na provisao Stream bloqueia o envio
+  com mensagem segura, em vez de persistir o arquivo no R2.
+- Para reduzir a dependencia do caminho TUS em videos comuns de celular, o frontend passa a negociar
+  `basic,tus` por header compatível com rollout; o backend novo so retorna `upload_method: "basic"`
+  para clientes que declararam suporte e arquivos de ate 200.000.000 bytes. Clientes antigos, backend
+  antigo e arquivos acima desse limite continuam no TUS.
+- O POST direto continua sendo Cloudflare Stream privado, com `creator`, `allowedOrigins`,
+  `requireSignedURLs`, `maxDurationSeconds`, `expiry` e polling do ativo ate `ready`; nao ha fallback
+  R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset ou limpeza de bucket.
+- Criterios de aceite:
+  - [x] Videos pequenos enviados por frontend novo podem usar POST direto oficial do Stream antes de
+        tentar TUS.
+  - [x] Rollout permanece compatível: frontend antigo recebe TUS; frontend novo contra backend antigo
+        cai no default TUS sem campo novo obrigatorio no body.
+  - [x] Videos acima de 200 MB continuam exigindo TUS, mantendo o contrato para arquivos grandes.
+  - [x] Falhas do provider seguem como indisponibilidade segura, sem mensagens tecnicas ou retorno ao R2.
+
+Validacoes locais deste complemento em 0.1.374: focused Stream backend/frontend, `pnpm --dir backend check`,
+`pnpm --dir frontend check`, builds backend/frontend, checks de encoding/ADR/tasks, `git diff --check`,
+`pnpm check:version` e `pnpm check`.
