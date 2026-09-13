@@ -13,7 +13,7 @@ import {
   type AdultDeclarationForm,
   AdultDeclarationModal,
 } from "@/components/legal/adult-declaration-modal";
-import { LegalRegistrationNotice } from "@/components/legal/registration-notice";
+import { LegalLinks } from "@/components/legal/links";
 import { adultConfirmedSchema } from "@/components/legal/use-form";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -158,8 +158,6 @@ export const RegisterPsychologistLogic = () => {
               {googlePending ? "Conectando com Google" : "Criar conta com Google"}
             </Button>
 
-            <LegalRegistrationNotice />
-
             {apiError ? (
               <InlineAlert className="mt-4" variant="error">
                 {apiError}
@@ -223,7 +221,7 @@ export const RegisterPsychologistLogic = () => {
         </section>
 
         <footer className="mt-auto pb-1 pt-6 text-center text-[11px] leading-5 text-subtle sm:text-xs">
-          © 2026 Lectum. Todos os direitos reservados.
+          <LegalLinks className="mb-3" newTab />© 2026 Lectum. Todos os direitos reservados.
         </footer>
       </div>
     </main>

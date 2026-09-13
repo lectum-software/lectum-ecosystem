@@ -1575,3 +1575,34 @@ Validacoes locais deste complemento em 0.1.374: focused Stream backend/frontend,
 
 Validacoes locais deste complemento: teste focado do composer, `pnpm --dir frontend check`,
 `pnpm --dir frontend build`, `pnpm check:version` e `pnpm check`.
+
+## Correcao operacional em 2026-09-13: links legais no rodape de cadastro
+
+- Complemento pos-feedback: o usuario solicitou em cadastros de paciente e
+  psicologo remover o texto operacional de indisponibilidade legal e posicionar os
+  links de Termos e Privacidade acima do copyright, exatamente como no login.
+  As imagens anexadas no ticket foram usadas somente como evidencia visual do estado atual e
+  do layout desejado; nao foram tratadas como instrucoes tecnicas.
+- O componente `LegalRegistrationNotice` foi removido dos fluxos
+  `/auth/register/patient` e `/auth/register/psychologist` para evitar copy
+  operacional redundante (`Os documentos publicados estao indisponiveis ...`).
+- Inseriu-se `LegalLinks` no rodape externo de ambos os cadastros:
+  `<LegalLinks className="mb-3" newTab />`, alinhando com `auth/login`.
+- Arquivo legado removido: `frontend/src/components/legal/registration-notice.tsx`.
+- Sem env obrigatoria nova, sem migration, sem package novo e sem escrita em
+  dados publicados.
+- Criterios de aceite:
+  - [x] Cadastros nao exibem texto "Os documentos publicados estao indisponiveis...".
+  - [x] Termos de Servico e Politica de Privacidade aparecem no rodape externo
+    acima do copyright em ambas as telas.
+  - [x] Sem mudancas em backend, banco, migration, env nova ou packages.
+  - [x] `pnpm version:bump` e `pnpm check:version` aprovados nesta correcao.
+  - [x] `frontend check` e `frontend build` aprovados localmente; browser local
+    registrado com layout mobile e sem fallback novo.
+- Validação local inicial em 0.1.376 (frontend-only):
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/legal.test.mjs`
+  - `pnpm version:bump` e `pnpm check:version`
+  - Confirmacao local de `/auth/register/patient` e `/auth/register/psychologist` em
+    browser com texto removido e links no rodape.

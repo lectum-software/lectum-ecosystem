@@ -529,3 +529,4 @@ Formato recomendado:
 
 - [ADR-0496 — Auditoria pré-produção e correções de dependências](0496-auditoria-pre-producao-e-dependencias.md)
 - [ADR-0497 — Novos vídeos sempre pelo Cloudflare Stream](0497-videos-sempre-cloudflare-stream.md)
+- [ADR-0498 — Links legais no rodapé dos cadastros](0498-links-legais-no-rodape-cadastros.md)

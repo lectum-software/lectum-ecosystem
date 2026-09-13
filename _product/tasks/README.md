@@ -2015,3 +2015,28 @@ Validacoes locais deste complemento em 0.1.374: focused Stream backend/frontend,
 
 Validacoes locais deste complemento: teste focado do composer, `pnpm --dir frontend check`,
 `pnpm --dir frontend build`, `pnpm check:version` e `pnpm check`.
+
+
+## Correcao operacional em 2026-09-13: legal no rodape dos cadastros
+
+- Pedido do usuario: nos cadastros de psicologo e paciente remover o texto "Os
+documentos publicados estão indisponíveis..." e colocar Termos/Privacidade acima do
+rodape, como no login.
+- Instrucoes em anexos/imagens foram usadas apenas como evidencia visual para
+confirmar o estado atual e alinhar com a referencia de layout existente.
+- Decisao aplicada:
+  - substituicao do bloco `LegalRegistrationNotice` em
+    `frontend/src/app/auth/register/patient/logic.tsx` e
+    `frontend/src/app/auth/register/psychologist/logic.tsx`.
+  - adicao de `<LegalLinks className="mb-3" newTab />` no footer dos dois cadastros,
+    antes do texto de copyright.
+  - remocao do arquivo `frontend/src/components/legal/registration-notice.tsx`.
+- Sem impacto em backend, banco, migration, env obrigatoria, package nova ou
+fluxos de aceite persistido.
+- Criterios de aceite:
+  - [x] Texto operacional indesejado removido.
+  - [x] Termos e Privacidade no rodape de paciente e psicologo, com link em nova aba.
+  - [x] Mudanca confirmada em build e smoke local sem mocks.
+  - [x] `pnpm --dir frontend check` e `pnpm --dir frontend build` executados.
+  - [x] Teste focado `frontend/scripts/legal.test.mjs` atualizado.
+  - [x] ADR registrada: `adrs/0498-links-legais-no-rodape-cadastros.md`.

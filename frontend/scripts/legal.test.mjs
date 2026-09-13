@@ -295,6 +295,9 @@ for (const role of ["patient", "psychologist"]) {
     const all = tree.getFullText();
     assert.match(all, /onClick=\{\(\) => setAdultReviewOpen\(true\)\}/);
     assert.doesNotMatch(all, /Ao continuar, você aceita/);
+    assert.match(all, /import \{ LegalLinks \} from "@\/components\/legal\/links"/);
+    assert.match(all, /<footer[\s\S]*<LegalLinks className="mb-3" newTab \/>/);
+    assert.doesNotMatch(all, /LegalRegistrationNotice|documentos publicados/);
   });
 }
 
