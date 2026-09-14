@@ -77,12 +77,17 @@ const toVideoStreamDetails = (
 
 const encodeMetadataValue = (value: string) => Buffer.from(value, "utf8").toString("base64");
 
-const buildUploadMetadata = (input: ProvisionVideoUploadInput, allowedOrigins: readonly string[]) =>
+export const buildUploadMetadata = (
+  input: ProvisionVideoUploadInput,
+  allowedOrigins: readonly string[],
+) =>
   [
     `name ${encodeMetadataValue(`lectum-${input.purpose}-${input.assetId}`)}`,
     `maxDurationSeconds ${encodeMetadataValue(String(input.maxDurationSeconds))}`,
     "requiresignedurls",
-    `allowedorigins ${encodeMetadataValue(JSON.stringify(allowedOrigins))}`,
+    // TUS recebe domínios separados por vírgula dentro do Base64, não um array JSON.
+    // Aspas/colchetes viravam parte dos domínios no Stream e bloqueavam o playback.
+    `allowedorigins ${encodeMetadataValue(allowedOrigins.join(","))}`,
     `thumbnailtimestamppct ${encodeMetadataValue("0.1")}`,
     `expiry ${encodeMetadataValue(input.expiresAt.toISOString())}`,
   ].join(",");

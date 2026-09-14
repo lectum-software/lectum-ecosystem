@@ -3,7 +3,7 @@
 Fila sequencial de execução do produto Lectum.
 
 Última correção operacional 14/09/2026: [TASK-180 — Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md).
-TASK-180 validada para publicação. Próxima execução: continuar a TASK-179 após obter o diagnóstico remoto do upload/reprodução TUS; não confundir a remoção do backfill com a conclusão desse diagnóstico.
+TASK-180 publicada em homolog (0.1.380). Execução atual: TASK-179, corrigir serialização das origens TUS após diagnóstico remoto confirmar domínios com caracteres de JSON. Atualização das envs e validação de novo upload/reprodução continuam pendentes; não confundir a remoção do backfill com a conclusão desse fluxo.
 
 Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando a skill de seu ambiente:
 

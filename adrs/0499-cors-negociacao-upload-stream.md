@@ -90,3 +90,38 @@ cria uma segunda reserva automaticamente. Reconciliação/limpeza geral não faz
 desta correção. Banco, limites, assinatura de playback e autorização permanecem iguais.
 Sete testes puros cobrem URL e decisão de fallback; o aceite end-to-end continua
 dependendo de upload/processamento/reprodução reais em homolog.
+
+## Complemento: serialização das origens no TUS
+
+O diagnóstico real fornecido pelo operador em 14/09/2026 revelou cinco vídeos com
+`originsMatchConfiguration=false` e `originsContainJsonCharacters=true`, incluindo
+dois prontos. Webhook URL/segredo conferem. O adapter codificava array JSON em
+`allowedorigins`; esse texto foi persistido com caracteres que não são domínios.
+
+Decisão: no header TUS, codificar em Base64 uma lista de domínios separada por
+vírgula. Manter arrays JSON em corpos JSON (básico/copy). Não alterar o parser de
+env, nem aceitar/remover silenciosamente caracteres de JSON na configuração.
+Não ampliar allowlist, desativar `requiresignedurls`, mudar limites ou reabrir R2.
+
+Referências oficiais consultadas em 14/09/2026:
+- https://developers.cloudflare.com/stream/uploading-videos/resumable-uploads/
+- https://developers.cloudflare.com/stream/viewing-videos/securing-your-stream/
+
+A documentação descreve o campo e a restrição de origens, mas não exemplifica a
+serialização interna dessa lista no header. A correção usa a evidência remota e o
+contrato do transporte; o roundtrip real de um novo upload ainda é gate de aceite,
+não pode ser substituído por simular o provider nos testes.
+
+Trade-off: patch mínimo para novos uploads; sem chamada extra ao provider por
+reserva/playback e sem reescrever ativos existentes. Reparação de origens legadas
+deve ser operação manual escopada a ativos do banco de homologação, com diagnóstico
+prévio; não executada neste patch. Dados e mídias permanecem intactos. Nenhuma env
+nova obrigatória; atualização operacional das envs continua pendente e separada.
+
+Regressão: cinco testes puros do serializador, quatro falhas antes da correção e
+cinco sucessos depois. Mantidos métodos básico/importação, signed URLs, creator,
+expiração e duração. Os testes de adapter existentes não contam como E2E.
+
+Checks desse complemento: backend com 784 testes aprovados e nenhum skip/falha;
+Prisma/TypeScript/Biome/build aprovados. Check global aprovado (seis skips
+preexistentes de FFmpeg local no video). Sem alteração de UI, banco ou packages.

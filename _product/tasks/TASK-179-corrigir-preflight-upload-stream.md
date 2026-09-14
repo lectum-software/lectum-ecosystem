@@ -32,6 +32,8 @@ O contrato compartilhado afeta apresentação, publicações e respostas.
 - [x] Checks e build do backend aprovados, sem mocks de Cloudflare como evidência de upload.
 - [x] Contrato de URL admite os dois hosts de ingestão com HTTPS, sem aceitar hosts arbitrários, credenciais, portas alternativas ou fragmentos.
 - [x] Falhas de contrato têm motivo controlado, sem URL/token/payload; resposta 2xx ambígua não dispara uma segunda reserva TUS.
+- [x] Serialização TUS preserva os domínios configurados sem caracteres JSON; testes puros cobrem apresentação, posts e respostas, sem alterar assinatura, duração ou expiração.
+- [ ] Novo upload TUS tem origens corretas confirmadas na API real do Stream.
 - [ ] Upload real validado no browser após deploy de homologação.
 - [ ] ADR, versão sincronizada, commit/push e smoke registrados.
 
@@ -79,3 +81,41 @@ Validação local complementar: backend check com 771 testes aprovados, zero ski
 Prisma/TypeScript/Biome e build aprovados. O teste de URL falha ao restaurar apenas
 a allowlist antiga e os sete testes passam com os dois destinos. Deploy e upload
 reais da correção complementar ainda precisam de confirmação.
+
+## Terceira falha — origens TUS (14/09)
+
+Operador forneceu diagnóstico somente leitura do backend de homologação: webhook
+responde 200/success, URL e segredo conferem. Consulta dos cinco vídeos recentes
+também responde 200/success; todos exigem assinatura e pertencem ao customer
+configurado, mas todos têm origens divergentes contendo caracteres de JSON.
+Dois já estão prontos; os demais não apresentam erro de processamento nesse instante.
+Isso não prova conclusão dos três restantes nem valida todas as credenciais.
+
+O caminho TUS enviava Base64 de `JSON.stringify(allowedOrigins)`. A evidência remota
+é consistente com aspas/colchetes sendo tratados como parte dos domínios. Corrigido
+para Base64 dos domínios separados por vírgula. O POST básico e importação por URL
+continuam enviando array JSON no corpo, onde esse formato é correto. A leitura da
+env continua com URLs separadas por vírgula, normalizadas pelo parser existente.
+
+Cinco testes puros usam o serializador real sem provider: quatro falham com JSON,
+cinco passam com a correção. A expectativa antiga do teste de adapter também foi
+corrigida; esse teste isolado não é prova de funcionamento do provider.
+
+Impacto: somente novos provisionamentos TUS, sem migration, package ou env nova.
+Clientes antigos permanecem compatíveis. Sem mudança em autenticação, acesso
+anônimo previsto no produto, assinaturas, limite de bytes, duração ou processamento.
+Os vídeos já criados com metadados incorretos NÃO são reparados por esse patch:
+exigem correção manual controlada, nunca startup, exclusão, wildcard ou novo upload
+em massa. Não retirar as restrições de origem para contornar o incidente.
+
+As envs de Dokploy/Vercel ainda não foram atualizadas pelo operador. Separar esse
+trabalho da serialização: não trocar chaves válidas nem culpar limites de arquivo
+por esse diagnóstico. Rollback de código volta a gravar origens incorretas em novos
+uploads; metadados remotos já persistidos não mudam em nenhum dos sentidos.
+
+Validação local desse complemento: `pnpm --dir backend check` com 784 testes
+aprovados, zero falhas/skips, Prisma/TypeScript/Biome aprovados; build do backend
+aprovado. `pnpm check` global aprovado, mantendo seis skips preexistentes de FFmpeg
+local no serviço de vídeo. Nenhuma alteração de UI, schema ou dependência.
+Deploy e roundtrip real continuam aguardando confirmação; não marcar o E2E como
+concluído apenas porque os testes locais passaram.

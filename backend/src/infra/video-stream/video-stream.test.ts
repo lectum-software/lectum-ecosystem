@@ -118,6 +118,7 @@ describe("Cloudflare Stream direct upload", () => {
 
   it("provisiona TUS privado com limites sem devolver o token da conta", async () => {
     const config = createConfig();
+    config.allowedOrigins = ["homolog.lectum.com.br", "homolog.admin.lectum.com.br"];
     let capturedUrl = "";
     let capturedInit: RequestInit | undefined;
     const fetcher = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
@@ -158,11 +159,12 @@ describe("Cloudflare Stream direct upload", () => {
     assert.match(metadata, /maxDurationSeconds NjAw/);
     assert.doesNotMatch(metadata, /maxdurationseconds/);
     assert.match(metadata, /expiry MjAzMC0wMS0wMlQwMzowNDowNS4wMDBa/);
-    assert.match(
-      metadata,
-      new RegExp(
-        `allowedorigins ${Buffer.from(JSON.stringify(config.allowedOrigins)).toString("base64")}`,
-      ),
+    assert.ok(
+      metadata
+        .split(",")
+        .includes(
+          `allowedorigins ${Buffer.from(config.allowedOrigins.join(",")).toString("base64")}`,
+        ),
     );
     assert.deepEqual(result, {
       providerUid: "0123456789abcdef0123456789abcdef",
