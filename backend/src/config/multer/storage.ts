@@ -6,6 +6,7 @@ import { isR2Configured, PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { streamToBuffer } from "./buffer";
 import { UploadInfrastructureError, UploadValidationError } from "./errors";
 import { matchesDeclaredFileType } from "./file-signature";
+import { assertPublicImageMimeType } from "./public-image-policy";
 import { acquireUploadSlot, releaseUploadSlot } from "./upload-concurrency";
 
 type UploadSlotDependencies = {
@@ -74,6 +75,7 @@ export const createPublicUploadStorage = ({
     let hasUploadSlot = false;
 
     try {
+      assertPublicImageMimeType(file.mimetype, file.fieldname);
       if (!isConfigured()) {
         throw new UploadInfrastructureError("R2_UPLOAD_NOT_CONFIGURED");
       }

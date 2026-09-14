@@ -2,8 +2,8 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Prioridade operacional 14/09/2026: [TASK-179 — Restaurar preflight e provisionamento de upload Stream](TASK-179-corrigir-preflight-upload-stream.md).
-Correção em execução sobre a regressão de uploads publicada na 0.1.377.
+Última correção operacional 14/09/2026: [TASK-180 — Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md).
+TASK-180 validada para publicação. Próxima execução: continuar a TASK-179 após obter o diagnóstico remoto do upload/reprodução TUS; não confundir a remoção do backfill com a conclusão desse diagnóstico.
 
 Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando a skill de seu ambiente:
 
@@ -21,7 +21,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 186 tasks: `TASK-00` a `TASK-179`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 187 tasks: `TASK-00` a `TASK-180`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -280,6 +280,7 @@ ou cortesia manual.
 | 177 | [TASK-177 - Backend como fonte única dos limites de vídeo](TASK-177-backend-fonte-unica-limites-video.md) | Completed | 157, 159, 163, 171, 173 |
 | 178 | [TASK-178 - Auditoria integral antes da produção](TASK-178-auditoria-pre-producao.md) | In Progress | 177 |
 | 179 | [TASK-179 - Restaurar preflight e provisionamento de upload Stream](TASK-179-corrigir-preflight-upload-stream.md) | In progress | 163, 173, 178 |
+| 180 | [TASK-180 - Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md) | Completed | 163, 165, 166 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1907,11 +1908,10 @@ Uma task só pode ser marcada como concluída quando:
   backfill.
 - O comando `video:migrate-r2-to-stream` passa a permitir `--dry-run` sem provider Stream local para
   inventário seguro; `--apply` segue exigindo provider real e confirmação explícita do ambiente.
-- Complemento solicitado em 2026-09-12: como o ambiente local não tem acesso aos secrets publicados,
-  o backend passa a iniciar no boot da API um lote de backfill R2 -> Stream em background quando o
-  runtime detectado for homologação. A API não bloqueia `/health`/`/ready`; o lote usa lock
-  transacional, limite 50, referências determinísticas e não apaga objetos/capas R2. Produção fica em
-  skip seguro por padrão e só roda com opt-in explícito por `R2_TO_STREAM_STARTUP_MIGRATION`.
+- Política atualizada em 14/09/2026 (TASK-180/ADR-0500): backfill R2 → Stream exclusivamente
+  manual no container, com dry-run, confirmação de ambiente e lock. Foi removida a execução
+  automática adicionada em 12/09; não existe opt-in por env que a reative. Objetos/capas R2
+  permanecem preservados; o inventário remoto deve confirmar se ainda existem referências legadas.
 - Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, limpeza de bucket ou
   exclusão de objetos. Rollback simples reverte o bloqueio de escrita, mas não deve apagar ativos
   Stream nem objetos R2.

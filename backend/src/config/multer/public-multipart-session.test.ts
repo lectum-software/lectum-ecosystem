@@ -22,14 +22,9 @@ const previousEnvironment = Object.fromEntries(
   Object.keys(TEST_ENV).map((key) => [key, process.env[key]]),
 );
 
-const mp4Chunk = () => {
+const pngChunk = () => {
   const chunk = Buffer.alloc(PUBLIC_MULTIPART_CHUNK_BYTES);
-  chunk.writeUInt32BE(24, 0);
-  chunk.write("ftyp", 4, "ascii");
-  chunk.write("isom", 8, "ascii");
-  chunk.writeUInt32BE(0, 12);
-  chunk.write("isom", 16, "ascii");
-  chunk.write("mp42", 20, "ascii");
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(chunk);
   return chunk;
 };
 
@@ -57,8 +52,8 @@ describe("public multipart session binding", () => {
     const context = { resourceId: "ansiedade", scope: "community_post_media", userId: "user-1" };
     const session = await createPublicMultipartUpload({
       ...context,
-      key: "posts/media/test.mp4",
-      mimeType: "video/mp4",
+      key: "posts/media/test.png",
+      mimeType: "image/png",
       size: PUBLIC_MULTIPART_CHUNK_BYTES,
       ttlSeconds: 600,
     });
@@ -66,7 +61,7 @@ describe("public multipart session binding", () => {
     await assert.rejects(
       uploadPublicMultipartPart({
         ...context,
-        chunk: mp4Chunk(),
+        chunk: pngChunk(),
         partNumber: 1,
         sessionId: session.sessionId,
         userId: "user-2",
@@ -77,7 +72,7 @@ describe("public multipart session binding", () => {
     await assert.rejects(
       uploadPublicMultipartPart({
         ...context,
-        chunk: mp4Chunk(),
+        chunk: pngChunk(),
         partNumber: 1,
         resourceId: "outra-comunidade",
         sessionId: session.sessionId,
@@ -99,7 +94,7 @@ describe("public multipart session binding", () => {
 
     const part = await uploadPublicMultipartPart({
       ...context,
-      chunk: mp4Chunk(),
+      chunk: pngChunk(),
       partNumber: 1,
       sessionId: session.sessionId,
       validateFirstPartSignature: true,

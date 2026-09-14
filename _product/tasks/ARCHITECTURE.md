@@ -538,3 +538,17 @@ Regras obrigatórias:
 - A camada de controller/service nao deve conhecer detalhes do fornecedor; criar interface de provider para permitir troca futura sem mudar contratos das rotas `/api/private/psychologist/cfp/*`.
 - Falhas de configuracao, rate limit, timeout ou resultado ambiguo devem falhar de forma honesta, sem mock e sem aprovar profissional automaticamente.
 - O token `DOCUMENT_TOKEN` nunca pode sair do backend nem aparecer em logs, respostas HTTP, traces ou codigo frontend.
+
+
+## Inicialização e propriedade de mídia (TASK-180 / ADR-0500)
+
+- Mídia de vídeo publicada: Cloudflare Stream, sem fallback de upload para R2.
+- Imagens: R2; o storage compartilhado só aceita JPEG, PNG e WebP, com validação de assinatura.
+- O start aplica migrations Prisma configuradas e inicia a API/schedulers normais. Nunca executa
+  backfill R2 → Stream, varredura de mídia ou migração de arquivos.
+- Backfill legado pertence a `backend/src/operations/video-assets/migrate-r2-to-stream.ts`,
+  executado manualmente no container, inicialmente em dry-run e depois com confirmação explícita.
+- Leitura legada e cancelamento de uploads antigos permanecem compatíveis até conclusão manual;
+  preservar objetos R2, capas e regras de visibilidade/propriedade existentes.
+- Arquivos temporários de processamento FFmpeg continuam no volume do serviço dedicado, sem
+  converter esse volume em bucket público nem introduzir upload de vídeo R2.

@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Accepted — decisão de startup parcialmente substituída pelo ADR-0500 (14/09/2026).
+O backfill agora é exclusivamente manual; a regra de novos vídeos no Stream permanece.
 
 ## Task relacionada
 

@@ -1,5 +1,44 @@
 # Lectum Backend
 
+## Inicialização e manutenção de mídia
+
+O start do container aplica somente as migrations Prisma configuradas e inicia a API e seus
+schedulers de produto. Não inventaria nem migra vídeos. `R2_TO_STREAM_STARTUP_MIGRATION`
+foi removida: configurações antigas dessa chave não têm efeito.
+
+**Vídeos novos → Cloudflare Stream. Imagens → R2.** Falha no Stream não autoriza fallback para R2.
+Vídeos legados continuam legíveis, respeitando a mesma visibilidade, até a migração manual.
+Arquivos temporários de FFmpeg ficam no volume do serviço de vídeo, não no R2.
+
+### Inventário manual no container do backend de homologação
+
+Use o terminal do container correto no Dokploy, não o host nem o serviço de vídeo.
+Não é necessário instalar/reinstalar pnpm dentro da imagem:
+
+```bash
+cd /app
+node --enable-source-maps dist/operations/video-assets/migrate-r2-to-stream.js --dry-run --purpose=all --limit=50
+```
+
+O inventário cobre os vídeos associados a perfis, posts e respostas ativos no banco. Não é uma
+varredura de objetos órfãos do bucket. Se `candidates_in_batch=0`, não há candidatos nessas consultas;
+isso não significa que o bucket não contenha objetos antigos. Não exclua o bucket nem suas imagens.
+
+Somente se houver candidatos elegíveis e após revisar o dry-run, executar um lote pequeno:
+
+```bash
+node --enable-source-maps dist/operations/video-assets/migrate-r2-to-stream.js --apply --confirm=homolog --purpose=all --limit=5
+```
+
+- O apply cria/importa ativos Stream e utiliza a capacidade contratada; não execute sem necessidade.
+- Lock impede apply concorrente. A associação só é substituída quando o Stream estiver pronto.
+- R2, capas e objetos de origem não são apagados. Não precisa de reset nem nova migration de banco.
+- Reexecute dry-run após cada lote. `processing` requer aguardar e repetir; `failed` requer analisar
+  o motivo controlado. Não use loops ilimitados se o mesmo item continuar falhando.
+- Saída do processo: 0 sem falhas/pendências do lote, 1 com falhas, 2 com processamento/itens pulados.
+- Compare a versão com `/ping` e valide reprodução pública e privada no app depois do lote.
+- Ver zero candidatos não substitui os testes de upload e reprodução da TASK-179.
+
 ## Reset total do ambiente de desenvolvimento
 
 Use somente em ambiente de desenvolvimento/sandbox. O comando limpa os recursos reais do ambiente

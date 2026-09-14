@@ -23,9 +23,9 @@ class R2ToStreamOperationError extends Error {
 const help = `Migra vídeos legados do R2 para Cloudflare Stream sem apagar a origem.
 
 Uso seguro no container do backend:
-  pnpm video:migrate-r2-to-stream
-  pnpm video:migrate-r2-to-stream -- --dry-run --limit=5
-  pnpm video:migrate-r2-to-stream -- --apply --confirm=homolog --limit=5
+  cd /app
+  node --enable-source-maps dist/operations/video-assets/migrate-r2-to-stream.js --dry-run --purpose=all --limit=50
+  node --enable-source-maps dist/operations/video-assets/migrate-r2-to-stream.js --apply --confirm=homolog --purpose=all --limit=5
 
 Filtros opcionais:
   --purpose=all|profile_presentation|community_post|community_reply
@@ -34,6 +34,7 @@ Filtros opcionais:
 
 Proteções:
   - o padrão é dry-run;
+  - a API nunca inicia este comando automaticamente;
   - --apply exige --confirm igual ao ambiente detectado;
   - apenas uma execução pode aplicar a migração por banco;
   - a troca no banco ocorre somente depois de o Stream ficar pronto;

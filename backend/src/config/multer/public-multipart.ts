@@ -14,6 +14,7 @@ import {
   type MultipartUploadLogEvent,
   type MultipartUploadLogReason,
 } from "./multipart-logging";
+import { isPublicImageMimeType } from "./public-image-policy";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "./s3";
 
 export const PUBLIC_MULTIPART_CHUNK_BYTES = 5 * 1024 * 1024;
@@ -270,6 +271,10 @@ export const createPublicMultipartUpload = async (
     ttlSeconds: number;
   },
 ) => {
+  if (!isPublicImageMimeType(input.mimeType)) {
+    logMultipartUpload("INITIATE_REJECTED", { reason: "request", scope: input.scope });
+    throw new PublicMultipartValidationError("request");
+  }
   const traceId = randomUUID();
   const startedAt = Date.now();
   const partCount = getPublicMultipartPartCount(input.size);
@@ -367,6 +372,10 @@ export const uploadPublicMultipartPart = async (
 ) => {
   const startedAt = Date.now();
   const session = readSession(input.sessionId, input, "part");
+  if (!isPublicImageMimeType(session.mimeType)) {
+    logMultipartUpload("PART_REJECTED", { reason: "request", scope: input.scope });
+    throw new PublicMultipartValidationError("request");
+  }
   const traceId = session.traceId;
   const partCount = getPublicMultipartPartCount(session.size, session.chunkSize);
   const expectedSize = getPublicMultipartExpectedPartSize(
@@ -494,6 +503,10 @@ export const completePublicMultipartUpload = async (
 ) => {
   const startedAt = Date.now();
   const session = readSession(input.sessionId, input, "complete");
+  if (!isPublicImageMimeType(session.mimeType)) {
+    logMultipartUpload("COMPLETE_REJECTED", { reason: "request", scope: input.scope });
+    throw new PublicMultipartValidationError("request");
+  }
   const traceId = session.traceId;
   let completedParts: CompletedPart[];
 

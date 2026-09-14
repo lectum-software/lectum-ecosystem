@@ -532,3 +532,4 @@ Formato recomendado:
 - [ADR-0498 — Links legais no rodapé dos cadastros](0498-links-legais-no-rodape-cadastros.md)
 
 - [ADR-0499 — CORS da negociação de upload Stream](0499-cors-negociacao-upload-stream.md)
+- [ADR-0500 — Start sem backfill e R2 somente para imagens](0500-start-sem-backfill-e-r2-somente-imagens.md)
