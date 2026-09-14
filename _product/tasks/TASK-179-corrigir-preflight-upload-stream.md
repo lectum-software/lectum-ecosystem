@@ -1,4 +1,4 @@
-# TASK-179 — Restaurar preflight de upload Stream
+# TASK-179 — Restaurar preflight e provisionamento de upload Stream
 
 | Campo | Valor |
 |---|---|
@@ -30,6 +30,8 @@ O contrato compartilhado afeta apresentação, publicações e respostas.
 - [x] Regressão reproduzida no preflight publicado e vinculada ao commit.
 - [x] Preflight permite a negociação e mantém origens/headers não autorizados bloqueados em teste HTTP local.
 - [x] Checks e build do backend aprovados, sem mocks de Cloudflare como evidência de upload.
+- [x] Contrato de URL admite os dois hosts de ingestão com HTTPS, sem aceitar hosts arbitrários, credenciais, portas alternativas ou fragmentos.
+- [x] Falhas de contrato têm motivo controlado, sem URL/token/payload; resposta 2xx ambígua não dispara uma segunda reserva TUS.
 - [ ] Upload real validado no browser após deploy de homologação.
 - [ ] ADR, versão sincronizada, commit/push e smoke registrados.
 
@@ -49,3 +51,31 @@ Check global `pnpm check`: aprovado em 14/09/2026; 6 skips preexistentes no vide
 relacionados ao FFmpeg local. Nenhum skip no backend. Foram restaurados somente
 os comentários ESLint justificados de recarga de sessão (frontend/Admin), removidos
 pelos commits recentes; comportamento de autenticação permanece intacto.
+
+## Segunda falha — provisionamento (14/09)
+
+Commit `9c3283e7` / 0.1.378 publicado: backend/frontend/Admin confirmados; health/ready
+200, OPTIONS permite o header novo e mantém origem não autorizada bloqueada.
+O upload real ainda falhou com arquivos de 743469 e 237103021 bytes. Logs fornecidos
+pelo operador mostram HTTP 200 no POST básico e 201 no TUS, ambos rejeitados como
+`*_contract`. Portanto, não é evidência de limite de tamanho ou credencial ausente.
+
+O adapter só permitia `upload.videodelivery.net`. A documentação oficial inclui
+também a família `cloudflarestream.com` para upload; a correção admite exatamente
+`upload.cloudflarestream.com`, não subdomínios arbitrários/playback. A CSP existente
+já permite esse destino e não foi ampliada. O endpoint efetivamente devolvido em
+homolog ainda precisa ser confirmado pelo diagnóstico seguro solicitado ao operador
+ou pelo upload real após deploy; não declarar causa final apenas pelo teste unitário.
+
+Os sete novos testes exercitam funções reais de URL/erro/fallback, sem simular API
+Cloudflare. Protegem também contra lookalikes, localhost, controles, credenciais,
+portas não padrão e fragmentos. A URL assinada permanece opaca e não é reconstruída.
+Fallback do básico para TUS só após rejeição HTTP explícita 400/404/405/415/422;
+timeout, 5xx, 2xx inválido ou erro inesperado encerram a tentativa para evitar reservar
+duas vezes o mesmo ativo. Logs passam a distinguir motivos fechados de contrato.
+Nenhuma reserva remota anterior é apagada ou migrada por esta correção.
+
+Validação local complementar: backend check com 771 testes aprovados, zero skips/falhas;
+Prisma/TypeScript/Biome e build aprovados. O teste de URL falha ao restaurar apenas
+a allowlist antiga e os sete testes passam com os dois destinos. Deploy e upload
+reais da correção complementar ainda precisam de confirmação.

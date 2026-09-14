@@ -60,3 +60,33 @@ pode reservar mais de um ativo; backfill automático em homolog roda lote único
 Não executar migração/limpeza nem relaxar segurança para investigar tais hipóteses.
 
 Check global `pnpm check` aprovado (6 skips preexistentes no FFmpeg local de video).
+
+## Complemento: contrato de upload e tentativa ambígua
+
+Após publicar 0.1.378, os logs reais revelaram respostas 200/201 rejeitadas pelo
+adapter antes de devolver a capability ao navegador. A antiga allowlist só aceitava
+`upload.videodelivery.net`; o contrato agora admite também exatamente
+`upload.cloudflarestream.com`. Não seguir a recomendação ampla de CSP como licença
+para aceitar qualquer host: manter allowlist de ingestão com HTTPS, porta padrão,
+sem credenciais, caracteres de controle ou fragmento. UID continua vindo do campo/header
+canônico ou de reconciliação por creator, nunca extraído da URL opaca.
+
+Referência oficial consultada em 14/09/2026: a FAQ lista as famílias videodelivery.net
+e cloudflarestream.com para direct creator uploads:
+https://developers.cloudflare.com/stream/faq/#i-use-content-security-policy-csp-on-my-website-what-domains-do-i-need-to-add-to-which-directives
+Frontend já permite o segundo domínio em connect-src; não há mudança de CSP.
+
+Adicionar `reason` opcional, enumerado, ao erro interno para diferenciar JSON,
+envelope, UID, destino e reconciliação. Nunca registrar URL, corpo ou header bruto.
+Resposta pública permanece genérica. Esta observabilidade não depende de env nova.
+
+Resposta 2xx rejeitada não prova ausência de efeito remoto: o loop anterior criava
+uma reserva básica e tentava outra TUS. Permitir fallback apenas após rejeições
+explícitas 400/404/405/415/422 do POST básico. Falhar fechado após timeout/5xx/contrato
+inválido; não limpar ativos históricos nem liberar URLs não confiáveis.
+
+Trade-off: uma tentativa ambígua pode manter a reserva remota até expirar, mas não
+cria uma segunda reserva automaticamente. Reconciliação/limpeza geral não faz parte
+desta correção. Banco, limites, assinatura de playback e autorização permanecem iguais.
+Sete testes puros cobrem URL e decisão de fallback; o aceite end-to-end continua
+dependendo de upload/processamento/reprodução reais em homolog.

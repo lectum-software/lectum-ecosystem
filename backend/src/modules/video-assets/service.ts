@@ -54,6 +54,7 @@ const safeProviderLog = (errorValue: unknown) => {
     return {
       operation: errorValue.operation,
       status: errorValue.status,
+      reason: errorValue.reason,
     };
   }
 
@@ -147,6 +148,12 @@ export const provisionVideoAssetUpload = async ({
           traceId,
           uploadMethod,
         });
+        if (
+          !(providerError instanceof VideoStreamProviderError) ||
+          !providerError.canFallbackToTus
+        ) {
+          throw providerError;
+        }
       }
     }
 

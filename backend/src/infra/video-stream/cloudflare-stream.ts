@@ -105,17 +105,49 @@ const buildDirectUploadBody = (
   thumbnailTimestampPct: 0.1,
 });
 
-const isCloudflareDirectUploadUrl = (value: string) => {
+export type VideoStreamContractFailure =
+  | "invalid_json"
+  | "invalid_envelope"
+  | "invalid_uid"
+  | "upload_url_missing"
+  | "upload_url_invalid"
+  | "upload_url_protocol"
+  | "upload_url_host"
+  | "upload_url_credentials"
+  | "upload_url_port"
+  | "upload_url_fragment"
+  | "uid_lookup_failed"
+  | "uid_lookup_missing";
+
+const DIRECT_UPLOAD_HOSTS = new Set(["upload.videodelivery.net", "upload.cloudflarestream.com"]);
+
+// Aceitar os dois endpoints de ingestão, não qualquer subdomínio de playback.
+// O caminho/query são capabilities opacas: nunca reconstruir, extrair UID ou logar.
+export const getCloudflareDirectUploadUrlFailure = (
+  value: string,
+): VideoStreamContractFailure | null => {
+  if (!value) return "upload_url_missing";
+  if (
+    value.length > 16_384 ||
+    value.includes("\\") ||
+    Array.from(value).some((character) => {
+      const code = character.charCodeAt(0);
+      return code <= 32 || code === 127;
+    })
+  ) {
+    return "upload_url_invalid";
+  }
+
   try {
     const url = new URL(value);
-    return (
-      url.protocol === "https:" &&
-      url.hostname === "upload.videodelivery.net" &&
-      !url.username &&
-      !url.password
-    );
+    if (url.protocol !== "https:") return "upload_url_protocol";
+    if (!DIRECT_UPLOAD_HOSTS.has(url.hostname)) return "upload_url_host";
+    if (url.username || url.password) return "upload_url_credentials";
+    if (url.port) return "upload_url_port";
+    if (url.hash) return "upload_url_fragment";
+    return null;
   } catch {
-    return false;
+    return "upload_url_invalid";
   }
 };
 
@@ -137,12 +169,23 @@ const isSafeImportSourceUrl = (value: string) => {
 export class VideoStreamProviderError extends Error {
   readonly operation: string;
   readonly status: number | null;
+  readonly reason: VideoStreamContractFailure | undefined;
 
-  constructor(operation: string, status: number | null) {
+  constructor(operation: string, status: number | null, reason?: VideoStreamContractFailure) {
     super("VIDEO_STREAM_PROVIDER_UNAVAILABLE");
     this.name = "VideoStreamProviderError";
     this.operation = operation;
     this.status = status;
+    this.reason = reason;
+  }
+
+  get canFallbackToTus() {
+    // Timeout/5xx/contrato 2xx podem já ter reservado um vídeo. Não criar outro.
+    return (
+      this.operation === "provision_direct_upload" &&
+      this.status !== null &&
+      [400, 404, 405, 415, 422].includes(this.status)
+    );
   }
 }
 
@@ -199,8 +242,13 @@ export class CloudflareStreamAdapter {
     const uploadUrl = response.headers.get("location")?.trim() ?? "";
     const providerUid = response.headers.get("stream-media-id")?.trim() ?? "";
 
-    if (!isCloudflareDirectUploadUrl(uploadUrl)) {
-      throw new VideoStreamProviderError("provision_upload_contract", response.status);
+    const uploadUrlFailure = getCloudflareDirectUploadUrlFailure(uploadUrl);
+    if (uploadUrlFailure) {
+      throw new VideoStreamProviderError(
+        "provision_upload_contract",
+        response.status,
+        uploadUrlFailure,
+      );
     }
 
     if (isCloudflareStreamVideoUid(providerUid)) {
@@ -211,10 +259,20 @@ export class CloudflareStreamAdapter {
     try {
       details = await this.findVideoByCreator(input.assetId);
     } catch {
-      throw new VideoStreamProviderError("provision_upload_contract", response.status);
+      throw new VideoStreamProviderError(
+        "provision_upload_contract",
+        response.status,
+        "uid_lookup_failed",
+      );
     }
 
-    if (!details) throw new VideoStreamProviderError("provision_upload_contract", response.status);
+    if (!details) {
+      throw new VideoStreamProviderError(
+        "provision_upload_contract",
+        response.status,
+        "uid_lookup_missing",
+      );
+    }
 
     return { providerUid: details.providerUid, uploadMethod: "tus", uploadUrl };
   }
@@ -239,19 +297,38 @@ export class CloudflareStreamAdapter {
     try {
       envelope = (await response.json()) as CloudflareEnvelope<CloudflareDirectUploadResult>;
     } catch {
-      throw new VideoStreamProviderError("provision_direct_upload_contract", response.status);
+      throw new VideoStreamProviderError(
+        "provision_direct_upload_contract",
+        response.status,
+        "invalid_json",
+      );
     }
 
+    if (!envelope || typeof envelope !== "object" || envelope.success !== true) {
+      throw new VideoStreamProviderError(
+        "provision_direct_upload_contract",
+        response.status,
+        "invalid_envelope",
+      );
+    }
     const providerUid = typeof envelope.result?.uid === "string" ? envelope.result.uid.trim() : "";
     const uploadUrl =
       typeof envelope.result?.uploadURL === "string" ? envelope.result.uploadURL.trim() : "";
 
-    if (
-      envelope.success !== true ||
-      !isCloudflareStreamVideoUid(providerUid) ||
-      !isCloudflareDirectUploadUrl(uploadUrl)
-    ) {
-      throw new VideoStreamProviderError("provision_direct_upload_contract", response.status);
+    if (!isCloudflareStreamVideoUid(providerUid)) {
+      throw new VideoStreamProviderError(
+        "provision_direct_upload_contract",
+        response.status,
+        "invalid_uid",
+      );
+    }
+    const uploadUrlFailure = getCloudflareDirectUploadUrlFailure(uploadUrl);
+    if (uploadUrlFailure) {
+      throw new VideoStreamProviderError(
+        "provision_direct_upload_contract",
+        response.status,
+        uploadUrlFailure,
+      );
     }
 
     return { providerUid, uploadMethod: "basic", uploadUrl };
