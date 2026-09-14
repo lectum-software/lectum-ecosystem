@@ -533,3 +533,5 @@ Formato recomendado:
 
 - [ADR-0499 — CORS da negociação de upload Stream](0499-cors-negociacao-upload-stream.md)
 - [ADR-0500 — Start sem backfill e R2 somente para imagens](0500-start-sem-backfill-e-r2-somente-imagens.md)
+
+- [ADR-0501 — Retenção recuperável de vídeos](0501-retencao-recuperavel-de-videos.md)

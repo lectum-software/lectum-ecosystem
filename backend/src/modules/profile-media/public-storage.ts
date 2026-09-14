@@ -1,5 +1,6 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
+import { isLegacyR2VideoKey } from "@/modules/video-assets/retention/policy";
 import { publicFileKeyFromUrl } from "@/utils/public-origin";
 
 const PROFILE_MEDIA_PREFIXES = [
@@ -14,7 +15,7 @@ export const publicProfileMediaKeyFromUrl = (value?: string | null) =>
 
 export const deletePublicProfileMedia = async (value?: string | null) => {
   const key = publicProfileMediaKeyFromUrl(value);
-  if (!key) return;
+  if (!key || isLegacyR2VideoKey(key)) return;
 
   try {
     await S3.send(

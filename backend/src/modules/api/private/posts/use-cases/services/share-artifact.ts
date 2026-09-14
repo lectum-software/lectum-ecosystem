@@ -1,5 +1,3 @@
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { isR2Configured, PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { msg } from "@/helpers/translate";
 import type { IPostUploadShareArtifactDTO, PostShareArtifactResponse } from "../../DTOs/IPostDTO";
 import { ensureCommunityActor } from "./post-support";
@@ -18,18 +16,8 @@ const emptyShareArtifactResponse = (): PostShareArtifactResponse => ({
 const isShareArtifactStorageKey = (value?: string | null) =>
   Boolean(value?.startsWith(SHARE_ARTIFACT_ALLOWED_PREFIX));
 
-const deleteShareArtifactObject = async (key?: string | null) => {
-  if (!isShareArtifactStorageKey(key) || !isR2Configured()) return false;
-
-  await S3.send(
-    new DeleteObjectCommand({
-      Bucket: PUBLIC_BUCKET,
-      Key: key!,
-    }),
-  );
-
-  return true;
-};
+// Compatibility only: legacy video artifacts await explicit inventory/retention review.
+const deleteShareArtifactObject = async (_key?: string | null) => false;
 
 export const getShareArtifact = async (_data?: unknown) => {
   return {
@@ -53,6 +41,6 @@ export const uploadShareArtifact = async (data: IPostUploadShareArtifactDTO) => 
   };
 };
 
-// Mantidos durante o rollout para expirar com segurança objetos criados por versões anteriores.
+// Mantidos para compatibilidade; não autorizam exclusão nem iniciam limpeza no boot.
 export const deleteExpiredShareArtifactObject = deleteShareArtifactObject;
 export const isShareArtifactKey = isShareArtifactStorageKey;

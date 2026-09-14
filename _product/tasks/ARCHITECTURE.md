@@ -397,12 +397,14 @@ Templates/shells devem viver em `frontend/src/templates`.
   incompleta. Rollback de escrita nao deve recriar fallback R2; se o Stream publicado ficar
   indisponivel, bloquear temporariamente novos videos e mais seguro do que gerar arquivos originais
   em R2. Nunca apagar ativos Stream ou objetos R2 no rollback.
-- O backfill de referências R2 existentes pertence à TASK-165. A partir de 2026-09-12, depois do
-  inventário e da decisão ADR-0497, o backend dispara no boot de **homologação** um lote em
-  background de R2 -> Stream com lock transacional, referência determinística e sem apagar R2; a API
-  não deve depender desse backfill para ficar pronta. Produção permanece em skip seguro salvo opt-in
-  operacional explícito. O comando compilado `video:migrate-r2-to-stream` continua disponível para
-  dry-run e execução manual em lotes, com confirmação explícita do ambiente para qualquer escrita.
+- O backfill de referências R2 existentes pertence à TASK-165. Desde TASK-180 ele nunca
+  inicia no boot, em nenhum ambiente. A CLI continua disponível para dry-run e aplicação
+  manual, retomável, com confirmação explícita do ambiente; preserva os objetos de origem.
+- TASK-181 registra retenção recuperável em catálogo interno separado, inclusive para
+  arquivos legados sem video_asset. Vídeos Stream substituídos/prontos removidos recebem
+  marcação na transação da aposentadoria, sem exclusão física e sem reativar o playback.
+  Data de revisão não é TTL: deletion_hold começa true, review_after pode ficar null e
+  nenhum job destrutivo é ativado. Catálogo de R2 é manual, sem upload de vídeo em R2.
 - A importação por link reconstrói a origem com o `BASE` atual, valida o objeto no R2 e exige
   `HEAD`/`GET Range` antes de chamar Stream. `creator` e `migration_key` determinísticos permitem
   retomada; resposta ambígua do provider falha fechada.

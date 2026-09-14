@@ -5,6 +5,8 @@ import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { findReadyOwnedVideoAsset, findVideoAssetAssociations } from "./association-guard";
 import { canViewVideoAsset } from "./authorization";
 import { isR2MigrationAsset } from "./r2-migration/policy";
+import { shouldRetainCanceledVideo } from "./retention/policy";
+import { retainStreamVideo } from "./retention/repository";
 import { mutableVideoAssetStatusesFor } from "./status";
 import type {
   ProfileVideoAssetAttachment,
@@ -213,7 +215,7 @@ export class VideoAssetRepository {
           owner_id: current.owner_id,
           purpose: "profile_presentation",
         },
-        select: { provider_uid: true },
+        select: { provider_uid: true, size_bytes: true },
       });
       const updated = await transaction.psychologist_profile.updateMany({
         where: {
@@ -231,6 +233,9 @@ export class VideoAssetRepository {
       if (updated.count === 0) return notAttached();
 
       if (replacedAssets.length > 0) {
+        for (const retired of replacedAssets) {
+          await retainStreamVideo(transaction, retired, "replaced");
+        }
         const now = new Date();
         await transaction.video_asset.updateMany({
           where: {
@@ -390,6 +395,9 @@ export class VideoAssetRepository {
         return { kind: "attached" };
 
       const reference = videoAssetPlaybackReference(asset.id);
+      if (shouldRetainCanceledVideo(asset)) {
+        await retainStreamVideo(transaction, asset, "removed");
+      }
       await transaction.psychologist_profile.updateMany({
         where: { deleted: false, user_id: asset.owner_id, video_url: reference },
         data: { video_cover_url: null, video_url: null },

@@ -1089,6 +1089,29 @@ model video_asset {
   @@map("video_assets")
 }
 
+// Operational retention is independent from user/content lifetime; never cascade it.
+model video_retention_record {
+  id                String    @id @default(cuid())
+  deleted           Boolean   @default(false)
+  deletedAt         DateTime? @map("deleted_at")
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  identity_hash     String    @unique
+  provider          String
+  storage_namespace String
+  object_key        String
+  reason            String
+  retained_at       DateTime  @default(now())
+  review_after      DateTime?
+  deletion_hold     Boolean   @default(true)
+  size_bytes        BigInt?
+  source_etag       String?
+
+  @@index([provider, deletion_hold, review_after])
+  @@index([deleted, retained_at, id])
+  @@map("video_retention_records")
+}
+
 model community_post_media {
   id            String         @id @default(cuid())
   deleted       Boolean        @default(false)

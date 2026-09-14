@@ -4,7 +4,6 @@ import {
   type VideoStreamDetails,
   VideoStreamProviderError,
 } from "@/infra/video-stream";
-import { deleteRetiredProviderVideos } from "../lifecycle";
 import { VideoAssetRepository } from "../repository";
 import type { VideoAssetRecord } from "../types";
 import { createR2MigrationIdentity } from "./policy";
@@ -172,9 +171,6 @@ export class R2ToStreamMigrationService {
       }
 
       const attachment = await this.migrationRepository.attachReadyCandidate(candidate, asset);
-      if (attachment.retiredProviderUids.length > 0) {
-        await deleteRetiredProviderVideos(attachment.retiredProviderUids);
-      }
 
       const outcome =
         attachment.state === "attached"

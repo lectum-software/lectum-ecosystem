@@ -617,7 +617,7 @@ Complemento TASK-149 (2026-08-10): o usuário final continua apenas enviando `co
 | `source_thumbnail_reference` | `String?` | TASK-165: capa R2 observada antes da troca; preservada e nullable |
 | `migration_key` | `String? @unique` | TASK-165: SHA-256 determinístico por finalidade/alvo/object key para deduplicação e retomada |
 | `migrated_at` | `DateTime?` | TASK-165: preenchido somente após associação atômica da referência Stream |
-| `deleted` / `deleted_at` | `Boolean` / `DateTime?` | cancelamento/aposentadoria lógica; exclusão no provider é best effort |
+| `deleted` / `deleted_at` | `Boolean` / `DateTime?` | cancelamento/aposentadoria lógica; TASK-181: pronto/substituído é retido sem exclusão física |
 | `@@index([owner_id, purpose, deleted, createdAt])` | | histórico e limitação de provisionamentos por dono/finalidade |
 | `@@index([status, deleted, updatedAt])` | | reconciliação/limpeza futura de estados |
 | `@@index([context_id, purpose, deleted])` | | validação de associação ao contexto autorizado |
@@ -642,6 +642,24 @@ Contratos derivados:
   ou remoção de objeto no rollout da TASK-163. A TASK-165 adiciona uma operação manual: copia em
   lotes, associa somente depois de `ready`, preserva as referências de origem e nunca remove o
   objeto/capa R2.
+
+`video_retention_record` / `video_retention_records` (TASK-181):
+
+- Catálogo operacional independente de publicação e de exclusão de usuário, sem FK cascade.
+- `identity_hash @unique`: SHA-256 do provider, namespace e chave do objeto; deduplicação,
+  não autorização. `provider`, `storage_namespace`, `object_key` são apenas internos.
+- `reason`: `legacy_r2_inventory`, `replaced` ou `removed`; não presume que o objeto é órfão.
+- `retained_at`: primeira marcação; reexecução não altera essa data. `review_after DateTime?`
+  é data opcional de revisão UTC, nunca expiração nem autorização de exclusão.
+- `deletion_hold Boolean @default(true)`: bloqueio conservador, sem endpoint de liberação
+  ou job destrutivo nesta entrega. `size_bytes BigInt?` e `source_etag String?` registram
+  observação da origem; divergência não sobrescreve o inventário silenciosamente.
+- Campos padrão id/deleted/deletedAt/createdAt/updatedAt; índices por provider/hold/revisão
+  e por deleted/data/id. Listagem CLI pagina pelo hash único, não expõe chaves ou UIDs.
+- Aposentadoria de vídeo Stream preserva estado deleted/canceled e autorização existente,
+  mas não remove fisicamente cópias substituídas ou vídeos que já chegaram a ready.
+- Acervo R2 é catalogado manualmente após migration, em dry-run/apply; não há movimentação
+  de bytes, backfill no start ou restauração implícita. O cadastro não torna R2 privado.
 
 `community_member` (seguir/participar, TASK-25; PRD "Comunidades seguidas"):
 
@@ -842,11 +860,11 @@ silenciamento do post. A identidade de quem compartilhou nao e exposta na centra
 | `file_name` | `String?` | nome seguro do arquivo gerado no navegador |
 | `content_type` | `String` | `video/mp4` ou `video/webm` normalizado |
 | `size_bytes` | `Int` | tamanho do arquivo com arte |
-| `expires_at` | `DateTime` | mantido para limpeza de objetos/registros legados; novos artefatos nao sao criados nem renovados desde 2026-08-28 |
+| `expires_at` | `DateTime` | histórico da antiga expiração; TASK-181 não usa essa data como autorização de exclusão; novos artefatos não são criados nem renovados desde 2026-08-28 |
 | `last_accessed_at` | `DateTime @default(now())` | historico legado, sem renovacao pelo fluxo atual |
-| `@@index([post_id, expires_at])`, `@@index([reply_id, expires_at])`, `@@index([expires_at])`, `@@index([storage_key])` | | limpeza de legado por expiracao |
+| `@@index([post_id, expires_at])`, `@@index([reply_id, expires_at])`, `@@index([expires_at])`, `@@index([storage_key])` | | consulta do histórico legado; não habilita limpeza |
 
-Regras desde 2026-09-05: a previa social de video e owner-only e o proprio psicologo baixa o arquivo personalizado sob demanda. O frontend nao consulta, nao envia, nao preaquece, nao persiste e nao renova cache remoto/R2 de `post_share_artifacts`; reaproveita somente o arquivo preparado em memoria durante a mesma interacao. O backend mantem as rotas `share-artifact` por compatibilidade e reativa apenas os render-jobs efemeros: valida o dono, resolve a origem HTTPS do video, delega o processamento ao app `video/` e faz proxy do download sem criar objeto R2 ou registro novo. A rotina existente de limpeza remove objetos expirados e marca registros legados como `deleted`, sem reset, seed, `db push`, lifecycle destrutivo manual ou env obrigatoria. `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env porque nao ha mais criacao/renovacao de TTL para novos artefatos.
+Regras desde 2026-09-05: a previa social de video e owner-only e o proprio psicologo baixa o arquivo personalizado sob demanda. O frontend nao consulta, nao envia, nao preaquece, nao persiste e nao renova cache remoto/R2 de `post_share_artifacts`; reaproveita somente o arquivo preparado em memoria durante a mesma interacao. O backend mantem as rotas `share-artifact` por compatibilidade e reativa apenas os render-jobs efemeros: valida o dono, resolve a origem HTTPS do video, delega o processamento ao app `video/` e faz proxy do download sem criar objeto R2 ou registro novo. Desde a TASK-181, a rotina de limpeza legada foi removida; objetos são preservados e catalogados manualmente para revisão, sem alterar os registros históricos ou reativar acesso. `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env porque nao ha mais criacao/renovacao de TTL para novos artefatos.
 
 Regras desde 2026-09-08: para posts com `community_post_media`, o render social usa o primeiro item
 ordenado por `position` quando ele e video, alinhado ao frontend; se nao houver carrossel, preserva

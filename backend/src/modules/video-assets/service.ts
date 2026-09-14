@@ -16,9 +16,9 @@ import {
 } from "@/infra/video-stream";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { deletePublicProfileMedia } from "../profile-media/public-storage";
-import { deleteRetiredProviderVideos } from "./lifecycle";
 import { isR2MigrationAsset } from "./r2-migration/policy";
 import { VideoAssetRepository } from "./repository";
+import { shouldRetainCanceledVideo } from "./retention/policy";
 import type { VideoAssetCancelOptions, VideoAssetProviderUpdate, VideoAssetRecord } from "./types";
 import { getVideoAssetUploadFailure, validateVideoAssetUploadMetadata } from "./upload-policy";
 
@@ -271,7 +271,6 @@ const attachReadyProfileAsset = async (
     preserveR2Source
       ? Promise.resolve()
       : deletePublicProfileMedia(attachment.previousVideoCoverUrl),
-    deleteRetiredProviderVideos(attachment.retiredProviderUids),
   ]);
 };
 
@@ -303,7 +302,7 @@ export const cancelOwnedVideoAsset = async (
 
   // A failed/uncertain transaction must never authorize destructive compensation.
   // not_found is idempotent for callers, but does not authorize another provider delete.
-  if (result.kind === "canceled") {
+  if (result.kind === "canceled" && !shouldRetainCanceledVideo(result.asset)) {
     const provider = getVideoStreamProvider();
     if (provider) {
       await provider.deleteVideo(result.asset.provider_uid).catch((providerError) => {

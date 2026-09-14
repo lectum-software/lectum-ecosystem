@@ -1,30 +1,5 @@
-import {
-  getVideoStreamProvider,
-  isCloudflareStreamVideoUid,
-  type VideoAssetPurpose,
-  VideoStreamProviderError,
-  videoAssetIdFromReference,
-} from "@/infra/video-stream";
+import { type VideoAssetPurpose, videoAssetIdFromReference } from "@/infra/video-stream";
 import { VideoAssetRepository } from "./repository";
-
-const providerFailureContext = (error: unknown) =>
-  error instanceof VideoStreamProviderError
-    ? { operation: error.operation, status: error.status }
-    : { operation: "delete_video", status: null };
-
-export const deleteRetiredProviderVideos = async (providerUids: readonly string[]) => {
-  const provider = getVideoStreamProvider();
-  if (!provider || providerUids.length === 0) return;
-
-  for (const providerUid of new Set(providerUids)) {
-    if (!isCloudflareStreamVideoUid(providerUid)) continue;
-    try {
-      await provider.deleteVideo(providerUid);
-    } catch (error) {
-      console.warn("[VIDEO_STREAM_RETIRE_DELETE_DEGRADED]", providerFailureContext(error));
-    }
-  }
-};
 
 export const retireOwnedVideoAssetReference = async ({
   ownerId,
@@ -44,6 +19,6 @@ export const retireOwnedVideoAssetReference = async ({
 
   const result = await repository.cancel(asset, { onlyUnattached: true });
   if (result.kind !== "canceled") return false;
-  await deleteRetiredProviderVideos([result.asset.provider_uid]);
+  // Retention is recorded atomically by cancel; retirement never purges provider bytes.
   return true;
 };
