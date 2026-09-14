@@ -1,7 +1,6 @@
 import "@/config/dotenv";
 import path from "node:path";
 import cookieParser from "cookie-parser";
-import cors from "cors";
 import express, { type Application, type Express, type Request } from "express";
 import helmet from "helmet";
 import * as i18nextMiddleware from "i18next-http-middleware";
@@ -13,10 +12,10 @@ import { setupSentryExpressErrorHandler } from "@/infra/observability/sentry";
 import { getVideoStreamConfig, isVideoStreamEnabled } from "@/infra/video-stream";
 import { errorHandler, errorRoute } from "@/main/server/error";
 import { socket } from "@/main/socket";
-import { getPublicWebOrigins } from "@/utils/public-origin";
 import { getTrustProxySetting } from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
+import { createApiCors } from "./cors";
 import swagger from "./documents";
 import i18next from "./i18n";
 import routes from "./routes";
@@ -97,23 +96,7 @@ server.use(
   }),
 );
 
-server.use(
-  cors({
-    origin: getPublicWebOrigins(),
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "Accept-Language",
-      "X-Requested-With",
-      "Accept",
-      "Origin",
-      "ngrok-skip-browser-warning",
-      "x-device",
-    ],
-  }),
-);
+server.use(createApiCors());
 
 const bodyLimit = getBodyLimit();
 server.use(

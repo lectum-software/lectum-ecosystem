@@ -2,6 +2,9 @@
 
 Fila sequencial de execução do produto Lectum.
 
+Prioridade operacional 14/09/2026: [TASK-179 — Restaurar preflight de upload Stream](TASK-179-corrigir-preflight-upload-stream.md).
+Correção em execução sobre a regressão de uploads publicada na 0.1.377.
+
 Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando a skill de seu ambiente:
 
 - Codex: `.codex/skills/execute-lectum-task/SKILL.md`
@@ -18,7 +21,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 185 tasks: `TASK-00` a `TASK-178`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 186 tasks: `TASK-00` a `TASK-179`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -276,6 +279,7 @@ ou cortesia manual.
 | 176 | [TASK-176 - Reativar prévia social de vídeos pelo serviço dedicado](TASK-176-reativar-preview-social-video-service.md) | Completed | 42, 164, 167, 173, 175 |
 | 177 | [TASK-177 - Backend como fonte única dos limites de vídeo](TASK-177-backend-fonte-unica-limites-video.md) | Completed | 157, 159, 163, 171, 173 |
 | 178 | [TASK-178 - Auditoria integral antes da produção](TASK-178-auditoria-pre-producao.md) | In Progress | 177 |
+| 179 | [TASK-179 - Restaurar preflight de upload Stream](TASK-179-corrigir-preflight-upload-stream.md) | In progress | 163, 173, 178 |
 
 ## Ordem operacional recomendada sem bloqueios
 
