@@ -3,7 +3,7 @@
 Fila sequencial de execução do produto Lectum.
 
 Última correção operacional 14/09/2026: [TASK-180 — Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md).
-TASK-180 publicada em homolog (0.1.380). Execução atual: TASK-179, corrigir serialização das origens TUS após diagnóstico remoto confirmar domínios com caracteres de JSON. Atualização das envs e validação de novo upload/reprodução continuam pendentes; não confundir a remoção do backfill com a conclusão desse fluxo.
+TASK-180 publicada em homolog (0.1.380). TASK-179 concluída após validar a correção 0.1.381: envs atualizadas pelo operador, uploads reais de 745 KB e 239 MB reproduzidos e persistidos, e leitura da API Cloudflare confirmando assinatura obrigatória e origens corretas no novo TUS. O fechamento documental não altera o fluxo validado. Vídeos antigos com metadados incorretos exigem inventário e correção manual escopada; qualidade/formato dos jobs do serviço dedicado e testes completos em aparelhos reais não estão concluídos por esse smoke. Não executar reparação no start nem tratar a auditoria geral como encerrada.
 
 Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando a skill de seu ambiente:
 
@@ -279,7 +279,7 @@ ou cortesia manual.
 | 176 | [TASK-176 - Reativar prévia social de vídeos pelo serviço dedicado](TASK-176-reativar-preview-social-video-service.md) | Completed | 42, 164, 167, 173, 175 |
 | 177 | [TASK-177 - Backend como fonte única dos limites de vídeo](TASK-177-backend-fonte-unica-limites-video.md) | Completed | 157, 159, 163, 171, 173 |
 | 178 | [TASK-178 - Auditoria integral antes da produção](TASK-178-auditoria-pre-producao.md) | In Progress | 177 |
-| 179 | [TASK-179 - Restaurar preflight e provisionamento de upload Stream](TASK-179-corrigir-preflight-upload-stream.md) | In progress | 163, 173, 178 |
+| 179 | [TASK-179 - Restaurar preflight e provisionamento de upload Stream](TASK-179-corrigir-preflight-upload-stream.md) | Completed | 163, 173, 178 |
 | 180 | [TASK-180 - Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md) | Completed | 163, 165, 166 |
 
 ## Ordem operacional recomendada sem bloqueios

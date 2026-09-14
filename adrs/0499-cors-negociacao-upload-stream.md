@@ -125,3 +125,28 @@ expiração e duração. Os testes de adapter existentes não contam como E2E.
 Checks desse complemento: backend com 784 testes aprovados e nenhum skip/falha;
 Prisma/TypeScript/Biome/build aprovados. Check global aprovado (seis skips
 preexistentes de FFmpeg local no video). Sem alteração de UI, banco ou packages.
+
+## Aceite operacional confirmado (14/09/2026)
+
+Commit `7ff4b60a` / 0.1.381 publicado em homolog, com envs aplicadas e os quatro
+artefatos confirmados nessa versão. Dois uploads autorizados na conta da auditoria
+usaram arquivos técnicos reais: 745.086 bytes/3s e 239.480.318 bytes/40s. Ambos
+foram processados, reproduzidos integralmente pelo Stream e mantidos após reload.
+O teste grande exercita o transporte TUS, não o limite de upload básico.
+
+O operador forneceu a leitura GET da API real do Stream após o envio. Foi
+encontrado exatamente o novo arquivo grande: `ready=true`, `processingError=false`,
+`signed=true`, `originsMatch=true` e `originsContainJsonCharacters=false`.
+Portanto, o roundtrip confirma a serialização CSV no metadata TUS e a preservação
+das restrições, além da evidência funcional de playback. Não houve necessidade
+de wildcard, desativação de assinatura ou alteração de limites para passar.
+
+Backend `/ping`, `/health` e `/ready` responderam 200 no smoke por curl; frontend
+e Admin `/version` responderam 200/0.1.381. O operador confirmou separadamente
+autenticação/readiness do serviço video 0.1.381 pela rede privada.
+
+Este fechamento muda apenas documentação/versão, não código, banco ou envs.
+O aceite se limita à regressão de novos uploads: não repara metadados históricos,
+não valida todos os perfis de acesso/aparelhos nem os jobs de transformação
+FFmpeg/BullMQ. Essas atividades não devem ser declaradas concluídas nem disparadas
+automaticamente como consequência deste registro.

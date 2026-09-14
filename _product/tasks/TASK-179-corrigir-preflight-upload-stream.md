@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | In progress |
+| Status | Completed |
 Dependências: TASK-163, TASK-173, TASK-178 e ADR-0497.
 
 ## Problema e evidência
@@ -33,9 +33,9 @@ O contrato compartilhado afeta apresentação, publicações e respostas.
 - [x] Contrato de URL admite os dois hosts de ingestão com HTTPS, sem aceitar hosts arbitrários, credenciais, portas alternativas ou fragmentos.
 - [x] Falhas de contrato têm motivo controlado, sem URL/token/payload; resposta 2xx ambígua não dispara uma segunda reserva TUS.
 - [x] Serialização TUS preserva os domínios configurados sem caracteres JSON; testes puros cobrem apresentação, posts e respostas, sem alterar assinatura, duração ou expiração.
-- [ ] Novo upload TUS tem origens corretas confirmadas na API real do Stream.
-- [ ] Upload real validado no browser após deploy de homologação.
-- [ ] ADR, versão sincronizada, commit/push e smoke registrados.
+- [x] Novo upload TUS tem origens corretas confirmadas na API real do Stream.
+- [x] Upload real validado no browser após deploy de homologação.
+- [x] ADR, versão sincronizada, commit/push e smoke registrados.
 
 ## Evidências
 
@@ -108,7 +108,7 @@ Os vídeos já criados com metadados incorretos NÃO são reparados por esse pat
 exigem correção manual controlada, nunca startup, exclusão, wildcard ou novo upload
 em massa. Não retirar as restrições de origem para contornar o incidente.
 
-As envs de Dokploy/Vercel ainda não foram atualizadas pelo operador. Separar esse
+Naquele momento, as envs de Dokploy/Vercel ainda não haviam sido atualizadas pelo operador. Separar esse
 trabalho da serialização: não trocar chaves válidas nem culpar limites de arquivo
 por esse diagnóstico. Rollback de código volta a gravar origens incorretas em novos
 uploads; metadados remotos já persistidos não mudam em nenhum dos sentidos.
@@ -117,5 +117,67 @@ Validação local desse complemento: `pnpm --dir backend check` com 784 testes
 aprovados, zero falhas/skips, Prisma/TypeScript/Biome aprovados; build do backend
 aprovado. `pnpm check` global aprovado, mantendo seis skips preexistentes de FFmpeg
 local no serviço de vídeo. Nenhuma alteração de UI, schema ou dependência.
-Deploy e roundtrip real continuam aguardando confirmação; não marcar o E2E como
-concluído apenas porque os testes locais passaram.
+Até essa etapa, deploy e roundtrip real aguardavam confirmação; os testes locais
+isolados não foram usados para marcar o E2E como concluído.
+
+## Fechamento — upload e roundtrip reais em homologação (14/09/2026)
+
+Correção funcional publicada no commit `7ff4b60a`, versão **0.1.381**, com push
+em homolog. O operador atualizou backend, video e frontend e confirmou o Admin
+com valores já corretos. A conexão backend → video retornou autenticação válida,
+readiness `ready`, versão 0.1.381 e transporte privado. Isso não é teste de um job
+de transformação: o upload direto ao Stream não usa a fila FFmpeg/BullMQ.
+
+Teste no navegador conectado, aproximadamente 18h18–18h28 (Brasília), na conta
+profissional da auditoria. O usuário autorizou explicitamente os dois envios e
+a substituição do vídeo anterior. Arquivos técnicos H.264/AAC gerados localmente
+com FFmpeg foram enviados ao provider real, sem mocks de API.
+
+| Arquivo | Envio/processamento | Reprodução | Persistência após reload |
+|---|---|---|---|
+| 745.086 bytes, 3 segundos | Concluído | Até o fim, sem MediaError | Reproduzido novamente até o fim |
+| 239.480.318 bytes, 40 segundos | Concluído, acima do limite do transporte básico | Até o fim: 40,042665s, `ended=true`, sem MediaError | Reproduzido por mais 11s e pausado |
+
+O player usou Cloudflare Stream, não uma prévia `blob:` nem o backend como origem
+dos bytes. Não houve erro de upload visível nas observações; o console capturado
+não registrou erros. Não se trata de captura integral da rede/logs remotos. O
+vídeo grande ficou na conta de auditoria; o formulário geral do perfil não foi
+salvo e nenhuma informação de identidade foi alterada.
+
+O operador executou o diagnóstico somente leitura no container do backend.
+Uma consulta GET encontrou exatamente o novo vídeo grande, pelo tamanho e janela
+de criação do teste, e devolveu:
+
+```json
+{
+  "diagnostic": "read_ok",
+  "matchingTestVideos": 1,
+  "sizeBytes": 239480318,
+  "durationSeconds": 40,
+  "ready": true,
+  "processingError": false,
+  "signed": true,
+  "originsMatch": true,
+  "originsContainJsonCharacters": false
+}
+```
+
+Essa leitura fecha o aceite do roundtrip das origens TUS e da assinatura
+obrigatória; não foi inferida apenas do playback. Nenhum segredo, UID ou URL
+assinada foi incluído no resultado registrado.
+
+Smoke por curl após os uploads: backend `/ping`, `/health` e `/ready` HTTP 200;
+frontend/Admin `/version` HTTP 200, todos 0.1.381. Python urllib recebeu 403 no
+backend enquanto curl e o aplicativo funcionaram; a diferença de cliente foi
+registrada, sem atribuir causa não verificada ou classificá-la como indisponibilidade.
+
+Fechamento documental: apenas task/índice/ADR e incremento sincronizado de versão;
+sem mudança funcional, migration, package, env nova, reset ou reparação em massa.
+Os checks/builds da correção funcional estão registrados acima; o novo commit
+também passa pelos guards e checks de commit/push do repositório.
+
+Limites deste aceite: não cobre aparelhos iPhone/Android reais, todos os fluxos
+de posts/respostas, jobs de transformação nem reparação de vídeos antigos. A
+correção dos metadados legados continua sendo operação manual escopada, precedida
+de inventário, nunca parte do start. Não declarar a auditoria geral concluída
+com base neste smoke de upload de apresentação.
