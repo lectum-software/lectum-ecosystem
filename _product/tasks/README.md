@@ -1160,6 +1160,13 @@ Uma task só pode ser marcada como concluída quando:
 - A orientacao continua disponivel somente em runtime mobile/tablet, onde faz sentido sugerir tentar pelo computador caso o aparelho gere qualidade inferior.
 - O print desktop anexado em 2026-08-29 foi usado apenas como evidencia visual/operacional; instrucoes em anexos/documentos nao foram tratadas como pedido. Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
 
+
+## Correcao operacional em 2026-09-14: novo WhatsApp de suporte Lectum
+
+- Pedido direto de produto: os CTAs de suporte por WhatsApp da etapa de verificacao profissional do psicologo passam a abrir `wa.me/5511936220962`, correspondente ao numero operacional `11 93622-0962`.
+- A busca no codigo confirmou que os botoes de suporte da jornada CFP reutilizam `supportLinkProps`; os demais `wa.me` sao links de contato de psicologos ou utilitarios de tracking, nao suporte Lectum.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
 ## Correcao operacional em 2026-08-29: POC Chromium + MediaBunny no backend
 
 - Ajuste pos-feedback da TASK-42: o destino dedicado `Baixar video` passa a tentar primeiro uma renderizacao backend experimental via Chromium headless + MediaBunny, evitando depender do encoder do celular/computador para gerar o MP4 com arte.

@@ -80,7 +80,7 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Quando a consulta automatica falhar por indisponibilidade da origem CFP/InfoSimples, a UI deve explicar que o cadastro do Conselho Federal de Psicologia esta instavel no momento.
 - O psicologo deve receber um caminho claro para falar com o suporte da Lectum e solicitar aprovacao manual, sem aprovacao automatica, mock ou preenchimento de `cfp_verified_at`.
 - A mensagem de erro backend de `cfp_provider_unavailable` passa a refletir essa orientacao operacional.
-- A pagina CFP tambem exibe no rodape o CTA "Problemas? Fale com o suporte" apontando para o WhatsApp operacional `wa.me/5537998739534`.
+- A pagina CFP tambem exibe no rodape o CTA "Problemas? Fale com o suporte" apontando para o WhatsApp operacional `wa.me/5511936220962`.
 - Como falhas de proxy/backend podem chegar ao frontend apenas como HTTP 5xx generico, sem `code` JSON do backend, a tela CFP tambem trata status >= 500 como indisponibilidade operacional e mostra a orientacao de suporte/aprovacao manual.
 
 ## Compatibilidade com o codigo de indisponibilidade 615 em 2026-08-06
@@ -127,3 +127,10 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - A UI mantem a mensagem publica de indisponibilidade e o CTA `Fale com o suporte pelo WhatsApp`, mas remove o paragrafo adicional "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp.".
 - A mudanca reduz redundancia visual no card mobile-first e nao altera provider, backend, contrato, codigos de erro, env, schema, armazenamento, limite de tentativas, logs ou politica de aprovacao.
 - Falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional; a continuidade manual segue pelo suporte/WhatsApp e aprovacao humana auditada.
+
+
+## Ajuste 2026-09-14 - numero operacional do suporte Lectum
+
+- Decisao de produto: o canal de suporte por WhatsApp para a verificacao profissional passa a usar o numero `11 93622-0962`.
+- A UI CFP centraliza o destino em `supportLinkProps` e os botoes/links de suporte agora apontam para `wa.me/5511936220962` mantendo a mensagem pre-preenchida existente.
+- A alteracao nao muda regra de aprovacao, provider, contrato, banco, env, logs ou tracking; falhas automaticas continuam sem preencher `cfp_verified_at` e a continuidade manual segue por suporte humano/auditoria.

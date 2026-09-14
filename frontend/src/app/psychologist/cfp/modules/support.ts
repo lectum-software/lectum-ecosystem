@@ -5,7 +5,9 @@ export const nextStepHref = "/app/profissional/perfil/configurar";
 export const supportMessage =
   "Ol\u00e1, preciso de ajuda com a verifica\u00e7\u00e3o profissional na Lectum.";
 
-export const supportHref = `https://wa.me/5537998739534?text=${encodeURIComponent(supportMessage)}`;
+export const supportWhatsappPhone = "5511936220962";
+
+export const supportHref = `https://wa.me/${supportWhatsappPhone}?text=${encodeURIComponent(supportMessage)}`;
 
 export const supportLinkProps = {
   href: supportHref,

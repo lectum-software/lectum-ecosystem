@@ -255,7 +255,7 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 
 - Quando a consulta automatica ao cadastro CFP falhar por instabilidade da origem, a tela passa a informar que o sistema do Conselho Federal de Psicologia esta instavel no momento.
 - A tela tambem passa a exibir um link de suporte para o psicologo solicitar aprovacao manual, mantendo a regra de nao aprovar automaticamente sem validacao real/manual.
-- A pagina CFP exibe no rodape "Problemas? Fale com o suporte" com link para o WhatsApp operacional `wa.me/5537998739534`.
+- A pagina CFP exibe no rodape "Problemas? Fale com o suporte" com link para o WhatsApp operacional `wa.me/5511936220962`.
 - A UI tambem cobre falhas HTTP 5xx genericas, como 502 de proxy/backend sem `code` JSON, exibindo a mensagem de suporte em vez do texto tecnico do cliente HTTP.
 
 ## Correcao de preservacao CRP no perfil em 2026-07-04
@@ -374,4 +374,31 @@ Validacoes executadas:
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] Browser local mobile-first 390x884 em `/psychologist/cfp`: rota protegida renderizou/redirecionou para login sem sessao, preservando o shell privado; o estado de erro nao foi forjado com mock.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+
+
+## Ajuste pos-feedback 2026-09-14 - novo WhatsApp do suporte
+
+- Pedido direto de produto aplicado aos botoes de suporte por WhatsApp da jornada de verificacao profissional do psicologo (`/psychologist/cfp` e alias `/app/profissional/cfp`).
+- O numero operacional do suporte Lectum passa a ser `11 93622-0962`, gerando link `wa.me/5511936220962` com a mensagem existente de ajuda na verificacao profissional.
+- A busca no codigo confirmou que `SupportFooterLink`, `SupportGuidance` e o CTA `Falar com suporte` do resultado CFP reutilizam `supportLinkProps`; os outros `wa.me` encontrados pertencem a contato de psicologos ou tracking, nao suporte Lectum.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia local `_product/proto/Verificacao de CPF - Consulta CFP.jpg` segue como fallback visual da tela mobile-first.
+- Alteracao frontend-only, mobile-first, sem schema Prisma, migration, endpoint, env, package novo, mock, seed, reset, provider ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] Botoes/links de suporte da etapa CFP usam `wa.me/5511936220962`.
+- [x] O link antigo do suporte nao permanece no codigo da tela CFP.
+- [x] Demais links de WhatsApp de psicologos permanecem inalterados.
+
+### Validacoes executadas pos-feedback
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/psychologist/cfp/modules/support.ts" "src/app/psychologist/cfp/components/cfp-copy.test.mjs"`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/psychologist/cfp/components/cfp-copy.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm version:bump` e `pnpm check:version` sincronizaram os manifests em `0.1.377`.
+- [x] `pnpm check`
+- [x] Browser local Chrome headless mobile-first 390x884 em `/psychologist/cfp`: sem sessao real, a rota redirecionou para login como esperado; nenhum estado autenticado foi forjado com mock.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
