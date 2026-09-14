@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | In Progress |
+| Status | Completed |
 
 Dependências: TASK-163, TASK-165, TASK-180. Prioridade solicitada pelo operador em 14/09/2026.
 
@@ -49,7 +49,7 @@ Validação de banco em PostgreSQL real descartável e local, sem usar DATABASE_
 - [x] Consulta do catálogo não retorna chaves, URLs, UID, PII ou credenciais.
 - [x] Migration dev isolada, Prisma/TypeScript/Biome, build e testes reais de persistência.
 - [x] ADR/DATA-MODEL/runbook e versão 0.1.383 preparados.
-- [ ] Deploy e smoke de homologação, seguidos da validação remota do catálogo pelo operador.
+- [x] Deploy e smoke de homologação, seguidos da validação remota do catálogo pelo operador.
 
 ## Evidências locais — 14/09/2026
 
@@ -103,8 +103,31 @@ do bloqueio, restauração ou job de exclusão nesta entrega.
 
 ## Operação publicada
 
-A marcação do acervo existente depende do dry-run e apply executados pelo operador no
-container. Não confundir código entregue com 64 objetos já catalogados/movidos.
+Implementação publicada pelo commit `5cfb4f98` (0.1.383). Backend, frontend e Admin
+responderam 0.1.383 no smoke; backend `/health=ok` e `/ready=ready`. Serviço privado de
+vídeo não recebeu alteração funcional nem foi consultado nesse smoke. Produção intacta.
+
+O operador executou no container de homologação uma prévia e três lotes de aplicação:
+5, 50 e 9 novos registros. A última reexecução **somente leitura** confirmou:
+
+| Indicador | Resultado |
+|---|---:|
+| Ambiente/modo | homolog / dry-run |
+| Objetos listados | 142 |
+| Imagens identificadas | 78 |
+| Vídeos com marcação existente válida | 64 |
+| Vídeos ainda elegíveis / novos registros | 0 / 0 |
+| Desconhecidos / conflitos / falhas | 0 / 0 / 0 |
+| Inventário completo | true |
+| Objetos escritos / excluídos no R2 | 0 / 0 |
+
+Evidência fornecida pelo operador nesta conversa, não execução remota atribuída ao agente.
+Os 64 vídeos observados estão catalogados e continuam no R2. A marcação no banco não é
+migração de bytes, privatização do bucket, teste completo de recuperação ou autorização
+de exclusão. Nenhum prazo foi informado nos comandos; não há expiração automática.
+Novos objetos posteriores ao inventário exigem nova verificação, sem inferir cobertura
+permanente do bucket. O fechamento documental não altera o runtime validado.
+
 Os ganchos automáticos desta task cobrem aposentadoria explícita de `video_asset`, troca
 do vídeo de apresentação e cancelamento pronto. Exclusão lógica do conteúdo pai continua
 preservando bytes; não afirmar que todos os eventos Admin/comunidades ganharam marcação.

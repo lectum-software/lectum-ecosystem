@@ -58,10 +58,14 @@ Migration dev aplicada em PostgreSQL local descartável, sem usar o banco do `.e
 Backend Prisma/TypeScript/Biome, 791 testes, build, `pnpm check` e versão 0.1.383 aprovados.
 Imagem Docker compilada validada com 12 verificações reais de retenção/persistência/CLI
 e 28 regressões reais de associação. Sem mocks nem chamadas Cloudflare nessas provas.
-O inventário R2 real e a gravação das marcações remotas ainda dependem do operador;
-não são certificados pelo teste isolado. Runbook e evidências na TASK-181.
+Depois do deploy 0.1.383 e smoke saudável, o operador catalogou os vídeos R2 em três
+lotes (5 + 50 + 9). A reexecução final somente leitura confirmou 142 objetos listados,
+78 imagens, 64 marcações existentes válidas, inventário completo e zero elegíveis,
+desconhecidos, conflitos, falhas, escritas ou exclusões no R2. A prova remota é o resultado
+fornecido pelo operador, não o teste isolado. Runbook e evidências na TASK-181.
 
 ## Pendências
 
-Execução manual do catálogo em homolog, prazo de retenção, transferência do acervo legado,
-UI de recuperação/revisão e eventual limpeza futura permanecem operações distintas.
+A catalogação do acervo observado em homolog foi concluída. Prazo de retenção,
+transferência do acervo legado, UI de recuperação/revisão e eventual limpeza futura
+permanecem decisões/operações distintas, sem execução ou autorização implícita por esta task.
