@@ -2,7 +2,7 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Concluída: [TASK-183 — Download de vídeos no Admin](TASK-183-admin-download-videos.md). Adiciona no painel administrativo downloads do vídeo original e do vídeo com arte Lectum para conteúdos de Comunidades, preservando o mesmo formato do fluxo do psicólogo e sem alterar banco, buckets ou packages.
+Concluída: [TASK-183 — Download de vídeos no Admin](TASK-183-admin-download-videos.md). Adiciona no painel administrativo downloads do vídeo original e do vídeo com arte Lectum para conteúdos de Comunidades, preservando o mesmo formato do fluxo do psicólogo e sem alterar banco, buckets ou packages. Ajuste pós-feedback: botões ficam abaixo do ícone de olho.
 
 Concluída: [TASK-182 — Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md). Correção 0.1.385 publicada, uploads reais e smoke aprovados; usuário confirmou funcionamento. Incidente encerrado sem atribuir causa histórica não comprovada nem alegar reprodução independente no Safari/iPhone. Não encerra a auditoria geral; sem alteração de armazenamento, qualidade ou plano da conta de auditoria.
 

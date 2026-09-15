@@ -160,17 +160,7 @@ export const ContentMediaPreview = ({
   }
 
   if (videoSrc)
-    return (
-      <div className="mx-auto grid w-full max-w-[220px] gap-2 xl:ml-0 xl:mr-auto">
-        <ContentVideoPreview label={`Vídeo de ${contentTitle(detail)}`} src={videoSrc} />
-        <ContentVideoDownloadActions
-          allowArtDownload={detail.author.role === "psicologo"}
-          communityId={detail.community.slug}
-          targetId={detail.content.id}
-          targetType={detail.content.type}
-        />
-      </div>
-    );
+    return <ContentVideoPreview label={`Vídeo de ${contentTitle(detail)}`} src={videoSrc} />;
 
   return (
     <div className="grid min-h-48 place-items-center rounded-[24px] border border-border bg-surface-muted p-6 text-center text-sm font-bold text-muted">
@@ -224,25 +214,41 @@ export const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyt
     ? toPublicFrontendHref(detail.content.public_url)
     : null;
   const hasMedia = Boolean(detail.content.media);
+  const hasVideoDownload = detail.content.media?.media_type.toLowerCase() === "video";
+  const hasTopActions = Boolean(publicHref) || hasVideoDownload;
   const isPost = detail.content.type === "post";
   const originPreview = isPost ? detail.content.origin_preview : null;
 
   return (
     <section className={cn(cardClass, "relative min-w-0 max-w-full p-5")}>
-      {publicHref ? (
-        <Link
-          aria-label="Visualizar post no site público"
-          className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-primary shadow-control transition hover:border-primary hover:bg-primary-soft"
-          href={publicHref}
-          rel="noreferrer"
-          target="_blank"
-          title="Visualizar post no site público"
-        >
-          <Eye aria-hidden className="h-5 w-5" />
-        </Link>
+      {hasTopActions ? (
+        <div className="mb-4 grid justify-items-end gap-2 sm:absolute sm:right-5 sm:top-5 sm:mb-0">
+          {publicHref ? (
+            <Link
+              aria-label="Visualizar post no site público"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-primary shadow-control transition hover:border-primary hover:bg-primary-soft"
+              href={publicHref}
+              rel="noreferrer"
+              target="_blank"
+              title="Visualizar post no site público"
+            >
+              <Eye aria-hidden className="h-5 w-5" />
+            </Link>
+          ) : null}
+          {hasVideoDownload ? (
+            <ContentVideoDownloadActions
+              allowArtDownload={detail.author.role === "psicologo"}
+              className="w-36"
+              compact
+              communityId={detail.community.slug}
+              targetId={detail.content.id}
+              targetType={detail.content.type}
+            />
+          ) : null}
+        </div>
       ) : null}
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2 pr-12 text-xs font-black text-muted">
+      <div className={cn("min-w-0", hasTopActions && "sm:pr-44")}>
+        <div className="flex flex-wrap items-center gap-2 text-xs font-black text-muted">
           <FileText aria-hidden className="h-4 w-4" />
           <span>{contentTypeLabel(detail)}</span>
           <span aria-hidden>·</span>

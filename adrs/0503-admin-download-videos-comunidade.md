@@ -29,8 +29,12 @@ A documentação oficial do Cloudflare Stream indica que downloads MP4 são habi
   - quando `ready`, emite URL curta assinada com `downloadable=true` e `flags.original=true` somente na resposta do endpoint Admin.
 - Para **original legado R2**, o backend usa a mesma resolução segura de fonte `posts/media/` já usada pelo render social e devolve a URL pública validada.
 - Para **com arte**, o Admin reutiliza o mesmo job `social_share` do app `video/`, com os mesmos metadados, rótulos (`Postado na Lectum`/`Respondido na Lectum`), nome profissional, selo verificado e `fileName` do fluxo do psicólogo. O arquivo final é baixado via proxy do backend, sem expor o serviço interno ao browser.
-- A UI Admin adiciona botões abaixo do miniplayer/preview: **Baixar original** para todo vídeo e **Baixar com arte** apenas quando o autor é psicólogo.
+- A UI Admin adiciona botões na coluna de ações do conteúdo, imediatamente abaixo do ícone de visualização pública: **Original** para todo vídeo e **Com arte** apenas quando o autor é psicólogo.
 - Não criar tabela, coluna, migration, package novo, seed, objeto R2 novo ou cache persistente para os downloads novos.
+
+### Ajuste pós-feedback — 2026-09-15
+
+Após validação visual do usuário, os botões deixam o bloco do miniplayer/preview e passam para a área de ações do Admin. A decisão mantém a mídia sem controles administrativos acoplados e concentra ações secundárias no mesmo eixo do botão de visualização.
 
 ## Consequências
 
@@ -54,6 +58,8 @@ Executada em 2026-09-15 na branch `homolog`:
 - `pnpm --dir admin build` — aprovado.
 - `pnpm check` — aprovado no fechamento da TASK-183.
 - `pnpm version:bump` e `pnpm check:version` — executados antes do commit, sincronizando os cinco manifests.
+- Ajuste pós-feedback: botões de download reposicionados abaixo do ícone de olho em lista e detalhe, sem alteração de contrato, env, banco ou package.
+- Ajuste pós-feedback validado com `pnpm --dir admin check` e `pnpm --dir admin build` — aprovados.
 
 Observações:
 

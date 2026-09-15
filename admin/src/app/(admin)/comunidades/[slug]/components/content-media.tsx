@@ -8,7 +8,6 @@ import type { AdminCommunityContentItem } from "@/api/req/communities";
 import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { isAdminPublicMediaUrl, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { cn } from "@/lib/utils";
-import { ContentVideoDownloadActions } from "./content-video-download-actions";
 
 export const ContentVideoMiniplayer = ({ label, src }: { label: string; src: string }) => {
   const expandedVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -189,13 +188,7 @@ export const ContentVideoMiniplayer = ({ label, src }: { label: string; src: str
   );
 };
 
-export const ContentMediaThumbnail = ({
-  communityId,
-  item,
-}: {
-  communityId: string;
-  item: AdminCommunityContentItem;
-}) => {
+export const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentItem }) => {
   if (!item.media) return null;
 
   const mediaType = item.media.media_type.toLowerCase();
@@ -233,16 +226,5 @@ export const ContentMediaThumbnail = ({
 
   if (!isVideo) return mediaFrame;
 
-  return (
-    <div className="grid w-full max-w-40 gap-2 sm:w-28 sm:max-w-none">
-      {mediaFrame}
-      <ContentVideoDownloadActions
-        allowArtDownload={item.author.role === "psicologo"}
-        compact
-        communityId={communityId}
-        targetId={item.content_id}
-        targetType={item.type}
-      />
-    </div>
-  );
+  return <div className="w-full max-w-40 sm:w-28 sm:max-w-none">{mediaFrame}</div>;
 };

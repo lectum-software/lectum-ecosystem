@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { formatDateTime, initials, numberFormatter } from "../modules/detail-support";
 import { ContentMediaThumbnail } from "./content-media";
 import { adminContentDetailHref, StatusBadge } from "./content-shared";
+import { ContentVideoDownloadActions } from "./content-video-download-actions";
 
 export { formatRankingCrp };
 
@@ -79,6 +80,9 @@ export const contentItemKindPresentation = (item: AdminCommunityContentItem) => 
 
   return null;
 };
+
+export const isVideoContentItem = (item: AdminCommunityContentItem) =>
+  item.media?.media_type.toLowerCase() === "video";
 
 export const ContentItemHeader = ({ item }: { item: AdminCommunityContentItem }) => {
   const kindPresentation = contentItemKindPresentation(item);
@@ -175,13 +179,7 @@ export const ContentAuthorIdentity = ({
   item: AdminCommunityContentItem;
 }) => <AuthorIdentity author={item.author} className={className} />;
 
-export const ContentItemMain = ({
-  item,
-  slug,
-}: {
-  item: AdminCommunityContentItem;
-  slug: string;
-}) => {
+export const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {
   const mediaTextGridClass = cn(
     "mt-3 grid min-w-0 gap-3",
     item.media && "sm:grid-cols-[112px_1fr]",
@@ -193,7 +191,7 @@ export const ContentItemMain = ({
         <ContentItemHeader item={item} />
         <ContentAuthorIdentity className="mt-3" item={item} />
         <div className={mediaTextGridClass}>
-          <ContentMediaThumbnail communityId={slug} item={item} />
+          <ContentMediaThumbnail item={item} />
           <div className="min-w-0">
             <ContentItemBody item={item} />
           </div>
@@ -207,7 +205,7 @@ export const ContentItemMain = ({
       <ContentItemHeader item={item} />
       <ContentAuthorIdentity className="mt-3" item={item} />
       <div className={mediaTextGridClass}>
-        <ContentMediaThumbnail communityId={slug} item={item} />
+        <ContentMediaThumbnail item={item} />
         <ContentItemBody item={item} />
       </div>
     </div>
@@ -220,44 +218,60 @@ export const ContentItemCard = ({
 }: {
   item: AdminCommunityContentItem;
   slug: string;
-}) => (
-  <article className="rounded-2xl border border-border bg-surface p-4">
-    <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
-      <ContentItemMain item={item} slug={slug} />
-      <div className="flex justify-end gap-2 lg:flex-col">
-        <Link
-          aria-label="Ver analytics do conteúdo no Admin"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-primary/20 text-primary transition hover:bg-primary-soft"
-          href={adminContentDetailHref(slug, item)}
-          title="Analytics"
-        >
-          <BarChart3 aria-hidden className="h-4 w-4" />
-          <span className="sr-only">Analytics</span>
-        </Link>
-        {item.status === "published" ? (
+}) => {
+  const hasVideoDownload = isVideoContentItem(item);
+
+  return (
+    <article className="rounded-2xl border border-border bg-surface p-4">
+      <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
+        <ContentItemMain item={item} />
+        <div className="flex items-start justify-end gap-2 lg:flex-col lg:items-end">
           <Link
-            aria-label="Ver conteúdo no site"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
-            href={toPublicFrontendHref(item.public_url)}
-            rel="noreferrer"
-            target="_blank"
-            title="Ver no site"
+            aria-label="Ver analytics do conteúdo no Admin"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-primary/20 text-primary transition hover:bg-primary-soft"
+            href={adminContentDetailHref(slug, item)}
+            title="Analytics"
           >
-            <Eye aria-hidden className="h-4 w-4" />
-            <span className="sr-only">Ver no site</span>
+            <BarChart3 aria-hidden className="h-4 w-4" />
+            <span className="sr-only">Analytics</span>
           </Link>
-        ) : (
-          <span
-            aria-label="Conteúdo indisponível no site público"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border bg-surface-muted text-subtle"
-            role="img"
-            title="Indisponível no site público"
-          >
-            <Eye aria-hidden className="h-4 w-4" />
-          </span>
-        )}
+          <div className="grid justify-items-end gap-2">
+            {item.status === "published" ? (
+              <Link
+                aria-label="Ver conteúdo no site"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
+                href={toPublicFrontendHref(item.public_url)}
+                rel="noreferrer"
+                target="_blank"
+                title="Ver no site"
+              >
+                <Eye aria-hidden className="h-4 w-4" />
+                <span className="sr-only">Ver no site</span>
+              </Link>
+            ) : (
+              <span
+                aria-label="Conteúdo indisponível no site público"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border bg-surface-muted text-subtle"
+                role="img"
+                title="Indisponível no site público"
+              >
+                <Eye aria-hidden className="h-4 w-4" />
+              </span>
+            )}
+            {hasVideoDownload ? (
+              <ContentVideoDownloadActions
+                allowArtDownload={item.author.role === "psicologo"}
+                className="w-32"
+                compact
+                communityId={slug}
+                targetId={item.content_id}
+                targetType={item.type}
+              />
+            ) : null}
+          </div>
+        </div>
       </div>
-    </div>
-    <ContentMetrics item={item} />
-  </article>
-);
+      <ContentMetrics item={item} />
+    </article>
+  );
+};
