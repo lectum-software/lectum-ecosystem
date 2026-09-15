@@ -59,10 +59,12 @@ import {
 import { AuthorAvatar, AuthorIdentityLine } from "./feed-controls";
 
 export const PostMedia = ({
+  enableFeedAutoplay = false,
   footer,
   overlayAction,
   post,
 }: {
+  enableFeedAutoplay?: boolean;
   footer?: ReactNode;
   overlayAction?: CommunityMediaOverlayAction;
   post: CommunityPost;
@@ -91,6 +93,7 @@ export const PostMedia = ({
       analyticsTarget={
         displayMediaType === "video" ? { targetId: post.id, targetType: "post" } : undefined
       }
+      enableFeedAutoplay={enableFeedAutoplay}
       footer={footer}
       mediaType={displayMediaType}
       mediaUrl={displayMediaUrl}
@@ -102,10 +105,12 @@ export const PostMedia = ({
 };
 
 export const ProfessionalReplyMedia = ({
+  enableFeedAutoplay = false,
   footer,
   overlayAction,
   reply,
 }: {
+  enableFeedAutoplay?: boolean;
   footer?: ReactNode;
   overlayAction?: CommunityMediaOverlayAction;
   reply: NonNullable<CommunityPost["highlighted_professional_reply"]>;
@@ -118,6 +123,7 @@ export const ProfessionalReplyMedia = ({
       analyticsTarget={
         reply.media_type === "video" ? { targetId: reply.id, targetType: "reply" } : undefined
       }
+      enableFeedAutoplay={enableFeedAutoplay}
       footer={footer}
       mediaType={reply.media_type}
       mediaUrl={reply.media_url}
@@ -130,9 +136,11 @@ export const ProfessionalReplyMedia = ({
 };
 
 export const ProfessionalReplyPreview = ({
+  enableFeedAutoplay = false,
   overlayAction,
   post,
 }: {
+  enableFeedAutoplay?: boolean;
   overlayAction?: CommunityMediaOverlayAction;
   post: CommunityPost;
 }) => {
@@ -226,6 +234,7 @@ export const ProfessionalReplyPreview = ({
         {reply.media_url ? (
           <div className="pointer-events-auto mt-3">
             <ProfessionalReplyMedia
+              enableFeedAutoplay={enableFeedAutoplay}
               footer={replyWhatsappCta}
               overlayAction={overlayAction}
               reply={reply}
@@ -558,11 +567,16 @@ export const PostCard = ({
 
       <div className="mt-4 grid gap-3">
         <PostMedia
+          enableFeedAutoplay
           footer={hasPostMedia ? authorWhatsappCta : undefined}
           overlayAction={postOverlayAction}
           post={post}
         />
-        <ProfessionalReplyPreview overlayAction={highlightedReplyOverlayAction} post={post} />
+        <ProfessionalReplyPreview
+          enableFeedAutoplay
+          overlayAction={highlightedReplyOverlayAction}
+          post={post}
+        />
         {hasPostMedia ? null : authorWhatsappCta}
       </div>
 

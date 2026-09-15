@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { type MouseEventHandler, type ReactNode, useEffect, useState } from "react";
+import { type MouseEventHandler, type ReactNode, useCallback, useEffect, useState } from "react";
 import {
   type ContentVideoWatchTrackingTarget,
   useContentVideoWatchTracking,
 } from "@/components/analytics/content-video-watch-tracker";
+import { useCommunityFeedVideoAutoplay } from "@/components/community/community-feed-video-autoplay";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -235,6 +236,7 @@ type CommunityMediaBlockProps = {
   alt: string;
   analyticsTarget?: ContentVideoWatchTrackingTarget;
   className?: string;
+  enableFeedAutoplay?: boolean;
   footer?: ReactNode;
   imageClassName?: string;
   mediaType: string | null;
@@ -252,6 +254,7 @@ export const CommunityMediaBlock = ({
   alt,
   analyticsTarget,
   className,
+  enableFeedAutoplay = false,
   footer,
   imageClassName,
   mediaType,
@@ -266,6 +269,7 @@ export const CommunityMediaBlock = ({
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
   const isStreamVideo = normalizedMediaType === "video" && isVideoAssetReference(mediaUrl);
+  const feedAutoplayEnabled = enableFeedAutoplay && normalizedMediaType === "video";
   // Players internos nao usam thumbnail_url: registros antigos podem conter a arte social exportavel.
   const fallbackPosterKey = normalizedMediaType === "video" && !isStreamVideo ? resolvedUrl : null;
   const [fallbackPoster, setFallbackPoster] = useState<{ key: string; url: string } | null>(null);
@@ -279,6 +283,18 @@ export const CommunityMediaBlock = ({
           videoUrl: analyticsTarget.videoUrl ?? resolvedUrl,
         }
       : null,
+  );
+  const {
+    handleVideoElementReady: handleFeedVideoElementReady,
+    onSoundEnabledChange: handleFeedSoundEnabledChange,
+    soundEnabled: feedSoundEnabled,
+  } = useCommunityFeedVideoAutoplay(feedAutoplayEnabled);
+  const handleVideoReady = useCallback(
+    (video: HTMLVideoElement | null) => {
+      handleVideoElementReady(video);
+      handleFeedVideoElementReady(video);
+    },
+    [handleFeedVideoElementReady, handleVideoElementReady],
   );
   const [detectedMedia, setDetectedMedia] = useState<{
     height?: number | null;
@@ -390,12 +406,22 @@ export const CommunityMediaBlock = ({
             controlsVariant="persistent"
             fit="contain"
             fullscreenVariant="content"
-            onVideoElementReady={handleVideoElementReady}
+            mutedControlVisibility={feedAutoplayEnabled ? "when-hidden" : "default"}
+            onSoundEnabledChange={feedAutoplayEnabled ? handleFeedSoundEnabledChange : undefined}
+            onVideoElementReady={handleVideoReady}
             persistentControlsLayout="media"
             poster={resolvedPosterUrl}
             src={resolvedUrl}
             style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
             title={alt}
+            videoProps={
+              feedAutoplayEnabled
+                ? {
+                    "data-lectum-feed-video-autoplay": "true",
+                    muted: !feedSoundEnabled,
+                  }
+                : undefined
+            }
           />
           {overlayAction ? (
             <button

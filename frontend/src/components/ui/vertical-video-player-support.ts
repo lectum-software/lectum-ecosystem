@@ -6,6 +6,7 @@ export type ControlsVariant = "native" | "minimal" | "persistent";
 export type FullscreenVariant = "default" | "content";
 export type PersistentControlsLayout = "stacked" | "media";
 export type PersistentControlsVisibility = "auto" | "always";
+export type MutedControlVisibility = "default" | "when-hidden";
 
 export type VideoDataAttributes = {
   [key: `data-${string}`]: string | undefined;
@@ -23,7 +24,9 @@ export type VerticalVideoPlayerProps = {
   controlsVariant?: ControlsVariant;
   fit?: VideoFit;
   fullscreenVariant?: FullscreenVariant;
+  mutedControlVisibility?: MutedControlVisibility;
   onContentClick?: () => void;
+  onSoundEnabledChange?: (soundEnabled: boolean) => void;
   onVideoElementReady?: (video: HTMLVideoElement | null) => void;
   persistentControlsLayout?: PersistentControlsLayout;
   persistentControlsVisibility?: PersistentControlsVisibility;

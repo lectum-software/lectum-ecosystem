@@ -16,6 +16,7 @@ type UseVerticalVideoPlayerImmersiveControlsInput = {
   isPaused: boolean;
   onContentClick?: () => void;
   onFullscreenRequest?: () => void;
+  onSoundEnabledChange?: (soundEnabled: boolean) => void;
   videoRef: RefObject<HTMLVideoElement | null>;
 };
 
@@ -28,6 +29,7 @@ export const useVerticalVideoPlayerImmersiveControls = ({
   isPaused,
   onContentClick,
   onFullscreenRequest,
+  onSoundEnabledChange,
   videoRef,
 }: UseVerticalVideoPlayerImmersiveControlsInput) => {
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,11 +104,13 @@ export const useVerticalVideoPlayerImmersiveControls = ({
     const video = videoRef.current;
     if (!video) return;
 
-    const nextMuted = !(video.muted || video.volume <= 0);
+    const shouldEnableSound = video.muted || video.volume <= 0;
+    const nextMuted = !shouldEnableSound;
     video.muted = nextMuted;
 
     if (!nextMuted && video.volume <= 0) video.volume = 1;
-  }, [videoRef]);
+    onSoundEnabledChange?.(shouldEnableSound);
+  }, [onSoundEnabledChange, videoRef]);
 
   const handleFullscreen = useCallback(() => {
     if (onFullscreenRequest) {

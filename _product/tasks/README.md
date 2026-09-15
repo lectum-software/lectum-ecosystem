@@ -2099,3 +2099,40 @@ fluxos de aceite persistido.
   check`, builds frontend/video, `pnpm version:bump`, `pnpm check:version`, `pnpm check` e smoke
   local do frontend (`/version` 0.1.388 e `/comunidades` 200). A validacao visual autenticada da
   modal fica para homologacao apos deploy, sem mocks locais.
+
+## Ajuste em 2026-09-15: autoplay mudo no feed de Comunidades
+
+- Pedido do usuario: videos no feed da Lectum devem iniciar automaticamente como Instagram/TikTok,
+  com audio mudo por padrao, controles existentes preservados e icone de volume visivel para ativar
+  o som. Depois que o usuario ativa o volume em um video, os proximos videos do feed passam a tentar
+  tocar com som; se ele silenciar novamente, voltam a iniciar mudos.
+- Decisao aplicada no frontend: o feed de Comunidades registra os players de posts e respostas em um
+  gerenciador client-side que escolhe o video mais visivel/proximo do centro da viewport, pausa os
+  demais e respeita pausa manual enquanto o card permanece em foco. A preferencia de som fica em
+  `localStorage` local degradavel, sem PII e sem sincronizacao server-side.
+- Os controles do `VerticalVideoPlayer` continuam os mesmos; quando os controles imersivos estiverem
+  ocultos e o video estiver mudo, um botao de volume/mute fica visivel sobre a midia para ativacao
+  clara do audio.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validacao visual baseada em
+  `_product/proto/Feed Comunidade.jpg` e nos controles existentes.
+- Alteracao exclusivamente frontend com documentacao e ADR; sem backend, schema/migration, env
+  obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia server-side ou
+  alteracao de dados/buckets publicados. Rollback simples reverte o commit; chaves locais antigas
+  ficam inertes no navegador.
+- Criterios de aceite:
+  - [x] Videos do feed de Comunidades iniciam automaticamente quando entram em foco, mudos por padrao.
+  - [x] Apenas um video registrado do feed toca por vez; videos fora de foco pausam.
+  - [x] Controles existentes de play/pause/progresso/fullscreen/volume permanecem e o volume fica
+        visivel quando autoplay estiver mudo.
+  - [x] Preferencia de audio ativada/desativada pelo usuario passa a valer para os proximos videos do
+        feed no mesmo dispositivo/browser.
+  - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e
+        smoke local do frontend executados em `0.1.391`.
+- Validacoes locais: teste focado
+  `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-feed-video-autoplay.test.mjs`;
+  `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; smoke local do frontend
+  buildado em `http://localhost:3332` com `/version` respondendo `0.1.391` apos o bump e
+  `/comunidades` HTTP 200. Validacao visual autenticada com videos reais fica para homologacao apos
+  deploy, porque nao ha sessao/dados reais locais nem ferramenta Builder/Quick Copy acessivel neste
+  ambiente.

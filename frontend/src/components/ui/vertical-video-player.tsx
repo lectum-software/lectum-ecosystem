@@ -17,6 +17,7 @@ import {
   useMobileContentFullscreenStyles,
 } from "./vertical-video-player-content-expansion";
 import { useVerticalVideoPlayerImmersiveControls } from "./vertical-video-player-immersive-controls";
+import { VerticalVideoPlayerMutedOverlayControl } from "./vertical-video-player-muted-overlay-control";
 import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
 import { useVideoPlaybackContinuity } from "./vertical-video-player-playback-continuity";
 import { VerticalVideoPlayerShell } from "./vertical-video-player-shell";
@@ -37,15 +38,15 @@ type BlobBackedVideoRequest = {
   source: string;
 };
 
-const SEEK_FALLBACK_TIMEOUT_MS = 15_000;
-
 export const VerticalVideoPlayer = ({
   className,
   controls = true,
   controlsVariant = "native",
   fit = "cover",
   fullscreenVariant = "default",
+  mutedControlVisibility = "default",
   onContentClick,
+  onSoundEnabledChange,
   onVideoElementReady,
   persistentControlsLayout = "stacked",
   persistentControlsVisibility = "auto",
@@ -223,6 +224,7 @@ export const VerticalVideoPlayer = ({
     onFullscreenRequest: usesInlineContentExpansion
       ? handleInlineContentExpansionRequest
       : undefined,
+    onSoundEnabledChange,
     videoRef,
   });
 
@@ -254,7 +256,7 @@ export const VerticalVideoPlayer = ({
       const promise = (async () => {
         const previousTime = video.currentTime || targetTime;
         const wasPaused = video.paused || video.ended;
-        const timeout = window.setTimeout(() => controller.abort(), SEEK_FALLBACK_TIMEOUT_MS);
+        const timeout = window.setTimeout(() => controller.abort(), 15_000);
 
         const isCurrentRequest = () =>
           !controller.signal.aborted &&
@@ -662,6 +664,15 @@ export const VerticalVideoPlayer = ({
           onProgressPointerMove={handlePersistentProgressPointerMove}
           progressRatio={persistentProgressRatio}
           progressTrackRef={persistentProgressTrackRef}
+          title={title}
+        />
+      ) : null}
+      {usesPersistentControls &&
+      persistentControlsHidden &&
+      mutedControlVisibility === "when-hidden" &&
+      isMuted ? (
+        <VerticalVideoPlayerMutedOverlayControl
+          onClick={handlePersistentMuteToggle}
           title={title}
         />
       ) : null}
