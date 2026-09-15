@@ -619,3 +619,45 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `pnpm check` completo em `0.1.387`.
 - [x] Smoke local HTTP do frontend buildado em `http://127.0.0.1:3378`: `/version` respondeu `0.1.387` e `/comunidades` respondeu 200.
 - [x] Validacao visual autenticada da modal social fica para homologacao apos deploy, porque o ambiente local nao possui sessao real de psicologo dono do video e nao foram usados mocks.
+
+## Ajuste pos-feedback em 2026-09-15 - polimento da caixa de pergunta social
+
+- Evidencia: o usuario comparou duas capturas do Instagram e pediu remover a sombra atras da caixa de
+  pergunta, suavizar as bordas pixeladas e aumentar as margens laterais do texto. As imagens anexadas
+  foram usadas somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como
+  pedido.
+- Correcao: o caminho padrao do app `video/` passa a usar um PNG de fundo da caixa com cantos
+  anti-aliased de 32px, sem sombra projetada, mantendo x=110, y=250, largura 860px, cabecalho 88px e
+  corpo 266px. A variante portatil continua sem asset, mas usa drawboxes de 1px e o mesmo raio de
+  32px como fallback.
+- Correcao de texto: a pergunta passa a quebrar em ate 3 linhas de 30 caracteres e a previa CSS usa
+  `px-[6.6cqw]`, `rounded-[2.95cqw]` e sem `drop-shadow-lg` na caixa.
+- A mudanca e visual em frontend+video, sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados.
+- Rollback simples reverte o commit e volta ao fundo desenhado por drawbox com sombra anterior; jobs
+  sociais permanecem efemeros.
+
+### Criterios de aceite do polimento
+
+- [x] Caixa de pergunta do MP4 social nao tem sombra projetada atras.
+- [x] Bordas do render padrao usam asset PNG anti-aliased com raio maior, mantendo fallback portatil.
+- [x] Texto da pergunta tem mais margem lateral e quebra em 30 caracteres na previa e no render.
+- [x] Testes cobrem ausencia de sombra, asset de fundo, fallback portatil e previa sem `drop-shadow-lg`.
+- [x] Nenhum banco/schema/migration, package novo ou env obrigatoria foi criado; `db:migrate` nao se aplica.
+
+### Validacoes locais do polimento
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-176, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES,
+  PROTO-INVENTORY e ADR-0492 consultados conforme aplicavel.
+- [x] Testes focados: `pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts src/infra/ffmpeg/social-share-output.test.ts`.
+- [x] Teste focado frontend: `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir video check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir video build` em `0.1.388`.
+- [x] `pnpm --dir frontend build` em `0.1.388`.
+- [x] `pnpm version:bump` para `0.1.388` e `pnpm check:version`.
+- [x] `pnpm check` completo em `0.1.388`.
+- [x] Smoke local HTTP do frontend buildado em `http://127.0.0.1:3388`: `/version` respondeu `0.1.388` e `/comunidades` respondeu 200.
+- [x] Validacao visual autenticada da modal social fica para homologacao apos deploy, porque o ambiente
+  local nao possui sessao real de psicologo dono do video e nao foram usados mocks.

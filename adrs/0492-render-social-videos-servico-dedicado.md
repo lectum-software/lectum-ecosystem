@@ -691,3 +691,36 @@ A mudanca toca frontend e app `video/`, nao altera upload, Cloudflare Stream, co
 - Teste focado do frontend confirma que a previa social usa `fit="contain"` e nao `fit="cover"`.
 - `pnpm --dir video check`, `pnpm --dir frontend check`, `pnpm --dir video build`, `pnpm --dir frontend build`, `pnpm version:bump` para `0.1.387`, `pnpm check:version` e `pnpm check` executados com sucesso.
 - Smoke local HTTP do frontend buildado: `/version` respondeu `0.1.387` e `/comunidades` respondeu 200. A modal autenticada com video real sera validada em homologacao apos deploy, sem criar mocks locais.
+
+## Atualizacao de acabamento da caixa de pergunta em 2026-09-15
+
+Novo feedback visual comparou a caixa de pergunta nova com a versao anterior publicada no Instagram
+e mostrou tres pontos de acabamento: sombra atras da caixa, cantos com aspecto pixelado e texto
+apertado nas laterais. A decisao foi preservar as coordenadas da arte social ja calibradas, mas
+trocar somente a construcao visual do card:
+
+- remover a sombra projetada do card no MP4 e na previa CSS;
+- usar um PNG de fundo azul/branco anti-aliased no caminho padrao do app `video/`, com 860x354,
+  raio de 32px, cabecalho de 88px e corpo de 266px;
+- manter fallback portatil por drawbox, sem sombra e com fatias de 1px para reduzir serrilhado
+  quando assets nao estiverem disponiveis;
+- aumentar as margens laterais da pergunta: o frontend usa `px-[6.6cqw]` e frontend/video passam a
+  quebrar o texto em ate 3 linhas de 30 caracteres.
+
+A mudanca nao altera upload, Cloudflare Stream, contrato publico, backend, schema, env obrigatoria,
+package, provider, persistencia, mock, seed, reset ou dados publicados. Rollback operacional:
+reverter o commit volta ao desenho anterior por drawbox; jobs sociais sao efemeros e nao exigem
+contracao de dados.
+
+## Validacao da atualizacao de acabamento da caixa
+
+- Testes focados do app `video` confirmam o asset `question-card-background.png`, ausencia de
+  `black@0.18`, overlay do card e fallback portatil por drawbox de 1px.
+- Teste focado do frontend confirma `rounded-[2.95cqw]`, `px-[6.6cqw]`, quebra em 30 caracteres e
+  ausencia de `drop-shadow-lg` no card.
+- `pnpm --dir video check`, `pnpm --dir frontend check`, `pnpm --dir video build`,
+  `pnpm --dir frontend build`, `pnpm version:bump` para `0.1.388`, `pnpm check:version` e
+  `pnpm check` executados com sucesso.
+- Smoke local HTTP do frontend buildado: `/version` respondeu `0.1.388` e `/comunidades`
+  respondeu 200. A modal autenticada com video real sera validada em homologacao apos deploy, sem
+  criar mocks locais.

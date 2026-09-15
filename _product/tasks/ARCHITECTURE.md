@@ -450,13 +450,15 @@ Templates/shells devem viver em `frontend/src/templates`.
   entao roda `ffprobe`/FFmpeg sobre arquivo local. O render social gera 1080x1920 com FFmpeg
   H.264/AAC em preset rapido, executa processos com locale UTF-8, escapa textos livres antes do
   `drawtext`, usa `fonts-manrope` no container para aproximar a tipografia da previa/app e compoe a
-  arte Reels por `scale+pad+drawbox+drawtext+overlay`: canvas final 9:16 fixo, video inteiro
+  arte Reels por `scale+pad+overlay+drawtext` no caminho padrao e `scale+pad+drawbox+drawtext` no
+  fallback portatil: canvas final 9:16 fixo, video inteiro
   centralizado sem crop e faixas pretas preservadas/criadas quando a origem nao preenche o canvas,
-  cartao superior sem moldura de celular/watermark, largura 860px, x=110, y=250, raio 24px, cabecalho azul `#308ce8`
-  com 88px, simbolo Lectum branco recortado do asset oficial `logo-light.png` a esquerda do label e
+  cartao superior sem sombra, moldura de celular ou watermark, largura 860px, x=110, y=250, raio
+  32px, fundo PNG anti-aliased no caminho padrao e drawbox de 1px no fallback, cabecalho azul
+  `#308ce8` com 88px, simbolo Lectum branco recortado do asset oficial `logo-light.png` a esquerda do label e
   deslocado 4px para cima para alinhamento optico com o texto,
-  corpo branco com 266px, margens laterais internas reduzidas, texto preto `#151922` centralizado em
-  ate 3 linhas de 31 caracteres, fonte Manrope bold 50px e compacta 44px quando a pergunta ocupar 3
+  corpo branco com 266px, margens laterais internas ampliadas, texto preto `#151922` centralizado em
+  ate 3 linhas de 30 caracteres, fonte Manrope bold 50px e compacta 44px quando a pergunta ocupar 3
   linhas, com entrelinha 60px para caber mais texto sem vazamento horizontal. As credenciais ficam sobre o video em y=1400/y=1440, grupo
   centralizado com nome branco Manrope bold 34px, profissao Manrope medium 21px alinhada ao inicio
   do nome e selo verificado azul em asset PNG de 26x24px. O rotulo do cartao e `Postado na Lectum` para
@@ -473,7 +475,8 @@ Templates/shells devem viver em `frontend/src/templates`.
   job em andamento na mesma sessao, iniciar o preparo do arquivo somente apos clique/toque no botao
   de download, manter a tela acordada por Wake Lock best-effort durante esse preparo acionado pelo
   usuario e exibir na modal uma previa instantanea do video original com a mesma arte visual
-  sobreposta por CSS em proporcoes equivalentes (`cqw/cqh`), usando o asset branco oficial da logo
+  sobreposta por CSS em proporcoes equivalentes (`cqw/cqh`), sem sombra na caixa de pergunta, com
+  raio `2.95cqw`, corpo `px-[6.6cqw]`, quebra em ate 3 linhas de 30 caracteres e usando o asset branco oficial da logo
   no cabecalho. As credenciais da previa recebem calibracao optica contra o MP4 real baixado: grupo
   em `top:69.35%`, nome Manrope Bold em `2.95cqw`, profissao em `1.8cqw`, espacamento de
   `0.55cqw` e selo em `2.22cqw x 2.05cqw`, para ficar sobre a identificacao gravada no video

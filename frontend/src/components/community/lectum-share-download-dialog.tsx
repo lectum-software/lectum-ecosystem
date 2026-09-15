@@ -81,7 +81,7 @@ const wrapPreviewSourceText = (value: string, maxLineLength: number, maxLines: n
 
 const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
   const sourceText = target.sourceText.trim() || "Conteúdo na Lectum";
-  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 31, 3), [sourceText]);
+  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 30, 3), [sourceText]);
 
   return (
     <div
@@ -90,7 +90,7 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
       data-lectum-share-preview-art="true"
     >
       <div
-        className="absolute top-[13%] left-[10.2%] w-[79.7%] overflow-hidden rounded-[2.2cqw] drop-shadow-lg"
+        className="absolute top-[13%] left-[10.2%] w-[79.7%] overflow-hidden rounded-[2.95cqw]"
         style={{ fontFamily: "var(--font-manrope), Manrope, Arial, sans-serif" }}
       >
         <div className="flex h-[4.6cqh] min-h-[1.05rem] items-center justify-center bg-primary px-[3.2cqw] text-[3.45cqw] font-bold leading-none text-primary-foreground">
@@ -107,7 +107,7 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
             <span className="min-w-0 truncate tracking-[-0.015em]">{target.cardLabel}</span>
           </span>
         </div>
-        <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[5.1cqw]">
+        <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.6cqw]">
           <p
             className={cn(
               "line-clamp-3 whitespace-pre-line font-bold tracking-[-0.025em] text-media-background",

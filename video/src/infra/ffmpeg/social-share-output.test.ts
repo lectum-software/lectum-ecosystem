@@ -48,7 +48,9 @@ describe("social share output limits", () => {
               {
                 filterMode,
                 fontFile: null,
-                ...(withAssets ? {} : { logoFile: null, verifiedBadgeFile: null }),
+                ...(withAssets
+                  ? {}
+                  : { cardBackgroundFile: null, logoFile: null, verifiedBadgeFile: null }),
               },
             );
             const sizeIndex = args.indexOf("-s:v");
@@ -71,7 +73,14 @@ describe("social share output limits", () => {
             assert.match(filter, /force_original_aspect_ratio=decrease/);
             assert.match(filter, /pad=1080:1920:\(ow-iw\)\/2:\(oh-ih\)\/2:color=black/);
             assert.equal(filter.includes("crop="), false);
-            assert.match(filter, /drawbox=x=110:y=274:w=860:h=64/);
+            assert.equal(filter.includes("black@0.18"), false);
+            if (withAssets && filterMode === "standard") {
+              assert.match(filter, /\[v0\]\[1:v\]overlay=x=110:y=250:format=auto\[card0\]/);
+              assert.doesNotMatch(filter, /drawbox=x=110:y=282:w=860:h=56/);
+            } else {
+              assert.match(filter, /drawbox=x=110:y=282:w=860:h=56/);
+              assert.match(filter, /drawbox=x=137:y=250:w=806:h=1/);
+            }
             assert.match(filter, /drawtext=text='Psicólogo\(a\)':.*:y=1440:fontsize=21/);
             assert.equal(args.at(args.indexOf("-pix_fmt") + 1), "yuv420p");
             assert.equal(args.at(args.indexOf("-c:v") + 1), "libx264");

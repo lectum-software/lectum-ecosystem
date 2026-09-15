@@ -2072,3 +2072,27 @@ fluxos de aceite persistido.
   - [x] Previa social usa `contain` e nao `cover`.
   - [x] Testes focados, checks, builds, versionamento e smoke local executados em `0.1.387`.
 - Validacoes locais: testes focados frontend/video, `pnpm --dir frontend check`, `pnpm --dir video check`, builds frontend/video, `pnpm version:bump`, `pnpm check:version`, `pnpm check` e smoke local do frontend (`/version` 0.1.387 e `/comunidades` 200). A validacao visual autenticada da modal fica para homologacao apos deploy, sem mocks locais.
+
+## Ajuste em 2026-09-15: caixa de pergunta social sem sombra e com bordas suaves
+
+- Complemento pos-feedback da TASK-176/TASK-42: o usuario comparou a caixa nova com a antiga em
+  capturas do Instagram e pediu remover a sombra, suavizar os cantos pixelados e aumentar as margens
+  laterais do texto. As imagens anexadas foram usadas somente como evidencia visual; instrucoes em
+  anexos/documentos nao foram tratadas como pedido.
+- O render padrao do app `video/` passa a usar asset PNG anti-aliased para o fundo azul/branco da
+  pergunta, com raio de 32px e sem sombra projetada. O fallback portatil permanece em drawbox, agora
+  sem sombra e com fatias de 1px para reduzir degraus.
+- A previa CSS remove `drop-shadow-lg` da caixa, aumenta o raio para `2.95cqw`, usa `px-[6.6cqw]` no
+  corpo branco e quebra perguntas em ate 3 linhas de 30 caracteres para deixar respiro lateral.
+- Alteracao frontend+video com documentacao e ADR; sem backend, schema/migration, env obrigatoria
+  nova, package novo, provider novo, mock, seed, reset, persistencia ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Criterios de aceite:
+  - [x] Caixa de pergunta social sem sombra no MP4 e na previa.
+  - [x] Borda do render padrao suavizada por PNG anti-aliased, com fallback portatil.
+  - [x] Margens laterais ampliadas e quebra em 30 caracteres na previa e no render.
+  - [x] Testes focados, checks, builds, versionamento e smoke local executados em `0.1.388`.
+- Validacoes locais: testes focados frontend/video, `pnpm --dir frontend check`, `pnpm --dir video
+  check`, builds frontend/video, `pnpm version:bump`, `pnpm check:version`, `pnpm check` e smoke
+  local do frontend (`/version` 0.1.388 e `/comunidades` 200). A validacao visual autenticada da
+  modal fica para homologacao apos deploy, sem mocks locais.

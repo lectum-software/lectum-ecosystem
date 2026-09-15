@@ -52,8 +52,10 @@ describe("FFmpeg social share command", () => {
     );
     assert.match(command, /pad=1080:1920:\(ow-iw\)\/2:\(oh-ih\)\/2:color=black/);
     assert.equal(command.includes("crop="), false);
+    assert.match(command, /-loop 1 -i .*question-card-background\.png/);
     assert.match(command, /-loop 1 -i .*lectum-symbol-white\.png/);
     assert.match(command, /-loop 1 -i .*verified-badge\.png/);
+    assert.match(command, /\[v0\]\[1:v\]overlay=x=110:y=250:format=auto\[card0\]/);
     assert.match(command, /overlay=x=329:y=274:format=auto/);
     assert.match(command, /scale=26:24:flags=lanczos\[verified_badge\]/);
     assert.match(command, /overlay=x=628:y=1405:format=auto/);
@@ -61,8 +63,10 @@ describe("FFmpeg social share command", () => {
     assert.equal(command.includes("fps="), false);
     assert.equal(command.includes("[v0],drawbox"), false);
     assert.equal(command.includes("gblur="), false);
-    assert.match(command, /drawbox=x=110:y=274:w=860:h=64:color=0x308ce8@0\.98:t=fill/);
-    assert.match(command, /drawbox=x=110:y=338:w=860:h=242:color=white@0\.98:t=fill/);
+    assert.equal(command.includes("black@0.18"), false);
+    assert.doesNotMatch(command, /drawbox=x=118:y=258/);
+    assert.doesNotMatch(command, /drawbox=x=110:y=282:w=860:h=56:color=0x308ce8/);
+    assert.doesNotMatch(command, /drawbox=x=110:y=338:w=860:h=234:color=white/);
     assert.match(command, /drawtext=text='Respondido na Lectum'/);
     assert.match(command, /drawtext=text='Respondido na Lectum':.*:x=371:y=274:fontsize=38/);
     assert.doesNotMatch(command, /drawtext=text='✓'/);
@@ -98,6 +102,10 @@ describe("FFmpeg social share command", () => {
 
     assert.match(command, /pad=1080:1920:\(ow-iw\)\/2:\(oh-ih\)\/2:color=black/);
     assert.match(command, /\[v0\]drawbox=/);
+    assert.match(command, /drawbox=x=110:y=282:w=860:h=56:color=0x308ce8@0\.98:t=fill/);
+    assert.match(command, /drawbox=x=110:y=338:w=860:h=234:color=white@0\.98:t=fill/);
+    assert.match(command, /drawbox=x=137:y=250:w=806:h=1:color=0x308ce8@0\.98:t=fill/);
+    assert.equal(command.includes("black@0.18"), false);
     assert.equal(command.includes("overlay="), false);
     assert.equal(command.includes("crop="), false);
     assert.equal(command.includes("eq="), false);
@@ -126,6 +134,10 @@ describe("FFmpeg social share command", () => {
   });
 
   it("resolve assets reais da marca usados no overlay social", () => {
+    assert.match(
+      resolveSocialShareAssetFile("question-card-background.png") ?? "",
+      /question-card-background\.png$/,
+    );
     assert.match(
       resolveSocialShareAssetFile("lectum-symbol-white.png") ?? "",
       /lectum-symbol-white\.png$/,
@@ -216,10 +228,10 @@ describe("FFmpeg social share command", () => {
       30,
     );
 
-    assert.match(filter, /drawtext=text='ansiedade bate forte\? E trouxer':.*:fontsize=44/);
-    assert.match(filter, /drawtext=text='a sensacao de falta de ar\?':.*:fontsize=44/);
-    assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E trouxer':.*:fontsize=50/);
-    assert.doesNotMatch(filter, /drawtext=text='trouxer a sensacao de falta…'/);
+    assert.match(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=44/);
+    assert.match(filter, /drawtext=text='trouxer a sensacao de falta de…':.*:fontsize=44/);
+    assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=50/);
+    assert.doesNotMatch(filter, /drawtext=text='trouxer a sensacao de falta de ar\?'/);
   });
 
   it("normaliza o rótulo legado de pergunta para resposta", () => {
