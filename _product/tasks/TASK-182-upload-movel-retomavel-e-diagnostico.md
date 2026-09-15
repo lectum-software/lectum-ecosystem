@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | In Progress |
+| Status | Completed |
 
 Dependências: TASK-179, TASK-180 e TASK-181. Incidente Safari informado em 14/09/2026.
 
@@ -37,9 +37,9 @@ cliente, captura do incidente usada apenas como evidência de estado, não arqui
 - [x] Endpoint exige autenticação/propriedade, valida payload e limita chamadas.
 - [x] Diagnóstico não altera estado do ativo nem o resultado do fluxo principal.
 - [x] Checks, builds e testes HTTP reais com banco local isolado, sem mocks.
-- [ ] Upload real pelo navegador e smoke do deploy em homologação registrados.
+- [x] Upload real pelo navegador e smoke do deploy em homologação registrados.
 - [x] Limitação de Safari/iPhone real explicitada sem alegar reprodução inexistente.
-- [ ] ADR, versão, commit e push em homolog.
+- [x] ADR, versão, commit e push em homolog.
 
 ## Diagnóstico após deploy
 
@@ -73,3 +73,21 @@ sendo consultada no backend e confirmada no fluxo de associação do produto.
 - Safari/iPhone real não disponível ao agente; o relato identifica Safari, mas não
   informa tempo até falha nem se houve suspensão. Causa histórica permanece não provada.
 - Evidências externas: diretório `task182-upload-movel` na área de artefatos do Codex.
+
+## Publicação e encerramento do incidente
+
+- Implementação publicada em homolog no commit `579de8cd`, versão `0.1.385`.
+  Backend, frontend e admin confirmaram essa versão; `/health` e `/ready` responderam
+  HTTP 200, com estados `ok` e `ready`. Produção não foi alterada.
+- Upload real pelo Browser: vídeo pequeno reproduzido até o fim (3,05 s); arquivo de
+  59.633.289 bytes/30 s enviado, persistido após recarregar e reproduzido até o fim,
+  sem erro de reprodução nem erro de upload observado no console.
+- Após a publicação, o usuário confirmou: “funcionou”. Encerrado o incidente reportado
+  com essa confirmação operacional; ela não acrescenta logs nem comprova a causa
+  histórica. O agente não reproduziu pessoalmente o fluxo no Safari/iPhone.
+- A conta profissional da auditoria continua gratuita, sem cortesia concedida. Não
+  houve validação independente pelo agente da resposta com vídeo nessa conta, nem
+  autorização implícita para alterar seu plano. A confirmação não encerra a auditoria
+  geral ou a matriz completa de navegadores/aparelhos.
+- Fechamento documental sem nova alteração funcional, env, schema, dados ou buckets.
+  Diagnóstico seguro e retentativas limitadas permanecem disponíveis.

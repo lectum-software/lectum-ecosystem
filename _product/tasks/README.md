@@ -2,7 +2,7 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Em execução: [TASK-182 — Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md). Prioridade: falha de resposta com vídeo no Safari após provisionamento básico; sem presumir causa histórica nem alterar armazenamento/qualidade.
+Concluída: [TASK-182 — Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md). Correção 0.1.385 publicada, uploads reais e smoke aprovados; usuário confirmou funcionamento. Incidente encerrado sem atribuir causa histórica não comprovada nem alegar reprodução independente no Safari/iPhone. Não encerra a auditoria geral; sem alteração de armazenamento, qualidade ou plano da conta de auditoria.
 
 Concluída: [TASK-181 — Retenção recuperável de vídeos](TASK-181-retencao-recuperavel-de-videos.md). Implementação 0.1.383 publicada e saudável; operador catalogou 64 vídeos R2 em lotes e confirmou inventário completo em reexecução somente leitura, sem falhas/conflitos ou pendências de marcação. Os arquivos continuam preservados no R2; sem limpeza automática, migração de bytes ou prazo de exclusão inventado. Isso não encerra a auditoria geral nem autoriza limpeza do acervo.
 
@@ -286,7 +286,7 @@ ou cortesia manual.
 | 179 | [TASK-179 - Restaurar preflight e provisionamento de upload Stream](TASK-179-corrigir-preflight-upload-stream.md) | Completed | 163, 173, 178 |
 | 180 | [TASK-180 - Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md) | Completed | 163, 165, 166 |
 | 181 | [TASK-181 - Retenção recuperável de vídeos](TASK-181-retencao-recuperavel-de-videos.md) | Completed | 163, 165, 180 |
-| 182 | [TASK-182 - Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md) | In Progress | 179, 180, 181 |
+| 182 | [TASK-182 - Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md) | Completed | 179, 180, 181 |
 
 ## Ordem operacional recomendada sem bloqueios
 
