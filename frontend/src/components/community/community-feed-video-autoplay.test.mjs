@@ -48,7 +48,7 @@ test("autoplay do feed ignora videos pausados manualmente ou pouco visiveis", ()
   );
 });
 
-test("feed de comunidades ativa autoplay mudo sem remover controles existentes", () => {
+test("comunidades ativam autoplay mudo sem remover controles existentes", () => {
   const mediaSource = readFileSync(new URL("./community-media-frame.tsx", import.meta.url), "utf8");
   const playerSource = readFileSync(
     new URL("../ui/vertical-video-player.tsx", import.meta.url),
@@ -62,15 +62,29 @@ test("feed de comunidades ativa autoplay mudo sem remover controles existentes",
     new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
     "utf8",
   );
+  const postContentSource = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const replyCardSource = readFileSync(
+    new URL("../../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
+    "utf8",
+  );
 
+  assert.match(mediaSource, /enableCommunityAutoplay\?: boolean/);
   assert.match(mediaSource, /enableFeedAutoplay\?: boolean/);
   assert.match(
     mediaSource,
-    /mutedControlVisibility=\{feedAutoplayEnabled \? "when-hidden" : "default"\}/,
+    /mutedControlVisibility=\{communityAutoplayEnabled \? "when-hidden" : "default"\}/,
   );
-  assert.match(mediaSource, /"data-lectum-feed-video-autoplay": "true"/);
+  assert.match(mediaSource, /"data-lectum-community-video-autoplay": "true"/);
   assert.match(immersiveControlsSource, /onSoundEnabledChange\?\.\(shouldEnableSound\)/);
   assert.match(playerSource, /mutedControlVisibility === "when-hidden"/);
   assert.match(routeCardSource, /<PostMedia\s+enableFeedAutoplay/);
   assert.match(routeCardSource, /<ProfessionalReplyPreview\s+enableFeedAutoplay/);
+  assert.match(postContentSource, /<CommunityMediaBlock[\s\S]*?enableCommunityAutoplay/);
+  assert.match(replyCardSource, /enableCommunityAutoplay=\{enableCommunityAutoplay\}/);
 });

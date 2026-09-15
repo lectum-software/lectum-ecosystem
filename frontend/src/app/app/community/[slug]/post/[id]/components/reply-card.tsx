@@ -232,6 +232,7 @@ export const ReplyCard = ({
   currentUserId,
   deleteReplyPending,
   depth = 0,
+  enableCommunityAutoplay = true,
   inlineReplyTargets,
   mediaPermission,
   onCancelInlineReplyTarget,
@@ -258,6 +259,7 @@ export const ReplyCard = ({
   currentUserId?: string | null;
   deleteReplyPending?: boolean;
   depth?: number;
+  enableCommunityAutoplay?: boolean;
   inlineReplyTargets: ReplyTargetMap;
   mediaPermission: ReplyMediaPermission;
   onCancelInlineReplyTarget: (replyId: string) => void;
@@ -509,6 +511,7 @@ export const ReplyCard = ({
                   : undefined
               }
               className="mt-3"
+              enableCommunityAutoplay={enableCommunityAutoplay}
               footer={hasReplyMedia ? replyWhatsappCta : undefined}
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}
@@ -629,6 +632,7 @@ export const ReplyCard = ({
                 currentUserId={currentUserId}
                 deleteReplyPending={deleteReplyPending}
                 depth={depth + 1}
+                enableCommunityAutoplay={enableCommunityAutoplay}
                 inlineReplyTargets={inlineReplyTargets}
                 focusReplyId={focusReplyId}
                 maxInlineDepth={maxInlineDepth}

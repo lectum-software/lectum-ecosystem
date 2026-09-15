@@ -2136,3 +2136,39 @@ fluxos de aceite persistido.
   `/comunidades` HTTP 200. Validacao visual autenticada com videos reais fica para homologacao apos
   deploy, porque nao ha sessao/dados reais locais nem ferramenta Builder/Quick Copy acessivel neste
   ambiente.
+
+## Complemento em 2026-09-15: autoplay mudo dentro do Post
+
+- Pedido do usuario: apos o autoplay entrar no feed e dentro da comunidade, aplicar o mesmo
+  comportamento na tela "Dentro do Post"; a lacuna ocorreu porque o detalhe usa componentes
+  separados (`PostBody`, `ThreadOriginalPostCard` e `ReplyCard`) em vez do `PostCard` do feed.
+- Decisao aplicada no frontend: `CommunityMediaBlock` ganhou o opt-in `enableCommunityAutoplay`,
+  reutilizando o mesmo gerenciador client-side, os mesmos controles persistentes e a mesma
+  preferencia local de audio ja usada no feed. O alias legado `enableFeedAutoplay` foi preservado
+  para nao quebrar os cards existentes.
+- O autoplay no detalhe continua mudo por padrao, mostra o controle claro de volume quando os
+  controles estao ocultos e passa a respeitar a preferencia de audio ativada/desativada pelo usuario
+  nos demais videos de Comunidades no mesmo dispositivo/browser.
+- Builder/Quick Copy foi tentado novamente via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validacao visual baseada em
+  `_product/proto/Dentro do Post.jpg` e nos controles existentes.
+- Alteracao exclusivamente frontend com documentacao e ADR atualizada; sem backend, schema/migration,
+  env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia server-side ou
+  alteracao de dados/buckets publicados. Rollback simples reverte o commit; a chave local de som
+  permanece degradavel e sem impacto de servidor.
+- Criterios de aceite:
+  - [x] Video do post principal no detalhe entra no mesmo autoplay mudo das superficies de
+        Comunidades.
+  - [x] Video do post original exibido em thread tambem usa autoplay mudo.
+  - [x] Videos de respostas e respostas aninhadas usam autoplay mudo sem remover play/pause,
+        progresso, fullscreen ou volume.
+  - [x] Preferencia de audio do usuario segue compartilhada entre feed, comunidade e detalhe do post.
+  - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e
+        smoke local do frontend executados em `0.1.392`.
+- Validacoes locais: teste focado
+  `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-feed-video-autoplay.test.mjs`;
+  `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; `pnpm version:bump` para
+  `0.1.392`; `pnpm check:version`; smoke local do frontend buildado em `http://localhost:3332` com
+  `/version` respondendo `0.1.392` e `/comunidades` HTTP 200. Validacao visual autenticada com
+  videos reais dentro de posts fica para homologacao apos deploy, porque nao ha sessao/dados reais
+  locais nem ferramenta Builder/Quick Copy acessivel neste ambiente.

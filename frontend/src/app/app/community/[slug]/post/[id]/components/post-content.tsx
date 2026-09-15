@@ -320,6 +320,7 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
             displayMediaType === "video" ? { targetId: post.id, targetType: "post" } : undefined
           }
           className="mt-3"
+          enableCommunityAutoplay
           footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
           mediaType={displayMediaType}
           mediaUrl={displayMediaUrl}
@@ -473,6 +474,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
               displayMediaType === "video" ? { targetId: post.id, targetType: "post" } : undefined
             }
             className="mt-3"
+            enableCommunityAutoplay
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
             overlayAction={postOverlayAction}

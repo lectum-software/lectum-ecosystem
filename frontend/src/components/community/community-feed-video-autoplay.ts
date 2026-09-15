@@ -391,7 +391,7 @@ const cleanupAutoplayRegistration = (cleanupRef: { current: (() => void) | null 
   cleanupRef.current = null;
 };
 
-export const useCommunityFeedVideoAutoplay = (
+export const useCommunityVideoAutoplay = (
   enabled: boolean,
 ): {
   handleVideoElementReady: RefCallback<HTMLVideoElement>;
@@ -437,3 +437,5 @@ export const useCommunityFeedVideoAutoplay = (
     soundEnabled,
   };
 };
+
+export const useCommunityFeedVideoAutoplay = useCommunityVideoAutoplay;
