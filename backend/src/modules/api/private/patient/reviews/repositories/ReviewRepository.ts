@@ -1,6 +1,8 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -85,7 +87,7 @@ export class ReviewRepository implements IReviewRepository {
         }),
         psychologist_avatar: item.psychologist.avatar,
         psychologist_headline: item.psychologist.psychologist_profile?.headline ?? null,
-        psychologist_crp: item.psychologist.psychologist_profile?.crp ?? null,
+        psychologist_crp: normalizeStoredCrp(item.psychologist.psychologist_profile?.crp),
         psychologist_gender: item.psychologist.psychologist_profile?.gender ?? null,
         psychologist_verified: isVerifiedProfessionalEntitlement(
           item.psychologist.psychologist_profile,
@@ -157,7 +159,7 @@ export class ReviewRepository implements IReviewRepository {
       }),
       psychologist_avatar: psychologist?.avatar ?? null,
       psychologist_headline: psychologist?.psychologist_profile?.headline ?? null,
-      psychologist_crp: psychologist?.psychologist_profile?.crp ?? null,
+      psychologist_crp: normalizeStoredCrp(psychologist?.psychologist_profile?.crp),
       psychologist_gender: psychologist?.psychologist_profile?.gender ?? null,
       psychologist_verified: isVerifiedProfessionalEntitlement(psychologist?.psychologist_profile),
       contact_request_id: null,
@@ -193,17 +195,50 @@ export class ReviewRepository implements IReviewRepository {
 
     if (!eligible.eligible) return eligible;
 
-    return prisma.$transaction(async (tx) => {
-      const review = await tx.professional_review.create({
-        data: {
-          author_id: authorId,
-          psychologist_id: psychologistId,
-          rating: data.b.rating,
-          comment: data.b.comment.trim(),
-          status: "publicada",
+    return withSerializableTransaction(async (tx) => {
+      const existing = await tx.professional_review.findUnique({
+        where: {
+          psychologist_id_author_id: {
+            author_id: authorId,
+            psychologist_id: psychologistId,
+          },
         },
-        select: { id: true },
+        select: { id: true, deleted: true },
       });
+
+      if (existing && !existing.deleted) {
+        return {
+          ...eligible,
+          eligible: false,
+          reason: "already_reviewed" as const,
+          existing_review_id: existing.id,
+        };
+      }
+
+      const review = existing
+        ? await tx.professional_review.update({
+            where: { id: existing.id },
+            data: {
+              comment: data.b.comment.trim(),
+              deleted: false,
+              deletedAt: null,
+              rating: data.b.rating,
+              responded_at: null,
+              response: null,
+              status: "publicada",
+            },
+            select: { id: true },
+          })
+        : await tx.professional_review.create({
+            data: {
+              author_id: authorId,
+              psychologist_id: psychologistId,
+              rating: data.b.rating,
+              comment: data.b.comment.trim(),
+              status: "publicada",
+            },
+            select: { id: true },
+          });
 
       const aggregate = await tx.professional_review.aggregate({
         where: { psychologist_id: psychologistId, deleted: false, status: "publicada" },

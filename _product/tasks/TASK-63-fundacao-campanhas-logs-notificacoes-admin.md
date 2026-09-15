@@ -1,4 +1,4 @@
-﻿# TASK-63: Fundação de campanhas e logs de notificações Admin
+# TASK-63: Fundação de campanhas e logs de notificações Admin
 
 ## Metadata
 

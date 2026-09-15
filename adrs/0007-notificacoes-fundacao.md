@@ -273,3 +273,30 @@ O usuario precisa perceber notificacoes ainda nao vistas antes de abrir a centra
 - `pnpm --dir backend check`
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/notifications`, com token real temporario e notificacoes nao lidas reais no banco de desenvolvimento, validando o ponto visivel no mobile `390x844` e no desktop `1280x900`.
+
+## Complemento 2026-08-30 - Nome da comunidade em novo post
+
+### Contexto
+
+Feedback visual na central de notificacoes mostrou que `[Autor] publicou na comunidade.` deixa ambiguo qual conversa/comunidade sera aberta, especialmente quando o usuario segue mais de uma comunidade.
+
+### Decisao
+
+- Derivar `community_name` no backend durante `GET /api/private/notification/index` para notificacoes `novo_post`, usando o `post_id`/`source_id` ja persistido em `notification.message_props` para buscar o `community_post` real e sua `community`.
+- Nao persistir snapshot permanente do nome da comunidade em `notification.message_props`; a central deve refletir o nome atual da comunidade quando o post ainda estiver ativo.
+- Renderizar no frontend `[Autor] postou em [Nome da comunidade].`, mantendo fallback seguro `postou na comunidade.` quando o contexto nao estiver disponivel.
+
+### Consequencias
+
+- Notificacoes antigas tambem ganham contexto se ainda apontarem para post ativo.
+- O contrato e aditivo e tolera rollout independente: frontend novo funciona com backend antigo via fallback; frontend antigo ignora o contexto derivado.
+- Nao ha migration, endpoint novo, package, env obrigatoria, mock ou mudanca em preferencias/push.
+
+### Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local HTTP no frontend buildado: `/app/notificacoes` respondeu 200 e `/app/notifications` respondeu 308 de compatibilidade.

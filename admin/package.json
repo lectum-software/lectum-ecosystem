@@ -1,25 +1,28 @@
 {
   "name": "admin",
-  "version": "0.1.0",
+  "version": "0.1.392",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack --port 3002",
-    "build": "next build --webpack && node scripts/sync-route-group-manifests.mjs",
+    "build": "next build --webpack && node scripts/remove-production-source-maps.mjs && node scripts/sync-route-group-manifests.mjs",
     "start": "next start -p 3002",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings=0",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/admin-media.test.mjs src/lib/community-reports.test.mjs src/lib/crp-formatters.test.mjs src/lib/http-origin-policy.test.mjs src/lib/image-preparation.test.mjs src/lib/sentry-policy.test.mjs src/lib/seo-dynamic-og-image.test.mjs src/lib/shared-helpers.test.mjs \"src/app/(admin)/comunidades/modules/use-dashboard-period.test.mjs\" \"src/app/(admin)/pacientes/lista/search-box.test.mjs\" src/components/admin-shell/shell.test.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types \"src/app/(admin)/psicologos/[id]/modules/tabs/publications/accessibility.test.mjs\" && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types \"scripts/community-edit-form.test.mjs\" && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/traffic-donut.test.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/content-distribution.test.mjs && node scripts/toaster-contract.test.mjs && node scripts/traffic-group.test.mjs && node scripts/world-map.test.mjs && node scripts/catalog-error.test.mjs && node scripts/community-rule-order.test.mjs && node --test \"src/app/(admin)/comunidades/*/views/ranking-tab.test.mjs\" && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test \"scripts/legal-policy.test.mjs\" \"src/app/(admin)/comunidades/modules/statistics-scope.test.mjs\" \"src/app/(admin)/psicologos/modules/plan-history.test.mjs\"",
     "typecheck": "tsc --noEmit --pretty false",
-    "biome:check": "biome check .",
+    "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck"
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",
     "@hookform/resolvers": "^5.4.0",
+    "@sentry/nextjs": "10.70.0",
     "@tanstack/react-query": "^5.101.0",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "clsx": "^2.1.1",
+    "hls.js": "1.7.2",
     "lucide-react": "^1.17.0",
-    "next": "16.2.9",
+    "next": "16.3.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.77.0",
@@ -34,14 +37,25 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli",
+      "sharp",
+      "unrs-resolver"
+    ],
     "overrides": {
+      "baseline-browser-mapping": "2.11.0",
+      "brace-expansion@>=3.0.0 <5.0.9": "5.0.9",
+      "browserslist": "4.28.7",
+      "fast-uri": "3.1.6",
       "form-data": "4.0.6",
-      "postcss": "8.5.16",
+      "nanoid@<3.3.17": "3.3.17",
+      "postcss": "8.5.26",
+      "sharp": "0.35.4",
       "ws": "8.21.0"
     }
   }

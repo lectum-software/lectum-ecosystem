@@ -139,7 +139,7 @@ Consequencias:
 Validacao complementar:
 
 - `pnpm --dir frontend check`: sucesso.
-- `pnpm --dir frontend build`: sucesso.
+- `pnpm --dir frontend build`: sucesso em `0.1.84` e reexecutado com sucesso apos o bump para `0.1.85`.
 - `pnpm check`: sucesso.
 - Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: erro de comunidade removido apos selecao, sem alerta geral ativo apos correcao, titulo digitado em 24.32px/900, copy `Publicar anonimamente?`, tip com texto atualizado e fechamento por `X` mantendo `aria-checked=true` no switch.
 
@@ -166,7 +166,6 @@ Validacao complementar:
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
-- Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: titulo renderizado como `TEXTAREA`, placeholder claro e responsivo, texto real do titulo em 24.32px/900, switch sem interrogacao, `content` com `overflow-y: auto`, area externa sem scroll inicial (`scrollHeight == clientHeight`) e backdrop em opacidade baixa.
 
 ## Atualizacao 2026-06-19 - modal route interceptada para Criar Post
 
@@ -271,7 +270,7 @@ Validacao complementar:
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Smoke real do endpoint `POST /api/private/community/ansiedade-em-equilibrio/posts/media` com token temporario para `tuliosrezende@gmail.com`, upload em R2 no prefixo `posts/media/` e remocao do objeto ao final.
+- Smoke real do endpoint `POST /api/private/community/ansiedade-em-equilibrio/posts/media` com token temporario para `<CONTA_DE_TESTE_AUTORIZADA>`, upload em R2 no prefixo `posts/media/` e remocao do objeto ao final.
 - Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/new` validou botao `Midia` habilitado, input aceitando `video/mp4` e ausencia da copy antiga de R2 pendente.
 
 ## Atualização 2026-06-21 - miniatura local de mídia no editor
@@ -432,3 +431,532 @@ Validação complementar 2026-07-01:
 - `pnpm --dir backend build`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
+
+## Atualização 2026-08-10 - modal imediata na rota canônica PT-BR
+
+A rota canônica privada de criação de post passou a ser PT-BR
+(`/app/comunidades/[slug]/publicacao/nova`), mas a experiência modal imediata dependia de o
+segmento `[slug]` renderizar o slot paralelo `@modal`. A pasta PT-BR já possuía a rota interceptada,
+porém não possuía `layout.tsx` local com a prop `modal`; na prática, a navegação podia cair primeiro
+na página direta/fallback e exibir um carregamento de contexto antes da sheet.
+
+Decisões complementares:
+
+- Adicionar `frontend/src/app/app/comunidades/[slug]/layout.tsx` espelhando o layout do segmento
+  legado em inglês, apenas renderizando `{children}` e `{modal}`. Assim, a URL PT-BR ativa a
+  interceptação do App Router sem desmontar o feed/comunidade de origem.
+- Manter a rota direta/fallback para deep link, reload e compatibilidade, mas iniciar a sheet de
+  `Criar Post` já aberta para evitar o primeiro frame invisível/fora da tela quando o fallback for
+  necessário.
+- Não alterar contratos, API, payload, schema, regras de anonimato, permissões de mídia, storage,
+  envs ou packages.
+
+Consequências:
+
+- Cliques originados do feed ou do detalhe de comunidade passam a abrir a modal imediatamente sobre o
+  contexto existente na URL PT-BR canônica.
+- O fallback contextual continua existindo para acesso direto, mas deixa de causar uma percepção de
+  "tela antes da modal".
+- A animação de fechamento, o bloqueio de scroll, o fechamento por `X`/`Esc` e o foco no editor
+  permanecem preservados.
+
+Validação complementar 2026-08-10:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso; o mapa de rotas confirmou
+  `/app/comunidades/[slug]/(.)publicacao/nova`.
+- `git diff --check` nos arquivos do ajuste: sucesso.
+- Chrome/CDP mobile em `http://localhost:3011/app/comunidades/feed/publicacao/nova`, com cookie de
+  sessão local apenas para atravessar o proxy privado: sucesso ao confirmar `dialog` `Criar Post`,
+  overlay com `opacity=1` e sheet sem `translate-y-full` inicial (`transform: none`).
+
+## Atualização 2026-08-10 - abertura local no PWA sem loading global
+
+A validação em PWA mostrou que, mesmo com a rota interceptada PT-BR disponível, o clique de criação de
+post ainda podia exibir o `loading.tsx` global (`Carregando página`) enquanto o App Router carregava a
+rota. Em standalone/PWA, essa tela ocupa toda a experiência e quebra a percepção de modal contextual.
+
+Decisões complementares:
+
+- Para cliques autenticados no feed e no detalhe de comunidade, impedir a navegação do `Link` e montar
+  `CreateCommunityPostLogic` localmente no mesmo React tree da tela de origem. A rota canônica
+  `/app/comunidades/[slug]/publicacao/nova` permanece como fallback para acesso direto, reload e
+  deep link, mas deixa de ser necessária no clique primário do PWA.
+- Estender a lógica da modal com `onCloseComplete`: no modo local, o fechamento anima a sheet para
+  baixo e depois apenas desmonta o componente; no modo de rota direta/interceptada, continua usando o
+  fallback de navegação já existente.
+- Restaurar a animação de subida (`up`) iniciando `isSheetOpen=false` e abrindo por
+  `requestAnimationFrame` duplo. Isso força uma pintura inicial com `translate-y-full` antes de
+  transicionar para `translate-y-0`, evitando que a correção de loading transforme a abertura em um
+  aparecimento seco.
+- Mover a composição de fallback visual das rotas diretas para os `page.tsx` canônicos, mantendo
+  `CreateCommunityPostLogic` sem import estático para as views de comunidade e preservando o grafo sem
+  ciclos.
+- Não alterar API, payload, schema, autorização, storage, anonimato, mídia, envs ou packages.
+
+Consequências:
+
+- O PWA não deve mais mostrar `Carregando página` ao tocar no botão `+` para criar post a partir do
+  feed/comunidade já carregados.
+- A URL visível permanece na tela de origem durante a composição local; esse é o trade-off aceito para
+  priorizar a experiência app-like. Deep links e reloads da rota de criação continuam suportados pelo
+  fallback existente.
+- A modalidade visual, bloqueio de scroll, `Esc`, foco do editor e publicação real permanecem
+  centralizados na mesma lógica compartilhada.
+
+Validação complementar 2026-08-10:
+
+- `pnpm check:version`: sucesso em `0.1.20`.
+- `pnpm check:cycles`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `git diff --check` nos arquivos do ajuste: sucesso.
+- Chrome/CDP mobile em `http://127.0.0.1:3138/app/comunidades/feed`: sucesso ao confirmar frontend
+  `0.1.20`, clique autenticado mantendo a URL em `/app/comunidades/feed`, sem `Carregando página`, 1
+  `dialog` com título `Criar Post`, `transitionDuration=0.3s` e alternância da sheet de
+  `translate-y-full` para `translate-y-0`.
+
+## Atualizacao 2026-08-11 - limite de 200MB para midia em posts de comunidade
+
+Para manter consistencia com o novo limite de midia em respostas, o upload real de midia de posts raiz tambem passa de 50MB para 200MB. Isso evita que um psicologo consiga publicar um video de resposta maior, mas seja bloqueado ao publicar ou editar um post de comunidade com o mesmo tipo de midia.
+
+Decisao complementar:
+
+- Alterar o limite do middleware `multer` de `POST /api/private/community/:slug/posts/media` para 200MB.
+- Validar no frontend, antes de iniciar upload, arquivos acima de 200MB na criacao e edicao de posts.
+- Manter os tipos permitidos atuais: JPEG, PNG, WebP, MP4, WebM e QuickTime/MOV.
+- Nao alterar payload, persistencia, carrossel, permissao profissional, buckets, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- Videos e imagens de posts de comunidade ate 200MB passam a ser aceitos pelo backend quando a permissao profissional ja existir.
+- O storage atual ainda valida assinatura a partir do buffer antes de enviar ao R2; portanto arquivos maiores aumentam uso de memoria/tempo de upload, mitigado pela concorrencia/fila de upload ja existentes.
+- Rollback: reverter este commit retorna o limite para 50MB e remove a validacao local de 200MB.
+
+Validacao adicional:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+
+## Atualizacao 2026-08-12 - composicao mobile da modal Criar Post
+
+Feedback real em iPhone/PWA mostrou regressao visual e de comportamento na modal de criacao de post:
+o seletor de comunidade parecia desabilitado por usar superficie cinza, o botao de midia nao seguia
+o padrao azul do compositor de comentarios, o CTA `Postar` precisava explicitar a familia textual da
+Lectum e o rodape da composicao precisava acompanhar a abertura do teclado como em apps sociais.
+
+Decisoes complementares:
+
+- Reutilizar a identidade do botao azul circular de midia dos comentarios: `bg-primary`, texto/icone em
+  `text-primary-foreground`, borda primaria, sombra Lectum e icone `Camera` do `lucide-react`.
+- Manter `Postar` com a familia de texto Lectum via `fontFamily: var(--font-sans)` e peso explicito
+  para evitar fallback visual do botao nativo quando o CTA estiver desabilitado.
+- Tornar o seletor de comunidade ativo visualmente: superficie `bg-surface`, borda tokenizada,
+  sombra suave, texto em `text-foreground` e copy `Selecionar comunidade`.
+- Fazer o controller de `textarea` respeitar `autoFocus` por foco imperativo no `ref`, sem usar o
+  atributo nativo proibido por lint/a11y. A modal tambem refoca o titulo em tentativas curtas ao montar.
+- Monitorar `window.visualViewport` e aplicar a diferenca entre layout viewport e visual viewport como
+  padding inferior da sheet. Assim, o footer que contem midia/switch/`Postar` sobe acima do teclado em
+  navegadores/PWAs que nao recalculam `100dvh` junto com o teclado.
+- Nao alterar API, payload, schema, permissao de midia, anonimato, storage, envs, packages ou backend.
+
+Consequencias:
+
+- A experiencia continua mobile-first e app-like: ao abrir a modal, o titulo recebe foco imediatamente
+  e, em iOS/PWA real, isso deve acionar o teclado quando permitido pelo navegador apos o gesto do usuario.
+- O rodape permanece dentro da mesma sheet e nao cria componente paralelo; apenas reserva espaco dinamico
+  quando o teclado ocupa parte do viewport.
+- Em navegadores/headless sem teclado virtual, o offset permanece `0px`, preservando desktop e testes.
+- Rollback: reverter este complemento volta ao foco anterior, ao seletor cinza e ao footer sem offset de
+  `visualViewport`, sem efeito persistente em dados.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Chrome/CDP mobile em `http://127.0.0.1:3019/app/comunidades/feed/publicacao/nova`, com cookie local
+  apenas para atravessar o proxy privado: sucesso ao confirmar `dialog` `Criar Post`, foco ativo no
+  `TEXTAREA#create-post-title`, seletor com `bg-surface`/texto foreground/copy `Selecionar comunidade`,
+  CTA `Postar` com `fontFamily` Manrope/`var(--font-sans)` e `fontWeight=800`, footer no rodape da sheet
+  e offset de teclado `0px` no ambiente headless sem teclado virtual.
+
+## Atualizacao 2026-08-12 - footer da modal proximo ao teclado e scroll lock mobile
+
+O primeiro refinamento com `visualViewport` mantinha o footer acima do teclado, mas fazia isso por
+padding inferior interno da sheet. Em iPhone/PWA real, esse padding podia aparecer como uma faixa
+branca abaixo da linha de acoes, deixando camera/`Postar` altos demais e consumindo area textual. A
+mesma validacao mostrou que `overflow: hidden` simples em `body/html` nao era suficiente para impedir
+rolagem da tela de fundo em todos os gestos mobile.
+
+Decisoes complementares:
+
+- Trocar o padding inferior de offset por reposicionamento da sheet: `margin-bottom` recebe o offset de
+  `visualViewport` e a altura da sheet subtrai o mesmo valor. Assim, o fundo da sheet termina no topo do
+  teclado e o footer permanece junto a essa borda, sem espaco branco interno abaixo dele.
+- Compactar o footer mobile: `pt-2`, CTA `Postar` com `h-11` e padding inferior reduzido para `0.35rem`
+  quando existe teclado virtual; sem teclado, o padding volta a respeitar `env(safe-area-inset-bottom)`.
+- Fortalecer o scroll lock da modal fixando o `body` no scroll atual (`position: fixed`, `top` negativo,
+  `left/right: 0`, `width: 100%`) e aplicando `overflow: hidden`/`overscroll-behavior: none` em
+  `body`/`html`. No unmount, todos os estilos anteriores e a posicao de scroll sao restaurados.
+- Manter a solucao local ao `CreateCommunityPostLogic`, sem criar dependencia global ou pacote novo e
+  sem alterar contrato, persistencia, permissao de midia, anonimato, storage ou backend.
+
+Consequencias:
+
+- O rodape da composicao fica mais proximo do teclado e libera mais area para titulo/conteudo no mobile.
+- A tela de fundo nao deve rolar enquanto a modal estiver aberta, inclusive em PWAs iOS onde apenas
+  `overflow: hidden` costuma ser insuficiente.
+- A restauracao do scroll original evita salto visual ao fechar a modal e retornar ao feed/comunidade.
+- Rollback: reverter este complemento volta ao padding interno baseado em `visualViewport` e ao scroll
+  lock simples; nao ha efeito persistente em dados ou providers.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.58`: sucesso.
+- Chrome/CDP mobile em `http://127.0.0.1:3026/app/comunidades/feed/publicacao/nova`: sucesso ao
+  confirmar foco ativo no titulo, `bodyPosition=fixed`, `bodyOverflow=hidden`, `htmlOverflow=hidden`,
+  footer base compacto (`61px`) e, com offset de teclado de `260px` aplicado ao CSS var em headless,
+  `sheetMarginBottom=260px`, `sheetHeight=572.75px`, `footerHeight=55px` e
+  `footerBottomToKeyboardTop=1px`.
+
+## Atualizacao 2026-08-12 - guard de touch scroll na modal Criar Post
+
+Mesmo com o `body` fixo, a validacao em iPhone/PWA mostrou que um gesto vertical dentro da
+descricao vazia podia produzir a sensacao de rolagem/rubber-band da modal ou do fundo. O problema nao
+era conteudo excedente: o textarea estava vazio, mas o browser ainda tentava propagar o gesto ate uma
+superficie rolavel.
+
+Decisoes complementares:
+
+- Adicionar `create-post-scroll-guard.ts` no modulo da rota de criacao para centralizar a regra de
+  `touchstart`/`touchmove` sem criar dependencia global nem pacote novo.
+- Registrar o alvo inicial do toque e, a cada `touchmove`, permitir o gesto apenas se houver ancestral
+  com `overflow` rolavel (`auto`/`scroll`/`overlay`), conteudo maior que o viewport local e espaco para
+  rolar na direcao do movimento.
+- Bloquear com `preventDefault()` todos os demais movimentos dentro do overlay. Assim, textarea vazio,
+  fim/inicio de textarea longo e pan vertical sobre a faixa de midias nao vazam para a pagina de fundo.
+- Manter excecao natural para rolagem horizontal da faixa de midias e para rolagem vertical da descricao
+  somente quando o texto realmente ultrapassar a altura disponivel.
+- Nao alterar contrato, API, payload, schema, autorizacao, upload, storage, anonimato, envs ou packages.
+
+Consequencias:
+
+- A modal deixa de aparentar acompanhar a rolagem do fundo quando nao ha conteudo escrito na descricao.
+- Conteudo longo continua editavel porque o guard libera a rolagem interna apenas quando existe
+  overflow real e ainda ha espaco na direcao do gesto.
+- A solucao fica limitada a `CreateCommunityPostLogic`, reduzindo risco para outros modais.
+- Rollback: reverter este complemento remove o listener nativo e volta ao lock baseado apenas em
+  `body` fixo/`overscroll`.
+
+Validacao complementar 2026-08-12:
+
+- `node --experimental-strip-types .tmp-create-post-scroll-smoke.mjs`: sucesso com `PASS create post modal touch scroll guard`.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+
+## Atualizacao 2026-08-12 - rolagem interna quando ha midia anexada
+
+A correcao anterior bloqueou gestos de scroll sem overflow real na modal `Criar Post`, resolvendo a
+sensacao de rubber-band quando a descricao estava vazia. A validacao seguinte em iPhone/PWA mostrou um
+caso complementar: ao anexar uma midia, o conteudo vertical da composicao pode ficar maior que a area
+util da sheet, especialmente com teclado aberto, e precisa ser acessivel por rolagem interna.
+
+Decisoes complementares:
+
+- A area central da composicao passa a ser o unico container vertical rolavel quando existe pelo menos
+  uma midia anexada (`selectedMediaItems.length > 0`). Sem midia, ela continua com `overflow-hidden`,
+  preservando o bloqueio de gesto vazio definido no complemento anterior.
+- O wrapper interno deixa de depender de `flex-1` no modo com midia e passa a manter altura minima da
+  area visivel (`min-h-full`) com crescimento por conteudo. Assim, titulo, descricao, preview de midia
+  e alertas podem exceder a area util e gerar scroll real somente nesse modo.
+- `preserveEditorFocusFromBlankTap` fica inativo enquanto ha midia selecionada, porque a mesma
+  prevencao de `pointerdown` que mantem o teclado aberto em espacos vazios tambem pode bloquear o
+  inicio de gestos de rolagem no container central.
+- O guard nativo de `touchmove` permanece como fronteira: ele libera o gesto apenas quando o container
+  realmente tem overflow e ainda pode rolar na direcao solicitada, evitando vazamento para a pagina de
+  fundo.
+- Nao alterar API, payload, schema, autorizacao, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- Posts com midia anexada podem ser revisados por completo dentro da propria modal, mesmo em telas
+  pequenas e com teclado virtual ocupando parte do viewport.
+- O comportamento sem midia continua enxuto: descricao vazia nao cria rolagem/rubber-band artificial.
+- O trade-off aceito e que, no modo com midia, toques em areas vazias priorizam rolagem/acesso ao
+  conteudo em vez de refoco automatico do campo ativo.
+- Rollback: reverter este complemento volta a manter a area central sempre travada, sem impacto
+  persistente em dados, storage ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.62`: sucesso.
+
+## Atualizacao 2026-08-12 - peso do placeholder do titulo da modal Criar Post
+
+A revisao visual em mobile mostrou que a dica cinza do campo de titulo podia parecer leve demais na
+modal de criacao, principalmente porque o titulo digitado usa hierarquia forte. Como pacientes e
+psicologos compartilham a mesma classe de campo de titulo, a decisao foi ajustar o token visual no CSS
+compartilhado em vez de duplicar estilos por role.
+
+Decisoes complementares:
+
+- Elevar o `font-weight` de `.create-post-title-input::placeholder` de `500` para `700`.
+- Manter a cor do placeholder em `var(--lectum-subtle)`, sem aproximar a dica do contraste do texto
+  digitado nem alterar o tamanho, line-height ou letter-spacing.
+- Reutilizar o mesmo seletor compartilhado pelas variacoes de paciente e psicologo da modal `Criar Post`.
+- Nao alterar controllers, schema de formulario, API, payload, persistencia, midia, envs ou packages.
+
+Consequencias:
+
+- A dica do titulo fica mais legivel e mais proxima da hierarquia visual esperada, mas continua cinza e
+  distinguivel do conteudo digitado.
+- O ajuste vale igualmente para pacientes e psicologos sem bifurcar a implementacao por perfil.
+- Rollback: reverter este complemento devolve o placeholder ao peso 500, sem efeito persistente em dados
+  ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso, reexecutado apos o bump para `0.1.67`.
+- `pnpm check`: sucesso em `0.1.67`; uma tentativa anterior com timeout menor excedeu o tempo local sem erro reportado.
+- `git diff --check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.67`: sucesso.
+- Browser/CDP mobile em `http://127.0.0.1:3032/app/comunidades/feed/publicacao/nova`: rota redirecionou para login por ausencia de cookie autenticado; a validacao do CSS global injetou `TEXTAREA.create-post-title-input` e confirmou `::placeholder.fontWeight=700`, cor cinza `rgb(148, 163, 184)` e texto digitado em peso `900`.
+
+## Atualizacao 2026-08-12 - editor sem textarea nativo na modal Criar Post para iOS
+
+A validacao em iPhone mostrou que a sheet `Criar Post` podia ficar presa no campo de titulo: tocar na descricao ou usar a navegacao nativa do teclado do Safari nao movia o foco de forma confiavel. O comportamento estava relacionado ao uso de textareas nativos em uma sheet com lock de scroll, foco preservado e footer reposicionado pelo teclado virtual.
+
+Decisoes complementares:
+
+- Reutilizar o `ContenteditableController` da fundacao de formularios para os campos de titulo e conteudo da criacao de post, evitando depender da navegacao nativa de campos do Safari dentro da sheet.
+- Manter os mesmos nomes de campo (`title`, `content`), ids (`create-post-title`, `create-post-content`), classes visuais e validacoes Zod/backend ja existentes.
+- Ajustar o helper de foco da modal para detectar `contenteditable`, chamar `focus({ preventScroll: true })` e mover o caret ao fim por Selection/Range em vez de `setSelectionRange`.
+- Tornar o guard de toque vazio contextual: area vazia do titulo foca titulo, area vazia da descricao foca descricao, e areas gerais continuam preservando o ultimo editor ativo.
+- Estender o CSS dos placeholders da modal para `:empty::before`, pois contenteditable nao usa `::placeholder` nativo.
+- Nao alterar contratos, payloads, persistencia, upload/storage, regras de anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- A composicao deixa de depender das setas nativas do teclado iOS para alternar entre titulo e descricao; cada area textual tem foco direto e previsivel.
+- A barra de navegacao de formulario do Safari deixa de ser uma premissa do fluxo de criacao, aproximando o comportamento do compositor de comentarios e de editores web modernos.
+- O trade-off aceito e usar `contenteditable` para texto livre em uma area controlada por React Hook Form; o controller compartilhado normaliza texto simples, limita tamanho e preserva acessibilidade por `role="textbox"`.
+- Rollback: reverter este complemento volta titulo/conteudo da criacao para textareas nativos e restaura a dependencia da navegacao de formulario do iOS, sem efeito persistente em dados ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- Browser local Chrome headless sobre frontend build em `http://127.0.0.1:3040`: sucesso ao confirmar `titleEditable=true`, `contentEditable=true`, foco programatico de titulo -> descricao, placeholder do titulo em peso `700` e placeholder da descricao em peso `400`.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.72`: sucesso.
+
+## Atualizacao 2026-08-12 - cancelamento de autofocus tardio do titulo no iOS
+
+A validacao em iPhone indicou que a troca para `contenteditable` nao eliminou todos os casos em que a modal `Criar Post` ficava presa no titulo. O ponto critico era a combinacao entre foco inicial agressivo do titulo, timers curtos para acionar teclado mobile e guards de toque usados para impedir perda de teclado/scroll em uma sheet.
+
+Decisoes complementares:
+
+- Manter o autofocus inicial do titulo para preservar a abertura app-like da composicao quando permitido pelo navegador apos o gesto do usuario.
+- Registrar uma intencao explicita de editor ativo antes do bubbling de `pointerdown`/`touchstart` nas areas de titulo e descricao.
+- Focar a descricao sincronamente durante o gesto do usuario quando a area de conteudo for tocada, sem esperar `setTimeout`, para melhorar a chance de abertura/manutencao do teclado em iOS/PWA.
+- Cancelar os timers tardios de autofocus do titulo assim que a descricao, ou qualquer editor diferente do titulo, receber intencao/foco.
+- Manter o guard de toque vazio contextual e ignorar areas auxiliares de midia anexada para nao abrir teclado ao interagir com preview/remocao.
+- Nao alterar API, payload, schema, persistencia, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- A descricao passa a ser selecionavel diretamente em iPhone/PWA mesmo durante a janela inicial de abertura da sheet.
+- O titulo continua recebendo foco inicial quando nenhum outro editor foi escolhido, mas deixa de disputar foco com a descricao apos o toque do usuario.
+- O comportamento fica restrito a `CreateCommunityPostLogic` e ao hook da propria modal; rollback reverte apenas a politica de foco, sem efeito persistente em dados ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Chrome/CDP mobile em `http://127.0.0.1:3041/app/comunidades/feed/publicacao/nova`: sucesso ao tocar a descricao em uma sheet recem-aberta e confirmar que o foco permaneceu em `#create-post-content` apos os timers do titulo.
+
+## Atualizacao 2026-08-13 - animacao vertical da bottom sheet Criar Post
+
+A modal de criacao de post ja usava uma apresentacao de bottom sheet, mas o tempo de desmontagem/rota era menor que a transicao visual e podia cortar a percepcao de saida. O produto pediu explicitamente que a entrada parecesse um arraste para cima e que a saida parecesse um arraste para baixo.
+
+Decisoes complementares:
+
+- Manter a modal como bottom sheet fixa no rodape e alterar apenas os estados de transformacao, sem introduzir nova biblioteca de motion.
+- Definir o estado fechado como `translate-y-[calc(100%+2rem)]`, garantindo que a sheet parta e termine completamente abaixo da viewport mesmo com bordas arredondadas e sombras.
+- Usar curva de entrada `cubic-bezier(0.16,1,0.3,1)` por `340ms` para uma subida mais natural e curva de saida `cubic-bezier(0.4,0,1,1)` por `300ms` para descida direta.
+- Elevar `SHEET_CLOSE_DELAY_MS` para `360ms`, deixando margem sobre a duracao da saida antes de chamar `onCloseComplete`, fallback de navegacao ou `router.replace` apos publicacao.
+- Expor `data-create-post-sheet-state` apenas como atributo de estado/validacao, sem impacto em contrato de API ou persistencia.
+- Nao alterar API, payload, schema, persistencia, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- A abertura da composicao fica mais alinhada ao padrao mobile de bottom sheet que sobe da borda inferior.
+- O fechamento por X/Escape/voltar e a navegacao apos publicar deixam de cortar a animacao de saida.
+- O trade-off aceito e adicionar ate `360ms` antes da navegacao apos postar para preservar a continuidade visual.
+- Rollback: reverter este complemento devolve o fechamento imediato anterior, sem efeito persistente em dados, storage ou contratos.
+
+Validacao complementar 2026-08-13:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso em `0.1.81` e reexecutado com sucesso apos o bump para `0.1.82`.
+- Browser/CDP mobile em `http://127.0.0.1:3059/app/comunidades/feed/publicacao/nova`: sucesso ao confirmar estado `open` com `translate-y-0 duration-[340ms]`, estado `closed` com `translate-y-[calc(100%+2rem)] duration-[300ms]` e desmontagem/navegacao somente apos a janela de saida.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm check:encoding`: sucesso.
+- `pnpm check:adrs`: sucesso.
+- `pnpm check:tasks`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.82`: sucesso.
+- Browser local `http://127.0.0.1:3060/version`: sucesso ao retornar `{"application":"frontend","version":"0.1.82"}`.
+
+
+## Atualizacao 2026-08-13 - confirmacao de descarte de rascunho na modal Criar Post
+
+A modal `Criar Post` passou a proteger rascunhos locais antes de fechar. O produto pediu que, quando o usuario ja tiver digitado titulo, descricao ou anexado midia, o fechamento explicito informe que esse conteudo sera excluido definitivamente.
+
+Decisoes complementares:
+
+- Definir rascunho descartavel apenas por conteudo produzido pelo usuario: titulo com texto, descricao com texto ou midia selecionada. A comunidade pre-selecionada por rota/query nao conta como rascunho para nao criar friccao ao abrir e fechar a modal vazia.
+- Reutilizar o modal de confirmacao existente de comunidades, evitando novo pacote ou novo padrao visual para uma confirmacao destrutiva semelhante.
+- Manter a animacao vertical de saida: a confirmacao apenas libera o fechamento; apos confirmar, o fluxo usa o mesmo atraso de `SHEET_CLOSE_DELAY_MS` antes de desmontar ou navegar.
+- Tratar `Escape` com o mesmo guard do botao `X`: se houver rascunho, abre/fecha a confirmacao em vez de descartar silenciosamente.
+- Ao cancelar a confirmacao, manter a sheet aberta e refocar o ultimo editor, preservando a continuidade de escrita no mobile.
+- Nao alterar API, payload, schema, persistencia, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- O usuario deixa de perder acidentalmente titulo, texto ou midia local ao tocar no fechamento da modal.
+- Abrir a criacao ja com comunidade contextual continua leve, pois fechar sem escrever nada nao exige confirmacao.
+- A decisao fica restrita ao estado local do frontend; nao ha efeito persistente em dados nem necessidade de migracao.
+
+Validacao complementar 2026-08-13:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.85`: sucesso.
+- Chrome/CDP mobile local em `http://127.0.0.1:3067/app/comunidades/feed/publicacao/nova`: a rota privada redirecionou para login por ausencia de cookie autenticado local; nao foi criado mock de sessao. O comportamento autenticado da modal foi validado por inspecao do fluxo real, typecheck/lint/testes e build.
+
+## Atualizacao 2026-08-13 - movimento role-neutral e copy de descarte para pacientes
+
+A validacao de produto indicou que a animacao vertical da modal `Criar Post` parecia perceptivel apenas no fluxo de psicologo no iPhone. Como pacientes e psicologos compartilham a mesma sheet, a decisao foi tornar o motor de movimento explicitamente role-neutral e auditavel por atributos de estado/role, reforcando a animacao por keyframes CSS locais da propria modal.
+
+Decisoes complementares:
+
+- Manter a mesma bottom sheet para pacientes e psicologos, sem bifurcar componente, rota ou contrato de formulario.
+- Expor `data-create-post-author-role` com `patient` ou `psychologist` somente para auditoria/validacao visual, sem impacto em API ou persistencia.
+- Expor `data-create-post-sheet-motion` com `initial`, `enter` e `exit`, diferenciando o primeiro estado fechado do fechamento real.
+- Reforcar a entrada e a saida com keyframes CSS `lectum-create-post-sheet-enter` e `lectum-create-post-sheet-exit`, preservando classes de fallback, safe-area, offsets de teclado e `prefers-reduced-motion`.
+- Evitar animacao de saida falsa no primeiro render: `exit` so ocorre depois que a sheet ja abriu ao menos uma vez.
+- Ajustar a confirmacao de descarte para pacientes para a copy exata `O que você escreveu nesta criação será excluído definitivamente.`
+- Manter para psicologos a copy que tambem menciona midias anexadas, pois esse fluxo pode ter upload local ainda nao publicado.
+- Nao alterar API, payload, schema, persistencia, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- O fluxo de paciente passa a ter evidencia tecnica e visual do mesmo movimento vertical usado na composicao de psicologos, em qualquer breakpoint.
+- O fechamento continua aguardando `SHEET_CLOSE_DELAY_MS`; a alteracao so torna a animacao mais robusta contra coalescencia de frames.
+- A copy de descarte do paciente fica mais simples e alinhada ao fato de que pacientes nao anexam midia na criacao de post.
+- Rollback: reverter esta atualizacao devolve a transicao anterior baseada apenas em troca de classes e a copy generica de descarte.
+
+Validacao complementar 2026-08-13:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts src/app/app/community/[slug]/post/new/views/create-community-post.tsx`: sucesso.
+- Validacao estatica via Node confirmou atributos de role/motion, keyframes de entrada/saida e copy de descarte do paciente.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+
+## Atualizacao 2026-08-21 - abertura fluida da bottom sheet no Android
+
+O video anexado pelo usuario em 2026-08-21 mostrou que, no Android, a abertura da modal `Criar Post`
+parecia travar: a bottom sheet começava a subir, enquanto o foco automatico do titulo acionava o
+teclado virtual e forçava resize do viewport praticamente no mesmo intervalo da animacao.
+
+Decisoes complementares:
+
+- Remover o `autoFocus` direto do campo `contenteditable` de titulo na configuracao do formulario da
+  modal. O foco passa a ser controlado apenas pelo hook da propria sheet.
+- Em Android/dispositivos touch (`pointer: coarse`), atrasar o primeiro foco programatico para depois
+  da animacao de entrada (`SHEET_ENTER_ANIMATION_MS + 120ms`). Desktop preserva os timers imediatos
+  para manter a composicao rapida com teclado fisico.
+- Remover o `backdrop-blur` da base mobile da modal e preservar o blur em `sm+`. O objetivo e reduzir
+  custo de GPU/composicao em celulares, especialmente quando o feed de fundo contem cards com midia.
+- Limitar a transicao da sheet a `transform`; alteracoes de altura/margem provocadas pelo teclado e
+  pelo `visualViewport` deixam de ser animadas junto da entrada.
+- Isolar a sheet com `contain: layout paint style` e `backface-visibility: hidden` para reduzir area
+  de repaint durante o movimento.
+- Nao alterar contratos de API, backend, schema, payload, upload/storage, anonimato, envs, providers,
+  dados persistidos ou packages.
+
+Consequencias:
+
+- A abertura mobile prioriza primeiro a animacao da bottom sheet e so depois chama o teclado virtual,
+  reduzindo a competicao de trabalho no mesmo frame em Android.
+- O titulo continua recebendo foco automaticamente em touch, mas com um atraso intencional pequeno.
+- A percepcao visual mobile fica menos pesada porque o fundo escurece sem blur; em telas maiores o blur
+  anterior permanece.
+- Rollback: reverter este complemento devolve o autofocus imediato, o blur mobile integral e a
+  transicao de altura/margem; nao ha efeito persistente em dados ou integracoes.
+
+Validacao complementar 2026-08-21:
+
+- Observacao local de frames do video anexado via Chrome/CDP confirmou que a janela critica de abertura
+  concentrava sheet, backdrop e teclado entre aproximadamente `9.50s` e `9.65s`.
+- Smoke estatico via Node confirmou ausencia de `autoFocus: true`, atraso de foco touch, blur apenas em
+  `sm+`, transicao restrita a transform e isolamento de pintura da sheet.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso, reexecutado apos o bump para `0.1.154`.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.154`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- Browser/CDP mobile em `http://127.0.0.1:3073/version`: sucesso ao confirmar frontend `0.1.154`.
+- Browser/CDP mobile em `http://127.0.0.1:3073/app/comunidades/feed/publicacao/nova`: redirecionou para
+  login por ausencia de cookie autenticado local; nao foi criado mock de sessao.
+- Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: titulo renderizado como `TEXTAREA`, placeholder claro e responsivo, texto real do titulo em 24.32px/900, switch sem interrogacao, `content` com `overflow-y: auto`, area externa sem scroll inicial (`scrollHeight == clientHeight`) e backdrop em opacidade baixa.
+
+## Atualizacao 2026-08-22 - fechamento da modal apos login por redirect
+
+O fluxo de visitantes para `Criar Post` passa por uma rota privada: o usuario clica para publicar, vai
+para `/auth/login?redirectTo=...` e, depois de autenticar, retorna para a modal. O fechamento anterior
+dependia de `router.back()` quando o historico do navegador indicava que havia uma entrada anterior.
+Nesse cenario, a entrada anterior podia ser a propria tela de login, criando a regressao de voltar para
+`/auth/login` mesmo com sessao ja ativa.
+
+Decisoes complementares:
+
+- Registrar no `sessionStorage` um marcador curto apenas quando o redirect autenticado resolvido aponta
+  para uma rota interna segura de criacao de post.
+- Consumir esse marcador somente dentro da modal `Criar Post` e somente se a rota atual corresponder ao
+  redirect salvo, usando `router.replace("/")` para fechar na home sem empilhar uma volta para login.
+- Limpar o marcador ao publicar com sucesso, ao consumir o fechamento pos-login, ao encontrar rota
+  divergente ou ao expirar a janela de validade.
+- Preservar o comportamento anterior de historico/fallback para aberturas autenticadas normais da modal,
+  como feed -> criar post -> fechar.
+- Nao alterar backend, API, payload, schema, persistencia, upload/storage, envs, providers ou packages.
+
+Consequencias:
+
+- O fluxo visitante -> login -> modal deixa de retornar para uma tela de login obsoleta ao fechar.
+- A home canonica usada no fechamento pos-login e `/`, que tambem e o destino do item `Inicio`/feed.
+- O marcador fica restrito ao navegador e a sessao atual; nao ha efeito persistente em dados reais.
+- Rollback: reverter este complemento devolve o fechamento anterior por historico/fallback, sem impacto
+  em contratos, dados ou ambientes publicados.
+
+Validacao complementar 2026-08-22:
+
+- Testes unitarios em `frontend/src/utils/session-policy.test.mjs` cobrem marcacao, consumo e descarte do
+  marcador de retorno autenticado para `Criar Post`.
+- Validacoes de build/check e smoke ficam registradas no complemento correspondente da TASK-24.

@@ -1,4 +1,4 @@
-﻿# TASK-26: Dentro do post
+# TASK-26: Dentro do post
 
 ## Metadata
 
@@ -6,13 +6,13 @@
 |---|---|
 | ID | TASK-26 |
 | Prioridade | P0 |
-| EsforÃƒÆ’Ã‚Â§o | L |
+| Esforço | L |
 | Fase | Comunidades |
 | Status | Completed |
-| DependÃƒÆ’Ã‚Âªncias | TASK-02, TASK-24, TASK-25 |
+| Dependências | TASK-02, TASK-24, TASK-25 |
 | ADR alvo | ADR de respostas e votos em posts |
 
-## ReferÃƒÆ’Ã‚Âªncias obrigatÃƒÆ’Ã‚Â³rias
+## Referências obrigatórias
 
 - `_product/tasks/ARCHITECTURE.md`
 - `_product/tasks/PACKAGES.md`
@@ -20,99 +20,99 @@
 - `_product/tasks/PROTO-INVENTORY.md`
 - `_product/tasks/ROADMAP-REVALIDADO.md`
 
-## ReferÃƒÆ’Ã‚Âªncias visuais
+## Referências visuais
 
 | Imagem local | Artefato Builder |
 |---|---|
 | `_product/proto/Dentro do Post.jpg` | `figma-design-frame-2-Dentro-do-Post.html` |
 
-As referÃƒÆ’Ã‚Âªncias visuais sÃƒÆ’Ã‚Â£o norte de produto e layout. Elas nÃƒÆ’Ã‚Â£o autorizam recriar arquitetura, aceitar cÃƒÆ’Ã‚Â³digo gerado sem revisÃƒÆ’Ã‚Â£o, usar mock ou ignorar os padrÃƒÆ’Ã‚Âµes atuais do projeto.
+As referências visuais são norte de produto e layout. Elas não autorizam recriar arquitetura, aceitar código gerado sem revisão, usar mock ou ignorar os padrões atuais do projeto.
 
-ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o: Builder/Quick Copy nÃƒÆ’Ã‚Â£o estava disponÃƒÆ’Ã‚Â­vel no ambiente Codex; a referÃƒÆ’Ã‚Âªncia visual foi consultada pela imagem local `_product/proto/Dentro do Post.jpg`.
+Execução: Builder/Quick Copy não estava disponível no ambiente Codex; a referência visual foi consultada pela imagem local `_product/proto/Dentro do Post.jpg`.
 
 ## Contexto
 
-`Dentro do Post.jpg` ÃƒÆ’Ã‚Â© uma tela muito longa. A implementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o precisa quebrar em componentes e carregar respostas de forma paginada.
+`Dentro do Post.jpg` é uma tela muito longa. A implementação precisa quebrar em componentes e carregar respostas de forma paginada.
 
 ## Objetivo
 
-Criar detalhe de post com respostas, votos, salvamento e paginaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de comentÃƒÆ’Ã‚Â¡rios.
+Criar detalhe de post com respostas, votos, salvamento e paginação de comentários.
 
-## PrÃƒÆ’Ã‚Â©-requisitos e bloqueios
+## Pré-requisitos e bloqueios
 
-- Regras de moderaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o/downvote devem estar em ADR antes de implementar comportamento destrutivo.
+- Regras de moderação/downvote devem estar em ADR antes de implementar comportamento destrutivo.
 
-Se qualquer bloqueio obrigatÃƒÆ’Ã‚Â³rio estiver ativo, pare a implementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, registre ADR/pendÃƒÆ’Ã‚Âªncia e nÃƒÆ’Ã‚Â£o marque a task como concluÃƒÆ’Ã‚Â­da.
+Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 
 ## Escopo frontend
 
-Rotas esperadas (convenÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o canÃƒÆ’Ã‚Â´nica de `DATA-MODEL.md`):
+Rotas esperadas (convenção canônica de `DATA-MODEL.md`):
 
 - `/app/community/[slug]/post/[id]`
 
-ImplementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o esperada:
+Implementação esperada:
 
 - Criar rota de detalhe do post.
 - Exibir post, autor, comunidade, votos, salvar e respostas.
-- Criar formulÃƒÆ’Ã‚Â¡rio de resposta com validaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.
+- Criar formulário de resposta com validação.
 - Paginar respostas e evitar render gigante.
 - Aplicar optimistic update com rollback em votos/salvar.
 
-DecomposiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de componentes (a tela ÃƒÆ’Ã‚Â© muito longa ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â quebrar para evitar render monolÃƒÆ’Ã‚Â­tico):
+Decomposição de componentes (a tela é muito longa — quebrar para evitar render monolítico):
 
-- `PostHeader`: avatar/autor (`author_id` + `user.role`), comunidade (`community.slug`/nome), data, menu de aÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes.
+- `PostHeader`: avatar/autor (`author_id` + `user.role`), comunidade (`community.slug`/nome), data, menu de ações.
 - `PostBody`: `community_post.title` + `content`.
-- `PostVoteBar`: upvote/downvote a partir de `community_post.upvotes_count`/`downvotes_count` e do voto do usuÃƒÆ’Ã‚Â¡rio; aÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de salvar usando `saves_count`. Downvote nunca exibido como nÃƒÆ’Ã‚Âºmero pÃƒÆ’Ã‚Âºblico (regra `DATA-MODEL.md`).
-- `ReplyComposer`: formulÃƒÆ’Ã‚Â¡rio (React Hook Form + Zod, `TASK-02`) para criar comentÃƒÆ’Ã‚Â¡rio (`parent_reply_id = null`) ou resposta (1 nÃƒÆ’Ã‚Â­vel, `parent_reply_id` preenchido).
-- `RepliesList`: lista de `post_reply` paginada por ÃƒÆ’Ã‚Â¢ncora (`@@index([post_id, parent_reply_id, createdAt])`), com respostas aninhadas em 1 nÃƒÆ’Ã‚Â­vel apenas.
+- `PostVoteBar`: upvote/downvote a partir de `community_post.upvotes_count`/`downvotes_count` e do voto do usuário; ação de salvar usando `saves_count`. Downvote nunca exibido como número público (regra `DATA-MODEL.md`).
+- `ReplyComposer`: formulário (React Hook Form + Zod, `TASK-02`) para criar comentário (`parent_reply_id = null`) ou resposta (1 nível, `parent_reply_id` preenchido).
+- `RepliesList`: lista de `post_reply` paginada por âncora (`@@index([post_id, parent_reply_id, createdAt])`), com respostas aninhadas em 1 nível apenas.
 
 ## Escopo backend
 
-ImplementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o esperada:
+Implementação esperada:
 
 - Endpoints de detalhe, respostas, criar resposta, votar e salvar.
 - Unicidade de voto via `post_vote` (`@@unique([user_id, post_id])` / `@@unique([user_id, reply_id])`); upsert para alterar voto.
 - `value` aceita apenas `1` (upvote) ou `-1` (downvote); downvotes nunca expostos individualmente.
-- Paginar respostas por ÃƒÆ’Ã‚Â¢ncora.
-- Validar permissÃƒÆ’Ã‚Â£o e `community_post.status`.
+- Paginar respostas por âncora.
+- Validar permissão e `community_post.status`.
 
 Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
 
 - `community_post`
-- `post_reply` (`parent_reply_id` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ÃƒÆ’Ã‚Â¡rvore de 1 nÃƒÆ’Ã‚Â­vel)
+- `post_reply` (`parent_reply_id` — árvore de 1 nível)
 - `post_vote`
 - `post_save`
 
-Endpoints esperados (convenÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o canÃƒÆ’Ã‚Â´nica de `DATA-MODEL.md`):
+Endpoints esperados (convenção canônica de `DATA-MODEL.md`):
 
-- GET `/api/private/posts/:id` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â detalhe do post.
-- GET `/api/private/posts/:id/replies` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â respostas paginadas por ÃƒÆ’Ã‚Â¢ncora.
-- POST `/api/private/posts/:id/replies` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â criar comentÃƒÆ’Ã‚Â¡rio/resposta; payload `{ content: string, parentReplyId?: string }`.
-- POST `/api/private/posts/:id/vote` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â votar/alterar voto; payload `{ value: 1 | -1, replyId?: string }` (sem `replyId` = voto no post). Reenviar o mesmo `value` remove o voto (toggle); upsert por `@@unique`.
-- POST `/api/private/posts/:id/save` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â salvar; DELETE `/api/private/posts/:id/save` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â remover salvo (`post_save`).
+- GET `/api/private/posts/:id` — detalhe do post.
+- GET `/api/private/posts/:id/replies` — respostas paginadas por âncora.
+- POST `/api/private/posts/:id/replies` — criar comentário/resposta; payload `{ content: string, parentReplyId?: string }`.
+- POST `/api/private/posts/:id/vote` — votar/alterar voto; payload `{ value: 1 | -1, replyId?: string }` (sem `replyId` = voto no post). Reenviar o mesmo `value` remove o voto (toggle); upsert por `@@unique`.
+- POST `/api/private/posts/:id/save` — salvar; DELETE `/api/private/posts/:id/save` — remover salvo (`post_save`).
 
-Request/response: seguir o "Contrato padrÃƒÆ’Ã‚Â£o de API" de `DATA-MODEL.md` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â replies paginadas (`page`/`limit` ou cursor por ÃƒÆ’Ã‚Â¢ncora); votos/salvar retornam o estado atualizado no envelope de sucesso para o optimistic update reconciliar.
+Request/response: seguir o "Contrato padrão de API" de `DATA-MODEL.md` — replies paginadas (`page`/`limit` ou cursor por âncora); votos/salvar retornam o estado atualizado no envelope de sucesso para o optimistic update reconciliar.
 
-## Contrato tÃƒÆ’Ã‚Â©cnico detalhado
+## Contrato técnico detalhado
 
-Arquitetura frontend obrigatÃƒÆ’Ã‚Â³ria:
+Arquitetura frontend obrigatória:
 
-- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulÃƒÆ’Ã‚Â¡rio.
+- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulário.
 - Chamadas HTTP em `frontend/src/api/req/{dominio}/index.ts` usando `callEndpoint` e `handleReq`.
 - Hooks React Query em `frontend/src/api/callers/{dominio}/index.tsx`.
 - Query keys em `frontend/src/api/cache/keys.ts`.
 - Shells/templates em `frontend/src/templates`.
 - Componentes existentes em `frontend/src/registry/new-york-v4/ui` e `frontend/src/components/ui` devem ser reutilizados antes de criar novos.
-- Quando houver formulÃƒÆ’Ã‚Â¡rio ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
+- Quando houver formulário ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
 
-Arquitetura backend obrigatÃƒÆ’Ã‚Â³ria:
+Arquitetura backend obrigatória:
 
 - Novas APIs em `backend/src/modules/api/{public|private}/{dominio}/{caso}`.
 - Rotas registradas em `backend/src/main/server/imports/write.ts`.
-- Validadores em `validator/index.ts` usando os helpers/pacote local de validaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.
-- Services e repositories separados quando houver regra de domÃƒÆ’Ã‚Â­nio ou persistÃƒÆ’Ã‚Âªncia.
-- Respostas usando `send`, `error500`, `error` e traduÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes em `backend/locales/pt/translation.json`.
-- Prisma com nomes e padrÃƒÆ’Ã‚Âµes jÃƒÆ’Ã‚Â¡ definidos em `ARCHITECTURE.md`.
+- Validadores em `validator/index.ts` usando os helpers/pacote local de validação.
+- Services e repositories separados quando houver regra de domínio ou persistência.
+- Respostas usando `send`, `error500`, `error` e traduções em `backend/locales/pt/translation.json`.
+- Prisma com nomes e padrões já definidos em `ARCHITECTURE.md`.
 
 Packages permitidos nesta task:
 
@@ -121,45 +121,45 @@ Packages permitidos nesta task:
 - TanStack Query
 - Prisma
 
-Regras anti-recriaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o especÃƒÆ’Ã‚Â­ficas:
+Regras anti-recriação específicas:
 
 - Procurar componente, helper, model, endpoint e query key equivalente antes de criar estrutura nova.
-- NÃƒÆ’Ã‚Â£o criar client HTTP paralelo, store paralela, autenticaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o paralela, validator paralelo ou design system paralelo.
-- NÃƒÆ’Ã‚Â£o usar `sample/` como referÃƒÆ’Ã‚Âªncia direta de implementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o futura.
-- NÃƒÆ’Ã‚Â£o instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
+- Não criar client HTTP paralelo, store paralela, autenticação paralela, validator paralelo ou design system paralelo.
+- Não usar `sample/` como referência direta de implementação futura.
+- Não instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
 
-## Estados obrigatÃƒÆ’Ã‚Â³rios
+## Estados obrigatórios
 
 - Loading inicial.
 - Erro de rede/API em PT-BR.
-- Estado vazio quando nÃƒÆ’Ã‚Â£o houver dado real.
+- Estado vazio quando não houver dado real.
 - Sucesso com feedback visual discreto.
 - Responsividade mobile-first baseada nas imagens exportadas.
 
 ## Fora do escopo
 
 - Criar dados fake, seed artificial ou mock para preencher tela.
-- Concluir integraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o externa ausente.
-- Refatorar mÃƒÆ’Ã‚Â³dulos nÃƒÆ’Ã‚Â£o relacionados ÃƒÆ’Ã‚Â  task.
+- Concluir integração externa ausente.
+- Refatorar módulos não relacionados à task.
 - Trocar package manager ou stack base.
 
-## CritÃƒÆ’Ã‚Â©rios de aceite
+## Critérios de aceite
 
-- [x] As referÃƒÆ’Ã‚Âªncias visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
 - [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [x] Rotas seguem a convenÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o canÃƒÆ’Ã‚Â´nica do `DATA-MODEL.md`.
+- [x] Rotas seguem a convenção canônica do `DATA-MODEL.md`.
 - [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [x] Backend implementado nos endpoints/modelos esperados quando aplicÃƒÆ’Ã‚Â¡vel.
-- [x] Todos os estados obrigatÃƒÆ’Ã‚Â³rios existem e usam textos em PT-BR.
-- [x] FormulÃƒÆ’Ã‚Â¡rios e campos usam a fundaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o da `TASK-02` quando aplicÃƒÆ’Ã‚Â¡vel.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
 - [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [x] Nenhum cÃƒÆ’Ã‚Â³digo gerado por Builder foi aceito sem revisÃƒÆ’Ã‚Â£o e adequaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o ÃƒÆ’Ã‚Â  arquitetura.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
 - [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
 - [x] ADR criado ou atualizado em `adrs/`.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
 
-## ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o mÃƒÆ’Ã‚Â­nima
+## Validação mínima
 
 - `pnpm --dir frontend check` quando frontend mudar.
 - `pnpm --dir frontend build` quando mudar rota ou UI.
@@ -170,7 +170,7 @@ Regras anti-recriaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o especÃƒÆ’Ã‚Â­f
 
 ## Notas para executor
 
-Esta task deve ser concluÃƒÆ’Ã‚Â­da em um commit prÃƒÆ’Ã‚Â³prio. Se houver bloqueio externo, registre claramente o bloqueio e nÃƒÆ’Ã‚Â£o avance para a prÃƒÆ’Ã‚Â³xima task.
+Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
 
 
 ## Execucao complementar: downvote privado e animacao externa de upvote (2026-06-14)
@@ -190,17 +190,17 @@ Esta task deve ser concluÃƒÆ’Ã‚Â­da em um commit prÃƒÆ’Ã‚Â³p
   - `pnpm check`
   - HTTP local em `/app/community/feed` respondeu `200`.
 
-## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: detalhe do post inspirado no Reddit (2026-06-15)
+## Execução complementar: detalhe do post inspirado no Reddit (2026-06-15)
 
-- Pedido do usuÃƒÆ’Ã‚Â¡rio: ajustar a tela interna do post conforme referÃƒÆ’Ã‚Âªncia `Dentro do Post`, com menu de denÃƒÆ’Ã‚Âºncia, composer compacto, composer mobile fixo, mÃƒÆ’Ã‚Â­dia restrita a psicÃƒÆ’Ã‚Â³logos assinantes/verificados e vÃƒÆ’Ã‚Â­deo de resposta em proporÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o 9:16 controlada.
-- ReferÃƒÆ’Ã‚Âªncia visual consultada: `_product/proto/Dentro do Post.jpg`. Builder/Quick Copy nÃƒÆ’Ã‚Â£o foi usado diretamente no ambiente; a imagem local/PDF foi usada como fallback auditÃƒÆ’Ã‚Â¡vel.
-- O menu de trÃƒÆ’Ã‚Âªs pontos do post passou a abrir a opÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o `Denunciar post` e o fluxo persistente `POST /api/private/posts/:id/report`.
-- O composer usa placeholder `Participe da conversa`, fica compacto no desktop e fixo no rodapÃƒÆ’Ã‚Â© mobile, expandindo apenas durante interaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o/digitaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.
-- O upload real de mÃƒÆ’Ã‚Â­dia de resposta foi adicionado em `POST /api/private/posts/:id/replies/media` e a criaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de resposta aceita `mediaUrl`/`mediaType` somente quando originados do fluxo permitido.
-- Backend bloqueia upload e criaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de resposta com mÃƒÆ’Ã‚Â­dia para pacientes, psicÃƒÆ’Ã‚Â³logos sem CFP verificado ou sem Plano Profissional ativo.
-- VÃƒÆ’Ã‚Â­deos anexados em respostas usam card 9:16 com largura mÃƒÆ’Ã‚Â¡xima, alinhado ao padrÃƒÆ’Ã‚Â£o do feed/comunidade.
+- Pedido do usuário: ajustar a tela interna do post conforme referência `Dentro do Post`, com menu de denúncia, composer compacto, composer mobile fixo, mídia restrita a psicólogos assinantes/verificados e vídeo de resposta em proporção 9:16 controlada.
+- Referência visual consultada: `_product/proto/Dentro do Post.jpg`. Builder/Quick Copy não foi usado diretamente no ambiente; a imagem local/PDF foi usada como fallback auditável.
+- O menu de três pontos do post passou a abrir a opção `Denunciar post` e o fluxo persistente `POST /api/private/posts/:id/report`.
+- O composer usa placeholder `Participe da conversa`, fica compacto no desktop e fixo no rodapé mobile, expandindo apenas durante interação/digitação.
+- O upload real de mídia de resposta foi adicionado em `POST /api/private/posts/:id/replies/media` e a criação de resposta aceita `mediaUrl`/`mediaType` somente quando originados do fluxo permitido.
+- Backend bloqueia upload e criação de resposta com mídia para pacientes, psicólogos sem CFP verificado ou sem Plano Profissional ativo.
+- Vídeos anexados em respostas usam card 9:16 com largura máxima, alinhado ao padrão do feed/comunidade.
 - ADR criado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
-- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas: `pnpm --dir backend db:migrate --name add_post_reports`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` na rota do detalhe.
+- Validações executadas: `pnpm --dir backend db:migrate --name add_post_reports`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` na rota do detalhe.
 
 ## Execucao complementar: badge TOP Mentor premium no detalhe (2026-06-15)
 
@@ -261,38 +261,38 @@ Esta task deve ser concluÃƒÆ’Ã‚Â­da em um commit prÃƒÆ’Ã‚Â³p
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile em 390px confirmando recolhimento isolado, `Ver 2 respostas`, expansao e preservacao ao clicar no menu.
 
-## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: ÃƒÆ’Ã‚Â¡rvore compacta e controles de comentÃƒÆ’Ã‚Â¡rios (2026-06-16)
+## Execução complementar: árvore compacta e controles de comentários (2026-06-16)
 
-- Pedido do usuÃƒÆ’Ã‚Â¡rio: ajustar a ÃƒÆ’Ã‚Â¡rvore de comentÃƒÆ’Ã‚Â¡rios e os controles de interaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o em feed, comunidade e detalhe do post, preservando ordenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, regra do psicÃƒÆ’Ã‚Â³logo verificado mais votado e responsividade mobile.
-- Fonte visual auditÃƒÆ’Ã‚Â¡vel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta direta nesta sessÃƒÆ’Ã‚Â£o, entÃƒÆ’Ã‚Â£o a execuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o seguiu as imagens locais/protÃƒÆ’Ã‚Â³tipos inventariados.
-- O cabeÃƒÆ’Ã‚Â§alho `DiscussÃƒÆ’Ã‚Â£o` passou a ser independente, sem a linha azul lateral e sem parecer parte do primeiro comentÃƒÆ’Ã‚Â¡rio.
-- Cada comentÃƒÆ’Ã‚Â¡rio direto ao post agora ÃƒÆ’Ã‚Â© uma ÃƒÆ’Ã‚Â¡rvore prÃƒÆ’Ã‚Â³pria de primeira camada; apenas respostas ficam aninhadas sob o comentÃƒÆ’Ã‚Â¡rio correspondente.
-- O fundo de cada ÃƒÆ’Ã‚Â¡rvore passou a depender do comentÃƒÆ’Ã‚Â¡rio raiz: branco para paciente e azul claro para psicÃƒÆ’Ã‚Â³logo verificado; fundos esverdeados foram removidos dos blocos de destaque compartilhados.
-- A barra azul grossa lateral foi removida; a hierarquia usa apenas linhas finas cinza, com recuos mais compactos e limite visual de trÃƒÆ’Ã‚Âªs nÃƒÆ’Ã‚Â­veis.
-- Nos comentÃƒÆ’Ã‚Â¡rios, `CommunityActionBar` usa `size="xs"`, reduzindo upvote/downvote e `Responder`, que permanece texto sem ÃƒÆ’Ã‚Â­cone.
-- O botÃƒÆ’Ã‚Â£o `Ver mais resposta(s)` foi alinhado ao nÃƒÆ’Ã‚Â­vel onde a resposta serÃƒÆ’Ã‚Â¡ expandida.
-- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma, migrations, packages, endpoints, payloads, ordenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, prioridade de psicÃƒÆ’Ã‚Â³logo verificado ou lÃƒÆ’Ã‚Â³gica de envio.
+- Pedido do usuário: ajustar a árvore de comentários e os controles de interação em feed, comunidade e detalhe do post, preservando ordenação, regra do psicólogo verificado mais votado e responsividade mobile.
+- Fonte visual auditável: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão, então a execução seguiu as imagens locais/protótipos inventariados.
+- O cabeçalho `Discussão` passou a ser independente, sem a linha azul lateral e sem parecer parte do primeiro comentário.
+- Cada comentário direto ao post agora é uma árvore própria de primeira camada; apenas respostas ficam aninhadas sob o comentário correspondente.
+- O fundo de cada árvore passou a depender do comentário raiz: branco para paciente e azul claro para psicólogo verificado; fundos esverdeados foram removidos dos blocos de destaque compartilhados.
+- A barra azul grossa lateral foi removida; a hierarquia usa apenas linhas finas cinza, com recuos mais compactos e limite visual de três níveis.
+- Nos comentários, `CommunityActionBar` usa `size="xs"`, reduzindo upvote/downvote e `Responder`, que permanece texto sem ícone.
+- O botão `Ver mais resposta(s)` foi alinhado ao nível onde a resposta será expandida.
+- Não houve alteração de backend, Prisma, migrations, packages, endpoints, payloads, ordenação, prioridade de psicólogo verificado ou lógica de envio.
 - ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
-- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
 
-## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: profundidade 5 e thread isolada (2026-06-16)
+## Execução complementar: profundidade 5 e thread isolada (2026-06-16)
 
-- Pedido do usuÃƒÆ’Ã‚Â¡rio: permitir atÃƒÆ’Ã‚Â© 5 nÃƒÆ’Ã‚Â­veis visuais na ÃƒÆ’Ã‚Â¡rvore de comentÃƒÆ’Ã‚Â¡rios dentro do post, abrir uma tela de thread ao exceder o limite e refinar os controles dos comentÃƒÆ’Ã‚Â¡rios sem alterar ordenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o ou destaque de psicÃƒÆ’Ã‚Â³logos verificados.
-- Fonte visual auditÃƒÆ’Ã‚Â¡vel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta direta nesta sessÃƒÆ’Ã‚Â£o, entÃƒÆ’Ã‚Â£o a validaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o visual usou a referÃƒÆ’Ã‚Âªncia local e browser local.
-- A tela principal do post agora renderiza o comentÃƒÆ’Ã‚Â¡rio raiz mais 4 nÃƒÆ’Ã‚Â­veis de respostas aninhadas; nÃƒÆ’Ã‚Â­veis abaixo disso exibem `Ver mais resposta(s)` alinhado ÃƒÆ’Ã‚Â  camada onde a continuaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o existiria.
-- O backend deixou de usar o `take: 3` de respostas imediatas e passou a hidratar descendentes dos comentÃƒÆ’Ã‚Â¡rios diretos paginados com profundidade limitada por `INLINE_REPLY_DESCENDANT_DEPTH`, preservando comentÃƒÆ’Ã‚Â¡rios diretos como ÃƒÆ’Ã‚Â¡rvores de primeira camada.
-- A rota de thread `/app/community/[slug]/post/[id]/thread/[replyId]` passou a exibir o post original no topo e, abaixo, o comentÃƒÆ’Ã‚Â¡rio raiz do fio selecionado com a continuaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o da conversa; o composer fica depois da ÃƒÆ’Ã‚Â¡rvore no desktop e permanece fixo no mobile.
+- Pedido do usuário: permitir até 5 níveis visuais na árvore de comentários dentro do post, abrir uma tela de thread ao exceder o limite e refinar os controles dos comentários sem alterar ordenação ou destaque de psicólogos verificados.
+- Fonte visual auditável: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão, então a validação visual usou a referência local e browser local.
+- A tela principal do post agora renderiza o comentário raiz mais 4 níveis de respostas aninhadas; níveis abaixo disso exibem `Ver mais resposta(s)` alinhado à camada onde a continuação existiria.
+- O backend deixou de usar o `take: 3` de respostas imediatas e passou a hidratar descendentes dos comentários diretos paginados com profundidade limitada por `INLINE_REPLY_DESCENDANT_DEPTH`, preservando comentários diretos como árvores de primeira camada.
+- A rota de thread `/app/community/[slug]/post/[id]/thread/[replyId]` passou a exibir o post original no topo e, abaixo, o comentário raiz do fio selecionado com a continuação da conversa; o composer fica depois da árvore no desktop e permanece fixo no mobile.
 - A resposta da API de thread foi normalizada no client para `{ reply }`, compatibilizando o contrato tipado com o payload real do backend e destravando a tela isolada.
-- Nos comentÃƒÆ’Ã‚Â¡rios, o grupo de upvote/downvote usa `votePresentation="inline"`, sem cÃƒÆ’Ã‚Â¡psula/fundo cinza; `Responder` permanece sem ÃƒÆ’Ã‚Â­cone, em escala menor e com espaÃƒÆ’Ã‚Â§amento consistente com salvar/compartilhar.
-- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de Prisma schema, migrations, packages, regra de ordenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, prioridade de psicÃƒÆ’Ã‚Â³logo verificado ou lÃƒÆ’Ã‚Â³gica de envio.
+- Nos comentários, o grupo de upvote/downvote usa `votePresentation="inline"`, sem cápsula/fundo cinza; `Responder` permanece sem ícone, em escala menor e com espaçamento consistente com salvar/compartilhar.
+- Não houve alteração de Prisma schema, migrations, packages, regra de ordenação, prioridade de psicólogo verificado ou lógica de envio.
 - ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
-- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas:
+- Validações executadas:
   - `pnpm --dir backend check`
   - `pnpm --dir backend build`
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
-  - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video/thread/demo-reply-ansiedade-apresentacao-psi-video` com cookie de sessÃƒÆ’Ã‚Â£o local.
+  - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video/thread/demo-reply-ansiedade-apresentacao-psi-video` com cookie de sessão local.
   - Browser local Chrome headless autenticado nas mesmas rotas, conferindo o detalhe do post e a thread isolada com o post original no topo.
 
 ## Execucao complementar: ajuste fino dos controles de comentarios (2026-06-16)
@@ -425,7 +425,7 @@ Esta task deve ser concluÃƒÆ’Ã‚Â­da em um commit prÃƒÆ’Ã‚Â³p
 - A regra preserva a exigencia de plano profissional ativo e continua bloqueando plano gratuito; o helper `activeProfessionalCourtesyEntitlementWhere()` centraliza a consulta da cortesia administrativa.
 - Nao houve alteracao de Prisma schema, migrations, storage, endpoints, payload de respostas, limites de arquivo, ordenacao, votos ou regras de denuncia.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
-- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, script local confirmando `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com `cfp_verified_at=null` e `admin_grant` ativo, e service real `authorizeReplyMediaUpload` retornando `status=200` para post publicado existente.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, script local confirmando `canAttachReplyMedia=true` para `<CONTA_DE_TESTE_AUTORIZADA>` com `cfp_verified_at=null` e `admin_grant` ativo, e service real `authorizeReplyMediaUpload` retornando `status=200` para post publicado existente.
 
 ## Execucao complementar: icone de video no anexo de comentarios (2026-06-21)
 
@@ -471,7 +471,7 @@ Esta task deve ser concluÃƒÆ’Ã‚Â­da em um commit prÃƒÆ’Ã‚Â³p
 - Nao houve alteracao de Prisma schema, migrations, packages, storage, payload de criacao/edicao, votos, salvamentos, ordenacao ou denuncia.
 - Fonte visual auditavel: screenshots enviados pelo usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
-- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API em `/api/private/community/feed/posts?search=teste%20novo&limit=20` confirmando `verified=true`, `whatsapp_url` e `edited_at` para `tuliosrezende@gmail.com`, e Chrome/CDP autenticado em `/app/community/feed` confirmando selo verificado, texto `editado`, botao `Chamar no WhatsApp` no card `teste novo` e botao de WhatsApp em resposta profissional destacada.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API em `/api/private/community/feed/posts?search=teste%20novo&limit=20` confirmando `verified=true`, `whatsapp_url` e `edited_at` para `<CONTA_DE_TESTE_AUTORIZADA>`, e Chrome/CDP autenticado em `/app/community/feed` confirmando selo verificado, texto `editado`, botao `Chamar no WhatsApp` no card `teste novo` e botao de WhatsApp em resposta profissional destacada.
 
 ## Execucao complementar: textarea compacto e botao Midia na edicao de comentario (2026-06-21)
 
@@ -496,7 +496,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Nao houve alteracao nas regras de autoria, exclusao, notificacoes, votos, salvos, ordenacao, storage, permissao de midia ou historico de edicoes.
 - Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
-- Validacoes executadas: `pnpm --dir backend db:migrate -- --name add_post_reply_edited_at`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` no detalhe do post demo, confirmando `Psic?logo ? h? 1 d ? editado` no comentario editado.
+- Validacoes executadas: `pnpm --dir backend db:migrate -- --name add_post_reply_edited_at`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` no detalhe do post demo, confirmando `Psicólogo · há 1 d · editado` no comentario editado.
 
 ## Complemento 2026-06-22 - comentarios com texto ou midia
 
@@ -702,7 +702,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 ## Execucao complementar: setas persistentes no carrossel publicado (2026-06-22)
 
 - Pedido do usuario: quando houver carrossel de midias, inserir setas de avancar e voltar nas midias no feed, dentro da comunidade e em todos os locais onde o carrossel aparecer.
-- Frontend: o componente compartilhado `PostMediaCarousel` recebeu botoes nativos de navegacao anterior/proxima com `z-index` alto, fundo escuro translÃƒÆ’Ã‚Âºcido, blur e gradientes laterais para manter contraste sobre imagens claras ou escuras.
+- Frontend: o componente compartilhado `PostMediaCarousel` recebeu botoes nativos de navegacao anterior/proxima com `z-index` alto, fundo escuro translúcido, blur e gradientes laterais para manter contraste sobre imagens claras ou escuras.
 - Como o feed geral, a tela da comunidade, o detalhe do post e os cards reutilizados ja consomem `PostMediaCarousel`, o ajuste se aplica de forma centralizada a todos os locais de exibicao do carrossel publicado.
 - Os dots continuam disponiveis para salto direto entre imagens; setas e dots agora interrompem propagacao de clique para nao abrir o card/post acidentalmente.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, limites de arquivo, upload, DTOs ou regra de carrossel apenas com imagens.
@@ -755,10 +755,10 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 
 ## Execucao complementar: divisor entre contexto e autor nos cards (2026-06-23)
 
-- Pedido do usuario: nos cards de conteudo, em todos os contextos exceto no detalhe do post, adicionar uma linha fina entre o cabeÃƒÂ¯Ã‚Â¿Ã‚Â½alho `Postado em` e o nome do psicologo.
+- Pedido do usuario: nos cards de conteudo, em todos os contextos exceto no detalhe do post, adicionar uma linha fina entre o cabeï¿½alho `Postado em` e o nome do psicologo.
 - Frontend: `CommunityPostCard` passou a renderizar um divisor sutil quando o card exibe simultaneamente contexto da comunidade (`Postado em`/`Respondido em`) e autoria.
-- Frontend: a listagem interna de comunidade recebeu o mesmo divisor no `PostCard` local quando o cabeÃƒÂ¯Ã‚Â¿Ã‚Â½alho `Postado em` esta visivel.
-- Frontend: os cards de respostas salvas tambem receberam o divisor entre `Respondido em` e o cabeÃƒÂ¯Ã‚Â¿Ã‚Â½alho do autor, mantendo consistencia nas listas fora do detalhe do post.
+- Frontend: a listagem interna de comunidade recebeu o mesmo divisor no `PostCard` local quando o cabeï¿½alho `Postado em` esta visivel.
+- Frontend: os cards de respostas salvas tambem receberam o divisor entre `Respondido em` e o cabeï¿½alho do autor, mantendo consistencia nas listas fora do detalhe do post.
 - O detalhe do post nao foi alterado, conforme excecao definida pelo usuario.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, votos, salvos, ranking, midia ou tracking de WhatsApp.
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
@@ -818,7 +818,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: pnpm --dir frontend biome:fix, pnpm --dir frontend check, pnpm --dir frontend build, pnpm check e git diff --check.
 
-## Execucao complementar: carrossel com fallback quadrado e formatos canÃƒÆ’Ã‚Â´nicos (2026-06-23)
+## Execucao complementar: carrossel com fallback quadrado e formatos canônicos (2026-06-23)
 
 - Pedido do usuario: o carrossel continuava vertical no feed mesmo apos a regra de carrossel misto.
 - Frontend: `PostMediaCarousel` passou a resolver o frame a partir dos metadados reais de largura/altura de todas as imagens do carrossel.
@@ -829,7 +829,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
 
-## Execucao complementar: mÃƒÆ’Ã‚Â­dias menores apenas no desktop (2026-06-23)
+## Execucao complementar: mídias menores apenas no desktop (2026-06-23)
 
 - Pedido do usuario: no desktop, diminuir as midias para ficar mais parecido com o Threads e permitir ver todo ou quase todo o post sem rolagem.
 - Frontend: os limites `md:max-w` dos frames compartilhados foram reduzidos para post/detalhe e respostas/comentarios, sem alterar a largura mobile.
@@ -865,7 +865,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 ## Execucao complementar: copy compacta no menu de acoes do post (2026-06-23)
 
 - Pedido do usuario: alterar as opcoes do menu do post para `Editar`, `Silenciar` e `Excluir`, removendo o sufixo `post`.
-- Frontend: `PostOwnerActionMenu` passou a exibir os rÃƒÆ’Ã‚Â³tulos compactos no dropdown de tres pontos e no fluxo de bloqueio para silenciar.
+- Frontend: `PostOwnerActionMenu` passou a exibir os rótulos compactos no dropdown de tres pontos e no fluxo de bloqueio para silenciar.
 - Frontend: o selo de post silenciado foi simplificado para `Silenciado`, mantendo o estado e a regra de notificacoes inalterados.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
@@ -875,7 +875,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 ## Execucao complementar: copy compacta no menu de acoes de comentarios (2026-06-23)
 
 - Pedido do usuario: alterar as opcoes do menu de comentarios/respostas para `Editar`, `Silenciar` e `Excluir`, removendo o sufixo `comentario`.
-- Frontend: `ReplyOwnerActionMenu` passou a exibir os rÃƒÆ’Ã‚Â³tulos compactos no dropdown de tres pontos, tanto para comentarios quanto para respostas.
+- Frontend: `ReplyOwnerActionMenu` passou a exibir os rótulos compactos no dropdown de tres pontos, tanto para comentarios quanto para respostas.
 - Frontend: o botao do fluxo de bloqueio de exclusao/silenciamento tambem usa copy compacta (`Silenciar`/`Silenciada`), sem alterar a regra de dominio.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
@@ -903,40 +903,41 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
 
-## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: botÃƒÆ’Ã‚Â£o de mÃƒÆ’Ã‚Â­dia na ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de comentÃƒÆ’Ã‚Â¡rio (2026-06-23)
+## Execução complementar: botão de mídia na edição de comentário (2026-06-23)
 
-- Pedido do usuÃƒÆ’Ã‚Â¡rio: quando jÃƒÆ’Ã‚Â¡ houver mÃƒÆ’Ã‚Â­dia no comentÃƒÆ’Ã‚Â¡rio, remover o botÃƒÆ’Ã‚Â£o `Editar mÃƒÆ’Ã‚Â­dia` da modal de editar comentÃƒÆ’Ã‚Â¡rio e exibir novamente somente se a mÃƒÆ’Ã‚Â­dia for removida; se o comentÃƒÆ’Ã‚Â¡rio nÃƒÆ’Ã‚Â£o tiver mÃƒÆ’Ã‚Â­dia, o botÃƒÆ’Ã‚Â£o deve aparecer.
-- Frontend: `ReplyMediaAttachmentControl` agora mantÃƒÆ’Ã‚Â©m o input de arquivo disponÃƒÆ’Ã‚Â­vel, mas sÃƒÆ’Ã‚Â³ renderiza o botÃƒÆ’Ã‚Â£o `MÃƒÆ’Ã‚Â­dia` no modo editor quando nÃƒÆ’Ã‚Â£o existe mÃƒÆ’Ã‚Â­dia efetiva atual ou selecionada.
-- Frontend: quando hÃƒÆ’Ã‚Â¡ mÃƒÆ’Ã‚Â­dia atual ou recÃƒÆ’Ã‚Â©m-selecionada, a modal exibe apenas a miniatura com o botÃƒÆ’Ã‚Â£o `X` de remover; ao remover a mÃƒÆ’Ã‚Â­dia, o botÃƒÆ’Ã‚Â£o `MÃƒÆ’Ã‚Â­dia` volta para permitir anexar uma nova.
-- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÆ’Ã‚Âµes, votos, salvos, ranking ou tracking de WhatsApp.
-- Fonte visual auditÃƒÆ’Ã‚Â¡vel: screenshot do usuÃƒÆ’Ã‚Â¡rio; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta callable neste ambiente.
+- Pedido do usuário: quando já houver mídia no comentário, remover o botão `Editar mídia` da modal de editar comentário e exibir novamente somente se a mídia for removida; se o comentário não tiver mídia, o botão deve aparecer.
+- Frontend: `ReplyMediaAttachmentControl` agora mantém o input de arquivo disponível, mas só renderiza o botão `Mídia` no modo editor quando não existe mídia efetiva atual ou selecionada.
+- Frontend: quando há mídia atual ou recém-selecionada, a modal exibe apenas a miniatura com o botão `X` de remover; ao remover a mídia, o botão `Mídia` volta para permitir anexar uma nova.
+- Não houve alteração de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissões, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditável: screenshot do usuário; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0156-botao-midia-edicao-comentario.md`.
-- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
-## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: miniatura horizontal na ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de comentÃƒÆ’Ã‚Â¡rio (2026-06-23)
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+## Execução complementar: miniatura horizontal na edição de comentário (2026-06-23)
 
-- Pedido do usuÃƒÆ’Ã‚Â¡rio: na modal de editar comentÃƒÆ’Ã‚Â¡rio, se a mÃƒÆ’Ã‚Â­dia for horizontal, a miniatura tambÃƒÆ’Ã‚Â©m deve aparecer horizontal.
-- Frontend: `ReplyMediaAttachmentControl` passou a usar `landscape` como orientaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o visual padrÃƒÆ’Ã‚Â£o no modo editor enquanto a detecÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o assÃƒÆ’Ã‚Â­ncrona de dimensÃƒÆ’Ã‚Âµes da mÃƒÆ’Ã‚Â­dia atual ainda nÃƒÆ’Ã‚Â£o terminou.
-- Frontend: `ReplyEditModal` passou a detectar a orientaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de novas mÃƒÆ’Ã‚Â­dias selecionadas na ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, reaproveitando `detectReplyMediaOrientation` para manter imagens/vÃƒÆ’Ã‚Â­deos horizontais em moldura horizontal.
-- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÆ’Ã‚Âµes, votos, salvos, ranking ou tracking de WhatsApp.
-- Fonte visual auditÃƒÆ’Ã‚Â¡vel: screenshot do usuÃƒÆ’Ã‚Â¡rio; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta callable neste ambiente.
+- Pedido do usuário: na modal de editar comentário, se a mídia for horizontal, a miniatura também deve aparecer horizontal.
+- Frontend: `ReplyMediaAttachmentControl` passou a usar `landscape` como orientação visual padrão no modo editor enquanto a detecção assíncrona de dimensões da mídia atual ainda não terminou.
+- Frontend: `ReplyEditModal` passou a detectar a orientação de novas mídias selecionadas na edição, reaproveitando `detectReplyMediaOrientation` para manter imagens/vídeos horizontais em moldura horizontal.
+- Não houve alteração de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissões, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditável: screenshot do usuário; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0156-botao-midia-edicao-comentario.md`.
-- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
 
-## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: reversÃƒÆ’Ã‚Â£o do fundo branco do feed (2026-06-23)
+## Execução complementar: reversão do fundo branco do feed (2026-06-23)
 
-- Pedido do usuÃƒÆ’Ã‚Â¡rio: desfazer a ÃƒÆ’Ã‚Âºltima alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o e voltar o background do feed ÃƒÆ’Ã‚Â  cor anterior.
+- Pedido do usuário: desfazer a última alteração e voltar o background do feed à cor anterior.
 - Frontend: `CommunityFeedLogic` voltou a usar `bg-[#F5F7FA]` no `PrivateTemplate` e no header sticky de busca/filtros.
-- Frontend: `CommunityDetailLogic` tambÃƒÆ’Ã‚Â©m voltou a usar `bg-[#F5F7FA]` para manter a timeline dentro da comunidade consistente com o feed.
-- Ajuste visual: o offset de foco do FAB de criaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o voltou para `ring-offset-[#F5F7FA]`.
+- Frontend: `CommunityDetailLogic` também voltou a usar `bg-[#F5F7FA]` para manter a timeline dentro da comunidade consistente com o feed.
+- Ajuste visual: o offset de foco do FAB de criação voltou para `ring-offset-[#F5F7FA]`.
 - Dark mode preservado com `dark:bg-background`.
-- O ADR da alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o para fundo branco foi removido por nÃƒÆ’Ã‚Â£o representar mais o estado atual; novo ADR criado: `adrs/0157-reversao-fundo-cinza-feed-comunidade.md`.
-- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma, storage ou packages.
-- Fonte visual: pedido do usuÃƒÆ’Ã‚Â¡rio; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ acessÃƒÆ’Ã‚Â­vel neste ambiente.
+- O ADR da alteração para fundo branco foi removido por não representar mais o estado atual; novo ADR criado: `adrs/0157-reversao-fundo-cinza-feed-comunidade.md`.
+- Não houve alteração de backend, Prisma, storage ou packages.
+- Fonte visual: pedido do usuário; Builder/Quick Copy não está acessível neste ambiente.
 
-### ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
+### Validações
 
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
+- [x] Chrome headless local em `/smoke-reply-composer` confirmou `contenteditable` renderizado, sem `textarea` nativo no composer.
 - [x] `pnpm check`
 - [x] `git diff --check`
 
@@ -955,16 +956,18 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
-## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: chips sem sombra no perfil do psicÃƒÆ’Ã‚Â³logo (2026-06-23)
+- [x] `pnpm version:bump` para `0.1.63`
+- [x] `pnpm check:version`
+## Execução complementar: chips sem sombra no perfil do psicólogo (2026-06-23)
 
-- Pedido do usuÃƒÆ’Ã‚Â¡rio: remover o sombreamento atrÃƒÆ’Ã‚Â¡s dos chips de especialidades, atendimento (`Modalidade`, `Abordagens`, `ServiÃƒÆ’Ã‚Â§os`, `PÃƒÆ’Ã‚Âºblico atendido`, `Idiomas`) e `FormaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o & TÃƒÆ’Ã‚Â­tulos` no perfil pÃƒÆ’Ã‚Âºblico do psicÃƒÆ’Ã‚Â³logo.
-- Frontend: `ProfileChipList`, `ProfileInfoCard` e os itens de `FormationSection` deixaram de aplicar sombras nos chips/cards internos, mantendo borda, radius e espaÃƒÆ’Ã‚Â§amentos.
-- As sombras dos cards principais do perfil foram preservadas para nÃƒÆ’Ã‚Â£o achatar toda a pÃƒÆ’Ã‚Â¡gina e manter a separaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o entre seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes.
-- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÆ’Ã‚Âµes, votos, salvos, ranking, posts, comentÃƒÆ’Ã‚Â¡rios ou tracking de WhatsApp.
-- Fonte visual auditÃƒÆ’Ã‚Â¡vel: screenshots do usuÃƒÆ’Ã‚Â¡rio; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta callable neste ambiente.
+- Pedido do usuário: remover o sombreamento atrás dos chips de especialidades, atendimento (`Modalidade`, `Abordagens`, `Serviços`, `Público atendido`, `Idiomas`) e `Formação & Títulos` no perfil público do psicólogo.
+- Frontend: `ProfileChipList`, `ProfileInfoCard` e os itens de `FormationSection` deixaram de aplicar sombras nos chips/cards internos, mantendo borda, radius e espaçamentos.
+- As sombras dos cards principais do perfil foram preservadas para não achatar toda a página e manter a separação entre seções.
+- Não houve alteração de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissões, votos, salvos, ranking, posts, comentários ou tracking de WhatsApp.
+- Fonte visual auditável: screenshots do usuário; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0158-remocao-sombra-chips-perfil-psicologo.md`.
 
-### ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
+### Validações
 
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
@@ -1042,7 +1045,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Pedido do usuario: ajustar o CTA de WhatsApp integrado a videos/imagens de posts e respostas da comunidade para que o texto nao pareca cortado, especialmente os descendentes de `WhatsApp`, e adicionar seta discreta em `Falar com {nome}`.
 - Frontend: `CommunityWhatsAppCta` aumentou o padding vertical da variante anexada a midia, ampliou o gap entre linhas e trocou `leading-none` por `leading-[1.35]` nas duas linhas do CTA.
 - Frontend: a linha `WhatsApp` deixou de usar `truncate`/`overflow-hidden`, mantendo `overflow-visible` e `whitespace-nowrap` para evitar corte visual da base das letras.
-- Frontend: a segunda linha agora exibe `Falar com {primeiro nome} â†’`, preservando o icone de WhatsApp e a largura conectada ao frame de video/imagem.
+- Frontend: a segunda linha agora exibe `Falar com {primeiro nome} →`, preservando o icone de WhatsApp e a largura conectada ao frame de video/imagem.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
 - Fonte visual/auditavel: pedido do usuario e referencias locais `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
@@ -1051,7 +1054,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 ## Complemento 2026-06-25 - CTA WhatsApp sem midia padronizado
 
 - Pedido do usuario: padronizar os elementos do botao de WhatsApp em posts e respostas sem midia.
-- Frontend: `CommunityWhatsAppCta` passou a usar a mesma hierarquia textual em todas as variantes: `WhatsApp` na primeira linha e `Falar com {primeiro nome} â†’` na segunda linha.
+- Frontend: `CommunityWhatsAppCta` passou a usar a mesma hierarquia textual em todas as variantes: `WhatsApp` na primeira linha e `Falar com {primeiro nome} →` na segunda linha.
 - A variante sem midia permanece como botao independente (`w-fit`, cantos arredondados completos), enquanto a variante com midia continua conectada ao frame de imagem/video.
 - A alteracao reaproveita `PsychologistWhatsAppRedirectButton` e `PsychologistWhatsAppButtonContent`, preservando abertura do WhatsApp, tracking, icone, estados de hover/focus e bloqueio de propagacao dos cards.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
@@ -1133,20 +1136,20 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/api/callers/posts/index.tsx" "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` na rota do post demo e Chrome headless mobile 390x844 confirmando ausencia de `Anterior`, `Proxima` e contador de paginas no DOM renderizado.
 
-## Complemento 2026-06-26 - alias anÃ´nimo estÃ¡vel no detalhe do post
+## Complemento 2026-06-26 - alias anônimo estável no detalhe do post
 
-- Pedido do usuÃ¡rio: manter o mesmo identificador anÃ´nimo para um membro em posts anÃ´nimos diferentes, para preservar contexto comunitÃ¡rio e apoiar respostas dos psicÃ³logos sem expor a identidade real.
-- Backend: o detalhe do post e as listas relacionadas passaram a receber o mesmo alias `Membro AnÃ´nimo #XXXX` derivado de `author.id`, em vez de um nÃºmero derivado do post.
+- Pedido do usuário: manter o mesmo identificador anônimo para um membro em posts anônimos diferentes, para preservar contexto comunitário e apoiar respostas dos psicólogos sem expor a identidade real.
+- Backend: o detalhe do post e as listas relacionadas passaram a receber o mesmo alias `Membro Anônimo #XXXX` derivado de `author.id`, em vez de um número derivado do post.
 - O comportamento preserva anonimato visual: nome real, avatar e perfil do paciente continuam mascarados quando `anonymous=true`.
-- Escopo: sem mudanÃ§a de schema Prisma, migrations, packages, endpoints, payloads, frontend, votos, salvos, Ã¡rvore de comentÃ¡rios ou criaÃ§Ã£o de respostas.
+- Escopo: sem mudança de schema Prisma, migrations, packages, endpoints, payloads, frontend, votos, salvos, árvore de comentários ou criação de respostas.
 - ADR criado: `adrs/0167-alias-anonimo-estavel-por-usuario.md`.
 
 ## Complemento 2026-06-26 - mensagem WhatsApp contextual no detalhe do post
 
-- Pedido do usuÃ¡rio: a mensagem pronta do WhatsApp deve iniciar com o primeiro nome do psicÃ³logo.
-- Backend: no detalhe do post, links de WhatsApp do autor do post usam a copy `seu post na Lectum`; links de respostas/comentÃ¡rios usam `sua resposta na Lectum`, ambos com saudaÃ§Ã£o `OlÃ¡ {primeiro nome}` quando o nome existe.
-- Frontend: a modal/transiÃ§Ã£o global de WhatsApp mantÃ©m o texto contextual da origem do clique ao combinar fallback de tela e URL retornada pelo tracking.
-- Escopo: sem alteraÃ§Ã£o de schema Prisma, migrations, endpoints, Ã¡rvore de comentÃ¡rios, votos, salvos, mÃ­dia, permissÃµes ou packages.
+- Pedido do usuário: a mensagem pronta do WhatsApp deve iniciar com o primeiro nome do psicólogo.
+- Backend: no detalhe do post, links de WhatsApp do autor do post usam a copy `seu post na Lectum`; links de respostas/comentários usam `sua resposta na Lectum`, ambos com saudação `Olá {primeiro nome}` quando o nome existe.
+- Frontend: a modal/transição global de WhatsApp mantém o texto contextual da origem do clique ao combinar fallback de tela e URL retornada pelo tracking.
+- Escopo: sem alteração de schema Prisma, migrations, endpoints, árvore de comentários, votos, salvos, mídia, permissões ou packages.
 - ADR atualizado: `adrs/0022-contato-whatsapp-wa-me.md`.
 
 ## Complemento 2026-06-29 - denuncias preparadas para painel administrativo futuro
@@ -1271,3 +1274,1168 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `git diff --check` (sem erro; apenas aviso local de normalizacao CRLF/LF no ADR atualizado)
 - [x] API local em `GET /api/private/posts/cmr26lrh70003nouhg6pd23j6/replies?limit=20` confirmou a resposta `cmr2797pm0003msuhqbqs3a4b` como `is_post_author=true`, `author.anonymous=true` e alias `Membro Anônimo #2624`.
 - [x] Chrome/CDP local mobile 390x844 em `/community/autocuidado-em-pratica/post/cmr26lrh70003nouhg6pd23j6?focusReplyId=cmr2797pm0003msuhqbqs3a4b#reply-cmr2797pm0003msuhqbqs3a4b` confirmou `Membro Anônimo #2624`, `Autor · há ... · editado` e ausencia de `Túlio Rezende` no comentario.
+
+## Complemento 2026-08-11 - composer mobile alinhado ao padrao Reddit
+
+- Pedido do usuario: comparar a barra de comentario da Lectum com a do Reddit e ajustar o composer porque a UI parecia vazar por tras, o controle `Anexar midia` ocupava espaco excessivo e a barra nativa com setas/check parecia sem funcao clara.
+- Referencias visuais/auditaveis: screenshots do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 10.43.37.jpeg` (Lectum) e `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 10.43.20.jpeg` (Reddit), alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: o composer fixo mobile passou a usar superficie solida `bg-surface`, sem translucidez/backdrop blur, com topo arredondado e camada `z-[80]` para reduzir a sensacao de vazamento da thread por tras.
+- Frontend: o controle de midia do modo composer virou botao circular icon-only e foi movido para a esquerda do campo `Comentar no post`, preservando input de arquivo, permissao real, `aria-label`, `title`, previa/remocao de midia selecionada e envio real.
+- Decisao de UX/tecnica: a barra com setas/check e controlada pelo iOS/browser quando o `textarea` recebe foco; a implementacao nao troca o controller React Hook Form/Zod por `contenteditable` fragil apenas para tentar ocultar uma UI nativa fora do controle CSS do app.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx" src/components/community/reply-media-attachment-control.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` e Chrome headless local em viewport 390x844. A API local respondeu `Post indisponivel`, entao a validacao visual autenticada final ficou para o smoke em homologacao apos o push.
+
+
+## Complemento 2026-08-11 - remocao do X do composer de comentarios
+
+- Pedido do usuario: remover o X de saida exibido na barra de adicionar comentario, mantendo a barra mais simples e alinhada ao padrao comparado com o Reddit.
+- Frontend: o composer de comentarios/respostas deixou de renderizar o botao circular de cancelar ao lado do campo e do envio; o row agora permanece com midia icon-only quando disponivel, textarea e botao de enviar.
+- O cancelamento interno foi preservado para gestos e limpeza de contexto ja existentes, e os X de outros fluxos continuam inalterados: fechar modal de denuncia e remover midia anexada.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A barra de adicionar comentario nao exibe mais o X de saida/cancelamento ao focar no campo.
+- [x] O botao de envio e o botao de midia icon-only permanecem funcionais no mesmo row.
+- [x] O X de remover midia anexada e o X de fechar denuncia nao foram removidos.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao autenticada final ficou para smoke de homologacao apos push.
+
+
+## Complemento 2026-08-11 - previa de midia abaixo do campo no composer
+
+- Pedido do usuario: a midia subida no comentario deve permanecer abaixo do campo de escrever o comentario; somente o icone de adicionar midia deve permanecer a esquerda do campo.
+- Frontend: o composer passou a separar o controle de midia em dois modos no fluxo de comentarios: `trigger`, para manter apenas o botao circular icon-only no row do textarea, e `preview`, para renderizar a miniatura/remocao em uma segunda linha abaixo do campo.
+- A previa da midia selecionada continua usando `next/image` para imagens, `video` para videos, orientacao real detectada, botao de remocao e envio real sem mock.
+- O icone de adicionar permanece acessivel a esquerda do campo e pode substituir a midia selecionada por um novo arquivo, sem transformar a miniatura em botao clicavel.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Ao selecionar midia, a miniatura aparece abaixo do campo de comentario, nao no lugar do icone a esquerda.
+- [x] O row principal permanece com icone de adicionar midia, campo de comentario e botao de envio.
+- [x] A miniatura mantem o X de remocao, preview real de imagem/video e envio real.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx" src/components/community/reply-media-attachment-control.tsx`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao autenticada final ficou para smoke de homologacao apos push.
+
+
+## Complemento 2026-08-11 - composer colado ao limite do teclado no iOS
+
+- Pedido do usuario: no iPhone, a barra nativa com setas/check aparece entre o composer da Lectum e o teclado; no Reddit o campo fica visualmente colado ao teclado.
+- Diagnostico: a barra com setas/check e a toolbar nativa do iOS/Safari para campos de formulario web (`textarea`), nao um componente da Lectum. Alem dela, o composer ainda aplicava `safe-area` de repouso quando estava focado, criando um vao extra acima dessa toolbar.
+- Frontend: quando o composer fixo esta ativo/focado no mobile, o padding inferior deixa de usar `var(--lectum-bottom-fixed-padding)` e passa a usar padding compacto (`pb-2`), mantendo o `safe-area` apenas no estado de repouso.
+- Decisao de UX/tecnica: nao substituir o controller React Hook Form/Zod por `contenteditable` apenas para tentar esconder uma toolbar nativa do iOS; o ajuste remove o espaco extra controlado pela Lectum e preserva acessibilidade/validacao real.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Composer focado no mobile usa padding inferior compacto, sem manter o `safe-area` de repouso acima da toolbar nativa.
+- [x] Composer em repouso continua respeitando safe-area/home indicator.
+- [x] React Hook Form/Zod, textarea, envio real e anexo de midia permanecem inalterados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao visual autenticada em iOS real fica coberta pelo smoke de homologacao e pelo reteste no aparelho do usuario.
+
+## Complemento 2026-08-11 - composer contextual com midia integrada e foco imediato
+
+- Pedido do usuario: ajustar a barra de adicionar comentario para tratar anexo como parte da resposta, deixar o botao de midia claramente clicavel apenas quando nao ha anexo, exibir miniatura de video, trocar a copy superior por `Respondendo a [Nome]`, mover a orientacao de conduta para baixo da caixa, fechar teclado ao rolar, mostrar header compacto ao rolar para cima e focar automaticamente a caixa ao tocar em `Responder` na arvore.
+- Referencias visuais/auditaveis: screenshot do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 14.00.27.jpeg`, comparativo anterior com Reddit `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 10.43.20.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: o botao de midia no composer fica visualmente acionavel quando pode anexar e desabilita enquanto existe `selectedMedia`, reativando somente apos remover a midia anexada.
+- Frontend: a previa de midia selecionada foi movida para dentro do contorno visual do campo de resposta, abaixo do textarea, mantendo o icone de adicionar separado a esquerda do campo e preservando o X apenas para remover a midia.
+- Frontend: videos selecionados localmente passam a gerar uma miniatura em canvas para preview; videos ja persistidos usam `thumbnail_url` quando disponivel na edicao.
+- Frontend: a mensagem superior do composer passa a indicar o contexto `Respondendo a [Nome]` ou `Respondendo ao post`, enquanto `Comente com respeito e empatia, mesmo quando discordar.` fica abaixo da caixa com menor peso visual.
+- Frontend: ao rolar a pagina com o textarea focado no mobile, o composer desfoca o campo para fechar o teclado sem descartar texto/midia; ao rolar para cima no detalhe do post, um header fixo compacto com seta de voltar e titulo `Post` aparece.
+- Frontend: ao tocar em `Responder` em um comentario da arvore no mobile, o controller foca o textarea de forma sincronica no gesto do usuario e repete o foco apos a atualizacao do alvo para aumentar a confiabilidade de abertura do teclado no iOS/PWA.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Sem midia anexada, o botao de midia aparece como acao clicavel para usuarios com permissao; com midia anexada, ele fica desabilitado ate a midia ser removida.
+- [x] Videos selecionados para comentario exibem miniatura local no preview do composer.
+- [x] A midia selecionada aparece dentro da caixa visual do comentario, abaixo do textarea, mostrando que faz parte da resposta a enviar.
+- [x] O texto superior do composer mostra `Respondendo a [Nome]` ou `Respondendo ao post`, e a orientacao de conduta aparece abaixo com menor peso visual.
+- [x] Rolar a pagina com o textarea focado no mobile desfoca o campo para fechar o teclado sem apagar o rascunho.
+- [x] Rolar para cima dentro da pagina do post exibe header compacto com seta de voltar e titulo `Post`.
+- [x] Tocar em `Responder` em comentario da arvore no mobile foca automaticamente a caixa de comentario para abrir o teclado.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento da rota; sem API/autenticacao local disponivel, a validacao visual autenticada final fica para smoke de homologacao apos push.
+
+## Complemento 2026-08-11 - teclado Android e header flutuante completo
+
+- Pedido do usuario: no Android/Chrome, ao tocar em `Responder`, o composer podia ficar escondido atras do teclado; a copy direta `Respondendo ao post` deveria virar `Respondendo [nome do usuario]`; o header ao rolar para cima deveria ser completo, com seta de voltar e menu de denuncia; e a selecao do campo precisava ficar mais fluida, sem desfocar sozinha nem travar o toque.
+- Referencias visuais/auditaveis: screenshots do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 15.00.27.jpeg` e `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 15.01.52.jpeg`, alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: o composer fixo mobile agora observa `window.visualViewport` quando focado e aplica offset inferior dinamico para ficar acima do teclado virtual em browsers que sobrepoem o teclado ao viewport, preservando fallback seguro quando a API nao existir.
+- Frontend: o desfoco por scroll foi restringido a rolagem com intencao real do usuario (`touchmove`/`wheel`), evitando que resize/auto-scroll do navegador ao abrir teclado feche o campo sozinho.
+- Frontend: a trava `touch-none` do composer focado foi removida para deixar toque, cursor e rolagem mais fluidos; o gesto de arrastar para cancelar permanece restrito ao movimento validado.
+- Frontend: comentarios diretos ao post recebem `replyToName` com o nome publico do autor do post e a copy passa a `Respondendo [nome]`; respostas da arvore tambem usam `Respondendo [nome]`, sem a preposicao anterior.
+- Frontend: o header flutuante mobile ao rolar para cima passou a espelhar o topo do post: seta de voltar, titulo `Post` e acao lateral com menu de denuncia para posts de outros usuarios ou menu de dono quando for post proprio.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Campo de comentario focado no mobile usa offset de viewport para permanecer acima do teclado virtual quando o navegador sobrepoe o teclado.
+- [x] O composer nao desfoca sozinho por resize/auto-scroll de abertura do teclado e nao usa mais trava global de toque no estado focado.
+- [x] Comentario direto exibe `Respondendo [nome publico do autor do post]`, nao `Respondendo ao post`.
+- [x] Resposta em comentario da arvore continua exibindo `Respondendo [nome]` do alvo.
+- [x] Header flutuante ao rolar para cima exibe seta de voltar, titulo `Post` e menu com `Denunciar post` para posts de terceiros.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local retornou estado `Post indisponivel`, entao a validacao autenticada final de teclado/header fica para smoke em homologacao e reteste no aparelho real.
+
+## Complemento 2026-08-11 - envio de midia no primeiro toque
+
+- Pedido do usuario: ao anexar midia e tocar no botao de envio, o primeiro toque nao enviava; o composer alterava levemente a altura e exigia um segundo toque.
+- Referencias visuais/auditaveis: screenshots do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 15.40.12.jpeg` e `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 15.40.05.jpeg`, alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Diagnostico: em mobile, tocar no botao de envio enquanto o textarea estava focado disparava `blur` antes do `click/submit`; como `relatedTarget` pode vir vazio no navegador mobile, o composer entendia como saida externa, trocava o estado ativo/padding e consumia a primeira interacao.
+- Frontend: o composer agora marca interacoes internas por `pointer/touch/mouse` em fase de captura e ignora o `blur` transitorio causado por toques dentro do proprio formulario, mantendo o estado visual estavel ate o submit concluir.
+- O envio real de resposta com texto, midia ou somente midia permanece pelo mesmo fluxo existente; o ajuste nao altera validacao, payload, upload, permissao, endpoint ou persistencia.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Tocar no botao de envio com midia anexada nao colapsa/altera o composer antes do submit.
+- [x] Resposta com midia anexada pode ser enviada no primeiro toque, sem exigir segunda tentativa.
+- [x] O comportamento de desfocar ao tocar fora/rolar intencionalmente continua preservado.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local pode depender de autenticacao/dados de homologacao para validacao visual final.
+
+## Complemento 2026-08-11 - limite de 200MB para midia em respostas
+
+- Pedido do usuario: aumentar de 50MB para 200MB o limite de videos/midia anexados nas respostas/comentarios, apos erro real exibido no composer mobile.
+- Referencia visual/auditavel: screenshot do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 16.09.34.jpeg`, alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Backend: `POST /api/private/posts/:id/replies/media` passa a usar limite de `200MB` no middleware real de upload (`multer` + R2 publico), mantendo os mesmos tipos permitidos: JPEG, PNG, WebP, MP4, WebM e QuickTime/MOV.
+- Frontend: o composer de respostas valida o tamanho do arquivo ja na selecao e mostra a mensagem de produto `A midia precisa ter ate 200MB.`, evitando tentar upload de arquivos acima do novo limite.
+- Frontend: a edicao de respostas usa a mesma validacao local de 200MB e preserva a compatibilidade de rollout para mensagens antigas de backend quando alguma versao ainda informar 50MB.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, buckets, endpoints, payloads, permissao de midia, votos, salvos, denuncias ou tracking.
+- Impacto de deploy: aumento de limite no backend pode elevar consumo de memoria/tempo de upload porque o storage atual valida assinatura a partir do buffer antes de enviar ao R2; `UPLOAD_MAX_CONCURRENCY` e fila existentes continuam limitando concorrencia. Rollback: reverter este commit volta o limite para 50MB.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Upload de midia em respostas/comentarios aceita arquivos de ate 200MB no backend.
+- [x] Composer e edicao de resposta bloqueiam localmente arquivos acima de 200MB com mensagem clara em PT-BR.
+- [x] Tipos permitidos, permissao profissional e upload real em R2 permanecem inalterados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; validacao autenticada final fica para smoke de homologacao apos push.
+
+## Complemento 2026-08-11 - erro claro no envio de resposta com mídia
+
+- Pedido do usuário: após aumentar o limite para 200MB, o envio de uma resposta com mídia ainda podia falhar exibindo apenas `Não foi possível publicar sua resposta agora.`; o usuário pediu identificar e corrigir o erro.
+- Referência visual/auditável: screenshot do usuário `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 16.40.44.jpeg`, além de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não está exposto como ferramenta callable nesta sessão.
+- Diagnóstico: o composer tratava upload da mídia, geração/upload da miniatura de vídeo e criação da resposta com o mesmo fallback genérico; quando a falha vinha sem corpo JSON seguro ou a mensagem sanitizada ficava apenas no `Error.message`, a UI perdia a causa de produto.
+- Frontend: o tratamento de erro passou a diferenciar falha de upload (`Não foi possível enviar a mídia. Verifique sua conexão e tente novamente.`) de falha na publicação da resposta (`Não foi possível publicar sua resposta agora. Verifique sua conexão e tente novamente.`), preservando mensagens de domínio seguras como limite, permissão e moderação.
+- Frontend: o upload/geração da miniatura de vídeo agora é best-effort; se a miniatura não puder ser gerada ou enviada, a resposta continua sendo publicada com o vídeo anexado e sem `thumbnailUrl`, em vez de abortar todo o envio.
+- Frontend: uploads de mídia de comunidade/resposta usam timeout client-side dedicado de 600s para ficar compatível com arquivos de até 200MB em redes móveis mais lentas.
+- Arquitetura: o fluxo comum de envio com mídia foi extraído para `modules/reply-submit.ts`, evitando crescimento do controller legado acima do limite de tamanho.
+- Escopo: sem mudanças de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, permissões de mídia, buckets, votos, salvos, denúncias ou tracking.
+- Impacto de deploy: mudança frontend-only; versões antigas e novas do backend continuam compatíveis. O upload ainda pode falhar por limite/timeout de infraestrutura, mas a UI passa a indicar a etapa correta sem expor detalhes técnicos. Rollback: reverter este commit restaura o fallback genérico e o abortamento por falha de thumbnail.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Critérios de aceite do complemento
+
+- [x] Falhas no upload da mídia exibem mensagem específica de envio de mídia, sem depender do fallback genérico de publicação.
+- [x] Falhas na criação/publicação da resposta exibem mensagem específica de publicação, preservando mensagens seguras de domínio.
+- [x] Falha ao gerar ou subir thumbnail de vídeo não bloqueia a publicação da resposta com vídeo.
+- [x] Uploads client-side de mídia de comunidade/resposta têm timeout compatível com o limite de 200MB.
+- [x] O controller do detalhe permanece abaixo do limite de tamanho por extração do fluxo de submit com mídia.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validações
+
+- [x] `pnpm --dir frontend exec biome check --write "src/api/errors.ts" "src/utils/media-upload-error.ts" "src/api/req/posts/index.ts" "src/api/req/community/index.ts" "src/app/app/community/[slug]/post/[id]/modules/reply-support.ts" "src/app/app/community/[slug]/post/[id]/views/post-detail-controller.ts" "src/app/app/community/[slug]/post/[id]/views/reply-thread.tsx"`
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/modules/reply-submit.ts" "src/app/app/community/[slug]/post/[id]/views/post-detail-controller.ts" "src/app/app/community/[slug]/post/[id]/views/reply-thread.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check` (primeira tentativa falhou por limite de tamanho do controller; o fluxo foi extraído para `reply-submit.ts` e a repetição passou)
+- [x] `git diff --check`
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP da rota; sem API/autenticação local disponível, a validação autenticada final de envio real fica para smoke de homologação após push.
+## Complemento 2026-08-11 - upload multipart para videos grandes em respostas
+
+- Pedido do usuario: o mesmo video grande que antes excedia 50MB continuava falhando no envio da resposta, agora com erro generico de envio de midia.
+- Referencia visual/auditavel: screenshot do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 17.25.01.jpeg`, alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Diagnostico: o limite logico ja estava em 200MB, mas o fluxo antigo ainda enviava o arquivo inteiro em um unico request multipart ao backend e o storage bufferizava todo o arquivo antes de gravar no bucket. Videos grandes ficavam sujeitos a limite intermediario, timeout e pressao de memoria.
+- Backend: adicionado fluxo multipart aditivo para respostas com endpoints de iniciar, enviar parte, completar e abortar upload; cada parte e pequena e o resultado final continua `{ media_url, media_type }` com URL publica em `/public/files/posts/media/`.
+- Backend: tokens de sessao/partes sao opacos e criptografados com `JWT_SECRET_KEY`, evitando expor detalhes internos do provedor no contrato publico.
+- Frontend: arquivos acima de 40MB passam automaticamente pelo fluxo multipart; em 404/405, o cliente faz fallback para o upload simples para tolerar rollout com backend antigo.
+- Frontend: mensagens legadas que ainda mencionem 50MB passam a ser normalizadas para o limite vigente de 200MB, e erros crus de upload sao convertidos em copy de produto.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR criado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Midias grandes em respostas usam upload em partes, sem depender de um unico request acima de 50MB.
+- [x] O contrato final de midia da resposta permanece `{ media_url, media_type }` e a criacao da resposta continua inalterada.
+- [x] O fluxo preserva permissao profissional, limite de 200MB, tipos permitidos e URLs publicas ja aceitas pelo backend.
+- [x] Frontend novo tolera backend antigo com fallback para o upload simples.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend biome:check`
+- [x] `pnpm --dir backend typecheck`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - ações inline e menu no cabeçalho dos comentários
+
+- Pedido do usuário: nos comentários dos posts, remover `Compartilhar` e `Salvar` do menu de três pontinhos, colocar essas ações ao lado de `Responder` e mover os três pontinhos para a linha do nome do autor, alinhados à direita.
+- Frontend: o menu `ReplyOverflowMenu` passou a conter somente ações contextuais de moderação/autoria (`Denunciar`, `Editar`, `Excluir`, conforme o usuário), sem `Compartilhar` e sem `Salvar`.
+- Frontend: `Compartilhar` e `Salvar` passaram a ser ações textuais inline na `CommunityActionBar`, logo após `Responder`, mantendo o estado `Salvo` quando aplicável e o mesmo fluxo real de autenticação/conversão para salvar respostas.
+- Frontend: os três pontinhos foram renderizados na linha de autor do `ReplyCard`, com alinhamento à direita e dropdown abrindo abaixo do botão para acompanhar a nova posição.
+- Escopo: sem mudanças de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, denúncias, edição/exclusão ou regras de permissão.
+- Fonte visual auditável: screenshot enviado pelo usuário em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 14.02.16.jpeg` e referência local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+
+### Critérios de aceite do complemento
+
+- [x] `Compartilhar` não aparece mais dentro do menu de três pontinhos dos comentários.
+- [x] `Salvar` não aparece mais dentro do menu de três pontinhos dos comentários.
+- [x] `Compartilhar` e `Salvar` aparecem na linha de ações do comentário ao lado de `Responder`.
+- [x] Os três pontinhos aparecem na linha do nome do autor e ficam alinhados à direita.
+- [x] O menu mantém somente `Denunciar` para comentários de outros usuários e `Editar`/`Excluir` para comentários próprios.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validações
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (reexecutado após o bump para `0.1.68`)
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.68`
+- [x] `pnpm check:version`
+- [x] Smoke estático do `ReplyCard` confirmou que o menu não contém `Compartilhar`/`Salvar`, mantém `Denunciar`/`Editar`/`Excluir`, renderiza ações secundárias inline e posiciona o menu antes do conteúdo.
+- [x] Browser local mobile no frontend buildado em `http://127.0.0.1:3033/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`; a rota autenticada local exibiu indisponibilidade de API (`Não foi possível conectar ao serviço`), então a validação visual específica dos dados reais fica para homologação após o push.
+
+## Complemento 2026-08-12 - composer estavel ao abrir midia
+
+- Pedido do usuario: ao tocar no botao de midia, o bloco de comentarios nao deve ser empurrado para baixo nem espremer os elementos enquanto a folha nativa de escolha de arquivo aparece.
+- Frontend: abrir o seletor de midia deixa de ativar visualmente o composer e deixa de exibir o chip `Respondendo...` antes de existir foco real no campo ou midia selecionada.
+- Frontend: o padding inferior compacto agora e usado somente quando o teclado foi detectado pelo `visualViewport`; sem teclado, o composer mantem o mesmo espacamento do estado em standby.
+- Frontend: o botao de camera recebe um marcador interno para que seu foco nao altere o estado ativo do campo.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, upload, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Tocar no botao de camera em standby nao desloca o composer para baixo.
+- [x] A folha nativa de midia abre sem exibir o chip `Respondendo...` apenas por causa do clique de midia.
+- [x] O padding inferior compacto do composer fica restrito ao estado com teclado detectado.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - raio e safe-area do composer de comentarios
+
+- Pedido do usuario: arredondar mais o campo de comentario, reduzir o botao de midia para ter margem uniforme e proteger a base do composer no mobile para evitar elementos escondidos.
+- Frontend: o campo de comentario passa de `rounded-[18px]` para `rounded-[24px]`, alinhado ao formato pill do botao de midia.
+- Frontend: o botao de camera passa de `44px` para `36px`, com `left-1` e centralizacao vertical, deixando margem visual equivalente na esquerda, topo e base do campo.
+- Frontend: quando o composer esta ativo no mobile com teclado detectado, a base usa `var(--lectum-bottom-nav-padding)`; sem teclado, mantem o espacamento fixo para nao deslocar o bloco.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, upload, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O campo de comentario tem bordas mais arredondadas, com aparencia de pill.
+- [x] O botao de camera fica menor e com margem equilibrada em relacao as bordas esquerda, superior e inferior do campo.
+- [x] No mobile, a base do composer respeita o espacamento de safe-area usado na navegacao inferior quando o teclado esta aberto.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-11 - multipart resiliente para videos reais no celular
+
+- Pedido do usuario: simular o comentario com o video real `c:/Users/tulio/Downloads/IMG_3087.MP4`, pois o arquivo correto do celular tem aproximadamente `120MB` e o erro de anexar midia continuava.
+- Diagnostico do arquivo correto: `IMG_3087.MP4` tem `125.880.310` bytes (`120,05MB`), assinatura valida de `video/mp4` e, com chunk de `8MB`, e dividido em `16` partes; cada parte fica abaixo do limite backend de `10MB`.
+- Diagnostico do storage: upload multipart direto para o R2 com o mesmo arquivo, mesmo chunk de `8MB`, `16` partes, complete e limpeza da chave diagnostica concluiu sem erro; portanto o formato, o tamanho, o chunk e o R2 nao explicam a falha.
+- Diagnostico complementar: o arquivo comprimido enviado antes tinha `13,89MB` e ficava abaixo do limiar anterior de `40MB`, entao ainda cairia no upload simples; para evitar essa zona cinzenta, o limiar do cliente foi alinhado ao chunk seguro de `8MB`.
+- Frontend: respostas/comentarios passam a usar multipart acima de `8MB`, mantendo upload simples apenas para arquivos realmente pequenos.
+- Frontend: o MIME enviado ao backend passa a ter fallback seguro pela extensao (`.MP4`, `.MOV`, `.WEBM`, `.JPG`, `.PNG`, `.WEBP`) quando o navegador mobile informa `File.type` vazio, com parametro extra ou inconsistente.
+- Frontend: upload de cada parte multipart passa a ter ate `3` tentativas em erros transitorios/rede, evitando abortar todo o envio por uma oscilacao isolada comum em videos de 120MB no celular.
+- Backend: sem mudancas; o backend multipart ja aceita chunks de ate `10MB`, retorna `part_id`/`part_token` e conclui com o contrato final `{ media_url, media_type }`.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O video real `IMG_3087.MP4` e classificado como multipart em `16` chunks de `8MB`.
+- [x] Arquivos pequenos continuam usando upload simples.
+- [x] O limite de cada parte permanece abaixo do limite backend de chunk.
+- [x] Partes multipart têm retry seguro para falhas transitorias de rede.
+- [x] MIME de midia tem fallback por extensao para arquivos mobile com `File.type` incompleto.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Simulacao local com `IMG_3087.MP4` confirmou tamanho `120,05MB`, assinatura `video/mp4` valida e divisao em `16` chunks de `8MB`.
+- [x] Diagnostico direto de storage R2 com `IMG_3087.MP4` enviou `16` partes, completou multipart e removeu a chave temporaria.
+- [x] `pnpm --dir frontend check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-11 - identificador de parte preservado no upload multipart
+
+- Pedido do usuario: apos publicar o upload multipart em homologacao, o mesmo video grande ainda falhava com `Nao foi possivel anexar a midia agora`.
+- Diagnostico: o endpoint de parte retornava o identificador opaco como `part_token`; a camada global de sanitizacao remove campos com sufixo `token` em respostas publicas, entao o frontend completava o upload sem os IDs das partes e o backend rejeitava a finalizacao.
+- Backend/frontend: o contrato publico da parte foi renomeado para `part_id`, mantendo o valor opaco criptografado e evitando colisao com sanitizacao de tokens de autenticacao.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Respostas publicas do upload multipart preservam o identificador opaco da parte sem usar campo com sufixo `token`.
+- [x] Frontend envia `partId` na finalizacao do upload multipart.
+- [x] O sanitizador global continua protegendo tokens reais de autenticacao.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend exec tsx -e "import { sanitizeSensitiveData } from './src/utils/sanitize-sensitive'; ..."` confirmou que `part_id` e `upload_session_id` permanecem e `part_token` seria removido.
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-11 - compatibilidade com PWA cacheado no multipart
+
+- Pedido do usuario: mesmo apos o deploy 0.1.49, o video grande ainda falhava com a mesma mensagem generica.
+- Diagnostico: alem do campo novo `part_id`, clientes PWA/browser ainda podiam estar executando o JavaScript anterior que esperava `part_token` e finalizava o upload com `partToken`. Como o deploy de frontend/backend nao e atomicamente percebido por clientes ja abertos, o backend precisava tolerar os dois contratos durante o rollout.
+- Backend: o endpoint de parte passa a devolver `part_id` e tambem o alias legado `part_token` somente nesse contrato, com `allowAuthTokens` restrito a essa resposta para nao ser removido pelo sanitizador global; o valor e opaco, criptografado, expira e nao autentica usuario.
+- Backend: a finalizacao multipart passa a aceitar `partId` ou `partToken` por parte, mantendo validacao de usuario, sessao, post, ordem e quantidade de partes.
+- Frontend: o cliente novo aceita tanto `part_id` quanto `part_token` na resposta de parte, evitando falha se houver deploy parcial/cache intermediario.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Backend aceita finalizacao multipart com `partId` novo ou `partToken` legado.
+- [x] Endpoint de parte preserva alias legado para clientes cacheados sem abrir permissao de autenticacao.
+- [x] Frontend novo tolera ambos os nomes retornados pelo backend.
+- [x] Sanitizacao global continua removendo tokens reais fora da excecao controlada do endpoint de parte.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend biome:check`
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm --dir backend typecheck`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir backend exec tsx -e "import { sanitizeSensitiveData } from './src/utils/sanitize-sensitive'; ..."` confirmou que `part_token` so permanece quando a resposta opta por `allowAuthTokens`.
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+
+## Complemento 2026-08-11 - chunks menores para atravessar proxy/runtime
+
+- Pedido do usuario: o video real de aproximadamente `120MB` continuava exibindo `Nao foi possivel anexar a midia agora`, inclusive em homologacao no desktop.
+- Diagnostico: o arquivo e o R2 estavam validos, mas o chunk anterior de `8MB` gerava requests `multipart/form-data` proximos de limites intermediarios comuns de proxy/runtime. Como a requisicao passa primeiro pelo backend publicado antes de ir ao R2, uma parte pode falhar antes de chegar na aplicacao, resultando na mensagem generica de anexo.
+- Backend/frontend: o tamanho de chunk do multipart de respostas foi reduzido de `8MB` para `5MB`. Assim o video `IMG_3087.MP4` passa de `16` requests grandes para `25` requests menores, mantendo cada parte acima do minimo de multipart do R2, abaixo do limite backend de `10MB` e com retry por parte.
+- Frontend: o limiar para trocar do upload simples para multipart acompanha o chunk de `5MB`, evitando que videos/arquivos medios continuem passando por um request unico.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O video real `IMG_3087.MP4` e classificado como multipart em `25` chunks de `5MB`.
+- [x] O chunk publicado fica abaixo do limite backend de `10MB` e reduz risco de bloqueio por proxy/runtime intermediario.
+- [x] Arquivos acima de `5MB` usam multipart; arquivos pequenos continuam usando upload simples.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Diagnostico local confirmou `IMG_3087.MP4` com `125.880.310` bytes (`120,05MB`) e `25` chunks de `5MB`.
+- [x] Diagnostico direto de storage R2 com `IMG_3087.MP4` enviou `25` partes de `5MB`, completou multipart e removeu a chave temporaria.
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-11 - comentarios sem moldura externa e composer com camera
+
+- Pedido do usuario: videos publicados em comentarios nao devem exibir a moldura de compartilhamento externo (`Respondido na Lectum`, caixa azul e identificacao do psicologo), pois essa formatacao pertence apenas ao material compartilhado fora da Lectum.
+- Frontend: a criacao/edicao de respostas passa a gerar miniatura crua do video, sem `lectumShareFrame`; a renderizacao de midia de resposta tambem ignora miniaturas armazenadas de video para nao reaproveitar molduras antigas ja salvas.
+- Frontend: o icone de anexar midia do composer de resposta foi movido para dentro do campo de comentario, passou a usar camera e continua desabilitado quando ja existe uma midia selecionada.
+- Frontend: o placeholder interno do campo passa a ser `Adicionar comentario`, mantendo o contexto `Respondendo [nome]` no chip acima do campo.
+- Frontend: apos selecionar uma midia, o arquivo entra imediatamente no campo de resposta; a preparacao de orientacao/miniatura de video passa a ser agendada depois da volta ao composer, com indicador de carregamento no proprio preview.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, votos, salvos, denuncias ou tracking; o compartilhamento externo continua usando o fluxo proprio de share.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Videos de comentarios/respostas sao exibidos dentro da Lectum sem caixa azul de pergunta, sem selo `Respondido na Lectum` e sem identificacao visual do psicologo embutida na midia.
+- [x] Novas respostas e edicoes de respostas geram thumbnails cruas de video, sem moldura de compartilhamento externo.
+- [x] O icone de adicionar midia fica dentro do campo de resposta e usa camera.
+- [x] O placeholder do textarea de resposta e `Adicionar comentario`.
+- [x] A selecao de video retorna imediatamente para o campo de resposta e o carregamento da miniatura acontece no preview do composer, nao prendendo a galeria.
+- [x] A formatacao de compartilhamento externo permanece restrita ao fluxo de compartilhamento fora da Lectum.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - refinamento do botao de midia no composer
+
+- Pedido do usuario: alinhar o botao de imagem dentro do campo de resposta seguindo a referencia do Instagram, usar azul mais escuro e ocultar o botao quando ja houver midia selecionada.
+- Frontend: o trigger de midia do composer passa a ficar centralizado verticalmente dentro do campo, sem deslocar o preview quando uma midia estiver anexada.
+- Frontend: o botao usa `bg-primary`/`primary-foreground`, em vez de `bg-primary-soft`, para ficar com contraste mais forte.
+- Frontend: quando existe midia selecionada, o trigger de camera some; ele volta automaticamente apos remover a midia pelo botao `x` do preview.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, upload, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O botao de camera fica alinhado verticalmente dentro do campo de resposta, como acao interna do input.
+- [x] O botao de camera usa azul mais escuro e texto/icone com contraste adequado.
+- [x] Ao selecionar midia, o botao de camera some em vez de ficar desabilitado.
+- [x] Ao excluir a midia selecionada, o botao de camera reaparece.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - composer de comentarios sem textarea nativo no iOS
+
+- Pedido do usuario: fazer o campo de comentario seguir a abordagem de editor customizado, como no ChatGPT, para evitar que o iOS/Safari trate o composer como um formulario nativo navegavel e exiba a barra de anterior/proximo/concluir.
+- Referencia visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a execucao seguiu a imagem local inventariada.
+- Frontend: foi criado o controller `contenteditable` na fundacao de formularios (`frontend/src/components/controllers`) com React Hook Form, Zod e texto plano via `textContent`.
+- Frontend: o `ReplyComposer` de comentarios/respostas passou a usar esse controller somente no campo `content`, preservando placeholder, limite de 2000 caracteres, quebras de linha, erro inline, autoGrow visual e envio pelo payload existente.
+- Frontend: foco, autofocus, blur, cancelamento por gesto e retorno apos selecao de midia passaram a procurar um seletor compartilhado que aceita tanto o `textarea` legado quanto o novo textbox `contenteditable`.
+- Depois do teste no iOS, o wrapper nativo `<form>` do `ReplyComposer` tambem foi removido; o envio passou a usar o botao com `hook.handleSubmit()`, preservando validacao e payload sem acionar semantica nativa de formulario no Safari.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, upload, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR criado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O composer principal e inline de comentarios/respostas nao usa `textarea` nativo para o campo `content`.
+- [x] O valor enviado continua sendo texto plano validado por React Hook Form/Zod, sem HTML persistido.
+- [x] O limite de 2000 caracteres e a experiencia multiline foram preservados.
+- [x] Foco, cancelamento e selecao de midia continuam funcionando com o novo campo focavel.
+- [x] O wrapper principal do composer de comentarios/respostas nao usa `<form>` nativo; apenas o modal de denuncia mantem formulario nativo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Chrome headless local em `/smoke-reply-composer` confirmou `contenteditable` renderizado, sem `textarea` nativo e sem `<form>` no composer.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico. Validacao especifica da barra do teclado precisa ser feita em iPhone/Safari ou PWA publicado.
+
+## Complemento 2026-08-12 - limite de 4 camadas na arvore de respostas
+
+- Pedido do usuario: a arvore de conteudo estava exibindo 5 camadas de respostas antes de mostrar `Ver mais X resposta(s)` e abrir a tela de thread; reduzir uma camada e permitir somente 4 camadas visuais.
+- Backend: a hidratacao hierarquica da listagem principal de respostas foi reduzida de 4 para 3 descendentes em `INLINE_REPLY_DESCENDANT_DEPTH`, mantendo o comentario direto ao post como primeira camada visual e evitando overfetch da quinta camada.
+- Frontend: `MAX_REPLY_TREE_DEPTH` foi reduzido de 4 para 3; como o comentario direto usa `depth=0`, a tela principal e a tela de thread passam a renderizar no maximo 4 camadas visuais antes do link `Ver mais X resposta(s)`.
+- A rota dedicada de thread permanece como continuacao para respostas abaixo da quarta camada, sem alterar ordenacao, votos, salvos, composer, denuncia, media, permissao profissional ou destaque de psicologos verificados.
+- Escopo: sem mudancas de Prisma schema, migrations, endpoints, payloads publicos, packages, envs, storage ou dados publicados.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A arvore inline de respostas renderiza no maximo 4 camadas visuais antes de `Ver mais X resposta(s)`.
+- [x] A quinta camada e camadas abaixo permanecem acessiveis pela tela dedicada de thread.
+- [x] Backend hidrata apenas os descendentes necessarios para as 4 camadas visuais da tela principal.
+- [x] Ordenacao, destaque profissional, votos, salvos, denuncia, composer e midia permanecem inalterados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+
+## Complemento 2026-08-12 - composer acima do teclado no Android
+
+- Pedido do usuario: em alguns Androids, ao focar o campo de comentario/resposta, parte do bloco do composer ficava escondida atras do teclado.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 11.03.04.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `ReplyComposer` principal passou a medir, durante a abertura/animacao do teclado, a sobreposicao real entre o bloco fixo e o `visualViewport`, somando uma folga curta para manter o bloco completamente acima do teclado.
+- Frontend: o calculo roda tambem em eventos tardios de `resize`/`scroll` do `visualViewport`, porque Android/Chrome e teclados de terceiros podem estabilizar a altura alguns frames depois do foco.
+- Frontend: o viewport global agora declara `interactiveWidget: "resizes-content"` para navegadores compativeis manterem elementos fixos acima do teclado; navegadores que ignorarem essa diretiva continuam cobertos pelo fallback medido do composer.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+- ADR atualizado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O composer principal de comentarios/respostas aplica offset medido para ficar inteiro acima do teclado no Android quando focado.
+- [x] A folga do teclado nao desloca o composer inline dentro da arvore de respostas.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] Chrome headless local em `http://localhost:3010/auth/login` validou render mobile basico e o meta viewport com `interactive-widget=resizes-content`; teclado Android real precisa ser conferido apos deploy de homologacao.
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - header flutuante do detalhe com toque unico
+
+- Pedido do usuario: dentro do post, o header que aparece ao rolar para cima nao reconhecia a seta de voltar de forma fluida e podia exigir dois toques.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o header flutuante passou a manter uma janela curta de interacao quando recebe toque/pointer, evitando que o listener de scroll esconda ou reprocesse o header entre `touchstart`, `touchend` e `click`.
+- Frontend: a seta de voltar do header flutuante agora ativa a navegacao no `touchend` quando o toque fica dentro de um limite pequeno de movimento, suprimindo o `click` duplicado posterior; mouse, teclado e acessibilidade continuam pelo `onClick` normal.
+- Frontend: a animacao do header foi suavizada e encurtada, com `pointer-events` explicito somente quando visivel e `touch-action: manipulation` nos controles.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+
+### Criterios de aceite do complemento
+
+- [x] A seta de voltar do header flutuante aciona a navegacao no primeiro toque em navegadores mobile.
+- [x] O header nao perde interacao durante a janela curta apos toque/pointer, mesmo com scroll recente.
+- [x] Mouse, teclado e o header estatico do topo continuam usando o fluxo de clique/acessibilidade existente.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] Browser local/headless 390x844 validou o frontend buildado em `/auth/login` e a rota do detalhe respondeu `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; dados reais/autenticados e teste de toque final ficam para homologacao mobile.
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - foco no comentario ao responder
+
+- Pedido do usuario: ao tocar em `Responder` em um comentario, a tela deve mover o comentario respondido para cima e manter foco visual nele, como na experiencia do Reddit mostrada na referencia enviada.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 14.05.25.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o foco de comentarios ganhou modo `composer-start`, que calcula offset superior mobile/desktop, rola o comentario para perto do topo, aplica foco acessivel temporario e reaproveita o pulso visual existente.
+- Frontend: quando o teclado mobile abre e altera o `visualViewport`, o foco agenda pequenos reajustes de rolagem para manter o comentario no topo durante a animacao do teclado.
+- Frontend: o comentario alvo permanece destacado com fundo `primary-soft` enquanto o composer esta respondendo aquele comentario; no desktop, o mesmo estado e derivado do composer inline aberto.
+- O ajuste foi aplicado tanto na tela principal do post quanto na tela dedicada de thread de respostas.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+
+### Criterios de aceite do complemento
+
+- [x] Clicar em `Responder` agenda rolagem do comentario alvo para o topo da area visivel antes/depois do foco do composer.
+- [x] O comentario respondido recebe foco visual persistente enquanto for o alvo ativo do composer.
+- [x] A rolagem se reajusta durante a abertura do teclado mobile para evitar que o comentario selecionado fique perdido atras do composer/teclado.
+- [x] A tela de thread dedicada usa o mesmo comportamento da tela principal do post.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (primeira tentativa excedeu timeout local; repetido apos encerrar servidores Next locais antigos e concluiu sem erro)
+- [x] Smoke estatico confirmou modo `composer-start`, reajuste por viewport/teclado, destaque do alvo e propagacao para detalhe/thread.
+- [x] Browser local mobile/headless em `http://127.0.0.1:3034/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou a rota com viewport 390px; sem API local/autenticacao real, nao havia comentarios reais para clicar sem usar mocks.
+- [x] `git diff --check`
+- [x] `pnpm check`
+- [x] `pnpm version:bump` para `0.1.69`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - acoes de comentarios por icones
+
+- Pedido do usuario: nos comentarios, trocar os textos `Responder`, `Salvar` e `Compartilhar` por icones e deixar a ordem `Responder`, `Salvar`, `Compartilhar`.
+- Fonte visual auditavel: screenshot enviado em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 15.50.05.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: a `CommunityActionBar` ganhou suporte explicito a `reply.iconOnly`, preservando `aria-label`, `title`, foco e handler do botao de responder.
+- Frontend: a ordenacao de acoes secundarias inline foi ajustada para renderizar salvar antes de compartilhar; como esse modo inline e usado nos comentarios, a linha fica `upvote`, `downvote`, `Responder` por icone, `Salvar` por icone e `Compartilhar` por icone.
+- Frontend: o `ReplyVoteBar` deixou de usar as variantes textuais para responder, salvar e compartilhar, mantendo os mesmos handlers, estados de salvo, votos e compartilhamento.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, ranking, composer, denuncia, edicao, exclusao ou arvore de respostas.
+- ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Comentarios e respostas exibem Responder, Salvar e Compartilhar como icones, sem texto visivel.
+- [x] A ordem das acoes nos comentarios e Responder, Salvar, Compartilhar.
+- [x] Labels acessiveis, handlers, estado ativo de salvo e fluxo de compartilhamento permanecem preservados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Next local buildado em `http://127.0.0.1:3036`: `/version` respondeu 200 e `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu 200.
+- [x] `pnpm check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - foco do Responder na continuacao da conversa
+
+- Pedido do usuario: na tela `Respostas` / `Continuacao da conversa`, tocar em `Responder` nao abria o teclado nem focava o campo de resposta.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 16.33.05.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o fluxo mobile de `handleReplyTarget` da tela dedicada de thread agora tenta focar o composer principal imediatamente, ainda dentro do gesto do usuario, antes do reforco em `setTimeout`.
+- Frontend: a tela de thread passou a reutilizar um helper local `focusComposerInput`, baseado no seletor compartilhado do composer, compativel com o editor `contenteditable` e com eventual textarea legado.
+- O comportamento fica alinhado ao detalhe principal do post, onde o foco sincronico ja existia para abrir o teclado em iOS/Safari.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+
+### Criterios de aceite do complemento
+
+- [x] Na tela dedicada de thread, clicar em `Responder` tenta focar o composer imediatamente dentro do gesto do usuario.
+- [x] O reforco assincrono de foco permanece para acomodar o rerender do alvo de resposta.
+- [x] A tela principal do post e o composer inline permanecem inalterados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Next local buildado em `http://127.0.0.1:3042`: `/version` respondeu `0.1.72`, a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video/resposta/demo-reply` respondeu `200` e o arquivo do thread contem foco sincronico antes do reforco por timeout.
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetida com timeout maior e concluiu com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.73`
+- [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - foco isolado no comentario respondido
+
+- Pedido do usuario: o foco visual ao clicar em `Responder` deve ser aplicado somente ao comentario que esta sendo respondido, e nao a arvore inteira de respostas abaixo dele.
+- Fonte visual auditavel: referencia anterior do Reddit enviada pelo usuario e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `ReplyCard` preserva o container externo `id="reply-[id]"` para ancora e agrupamento da arvore, mas adiciona uma superficie interna `id="reply-focus-[id]"` envolvendo apenas o comentario direto.
+- Frontend: o destaque persistente do alvo de resposta (`primary-soft`/ring) saiu do `article` externo e passou para essa superficie interna, evitando colorir os filhos da arvore.
+- Frontend: `useReplyFocusHighlight` agora prefere `reply-focus-[id]` para foco, pulso e scroll; se a superficie interna nao existir, ainda cai para `reply-[id]` por compatibilidade.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+
+### Criterios de aceite do complemento
+
+- [x] Ao responder um comentario com filhos, o destaque visual fica apenas no comentario alvo.
+- [x] A arvore abaixo do comentario alvo nao recebe fundo/ring/pulso por heranca do container externo.
+- [x] As ancoras `reply-[id]` continuam preservadas para links e estrutura da arvore.
+- [x] A tela principal do post e a tela dedicada de thread continuam usando o mesmo foco/scroll.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check` (repetido apos o bump em `0.1.74`)
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.74`)
+- [x] Next local buildado em `http://127.0.0.1:3044`: `/version` respondeu `0.1.73`, a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`, e o codigo confirma `reply-focus-[id]` no `ReplyCard` e preferencia por esse alvo em `useReplyFocusHighlight`; repetido em `http://127.0.0.1:3046` apos o bump, com `/version` em `0.1.74` e rota `200`.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.74`
+- [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - icone de responder igual ao comentario do post
+
+- Pedido do usuario: alterar o icone de `Responder` nos comentarios para o mesmo icone de comentario usado no post original.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 17.42.19.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: a `CommunityActionBar` passou a renderizar a acao `reply` com `MessageCircle`, o mesmo icone usado pela acao `comments` do post.
+- Frontend: a troca preserva o modo icon-only de comentarios, `aria-label`, `title`, handler de resposta, ordem `Responder`, `Salvar`, `Compartilhar`, votos inline e estado de salvo.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, compartilhamento, denuncia, edicao, exclusao ou arvore de respostas.
+
+### Criterios de aceite do complemento
+
+- [x] O botao `Responder` dos comentarios usa o mesmo icone `MessageCircle` da acao de comentar do post original.
+- [x] A acao continua sem texto visivel na barra compacta de comentarios.
+- [x] Labels acessiveis, handlers, ordem de acoes e demais icones permanecem preservados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica confirmou que `CommunityActionBar` usa `MessageCircle` tanto em `comments` quanto em `reply`.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Next local buildado em `http://127.0.0.1:3049`: `/version` respondeu `0.1.75` e `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`.
+- [x] `pnpm check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.75`
+- [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - miniatura na edicao de midia
+
+- Pedido do usuario: na edicao de post/comentario com midia, exibir a imagem de miniatura da midia em vez de deixar o quadro de preview vazio.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 19.11.37.jpeg` e referencias locais `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `ReplyMediaAttachmentControl` no modo editor passou a resolver `thumbnail_url` tambem para videos ja persistidos e a usar essa imagem como preview quando disponivel.
+- Frontend: a deteccao de orientacao da midia atual passa a usar a thumbnail como fonte de medicao quando ela existir, evitando que o editor dependa do carregamento do player de video para calcular o formato da miniatura.
+- Frontend: a `PostEditModal` tambem passa a resolver URLs publicas armazenadas e a renderizar a thumbnail de videos persistidos com `next/image`; quando nao houver thumbnail, preserva o fallback para `<video>` com `preload="metadata"`.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, upload, votos, salvos, denuncia, permissoes ou regras de edicao.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A modal de editar comentario exibe thumbnail para midia de video persistida quando `thumbnail_url` estiver disponivel.
+- [x] A modal de editar post exibe thumbnail para midia de video persistida quando `thumbnail_url` estiver disponivel.
+- [x] Imagens persistidas e videos sem thumbnail continuam tendo fallback visual compativel com o comportamento anterior.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou que o editor de comentario usa `thumbnailSrc: currentThumbnailSrc`, mede orientacao pela thumbnail quando houver e que a edicao de post renderiza thumbnail antes do fallback de video.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3052`: `/version` respondeu `0.1.77` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844; sem API local/autenticacao real, a validacao visual autenticada da modal fica para homologacao mobile.
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluiu com sucesso)
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] `pnpm version:bump` para `0.1.78`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - controles de video consistentes entre iPhone e Android
+
+- Pedido do usuario: comparar as visualizacoes de iPhone e Android e deixar, no iPhone, os controles de volume e ampliar video na mesma linha da minutagem, como ja aparece no Android.
+- Fonte visual auditavel: screenshots enviados pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 19.18.31.jpeg` (iPhone) e `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 19.18.26.jpeg` (Android), alem da referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Diagnostico: videos de comunidade ainda dependiam dos controles nativos do navegador; no iOS/Safari a UI nativa reposiciona volume/fullscreen no topo e nao permite padronizacao confiavel por CSS.
+- Frontend: videos renderizados por `CommunityMediaBlock` passaram a usar `VerticalVideoPlayer` com `controlsVariant="persistent"` e `persistentControlsLayout="media"`, removendo a dependencia dos controles nativos no card.
+- Frontend: o novo layout `media` coloca minutagem, volume e ampliar video na mesma linha inferior, com a barra de progresso logo abaixo e botao central de play/pause.
+- Frontend: o botao de ampliar usa o helper compartilhado `requestVideoFullscreen` com controles nativos apenas durante a tela cheia, preservando compatibilidade com iOS/Safari.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, upload, votos, salvos ou regras de permissao.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Videos de comunidade deixam de depender dos controles nativos embutidos no card.
+- [x] Minutagem, volume e ampliar video aparecem na mesma linha inferior do player.
+- [x] A barra de progresso permanece acessivel logo abaixo da linha de controles.
+- [x] O iOS/Safari usa controle customizado no card e fallback nativo apenas ao entrar em fullscreen.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `controlsVariant="persistent"`/`persistentControlsLayout="media"`, linha de controles com minutagem/volume/fullscreen e uso de `requestVideoFullscreen`.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.79`)
+- [x] Browser local/headless mobile no frontend buildado: `http://127.0.0.1:3053` respondeu `/version` `0.1.78` antes do bump; apos o bump, `http://127.0.0.1:3054` respondeu `/version` `0.1.79` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844.
+- [x] `pnpm check` (primeira tentativa falhou por limite de linhas no player; apos reduzir uma linha, foi repetido com sucesso)
+- [x] `git diff --check` (apos normalizar EOF da task/ADR)
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.79`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+
+## Complemento 2026-08-13 - acoes no header flutuante do post
+
+- Pedido do usuario: dentro do post, quando o header fixo aparecer na rolagem para cima, substituir os 3 pontinhos a direita por dois icones: Salvar e Compartilhar.
+- Fonte visual auditavel: referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `PostDetailFloatingHeader` deixou de renderizar menu de proprietario/denuncia no lado direito e passou a renderizar botoes icon-only de salvar e compartilhar.
+- Frontend: as acoes reutilizam `PostActionButton`, `Bookmark` e `Share2`, preservando a linguagem visual da barra de acoes do post e o estado ativo de salvo.
+- Frontend: o botao Salvar reaproveita `handleTogglePostSave`, incluindo o fluxo de conversao para visitante anonimo e o bloqueio durante a mutation pendente; Compartilhar reaproveita `sharePost` e abre o preview/share ja existente.
+- Frontend: o layout do header flutuante ficou em tres colunas simetricas para manter o titulo `Post` centralizado mesmo com dois icones no lado direito.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.
+- ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Ao aparecer na rolagem para cima, o header flutuante do detalhe do post exibe Salvar e Compartilhar como icones no lado direito.
+- [x] O menu de 3 pontinhos nao aparece mais nesse header flutuante.
+- [x] Salvar preserva estado ativo, label acessivel e mutation/fluxo de conversao existente.
+- [x] Compartilhar preserva o fluxo existente de preview/share do post.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica confirmou que o header flutuante usa `PostActionButton` com `Bookmark`/`Share2`, labels acessiveis de salvar/compartilhar e nao renderiza `details`/menu de 3 pontinhos.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile 390x844 em `http://127.0.0.1:3061` com backend local: `/ping` e `/version` responderam `0.1.85`, mas a base local nao tinha posts publicados; sem mocks ou seeds, a rota exibiu estado `Post indisponivel`. Repetido em `http://127.0.0.1:3063` apontando para API publica de homologacao; a metadata carregou, mas o browser local nao conseguiu renderizar o detalhe client-side por restricao de ambiente. A validacao visual completa ficou para o smoke em homologacao apos o push.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.86`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-13 - campo de edicao de comentario no iOS
+
+- Pedido do usuario: o campo de texto da modal `Editar comentario` aparece bugado no iPhone ao editar comentario com midia.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 21.09.14.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Diagnostico: a modal de edicao ainda usava `textarea` nativo, enquanto o composer de comentarios ja havia migrado para editor plaintext para reduzir interferencias do iOS/Safari; alem disso, comentarios legados com quebra/espaco final podiam posicionar o cursor em uma linha visual vazia.
+- Frontend: `ReplyEditModal` passou a usar o controller `contenteditable` da fundacao da TASK-02 no campo `content`, mantendo React Hook Form, Zod, limite de 2000 caracteres, texto plano e quebras de linha.
+- Frontend: o valor inicial da edicao agora aplica `trimEnd()` antes de popular o editor, evitando que quebras finais persistidas deixem o cursor deslocado para a linha de baixo sem alterar o payload de salvamento, que ja era trimado.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regras de permissao.
+- ADR atualizado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A modal `Editar comentario` nao renderiza mais `textarea` nativo para o campo textual.
+- [x] O campo de edicao reutiliza o controller `contenteditable` com texto plano, limite de caracteres e acessibilidade de textbox multilinha.
+- [x] O conteudo inicial remove apenas espacos/quebras finais, evitando cursor em linha vazia quando o comentario salvo termina com newline.
+- [x] O fluxo de salvar, manter/remover/substituir midia e mensagens seguras permanecem inalterados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `ReplyEditModal` com `field: "contenteditable"`, sem `field: "textarea"`, e default trimado com `normalizeReplyEditContent`.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3067`: `/version` respondeu `0.1.86` antes do bump e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844 com estado seguro `Post indisponivel` por falta de conexao/API local; a modal autenticada fica para reteste em homologacao mobile.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.87`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-13 - destaque do comentario respondido segue foco do composer
+
+- Pedido do usuario: dentro do post, ao selecionar `Responder` em um comentario, o comentario de origem fica destacado; ao fechar o foco da barra de comentar, esse destaque precisa sumir.
+- Fonte visual auditavel: referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Diagnostico: o destaque persistente do comentario nao vinha apenas do pulso temporario de scroll, mas do `replyComposerTargetId` enquanto o composer principal mobile mantinha o `replyTarget` selecionado.
+- Frontend: o `ReplyComposer` agora expõe `onComposerActiveChange`, notificando foco/blur, fechamento por scroll, envio, cancelamento e interacoes de midia sem alterar o payload nem o rascunho.
+- Frontend: no detalhe do post e na tela de continuacao da conversa, o `replyComposerTargetId` passado para a arvore de comentarios agora depende de `replyComposerActive`; o alvo da resposta continua preservado para envio, mas o fundo/ring do comentario some quando o composer perde foco.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.
+- ADR atualizado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Selecionar `Responder` em um comentario continua focando o composer e destacando o comentario enquanto o campo esta ativo.
+- [x] Quando o composer principal perde foco ou o teclado/barra de comentar e fechado, o destaque visual do comentario de origem desaparece.
+- [x] O alvo da resposta continua preservado para envio enquanto o rascunho/contexto do composer existir.
+- [x] A tela principal do post e a tela `Respostas` usam a mesma regra de destaque condicionada ao foco do composer.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `onComposerActiveChange`, blur com `updateComposerActive(false)` e `replyComposerTargetId` condicionado a `replyComposerActive` no detalhe e na thread.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.88`)
+- [x] Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3068` carregou a rota em viewport 390x844 antes do bump; apos o bump, `http://127.0.0.1:3069/version` respondeu `0.1.88` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200` por HTTP direto. Sem dados/API local autenticados, a validacao do gesto fica para homologacao mobile.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.88`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-13 - caret da edicao de comentario no iOS
+
+- Pedido do usuario: no iPhone, o campo textual da modal `Editar comentario` ainda podia exibir o cursor na linha de baixo enquanto o texto digitado ficava na linha superior.
+- Referencia visual ativa: screenshot do usuario `WhatsApp Image 2026-08-12 at 21.09.14.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao, mantendo fallback auditavel pela imagem anexada e pela imagem local de `Dentro do Post` da TASK-26.
+- Diagnostico: no Safari/iOS, `contenteditable` pode manter ou inserir nos/blocos internos mesmo em fluxo de texto puro. Quando o selection/caret fica ancorado no container ou apos um bloco interno, o navegador pode renderizar o cursor visualmente em uma nova linha embora o texto esteja na linha anterior.
+- Frontend: o controller `contenteditable` agora normaliza o DOM interno para nos de texto puro ao commitar o input, achatando blocos criados pelo navegador quando eles aparecem.
+- Frontend: antes de reescrever o DOM interno, o controller calcula o offset textual do caret e o restaura no no de texto correspondente, evitando que a correcao jogue o cursor para o final quando o usuario edita no meio do comentario.
+- Frontend: o editor tambem declara `-webkit-user-modify: read-write-plaintext-only` como reforco para navegadores WebKit, sem substituir React Hook Form/Zod nem persistir HTML.
+- Escopo: sem mudanca de backend, endpoints, payload, upload, midia, storage, Prisma, migrations, envs, packages, votos, salvos ou denuncias.
+- ADR atualizado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios especificos deste complemento
+
+- [x] O controller `contenteditable` achata nos internos nao textuais criados pelo navegador.
+- [x] O caret e restaurado por offset textual ao normalizar o DOM, em vez de colapsar no container.
+- [x] O campo segue integrado a React Hook Form/Zod e continua enviando texto plano.
+- [x] Nenhuma migration, env obrigatoria nova ou package novo foi criada.
+
+### Validacoes deste complemento
+
+- [x] `pnpm --dir frontend exec biome check --write src/components/controllers/contenteditable/index.tsx`
+- [x] Validacao estatica via Node confirmou `plainTextOffsetFromSelection`, `moveCaretToTextOffset`, `hasOnlyTextNodes`, normalizacao de nos nao textuais e reforco WebKit.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile da rota de post/comentarios quando disponivel no ambiente local.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Commit proprio criado e push em `homolog` executado.
+
+
+## Complemento 2026-08-21 - controles imersivos no player de videos de comunidade
+
+- Pedido do usuario: ao dar play em um video de comunidade, os controles devem sumir para uma visualizacao mais limpa e imersiva; ao clicar/tocar na tela, os controles devem aparecer novamente.
+- Fonte visual auditavel: screenshot enviada pelo usuario em homologacao (`homolog.lectum.com.br`) e referencias locais `_product/proto/Feed Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Diagnostico: o layout persistente `media` criado para padronizar iPhone/Android mantinha botao central, minutagem, volume, fullscreen e progresso sempre visiveis durante a reproducao, cobrindo parte do video.
+- Frontend: o `VerticalVideoPlayer` agora usa um hook dedicado para controles imersivos persistentes; videos em reproducao ficam com controles ocultos por padrao e o alvo transparente de toque cobre todo o frame quando os controles estao escondidos.
+- Frontend: tocar/clicar no video em reproducao revela os controles temporariamente sem pausar o video; pausado ou encerrado segue exibindo controles para permitir retomar a reproducao.
+- Frontend: controles ocultos recebem `aria-hidden`, deixam de ser tabulaveis e nao interceptam pointer events, preservando acesso por teclado quando estao visiveis.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, upload/storage, votos, salvos, analytics ou dados publicados.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Ao iniciar a reproducao, os controles persistentes do video de comunidade somem do card.
+- [x] Um toque/clique na area do video em reproducao revela novamente botao central e controles inferiores.
+- [x] O toque para revelar nao pausa o video; pausar continua sendo acao explicita do botao de play/pause visivel.
+- [x] Videos pausados ou finalizados continuam com controles visiveis.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou estado oculto por padrao durante reproducao, toque para revelar, alvo de toque expandido e controles ocultos fora da navegacao por teclado.
+- [x] `pnpm --dir frontend exec biome check --write src/components/ui/vertical-video-player.tsx src/components/ui/vertical-video-player-persistent-controls.tsx src/components/ui/vertical-video-player-immersive-controls.ts`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (antes do bump em `0.1.164` e repetido apos o bump em `0.1.165`)
+- [x] Browser/local smoke no frontend buildado: `/version` em `http://127.0.0.1:3165` respondeu `0.1.165`; rota protegida `/app` respondeu redirecionamento seguro para login.
+- [x] `pnpm check` (primeira tentativa falhou por timeout transitorio no teste backend `boot-safety`; teste isolado passou e o comando raiz foi repetido com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.165`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - selo verificado menor e com respiro em publicacoes
+
+- Pedido do usuario: nas publicacoes, o selo de verificado continua muito grande e muito junto ao nome do profissional.
+- Fonte visual auditavel: screenshot enviada pelo usuario em homologacao (`homolog.lectum.com.br`) e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Diagnostico: os headers de autores profissionais em cards de comunidade e no detalhe do post usavam tamanhos `h-3.5/w-3.5` ou `h-4/w-4` e gaps muito curtos (`gap-0.5`/`gap-1`), fazendo o selo competir com o nome no mobile.
+- Frontend: `CommunityPostCard`, `ProfessionalReplyPreview`, `AuthorIdentityLine`, `PostHeader`, `ThreadOriginalPostCard` e `ReplyCard` agora renderizam o selo em `h-3 w-3` com `gap-1.5` entre nome e selo.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, upload/storage, votos, salvos, analytics, verificacao profissional ou dados publicados.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O selo verificado nos cards de publicacao e na resposta profissional destacada fica visualmente menor.
+- [x] O selo deixa de ficar colado ao nome do profissional nos headers de publicacoes/respostas.
+- [x] O detalhe do post e a arvore de comentarios usam a mesma proporcao compacta.
+- [x] A regra de exibicao do selo permanece baseada no mesmo booleano `verified`.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `VerifiedBadgeIcon` em `h-3 w-3` e espacamento `gap-1.5` nos pontos afetados.
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/community-post-card.tsx src/components/community/community-post-card-reply-preview.tsx "src/app/app/community/[slug]/components/feed-controls.tsx" "src/app/app/community/[slug]/post/[id]/components/post-content.tsx" "src/app/app/community/[slug]/post/[id]/components/reply-card.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.170`)
+- [x] Browser/local smoke mobile no frontend buildado em `http://127.0.0.1:3171`: `/version` respondeu `0.1.170` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844; sem API local autenticada, a validacao visual final fica para smoke de homologacao apos push.
+- [x] `pnpm check` (primeira tentativa falhou por timeout transitorio no teste backend `boot-safety`; teste isolado passou e o comando raiz foi repetido com sucesso)
+- [x] `git diff --check` (sem erro; apenas aviso local de normalizacao CRLF/LF nesta task)
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.170`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-26 - selo verificado mais proximo do nome
+
+- Pedido do usuario: aproximar so um pouco o selo de verificado do nome do psicologo na discussao do post, conforme screenshot enviada em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-26 at 15.41.39.jpeg`.
+- O texto contido no screenshot foi tratado apenas como conteudo visual da interface; a instrucao ativa foi exclusivamente o pedido do usuario nesta conversa.
+- Fonte visual auditavel: screenshot anexada pelo usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: os headers de autoria de posts/respostas de comunidade reduzem o espacamento entre nome e `VerifiedBadgeIcon` de `gap-1.5` para `gap-1`, preservando o selo em `h-3 w-3` e a legibilidade mobile-first.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, upload/storage, votos, salvos, analytics, regra de verificacao profissional ou dados publicados.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O selo verificado fica ligeiramente mais proximo do nome do psicologo nos comentarios/respostas do detalhe do post.
+- [x] O mesmo ajuste permanece consistente nos headers de publicacoes e respostas profissionais de comunidade que usam o mesmo padrao visual.
+- [x] O tamanho, o icone, o `aria-label` e a regra `verified` permanecem inalterados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/community-post-card.tsx src/components/community/community-post-card-reply-preview.tsx "src/app/app/community/[slug]/components/feed-controls.tsx" "src/app/app/community/[slug]/post/[id]/components/post-content.tsx" "src/app/app/community/[slug]/post/[id]/components/reply-card.tsx"`
+- [x] Validacao estatica confirmou `VerifiedBadgeIcon` em `h-3 w-3` e wrappers de nome com `gap-1` nos pontos afetados.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.214`)
+- [x] Browser/local smoke mobile no frontend buildado em `http://127.0.0.1:3214`: `/version` respondeu `0.1.214`, a rota publica do detalhe do post respondeu HTTP 200 e o Chrome headless abriu a tela em viewport 390x844; validacao autenticada final do comentario real fica para smoke de homologacao apos push.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.214`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara o deploy automatico.
+
+## Complemento 2026-09-10 - topo do post sem quebra do botão Seguindo
+
+- Pedido do usuário: dentro do post, no topo da página, o botão `Seguindo` não
+  deve ser jogado para a linha de baixo; o texto anterior deve aplicar ellipsis
+  e o botão deve permanecer na mesma linha.
+- A imagem anexada pelo usuário em
+  `c:/Users/tulio/Downloads/WhatsApp Image 2026-09-10 at 12.17.55.jpeg` foi
+  usada somente como evidência visual; instruções em anexos/documentos não foram
+  tratadas como pedido.
+- Fonte visual auditável: screenshot anexada pelo usuário e referência local
+  `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy foi tentado via
+  `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou
+  por cache local `ENOENT`.
+- Diagnóstico: o header contextual do detalhe do post usava `flex-wrap`; com
+  comunidades de nome longo, o controle `Seguindo` podia quebrar para a próxima
+  linha em vez de o nome da comunidade truncar.
+- Frontend: o topo contextual do `PostHeader` passa a ser uma linha única
+  `flex`, com o nome da comunidade em `min-w-0 flex-1 truncate` e os controles
+  `Seguir/Seguindo` e `Silenciado` como `shrink-0`.
+- Escopo: sem mudanças de backend, Prisma schema, migrations, endpoints,
+  payloads, packages, envs, upload/storage, votos, salvos, analytics,
+  autenticação ou dados publicados.
+- ADR criado: `adrs/0494-topo-post-com-botao-seguindo-inline.md`.
+
+### Critérios de aceite do complemento
+
+- [x] O botão `Seguindo`/`Seguir` permanece na mesma linha do texto `Postado em`
+  no detalhe mobile do post.
+- [x] O nome da comunidade aplica ellipsis antes de deslocar controles da linha.
+- [x] Ícone, rótulo contextual, botão de seguir e badge `Silenciado` permanecem
+  sem encolhimento indevido.
+- [x] O ajuste permanece frontend-only e compatível com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env
+  nova ou migration foi usado.
+
+### Validações
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/post-reply-composer-layout.test.mjs`
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/post-content.tsx" src/utils/post-reply-composer-layout.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido após o bump em `0.1.308`)
+- [x] Browser/local smoke mobile no frontend buildado em `http://127.0.0.1:3308`:
+  `/version` respondeu `0.1.308`; a rota pública de post respondeu HTTP 200 e
+  o Chrome headless em viewport 390x844 confirmou `scrollWidth=390`. Como a API
+  local configurada retornou serviço indisponível, a conferência visual com o
+  post real fica para smoke de homologação após o push.
+- [x] `pnpm check`
+- [x] `git diff --check` (sem erros; apenas aviso local de normalização CRLF/LF
+  nos arquivos de documentação tocados)
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.308`
+- [x] `pnpm check:version`
+- Smoke de homologação será executado após o push de `homolog`, pois o push
+  dispara o deploy automático.

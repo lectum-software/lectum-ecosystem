@@ -1,4 +1,4 @@
-﻿# ADR-0094: Estado vazio do filtro de comunidades seguidas no feed geral
+# ADR-0094: Estado vazio do filtro de comunidades seguidas no feed geral
 
 ## Status
 

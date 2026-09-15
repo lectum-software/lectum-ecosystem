@@ -32,6 +32,14 @@ const targetIdParam = {
   max: 120,
 } satisfies NonNullable<IValidatorRequest["params"]>[number];
 
+const jobIdParam = {
+  key: "jobId",
+  coerse: "string",
+  method: "string",
+  min: 1,
+  max: 512,
+} satisfies NonNullable<IValidatorRequest["params"]>[number];
+
 const paginationQuery = [
   {
     key: "page",
@@ -307,7 +315,7 @@ export const contentSchema: IValidatorRequest = {
       key: "type",
       coerse: "string",
       method: "string",
-      max: 20,
+      max: 32,
       optional: true,
     },
     {
@@ -375,6 +383,14 @@ export const contentDetailSchema: IValidatorRequest = {
   ],
 };
 
+export const contentVideoDownloadSchema: IValidatorRequest = {
+  params: [communityParam, targetTypeParam, targetIdParam],
+};
+
+export const contentVideoDownloadJobSchema: IValidatorRequest = {
+  params: [communityParam, targetTypeParam, targetIdParam, jobIdParam],
+};
+
 export const rankingSchema: IValidatorRequest = {
   params: [communityParam],
   query: [
@@ -397,7 +413,7 @@ export const reportsSchema: IValidatorRequest = {
       key: "type",
       coerse: "string",
       method: "string",
-      max: 20,
+      max: 32,
       optional: true,
     },
     {
@@ -412,6 +428,7 @@ export const reportsSchema: IValidatorRequest = {
       coerse: "string",
       method: "string",
       max: 10,
+      nullable: true,
       optional: true,
     },
     {
@@ -419,6 +436,7 @@ export const reportsSchema: IValidatorRequest = {
       coerse: "string",
       method: "string",
       max: 10,
+      nullable: true,
       optional: true,
     },
   ],
@@ -544,6 +562,8 @@ export const updateRuleValidator = validator(updateRuleSchema);
 export const deleteRuleValidator = validator(deleteRuleSchema);
 export const contentValidator = validator(contentSchema);
 export const contentDetailValidator = validator(contentDetailSchema);
+export const contentVideoDownloadValidator = validator(contentVideoDownloadSchema);
+export const contentVideoDownloadJobValidator = validator(contentVideoDownloadJobSchema);
 export const rankingValidator = validator(rankingSchema);
 export const reportsValidator = validator(reportsSchema);
 export const activitiesValidator = validator(activitiesSchema);

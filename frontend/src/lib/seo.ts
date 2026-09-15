@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { isAllowedPublicAssetSource, parsePublicAssetSource } from "@/utils/public-asset-sources";
 import {
   PUBLIC_COMMUNITIES_HREF,
   PUBLIC_PSYCHOLOGISTS_HREF,
   PUBLIC_TOP_MENTORS_HREF,
 } from "@/utils/public-routes";
 
-const DEFAULT_SITE_URL = "http://localhost:3000";
+const DEFAULT_SITE_URL =
+  process.env.NODE_ENV === "production" ? "https://lectum.com.br" : "http://localhost:3000";
 
 export const SITE_NAME = process.env.NEXT_PUBLIC_SYSTEM_NAME || "Lectum";
 
@@ -82,28 +84,25 @@ export const NON_INDEXABLE_METADATA: Metadata = {
   },
 };
 
-const normalizeUrl = (value: string) => {
-  const url = value.trim();
-
-  if (!url) return DEFAULT_SITE_URL;
-
-  return url.endsWith("/") ? url.slice(0, -1) : url;
-};
-
 export const getSiteUrl = () => {
   const configuredUrl =
     process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_WEB_URL || DEFAULT_SITE_URL;
+  const source = parsePublicAssetSource(configuredUrl);
 
-  try {
-    return new URL(normalizeUrl(configuredUrl));
-  } catch {
+  if (!source || !isAllowedPublicAssetSource(source, process.env.NODE_ENV)) {
     return new URL(DEFAULT_SITE_URL);
   }
+
+  return new URL(source.origin);
 };
 
 export const absoluteUrl = (path = "/") => {
   const siteUrl = getSiteUrl();
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const rawPath = path.trim();
+  const normalizedPath =
+    rawPath.startsWith("/") && !rawPath.startsWith("//") && !rawPath.includes("\\")
+      ? rawPath
+      : `/${rawPath.replace(/^\/+/, "").replaceAll("\\", "/")}`;
 
   return new URL(normalizedPath, siteUrl).toString();
 };

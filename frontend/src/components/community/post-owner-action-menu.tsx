@@ -13,6 +13,7 @@ import {
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDeletePost, useMutePost } from "@/api/callers/posts";
+import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostDetail } from "@/api/generator/types/posts";
 import { PostEditModal } from "@/components/community/post-edit-modal";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -44,17 +45,8 @@ type PostOwnerActionMenuProps = {
   post: OwnerActionPost;
 };
 
-const errorMessageFromUnknown = (error: unknown) => {
-  if (error instanceof Error && error.message) return error.message;
-
-  return "Não foi possível concluir a ação. Tente novamente.";
-};
-
-const errorStatusFromUnknown = (error: unknown) => {
-  const candidate = error as { data?: { status?: number } } | null;
-
-  return candidate?.data?.status;
-};
+const errorMessageFromUnknown = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível concluir a ação. Tente novamente.");
 
 const PostActionModal = ({
   action,
@@ -230,7 +222,7 @@ export const PostOwnerActionMenu = ({
     setActionError(null);
     deleteMutation.mutate(post.id, {
       onError: (error) => {
-        if (errorStatusFromUnknown(error) === 409) {
+        if (getApiErrorStatus(error) === 409) {
           setDeleteModalOpen(false);
           setBlockedModalOpen(true);
           return;

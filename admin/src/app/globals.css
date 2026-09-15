@@ -4,6 +4,7 @@
   --admin-background: #f7f9ff;
   --admin-foreground: #06104a;
   --admin-primary: #3300ff;
+  --admin-primary-foreground: #ffffff;
   --admin-primary-hover: #2500c7;
   --admin-primary-soft: #efeaff;
   --admin-surface: #ffffff;
@@ -13,8 +14,25 @@
   --admin-muted: #55618a;
   --admin-subtle: #97a2bc;
   --admin-danger: #e5484d;
+  --admin-danger-border: #fecaca;
+  --admin-danger-soft: #fef2f2;
   --admin-success: #13a85b;
+  --admin-success-border: #bbf7d0;
+  --admin-success-soft: #ecfdf3;
   --admin-warning: #f59f00;
+  --admin-warning-border: #fed7aa;
+  --admin-warning-soft: #fff7ed;
+  --admin-info: #2563eb;
+  --admin-info-border: #bfdbfe;
+  --admin-info-soft: #eff6ff;
+  --admin-chart-accent: #8b5cf6;
+  --admin-chart-accent-soft: #f5f3ff;
+  --admin-chart-secondary: #db2777;
+  --admin-chart-secondary-soft: #fdf2f8;
+  --admin-chart-tertiary: #0d9488;
+  --admin-chart-tertiary-soft: #f0fdfa;
+  --admin-media-background: #000000;
+  --admin-media-foreground: #ffffff;
   --admin-sidebar: #06133c;
   --admin-sidebar-foreground: #ffffff;
   --admin-sidebar-muted: #b9c4e8;
@@ -32,6 +50,7 @@
   --admin-background: #f8fbff;
   --admin-foreground: #061a3a;
   --admin-primary: #308ce8;
+  --admin-primary-foreground: #ffffff;
   --admin-primary-hover: #1978d0;
   --admin-primary-soft: #eaf5ff;
   --admin-surface: #ffffff;
@@ -84,10 +103,25 @@
   letter-spacing: 0;
 }
 
+.admin-login-backdrop {
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      color-mix(in srgb, var(--admin-primary) 46%, transparent),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 82% 12%,
+      color-mix(in srgb, var(--admin-primary-hover) 32%, transparent),
+      transparent 28%
+    );
+}
+
 @theme inline {
   --color-background: var(--admin-background);
   --color-foreground: var(--admin-foreground);
   --color-primary: var(--admin-primary);
+  --color-primary-foreground: var(--admin-primary-foreground);
   --color-primary-hover: var(--admin-primary-hover);
   --color-primary-soft: var(--admin-primary-soft);
   --color-surface: var(--admin-surface);
@@ -97,8 +131,25 @@
   --color-muted: var(--admin-muted);
   --color-subtle: var(--admin-subtle);
   --color-danger: var(--admin-danger);
+  --color-danger-border: var(--admin-danger-border);
+  --color-danger-soft: var(--admin-danger-soft);
   --color-success: var(--admin-success);
+  --color-success-border: var(--admin-success-border);
+  --color-success-soft: var(--admin-success-soft);
   --color-warning: var(--admin-warning);
+  --color-warning-border: var(--admin-warning-border);
+  --color-warning-soft: var(--admin-warning-soft);
+  --color-info: var(--admin-info);
+  --color-info-border: var(--admin-info-border);
+  --color-info-soft: var(--admin-info-soft);
+  --color-chart-accent: var(--admin-chart-accent);
+  --color-chart-accent-soft: var(--admin-chart-accent-soft);
+  --color-chart-secondary: var(--admin-chart-secondary);
+  --color-chart-secondary-soft: var(--admin-chart-secondary-soft);
+  --color-chart-tertiary: var(--admin-chart-tertiary);
+  --color-chart-tertiary-soft: var(--admin-chart-tertiary-soft);
+  --color-media-background: var(--admin-media-background);
+  --color-media-foreground: var(--admin-media-foreground);
   --color-sidebar: var(--admin-sidebar);
   --color-sidebar-foreground: var(--admin-sidebar-foreground);
   --color-sidebar-muted: var(--admin-sidebar-muted);
@@ -166,11 +217,11 @@ input:disabled {
 }
 
 ::selection {
-  background: rgb(51 0 255 / 16%);
+  background: color-mix(in srgb, var(--admin-primary) 16%, transparent);
 }
 
 :focus-visible {
-  outline: 3px solid rgb(51 0 255 / 28%);
+  outline: 3px solid color-mix(in srgb, var(--admin-primary) 28%, transparent);
   outline-offset: 2px;
 }
 
@@ -182,6 +233,7 @@ input:disabled {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
 .admin-community-video-player:fullscreen,
 .admin-community-video-player:-webkit-full-screen {
   width: min(100vw, 56.25vh);
@@ -190,12 +242,12 @@ input:disabled {
   max-height: 100vh;
   inset: 0;
   margin: auto;
-  background: #000;
+  background: var(--admin-media-background);
   object-fit: cover;
 }
 
 .admin-community-video-player:fullscreen::backdrop {
-  background: #000;
+  background: var(--admin-media-background);
 }
 
 .admin-community-video-expanded {
@@ -205,7 +257,7 @@ input:disabled {
   max-height: calc(100vh - 2rem);
   aspect-ratio: 9 / 16;
   border-radius: 1.25rem;
-  background: #000;
+  background: var(--admin-media-background);
 }
 
 .admin-community-video-expanded:fullscreen,
@@ -215,6 +267,6 @@ input:disabled {
   max-width: 100vw;
   max-height: 100vh;
   border-radius: 0;
-  background: #000;
+  background: var(--admin-media-background);
   object-fit: cover;
 }

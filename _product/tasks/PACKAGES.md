@@ -1,7 +1,10 @@
 # Packages e Política de Dependências
 
-Última verificação no registry: 2026-06-30, via `pnpm view` e `pnpm audit --prod`.
-Revisão técnica de frontend em junho/2026: React Hook Form permanece como padrão de formulários; TanStack Query permanece como padrão de server state.
+Última consulta dos manifests/lockfiles: **2026-09-10**, com `pnpm audit --prod` separado na raiz, backend, frontend, admin e video.
+Após atualização focal da TASK-178: **zero vulnerabilidades conhecidas** nos cinco escopos.
+O baseline anterior tinha 8 ocorrências no backend e 4 em cada app Next; versões corrigidas e
+limitações de evidência estão no ADR-0496. Isso não equivale à conclusão do pentest funcional. React Hook Form permanece como
+padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
 
@@ -10,7 +13,9 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 - Preferir pacotes já instalados e padrões locais.
 - Registrar em ADR quando uma task adicionar dependência.
 - Para integrações externas, escolher provedor na TASK-03 antes de instalar SDK definitivo.
-- Manter frontend e backend com dependências separadas.
+- Manter frontend, backend, admin e video com dependências separadas.
+- Manter `admin/` e `video/` como aplicações e lockfiles separados; compartilhar decisões e
+  contratos, não instalação/runtime.
 - Não trocar Next App Router por TanStack Router neste projeto.
 - Não trocar React Hook Form por TanStack Form sem ADR forte; a fundação de forms deve seguir `TASK-02`.
 - Pacotes TanStack adicionais devem ser adotados por problema concreto: tabela, virtualização, lint/devtools ou server state.
@@ -19,20 +24,21 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 
 | Pacote | Versão instalada | Última verificada | Uso |
 |---|---:|---:|---|
-| `next` | `16.2.9` | `16.2.9` | App Router, SSR, build |
+| `next` | `16.3.3` | `16.3.3` | App Router, SSR, build |
 | `react` | `19.2.4` | `19.2.7` | UI |
 | `react-dom` | `19.2.4` | `19.2.7` | UI |
 | `tailwindcss` | `^4` | `4.3.0` | Estilo |
 | `@tailwindcss/postcss` | `^4` | `4.3.0` | PostCSS |
 | `@tanstack/react-query` | `^5.101.0` | `5.101.0` | Server state |
-| `axios` | `^1.18.1` | `1.18.1` | HTTP client |
+| `tus-js-client` | `^4.3.1` | `4.3.1` | Upload resumível direto ao Cloudflare Stream, sem transportar vídeo pelo Next/Express (TASK-163) |
+| `hls.js` | `1.7.2` | `1.7.2` | Reprodução HLS adaptativa no frontend e admin em browsers MSE; Safari usa HLS nativo (TASK-163) |
+| `axios` | `^1.19.0` | `1.19.0` | HTTP client |
 | `react-hook-form` | `^7.77.0` | `7.77.0` | Formulários |
 | `@hookform/resolvers` | `^5.4.0` | `5.4.0` | Zod resolver |
 | `zod` | `^4.4.3` | `4.4.3` | Schema validation |
 | `@mercadopago/sdk-react` | `^1.0.7` | `1.0.7` | Checkout Bricks/Card Payment Brick |
 | `@reduxjs/toolkit` | `^2.12.0` | `2.12.0` | Client state |
 | `react-redux` | `^9.3.0` | `9.3.0` | Redux bindings |
-| `redux-persist` | `^6.0.0` | `6.0.0` | Persistência local |
 | `js-cookie` | `^3.0.8` | `3.0.8` | Cookies |
 | `socket.io-client` | `^4.8.3` | `4.8.3` | Tempo real |
 | `lucide-react` | `^1.17.0` | `1.17.0` | Ícones |
@@ -40,6 +46,7 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 | `next-themes` | `^0.4.6` | `0.4.6` | Tema claro/escuro |
 | `nprogress` | `^0.2.0` | `0.2.0` | Loading route progress |
 | `@fingerprintjs/fingerprintjs` | `^5.2.0` | `5.2.0` | Device id |
+| `@sentry/nextjs` | `10.70.0` | `10.70.0` | Captura de erros client/server/edge e upload condicional de source maps |
 | `class-variance-authority` | `^0.7.1` | `0.7.1` | Variants de UI |
 | `clsx` | `^2.1.1` | `2.1.1` | Class composition |
 | `tailwind-merge` | `^3.6.0` | `3.6.0` | Merge Tailwind |
@@ -55,6 +62,9 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 | URL state | Considerar `nuqs` em filtros complexos | Next expõe `useSearchParams`, mas validação/tipagem de filtros avançados pode justificar package dedicado. |
 | Tabelas/listas densas | Considerar `@tanstack/react-table` e `@tanstack/react-virtual` | São headless e preservam controle visual, úteis para filtros/listas longas sem design system paralelo. |
 | Query quality | Considerar `@tanstack/react-query-devtools` e `@tanstack/eslint-plugin-query` | Melhoram depuração e evitam mau uso de keys/deps em tasks futuras. |
+
+`redux-persist` foi removido na auditoria de produção de 07/08/2026. Estado de usuário fica em
+memória e é reidratado pela API; JWTs ficam em cookies `HttpOnly`, não em storage JavaScript.
 
 ## Configuração frontend sem package novo
 
@@ -109,9 +119,9 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | Pacote | Versão instalada | Última verificada | Uso |
 |---|---:|---:|---|
 | `express` | `^5.2.1` | `5.2.1` | API HTTP |
-| `prisma` | `^7.8.0` | `7.8.0` | ORM CLI |
-| `@prisma/client` | `^7.8.0` | `7.8.0` | ORM client |
-| `@prisma/adapter-pg` | `^7.8.0` | `7.8.0` | Adapter PostgreSQL |
+| `prisma` | `^7.9.1` | `7.9.1` | ORM CLI |
+| `@prisma/client` | `^7.9.1` | `7.9.1` | ORM client |
+| `@prisma/adapter-pg` | `^7.9.1` | `7.9.1` | Adapter PostgreSQL |
 | `pg` | `^8.21.0` | `8.21.0` | PostgreSQL driver |
 | `passport` | `^0.7.0` | `0.7.0` | Auth strategies |
 | `passport-jwt` | `^4.0.1` | `4.0.1` | JWT auth |
@@ -121,15 +131,14 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `bcrypt` | `^6.0.0` | `6.0.0` | Compat senha |
 | `zod` | `^4.4.3` | `4.4.3` | Validation |
 | `i18next` | `^26.3.0` | `26.3.0` | i18n |
-| `nodemailer` | `^9.0.1` | `9.0.1` | E-mail transacional via Resend SMTP |
+| `nodemailer` | `9.1.1` | `9.1.1` | E-mail transacional via Resend SMTP |
 | `twilio` | `^6.0.2` | `6.0.2` | SMS/OTP para verificação de telefone/WhatsApp |
 | `web-push` | `^3.6.7` | `3.6.7` | Push web |
 | `socket.io` | `^4.8.3` | `4.8.3` | Tempo real |
 | `helmet` | `^8.2.0` | `8.2.0` | Segurança HTTP |
 | `cors` | `^2.8.6` | `2.8.6` | CORS |
 | `cookie-parser` | `^1.4.7` | `1.4.7` | Cookies |
-| `express-session` | `^1.19.0` | `1.19.0` | Sessão OAuth |
-| `multer` | `^2.2.0` | `2.2.0` | Upload |
+| `multer` | `2.3.0` | `2.3.0` | Upload |
 | `@aws-sdk/client-s3` | `^3.1059.0` | `3.1060.0` | Cloudflare R2 via API S3-compatible |
 | `mercadopago` | `^3.1.0` | `3.1.0` | Gateway Mercado Pago via adapter backend |
 | `date-fns` | `^4.4.0` | `4.4.0` | Datas |
@@ -137,6 +146,74 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `@scalar/express-api-reference` | `^0.9.20` | `0.9.20` | API docs |
 | `swagger-ui-express` | `^5.0.1` | `5.0.1` | Swagger UI |
 | `libphonenumber-js` | `^1.13.4` | `1.13.4` | Telefone |
+| `dotenv` | `^17.4.2` | `17.4.2` | Carregamento de env no processo backend |
+| `uuid` | `^14.0.0` | `14.0.0` | Identificadores de correlação |
+| `@sentry/node` | `10.70.0` | `10.70.0` | Captura sanitizada de falhas operacionais e Express 5 |
+O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnly`; `express-session` foi removido por não ser necessário para esse fluxo. O verificador mantém transição temporária para states assinados pela versão anterior durante o rollout.
+
+MediaBunny, seu encoder AAC e a POC Playwright/Chromium foram removidos pela TASK-164. Novos vídeos
+usam Cloudflare Stream; transformações offline pertencem à aplicação `video/`. A reativação do
+download social 9:16 não reinstala pacotes no frontend: o browser apenas abre a prévia e solicita
+um job `social_share` ao backend, e o `video/` usa BullMQ/Redis/FFmpeg já aprovados.
+
+A migração manual R2 → Stream da TASK-165 não adiciona dependência. O adapter usa `fetch` nativo;
+identidade usa `node:crypto`; lock usa o `pg` já instalado; inspeção de origem usa o
+`@aws-sdk/client-s3` existente. Não instalar SDK Cloudflare ou ferramenta de migration externa para
+esse backfill.
+
+A correção operacional da TASK-166 também não adiciona package. Como o backend é construído e
+executado a partir de contexto isolado, seu `package.json` deve fixar `packageManager: pnpm@10.33.0`
+na mesma versão preparada pelo Docker/Corepack. O cache preparado deve estar disponível ao usuário
+não privilegiado e a rede do Corepack deve permanecer bloqueada no estágio runtime. Não permitir que
+o terminal do container baixe/atualize pnpm ou reinstale `node_modules` em runtime.
+
+## Admin já instalado
+
+| Pacote | Versão instalada | Última verificada | Uso |
+|---|---:|---:|---|
+| `next` | `16.3.3` | `16.3.3` | App Router e build do painel separado |
+| `react` / `react-dom` | `19.2.4` | `19.2.4` | UI |
+| `tailwindcss` | `^4` | `4.x` | Estilo |
+| `@tanstack/react-query` | `^5.101.0` | `5.101.0` | Server state |
+| `axios` | `^1.19.0` | `1.19.0` | HTTP client |
+| `react-hook-form` + `@hookform/resolvers` | `^7.77.0` / `^5.4.0` | manifests atuais | Formulários |
+| `zod` | `^4.4.3` | `4.4.3` | Validação |
+| `sonner` | `^2.0.7` | `2.0.7` | Feedback não técnico |
+| `@fingerprintjs/fingerprintjs` | `^5.2.0` | `5.2.0` | Identificação do dispositivo admin |
+| `@sentry/nextjs` | `10.70.0` | `10.70.0` | Captura de erros client/server/edge e upload condicional de source maps |
+| `lucide-react` | `^1.17.0` | `1.17.0` | Ícones |
+
+## Aplicação de processamento de vídeo
+
+`video/` é uma aplicação Node independente. Ela não integra o caminho crítico de upload/playback
+Cloudflare Stream e não compartilha instalação/runtime com o backend. Versões verificadas em
+2026-09-03 para a TASK-164:
+
+| Pacote/binário | Versão instalada | Última verificada | Uso |
+|---|---:|---:|---|
+| `express` | `5.2.1` | `5.2.1` | API HTTP service-to-service |
+| `bullmq` | `6.3.4` | `6.3.4` | Fila, retry, progresso e worker persistentes |
+| `ioredis` | `6.0.0` | `6.0.0` | Conexão Redis explícita para API/worker BullMQ |
+| `multer` | `2.3.0` | `2.3.0` | Multipart limitado com escrita direta no volume |
+| `zod` | `4.5.4` | `4.5.4` | Env e contratos internos tipados |
+| `helmet` | `8.3.0` | `8.3.0` | Headers defensivos da API privada |
+| `@paralleldrive/cuid2` | `3.3.0` | `3.3.0` | IDs opacos de jobs e traces |
+| `dotenv` | `17.4.2` | `17.4.2` | Env local; deploy usa secrets de runtime |
+| FFmpeg/ffprobe CLI | imagem Debian | `5.1.9` na imagem; `8.1.2` no host E2E | Probe, compressão e render social MP4 H.264/AAC |
+| `fonts-manrope` | pacote Debian bookworm | `4.504+git20201211-2` | Fonte open-source Manrope no container `video/` para o render social combinar com a prévia/app |
+
+Decisões obrigatórias:
+
+- não armazenar bytes no Redis; somente IDs, parâmetros fechados e estado;
+- não usar `fluent-ffmpeg`, MediaBunny, Chromium, WASM ou comando shell interpolado;
+- executar FFmpeg por adapter com `spawn`, argumentos fixos e `shell: false`;
+- manter Redis privado com persistência AOF; no runtime padrão `dist/all.js`, API e worker rodam
+  no mesmo processo/volume, e em escala separada devem compartilhar storage persistente equivalente;
+- para HLS privado do Cloudflare Stream, `ffprobe` e FFmpeg podem receber `Origin`/`Referer`
+  derivados de uma origem publica HTTPS permitida pelo backend; a validacao continua sem shell,
+  sem headers arbitrarios do cliente e sem novo pacote;
+- concorrência padrão `1` por worker porque transcodificação é CPU-bound;
+- adicionar nova operação somente em task/ADR com validação de autorização, recursos e output.
 
 ## Candidatos condicionais
 
@@ -145,28 +222,46 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `stripe` | `22.2.0` | Não escolhido. Manter como referência caso troque de gateway (novo adapter). |
 | `asaas` | `1.1.0` | Não escolhido. |
 | `@aws-sdk/s3-request-presigner` | `3.1060.0` | URLs assinadas S3 |
-| `@sentry/nextjs` | `10.56.0` | Observabilidade frontend — decidido, instalar em task dedicada |
-| `@sentry/node` | `10.56.0` | Observabilidade backend — decidido, instalar em task dedicada |
 
 ## Overrides transitivos de segurança
 
-Aplicados em `frontend/package.json` e `backend/package.json` porque frontend e backend são aplicações separadas, mesmo estando no mesmo repositório de desenvolvimento. O `pnpm-workspace.yaml` raiz foi removido para não transformar o repositório em monorepo operacional nem invalidar overrides por aplicação.
+Aplicados no manifest de cada aplicação porque raiz, frontend, backend, admin e video têm instalações
+separadas. O `pnpm-workspace.yaml` raiz foi removido para não transformar o repositório em monorepo
+operacional nem invalidar overrides por aplicação.
+
+O postinstall oficial de `@sentry/cli` é permitido apenas nos manifests Next (`frontend/` e
+`admin/`) por `pnpm.onlyBuiltDependencies`. A lista preserva também `sharp` e `unrs-resolver`, já
+autorizados pelo `pnpm-workspace.yaml` de cada app. O binário Sentry é usado no build para publicar
+source maps quando as credenciais de CI estiverem presentes; não roda como serviço da aplicação e
+não recebe credenciais no bundle.
 
 | Aplicação | Override | Motivo |
 |---|---:|---|
 | Frontend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io-client > engine.io-client > ws`. |
-| Frontend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `axios > form-data`. |
-| Frontend | `postcss@8.5.16` | Corrige advisory de XSS transitivo em `next > postcss`. |
+| Frontend | `form-data@4.0.6`, `brace-expansion@5.0.9` | Corrige advisories transitivos em `axios > form-data` e no tooling Sentry. |
+| Frontend | `postcss@8.5.26` | Mantém a correção de advisories transitivos do pipeline CSS/Next. |
+| Frontend | `sharp@0.35.4`, `socket.io-parser@4.2.7`, `nanoid@3.3.17` | Correções transitivas preservando as majors exigidas pela aplicação. |
 | Backend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io > engine.io > ws`. |
 | Backend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `twilio > axios > form-data`. |
-| Backend | `hono@4.12.27` | Corrige advisories transitivos trazidos pelo pacote Prisma dev incluído por `@prisma/client`. |
-| Backend | `@hono/node-server@1.19.13` | Corrige advisory transitivo de `@hono/node-server` mantendo major compatível. |
+| Backend | `hono@4.12.34`, `@hono/node-server@2.0.5` | Corrige advisories transitivos do tooling Prisma. |
+| Backend | `deepmerge-ts@8.0.0` | Corrige CVE-2026-40345 em `prisma > @prisma/config`; o CLI/config foi revalidado sem alterar banco. |
+| Frontend | `browserslist@4.28.7`, `fast-uri@3.1.6` | Corrige advisories transitivos do pipeline Sentry/Babel/webpack. |
+| Backend | `axios@1.19.0`, `body-parser@2.3.0`, `brace-expansion@5.0.9`, `fast-uri@3.1.6`, `mysql2@3.23.1`, `nanoid@5.1.16`, `qs@6.16.0`, `socket.io-parser@4.2.7`, `valibot@1.4.2` | Patches transitivos fixados após auditoria; `mysql2` permanece apenas dependência transitiva do CLI Prisma, não datasource da aplicação. |
+| Admin | `form-data@4.0.6`, `brace-expansion@5.0.9`, `browserslist@4.28.7`, `fast-uri@3.1.6`, `postcss@8.5.26`, `sharp@0.35.4`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
+| Raiz | `fast-uri@3.1.6`, `js-yaml@4.3.1` | Correções transitivas das ferramentas de commit/hook. |
 
-Validação obrigatória após alteração de dependências de produção: `pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`, `pnpm check`, `pnpm --dir backend build` e `pnpm --dir frontend build`.
+Validação obrigatória após alteração de dependências de produção: `pnpm audit --prod`,
+`pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`,
+`pnpm --dir admin audit --prod`, `pnpm --dir video audit --prod`, `pnpm check` e os quatro builds.
+
+A TASK-178 fixa também `baseline-browser-mapping@2.11.0` nos overrides independentes do
+frontend/Admin para corrigir encerramento de processo por entrada inválida. Multer `2.3.0` já
+aplica `fileSize` inclusivo: o ajuste `+1` fica apenas em `fieldSize` e `parts`. Parsers públicos
+limitam também profundidade e índice de campos antes de materializar objetos.
 
 ## Testes e qualidade candidatos
 
-Atualmente o projeto valida com Biome, ESLint e TypeScript. Para uma suíte automatizada futura:
+Atualmente o backend também possui testes unitários com o test runner nativo do Node + `tsx`, sem framework adicional. Frontend/admin validam Biome sem warnings, ESLint com `--max-warnings=0` e TypeScript. Para uma suíte automatizada futura:
 
 | Pacote | Versão verificada | Uso |
 |---|---:|---|

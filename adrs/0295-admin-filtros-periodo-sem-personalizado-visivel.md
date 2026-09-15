@@ -1,4 +1,4 @@
-﻿# ADR-0295: Filtros de período do Admin sem Personalizado selecionável
+# ADR-0295: Filtros de período do Admin sem Personalizado selecionável
 
 ## Status
 

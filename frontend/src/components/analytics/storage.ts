@@ -1,5 +1,7 @@
-﻿export const VISITOR_ID_KEY = "lectum:analytics:visitor-id";
-export const SESSION_ID_KEY = "lectum:analytics:session-id";
+import { ANALYTICS_SESSION_ID_KEY } from "@/utils/analytics-session";
+import { getBrowserStorage, readStorageItem, writeStorageItem } from "@/utils/browser-storage";
+
+export const VISITOR_ID_KEY = "lectum:analytics:visitor-id";
 
 export const createTrackingId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -9,20 +11,12 @@ export const createTrackingId = () => {
   return `lectum-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
 
-export const safeGetItem = (storage: Storage, key: string) => {
-  try {
-    return storage.getItem(key);
-  } catch {
-    return null;
-  }
+export const safeGetItem = (storage: Storage | null, key: string) => {
+  return readStorageItem(storage, key);
 };
 
-export const safeSetItem = (storage: Storage, key: string, value: string) => {
-  try {
-    storage.setItem(key, value);
-  } catch {
-    // Analytics must never break the user experience.
-  }
+export const safeSetItem = (storage: Storage | null, key: string, value: string) => {
+  return writeStorageItem(storage, key, value);
 };
 
 export const getOrCreateStorageId = (storage: Storage, key: string) => {
@@ -30,16 +24,22 @@ export const getOrCreateStorageId = (storage: Storage, key: string) => {
   if (existingId) return existingId;
 
   const newId = createTrackingId();
-  safeSetItem(storage, key, newId);
+  if (!safeSetItem(storage, key, newId)) return null;
 
   return newId;
 };
 
 export const getOrCreateAnalyticsIdentity = () => {
-  if (typeof window === "undefined") return null;
+  const localStorage = getBrowserStorage("localStorage");
+  const sessionStorage = getBrowserStorage("sessionStorage");
+  if (!localStorage || !sessionStorage) return null;
+
+  const visitorId = getOrCreateStorageId(localStorage, VISITOR_ID_KEY);
+  const sessionId = getOrCreateStorageId(sessionStorage, ANALYTICS_SESSION_ID_KEY);
+  if (!visitorId || !sessionId) return null;
 
   return {
-    visitorId: getOrCreateStorageId(window.localStorage, VISITOR_ID_KEY),
-    sessionId: getOrCreateStorageId(window.sessionStorage, SESSION_ID_KEY),
+    visitorId,
+    sessionId,
   };
 };

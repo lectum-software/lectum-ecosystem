@@ -1,4 +1,4 @@
-﻿# ADR-0134: Labels compactos de público atendido
+# ADR-0134: Labels compactos de público atendido
 
 ## Status
 

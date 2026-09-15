@@ -66,3 +66,8 @@ formatação pendente do Biome.
 
 - Validação visual autenticada em browser local deve ser feita na sessão real do usuário, pois este
   ambiente não expõe ferramenta de inspeção visual/autenticação do navegador.
+## Atualizacao em 2026-08-13: fallback visual gratuito sem assinatura vigente
+
+A mesma regressao tambem podia aparecer quando o endpoint de assinatura retornava `current=null` para um psicologo gratuito/sem assinatura vigente na rota canonica `/app/profissional/assinatura`: o site exibia o empty state **Assinatura nao encontrada**, enquanto o PWA podia estar na rota/view persuasiva de Plano Gratuito.
+
+A decisao e tratar ausencia de assinatura vigente como fallback visual de Plano Gratuito na tela principal de assinatura, reutilizando `ProfessionalBillingSubscriptionView`. Esse fallback e apenas de UI: nao cria `professional_subscription`, nao altera entitlement, nao simula pagamento e nao muda gateway. Quando houver assinatura profissional/cortesia real, a tela de gestao continua usando o contrato persistido.

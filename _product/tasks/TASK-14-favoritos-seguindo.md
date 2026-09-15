@@ -206,30 +206,30 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR não atualizado por se tratar de refinamento visual local sem nova decisão arquitetural ou regra de domínio.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local 200 em `/app/favorites`.
 
-## Execu??o completa (2026-06-06)
+## Execução completa (2026-06-06)
 
-- Refer?ncias visuais consultadas: `_product/proto/Favoritos.jpg` e `_product/proto/Seguindo.jpg`. Builder/Quick Copy n?o est? exposto como ferramenta MCP nesta sess?o; foi usado o fallback audit?vel de imagens locais conforme `PROTO-INVENTORY.md`.
-- Backend conclu?do sob guarda `requireRole("paciente")`:
+- Referências visuais consultadas: `_product/proto/Favoritos.jpg` e `_product/proto/Seguindo.jpg`. Builder/Quick Copy não está exposto como ferramenta MCP nesta sessão; foi usado o fallback auditável de imagens locais conforme `PROTO-INVENTORY.md`.
+- Backend concluído sob guarda `requireRole("paciente")`:
   - `GET /api/private/patient/favorites`;
   - `POST /api/private/patient/favorites/:id`;
   - `DELETE /api/private/patient/favorites/:id`;
   - `GET /api/private/patient/follows`;
   - `POST /api/private/patient/follows/:id`;
   - `DELETE /api/private/patient/follows/:id`.
-- Listagens paginadas usam dados reais, escopo por `req.auth.id`, filtros `deleted=false`, alvo psic?logo ativo e `psychologist_profile.published=true`.
-- Frontend conclu?do nas rotas `/app/favorites` e `/app/following`, com estados de loading, erro e vazio em PT-BR, tabs entre listas, contadores reais e cards reutilizados da descoberta.
-- O card de psic?logo da descoberta foi extra?do para componente reutiliz?vel e agora diferencia `favorited` e `followed` com atualiza??es otimistas e rollback por snapshot em erro.
-- N?o foram criados formul?rios nesta task; a funda??o da TASK-02 n?o era aplic?vel.
-- A rota de perfil profissional `/app/psychologist/[id]` ainda pertence ? TASK-15 e n?o existe no produto atual; a integra??o dos mesmos bot?es no perfil deve ser feita quando a TASK-15 materializar essa tela.
+- Listagens paginadas usam dados reais, escopo por `req.auth.id`, filtros `deleted=false`, alvo psicólogo ativo e `psychologist_profile.published=true`.
+- Frontend concluído nas rotas `/app/favorites` e `/app/following`, com estados de loading, erro e vazio em PT-BR, tabs entre listas, contadores reais e cards reutilizados da descoberta.
+- O card de psicólogo da descoberta foi extraído para componente reutilizável e agora diferencia `favorited` e `followed` com atualizações otimistas e rollback por snapshot em erro.
+- Não foram criados formulários nesta task; a fundação da TASK-02 não era aplicável.
+- A rota de perfil profissional `/app/psychologist/[id]` ainda pertence à TASK-15 e não existe no produto atual; a integração dos mesmos botões no perfil deve ser feita quando a TASK-15 materializar essa tela.
 - ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
-- Valida??es executadas:
-  - `pnpm --dir backend db:migrate` (sem migration pendente; schema j? sincronizado pela execu??o parcial anterior);
+- Validações executadas:
+  - `pnpm --dir backend db:migrate` (sem migration pendente; schema já sincronizado pela execução parcial anterior);
   - `pnpm --dir backend check`;
   - `pnpm --dir backend build`;
   - `pnpm --dir frontend check`;
   - `pnpm --dir frontend build`;
-  - smoke real de API com paciente e psic?logo tempor?rios: guarda 403 para psic?logo em rota paciente, criar/listar/remover favorito, criar/listar/remover seguindo e refletir `favorited/followed` no diret?rio;
-  - browser local headless desktop `1440x1000`: `/app/favorites` com remo??o pelo cora??o e estado vazio; `/app/following` com remo??o pelo bot?o `Seguindo` e estado vazio.
+  - smoke real de API com paciente e psicólogo temporários: guarda 403 para psicólogo em rota paciente, criar/listar/remover favorito, criar/listar/remover seguindo e refletir `favorited/followed` no diretório;
+  - browser local headless desktop `1440x1000`: `/app/favorites` com remoção pelo coração e estado vazio; `/app/following` com remoção pelo botão `Seguindo` e estado vazio.
 
 ## Complemento 2026-06-15 - refinamento visual do header e cards de favoritos
 
@@ -348,7 +348,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Responsividade: conteúdo centralizado em coluna responsiva com padding mobile seguro, `w-full/max-w-full` e grid sem larguras fixas que poderiam ultrapassar a viewport.
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoints, dados de favoritos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
-- Valida??es executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
+- Validações executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
 
 ## Complemento 2026-06-25 - chips de filtro com contagens em Favoritos
 
@@ -561,13 +561,279 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
 
-## Complemento 2026-07-05 - bloquear auto-favorito no pr�prio perfil/v�deo
+## Complemento 2026-07-05 - bloquear auto-favorito no próprio perfil/vídeo
 
-- Pedido do usu�rio: quando o psic�logo autenticado estiver no pr�prio perfil p�blico ou no pr�prio v�deo de apresenta��o em `/psychologists`, o bot�o de cora��o deve ficar desabilitado; psic�logos n�o podem favoritar a si mesmos.
-- Fonte visual/audit�vel: prints do usu�rio, `_product/proto/Psic�logos.jpg` e `_product/proto/Perfil Profissional - Sobre.jpg`. Builder/Quick Copy foi testado com `npx "@builder.io/dev-tools@latest" auth status`, mas retornou `Not Authenticated to Builder.io`; a valida��o visual seguiu com imagens locais e browser local.
-- Backend: `POST /api/private/user/favorites/:id` e a rota legada equivalente agora retornam `403 favorite_own_profile` quando `req.auth.id` � igual ao psic�logo alvo.
-- Backend: leituras contextuais do diret�rio/perfil e a listagem de favoritos ignoram rela��es antigas de auto-favorito, mantendo `favorited=false` para o pr�prio psic�logo.
-- Frontend: o cora��o do pr�prio perfil p�blico e o cora��o do pr�prio v�deo/card em `/psychologists` renderizam desabilitados, sem estado vermelho, com `aria-label`/`title` em PT-BR: `Voc� n�o pode favoritar o pr�prio perfil`.
-- Escopo: sem altera��o de Prisma schema/migrations, sem packages novos, sem mocks e sem endpoints simulados.
+- Pedido do usuário: quando o psicólogo autenticado estiver no próprio perfil público ou no próprio vídeo de apresentação em `/psychologists`, o botão de coração deve ficar desabilitado; psicólogos não podem favoritar a si mesmos.
+- Fonte visual/auditável: prints do usuário, `_product/proto/Psicólogos.jpg` e `_product/proto/Perfil Profissional - Sobre.jpg`. Builder/Quick Copy foi testado com `npx "@builder.io/dev-tools@latest" auth status`, mas retornou `Not Authenticated to Builder.io`; a validação visual seguiu com imagens locais e browser local.
+- Backend: `POST /api/private/user/favorites/:id` e a rota legada equivalente agora retornam `403 favorite_own_profile` quando `req.auth.id` é igual ao psicólogo alvo.
+- Backend: leituras contextuais do diretório/perfil e a listagem de favoritos ignoram relações antigas de auto-favorito, mantendo `favorited=false` para o próprio psicólogo.
+- Frontend: o coração do próprio perfil público e o coração do próprio vídeo/card em `/psychologists` renderizam desabilitados, sem estado vermelho, com `aria-label`/`title` em PT-BR: `Você não pode favoritar o próprio perfil`.
+- Escopo: sem alteração de Prisma schema/migrations, sem packages novos, sem mocks e sem endpoints simulados.
 - ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
-- Valida��es executadas: `npx "@builder.io/dev-tools@latest" auth status`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, smoke HTTP local `POST /api/private/user/favorites/:id` retornando `403 favorite_own_profile` para auto-favorito e Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4` e `/psychologists?search=Rezende`, confirmando cora��o desabilitado (`disabled=true`, `aria-pressed=false`) no pr�prio perfil/v�deo.
+- Validações executadas: `npx "@builder.io/dev-tools@latest" auth status`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, smoke HTTP local `POST /api/private/user/favorites/:id` retornando `403 favorite_own_profile` para auto-favorito e Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4` e `/psychologists?search=Rezende`, confirmando coração desabilitado (`disabled=true`, `aria-pressed=false`) no próprio perfil/vídeo.
+
+## Complemento 2026-08-11 - liberacao da rota canonica de Favoritos para psicologos
+
+- Pedido do usuario: corrigir a aba `/app/favorites`, que retornava `403` para usuario autenticado com role `psicologo`.
+- Causa: a rota canonica `/api/private/user/favorites` estava montada com `requireRole("paciente")`, apesar da decisao vigente de 2026-06-08 permitir favoritos por qualquer usuario autenticado.
+- Backend: `/api/private/user/favorites` passou a ser montada apenas com `_auth`; `/api/private/patient/favorites` permanece como rota legada com `requireRole("paciente")`.
+- Segurança: a politica de rotas privadas foi extraida para helper testavel, cobrindo namespaces user-level `_auth-only` e mantendo `/api/private/patient/*` e `/api/private/psychologist/*` fail-closed por role.
+- Escopo: sem mudanca de UI, Prisma schema, migrations, packages, contratos de resposta, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
+
+## Complemento 2026-08-11 - estado vazio de Favoritos mais compacto
+
+- Pedido do usuario: reduzir o espacamento vertical entre o icone de coracao, o titulo `Voce ainda nao possui favoritos`, a descricao `Explore psicologos...` e o botao `Explorar psicologos`.
+- Referencias visuais/auditaveis: screenshot do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 10.37.39.jpeg` e referencia local `_product/proto/Favoritos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: o estado vazio de `/app/favoritos` passou a centralizar o conteudo pelo proprio grid (`content-center`), reduziu o gap interno, o padding vertical e a altura minima do bloco, mantendo o card, borda tracejada, copy e CTA existentes.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, endpoint, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/app/favoritos` e Chrome headless local em viewport 390x844.
+
+## Complemento 2026-08-15 - imagens reais em Comunidades seguidas
+
+- Pedido do usuario: em `Comunidades seguidas`, corrigir as imagens do bloco **Em destaque** e o
+  avatar das demais comunidades.
+- Fonte visual/auditavel: screenshot do usuario em `/app/comunidades-seguidas`; a imagem anexada
+  foi tratada apenas como evidencia visual. As referencias locais consultadas foram
+  `_product/proto/Seguindo.jpg`, `_product/proto/Explorar Comunidades.jpg` e
+  `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta
+  callable neste ambiente.
+- Frontend: `/app/following` e a rota canonica `/app/comunidades-seguidas` passaram a reutilizar
+  `buildCommunityExploreCard` para resolver os assets reais/catalogados das comunidades.
+- O card **Em destaque** agora renderiza `next/image` em background com o mesmo asset da comunidade,
+  mantendo overlay escuro para legibilidade.
+- Os cards de **Minhas comunidades** e **Recomendados para voce** renderizam a imagem/avatar da
+  comunidade no lugar do bloco gradiente com iniciais; as iniciais permanecem apenas como fallback
+  atras da imagem.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, endpoints, filtros reais,
+  paginacao, participacao em comunidades ou tracking.
+- ADR atualizado: `adrs/0073-comunidades-seguidas.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O bloco **Em destaque** de Comunidades seguidas exibe imagem real/catalogada da comunidade.
+- [x] Os cards das demais comunidades exibem avatar/imagem real/catalogada, sem trocar por iniciais
+  quando houver asset disponivel.
+- [x] A tela continua usando `next/image`, sem `<img>` cru.
+- [x] A alteracao nao cria mock, dado fake, endpoint, schema, migration, env ou package novo.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/following/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version`, `/app/comunidades-seguidas` e `/app/following`.
+- `pnpm check`
+- `pnpm check:version`
+
+## Complemento 2026-08-16 - descricao abaixo do destaque em Comunidades seguidas
+
+- Pedido do usuario: adicionar um texto de descricao abaixo do titulo da comunidade de destaque em
+  `Comunidades seguidas`.
+- Fonte visual/auditavel: screenshot do usuario em `/app/comunidades-seguidas`; a imagem anexada foi
+  tratada apenas como evidencia visual. Referencia local pertinente: `_product/proto/Seguindo.jpg`.
+  Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o card **Em destaque** de `/app/following` e da rota canonica
+  `/app/comunidades-seguidas` passou a renderizar uma descricao logo abaixo do titulo.
+- A descricao usa dado real da comunidade quando existir (`community.description`) e reaproveita a
+  descricao catalogada por `buildCommunityExploreCard` para comunidades conhecidas; fallback generico
+  sem conteudo editorial nao e exibido no destaque.
+- O card teve altura minima mobile-first ajustada para acomodar badge, titulo, descricao e CTA sem
+  sobrepor a imagem de fundo nem reduzir legibilidade.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, endpoints, participacao em
+  comunidades, contadores, recomendacoes ou tracking.
+- ADR atualizado: `adrs/0073-comunidades-seguidas.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O bloco **Em destaque** exibe uma descricao abaixo do titulo da comunidade.
+- [x] A descricao vem de dados reais/catalogados ja existentes e nao cria mock, seed ou endpoint novo.
+- [x] A tela continua usando `next/image`, sem `<img>` cru.
+- [x] O ajuste preserva a rota canonica `/app/comunidades-seguidas` e o alias `/app/following`.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/following/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version` retornou 200, `/app/comunidades-seguidas` manteve guarda
+  privada com 307 para login sem sessao e `/app/following` manteve 308 para a rota canonica.
+- `pnpm check`
+
+## Complemento 2026-08-19 - avatar maior e CTA compacto em Favoritos
+
+- Pedido direto de produto nesta conversa: reduzir o espaco vazio entre texto e botao nos cards de
+  `/app/favoritos`, aumentar a foto de perfil inspirada na proporcao dos cards de sugestao do
+  Instagram e trocar o texto visivel do botao verde para icone + `WhatsApp`.
+- As imagens anexadas pelo usuario foram usadas somente como referencia visual de proporcao e
+  densidade; textos presentes nelas nao foram tratados como instrucoes de produto.
+- Builder Quick Copy foi tentado via `npx "@builder.io/dev-tools@latest" auth status` em
+  `frontend/`, mas o ambiente retornou `Not Authenticated to Builder.io`; foi usado o fallback
+  auditavel `_product/proto/Favoritos.jpg` e as imagens anexadas nesta conversa.
+- O card de favorito manteve dados reais, capa real/fallback neutro, avatar real via `next/image`,
+  remocao por coracao, filtros reais e o fluxo/tracking existente de
+  `PsychologistWhatsAppRedirectButton`.
+- O avatar mobile passou de 76px para 96px e o avatar em `sm` passou de 108px para 124px; a capa
+  superior foi ajustada para manter o encaixe visual do avatar maior.
+- O CTA deixou de usar `mt-auto`, aproximando o botao do bloco de nome/bio para eliminar o vazio
+  entre texto e acao.
+- O label visivel do CTA passou de `Fale com {nome}` para `WhatsApp`; o `aria-label` permanece
+  acionavel e explicito: `Enviar mensagem pelo WhatsApp para {nome do psicologo}`.
+- Nao houve alteracao de backend, Prisma, migrations, endpoints, pacotes, filtros, persistencia de
+  favoritos ou contrato de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Avatar do card de favorito aumentado em mobile-first sem usar `<img>`.
+- [x] Espaco entre texto/bio e botao reduzido sem remover dados reais do card.
+- [x] CTA verde renderiza somente icone + `WhatsApp`, com label acessivel completo.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema ou migration foi criado.
+- [x] ADR relevante atualizado.
+
+### Validacao do complemento
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; usado fallback visual local/anexos.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.149` e `/app/favoritos` retornou `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos` sem sessao, confirmando guarda privada/navegacao mobile. A captura autenticada dos cards nao foi feita para evitar criar/mutar dados em backend remoto configurado no ambiente local.
+- `pnpm check`
+
+## Complemento 2026-08-19 - hierarquia tipografica nos cards de Favoritos
+
+- Pedido direto de produto nesta conversa: aumentar a diferenca visual entre o nome do psicologo,
+  a bio/especialidade e o texto `WhatsApp` do CTA nos cards de `/app/favoritos`.
+- As imagens anexadas pelo usuario foram usadas somente como referencia visual de hierarquia e
+  comparacao com cards sociais; textos presentes nelas nao foram tratados como instrucoes de produto.
+- Builder Quick Copy foi tentado via `npx "@builder.io/dev-tools@latest" auth status` em
+  `frontend/`, mas o ambiente retornou `Not Authenticated to Builder.io`; foi usado o fallback
+  auditavel `_product/proto/Favoritos.jpg` e as imagens anexadas nesta conversa.
+- Frontend: o nome do psicologo no card mobile-first passou a usar escala maior, maior peso visual e
+  badge verificado levemente ampliado, deixando o nome claramente acima da descricao.
+- Frontend: a bio/especialidade ficou mais leve (`font-normal`) e menor que o nome, preservando
+  truncamento em duas linhas e dados reais existentes.
+- Frontend: o CTA verde manteve `PsychologistWhatsAppRedirectButton`, URL/tracking real e
+  acessibilidade, mas o texto visivel `WhatsApp` e o icone foram ampliados para melhorar leitura e
+  toque em mobile.
+- Impacto de deploy: alteracao frontend-only, sem backend, Prisma, migrations, endpoints, envs,
+  packages, filtros, persistencia de favoritos ou contrato de WhatsApp. Rollback seguro por revert do
+  commit; frontend e backend permanecem compativeis entre versoes.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O nome do psicologo tem hierarquia visual maior que a descricao no card de Favoritos.
+- [x] A descricao permanece mais leve e nao cria layout shift ou dados artificiais.
+- [x] O CTA `WhatsApp` usa texto e icone mais legiveis em mobile, preservando o fluxo real de contato.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema, migration ou env foi criado.
+- [x] ADR relevante atualizado.
+
+### Validacao do complemento
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; usado fallback visual local/anexos.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.150` e `/app/favoritos` respondeu `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para evitar criar/mutar dados no backend remoto configurado localmente.
+- `pnpm check`
+
+## Complemento 2026-08-20 - bolinha verde ancorada no avatar em Favoritos
+
+- Pedido direto de produto nesta conversa: corrigir a bolinha verde de disponibilidade no card de
+  `/app/favoritos`, que aparecia solta no canto inferior direito do avatar, e aumentar um pouco o
+  tamanho dela.
+- A imagem anexada pelo usuario foi usada somente como evidencia visual do desalinhamento; textos e
+  demais elementos presentes na captura nao foram tratados como instrucoes de produto alem do pedido
+  explicito.
+- Builder Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas o CLI falhou com `ENOENT` no cache local do `npx`; foi usado o fallback auditavel
+  `_product/proto/Favoritos.jpg` e a captura anexada.
+- Frontend: o indicador `available_today` do card de favorito passou de 14px/16px para uma superficie
+  de 20px/24px, com ponto verde interno de 14px/16px.
+- Frontend: a posicao foi recalibrada para ficar na diagonal inferior direita da foto circular, sem
+  usar o canto externo do quadrado do avatar, e ganhou moldura/surface por tokens para separar da
+  imagem.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, packages, envs, filtros reais,
+  favoritos persistidos ou tracking de WhatsApp.
+- Impacto de deploy: alteracao frontend-only, compativel com backend em versoes diferentes. Rollback
+  seguro por revert do commit. Nenhuma env nova e nenhum ALERTA DE DEPLOY.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A bolinha verde fica visualmente ancorada sobre a borda inferior direita do avatar, nao no
+  canto externo do quadrado da imagem.
+- [x] O indicador ficou maior e mais legivel em mobile-first.
+- [x] O indicador continua dependendo somente do dado real `available_today`, sem mock ou estado
+  online artificial.
+- [x] A tela continua usando `next/image`, sem `<img>` cru.
+- [x] Nenhum backend, schema, migration, package, env, endpoint ou tracking foi alterado.
+- [x] ADR relevante atualizado.
+
+### Validacao do ajuste
+
+- `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/` falhou com `ENOENT`; usado fallback
+  visual local/anexo.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm --dir frontend check` passou em nova execucao com timeout maior; a primeira tentativa excedeu
+  o timeout local de 120s.
+- `pnpm version:bump` atualizou os quatro manifests de `0.1.150` para `0.1.151`.
+- `pnpm check:version`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.151` e
+  `/app/favoritos` retornou `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou
+  guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para
+  evitar criar/mutar dados reais no backend remoto configurado localmente.
+
+## Complemento 2026-08-20 - CTA WhatsApp menos pesado nos cards de Favoritos
+
+- Pedido direto de produto nesta conversa: reduzir a presenca visual do texto `WhatsApp` no botao
+  verde dos cards de `/app/favoritos`, porque a fonte textual estava grande em relacao ao restante
+  do card.
+- A imagem anexada pelo usuario foi usada somente como evidencia visual de escala do CTA; textos e
+  demais elementos presentes na captura nao foram tratados como instrucoes de produto alem do pedido
+  explicito.
+- Builder Quick Copy foi tentado via `npx "@builder.io/dev-tools@latest" auth status` em
+  `frontend/`, mas retornou `Not Authenticated to Builder.io`; foi usado o fallback auditavel
+  `_product/proto/Favoritos.jpg` e a captura anexada.
+- Frontend: o label do CTA `WhatsApp` passou de `13px/extrabold` para `text-xs/font-bold` no mobile
+  e de `text-sm` para `13px` em `sm`, mantendo a altura do botao, o icone, o `aria-label` completo e
+  o fluxo real `PsychologistWhatsAppRedirectButton`.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, packages, envs, filtros reais,
+  favoritos persistidos ou tracking de WhatsApp.
+- Impacto de deploy: alteracao frontend-only, compativel com backend em versoes diferentes. Rollback
+  seguro por revert do commit. Nenhuma env nova e nenhum ALERTA DE DEPLOY.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O texto visivel `WhatsApp` do CTA fica menos pesado no card mobile-first.
+- [x] A altura do botao e a area de toque foram preservadas.
+- [x] O fluxo real de WhatsApp, tracking e `aria-label` completo foram preservados.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema, migration ou env foi criado.
+- [x] ADR relevante atualizado.
+
+### Validacao do ajuste
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; usado fallback visual local/anexo.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm version:bump` atualizou os quatro manifests de `0.1.151` para `0.1.152`.
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.152` e
+  `/app/favoritos` retornou `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou
+  guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para
+  evitar criar/mutar dados reais no backend remoto configurado localmente.

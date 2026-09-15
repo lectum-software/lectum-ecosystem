@@ -1,4 +1,4 @@
-﻿# ADR 0155 - Midia nas respostas em Meus posts e respostas
+# ADR 0155 - Midia nas respostas em Meus posts e respostas
 
 Status: Accepted
 Data: 2026-06-23

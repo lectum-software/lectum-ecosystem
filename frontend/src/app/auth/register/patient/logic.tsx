@@ -7,48 +7,39 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { resolveRegisterErrorMessage } from "@/app/auth/register/error-message";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
+import {
+  type AdultDeclarationForm,
+  AdultDeclarationModal,
+} from "@/components/legal/adult-declaration-modal";
+import { LegalLinks } from "@/components/legal/links";
+import { adultConfirmedSchema } from "@/components/legal/use-form";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { buildAuthRouteWithRedirect, resolveAuthReturnTo } from "@/utils/auth-redirect";
 import { fingerprint } from "@/utils/fingerprint";
-import { type RegisterPatientForm, TERMS_VERSION, useForm } from "./use-form";
-
-const resolveRegisterErrorMessage = (error: unknown) => {
-  const message = error instanceof Error ? error.message : "";
-  const normalized = message.toLowerCase();
-
-  if (normalized.includes("email") && normalized.includes("cadastrad")) {
-    return "Este e-mail já está cadastrado. Faça login ou use outro e-mail.";
-  }
-
-  if (normalized.includes("senha") || normalized.includes("password")) {
-    return "A senha precisa ter no mínimo 10 caracteres.";
-  }
-
-  if (normalized.includes("termos") || normalized.includes("terms")) {
-    return "Aceite os termos para continuar.";
-  }
-
-  if (normalized.includes("device") || normalized.includes("dispositivo")) {
-    return "Não foi possível identificar seu dispositivo. Atualize a página e tente novamente.";
-  }
-
-  return message || "Não foi possível criar sua conta agora. Tente novamente.";
-};
+import { buildTrustedGoogleLoginUrl } from "@/utils/trusted-navigation";
+import { LEGACY_TERMS_VERSION, type RegisterPatientForm, useForm } from "./use-form";
 
 const PATIENT_EMAIL_FORM_ID = "patient-email-register-form";
 
 export const RegisterPatientLogic = () => {
   const { setter } = useUserSet("/auth/verify-email");
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? searchParams.get("callbackUrl");
+  const redirectTo = resolveAuthReturnTo(
+    searchParams.get("redirectTo"),
+    searchParams.get("callbackUrl"),
+  );
+  const loginHref = buildAuthRouteWithRedirect("/auth/login", redirectTo);
   const { Form, formProps, hook } = useForm();
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
+  const [adultReviewOpen, setAdultReviewOpen] = useState(false);
   const [emailFormOpen, setEmailFormOpen] = useState(false);
 
   const { registerPatient } = useAuth({
@@ -60,7 +51,7 @@ export const RegisterPatientLogic = () => {
           setter(data);
         },
         onError: (error) => {
-          setApiError(resolveRegisterErrorMessage(error));
+          setApiError(resolveRegisterErrorMessage(error, "patient"));
         },
       },
     },
@@ -69,6 +60,7 @@ export const RegisterPatientLogic = () => {
   const isPending = registerPatient.isPending || googlePending;
 
   const handleSubmit = (data: RegisterPatientForm) => {
+    if (!adultConfirmedSchema.safeParse(data.adult_confirmed).success) return;
     setApiError(null);
     const analyticsIdentity = getOrCreateAnalyticsIdentity();
     registerPatient.mutate({
@@ -78,7 +70,8 @@ export const RegisterPatientLogic = () => {
       password_confirm: data.password_confirm,
       role: "paciente",
       terms_accepted: true,
-      terms_version: TERMS_VERSION,
+      terms_version: LEGACY_TERMS_VERSION,
+      adult_confirmed: data.adult_confirmed,
       ...(analyticsIdentity
         ? {
             analytics_session_id: analyticsIdentity.sessionId,
@@ -88,25 +81,20 @@ export const RegisterPatientLogic = () => {
     });
   };
 
-  const handleGoogleRegister = async () => {
+  const handleGoogleRegister = async (values: AdultDeclarationForm) => {
+    if (!adultConfirmedSchema.safeParse(values.adult_confirmed).success) return;
+    setAdultReviewOpen(false);
     try {
       setGooglePending(true);
       setApiError(null);
-      hook.setValue("terms_accepted", true, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true,
-      });
 
       const currentDeviceId = await fingerprint();
-      const loginUrl =
-        process.env.NEXT_PUBLIC_LOGIN_URL ||
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/public/google/login`;
       const query = new URLSearchParams({
         intent: "register",
         role: "paciente",
         terms_accepted: "true",
-        terms_version: TERMS_VERSION,
+        terms_version: LEGACY_TERMS_VERSION,
+        adult_confirmed: String(values.adult_confirmed),
       });
       const analyticsIdentity = getOrCreateAnalyticsIdentity();
       if (analyticsIdentity) {
@@ -117,7 +105,7 @@ export const RegisterPatientLogic = () => {
         query.set("redirectTo", redirectTo);
       }
 
-      window.location.href = `${loginUrl}/${currentDeviceId}?${query.toString()}`;
+      window.location.href = buildTrustedGoogleLoginUrl(currentDeviceId, query);
     } catch {
       setGooglePending(false);
       setApiError("Não foi possível iniciar o cadastro com Google. Tente novamente.");
@@ -126,6 +114,12 @@ export const RegisterPatientLogic = () => {
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
+      {adultReviewOpen ? (
+        <AdultDeclarationModal
+          onClose={() => setAdultReviewOpen(false)}
+          onSubmit={handleGoogleRegister}
+        />
+      ) : null}
       <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 pb-1 pt-5 sm:pb-2 sm:pt-6">
         <Logo className="mx-auto mb-5 mt-1 w-[132px] sm:mb-6 sm:w-[144px]" priority />
 
@@ -141,7 +135,7 @@ export const RegisterPatientLogic = () => {
             <Button
               className="mt-5 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
               disabled={isPending}
-              onClick={handleGoogleRegister}
+              onClick={() => setAdultReviewOpen(true)}
               type="button"
               variant="outline"
             >
@@ -152,10 +146,6 @@ export const RegisterPatientLogic = () => {
               )}
               {googlePending ? "Conectando com Google" : "Criar conta com Google"}
             </Button>
-
-            <p className="mx-auto mt-2 max-w-[280px] text-center text-[10px] leading-4 text-subtle">
-              Ao continuar, você aceita os Termos e a Privacidade.
-            </p>
 
             {apiError ? (
               <InlineAlert className="mt-4" variant="error">
@@ -213,21 +203,14 @@ export const RegisterPatientLogic = () => {
 
           <div className="border-t border-border bg-surface-muted px-5 py-4 text-center text-[13px] leading-5 text-muted sm:px-6 sm:text-sm">
             Já possui uma conta?{" "}
-            <Link
-              className="font-semibold text-primary hover:text-primary-hover"
-              href={
-                redirectTo
-                  ? `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`
-                  : "/auth/login"
-              }
-            >
+            <Link className="font-semibold text-primary hover:text-primary-hover" href={loginHref}>
               Fazer login
             </Link>
           </div>
         </section>
 
         <footer className="mt-auto pb-1 pt-6 text-center text-[11px] leading-5 text-subtle sm:text-xs">
-          © 2026 Lectum. Todos os direitos reservados.
+          <LegalLinks className="mb-3" newTab />© 2026 Lectum. Todos os direitos reservados.
         </footer>
       </div>
     </main>

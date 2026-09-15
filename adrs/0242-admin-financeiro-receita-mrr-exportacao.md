@@ -213,21 +213,21 @@ Consequências:
 - Não há instalação de package, schema Prisma, migration, mock, seed ou endpoint simulado.
 
 
-## Ajuste 2026-07-23: confiabilidade de pagamento na pr?via de assinaturas
+## Ajuste 2026-07-23: confiabilidade de pagamento na prévia de assinaturas
 
-Feedback de produto pediu que a tabela **Assinaturas** do dashboard `/financeiro` usasse a mesma leitura operacional da rela??o completa, priorizando a pr?xima cobran?a e a confiabilidade do pagamento.
+Feedback de produto pediu que a tabela **Assinaturas** do dashboard `/financeiro` usasse a mesma leitura operacional da relação completa, priorizando a próxima cobrança e a confiabilidade do pagamento.
 
-Decis?es:
+Decisões:
 
-- A pr?via de assinaturas no dashboard passa a exibir **Psic?logo**, **In?cio**, **Pr?xima**, **Valor**, **Status** e **Confiabilidade Pgto**.
-- A coluna **?ltima** ? removida apenas da pr?via visual do dashboard; a informa??o de cobran?as confirmadas continua dispon?vel na tabela de cobran?as e no hist?rico da rela??o completa de assinaturas.
-- **Confiabilidade Pgto** reutiliza o `payment_health` j? calculado pelo servi?o financeiro a partir de `payment_event` e `professional_subscription`, sem endpoint novo, c?lculo visual paralelo ou dado simulado.
+- A prévia de assinaturas no dashboard passa a exibir **Psicólogo**, **Início**, **Próxima**, **Valor**, **Status** e **Confiabilidade Pgto**.
+- A coluna **Última** é removida apenas da prévia visual do dashboard; a informação de cobranças confirmadas continua disponível na tabela de cobranças e no histórico da relação completa de assinaturas.
+- **Confiabilidade Pgto** reutiliza o `payment_health` já calculado pelo serviço financeiro a partir de `payment_event` e `professional_subscription`, sem endpoint novo, cálculo visual paralelo ou dado simulado.
 - Os cards mobile seguem a mesma hierarquia, exibindo a confiabilidade de pagamento junto aos dados principais da assinatura.
 
-Consequ?ncias:
+Consequências:
 
-- A pr?via do Financeiro fica consistente com `/financeiro/assinaturas` e reduz redund?ncia com a tabela de cobran?as realizadas.
-- A mudan?a ? somente de apresenta??o: n?o altera contrato HTTP, c?lculo financeiro, CSV, Prisma/migrations, packages, seeds, mocks ou dados persistidos.
+- A prévia do Financeiro fica consistente com `/financeiro/assinaturas` e reduz redundância com a tabela de cobranças realizadas.
+- A mudança é somente de apresentação: não altera contrato HTTP, cálculo financeiro, CSV, Prisma/migrations, packages, seeds, mocks ou dados persistidos.
 
 ## Ajuste 2026-08-04: IDs operacionais em assinaturas e cobranças
 
@@ -304,3 +304,23 @@ Consequências:
 - O operador distingue cobrança e assinatura pela própria célula de ID, preservando uma tabela curta e sem prefixo textual `ID:`.
 - O padrão é reversível e auditável a partir do banco local: remover o prefixo e zeros à esquerda recupera o `internal_id`.
 - A decisão não altera schema, chaves primárias, contratos financeiros centrais, gateway Mercado Pago, CSV ou packages.
+
+## Ajuste 2026-08-13: conciliação de cobranças com resumo do Mercado Pago
+
+Feedback de homologação mostrou uma assinatura Mercado Pago aprovada para o psicólogo Austin aparecendo como assinatura ativa, mas sem linha correspondente em `/financeiro/cobrancas`; também havia risco de valores absurdos quando payloads do gateway continham apenas IDs numéricos.
+
+Decisões:
+
+- Manter `payment_event` local como fonte preferencial para cobranças, porque possui ID operacional (`payment_event.internal_id`) e maior granularidade.
+- Consultar, de forma somente leitura, o resumo real da assinatura no Mercado Pago (`preapproval.summarized`) quando houver `professional_subscription.source="mercadopago"` e `gateway_subscription_id`.
+- Usar o resumo do gateway para complementar `/financeiro/cobrancas`, `latest_charges`, série de receita e LTV médio quando o webhook local não foi gravado ou não tem valor monetário confiável.
+- Não persistir eventos sintéticos nem criar cobranças artificiais; linhas vindas apenas do resumo do gateway recebem `source="gateway_subscription_summary"`, `internal_id_available=false` e a UI exibe `—` no lugar de um código como `C00000`.
+- Deduplicar cobranças por assinatura e dia, priorizando `payment_event` local quando há valor confiável e usando o resumo do gateway como fallback real.
+- Restringir a extração de valores financeiros a chaves explicitamente monetárias (`transaction_amount`, `total_paid_amount`, `paid_amount`, `amount`/`amount.value`), nunca a campos genéricos como `value` isolado ou IDs numéricos do payload.
+
+Consequências:
+
+- O Admin passa a enxergar cobranças aprovadas existentes no Mercado Pago mesmo quando o webhook não populou `payment_event` local, reduzindo divergência operacional entre **Assinaturas** e **Cobranças**.
+- LTV médio e cartões/série de receita ficam mais completos sem simular cobrança nem multiplicar quantidade de assinaturas por preço de plano.
+- A lista de cobranças pode exibir uma linha sem ID operacional local quando a única evidência é o resumo do gateway; isso é uma limitação honesta até existir uma tabela normalizada de cobranças/tentativas.
+- A reconciliação por resumo do gateway não substitui uma futura persistência normalizada de pagamentos, mas evita apresentar zeros ou valores impossíveis em homologação/produção.

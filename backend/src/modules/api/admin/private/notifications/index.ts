@@ -1,5 +1,4 @@
-﻿import { Router } from "express";
-import adminAuth from "../../middlewares/_auth";
+import { Router } from "express";
 import {
   automaticLogs,
   cancelCampaign,
@@ -24,8 +23,6 @@ import {
 } from "./validator";
 
 const routes = Router();
-
-routes.use(adminAuth);
 
 routes.get("/metrics", metricsValidator, metrics);
 routes.get("/push-status", pushStatus);

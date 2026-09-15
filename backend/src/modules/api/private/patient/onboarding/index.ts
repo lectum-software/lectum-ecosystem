@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { update } from "./use-cases/controller";
 import validator from "./validator";
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+
 type NavigationRouter = {
   back: () => void;
   push: (href: string) => void;
@@ -64,6 +66,8 @@ const getPreviousAppHref = () => {
   return normalizedHistory[normalizedHistory.length - 1] ?? null;
 };
 
+export const getPreviousAppNavigationHref = () => getPreviousAppHref();
+
 const hasSameOriginReferrer = () => {
   if (typeof window === "undefined" || !document.referrer) return false;
 
@@ -115,11 +119,11 @@ export const navigateBackWithFallback = (
     return;
   }
 
-  router.push(fallbackHref);
+  router.push(normalizeSafeInternalRedirect(fallbackHref, "/comunidades") || "/comunidades");
 };
 
 export const recordAppNavigationPoint = (href?: string) => {
-  const currentHref = href ?? getCurrentAppHref();
+  const currentHref = normalizeSafeInternalRedirect(href ?? getCurrentAppHref());
   if (!currentHref) return;
 
   const history = readAppNavigationHistory();

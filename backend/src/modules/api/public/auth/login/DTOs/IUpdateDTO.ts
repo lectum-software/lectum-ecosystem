@@ -9,7 +9,7 @@ export interface IUpdateDTO {
     avatar?: string | null;
     provider?: string;
     password?: string;
-    password_confirm?: string;
+    password_confirm?: string | null;
     confirmed?: boolean;
     confirmed_date?: Date | null;
     recovery_code?: string | null;

@@ -1,56 +1,202 @@
 type SanitizeOptions = {
+  allowSignedMediaUrls?: boolean;
   removeAuthTokens?: boolean;
+  removePii?: boolean;
 };
 
 const sensitiveResponseKeys = new Set([
-  "access_token",
-  "ai_api_key",
-  "api_key",
-  "auth_token",
-  "client_secret",
-  "code_hash",
-  "confirm_code",
-  "gateway_token",
+  "accesstoken",
+  "accesskeyid",
+  "aiapikey",
+  "apikey",
+  "auth",
+  "authorization",
+  "authtoken",
+  "cardtoken",
+  "clientsecret",
+  "codehash",
+  "confirmcode",
+  "connectionstring",
+  "causemessage",
+  "credentials",
+  "cookie",
+  "cvv",
+  "databaseurl",
+  "gatewaytoken",
+  "idtoken",
+  "otp",
   "password",
-  "password_confirm",
-  "private_key",
-  "provider_message_id",
-  "recovery_code",
-  "refresh_token",
+  "passwordconfirm",
+  "passwordhash",
+  "p256dh",
+  "privatekey",
+  "providercode",
+  "providererror",
+  "providermessageid",
+  "providermessage",
+  "providerresponse",
+  "raw",
+  "recoverycode",
+  "refreshtoken",
   "secret",
-  "secret_access_key",
-  "secret_key",
-  "webhook_secret",
+  "secretaccesskey",
+  "secretkey",
+  "setcookie",
+  "signature",
+  "sql",
+  "stack",
+  "webhooksecret",
 ]);
 
-const sensitiveLogOnlyKeys = new Set(["token"]);
+const sensitiveResponseSuffixes = [
+  "accesstoken",
+  "accesskeyid",
+  "apikey",
+  "authtoken",
+  "cardtoken",
+  "clientsecret",
+  "codehash",
+  "confirmcode",
+  "connectionstring",
+  "credentials",
+  "databaseurl",
+  "gatewaytoken",
+  "password",
+  "passwordconfirm",
+  "passwordhash",
+  "p256dh",
+  "privatekey",
+  "recoverycode",
+  "refreshtoken",
+  "sessiontoken",
+  "secret",
+  "secretaccesskey",
+  "secretkey",
+  "subscriptionauth",
+  "webhooksecret",
+] as const;
 
-const shouldRemoveKey = (key: string, options: SanitizeOptions) => {
-  const normalizedKey = key.toLowerCase();
+const sensitiveLogOnlySuffixes = ["token", "tokens"] as const;
 
-  if (sensitiveResponseKeys.has(normalizedKey)) return true;
+const safeCredentialMetadataKeys = new Set(["haspassword"]);
 
-  return Boolean(options.removeAuthTokens && sensitiveLogOnlyKeys.has(normalizedKey));
+const piiKeys = new Set([
+  "cpf",
+  "cpfmasked",
+  "email",
+  "emailaddress",
+  "mobile",
+  "phone",
+  "phonenumber",
+  "telephone",
+  "whatsapp",
+]);
+
+const piiSuffixes = ["cpf", "email", "mobile", "phone", "phonenumber", "telephone", "whatsapp"];
+
+const normalizeSensitiveKey = (key: string) => key.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const AUTH_TOKEN_VALUE_PATTERNS = [
+  /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/,
+  /\b(?:bearer|basic)\s+[A-Za-z0-9+/_.=-]{8,}\b/i,
+  /\bsk-(?:proj-)?[A-Za-z0-9_-]{12,}\b/i,
+  /\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/i,
+  /\bxox[a-z]-[A-Za-z0-9-]{12,}\b/i,
+  /\bAKIA[A-Z0-9]{16}\b/,
+  /\bAIza[A-Za-z0-9_-]{20,}\b/,
+  /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^\s]+/i,
+] as const;
+
+const PII_VALUE_PATTERNS = [
+  /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
+  /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/,
+  /(?:\+?55\s*)?\(?\d{2}\)?[\s.-]*\d{4,5}[\s.-]*\d{4}\b/,
+] as const;
+
+const containsPattern = (value: string, patterns: readonly RegExp[]) =>
+  patterns.some((pattern) => pattern.test(value));
+
+const SIGNED_MEDIA_URL_KEYS = new Set(["downloadurl", "hlsurl", "thumbnailurl"]);
+const SIGNED_CLOUDFLARE_STREAM_URL =
+  /^https:\/\/customer-[a-zA-Z0-9_-]{1,128}\.cloudflarestream\.com\/eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\/(?:downloads\/default\.mp4|manifest\/video\.m3u8|thumbnails\/thumbnail\.jpg)(?:\?[^\s#]*)?$/;
+
+const isAllowedSignedMediaUrl = (
+  key: string | undefined,
+  value: string,
+  options: SanitizeOptions,
+) =>
+  Boolean(
+    options.allowSignedMediaUrls &&
+      key &&
+      SIGNED_MEDIA_URL_KEYS.has(normalizeSensitiveKey(key)) &&
+      SIGNED_CLOUDFLARE_STREAM_URL.test(value),
+  );
+
+const shouldRemoveKey = (key: string, value: unknown, options: SanitizeOptions) => {
+  const normalizedKey = normalizeSensitiveKey(key);
+
+  if (safeCredentialMetadataKeys.has(normalizedKey) && typeof value === "boolean") {
+    return false;
+  }
+
+  if (
+    sensitiveResponseKeys.has(normalizedKey) ||
+    sensitiveResponseSuffixes.some((suffix) => normalizedKey.endsWith(suffix))
+  ) {
+    return true;
+  }
+
+  if (
+    options.removeAuthTokens &&
+    (normalizedKey.includes("authorization") ||
+      sensitiveLogOnlySuffixes.some((suffix) => normalizedKey.endsWith(suffix)))
+  ) {
+    return true;
+  }
+
+  return Boolean(
+    options.removePii &&
+      (piiKeys.has(normalizedKey) || piiSuffixes.some((suffix) => normalizedKey.endsWith(suffix))),
+  );
 };
 
 export const sanitizeSensitiveData = <T = unknown>(value: T, options: SanitizeOptions = {}): T => {
-  if (value === null || value === undefined) return value;
-  if (value instanceof Date) return value;
-  if (value instanceof Buffer) return value;
+  const stack = new WeakSet<object>();
 
-  if (Array.isArray(value)) {
-    return value.map((item) => sanitizeSensitiveData(item, options)) as T;
-  }
+  const visit = (entry: unknown, key?: string): unknown => {
+    if (entry === null || entry === undefined) return entry;
+    if (entry instanceof Date || entry instanceof Buffer) return entry;
 
-  if (typeof value !== "object") return value;
+    if (typeof entry === "string") {
+      if (
+        options.removeAuthTokens &&
+        containsPattern(entry, AUTH_TOKEN_VALUE_PATTERNS) &&
+        !isAllowedSignedMediaUrl(key, entry, options)
+      ) {
+        return "[REDACTED]";
+      }
+      if (options.removePii && containsPattern(entry, PII_VALUE_PATTERNS)) return "[REDACTED]";
+      return entry;
+    }
 
-  const sanitized: Record<string, unknown> = {};
+    if (typeof entry !== "object") return entry;
+    if (stack.has(entry)) return "[REDACTED]";
+    stack.add(entry);
 
-  for (const [key, entryValue] of Object.entries(value)) {
-    if (shouldRemoveKey(key, options)) continue;
+    try {
+      if (Array.isArray(entry)) return entry.map((item) => visit(item));
 
-    sanitized[key] = sanitizeSensitiveData(entryValue, options);
-  }
+      const sanitized: Record<string, unknown> = {};
+      for (const [key, entryValue] of Object.entries(entry)) {
+        if (shouldRemoveKey(key, entryValue, options)) continue;
+        sanitized[key] = visit(entryValue, key);
+      }
 
-  return sanitized as T;
+      return sanitized;
+    } finally {
+      stack.delete(entry);
+    }
+  };
+
+  return visit(value) as T;
 };

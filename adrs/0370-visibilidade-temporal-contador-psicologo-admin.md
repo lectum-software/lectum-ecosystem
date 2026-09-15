@@ -1,4 +1,4 @@
-﻿# ADR-0370: Visibilidade temporal no contador principal do psicologo Admin
+# ADR-0370: Visibilidade temporal no contador principal do psicologo Admin
 
 ## Status
 

@@ -1,4 +1,4 @@
-﻿export type BillingSubscriptionStatus = "inativa" | "ativa" | "inadimplente" | "cancelada";
+export type BillingSubscriptionStatus = "inativa" | "ativa" | "inadimplente" | "cancelada";
 
 export type GatewaySubscriptionInput = {
   subscriptionId: string;

@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 const AUTH_PREFIX = "/auth";
 const APP_PATH = "/app";
 const DEFAULT_AUTHENTICATED_PATH = "/psicologos";
 const DASHBOARD_PATH = "/dashboard";
+const INTERNAL_ORIGIN = "https://lectum.local";
 const TOKEN_COOKIE_NAME = process.env.NEXT_PUBLIC_TOKEN_LOCAL || "lectum.token";
 const USER_COOKIE_NAME = process.env.NEXT_PUBLIC_USER_LOCAL || "lectum.user";
 
@@ -32,8 +34,8 @@ const PUBLIC_APP_PREFIXES = [
   "/app/psicologo/",
   "/app/psychologist/",
 ];
+const PATIENT_WELCOME_ROUTES = new Set(["/paciente/boas-vindas", "/patient/welcome"]);
 const LEGACY_PRIVATE_REDIRECTS = new Map<string, string>([
-  ["/patient/welcome", "/paciente/boas-vindas"],
   ["/app/account/need-reset", "/app/conta/redefinir-senha"],
   ["/app/settings/notifications", "/app/configuracoes/notificacoes"],
   ["/app/settings/account", "/app/configuracoes/conta"],
@@ -65,6 +67,9 @@ const LEGACY_PRIVATE_REDIRECTS = new Map<string, string>([
   ["/app/community/post/new", "/app/comunidades/publicacao/nova"],
   ["/app/community", "/app/comunidades"],
 ]);
+
+const isPathOrDescendant = (pathname: string, prefix: string) =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`);
 
 const resolveLegacyPrivateRedirect = (pathname: string) => {
   const exact = LEGACY_PRIVATE_REDIRECTS.get(pathname);
@@ -117,13 +122,6 @@ const isPublicCommunityRoute = (pathname: string) => {
   return true;
 };
 
-const clearRootCookie = (response: NextResponse, name: string) => {
-  response.cookies.set(name, "", {
-    maxAge: 0,
-    path: "/",
-  });
-};
-
 const hasPendingEmailConfirmation = (req: NextRequest) => {
   const rawUserCookie = req.cookies.get(USER_COOKIE_NAME)?.value;
   if (!rawUserCookie) return false;
@@ -146,10 +144,33 @@ const hasPendingEmailConfirmation = (req: NextRequest) => {
   });
 };
 
+const resolveSafeReturnTo = (req: NextRequest) =>
+  normalizeSafeInternalRedirect(req.nextUrl.searchParams.get("redirectTo")) ??
+  normalizeSafeInternalRedirect(req.nextUrl.searchParams.get("callbackUrl"));
+
+const resolvePatientWelcomeRedirect = (req: NextRequest) => {
+  const safeRedirect = resolveSafeReturnTo(req);
+
+  if (!safeRedirect) return DEFAULT_AUTHENTICATED_PATH;
+
+  try {
+    const targetPathname = new URL(safeRedirect, INTERNAL_ORIGIN).pathname;
+    if (PATIENT_WELCOME_ROUTES.has(targetPathname)) return DEFAULT_AUTHENTICATED_PATH;
+
+    return safeRedirect;
+  } catch {
+    return DEFAULT_AUTHENTICATED_PATH;
+  }
+};
+
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const currentPathWithSearch = `${pathname}${req.nextUrl.search}`;
   const legacyPrivateRedirect = resolveLegacyPrivateRedirect(pathname);
+
+  if (PATIENT_WELCOME_ROUTES.has(pathname)) {
+    return NextResponse.redirect(new URL(resolvePatientWelcomeRedirect(req), req.url));
+  }
 
   if (legacyPrivateRedirect) {
     const url = req.nextUrl.clone();
@@ -161,7 +182,7 @@ export function proxy(req: NextRequest) {
   const token = req.cookies.get(TOKEN_COOKIE_NAME);
   const pendingEmailConfirmation = Boolean(token) && hasPendingEmailConfirmation(req);
 
-  const isAuthRoute = pathname.startsWith(AUTH_PREFIX);
+  const isAuthRoute = isPathOrDescendant(pathname, AUTH_PREFIX);
   const isPublicAppRoute =
     PUBLIC_APP_EXACT_ROUTES.includes(pathname) ||
     isPublicCommunityRoute(pathname) ||
@@ -169,22 +190,24 @@ export function proxy(req: NextRequest) {
   const isPublicRoute = PUBLIC_ROUTES.includes(pathname) || isPublicAppRoute;
   const isAuthRequiredRoute = AUTH_REQUIRED_ROUTES.includes(pathname);
   const isAuthResultRoute = AUTH_RESULT_ROUTES.includes(pathname);
-  const isPrivateRoute = PRIVATE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isPrivateRoute = PRIVATE_PREFIXES.some((prefix) => isPathOrDescendant(pathname, prefix));
   const isInlineAuthPromptRoute = INLINE_AUTH_PROMPT_ROUTES.includes(pathname);
 
   if (isAuthResultRoute) {
-    const response = NextResponse.next();
-
-    if (pathname === "/auth/error" && req.nextUrl.searchParams.get("clearSession") === "1") {
-      clearRootCookie(response, TOKEN_COOKIE_NAME);
-      clearRootCookie(response, USER_COOKIE_NAME);
-    }
-
-    return response;
+    return NextResponse.next();
   }
 
   if (pendingEmailConfirmation && !isAuthRequiredRoute && (isAuthRoute || isPrivateRoute)) {
-    return NextResponse.redirect(new URL("/auth/verify-email", req.url));
+    const verifyEmailUrl = new URL("/auth/verify-email", req.url);
+    const existingRedirect = resolveSafeReturnTo(req);
+
+    if (existingRedirect) {
+      verifyEmailUrl.searchParams.set("redirectTo", existingRedirect);
+    } else if (!isAuthRoute) {
+      verifyEmailUrl.searchParams.set("redirectTo", currentPathWithSearch);
+    }
+
+    return NextResponse.redirect(verifyEmailUrl);
   }
 
   if (token && isAuthRoute && !isAuthRequiredRoute) {

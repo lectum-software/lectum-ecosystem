@@ -102,6 +102,9 @@ export type FreeProfessionalProfileResponse = {
     approaches: FreeProfileCatalogItem[];
   };
   activation: FreeProfessionalProfileActivation;
+  upload_limits: {
+    presentation_video_mb: number;
+  };
   catalogs: {
     genders: FreeProfileCatalogItem[];
     specialty_categories: FreeProfileCatalogCategory[];
@@ -165,6 +168,30 @@ export type FreeProfessionalProfileVideoUploadResponse = {
   video_url: string;
 };
 
+export type FreeProfessionalProfileVideoMultipartInitiateBody = {
+  fileName?: string;
+  mimeType: string;
+  size: number;
+};
+
+export type FreeProfessionalProfileVideoMultipartPartBody = {
+  partNumber: number | string;
+  uploadSessionId: string;
+};
+
+export type FreeProfessionalProfileVideoMultipartCompleteBody = {
+  parts: Array<{
+    partId?: string;
+    partNumber: number;
+    partToken?: string;
+  }>;
+  uploadSessionId: string;
+};
+
+export type FreeProfessionalProfileVideoMultipartAbortBody = {
+  uploadSessionId: string;
+};
+
 export type FreeProfessionalProfileVideoCoverUploadResponse = {
   profile: FreeProfessionalProfileResponse | null;
   video_cover_url: string;
@@ -201,6 +228,27 @@ export interface IFreeProfessionalProfileUploadVideoDTO {
     fileUrl?: string;
     mimetype?: string;
   };
+}
+
+export interface IFreeProfessionalProfileInitiateVideoMultipartDTO {
+  auth: user;
+  b: FreeProfessionalProfileVideoMultipartInitiateBody;
+}
+
+export interface IFreeProfessionalProfileUploadVideoMultipartPartDTO {
+  auth: user;
+  b: FreeProfessionalProfileVideoMultipartPartBody;
+  file?: Express.Multer.File;
+}
+
+export interface IFreeProfessionalProfileCompleteVideoMultipartDTO {
+  auth: user;
+  b: FreeProfessionalProfileVideoMultipartCompleteBody;
+}
+
+export interface IFreeProfessionalProfileAbortVideoMultipartDTO {
+  auth: user;
+  b: FreeProfessionalProfileVideoMultipartAbortBody;
 }
 
 export interface IFreeProfessionalProfileUploadVideoCoverDTO {

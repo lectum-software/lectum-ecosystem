@@ -10,5 +10,5 @@ export interface ILocationCaptureRepository {
   linkSessionsToUser(visitorId: string, userId: string): Promise<number>;
   linkVisitorToUser(visitorId: string, userId: string): Promise<number>;
   store(input: StoreVisitorLocationInput): Promise<visitor_location>;
-  upsertSession(input: UpsertVisitorSessionInput): Promise<visitor_session>;
+  upsertSession(input: UpsertVisitorSessionInput): Promise<visitor_session | null>;
 }

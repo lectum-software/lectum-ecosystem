@@ -1,4 +1,4 @@
-﻿# ADR 0122: Card de upgrade no menu principal de perfil
+# ADR 0122: Card de upgrade no menu principal de perfil
 
 Data: 2026-06-18
 

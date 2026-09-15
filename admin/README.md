@@ -11,10 +11,12 @@ Aplicação administrativa separada do `frontend/`, criada na TASK-46 para consu
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-3. Crie um administrador real no backend quando necessário:
+3. Crie um administrador real somente no banco local de desenvolvimento, quando necessário.
+   Nunca execute este comando apontando para homologação ou produção. Configure
+   `ADMIN_BOOTSTRAP_PASSWORD` no terminal ou no gerenciador de segredos local, sem registrar o
+   valor no repositório ou no histórico do shell, e então rode:
 
 ```bash
-$env:ADMIN_BOOTSTRAP_PASSWORD="uma-senha-segura"
 pnpm --dir backend admin:bootstrap -- --email admin@lectum.local --name "Admin Lectum" --password-env ADMIN_BOOTSTRAP_PASSWORD
 ```
 
@@ -45,6 +47,13 @@ Nesse modo, `ADMIN_PORT` controla a porta do Admin e o padrão continua sendo `3
 
 ## Observações
 
-- O token e o storage do Admin usam o prefixo `lectum.admin.*`, separado do site/app principal.
+- A sessão autenticada do Admin usa o cookie seguro emitido pela API como mecanismo principal. O
+  token legado, quando ainda recebido durante a transição, fica apenas em memória ou
+  `sessionStorage`; JWT e dados do administrador não são gravados em `localStorage`.
+- Preferências locais e o marcador não sensível de navegação usam o prefixo `lectum.admin.*`,
+  separado do site/app principal. A API continua sendo a autoridade de autorização.
 - O app não importa código do `frontend/` em runtime. Fundações mínimas de API, formulário e shell foram adaptadas localmente para preservar a separação entre aplicações.
-- As telas internas fora do shell exibem placeholders honestos até as tasks específicas de métricas e conteúdo real.
+- Todas as telas administrativas consomem endpoints reais; não use mocks para substituir requisitos
+  externos ausentes.
+- A branch `homolog` publica automaticamente em homologação. A `main` publica em produção e só deve
+  receber promoção revisada depois do smoke test em homologação.

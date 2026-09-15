@@ -1,4 +1,5 @@
-﻿import type { Request } from "express";
+import type { Request } from "express";
+import { parsePublicHttpOrigins } from "@/utils/public-origin";
 
 export type AnalyticsDisplayMode =
   | "browser"
@@ -275,10 +276,8 @@ const getInternalHosts = (req: Request) => {
   }
 
   for (const envValue of [process.env.WEB_URL, process.env.FRONTEND_URL]) {
-    if (!envValue) continue;
-
-    for (const item of envValue.split(",")) {
-      const envHost = parseHost(item.trim());
+    for (const origin of parsePublicHttpOrigins(envValue)) {
+      const envHost = parseHost(origin);
       if (envHost) hosts.add(envHost);
     }
   }

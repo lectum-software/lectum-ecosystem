@@ -100,7 +100,7 @@ const buildPersonalAudit = ({
       changed_field_keys: changedFieldKeys,
       profile_was_missing_or_deleted:
         !patient.patient_profile || Boolean(patient.patient_profile.deleted),
-      readonly_fields: ["user.email", "visitor_location.city/state/country"],
+      readonly_fields: ["user.email", "patient_profile.city/state"],
       source: ADMIN_SOURCE,
       user_field_keys: changedFieldKeys.filter((key) => key === "display_name"),
     } as Prisma.InputJsonObject,

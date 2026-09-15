@@ -8,14 +8,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { extractAdminToken, hydrateAdmin, loginAdmin, logoutAdmin } from "@/api/admin-auth";
+import { hydrateAdmin, loginAdmin, logoutAdmin } from "@/api/admin-auth";
 import type { AdminLoginInput } from "@/api/types";
+import { isConfirmedAdminSessionRejection } from "@/lib/session-rejection";
 import {
   clearAdminSession,
-  getAdminToken,
-  getStoredAdmin,
   type StoredAdmin,
   sanitizeAdmin,
   storeAdminSession,
@@ -25,6 +25,7 @@ const AdminAuthContext = createContext<{
   admin: StoredAdmin | null;
   isAuthenticated: boolean;
   isHydrating: boolean;
+  isLoggingOut: boolean;
   login: (payload: AdminLoginInput) => Promise<StoredAdmin>;
   logout: () => Promise<void>;
 } | null>(null);
@@ -33,18 +34,12 @@ export const AdminAuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter();
   const [admin, setAdmin] = useState<StoredAdmin | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const logoutPromiseRef = useRef<Promise<void> | null>(null);
 
   const applyAdminSession = useCallback((adminData: Awaited<ReturnType<typeof hydrateAdmin>>) => {
-    const token = extractAdminToken(adminData);
-
-    if (!token) {
-      clearAdminSession();
-      setAdmin(null);
-      throw new Error("Sessão administrativa inválida. Faça login novamente.");
-    }
-
     const safeAdmin = sanitizeAdmin(adminData);
-    storeAdminSession(adminData, token);
+    storeAdminSession();
     setAdmin(safeAdmin);
     return safeAdmin;
   }, []);
@@ -53,23 +48,11 @@ export const AdminAuthProvider = ({ children }: PropsWithChildren) => {
     let active = true;
 
     const hydrate = async () => {
-      const stored = getStoredAdmin();
-      const token = getAdminToken();
-
-      if (stored && token) {
-        setAdmin(stored);
-      }
-
-      if (!token) {
-        if (active) setIsHydrating(false);
-        return;
-      }
-
       try {
         const adminData = await hydrateAdmin();
         if (active) applyAdminSession(adminData);
-      } catch {
-        clearAdminSession();
+      } catch (error) {
+        if (isConfirmedAdminSessionRejection(error)) clearAdminSession();
         if (active) setAdmin(null);
       } finally {
         if (active) setIsHydrating(false);
@@ -91,25 +74,45 @@ export const AdminAuthProvider = ({ children }: PropsWithChildren) => {
     [applyAdminSession],
   );
 
-  const logout = useCallback(async () => {
-    try {
-      if (getAdminToken()) await logoutAdmin();
-    } finally {
-      clearAdminSession();
-      setAdmin(null);
-      router.replace("/login");
-    }
+  const logout = useCallback(() => {
+    if (logoutPromiseRef.current) return logoutPromiseRef.current;
+
+    const request = (async () => {
+      setIsLoggingOut(true);
+
+      try {
+        try {
+          await logoutAdmin();
+        } catch (error) {
+          // Apenas uma rejeição controlada da própria API confirma que a
+          // credencial atual já não autentica. Falha de rede/proxy preserva a
+          // sessão visível para que o usuário possa tentar novamente.
+          if (!isConfirmedAdminSessionRejection(error)) throw error;
+        }
+
+        clearAdminSession();
+        setAdmin(null);
+        router.replace("/login");
+      } finally {
+        setIsLoggingOut(false);
+        logoutPromiseRef.current = null;
+      }
+    })();
+
+    logoutPromiseRef.current = request;
+    return request;
   }, [router]);
 
   const value = useMemo(
     () => ({
       admin,
-      isAuthenticated: Boolean(admin && getAdminToken()),
+      isAuthenticated: Boolean(admin),
       isHydrating,
+      isLoggingOut,
       login,
       logout,
     }),
-    [admin, isHydrating, login, logout],
+    [admin, isHydrating, isLoggingOut, login, logout],
   );
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;

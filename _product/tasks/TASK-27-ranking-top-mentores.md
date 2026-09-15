@@ -218,3 +218,116 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, fórmula, ordenação ou dados do ranking.
 - ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
 - Validações executadas: `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx src/app/globals.css`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/community/top-mentors?community=luto-e-ressignificacao`.
+
+## Complemento 2026-08-13 - CTA WhatsApp na classificacao geral
+
+- Pedido do usuário: na tela Top Mentores, trocar a seta lateral de perfil por ícone WhatsApp já usado na Lectum, ajustar o texto `Psicólogo` para fonte textual com primeira letra maiúscula e demais minúsculas, e garantir o mesmo selo verificado do restante do produto.
+- Referência visual ativa: screenshot do usuário `WhatsApp Image 2026-08-12 at 19.33.12.jpeg` e `_product/proto/Top 5 Mentores da comunidade.jpg`; Builder/Quick Copy não está exposto como ferramenta callable nesta sessão, mantendo fallback auditável pela imagem local.
+- Frontend: a `Classificação geral` mantém o corpo do card como link para o perfil público, mas a affordance lateral deixou de ser `ChevronRight` e passou a ser um botão independente com `PsychologistWhatsAppRedirectButton` + `WhatsAppIcon`.
+- Backend: `GET /api/private/community/top-mentors` passou a retornar, de forma aditiva, `professional.whatsapp_name` e `professional.whatsapp_url`, derivados do perfil profissional e do helper canônico `buildProfessionalWhatsappUrl`.
+- Rollout: os novos campos são opcionais no frontend para tolerar backend e frontend em versões diferentes; enquanto o backend antigo responder sem URL, o ícone aparece desabilitado em vez de quebrar a tela.
+- Identidade profissional: o label passa a exibir `Psicólogo`/`Psicóloga` em title case com `font-sans`, sem uppercase/tracking exagerado.
+- Selo verificado: segue usando o componente compartilhado `VerifiedBadgeIcon`, o mesmo usado nas páginas de comunidade e no perfil público do psicólogo.
+- Escopo: sem alteração de fórmula, ordenação, score, elegibilidade, schema, migrations, envs, packages, seeds, snapshots ou mocks.
+- ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
+
+### Critérios específicos deste complemento
+
+- [x] Seta/chevron da linha de classificação removida e substituída por ícone WhatsApp já existente na Lectum.
+- [x] CTA WhatsApp usa URL real derivada do perfil profissional, sem mock ou dado fake.
+- [x] `Psicólogo`/`Psicóloga` aparece em title case com fonte textual já usada no produto.
+- [x] Selo verificado usa `VerifiedBadgeIcon`, sem criar novo asset ou ícone paralelo.
+- [x] Contrato backend/frontend permanece compatível durante rollout por campos aditivos e opcionais.
+- [x] Nenhuma migration, env obrigatória nova ou package novo foi criada.
+- [x] ADR e `DATA-MODEL.md` atualizados com a decisão de contrato e rollout.
+
+### Validações deste complemento
+
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/community/repositories/support/community-feed.ts src/modules/api/private/community/repositories/queries/CommunityMentorRepository.ts src/modules/api/private/community/DTOs/ICommunityDTO.ts`
+- [x] `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx src/api/generator/types/community.ts`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local em `/app/comunidades/top-mentores` (rota carregada no servidor local; validação visual detalhada limitada pelo estado autenticado, sem criar usuário/dado artificial em homologação)
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Commit próprio criado e push em `homolog` executado.
+
+## Complemento 2026-08-13 - classificacao geral sem posicao e tracking robusto
+
+- Pedido do usuario: na `Classificacao geral` da tela Top Mentores, remover a medalha e o numero de posicao do ranking, remover o fundo verde do botao de WhatsApp e garantir que cliques nesse CTA contem nos analytics do psicologo.
+- Referencia visual ativa: screenshot do usuario `WhatsApp Image 2026-08-12 at 23.02.05.jpeg` e `_product/proto/Top 5 Mentores da comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao, mantendo fallback auditavel por imagem local.
+- Frontend: a lista inferior deixou de exibir medalha e numero antes do avatar. O podio superior mantem os indicadores de Top 1/2/3, pois o pedido foi restrito a lista de `Classificacao geral`.
+- Frontend: o CTA de WhatsApp segue usando `PsychologistWhatsAppRedirectButton` e `WhatsAppIcon`, mas sem background verde atras do botao; a cor verde permanece no icone para manter reconhecimento da acao.
+- Analytics: o CTA continua disparando `contact-click` e `important_action_event` com `pageKind: community_top_mentors`, `targetType: psychologist` e `targetId` do psicologo.
+- Backend: o analytics do psicologo passou a reconhecer explicitamente `page_kind = community_top_mentors`, alem dos paths existentes, para atribuir os cliques ao bloco `Top Mentores` mesmo se a rota canonica/alias variar.
+- Escopo: sem mudanca de formula, ordenacao, score, elegibilidade, schema, migrations, envs, packages, seeds, snapshots ou mocks.
+- ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
+
+### Criterios especificos deste complemento
+
+- [x] Medalha da lista de `Classificacao geral` removida.
+- [x] Numero de posicao da lista de `Classificacao geral` removido.
+- [x] Fundo verde do botao de WhatsApp removido sem substituir o componente canonico de redirecionamento.
+- [x] Clique no WhatsApp da tela Top Mentores continua criando evento de contato/analytics para o psicologo.
+- [x] Analytics do psicologo reconhece `page_kind = community_top_mentors` como origem Top Mentores.
+- [x] Nenhuma migration, env obrigatoria nova ou package novo foi criada.
+
+### Validacoes deste complemento
+
+- [x] `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx`
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/psychologist/analytics/repositories/queries/PsychologistAnalyticsCommunityRepository.ts src/modules/api/private/psychologist/analytics/repositories/support/traffic.ts src/utils/admin-psychologist-analytics/whatsapp-origins.ts`
+- [x] Validacao estatica de ausencia de `Medal`/posicao dentro do `RankingCard` e presenca de `pageKind: "community_top_mentors"` no CTA.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] Browser local em `/comunidades/top-mentores?community=ansiedade-em-equilibrio` e `/app/comunidades/top-mentores?community=ansiedade-em-equilibrio`.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Commit proprio criado e push em `homolog` executado.
+
+## Complemento 2026-08-22 - selo e aneis compactos na classificacao geral
+
+- Pedido do usuario: na tela Top Mentores, o selo verificado tambem esta muito grande; na lista de `Classificacao geral`, os circulos dourado e prata ao redor da foto estao com espessura muito grande.
+- Referencia visual ativa: screenshot do usuario `WhatsApp Image 2026-08-21 at 22.44.39.jpeg` e `_product/proto/Top 5 Mentores da comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao, mantendo fallback auditavel por imagem local.
+- Frontend: o selo verificado dos cards da `Classificacao geral` agora usa `VerifiedBadgeIcon` em `h-3 w-3`, com `gap-1.5` entre nome e selo, em paridade com o ajuste de publicacoes.
+- Frontend: o `Avatar` da tela Top Mentores ganhou variante `ringVariant="list"`; apenas a lista inferior usa anel metalico compacto (`p-[2px]` + borda interna `border-2`), enquanto o podio superior preserva a expressao premium ja aprovada.
+- Escopo: sem mudanca de formula, ordenacao, score, elegibilidade, schema, migrations, endpoints, payloads, envs, packages, seeds, snapshots, analytics ou mocks.
+- ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
+
+### Criterios especificos deste complemento
+
+- [x] O selo verificado na `Classificacao geral` fica visualmente menor.
+- [x] O selo deixa de ficar colado ao nome do psicologo nos cards da lista.
+- [x] Os aneis metalicos dos avatares da lista inferior ficam mais finos.
+- [x] O podio superior continua usando a variante premium anterior.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes deste complemento
+
+- [x] Validacao estatica confirmou selo `h-3 w-3`, `gap-1.5`, `ringVariant="list"` e podio preservado sem variante de lista.
+- [x] `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.171`)
+- [x] Browser/local smoke mobile no frontend buildado em `http://127.0.0.1:3173`: `/version` respondeu `0.1.171` e `/comunidades/top-mentores?community=ansiedade-em-equilibrio` carregou em viewport 390x844 com estado restrito seguro por falta de sessao/API local; a validacao visual final fica para homologacao apos push.
+- [x] `pnpm check` (primeira tentativa falhou por timeout transitorio no teste backend `boot-safety`; o teste isolado passou e o comando raiz foi repetido com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.171`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

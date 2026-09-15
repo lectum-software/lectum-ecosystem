@@ -1,4 +1,4 @@
-﻿# TASK-127 - Matriz expansivel no funil comportamental por conversao do Admin de psicologos
+# TASK-127 - Matriz expansivel no funil comportamental por conversao do Admin de psicologos
 
 ## Status
 

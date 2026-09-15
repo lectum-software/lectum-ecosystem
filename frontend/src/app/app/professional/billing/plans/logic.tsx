@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { SubscriptionPlan } from "@/api/generator/types/billing";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -43,9 +44,8 @@ const formatPrice = (priceCents: number) => {
   return currencyFormatter.format(priceCents / 100);
 };
 
-const getErrorMessage = (error: unknown) => {
-  return error instanceof Error ? error.message : "Não foi possível carregar os planos agora.";
-};
+const getErrorMessage = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível carregar os planos agora.");
 
 const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
   if (plan.slug === "gratuito") {
@@ -64,7 +64,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "1 serviço profissional",
+        label: "Até 1 serviço profissional",
       },
       {
         included: false,
@@ -84,7 +84,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: false,
-        label: "Respostas nas comunidades com mídia",
+        label: "Respostas com mídia nas comunidades",
       },
       {
         included: false,
@@ -92,11 +92,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: false,
-        label: "Serviços profissionais ilimitados",
-      },
-      {
-        included: false,
-        label: "Estatísticas de perfil",
+        label: "Analytics do seu perfil",
       },
     ];
   }
@@ -121,7 +117,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "Respostas nas comunidades com mídia",
+        label: "Respostas com mídia nas comunidades",
       },
       {
         included: true,
@@ -137,7 +133,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "Estatísticas de perfil",
+        label: "Analytics do seu perfil",
       },
     ];
   }
@@ -170,7 +166,7 @@ const PlanCard = ({
       )}
     >
       {tone.popular ? (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wide text-white">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wide text-primary-foreground">
           Mais popular
         </span>
       ) : null}
@@ -294,7 +290,7 @@ export const PsychologistBillingPlansLogic = () => {
 
         {!isLoading && !hasError && planList.length === 0 ? (
           <EmptyState
-            description="Nenhum plano ativo foi encontrado no backend. Cadastre os planos reais antes de seguir para checkout."
+            description="Nenhum plano profissional ativo está disponível no momento. Tente novamente mais tarde."
             icon={Banknote}
             title="Planos indisponíveis"
           />

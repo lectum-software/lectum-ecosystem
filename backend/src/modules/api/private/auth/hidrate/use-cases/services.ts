@@ -5,8 +5,7 @@ import type { Resolve } from "@/helpers/return";
 
 //Libs
 import { error, msg } from "@/helpers/translate";
-import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
-import { getAdminViewAsPayloadFromRequest } from "@/utils/admin-view-as";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 //Utils
 import { getDevice } from "../../../../middlewares/_auth/utils/device";
 //DTOs
@@ -22,8 +21,6 @@ export default async (data: IHidrateDTO): Promise<Resolve> => {
       }),
     };
 
-  const _LOGIN = new LoginRepository(device.id);
-
   const user = data?.auth;
 
   if (!user?.active)
@@ -36,20 +33,31 @@ export default async (data: IHidrateDTO): Promise<Resolve> => {
       type: 4,
     };
 
-  if (getAdminViewAsPayloadFromRequest(data)) {
+  const requestToken = getUserRequestToken(data);
+  const newestDeviceToken = user.user_tokens?.[0];
+  const responseToken = newestDeviceToken?.token || requestToken;
+
+  if (!responseToken) {
     return {
-      status: 200,
-      ...msg("auth_success", {}),
-      data: user,
+      status: 401,
+      ...error("token_not_authorized", {}),
     };
   }
 
-  const res = await _LOGIN.hidrate(user, device.id);
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("auth_success", {
       //If you need a custom text
     }),
-    data: res,
+    data: {
+      ...user,
+      user_tokens: [
+        {
+          ...newestDeviceToken,
+          token: responseToken,
+        },
+      ],
+    },
   };
 };

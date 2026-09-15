@@ -6,7 +6,7 @@ This repository contains separate `frontend/` and `backend/` apps only for local
 
 ```bash
 cd frontend
-npx "@builder.io/dev-tools@latest" code --url vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a --cwd .
+npx "@builder.io/dev-tools@1.79.0" code --url vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a --cwd .
 ```
 
 Treat Builder output as a visual draft. Never accept generated code as final without applying `_product/tasks/ARCHITECTURE.md`, `_product/tasks/PACKAGES.md`, and the target task file.

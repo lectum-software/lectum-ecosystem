@@ -1,7 +1,8 @@
 import { createId } from "@paralleldrive/cuid2";
 import type { Request } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 
 export const ADMIN_VIEW_AS_DEVICE_PREFIX = "admin_view_as:";
 export const ADMIN_VIEW_AS_TOKEN_TTL_SECONDS = 30 * 60;
@@ -28,19 +29,14 @@ export const buildAdminViewAsDeviceId = ({
   targetRole: AdminViewAsTargetRole;
 }) => `${ADMIN_VIEW_AS_DEVICE_PREFIX}${targetRole}:${adminId}:${targetId}:${createId()}`;
 
-const bearerTokenFromRequest = (req: Request) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  return authHeader.split(" ")[1] || null;
-};
-
 export const getAdminViewAsPayloadFromRequest = (req: Request): AdminViewAsJwtPayload | null => {
-  const token = bearerTokenFromRequest(req);
+  const token = getUserRequestToken(req);
   if (!token) return null;
 
   try {
-    const payload = jwt.verify(token, getJwtSecret()) as AdminViewAsJwtPayload;
+    const payload = jwt.verify(token, getJwtSecret(), {
+      algorithms: [JWT_ALGORITHM],
+    }) as AdminViewAsJwtPayload;
     if (payload.type !== "user" || !isAdminViewAsDeviceId(payload.device_id)) return null;
 
     return payload;
@@ -52,8 +48,30 @@ export const getAdminViewAsPayloadFromRequest = (req: Request): AdminViewAsJwtPa
 export const isSafeAdminViewAsMethod = (method: string) =>
   ["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase());
 
-export const shouldBlockAdminViewAsWrite = (req: Request) => {
-  if (isSafeAdminViewAsMethod(req.method)) return false;
+export const isAdminViewAsLogoutRequest = (req: Request) => {
+  if (req.method.toUpperCase() !== "POST") return false;
 
-  return Boolean(getAdminViewAsPayloadFromRequest(req));
+  const rawUrl = req.originalUrl || req.url;
+  const queryIndex = rawUrl.indexOf("?");
+  const pathname = queryIndex === -1 ? rawUrl : rawUrl.slice(0, queryIndex);
+
+  return pathname === "/api/private/account/logout";
 };
+
+export const isSafeAdminViewAsRequest = (req: Request) =>
+  isSafeAdminViewAsMethod(req.method) || isAdminViewAsLogoutRequest(req);
+
+export const shouldBlockAdminViewAsWrite = (
+  req: Request,
+  payload = getAdminViewAsPayloadFromRequest(req),
+) => {
+  if (isSafeAdminViewAsRequest(req)) return false;
+
+  return Boolean(payload);
+};
+
+export const resolveUserRequestDeviceId = (
+  req: Request,
+  browserDeviceId: string,
+  payload = getAdminViewAsPayloadFromRequest(req),
+) => payload?.device_id || browserDeviceId;

@@ -1,4 +1,4 @@
-﻿# ADR-0096 - Detalhe de post com composer compacto, denúncia e mídia profissional
+# ADR-0096 - Detalhe de post com composer compacto, denúncia e mídia profissional
 
 ## Status
 
@@ -55,7 +55,7 @@ Validacao adicional:
 - `pnpm --dir backend exec biome check --write src/utils/subscription-entitlement.ts src/modules/api/private/posts/repositories/PostRepository.ts`
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
-- Script local confirmou `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com assinatura `admin_grant` ativa e `cfp_verified_at=null`.
+- Script local confirmou `canAttachReplyMedia=true` para `<CONTA_DE_TESTE_AUTORIZADA>` com assinatura `admin_grant` ativa e `cfp_verified_at=null`.
 - Service real `authorizeReplyMediaUpload` retornou `status=200` para um post publicado existente, sem criar midia fake.
 
 ## Atualizacao 2026-06-21 - icone de video no composer de respostas
@@ -148,3 +148,316 @@ Validacao adicional:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+## Atualizacao 2026-08-11 - composer mobile solido e midia icon-only
+
+O produto comparou a barra de comentario da Lectum com a do Reddit em capturas reais de iPhone e apontou tres problemas: o compositor parecia deixar a tela vazar por tras, o controle de anexo ocupava uma linha propria com o texto `Anexar midia`, e a barra nativa do iOS com setas/check parecia fazer parte da Lectum sem utilidade clara.
+
+Decisao complementar:
+
+- Tornar o composer fixo mobile uma superficie solida (`bg-surface`) sem translucidez/backdrop blur, com topo arredondado, borda superior e camada acima do conteudo (`z-[80]`).
+- Mover o controle de midia para a esquerda do campo de comentario no mesmo row do textarea e do botao de envio.
+- No modo composer, renderizar o controle de midia como botao circular icon-only, mantendo `aria-label`, `title`, permissao real e input de arquivo existente.
+- Preservar React Hook Form/Zod e o controller `textarea` da TASK-02; nao trocar por `contenteditable` nem criar hack frágil apenas para tentar esconder a toolbar nativa do iOS. Essa toolbar e controlada pelo navegador/PWA, entao o ajuste da Lectum deve evitar que ela pareca parte quebrada da interface, mas nao depender de removela via CSS.
+- Manter endpoint, payload, upload real, permissao profissional, validacao backend, safe area e fluxo de envio inalterados.
+
+Consequencias:
+
+- O compositor fica mais proximo do padrao de bottom sheet do Reddit, mais limpo e com menor altura.
+- O botao de midia continua descobrivel para psicologos elegiveis, mas sem ocupar texto/linha extra.
+- Usuarios que nao podem anexar midia continuam bloqueados visualmente e pelo backend; a razao fica preservada em `title`/texto acessivel.
+- Nenhum contrato de API, schema, migration, env, pacote ou dado persistido foi alterado.
+
+
+## Atualizacao 2026-08-11 - remocao do X de saida no composer
+
+A barra de comentario no mobile estava acumulando controles: midia, campo, X de cancelamento e envio. A decisao complementar e remover o X de saida/cancelamento visivel do row principal para deixar o composer mais proximo de uma barra de resposta simples, como a referencia do Reddit.
+
+Decisao complementar:
+
+- Remover apenas o botao circular de cancelar exibido ao lado do textarea no composer de comentarios/respostas.
+- Manter o comportamento interno de cancelamento/limpeza que ja atende gestos e saida de contexto sem depender de um botao visivel no row.
+- Preservar os outros usos de X que tem funcao clara: fechar a modal de denuncia e remover uma midia anexada selecionada.
+- Nao alterar React Hook Form/Zod, controller do textarea, endpoint, payload, upload real, permissao profissional, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- O composer fica com menos ruido visual e com mais espaco horizontal para o campo de comentario no mobile.
+- O usuario ainda consegue enviar texto/midia e remover midia anexada; apenas perde o atalho visual redundante de cancelar no row.
+- O rollback e reverter este commit, pois a mudanca e puramente frontend e nao altera dados persistidos.
+
+
+## Atualizacao 2026-08-11 - previa de midia abaixo do campo
+
+A iteracao visual do composer separa a acao de anexar midia da previa da midia selecionada. A referencia de produto pediu que apenas o icone de adicionar permanecesse a esquerda do campo, enquanto a midia subida ficasse abaixo do textarea.
+
+Decisao complementar:
+
+- Dividir o modo composer de `ReplyMediaAttachmentControl` em apresentacoes `trigger`, `preview` e `combined`, preservando o comportamento historico como padrao.
+- Usar `trigger` no row principal para manter somente o botao circular icon-only de midia ao lado do campo de comentario.
+- Renderizar `preview` em linha separada abaixo do campo quando ha `selectedMedia`, com miniatura, orientacao real e remocao explicita.
+- Permitir que o icone de adicionar substitua o arquivo selecionado por outro, mantendo a miniatura apenas como previa/remocao e sem torna-la clicavel.
+- Nao alterar endpoints, payloads, upload real, validacao backend, permissao profissional, React Hook Form/Zod, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- O campo de comentario volta a ocupar a linha principal sem ser deslocado pela miniatura vertical.
+- A midia anexada fica visualmente associada ao comentario, mas abaixo do campo, reduzindo o desalinhamento visto no iPhone.
+- O rollback e reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+
+## Atualizacao 2026-08-11 - padding compacto com teclado ativo no iOS
+
+O iOS/Safari exibe uma toolbar nativa de formulario com setas de navegacao e botao de concluir quando um `textarea` web recebe foco. Essa barra nao pertence a Lectum e nao pode ser removida de forma confiavel por CSS sem trocar o campo por uma implementacao fragil. O problema visual observado era agravado porque o composer mantinha o padding de safe-area do estado de repouso enquanto o teclado estava aberto.
+
+Decisao complementar:
+
+- Manter o `textarea` da fundacao de formularios com React Hook Form/Zod.
+- No composer fixo mobile, usar `pb-2` quando `composerActive=true` para remover o safe-area extra enquanto o teclado esta aberto.
+- Manter `var(--lectum-bottom-fixed-padding)` no estado de repouso, preservando o home indicator e a barra inferior em iPhones sem teclado.
+- Nao criar hack com `contenteditable`, input oculto ou manipulacao nao confiavel da toolbar nativa do iOS.
+- Nao alterar endpoint, payload, upload real, validacao backend, permissao profissional, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- A Lectum deixa de criar um vao proprio acima da toolbar nativa; o campo fica visualmente mais baixo e mais proximo do teclado.
+- A toolbar nativa do iOS pode continuar aparecendo por decisao do sistema operacional/browser, diferente do Reddit nativo.
+- Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+## Atualizacao 2026-08-11 - composer contextual com midia integrada e foco no teclado
+
+O feedback de produto consolidou o composer mobile como uma caixa de resposta mais proxima de apps nativos: a midia precisa parecer parte do texto que sera enviado, o contexto de resposta precisa ser explicito, o teclado deve fechar quando o usuario volta a rolar a thread e o toque em `Responder` precisa acionar foco imediato.
+
+Decisao complementar:
+
+- Manter o `textarea` React Hook Form/Zod como campo padrao, mas envolver textarea e preview de midia no mesmo contorno visual para comunicar uma unica resposta composta.
+- Deixar o botao circular de midia ativo somente enquanto nao existe anexo selecionado; depois da selecao, o fluxo exige remover a midia antes de escolher outra, evitando substituicao acidental.
+- Para videos selecionados localmente, gerar uma miniatura client-side em canvas para preview do composer, sem alterar o upload real nem depender de thumbnail remota antes do envio.
+- Reintroduzir o contexto textual acima do composer como `Respondendo a [Nome]`/`Respondendo ao post` e mover a frase de conduta para baixo da caixa com menor hierarquia visual.
+- Desfocar o textarea ao detectar scroll da pagina no mobile, preservando rascunho/midia e usando o fechamento nativo do teclado em vez de tentar manipular a toolbar do iOS.
+- Exibir um header fixo compacto apenas no mobile quando a direcao de scroll for para cima e a pagina ja estiver afastada do topo.
+- Ao responder comentario da arvore no mobile, focar o textarea de forma sincronica no gesto do usuario e repetir o foco apos a troca de alvo, aumentando a chance de o iOS/PWA abrir o teclado.
+- Nao alterar endpoint, payload, upload real, validacao backend, permissao profissional, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- O composer comunica melhor que texto e midia formam uma unica resposta, com menos ambiguidade de toque no controle de midia.
+- O teclado deve abrir com mais confiabilidade ao tocar em `Responder` na arvore, respeitando a exigencia de foco dentro do gesto do usuario em browsers mobile.
+- O header de retorno melhora navegacao em leitura profunda sem impactar desktop.
+- Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento da rota; sem API/autenticacao local disponivel, a validacao visual autenticada final fica para smoke de homologacao apos push.
+
+## Atualizacao 2026-08-11 - teclado Android, foco fluido e header completo
+
+O teste em Android/Chrome de homologacao mostrou que `position: fixed; bottom: 0` podia ficar atras do teclado quando o navegador sobrepunha o teclado ao viewport visual. O mesmo fluxo tambem evidenciou que o auto-scroll/resize disparado pela abertura do teclado nao deve ser tratado como rolagem intencional do usuario, pois isso pode desfocar o textarea sozinho.
+
+Decisao complementar:
+
+- No composer fixo mobile, observar `window.visualViewport` quando o textarea esta ativo e aplicar `bottom` dinamico igual ao espaco ocupado pelo teclado virtual, com fallback sem efeito quando a API nao estiver disponivel.
+- Manter o fechamento do teclado por rolagem apenas apos intencao real de usuario (`touchmove`/`wheel`), ignorando scrolls automaticos causados por foco, resize e abertura do teclado.
+- Remover a classe mobile `touch-none` do composer focado para evitar sensacao de trava; o gesto de arrastar para cancelar continua validando direcao/distancia antes de impedir o padrao.
+- Para respostas diretas ao post, passar o nome publico do autor do post ao composer e renderizar `Respondendo [nome]`; respostas aninhadas usam a mesma copy sem preposicao.
+- Tornar o header flutuante mobile equivalente ao topo do post em acoes essenciais: voltar, titulo `Post` e menu lateral com denuncia ou menu de dono do post.
+- Nao alterar endpoint, payload, upload real, validacao backend, permissao profissional, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- O composer passa a acompanhar melhor teclados virtuais de Android/Chrome e PWA, sem depender de hacks de `contenteditable` ou troca da fundacao de formularios.
+- A selecao do campo e a abertura do teclado ficam mais fluidas porque resize/auto-scroll deixam de fechar o foco.
+- O header de retorno fornece a mesma acao de denuncia do header original durante leitura profunda.
+- Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local retornou estado `Post indisponivel`, entao a validacao autenticada final de teclado/header fica para smoke em homologacao e reteste no aparelho real.
+
+## Atualizacao 2026-08-11 - envio de midia no primeiro toque
+
+O teste em homologacao mostrou que a primeira tentativa de envio com midia anexada podia apenas alterar a altura do composer e exigir novo toque. A causa provavel era a ordem de eventos em navegadores mobile: tocar no botao de submit desfoca o `textarea` antes do `click/submit`, e `relatedTarget` pode nao apontar para o botao interno.
+
+Decisao complementar:
+
+- Marcar interacoes internas do composer em `pointerdown`, `touchstart` e `mousedown` durante a fase de captura.
+- Ignorar por uma janela curta o `blur` do `textarea` quando ele foi causado por toque dentro do proprio formulario, evitando que o composer troque estado/padding antes do submit.
+- Preservar o fechamento por toque fora e por rolagem intencional do usuario, sem descartar rascunho/midia.
+- Nao alterar contrato de resposta, upload, permissao, backend, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- O botao de envio deixa de depender de um segundo toque quando ha midia selecionada e o textarea esta focado.
+- O layout do composer fica mais estavel entre pointerdown, blur e submit em Android/Chrome, iOS/Safari e PWA.
+- Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local pode depender de autenticacao/dados de homologacao para validacao visual final.
+
+## Atualizacao 2026-08-11 - limite de 200MB para midia em respostas
+
+O limite anterior de 50MB para `POST /api/private/posts/:id/replies/media` estava bloqueando videos de respostas/comentarios em uso real no mobile. A decisao e aumentar o limite de produto desse upload para 200MB, preservando o mesmo entitlement profissional e o mesmo storage publico R2.
+
+Decisao complementar:
+
+- Alterar o limite do middleware `multer` do upload de midia de respostas para 200MB.
+- Validar no frontend, antes de iniciar upload, arquivos acima de 200MB no composer e na edicao de respostas.
+- Manter os tipos permitidos atuais: JPEG, PNG, WebP, MP4, WebM e QuickTime/MOV.
+- Manter compatibilidade de rollout: se uma versao antiga do backend ainda responder com mensagem de 50MB durante deploy, o frontend preserva essa informacao em vez de anunciar 200MB incorretamente.
+- Nao alterar payload, persistencia, permissao profissional, buckets, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- Videos de respostas ate 200MB passam a ser aceitos pelo backend quando a permissao profissional ja existir.
+- O storage atual ainda valida assinatura a partir do buffer antes de enviar ao R2; portanto arquivos maiores aumentam uso de memoria/tempo de upload, mitigado pela concorrencia/fila de upload ja existentes.
+- Rollback: reverter este commit retorna o limite para 50MB e remove a validacao local de 200MB.
+
+Validacao adicional:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; validacao autenticada final fica para smoke de homologacao apos push.
+
+## Atualizacao 2026-08-11 - erro por etapa e thumbnail best-effort no envio de respostas
+
+O reteste em homologação após elevar o limite para 200MB mostrou que o composer ainda podia exibir apenas a mensagem genérica `Não foi possível publicar sua resposta agora.` quando a resposta com mídia falhava. O fluxo real possuía etapas diferentes com riscos distintos: upload do arquivo principal, geração/upload da miniatura de vídeo e criação da resposta.
+
+Decisão complementar:
+
+- Diferenciar mensagens de erro por etapa no frontend: falhas no upload principal informam que a mídia não foi enviada; falhas na mutation de criação informam que a resposta não foi publicada.
+- Preservar mensagens públicas seguras vindas do backend, incluindo limite de arquivo, permissão profissional e moderação, sem expor status técnico, stack, storage ou provider.
+- Considerar thumbnail de vídeo como melhoria visual best-effort: se a geração local ou o upload da thumbnail falhar, publicar a resposta com o vídeo principal e omitir `thumbnailUrl`.
+- Aumentar o timeout client-side dos uploads de mídia de comunidades/respostas para 600s, alinhado ao limite de 200MB e a redes móveis mais lentas.
+- Extrair o fluxo compartilhado de submit com mídia para `modules/reply-submit.ts`, mantendo controllers de detalhe/thread dentro do limite arquitetural de tamanho.
+- Não alterar contrato, endpoint, payload, validação backend, permissão profissional, storage, Prisma, migrations, envs ou packages.
+
+Consequências:
+
+- O usuário recebe orientação mais útil quando a falha está no upload da mídia, em vez de sempre parecer erro da publicação da resposta.
+- Vídeos não deixam de ser publicados apenas porque a thumbnail falhou; o card pode usar fallback visual do player quando `thumbnailUrl` não existir.
+- O timeout maior reduz falsos negativos no frontend para arquivos grandes, mas não elimina possíveis limites de infraestrutura; se o provedor interromper a requisição, a UI ainda mostra mensagem segura por etapa.
+- Rollback: reverter este commit retorna ao fluxo inline anterior, ao timeout padrão de `FormData` e ao abortamento do envio quando a thumbnail falha.
+
+Validação adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check` (primeira tentativa falhou por limite de tamanho do controller; resolvido com extração para `reply-submit.ts` e repetido com sucesso)
+- `git diff --check`
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP da rota; validação autenticada final fica para smoke de homologação após push.
+
+## Atualizacao 2026-08-12 - toque unico no header flutuante do detalhe
+
+O teste de uso dentro do post mostrou que o header flutuante exibido ao rolar para cima podia exigir dois toques na seta de voltar. A causa provavel e a combinacao de momentum scroll mobile, transicao do header e eventos `touch`/`click`: o primeiro toque pode apenas estabilizar a rolagem ou ser recebido enquanto o header ainda alterna estado visual.
+
+Decisao complementar:
+
+- Manter uma janela curta de bloqueio de interacao do header quando ele recebe `pointerdown`, preservando-o visivel enquanto o toque e processado.
+- Fazer a seta de voltar ativar a navegacao em `touchend` para toques validos, medidos por deslocamento pequeno, e suprimir o `click` sintetico subsequente para evitar dupla navegacao.
+- Preservar `onClick` para mouse, teclado e tecnologias assistivas.
+- Reduzir a transicao do header e explicitar `pointer-events` apenas no estado visivel.
+- Nao alterar rota, historico, payloads, backend, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- O usuario mobile nao precisa tocar duas vezes na seta do header flutuante para voltar.
+- Gestos de arrasto sobre a seta nao disparam navegacao acidental por causa do limite de movimento.
+- Rollback: reverter este commit retorna ao comportamento anterior; a mudanca e puramente frontend e nao altera dados persistidos.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local/headless 390x844 no frontend buildado.
+- `git diff --check`
+- `pnpm version:bump`
+- `pnpm check:version`
+
+## Atualizacao 2026-08-12 - thumbnails armazenadas nas modais de edicao
+
+O teste mobile da modal `Editar comentario` mostrou que midias de video ja persistidas podiam aparecer como um quadro vazio no editor. A causa pratica e que o preview do editor dependia do proprio elemento `<video>` carregar metadata/frame inicial; em iOS/Safari isso pode demorar, falhar ou renderizar um frame branco, mesmo quando a API ja possui `thumbnail_url` para aquela midia.
+
+Decisao complementar:
+
+- No `ReplyMediaAttachmentControl` em modo editor, resolver e usar `thumbnail_url` da midia atual para imagem de preview sempre que ela estiver disponivel, inclusive para videos.
+- Usar a thumbnail como fonte da deteccao de orientacao quando presente, mantendo o fallback para a midia principal quando nao houver thumbnail.
+- Na `PostEditModal`, resolver URLs publicas de midias armazenadas e renderizar a thumbnail de videos persistidos com `next/image`; sem thumbnail, manter o fallback para `<video preload="metadata">`.
+- Nao alterar upload, payload, persistencia, regras de permissao, backend, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- As modais de edicao deixam de exibir placeholders vazios para videos que ja possuem thumbnail armazenada.
+- A experiencia fica mais consistente entre iOS/Safari, Android/Chrome e desktop porque a primeira pintura do preview usa uma imagem estavel.
+- Videos antigos sem `thumbnail_url` continuam usando o fallback anterior do elemento de video.
+- Rollback: reverter este commit volta a depender do frame inicial do video nas modais de edicao, podendo reaparecer o quadro branco em alguns navegadores.
+
+Validacao adicional:
+
+- Validacao estatica via Node confirmou uso de thumbnail no editor de comentario e no preview da edicao de post antes do fallback para video.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3052`: `/version` respondeu `0.1.77` e a rota do detalhe carregou em viewport 390x844; a modal autenticada fica para reteste em homologacao mobile.
+- `pnpm check`: sucesso na segunda tentativa, apos timeout local da primeira execucao.
+- `git diff --check`: sucesso, com aviso local de normalizacao CRLF/LF neste ADR.
+- `pnpm version:bump` para `0.1.78`: sucesso.
+- `pnpm check:version`: sucesso.
+
+## Atualizacao 2026-08-22 - selo verificado compacto em publicacoes
+
+O feedback visual em homologacao mostrou que o selo de verificado nos headers de publicacoes e respostas profissionais ainda competia com o nome do psicologo: em mobile ele parecia grande e colado ao texto, especialmente dentro da resposta destacada.
+
+Decisao complementar:
+
+- Padronizar o `VerifiedBadgeIcon` dos contextos de comunidade/publicacao em `h-3 w-3`, menor que o uso global padrao do componente e adequado a linhas de autor com texto `text-sm`.
+- Aumentar o respiro entre nome e selo para `gap-1.5` nos cards de feed, preview de resposta profissional, detalhe do post, post original de thread e arvore de comentarios.
+- Manter o componente, `aria-label="Perfil verificado"` e a regra de exibicao existentes, sem criar asset paralelo nem alterar o significado de verificacao profissional.
+- Nao alterar backend, Prisma, endpoints, payloads, links, votos, salvos, analytics, storage, envs ou packages.
+
+Consequencias:
+
+- O selo permanece reconhecivel, mas deixa de dominar a linha do nome e ganha separacao visual suficiente em telas estreitas.
+- A mudanca e puramente frontend e pode ser revertida por rollback do commit sem impacto em dados ou contratos.
+
+Validacao adicional:
+
+- Validacao estatica confirmou `h-3 w-3` e `gap-1.5` nos pontos afetados.
+- Validacoes de build/check e smoke ficam registradas no complemento correspondente da TASK-26.
+
+## Atualizacao 2026-08-26 - selo verificado mais proximo do nome
+
+O feedback visual em homologacao indicou que, apos a reducao anterior do selo, o espaco `gap-1.5` ainda deixava o verificado um pouco distante do nome do psicologo em comentarios do detalhe do post.
+
+Decisao complementar:
+
+- Manter o `VerifiedBadgeIcon` em `h-3 w-3` nos contextos de comunidade/publicacao.
+- Reduzir apenas o espacamento horizontal do grupo nome+selo de `gap-1.5` para `gap-1` em `CommunityPostCard`, `ProfessionalReplyPreview`, `AuthorIdentityLine`, `PostHeader`, `ThreadOriginalPostCard` e `ReplyCard`.
+- Preservar o componente compartilhado, o `aria-label="Perfil verificado"`, a regra `verified`, os links de perfil e os badges de mentor existentes.
+- Nao alterar backend, Prisma, endpoints, payloads, links, votos, salvos, analytics, storage, envs ou packages.
+
+Consequencias:
+
+- O selo volta a parecer visualmente associado ao nome do psicologo sem ficar colado no texto.
+- A mudanca e puramente frontend, mobile-first e reversivel por rollback do commit, sem impacto em dados ou contratos.
+
+Validacao adicional:
+
+- Validacao estatica confirmou `VerifiedBadgeIcon` em `h-3 w-3` e wrappers de nome com `gap-1` nos pontos afetados.
+- Build/check e smoke ficam registrados no complemento correspondente da TASK-26.

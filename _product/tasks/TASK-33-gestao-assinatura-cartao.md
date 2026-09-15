@@ -163,13 +163,13 @@ Regras anti-recriação específicas:
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
 
-## Evid?ncias da execu??o
+## Evidências da execução
 
-- Builder Quick Copy n?o estava dispon?vel neste ambiente; foram usadas as imagens locais listadas em "Refer?ncias visuais".
-- Mercado Pago sandbox configurado via vari?veis de ambiente locais informadas pelo usu?rio.
-- Implementa??o mantida somente para cart?o de cr?dito, sem d?bito/pr?-pago no MVP.
-- Migra??o executada: `20260628024244_task33_payment_method`.
-- Valida??es executadas sem erros:
+- Builder Quick Copy não estava disponível neste ambiente; foram usadas as imagens locais listadas em "Referências visuais".
+- Mercado Pago sandbox configurado via variáveis de ambiente locais informadas pelo usuário.
+- Implementação mantida somente para cartão de crédito, sem débito/pr?-pago no MVP.
+- Migração executada: `20260628024244_task33_payment_method`.
+- Validações executadas sem erros:
   - `pnpm --dir backend exec prisma migrate dev --name task33_payment_method`
   - `pnpm --dir backend db:migrate`
   - `pnpm --dir backend check`
@@ -177,7 +177,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
-- Valida??o visual manual em browser local ficou limitada pela aus?ncia de uma ferramenta de inspe??o visual automatizada neste ambiente; a rota foi validada por build est?tico do Next.js, incluindo `/app/professional/billing` e `/app/professional/billing/card`.
+- Validação visual manual em browser local ficou limitada pela ausência de uma ferramenta de inspeção visual automatizada neste ambiente; a rota foi validada por build estático do Next.js, incluindo `/app/professional/billing` e `/app/professional/billing/card`.
 
 ## Ajuste de conversão em 2026-07-04: upgrade direto para cartão
 
@@ -212,7 +212,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Ajuste de UI em 2026-07-04: metodo de pagamento e historico
 
-- Pedido direto de produto: na rota `/app/professional/billing`, o bloco do cartao passa a exibir o titulo **Metodo de pagamento** e a descricao segura **Visa final 5682** conforme dados reais de bandeira/ultimos quatro digitos, sem a copy tecnica "Cartao de credito tokenizado...".
+- Pedido direto de produto: na rota `/app/professional/billing`, o bloco do cartao passa a exibir o titulo **Metodo de pagamento** e a descricao segura **Visa final <4 dígitos>** conforme dados reais de bandeira/ultimos quatro digitos, sem a copy tecnica "Cartao de credito tokenizado...".
 - Foram removidos da pagina o card informativo **Cobranca protegida**, o CTA azul **Alterar cartao** e o botao **Atualizar status**; a acao contextual **Alterar** permanece dentro do bloco do metodo quando houver assinatura Mercado Pago gerenciavel.
 - A pagina agora exibe **Historico de pagamentos** usando somente eventos reais persistidos em `payment_event` e relacionados por `professional_subscription.id` ou `gateway_subscription_id`; quando nao houver evento real, a UI mostra estado vazio honesto, sem criar entradas ficticias.
 - Referencia visual local consultada: `_product/proto/Minhas Assinatura - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
@@ -224,6 +224,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir backend build`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
+- Validacao de fonte via PowerShell confirmou o card com
+  `href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}` e o item **Minha Assinatura** preservado em
+  `/app/profissional/assinatura`.
+- Smoke local com `next start -p 3208`: `/app/perfil` retornou `200` e
+  `/app/profissional/assinatura/pagamento` retornou `307` para login sem sessao, preservando a
+  protecao da rota privada.
 - `pnpm check`
 - Smoke local com `next start --port 3107`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessao e `/auth/login` retornou `200`.
 
@@ -296,12 +302,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
+- `pnpm check:version`
 - Smoke local com `next start --port 3113`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessão e `/auth/login` retornou `200`.
 - Busca de fonte confirmou ausência de `Mercado Pago` nas strings de UI billing e mensagens backend alteradas.
 
 ## Ajuste em 2026-07-04: cortesia sem cobrança nem cartão legado
 
-- Pedido direto de produto: a conta `contato.tuliorezende@gmail.com` está com cortesia operacional, não com assinatura profissional padrão paga.
+- Pedido direto de produto: a conta `<CONTA_DE_TESTE_AUTORIZADA>` está com cortesia operacional, não com assinatura profissional padrão paga.
 - A rota `/app/professional/billing` agora diferencia `professional_subscription.source="admin_grant"` ativa, exibindo **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia** e método de pagamento como cortesia sem cartão vinculado.
 - O endpoint `GET /api/private/psychologist/billing/subscription` deixou de retornar `payment_method` quando a assinatura atual não é gerenciável por gateway real ativo, evitando exibir cartão tokenizado de assinatura paga cancelada.
 - Os alertas de `Pagamento não vinculado` não aparecem para cortesia administrativa, porque ausência de gateway é o estado esperado.
@@ -325,7 +332,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser local via Chrome headless/CDP em `http://localhost:3002/app/professional/billing`, com sessão real da conta, confirmou **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia**, **Cortesia ativa, sem cartão vinculado** e ausência de `Amex final 6885`, `Pagamento não vinculado` e `R$ 9,90 / mês`.
+- Browser local via Chrome headless/CDP em `http://localhost:3002/app/professional/billing`, com sessão real da conta, confirmou **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia**, **Cortesia ativa, sem cartão vinculado** e ausência de `Amex final <4 dígitos>`, `Pagamento não vinculado` e `R$ 9,90 / mês`.
 
 ## Ajuste de UI em 2026-07-04: cortesia sem historico lateral e com cartao futuro
 
@@ -413,7 +420,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O backend persiste `brand`/`last4` somente como dados de exibição em `payment_method`, sempre vinculados ao `gateway_subscription_id` da assinatura futura; PAN/CVV continuam fora do banco.
 - O endpoint `GET /api/private/psychologist/billing/subscription` continua retornando a cortesia ativa como assinatura principal, mas agora também procura uma assinatura futura real `mercadopago` (`inativa`/`inadimplente`) para expor o `payment_method` correspondente ao cartão pós-cortesia.
 - A rota `/app/professional/billing` mostra **Cartão de cobrança cadastrado** e CTA **Alterar** quando esse método futuro existir; se o cartão foi cadastrado antes de haver `brand`/`last4`, mostra **Cartão cadastrado para cobrança futura** sem inventar final/bandeira.
-- Consulta real do banco para `contato.tuliorezende@gmail.com` durante a validação confirmou que, neste ambiente, ainda não há assinatura futura gateway nem `payment_method` vinculado; por isso não foi criado backfill, seed ou dado artificial para forçar o estado **Alterar**.
+- Consulta real do banco para `<CONTA_DE_TESTE_AUTORIZADA>` durante a validação confirmou que, neste ambiente, ainda não há assinatura futura gateway nem `payment_method` vinculado; por isso não foi criado backfill, seed ou dado artificial para forçar o estado **Alterar**.
 - Referência visual local consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
 - ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
 - Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
@@ -440,10 +447,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ## Ajuste em 2026-07-05: cartão de teste sem `gateway_token` exposto
 
 - Pedido direto de produto: após cadastrar cartão de teste Mercado Pago, a tela **Minha Assinatura** ainda mostrava **Adicionar cartão de cobrança**.
-- Investigação real confirmou que o banco já possuía assinatura futura `mercadopago` `inativa` e `payment_method` com `brand="amex"` e `last4="6885"` para a conta `contato.tuliorezende@gmail.com`.
+- Investigação real confirmou que o banco já possuía assinatura futura `mercadopago` `inativa` e `payment_method` com `brand="amex"` e `last4="<FINAL_AUTORIZADO>"` para a conta `<CONTA_DE_TESTE_AUTORIZADA>`.
 - O endpoint `GET /api/private/psychologist/billing/subscription` já retornava `payment_method` com bandeira/final, mas não expunha `gateway_token` no payload consumido pelo frontend; a UI dependia indevidamente de `paymentMethod.gateway_token` para considerar o cartão cadastrado.
 - A rota `/app/professional/billing` agora usa a presença do objeto `payment_method` como evidência de cartão futuro cadastrado, porque o backend já filtrou esse método pela assinatura gateway futura antes de responder.
-- Resultado esperado no teste: exibir **Cartão de cobrança cadastrado**, **Amex final 6885** e CTA **Alterar**.
+- Resultado esperado no teste: exibir **Cartão de cobrança cadastrado**, **Amex final <4 dígitos>** e CTA **Alterar**.
 - ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
 - Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
 
@@ -456,9 +463,340 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ### Validação do ajuste de cartão de teste
 
 - Consulta real de banco confirmou assinatura futura `mercadopago` `inativa` e `payment_method` com `brand`/`last4`.
-- Chamada real ao endpoint via ngrok confirmou `payment_method_present=true`, `brand="amex"` e `last4="6885"`.
+- Chamada real ao endpoint via ngrok confirmou `payment_method_present=true`, `brand="amex"` e `last4="<FINAL_AUTORIZADO>"`.
 - `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/logic.tsx`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser local mobile-first via Chrome headless/CDP em `http://localhost:3115/app/professional/billing`, com frontend apontando para backend local `http://localhost:3121` e sessão real da conta em cortesia, confirmou **Plano Profissional de Cortesia**, **Amex final 6885**, CTA **Alterar**, ausência de CTA **Adicionar**, ausência de **Histórico de pagamentos** e ausência da faixa azul de cortesia.
+- Browser local mobile-first via Chrome headless/CDP em `http://localhost:3115/app/professional/billing`, com frontend apontando para backend local `http://localhost:3121` e sessão real da conta em cortesia, confirmou **Plano Profissional de Cortesia**, **Amex final <4 dígitos>**, CTA **Alterar**, ausência de CTA **Adicionar**, ausência de **Histórico de pagamentos** e ausência da faixa azul de cortesia.
+
+
+## Correcao em 2026-08-10: alias sanitizado em Minha Assinatura
+
+- Incidente observado em homologacao: psicologo com cortesia administrativa ativa no Admin (`Plano = Cortesia`) via a tela `/app/profissional/assinatura` como `Plano nao encontrado`, status `Pendente` e `R$ 0,00 / mes`.
+- Causa tecnica: o endpoint `GET /api/private/psychologist/billing/subscription` mantem, por compatibilidade, os campos `current` e `subscription` com a mesma assinatura. A camada `send` passava o payload por sanitizadores com `WeakSet` global; o segundo alias era tratado como ciclo e redigido, entao o frontend priorizava `subscription` invalido em vez de `current` completo.
+- Ajuste: `sanitizeSensitiveData` e `sanitizePublicResponseData` agora rastreiam apenas a pilha de recursao atual, preservando aliases legitimos e mantendo ciclos reais como `[REDACTED]`.
+- Nenhum package novo, migration, seed, mock, env nova ou alteracao de contrato foi criado.
+- ADR registrado: `adrs/0446-sanitizacao-aliases-resposta-billing.md`.
+- Validacoes executadas sem erros:
+  - `pnpm --dir backend exec node --import tsx --test src/utils/sanitize-sensitive.test.ts src/utils/public-response.test.ts`
+  - Simulacao local do pipeline confirmando `current` e `subscription` completos para assinatura `admin_grant/ativa/profissional`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm check:version`
+  - `pnpm check`
+
+## Ajuste de UI em 2026-08-10: voltar no checkout de cartao futuro
+
+- Pedido direto de produto: na tela mobile de **Adicionar cartao de cobranca** (`/app/profissional/assinatura/pagamento?intent=courtesy-renewal`), incluir uma seta de voltar no topo esquerdo.
+- A rota de checkout agora exibe um botao circular com `ArrowLeft`, alinhado ao topo esquerdo do container mobile-first, antes do bloco central de titulo.
+- A acao aponta para `/app/profissional/assinatura`, retornando para **Minha Assinatura** sem depender do historico do navegador.
+- Referencias visuais consultadas: screenshot enviada pelo usuario em 2026-08-10 e `_product/proto/Finalizar Assinatura - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou alteracao de contrato foi criado.
+- ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A tela de checkout de cartao futuro exibe seta de voltar no topo esquerdo.
+- [x] A seta retorna para **Minha Assinatura** por rota interna segura.
+- [x] A composicao mobile-first da tela e o CardPayment Brick real foram preservados.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+
+### Validacao do ajuste de voltar
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check:version`
+- `pnpm check`
+
+## Correção em 2026-08-13: campos do CardPayment visíveis no pagamento profissional
+
+- Incidente observado em homologação/iPhone: a tela `/app/profissional/assinatura/pagamento`
+  exibia o resumo **Cartão de crédito**, mas o campo seguro de cartão ficava ausente abaixo do bloco.
+- Causa técnica provável: a CSP do frontend permitia o SDK principal do Mercado Pago, porém não
+  contemplava todos os assets dinâmicos usados pelo Card Payment Brick em runtime. Quando o carregamento
+  externo falhava, o componente React do provider mantinha o container vazio, sem feedback visual para o
+  usuário.
+- Ajuste: `frontend/next.config.ts` passou a centralizar as fontes CSP do Mercado Pago, incluindo os
+  assets estáticos do Brick em `https://http2.mlstatic.com` e `https://api-static.mercadopago.com` nas
+  diretivas necessárias. A tela de checkout
+  também ganhou estado explícito de carregamento, timeout honesto e ação **Tentar novamente** para o
+  CardPayment, preservando a tokenização real do provider e sem coletar PAN/CVV na Lectum.
+- Referência visual local consultada: `_product/proto/Finalizar Assinatura - Psicólogo.jpg`; Builder
+  Quick Copy não está exposto como ferramenta direta neste ambiente.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou alteração de contrato foi
+  criado.
+- ADR registrado: `adrs/0454-csp-mercado-pago-cardpayment-checkout.md`.
+
+### Critérios de aceite da correção
+
+- [x] A tela de pagamento do Plano Profissional continua usando o Card Payment Brick real do Mercado Pago.
+- [x] A CSP do frontend permite os assets necessários para o Brick montar os campos seguros do cartão.
+- [x] Se o carregamento externo falhar, a UI deixa de ficar em branco e mostra feedback com ação de retry.
+- [x] A regra de crédito recorrente, tokenização no provider e ausência de PAN/CVV no frontend/backend foram
+  preservadas.
+
+### Validação da correção do CardPayment
+
+- `pnpm --dir frontend exec biome check --write next.config.ts src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start --port 3118` antes do bump de release: `/version` retornou `0.1.91`; `/app/profissional/assinatura/pagamento` retornou `307` para login sem sessão e a CSP enviada continha `sdk.mercadopago.com`, `http2.mlstatic.com`, `api-static.mercadopago.com` e domínios Mercado Pago necessários ao Brick.
+- `pnpm check`
+- `pnpm check:version` após `pnpm version:bump`, confirmando manifests sincronizados em `0.1.92`.
+## Correcao em 2026-08-13: paridade site/PWA no Plano Gratuito
+
+- Incidente observado em homologacao/iPhone: em `/app/profissional/assinatura` no Safari, psicologo gratuito podia ver o estado **Assinatura nao encontrada**, enquanto o PWA exibia a tela persuasiva de **Plano Gratuito** com CTA **Fazer upgrade**.
+- Ajuste: a rota principal de **Minha Assinatura** passa a reutilizar a mesma view gratuita quando a API retorna assinatura gratuita ou quando nao ha assinatura vigente, evitando o empty state antigo no fluxo gratuito.
+- A view compartilhada agora trata ausencia de assinatura como fallback visual de Plano Gratuito, sem criar mock, seed, dado fake, env nova, package novo, migration ou alteracao de contrato.
+- A gestao paga/cortesia permanece inalterada quando existe assinatura profissional/cortesia real.
+- ADR atualizado: `adrs/0183-prioridade-plano-gratuito-billing.md`.
+
+### Criterios de aceite da correcao
+
+- [x] `/app/profissional/assinatura` nao exibe **Assinatura nao encontrada** para psicologo gratuito/sem assinatura vigente.
+- [x] O site e o PWA reutilizam a mesma tela de **Plano Gratuito** com beneficios e CTA **Fazer upgrade**.
+- [x] Assinaturas profissionais/cortesias reais continuam seguindo a tela de gestao atual.
+
+### Validacao da correcao site/PWA
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/logic.tsx src/app/app/professional/billing/subscription/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+
+## Correcao em 2026-08-13: plano efetivo gratuito apos assinatura declinada
+
+- Incidente observado em homologacao/Android: uma tentativa de assinatura profissional encerrada
+  aparecia em **Minha Assinatura** como **Plano Profissional** com status **Cancelado**, mesmo sem
+  pagamento confirmado ou cartao cadastrado.
+- Ajuste: os endpoints de plano atual deixam de usar a ultima assinatura encerrada como fallback.
+  Agora o contrato expõe apenas profissional ativo, profissional `inativa` ainda com referencia real
+  aguardando confirmacao ou plano gratuito ativo; sem esses estados, retorna `null` e a UI reutiliza
+  a experiencia de **Plano Gratuito**.
+- Assinaturas `cancelada` ou `inadimplente` continuam preservadas no banco/historico operacional,
+  mas deixam de ser o plano principal exibido ao psicologo.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao automatica de
+  dados publicados foi criada.
+- ADR registrado: `adrs/0457-plano-efetivo-gratuito-apos-assinatura-declinada.md`.
+
+### Criterios de aceite da correcao
+
+- [x] Assinatura profissional cancelada nao aparece como plano atual do psicologo.
+- [x] Ausencia de assinatura vigente cai na tela de **Plano Gratuito** com CTA de upgrade.
+- [x] Assinatura profissional `inativa` com referencia real ainda pode aparecer como aguardando
+  confirmacao.
+- [x] Nenhum dado real de assinatura foi resetado, apagado ou reclassificado em massa.
+
+### Validacao da correcao de plano efetivo
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+
+## Ajuste em 2026-08-13: upgrade do perfil direto para pagamento
+
+- Pedido direto de produto: no perfil privado do psicologo, o card azul **Upgrade para o Plano
+  Profissional** deve levar diretamente para a tela de pagamento/cartao, em vez de abrir **Minha
+  Assinatura**.
+- Ajuste: o card de upgrade em `/app/perfil` passa a usar `PSYCHOLOGIST_ONBOARDING_PATHS.checkout`,
+  apontando para `/app/profissional/assinatura/pagamento`.
+- A decisao reaproveita o fluxo ja aprovado no ADR-0204 para upgrade direto ao checkout e preserva a
+  tela **Minha Assinatura** apenas para o menu explicito da conta.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+- Referencia visual ativa: captura enviada pelo usuario em 2026-08-13; Builder/Quick Copy nao esta
+  exposto como ferramenta direta neste ambiente.
+- ADR atualizado: `adrs/0204-upgrade-direto-checkout-profissional.md`.
+
+### Criterios de aceite do ajuste do perfil
+
+- [x] O card azul **Upgrade para o Plano Profissional** do perfil aponta para
+  `/app/profissional/assinatura/pagamento`.
+- [x] O item **Minha Assinatura** do menu da conta continua apontando para
+  `/app/profissional/assinatura`.
+- [x] O ajuste reutiliza a constante compartilhada do fluxo de onboarding/assinatura, sem rota
+  hardcoded nova.
+
+### Validacao do ajuste do perfil
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+
+## Ajuste em 2026-08-13: localidade do endereco de faturamento
+
+- Pedido direto de produto: na etapa `/app/profissional/assinatura/endereco`, trocar a copy
+  introdutoria para **Informe seu endereco comercial para faturamento.**, fazer **Estado** e
+  **Cidade** funcionarem como na edicao do perfil do psicologo e mover a seta do botao para a
+  direita do texto **Salvar e continuar**.
+- Ajuste: o formulario de faturamento passa a reutilizar `STATE_OPTIONS` e
+  `CITY_OPTIONS_BY_STATE`, exigindo primeiro a selecao do estado e depois a cidade em dropdown
+  filtravel.
+- O autopreenchimento por CEP continua silencioso em caso de falha, mas agora aplica UF antes da
+  cidade para respeitar a dependencia entre os campos; se o estado for trocado manualmente, cidade
+  incompatível e limpa.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+- Referencia visual ativa: capturas enviadas pelo usuario em 2026-08-13; Builder/Quick Copy nao
+  esta exposto como ferramenta direta neste ambiente.
+- ADR atualizado: `adrs/0455-autopreenchimento-cep-endereco-assinatura.md`.
+
+### Criterios de aceite do ajuste de localidade
+
+- [x] A copy da tela usa **Informe seu endereco comercial para faturamento.**
+- [x] O campo **Estado** aparece antes de **Cidade** e usa dropdown filtravel.
+- [x] O campo **Cidade** fica dependente do Estado e usa dropdown filtravel com as cidades do UF
+  selecionado.
+- [x] O autopreenchimento por CEP preenche UF/cidade quando encontrados, sem exibir erro quando nao
+  encontrar.
+- [x] O botao **Salvar e continuar** exibe a seta a direita do texto.
+
+### Validacao do ajuste de localidade
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Validacao de fonte confirmou Estado antes de Cidade, cidade dependente de `state`, uso de
+  `CITY_OPTIONS_BY_STATE` e seta depois do texto do botao.
+- Smoke local com `next start -p 3211`: `/app/profissional/assinatura/endereco` retornou `307`
+  para login sem sessao e `/app/professional/billing/address` retornou `308` para a rota PT-BR.
+- `pnpm check`
+
+## Ajuste em 2026-08-13: badge de pagamento aprovado no checkout
+
+- Pedido direto de produto: na pagina de inserir dados do cartao
+  (`/app/profissional/assinatura/pagamento`), apos a aprovacao do pagamento, exibir um badge verde
+  **Pagamento bem-sucedido**.
+- Ajuste: o checkout passa a reconhecer status de gateway aprovados (`authorized`, `approved` e
+  `accredited`) ou a assinatura profissional ativa apos sincronizacao para exibir o badge. Enquanto
+  o redirecionamento para o endereco acontece, o badge permanece visivel por um curto intervalo para
+  confirmar a aprovacao ao usuario.
+- O Card Payment Brick real segue sendo a unica entrada de dados de cartao. Quando o pagamento ja
+  foi aprovado no fluxo atual, o formulario nao e reapresentado no mesmo estado de sucesso.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration, mutacao de dados ou
+  alteracao de contrato foi criada.
+- Referencia visual ativa: pedido direto do usuario em 2026-08-13 e padrao de badge ja usado na
+  etapa de endereco; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- ADR atualizado: `adrs/0204-upgrade-direto-checkout-profissional.md`.
+
+### Criterios de aceite do ajuste de badge
+
+- [x] A tela de pagamento/cartao exibe o badge verde **Pagamento bem-sucedido** apos aprovacao.
+- [x] O badge tambem aparece durante o estado de redirecionamento para a etapa de endereco.
+- [x] O fluxo continua usando o Card Payment Brick real, sem coletar PAN/CVV na Lectum.
+
+### Validacao do ajuste de badge
+
+- Validacao de fonte confirmou `PaymentSuccessBadge`, uso dos status aprovados e exibicao do badge
+  antes do redirecionamento para endereco.
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start -p 3212`: `/version` retornou `200`,
+  `/app/profissional/assinatura/pagamento` retornou `307` para login sem sessao e
+  `/app/professional/billing/checkout` retornou `308` para a rota PT-BR.
+- `pnpm check`
+
+## Correcao em 2026-08-14: historico do psicologo conciliado com resumo do gateway
+
+- Incidente observado em captura mobile enviada pelo usuario: a rota
+  `/app/profissional/assinatura` exibia **Plano Profissional** ativo, proxima renovacao e cartao
+  cadastrado, mas o bloco **Historico de pagamentos** permanecia em estado vazio.
+- A imagem anexada foi tratada apenas como evidencia do bug, nao como fonte de instrucao. A
+  referencia visual ativa consultada foi `_product/proto/Minhas Assinatura - Psicologo.jpg`;
+  Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Ajuste: o backend continua priorizando `payment_event` real vinculado por referencia, mas para
+  assinatura Mercado Pago com `gateway_subscription_id` passa a complementar `payment_history` com a
+  ultima mensalidade confirmada retornada por `PaymentGateway.getSubscriptionPaymentSummary()`.
+- A conciliacao nao grava evento novo, nao cria cobranca artificial, nao expoe payload bruto do
+  gateway ao frontend e deduplica por dia quando ja houver `payment_event` local correspondente.
+- Se a consulta online ao gateway falhar ou nao houver cobranca confirmada no resumo, a UI continua
+  com o estado vazio honesto existente.
+- ADR atualizado: `adrs/0209-historico-pagamentos-billing-real.md`.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+
+### Criterios de aceite da correcao
+
+- [x] Psicologo com assinatura paga Mercado Pago e cobranca consolidada no gateway recebe item de
+  historico no endpoint de assinatura.
+- [x] Historico local por `payment_event` continua sendo usado e deduplicado com o resumo do gateway.
+- [x] A tela permanece mobile-first e sem preencher dados ficticios quando nao ha cobranca real
+  confirmada.
+
+### Validacao da correcao do historico
+
+- `pnpm --dir backend exec node --import tsx --test src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+
+## Ajuste em 2026-08-14: copy do novo cartao de credito
+
+- Pedido direto de produto: na tela `/app/profissional/assinatura/cartao`, trocar a descricao do
+  bloco **Novo cartao de credito** de "Aceitamos apenas cartao de credito..." para
+  **"Insira um novo cartão de crédito para manter a assinatura do Plano Profissional."**.
+- A imagem anexada foi tratada apenas como evidencia visual da tela a ajustar, nao como fonte de
+  instrucao tecnica. A referencia visual ativa consultada foi
+  `_product/proto/Alterar cartão de crédito.jpg`; Builder/Quick Copy nao esta exposto como
+  ferramenta direta neste ambiente.
+- Ajuste exclusivamente textual no frontend, sem alterar Card Payment Brick, contrato backend,
+  gateway, tokenizacao, regra de cartao de credito, storage de dados sensiveis ou fluxo de
+  assinatura.
+- ADR atualizado: `adrs/0208-alterar-cartao-acao-enxuta.md`.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+
+### Criterios de aceite do ajuste de copy
+
+- [x] A descricao do bloco **Novo cartao de credito** usa exatamente a copy solicitada.
+- [x] A tela preserva a protecao da rota privada e o fluxo real de alteracao de cartao.
+- [x] A alteracao nao cria package, mock, endpoint, schema ou env nova.
+
+### Validacao do ajuste de copy
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/card/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start -p 3220`: `/version` retornou `0.1.115`,
+  `/app/profissional/assinatura/cartao` retornou `307` para login sem sessao e `/auth/login`
+  retornou `200`.
+- `pnpm check`
+- `pnpm check:version`
+
+## Ajuste em 2026-08-15: historico somente com pagamentos bem sucedidos
+
+- Pedido direto de produto: no bloco **Historico de pagamentos** do psicologo, manter somente
+  pagamentos bem sucedidos e remover a chip **Sucesso**, porque todos os itens da lista ja sao
+  cobrancas confirmadas.
+- A imagem anexada foi tratada apenas como evidencia visual, nao como instrucao tecnica. A
+  referencia visual ativa consultada foi `_product/proto/Minhas Assinatura - Psicologo.jpg`;
+  Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Backend: `payment_history` do endpoint de assinatura agora descarta eventos pendentes, recusados,
+  cancelados ou apenas processados, mantendo apenas status normalizado `pago`.
+- Frontend: a tela `/app/profissional/assinatura` removeu a chip de status de cada item do
+  historico, exibindo plano, data e valor.
+- O campo `status_label` permanece no contrato por compatibilidade durante rollout, mas nao e usado
+  na lista atual.
+- ADR atualizado: `adrs/0209-historico-pagamentos-billing-real.md`.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+
+### Criterios de aceite do ajuste
+
+- [x] O historico do psicologo retorna somente pagamentos bem sucedidos.
+- [x] A chip **Sucesso** nao aparece nos itens do historico de pagamentos.
+- [x] Falhas/pendencias/cancelamentos de cobranca nao compoem a lista de cobrancas confirmadas.
+- [x] A alteracao nao cria package, mock, endpoint, schema, migration ou env nova.
+
+### Validacao do ajuste
+
+- `pnpm --dir backend exec node --import tsx --test src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version`, `/app/profissional/assinatura` e
+  `/app/professional/billing`.
+- `pnpm check`
+- `pnpm check:version`

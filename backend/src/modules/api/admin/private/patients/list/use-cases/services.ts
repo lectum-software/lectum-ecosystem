@@ -4,6 +4,7 @@ import {
   calculateAdminPatientCommunityEngagementScore,
   diagnoseAdminCommunityEngagement,
 } from "@/utils/admin-community-engagement-diagnosis";
+import { daysBetweenInclusive, startOfDate } from "@/utils/date-range";
 import type {
   AdminPatientsListEngagementId,
   AdminPatientsListFilters,
@@ -22,10 +23,10 @@ import {
   type AdminPatientListRecord,
   AdminPatientsListRepository,
 } from "../repositories/AdminPatientsListRepository";
+import { normalizeGender, normalizeKey } from "./gender";
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
-const MS_PER_DAY = 86_400_000;
 
 type PatientsListIntentSignals = Awaited<
   ReturnType<AdminPatientsListRepository["listIntentSignals"]>
@@ -65,22 +66,6 @@ const INTENT_ENGAGEMENT_QUADRANTS = new Set<AdminPatientsListIntentEngagementQua
   ADMIN_PATIENTS_LIST_INTENT_ENGAGEMENT_QUADRANTS,
 );
 
-const GENDER_LABELS: Record<string, string> = {
-  female: "Feminino",
-  feminina: "Feminino",
-  feminino: "Feminino",
-  homem: "Masculino",
-  male: "Masculino",
-  masculina: "Masculino",
-  masculino: "Masculino",
-  mulher: "Feminino",
-  nao_binario: "Outro",
-  nao_informado: "Não informado",
-  não_binário: "Outro",
-  outro: "Outro",
-  other: "Outro",
-};
-
 const PROVIDER_LABELS: Record<AdminPatientsListProvider, string> = {
   email_password: "E-mail e senha",
   google: "Google",
@@ -91,7 +76,7 @@ const STATUS_LABELS: Record<AdminPatientsListStatus, AdminPatientsListItem["stat
   inactive: "Inativo",
 };
 const PATIENT_LIST_SOURCE =
-  "user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save" as const;
+  "user+patient_profile+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save" as const;
 const PATIENT_LIST_COMMUNITY_ENGAGEMENT_SOURCE =
   "community_post+post_reply+post_vote+post_save+post_reply_save" as const;
 const PATIENT_INTENT_SCORE_WEIGHTS = {
@@ -122,14 +107,6 @@ const PATIENT_ENGAGEMENT_LABELS = {
   AdminPatientsListItem["engagement"]["label"]
 >;
 
-const normalizeKey = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-
 const normalizeSearchText = (value: string | null | undefined) =>
   (value ?? "")
     .normalize("NFD")
@@ -138,14 +115,8 @@ const normalizeSearchText = (value: string | null | undefined) =>
 
 const normalizeName = (name: string) => name.replace(/\s+/g, " ").trim() || "Paciente";
 
-const normalizeGender = (value?: string | null) => {
-  const key = normalizeKey(value || "nao_informado");
-
-  return {
-    id: key || "nao_informado",
-    label: GENDER_LABELS[key] ?? value?.trim() ?? "Não informado",
-  };
-};
+const hasDeclaredLocation = (profile: AdminPatientListRecord["patient_profile"]) =>
+  Boolean(profile?.city?.trim() && profile?.state?.trim());
 
 const providerFromRaw = (provider?: string | null): AdminPatientsListProvider =>
   (provider ?? "").trim().toLowerCase() === "google" ? "google" : "email_password";
@@ -165,20 +136,6 @@ const normalizeSort = (value?: string): AdminPatientsListSort => {
   if (value && SORTS.has(value as AdminPatientsListSort)) return value as AdminPatientsListSort;
 
   return "recent";
-};
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-
-  return next;
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / MS_PER_DAY) + 1;
 };
 
 const patientActiveDaysUntil = (patientCreatedAt: Date, date: Date) => {
@@ -401,15 +358,15 @@ const matchesFilters = (patient: AdminPatientListRecord, query: AdminPatientsLis
 };
 
 const mapPatient = (patient: AdminPatientListRecord): AdminPatientsListItem => {
-  const latestLocation = patient.visitor_locations[0] ?? null;
   const provider = providerFromRaw(patient.provider);
   const status = statusFromPatient(patient);
   const gender = normalizeGender(patient.patient_profile?.gender);
+  const hasLocation = hasDeclaredLocation(patient.patient_profile);
 
   return {
     avatar: patient.avatar,
-    city: latestLocation?.city ?? null,
-    country: latestLocation?.country ?? null,
+    city: hasLocation ? (patient.patient_profile?.city ?? null) : null,
+    country: hasLocation ? "BR" : null,
     created_at: patient.createdAt,
     detail_url: `/pacientes/${patient.id}`,
     email: patient.email,
@@ -424,12 +381,12 @@ const mapPatient = (patient: AdminPatientListRecord): AdminPatientsListItem => {
       id: "cold",
       label: PATIENT_INTENT_LABELS.cold,
     },
-    last_location_at: latestLocation?.createdAt ?? null,
+    last_location_at: hasLocation ? (patient.patient_profile?.updatedAt ?? null) : null,
     name: normalizeName(patient.name),
     onboarding_completed_at: patient.patient_profile?.onboarding_completed_at ?? null,
     provider: patient.provider,
     provider_label: PROVIDER_LABELS[provider],
-    state: latestLocation?.state ?? null,
+    state: hasLocation ? (patient.patient_profile?.state ?? null) : null,
     status,
     status_label: STATUS_LABELS[status],
   };

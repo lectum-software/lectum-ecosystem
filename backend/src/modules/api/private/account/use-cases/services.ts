@@ -1,9 +1,10 @@
+import type { Request } from "express";
 import jwt from "jsonwebtoken";
 import { error, msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import {
   createGoogleOAuthLoginUrl,
@@ -12,6 +13,7 @@ import {
 } from "@/modules/api/public/google/utils/config";
 import { code } from "@/utils/code";
 import { compare, encrypt } from "@/utils/crypt";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import type {
   AccountDeleteGoogleIntentResponse,
   AccountOnboardingTipsResponse,
@@ -24,29 +26,20 @@ import type {
   IAccountPasswordDTO,
 } from "../DTOs/IAccountDTO";
 import { AccountRepository } from "../repositories/AccountRepository";
+import {
+  resolveAuthenticatedLogoutDeviceId,
+  runBestEffortLogoutSubscriptionCleanup,
+} from "../repositories/support/logout-subscription";
+import {
+  requiresGoogleDeleteReauth,
+  requiresPasswordDeleteConfirmation,
+} from "./delete-confirmation";
 
 const DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN = "10m";
+const DELETE_GOOGLE_REAUTH_CALLBACK = "/app/configuracoes/conta?deleteReauth=ok";
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
-const sanitizeDeleteCallbackUrl = (value?: string | null, role?: string | null) => {
-  const fallback =
-    role === "psicologo"
-      ? "/app/profissional/perfil/configurar?deleteReauth=ok"
-      : "/app/perfil/editar?deleteReauth=ok";
-  const raw = value?.trim() || fallback;
-
-  if (!raw.startsWith("/app/")) return fallback;
-  if (raw.startsWith("//")) return fallback;
-
-  try {
-    const url = new URL(raw, "https://lectum.local");
-    url.searchParams.set("deleteReauth", "ok");
-
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return fallback;
-  }
-};
+const sanitizeDeleteCallbackUrl = () => DELETE_GOOGLE_REAUTH_CALLBACK;
 
 const getCurrentUser = async (auth: user) => {
   if (!auth.id) return null;
@@ -78,6 +71,32 @@ const validateCurrentPassword = async (user: user, currentPassword: string) => {
 const hydrateUpdatedUser = async (user: user, deviceId: string) => {
   const loginRepository = new LoginRepository(deviceId);
   return loginRepository.hidrate(user, deviceId);
+};
+
+export const logout = async (data: IAccountDTO) => {
+  const deviceId = resolveAuthenticatedLogoutDeviceId(data);
+  const token = getUserRequestToken(data as unknown as Request);
+
+  if (!deviceId || !data.auth.id || !token) {
+    return {
+      status: 401,
+      ...error("token_not_authorized", {}),
+    };
+  }
+
+  const repository = new AccountRepository();
+  await runBestEffortLogoutSubscriptionCleanup(
+    () => repository.deactivateNotificationSubscriptions(data.auth.id!, deviceId),
+    () => {
+      console.warn("[AUTH] Notificações do dispositivo não puderam ser desativadas no logout.");
+    },
+  );
+  await repository.deleteToken(data.auth.id, deviceId, token);
+
+  return {
+    status: 200,
+    success: true,
+  };
 };
 
 export const security = async (data: IAccountDTO) => {
@@ -267,11 +286,17 @@ export const updateEmail = async (data: IAccountEmailDTO) => {
 
   const confirmCode = code();
 
-  await confirmEmailSend({
+  const emailSent = await confirmEmailSend({
     email: nextEmail,
     name: current.name || nextEmail,
     code: confirmCode,
   });
+  if (!emailSent) {
+    return {
+      status: 503,
+      ...error("email_provider_unavailable", {}),
+    };
+  }
 
   const updated = await repository.updateUserAndClearTokens(current.id, {
     email: nextEmail,
@@ -283,6 +308,7 @@ export const updateEmail = async (data: IAccountEmailDTO) => {
   const hydrated = await hydrateUpdatedUser(updated, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("account_email_update_success", {}),
     data: hydrated,
@@ -316,12 +342,13 @@ export const updatePassword = async (data: IAccountPasswordDTO) => {
 
   const updated = await repository.updateUserAndClearTokens(current.id, {
     password,
-    password_confirm: password,
+    password_confirm: null,
     need_reset: false,
   });
   const hydrated = await hydrateUpdatedUser(updated, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("account_password_update_success", {}),
     data: hydrated,
@@ -354,11 +381,23 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
     };
   }
 
-  if (current.password || current.provider !== "google") {
+  if (!requiresGoogleDeleteReauth(current)) {
     return {
       status: 400,
       ...error("account_delete_google_reauth_unavailable", {}),
     };
+  }
+
+  if (current.role === "psicologo") {
+    const repository = new AccountRepository();
+    const blockingSubscription = await repository.findBlockingSubscription(current.id);
+
+    if (blockingSubscription) {
+      return {
+        status: 409,
+        ...error("account_delete_active_subscription", {}),
+      };
+    }
   }
 
   const token = jwt.sign(
@@ -369,7 +408,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
       user_id: current.id,
     },
     getJwtSecret(),
-    { expiresIn: DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN },
+    { algorithm: JWT_ALGORITHM, expiresIn: DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN },
   );
 
   const url = createGoogleOAuthLoginUrl(device.id);
@@ -383,13 +422,15 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
 
   url.searchParams.set("intent", "delete_account");
   url.searchParams.set("delete_token", token);
-  url.searchParams.set("callbackUrl", sanitizeDeleteCallbackUrl(data.b.callback_url, current.role));
+  url.searchParams.set("callbackUrl", sanitizeDeleteCallbackUrl());
 
   const response: AccountDeleteGoogleIntentResponse = {
+    device_id: device.id,
     url: url.toString(),
   };
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("account_delete_google_intent_created", {}),
     data: response,
@@ -423,10 +464,7 @@ export const destroy = async (data: IAccountDeleteDTO) => {
     };
   }
 
-  if (current.password) {
-    const passwordError = await validateCurrentPassword(current, data.b.current_password || "");
-    if (passwordError) return passwordError;
-  } else if (current.provider === "google") {
+  if (requiresGoogleDeleteReauth(current)) {
     const hasRecentGoogleReauth = await repository.hasRecentGoogleDeleteReauth(
       current.id,
       device.id,
@@ -438,6 +476,9 @@ export const destroy = async (data: IAccountDeleteDTO) => {
         ...error("account_delete_google_reauth_required", {}),
       };
     }
+  } else if (requiresPasswordDeleteConfirmation(current)) {
+    const passwordError = await validateCurrentPassword(current, data.b.current_password || "");
+    if (passwordError) return passwordError;
   } else {
     return {
       status: 403,

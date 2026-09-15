@@ -3,77 +3,27 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription, user } from "@/interfaces/objects";
 import { loginInclude } from "@/query/login";
 import { log } from "@/utils/logs";
+import {
+  deleteAccountSession,
+  deleteAllAccountSessions,
+  updateAccountAndClearSessions,
+} from "./account-session-store";
 import type { IAccountRepository } from "./interfaces/IAccountRepository";
-
-const GOOGLE_DELETE_REAUTH_TTL_MS = 10 * 60 * 1000;
-const ACCOUNT_DELETE_TRANSACTION_TIMEOUT_MS = 30 * 1000;
-const ACCOUNT_DELETE_TRANSACTION_OPTIONS = {
-  timeout: ACCOUNT_DELETE_TRANSACTION_TIMEOUT_MS,
-} as const;
-
-const getDeletedAuthorName = (role?: string | null) =>
-  role === "psicologo" ? "Psicólogo Excluído" : "Membro Excluído";
-
-const markDeleted = (now: Date) => ({
-  deleted: true,
-  deletedAt: now,
-});
-
-type AccountDeletionAdminAudit = {
-  action?: string;
-  adminId: string;
-  area?: string;
-  changedFields: string[];
-  domain?: string;
-  metadata: Prisma.InputJsonObject;
-  reason: string;
-  safeAfter: Prisma.InputJsonObject;
-  safeBefore: Prisma.InputJsonObject;
-  targetId: string;
-  targetType?: string;
-};
-
-const recalculatePsychologistRating = async (
-  tx: Prisma.TransactionClient,
-  psychologistId: string,
-) => {
-  const aggregate = await tx.professional_review.aggregate({
-    where: {
-      psychologist_id: psychologistId,
-      deleted: false,
-      status: "publicada",
-      author: {
-        active: true,
-        deleted: false,
-      },
-    },
-    _avg: {
-      rating: true,
-    },
-    _count: {
-      _all: true,
-    },
-  });
-
-  await tx.psychologist_profile.updateMany({
-    where: {
-      user_id: psychologistId,
-      deleted: false,
-    },
-    data: {
-      rating_avg: Math.round((aggregate._avg.rating || 0) * 100),
-      rating_count: aggregate._count._all,
-    },
-  });
-};
+import {
+  ACCOUNT_DELETE_TRANSACTION_OPTIONS,
+  type AccountDeletionAdminAudit,
+  GOOGLE_DELETE_REAUTH_TTL_MS,
+  getDeletedAuthorName,
+  markDeleted,
+  recalculatePsychologistRating,
+} from "./support/account-query";
+import { buildLogoutSubscriptionFilter } from "./support/logout-subscription";
 
 export class AccountRepository implements IAccountRepository {
   readonly repository: ORM["user"];
-  readonly userTokenRepository: ORM["user_token"];
 
   constructor() {
     this.repository = prisma.user;
-    this.userTokenRepository = prisma.user_token;
   }
 
   async findById(id: string): Promise<user | null> {
@@ -143,31 +93,27 @@ export class AccountRepository implements IAccountRepository {
     });
   }
 
-  async deleteTokens(userId: string): Promise<void> {
-    await this.userTokenRepository.deleteMany({
-      where: {
-        user_id: userId,
+  deleteTokens(userId: string): Promise<void> {
+    return deleteAllAccountSessions(userId);
+  }
+
+  deleteToken(userId: string, deviceId: string, token: string): Promise<void> {
+    return deleteAccountSession(userId, deviceId, token);
+  }
+
+  async deactivateNotificationSubscriptions(userId: string, deviceId: string): Promise<void> {
+    await prisma.notification_subscription.updateMany({
+      where: buildLogoutSubscriptionFilter(userId, deviceId),
+      data: {
+        deleted: true,
+        deletedAt: new Date(),
+        subscription: Prisma.DbNull,
       },
     });
   }
 
   async updateUserAndClearTokens(userId: string, data: Prisma.userUpdateInput): Promise<user> {
-    const [updated] = await prisma.$transaction([
-      this.repository.update({
-        where: {
-          id: userId,
-        },
-        data,
-        include: loginInclude(),
-      }),
-      this.userTokenRepository.deleteMany({
-        where: {
-          user_id: userId,
-        },
-      }),
-    ]);
-
-    return updated;
+    return updateAccountAndClearSessions(userId, data);
   }
 
   async findBlockingSubscription(userId: string): Promise<professional_subscription | null> {
@@ -357,7 +303,10 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: markDeleted(now),
+        data: {
+          ...markDeleted(now),
+          subscription: Prisma.DbNull,
+        },
       });
 
       await tx.user_background.updateMany({

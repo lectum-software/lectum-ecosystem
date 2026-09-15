@@ -5,14 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
-import type { user } from "@/api/generator/types";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { CenterTemplate } from "@/templates/center";
 
 const DEFAULT_AUTHENTICATED_REDIRECT = "/psicologos";
-const DELETE_ACCOUNT_PATIENT_REDIRECT = "/app/perfil/editar?deleteReauth=ok";
-const DELETE_ACCOUNT_PSYCHOLOGIST_REDIRECT = "/app/profissional/perfil/configurar?deleteReauth=ok";
+const DELETE_ACCOUNT_REDIRECT = "/app/configuracoes/conta?deleteReauth=ok";
 
 export const RedirectLogic = () => {
   const searchParams = useSearchParams();
@@ -20,20 +19,22 @@ export const RedirectLogic = () => {
   const fallbackRedirect = useMemo(() => {
     if (intent !== "delete_account") return DEFAULT_AUTHENTICATED_REDIRECT;
 
-    return (data: user) =>
-      data.role === "psicologo"
-        ? DELETE_ACCOUNT_PSYCHOLOGIST_REDIRECT
-        : DELETE_ACCOUNT_PATIENT_REDIRECT;
+    return () => DELETE_ACCOUNT_REDIRECT;
   }, [intent]);
-  const { setter } = useUserSet(fallbackRedirect);
+  const { setter } = useUserSet(fallbackRedirect, {
+    skipOnboardingRedirect: intent === "delete_account",
+  });
   const { googleMe } = useAuth({
     callbacks: {
       googleMe: {
         onSuccess: setter,
         onError: (error) => {
-          const message =
-            error instanceof Error ? error.message : "Nao foi possivel concluir o login";
+          const message = getSafeApiErrorMessage(
+            error,
+            "Não foi possível concluir o login com o Google.",
+          );
           toast.error(message);
+          // Falha de sessão exige descartar também os caches em memória antes da revogação.
           window.location.href = `/auth/error?error=${encodeURIComponent(message)}&clearSession=1`;
         },
       },

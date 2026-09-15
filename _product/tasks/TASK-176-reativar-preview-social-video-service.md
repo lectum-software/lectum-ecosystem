@@ -1,0 +1,663 @@
+# TASK-176 - Reativar prévia social de vídeos pelo serviço dedicado
+
+## Status
+
+Completed
+
+## Contexto
+
+A TASK-42 criou a experiência de compartilhamento social de vídeo-respostas com botão sobre o vídeo, modal de prévia e arquivo vertical para Instagram/TikTok. A TASK-164 removeu MediaBunny/Chromium do frontend e isolou processamento pesado no app `video/`, deixando a geração social temporariamente indisponível. Depois da remoção, o botão de Instagram deixou de aparecer sobre vídeos próprios do psicólogo.
+
+## Objetivo
+
+Reativar o botão de Instagram, a modal de prévia e o download do vídeo social 9:16 sem voltar a usar MediaBunny no browser, delegando toda geração pesada ao serviço dedicado `video/` com fila BullMQ/Redis e FFmpeg/ffprobe.
+
+## Escopo
+
+- Frontend:
+  - Reexibir o botão de prévia social somente sobre vídeos próprios de psicólogos.
+  - Abrir modal mobile-first com prévia vertical e ação de download.
+  - Solicitar render server-side, acompanhar job e baixar o MP4 pronto.
+  - Manter compartilhamento de link existente quando a ação não for download social.
+- Backend:
+  - Autorizar apenas psicólogo dono do post/resposta.
+  - Resolver a origem real do vídeo em Cloudflare Stream assinado ou mídia legada pública permitida.
+  - Fazer proxy privado para criação, status e download dos jobs no app `video/`.
+  - Não criar nem renovar `post_share_artifacts`.
+- Video:
+  - Adicionar operação `social_share` ao contrato de jobs.
+  - Validar URLs remotas HTTPS e DNS público antes do FFmpeg.
+  - Renderizar MP4 1080x1920 H.264/AAC com overlay Lectum em alta qualidade.
+
+## Fora de escopo
+
+- Reinstalar MediaBunny, encoder AAC, Playwright, Chromium, WASM ou nova dependência.
+- Alterar schema/migrations ou persistir novos artefatos R2.
+- Fazer reset, seed, limpeza de bucket ou backfill de dados publicados.
+- Rastrear app específico escolhido na folha nativa de compartilhamento.
+
+## Critérios de aceite
+
+- [x] O botão/ícone de Instagram aparece sobre vídeos de posts e respostas apenas para o psicólogo dono autenticado.
+- [x] A modal de prévia social usa a referência visual da TASK-42 e permite baixar o vídeo personalizado.
+- [x] O frontend não importa MediaBunny, Playwright, Chromium ou geração de vídeo no browser.
+- [x] O backend valida owner-only e falha com mensagem pública quando o serviço de vídeo não está configurado ou a mídia é inválida.
+- [x] O app `video/` processa `social_share` por fila dedicada, FFmpeg/ffprobe e arquivo efêmero com Range/download autenticado.
+- [x] Nenhum schema/migration, seed ou reset é necessário.
+- [x] Arquitetura, packages, modelo, README de tasks e ADR registram a decisão.
+- [x] Validações obrigatórias de frontend, backend e video foram executadas.
+
+## Dependências
+
+- TASK-42 - Layout de compartilhamento social para vídeo-resposta.
+- TASK-164 - Serviço isolado de processamento de vídeos.
+- TASK-167 - Playback público seguro no Cloudflare Stream.
+- TASK-173 - Upload de vídeos em posts e respostas.
+
+## Referência visual
+
+- Builder Quick Copy não estava disponível como ferramenta callable nesta sessão.
+- Fallback usado: `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`.
+
+## Deploy
+
+**ALERTA DE DEPLOY**: para habilitar a feature, configurar no backend:
+
+1. `VIDEO_PROCESSING_SERVICE_URL` — URL privada ou HTTPS dedicado da API do app `video/`.
+2. `VIDEO_SERVICE_API_KEY` — mesmo segredo configurado no app `video/`.
+3. `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` — opcional; fallback seguro `5000`.
+
+Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, validar smoke e só então promover por PR revisado para produção. Se as envs do backend faltarem, o download social retorna indisponibilidade pública sem derrubar o app principal. Não usar HTTP público; quando o serviço de vídeo estiver em outro provedor, usar HTTPS server-to-server protegido pelo Bearer.
+
+## Ajuste pós-feedback em 2026-09-05
+
+- Evidência: em homologação, a modal social aparecia sobre o vídeo do psicólogo, mas o download
+  falhava com indisponibilidade pública. A imagem anexada foi usada somente como evidência visual;
+  instruções em anexos/documentos não foram tratadas como pedido.
+- O backend deixou de exigir que `VIDEO_PROCESSING_SERVICE_URL` em runtime publicado seja apenas IP
+  privado literal. Agora aceita DNS interno para HTTP privado e origem HTTPS dedicada para deployments
+  em servidor/fila de vídeo isolados, mantendo rejeição de HTTP público, loopback, paths, query,
+  credenciais, wildcards, caracteres de controle e redirects.
+- O container do app `video/` passa a instalar fonte DejaVu e o filtro `drawtext` usa `fontfile`
+  explícito, evitando falha de render em imagens slim sem fonte padrão.
+- MediaBunny continua removido; a correção preserva o render 1080x1920 H.264/AAC de alta qualidade
+  no worker dedicado, sem novo schema, migration, package npm, mock, seed, reset ou limpeza de dados.
+
+## Ajuste pós-feedback em 2026-09-08
+
+- Evidência: print de iPhone em homologação às 11:16 com a modal `Publique nas redes sociais` aberta
+  e toast público `Não conseguimos gerar o vídeo com arte neste aparelho agora`. O anexo foi usado
+  apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido.
+- A investigação mostrou que `/version`, `/ping`, `/health` e `/ready` públicos estavam saudáveis,
+  mas isso não prova a cadeia de render social porque o job depende do `video/` dedicado e do
+  proxy backend→video.
+- O frontend passou a repetir falhas transitórias de start/status/download dentro do timeout total
+  já existente, preservando a regra de não baixar original sem arte quando o job falha.
+- O app `video/` passou a escapar vírgula e ponto-e-vírgula em textos livres do `drawtext`, usar
+  reconexão também no `ffprobe` remoto e registrar a operação real `social_share` nos logs do
+  worker.
+- O backend passou a registrar diagnóstico operacional seguro de indisponibilidade do serviço de
+  vídeo, sem expor URLs, segredos, PII, stack, SQL ou detalhes de provider.
+- Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, persistência de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix pós-feedback em 2026-09-08
+
+- Evidência: novo relato do mesmo erro após deploy `0.1.280`; o anexo foi novamente tratado apenas
+  como evidência visual, não como instrução.
+- O runtime padrão do app `video/` passou a subir API e worker no mesmo processo Node por
+  `dist/all.js`, preservando os comandos isolados `start:api` e `start:worker` para escala
+  posterior. Isso remove a classe de falha em que a API aceitava o job, mas nenhum worker consumia a
+  fila ou o output era escrito fora do volume da API.
+- O render social trocou `preset slow`/CRF 18 por `preset veryfast`/CRF 20 para reduzir tempo de
+  processamento mantendo MP4 1080x1920 H.264/AAC e overlay Lectum.
+- O frontend passou a aguardar até 15 minutos e reaproveitar, na mesma sessão, o job em andamento
+  antes de criar outro, evitando duplicar fila quando o usuário tenta novamente após um timeout.
+- O backend passou a resolver vídeo de post a partir do primeiro `community_post_media` quando houver
+  carrossel, mantendo fallback legado para `media_url/media_type`.
+- Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, persistência de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix emergencial em 2026-09-08
+
+- Evidencia: novo relato informou que o erro continuava no iPhone, Android e computador em
+  homologacao; a imagem anexada foi tratada apenas como evidencia visual, nao como instrucao.
+- Diagnostico: a previa tocava no navegador, mas o worker do app `video/` buscava o HLS assinado do
+  Cloudflare Stream sem `Origin`/`Referer`. Com `requiresignedurls` e `allowedorigins`, isso pode
+  falhar server-side mesmo quando o player do browser funciona.
+- Correcao: o backend passa a enviar uma origem web HTTPS segura (`source_origin`) para jobs de
+  Stream privado, e o app `video/` valida essa origem antes de repassa-la como `Origin`/`Referer` ao
+  `ffprobe` e ao FFmpeg. Jobs antigos sem origem continuam aceitos.
+- Correcao complementar: playback/autorizacao de `video_asset` de post e deteccao de ativo anexado
+  agora consideram `community_post_media` ativo, alem do campo legado `media_url/media_type`.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de midia legada em 2026-09-08
+
+- Evidencia: novo relato mostrou o mesmo toast no computador em homologacao apos `0.1.282`. A imagem
+  anexada foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas
+  como pedido.
+- Diagnostico: a resposta em video do psicologo Tulio Rezende do post relatado usa uma URL publica
+  legada em `/public/files/posts/media/`, nao uma referencia `video_asset`/Cloudflare Stream. Assim,
+  a autorizacao de `Origin`/`Referer` para HLS privado nao cobria esse caso.
+- Correcao: a resolucao backend de fonte legada passa a aceitar a URL absoluta HTTPS ja persistida
+  quando a `BASE` atual diverge, desde que o caminho continue no prefixo publico de midia de post e
+  sem credenciais, HTTP, query ou fragmento. A validacao final de DNS publico e arquivo de video
+  permanece no app `video/`.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de diagnostico publico em 2026-09-08
+
+- Evidencia: novo relato informou que o erro continuava em iPhone, Android e computador, e o usuario
+  pediu uma mensagem detalhada para identificar onde a falha acontece. A captura anexada foi usada
+  apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: o frontend passa a exibir, abaixo do toast publico ja existente, uma descricao segura
+  com etapa, motivo em PT-BR, referencia publica `SR-xx`, status HTTP quando existir e estado do job
+  quando a fila retornar falha terminal. Isso diferencia inicio da geracao, acompanhamento da fila,
+  processamento, timeout e download sem exigir DevTools do usuario.
+- Privacidade: a mensagem nao usa `error.message` bruto nem exibe stack, URLs, segredo, SQL, PII,
+  payload tecnico ou detalhe de provider. Codigos internos sao normalizados e mapeados para
+  referencias publicas estaveis, suficientes para triagem via print.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de leitura de midia publica Lectum em 2026-09-08
+
+- Evidencia: apos o diagnostico publico, o novo print mostrou `SR-04`, etapa `processamento do
+  video`, job `falhou`, progresso `0%`. A captura anexada foi usada apenas como evidencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Diagnostico: progresso `0%` indica falha antes do `ffprobe`, durante a validacao segura de origem
+  remota do app `video`. A midia real do relato e um MP4 legado publico em
+  `homolog-api.lectum.com.br/public/files/posts/media/`, com `HEAD 200`, `Range 206`, `Content-Type`
+  `video/mp4` e aproximadamente 21,7 MB.
+- Correcao: o app `video` passa a reconhecer como origem first-party confiavel somente
+  `homolog-api.lectum.com.br` e `api.lectum.com.br`, sempre HTTPS, sem credenciais/query/fragmento e
+  sob o prefixo exato `/public/files/posts/media/`. Esse caso pode seguir para leitura mesmo quando
+  o DNS do runtime aponta para rota privada/overlay do ambiente; qualquer outra URL continua exigindo
+  DNS publico e extensao/prefixo permitido.
+- Correcao complementar: `ffprobe` e FFmpeg passam a enviar um `User-Agent` controlado nas leituras
+  remotas. `Origin`/`Referer` continuam restritos ao caso de origem segura enviada pelo backend.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de probe MP4 remoto em 2026-09-08
+
+- Evidencia: apos o deploy anterior, o novo print passou a mostrar `SR-04` com progresso `1%`. Isso
+  confirma que a origem first-party foi aceita e que o bloqueio agora ocorre no `ffprobe`/validacao
+  de entrada remota.
+- Reproducao local sem alterar dependencias do projeto: binarios FFmpeg/ffprobe temporarios
+  conseguiram ler o MP4 publico concreto quando `-allowed_extensions ALL` nao foi enviado; com a
+  opcao presente, o processo falhou antes de abrir o arquivo porque a opcao pertence ao demuxer HLS
+  e nao deve ser aplicada a MP4 direto.
+- Correcao: `video/` condiciona `-allowed_extensions ALL` a fontes HLS `.m3u8`; MP4/MOV/WebM
+  remotos mantem whitelist de protocolo, reconexao, headers seguros e probe/render dedicados sem a
+  opcao HLS.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de download local para MP4 remoto em 2026-09-08
+
+- Evidencia: apos a correcao de probe remoto, novo print em homologacao continuou mostrando `SR-04`
+  com progresso `1%`. A imagem anexada foi tratada apenas como evidencia visual; instrucoes em
+  anexos/documentos nao foram tratadas como pedido.
+- Diagnostico: o ponto `1%` indica que a origem first-party ja e aceita, mas a cadeia ainda falha
+  antes de concluir a validacao de entrada. Para midias remotas diretas (MP4/MOV/WebM), o worker
+  deixa de depender de `ffprobe` lendo HTTPS diretamente: baixa a origem para storage privado
+  efemero com `fetch`, `User-Agent` controlado, `Origin`/`Referer` somente quando seguros e redirects
+  proibidos; valida assinatura/tamanho e roda `ffprobe`/FFmpeg em arquivo local. HLS `.m3u8` segue
+  remoto para Cloudflare Stream assinado.
+- A reserva de storage do job social direto passa a cobrir input maximo + output maximo ate o
+  estado terminal. O arquivo baixado e removido no fluxo normal/terminal, sem persistir novo
+  artefato e sem voltar a gerar video no browser ou baixar original sem arte.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de egresso do worker Docker em 2026-09-08
+
+- Evidencia: apos a versao `0.1.287`, novo print mostrou `SR-05`, etapa `processamento do video`,
+  job `falhou` com progresso `1%`. Isso indica que a URL ja passou pela validacao e que a falha
+  virou erro operacional antes do download/probe local avancar.
+- Diagnostico: no `docker-compose`, o `worker` isolado estava apenas na rede `video-private`, marcada
+  como `internal: true`. Nesse modo, ele consegue falar com Redis/API privados, mas nao possui
+  egresso para buscar a midia HTTPS first-party/Stream usada pelo render social.
+- Correcao: o `worker` agora tambem entra na rede `video-edge`, sem publicar portas. O Redis continua
+  somente em `video-private`, que permanece interna. Assim, o worker ganha egresso para ler as midias
+  remotas, mas a superficie publica continua limitada a API do servico de video.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de compatibilidade FFmpeg em 2026-09-08
+
+- Evidencia: os logs do servidor de video passaram a mostrar `SR-05`, job `falhou` e progresso
+  `3%`. Isso indica que a origem, o download local e o probe da entrada passaram; a falha restante
+  fica na inicializacao/processamento do FFmpeg que desenha o overlay.
+- Correcao: `video/` executa FFmpeg/ffprobe com locale UTF-8, remove a opcao `steps` do `gblur`,
+  resolve `fontfile` DejaVu somente quando a fonte existe no runtime e tenta novamente sem
+  `fontfile` explicito se o FFmpeg falhar antes de emitir progresso do render.
+- Diagnostico: logs seguros de falha do worker incluem `progress` e `stage` normalizados, sem URL,
+  segredo, PII, stack, SQL, payload tecnico ou detalhe de provider.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de diagnostico FFmpeg em 2026-09-08
+
+- Evidencia: apos a versao `0.1.289`, os logs confirmaram `stage=render_initialization` e
+  `progress=3` em todas as tentativas, mas ainda sem causa classificada. Isso confirma falha antes
+  de qualquer progresso emitido pelo FFmpeg do overlay.
+- Correcao: `runManagedProcess` passa a capturar somente a cauda do stderr em memoria e transforma a
+  causa em `diagnostic_code` controlado, sem registrar stderr bruto, URL, segredo, stack, SQL, PII,
+  payload tecnico ou detalhe de provider.
+- O worker registra `video_job_processing_diagnostic` por tentativa com `attempt`, `will_retry`,
+  `stage`, `progress` e `diagnostic_code`; o `/ready` do app `video/` valida capacidades minimas do
+  render social (`drawtext`, `scale`, `overlay`, `drawbox`, `libx264` e `aac`).
+- Correcao adicional: o render social remove a dependencia do filtro `gblur`, preservando MP4
+  1080x1920 H.264/AAC com overlay Lectum e reduzindo incompatibilidade entre builds FFmpeg.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Hotfix de filtergraph portatil em 2026-09-08
+
+- Evidencia: novo log do app `video/` trouxe
+  `diagnostic_code="ffmpeg_filter_unavailable"`, `stage="render_initialization"` e `progress=3` em
+  tentativas repetidas do job social. Isso confirma falha no `filter_complex`, depois de origem,
+  download local e probe da entrada.
+- Diagnostico: o grafo do overlay podia inserir um separador extra antes dos filtros de arte e ainda
+  usava filtros secundarios (`eq`, `fps`, `format`, `setsar`) dispensaveis para o arquivo social.
+- Correcao: a cadeia passa a anexar corretamente o label de entrada ao primeiro filtro, `fps` vira
+  opcao de saida `-r`, e o worker passa a tentar uma variante portatil `scale+pad+drawbox+drawtext`
+  quando o grafo padrao falha antes de emitir progresso. A variante portatil evita `crop`,
+  `overlay`, `eq`, `fps`, `format`, `setsar` e `gblur`.
+- Observabilidade: erros `No such filter` agora identificam filtros conhecidos por codigo allowlist
+  (`ffmpeg_filter_crop_unavailable`, `ffmpeg_filter_pad_unavailable`, etc.) e `No such filter: ''`
+  vira `ffmpeg_filtergraph_invalid`, sem expor stderr bruto.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Ajuste de UX/download e arte Reels em 2026-09-09
+
+- Evidencia: o usuario anexou um print de Quick Look/preview de arquivo MP4 no iPhone e uma imagem
+  de referencia Reels para a arte. Os anexos foram usados apenas como evidencia e referencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido. Os requisitos validos vieram da
+  lista numerada do usuario: remover a tela intermediaria de arquivo, manter a tela acordada durante
+  o preparo, alinhar a arte a referencia, diferenciar `Postado na Lectum`/`Respondido na Lectum` e
+  tornar a previa da modal identica ao artefato baixado.
+- Frontend: o fluxo de download social virou duas etapas quando o arquivo ainda nao esta pronto.
+  Ao abrir a modal, o MP4 server-side começa a ser preparado e a modal permanece aberta; depois de pronto, a modal passa
+  a reproduzir o proprio `File` gerado por `URL.createObjectURL`, entao a previa exibida e o arquivo
+  baixado sao identicos. Em mobile/iPad, quando o Web Share de arquivo esta disponivel, o segundo
+  toque exige ativacao recente do usuario para abrir a folha nativa e evita cair no fallback que
+  navega para a tela intermediaria do arquivo. Desktop sem Web Share mantem o fallback de `download`
+  por objeto local.
+- Frontend: durante o preparo do video, a UI solicita Wake Lock `screen` de forma best-effort,
+  reaquece ao voltar a aba para visivel e libera o lock no sucesso, erro ou cancelamento. A falta de
+  suporte do navegador nao bloqueia o download.
+- Contrato visual: posts usam `Postado na Lectum`; respostas usam `Respondido na Lectum`. O label
+  legado `Perguntaram na Lectum` e normalizado no worker para tolerar rollout entre frontend,
+  backend e app `video`.
+- Video: o render padrao passa a usar canvas 9:16 com video inteiro encaixado por `scale+pad` e arte
+  desenhada por `drawbox+drawtext` nas proporcoes da referencia Reels: cartao azul/branco superior,
+  texto da pergunta centralizado, nome/cargo centralizados e selo verificado. A moldura de celular,
+  watermark textual e filtros secundarios (`eq`, `fps`, `format`, `setsar`, `gblur`) nao entram no
+  grafo padrao. As variantes portateis preservam `scale+pad` e ausencia de `crop`.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Ajuste de previa instantanea em 2026-09-09
+
+- Evidencia: apos o deploy `0.1.292`, o usuario mostrou a modal com placeholder `Preparando previa
+  identica ao video final...` durante o preparo e pediu que a previa nao esperasse o MP4 final,
+  apenas mantivesse o layout igual e carregasse o video instantaneamente. A captura anexada foi usada
+  apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a modal volta a carregar imediatamente o `target.mediaUrl` original com o player
+  existente, `posterUrl` real e `fit="cover"`, enquanto a geracao do arquivo final continua
+  server-side em segundo plano. Sobre essa previa, o frontend desenha a arte por CSS com as mesmas
+  proporcoes do render FFmpeg: cartao superior, texto do post/pergunta, rotulo `Postado na
+  Lectum`/`Respondido na Lectum`, nome, cargo e selo verificado.
+- A paridade exigida entre previa e download passa a ser de layout/posicionamento da arte; os bytes
+  da previa nao precisam ser o MP4 final, evitando tela branca/placeholder durante o preparo e
+  mantendo o botao de download dependente do artefato gerado pelo app `video/`.
+- Texto publico do toast simplificado para `Mantenha esta tela aberta enquanto o vídeo é preparado.`,
+  sem prometer explicitamente Wake Lock ao usuario; a tentativa de Wake Lock continua
+  best-effort e silenciosa.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Ajuste de preparo sob demanda e audio overlay em 2026-09-09
+
+- Evidencia: apos o deploy `0.1.293`, o usuario mostrou que a modal ainda iniciava o preparo do
+  arquivo ao abrir e exibia o estado `Preparando...` antes do clique. A captura anexada foi usada
+  apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: o frontend remove o disparo automatico de render ao abrir a modal. O job server-side e
+  solicitado somente pelo clique/toque no botao `Baixar video`; ate esse clique, a modal exibe a
+  previa instantanea com `target.mediaUrl` e overlay CSS, sem chamar start/status/download do render.
+- O toast de preparo continua com a frase `Mantenha esta tela aberta enquanto o video e preparado.`
+  e o Wake Lock segue best-effort apenas enquanto o preparo acionado pelo usuario estiver em curso.
+- O controle de som deixa de ser um botao textual abaixo da previa e passa a ser um botao-icon sobre
+  o proprio video, no canto inferior direito, preservando acessibilidade por `aria-label`.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Ajuste visual do volume transparente em 2026-09-09
+
+- Evidencia: apos o deploy `0.1.294`, o usuario mostrou que o icone de volume sobreposto ainda
+  chamava muita atencao por causa do fundo preenchido. A captura anexada foi usada apenas como
+  evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: o botao de volume da previa social fica menor, sem borda, com `bg-transparent` e apenas
+  o icone com sombra discreta para legibilidade sobre o video. O alvo continua acessivel por
+  `aria-label` e mantem a mesma posicao no canto inferior direito da previa.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
+## Ajuste de download automatico apos preparo em 2026-09-09
+
+- Evidencia: apos o deploy `0.1.295`, o usuario mostrou a modal no estado `Video pronto`, com instrucao para tocar novamente em `Baixar video`. A captura anexada foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: o frontend mantem o preparo sob demanda apenas no clique/toque inicial, mas, ao receber o `File` final do app `video/`, tenta entregar o arquivo imediatamente. Se Web Share estiver disponivel e permitido, usa a folha nativa; se a ativacao do usuario tiver expirado ou a chamada nativa falhar por restricao do navegador, cai para o download por objeto local sem exigir segundo clique.
+- O modo intermediario `prepared` e o toast `Toque novamente em Baixar video` foram removidos do caminho de download social. Falhas continuam usando diagnostico publico controlado; cancelamento nativo pelo usuario permanece silencioso.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validações
+
+- [x] `pnpm --dir video check`
+- [x] `pnpm --dir video build`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Smoke local HTTP do frontend (`/version` 200 em `0.1.277` e `/comunidades` 200)
+- [x] Commit e push em `homolog`
+- [x] Smoke de homologação após deploy da versão `0.1.277` (`/health`, `/ready`, `/ping` backend e `/version` frontend/admin)
+- [x] Validações pós-feedback `0.1.279`: testes focados backend/video, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir video check`, `pnpm --dir video build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version`
+- Smoke de homologação da correção `0.1.279` será registrado após `git push` em `homolog`.
+- [x] Validações pós-feedback `0.1.280`: teste focado frontend de compartilhamento, `pnpm --dir video test`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`
+- Commit/push e smoke de homologação da correção `0.1.280` serão registrados após `git push` em `homolog` e deploy.
+- [x] Validações do hotfix `0.1.281`: `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend
+  build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build`.
+- Commit/push e smoke de homologação da correção `0.1.281` serão registrados após `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix emergencial `0.1.282`: `pnpm --dir video test`, teste backend focado em render social/associacao de midia, `pnpm --dir video check`, `pnpm --dir backend check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build`.
+- Commit/push e smoke de homologacao da correcao `0.1.282` serao registrados apos `git push` em `homolog` e deploy.
+- [x] Validacoes do hotfix de midia legada `0.1.283`: teste backend focado em render social/midia
+  legada, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.283` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de diagnostico publico `0.1.284`: teste focado frontend de
+  compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.284` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de leitura de midia publica Lectum `0.1.285`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.285` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de probe MP4 remoto `0.1.286`: `pnpm --dir video test`, `pnpm --dir
+  video check`, `pnpm --dir video build`, reproducao operacional local com ffprobe/FFmpeg
+  temporarios, `pnpm version:bump`, `pnpm check:version` e `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.286` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de download local para MP4 remoto `0.1.287`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.287` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de egresso do worker Docker `0.1.288`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.288` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de compatibilidade FFmpeg `0.1.289`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.289` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de diagnostico FFmpeg `0.1.290`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.290` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de filtergraph portatil `0.1.291`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.291` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do ajuste de UX/download e arte Reels `0.1.292`: teste focado frontend de compartilhamento, `pnpm --dir video test`, teste backend focado em render social, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, smoke local HTTP do frontend (`/version` 200 e rota publica do post 200), `pnpm check`, `pnpm version:bump` e `pnpm check:version`.
+- [x] Commit/push e smoke de homologacao da correcao `0.1.292`: frontend `/version`, backend `/ping`, backend `/health`, backend `/ready`, admin `/version` e rota publica do post retornaram sucesso em homologacao.
+- [x] Validacoes do ajuste de previa instantanea `0.1.293`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.293` e rota publica do post 200), `pnpm check:encoding`, `pnpm check:tasks`, `pnpm check:adrs`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`.
+- [x] Validacoes do ajuste de preparo sob demanda e audio overlay `0.1.294`: teste focado frontend
+  de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
+  frontend (`/version` 200 em `0.1.294` e rota publica do post 200), `pnpm version:bump`,
+  `pnpm check:version`, `pnpm check` e `git diff --check`.
+- [x] Validacoes do ajuste visual do volume transparente `0.1.295`: teste focado frontend de
+  compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
+  frontend (`/version` 200 em `0.1.295` e rota publica do post 200), `pnpm version:bump`,
+  `pnpm check:version`, `pnpm check` e `git diff --check`.
+
+- [x] Validacoes do ajuste de download automatico apos preparo `0.1.296`: teste focado frontend
+  de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
+  frontend (`/version` 200 em `0.1.296` e rota publica do post 200), `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check`.
+
+## Ajuste de fidelidade tipografica e assets da arte social em 2026-09-09
+
+- Evidencia: o usuario comparou a referencia visual com o modelo atual e apontou diferencas na logo
+  Lectum, centralizacao/tipografia do label, fonte/cor/margens/espacamento da pergunta e
+  identificacao do psicologo com selo. A imagem anexada foi usada apenas como referencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao frontend: a previa instantanea troca a aproximacao inline da logo por asset PNG branco
+  recortado do logo oficial, usa Manrope explicitamente no overlay, reduz a densidade tipografica da
+  pergunta, usa tokens semanticos equivalentes na UI (`bg-primary`, `bg-media-foreground`,
+  `text-media-background`), 28 caracteres por linha, margens horizontais maiores e usa
+  `VerifiedBadgeIcon` real no nome do psicologo.
+- Correcao video: o render FFmpeg passa a instalar `fonts-manrope` no container, usar Manrope
+  Bold/Medium em `drawtext`, sobrepor os PNGs reais da logo e do selo verificado e aplicar os mesmos
+  tamanhos/coordenadas relativos da previa: label 38px, pergunta 50px/44px, nome 34px, profissao
+  21px e selo 26x24px.
+- Arquitetura: resolucao de fontes/assets foi isolada em `video/src/infra/ffmpeg/social-share-assets.ts`
+  para manter o render principal abaixo do limite de tamanho de fonte.
+- O fallback operacional permanece seguro: se os assets/fonte falharem antes de progresso do render,
+  o worker tenta variantes portateis e fallback sem assets, sem expor erro tecnico ao usuario.
+- Sem schema/migration, env obrigatoria nova, dependencia npm nova, mock, seed, reset, persistencia
+  de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes do ajuste de fidelidade tipografica e assets
+
+- [x] Medicao local do print de referencia: cartao x=60..528, y=252..445; cabecalho y=252..298;
+  texto/logo do cabecalho x=175..415; credenciais/selo x=223..366 no JPEG 590x1280.
+- [x] Teste focado frontend de compartilhamento social em `0.1.298` antes do bump.
+- [x] Teste focado video de render social FFmpeg em `0.1.298` antes do bump.
+- [x] `pnpm --dir video check` em `0.1.298` antes do bump.
+- [x] `pnpm --dir video build` em `0.1.298` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.298` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.298` antes do bump.
+- [x] `pnpm check:source-size` apos extrair o helper de assets/fontes.
+- [x] `pnpm check` em `0.1.298` antes do bump.
+- [x] `git diff --check`.
+- [x] `pnpm version:bump` para `0.1.299`.
+- [x] `pnpm check:version` em `0.1.299`.
+
+## Ajuste de alinhamento vertical da logo no cabecalho social em 2026-09-09
+
+- Evidencia: o MP4 homologado `0.1.299` mostrou a logo branca da Lectum desalinhada verticalmente em relacao ao texto `Respondido na Lectum`. A captura do usuario foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a previa desloca o asset da logo `0.35cqw` para cima e o render FFmpeg aplica `logoOffsetY=-4`, mantendo o texto do label inalterado e alinhando a altura visual do simbolo com a linha do texto.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes do ajuste de alinhamento vertical da logo
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.299` antes do bump.
+- [x] `pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts` em `0.1.299` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.299` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.299` antes do bump.
+- [x] `pnpm --dir video check` em `0.1.299` antes do bump.
+- [x] `pnpm --dir video build` em `0.1.299` antes do bump.
+- [x] `pnpm check` em `0.1.299` antes do bump.
+- [x] `git diff --check` em `0.1.299` antes do bump.
+- [x] `pnpm version:bump` para `0.1.300`.
+- [x] `pnpm check:version` em `0.1.300`.
+
+## Ajuste de altura das credenciais na previa social em 2026-09-09
+
+- Evidencia: o usuario comparou o MP4 baixado com a modal e apontou que nome, profissao e selo do psicologo estavam em altura diferente na previa. As capturas foram usadas apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao estava exposto como ferramenta neste ambiente, entao a correcao usou o inventario local e as capturas da conversa.
+- Correcao: a previa deixa de usar o arredondamento `top-[73%]` para as credenciais e passa a espelhar a coordenada do MP4 (`nameY=1400` em 1080x1920) com `top-[72.9167%]`. A distancia visual da profissao passa a `0.55cqw`, equivalente aos 40px entre `nameY=1400` e `roleY=1440`, e o selo volta para a escala do render (`26x24px`, representado por `2.41cqw x 2.22cqw`).
+- A mudanca e somente frontend/documentacao: sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes do ajuste de altura das credenciais na previa social
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.300` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.300` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.300` antes do bump.
+- [x] `pnpm check` em `0.1.300` antes do bump.
+- [x] `git diff --check` em `0.1.300` antes do bump.
+- [x] `pnpm version:bump` para `0.1.301`.
+- [x] `pnpm check:version` em `0.1.301`.
+
+## Compensacao optica das credenciais na previa social em 2026-09-09
+
+- Evidencia: novo print mostrou que, na modal, o nome do psicologo ainda aparece mais acima do que a posicao percebida no MP4 baixado. A imagem anexada foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: somente a previa frontend desloca o grupo de credenciais para baixo, de `top-[72.9167%]` para `top-[75%]`, mantendo MP4/render FFmpeg, nome, profissao, selo, tipografia, espacos internos e fluxo de download automatico intactos.
+- A mudanca e somente frontend/documentacao: sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes da compensacao optica das credenciais na previa social
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.301` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.301` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.301` antes do bump.
+- [x] `pnpm check` em `0.1.301` antes do bump.
+- [x] `git diff --check` em `0.1.301` antes do bump.
+- [x] `pnpm version:bump` para `0.1.302`.
+- [x] `pnpm check:version` em `0.1.302`.
+
+## Correcao de leitura da referencia das credenciais em 2026-09-09
+
+- Evidencia: o usuario corrigiu a leitura da captura e informou que a identificacao superior era a do MP4 real, enquanto a inferior era a da previa. A imagem anexada foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a compensacao para baixo aplicada na previa foi removida. A previa volta a espelhar a coordenada do render MP4 (`nameY=1400` em 1080x1920), usando `top-[72.9167%]`, para subir o nome, profissao e selo ao mesmo ponto visual do artefato real.
+- A mudanca e somente frontend/documentacao: sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes da correcao de leitura da referencia das credenciais
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.302` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.302` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.302` antes do bump.
+- [x] `pnpm check` em `0.1.302` antes do bump.
+- [x] `git diff --check` em `0.1.302` antes do bump.
+- [x] `pnpm version:bump` para `0.1.303`.
+- [x] `pnpm check:version` em `0.1.303`.
+
+
+## Calibracao visual final da previa contra o MP4 real em 2026-09-09
+
+- Evidencia: o usuario confirmou que, na comparacao sobreposta, a identificacao superior e a arte gravada no MP4 real e a inferior e a previa CSS. A captura foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a previa deixa de tentar paridade puramente numerica e passa a usar calibracao optica contra a arte baixada: credenciais em `top-[69.35%]`, nome em `2.95cqw` com Manrope Bold, profissao em `1.8cqw`, gap `0.62cqw`, margem `0.55cqw` e selo `2.22cqw x 2.05cqw`. A intencao e fazer o texto inferior da previa cair sobre o texto superior gravado no MP4 durante a validacao por sobreposicao.
+- O cabecalho e o texto da pergunta da previa tambem deixam de usar `font-extrabold` e passam a `font-bold`, aproximando a renderizacao CSS da fonte Bold usada pelo FFmpeg no arquivo final.
+- A mudanca e somente frontend/documentacao: sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes da calibracao visual final da previa
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.303` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.303` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.303` antes do bump.
+- [x] `pnpm check` em `0.1.303` antes do bump.
+- [x] `git diff --check` em `0.1.303` antes do bump.
+- [x] `pnpm version:bump` para `0.1.304`.
+- [x] `pnpm check:version` em `0.1.304`.
+
+## Ajuste de margens laterais da pergunta social em 2026-09-09
+
+- Evidencia: o usuario comparou a referencia com o modelo atual e apontou que a caixinha de pergunta ainda tinha margens laterais internas maiores, fazendo a pergunta truncar com reticencias. As capturas foram usadas somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a previa CSS e o render FFmpeg passam a quebrar a pergunta em ate 3 linhas de 31 caracteres, permitindo o trecho `ansiedade bate forte? E trouxer` na mesma linha, como na referencia. Na previa, o padding lateral do corpo branco foi reduzido de `7.1cqw` para `5.1cqw` para dar mais largura util sem alterar o card, cabecalho, credenciais, selo, fluxo de preparo sob demanda ou download automatico.
+- A mudanca e visual em frontend+video, sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes do ajuste de margens laterais da pergunta social
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.304` antes do bump.
+- [x] `pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts` em `0.1.304` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.304` antes do bump.
+- [x] `pnpm --dir video check` em `0.1.304` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.304` antes do bump.
+- [x] `pnpm --dir video build` em `0.1.304` antes do bump.
+- [x] `pnpm check` em `0.1.304` antes do bump.
+- [x] `git diff --check` em `0.1.304` antes do bump.
+- [x] `pnpm version:bump` para `0.1.305`.
+- [x] `pnpm check:version` em `0.1.305`.
+- [x] Smoke local HTTP do frontend em `0.1.305`: `/version` 200 e rota publica do post 200.
+
+## Ajuste pos-feedback em 2026-09-15 - preservar enquadramento e faixas pretas
+
+- Evidencia: o usuario comparou captura do video original com a captura do MP4 social baixado e apontou perda de qualidade/percepcao de zoom. As imagens anexadas foram usadas somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Decisao: manter o canvas final 9:16 e a arte Lectum exatamente nas proporcoes/posicoes ja calibradas para Instagram, mas trocar o encaixe do video de `scale+crop` para `scale+pad` no render padrao do app `video/`.
+- O arquivo social continua sendo MP4 1080x1920 H.264/AAC com overlay Lectum, porem o video de origem passa a caber inteiro no canvas, sem corte automatico. Quando a origem nao preenche 9:16, as sobras ficam pretas; se a origem ja trouxer faixas pretas, elas sao preservadas.
+- A previa da modal `Publique nas redes sociais` passa a usar `fit="contain"`, mantendo paridade visual com o artefato baixado: canvas/arte fixos e video completo centralizado.
+- O scale padrao usa `flags=lanczos` para reduzir artefatos de redimensionamento; a variante portatil continua sem flags extras para fallback de compatibilidade.
+- Nao ha alteracao no upload: navegador/backend seguem enviando o arquivo original ao Cloudflare Stream sem compressao/redimensionamento client-side. O processamento/adaptacao do Stream e o render social continuam etapas separadas.
+- Sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados.
+- Rollback simples reverte o commit e volta ao comportamento de crop; jobs/arquivos sociais continuam efemeros.
+
+### Criterios de aceite do ajuste
+
+- [x] Render social mantem canvas 9:16 e arte Lectum nas mesmas coordenadas.
+- [x] Video de origem e encaixado inteiro por `scale+pad`, sem `crop` no grafo padrao.
+- [x] Faixas pretas sao preservadas/criadas quando a proporcao da origem nao preencher o canvas.
+- [x] Previa da modal usa `contain` para representar o mesmo enquadramento do MP4 baixado.
+- [x] Testes cobrem ausencia de `crop`, presenca de `pad` e troca da previa de `cover` para `contain`.
+- [x] Nenhum banco/schema/migration, package novo ou env obrigatoria foi criado; `db:migrate` nao se aplica.
+
+### Validacoes locais do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, TASK-176, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0492 consultados conforme aplicavel.
+- [x] Testes focados: `pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts src/infra/ffmpeg/social-share-output.test.ts`.
+- [x] Teste focado frontend: `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir video check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir video build` em `0.1.387`.
+- [x] `pnpm --dir frontend build` em `0.1.387`.
+- [x] `pnpm version:bump` para `0.1.387` e `pnpm check:version`.
+- [x] `pnpm check` completo em `0.1.387`.
+- [x] Smoke local HTTP do frontend buildado em `http://127.0.0.1:3378`: `/version` respondeu `0.1.387` e `/comunidades` respondeu 200.
+- [x] Validacao visual autenticada da modal social fica para homologacao apos deploy, porque o ambiente local nao possui sessao real de psicologo dono do video e nao foram usados mocks.
+
+## Ajuste pos-feedback em 2026-09-15 - polimento da caixa de pergunta social
+
+- Evidencia: o usuario comparou duas capturas do Instagram e pediu remover a sombra atras da caixa de
+  pergunta, suavizar as bordas pixeladas e aumentar as margens laterais do texto. As imagens anexadas
+  foram usadas somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como
+  pedido.
+- Correcao: o caminho padrao do app `video/` passa a usar um PNG de fundo da caixa com cantos
+  anti-aliased de 32px, sem sombra projetada, mantendo x=110, y=250, largura 860px, cabecalho 88px e
+  corpo 266px. A variante portatil continua sem asset, mas usa drawboxes de 1px e o mesmo raio de
+  32px como fallback.
+- Correcao de texto: a pergunta passa a quebrar em ate 3 linhas de 30 caracteres e a previa CSS usa
+  `px-[6.6cqw]`, `rounded-[2.95cqw]` e sem `drop-shadow-lg` na caixa.
+- A mudanca e visual em frontend+video, sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados.
+- Rollback simples reverte o commit e volta ao fundo desenhado por drawbox com sombra anterior; jobs
+  sociais permanecem efemeros.
+
+### Criterios de aceite do polimento
+
+- [x] Caixa de pergunta do MP4 social nao tem sombra projetada atras.
+- [x] Bordas do render padrao usam asset PNG anti-aliased com raio maior, mantendo fallback portatil.
+- [x] Texto da pergunta tem mais margem lateral e quebra em 30 caracteres na previa e no render.
+- [x] Testes cobrem ausencia de sombra, asset de fundo, fallback portatil e previa sem `drop-shadow-lg`.
+- [x] Nenhum banco/schema/migration, package novo ou env obrigatoria foi criado; `db:migrate` nao se aplica.
+
+### Validacoes locais do polimento
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-176, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES,
+  PROTO-INVENTORY e ADR-0492 consultados conforme aplicavel.
+- [x] Testes focados: `pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts src/infra/ffmpeg/social-share-output.test.ts`.
+- [x] Teste focado frontend: `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir video check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir video build` em `0.1.388`.
+- [x] `pnpm --dir frontend build` em `0.1.388`.
+- [x] `pnpm version:bump` para `0.1.388` e `pnpm check:version`.
+- [x] `pnpm check` completo em `0.1.388`.
+- [x] Smoke local HTTP do frontend buildado em `http://127.0.0.1:3388`: `/version` respondeu `0.1.388` e `/comunidades` respondeu 200.
+- [x] Validacao visual autenticada da modal social fica para homologacao apos deploy, porque o ambiente
+  local nao possui sessao real de psicologo dono do video e nao foram usados mocks.

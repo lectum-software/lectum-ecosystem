@@ -33,15 +33,17 @@ export const action = async (data: IFollowActionDTO, actionType: FollowAction) =
 
   const repository = new FollowRepository();
   const psychologistId = data.p.id;
-  const isPublishedPsychologist = await repository.hasPublishedPsychologist(psychologistId);
+  if (actionType === "follow") {
+    const isPublishedPsychologist = await repository.hasPublishedPsychologist(psychologistId);
 
-  if (!isPublishedPsychologist) {
-    return {
-      status: 404,
-      ...error("not_found", {
-        model: "psychologist_profile",
-      }),
-    };
+    if (!isPublishedPsychologist) {
+      return {
+        status: 404,
+        ...error("not_found", {
+          model: "psychologist_profile",
+        }),
+      };
+    }
   }
 
   const res =

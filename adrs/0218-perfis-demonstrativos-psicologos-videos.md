@@ -1,4 +1,4 @@
-﻿# ADR-0218: Perfis demonstrativos de psicólogos com vídeos anexados
+# ADR-0218: Perfis demonstrativos de psicólogos com vídeos anexados
 
 ## Status
 

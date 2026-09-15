@@ -241,6 +241,8 @@ export type CommunityTopMentor = {
     rating_avg: number;
     rating_count: number;
     profile_url: string;
+    whatsapp_name?: string | null;
+    whatsapp_url?: string | null;
   };
   metrics: CommunityTopMentorMetrics;
   score_breakdown: CommunityTopMentorBreakdown;
@@ -285,6 +287,32 @@ export type CreateCommunityPostPayload = {
 export type CommunityPostMediaUploadResponse = {
   media_url: string;
   media_type: "image" | "video";
+};
+
+export type CommunityPostMediaMultipartInitiatePayload = {
+  fileName: string;
+  mimeType: string;
+  size: number;
+};
+
+export type CommunityPostMediaMultipartInitiateResponse = {
+  chunk_size: number;
+  max_file_size: number;
+  upload_session_id: string;
+};
+
+export type CommunityPostMediaMultipartPartResponse = {
+  part_id?: string;
+  part_number: number;
+  part_token?: string;
+};
+
+export type CommunityPostMediaMultipartCompletePayload = {
+  parts: Array<{
+    partId: string;
+    partNumber: number;
+  }>;
+  uploadSessionId: string;
 };
 
 export type SuggestCommunityPayload = {

@@ -1,4 +1,4 @@
-﻿# ADR-0378 - Origem do trafego por WhatsApp no Admin de psicologos
+# ADR-0378 - Origem do trafego por WhatsApp no Admin de psicologos
 
 ## Status
 

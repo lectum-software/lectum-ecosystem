@@ -1,0 +1,152 @@
+"use client";
+
+import { type FocusEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { requestVideoFullscreen } from "@/lib/video-fullscreen";
+import { toggleVideoElementPlayback } from "@/lib/video-interactions";
+import {
+  type FullscreenVariant,
+  type PersistentControlsVisibility,
+  shouldHidePersistentVideoControls,
+} from "./vertical-video-player-support";
+
+type UseVerticalVideoPlayerImmersiveControlsInput = {
+  controlsVisibility?: PersistentControlsVisibility;
+  enabled: boolean;
+  fullscreenVariant: FullscreenVariant;
+  isPaused: boolean;
+  onContentClick?: () => void;
+  onFullscreenRequest?: () => void;
+  onSoundEnabledChange?: (soundEnabled: boolean) => void;
+  videoRef: RefObject<HTMLVideoElement | null>;
+};
+
+const REVEALED_CONTROLS_AUTO_HIDE_MS = 2200;
+
+export const useVerticalVideoPlayerImmersiveControls = ({
+  controlsVisibility = "auto",
+  enabled,
+  fullscreenVariant,
+  isPaused,
+  onContentClick,
+  onFullscreenRequest,
+  onSoundEnabledChange,
+  videoRef,
+}: UseVerticalVideoPlayerImmersiveControlsInput) => {
+  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [controlsRevealed, setControlsRevealed] = useState(false);
+  const [controlsFocused, setControlsFocused] = useState(false);
+
+  const handleFocusCapture = useCallback((event: FocusEvent<HTMLDivElement>) => {
+    // Preserva a navegação por teclado sem retirar o modo imersivo de cliques/toques.
+    setControlsFocused(event.target.matches(":focus-visible"));
+  }, []);
+
+  const handleBlurCapture = useCallback((event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setControlsFocused(false);
+  }, []);
+
+  const clearAutoHideTimer = useCallback(() => {
+    if (!autoHideTimerRef.current) return;
+
+    clearTimeout(autoHideTimerRef.current);
+    autoHideTimerRef.current = null;
+  }, []);
+
+  const isVideoPlaying = useCallback(() => {
+    const video = videoRef.current;
+    return Boolean(video && !video.paused && !video.ended);
+  }, [videoRef]);
+
+  const scheduleAutoHide = useCallback(() => {
+    clearAutoHideTimer();
+
+    if (controlsVisibility === "always") return;
+
+    autoHideTimerRef.current = setTimeout(() => {
+      if (isVideoPlaying()) setControlsRevealed(false);
+      autoHideTimerRef.current = null;
+    }, REVEALED_CONTROLS_AUTO_HIDE_MS);
+  }, [clearAutoHideTimer, controlsVisibility, isVideoPlaying]);
+
+  const revealControlsTemporarily = useCallback(() => {
+    setControlsRevealed(true);
+
+    if (isVideoPlaying()) scheduleAutoHide();
+  }, [isVideoPlaying, scheduleAutoHide]);
+
+  useEffect(() => () => clearAutoHideTimer(), [clearAutoHideTimer]);
+
+  const handleContentClick = useCallback(() => {
+    if (enabled && isVideoPlaying()) {
+      revealControlsTemporarily();
+      onContentClick?.();
+      return;
+    }
+
+    if (onContentClick) {
+      onContentClick();
+      return;
+    }
+
+    void toggleVideoElementPlayback(videoRef.current);
+  }, [enabled, isVideoPlaying, onContentClick, revealControlsTemporarily, videoRef]);
+
+  const handlePlayPause = useCallback(() => {
+    if (enabled) {
+      clearAutoHideTimer();
+      setControlsRevealed(false);
+    }
+
+    void toggleVideoElementPlayback(videoRef.current);
+  }, [clearAutoHideTimer, enabled, videoRef]);
+
+  const handleMuteToggle = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const shouldEnableSound = video.muted || video.volume <= 0;
+    const nextMuted = !shouldEnableSound;
+    video.muted = nextMuted;
+
+    if (!nextMuted && video.volume <= 0) video.volume = 1;
+    onSoundEnabledChange?.(shouldEnableSound);
+  }, [onSoundEnabledChange, videoRef]);
+
+  const handleFullscreen = useCallback(() => {
+    if (onFullscreenRequest) {
+      onFullscreenRequest();
+      return;
+    }
+
+    void requestVideoFullscreen(videoRef.current, {
+      forceContain: fullscreenVariant === "content",
+      temporaryControls: true,
+    });
+  }, [fullscreenVariant, onFullscreenRequest, videoRef]);
+
+  const handleControlsInteraction = useCallback(() => {
+    if (enabled && controlsVisibility === "auto" && isVideoPlaying()) scheduleAutoHide();
+  }, [controlsVisibility, enabled, isVideoPlaying, scheduleAutoHide]);
+
+  const controlsHidden = shouldHidePersistentVideoControls({
+    controlsFocused,
+    controlsRevealed,
+    enabled,
+    isPaused,
+    visibility: controlsVisibility,
+  });
+
+  return {
+    controlsFocusProps: {
+      onBlurCapture: handleBlurCapture,
+      onFocusCapture: handleFocusCapture,
+    },
+    controlsHidden,
+    controlsVisible: !controlsHidden,
+    handleContentClick,
+    handleControlsInteraction,
+    handleFullscreen,
+    handleMuteToggle,
+    handlePlayPause,
+  };
+};

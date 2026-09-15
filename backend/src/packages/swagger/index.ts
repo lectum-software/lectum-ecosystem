@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: o pacote portado interpreta rotas e metadados AST dinâmicos preservando o contrato legado.
 
 import { promises as fs } from "node:fs";
 //Libs
@@ -6,6 +7,7 @@ import path from "node:path";
 import { apiReference } from "@scalar/express-api-reference";
 import express, { Router } from "express";
 import swaggerUi from "swagger-ui-express";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 //Types
 import type { EndPoints, ScalarOptions } from "./types";
 import { analyzeRoutesWithAST } from "./utils/analyze";
@@ -37,7 +39,10 @@ const swagger = async (
 
     return true;
   } catch (error) {
-    console.error("\x1b[31m[SWAGGER]: Erro durante o processo\x1b[0m", error);
+    console.error(
+      "\x1b[31m[SWAGGER]: Erro durante o processo\x1b[0m",
+      toSafeErrorLog(error, "SwaggerGenerationError"),
+    );
     return false;
   }
 };
@@ -159,7 +164,7 @@ export const swaggerRoutes = async (
         documents.use(route.options.url, apiReference(scalarConfig));
 
         console.log(
-          `\x1b[32m[SWAGGER]: Documentação Scalar de "${route.options.title}" gerada! Acesse: ${process.env.BASE}${route.options.url}\x1b[0m`,
+          `\x1b[32m[SWAGGER]: Documentação Scalar de "${route.options.title}" gerada.\x1b[0m`,
         );
       } catch (error) {
         console.warn(
@@ -194,9 +199,7 @@ const setupSwaggerUI = (documents: Router, route: any, swaggerFile: any) => {
     res.sendFile(`${__dirname}/custom.js`);
   });
 
-  console.log(
-    `\x1b[32m[SWAGGER]: Documentação de "${route.options.title}" gerada! Acesse: ${process.env.BASE}${route.options.url}\x1b[0m`,
-  );
+  console.log(`\x1b[32m[SWAGGER]: Documentação de "${route.options.title}" gerada.\x1b[0m`);
 };
 
 const initializeSwagger = async (

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistWhatsappVerification } from "@/api/callers/psychologist-whatsapp-verification";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -18,26 +19,8 @@ import {
 } from "@/utils/psychologist-onboarding";
 import { toWhatsappPhoneE164, usePhoneForm, type WhatsappPhoneForm } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
-const resolveApiError = (error: unknown) => {
-  const apiError = error as ApiError;
-
-  return (
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "") ||
-    "Não foi possível salvar o WhatsApp agora."
-  );
-};
+const resolveApiError = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível salvar o WhatsApp agora.");
 
 const formatDisplayPhone = (phone?: string | null) => {
   const digits = (phone || "").replace(/\D/g, "");
@@ -206,10 +189,6 @@ export const WhatsappVerificationLogic = () => {
                 {...phoneForm.formProps}
                 onSubmit={submitPhone}
               >
-                <InlineAlert title="Privacidade do número" variant="info">
-                  O telefone não aparece no perfil público. Ele é usado apenas para montar o link de
-                  WhatsApp depois do registro da intenção de contato do paciente.
-                </InlineAlert>
                 <Button
                   className="h-14 w-full rounded-full text-base"
                   disabled={!isPsychologist || request.isPending}

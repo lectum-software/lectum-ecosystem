@@ -1,4 +1,4 @@
-# ADR-0054: Corrigir container de telefone para evitar overflow em viewport móvel no setup do perfil
+# ADR-0054: Corrigir container de telefone para evitar overflow em viewport mÃ³vel no setup do perfil
 
 ## Status
 
@@ -10,34 +10,34 @@ Ajuste pontual de responsividade solicitado para a tela `/app/professional/profi
 
 ## Contexto
 
-Na revisão de usabilidade em `375x667` (iPhone SE), a tela de configuração de perfil apresentava corte lateral à direita.
+Na revisÃ£o de usabilidade em `375x667` (iPhone SE), a tela de configuraÃ§Ã£o de perfil apresentava corte lateral Ã  direita.
 
-Ao inspecionar o código de estilos, a causa principal estava no componente de telefone (`PhoneController`):
+Ao inspecionar o cÃ³digo de estilos, a causa principal estava no componente de telefone (`PhoneController`):
 
-- o `select` do código do país tinha largura fixa (`w-32`);
-- o input de número usava `w-full` sem comportamento de flex adequado no mesmo container;
+- o `select` do cÃ³digo do paÃ­s tinha largura fixa (`w-32`);
+- o input de nÃºmero usava `w-full` sem comportamento de flex adequado no mesmo container;
 - isso faz o par entrar fora do limite do `flex` pai quando havia elementos adjacentes (ex.: link de teste do WhatsApp ao lado), gerando overflow horizontal.
 
-## Decisão
+## DecisÃ£o
 
-- Manter o seletor do código do país com largura fixa e evitar que ele encolha (`shrink-0`).
-- Forçar o container do campo de telefone a ocupar largura controlada (`w-full`, `min-w-0`).
-- Converter o campo principal do número para flexível dentro do par (`min-w-0 flex-1`), preservando `w-full` visual sem quebrar o fluxo de linha em dispositivos estreitos.
-- Não introduzir `overflow-x` como solução de arquitetura; o ajuste é estrutural no layout de fluxo.
+- Manter o seletor do cÃ³digo do paÃ­s com largura fixa e evitar que ele encolha (`shrink-0`).
+- ForÃ§ar o container do campo de telefone a ocupar largura controlada (`w-full`, `min-w-0`).
+- Converter o campo principal do nÃºmero para flexÃ­vel dentro do par (`min-w-0 flex-1`), preservando `w-full` visual sem quebrar o fluxo de linha em dispositivos estreitos.
+- NÃ£o introduzir `overflow-x` como soluÃ§Ã£o de arquitetura; o ajuste Ã© estrutural no layout de fluxo.
 
-## Consequências
+## ConsequÃªncias
 
-- A linha do campo WhatsApp passa a caber no espaço disponível sem exceder o viewport.
-- Elementos adjacentes à esquerda/direita deixam de ser empurrados para fora da área útil.
-- O comportamento visual do campo de telefone permanece idêntico em telas maiores, com melhor estabilidade em mobile.
+- A linha do campo WhatsApp passa a caber no espaÃ§o disponÃ­vel sem exceder o viewport.
+- Elementos adjacentes Ã  esquerda/direita deixam de ser empurrados para fora da Ã¡rea Ãºtil.
+- O comportamento visual do campo de telefone permanece idÃªntico em telas maiores, com melhor estabilidade em mobile.
 
-## Validação
+## ValidaÃ§Ã£o
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Validação manual sugerida em `/app/professional/profile/setup` em viewport `375x667` com conferência de ausência de scroll horizontal.
+- ValidaÃ§Ã£o manual sugerida em `/app/professional/profile/setup` em viewport `375x667` com conferÃªncia de ausÃªncia de scroll horizontal.
 
-## Pendências
+## PendÃªncias
 
-- Manter monitoria em outras telas que reutilizam `PhoneController` com componentes irmãos, para confirmar se o padrão de overflow foi neutralizado em todos os fluxos.
+- Manter monitoria em outras telas que reutilizam `PhoneController` com componentes irmÃ£os, para confirmar se o padrÃ£o de overflow foi neutralizado em todos os fluxos.

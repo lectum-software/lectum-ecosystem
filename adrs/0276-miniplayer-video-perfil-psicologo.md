@@ -1,4 +1,4 @@
-﻿# ADR-0276: Miniplayer 9:16 compacto na edição do perfil profissional
+# ADR-0276: Miniplayer 9:16 compacto na edição do perfil profissional
 
 ## Status
 

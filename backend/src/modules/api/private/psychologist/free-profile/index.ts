@@ -1,6 +1,10 @@
 import { Router } from "express";
 import multer from "@/config/multer";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import {
+  abortProfileVideoMultipartUpload,
+  completeProfileVideoMultipartUpload,
+  initiateProfileVideoMultipartUpload,
   removeAvatar,
   removeCoverImage,
   removeVideo,
@@ -8,9 +12,15 @@ import {
   update,
   uploadAvatar,
   uploadCoverImage,
+  uploadProfileVideoMultipartPart,
   uploadVideo,
   uploadVideoCover,
 } from "./use-cases/controller";
+import {
+  videoMultipartAbortValidator,
+  videoMultipartCompleteValidator,
+  videoMultipartInitiateValidator,
+} from "./validator";
 
 const routes = Router();
 
@@ -21,7 +31,7 @@ routes.post(
   multer({
     single: "avatar",
     allowed: ["image/jpeg", "image/png", "image/webp"],
-    size: 5,
+    size: UPLOAD_LIMITS.psychologist.avatarMb,
   }),
   uploadAvatar,
 );
@@ -31,26 +41,30 @@ routes.post(
   multer({
     single: "cover-image",
     allowed: ["image/jpeg", "image/png", "image/webp"],
-    size: 5,
+    size: UPLOAD_LIMITS.psychologist.coverImageMb,
   }),
   uploadCoverImage,
 );
 routes.delete("/cover-image", removeCoverImage);
 routes.post(
-  "/video",
-  multer({
-    single: "video",
-    allowed: ["video/mp4", "video/webm", "video/quicktime"],
-    size: 50,
-  }),
-  uploadVideo,
+  "/video/multipart/initiate",
+  videoMultipartInitiateValidator,
+  initiateProfileVideoMultipartUpload,
 );
+routes.post("/video/multipart/part", uploadProfileVideoMultipartPart);
+routes.post(
+  "/video/multipart/complete",
+  videoMultipartCompleteValidator,
+  completeProfileVideoMultipartUpload,
+);
+routes.delete("/video/multipart", videoMultipartAbortValidator, abortProfileVideoMultipartUpload);
+routes.post("/video", uploadVideo);
 routes.post(
   "/video/cover",
   multer({
     single: "video-cover",
     allowed: ["image/jpeg", "image/png", "image/webp"],
-    size: 5,
+    size: UPLOAD_LIMITS.psychologist.videoCoverMb,
   }),
   uploadVideoCover,
 );

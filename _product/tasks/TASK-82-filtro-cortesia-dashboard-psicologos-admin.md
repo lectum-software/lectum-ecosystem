@@ -1,4 +1,4 @@
-﻿# TASK-82: Filtro Cortesia no dashboard Admin de psicologos
+# TASK-82: Filtro Cortesia no dashboard Admin de psicologos
 
 ## Metadata
 

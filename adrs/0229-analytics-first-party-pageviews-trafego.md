@@ -64,8 +64,8 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - Calcular e expor agregacoes administrativas fica para a TASK-50.
 - Definir politica de retencao/anonimizacao de longo prazo se o volume de analytics crescer ou se houver demanda legal especifica.
 
-## Complemento 2026-07-14 - Pausa e retomada da duraÁ„o por visibilidade
+## Complemento 2026-07-14 - Pausa e retomada da dura√ß√£o por visibilidade
 
-A duraÁ„o de `page_view_event` passa a representar soma de segmentos visÌveis do pageview atual. O frontend pausa a contagem em `visibilitychange=hidden`/`pagehide`, envia o acumulado por keepalive e retoma em `visibilitychange=visible` quando a mesma p·gina volta do background. Isso evita contar tempo em que o usu·rio apenas minimizou o navegador no mobile, preservando a mediÁ„o para todos os usu·rios e visitantes sem criar evento novo ou backfill.
+A dura√ß√£o de `page_view_event` passa a representar soma de segmentos vis√≠veis do pageview atual. O frontend pausa a contagem em `visibilitychange=hidden`/`pagehide`, envia o acumulado por keepalive e retoma em `visibilitychange=visible` quando a mesma p√°gina volta do background. Isso evita contar tempo em que o usu√°rio apenas minimizou o navegador no mobile, preservando a medi√ß√£o para todos os usu√°rios e visitantes sem criar evento novo ou backfill.
 
-A estratÈgia continua best-effort: se o browser n„o entregar eventos de visibilidade/keepalive, a mÈtrica permanece aproximada e consumidores administrativos devem manter estados de confiabilidade/indisponibilidade.
+A estrat√©gia continua best-effort: se o browser n√£o entregar eventos de visibilidade/keepalive, a m√©trica permanece aproximada e consumidores administrativos devem manter estados de confiabilidade/indisponibilidade.

@@ -5,12 +5,15 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAccount } from "@/api/callers/account";
+import { getApiErrorCode, getSafeApiErrorMessage } from "@/api/errors";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useSignOut } from "@/hooks/cookies/signout";
+import { clearLocalAuthSession } from "@/hooks/cookies/signout";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { fingerprint } from "@/utils/fingerprint";
+import { buildTrustedGoogleLoginUrlFromIntent } from "@/utils/trusted-navigation";
 import { useDeleteAccountForm } from "./use-delete-account-form";
 
 type ApiErrorData = {
@@ -30,23 +33,39 @@ type AccountDeleteSectionProps = {
 
 const resolveDeleteAccountError = (error: unknown) => {
   const apiError = error as ApiError;
-  const code = apiError?.data?.code;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const code = getApiErrorCode(error) ?? apiError?.data?.code;
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
+
+  if (code === "account_delete_confirmation_invalid") {
+    return "Digite EXCLUIR para confirmar a exclusão.";
+  }
 
   if (code === "account_delete_google_reauth_required") {
     return "Confirme sua identidade com o Google antes de excluir a conta.";
+  }
+
+  if (
+    code === "account_current_password_invalid" ||
+    code === "account_password_login_unavailable"
+  ) {
+    return "A senha atual não confere. Revise e tente novamente.";
   }
 
   if (code === "account_delete_identity_unavailable") {
     return "Não há método de autenticação disponível para confirmar a exclusão desta conta.";
   }
 
+  if (code === "device_not_found") {
+    return "Não foi possível confirmar este dispositivo. Atualize a página e tente novamente.";
+  }
+
+  if (code === "token_not_authorized") {
+    return "Sua sessão precisa estar ativa para excluir a conta.";
+  }
+
   if (normalized.includes("assinatura") || normalized.includes("pagamento")) {
-    return "Cancele ou regularize a assinatura paga antes de excluir a conta.";
+    return "Cancele a assinatura ativa antes de excluir sua conta.";
   }
 
   if (normalized.includes("senha atual") || normalized.includes("incorreta")) {
@@ -68,10 +87,30 @@ const resolveDeleteAccountError = (error: unknown) => {
   return rawMessage || "Não foi possível excluir sua conta agora.";
 };
 
+const normalizeAccountProvider = (provider?: string | null) =>
+  provider?.trim().toLowerCase() || null;
+
+const localPasswordProviders = new Set(["email", "local", "manual"]);
+
+const shouldRequirePasswordForDelete = ({
+  hasPassword,
+  provider,
+}: {
+  hasPassword: boolean;
+  provider?: string | null;
+}) => {
+  const normalizedProvider = normalizeAccountProvider(provider);
+
+  if (normalizedProvider === "google") return false;
+
+  return (
+    hasPassword || Boolean(normalizedProvider && localPasswordProviders.has(normalizedProvider))
+  );
+};
+
 export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { out } = useSignOut();
   const googleReauthParam = searchParams.get("deleteReauth");
   const hasGoogleReauthParam = googleReauthParam === "ok";
   const [isOpen, setIsOpen] = useState(hasGoogleReauthParam);
@@ -84,23 +123,52 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
       createDeleteGoogleIntent: {
         onError: (error) => setDeleteAccountError(resolveDeleteAccountError(error)),
         onSuccess: (data) => {
-          window.location.href = data.url;
+          const immediateUrl = buildTrustedGoogleLoginUrlFromIntent(data.url, data.device_id);
+          if (immediateUrl) {
+            window.location.assign(immediateUrl);
+            return;
+          }
+
+          void (async () => {
+            try {
+              const deviceId = await fingerprint();
+              const url = buildTrustedGoogleLoginUrlFromIntent(data.url, deviceId);
+              if (!url) {
+                setDeleteAccountError("Não foi possível iniciar a confirmação com o Google.");
+                return;
+              }
+
+              window.location.assign(url);
+            } catch {
+              setDeleteAccountError("Não foi possível iniciar a confirmação com o Google.");
+            }
+          })();
         },
       },
       deleteAccount: {
         onError: (error) => setDeleteAccountError(resolveDeleteAccountError(error)),
-        onSuccess: () => out("/auth/login"),
+        onSuccess: () => {
+          void clearLocalAuthSession().finally(() => {
+            window.location.replace("/auth/login");
+          });
+        },
       },
     },
   });
 
-  const hasPassword = account.security.data?.has_password ?? true;
+  const isSecurityLoading =
+    account.security.isLoading || account.security.isPending || account.security.isFetching;
+  const hasSecurityData = Boolean(account.security.data);
+  const hasPassword = account.security.data?.has_password === true;
   const provider = account.security.data?.provider;
-  const isGoogleOnlyAccount = provider === "google" && !hasPassword;
+  const isGoogleAccount = normalizeAccountProvider(provider) === "google";
+  const deleteRequiresGoogleReauth = isGoogleAccount;
+  const deleteRequiresPassword = shouldRequirePasswordForDelete({ hasPassword, provider });
   const canUseGoogleReauth = Boolean(
-    isGoogleOnlyAccount && account.security.data?.google.available,
+    deleteRequiresGoogleReauth && account.security.data?.google.available,
   );
-  const form = useDeleteAccountForm(hasPassword);
+  const canRenderDeleteForm = hasSecurityData && !isSecurityLoading && !account.security.isError;
+  const form = useDeleteAccountForm(deleteRequiresPassword);
 
   const googleCallbackUrl = useMemo(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -128,14 +196,14 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
   const onSubmit = form.hook.handleSubmit((values) => {
     setDeleteAccountError(null);
 
-    if (isGoogleOnlyAccount && !googleReauthReady) {
+    if (deleteRequiresGoogleReauth && !googleReauthReady) {
       setDeleteAccountError("Confirme sua identidade com o Google antes de excluir a conta.");
       return;
     }
 
     account.deleteAccount.mutate({
       confirmation: values.confirmation.trim(),
-      ...(hasPassword ? { current_password: values.current_password?.trim() || "" } : {}),
+      ...(deleteRequiresPassword ? { current_password: values.current_password || "" } : {}),
     });
   });
 
@@ -160,7 +228,7 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
     <div
       aria-labelledby="account-delete-title"
       aria-modal="true"
-      className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/35 p-3 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-media-background/35 p-3 backdrop-blur-sm sm:items-center sm:p-6"
       role="dialog"
     >
       <button
@@ -169,7 +237,7 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
         onClick={closeModal}
         type="button"
       />
-      <section className="relative z-10 grid max-h-[90vh] w-full max-w-lg gap-5 overflow-y-auto rounded-[28px] border border-danger/20 bg-white p-5 shadow-[0_28px_90px_rgba(15,23,42,0.28)] sm:p-6">
+      <section className="relative z-10 grid max-h-[90vh] w-full max-w-lg gap-5 overflow-y-auto rounded-[28px] border border-danger/20 bg-surface p-5 shadow-lectum-soft sm:p-6">
         <div className="flex items-start gap-3">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-danger/10 text-danger">
             <ShieldAlert className="h-5 w-5" aria-hidden="true" />
@@ -188,7 +256,7 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
           </div>
         </div>
 
-        {account.security.isLoading || account.security.isPending ? (
+        {isSecurityLoading ? (
           <div className="rounded-2xl border border-border bg-surface-muted p-4">
             <LoadingState label="Verificando segurança da conta" />
           </div>
@@ -200,24 +268,24 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
           </InlineAlert>
         ) : null}
 
-        {isGoogleOnlyAccount ? (
+        {deleteRequiresGoogleReauth ? (
           <InlineAlert
             title={googleReauthReady ? "Identidade confirmada" : "Confirmação com Google"}
             variant={googleReauthReady ? "success" : "warning"}
           >
             {googleReauthReady
               ? "Sua identidade foi confirmada com o Google nesta sessão."
-              : "Esta conta usa login Google. Confirme sua identidade antes de excluir definitivamente."}
+              : canUseGoogleReauth
+                ? "Esta conta usa login Google. Confirme sua identidade antes de excluir definitivamente."
+                : "A confirmação com Google está indisponível agora. Tente novamente mais tarde ou fale com o suporte."}
           </InlineAlert>
         ) : null}
 
-        {isGoogleOnlyAccount && !googleReauthReady ? (
+        {deleteRequiresGoogleReauth && !googleReauthReady ? (
           <Button
             className="w-full"
             disabled={
-              account.createDeleteGoogleIntent.isPending ||
-              account.security.isLoading ||
-              !canUseGoogleReauth
+              account.createDeleteGoogleIntent.isPending || isSecurityLoading || !canUseGoogleReauth
             }
             onClick={handleGoogleReauth}
             type="button"
@@ -230,57 +298,59 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
           </Button>
         ) : null}
 
-        <form className="grid gap-4" noValidate onSubmit={onSubmit}>
-          <div className="grid gap-1">
-            {form.formProps.fields.map((field) => {
-              if (field.hide) return null;
+        {canRenderDeleteForm ? (
+          <form className="grid gap-4" noValidate onSubmit={onSubmit}>
+            <div className="grid gap-1">
+              {form.formProps.fields.map((field) => {
+                if (field.hide) return null;
 
-              const Component = components[field.field];
-              if (!Component) return null;
+                const Component = components[field.field];
+                if (!Component) return null;
 
-              return (
-                <Component
-                  control={form.hook.control}
-                  key={`account-delete-${String(field.name)}`}
-                  {...field}
-                />
-              );
-            })}
-          </div>
+                return (
+                  <Component
+                    control={form.hook.control}
+                    key={`account-delete-${String(field.name)}`}
+                    {...field}
+                  />
+                );
+              })}
+            </div>
 
-          {deleteAccountError ? (
-            <InlineAlert title="Exclusão bloqueada" variant="error">
-              {deleteAccountError}
-            </InlineAlert>
-          ) : null}
+            {deleteAccountError ? (
+              <InlineAlert title="Exclusão bloqueada" variant="error">
+                {deleteAccountError}
+              </InlineAlert>
+            ) : null}
 
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Button
-              disabled={account.deleteAccount.isPending}
-              onClick={closeModal}
-              type="button"
-              variant="outline"
-            >
-              Cancelar
-            </Button>
-            <Button
-              className="bg-danger text-white hover:bg-danger/90"
-              disabled={
-                account.deleteAccount.isPending ||
-                account.security.isLoading ||
-                (isGoogleOnlyAccount && !googleReauthReady)
-              }
-              type="submit"
-            >
-              {account.deleteAccount.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              )}
-              Excluir conta
-            </Button>
-          </div>
-        </form>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                disabled={account.deleteAccount.isPending}
+                onClick={closeModal}
+                type="button"
+                variant="outline"
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="bg-danger text-primary-foreground hover:bg-danger/90"
+                disabled={
+                  account.deleteAccount.isPending ||
+                  isSecurityLoading ||
+                  (deleteRequiresGoogleReauth && !googleReauthReady)
+                }
+                type="submit"
+              >
+                {account.deleteAccount.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                )}
+                Excluir conta
+              </Button>
+            </div>
+          </form>
+        ) : null}
       </section>
     </div>
   ) : null;

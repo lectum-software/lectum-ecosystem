@@ -69,3 +69,20 @@ Implementar o perfil privado do paciente com:
 - O dropdown preserva as mesmas opções e o mesmo valor persistido em `patient_profile.gender`; apenas a camada visual do controle foi padronizada.
 - Não houve mudança de contrato, backend, Prisma, persistência, endpoints ou packages.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 em `/app/profile/edit`, confirmando consistência visual do seletor fechado com o input de nome.
+
+## Complemento 2026-08-16 - copy de localização do paciente
+
+- A descrição do campo `Estado` em `/app/profile/edit` deixa de comunicar opcionalidade como primeira informação e passa a orientar diretamente o benefício de proximidade regional: `Informe para aproximarmos psicólogos da sua região.`.
+- A decisão preserva o campo como opcional no schema e no contrato: estado e cidade continuam podendo ficar ambos em branco, e a validação existente permanece exigindo ambos quando um deles for informado.
+- O ajuste foi limitado à copy do formulário existente, sem mudança de backend, Prisma, persistência, endpoints, envs ou packages.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm check:version`, `git diff --check` e smoke local/homologação das rotas públicas de versão.
+
+## Complemento 2026-08-31 - exclusao de conta fora da edicao pessoal
+
+A separacao entre perfil pessoal e configuracoes sensiveis foi reforcada: `/app/perfil/editar` (alias `/app/profile/edit`) nao renderiza mais `AccountDeleteSection`. A exclusao self-service fica centralizada em `/app/configuracoes/conta`, junto de e-mail, senha e Google, preservando a fundacao segura da TASK-30 e sem alterar contratos de paciente.
+
+Consequencias:
+
+- A tela de edicao do paciente volta a tratar apenas dados pessoais permitidos.
+- Pacientes e psicologos usam o mesmo ponto de entrada para exclusao de conta, reduzindo duplicidade de UI e risco de divergencia de fluxo.
+- Sem mudanca de backend, banco, envs, providers, packages ou dados persistidos.

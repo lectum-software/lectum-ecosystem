@@ -5,6 +5,16 @@
 pre-commit:
   parallel: true
   commands:
+    release-version:
+      run: pnpm version:check-commit
+    secrets:
+      run: pnpm check:secrets
+    env-examples:
+      run: pnpm check:env
+    adrs:
+      run: pnpm check:adrs
+    tasks:
+      run: pnpm check:tasks
     frontend-biome:
       root: frontend/
       glob:
@@ -41,6 +51,36 @@ pre-commit:
           pnpm typecheck
         fi
 
+    admin-biome:
+      root: admin/
+      glob:
+        - "*.{js,jsx,ts,tsx,json,jsonc,css}"
+        - "**/*.{js,jsx,ts,tsx,json,jsonc,css}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    admin-typecheck:
+      root: admin/
+      glob:
+        - "*.{ts,tsx}"
+        - "**/*.{ts,tsx}"
+      run: pnpm typecheck
+
+    video-biome:
+      root: video/
+      glob:
+        - "*.{js,ts,json,jsonc}"
+        - "**/*.{js,ts,json,jsonc}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    video-typecheck:
+      root: video/
+      glob:
+        - "*.ts"
+        - "**/*.ts"
+      run: pnpm typecheck
+
 commit-msg:
   commands:
     commitlint:
@@ -49,6 +89,13 @@ commit-msg:
 pre-push:
   parallel: false
   commands:
+    deploy-branch:
+      run: pnpm check:deploy-branch
+      use_stdin: true
+
+    repository-guards:
+      run: pnpm check:secrets && pnpm check:encoding && pnpm check:adrs && pnpm check:tasks && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles
+
     frontend-check:
       glob:
         - "frontend/**/*.{js,jsx,ts,tsx,json,jsonc,css}"
@@ -70,3 +117,25 @@ pre-push:
         - "backend/eslint.config.*"
         - "backend/.eslintrc*"
       run: pnpm check:backend
+
+    admin-check:
+      glob:
+        - "admin/**/*.{js,jsx,ts,tsx,json,jsonc,css}"
+        - "admin/package.json"
+        - "admin/pnpm-lock.yaml"
+        - "admin/tsconfig.json"
+        - "admin/next.config.*"
+        - "admin/eslint.config.*"
+        - "admin/postcss.config.*"
+      run: pnpm check:admin
+
+    video-check:
+      glob:
+        - "video/**/*.{js,ts,json,jsonc}"
+        - "video/package.json"
+        - "video/pnpm-lock.yaml"
+        - "video/tsconfig.json"
+        - "video/biome.json"
+        - "video/Dockerfile"
+        - "video/docker-compose.yml"
+      run: pnpm check:video

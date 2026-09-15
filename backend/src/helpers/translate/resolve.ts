@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import i18next from "@/main/server/i18n";
 
 const translate = (key: string, data: Record<string, unknown> = {}) => {

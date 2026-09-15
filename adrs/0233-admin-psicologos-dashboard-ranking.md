@@ -101,5 +101,5 @@ Atualização 2026-07-12 (denominador clássico do churn):
 - Atualização 2026-07-12 (valor social ao lado do desconto): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
 
 
-- Atualiza��o 2026-07-12 (churn com contagem absoluta): `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200; `pnpm check` falhou por erros TypeScript preexistentes/concomitantes fora do escopo em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.
+- Atualização 2026-07-12 (churn com contagem absoluta): `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200; `pnpm check` falhou por erros TypeScript preexistentes/concomitantes fora do escopo em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.
 - Atualização 2026-07-12 (denominador clássico do churn): `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke HTTP local em `/psicologos` retornando 200.

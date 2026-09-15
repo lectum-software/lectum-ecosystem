@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 import type { admin } from "@/interfaces/objects";
 

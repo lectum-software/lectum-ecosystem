@@ -68,21 +68,48 @@ Em 2026-06-08, a regra de produto foi ajustada: usu√°rios n√£o seguem psic√≥logo
 
 - Implementar fluxo real de WhatsApp/contact request na TASK-16; o CTA visual do card mant√©m navega√ß√£o para o perfil p√∫blico at√© esse fluxo existir.
 
-## AtualizaÁ„o 2026-07-05 - bloqueio de auto-favorito
+## Atualiza√ß√£o 2026-07-05 - bloqueio de auto-favorito
 
 ### Contexto
 
-PsicÛlogos autenticados podiam visualizar o prÛprio perfil p˙blico e o prÛprio vÌdeo de apresentaÁ„o na descoberta. Nesses contextos, o bot„o de coraÁ„o ainda aparecia como acion·vel, criando uma aÁ„o inv·lida: favoritar a si mesmo.
+Psic√≥logos autenticados podiam visualizar o pr√≥prio perfil p√∫blico e o pr√≥prio v√≠deo de apresenta√ß√£o na descoberta. Nesses contextos, o bot√£o de cora√ß√£o ainda aparecia como acion√°vel, criando uma a√ß√£o inv√°lida: favoritar a si mesmo.
 
-### Decis„o
+### Decis√£o
 
-- O backend passa a rejeitar `POST /api/private/user/favorites/:id` e a rota legada equivalente quando `req.auth.id` È igual ao `:id` do psicÛlogo alvo.
-- O `DELETE` permanece idempotente para permitir limpeza operacional de relaÁıes antigas, mas novas relaÁıes de auto-favorito n„o s„o criadas.
-- As leituras do diretÛrio/perfil e a listagem de favoritos n„o consideram relaÁıes em que `user_id` e `psychologist_id` apontam para o mesmo usu·rio.
-- O frontend desabilita o coraÁ„o no prÛprio perfil p˙blico e no prÛprio vÌdeo/card ativo de `/psychologists`, com estado visual inativo e texto acessÌvel informando que n„o È possÌvel favoritar o prÛprio perfil.
+- O backend passa a rejeitar `POST /api/private/user/favorites/:id` e a rota legada equivalente quando `req.auth.id` √© igual ao `:id` do psic√≥logo alvo.
+- O `DELETE` permanece idempotente para permitir limpeza operacional de rela√ß√µes antigas, mas novas rela√ß√µes de auto-favorito n√£o s√£o criadas.
+- As leituras do diret√≥rio/perfil e a listagem de favoritos n√£o consideram rela√ß√µes em que `user_id` e `psychologist_id` apontam para o mesmo usu√°rio.
+- O frontend desabilita o cora√ß√£o no pr√≥prio perfil p√∫blico e no pr√≥prio v√≠deo/card ativo de `/psychologists`, com estado visual inativo e texto acess√≠vel informando que n√£o √© poss√≠vel favoritar o pr√≥prio perfil.
 
-### ConsequÍncias
+### Consequ√™ncias
 
-- A UI deixa de oferecer uma aÁ„o impossÌvel ao psicÛlogo no prÛprio perfil/vÌdeo.
-- A regra fica garantida no backend, sem depender apenas de esconder ou desabilitar o bot„o.
-- N„o houve alteraÁ„o de schema Prisma, migrations, packages ou contrato p˙blico alÈm de normalizar `favorited=false` para o prÛprio perfil.
+- A UI deixa de oferecer uma a√ß√£o imposs√≠vel ao psic√≥logo no pr√≥prio perfil/v√≠deo.
+- A regra fica garantida no backend, sem depender apenas de esconder ou desabilitar o bot√£o.
+- N√£o houve altera√ß√£o de schema Prisma, migrations, packages ou contrato p√∫blico al√©m de normalizar `favorited=false` para o pr√≥prio perfil.
+
+## Atualiza√ß√£o 2026-08-11 - rota can√¥nica de favoritos sem guarda de papel
+
+### Contexto
+
+Ap√≥s o deploy publicado, a tela `/app/favorites` carregava o endpoint can√¥nico
+`GET /api/private/user/favorites` com usu√°rio psic√≥logo autenticado e recebia `403`, exibindo
+"Voc√™ n√£o tem permiss√£o para realizar esta a√ß√£o". A causa era a montagem da rota neutra
+`/api/private/user/favorites` com `requireRole("paciente")`, contrariando a decis√£o de
+2026-06-08 e o `DATA-MODEL.md`.
+
+### Decis√£o
+
+- Montar `/api/private/user/favorites` somente com `_auth`, sem `requireRole`, para permitir que
+  qualquer usu√°rio autenticado liste, crie e remova favoritos de psic√≥logos.
+- Manter `/api/private/patient/favorites` como rota legada sob `requireRole("paciente")`.
+- Extrair a pol√≠tica de montagem de rotas privadas para um helper test√°vel, garantindo que rotas
+  can√¥nicas user-level sejam `_auth-only` e que namespaces `/patient/*` e `/psychologist/*`
+  continuem fail-closed por papel.
+
+### Consequ√™ncias
+
+- Psic√≥logos voltam a acessar a aba Favoritos e a favoritar outros psic√≥logos.
+- A corre√ß√£o n√£o altera schema Prisma, migrations, contratos de resposta, envs, packages ou dados
+  publicados.
+- Rollback √© direto: restaurar a montagem anterior, sabendo que isso reintroduz o `403` para
+  psic√≥logos na rota can√¥nica.

@@ -1,4 +1,4 @@
-﻿# ADR-0185 - Hardening operacional da TASK-34
+# ADR-0185 - Hardening operacional da TASK-34
 
 ## Status
 

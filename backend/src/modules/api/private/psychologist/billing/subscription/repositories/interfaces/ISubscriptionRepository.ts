@@ -28,10 +28,10 @@ export interface ISubscriptionRepository {
   findScheduledGatewaySubscription(
     psychologistId: string,
   ): Promise<professional_subscription | null>;
-  cancelSubscription(data: {
-    subscriptionId: string;
-    gatewaySubscriptionId: string;
-  }): Promise<professional_subscription>;
+  cancelSubscription(data: { subscriptionId: string; gatewaySubscriptionId: string }): Promise<{
+    cancelled: professional_subscription;
+    current: professional_subscription;
+  }>;
   showPaymentMethod(userId: string, gatewayToken?: string | null): Promise<payment_method | null>;
   showPaymentHistory(
     subscription: professional_subscription | null,

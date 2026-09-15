@@ -1,4 +1,4 @@
-# ADR 0116 — Destaques dinamicos na aba Geral do perfil do psicologo
+# ADR 0116 â€” Destaques dinamicos na aba Geral do perfil do psicologo
 
 ## Status
 
@@ -6,7 +6,7 @@ Aceita
 
 ## Task relacionada
 
-TASK-15 — Perfil profissional publico
+TASK-15 â€” Perfil profissional publico
 
 ## Contexto
 
@@ -43,7 +43,7 @@ Em caso de empate de pontuacao, vence o item mais recente e, depois, o maior `id
 
 No frontend, a aba `Geral` usa explicitamente `highlighted_review` e `highlighted_publication`. As abas completas continuam usando a ordenacao e paginacao ja existentes.
 
-As mutacoes de posts/respostas/votos/salvos invalidam as queries `directory_psychologist` para que o perfil ativo refaça a busca e recalcule os destaques apos interacoes. A criacao de avaliacao ja invalidava o perfil do psicologo avaliado.
+As mutacoes de posts/respostas/votos/salvos invalidam as queries `directory_psychologist` para que o perfil ativo refaÃ§a a busca e recalcule os destaques apos interacoes. A criacao de avaliacao ja invalidava o perfil do psicologo avaliado.
 
 ## Consequencias
 

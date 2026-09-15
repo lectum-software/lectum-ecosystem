@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import type { AdminSeoMetadataPayload, AdminSeoMetadataSetting } from "@/api/req/settings";
 import { type Field, useFormList } from "@/hooks/form";
 
@@ -10,12 +10,16 @@ const optionalPathOrUrl = (label: string) =>
     .refine(
       (value) => {
         if (!value) return true;
-        if (value.startsWith("/")) return true;
+        if (value.startsWith("/")) return !value.startsWith("//") && !value.includes("\\");
 
         try {
           const url = new URL(value);
 
-          return url.protocol === "https:" || url.protocol === "http:";
+          return (
+            (url.protocol === "https:" || url.protocol === "http:") &&
+            !url.username &&
+            !url.password
+          );
         } catch {
           return false;
         }

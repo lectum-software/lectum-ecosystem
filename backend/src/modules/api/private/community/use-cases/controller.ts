@@ -13,6 +13,12 @@ import {
   unfollow as unfollowService,
   uploadPostMedia as uploadPostMediaService,
 } from "./services";
+import {
+  abortPostMediaMultipartUpload as abortPostMediaMultipartUploadService,
+  completePostMediaMultipartUpload as completePostMediaMultipartUploadService,
+  initiatePostMediaMultipartUpload as initiatePostMediaMultipartUploadService,
+  uploadPostMediaMultipartPart as uploadPostMediaMultipartPartService,
+} from "./services/post-media-multipart";
 
 export const index = async (req: Request, res: Response) => {
   try {
@@ -131,5 +137,56 @@ export const uploadPostMedia = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "community_upload_post_media", err);
+  }
+};
+
+export const initiatePostMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await initiatePostMediaMultipartUploadService(
+      req as unknown as Parameters<typeof initiatePostMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "community_post_media_multipart_initiate", err);
+  }
+};
+
+export const uploadPostMediaMultipartPart = async (req: Request, res: Response) => {
+  try {
+    const resolve = await uploadPostMediaMultipartPartService({
+      auth: req.auth,
+      b: req.b as Parameters<typeof uploadPostMediaMultipartPartService>[0]["b"],
+      file: req.file,
+      p: req.p as Parameters<typeof uploadPostMediaMultipartPartService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "community_post_media_multipart_part", err);
+  }
+};
+
+export const completePostMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await completePostMediaMultipartUploadService(
+      req as unknown as Parameters<typeof completePostMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "community_post_media_multipart_complete", err);
+  }
+};
+
+export const abortPostMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await abortPostMediaMultipartUploadService(
+      req as unknown as Parameters<typeof abortPostMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "community_post_media_multipart_abort", err);
   }
 };

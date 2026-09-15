@@ -1,3 +1,5 @@
+export const JWT_ALGORITHM = "HS256" as const;
+
 export const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET_KEY?.trim();
 

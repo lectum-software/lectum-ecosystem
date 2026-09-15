@@ -330,7 +330,7 @@ export type AdminPatientDetailDTO = {
     points: AdminPatientDetailSeriesPoint[];
     source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report+verified_responses";
   };
-  source: "user+patient_profile+visitor_location+community_activity+professional_review";
+  source: "user+patient_profile+community_activity+professional_review";
   unavailable: AdminPatientDetailUnavailable[];
 };
 

@@ -2,6 +2,15 @@
 
 Fila sequencial de execução do produto Lectum.
 
+Concluída: [TASK-183 — Download de vídeos no Admin](TASK-183-admin-download-videos.md). Adiciona no painel administrativo downloads do vídeo original e do vídeo com arte Lectum para conteúdos de Comunidades, preservando o mesmo formato do fluxo do psicólogo e sem alterar banco, buckets ou packages. Ajuste pós-feedback: botões ficam abaixo do ícone de olho.
+
+Concluída: [TASK-182 — Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md). Correção 0.1.385 publicada, uploads reais e smoke aprovados; usuário confirmou funcionamento. Incidente encerrado sem atribuir causa histórica não comprovada nem alegar reprodução independente no Safari/iPhone. Não encerra a auditoria geral; sem alteração de armazenamento, qualidade ou plano da conta de auditoria.
+
+Concluída: [TASK-181 — Retenção recuperável de vídeos](TASK-181-retencao-recuperavel-de-videos.md). Implementação 0.1.383 publicada e saudável; operador catalogou 64 vídeos R2 em lotes e confirmou inventário completo em reexecução somente leitura, sem falhas/conflitos ou pendências de marcação. Os arquivos continuam preservados no R2; sem limpeza automática, migração de bytes ou prazo de exclusão inventado. Isso não encerra a auditoria geral nem autoriza limpeza do acervo.
+
+Última correção operacional 14/09/2026: [TASK-180 — Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md).
+TASK-180 publicada em homolog (0.1.380). TASK-179 concluída após validar a correção 0.1.381: envs atualizadas pelo operador, uploads reais de 745 KB e 239 MB reproduzidos e persistidos, e leitura da API Cloudflare confirmando assinatura obrigatória e origens corretas no novo TUS. O fechamento documental não altera o fluxo validado. Vídeos antigos com metadados incorretos exigem inventário e correção manual escopada; qualidade/formato dos jobs do serviço dedicado e testes completos em aparelhos reais não estão concluídos por esse smoke. Não executar reparação no start nem tratar a auditoria geral como encerrada.
+
 Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando a skill de seu ambiente:
 
 - Codex: `.codex/skills/execute-lectum-task/SKILL.md`
@@ -11,13 +20,26 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 
 ## Estado atual do produto
 
-- Backend e frontend têm base inicial de autenticação.
+- Desde **2026-08-07**, frontend, backend e admin são aplicações publicadas; homologação e produção podem conter dados reais.
 - Backend usa Express 5, Prisma 7, Passport/JWT/Google OAuth e Biome.
 - Frontend usa Next.js 16, React 19, Tailwind CSS 4, TanStack Query 5, Redux Toolkit, Biome e ESLint.
+- Admin usa Next.js 16 e é publicado separadamente.
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
-- Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 152 tasks: `TASK-00` a `TASK-145`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
+- A fila operacional agora possui 190 tasks: `TASK-00` a `TASK-183`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+
+## Gate obrigatório de publicação
+
+1. Confirmar `git branch --show-current` antes de editar. O desenvolvimento acontece em `homolog`; se estiver em `main`, parar e orientar a troca de branch.
+2. Lembrar que push em `homolog` publica homologação e push/merge em `main` publica produção.
+3. Nunca commitar ou fazer push direto em `main`. Produção só recebe merge revisado depois de checks, builds e smoke test do deploy em homologação.
+4. Tratar dados, pagamentos, uploads, notificações e integrações dos ambientes publicados como persistentes. Reset, seed destrutivo, `db push`, exclusão em massa e limpeza de bucket são proibidos nesses ambientes.
+5. Toda mudança de banco deve descrever compatibilidade com dados existentes, ordem expandir → backfill retomável → contrair e rollback. Migration aplicada é imutável.
+6. Toda env nova obrigatória deve gerar um **ALERTA DE DEPLOY** com chave, aplicação, ordem de cadastro em homologação/produção e impacto se ausente, sem mostrar o valor. Preferir implantação em duas etapas com fallback seguro.
+7. Contratos de API devem continuar funcionando durante o período em que frontend, backend e admin estiverem em versões diferentes.
+8. Depois do deploy em homologação, validar os fluxos afetados e, para backend, `/health` e `/ready`. Só então recomendar promoção para `main`.
+9. Quando o usuário pedir explicitamente produção, o agente cria/reutiliza PR `homolog` → `main` com `gh`, aguarda checks, faz merge sem excluir `homolog` e valida produção. Nunca delegar push direto ou commit em `main`.
 
 ## Inventário visual ativo
 
@@ -62,10 +84,13 @@ ou cortesia manual.
 - Use o Quick Copy Builder para obter contexto visual quando a ferramenta estiver disponível.
 - Use as imagens exportadas de `_product/proto` como fallback e como referência auditável da task.
 - Ao concluir, marque critérios de aceite `[x]`, registre ADR, faça commit próprio e execute `git push` para publicar a branch/remoto correspondente. Se a branch ainda não tiver upstream, use `git push -u origin <branch>`.
+- Commit e push da task devem ocorrer em `homolog`; o executor deve informar que o push iniciou o deploy automático de homologação.
+- Antes de cada novo commit do agente, executar uma única vez `pnpm version:bump`, incluir os cinco `package.json` sincronizados e validar `pnpm check:version`. Não repetir o bump ao apenas tentar novamente um commit que falhou.
 - Não use referências externas ao workspace da task como atalho arquitetural.
 - Antes de criar código novo, consulte `ARCHITECTURE.md`.
 - Antes de criar/alterar modelo Prisma ou contrato de API, consulte `DATA-MODEL.md` e referencie a seção em vez de redefinir o schema.
 - Toda task que alterar o banco (`backend/prisma/schema.prisma` ou `backend/prisma/migrations`) deve executar `pnpm --dir backend db:migrate` na própria execução. O usuário não-dev não deve ficar responsável por aplicar migrations.
+- Uma migration local aprovada não autoriza alteração destrutiva em dados publicados. Colunas inicialmente obrigatórias devem entrar nullable ou com default compatível, receber backfill seguro e ser endurecidas somente em deploy posterior.
 - Se `prisma migrate dev` falhar por dados ou estado preexistente do banco de desenvolvimento, pare e pergunte ao usuário se pode resetar o banco antes de rodar qualquer comando destrutivo, como `pnpm --dir backend exec prisma migrate reset`.
 - Antes de instalar pacote, consulte `PACKAGES.md`.
 - Antes de qualquer tela com campo, edição, filtro avançado ou submit, execute/consulte `TASK-02` e use `frontend/src/hooks/form` + `frontend/src/components/controllers`.
@@ -121,7 +146,7 @@ ou cortesia manual.
 | 38 | [TASK-38 - Permissão contextual de notificações no navegador](TASK-38-permissao-contextual-notificacoes-navegador.md) | Completed | 12, 29A |
 | 39 | [TASK-39 - SEO e descoberta por mecanismos de busca/IA](TASK-39-seo-ia-descoberta.md) | Completed | 01, 12 |
 | 40 | [TASK-40 - Rotas publicas de psicologos e comunidades fora de /app](TASK-40-rotas-publicas-psicologos-comunidades.md) | Completed | 12, 13, 22, 23, 25, 26, 39 |
-| 41 | [TASK-41 - Páginas legais públicas: Termos de Serviço e Política de Privacidade](TASK-41-paginas-legais-termos-privacidade.md) | Pending | 39, 40 |
+| 41 | [TASK-41 - Páginas legais públicas: Termos de Serviço e Política de Privacidade](TASK-41-paginas-legais-termos-privacidade.md) | Blocked | 39, 40 |
 | 42 | [TASK-42 - Layout de compartilhamento social para vídeo-resposta](TASK-42-layout-compartilhamento-video-resposta.md) | Completed | 23, 26, 28, 29B |
 | 43 | [TASK-43 - Scrollbar mobile app-like em telas principais](TASK-43-scrollbar-mobile-telas-principais.md) | Completed | 12, 23, 25, 40 |
 | 44 | [TASK-44 - Verificação de registro retomável no fluxo pago](TASK-44-verificacao-registro-assinatura-retomavel.md) | Completed | 10, 16, 18A, 31, 32 |
@@ -130,7 +155,7 @@ ou cortesia manual.
 | 47 | [TASK-47 - Captura de sessão e tipo de dispositivo para analytics admin](TASK-47-captura-sessao-tipo-dispositivo.md) | Completed | 39 |
 | 48 | [TASK-48 - Dashboard administrativo](TASK-48-dashboard-administrativo.md) | Completed | 45, 46, 47 |
 | 49 | [TASK-49 - Tracking de pageviews e origem de tráfego](TASK-49-tracking-pageviews-origem-trafego.md) | Completed | 39, 40, 47 |
-| 50 | [TASK-50 - Tela Tráfego administrativo](TASK-50-tela-trafego-administrativo.md) | Pending | 45, 46, 47, 49 |
+| 50 | [TASK-50 - Tela Tráfego administrativo](TASK-50-tela-trafego-administrativo.md) | Completed | 45, 46, 47, 49 |
 | 51 | [TASK-51 - Dashboard administrativo de comunidades](TASK-51-dashboard-administrativo-comunidades.md) | Completed | 45, 46 |
 | 52 | [TASK-52 - Detalhe e edição de comunidade no Admin](TASK-52-detalhe-edicao-comunidade-admin.md) | Completed | 45, 46, 51 |
 | 53 | [TASK-53 - Dashboard administrativo de psicólogos](TASK-53-dashboard-administrativo-psicologos.md) | Completed | 45, 46 |
@@ -226,7 +251,45 @@ ou cortesia manual.
 | 142 | [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md) | Completed | 31, 45, 46, 62, 141 |
 | 143 | [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) | Completed | 39, 40, 42, 141 |
 | 144 | [TASK-144 - Upload de imagem Open Graph no Admin](TASK-144-upload-imagem-open-graph-admin.md) | Completed | 141, 143 |
-| 145 | [TASK-145 - Rotas em PT-BR e SEO can�nico](TASK-145-rotas-publicas-pt-br-seo.md) | Completed | 40, 141, 143, 144 |
+| 145 | [TASK-145 - Rotas em PT-BR e SEO canônico](TASK-145-rotas-publicas-pt-br-seo.md) | Completed | 40, 141, 143, 144 |
+| 146 | [TASK-146 - Versionamento rastreável e promoção de produção por PR](TASK-146-versionamento-rastreavel-promocao-producao.md) | Completed | 34, 45, 145 |
+| 147 | [TASK-147 - Confirmação antes de excluir post ou comentário](TASK-147-confirmacao-exclusao-post-comentario.md) | Completed | 26, 28, 145 |
+| 148 | [TASK-148 - Safe area iOS/PWA para elementos inferiores](TASK-148-safe-area-ios-pwa-elementos-inferiores.md) | Completed | 12, 37, 43 |
+| 149 | [TASK-149 - Sugestões de comunidades no Admin com blocos de demanda](TASK-149-admin-sugestoes-comunidades-blocos-demanda.md) | Completed | 22, 45, 46, 51, 77 |
+| 150 | [TASK-150 - Localizacao declarada do paciente para proximidade](TASK-150-localizacao-declarada-paciente.md) | Completed | 02, 21, 60, 61 |
+| 151 | [TASK-151 - Remover banner de localizacao opcional no perfil do paciente](TASK-151-remover-banner-localizacao-paciente.md) | Completed | 02, 21, 150 |
+| 152 | [TASK-152 - Instalar aplicativo no perfil](TASK-152-instalar-aplicativo-no-perfil.md) | Completed | 12, 21, 37 |
+| 153 | [TASK-153 - Permissao nativa direta de notificacoes](TASK-153-permissao-nativa-direta-notificacoes.md) | Completed | 12, 29A, 38 |
+| 154 | [TASK-154 - Digests temporais para push de notificacoes](TASK-154-digests-temporais-push-notificacoes.md) | Completed | 29A, 29B, 38, 63 |
+| 155 | [TASK-155 - Ocultar instalar aplicativo no desktop](TASK-155-ocultar-instalar-aplicativo-desktop.md) | Completed | 12, 21, 37, 152 |
+| 156 | [TASK-156 - Regua de cobranca e regularizacao da assinatura](TASK-156-regua-cobranca-assinatura.md) | Completed | 32, 33, 63, 64, 80 |
+| 157 | [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) | Completed | 03, 18A, 26, 146 |
+| 158 | [TASK-158 - Otimização client-side do vídeo de apresentação](TASK-158-otimizacao-video-apresentacao-mediabunny.md) | Completed | 18A, 146, 157 |
+| 159 | [TASK-159 - Preparação transversal de mídia antes dos uploads](TASK-159-preparacao-transversal-midia-uploads.md) | Completed | 26, 144, 157, 158 |
+| 160 | [TASK-160 - Limites em duas etapas para vídeos no Safari Photos](TASK-160-limites-video-safari-photos-opfs.md) | Superseded | 157, 158, 159 |
+| 161 | [TASK-161 - Loop circular dos videos da pagina de psicologos](TASK-161-loop-circular-videos-psicologos.md) | Completed | 13, 40, 75, 145 |
+| 162 | [TASK-162 - Corrigir bug visual do loop de videos de psicologos](TASK-162-corrigir-loop-videos-psicologos.md) | Completed | 13, 40, 75, 145, 161 |
+| 163 | [TASK-163 - Streaming privado de vídeos com Cloudflare Stream](TASK-163-streaming-privado-cloudflare-stream.md) | Completed | 03, 13, 15, 23, 24, 26, 29B, 157, 159 |
+| 164 | [TASK-164 - Serviço isolado de processamento de vídeos](TASK-164-servico-isolado-processamento-videos.md) | Completed | 42, 158, 159, 163 |
+| 165 | [TASK-165 - Migração segura de vídeos legados do R2 para Cloudflare Stream](TASK-165-migracao-segura-videos-r2-cloudflare-stream.md) | Completed | 157, 163, 164 |
+| 166 | [TASK-166 - Estabilizar origem pública da migração R2 para Stream](TASK-166-estabilizar-origem-migracao-r2-stream.md) | Completed | 157, 163, 165 |
+| 167 | [TASK-167 - Restaurar playback público seguro no Cloudflare Stream](TASK-167-restaurar-playback-publico-stream.md) | Completed | 40, 163, 165, 166 |
+| 168 | [TASK-168 - Preservar vídeo ao voltar do perfil do psicólogo](TASK-168-preservar-video-ao-voltar-perfil-psicologo.md) | Completed | 13, 15, 145, 161, 162 |
+| 169 | [TASK-169 - Remover tag nativa no vídeo expandido](TASK-169-video-expandido-sem-tag-nativa-fullscreen.md) | Completed | 13, 23, 42, 161 |
+| 170 | [TASK-170 - Retorno instantâneo ao vídeo anterior de psicólogos](TASK-170-retorno-instantaneo-video-psicologos.md) | Completed | 13, 15, 168 |
+| 171 | [TASK-171 - Corrigir troca do vídeo de apresentação do psicólogo](TASK-171-corrigir-troca-video-apresentacao-psicologo.md) | Completed | 157, 163, 167 |
+| 172 | [TASK-172 - Corrigir vazamento visual abaixo do vídeo expandido no feed](TASK-172-corrigir-video-expandido-feed-inferior.md) | Completed | 23, 42, 169 |
+| 173 | [TASK-173 - Corrigir upload de vídeos nos posts e respostas](TASK-173-corrigir-upload-video-posts-respostas.md) | Completed | 23, 24, 26, 163, 171 |
+| 174 | [TASK-174 - Fixar barra de comentários no detalhe do post](TASK-174-fixar-barra-comentarios-detalhe-post.md) | Completed | 23, 24, 26, 45 |
+| 175 | [TASK-175 - Conexão autenticada do backend ao serviço de vídeo](TASK-175-conexao-backend-servico-video.md) | Completed | 164 |
+| 176 | [TASK-176 - Reativar prévia social de vídeos pelo serviço dedicado](TASK-176-reativar-preview-social-video-service.md) | Completed | 42, 164, 167, 173, 175 |
+| 177 | [TASK-177 - Backend como fonte única dos limites de vídeo](TASK-177-backend-fonte-unica-limites-video.md) | Completed | 157, 159, 163, 171, 173 |
+| 178 | [TASK-178 - Auditoria integral antes da produção](TASK-178-auditoria-pre-producao.md) | In Progress | 177 |
+| 179 | [TASK-179 - Restaurar preflight e provisionamento de upload Stream](TASK-179-corrigir-preflight-upload-stream.md) | Completed | 163, 173, 178 |
+| 180 | [TASK-180 - Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md) | Completed | 163, 165, 166 |
+| 181 | [TASK-181 - Retenção recuperável de vídeos](TASK-181-retencao-recuperavel-de-videos.md) | Completed | 163, 165, 180 |
+| 182 | [TASK-182 - Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md) | Completed | 179, 180, 181 |
+| 183 | [TASK-183 - Download de vídeos no Admin](TASK-183-admin-download-videos.md) | Completed | 164, 181 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -279,6 +342,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 43. [TASK-78 - Indicador de urgência no menu lateral da moderação Admin](TASK-78-indicador-urgencia-menu-moderacao-admin.md) foi adicionada e concluída em 2026-07-21 para trocar o badge neutro da opção **Moderação** por um indicador com ícone de alerta vermelho quando houver urgência e laranja quando houver apenas pendências menos urgentes.
 44. [TASK-79 - Sessões por device no detalhe administrativo](TASK-79-sessoes-por-device-detalhe-admin.md) foi concluída em 2026-07-22 para levar aos detalhes individuais de psicólogo e paciente a mesma lógica real dos dashboards: distribuição de sessões autenticadas por `visitor_session.device_type` no período, sem medir device principal por usuário, com **Páginas mais acessadas** e **Devices** em duas colunas no desktop e pie chart em **Devices**.
 45. [TASK-80 - Confiabilidade do pagamento nas assinaturas Admin](TASK-80-saude-pagamento-assinaturas-admin.md) foi concluída em 2026-07-22 para adicionar uma coluna resumida de **Confiabilidade do pagamento** em `/financeiro/assinaturas` e dropdown por assinatura com histórico real de `payment_event`, mantendo a tag em uma linha e sem simular cobranças.
+45A. [TASK-62 - Financeiro administrativo](TASK-62-financeiro-administrativo.md) recebeu ajuste pós-feedback em 2026-08-13 para conciliar `/financeiro/cobrancas`, cards/série e LTV médio com o resumo real de assinaturas do Mercado Pago quando o webhook local `payment_event` não foi gravado, sem criar cobranças artificiais e evitando interpretar IDs do gateway como valores.
 46. [TASK-81 - Sistema operacional nos analytics Admin](TASK-81-sistema-operacional-analytics-admin.md) foi adicionada e concluida em 2026-07-25 para exibir graficos de pizza de OS nos dashboards de psicologos/pacientes e detalhar os sistemas operacionais dentro de cada device nas abas de estatisticas individuais, usando `visitor_session.os` + `visitor_session.device_type`, sem versao exata, user-agent bruto, backfill ou estimativas.
 47. [TASK-82 - Filtro Cortesia no dashboard Admin de psicologos](TASK-82-filtro-cortesia-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-25 para separar nos filtros por plano dos blocos de `/psicologos` o recorte de cortesia administrativa (`professional_subscription.source="admin_grant"`), mantendo **Assinantes** restrito a pagamentos Mercado Pago e **Todos** como agregado completo.
 48. [TASK-83 - Erro no cadastro em Operacionais Admin](TASK-83-erro-cadastro-operacionais-admin.md) foi adicionada e concluida em 2026-07-25 para listar em `/moderacao/operacionais` cadastros de pacientes e psicologos ativos ainda nao confirmados (`user.confirmed=false`), exibindo modo de cadastro e e-mail, com remocao automatica quando a confirmacao real conclui.
@@ -349,7 +413,33 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 112. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para gerar miniaturas Open Graph de videos no frame vertical 9:16 do compartilhamento Lectum, alinhado ao preview de WhatsApp enviado como referencia.
 113. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para separar **Comunidades** (`/community`) de **Comunidade** (`/community/[slug]`), publicar metadados dinamicos por slug e usar o nome real da comunidade/post como titulo compartilhado.
 114. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para usar imagens Open Graph quadradas de entidade: avatar da comunidade em `/community/[slug]` e foto/avatar do psicologo em `/psychologists/[id]`.
-115. [TASK-145 - Rotas em PT-BR e SEO can�nico](TASK-145-rotas-publicas-pt-br-seo.md) foi adicionada e concluida em 2026-08-03 para tornar canonicos os slugs publicos (`/psicologos`, `/comunidades`) e privados (`/app/notificacoes`, `/app/perfil`, `/app/profissional/*`) em PT-BR, mantendo redirects permanentes das URLs antigas em ingles.
+115. [TASK-145 - Rotas em PT-BR e SEO canônico](TASK-145-rotas-publicas-pt-br-seo.md) foi adicionada e concluida em 2026-08-03 para tornar canonicos os slugs publicos (`/psicologos`, `/comunidades`) e privados (`/app/notificacoes`, `/app/perfil`, `/app/profissional/*`) em PT-BR, mantendo redirects permanentes das URLs antigas em ingles.
+116. [TASK-146 - Versionamento rastreável e promoção de produção por PR](TASK-146-versionamento-rastreavel-promocao-producao.md) foi adicionada e concluída em 2026-08-08 para sincronizar SemVer entre os quatro manifests, expor a versão dos três artefatos publicados e tornar a solicitação explícita de produção um PR `homolog` -> `main` seguido de merge e smoke.
+117. [TASK-147 - Confirmação antes de excluir post ou comentário](TASK-147-confirmacao-exclusao-post-comentario.md) foi adicionada e concluída em 2026-08-10 para exigir confirmação visual antes de excluir comentários/respostas e manter as regras existentes de exclusão de posts e conteúdo protegido.
+118. [TASK-148 - Safe area iOS/PWA para elementos inferiores](TASK-148-safe-area-ios-pwa-elementos-inferiores.md) foi adicionada e concluída em 2026-08-10 para aplicar `viewport-fit=cover`, centralizar tokens de safe area inferior e elevar bottom nav, composer de comentários e CTAs/footers inferiores no iPhone/PWA.
+119. [TASK-149 - Sugestões de comunidades no Admin com blocos de demanda](TASK-149-admin-sugestoes-comunidades-blocos-demanda.md) foi adicionada e concluída em 2026-08-10 para receber sugestões já enviadas pelo app, agrupá-las em blocos internos de demanda e apoiar a decisão futura de abrir novas comunidades sem automação.
+120. [TASK-150 - Localizacao declarada do paciente para proximidade](TASK-150-localizacao-declarada-paciente.md) foi adicionada e concluida em 2026-08-10 para trocar, nas telas de paciente do Admin, a localizacao por IP pela localidade declarada pelo paciente no perfil, mantendo **Nao informado** para quem nao preencher.
+121. [TASK-151 - Remover banner de localizacao opcional no perfil do paciente](TASK-151-remover-banner-localizacao-paciente.md) foi adicionada e concluida em 2026-08-10 para retirar a faixa azul informativa da edicao de perfil do paciente, mantendo Estado/Cidade opcionais e a explicacao curta no campo Estado.
+122. [TASK-152 - Instalar aplicativo no perfil](TASK-152-instalar-aplicativo-no-perfil.md) foi adicionada em 2026-08-10 e concluida em 2026-08-11 para oferecer, na seção Conta do perfil de pacientes e psicologos, uma entrada manual de instalação do PWA após o usuário dispensar o prompt automático.
+123. [TASK-153 - Permissao nativa direta de notificacoes](TASK-153-permissao-nativa-direta-notificacoes.md) foi adicionada e concluida em 2026-08-11 para remover a modal propria da Lectum no fluxo automatico de notificacoes e chamar diretamente a permissao nativa do navegador no mesmo timing anterior, preservando gates, cooldown, `lectum.activePrompt` e a acao manual em configuracoes.
+124. [TASK-154 - Digests temporais para push de notificacoes](TASK-154-digests-temporais-push-notificacoes.md) foi adicionada e concluida em 2026-08-11 para reduzir ruido de push: engajamentos de pacientes e novos posts para psicologos viram digests temporais de 3 horas, enquanto visualizacoes, compartilhamentos, upvotes e salvamentos de psicologos entram no digest diario profissional sem push imediato.
+125. [TASK-155 - Ocultar instalar aplicativo no desktop](TASK-155-ocultar-instalar-aplicativo-desktop.md) foi adicionada e concluida em 2026-08-11 para manter a entrada manual de instalacao do PWA apenas na experiencia mobile/tablet e ocultar a linha do perfil em desktop mesmo quando o navegador oferece `beforeinstallprompt`.
+126. [TASK-56 - Detalhe administrativo do psicologo: Plano, pagamentos e cortesia](TASK-56-detalhe-psicologo-plano-pagamentos-admin.md) recebeu ajuste pos-feedback em 2026-08-13 para permitir cancelamento administrativo real de assinatura Mercado Pago com confirmacao forte, motivo interno, auditoria em `admin_activity_log` e sem expor dados sensiveis de pagamento.
+127. [TASK-18A - Perfil gratuito sem documento CRP](TASK-18A-perfil-gratuito-sem-crp.md) recebeu ajuste pos-feedback em 2026-08-13 para remover a sombra projetada das chips de dias da semana na edicao profissional, preservando estados de foco e selecao sem alterar contratos ou dados.
+128. [TASK-156 - Regua de cobranca e regularizacao da assinatura](TASK-156-regua-cobranca-assinatura.md) foi adicionada e concluida em 2026-08-15 para abrir janela D+0 a D+7 em falhas de cobranca Mercado Pago, manter beneficios durante a graca, notificar psicologos e oferecer botao **Regularizar cartao** em **Minha Assinatura**.
+129. [TASK-18A - Perfil gratuito sem documento CRP](TASK-18A-perfil-gratuito-sem-crp.md) recebeu ajuste pos-feedback em 2026-08-17 para alinhar as chips selecionadas dos catalogos ao tamanho visual do select `Idiomas` (`Portugues`), preservando os placeholders compactos.
+130. [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) foi adicionada e concluída em 2026-08-20 para dividir vídeos grandes em partes de 5 MiB, exibir progresso, preservar o endpoint legado e centralizar em 13 envs opcionais os limites dos 11 endpoints binários baseados em Multer.
+131. [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) recebeu ajuste pós-feedback em 2026-08-20 para compensar a semântica exclusiva dos thresholds do Busboy/Multer e aceitar exatamente as três partes válidas e o chunk de 5 MiB sem ampliar os limites públicos.
+132. [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) recebeu novo ajuste pós-feedback em 2026-08-20 para aceitar marcas compatíveis e estruturas QuickTime legadas de MOV, preservar a rejeição de HEIC/conteúdo malformado e distinguir de forma segura falhas de sessão, tamanho da parte e assinatura.
+133. [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) recebeu observabilidade pós-feedback em 2026-08-20 para correlacionar parser, partes, storage, conclusão, persistência e abort por `traceId` aleatório, com whitelist que impede tokens, PII e detalhes do provider nos logs.
+134. [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) recebeu correção pós-smoke em 2026-08-20 para fazer o controller da parte consumir `req.b` após o validator, preservar integralmente a sessão multipart e distinguir causas internas seguras de rejeição sem alterar a resposta pública.
+135. [TASK-158 - Otimização client-side do vídeo de apresentação](TASK-158-otimizacao-video-apresentacao-mediabunny.md) foi adicionada em 2026-08-20 para reduzir vídeos curtos antes do multipart atual com MediaBunny/WebCodecs, progresso, cancelamento e fallback original, sem antecipar Cloudflare Stream nem alterar backend, banco, R2 ou envs.
+136. [TASK-159 - Preparação transversal de mídia antes dos uploads](TASK-159-preparacao-transversal-midia-uploads.md) foi adicionada em 2026-08-21 para aplicar políticas explícitas de vídeo/imagem a todas as superfícies atuais de mídia pública, reservar passthrough apenas a thumbnails geradas, excluir documentos por allowlist fechada e tornar o post raiz compatível com multipart sem acoplar preparação ao transporte.
+137. [TASK-160 - Limites em duas etapas para vídeos no Safari Photos](TASK-160-limites-video-safari-photos-opfs.md) foi adicionada em 2026-08-21 para permitir que rendições transitórias maiores do Photos sejam preparadas antes do limite final, usar OPFS com `StreamTarget` no caminho principal e aplicar a mesma política a post, comentário e apresentação, mantendo validação backend e fallback seguro.
+
+138. [TASK-161 - Loop circular dos videos da pagina de psicologos](TASK-161-loop-circular-videos-psicologos.md) foi adicionada em 2026-08-27 para transformar a sequencia dos videos de apresentacao em ciclo silencioso, sem mensagem final e sem scroll para o topo ao voltar ao primeiro profissional.
+
+139. [TASK-162 - Corrigir bug visual do loop de videos de psicologos](TASK-162-corrigir-loop-videos-psicologos.md) foi adicionada em 2026-08-27 para remover a normalizacao visual para cima do loop da pagina de psicologos, iniciar no primeiro slide real e expandir ciclos abaixo conforme necessario.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.
@@ -503,10 +593,12 @@ Toda task deve rodar os comandos relevantes:
 
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
+- `pnpm --dir admin check`
 - `pnpm check`
 - `pnpm --dir backend db:migrate` quando a task alterar banco/schema/migrations
 - `pnpm --dir backend build` quando backend estrutural mudar
 - `pnpm --dir frontend build` quando frontend visual/rota mudar
+- `pnpm --dir admin build` quando admin visual/rota mudar
 
 ## Definition of Done obrigatória
 
@@ -522,6 +614,7 @@ Uma task só pode ser marcada como concluída quando:
 - UI tiver sido validada com Builder/Quick Copy quando disponível ou com imagem local registrada em `PROTO-INVENTORY.md`;
 - UI tiver sido validada no browser local quando houver tela;
 - houver commit próprio da task;
+- o commit tiver incremento sincronizado em `package.json`, `backend/package.json`, `frontend/package.json`, `admin/package.json` e `video/package.json`;
 - o commit tiver sido publicado com `git push`, ou o bloqueio de push tiver sido registrado explicitamente quando houver falha de credenciais, rede ou permissão.
 
 ## Templates
@@ -546,10 +639,10 @@ Uma task só pode ser marcada como concluída quando:
 - Builder Quick Copy: `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`
 - Protótipos exportados: `_product/proto`
 
-## Atualiza��o de fluxo em 2026-06-07
+## Atualização de fluxo em 2026-06-07
 
-- A etapa de WhatsApp profissional deixa de ser verifica��o por SMS/OTP e passa a ser apenas cadastro do n�mero para gera��o interna do link `wa.me` ap�s inten��o de contato.
-- O fluxo visual ainda usa `/app/profissional/whatsapp/verificar` por compatibilidade de rota, mas a c�pia e a regra de dom�nio tratam a tela como inser��o/salvamento do WhatsApp.
+- A etapa de WhatsApp profissional deixa de ser verificação por SMS/OTP e passa a ser apenas cadastro do número para geração interna do link `wa.me` após intenção de contato.
+- O fluxo visual ainda usa `/app/profissional/whatsapp/verificar` por compatibilidade de rota, mas a cópia e a regra de domínio tratam a tela como inserção/salvamento do WhatsApp.
 
 ## Atualizacao de fluxo em 2026-06-07: gratuito sem CRP API
 
@@ -561,3 +654,1521 @@ Uma task só pode ser marcada como concluída quando:
 - Psicologos no Plano Profissional pago seguem, apos pagamento real e endereco de faturamento, para `/app/profissional/whatsapp/verificar`.
 - Depois de cadastrar o WhatsApp, psicologos pagos com verificacao profissional pendente seguem para `/app/profissional/cfp`.
 - A edicao/publicacao do perfil profissional pago permanece bloqueada ate a verificacao profissional ser aprovada por API automatica ou aprovacao manual auditada.
+
+## Atualizacao visual em 2026-08-13: endereco de assinatura
+
+- A etapa `/app/profissional/assinatura/endereco` nao exibe mais a faixa verde de pagamento bem-sucedido.
+- No desktop, Numero fica ao lado de Logradouro e Cidade fica ao lado de Estado; no mobile o formulario continua em uma coluna unica.
+
+## Atualizacao visual em 2026-08-13: Admin cancelamento de assinatura
+
+- Na aba Assinatura do detalhe do psicologo, o botao do card de cancelamento administrativo exibe `Cancelar`; a modal, a confirmacao forte e o cancelamento real no gateway permanecem inalterados.
+
+## Atualizacao operacional em 2026-08-13: nome profissional no header Admin
+
+- O detalhe Admin de psicologo passa a exibir no header o mesmo nome profissional usado em **Dados pessoais > Nome completo**.
+- `user.name` fica apenas como fallback para perfis legados sem `professional_first_name`/`professional_last_name`, evitando divergencia como conta `Tulio Rezende` com perfil profissional `Sebastiao Rezende`.
+
+## Atualizacao operacional em 2026-08-13: alerta de Perfil e cadastro no Admin
+
+- O icone de alerta da aba `Perfil e cadastro` no detalhe Admin do psicologo passa a indicar somente perfil nao visivel para pacientes por falta de configuracoes publicas.
+- CRP pendente por si so nao aciona o alerta; desativacao manual de `Perfil visivel para pacientes`, com perfil completo, tambem nao aciona alerta.
+
+## Atualizacao visual em 2026-08-14: copy da verificacao profissional
+
+- A tela `/psychologist/cfp` passa a comunicar que a consulta CFP e necessaria para conceder o selo de verificado.
+- O texto auxiliar do CPF passa a informar que o registro sera buscado junto ao Conselho Federal de Psicologia.
+- A alteracao e apenas de copy no frontend e nao altera contrato, banco, provider CFP, packages ou envs.
+
+## Atualizacao operacional em 2026-08-15: cancelamento pago volta ao gratuito
+
+- Ajuste pos-feedback da TASK-156: cancelamentos reais de assinatura profissional Mercado Pago agora restauram o Plano Gratuito ativo quando nao houver outro entitlement profissional, inclusive por sync, webhook, cancelamento do psicologo, cancelamento Admin ou correcao idempotente ao ler o plano atual.
+- A etapa de endereco de faturamento nao deve manter o usuario preso no fluxo pago quando o plano efetivo ja voltou para gratuito/cancelado/inexistente.
+
+## Atualizacao operacional em 2026-08-15: exclusao de conta Google
+
+- Ajuste pos-feedback da TASK-30: no fluxo proprio de exclusao de conta, `user.provider="google"` exige reautenticacao Google e nao senha atual, mesmo quando existir senha local legada.
+- Senha atual permanece exigida somente para contas nao Google com senha cadastrada; contas sem metodo confirmavel continuam bloqueadas por erro de dominio seguro.
+
+## Atualizacao operacional em 2026-08-20: intenção Google com autenticação por cookie
+
+- Ajuste pós-feedback da TASK-30: o transporte cookie-aware só remove `user_tokens` e força a
+  sanitização de tokens quando a resposta realmente contém o contrato de sessão. A intenção curta
+  e explicitamente autorizada de exclusão Google deixa de chegar como `url="[REDACTED]"`.
+- Respostas sem opt-in continuam fail-closed; no cliente cookie-aware, JWT de sessão permanece
+  exclusivo do cookie HttpOnly. A mesma fronteira preserva o `link_token` curto do vínculo Google
+  sem alterar frontend, banco, packages ou envs.
+
+## Atualizacao operacional em 2026-08-27: exclusão de conta local com senha
+
+- Ajuste pós-feedback da TASK-30: a consulta frontend de `account.security` passa a ser cacheada por
+  usuário autenticado e não por chave global, evitando que a modal de exclusão reaproveite estado de
+  outra sessão/conta durante refetch em mobile/PWA.
+- Para contas não Google com senha, a modal aguarda o contrato real de segurança, exibe e valida
+  **Senha atual**, preserva a senha digitada sem `trim()` e mapeia códigos seguros de domínio antes
+  do fallback genérico de `403`.
+- A causa confirmada no segundo feedback foi a sanitização global removendo o booleano seguro
+  `has_password`; o backend agora preserva apenas esse indicador booleano e continua removendo
+  qualquer segredo real de senha.
+- O frontend também trata provedores locais (`manual`, `email`, `local`) como confirmação por
+  senha durante rollout misto, mesmo se um backend antigo ainda não entregar `has_password`.
+- Sem alteração de banco, migration, package, env, mock, seed ou exclusão real de conta em ambientes
+  publicados.
+
+## Atualização operacional em 2026-08-20: observabilidade Sentry separada
+
+- Complemento da TASK-34: frontend, backend e admin passam a capturar falhas em três projetos
+  Sentry independentes, preservando os ciclos de deploy separados.
+- O primeiro rollout é error-only e fail-open: sem DSN ou environment explícito cada aplicação
+  continua operacional; sem o conjunto completo de credenciais de build os apps Next apenas deixam
+  de publicar source maps.
+- A política de coleta remove PII, requests, cookies, headers, corpos, query strings, tokens, SQL,
+  breadcrumbs, variáveis locais e mensagens cruas de provider. Tracing, Replay, Logs, User Feedback
+  e profiling permanecem fora do escopo.
+- Decisão e rollout registrados no ADR-0465, sem banco, migration ou mudança de contrato de API.
+- A adoção ocorre em duas etapas: primeiro o código desativado por fallback seguro; depois o
+  cadastro das envs e novo deploy em homolog, validação no provider e somente então produção.
+
+## Atualizacao visual em 2026-08-17: chips selecionadas no perfil profissional
+
+- Ajuste pos-feedback da TASK-18A: chips selecionadas dos catalogos em `/app/profissional/perfil/configurar` passam a usar `text-sm`, igual ao select `Idiomas`, para aproximar `Adultos`, `Terapia Online`, `Psicanalise` e equivalentes do tamanho visual de `Portugues`.
+- O placeholder interno dos campos de catalogo permanece compacto em linha propria; nao houve alteracao de backend, banco, contratos, packages ou envs.
+
+## Atualizacao visual em 2026-08-17: switch de visibilidade e placeholders no limite
+
+- Ajuste pos-feedback da TASK-18A: `Perfil visivel para pacientes` em `/app/profissional/perfil/configurar` passa a usar switch com status textual e alerta vermelho especifico quando o perfil esta oculto.
+- O menu privado `/app/perfil` preserva o indicador em `Editar perfil` quando o perfil esta oculto ou incompleto.
+- Campos de catalogo escondem o placeholder `Adicione...` quando o limite de selecoes do plano ja foi atingido, sem alterar backend, banco, contratos, packages ou envs.
+
+## Atualizacao visual em 2026-08-17: copy do alerta de perfil oculto
+
+- Ajuste pos-feedback da TASK-18A: o alerta vermelho de perfil oculto em `/app/profissional/perfil/configurar` passa a usar a copy curta `Seu perfil está oculto. Ative a visibilidade para voltar a aparecer para pacientes.`
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages ou envs.
+
+## Atualizacao visual em 2026-08-17: copy do perfil oculto no perfil proprio
+
+- Ajuste pos-feedback da TASK-18A: o card de ativacao do perfil proprio em `/app/psicologo/[id]` passa a explicar que o perfil esta oculto porque o proprio psicologo desativou a visibilidade.
+- A copy orienta ativar novamente para voltar a aparecer para pacientes: `Seu perfil não está visível porque você desativou a visibilidade. Ative novamente para o perfil voltar a ficar visível para pacientes.`
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages ou envs.
+
+## Atualizacao operacional em 2026-08-17: descadastros nos dashboards Admin
+
+- Ajuste pos-feedback das TASK-53 e TASK-60: dashboards Admin de psicologos e pacientes exibem o contador **Descadastros** na **Visao geral**.
+- A contagem usa soft delete real em `user.deleted=true`, `user.account_status="deleted"`, `user.deletedAt` e `role` correspondente, sem incluir contas excluidas nos totais ativos/inativos.
+- O contrato e aditivo (`cards.deleted_accounts` e pontos temporais com `deleted_accounts`), sem schema Prisma, migration, package novo, seed, mock, backfill artificial ou env nova.
+
+## Atualizacao visual em 2026-08-21: abertura da modal Criar Post no Android
+
+- Ajuste pos-feedback da TASK-24: a modal `Criar Post` em Android/touch deixa de focar o titulo no mesmo frame de montagem, aguardando a animacao da bottom sheet antes de acionar o teclado virtual.
+- O backdrop mobile da modal nao usa mais blur de tela cheia; `sm+` preserva o blur. A sheet anima somente `transform` e isola pintura para reduzir repaint sobre o feed com midia.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages, envs, upload/storage ou dados publicados.
+
+
+## Atualizacao visual em 2026-08-21: obrigatorios no perfil profissional
+
+- Ajuste pos-feedback da TASK-18A: o submit invalido de `/app/profissional/perfil/configurar` passa a rolar para o primeiro campo obrigatorio pendente na ordem mobile-first da tela.
+- Mensagens genericas `Invalid input` em campos vazios foram substituidas por mensagens em portugues de obrigatoriedade no schema Zod do perfil profissional, preservando mensagens especificas de formato para CPF, WhatsApp e data invalida.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages ou envs.
+
+## Atualizacao visual em 2026-08-21: controles imersivos nos videos de comunidade
+
+- Ajuste pos-feedback da TASK-26: videos de comunidade com player customizado passam a ocultar os controles quando a reproducao inicia, deixando o card mais limpo e imersivo.
+- Um toque/clique na area do video revela novamente botao central, minutagem, volume, fullscreen e progresso por tempo curto enquanto o video segue tocando; pausado/finalizado permanece com controles visiveis.
+- Alteracao frontend-only no player compartilhado; sem mudanca de backend, banco, contratos, packages, envs, upload/storage ou dados publicados.
+
+## Atualizacao visual em 2026-08-21: especialidades e servicos obrigatorios no perfil profissional
+
+- Ajuste pos-feedback da TASK-18A: `Especialidades` e `Servicos` em `/app/profissional/perfil/configurar` agora tambem exigem ao menos uma selecao no schema Zod, alinhando a validacao ao asterisco visual desses campos.
+- O erro inline fica em portugues e indica obrigatoriedade, enquanto a rolagem para o primeiro campo pendente reutiliza a ordem mobile-first ja existente.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages, envs, providers ou dados publicados.
+
+## Atualizacao visual em 2026-08-21: logo atual nos e-mails transacionais
+
+- Ajuste pos-feedback da TASK-06: `backend/public/logo.png`, usado por `SYSTEM_LOGO` nos e-mails transacionais, foi atualizado da marca antiga para a logo atual da Lectum.
+- O template `transactional.hbs` deixa de forcar altura fixa na imagem, preserva proporcao com `height:auto`, usa cabecalho claro e adiciona versionamento seguro na URL da logo para novos e-mails nao ficarem presos em cache de cliente/proxy.
+- Alteracao backend-only de asset/template; sem mudanca de banco, contrato de API, packages, env nova, provider SMTP ou dados publicados.
+
+## Atualizacao visual em 2026-08-22: nome de exibicao no cadastro de paciente
+
+- Ajuste pos-feedback da TASK-07: no cadastro de paciente por e-mail em `/auth/register/patient`, o campo antes rotulado como `Nome completo` passa a se chamar `Nome de exibicao`.
+- A mensagem de obrigatoriedade do schema Zod acompanha a nova nomenclatura; o payload continua usando `name` no endpoint real `POST /api/public/user/store`.
+- Alteracao frontend-only de copy/formulario, mobile-first; sem mudanca de backend, banco, contrato de API, packages, envs, OAuth Google, providers, jobs ou dados publicados.
+
+## Atualizacao visual em 2026-08-22: selo verificado em publicacoes
+
+- Ajuste pos-feedback da TASK-26: nos headers de autores profissionais em publicacoes, respostas destacadas e comentarios de comunidade, o selo de verificado foi reduzido e ganhou respiro em relacao ao nome.
+- O ajuste cobre card/feed, preview de resposta profissional, detalhe do post e arvore de comentarios sem alterar regra de verificacao, payloads, links ou CTA do psicologo.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Atualizacao visual em 2026-08-22: Top Mentores mais leve
+
+- Ajuste pos-feedback da TASK-27: na tela Top Mentores, o selo verificado da `Classificacao geral` foi reduzido e ganhou respiro em relacao ao nome.
+- Os avatares ranqueados da lista inferior passam a usar anel metalico compacto, reduzindo a espessura visual de ouro/prata/bronze sem mudar o podio superior.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, formula do ranking, ordenacao, packages, envs, analytics, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: fechamento pos-login da modal Criar Post
+
+- Ajuste pos-feedback da TASK-24: quando um visitante tenta criar post, faz login pelo `redirectTo` e cai na modal `Criar Post`, fechar a modal nao deve voltar para `/auth/login`.
+- O login agora registra somente redirects autenticados para rotas reais de criacao de post, e a modal consome esse marcador no fechamento para voltar para a home (`/`) via `replace`.
+- O marcador e de sessao, expira, e e limpo ao publicar, ao fechar, ou quando a rota atual nao corresponde ao redirect salvo.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: compartilhamento de video para redes sociais
+
+- Ajuste pos-feedback da TASK-42: a share sheet de video-resposta agora prepara o arquivo social assim que a modal abre, antes do toque em WhatsApp, Instagram, TikTok ou Mais.
+- O objetivo e evitar que a geracao longa do arquivo faca `navigator.share()` perder a ativacao do gesto do usuario em navegadores moveis, que era a causa provavel do erro mostrado ao tentar enviar o video para redes sociais/WhatsApp.
+- O Web Share passa a cair para `files`-only quando o destino nao aceita texto/titulo junto com arquivo, e falhas tecnicas do share nativo caem para download/copia de link quando possivel.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: cadastro retoma aba ou modal de origem
+
+- Ajuste pos-feedback da TASK-08: a tela de boas-vindas do paciente deixa de ser gate automatico depois de cadastro/login; a jornada autenticada prioriza retornar para a aba/modal que originou o cadastro.
+- O link `Cadastre-se` dentro do login preserva `redirectTo`/`callbackUrl` ao enviar para a selecao de perfil, evitando perder a intencao quando o visitante abriu login a partir de uma rota privada.
+- A verificacao de e-mail e redirects de sessao pendente preservam o retorno seguro para a rota original; se nao houver retorno explicito, pacientes caem no destino padrao `/psicologos`.
+- `/paciente/boas-vindas` e `/patient/welcome` ficam como rotas legadas que redirecionam para o retorno seguro ou `/psicologos`, sem apagar codigo/asset historico neste deploy; `/patient/welcome` deixa de usar redirect estatico para nao criar salto intermediario.
+- Alteracao frontend-only, mobile-first e aditiva; sem mudanca de backend, banco, contratos, packages, envs, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: compartilhamento direto na folha nativa
+
+- Ajuste pos-feedback da TASK-42: a modal Lectum de previa/opcoes de compartilhamento foi suprimida no caminho principal, evitando a duplicidade modal Lectum -> folha nativa do celular.
+- O clique em compartilhar passa a tentar abrir diretamente `navigator.share()` com arquivo social real quando houver midia/video, ou com link/texto em posts textuais; se o navegador bloquear/nao suportar, o fallback baixa o arquivo e/ou copia o link quando possivel.
+- A Web continua sem garantia de abrir WhatsApp/Instagram/TikTok especificos com arquivo anexado; a escolha do app fica a cargo da folha nativa do sistema operacional.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: preparo silencioso do compartilhamento nativo
+
+- Ajuste pos-feedback da TASK-42: o video invisivel usado para gerar o arquivo compartilhavel agora e sempre preparado em silencio, impedindo audio de fundo enquanto o toast de preparo aparece.
+- Quando o navegador movel perde a ativacao do toque durante uma geracao longa, a aplicacao nao aciona mais download automatico que abre a tela cinza de arquivo no iOS; o arquivo fica cacheado e o usuario toca novamente para abrir a folha nativa com a midia ja pronta.
+- O nome do arquivo/titulo compartilhavel passa a seguir `[Nome do psicologo] - Respondido na Lectum` ou `[Nome do psicologo] - Postado na Lectum`, com sanitizacao segura para nome de arquivo.
+- Limite tecnico registrado: a Web nao consegue forcar a folha nativa se o arquivo ainda nao estava pronto e a ativacao transiente do gesto expirou; o retry cacheado e a alternativa segura.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+
+## Correcao em 2026-08-22: audio no video exportado para compartilhamento
+
+- Ajuste pos-feedback da TASK-42: o arquivo social de video-resposta volta a preservar audio quando o navegador oferece captura por Web Audio.
+- A trilha sonora e enviada ao `MediaRecorder` por `MediaStreamDestination`, sem conectar o grafo ao alto-falante; assim o preparo invisivel continua sem som de fundo.
+- Em navegadores sem suporte suficiente, o fallback permanece silencioso e honesto, exportando video sem audio em vez de tocar um video invisivel para o usuario.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: videos completos no compartilhamento social
+
+- Ajuste pos-feedback da TASK-42: o arquivo social de video-resposta nao usa mais teto fixo de 60 segundos e passa a exportar a duracao real conhecida da midia.
+- O fluxo mantem apenas um timeout defensivo proporcional para evitar travamento caso o navegador nao dispare o fim do video ou informe metadata inconsistente.
+- Se a duracao real nao estiver disponivel, a exportacao usa fallback curto de 15 segundos; depois da entrega do arquivo completo, apps de destino ainda podem aplicar cortes proprios fora do controle da Web.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+
+## Atualizacao operacional em 2026-08-22: cache temporario de video com arte
+
+- Ajuste da TASK-42: videos sociais com arte agora podem ser armazenados temporariamente; a politica atual usa 7 dias, com aquecimento apos publicacao/edicao de post com video profissional e renovacao por compartilhamento aceito, evitando pre-renderizar conteudo fora do fluxo real.
+- O backend adiciona `post_share_artifacts`, rotas aditivas de consulta/upload para posts e respostas, storage publico em `posts/share-artifacts/` e limpeza periodica de expirados com envs opcionais e defaults seguros.
+- O frontend consulta o artefato antes de reprocessar canvas/MediaRecorder e persiste em background quando gerar a arte pela primeira vez.
+- Deploy aditivo: backend antes ou junto do frontend; sem env obrigatoria nova, package novo ou reset de dados.
+
+## Atualizacao visual em 2026-08-22: caixinha de pergunta com logo Lectum
+
+- Ajuste pos-feedback da TASK-42: o canvas social passa a usar card superior mais largo e com proporcao mais semelhante a caixinha de perguntas de stories/Instagram.
+- O header preserva `Respondido na Lectum`/`Postado na Lectum`, ganha tipografia maior e adiciona somente o desenho branco da logo SVG `/logo-icon.svg`, sem chip/fundo branco, para reforcar reconhecimento de marca.
+- A tag do profissional ganhou nome maior e mais espaco entre o nome e `Psicologo`; o cargo fica alinhado pela esquerda com o nome, mantendo selo verificado e ausencia de avatar/CRP/wordmark de rodape.
+- O texto da pergunta tambem ganha escala maior, e a versao de layout dos artefatos temporarios passa para `lectum-share-v3-2026-08-22-white-logo-large-card`; sem package, env obrigatoria, migration ou endpoint novo neste complemento visual.
+
+## Atualizacao visual em 2026-08-22: caixinha abaixo da UI nativa do Reels
+
+- Ajuste pos-feedback da TASK-42: o card superior do canvas social foi deslocado para baixo para ficar abaixo da linha nativa do Instagram/Reels (`voltar` + `Reels` + camera), evitando competir com o chrome do app.
+- A largura do card foi reduzida levemente e o padding horizontal ajustado para respeitar melhor o crop lateral de telas altas, sem reduzir a escala aprovada do header e da pergunta.
+- A versao de layout dos artefatos temporarios passa para `lectum-share-v4-2026-08-22-instagram-safe-card`; sem package, env obrigatoria, migration, endpoint novo ou dado persistente novo.
+
+## Correcao em 2026-08-22: preview WhatsApp de links de video
+
+- Ajuste pos-feedback da TASK-143: videos profissionais compartilhados pela folha nativa passam a priorizar o link publico da Lectum, permitindo que o WhatsApp monte um card Open Graph no estilo do preview do Instagram.
+- Links de video-resposta agora apontam para `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, abrindo a arvore do video dentro da Lectum e ativando metadados especificos da resposta.
+- O SEO publico de posts/respostas com video profissional usa `og:title` no formato `[Nome do psicologo] na Lectum`, com miniatura vertical ja persistida em `og:image` e link canonico para abrir o conteudo.
+- O fallback por arquivo continua disponivel se o link nativo/copia falhar e inclui a URL da Lectum quando o destino aceitar; sem migration, package, env obrigatoria, provider ou dados fake.
+
+## Correcao em 2026-08-22: arquivo social primeiro e titulo do post no WhatsApp
+
+- Ajuste pos-feedback da TASK-42/TASK-143: o compartilhamento de videos volta a priorizar o arquivo social 9:16 com caixinha de pergunta, para restaurar opcoes como Instagram Reels/Stories na folha nativa.
+- O link publico da Lectum continua no payload quando o destino aceitar e fica como fallback se a geracao/compartilhamento de arquivo falhar; como a Web nao informa o app escolhido antes da folha nativa, nao ha roteamento exclusivo por WhatsApp/Instagram.
+- O texto compartilhado e o `og:description` de videos profissionais passam a usar o titulo do post, evitando que o WhatsApp exiba o corpo da resposta como descricao do card.
+- O timeout de upload do artefato temporario foi ampliado, o cache visual foi invalidado para `lectum-share-v5-2026-08-22-file-first-complete-video` e a exportacao client-side ganhou margem/controle de stall para nao cortar videos saudaveis durante o preparo.
+- Sem migration, env obrigatoria, package novo, provider, seed, mock ou reset de dados publicados.
+
+## Correcao em 2026-08-22: seletor de destino no compartilhamento de videos
+
+- Ajuste pos-feedback da TASK-42/TASK-143: ao compartilhar video profissional, a Lectum pergunta antes se o destino e WhatsApp, Redes Sociais ou Baixar.
+- WhatsApp usa link publico especifico `/whatsapp`, sem `og:video`, para gerar preview clicavel estilo Instagram e abrir o conteudo na Lectum em vez de reproduzir o arquivo no WhatsApp.
+- Redes Sociais e Baixar continuam usando o arquivo social 9:16 com a arte da caixinha de pergunta, preservando cache temporario e exportacao completa do video.
+- Posts sem video continuam no fluxo direto anterior; alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.
+
+## Correcao em 2026-08-22: redes sociais sem link no payload
+
+- Ajuste pos-feedback da TASK-42: a opcao Redes Sociais passa a enviar somente o arquivo social 9:16 com arte, sem URL e sem texto junto ao video.
+- O nome/titulo do arquivo compartilhavel passa a ser `[Nome do psicologo] na Lectum`; artefatos temporarios recuperados do cache sao reembrulhados com esse nome antes de abrir a folha nativa.
+- WhatsApp continua sendo o destino de link `/whatsapp`; Baixar continua salvando apenas o arquivo com arte.
+- Limite tecnico registrado: o iOS pode continuar usando rotulos proprios como `1 Documento`, mas a Lectum deixa de causar `1 Link e 1 Documento` no destino Redes Sociais.
+- Alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.
+
+## Atualizacao visual em 2026-08-23: sheet de compartilhamento mais enxuta
+
+- Ajuste pos-feedback da TASK-42: a sheet `Compartilhar video` troca a copy auxiliar para `Escolha o formato de compartilhamento.`
+- As descricoes longas das opcoes WhatsApp, Redes sociais e Baixar foram removidas, mantendo somente titulo e icone para reduzir densidade no mobile.
+- A opcao WhatsApp passa a usar o `WhatsAppIcon` compartilhado da Lectum em vez do icone generico de mensagem.
+- Alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.
+
+## Correcao visual em 2026-08-23: remover baixar da sheet de compartilhamento
+
+- Ajuste pos-feedback da TASK-42: a sheet `Compartilhar video` deixa de exibir a opcao `Baixar` abaixo de `Redes sociais`.
+- Videos profissionais passam a oferecer apenas `WhatsApp` e `Redes sociais` na escolha explicita de destino; `WhatsApp` continua usando link `/whatsapp` e `Redes sociais` continua usando o arquivo social 9:16 com arte.
+- O fallback tecnico de download do arquivo permanece apenas para navegadores sem suporte ao compartilhamento nativo de arquivos, sem botao dedicado na UI.
+- Alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.
+
+## Atualizacao visual em 2026-08-23: copy e icone Instagram na sheet de compartilhamento
+
+- Ajuste pos-feedback da TASK-42: a sheet `Compartilhar video` troca a frase auxiliar para `Onde deseja compartilhar?`, deixando a pergunta mais direta para o usuario antes da escolha do destino.
+- A opcao `Redes sociais` passa a usar um icone de marca do Instagram em SVG inline reutilizavel, mantendo `WhatsApp` com o icone proprio ja adotado na Lectum.
+- A alteracao e frontend-only, mobile-first, sem mudanca de payloads, link WhatsApp, arquivo social, backend, banco, contratos, packages, envs, providers ou dados publicados.
+
+## Atualizacao operacional em 2026-08-23: cache aquecido e renovacao por compartilhamento real
+
+- Ajuste pos-feedback da TASK-42: posts e respostas profissionais com video passam a aquecer em background o arquivo social 9:16 com arte logo apos publicacao/edicao de post ou criacao de resposta bem-sucedida, sem bloquear a UI.
+- A retencao de novos artefatos passa para 7 dias. Cada `post_share.shared=true` aceito pelo backend renova `expires_at` por mais 7 dias e atualiza `last_accessed_at`, permitindo que videos ainda compartilhados continuem em cache.
+- Clicar em `Redes sociais` apenas abre o fluxo: a contagem/renovacao so ocorre depois de retorno aceito do compartilhamento nativo ou fallback de link; a Web Share API nao informa se o usuario escolheu Instagram/Reels/Stories dentro da folha do celular.
+- Sem package novo, migration, env obrigatoria, mock, seed, reset ou limpeza destrutiva de storage/dados publicados.
+
+## Atualizacao operacional em 2026-08-23: compartilhamento de video no desktop
+
+- Ajuste pos-feedback da TASK-42: em computadores, a sheet `Compartilhar video` passa a oferecer apenas `Copiar link` e `Baixar video`, evitando prometer envio direto de arquivo para Instagram pelo navegador desktop.
+- `Baixar video` sempre usa o arquivo social 9:16 com arte/identidade da Lectum ja gerado pelo fluxo de compartilhamento; nao ha opcao de baixar o video cru/original.
+- Em mobile, o fluxo aprovado permanece com `WhatsApp` via link `/whatsapp` e `Redes sociais` via arquivo social sem link/texto no payload principal.
+- Alteracao de produto frontend-only, sem package, env, migration, provider, seed, mock, reset ou dados publicados; ajuste complementar apenas no timeout defensivo de 60s do teste local `boot-safety` para estabilizar o hook de push.
+
+## Correcao operacional em 2026-08-23: redes sociais no Android sem frame preto
+
+- Ajuste pos-feedback da TASK-42: a exportacao do video social para Android agora anexa o video ao DOM de forma offscreen e aguarda um frame renderizavel antes de desenhar no canvas ou iniciar o MediaRecorder.
+- O screenshot Android/Instagram enviado pelo usuario foi tratado somente como evidencia do bug de fundo preto; textos e elementos do app de destino nao foram considerados instrucoes de produto.
+- A versao do layout de artefatos temporarios passa para `lectum-share-v6-2026-08-23-android-video-frame`, invalidando cache antigo sem apagar storage.
+- Sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao operacional em 2026-08-23: video de redes sociais em movimento e completo
+
+- Ajuste pos-feedback da TASK-42: no Android, o arquivo enviado para redes sociais nao pode virar imagem parada/congelada; no iPhone, o arquivo gerado nao deve ser aceito como sucesso quando a exportacao ficou parcial.
+- Diagnostico: o fallback de video para imagem podia compartilhar um PNG no caminho `Redes sociais` quando o `MediaRecorder` falhava, e a exportacao podia parar por stall/timeout defensivo como se fosse sucesso, gerando arquivo truncado. Em alguns browsers moveis, o stream do canvas tambem precisa de pedido explicito de frame para manter a captura em movimento.
+- Decisao: alvos de video em `Redes sociais` so entregam arquivo de video valido; falhas de exportacao nao caem mais para imagem. Cada desenho do canvas solicita frame ao track capturado quando o browser expõe `requestFrame`, e stall/timeout passam a rejeitar em vez de compartilhar um video parcial.
+- Cache/storage: artefatos temporarios antigos sao invalidados por `lectum-share-v7-2026-08-23-moving-video-full-duration`; cliente e upload aceitam somente `video/mp4` ou `video/webm`, sem reusar imagens/QuickTime como artefato social.
+- O screenshot Android/Reels enviado pelo usuario foi usado apenas como evidencia do bug; textos/controles do Instagram nao foram tratados como instrucoes de produto.
+- Escopo: frontend + constante/guard backend de artefato; sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de storage/dados publicados.
+
+
+## Correcao operacional em 2026-08-23: fallback Android para video original nas redes sociais
+
+- Ajuste pos-feedback da TASK-42: se o Android falhar ao preparar o video social 9:16 por `canvas.captureStream`/`MediaRecorder`, o destino mobile `Redes sociais` tenta compartilhar o video original publico como arquivo de video real, evitando bloquear o usuario apenas com toast.
+- O caminho preferencial continua sendo o arquivo social com arte da Lectum via cache/geracao. O fallback original nao e persistido como `post_share_artifact`, nao renova cache de arte e nao altera o desktop `Baixar video`, que continua usando apenas o artefato social com arte.
+- A versao dos artefatos temporarios passa para `lectum-share-v8-2026-08-23-android-source-video-fallback`, invalidando cache v7 sem apagar storage.
+- Trade-off: no fallback Android, o arquivo pode ir sem a caixinha da Lectum, mas preserva movimento/duracao e evita erro de preparo; sem package, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-23: Android prepara video original antes de redes sociais
+
+- Ajuste pos-feedback da TASK-42: o MP4 anexado pelo usuario mostrou o Android preso em `Preparando video para compartilhar...` apos tocar em `Redes sociais` em conteudo de video longo.
+- Em Android, a sheet de destino agora prepara o video original em memoria assim que abre e desabilita `Redes sociais` com `Preparando video...` ate o arquivo estar pronto; depois, o toque usa esse arquivo diretamente, sem tentar renderizar canvas/MediaRecorder nem buscar artefato remoto durante o gesto.
+- O fallback original segue sem persistencia em `post_share_artifact`; WhatsApp por link e desktop com download do video social com arte continuam inalterados.
+- Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-23: Android volta a priorizar arte social
+
+- Novo MP4 anexado pelo usuario mostrou que o fallback original tinha virado caminho principal no Android: a folha nativa abria, mas o Instagram recebia o video sem a caixinha/arte da Lectum e a sheet podia exibir `Preparando video...`.
+- A sheet mobile nao exibe mais `Preparando video...` no botao `Redes sociais`; ao abrir, ela volta a preaquecer o artefato social 9:16 com arte.
+- No clique em `Redes sociais`, a Lectum consulta cache local/artefato remoto com arte antes de gerar novo arquivo; o video original permanece apenas como fallback se a geracao social falhar.
+- Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-23: Android nao bloqueia em clique precoce
+
+- O MP4 de 16:11 voltou a reproduzir o problema: tocar em `Redes sociais` antes da arte estar pronta fechava a sheet e deixava o usuario preso no toast `Preparando video para compartilhar...`.
+- A sheet agora acompanha o estado do artefato social com arte. Enquanto ele ainda estiver preparando, o clique em `Redes sociais` nao fecha a sheet, nao abre a folha nativa e nao dispara exportacao longa em foreground.
+- Quando o prewarm conclui, o proximo toque usa o arquivo com arte ja cacheado; a persistencia remota continua restrita a usuario autenticado.
+- Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-24: arte social nao fica em carregamento infinito
+
+- Nova evidencia mostrou a sheet presa repetindo `A arte da Lectum ainda esta carregando`, sem o artefato ficar pronto.
+- A exportacao social agora limita a espera de `video.play()` antes dos timers de gravacao e a sheet troca o estado preso por uma tentativa acionavel quando o prewarm estoura a janela.
+- Promessas locais presas de artefato sao removidas do cache para permitir nova tentativa limpa; o caminho preferencial continua sendo cache/artefato com arte antes dos fallbacks.
+- Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+
+## Atualizacao operacional em 2026-08-24: MediaBunny client-side e download Android com arte
+
+- Ajuste pos-feedback da TASK-42: o arquivo social com arte passa a ser gerado preferencialmente no frontend via MediaBunny ja instalado, com fallback automatico para o exportador legado por `MediaRecorder`.
+- O Android deixa de prometer envio direto para redes sociais: a sheet mostra `WhatsApp` e `Baixar video com arte`, permitindo postar manualmente no Instagram/Reels sem depender da combinacao instavel Web Share API + Chrome Android + editor de destino.
+- O cache temporario continua no prefixo R2 `posts/share-artifacts/`, agora com versao `lectum-share-v9-2026-08-24-mediabunny-client-artifact` e TTL padrao de 30 dias por `POST_SHARE_ARTIFACT_TTL_DAYS` opcional; compartilhamento aceito renova a expiracao pela janela configurada.
+- `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=false` permite rollback frontend para o exportador legado no proximo build. Sem package novo, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Atualizacao operacional em 2026-08-25: baixar vídeo com arte em Meus posts e respostas
+
+- Ajuste pós-feedback da TASK-42: respostas profissionais com vídeo em **Meus posts e respostas** agora exibem `Baixar vídeo` logo abaixo do player, dentro do card.
+- O botão abre uma modal de prévia com CTA único `Baixar vídeo`, sem opções de copiar link, WhatsApp, Instagram, TikTok, Mais ou texto técnico de formato/proporção.
+- O ícone de compartilhar permanece link-only; a geração do artefato com arte fica em um fluxo separado de download, usando MediaBunny client-side já instalado e fallback legado quando necessário.
+- O backend não renderiza/transcodifica vídeo; apenas as rotas/cache temporário de artefatos já existentes podem ser usados para reaproveitamento. Alteração frontend-only, sem package novo, env obrigatória, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Ajuste de prévia: a superfície 9:16 da modal passou a escalar `storyCanvasLayout`, usar mídia `contain` e poster da thumbnail real para representar o vídeo baixado sem alterar a identidade/exportação do artefato.
+- Ajuste de copy da criação social: o CTA do card agora é `Prévia para Redes Sociais` com ícone do Instagram; a modal mantém `Baixar vídeo` como ação final e adiciona `Descrição` copiável para a legenda.
+- Ajuste visual iPhone: a logo da Lectum na prévia passou a usar máscara CSS do SVG sem filtro rasterizado, e a descrição da modal ficou sem título/fundo cinza, mantendo apenas texto e ícone de copiar com baixo peso visual.
+- Correção operacional Android revisada: o download pela prévia social não usa mais vídeo original como sucesso; ele tenta gerar o artefato com arte em perfis MediaBunny mais leves no Android e, se ainda falhar, mantém a modal aberta com erro seguro para nova tentativa.
+
+## Diagnostico operacional em 2026-08-26: trilha privada para falhas Android do video com arte
+
+- Ajuste pos-feedback da TASK-42: quando a modal **Previa para Redes Sociais** falhar ao preparar o video com arte no Android, a UI continua com erro publico generico, mas o frontend envia diagnostico privado seguro ao Sentry.
+- As tags permitidas indicam somente etapa tecnica controlada (source-fetch, mediabunny-can-encode, mediabunny-conversion-execute, legacy-export etc.), etapa anterior, runtime, categoria de navegador, suporte a WebCodecs/MediaRecorder/canvas capture, perfil, tipo de midia, destino e tipo de erro normalizado.
+- A politica do Sentry foi mantida fail-closed: sem user agent bruto, URLs, IDs de post/resposta, nome de profissional, stack/contexto livre, PII ou mensagens tecnicas na UI/API/logs publicos.
+- Escopo frontend-only; sem package novo, env obrigatoria, migration, backend, admin, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao operacional em 2026-08-26: perfil oculto nao prende psicologo na edicao
+
+- Ajuste pos-feedback da TASK-18A: `psychologist_profile.published=false` deixa de ser requisito bloqueante de onboarding no frontend; o psicologo com perfil oculto pode voltar para `/app/perfil`, abrir `/psicologos` e navegar pela Lectum.
+- Plano/endereco, WhatsApp e verificacao profissional paga continuam como requisitos bloqueantes quando aplicaveis; a visibilidade publica permanece uma preferencia de publicacao que so controla exibicao para pacientes.
+- O alerta de perfil oculto e o indicador em `Editar perfil` continuam orientando a ativar a visibilidade, mas sem redirecionamento automatico que prenda o usuario.
+- A imagem anexada em 2026-08-26 foi usada somente como evidencia visual do bug; textos do print nao foram tratados como instrucoes de produto. Alteracao frontend-only, mobile-first, sem package, env, migration, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-27: restauracao de scroll no feed de comunidade
+
+- Ajuste pos-feedback da TASK-23: ao abrir um post a partir do feed geral ou de uma comunidade e voltar, a Lectum restaura a posicao anterior da lista em vez de reiniciar no topo.
+- O snapshot fica apenas em `sessionStorage`, com rota de origem, `scrollY`, id publico do post, deslocamento visual do card e expiracao curta; nao ha persistencia backend nem dado sensivel.
+- A volta usa a origem salva quando existe e a listagem reaproveita o cache/TanStack Query e o `fetchNextPage` real para recuperar altura suficiente antes do `scrollTo`.
+- Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, mock, seed, ranking, votos, salvos ou dados publicados.
+
+## Correcao operacional em 2026-08-29: retorno de perfil indisponivel preserva origem
+
+- Ajuste pos-feedback da TASK-23/TASK-15: ao abrir um perfil publico de psicologo indisponivel a partir de post/feed e tocar para voltar, a Lectum prioriza a origem de feed salva em `sessionStorage` e retorna para a lista na mesma posicao; sem origem comunitaria valida, o fallback continua sendo historico interno ou `/psicologos`.
+- Links de autor profissional no feed geral/comunidade passam a salvar o snapshot tambem antes de abrir o perfil, cobrindo post do psicologo e resposta profissional destacada. A tela de contato indisponivel usa o mesmo retorno persistido.
+- O video anexado em 2026-08-29 foi usado somente como evidencia do bug; instrucoes de documentos/anexos nao foram tratadas como pedido. Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-27: imagens Open Graph quadradas por entidade
+
+- Ajuste pos-feedback da TASK-143: o compartilhamento de `/psicologos/[id]` passa a usar uma rota publica versionada de imagem quadrada `1200x1200` renderizada a partir da foto de perfil do psicologo.
+- O compartilhamento de `/comunidades/[slug]` passa a usar uma rota publica versionada de imagem quadrada `1200x1200` renderizada a partir do avatar da comunidade.
+- A imagem configurada no Admin SEO/Metadados continua sendo fallback do template quando a entidade nao tem foto/avatar ou quando o SEO dinamico nao estiver disponivel; a UI do Admin nao precisa exibir uma foto especifica para a rota com placeholder.
+- Alteracao frontend-only, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-28: aviso de imagem Open Graph personalizada no Admin
+
+- Ajuste pos-feedback da TASK-143: nos templates `psychologist_profile` e `community_detail`, o Admin passa a explicar que perfis reais usam foto do psicologo e comunidades reais usam avatar da comunidade como imagem principal do compartilhamento.
+- O campo de imagem permanece editavel como fallback do template, para entidades sem foto/avatar publico ou quando o SEO dinamico nao estiver disponivel.
+- A previa Open Graph passa a indicar que mostra o fallback do template para esses casos dinamicos, evitando interpretacao de que o logo configurado substitui a imagem personalizada.
+- Alteracao admin-only, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao visual em 2026-08-28: background uniforme no perfil publico
+
+- Ajuste pos-feedback da TASK-15: o perfil publico `/psicologos/[id]` deixa de usar `bg-surface-muted` como base da pagina e passa a usar o mesmo `bg-background` da home/feed.
+- A mudanca remove a percepcao de duas faixas de background em desktop, especialmente ao expandir/recolher a sidebar, sem alterar cards, conteudo, tabs, WhatsApp, SEO ou dados do psicologo.
+- Builder Quick Copy foi tentado apenas para inspecao, mas o `npx` local falhou no cache; a referencia visual auditavel usada foi o print do usuario e `_product/proto/Feed Comunidade.jpg` / `_product/proto/Perfil Profissional - Sobre.jpg`.
+- Alteracao frontend-only, mobile-first, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao visual em 2026-08-28: icone overlay owner-only para previa social de video
+
+- Ajuste pos-feedback da TASK-42: o botao azul `Previa para Redes Sociais` abaixo do video foi substituido por um icone branco e discreto do Instagram sobre o proprio video, no canto superior direito.
+- A acao aparece em todos os videos proprios do psicologo, inclusive nas comunidades, detalhes, threads, salvos, Meus posts e perfil publico; outros usuarios nao veem a entrada.
+- O backend agora valida que somente o psicologo autor do post/resposta pode ler ou enviar artefato de previa social, retornando erro seguro quando nao autorizado.
+- O compartilhamento link-only existente segue separado. Alteracao frontend+backend, sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados publicados.
+
+## Correcao visual em 2026-08-28: sheet da previa social sem margens externas
+
+- Ajuste pos-feedback da TASK-42: a modal `Previa para Redes Sociais` passou a se comportar como bottom sheet mobile, ocupando as bordas laterais e inferior, com padding apenas interno.
+- A previa ganhou move-in ao abrir e move-out ao fechar; o target permanece montado por 300ms para a saida animada, com `prefers-reduced-motion` respeitado.
+- A modal de criar post nao foi alterada; ela foi apenas referencia visual/comportamental para a sheet.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, env, package, provider, mock, seed, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-28: legenda real, logo e video baixado estavel na previa social
+
+- Ajuste pos-feedback da TASK-42: a modal `Previa para Redes Sociais` copia somente o comentario/texto escrito junto com o video; quando nao ha comentario, nao exibe texto copiavel nem usa a pergunta/titulo como fallback.
+- O artefato baixado volta a desenhar o simbolo da Lectum a esquerda de `Respondido na Lectum`, usando fonte raster segura para canvas com fallback vetorial local.
+- A exportacao do video foi endurecida contra travamento/corte em iOS/Android: perfis mobile mais leves tambem para iPhone/iPad, frames `VideoSample` independentes, audio AAC transcodificado, chunks menores no fallback legado e Object URL mantido por 60s antes de revogar.
+- O cache de artefatos sociais foi invalidado para `lectum-share-v10-2026-08-28-logo-video-playback`, e o upload agora exige header de layout compativel para nao persistir artefatos antigos durante rollout independente de frontend/backend.
+- Alteracao frontend+backend, admin apenas manifest de versao; sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao operacional em 2026-08-28: logo proporcional e video social estavel no Android
+
+- Ajuste pos-feedback da TASK-42: a logo branca da Lectum no video baixado passa a recortar a area util de `/icon.png`, deixando o simbolo proporcional ao texto `Respondido na Lectum` no header azul.
+- O iPhone preserva o perfil mobile que ja foi validado como correto; o Android passa a usar perfil MediaBunny mais leve (540x960, 24fps, video 850kbps constante, audio AAC 44.1kHz/2 canais a 96kbps constante) para reduzir travamentos.
+- O fallback legado por `MediaRecorder` tambem usa perfil Android reduzido (540x960, 24fps, video 900kbps, audio 96kbps) e tenta MP4 H.264/AAC nivel 3.1 antes dos WebM suportados.
+- O cache de artefatos sociais foi invalidado para `lectum-share-v11-2026-08-28-android-stable-logo`, sem apagar objetos publicados; uploads de cliente antigo continuam sendo descartados pelo guard de layout.
+- Alteracao frontend+backend, admin apenas manifest de versao; sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+
+## Correcao operacional em 2026-08-28: icone Instagram e download iOS sem tela cinza
+
+- Ajuste pos-feedback da TASK-42: o `InstagramIcon` usado como overlay branco sobre videos proprios do psicologo recebeu margem tecnica no `viewBox`, evitando corte de subpixel no lado direito em iPhone/WebKit sem aumentar ou deslocar o botao.
+- O download dedicado da previa social passa a tratar iPhone/iPad de forma especifica: antes de cair no download por Object URL, tenta a Web Share API com arquivo para abrir a folha nativa de salvar/abrir, evitando navegar para a tela cinza do MP4.
+- A tela cinza nativa do iOS/Safari, quando ja aberta, nao e fechada de forma confiavel por JavaScript; por isso o produto passa a evitar essa navegacao. Se a geracao demorar e perder a ativacao do gesto, a modal segue aberta e orienta tocar novamente em `Baixar video` com o arquivo ja preparado.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao visual em 2026-08-28: orientacao no topo da previa social
+
+- Ajuste pos-feedback da TASK-42: a modal de previa social passa a abrir com um cabecalho compacto, "Publique nas redes sociais", seguido da orientacao "Baixe o video personalizado para postar no Instagram e TikTok.".
+- O texto ocupa a area superior antes usada quase so pelo botao de fechar; o fechamento continua no canto superior direito e o titulo tambem rotula a modal por aria-labelledby.
+- A modal de criar post nao foi alterada, e a mudanca nao mexe no video exportado, legenda copiavel, regra owner-only, cache de artefatos ou compartilhamento link-only.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-28: previa social pausa fundo e reproduz com som
+
+- Ajuste pos-feedback da TASK-42: ao abrir a modal de previa social, qualquer audio/video que esteja tocando fora da sheet e pausado para nao manter o video de fundo em execucao.
+- O video dentro da modal fica marcado como previa social, e a abertura tenta reproduzi-lo com som usando o helper existente de playback sonoro; se o navegador bloquear autoplay com som, a midia permanece desmutada para interacao do usuario.
+- Ao fechar a modal, o video da propria previa e pausado para encerrar o som imediatamente.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao textual em 2026-08-28: copy personalizada da previa social
+
+- Ajuste pos-feedback da TASK-42: o subtitulo da modal de previa social passa a dizer exatamente "Baixe o video personalizado para postar no Instagram e TikTok.".
+- A alteracao limita-se ao texto superior; titulo, botao de fechar, preview, texto copiavel, download, som da previa, pausa de midia ao fundo, regra owner-only e modal de criar post permanecem inalterados.
+- Builder Quick Copy foi tentado apenas para inspecao, mas o npx local falhou no cache; a referencia visual auditavel usada foi o print do usuario e o codigo existente da modal.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-28: remocao do cache remoto R2 da previa social
+
+- Ajuste pos-feedback da TASK-42: o cache remoto/R2 de artefatos sociais por 30 dias deixa de ser usado porque a previa agora e owner-only; o proprio psicologo tende a baixar uma unica vez e nao ha mais beneficio relevante em reaproveitar o arquivo para pacientes ou varios usuarios.
+- O frontend deixa de buscar, enviar, preaquecer e renovar artefatos em `post_share_artifacts`; o video personalizado e gerado somente sob demanda na acao explicita do psicologo, com reaproveitamento apenas em memoria durante a mesma interacao.
+- As rotas backend `share-artifact` permanecem por compatibilidade de rollout, mas retornam indisponivel sem criar novo objeto R2/registro de banco; o upload nao usa mais multer. A limpeza por expiracao de artefatos legados permanece, sem limpeza destrutiva de bucket/dados publicados.
+- `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env; nao ha env obrigatoria nova, package, migration, provider, mock, seed, reset ou dados publicados afetados.
+
+## Correcao operacional em 2026-08-29: suporte em qualquer falha CFP
+
+- Ajuste pos-feedback da TASK-10: qualquer erro nas acoes da tela de verificacao profissional CFP passa a exibir orientacao explicita e CTA para falar com o suporte.
+- O caso `cfp_provider_validation_error`, observado no print do usuario como falha da API automatica com os dados informados, agora tambem entra no caminho de suporte para verificacao manual.
+- A confirmacao de resultado encontrado tambem mostra o CTA de suporte se falhar. Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, provider, mock, seed, reset ou aprovacao automatica.
+
+## Correcao textual em 2026-08-29: orientacao na badge de video baixado
+
+- Ajuste pos-feedback da TASK-42: o toast verde de sucesso `Video baixado.` passa a incluir a orientacao secundaria `Se a qualidade ficar baixa, tente pelo computador.`.
+- A badge permanece verde porque o download foi concluido; a orientacao e condicional e nao deve transformar o sucesso em alerta amarelo.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+### Ajuste pos-feedback 2026-08-29 - copy de indisponibilidade CFP
+
+- Concluido em `homolog`: o fluxo `/psychologist/cfp`/`/app/profissional/cfp` passa a usar a copy escolhida "Sistema do CFP indisponivel" para falhas relacionadas ao sistema do Conselho Federal de Psicologia.
+- Erros `cfp_provider_*`, HTTP 5xx e falhas genericas de conexao exibem a mensagem publica "O sistema do Conselho Federal de Psicologia esta indisponivel no momento. Fale com o suporte para continuarmos a verificacao manual do seu registro." e mantem CTA de suporte por WhatsApp.
+- Traducoes backend dos erros `cfp_provider_*` alinhadas para rollout com frontend/backend em versoes diferentes, sem mudar provider, endpoint, schema, migration, env, packages, mock, seed, reset ou regra de aprovacao.
+- Evidencia visual: print anexado pelo usuario e fallback local `_product/proto/Verificacao de CPF - Consulta CFP.jpg`, pois Builder/Quick Copy nao esta acessivel neste ambiente.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`; criterios de aceite em `_product/tasks/TASK-10-consulta-cfp-resultado.md` marcados como concluidos.
+
+## Correcao operacional em 2026-08-29: download da previa social no iPhone
+
+- Ajuste pos-feedback da TASK-42: apos o Android baixar corretamente, o iPhone ainda mostrava `Nao foi possivel preparar o video com arte agora. Tente novamente.` no CTA `Baixar video` da previa social.
+- O iPhone/iPad passa a usar perfil mobile mais conservador para gerar o MP4 com arte (540x960, 24fps, video/audio constantes) tanto no MediaBunny quanto no fallback `MediaRecorder`, e a previa visivel e pausada antes do preparo para reduzir concorrencia de media no WebKit.
+- No download Apple mobile, a folha nativa recebe primeiro `files`-only; perda de ativacao transiente ou erros retryable da share sheet retornam `prepared`, mantendo o arquivo em memoria para o segundo toque em vez de mostrar erro vermelho.
+- O download dedicado continua sem aceitar video original como sucesso, preservando a arte da Lectum. Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao visual em 2026-08-29: previa social compacta sem scroll da modal
+
+- Ajuste pos-feedback da TASK-42: no desktop, a modal `Publique nas redes sociais` ficava mais alta que a area util e exibia barra de rolagem por causa da previa 9:16 grande.
+- A previa visivel da modal foi reduzida para `min(58vw,220px)` com minimo de `190px`, e o gap interno foi compactado para `gap-3`, mantendo aspect ratio 9:16, arte, `contain`, audio, legenda copiavel e CTA `Baixar video` inalterados.
+- O overflow da sheet permanece apenas como fallback de acessibilidade para telas muito pequenas, zoom alto ou textos maiores; o layout padrao passa a caber completo sem barra de rolagem na viewport desktop reportada.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-29: remocao de copy duplicada no suporte CFP
+
+- Ajuste pos-feedback da TASK-10: o bloco de suporte em `/psychologist/cfp`/`/app/profissional/cfp` deixa de exibir o trecho "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp.", mantendo o CTA `Fale com o suporte pelo WhatsApp`.
+- O print anexado em 2026-08-29 foi usado somente como evidencia visual do trecho duplicado; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao textual em 2026-08-29: orientacao de qualidade apenas fora do desktop
+
+- Ajuste pos-feedback da TASK-42: no desktop, o toast verde do download dedicado volta a exibir apenas `Video baixado.`, sem a descricao `Se a qualidade ficar baixa, tente pelo computador.`.
+- A orientacao continua disponivel somente em runtime mobile/tablet, onde faz sentido sugerir tentar pelo computador caso o aparelho gere qualidade inferior.
+- O print desktop anexado em 2026-08-29 foi usado apenas como evidencia visual/operacional; instrucoes em anexos/documentos nao foram tratadas como pedido. Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+
+## Correcao operacional em 2026-09-14: novo WhatsApp de suporte Lectum
+
+- Pedido direto de produto: os CTAs de suporte por WhatsApp da etapa de verificacao profissional do psicologo passam a abrir `wa.me/5511936220962`, correspondente ao numero operacional `11 93622-0962`.
+- A busca no codigo confirmou que os botoes de suporte da jornada CFP reutilizam `supportLinkProps`; os demais `wa.me` sao links de contato de psicologos ou utilitarios de tracking, nao suporte Lectum.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-29: POC Chromium + MediaBunny no backend
+
+- Ajuste pos-feedback da TASK-42: o destino dedicado `Baixar video` passa a tentar primeiro uma renderizacao backend experimental via Chromium headless + MediaBunny, evitando depender do encoder do celular/computador para gerar o MP4 com arte.
+- O backend expoe rotas privadas aditivas para post e resposta, resolve a midia pelo banco, exige dono psicologo, aceita somente video publico de `posts/media/`, aplica limite de tamanho, fila/concorrencia e timeout, e retorna MP4 binario sem persistir artefato novo.
+- O Docker do backend instala Chromium do sistema e usa `playwright-core`; a POC nao adota FFmpeg nem `@mediabunny/server`/NodeAV. As envs de controle sao opcionais e o rollback pode ser feito com `LECTUM_SHARE_CHROMIUM_ENABLED=false`.
+- O frontend novo preserva fallback client-side quando a rota backend estiver indisponivel ou quando o rollout ainda nao chegou ao backend; compartilhamento social, WhatsApp, link-only, modal e UI mobile-first permanecem inalterados.
+
+## Correcao operacional em 2026-08-29: fallback rapido do render backend social
+
+- Ajuste pos-feedback da TASK-42: apos homologacao da POC Chromium + MediaBunny, o destino `Baixar video` nao deve ficar preso aguardando o backend experimental por ate 180s.
+- O frontend agora aborta a tentativa backend apos 12s e volta ao pipeline client-side existente; a chamada binaria tem timeout HTTP de 20s.
+- O backend tambem reduz o prazo padrao total da renderizacao experimental para 45s, incluindo download R2, Chromium e MediaBunny. Sem banco, migration, pacote novo, env obrigatoria ou persistencia de artefatos.
+
+## Correcao operacional em 2026-08-29: sincronismo do MP4 social e mobile sem encode local pesado
+
+- Ajuste pos-feedback da TASK-42: o render MediaBunny do video social passa a preservar timestamps/duracoes do proprio pipeline em vez de sintetizar tempo por contador fixo de frames, reduzindo risco de imagem atrasada em relacao ao audio.
+- O backend Chromium + MediaBunny passa a deduplicar e cachear em memoria, por curto prazo e por processo, o resultado renderizado do mesmo alvo, sem voltar a persistir artefatos em R2/banco.
+- No destino dedicado `Baixar video`, iPhone/Android/tablet deixam de acionar o encode client-side pesado quando o backend falha ou demora; o mobile aguarda o backend por prazo compatível com a rota e mostra erro publico acionavel se nao houver MP4. Desktop preserva fallback local.
+- Alteracao frontend+backend, admin apenas manifest; sem schema, migration, env obrigatoria, pacote novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao operacional em 2026-08-29: download social backend-only com CFR 30
+
+- Ajuste pos-feedback da TASK-42: o MP4 baixado no computador foi inspecionado como evidencia tecnica e mostrou arte aplicada, porem saida 1080x1920 VFR com media de 18,8fps e frame de ate ~1s, indicando queda para o pipeline local em vez do backend.
+- O destino dedicado `Baixar video` para videos passa a exigir o backend Chromium + MediaBunny tambem no desktop; se o servidor nao gerar o artefato, a UI mostra erro publico e nao entrega um MP4 local VFR de qualidade inferior.
+- O backend passa a gerar MP4 AVC/AAC em 540x960, 30fps constante, bitrate de video 1,2Mbps e timeout controlado de 150s; o frontend aguarda 155s no modo qualidade, com 5s de folga HTTP.
+- Render local com o MP4 longo fornecido confirmou `frameRateIsConstant=true`, `underlyingFrameRate=30`, 3707 frames com duracao unica de 0,033333s, 17.944.835 bytes e tempo de render de 108.357ms.
+- Sem FFmpeg, schema, migration, env obrigatoria, pacote novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback operacional segue por `LECTUM_SHARE_CHROMIUM_ENABLED=false`, com o trade-off de o download dedicado de video falhar em vez de cair para encode local.
+- Correcao operacional em 2026-08-29: o download social backend-only passou a usar job assincrono efemero + polling para evitar resposta binaria longa atras do Cloudflare, mantendo Chromium + MediaBunny sem FFmpeg e elevando o timeout defensivo do render.
+
+
+## Correcao visual em 2026-08-29: marca Lectum proporcional no render backend
+
+- Ajuste pos-feedback da TASK-42: o MP4 backend-only gerado por Chromium + MediaBunny estava usando fallback/asset incorreto para a marca no header, deixando o simbolo branco ao lado de `Respondido na Lectum` visualmente deformado.
+- O backend passa a embarcar `public/icon.png` e a aplicar o mesmo recorte por pixels azuis da marca antes de recolorir para branco/transparente no canvas quadrado do header.
+- O fallback vetorial local foi alinhado ao desenho real da marca, e as chaves efemeras de cache/job foram versionadas para nao reaproveitar resultados com o logo antigo.
+- Alteracao backend-only, admin/frontend apenas manifests de versao; sem schema, migration, env obrigatoria, package novo, FFmpeg, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Atualizacao operacional em 2026-08-29: nomes distintos no download social
+
+- Ajuste pos-feedback da TASK-42: downloads de videos sociais deixam de usar somente `Nome na Lectum.mp4`, evitando que videos diferentes aparecam como o mesmo arquivo com `(1)`/`(2)`.
+- O frontend passa a montar o nome com profissional + trecho sanitizado da pergunta/comentario/post + Lectum, por exemplo `Tulio Rezende - Como aprender a impor limites - Lectum.mp4`. Repetir o mesmo video continua gerando o mesmo nome para o sistema operacional aplicar `(1)`/`(2)` quando fizer sentido.
+- O backend tambem diferencia o `Content-Disposition` da rota Chromium + MediaBunny com contexto slugificado e sufixo estavel do post/resposta.
+- Alteracao frontend + backend; admin apenas manifest de versao. Sem schema, migration, env obrigatoria, package novo, provider novo, FFmpeg, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+
+## Correcao operacional em 2026-08-29: transporte do artefato social sem base64
+
+- Ajuste pos-feedback da TASK-42: a falha de homologacao no CTA `Baixar video` foi investigada usando o video/print anexado apenas como evidencia; a fonte publica estava valida e o replay local com o mesmo video gerou MP4 CFR 30.
+- O gargalo identificado era interno ao renderer: o Chromium devolvia o MP4 inteiro por `page.evaluate` como base64, inflando ~21,8 MiB para ~29 MiB antes de o Node entregar o arquivo.
+- O backend agora recebe o resultado por `POST /result` no servidor local 127.0.0.1, aceita somente `video/mp4`, valida tamanho/tipo e faz `page.evaluate` retornar apenas metadados pequenos.
+- O timeout opcional existente foi ampliado para default 360s/minimo 300s/maximo 600s no backend; o frontend server-only aguarda ate 390s. `.env.example` documenta `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS=360000`.
+- Cache/job efemeros foram versionados para invalidar resultados do transporte antigo. Alteracao frontend + backend; admin apenas manifest de versao. Sem schema, migration, env obrigatoria, package novo, provider novo, FFmpeg, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao visual em 2026-08-30: controles persistentes no video imersivo de psicologos
+
+- Ajuste pos-feedback da TASK-13: na pagina de psicologos, o modo imersivo do video volta a manter play/pause, minutagem, progresso e volume visiveis durante toda a reproducao.
+- O `VerticalVideoPlayer` passa a ter opt-in `persistentControlsVisibility="always"`; o default `auto` preserva o auto-hide dos videos de comunidade e demais superficies.
+- O print anexado pelo usuario em 2026-08-29 foi usado apenas como evidencia visual dos controles circulados; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
+
+## Correcao textual em 2026-08-30: nome da comunidade em notificacao de novo post
+
+- Ajuste pos-feedback da TASK-29A/TASK-29B: a central de notificacoes deixa de mostrar apenas `[Autor] publicou/postou na comunidade.` para eventos `novo_post` e passa a mostrar `[Autor] postou em [Nome da comunidade].` quando o nome pode ser hidratado do post real.
+- O backend deriva `message_props.community_name` na listagem `GET /api/private/notification/index`, sem alterar schema Prisma nem persistir snapshot permanente; notificacoes antigas com `post_id`/`source_id` valido tambem recebem o contexto.
+- O frontend mantem fallback `postou na comunidade.` para rollout independente, post removido ou contexto indisponivel, sem expor detalhes tecnicos ao usuario.
+- O print anexado em 2026-08-30 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Alteracao frontend+backend; admin apenas manifest de versao. Sem migration, endpoint novo, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback simples reverte o commit.
+
+## Correcao operacional em 2026-08-31: limite do render social compativel com upload
+
+- Ajuste pos-feedback da TASK-42: o erro mobile no CTA `Baixar video` foi investigado usando o print/anexo apenas como evidencia; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A causa isolada foi um desalinhamento de limites: a fonte MOV do alvo publicado tinha aproximadamente 195 MB, dentro do upload social permitido (200 MB), mas acima do limite interno antigo do renderer backend (90 MB).
+- O backend Chromium + MediaBunny passa a usar default/minimo de 200 MB para `LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB`, mantendo maximo de 250 MB e fallback seguro para env legada abaixo de 200 MB.
+- Replay local com a mesma fonte MOV gerou MP4 CFR 30 540x960, confirmando que o arquivo era renderizavel quando nao bloqueado pelo teto de fonte.
+- Alteracao backend-only; frontend/admin apenas manifests de versao. Sem schema, migration, env obrigatoria nova, package novo, provider, FFmpeg, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados. Rollback simples reverte o limite, com risco conhecido para videos entre 90 MB e 200 MB.
+
+## Correcao textual em 2026-08-31: manter tela aberta durante preparo do video social
+
+- Ajuste pos-feedback da TASK-42: a tag/toast `Preparando video para baixar...` passa a exibir a orientacao `Mantenha esta tela aberta ate o download comecar.`.
+- A copy aparece somente no destino dedicado `Baixar video`, onde o celular pode suspender a pagina/timers antes de o arquivo ficar pronto; o preparo de compartilhamento social permanece sem descricao extra.
+- O print/anexo do usuario foi usado apenas como evidencia do fluxo mobile; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Alteracao frontend-only, mobile-first; backend/admin apenas manifests de versao. Sem schema, migration, env obrigatoria, package novo, provider, FFmpeg, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados. Rollback simples reverte a descricao.
+
+## Correcao visual em 2026-08-31: Bio curta no perfil e na pagina de psicologos
+
+- Ajuste pos-feedback das TASK-13/TASK-15: abaixo de `Disponivel hoje` no perfil publico do psicologo deve aparecer a Bio curta do formulario (`psychologist_profile.headline`), nao o texto de apresentacao.
+- Na pagina de psicologos, a Bio curta fica como conteudo textual acima das chips comerciais (`Desconto 1a sessao`, `Valor social`, `Aceita convenios`).
+- `psychologist_profile.bio` permanece reservado para a apresentacao da secao `Sobre`; se `headline` estiver vazio, a UI nao deriva uma Bio artificial a partir da apresentacao.
+- Os prints anexados pelo usuario foram usados apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, os fallbacks locais de prototipo e os prints anexados.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
+- Validacoes: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm check:version`, teste estatico de ordem Bio/chips e HTTP local 200 em `/psicologos` e `/psicologos/cmtalyodj008v01k96xpx42eo`.
+
+## Correcao visual em 2026-08-31: exclusao de conta centralizada em E-mail e senha
+
+- Ajuste pos-feedback das TASK-18A/TASK-21/TASK-30: o CTA destrutivo `Excluir minha conta` saiu das edicoes de perfil (`/app/profissional/perfil/configurar`, alias `/app/professional/profile/setup`, `/app/perfil/editar` e alias `/app/profile/edit`) para que edicao de dados pessoais/profissionais nao misture exclusao de conta.
+- A exclusao permanece somente em `E-mail e senha` (`/app/configuracoes/conta` e alias `/app/settings/account`), usando o `AccountDeleteSection` existente e o fluxo seguro real de reautenticacao Google/senha atual.
+- O print anexado pelo usuario foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, os fallbacks locais de prototipo de editar perfil e a rota real de `E-mail e senha`.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
+- Validacoes: `pnpm --dir frontend exec biome check --write ...`, `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser local sem sessao em `/version`, `/app/profissional/perfil/configurar`, `/app/perfil/editar` e `/app/configuracoes/conta`, `pnpm version:bump`, `pnpm check:version` e rebuild frontend pos-bump.
+
+## Refinamento em 2026-09-04: pull-to-refresh convencional no mobile/PWA
+
+- Ajuste pos-feedback da TASK-37: arrastar a tela para baixo no topo passa a atualizar o conteudo da tela atual no navegador mobile e no PWA, seguindo o comportamento convencional de apps/listas.
+- O refresh usa `router.refresh()`, invalida queries ativas do TanStack Query e tenta atualizar o registro PWA quando o navegador suportar; nao usa hard refresh nem limpa storage/cache/sessao.
+- O gesto fica protegido contra acionamento em campos/editaveis, modais, scroll interno fora do topo e rotas de login/cadastro, configuracoes/conta, assinatura/checkout/WhatsApp, setup/edicao e criacao/sugestao de conteudo; cards, links e botoes de listas podem iniciar o arrasto vertical convencional.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, o shell mobile existente e a modal PWA atual.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, seed, reset ou dados publicados. Rollback simples reverte o commit.
+
+## Correcao em 2026-09-04: prefixo profissional no nome e no WhatsApp
+
+- Ajuste pos-feedback da TASK-69: a remocao de termos como `Psicologa`, `Psicologo`, `Dr.`, `Dra.` e `Psi` passa a valer tambem quando o termo foi salvo dentro de `psychologist_profile.professional_first_name`, nao apenas no fallback por `user.name`.
+- Backend normaliza leitura e novos salvamentos; descoberta, perfil, favoritos, comunidade/ranking e links `wa.me` deixam de montar nome publico, `whatsapp_name` ou saudacao com o prefixo salvo no campo Nome.
+- Frontend normaliza feed `/psicologos`, sugestoes, CTAs e mensagens `wa.me` preservadas durante o rollout, tolerando backend antigo/cache.
+- Os prints anexados pelo usuario foram usados apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Alteracao sem schema/migration, package, env obrigatoria, provider, job, mock, seed, reset, backfill ou alteracao destrutiva de dados publicados. Rollback simples reverte o commit.
+
+## Correcao em 2026-09-04: retorno ao mesmo video de psicologos
+
+- Ajuste pos-feedback das TASK-13/TASK-161/TASK-162: ao abrir um perfil a partir do feed de videos
+  de psicologos e retornar, o frontend deixa de reiniciar a lista no primeiro item e restaura o
+  mesmo slide ativo/scroll da origem.
+- A memoria e efemera por aba via `sessionStorage`, expira em 30 minutos e so e aplicada quando a
+  URL atual coincide exatamente com a origem salva, preservando busca, filtros, hash e aliases
+  PT/EN.
+- Se a lista atual mudou, a restauracao tenta reconciliar pelo `psychologistId`; se nao encontrar
+  correspondencia valida, descarta o snapshot e segue com o fallback anterior.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o
+  inventario `_product/tasks/PROTO-INVENTORY.md` e os prototipos locais de Psicologos/Perfil.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration,
+  endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback
+  simples reverte o commit.
+- Validacoes: testes focados de memoria de retorno, `pnpm --dir frontend check`, `pnpm --dir
+  frontend build`, `pnpm check` e browser local mobile com dados reais de homologacao confirmando
+  retorno ao candidato ativo 2 e snapshot consumido; `version:bump`/`check:version` em `0.1.268`.
+
+## Correcao em 2026-09-04: video expandido sem tag nativa do navegador
+
+- Ajuste pos-feedback das TASK-13/TASK-23/TASK-42/TASK-161: videos de conteudo ampliados deixam de chamar fullscreen nativo do navegador, evitando a faixa `homolog.lectum.com.br - Para sair da tela cheia...` exibida pelo sistema mobile.
+- O `VerticalVideoPlayer` passa a usar expansao inline/fixa no DOM para `fullscreenVariant="content"` com layout `media`, mantendo `object-contain`, controles persistentes, botao proprio de saida e body sem rolagem enquanto ampliado.
+- No feed de psicologos, o modo imersivo nao habilita mais `video.controls = true` transitoriamente; a experiencia permanece nos controles customizados/persistentes do produto.
+- O print anexado pelo usuario foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback simples reverte o commit.
+- Validacoes: teste focado de player, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser local mobile em `/psicologos` com `nativeFullscreenCalls=0`/`video.controls=false` e em `/comunidades/autocuidado-em-pratica` com overlay inline `position=fixed`, `object-fit=contain`, botao de saida e zero chamadas nativas.
+
+## Correcao em 2026-09-04: retorno instantaneo ao video anterior de psicologos
+
+- Ajuste pos-feedback da TASK-168/commit `65cf0758`: ao voltar do perfil para `/psicologos`, a lista
+  nao deve animar passando pelos videos anteriores ate chegar no video de origem.
+- A restauracao do snapshot efemero passa de `useEffect` pos-paint com duplo `requestAnimationFrame`
+  para `useLayoutEffect`, posicionando o container antes da primeira pintura do feed restaurado.
+- Durante a restauracao automatica, o container neutraliza temporariamente `scroll-behavior: smooth`
+  e `scroll-snap-type`, aplica `scrollTop` diretamente e restaura os estilos no frame seguinte,
+  preservando snap/scroll suave nas interacoes normais do usuario.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o
+  inventario `_product/tasks/PROTO-INVENTORY.md` e o prototipo local de Psicologos.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration,
+  endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback
+  simples reverte o commit.
+- Validacoes: testes focados de memoria/scroll do feed, `pnpm --dir frontend check`, `pnpm --dir
+  frontend build`, `pnpm check` e browser local mobile em `/psicologos` com retorno ao slide 4
+  (`scrollTop=3376`, `targetTop=3376`, `activeIndexByScroll=4`) sem amostras intermediarias de
+  scroll; `version:bump`/`check:version` em `0.1.270`.
+
+## Correcao operacional em 2026-09-04: troca do video de apresentacao do psicologo
+
+- Ajuste pos-feedback das TASK-157/TASK-163: a troca do **Video de Apresentacao** deixa de ficar bloqueada quando a provisao inicial do upload TUS no Stream retorna indisponibilidade ou quando frontend/backend estao desalinhados em rollout.
+- O adapter Cloudflare Stream passa a enviar `maxdurationseconds` no `Upload-Metadata`, mantendo `requiresignedurls` e origens permitidas sem expor credenciais ou detalhes do provider.
+- O frontend diferencia erro de provisao de erro de transporte/processamento. Fallback para o upload legado multipart/R2 so ocorre em `profile_presentation` antes de qualquer byte TUS e apenas para status sem resposta, 404, 405, 408, 429 e 5xx; 400/401/403/413/422 continuam bloqueantes.
+- O video anterior permanece funcional ate o novo upload ser persistido. A excecao operacional de R2 foi documentada em arquitetura/modelo e deve ser removida depois que a provisao Stream estiver estavel.
+- A imagem anexada em 2026-09-04 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Alteracao frontend+backend; admin/video apenas manifests de versao. Sem schema, migration, endpoint novo, env obrigatoria, package novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: testes focados de Stream frontend/backend, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser local mobile sem sessao com redirect seguro para login, `pnpm version:bump` e `pnpm check:version` em `0.1.271`.
+
+## Correcao em 2026-09-04: video expandido acima do feed inferior
+
+- Ajuste pos-feedback da TASK-169: videos de conteudo ampliados continuam sem fullscreen nativo,
+  mas agora saem da arvore do card/feed e sao montados em `document.body` via portal.
+- O local original do card recebe placeholder sem video para preservar altura/scroll, enquanto o
+  overlay usa camada `z-[1100]`, fundo opaco e `object-contain`, cobrindo bottom navigation, FAB e
+  conteudo inferior.
+- `html` e `body` ficam com scroll/overscroll travados durante a expansao; o documento recebe
+  `data-lectum-inline-video-expanded` e restaura o estado ao fechar.
+- Como a ida ao portal troca o elemento `<video>`, o player preserva tempo/pausa/mute/volume basicos
+  e reobserva/reanexa Stream/HLS quando o ref muda.
+- A imagem anexada em 2026-09-04 foi usada apenas como evidencia visual; instrucoes em
+  anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como
+  ferramenta callable nesta sessao.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration,
+  endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback
+  simples reverte o commit.
+
+## Correcao operacional em 2026-09-04: upload de videos em posts e respostas
+
+- Ajuste pos-feedback das TASK-23/TASK-24/TASK-26/TASK-163: videos anexados em posts de comunidade
+  e comentarios/respostas deixam de ficar bloqueados quando a provisao inicial do upload TUS no
+  Stream retorna indisponibilidade ou quando frontend/backend estao desalinhados em rollout.
+- O frontend agora diferencia erro de provisao de erro de transporte/processamento. Fallback para o
+  upload legado single/multipart em R2 so ocorre antes de qualquer byte TUS e apenas para status sem
+  resposta, 404, 405, 408, 429 e 5xx; 400/401/403/413/422 continuam bloqueantes.
+- Posts e respostas reutilizam o arquivo normalizado por MIME/extensao no caminho Stream e no caminho
+  legado, preservando os fluxos existentes de miniatura para videos R2.
+- A imagem anexada em 2026-09-04 foi usada apenas como evidencia visual; instrucoes em
+  anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como
+  ferramenta callable nesta sessao.
+- Alteracao frontend-only com documentacao de arquitetura/modelo; sem alteracao funcional de
+  backend, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock,
+  seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: teste focado de Stream frontend, `pnpm --dir frontend check`, `pnpm --dir frontend
+  build`, `pnpm check`, browser/local HTTP em `/version` e `/comunidades`, `pnpm version:bump` e
+  `pnpm check:version` em `0.1.273`; upload autenticado real nao foi executado localmente por falta
+  de sessao/credenciais no ambiente do agente, sem uso de mocks.
+
+## Correção visual em 2026-09-04: barra de comentários fixa no detalhe do post
+
+- Ajuste pós-feedback das TASK-23/TASK-24/TASK-26/TASK-45/ADR-0453: no detalhe do post e na árvore de respostas, a barra principal de comentários deve permanecer ancorada no rodapé da viewport mobile, sem flutuar no meio do conteúdo após abrir/fechar o teclado.
+- A causa isolada foi o uso de `env(keyboard-inset-height)` como `bottom` padrão do composer fixo. Em navegadores mobile/PWA esse valor pode ficar desatualizado após o teclado fechar e empurrar a barra para cima mesmo sem teclado visível.
+- O composer agora usa `bottom-0` + safe area como estado padrão e só aplica `bottom` inline com offset medido pelo `visualViewport` enquanto há teclado ativo, preservando o espaço inferior (`pb-36`) para que comentários/vídeos não fiquem cobertos.
+- A imagem anexada em 2026-09-04 foi usada apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido. Builder/Quick Copy não está exposto como ferramenta callable nesta sessão; foram consultados o inventário `_product/tasks/PROTO-INVENTORY.md` e o fallback local `_product/proto/Dentro do Post.jpg`.
+- Alteração frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatória, package novo, provider, mock, seed, reset ou dados publicados. Rollback simples reverte o commit.
+- Validações: teste focado do layout do composer, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser/local HTTP em `/version` e `/comunidades`, `pnpm version:bump` e `pnpm check:version` em `0.1.274`; deploy/smoke de homologação após `git push`.
+
+## Correção operacional em 2026-09-05: prévia social de vídeo pelo serviço dedicado
+
+- Ajuste pós-feedback das TASK-42/TASK-164/TASK-173: o botão de Instagram volta a aparecer sobre vídeos próprios de psicólogos em posts e respostas, abrindo a prévia social vertical antes do download.
+- MediaBunny continua removido. O frontend só monta a prévia e solicita render; o backend valida psicólogo dono e delega a geração de MP4 9:16 para o app `video/`, que usa fila BullMQ/Redis e FFmpeg/ffprobe em worker dedicado.
+- O render social usa fonte HTTPS segura (playback assinado Cloudflare Stream ou mídia legada pública permitida), valida DNS público, sonda o vídeo remoto, gera H.264/AAC em alta qualidade (`slow`, CRF 18, áudio mínimo 192 kbps) e entrega arquivo efêmero por proxy autenticado.
+- Builder/Quick Copy não está exposto como ferramenta callable nesta sessão; foram usados `PROTO-INVENTORY.md` e a referência local `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`.
+- Alteração frontend+backend+video, sem schema/migration, package novo, seed, reset, limpeza de bucket ou criação/renovação de `post_share_artifacts`. Rollback simples reverte o commit e, se necessário, remove as envs de conexão backend→video.
+- ALERTA DE DEPLOY: para habilitar a feature, configurar no backend `VIDEO_PROCESSING_SERVICE_URL` e `VIDEO_SERVICE_API_KEY`; `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` é opcional. Se ausentes, o download social retorna indisponibilidade pública e o restante do app segue funcionando.
+- Validações: `pnpm --dir video check`, `pnpm --dir video build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version` em `0.1.277`; smoke local HTTP em `/version` e `/comunidades`. Smoke de homologação será registrado após o push/deploy em `homolog`.
+
+## Correção operacional em 2026-09-05: render social em servidor de vídeo dedicado
+
+- Ajuste pós-feedback da TASK-176: a modal de prévia social estava abrindo em homologação, mas o download retornava indisponibilidade pública mesmo com o botão sobre o vídeo do psicólogo.
+- A imagem anexada foi usada apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido. Builder/Quick Copy não está exposto como ferramenta callable nesta sessão.
+- O backend mantém `VIDEO_PROCESSING_SERVICE_URL` backend-only e passa a aceitar HTTP apenas para IP/DNS internos ou HTTPS dedicado server-to-server. HTTP público, loopback, URL com credenciais/path/query/fragmento/wildcard e redirects continuam recusados.
+- O app `video/` empacota fonte DejaVu e usa `fontfile` explícito no `drawtext`, evitando falhas de overlay em container slim. MediaBunny continua removido e toda geração pesada permanece na fila BullMQ/Redis/FFmpeg dedicada.
+- Alteração backend+video com documentação de arquitetura/ADR; frontend/admin apenas manifests de versão. Sem schema/migration, package npm novo, env obrigatória nova, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit e mantém os dados intactos.
+- Validações: focados backend/video, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir video check`, `pnpm --dir video build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version` em `0.1.279`; smoke de homologação após `git push` em `homolog`.
+
+## Correção operacional em 2026-09-08: download social resiliente a oscilações
+
+- Ajuste pós-feedback da TASK-176: novo print de iPhone em homologação às 11:16 mostrou a modal social aberta, mas o CTA `Baixar vídeo` voltou a exibir indisponibilidade pública. A imagem anexada foi usada apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido.
+- O frontend mantém render server-side obrigatório, mas deixa de abortar o preparo por uma única oscilação transitória de start/status/download: aplica tentativas curtas e progressivas dentro do timeout total já existente e remove listeners de abort após cada poll.
+- O app `video/` endurece o caminho FFmpeg: `ffprobe` remoto passa a usar reconexão como o render, textos livres escapam vírgula e ponto-e-vírgula antes do `drawtext`, e logs do worker passam a identificar `social_share` em vez de classificar todo job como `compress`.
+- O backend registra apenas diagnóstico operacional seguro (`config_missing`, `request_failed`, status e código controlado), sem URL, segredo, PII, stack, SQL ou detalhe de provider, para diferenciar ambiente sem conexão ao `video/` de falha de mídia/job.
+- Alteração frontend+backend+video; sem schema/migration, env obrigatória nova, package novo, provider novo, mock, seed, reset, persistência de artefatos ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validações: teste focado frontend de compartilhamento, `pnpm --dir video test`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.280`. Smoke de homologação será registrado após `git push` em `homolog` e deploy.
+
+## Correcao emergencial em 2026-09-08: render social com HLS privado autorizado
+
+- Ajuste pos-feedback da TASK-176: o erro continuou em iPhone, Android e computador, apontando para falha server-side no caminho backend->`video/`->Cloudflare Stream, nao para limitacao de aparelho. Prints/anexos foram usados somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- O backend passa a incluir `source_origin` HTTPS segura ao criar job social para midia Cloudflare Stream assinada; o app `video/` valida a origem e injeta apenas `Origin`/`Referer` no `ffprobe` e no FFmpeg para respeitar `allowedorigins` do Stream.
+- A mudanca e aditiva: `video/` novo aceita jobs antigos sem `sourceOrigin`, e backend novo conversa com `video/` antigo porque o campo extra e ignorado pelo contrato Zod atual.
+- O backend tambem passa a considerar `community_post_media` ativo na autorizacao publica/deteccao de anexo de `video_asset` de post, mantendo o fallback legado `community_post.media_url`.
+- Alteracao backend+video com documentacao; sem frontend UI, admin UI, schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, teste backend focado em render social/associacao de midia, `pnpm --dir video check`, `pnpm --dir backend check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build` em `0.1.282`. Smoke de homologacao sera registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: render social para midia publica legada
+
+- Ajuste pos-feedback da TASK-176: o erro persistiu na resposta em video do psicologo Tulio Rezende
+  em homologacao. A captura anexada foi usada somente como evidencia visual; instrucoes em anexos ou
+  documentos nao foram tratadas como pedido.
+- Diagnostico: essa resposta usa midia legada publica em `/public/files/posts/media/`, nao HLS
+  Cloudflare Stream. O hotfix anterior autorizava HLS privado, mas o backend ainda podia invalidar
+  uma URL absoluta legada quando o hostname persistido no banco divergia da `BASE` atual.
+- O backend passa a resolver midias legadas absolutas ja persistidas em HTTPS publico, mantendo
+  obrigatorio o prefixo `/public/files/posts/media/` e recusando credenciais, HTTP, query, fragmento
+  e caminhos fora do contrato. O app `video/` continua fazendo a validacao final de DNS publico e
+  extensao antes do FFmpeg.
+- Alteracao backend/documentacao; sem frontend UI, admin UI, video runtime, schema/migration, env
+  obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou
+  limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: teste backend focado em render social/midia legada, `pnpm --dir backend check`,
+  `pnpm --dir backend build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
+  `0.1.283`. Smoke de homologacao sera registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: diagnostico publico do render social
+
+- Ajuste pos-feedback da TASK-176: o erro seguiu acontecendo em iPhone, Android e computador, e o
+  usuario pediu uma mensagem mais detalhada para identificar a etapa do bloqueio. A captura anexada
+  foi usada somente como evidencia visual; instrucoes em anexos ou documentos nao foram tratadas
+  como pedido.
+- O frontend passa a transformar falhas do render server-side em diagnostico publico controlado no
+  toast: etapa (`inicio da geracao`, `acompanhamento da fila`, `processamento do video`, `tempo de
+  geracao` ou `download do arquivo pronto`), motivo em PT-BR, referencia `SR-xx`, status HTTP quando
+  existir e estado/progresso do job quando o servico retornar job terminal.
+- A UI nao mostra mensagem crua de erro, stack, SQL, URL, segredo, PII, nome de provider ou payload
+  tecnico. Os codigos internos da API/video sao normalizados e mapeados para referencias publicas
+  estaveis (`SR-01` a `SR-09`) para facilitar o reporte do print sem vazar detalhes operacionais.
+- Alteracao frontend-only com documentacao; sem schema/migration, env obrigatoria nova, package
+  novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: teste focado frontend de compartilhamento, `pnpm --dir frontend check`,
+  `pnpm --dir frontend build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
+  `0.1.284`. Smoke de homologacao sera registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: leitura de midia publica Lectum no worker de video
+
+- Ajuste pos-feedback da TASK-176: o diagnostico publico mostrou `SR-04`, etapa `processamento do
+  video`, job `falhou` com progresso `0%`. Isso isolou a falha antes do `ffprobe`, na validacao de
+  origem remota do app `video`, nao no browser.
+- A midia concreta do relato e um MP4 legado publico de post em
+  `homolog-api.lectum.com.br/public/files/posts/media/`, com `HEAD 200`, `Range 206`, `Content-Type`
+  `video/mp4` e tamanho aproximado de 21,7 MB.
+- O app `video` passa a tratar somente os hostnames first-party `homolog-api.lectum.com.br` e
+  `api.lectum.com.br`, sempre em HTTPS e no prefixo exato `/public/files/posts/media/`, como origem
+  publica Lectum confiavel mesmo quando o DNS do runtime resolva por uma rota privada/overlay do
+  ambiente. Todas as demais URLs continuam exigindo DNS publico e formato fechado, e query string
+  passa a ser recusada.
+- `ffprobe` e FFmpeg passam a enviar um `User-Agent` controlado nas leituras remotas; `Origin` e
+  `Referer` seguem sendo enviados apenas quando a origem segura for fornecida para HLS privado.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.285`. Smoke de homologacao foi
+  registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: probe MP4 remoto sem opcao HLS
+
+- Ajuste pos-feedback da TASK-176: novo print mostrou `SR-04`, etapa `processamento do video`, job
+  `falhou` com progresso `1%`. Isso confirma que a validacao de URL first-party passou e que a
+  falha agora ocorre no `ffprobe`/validacao de entrada.
+- Reproducao operacional local com binarios FFmpeg/ffprobe externos ao repositorio: o MP4 publico
+  concreto e lido com sucesso quando o comando remoto omite `-allowed_extensions ALL`, mas falha
+  imediatamente quando essa opcao de demuxer HLS e aplicada a um MP4 direto.
+- Correcao: `video/` continua usando `-allowed_extensions ALL` somente para fontes HLS `.m3u8`
+  (necessarias para Cloudflare Stream), e passa a omitir a opcao em MP4/MOV/WebM remotos. O
+  restante do contrato permanece igual: URL segura, `User-Agent` controlado, `Origin`/`Referer`
+  apenas quando houver origem web segura e processamento 9:16 no worker dedicado.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  reproducao operacional local com ffprobe/FFmpeg temporarios, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check` em `0.1.286`. Smoke de homologacao foi registrado apos
+  `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: download local de MP4 remoto antes do render social
+
+- Ajuste pos-feedback da TASK-176: apos a versao `0.1.286`, o print ainda mostrou `SR-04`, etapa
+  `processamento do video`, job `falhou` com progresso `1%`. A captura anexada foi usada somente
+  como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Diagnostico: progresso `1%` confirma que a validacao da origem passou e que o bloqueio segue na
+  leitura remota de MP4 pelo worker. Para reduzir dependencia de `ffprobe` lendo HTTPS diretamente
+  em topologias publicadas, o worker agora baixa MP4/MOV/WebM remoto direto para storage privado
+  efemero usando `fetch` com headers seguros e redirects proibidos, valida assinatura/tamanho e so
+  entao executa `ffprobe`/FFmpeg sobre arquivo local. HLS `.m3u8` continua remoto para preservar
+  Cloudflare Stream assinado.
+- A reserva de storage do job social direto passa a considerar input maximo + output maximo ate o
+  terminal do job; HLS conserva reserva apenas de output. Outputs continuam efemeros, com download
+  autenticado por proxy, e inputs sao removidos ao concluir/falhar sem retry.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.287`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: egresso do worker Docker do render social
+
+- Ajuste pos-feedback da TASK-176: apos a versao `0.1.287`, novo print mostrou `SR-05`, etapa
+  `processamento do video`, job `falhou` com progresso `1%`. A captura anexada foi usada somente
+  como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Diagnostico: o progresso `1%` com `SR-05` mostra que a validacao da origem passou e que a falha
+  ocorre como erro operacional no worker antes de concluir download/probe. No `docker-compose`, o
+  worker isolado estava apenas em `video-private`, uma rede `internal: true`, portanto sem egresso
+  para baixar midias HTTPS first-party/Stream.
+- Correcao: o worker passa a participar tambem da rede `video-edge`, mantendo zero portas publicadas.
+  Redis permanece somente em `video-private`, que continua interna. Assim, o worker consegue buscar
+  a midia remota necessaria ao `social_share` sem ampliar a superficie publica do Redis/worker.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.288`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: compatibilidade do render social no FFmpeg
+
+- Ajuste pos-feedback da TASK-176: os logs do servidor de video passaram a mostrar `SR-05` com
+  progresso `3%`. Isso confirma que a validacao da URL, o download local e o `ffprobe` da entrada
+  foram vencidos; a falha restante ocorre na inicializacao/processamento do FFmpeg do overlay.
+- Correcao: o app `video/` remove a opcao menos portavel `steps` do filtro `gblur`, executa
+  processos FFmpeg/ffprobe com locale UTF-8, resolve `fontfile` DejaVu somente quando a fonte existe
+  no runtime e tenta novamente sem `fontfile` explicito se o FFmpeg falhar antes de emitir progresso
+  do render.
+- Diagnostico operacional: logs seguros de falha do worker agora incluem `progress` e `stage`
+  normalizados, sem stack, URL, segredo, PII, SQL, payload tecnico ou detalhe de provider.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.289`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: diagnostico seguro do FFmpeg social
+
+- Ajuste pos-feedback da TASK-176: apos a versao `0.1.289`, os logs confirmaram
+  `stage=render_initialization` e `progress=3`, mas ainda sem causa operacional suficiente. Isso
+  preserva o diagnostico de falha no FFmpeg antes de emitir progresso do render.
+- Correcao: `runManagedProcess` captura apenas a cauda do stderr em memoria e a converte para
+  `diagnostic_code` controlado (`ffmpeg_filter_drawtext_unavailable`,
+  `ffmpeg_encoder_h264_unavailable`, `ffmpeg_font_unavailable`, `process_output_no_space` etc.),
+  descartando stderr bruto, URL, segredo, stack, SQL, PII e payload tecnico dos logs.
+- O worker registra `video_job_processing_diagnostic` por tentativa com tentativa, retry, etapa,
+  progresso e `diagnostic_code`. O `/ready` do app `video/` passa a validar capacidades minimas do
+  render social (`drawtext`, `scale`, `overlay`, `drawbox`, `libx264` e `aac`) alem de binarios,
+  storage, Redis e worker.
+- Para reduzir a superficie de falha antes de sair progresso, o render social tambem remove a
+  dependencia do filtro de blur `gblur`; o video continua 1080x1920 H.264/AAC com overlay Lectum.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.290`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: filtergraph portatil do render social
+
+- Ajuste pos-feedback da TASK-176: apos o diagnostico seguro, os logs do app `video/` passaram a
+  mostrar `diagnostic_code="ffmpeg_filter_unavailable"` em `stage="render_initialization"` e
+  `progress=3`, confirmando que URL, download local e `ffprobe` foram vencidos e que o bloqueio
+  restante estava no `filter_complex` do FFmpeg.
+- Diagnostico: o grafo do overlay social podia gerar uma cadeia invalida com separador extra antes
+  dos filtros de arte, alem de depender de filtros secundarios de fundo (`eq`, `fps`, `format` e
+  `setsar`) que nao sao essenciais para entregar o MP4 9:16. Esse padrao aparece como filtro
+  indisponivel/malformado em builds FFmpeg diferentes.
+- Correcao: o grafo padrao deixa de inserir cadeia vazia, remove os filtros secundarios e move o
+  controle de FPS para opcao de saida `-r`; se o runtime falhar antes de emitir progresso, o worker
+  tenta uma variante portatil baseada em `scale+pad+drawbox+drawtext`, sem `crop`, `overlay`, `eq`,
+  `fps`, `format`, `setsar` ou `gblur`.
+- Observabilidade segura: a classificacao de stderr continua descartando o texto bruto, mas agora
+  reconhece filtros conhecidos em codigos allowlist (`ffmpeg_filter_crop_unavailable`,
+  `ffmpeg_filter_pad_unavailable`, `ffmpeg_filter_overlay_unavailable`, etc.) e classifica
+  `No such filter: ''` como `ffmpeg_filtergraph_invalid`.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.291`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.
+
+## Ajuste em 2026-09-09: download sem Quick Look e arte Reels igual ao arquivo
+
+- Ajuste pos-feedback da TASK-176: o usuario relatou que o download ainda abria uma tela intermediaria
+  de arquivo MP4 no iPhone e pediu que a previa da modal fosse identica ao artefato baixado. O print
+  de Quick Look e a imagem Reels anexada foram usados somente como evidencia/referencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Frontend: ao abrir a modal social, o MP4 server-side começa a ser preparado quando ele ainda
+  nao estiver pronto; a modal permanece aberta com Wake Lock `screen` best-effort para reduzir
+  apagamento de tela no celular. Quando o arquivo fica pronto, a modal reproduz o proprio `File`
+  gerado, garantindo paridade entre previa e download.
+- Download: em mobile/iPad com Web Share de arquivo, o segundo toque abre a folha nativa com ativacao
+  de usuario e evita o fallback que navegava para o blob/MP4 e exibia a tela intermediaria do
+  sistema. Desktop sem Web Share continua usando `download` por objeto local.
+- Arte: posts usam `Postado na Lectum`; respostas usam `Respondido na Lectum`. O app `video/`
+  normaliza o rotulo legado `Perguntaram na Lectum` para resposta durante rollout e renderiza a
+  referencia Reels sem moldura de celular/watermark textual: canvas 9:16 fixo, video inteiro
+  preservado por `scale+pad+drawbox+drawtext`, cartao azul/branco superior, texto centralizado e
+  nome/cargo do profissional centralizados. As variantes portateis tambem preservam `scale+pad`.
+- Alteracao frontend+backend+video com documentacao; sem schema/migration, env obrigatoria nova,
+  package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de
+  dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: teste focado frontend de compartilhamento, `pnpm --dir video test`, teste backend
+  focado em render social, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`,
+  `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`,
+  smoke local HTTP do frontend (`/version` 200 e rota publica do post 200), `pnpm check`,
+  `pnpm version:bump` e `pnpm check:version` em `0.1.292`. Smoke de homologacao sera registrado apos
+  `git push` em `homolog` e deploy.
+
+## Ajuste em 2026-09-09: previa instantanea com layout social
+
+- Ajuste pos-feedback da TASK-176: apos o deploy `0.1.292`, o usuario pediu que a previa da modal
+  nao carregasse o MP4 final antes de exibir o conteudo. A previa agora usa o video original
+  imediatamente, com `posterUrl` real e overlay CSS nas mesmas proporcoes do render final.
+- O arquivo baixado continua sendo o MP4 gerado pelo app `video/`; a paridade exigida da previa e de
+  layout/posicionamento da arte, nao de bytes. Isso remove o placeholder visual durante o preparo e
+  mantem o download dependente do artefato com arte.
+- O texto do toast de preparo passa a ser `Mantenha esta tela aberta enquanto o vídeo é preparado.`.
+  A tentativa de Wake Lock segue best-effort e silenciosa.
+- Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.293`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.293` e rota publica do post 200), `pnpm check:encoding`, `pnpm check:tasks`, `pnpm check:adrs`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`. Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: preparo do download somente no clique
+
+- Ajuste pos-feedback da TASK-176: apos o deploy `0.1.293`, o usuario mostrou que a modal ainda
+  iniciava o preparo do arquivo automaticamente ao abrir. O frontend agora abre apenas a previa
+  instantanea e chama o render server-side somente quando o usuario clica/toca em `Baixar video`.
+- O CTA permanece `Baixar video`; enquanto o job acionado pelo clique estiver em curso, o estado
+  muda para `Preparando...` e o Wake Lock segue best-effort apenas nesse periodo.
+- O controle de som da previa deixou de ser botao textual abaixo do video e virou icone sobreposto
+  no canto inferior direito do proprio video, com `aria-label` para acessibilidade.
+- Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.294`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`,
+  `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.294` e rota publica
+  do post 200), `pnpm version:bump`, `pnpm check:version`, `pnpm check` e `git diff --check`.
+  Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: volume discreto na previa social
+
+- Ajuste pos-feedback da TASK-176: apos o deploy `0.1.294`, o usuario pediu que o botao de volume
+  sobreposto ao video ficasse mais discreto e com fundo transparente.
+- O controle agora fica menor, sem borda e com `bg-transparent`; somente o icone permanece visivel
+  com sombra discreta para contraste sobre o video, mantendo `aria-label` e a posicao inferior
+  direita.
+- Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.295`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`,
+  `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.295` e rota publica
+  do post 200), `pnpm version:bump`, `pnpm check:version`, `pnpm check` e `git diff --check`.
+  Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: download automatico apos preparo social
+
+- Ajuste pos-feedback da TASK-176: apos o deploy `0.1.295`, o usuario mostrou que, ao terminar o preparo, a UI ainda exibia `Video pronto` e exigia outro clique em `Baixar video`. A captura anexada foi usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- O fluxo continua iniciando o render apenas pelo clique/toque do usuario, mas, quando o arquivo fica pronto, o frontend tenta entregar o MP4 imediatamente: usa Web Share se o navegador aceitar naquele momento e, se a ativacao expirar ou a folha nativa nao abrir, aciona o download por objeto local sem voltar ao estado de segundo clique.
+- O toast `Video pronto / Toque novamente...` deixa de existir nesse caminho; sucesso passa a ser tratado como `Video baixado`, mantendo a orientacao de qualidade em mobile quando aplicavel.
+- Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.296`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.296` e rota publica do post 200), `pnpm version:bump`, `pnpm check:version` e `pnpm check`. Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: refinamento detalhado da arte social
+
+- Ajuste pos-feedback da TASK-176: o novo print Reels foi usado somente como referencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A arte passa a usar as proporcoes medidas da referencia: cartao superior com ~79,7% da largura,
+  margem lateral ~10,2%, topo em 13%, raio equivalente a 24px no MP4 1080x1920, cabecalho azul
+  `#308ce8` com simbolo Lectum branco, corpo branco, pergunta centralizada em ate 3 linhas de
+  31 caracteres, fonte bold e sombra curta.
+- As credenciais foram reposicionadas para baixo e centralizadas em grupo: nome branco bold,
+  profissao menor alinhada ao inicio do nome e selo azul preenchido com check branco.
+- A previa CSS e o render server-side do app `video/` compartilham a mesma grade visual; a previa
+  continua instantanea sobre o video original e o MP4 final continua sendo gerado sem filtros
+  secundarios frageis (`overlay`, `eq`, `fps`, `format`, `setsar`, `gblur`).
+- Alteracao frontend+video com documentacao; sem schema/migration, env obrigatoria nova, package
+  novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.297`: teste focado frontend de compartilhamento, `pnpm --dir video test`,
+  `pnpm --dir frontend check`, `pnpm --dir video check`, `pnpm --dir frontend build`,
+  `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
+  `git diff --check` e smoke local HTTP do frontend (`/version` 200 em `0.1.297` e
+  `/comunidades` 200). Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: paridade fina da arte social
+
+- Ajuste pos-feedback da TASK-176: o print do MP4 gerado mostrou diferenca residual em relacao a
+  referencia visual, principalmente pergunta de 3 linhas vazando para fora do cartao e credenciais
+  altas demais. A imagem anexada segue sendo apenas referencia visual/evidencia, nao fonte de
+  instrucoes.
+- O render social manteve o cartao nas dimensoes medidas, mas compacta a pergunta para 48px quando
+  ela ocupar 3 linhas, preservando o limite de 31 caracteres por linha sem cortar horizontalmente a
+  arte. A previa CSS aplica a mesma compactacao visual.
+- As credenciais foram reposicionadas para o ponto medido da area util do video: nome em y=1400 e
+  profissao em y=1445 no MP4 1080x1920; a previa usa `top: 73%` para alinhar nome, profissao e selo
+  ao print de referencia.
+- Alteracao frontend+video com documentacao; sem schema/migration, env obrigatoria nova, package
+  novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.298`: teste focado frontend de compartilhamento, `pnpm --dir video test`,
+  `pnpm --dir frontend check`, `pnpm --dir video check`, `pnpm --dir frontend build`,
+  `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
+  `git diff --check` e smoke local HTTP do frontend (`/version` 200 em `0.1.298` e
+  `/comunidades` 200). Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: margens laterais da pergunta social
+
+- Ajuste pos-feedback da TASK-176: o usuario comparou a referencia com o modelo atual e pediu reduzir as margens laterais dentro da caixinha de pergunta para caber mais texto. As imagens anexadas foram usadas somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A previa CSS reduz o padding horizontal do corpo branco para `5.1cqw` e a quebra textual passa a aceitar ate 31 caracteres por linha. O app `video/` usa a mesma quebra no MP4 gerado, evitando truncar a pergunta validada com reticencias e preservando card, cabecalho, logo, credenciais, selo, preparo sob demanda e download automatico.
+- Alteracao frontend+video com documentacao; sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.304`: testes focados de frontend e video, `pnpm --dir frontend check`, `pnpm --dir video check`, `pnpm --dir frontend build` e `pnpm --dir video build`. Validacoes finais, bump, commit/push e smoke de homologacao serao registrados apos deploy.
+- Validacoes finais em `0.1.305`: `pnpm check`, `git diff --check`, `pnpm version:bump` e `pnpm check:version`. Smoke de homologacao sera registrado apos `git push` e deploy.
+- Smoke local HTTP do frontend em `0.1.305`: `/version` 200 e rota publica do post 200.
+
+## Ajuste em 2026-09-10: CRP publico sem zero artificial
+
+- Ajuste pos-feedback da TASK-15: o usuario mostrou que o perfil publico exibia `CRP 07/029112`,
+  enquanto o numero correto do registro profissional era `29112`, conforme a aba Admin de registro.
+- Causa confirmada: o formatter compartilhado do frontend (`formatCrpNumber`) aplicava padding no
+  numero do registro. A regional continua normalizada para 2 digitos, mas o numero passa a preservar
+  o valor recebido, sem zero artificial.
+- A regra tambem preserva a deduplicacao do prefixo `CRP` na modal/CTA de WhatsApp, perfil publico,
+  perfil privado e avaliacoes, porque todos usam `formatCrpLabel`.
+- Alteracao frontend-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, backfill, endpoint novo ou alteracao de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; a validacao visual usa o print do usuario e
+  `_product/proto/Perfil Profissional - Sobre.jpg`.
+- Validacao focada: `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`.
+- Validacoes finais locais em `0.1.306`: `pnpm --dir frontend check`, `pnpm --dir frontend build`,
+  `pnpm check:version`, `pnpm check` e smoke HTTP do frontend buildado (`/version` 200 e rota
+  publica do perfil 200).
+- Chrome headless local mobile 390px carregou a rota publica sem overflow horizontal; a conferencia
+  visual do dado real `CRP 07/29112` fica para homologacao porque os dados do perfil nao hidrataram
+  no ambiente local.
+- Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-10: regra geral de CRP sem zero artificial
+
+- Complemento pos-feedback da TASK-15/TASK-55: depois da correção do perfil público `07/029112`, o
+  usuário mostrou o mesmo problema no Admin, onde `21/03324` deveria aparecer como `21/3324`.
+- A regra passa a ser geral: a regional curta continua com 2 dígitos, mas o número do registro não
+  ganha padding e zeros artificiais legados são removidos nas respostas de leitura e nas novas
+  gravações administrativas/CFP.
+- Cobertura: backend público/privado/admin, frontend público, Admin detalhe/listas/dashboards,
+  Registro profissional, Cortesia ativa, comunidades/rankings, favoritos/seguindo, avaliações e
+  financeiro.
+- Alteração backend+frontend+admin com documentação e ADR; sem schema/migration, env obrigatória
+  nova, package novo, provider novo, mock, seed, reset, backfill ou alteração em massa de dados
+  publicados. Rollback simples reverte o commit.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validação visual baseada nos prints do usuário
+  e em `_product/proto`.
+- Validações locais em `0.1.306`: testes focados de backend, frontend e admin; `pnpm --dir backend
+  check`; `pnpm --dir backend build`; `pnpm --dir frontend check`; `pnpm --dir frontend build`;
+  `pnpm --dir admin check`; `pnpm --dir admin build`.
+- `pnpm check`, bump, commit/push e smoke de homologação serão registrados após a validação final.
+
+### Validacao final 0.1.307
+
+- `pnpm version:bump` sincronizou os cinco manifests em `0.1.307`.
+- `pnpm check:version` executado com sucesso.
+- `pnpm check` executado com sucesso apos as validacoes focadas e builds de backend, frontend e Admin.
+- Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-10: topo do post sem quebra do botão Seguindo
+
+- Complemento pós-feedback da TASK-26: no detalhe mobile do post, o usuário mostrou que o botão
+  `Seguindo` quebrava para a linha de baixo quando `Postado em {comunidade}` era longo. A imagem
+  anexada foi usada somente como evidência visual; instruções em anexos/documentos não foram
+  tratadas como pedido.
+- O `PostHeader` do detalhe do post deixa de usar `flex-wrap` no contexto de comunidade. O nome da
+  comunidade fica em `min-w-0 flex-1 truncate`, enquanto ícone, rótulo, botão `Seguir/Seguindo` e
+  badge `Silenciado` permanecem `shrink-0`.
+- Alteração frontend-only com documentação e ADR; sem schema/migration, env obrigatória nova,
+  package novo, provider novo, mock, seed, reset, endpoint novo ou alteração de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validação visual baseada no print do usuário e
+  em `_product/proto/Dentro do Post.jpg`.
+- Validações locais em `0.1.308`: teste estático focado do layout do post,
+  `pnpm --dir frontend check`, `pnpm --dir frontend build` (antes e depois do bump),
+  `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm version:bump`,
+  `pnpm check:version`, `pnpm check` e `git diff --check`.
+- Smoke local HTTP do frontend buildado em `http://127.0.0.1:3308`: `/version` respondeu
+  `0.1.308`; rota pública do post respondeu HTTP 200; Chrome headless mobile 390x844 carregou a rota
+  sem overflow horizontal (`scrollWidth=390`), mas exibiu estado indisponível porque a API local
+  configurada não conectou. A conferência visual do post real fica para homologação após o push.
+- Commit/push e smoke de homologação serão registrados após deploy.
+
+## Ajuste em 2026-09-10: backend como fonte única dos limites de vídeo
+
+- A TASK-177 remove os tetos numéricos de vídeo compilados no frontend. Apresentação, post e resposta
+  passam a respeitar somente a env total da respectiva finalidade no backend.
+- O backend valida os metadados antes de emitir a URL TUS do Cloudflare Stream e responde excesso
+  com `413/exceeded_file_limit` e o limite efetivo. A UI preserva essa mensagem segura e usa texto
+  genérico quando um proxy responde 413 sem o contrato da aplicação.
+- Imagens mantêm a proteção client-side; thresholds de 5 MiB continuam apenas escolhendo o transporte
+  legado e não representam limite máximo de produto.
+- A env ausente na configuração apresentada era
+  `UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MULTIPART_MB`; sua ausência explica o fallback de 200 MB em
+  vídeos de posts. As envs `*_SIMPLE_MB` e `*_MULTIPART_CHUNK_MB` não substituem esse total.
+- Alteração backend+frontend com documentação e ADR; sem schema/migration, env obrigatória nova,
+  package novo, mock, seed, reset, backfill ou alteração de dados/buckets publicados.
+- Validações locais em `0.1.309`: 283 testes backend, 117 testes frontend,
+  `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`,
+  `pnpm --dir frontend build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`.
+- Backend e frontend foram compilados novamente depois do bump. Smoke local HTTP/Chrome mobile do
+  frontend confirmou `/version` público, sem cache, não indexável e em `0.1.309`; a rota privada
+  de perfil redirecionou para autenticação.
+- Commit/push e smoke de homologação são concluídos no fechamento operacional da task.
+
+
+## Ajuste em 2026-09-11: Cidade com seta e limpeza ao trocar Estado
+
+- Complemento pos-feedback da TASK-18A: no endereco profissional de
+  `/app/profissional/perfil/configurar`, o campo `Cidade` precisava exibir seta de dropdown e nao
+  manter cidade/busca antiga quando `Estado` muda.
+- A imagem anexada pelo usuario foi usada somente como evidencia visual do estado mobile; instrucoes
+  em anexos/documentos nao foram tratadas como pedido independente.
+- O `CityField` manual ganhou `ChevronDown`, o select `Estado` limpa `address_city` via
+  `onChangeCallback` quando a UF muda, e a lista de cidades exposta ao campo passa a conter somente
+  opcoes validas da UF atual.
+- Durante o rebase sobre `origin/homolog`, as validacoes de frontend/admin tambem exigiram remover
+  diretivas ESLint inexistentes em `/auth/redirect` e no client HTTP do admin; comportamento dos
+  fluxos inalterado.
+- Durante a revalidacao apos rebase, a suite backend expôs regressao ja documentada pela ADR-0463
+  no middleware de chunk multipart; o ajuste restaurou limite inclusivo de 5 MiB e rejeicao de
+  campos com colchetes nesse contrato simples, sem schema/migration, env, provider ou dados.
+- A validacao do app `video/` foi mantida portavel no Windows trocando a criacao do symlink
+  estrutural de teste por junction; protecao runtime de storage inalterada.
+- Alteracao de produto frontend com documentacao e ADR; sem schema/migration, env obrigatoria nova,
+  package novo, provider novo, mock, seed, reset, endpoint novo ou alteracao de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validacao visual baseada no print do usuario e
+  em `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Validacoes locais em `0.1.334`: `pnpm --dir frontend exec biome check --write` nos arquivos
+  alterados, `pnpm --dir frontend check`, `pnpm --dir frontend build` antes/depois do bump,
+  teste HTTP real `backend/src/config/multer/multipart-chunk.test.ts`,
+  `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
+  `pnpm --dir video check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
+  `pnpm check:encoding`, `pnpm check:adrs` e `pnpm check:tasks`.
+- Smoke local HTTP do frontend buildado em `http://127.0.0.1:3332`: `/version` respondeu
+  `0.1.334`; `/app/profissional/perfil/configurar` respondeu HTTP 307 para login sem sessao,
+  preservando a protecao da rota privada. A conferencia visual autenticada fica para homologacao
+  porque nao ha sessao real de psicologo disponivel sem criar mock.
+- Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Correção operacional em 2026-09-12: vídeos sempre no Cloudflare Stream
+
+- Ajuste pós-feedback das TASK-163/TASK-165/TASK-171/TASK-173: vídeos enviados após a implementação
+  do Stream ainda podiam cair no R2 por causa do fallback temporário de provisão inicial. Esse
+  fallback explica por que, na mesma internet, alguns vídeos travavam enquanto outros tocavam bem:
+  vídeos R2 entregam o arquivo original, sem HLS adaptativo/transcodificação do Cloudflare Stream.
+- A captura/vídeo anexado pelo usuário foi tratado somente como evidência do sintoma; instruções em
+  anexos/documentos não foram tratadas como pedido.
+- Inventário read-only em homologação via APIs disponíveis: página/lista de psicólogos com 16 perfis
+  lidos, 11 vídeos de perfil ainda R2 e 5 Stream; feed de comunidades com 10 vídeos de post, 1 R2 e
+  9 Stream; respostas dos posts do feed com 11 vídeos, 2 R2 e 9 Stream.
+- O frontend deixa de consultar flag pública ou fallback para upload de vídeo: apresentação, post e
+  resposta chamam sempre `uploadVideoAsset`/TUS/Stream para MIME `video/*`. Imagens continuam nos
+  transportes R2 existentes.
+- O backend recusa clientes antigos que tentarem enviar vídeo pelos endpoints R2 antes de
+  criar/associar objeto: multipart/serviços respondem `video_upload_stream_required` e endpoints
+  single bloqueiam vídeo no parser de MIME. Leitura de URLs R2 legadas permanece compatível até
+  backfill.
+- O comando `video:migrate-r2-to-stream` passa a permitir `--dry-run` sem provider Stream local para
+  inventário seguro; `--apply` segue exigindo provider real e confirmação explícita do ambiente.
+- Política atualizada em 14/09/2026 (TASK-180/ADR-0500): backfill R2 → Stream exclusivamente
+  manual no container, com dry-run, confirmação de ambiente e lock. Foi removida a execução
+  automática adicionada em 12/09; não existe opt-in por env que a reative. Objetos/capas R2
+  permanecem preservados; o inventário remoto deve confirmar se ainda existem referências legadas.
+- Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, limpeza de bucket ou
+  exclusão de objetos. Rollback simples reverte o bloqueio de escrita, mas não deve apagar ativos
+  Stream nem objetos R2.
+- Critérios de aceite:
+  - [x] Novos uploads de vídeo de apresentação, post e resposta não têm fallback frontend para R2.
+  - [x] Endpoints legados backend recusam vídeo antes de gravar/associar R2 e preservam imagens.
+  - [x] Inventário read-only das superfícies de psicólogos e comunidade foi executado sem escrita.
+  - [x] Boot da API em homologação dispara backfill R2 -> Stream em background usando o runtime com
+        credenciais reais, sem bloquear a API e sem apagar R2.
+  - [ ] Migração dos R2 existentes em homologação: pendente até o lote de startup no runtime do
+        backend com credenciais reais de banco/R2/Stream concluir, ou execução manual do runbook da
+        TASK-165.
+- Validações locais: testes focados frontend/backend de Stream; `pnpm --dir frontend check`;
+  `pnpm --dir frontend build`; `pnpm --dir backend check`; `pnpm --dir backend build`;
+  `pnpm --dir backend video:migrate-r2-to-stream -- --help`; `pnpm --dir admin check`;
+  `pnpm check:encoding`; `pnpm check:adrs`; `pnpm check:tasks`; `git diff --check`; `pnpm check`;
+  `pnpm version:bump` para `0.1.370`; `pnpm check:version`.
+- Validações locais do complemento de startup: teste focado
+  `pnpm --dir backend exec node --import tsx --test src/modules/video-assets/r2-migration/startup.test.ts`;
+  `pnpm --dir backend check` (após reexecutar e confirmar isoladamente um timeout transitório de
+  `scripts/optional-auth-failure.test.mjs`); `pnpm --dir backend build`;
+  `pnpm --dir backend video:migrate-r2-to-stream -- --help`; `pnpm check:env`;
+  `pnpm check:adrs`; `pnpm check:tasks`; `pnpm check:encoding`; `git diff --check`;
+  `pnpm version:bump` para `0.1.371`; `pnpm check:version`; `pnpm check`.
+- A instalação local do backend foi sincronizada com o lockfile via
+  `pnpm --dir backend install --frozen-lockfile` antes da suíte completa, sem alterar manifests.
+- Commit/push e smoke de homologação serão registrados após deploy. O runbook pendente deve rodar
+  no container do backend:
+  `pnpm --dir backend video:migrate-r2-to-stream -- --dry-run --limit=5` e depois
+  `pnpm --dir backend video:migrate-r2-to-stream -- --apply --confirm=homolog --limit=5`, repetindo
+  lotes até zerar candidatos e sem apagar origens/capas R2.
+
+
+## Correcao operacional em 2026-09-12: Stream obrigatorio em runtime publicado
+
+- Ajuste pos-feedback do erro de resposta com midia: a captura anexada foi usada somente como
+  evidencia visual do composer mobile; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Como novos videos nao podem mais cair para R2, o backend publicado passa a tratar Cloudflare Stream
+  como dependencia obrigatoria independentemente da flag legada `CLOUDFLARE_STREAM_ENABLED`. Em
+  local/CI a flag continua controlando opt-in; em homologacao/producao, `/ready` falha se as
+  credenciais Stream obrigatorias estiverem ausentes ou invalidas.
+- O frontend mantem o fluxo Stream obrigatorio para video, mas deixa de transformar o erro semantico
+  `video_stream_unavailable` em mensagem generica de conexao no upload de midia.
+- Nao ha schema/migration, env obrigatoria nova, package novo, mock, seed, reset ou limpeza de dados.
+  As envs Stream ja existentes continuam necessarias para ambientes publicados.
+- Criterios de aceite:
+  - [x] Runtime publicado ignora a flag backend legada falsa e usa Stream quando as credenciais estao completas.
+  - [x] Runtime publicado marca readiness indisponivel quando a configuracao Stream obrigatoria esta incompleta.
+  - [x] Composer nao acusa conexao do usuario quando o backend informa indisponibilidade semantica do Stream.
+  - [x] Documentacao e ADR registram o impacto operacional sem expor valores de segredo.
+- Validacoes locais executadas em 2026-09-12: focused Stream backend, focused limites frontend, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `pnpm check:version`. Versao sincronizada: 0.1.372.
+
+
+## Correcao operacional em 2026-09-12: contrato TUS do Stream na provisao de videos
+
+- Complemento pos-feedback do composer mobile: a nova captura foi usada somente como evidencia de que o backend ainda retornava `video_stream_unavailable` ao iniciar video em resposta. Instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A provisao TUS passa a enviar a chave oficial `maxDurationSeconds` no `Upload-Metadata`, alinhada ao contrato atual da Cloudflare para direct creator uploads. A grafia lowercase anterior podia ser tratada como metadado arbitrario e deixar a reserva sem limite obrigatorio.
+- Se a Cloudflare aceitar a reserva TUS e devolver `Location`, mas o header `stream-media-id` vier ausente, o backend reconcilia o UID pelo `creator` interno ja enviado em `Upload-Creator`; ainda falha fechado se houver resposta ambigua, sem expor provider ao usuario.
+- Nao ha fallback R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset, limpeza de bucket ou apagamento de ativo publicado. Rollback simples reverte a tolerancia, mas pode voltar a bloquear novos videos quando o provider nao devolver o header esperado.
+- Criterios de aceite:
+  - [x] Metadata TUS usa `maxDurationSeconds` conforme contrato atual do provider.
+  - [x] Provisao TUS nao falha apenas por ausencia do header de UID quando o video pode ser reconciliado pelo `creator` unico.
+  - [x] Falhas/ambiguidade do provider continuam publicas como indisponibilidade segura de Stream, sem fallback R2.
+  - [x] Checks/builds locais e versionamento 0.1.373 executados; commit, push e smoke de homologacao serao registrados no encerramento.
+
+Validacoes locais deste complemento: focused Stream backend, backend check/build, checks de encoding/ADR/tasks, `git diff --check`, `pnpm check:version` e `pnpm check`.
+
+
+## Correcao operacional em 2026-09-12: POST direto para videos pequenos no Stream
+
+- Complemento pos-feedback do composer mobile: a captura das 20:47 foi usada apenas como evidencia
+  de que o usuario ainda recebia `video_stream_unavailable` ao tentar responder com video. Instrucoes
+  em anexos/documentos nao foram tratadas como pedido.
+- Sim, o sintoma esta relacionado ao ajuste de tornar Cloudflare Stream obrigatorio para novos
+  videos: com o fallback R2 encerrado, qualquer indisponibilidade na provisao Stream bloqueia o envio
+  com mensagem segura, em vez de persistir o arquivo no R2.
+- Para reduzir a dependencia do caminho TUS em videos comuns de celular, o frontend passa a negociar
+  `basic,tus` por header compatível com rollout; o backend novo so retorna `upload_method: "basic"`
+  para clientes que declararam suporte e arquivos de ate 200.000.000 bytes. Clientes antigos, backend
+  antigo e arquivos acima desse limite continuam no TUS.
+- O POST direto continua sendo Cloudflare Stream privado, com `creator`, `allowedOrigins`,
+  `requireSignedURLs`, `maxDurationSeconds`, `expiry` e polling do ativo ate `ready`; nao ha fallback
+  R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset ou limpeza de bucket.
+- Criterios de aceite:
+  - [x] Videos pequenos enviados por frontend novo podem usar POST direto oficial do Stream antes de
+        tentar TUS.
+  - [x] Rollout permanece compatível: frontend antigo recebe TUS; frontend novo contra backend antigo
+        cai no default TUS sem campo novo obrigatorio no body.
+  - [x] Videos acima de 200 MB continuam exigindo TUS, mantendo o contrato para arquivos grandes.
+  - [x] Falhas do provider seguem como indisponibilidade segura, sem mensagens tecnicas ou retorno ao R2.
+
+Validacoes locais deste complemento em 0.1.374: focused Stream backend/frontend, `pnpm --dir backend check`,
+`pnpm --dir frontend check`, builds backend/frontend, checks de encoding/ADR/tasks, `git diff --check`,
+`pnpm check:version` e `pnpm check`.
+
+
+## Correcao operacional em 2026-09-12: mensagem de upload de midia sem acusar conexao
+
+- Complemento pos-feedback: a captura das 18:40 foi usada somente como evidencia visual de que a copy
+  generica ainda orientava verificar conexao mesmo quando o problema nao era a internet do usuario.
+  Instrucoes em anexos/documentos nao foram tratadas como pedido.
+- O composer de resposta passa a usar mensagem neutra para falhas transientes de upload de midia:
+  "Não foi possível enviar a mídia agora. Tente novamente em instantes."
+- O mapeamento semantico de `video_stream_unavailable` continua preservado como indisponibilidade do
+  envio de video; a mudanca apenas remove a atribuicao indevida de causa ao usuario em falhas genericas.
+- Nao ha fallback R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset, limpeza
+  de bucket ou apagamento de ativo publicado.
+- Criterios de aceite:
+  - [x] Falha generica de upload de midia em resposta nao instrui o usuario a verificar conexao.
+  - [x] Indisponibilidade semantica do Stream continua com mensagem segura e especifica.
+  - [x] Contrato Stream obrigatorio, POST direto/TUS e compatibilidade de rollout permanecem inalterados.
+
+Validacoes locais deste complemento: teste focado do composer, `pnpm --dir frontend check`,
+`pnpm --dir frontend build`, `pnpm check:version` e `pnpm check`.
+
+
+## Correcao operacional em 2026-09-13: legal no rodape dos cadastros
+
+- Pedido do usuario: nos cadastros de psicologo e paciente remover o texto "Os
+documentos publicados estão indisponíveis..." e colocar Termos/Privacidade acima do
+rodape, como no login.
+- Instrucoes em anexos/imagens foram usadas apenas como evidencia visual para
+confirmar o estado atual e alinhar com a referencia de layout existente.
+- Decisao aplicada:
+  - substituicao do bloco `LegalRegistrationNotice` em
+    `frontend/src/app/auth/register/patient/logic.tsx` e
+    `frontend/src/app/auth/register/psychologist/logic.tsx`.
+  - adicao de `<LegalLinks className="mb-3" newTab />` no footer dos dois cadastros,
+    antes do texto de copyright.
+  - remocao do arquivo `frontend/src/components/legal/registration-notice.tsx`.
+- Sem impacto em backend, banco, migration, env obrigatoria, package nova ou
+fluxos de aceite persistido.
+- Criterios de aceite:
+  - [x] Texto operacional indesejado removido.
+  - [x] Termos e Privacidade no rodape de paciente e psicologo, com link em nova aba.
+  - [x] Mudanca confirmada em build e smoke local sem mocks.
+  - [x] `pnpm --dir frontend check` e `pnpm --dir frontend build` executados.
+  - [x] Teste focado `frontend/scripts/legal.test.mjs` atualizado.
+  - [x] ADR registrada: `adrs/0498-links-legais-no-rodape-cadastros.md`.
+
+## Ajuste em 2026-09-15: video social preserva enquadramento e faixas pretas
+
+- Complemento pos-feedback da TASK-176/TASK-42: o video social para redes mantem canvas 9:16 e a arte Lectum nas mesmas coordenadas calibradas para Instagram, mas deixa de cortar o video de origem.
+- O render padrao do app `video/` troca `scale+crop` por `scale+pad`: o video cabe inteiro no MP4 1080x1920, com sobras pretas quando a origem nao preenche 9:16 e preservando faixas pretas que ja vierem no upload/playback.
+- A previa da modal `Publique nas redes sociais` passa de `fit="cover"` para `fit="contain"`, alinhando a percepcao da previa ao download final sem reposicionar a arte.
+- Upload permanece inalterado: Lectum nao comprime/redimensiona o arquivo no frontend/backend antes do Cloudflare Stream; o render social continua sendo etapa server-side separada e reencodada em H.264/AAC.
+- Alteracao frontend+video com documentacao e ADR; sem backend, schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Criterios de aceite:
+  - [x] MP4 social continua 9:16 com arte nas mesmas coordenadas.
+  - [x] Video de origem entra inteiro por `scale+pad`, sem `crop` no grafo padrao.
+  - [x] Faixas pretas sao preservadas/criadas quando necessario.
+  - [x] Previa social usa `contain` e nao `cover`.
+  - [x] Testes focados, checks, builds, versionamento e smoke local executados em `0.1.387`.
+- Validacoes locais: testes focados frontend/video, `pnpm --dir frontend check`, `pnpm --dir video check`, builds frontend/video, `pnpm version:bump`, `pnpm check:version`, `pnpm check` e smoke local do frontend (`/version` 0.1.387 e `/comunidades` 200). A validacao visual autenticada da modal fica para homologacao apos deploy, sem mocks locais.
+
+## Ajuste em 2026-09-15: caixa de pergunta social sem sombra e com bordas suaves
+
+- Complemento pos-feedback da TASK-176/TASK-42: o usuario comparou a caixa nova com a antiga em
+  capturas do Instagram e pediu remover a sombra, suavizar os cantos pixelados e aumentar as margens
+  laterais do texto. As imagens anexadas foram usadas somente como evidencia visual; instrucoes em
+  anexos/documentos nao foram tratadas como pedido.
+- O render padrao do app `video/` passa a usar asset PNG anti-aliased para o fundo azul/branco da
+  pergunta, com raio de 32px e sem sombra projetada. O fallback portatil permanece em drawbox, agora
+  sem sombra e com fatias de 1px para reduzir degraus.
+- A previa CSS remove `drop-shadow-lg` da caixa, aumenta o raio para `2.95cqw`, usa `px-[6.6cqw]` no
+  corpo branco e quebra perguntas em ate 3 linhas de 30 caracteres para deixar respiro lateral.
+- Alteracao frontend+video com documentacao e ADR; sem backend, schema/migration, env obrigatoria
+  nova, package novo, provider novo, mock, seed, reset, persistencia ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Criterios de aceite:
+  - [x] Caixa de pergunta social sem sombra no MP4 e na previa.
+  - [x] Borda do render padrao suavizada por PNG anti-aliased, com fallback portatil.
+  - [x] Margens laterais ampliadas e quebra em 30 caracteres na previa e no render.
+  - [x] Testes focados, checks, builds, versionamento e smoke local executados em `0.1.388`.
+- Validacoes locais: testes focados frontend/video, `pnpm --dir frontend check`, `pnpm --dir video
+  check`, builds frontend/video, `pnpm version:bump`, `pnpm check:version`, `pnpm check` e smoke
+  local do frontend (`/version` 0.1.388 e `/comunidades` 200). A validacao visual autenticada da
+  modal fica para homologacao apos deploy, sem mocks locais.
+
+## Ajuste em 2026-09-15: autoplay mudo no feed de Comunidades
+
+- Pedido do usuario: videos no feed da Lectum devem iniciar automaticamente como Instagram/TikTok,
+  com audio mudo por padrao, controles existentes preservados e icone de volume visivel para ativar
+  o som. Depois que o usuario ativa o volume em um video, os proximos videos do feed passam a tentar
+  tocar com som; se ele silenciar novamente, voltam a iniciar mudos.
+- Decisao aplicada no frontend: o feed de Comunidades registra os players de posts e respostas em um
+  gerenciador client-side que escolhe o video mais visivel/proximo do centro da viewport, pausa os
+  demais e respeita pausa manual enquanto o card permanece em foco. A preferencia de som fica em
+  `localStorage` local degradavel, sem PII e sem sincronizacao server-side.
+- Os controles do `VerticalVideoPlayer` continuam os mesmos; quando os controles imersivos estiverem
+  ocultos e o video estiver mudo, um botao de volume/mute fica visivel sobre a midia para ativacao
+  clara do audio.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validacao visual baseada em
+  `_product/proto/Feed Comunidade.jpg` e nos controles existentes.
+- Alteracao exclusivamente frontend com documentacao e ADR; sem backend, schema/migration, env
+  obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia server-side ou
+  alteracao de dados/buckets publicados. Rollback simples reverte o commit; chaves locais antigas
+  ficam inertes no navegador.
+- Criterios de aceite:
+  - [x] Videos do feed de Comunidades iniciam automaticamente quando entram em foco, mudos por padrao.
+  - [x] Apenas um video registrado do feed toca por vez; videos fora de foco pausam.
+  - [x] Controles existentes de play/pause/progresso/fullscreen/volume permanecem e o volume fica
+        visivel quando autoplay estiver mudo.
+  - [x] Preferencia de audio ativada/desativada pelo usuario passa a valer para os proximos videos do
+        feed no mesmo dispositivo/browser.
+  - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e
+        smoke local do frontend executados em `0.1.391`.
+- Validacoes locais: teste focado
+  `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-feed-video-autoplay.test.mjs`;
+  `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; smoke local do frontend
+  buildado em `http://localhost:3332` com `/version` respondendo `0.1.391` apos o bump e
+  `/comunidades` HTTP 200. Validacao visual autenticada com videos reais fica para homologacao apos
+  deploy, porque nao ha sessao/dados reais locais nem ferramenta Builder/Quick Copy acessivel neste
+  ambiente.
+
+## Complemento em 2026-09-15: autoplay mudo dentro do Post
+
+- Pedido do usuario: apos o autoplay entrar no feed e dentro da comunidade, aplicar o mesmo
+  comportamento na tela "Dentro do Post"; a lacuna ocorreu porque o detalhe usa componentes
+  separados (`PostBody`, `ThreadOriginalPostCard` e `ReplyCard`) em vez do `PostCard` do feed.
+- Decisao aplicada no frontend: `CommunityMediaBlock` ganhou o opt-in `enableCommunityAutoplay`,
+  reutilizando o mesmo gerenciador client-side, os mesmos controles persistentes e a mesma
+  preferencia local de audio ja usada no feed. O alias legado `enableFeedAutoplay` foi preservado
+  para nao quebrar os cards existentes.
+- O autoplay no detalhe continua mudo por padrao, mostra o controle claro de volume quando os
+  controles estao ocultos e passa a respeitar a preferencia de audio ativada/desativada pelo usuario
+  nos demais videos de Comunidades no mesmo dispositivo/browser.
+- Builder/Quick Copy foi tentado novamente via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validacao visual baseada em
+  `_product/proto/Dentro do Post.jpg` e nos controles existentes.
+- Alteracao exclusivamente frontend com documentacao e ADR atualizada; sem backend, schema/migration,
+  env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia server-side ou
+  alteracao de dados/buckets publicados. Rollback simples reverte o commit; a chave local de som
+  permanece degradavel e sem impacto de servidor.
+- Criterios de aceite:
+  - [x] Video do post principal no detalhe entra no mesmo autoplay mudo das superficies de
+        Comunidades.
+  - [x] Video do post original exibido em thread tambem usa autoplay mudo.
+  - [x] Videos de respostas e respostas aninhadas usam autoplay mudo sem remover play/pause,
+        progresso, fullscreen ou volume.
+  - [x] Preferencia de audio do usuario segue compartilhada entre feed, comunidade e detalhe do post.
+  - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e
+        smoke local do frontend executados em `0.1.392`.
+- Validacoes locais: teste focado
+  `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-feed-video-autoplay.test.mjs`;
+  `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; `pnpm version:bump` para
+  `0.1.392`; `pnpm check:version`; smoke local do frontend buildado em `http://localhost:3332` com
+  `/version` respondendo `0.1.392` e `/comunidades` HTTP 200. Validacao visual autenticada com
+  videos reais dentro de posts fica para homologacao apos deploy, porque nao ha sessao/dados reais
+  locais nem ferramenta Builder/Quick Copy acessivel neste ambiente.

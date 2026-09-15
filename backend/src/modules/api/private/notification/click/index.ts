@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import middlewares from "../../../middlewares";
 import { click } from "./use-cases/controller";
 import validator from "./validator";

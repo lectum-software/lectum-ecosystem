@@ -1,11 +1,11 @@
 "use client";
 
-import { Loader2, X } from "lucide-react";
+import { Camera, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { type ChangeEvent, type RefObject, useEffect, useState } from "react";
-import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaKind } from "@/utils/media-preparation";
 
 export const REPLY_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
@@ -15,8 +15,10 @@ export type ReplyMediaOrientation = "landscape" | "portrait" | "square";
 
 export type SelectedReplyMedia = {
   file: File;
+  isPreparingPreview?: boolean;
   orientation?: ReplyMediaOrientation;
   previewUrl: string;
+  thumbnailUrl?: string | null;
   type: ReplyMediaType;
 };
 
@@ -27,6 +29,7 @@ type ReplyMediaPermissionLike = {
 
 type CurrentReplyMedia = {
   mediaType?: string | null;
+  thumbnailUrl?: string | null;
   mediaUrl?: string | null;
 };
 
@@ -45,6 +48,7 @@ type ReplyMediaAttachmentControlProps = {
   onUndoRemove?: () => void;
   removeCurrent?: boolean;
   selectedMedia: SelectedReplyMedia | null;
+  composerMode?: "combined" | "preview" | "trigger";
   variant?: "composer" | "editor";
 };
 
@@ -100,8 +104,86 @@ export const detectReplyMediaOrientation = (
   });
 };
 
-export const mediaTypeFromFile = (file: File): ReplyMediaType =>
-  file.type.startsWith("image/") ? "image" : "video";
+export const createReplyVideoThumbnail = (previewUrl: string): Promise<string | null> => {
+  if (typeof document === "undefined" || typeof window === "undefined") {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    let isSettled = false;
+    let seekRequested = false;
+    const timeout = { id: undefined as number | undefined };
+
+    const finish = (thumbnailUrl: string | null) => {
+      if (isSettled) return;
+
+      isSettled = true;
+      if (timeout.id !== undefined) {
+        window.clearTimeout(timeout.id);
+      }
+      video.onloadeddata = null;
+      video.onloadedmetadata = null;
+      video.onseeked = null;
+      video.onerror = null;
+      video.removeAttribute("src");
+      video.load();
+      resolve(thumbnailUrl);
+    };
+
+    const captureFrame = () => {
+      if (!video.videoWidth || !video.videoHeight) {
+        finish(null);
+        return;
+      }
+
+      try {
+        const maxDimension = 480;
+        const scale = Math.min(1, maxDimension / Math.max(video.videoWidth, video.videoHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+        canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
+        finish(canvas.toDataURL("image/jpeg", 0.82));
+      } catch {
+        finish(null);
+      }
+    };
+
+    timeout.id = window.setTimeout(() => finish(null), 4000);
+
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    video.onloadeddata = () => {
+      if (!seekRequested) {
+        captureFrame();
+      }
+    };
+    video.onloadedmetadata = () => {
+      const targetTime = Number.isFinite(video.duration) && video.duration > 0.2 ? 0.1 : 0;
+
+      if (targetTime <= 0) {
+        return;
+      }
+
+      try {
+        seekRequested = true;
+        video.currentTime = targetTime;
+      } catch {
+        seekRequested = false;
+        captureFrame();
+      }
+    };
+    video.onseeked = captureFrame;
+    video.onerror = () => finish(null);
+    video.src = previewUrl;
+    video.load();
+  });
+};
+
+export const mediaTypeFromFile = (file: File): ReplyMediaType | null =>
+  resolvePublicMediaKind(file);
 
 const composerPreviewSizeClassName = (orientation?: ReplyMediaOrientation) => {
   if (orientation === "portrait") return "h-20 w-14 rounded-[1.15rem]";
@@ -151,11 +233,21 @@ export function ReplyMediaAttachmentControl({
   onUndoRemove,
   removeCurrent = false,
   selectedMedia,
+  composerMode = "combined",
   variant = "composer",
 }: ReplyMediaAttachmentControlProps) {
   const currentType = normalizeMediaType(currentMedia?.mediaType);
   const currentSrc =
     currentMedia?.mediaUrl && currentType ? resolvePublicMediaUrl(currentMedia.mediaUrl) : null;
+  // Em video atual, evitar thumbnail_url persistido para nao reexibir moldura social antiga.
+  const currentThumbnailSrc =
+    currentMedia?.thumbnailUrl && currentType === "image"
+      ? resolvePublicMediaUrl(currentMedia.thumbnailUrl)
+      : null;
+  const currentOrientationProbeSrc = currentThumbnailSrc ?? currentSrc;
+  const currentOrientationProbeType: ReplyMediaType | null = currentThumbnailSrc
+    ? "image"
+    : currentType;
   const [currentMediaOrientation, setCurrentMediaOrientation] = useState<{
     src: string;
     type: ReplyMediaType;
@@ -163,50 +255,63 @@ export function ReplyMediaAttachmentControl({
   } | null>(null);
 
   useEffect(() => {
-    if (!currentSrc || !currentType || removeCurrent) {
+    if (!currentOrientationProbeSrc || !currentOrientationProbeType || removeCurrent) {
       return;
     }
 
     let isMounted = true;
 
-    detectReplyMediaOrientation(currentSrc, currentType).then((orientation) => {
-      if (isMounted) {
-        setCurrentMediaOrientation({ src: currentSrc, type: currentType, value: orientation });
-      }
-    });
+    detectReplyMediaOrientation(currentOrientationProbeSrc, currentOrientationProbeType).then(
+      (orientation) => {
+        if (isMounted) {
+          setCurrentMediaOrientation({
+            src: currentOrientationProbeSrc,
+            type: currentOrientationProbeType,
+            value: orientation,
+          });
+        }
+      },
+    );
 
     return () => {
       isMounted = false;
     };
-  }, [currentSrc, currentType, removeCurrent]);
+  }, [currentOrientationProbeSrc, currentOrientationProbeType, removeCurrent]);
 
   const resolvedCurrentMediaOrientation =
-    currentMediaOrientation?.src === currentSrc && currentMediaOrientation.type === currentType
+    currentMediaOrientation?.src === currentOrientationProbeSrc &&
+    currentMediaOrientation.type === currentOrientationProbeType
       ? currentMediaOrientation.value
       : undefined;
 
   const activeMedia = selectedMedia
     ? {
         alt: "Miniatura da mídia selecionada",
+        isPreparingPreview: selectedMedia.isPreparingPreview,
         orientation: selectedMedia.orientation,
         src: selectedMedia.previewUrl,
+        thumbnailSrc: selectedMedia.thumbnailUrl ?? null,
         type: selectedMedia.type,
         unoptimized: true,
       }
     : !removeCurrent && currentSrc && currentType
       ? {
           alt: currentType === "video" ? "Vídeo atual anexado" : "Imagem atual anexada",
+          isPreparingPreview: false,
           orientation: resolvedCurrentMediaOrientation,
           src: currentSrc,
+          thumbnailSrc: currentThumbnailSrc,
           type: currentType,
-          unoptimized: isPublicMediaUrl(currentMedia?.mediaUrl),
+          unoptimized:
+            isPublicMediaUrl(currentMedia?.mediaUrl) ||
+            isPublicMediaUrl(currentMedia?.thumbnailUrl),
         }
       : null;
   const isEditor = variant === "editor";
   const editorPreview = editorPreviewClassNames(activeMedia?.orientation);
 
   const openFileDialog = () => {
-    if (!mediaPermission.canAttach || disabled) return;
+    if (!mediaPermission.canAttach || disabled || selectedMedia) return;
 
     onOpenDialog?.();
     fileInputRef.current?.click();
@@ -224,90 +329,120 @@ export function ReplyMediaAttachmentControl({
   );
 
   if (!isEditor) {
-    return (
-      <div
-        className={cn(
-          "flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs text-muted",
-          className,
-        )}
-      >
-        {mediaInput}
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          {activeMedia ? (
-            <div
-              className={cn(
-                "relative shrink-0 overflow-visible",
-                composerPreviewSizeClassName(activeMedia.orientation),
-              )}
-            >
-              <div
-                aria-label={activeMedia.alt}
-                className="relative h-full w-full overflow-hidden rounded-[inherit] border border-primary/20 bg-surface-muted shadow-[0_8px_18px_rgba(47,141,235,0.14)]"
-                role="img"
-              >
-                {activeMedia.type === "image" ? (
-                  <Image
-                    alt={activeMedia.alt}
-                    className="object-cover"
-                    fill
-                    sizes="136px"
-                    src={activeMedia.src}
-                    unoptimized={activeMedia.unoptimized}
-                  />
-                ) : (
-                  <video
-                    aria-label={activeMedia.alt}
-                    className="h-full w-full object-cover"
-                    muted
-                    playsInline
-                    preload="metadata"
-                    src={activeMedia.src}
-                  />
-                )}
-              </div>
-              <button
-                aria-label="Remover mídia anexada"
-                className="absolute -top-1 -right-1 z-10 grid h-5 w-5 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={disabled}
-                onClick={() => {
-                  onRemoveSelected();
-                  onAfterAction?.();
-                }}
-                onMouseDown={(event) => event.preventDefault()}
-                type="button"
-              >
-                <X className="h-3 w-3" aria-hidden="true" />
-              </button>
-            </div>
-          ) : (
-            <button
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
-                mediaPermission.canAttach
-                  ? "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
-                  : "cursor-not-allowed border-border bg-surface-muted text-subtle",
-              )}
-              disabled={!mediaPermission.canAttach || disabled}
-              onClick={openFileDialog}
-              onMouseDown={(event) => event.preventDefault()}
-              title={mediaPermission.canAttach ? "Anexar mídia" : mediaPermission.reason}
-              type="button"
-            >
-              {isUploading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <AnimatedImagesIcon className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              Anexar mídia
-            </button>
+    const renderComposerPreview = () =>
+      activeMedia ? (
+        <div
+          className={cn(
+            "relative shrink-0 overflow-visible",
+            composerPreviewSizeClassName(activeMedia.orientation),
           )}
-
-          {!mediaPermission.canAttach && mediaPermission.reason ? (
-            <span className="min-w-0 flex-1 basis-56 whitespace-normal break-words leading-4 text-muted">
-              {mediaPermission.reason}
-            </span>
-          ) : null}
+        >
+          <div
+            aria-label={activeMedia.alt}
+            className="relative h-full w-full overflow-hidden rounded-[inherit] border border-primary/20 bg-surface-muted shadow-lectum-soft"
+            role="img"
+          >
+            {activeMedia.type === "image" || activeMedia.thumbnailSrc ? (
+              <Image
+                alt={activeMedia.alt}
+                className="object-cover"
+                fill
+                sizes="136px"
+                src={activeMedia.thumbnailSrc ?? activeMedia.src}
+                unoptimized={activeMedia.unoptimized}
+              />
+            ) : (
+              <video
+                aria-label={activeMedia.alt}
+                className="h-full w-full object-cover"
+                muted
+                playsInline
+                preload="metadata"
+                src={activeMedia.src}
+              />
+            )}
+            {activeMedia.isPreparingPreview ? (
+              <span className="absolute inset-0 grid place-items-center bg-foreground/20 text-surface">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span className="sr-only">Preparando video</span>
+              </span>
+            ) : null}
+          </div>
+          <button
+            aria-label="Remover mídia anexada"
+            className="absolute -top-1 -right-1 z-10 grid h-5 w-5 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={disabled}
+            onClick={() => {
+              onRemoveSelected();
+              onAfterAction?.();
+            }}
+            onMouseDown={(event) => event.preventDefault()}
+            type="button"
+          >
+            <X className="h-3 w-3" aria-hidden="true" />
+          </button>
         </div>
+      ) : null;
+
+    const renderComposerTrigger = () => {
+      const hasSelectedMedia = Boolean(selectedMedia);
+      const triggerDisabled = !mediaPermission.canAttach || disabled || hasSelectedMedia;
+
+      if (hasSelectedMedia) return null;
+
+      return (
+        <button
+          aria-label={
+            hasSelectedMedia
+              ? "Mídia já anexada"
+              : mediaPermission.canAttach
+                ? "Anexar mídia"
+                : "Mídia indisponível"
+          }
+          className={cn(
+            "grid h-9 w-9 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:active:scale-100",
+            !mediaPermission.canAttach || hasSelectedMedia
+              ? "cursor-not-allowed border-border bg-surface-muted text-subtle opacity-75"
+              : "border-primary bg-primary text-primary-foreground shadow-lectum-soft hover:border-primary-hover hover:bg-primary-hover",
+            disabled && "opacity-60",
+          )}
+          data-reply-media-trigger="true"
+          disabled={triggerDisabled}
+          onClick={openFileDialog}
+          onMouseDown={(event) => event.preventDefault()}
+          title={
+            hasSelectedMedia
+              ? "Remova a mídia anexada para escolher outra"
+              : mediaPermission.canAttach
+                ? "Anexar mídia"
+                : mediaPermission.reason
+          }
+          type="button"
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Camera className="h-4 w-4" aria-hidden="true" />
+          )}
+          <span className="sr-only">Anexar mídia</span>
+        </button>
+      );
+    };
+
+    return (
+      <div className={cn("flex shrink-0 items-center text-xs text-muted", className)}>
+        {composerMode !== "preview" ? mediaInput : null}
+        {composerMode === "preview"
+          ? renderComposerPreview()
+          : composerMode === "trigger"
+            ? renderComposerTrigger()
+            : activeMedia
+              ? renderComposerPreview()
+              : renderComposerTrigger()}
+
+        {!mediaPermission.canAttach && mediaPermission.reason ? (
+          <span className="sr-only">{mediaPermission.reason}</span>
+        ) : null}
       </div>
     );
   }
@@ -324,13 +459,13 @@ export function ReplyMediaAttachmentControl({
           <div
             className={cn("relative w-full overflow-hidden bg-surface-muted", editorPreview.frame)}
           >
-            {activeMedia.type === "image" ? (
+            {activeMedia.type === "image" || activeMedia.thumbnailSrc ? (
               <Image
                 alt={activeMedia.alt}
                 className="object-cover"
                 fill
                 sizes={editorPreview.sizes}
-                src={activeMedia.src}
+                src={activeMedia.thumbnailSrc ?? activeMedia.src}
                 unoptimized={activeMedia.unoptimized}
               />
             ) : (
@@ -343,6 +478,12 @@ export function ReplyMediaAttachmentControl({
                 src={activeMedia.src}
               />
             )}
+            {activeMedia.isPreparingPreview ? (
+              <span className="absolute inset-0 grid place-items-center bg-foreground/20 text-surface">
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                <span className="sr-only">Preparando video</span>
+              </span>
+            ) : null}
 
             <button
               aria-label="Remover mídia anexada"
@@ -386,7 +527,7 @@ export function ReplyMediaAttachmentControl({
         {activeMedia ? null : (
           <button
             aria-label="Adicionar mídia"
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[#D7E7F7] bg-gradient-to-b from-white to-[#F8FBFF] px-4 text-sm font-extrabold text-[#526B86] shadow-none transition hover:border-primary/35 hover:bg-primary-soft/70 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:bg-none disabled:text-muted disabled:opacity-60 dark:border-border dark:from-surface dark:to-surface-muted/40 dark:text-muted"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-border bg-gradient-to-b from-surface to-surface-muted px-4 text-sm font-extrabold text-muted shadow-none transition hover:border-primary/35 hover:bg-primary-soft/70 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:bg-none disabled:text-muted disabled:opacity-60 dark:border-border dark:from-surface dark:to-surface-muted/40 dark:text-muted"
             disabled={!mediaPermission.canAttach || disabled}
             onClick={openFileDialog}
             onMouseDown={(event) => event.preventDefault()}
@@ -396,7 +537,7 @@ export function ReplyMediaAttachmentControl({
             {isUploading ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
-              <AnimatedImagesIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              <Camera className="h-3.5 w-3.5" aria-hidden="true" />
             )}
             Mídia
           </button>

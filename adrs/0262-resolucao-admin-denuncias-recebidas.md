@@ -1,4 +1,4 @@
-﻿# ADR-0262: Resolução administrativa auditada de denúncias recebidas
+# ADR-0262: Resolução administrativa auditada de denúncias recebidas
 
 ## Status
 

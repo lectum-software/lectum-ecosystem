@@ -6,3 +6,13 @@ export const code = (onlyNumeric = true) => {
 
   return v4().slice(0, 6);
 };
+
+export const isCodeWithinValidity = (
+  issuedAt: Date | null | undefined,
+  validityMinutes: number,
+  now = Date.now(),
+) => {
+  if (!issuedAt || !Number.isSafeInteger(validityMinutes) || validityMinutes <= 0) return false;
+  const age = now - issuedAt.getTime();
+  return Number.isFinite(age) && age >= 0 && age < validityMinutes * 60_000;
+};

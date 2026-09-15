@@ -1,4 +1,4 @@
-﻿# ADR-0270: Moderação textual determinística V1 e alertas Admin para pacientes
+# ADR-0270: Moderação textual determinística V1 e alertas Admin para pacientes
 
 ## Status
 

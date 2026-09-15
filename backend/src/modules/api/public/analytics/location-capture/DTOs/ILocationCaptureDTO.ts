@@ -1,5 +1,3 @@
-import type { visitor_location, visitor_session } from "@/interfaces/objects";
-
 export type DeviceType = "mobile" | "tablet" | "desktop" | "unknown";
 export type NormalizedOs =
   | "android"
@@ -77,25 +75,4 @@ export type LocationCaptureResult = {
   linked: boolean;
   authenticated: boolean;
   reason?: "frequency" | "unavailable" | "invalid_ip";
-  source?: LocationSource;
-  location?: Pick<visitor_location, "city" | "state" | "country" | "source" | "confidence">;
-  session?: {
-    captured: boolean;
-    device_type: DeviceType;
-    reason?: "missing_session_id";
-    data?: Pick<
-      visitor_session,
-      | "id"
-      | "visitor_id"
-      | "session_id"
-      | "user_id"
-      | "device_type"
-      | "os"
-      | "browser"
-      | "viewport_width"
-      | "viewport_height"
-      | "first_seen_at"
-      | "last_seen_at"
-    >;
-  };
 };

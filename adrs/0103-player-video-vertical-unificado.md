@@ -114,3 +114,93 @@ A regra global de fullscreen desktop permanece intocada e continua responsavel p
   - `/app/community/ansiedade-em-equilibrio`;
   - `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
 - Nas tres rotas, a simulacao do evento nativo de fullscreen mobile expandiu o video para 390x693px, proporcao 9:16, `object-fit: contain`, posicao centralizada, e restaurou o tamanho embutido ao sair.
+
+## Complemento 2026-08-10 - proporção fixa em vídeos de respostas
+
+### Contexto
+
+No feed público da comunidade, vídeos exibidos dentro da resposta profissional em destaque podiam herdar a proporção real detectada no arquivo e aparecer em formato intermediário, como 3:4, em vez do frame vertical esperado para respostas. A referência visual ativa de comunidade mantém a resposta profissional com vídeo em frame vertical 9:16 e metadados discretos, sem contador textual de upvotes no cabeçalho do destaque.
+
+### Decisão
+
+Forçar `CommunityMediaBlock` a tratar vídeos com `variant="reply"` como mídia vertical canônica:
+
+- orientação visual inicial e final `portrait`;
+- frame e player sempre em `aspect-ratio: 9 / 16`;
+- `object-fit: contain` para preservar vídeos horizontais ou arquivos com metadados divergentes sem corte agressivo;
+- remoção do `aspectRatio` inline derivado do arquivo apenas para vídeos de resposta.
+
+Os vídeos de posts continuam podendo usar a proporção real detectada, preservando o comportamento já aprovado para publicações originais. A metadata da resposta profissional destacada mantém apenas função e horário, deixando votos para a barra de ações da entidade correta.
+
+### Consequências
+
+- Respostas profissionais com vídeo permanecem no formato 9:16 em feed, comunidade, detalhe, salvos, minhas publicações e perfil público quando reutilizam `CommunityMediaBlock` com `variant="reply"`.
+- Vídeos não verticais dentro de respostas aparecem com letterbox/fundo do player, sem distorção ou crop agressivo.
+- A remoção do texto de upvotes reduz ruído visual e evita misturar métrica da resposta no cabeçalho do destaque.
+- Não há alteração de backend, Prisma, endpoints, dados, envs ou dependências.
+
+## Complemento 2026-08-12 - controles inline de video em cards de comunidade
+
+### Contexto
+
+A comparacao entre screenshots de iPhone e Android mostrou que os controles nativos do video ficam inconsistentes: no Android, minutagem, volume e fullscreen aparecem agrupados na parte inferior; no iPhone/Safari, volume e fullscreen sao reposicionados no topo do video quando o player usa controles nativos. Essa UI nativa nao e estilizada de forma confiavel por CSS.
+
+### Decisao
+
+Adicionar ao `VerticalVideoPlayer` um layout persistente `media` para videos de conteudo de comunidade. Esse layout desativa os controles nativos no card e renderiza controles proprios:
+
+- botao central de play/pause;
+- linha inferior com minutagem, volume e ampliar video;
+- barra de progresso logo abaixo;
+- acionamento de fullscreen pelo helper `requestVideoFullscreen`, com controles nativos temporarios somente durante a tela cheia.
+
+O `CommunityMediaBlock` passa a usar `controlsVariant="persistent"` e `persistentControlsLayout="media"` para videos. O layout persistente anterior `stacked` permanece como padrao para nao alterar automaticamente os demais usos do componente.
+
+### Consequencias
+
+- iPhone e Android passam a ter a mesma hierarquia visual de controles no card de video de comunidade.
+- A decisao evita depender da composicao nativa do Safari para a UI embutida.
+- Fullscreen continua usando o caminho nativo/compatibilidade ja existente, minimizando regressao em iOS.
+- Nao ha mudanca de backend, Prisma, endpoints, contratos, dados, envs, packages ou armazenamento.
+
+### Validacao
+
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Validacao estatica via Node para confirmar o layout persistente `media`, a linha de controles com minutagem/volume/fullscreen e o helper de fullscreen.
+- Browser local/headless mobile em 390x844 na rota do detalhe de post com video.
+
+
+## Complemento 2026-08-21 - controles imersivos durante reproducao
+
+### Contexto
+
+Apos a padronizacao dos controles customizados de videos de comunidade entre iPhone e Android, o card passou a manter botao central, minutagem, volume, fullscreen e progresso sempre visiveis. Em videos verticais isso reduzia a sensacao de imersao e cobria parte relevante da imagem durante a reproducao.
+
+### Decisao
+
+Adicionar ao `VerticalVideoPlayer` um comportamento imersivo para `controlsVariant="persistent"`:
+
+- controles persistentes ficam visiveis enquanto o video esta pausado ou finalizado;
+- ao iniciar a reproducao, os controles ficam ocultos por padrao;
+- quando ocultos, o alvo transparente de toque/click cobre todo o frame para revelar os controles;
+- tocar/clicar no frame durante a reproducao revela os controles temporariamente sem alternar play/pause;
+- play/pause permanece uma acao explicita dos botoes do player quando visiveis;
+- controles ocultos recebem `aria-hidden`, `tabIndex=-1` nos focaveis e `pointer-events:none` no conteudo interativo.
+
+A regra fica centralizada em hook proprio do player compartilhado para evitar espalhar estado de UI por cards de feed, detalhe, perfil publico ou analytics. O fullscreen continua usando o helper existente `requestVideoFullscreen`, que habilita controles nativos apenas durante tela cheia quando necessario.
+
+### Consequencias
+
+- Videos de comunidade ficam mais limpos durante a reproducao no Android e tambem mantem consistencia no iPhone/Safari.
+- O usuario consegue recuperar os controles com um toque no video sem interromper a reproducao.
+- O player compartilhado mantem compatibilidade com usos pausados/preview, controles `minimal` e controles nativos.
+- Nao ha mudanca de backend, Prisma, endpoints, contratos, dados, envs, packages ou armazenamento.
+
+### Validacao
+
+- Validacao estatica via Node para checar ocultacao em reproducao, reveal por toque, alvo expandido e controles ocultos fora da navegacao por teclado.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm check`.
+- Browser/local smoke no build do frontend e smoke de homologacao apos deploy da branch `homolog`.

@@ -1,4 +1,4 @@
-﻿import type { Community, CommunityAuthor, CommunityPostMediaItem } from "./community";
+import type { Community, CommunityAuthor, CommunityPostMediaItem } from "./community";
 
 export type PostDetail = {
   id: string;
@@ -174,6 +174,32 @@ export type PostReplyMediaUploadResponse = {
   media_type: "image" | "video";
 };
 
+export type PostReplyMediaMultipartInitiatePayload = {
+  fileName: string;
+  mimeType: string;
+  size: number;
+};
+
+export type PostReplyMediaMultipartInitiateResponse = {
+  chunk_size: number;
+  max_file_size: number;
+  upload_session_id: string;
+};
+
+export type PostReplyMediaMultipartPartResponse = {
+  part_id?: string;
+  part_number: number;
+  part_token?: string;
+};
+
+export type PostReplyMediaMultipartCompletePayload = {
+  parts: Array<{
+    partNumber: number;
+    partId: string;
+  }>;
+  uploadSessionId: string;
+};
+
 export type PostReportReason = "spam" | "abuse" | "self_harm" | "privacy" | "other";
 
 export type PostReportPayload = {
@@ -237,6 +263,29 @@ export type PostShareResponse = {
   target_type: "post" | "reply";
   notification_event_id: string | null;
   shared: boolean;
+};
+
+export type PostShareVideoArtifactRenderJobStatus =
+  | "queued"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "cancel_requested"
+  | "canceled";
+
+export type PostShareVideoArtifactRenderJobResponse = {
+  completed_at: string | null;
+  created_at: string;
+  download_url: string | null;
+  failed_at: string | null;
+  failure_code: "canceled" | "invalid_video" | "processing_failed" | null;
+  job_id: string;
+  output_size_bytes: number | null;
+  progress: number;
+  ready: boolean;
+  retry_after_ms: number;
+  started_at: string | null;
+  status: PostShareVideoArtifactRenderJobStatus;
 };
 
 export type PostSaveResponse = {

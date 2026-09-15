@@ -1,106 +1,41 @@
 "use client";
 
-import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { Minimize2, Pause, Play } from "lucide-react";
 import {
-  type CSSProperties,
   type MouseEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
-  type VideoHTMLAttributes,
 } from "react";
 import { cn } from "@/lib/utils";
-import { toggleVideoElementPlayback } from "@/lib/video-interactions";
+import {
+  useInlineContentVideoExpansion,
+  useMobileContentFullscreenStyles,
+} from "./vertical-video-player-content-expansion";
+import { useVerticalVideoPlayerImmersiveControls } from "./vertical-video-player-immersive-controls";
+import { VerticalVideoPlayerMutedOverlayControl } from "./vertical-video-player-muted-overlay-control";
+import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
+import { useVideoPlaybackContinuity } from "./vertical-video-player-playback-continuity";
+import { VerticalVideoPlayerShell } from "./vertical-video-player-shell";
+import { useVerticalVideoStream, VerticalVideoStreamStatus } from "./vertical-video-player-stream";
+import {
+  clampNumber,
+  fetchBoundedVideoBlob,
+  fitClassName,
+  getReadableVideoDuration,
+  shouldUseInlineContentVideoExpansion,
+  type VerticalVideoPlayerProps,
+  waitForVideoEvent,
+} from "./vertical-video-player-support";
 
-type VideoFit = "contain" | "cover";
-type ControlsVariant = "native" | "minimal" | "persistent";
-type VideoDataAttributes = {
-  [key: `data-${string}`]: string | undefined;
-};
-type VerticalVideoElementProps = Omit<
-  VideoHTMLAttributes<HTMLVideoElement>,
-  "children" | "className" | "controls" | "poster" | "preload" | "ref" | "src"
-> &
-  VideoDataAttributes;
-
-type VerticalVideoPlayerProps = {
-  className?: string;
-  controls?: boolean;
-  controlsVariant?: ControlsVariant;
-  fit?: VideoFit;
-  fullscreenVariant?: "default" | "content";
-  onContentClick?: () => void;
-  onVideoElementReady?: (video: HTMLVideoElement | null) => void;
-  poster?: string | null;
-  preload?: "auto" | "metadata" | "none";
-  src: string;
-  style?: CSSProperties;
-  title: string;
-  videoClassName?: string;
-  videoProps?: VerticalVideoElementProps;
-};
-
-const fitClassName: Record<VideoFit, string> = {
-  contain: "object-contain",
-  cover: "object-cover",
-};
-
-const formatVideoTime = (seconds: number) => {
-  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
-
-  const totalSeconds = Math.floor(seconds);
-  const minutes = Math.floor(totalSeconds / 60);
-  const remainingSeconds = String(totalSeconds % 60).padStart(2, "0");
-
-  return `${minutes}:${remainingSeconds}`;
-};
-
-const getReadableVideoDuration = (video: HTMLVideoElement) =>
-  Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
-
-const clampNumber = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
-
-const waitForVideoEvent = (video: HTMLVideoElement, eventName: keyof HTMLMediaElementEventMap) =>
-  new Promise<void>((resolve) => {
-    const timeout = window.setTimeout(() => {
-      video.removeEventListener(eventName, handleEvent);
-      resolve();
-    }, 2500);
-
-    const handleEvent = () => {
-      window.clearTimeout(timeout);
-      resolve();
-    };
-
-    video.addEventListener(eventName, handleEvent, {
-      once: true,
-    });
-  });
-
-const MOBILE_FULLSCREEN_MEDIA_QUERY = "(max-width: 1023px)";
-
-const staticMobileContentFullscreenStyles = [
-  ["position", "fixed"],
-  ["inset", "0"],
-  ["display", "block"],
-  ["min-width", "0"],
-  ["min-height", "0"],
-  ["max-width", "100vw"],
-  ["margin", "auto"],
-  ["aspect-ratio", "9 / 16"],
-  ["background", "#000"],
-  ["object-fit", "contain"],
-  ["object-position", "center center"],
-] as const;
-
-type StoredVideoStyle = {
-  name: string;
-  priority: string;
-  value: string;
+type BlobBackedVideoRequest = {
+  controller: AbortController;
+  promise: Promise<boolean>;
+  source: string;
 };
 
 export const VerticalVideoPlayer = ({
@@ -109,8 +44,12 @@ export const VerticalVideoPlayer = ({
   controlsVariant = "native",
   fit = "cover",
   fullscreenVariant = "default",
+  mutedControlVisibility = "default",
   onContentClick,
+  onSoundEnabledChange,
   onVideoElementReady,
+  persistentControlsLayout = "stacked",
+  persistentControlsVisibility = "auto",
   poster,
   preload = "metadata",
   src,
@@ -120,20 +59,45 @@ export const VerticalVideoPlayer = ({
   videoProps,
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const storedFullscreenStylesRef = useRef<StoredVideoStyle[] | null>(null);
+  const latestSourceRef = useRef(src);
   const isSeekingRef = useRef(false);
   const blobBackedVideoRef = useRef<{ source: string; url: string } | null>(null);
-  const blobBackedVideoPromiseRef = useRef<Promise<boolean> | null>(null);
+  const blobBackedVideoRequestRef = useRef<BlobBackedVideoRequest | null>(null);
   const persistentSeekVerificationTimerRef = useRef<number | null>(null);
   const persistentProgressPointerIdRef = useRef<number | null>(null);
   const persistentProgressTrackRef = useRef<HTMLDivElement | null>(null);
   const wasPlayingBeforePersistentSeekRef = useRef(false);
+  const persistentReadySeekCleanupRef = useRef<(() => void) | null>(null);
   const [isPaused, setIsPaused] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const { capturePlaybackSnapshot, handleVideoElementRef, videoElementVersion } =
+    useVideoPlaybackContinuity({
+      currentTime,
+      onVideoElementReady,
+      setCurrentTime,
+      setIsMuted,
+      setIsPaused,
+      videoRef,
+    });
+  const { adaptivePlaybackFailed, playback } = useVerticalVideoStream({
+    poster,
+    src,
+    videoElementVersion,
+    videoRef,
+  });
+  const effectiveSource = playback.source;
   const usesMinimalControls = controls && controlsVariant === "minimal";
   const usesPersistentControls = controls && controlsVariant === "persistent";
+  const usesMediaPersistentControls =
+    usesPersistentControls && persistentControlsLayout === "media";
+  const usesInlineContentExpansion = shouldUseInlineContentVideoExpansion({
+    controlsEnabled: controls,
+    controlsVariant,
+    fullscreenVariant,
+    persistentControlsLayout,
+  });
   const hasNativeControls = controls && !usesMinimalControls && !usesPersistentControls;
   const {
     controlsList: videoControlsList,
@@ -144,20 +108,40 @@ export const VerticalVideoPlayer = ({
     ...passthroughVideoProps
   } = videoProps ?? {};
   const defaultNativeControlsList = "nodownload noplaybackrate noremoteplayback";
+  const { closeInlineContentExpansion, handleInlineContentExpansion, isContentExpanded } =
+    useInlineContentVideoExpansion({
+      effectiveSource,
+      enabled: usesInlineContentExpansion,
+      onBeforeClose: capturePlaybackSnapshot,
+    });
+
+  useMobileContentFullscreenStyles({ fullscreenVariant, videoRef });
+
+  const handleInlineContentExpansionRequest = useCallback(() => {
+    capturePlaybackSnapshot();
+    handleInlineContentExpansion();
+  }, [capturePlaybackSnapshot, handleInlineContentExpansion]);
+
+  useLayoutEffect(() => {
+    latestSourceRef.current = effectiveSource;
+  }, [effectiveSource]);
 
   useEffect(() => {
-    onVideoElementReady?.(videoRef.current);
-
-    return () => onVideoElementReady?.(null);
-  }, [onVideoElementReady]);
-
-  useEffect(() => {
-    const effectSource = src;
+    const effectSource = effectiveSource;
 
     return () => {
       if (persistentSeekVerificationTimerRef.current) {
         window.clearTimeout(persistentSeekVerificationTimerRef.current);
         persistentSeekVerificationTimerRef.current = null;
+      }
+
+      persistentReadySeekCleanupRef.current?.();
+      persistentReadySeekCleanupRef.current = null;
+
+      const activeRequest = blobBackedVideoRequestRef.current;
+      if (activeRequest?.source === effectSource) {
+        activeRequest.controller.abort();
+        blobBackedVideoRequestRef.current = null;
       }
 
       const currentBlobBackedVideo = blobBackedVideoRef.current;
@@ -166,85 +150,24 @@ export const VerticalVideoPlayer = ({
         blobBackedVideoRef.current = null;
       }
     };
-  }, [src]);
+  }, [effectiveSource]);
 
   useEffect(() => {
+    // Reexecuta quando o ref recebe outro elemento ao alternar o portal expandido.
+    void videoElementVersion;
+
     const video = videoRef.current;
     if (!video) return;
 
     if (usesMinimalControls || usesPersistentControls) {
       video.controls = false;
     }
-  }, [usesMinimalControls, usesPersistentControls]);
-
-  useEffect(() => {
-    if (fullscreenVariant !== "content" || typeof window === "undefined") return;
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    const restoreMobileContentFullscreenStyles = () => {
-      const storedStyles = storedFullscreenStylesRef.current;
-      if (!storedStyles) return;
-
-      for (const { name, priority, value } of storedStyles) {
-        video.style.setProperty(name, value, priority);
-      }
-
-      storedFullscreenStylesRef.current = null;
-    };
-
-    const applyMobileContentFullscreenStyles = () => {
-      if (!window.matchMedia(MOBILE_FULLSCREEN_MEDIA_QUERY).matches) {
-        restoreMobileContentFullscreenStyles();
-        return;
-      }
-
-      const viewportHeight =
-        typeof CSS !== "undefined" && CSS.supports("height: 100dvh") ? "100dvh" : "100vh";
-      const dynamicStyles = [
-        ["width", `min(100vw, calc(${viewportHeight} * 9 / 16))`],
-        ["height", `min(${viewportHeight}, calc(100vw * 16 / 9))`],
-        ["max-height", viewportHeight],
-      ] as const;
-      const fullscreenStyles = [...staticMobileContentFullscreenStyles, ...dynamicStyles];
-
-      if (!storedFullscreenStylesRef.current) {
-        storedFullscreenStylesRef.current = fullscreenStyles.map(([name]) => ({
-          name,
-          priority: video.style.getPropertyPriority(name),
-          value: video.style.getPropertyValue(name),
-        }));
-      }
-
-      for (const [name, value] of fullscreenStyles) {
-        video.style.setProperty(name, value, "important");
-      }
-    };
-
-    const handleFullscreenChange = () => {
-      if (document.fullscreenElement === video) {
-        applyMobileContentFullscreenStyles();
-        return;
-      }
-
-      restoreMobileContentFullscreenStyles();
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    video.addEventListener("webkitbeginfullscreen", applyMobileContentFullscreenStyles);
-    video.addEventListener("webkitendfullscreen", restoreMobileContentFullscreenStyles);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      video.removeEventListener("webkitbeginfullscreen", applyMobileContentFullscreenStyles);
-      video.removeEventListener("webkitendfullscreen", restoreMobileContentFullscreenStyles);
-      restoreMobileContentFullscreenStyles();
-    };
-  }, [fullscreenVariant]);
+  }, [usesMinimalControls, usesPersistentControls, videoElementVersion]);
 
   useEffect(() => {
     if (!usesMinimalControls && !usesPersistentControls) return;
+    // Reexecuta quando o ref recebe outro elemento ao alternar o portal expandido.
+    void videoElementVersion;
 
     const video = videoRef.current;
     if (!video) return;
@@ -282,34 +205,28 @@ export const VerticalVideoPlayer = ({
       video.removeEventListener("timeupdate", syncPlayerState);
       video.removeEventListener("volumechange", syncPlayerState);
     };
-  }, [usesMinimalControls, usesPersistentControls]);
+  }, [usesMinimalControls, usesPersistentControls, videoElementVersion]);
 
-  const handleContentClick = useCallback(() => {
-    if (onContentClick) {
-      onContentClick();
-      return;
-    }
-
-    void toggleVideoElementPlayback(videoRef.current);
-  }, [onContentClick]);
-
-  const handlePersistentPlayPause = useCallback(() => {
-    void toggleVideoElementPlayback(videoRef.current);
-  }, []);
-
-  const handlePersistentMuteToggle = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const nextMuted = !(video.muted || video.volume <= 0);
-    video.muted = nextMuted;
-
-    if (!nextMuted && video.volume <= 0) {
-      video.volume = 1;
-    }
-
-    setIsMuted(video.muted || video.volume <= 0);
-  }, []);
+  const {
+    controlsFocusProps,
+    controlsHidden: persistentControlsHidden,
+    handleContentClick,
+    handleControlsInteraction,
+    handleFullscreen: handlePersistentFullscreen,
+    handleMuteToggle: handlePersistentMuteToggle,
+    handlePlayPause: handlePersistentPlayPause,
+  } = useVerticalVideoPlayerImmersiveControls({
+    controlsVisibility: persistentControlsVisibility,
+    enabled: usesPersistentControls,
+    fullscreenVariant,
+    isPaused,
+    onContentClick,
+    onFullscreenRequest: usesInlineContentExpansion
+      ? handleInlineContentExpansionRequest
+      : undefined,
+    onSoundEnabledChange,
+    videoRef,
+  });
 
   const ensureBlobBackedVideoForSeek = useCallback(
     (targetTime: number) => {
@@ -318,44 +235,69 @@ export const VerticalVideoPlayer = ({
       }
 
       const video = videoRef.current;
-      if (!video || !src) return Promise.resolve(false);
+      if (!video || !effectiveSource || playback.isStream) return Promise.resolve(false);
 
       const currentBlobBackedVideo = blobBackedVideoRef.current;
-      if (currentBlobBackedVideo?.source === src) {
+      if (currentBlobBackedVideo?.source === effectiveSource) {
         return Promise.resolve(true);
       }
 
-      if (blobBackedVideoPromiseRef.current) {
-        return blobBackedVideoPromiseRef.current;
+      const pendingRequest = blobBackedVideoRequestRef.current;
+      if (pendingRequest?.source === effectiveSource) {
+        return pendingRequest.promise;
       }
+
+      pendingRequest?.controller.abort();
+
+      const source = effectiveSource;
+      const controller = new AbortController();
+      let request: BlobBackedVideoRequest | null = null;
 
       const promise = (async () => {
         const previousTime = video.currentTime || targetTime;
         const wasPaused = video.paused || video.ended;
+        const timeout = window.setTimeout(() => controller.abort(), 15_000);
+
+        const isCurrentRequest = () =>
+          !controller.signal.aborted &&
+          request !== null &&
+          blobBackedVideoRequestRef.current === request &&
+          videoRef.current === video &&
+          latestSourceRef.current === source;
 
         try {
-          const response = await fetch(src, {
-            cache: "force-cache",
-          });
+          const blob = await fetchBoundedVideoBlob(source, controller.signal);
+          if (!blob || !isCurrentRequest()) return false;
 
-          if (!response.ok) return false;
-
-          const blob = await response.blob();
           const objectUrl = URL.createObjectURL(blob);
+
+          if (!isCurrentRequest()) {
+            URL.revokeObjectURL(objectUrl);
+            return false;
+          }
 
           if (blobBackedVideoRef.current) {
             URL.revokeObjectURL(blobBackedVideoRef.current.url);
           }
 
           blobBackedVideoRef.current = {
-            source: src,
+            source,
             url: objectUrl,
           };
 
           video.src = objectUrl;
           video.load();
 
-          await waitForVideoEvent(video, "loadedmetadata");
+          await waitForVideoEvent(video, "loadedmetadata", controller.signal);
+
+          if (!isCurrentRequest()) {
+            const currentBlobBackedVideo = blobBackedVideoRef.current;
+            if (currentBlobBackedVideo?.url === objectUrl) {
+              blobBackedVideoRef.current = null;
+            }
+            URL.revokeObjectURL(objectUrl);
+            return false;
+          }
 
           const duration = getReadableVideoDuration(video);
           const restoredTime = clampNumber(targetTime || previousTime, 0, duration || targetTime);
@@ -374,18 +316,27 @@ export const VerticalVideoPlayer = ({
           return true;
         } catch {
           return false;
+        } finally {
+          window.clearTimeout(timeout);
         }
       })();
 
-      blobBackedVideoPromiseRef.current = promise;
+      request = {
+        controller,
+        promise,
+        source,
+      };
+      blobBackedVideoRequestRef.current = request;
 
       promise.finally(() => {
-        blobBackedVideoPromiseRef.current = null;
+        if (blobBackedVideoRequestRef.current === request) {
+          blobBackedVideoRequestRef.current = null;
+        }
       });
 
       return promise;
     },
-    [src],
+    [effectiveSource, playback.isStream],
   );
 
   const seekPersistentVideoToTime = useCallback(
@@ -397,6 +348,8 @@ export const VerticalVideoPlayer = ({
 
       const clampedTime = clampNumber(nextTime, 0, resolvedDuration);
       const commitSeek = () => {
+        if (videoRef.current !== video) return;
+
         try {
           if ("fastSeek" in video && typeof video.fastSeek === "function") {
             video.fastSeek(clampedTime);
@@ -412,15 +365,26 @@ export const VerticalVideoPlayer = ({
 
       commitSeek();
 
-      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-        const commitWhenReady = () => commitSeek();
+      persistentReadySeekCleanupRef.current?.();
+      persistentReadySeekCleanupRef.current = null;
 
-        video.addEventListener("canplay", commitWhenReady, {
-          once: true,
-        });
-        video.addEventListener("loadeddata", commitWhenReady, {
-          once: true,
-        });
+      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+        const removeReadyListeners = () => {
+          video.removeEventListener("canplay", commitWhenReady);
+          video.removeEventListener("loadeddata", commitWhenReady);
+          if (persistentReadySeekCleanupRef.current === removeReadyListeners) {
+            persistentReadySeekCleanupRef.current = null;
+          }
+        };
+        const commitWhenReady = () => {
+          removeReadyListeners();
+          commitSeek();
+        };
+
+        persistentReadySeekCleanupRef.current = removeReadyListeners;
+
+        video.addEventListener("canplay", commitWhenReady);
+        video.addEventListener("loadeddata", commitWhenReady);
       }
 
       if (persistentSeekVerificationTimerRef.current) {
@@ -574,28 +538,31 @@ export const VerticalVideoPlayer = ({
   const handleVideoClick = useCallback(
     (event: MouseEvent<HTMLVideoElement>) => {
       onVideoClick?.(event);
-
-      if (!event.defaultPrevented && usesPersistentControls && onContentClick) {
-        onContentClick();
+      if (!event.defaultPrevented && usesPersistentControls) {
+        handleContentClick();
       }
     },
-    [onContentClick, onVideoClick, usesPersistentControls],
+    [handleContentClick, onVideoClick, usesPersistentControls],
   );
 
   const persistentProgressRatio = duration > 0 ? clampNumber(currentTime / duration, 0, 1) : 0;
 
   return (
-    <div
-      className={cn(
-        "relative aspect-[9/16] overflow-hidden rounded-[22px] border border-border bg-black shadow-inner",
-        className,
-      )}
+    <VerticalVideoPlayerShell
+      {...controlsFocusProps}
+      className={className}
+      isContentExpanded={isContentExpanded}
       style={style}
     >
       <video
         {...passthroughVideoProps}
         aria-label={title}
-        className={cn("h-full w-full bg-black", fitClassName[fit], videoClassName)}
+        className={cn(
+          "h-full w-full bg-media-background",
+          fitClassName[fit],
+          videoClassName,
+          isContentExpanded && "object-contain",
+        )}
         controls={hasNativeControls}
         controlsList={
           usesMinimalControls
@@ -613,116 +580,108 @@ export const VerticalVideoPlayer = ({
         onClick={handleVideoClick}
         onContextMenu={handleVideoContextMenu}
         playsInline
-        poster={poster || undefined}
+        poster={playback.poster || undefined}
         preload={preload}
-        ref={videoRef}
-        src={src}
+        ref={handleVideoElementRef}
+        src={playback.isStream ? undefined : effectiveSource}
       >
         Seu navegador não suporta a reprodução de vídeo.
       </video>
+      <VerticalVideoStreamStatus
+        adaptivePlaybackFailed={adaptivePlaybackFailed}
+        error={playback.error}
+        isLoading={playback.isLoading}
+      />
+      {isContentExpanded ? (
+        <button
+          aria-label={`Sair do vídeo ampliado: ${title}`}
+          className="absolute right-3 z-[3] grid h-11 w-11 place-items-center rounded-full border border-media-foreground/20 bg-media-background/40 text-primary-foreground shadow-lectum-soft backdrop-blur-md transition hover:bg-media-background/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 active:scale-95"
+          data-lectum-inline-video-exit="true"
+          onClick={closeInlineContentExpansion}
+          onPointerDown={(event) => event.stopPropagation()}
+          style={{
+            top: "calc(env(safe-area-inset-top) + 12px)",
+          }}
+          type="button"
+        >
+          <Minimize2 className="h-5 w-5" aria-hidden="true" strokeWidth={2.3} />
+        </button>
+      ) : null}
       <button
         aria-label={
-          onContentClick
-            ? `Mostrar interface do vídeo: ${title}`
-            : `Alternar reprodução do vídeo: ${title}`
+          persistentControlsHidden
+            ? `Mostrar controles do vídeo: ${title}`
+            : onContentClick
+              ? `Mostrar interface do vídeo: ${title}`
+              : `Alternar reprodução do vídeo: ${title}`
         }
-        className="absolute inset-x-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+        className="absolute inset-x-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/50"
         onClick={handleContentClick}
         style={{
           bottom: usesPersistentControls
-            ? "max(104px, calc(env(safe-area-inset-bottom) + 96px))"
+            ? persistentControlsHidden
+              ? 0
+              : usesMediaPersistentControls
+                ? "calc(var(--lectum-bottom-fixed-padding) + 4.5rem)"
+                : "calc(var(--lectum-bottom-fixed-padding) + 5.25rem)"
             : controls
               ? "max(64px, 20%)"
               : 0,
         }}
         type="button"
       />
-      {usesPersistentControls ? (
-        <div
-          data-lectum-video-player-controls="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] px-4 text-white"
-          style={{
-            paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
-          }}
+      {usesMediaPersistentControls && !persistentControlsHidden ? (
+        <button
+          aria-label={isPaused ? `Reproduzir vídeo: ${title}` : `Pausar vídeo: ${title}`}
+          className="absolute top-1/2 left-1/2 z-[2] grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-surface/75 text-foreground shadow-[var(--lectum-shadow-soft)] backdrop-blur transition hover:scale-[1.03] hover:bg-surface/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 active:scale-95 sm:h-[4.5rem] sm:w-[4.5rem]"
+          onClick={handlePersistentPlayPause}
+          onPointerDown={(event) => event.stopPropagation()}
+          type="button"
         >
-          <div
-            className="pointer-events-auto [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.78))]"
-            style={{ touchAction: "none" }}
-          >
-            <div
-              aria-label={`Progresso do vídeo: ${title}`}
-              aria-valuemax={Math.round(duration)}
-              aria-valuemin={0}
-              aria-valuenow={Math.round(currentTime)}
-              className="relative flex h-7 w-full cursor-pointer items-center outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-              onKeyDown={handlePersistentProgressKeyDown}
-              onPointerCancel={handlePersistentProgressPointerEnd}
-              onPointerDown={handlePersistentProgressPointerDown}
-              onPointerMove={handlePersistentProgressPointerMove}
-              onPointerUp={handlePersistentProgressPointerEnd}
-              ref={persistentProgressTrackRef}
-              role="slider"
-              tabIndex={0}
-              style={{ touchAction: "none" }}
-            >
-              <span
-                aria-hidden="true"
-                className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-black/35"
-              />
-              <span
-                aria-hidden="true"
-                className="absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white"
-                style={{ width: `${persistentProgressRatio * 100}%` }}
-              />
-              <span
-                aria-hidden="true"
-                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_1px_5px_rgba(0,0,0,0.45)]"
-                style={{ left: `${persistentProgressRatio * 100}%` }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                aria-label={isPaused ? `Reproduzir vídeo: ${title}` : `Pausar vídeo: ${title}`}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
-                onClick={handlePersistentPlayPause}
-                onPointerDown={(event) => event.stopPropagation()}
-                type="button"
-              >
-                {isPaused ? (
-                  <Play className="ml-0.5 h-[18px] w-[18px] fill-current" />
-                ) : (
-                  <Pause className="h-[18px] w-[18px] fill-current" />
-                )}
-              </button>
-
-              <span className="min-w-0 flex-1 text-[12px] font-semibold tabular-nums text-white">
-                {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
-              </span>
-
-              <button
-                aria-label={isMuted ? `Ativar som do vídeo: ${title}` : `Mutar vídeo: ${title}`}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
-                onClick={handlePersistentMuteToggle}
-                onPointerDown={(event) => event.stopPropagation()}
-                type="button"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-[18px] w-[18px]" />
-                ) : (
-                  <Volume2 className="h-[18px] w-[18px]" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+          {isPaused ? (
+            <Play className="ml-1 h-9 w-9 fill-current sm:h-10 sm:w-10" />
+          ) : (
+            <Pause className="h-8 w-8 fill-current sm:h-9 sm:w-9" />
+          )}
+        </button>
+      ) : null}
+      {usesPersistentControls ? (
+        <VerticalVideoPlayerPersistentControls
+          currentTime={currentTime}
+          duration={duration}
+          fullscreenActive={isContentExpanded}
+          isMuted={isMuted}
+          isPaused={isPaused}
+          hidden={persistentControlsHidden}
+          layout={persistentControlsLayout}
+          onInteraction={handleControlsInteraction}
+          onFullscreen={usesMediaPersistentControls ? handlePersistentFullscreen : undefined}
+          onMuteToggle={handlePersistentMuteToggle}
+          onPlayPause={handlePersistentPlayPause}
+          onProgressKeyDown={handlePersistentProgressKeyDown}
+          onProgressPointerDown={handlePersistentProgressPointerDown}
+          onProgressPointerEnd={handlePersistentProgressPointerEnd}
+          onProgressPointerMove={handlePersistentProgressPointerMove}
+          progressRatio={persistentProgressRatio}
+          progressTrackRef={persistentProgressTrackRef}
+          title={title}
+        />
+      ) : null}
+      {usesPersistentControls &&
+      persistentControlsHidden &&
+      mutedControlVisibility === "when-hidden" &&
+      isMuted ? (
+        <VerticalVideoPlayerMutedOverlayControl
+          onClick={handlePersistentMuteToggle}
+          title={title}
+        />
       ) : null}
       {usesMinimalControls ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pb-4 pt-12">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-media-background/80 via-media-background/45 to-transparent px-4 pt-12 pb-[var(--lectum-bottom-fixed-padding)]">
           <div className="pointer-events-auto flex items-center">
             <button
               aria-label={isPaused ? `Reproduzir video: ${title}` : `Pausar video: ${title}`}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface/95 text-foreground shadow-[var(--lectum-shadow-soft)] transition hover:scale-[1.03] hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface/95 text-foreground shadow-[var(--lectum-shadow-soft)] transition hover:scale-[1.03] hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70"
               onClick={handleContentClick}
               type="button"
             >
@@ -735,6 +694,6 @@ export const VerticalVideoPlayer = ({
           </div>
         </div>
       ) : null}
-    </div>
+    </VerticalVideoPlayerShell>
   );
 };

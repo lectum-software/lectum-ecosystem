@@ -2,5 +2,5 @@
 import type { user } from "@/interfaces/objects";
 
 export interface IRecoveryRepository {
-  recoveryCode(data: user): Promise<user>;
+  recoveryCode(data: user, expectedCode?: string): Promise<boolean>;
 }

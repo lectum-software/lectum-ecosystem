@@ -66,6 +66,7 @@ const profileEditSelect = {
     },
   },
   user_id: true,
+  updatedAt: true,
   whatsapp: true,
 } satisfies Prisma.psychologist_profileSelect;
 
@@ -205,19 +206,39 @@ export class AdminPsychologistProfileEditRepository {
     });
   }
 
+  private async updateProfile(
+    tx: Prisma.TransactionClient,
+    id: string,
+    expectedUpdatedAt: Date,
+    changes: AdminPsychologistPersonalProfileUpdate | AdminPsychologistProfessionalProfileUpdate,
+  ) {
+    const result = await tx.psychologist_profile.updateMany({
+      where: {
+        id,
+        updatedAt: expectedUpdatedAt,
+        deleted: false,
+        user: { active: true, deleted: false, role: "psicologo" },
+      },
+      data: {
+        ...changes,
+        updatedAt: new Date(Math.max(Date.now(), expectedUpdatedAt.getTime() + 1)),
+      },
+    });
+    return result.count === 1;
+  }
+
   async updatePersonalData(
     profileId: string,
     input: {
       audit: AdminPsychologistProfileEditAudit | null;
+      expectedUpdatedAt: Date;
       profile: AdminPsychologistPersonalProfileUpdate;
     },
   ) {
     return prisma.$transaction(async (tx) => {
-      await tx.psychologist_profile.update({
-        data: input.profile,
-        select: { id: true },
-        where: { id: profileId },
-      });
+      if (!(await this.updateProfile(tx, profileId, input.expectedUpdatedAt, input.profile))) {
+        return false;
+      }
 
       if (input.audit) {
         await tx.admin_activity_log.create({
@@ -238,89 +259,97 @@ export class AdminPsychologistProfileEditRepository {
           select: { id: true },
         });
       }
+      return true;
     });
   }
 
   async updateProfessionalData(
     profile: AdminPsychologistProfileEditRecord,
     input: {
-      approachIds: string[];
+      approachIds?: string[];
       audit: AdminPsychologistProfileEditAudit | null;
+      expectedUpdatedAt: Date;
       profile: AdminPsychologistProfessionalProfileUpdate;
-      serviceIds: string[];
-      specialtyIds: string[];
+      serviceIds?: string[];
+      specialtyIds?: string[];
     },
   ) {
     return prisma.$transaction(async (tx) => {
-      await tx.psychologist_profile.update({
-        data: input.profile,
-        select: { id: true },
-        where: { id: profile.id },
-      });
+      if (!(await this.updateProfile(tx, profile.id, input.expectedUpdatedAt, input.profile))) {
+        return false;
+      }
 
       const relationDeletedAt = new Date();
 
-      await tx.psychologist_specialty.updateMany({
-        data: { deleted: true, deletedAt: relationDeletedAt },
-        where: {
-          deleted: false,
-          psychologist_id: profile.user_id,
-          ...(input.specialtyIds.length > 0 ? { specialty_id: { notIn: input.specialtyIds } } : {}),
-        },
-      });
-      for (const specialty_id of input.specialtyIds) {
-        await tx.psychologist_specialty.upsert({
-          create: { psychologist_id: profile.user_id, specialty_id },
-          update: { deleted: false, deletedAt: null },
+      if (input.specialtyIds !== undefined) {
+        await tx.psychologist_specialty.updateMany({
+          data: { deleted: true, deletedAt: relationDeletedAt },
           where: {
-            psychologist_id_specialty_id: {
-              psychologist_id: profile.user_id,
-              specialty_id,
-            },
+            deleted: false,
+            psychologist_id: profile.user_id,
+            ...(input.specialtyIds.length > 0
+              ? { specialty_id: { notIn: input.specialtyIds } }
+              : {}),
           },
         });
+        for (const specialty_id of input.specialtyIds) {
+          await tx.psychologist_specialty.upsert({
+            create: { psychologist_id: profile.user_id, specialty_id },
+            update: { deleted: false, deletedAt: null },
+            where: {
+              psychologist_id_specialty_id: {
+                psychologist_id: profile.user_id,
+                specialty_id,
+              },
+            },
+          });
+        }
       }
 
-      await tx.psychologist_service.updateMany({
-        data: { deleted: true, deletedAt: relationDeletedAt },
-        where: {
-          deleted: false,
-          psychologist_id: profile.user_id,
-          ...(input.serviceIds.length > 0 ? { service_id: { notIn: input.serviceIds } } : {}),
-        },
-      });
-      for (const service_id of input.serviceIds) {
-        await tx.psychologist_service.upsert({
-          create: { psychologist_id: profile.user_id, service_id },
-          update: { deleted: false, deletedAt: null },
+      if (input.serviceIds !== undefined) {
+        await tx.psychologist_service.updateMany({
+          data: { deleted: true, deletedAt: relationDeletedAt },
           where: {
-            psychologist_id_service_id: {
-              psychologist_id: profile.user_id,
-              service_id,
-            },
+            deleted: false,
+            psychologist_id: profile.user_id,
+            ...(input.serviceIds.length > 0 ? { service_id: { notIn: input.serviceIds } } : {}),
           },
         });
+        for (const service_id of input.serviceIds) {
+          await tx.psychologist_service.upsert({
+            create: { psychologist_id: profile.user_id, service_id },
+            update: { deleted: false, deletedAt: null },
+            where: {
+              psychologist_id_service_id: {
+                psychologist_id: profile.user_id,
+                service_id,
+              },
+            },
+          });
+        }
       }
 
-      await tx.psychologist_approach.updateMany({
-        data: { deleted: true, deletedAt: relationDeletedAt },
-        where: {
-          approach_id: input.approachIds.length > 0 ? { notIn: input.approachIds } : undefined,
-          deleted: false,
-          psychologist_id: profile.user_id,
-        },
-      });
-      for (const approach_id of input.approachIds) {
-        await tx.psychologist_approach.upsert({
-          create: { approach_id, psychologist_id: profile.user_id },
-          update: { deleted: false, deletedAt: null },
+      if (input.approachIds !== undefined) {
+        await tx.psychologist_approach.updateMany({
+          data: { deleted: true, deletedAt: relationDeletedAt },
           where: {
-            psychologist_id_approach_id: {
-              approach_id,
-              psychologist_id: profile.user_id,
-            },
+            approach_id: input.approachIds.length > 0 ? { notIn: input.approachIds } : undefined,
+            deleted: false,
+            psychologist_id: profile.user_id,
           },
         });
+        for (const approach_id of input.approachIds) {
+          await tx.psychologist_approach.upsert({
+            create: { approach_id, psychologist_id: profile.user_id },
+            update: { deleted: false, deletedAt: null },
+            where: {
+              psychologist_id_approach_id: {
+                approach_id,
+                psychologist_id: profile.user_id,
+              },
+            },
+          });
+        }
       }
 
       if (input.audit) {
@@ -342,6 +371,7 @@ export class AdminPsychologistProfileEditRepository {
           select: { id: true },
         });
       }
+      return true;
     });
   }
 }

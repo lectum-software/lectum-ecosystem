@@ -1,4 +1,4 @@
-﻿# ADR-0228: Dashboard Admin com agregações reais e gráficos sem pacote externo
+# ADR-0228: Dashboard Admin com agregações reais e gráficos sem pacote externo
 
 ## Status
 

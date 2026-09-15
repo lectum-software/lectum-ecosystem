@@ -1,4 +1,4 @@
-﻿import type { payment_method, professional_subscription } from "@/interfaces/objects";
+import type { payment_method, professional_subscription } from "@/interfaces/objects";
 
 type PaymentMethodDisplay = {
   gatewaySubscriptionId: string;

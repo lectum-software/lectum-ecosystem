@@ -1,4 +1,4 @@
-﻿# ADR 0153: Fundo branco para posts e respostas de psicologos dentro do post
+# ADR 0153: Fundo branco para posts e respostas de psicologos dentro do post
 
 Data: 2026-06-23
 

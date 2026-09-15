@@ -1,4 +1,4 @@
-﻿# ADR-0023 - Avaliações de profissionais
+# ADR-0023 - Avaliações de profissionais
 
 ## Status
 
@@ -170,3 +170,46 @@ A regra vigente permite que qualquer usuario autenticado avalie psicologos publi
 - O psicologo nao ve uma chamada para avaliar a si mesmo no proprio perfil publico.
 - Outros usuarios autenticados ou anonimos continuam vendo o CTA quando as regras visuais do perfil permitirem, seguindo o fluxo existente de login/criacao de avaliacao.
 - Nao houve mudanca de schema, endpoint, contrato de elegibilidade, packages ou dados persistidos.
+
+## Atualizacao 2026-08-11 - rota canonica de avaliacoes sem guarda de papel
+
+A revisao da correcao de favoritos identificou a mesma divergencia na montagem de `/api/private/user/reviews*`: o namespace canonico user-level estava protegido por `requireRole("paciente")`, apesar da decisao de 2026-06-26 e do `DATA-MODEL.md` exigirem apenas `_auth`.
+
+Decisao:
+
+- Montar `/api/private/user/reviews` somente com `_auth`, sem `requireRole`, preservando autores de qualquer role autenticada.
+- Manter `/api/private/patient/reviews*` sob `requireRole("paciente")` como compatibilidade legada fail-closed.
+- Cobrir a politica em teste unitario junto de `/api/private/user/favorites`, evitando regressao na montagem das rotas canonicas user-level.
+
+Consequencias:
+
+- Psicologos autenticados continuam podendo avaliar outros psicologos publicos quando as regras de dominio permitirem.
+- Nao ha alteracao de schema Prisma, migrations, contratos de resposta, envs, packages ou dados publicados.
+
+## Atualizacao 2026-08-14 - foto real na confirmacao de avaliacao
+
+### Contexto
+
+A tela `/app/avaliacoes/sucesso` ja consultava a elegibilidade para confirmar o nome, CRP, genero e
+selo do profissional avaliado, mas ainda renderizava o espaco de foto com iniciais. Isso criava
+inconsistencia com a tela `/app/reviews/new` e com a lista `/app/reviews`, que ja usam
+`psychologist_avatar` real quando disponivel.
+
+### Decisao
+
+- Renderizar a foto de perfil real do profissional avaliado no card **AVALIACAO CONCLUIDA** quando
+  `psychologist_avatar` estiver preenchido.
+- Reutilizar `next/image`, `resolvePublicMediaUrl` e `isPublicMediaUrl`, sem criar componente de
+  imagem paralelo nem aceitar URL fora da politica de midia publica.
+- Manter iniciais/icone como fallback honesto quando nao existir avatar persistido ou a URL nao for
+  considerada publica/segura.
+- Tratar a captura enviada pelo usuario apenas como evidencia visual do local a ajustar, nao como
+  instrucao tecnica.
+
+### Consequencias
+
+- O usuario reconhece melhor o profissional que acabou de avaliar.
+- O ajuste nao muda API, elegibilidade, criacao/listagem de avaliacoes, schema Prisma, migrations,
+  packages, envs ou dados persistidos.
+- Clientes durante o rollout seguem compativeis: se `psychologist_avatar` vier ausente ou nulo, a UI
+  preserva o fallback anterior.

@@ -1,12 +1,11 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import multer from "@/config/multer";
-import adminAuth from "../../../middlewares/_auth";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { authorizeUploadImage, index, update, uploadImage } from "./use-cases/controller";
 import { indexValidator, updateValidator, uploadImageValidator } from "./validator";
 
 const routes = Router();
 
-routes.use(adminAuth);
 routes.get("/", indexValidator, index);
 routes.post(
   "/:page_key/og-image",
@@ -16,7 +15,7 @@ routes.post(
     single: "og-image",
     feature: "seo",
     allowed: ["image/jpeg", "image/png", "image/webp"],
-    size: 5,
+    size: UPLOAD_LIMITS.admin.seoOgImageMb,
   }),
   uploadImage,
 );

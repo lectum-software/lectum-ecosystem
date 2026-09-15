@@ -1,4 +1,4 @@
-﻿import type { page_view_event } from "@/interfaces/objects";
+import type { page_view_event } from "@/interfaces/objects";
 import type { AnalyticsDisplayMode } from "../../helpers/tracking";
 
 export interface IPageViewCreateDTO {
@@ -67,26 +67,10 @@ export type PageViewDurationInput = {
 export type PageViewTrackingResult = {
   tracked: boolean;
   id: string | null;
-  visitor_id: string;
-  session_id: string;
-  user_id: string | null;
-  path: string;
-  normalized_path: string;
-  page_kind: string;
-  target_type: string | null;
-  target_id: string | null;
-  traffic_source: string;
-  traffic_medium: string | null;
-  referrer_host: string | null;
-  display_mode: AnalyticsDisplayMode;
-  is_entry: boolean;
-  entry_path: string | null;
 };
 
 export type PageViewDurationResult = {
   updated: boolean;
-  id: string | null;
-  duration_seconds: number | null;
 };
 
 export type PageViewEntry = Pick<page_view_event, "entry_path" | "id" | "path"> | null;

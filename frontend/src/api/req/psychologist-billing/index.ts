@@ -83,7 +83,7 @@ export const savePsychologistBillingAddress = async (body: BillingAddressPayload
     body,
   });
 
-  return handleReq<BillingAddressResponse>(handle);
+  return handleReq<BillingAddressResponse>({ ...handle, hideError: true });
 };
 
 export const updatePsychologistBillingPaymentMethod = async (body: BillingPaymentMethodPayload) => {

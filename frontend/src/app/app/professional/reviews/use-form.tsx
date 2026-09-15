@@ -21,7 +21,7 @@ export const useReviewResponseForm = (
       field: "textarea",
       placeholder,
       inputClassName:
-        "min-h-[84px] resize-none rounded-[16px] border-[#e5e7eb] bg-white px-4 py-3 text-[14px] leading-6 shadow-none placeholder:text-[#94a3b8] focus:border-[#308ce8] focus:ring-[#308ce8]/10",
+        "min-h-[84px] resize-none rounded-[16px] border-border bg-surface px-4 py-3 text-[14px] leading-6 shadow-none placeholder:text-subtle focus:border-primary focus:ring-primary/10",
     },
   ];
 

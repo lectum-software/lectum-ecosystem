@@ -1,4 +1,4 @@
-import type { CommunityAuthor, CommunityPostMediaItem } from "@/api/generator/types/community";
+import type { CommunityAuthor } from "@/api/generator/types/community";
 import type {
   PostListPost,
   PostProfessionalReply,
@@ -6,6 +6,11 @@ import type {
   UserPostReply,
 } from "@/api/generator/types/posts";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  publicCommunityPostFocusedReplyHref,
+  publicCommunityPostHref,
+  publicCommunityReplyWhatsappShareHref,
+} from "@/utils/public-routes";
 
 export type LectumShareChannel = "clipboard" | "web_share";
 
@@ -33,6 +38,7 @@ export type LectumShareSocialTarget = LectumShareBaseTarget & {
   mediaItems: LectumShareMediaItem[];
   mediaType: "image" | "video";
   mediaUrl: string;
+  posterUrl?: string | null;
   professional: {
     avatar: string | null;
     name: string;
@@ -44,13 +50,21 @@ export type LectumShareSocialTarget = LectumShareBaseTarget & {
   shareTitle: string;
   sourceKind: "comment" | "post";
   sourceText: string;
+  whatsappShareUrl: string;
 };
 
 export type LectumShareVideoTarget = LectumShareLinkTarget | LectumShareSocialTarget;
 
 type ShareableProfessionalReply = Pick<
   PostProfessionalReply | PostReply | UserPostReply,
-  "author" | "content" | "id" | "media_type" | "media_url" | "parent_reply_id" | "title"
+  | "author"
+  | "content"
+  | "id"
+  | "media_type"
+  | "media_url"
+  | "parent_reply_id"
+  | "thumbnail_url"
+  | "title"
 > & {
   parent_content?: string | null;
 };
@@ -62,8 +76,20 @@ type ShareTargetOptions = {
 
 type ShareablePostWithMedia = Pick<
   PostListPost,
-  "author" | "community" | "content" | "id" | "media_items" | "media_type" | "media_url" | "title"
+  | "author"
+  | "community"
+  | "content"
+  | "id"
+  | "media_items"
+  | "media_type"
+  | "media_url"
+  | "thumbnail_url"
+  | "title"
 >;
+
+type ShareablePostRouteContext = Pick<PostListPost, "id" | "title"> & {
+  community?: Pick<PostListPost["community"], "slug"> | null;
+};
 
 const normalizeForComparison = (value?: string | null) =>
   String(value ?? "")
@@ -100,22 +126,40 @@ const toAbsoluteShareUrl = (relativeUrl: string) =>
   typeof window === "undefined" ? relativeUrl : `${window.location.origin}${relativeUrl}`;
 
 const postRelativeUrl = (post: Pick<PostListPost, "community" | "id">) =>
-  `/comunidades/${post.community.slug}/publicacao/${post.id}`;
+  publicCommunityPostHref(post.community.slug, post.id);
 
-const normalizePostMediaItem = (
+const isShareableMedia = (
   mediaUrl: string | null | undefined,
   mediaType: string | null | undefined,
-): LectumShareMediaItem | null => {
-  if (!mediaUrl || (mediaType !== "image" && mediaType !== "video")) return null;
+): mediaType is "image" | "video" =>
+  Boolean(mediaUrl && (mediaType === "image" || mediaType === "video"));
 
-  return {
-    mediaType,
-    mediaUrl,
-  };
+const hasShareablePostMedia = (post: ShareablePostWithMedia) =>
+  (post.media_items ?? []).some((item) => isShareableMedia(item.media_url, item.media_type)) ||
+  isShareableMedia(post.media_url, post.media_type);
+
+const getFirstShareablePostVideoMedia = (post: ShareablePostWithMedia) => {
+  const firstMedia = (post.media_items ?? [])[0];
+
+  if (firstMedia) {
+    return firstMedia.media_type === "video" && firstMedia.media_url
+      ? {
+          mediaUrl: firstMedia.media_url,
+          posterUrl: firstMedia.thumbnail_url ?? null,
+        }
+      : null;
+  }
+
+  return post.media_type === "video" && post.media_url
+    ? {
+        mediaUrl: post.media_url,
+        posterUrl: post.thumbnail_url ?? null,
+      }
+    : null;
 };
 
-const sortMediaItems = (items: CommunityPostMediaItem[]) =>
-  [...items].sort((left, right) => left.position - right.position);
+const createLectumSocialShareTitle = (professionalName: string) =>
+  `${professionalName.replace(/\s+/g, " ").trim() || "Lectum"} na Lectum`;
 
 export const createLectumShareLinkTarget = (
   post: Pick<PostListPost, "community" | "id" | "title">,
@@ -141,47 +185,93 @@ export const createLectumShareLinkTarget = (
 export const createLectumSharePostMediaTarget = (
   post: ShareablePostWithMedia,
   options: ShareTargetOptions = {},
-): LectumShareSocialTarget | null => {
+): LectumShareLinkTarget | null => {
   if (!isProfessionalAuthor(post.author)) return null;
 
-  const carouselItems = sortMediaItems(post.media_items ?? [])
-    .map((item) => normalizePostMediaItem(item.media_url, item.media_type))
-    .filter((item): item is LectumShareMediaItem => Boolean(item));
-  const singleItem = normalizePostMediaItem(post.media_url, post.media_type);
-  const mediaItems = carouselItems.length > 0 ? carouselItems : singleItem ? [singleItem] : [];
-  const firstMedia = mediaItems[0];
-
-  if (!firstMedia) return null;
+  if (!hasShareablePostMedia(post)) return null;
 
   const relativeUrl = options.relativeUrl ?? postRelativeUrl(post);
-  const responseText = post.content?.trim() || null;
+  const professionalName =
+    normalizeLectumShareProfessionalName(post.author.name) || post.author.name;
 
-  return {
-    cardLabel: "Postado na Lectum",
-    carouselCount: mediaItems.length,
-    kind: "post_media",
-    mediaItems,
-    mediaType: firstMedia.mediaType,
-    mediaUrl: firstMedia.mediaUrl,
-    postId: post.id,
-    professional: {
-      avatar: post.author.avatar,
-      name: normalizeLectumShareProfessionalName(post.author.name) || post.author.name,
-      roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
-      verified: post.author.verified,
-    },
-    replyId: null,
-    responseText,
-    shareText: post.title,
-    shareTitle: "Postado na Lectum",
-    shareUrl: toAbsoluteShareUrl(relativeUrl),
-    sourceKind: "post",
-    sourceText: post.title,
-  };
+  return createLectumShareLinkTarget(post, {
+    relativeUrl,
+    title: createLectumSocialShareTitle(professionalName),
+  });
 };
 
 export const createLectumShareVideoTarget = (
   post: Pick<PostListPost, "community" | "id" | "title">,
+  reply: ShareableProfessionalReply,
+  options: ShareTargetOptions = {},
+): LectumShareLinkTarget | null => {
+  if (!isProfessionalAuthor(reply.author) || !isVideoReply(reply) || !reply.media_url) {
+    return null;
+  }
+
+  const relativeUrl =
+    options.relativeUrl ??
+    publicCommunityPostFocusedReplyHref(post.community.slug, post.id, reply.id);
+  const professionalName =
+    normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name;
+
+  return createLectumShareLinkTarget(post, {
+    relativeUrl,
+    replyId: reply.id,
+    title: createLectumSocialShareTitle(professionalName),
+  });
+};
+
+export const createLectumShareTargetFromHighlightedReply = (
+  post: Pick<PostListPost, "community" | "highlighted_professional_reply" | "id" | "title">,
+) => {
+  if (!post.highlighted_professional_reply) return null;
+
+  return createLectumShareVideoTarget(post, post.highlighted_professional_reply);
+};
+
+export const createLectumSharePostVideoDownloadTarget = (
+  post: ShareablePostWithMedia,
+  options: ShareTargetOptions = {},
+): LectumShareSocialTarget | null => {
+  if (!isProfessionalAuthor(post.author)) return null;
+
+  const videoMedia = getFirstShareablePostVideoMedia(post);
+  if (!videoMedia) return null;
+
+  const sourceText = post.title.trim() || post.content.trim() || "Post na Lectum";
+  const relativeUrl = options.relativeUrl ?? postRelativeUrl(post);
+  const professionalName =
+    normalizeLectumShareProfessionalName(post.author.name) || post.author.name;
+
+  return {
+    cardLabel: "Postado na Lectum",
+    carouselCount: 1,
+    kind: "post_media",
+    mediaItems: [{ mediaType: "video", mediaUrl: videoMedia.mediaUrl }],
+    mediaType: "video",
+    mediaUrl: videoMedia.mediaUrl,
+    posterUrl: videoMedia.posterUrl,
+    postId: post.id,
+    professional: {
+      avatar: post.author.avatar,
+      name: professionalName,
+      roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
+      verified: post.author.verified,
+    },
+    replyId: null,
+    responseText: post.content.trim() || null,
+    shareText: sourceText,
+    shareTitle: createLectumSocialShareTitle(professionalName),
+    shareUrl: toAbsoluteShareUrl(relativeUrl),
+    sourceKind: "post",
+    sourceText,
+    whatsappShareUrl: toAbsoluteShareUrl(relativeUrl),
+  };
+};
+
+export const createLectumShareVideoDownloadTarget = (
+  post: ShareablePostRouteContext,
   reply: ShareableProfessionalReply,
   options: ShareTargetOptions = {},
 ): LectumShareSocialTarget | null => {
@@ -191,49 +281,46 @@ export const createLectumShareVideoTarget = (
 
   const parentContent =
     options.parentContent ?? ("parent_content" in reply ? reply.parent_content : null);
+  const postTitle = post.title.trim() || "Pergunta na Lectum";
   const hasCommentContext = Boolean(parentContent?.trim() || reply.parent_reply_id);
-  const sourceText = (hasCommentContext ? parentContent : post.title)?.trim() || post.title;
+  const sourceText = (hasCommentContext ? parentContent : postTitle)?.trim() || postTitle;
   const responseText = reply.content?.trim() || null;
   const relativeUrl =
     options.relativeUrl ??
-    `/comunidades/${post.community.slug}/publicacao/${post.id}?focusReplyId=${encodeURIComponent(
-      reply.id,
-    )}#reply-${reply.id}`;
+    (post.community
+      ? publicCommunityPostFocusedReplyHref(post.community.slug, post.id, reply.id)
+      : `#reply-${reply.id}`);
+  const whatsappShareRelativeUrl = post.community
+    ? publicCommunityReplyWhatsappShareHref(post.community.slug, post.id, reply.id)
+    : relativeUrl;
+  const cardLabel = "Respondido na Lectum";
+  const professionalName =
+    normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name;
 
   return {
-    cardLabel: "Respondido na Lectum",
+    cardLabel,
     carouselCount: 1,
     kind: "video_response",
     mediaItems: [{ mediaType: "video", mediaUrl: reply.media_url }],
     mediaType: "video",
     mediaUrl: reply.media_url,
+    posterUrl: reply.thumbnail_url ?? null,
     postId: post.id,
     professional: {
       avatar: reply.author.avatar,
-      name: normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name,
+      name: professionalName,
       roleLabel: normalizeLectumShareProfessionalRole(reply.author.type_label),
       verified: reply.author.verified,
     },
-    responseText,
     replyId: reply.id,
-    shareText:
-      responseText ||
-      (hasCommentContext
-        ? "Responderam a um comentário na Lectum."
-        : "Responderam a uma pergunta na Lectum."),
-    shareTitle: "Respondido na Lectum",
+    responseText,
+    shareText: postTitle,
+    shareTitle: createLectumSocialShareTitle(professionalName),
     shareUrl: toAbsoluteShareUrl(relativeUrl),
     sourceKind: hasCommentContext ? "comment" : "post",
     sourceText,
+    whatsappShareUrl: toAbsoluteShareUrl(whatsappShareRelativeUrl),
   };
-};
-
-export const createLectumShareTargetFromHighlightedReply = (
-  post: Pick<PostListPost, "community" | "highlighted_professional_reply" | "id" | "title">,
-) => {
-  if (!post.highlighted_professional_reply) return null;
-
-  return createLectumShareVideoTarget(post, post.highlighted_professional_reply);
 };
 
 export const findPostReplyInTree = (

@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
-import { absoluteUrl } from "@/lib/seo";
+import { absoluteUrl, getSiteUrl } from "@/lib/seo";
+import { getPublicApiSource, isTrustedPublicAssetUrl } from "@/utils/public-asset-sources";
+import {
+  publicCommunityOpenGraphImageHref,
+  publicCommunityPostWhatsappShareHref,
+  publicCommunityReplyWhatsappShareHref,
+  publicPsychologistOpenGraphImageHref,
+} from "@/utils/public-routes";
 
-const DEFAULT_API_URL = "http://localhost:3001";
 const COMMUNITY_ICON_MEDIA_PATH_PREFIX = "/community/icons/";
 const COMMUNITY_ICON_FRONTEND_PATH_PREFIX = "/images/community/explore/";
+const MAX_METADATA_URL_LENGTH = 8192;
 
 export type SeoMetadataPageKey =
   | "default"
@@ -67,6 +74,7 @@ type SeoMetadataOverrides = {
   imageWidth?: number | null;
   ogDescription?: string | null;
   ogTitle?: string | null;
+  openGraphUrl?: string | null;
   title?: string | null;
   type?: SeoOpenGraphType;
   video?: string | null;
@@ -74,6 +82,8 @@ type SeoMetadataOverrides = {
   videoType?: string | null;
   videoWidth?: number | null;
 };
+
+type CommunityPostSeoShareTarget = "default" | "whatsapp";
 
 type PublicCommunityPostSeo = {
   canonical_url: string;
@@ -99,6 +109,7 @@ type PublicCommunitySeo = {
   og_title: string;
   slug: string;
   title: string;
+  updated_at: string | null;
 };
 
 type PublicPsychologistSeo = {
@@ -111,9 +122,18 @@ type PublicPsychologistSeo = {
   og_image_width: number | null;
   og_title: string;
   title: string;
+  updated_at: string | null;
 };
 
-const apiBaseUrl = () => (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
+const apiBaseUrl = () => {
+  return getPublicApiSource()?.origin ?? null;
+};
+
+const hasControlCharacters = (value: string) =>
+  Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  });
 
 const resolveCommunityIconAssetPath = (pathname: string, search = "") => {
   if (!pathname.startsWith(COMMUNITY_ICON_MEDIA_PATH_PREFIX)) return null;
@@ -124,21 +144,77 @@ const resolveCommunityIconAssetPath = (pathname: string, search = "") => {
   return `${COMMUNITY_ICON_FRONTEND_PATH_PREFIX}${filename}${search}`;
 };
 
-const resolveAbsoluteUrl = (value?: string | null) => {
-  if (!value) return undefined;
+const normalizeMetadataUrl = (value?: string | null) => {
+  const raw = value?.trim();
+  if (
+    !raw ||
+    raw.length > MAX_METADATA_URL_LENGTH ||
+    raw.startsWith("//") ||
+    raw.includes("\\") ||
+    hasControlCharacters(value ?? "")
+  ) {
+    return null;
+  }
 
-  if (value.startsWith("/public/files/")) return `${apiBaseUrl()}${value}`;
-  if (value.startsWith(COMMUNITY_ICON_MEDIA_PATH_PREFIX)) {
-    return absoluteUrl(resolveCommunityIconAssetPath(value) ?? value);
+  return raw;
+};
+
+const resolveCanonicalUrl = (value?: string | null) => {
+  const raw = normalizeMetadataUrl(value);
+  if (!raw) return undefined;
+
+  try {
+    const siteUrl = getSiteUrl();
+    const url = new URL(raw, siteUrl);
+    if (
+      (url.protocol !== "http:" && url.protocol !== "https:") ||
+      url.origin !== siteUrl.origin ||
+      url.username ||
+      url.password
+    ) {
+      return undefined;
+    }
+
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+};
+
+export const resolveSeoMediaUrl = (value?: string | null) => {
+  const raw = normalizeMetadataUrl(value);
+  if (!raw) return undefined;
+
+  if (raw.startsWith("/public/files/")) {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return undefined;
+
+    try {
+      const mediaUrl = new URL(raw, apiBase);
+      return mediaUrl.pathname.startsWith("/public/files/") ? mediaUrl.toString() : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  if (raw.startsWith(COMMUNITY_ICON_MEDIA_PATH_PREFIX)) {
+    return absoluteUrl(resolveCommunityIconAssetPath(raw) ?? raw);
   }
 
   try {
-    const url = new URL(value);
-    const communityIconPath = resolveCommunityIconAssetPath(url.pathname, url.search);
+    const siteUrl = getSiteUrl();
+    const url = new URL(raw, siteUrl);
+    if ((url.protocol !== "http:" && url.protocol !== "https:") || url.username || url.password) {
+      return undefined;
+    }
 
-    return communityIconPath ? absoluteUrl(communityIconPath) : url.toString();
+    const communityIconPath = resolveCommunityIconAssetPath(url.pathname, url.search);
+    if (communityIconPath && url.origin === siteUrl.origin) return absoluteUrl(communityIconPath);
+
+    return url.origin === siteUrl.origin || isTrustedPublicAssetUrl(url)
+      ? url.toString()
+      : undefined;
   } catch {
-    return absoluteUrl(value);
+    return undefined;
   }
 };
 
@@ -154,7 +230,11 @@ const resolveVideoType = (value?: string | null) => {
 
 const getPublicSeoSettings = async () => {
   try {
-    const response = await fetch(`${apiBaseUrl()}/api/public/seo/metadata`, {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return null;
+
+    const response = await fetch(`${apiBase}/api/public/seo/metadata`, {
+      signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",
@@ -183,29 +263,30 @@ export const resolveSeoMetadata = async (
   const description = overrides.description || setting?.description || fallback.description;
   const canonical = overrides.canonical || setting?.canonical_url || fallback.canonical;
   const image = overrides.image || setting?.og_image_url || fallback.image || "/logo-light.png";
-  const video = overrides.video || fallback.video;
+  const video = overrides.video === null ? null : overrides.video || fallback.video;
   const ogTitle = overrides.ogTitle || setting?.og_title || fallback.ogTitle || title;
   const ogDescription =
     overrides.ogDescription || setting?.og_description || fallback.ogDescription || description;
   const robotsIndex = setting?.robots_index ?? fallback.robotsIndex ?? true;
   const robotsFollow = setting?.robots_follow ?? fallback.robotsFollow ?? true;
-  const resolvedImage = resolveAbsoluteUrl(image);
-  const resolvedVideo = resolveAbsoluteUrl(video);
+  const resolvedImage = resolveSeoMediaUrl(image);
+  const resolvedVideo = video === null ? undefined : resolveSeoMediaUrl(video);
   const imageWidth = overrides.imageWidth ?? fallback.imageWidth ?? undefined;
   const imageHeight = overrides.imageHeight ?? fallback.imageHeight ?? undefined;
   const videoWidth = overrides.videoWidth ?? fallback.videoWidth ?? undefined;
   const videoHeight = overrides.videoHeight ?? fallback.videoHeight ?? undefined;
   const videoType = overrides.videoType ?? fallback.videoType ?? resolveVideoType(resolvedVideo);
   const routePath = setting?.route_path?.includes("[") ? undefined : setting?.route_path;
-  const resolvedCanonical = resolveAbsoluteUrl(canonical || routePath);
+  const resolvedCanonical = resolveCanonicalUrl(canonical || routePath);
+  const resolvedOpenGraphUrl = resolveCanonicalUrl(overrides.openGraphUrl) ?? resolvedCanonical;
 
   return {
     title: { absolute: title },
     description,
     keywords: setting?.keywords?.length ? setting.keywords : undefined,
-    alternates: canonical
+    alternates: resolvedCanonical
       ? {
-          canonical,
+          canonical: resolvedCanonical,
         }
       : undefined,
     openGraph: {
@@ -222,7 +303,7 @@ export const resolveSeoMetadata = async (
         : undefined,
       type: overrides.type ?? fallback.type ?? "website",
       title: ogTitle,
-      url: resolvedCanonical,
+      url: resolvedOpenGraphUrl,
       videos: resolvedVideo
         ? [
             {
@@ -270,8 +351,12 @@ const getPublicCommunityPostSeo = async ({
     : `/api/public/seo/community-post/${encodedSlug}/${encodedId}`;
 
   try {
-    const response = await fetch(`${apiBaseUrl()}${path}`, {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return null;
+
+    const response = await fetch(`${apiBase}${path}`, {
       cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",
@@ -288,12 +373,16 @@ const getPublicCommunityPostSeo = async ({
   }
 };
 
-const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
+export const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
   const encodedSlug = encodeURIComponent(slug);
 
   try {
-    const response = await fetch(`${apiBaseUrl()}/api/public/seo/community/${encodedSlug}`, {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return null;
+
+    const response = await fetch(`${apiBase}/api/public/seo/community/${encodedSlug}`, {
       cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",
@@ -310,12 +399,16 @@ const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
   }
 };
 
-const getPublicPsychologistSeo = async ({ id }: { id: string }) => {
+export const getPublicPsychologistSeo = async ({ id }: { id: string }) => {
   const encodedId = encodeURIComponent(id);
 
   try {
-    const response = await fetch(`${apiBaseUrl()}/api/public/seo/psychologist/${encodedId}`, {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return null;
+
+    const response = await fetch(`${apiBase}/api/public/seo/psychologist/${encodedId}`, {
       cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",
@@ -343,12 +436,16 @@ export const resolveCommunitySeoMetadata = async ({
 
   if (!seo) return resolveSeoMetadata("community_detail", fallback);
 
+  const squareImage = seo.og_image_url
+    ? publicCommunityOpenGraphImageHref(seo.slug, seo.updated_at)
+    : null;
+
   return resolveSeoMetadata("community_detail", fallback, {
     canonical: seo.canonical_url,
     description: seo.description,
-    image: seo.og_image_url,
-    imageHeight: seo.og_image_height,
-    imageWidth: seo.og_image_width,
+    image: squareImage ?? seo.og_image_url,
+    imageHeight: squareImage ? 1200 : seo.og_image_height,
+    imageWidth: squareImage ? 1200 : seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
     title: seo.title,
@@ -366,12 +463,16 @@ export const resolvePsychologistSeoMetadata = async ({
 
   if (!seo) return resolveSeoMetadata("psychologist_profile", fallback);
 
+  const squareImage = seo.og_image_url
+    ? publicPsychologistOpenGraphImageHref(id, seo.updated_at)
+    : null;
+
   return resolveSeoMetadata("psychologist_profile", fallback, {
     canonical: seo.canonical_url,
     description: seo.description,
-    image: seo.og_image_url,
-    imageHeight: seo.og_image_height,
-    imageWidth: seo.og_image_width,
+    image: squareImage ?? seo.og_image_url,
+    imageHeight: squareImage ? 1200 : seo.og_image_height,
+    imageWidth: squareImage ? 1200 : seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
     title: seo.title,
@@ -379,33 +480,55 @@ export const resolvePsychologistSeoMetadata = async ({
 };
 
 export const resolveCommunityPostSeoMetadata = async ({
+  canonicalOverride,
   fallback,
   id,
+  openGraphUrlOverride,
   replyId,
+  shareTarget = "default",
   slug,
 }: {
+  canonicalOverride?: string;
   fallback: SeoMetadataFallback;
   id: string;
+  openGraphUrlOverride?: string;
   replyId?: string;
+  shareTarget?: CommunityPostSeoShareTarget;
   slug: string;
 }): Promise<Metadata> => {
   const seo = await getPublicCommunityPostSeo({ id, replyId, slug });
   const pageKey: SeoMetadataPageKey = replyId ? "community_post_reply" : "community_post";
+  const suppressVideoPreview = shareTarget === "whatsapp";
+  const whatsappSharePath =
+    suppressVideoPreview && replyId
+      ? publicCommunityReplyWhatsappShareHref(slug, id, replyId)
+      : suppressVideoPreview
+        ? publicCommunityPostWhatsappShareHref(slug, id)
+        : undefined;
 
-  if (!seo) return resolveSeoMetadata(pageKey, fallback);
+  const shareOpenGraphUrl = openGraphUrlOverride ?? whatsappSharePath;
+
+  if (!seo) {
+    return resolveSeoMetadata(pageKey, fallback, {
+      canonical: canonicalOverride,
+      openGraphUrl: shareOpenGraphUrl,
+      ...(suppressVideoPreview ? { type: "article" as const, video: null } : {}),
+    });
+  }
 
   return resolveSeoMetadata(pageKey, fallback, {
-    canonical: seo.canonical_url,
+    canonical: canonicalOverride ?? seo.canonical_url,
     description: seo.description,
     image: seo.og_image_url,
     imageHeight: seo.og_image_height,
     imageWidth: seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
+    openGraphUrl: shareOpenGraphUrl,
     title: seo.title,
-    type: seo.media_type === "video" ? "video.other" : "article",
-    video: seo.og_video_url,
-    videoHeight: seo.media_type === "video" ? 1920 : undefined,
-    videoWidth: seo.media_type === "video" ? 1080 : undefined,
+    type: !suppressVideoPreview && seo.media_type === "video" ? "video.other" : "article",
+    video: suppressVideoPreview ? null : seo.og_video_url,
+    videoHeight: !suppressVideoPreview && seo.media_type === "video" ? 1920 : undefined,
+    videoWidth: !suppressVideoPreview && seo.media_type === "video" ? 1080 : undefined,
   });
 };

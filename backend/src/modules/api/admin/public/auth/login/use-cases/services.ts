@@ -1,9 +1,9 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type { admin } from "@/interfaces/objects";
 import { assertAdminJwtConfigured } from "@/modules/api/admin/shared/auth/jwt";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
-import { compare } from "@/utils/crypt";
+import { comparePasswordOrDummy } from "@/utils/crypt";
 import type { IAdminLoginDTO } from "../DTOs/IAdminLoginDTO";
 import { AdminLoginRepository } from "../repositories/AdminLoginRepository";
 
@@ -11,20 +11,12 @@ const credentials = async (email: string, password: string, deviceId: string) =>
   const repo = new AdminLoginRepository(deviceId);
   const find = await repo.findByEmail(email);
 
-  if (!find) {
-    return {
-      status: 404,
-      ...error("admin_account_not_registered", {}),
-      type: 1,
-    };
-  }
-
-  const match = find.password && (await compare(password, find.password));
+  const match = await comparePasswordOrDummy(password, find?.password);
   if (!match) {
     return {
-      status: 403,
+      status: 401,
       ...error("auth_incorrect", {}),
-      type: 2,
+      type: 1,
     };
   }
 
@@ -75,6 +67,7 @@ export default async (data: IAdminLoginDTO): Promise<Resolve> => {
   const res = await repo.hidrate(admin, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("admin_auth_success", {}),
     data: res,

@@ -42,6 +42,10 @@ export type ProfessionalSubscription = {
   gateway?: string | null;
   gateway_subscription_id?: string | null;
   current_period_end?: string | null;
+  billing_issue_started_at?: string | null;
+  billing_grace_ends_at?: string | null;
+  billing_downgraded_at?: string | null;
+  billing_last_notice_key?: string | null;
   grant_reason?: string | null;
   grant_notes?: string | null;
   granted_by?: string | null;

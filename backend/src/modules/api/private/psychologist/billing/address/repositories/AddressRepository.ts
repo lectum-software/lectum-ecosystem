@@ -4,6 +4,8 @@ import type {
   professional_subscription,
   psychologist_profile,
 } from "@/interfaces/objects";
+import type { BillingDunningUpdate } from "@/modules/billing/dunning";
+import { restoreFreePlanAfterProfessionalCancellation } from "@/modules/billing/free-subscription";
 import type { BillingSubscriptionStatus } from "@/modules/billing/payment-gateway";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { IAddressDTO } from "../DTOs/IAddressDTO";
@@ -81,21 +83,37 @@ export class AddressRepository implements IAddressRepository {
     subscriptionId: string;
     gatewaySubscriptionId: string;
     status: BillingSubscriptionStatus;
+    billingDunning?: BillingDunningUpdate;
     currentPeriodEnd?: Date | null;
   }): Promise<professional_subscription | null> {
-    return this.subscriptionRepository.update({
-      where: {
-        id: data.subscriptionId,
-      },
-      data: {
-        status: data.status,
-        gateway: "mercadopago",
-        gateway_subscription_id: data.gatewaySubscriptionId,
-        current_period_end: data.currentPeriodEnd ?? null,
-      },
-      include: {
-        plan: true,
-      },
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.professional_subscription.update({
+        where: {
+          id: data.subscriptionId,
+        },
+        data: {
+          status: data.status,
+          ...data.billingDunning,
+          gateway: "mercadopago",
+          gateway_subscription_id: data.gatewaySubscriptionId,
+          current_period_end: data.currentPeriodEnd ?? null,
+        },
+        include: {
+          plan: true,
+        },
+      });
+
+      if (data.status !== "cancelada" || updated.plan?.slug === "gratuito") {
+        return updated;
+      }
+
+      return (
+        (await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: updated.id,
+          psychologistId: updated.psychologist_id,
+          tx,
+        })) ?? updated
+      );
     });
   }
 

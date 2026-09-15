@@ -1,61 +1,23 @@
-﻿import { isIP } from "node:net";
 import { error, msg } from "@/helpers/translate";
-import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import {
+  getPaymentGateway,
+  isPaymentGatewayConfigurationError,
+  resolvePaymentGatewayPublicError,
+  sanitizePaymentGatewayError,
+} from "@/modules/billing/payment-gateway";
 import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
+import { parseSafeExternalHttpsUrl } from "@/utils/safe-external-url";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
 import { CheckoutRepository } from "../repositories/CheckoutRepository";
-
-type GatewayErrorLog = {
-  name?: string;
-  message?: string;
-  operation?: string;
-  cause_message?: string;
-  status?: number;
-  code?: string;
-  blocked_by?: string;
-};
+import { isCompatibleGatewayPlan, isValidLocalPaidPlan } from "./plan-compatibility";
 
 type ProfessionalPlan = NonNullable<Awaited<ReturnType<CheckoutRepository["findPlanBySlug"]>>>;
 type ActiveProfessionalSubscription = NonNullable<
   Awaited<ReturnType<CheckoutRepository["findActiveProfessionalSubscription"]>>
 >;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const toSafeString = (value: unknown) => (typeof value === "string" ? value : undefined);
-
-const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : undefined);
-
-const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
-  if (err instanceof Error) {
-    const errorWithDetails = err as Error & { details?: unknown };
-    const details = isRecord(errorWithDetails.details) ? errorWithDetails.details : null;
-
-    return {
-      name: err.name,
-      message: err.message,
-      operation: toSafeString(details?.operation),
-      cause_message: toSafeString(details?.cause_message),
-      status: toSafeNumber(details?.status),
-      code: toSafeString(details?.code),
-      blocked_by: toSafeString(details?.blocked_by),
-    };
-  }
-
-  if (!isRecord(err)) {
-    return {
-      message: "Unknown gateway error",
-    };
-  }
-
-  return {
-    message: toSafeString(err.message),
-    status: toSafeNumber(err.status),
-    code: toSafeString(err.code),
-    blocked_by: toSafeString(err.blocked_by),
-  };
-};
+const isGatewayResourceNotFoundError = (err: unknown) =>
+  sanitizePaymentGatewayError(err).status === 404;
 
 const getConfiguredGatewayPlanId = () =>
   process.env.MERCADO_PAGO_PREAPPROVAL_PLAN_ID?.trim() || null;
@@ -77,59 +39,11 @@ const resolvePayerEmail = (authenticatedEmail?: string | null) => {
     return sandboxPayerEmail;
   }
 
-  return authenticatedEmail || null;
-};
-
-const isPrivateIpv4 = (hostname: string) => {
-  const [first = 0, second = 0] = hostname.split(".").map(Number);
-
-  if (first === 10 || first === 127) return true;
-  if (first === 169) return second === 254;
-  if (first === 192) return second === 168;
-
-  return first === 172 && second >= 16 && second <= 31;
-};
-
-const isLocalOrPrivateHostname = (hostname: string) => {
-  const normalizedHostname = hostname.toLowerCase().replace(/^\[|\]$/g, "");
-
-  if (
-    normalizedHostname === "localhost" ||
-    normalizedHostname === "0.0.0.0" ||
-    normalizedHostname === "::1" ||
-    normalizedHostname.endsWith(".local")
-  ) {
-    return true;
-  }
-
-  const ipVersion = isIP(normalizedHostname);
-
-  if (ipVersion === 4) {
-    return isPrivateIpv4(normalizedHostname);
-  }
-
-  if (ipVersion === 6) {
-    return (
-      normalizedHostname.startsWith("fc") ||
-      normalizedHostname.startsWith("fd") ||
-      normalizedHostname.startsWith("fe80")
-    );
-  }
-
-  return false;
+  return authenticatedEmail?.trim() || null;
 };
 
 const isPublicHttpsUrl = (value?: string | null) => {
-  if (!value) return false;
-
-  try {
-    const url = new URL(value);
-    const hostname = url.hostname.toLowerCase();
-
-    return url.protocol === "https:" && !isLocalOrPrivateHostname(hostname);
-  } catch {
-    return false;
-  }
+  return Boolean(parseSafeExternalHttpsUrl(value));
 };
 
 const resolveGatewayBackUrl = () => {
@@ -155,21 +69,42 @@ const readCompatibleGatewayPlanId = async ({
   plan: ProfessionalPlan;
 }) => {
   const gatewayPlan = await gateway.getSubscriptionPlan(gatewayPlanId);
-  const expectedAmountCents = plan.price_cents ?? null;
-
-  if (gatewayPlan.amount_cents === expectedAmountCents) {
+  if (isCompatibleGatewayPlan(gatewayPlan, plan)) {
     return gatewayPlan.gateway_plan_id || gatewayPlanId;
   }
 
-  console.warn("[BILLING] Mercado Pago plan amount mismatch", {
-    expected_amount_cents: expectedAmountCents,
-    gateway_amount_cents: gatewayPlan.amount_cents,
-    gateway_plan_id: gatewayPlanId,
-    plan_id: plan.id,
-    plan_slug: plan.slug,
-  });
+  console.warn("[BILLING] Plano externo incompatível com a configuração local.");
 
   return null;
+};
+
+const readPersistedGatewayPlanId = async ({
+  gateway,
+  gatewayPlanId,
+  plan,
+}: {
+  gateway: PaymentGateway;
+  gatewayPlanId: string;
+  plan: ProfessionalPlan;
+}) => {
+  try {
+    return await readCompatibleGatewayPlanId({
+      gateway,
+      gatewayPlanId,
+      plan,
+    });
+  } catch (err) {
+    if (!isGatewayResourceNotFoundError(err)) {
+      throw err;
+    }
+
+    console.warn(
+      "[BILLING] Plano externo não encontrado; a referência local será renovada.",
+      sanitizePaymentGatewayError(err),
+    );
+
+    return null;
+  }
 };
 
 const createAndPersistGatewayPlanId = async ({
@@ -207,7 +142,7 @@ const ensureGatewayPlanId = async ({
   returnUrl: string;
 }) => {
   if (plan.gateway_plan_id) {
-    const compatibleGatewayPlanId = await readCompatibleGatewayPlanId({
+    const compatibleGatewayPlanId = await readPersistedGatewayPlanId({
       gateway,
       gatewayPlanId: plan.gateway_plan_id,
       plan,
@@ -243,15 +178,41 @@ const ensureGatewayPlanId = async ({
   });
 };
 
-const isGatewayConfigError = (err: unknown) => {
-  const message = err instanceof Error ? err.message : "";
+const resolveGatewayPlanId = async ({
+  gateway,
+  plan,
+  repository,
+  returnUrl,
+}: {
+  gateway: PaymentGateway;
+  plan: ProfessionalPlan;
+  repository: CheckoutRepository;
+  returnUrl: string;
+}) => {
+  const configuredGatewayPlanId = getConfiguredGatewayPlanId();
 
-  return (
-    message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_ENV_INVALID")
-  );
+  if (configuredGatewayPlanId) {
+    const compatibleConfiguredPlanId = await readCompatibleGatewayPlanId({
+      gateway,
+      gatewayPlanId: configuredGatewayPlanId,
+      plan,
+    });
+
+    if (compatibleConfiguredPlanId) {
+      await repository.setGatewayPlanId(plan.id!, compatibleConfiguredPlanId);
+      return compatibleConfiguredPlanId;
+    }
+
+    await repository.setGatewayPlanId(plan.id!, null);
+    throw new Error("MERCADO_PAGO_PREAPPROVAL_PLAN_INCOMPATIBLE");
+  }
+
+  return ensureGatewayPlanId({
+    gateway,
+    plan,
+    repository,
+    returnUrl,
+  });
 };
 
 const isActiveCourtesySubscription = (subscription?: ActiveProfessionalSubscription | null) =>
@@ -333,6 +294,13 @@ export default async (data: ICheckoutDTO) => {
     };
   }
 
+  if (!isValidLocalPaidPlan(professionalPlan)) {
+    return {
+      status: 503,
+      ...error("billing_gateway_config_error", {}),
+    };
+  }
+
   const activeProfessional = await repository.findActiveProfessionalSubscription(profile.id!);
   const isCourtesyRenewal = data.b.intent === "courtesy_renewal";
   const isActiveCourtesy = isActiveCourtesySubscription(activeProfessional);
@@ -366,7 +334,10 @@ export default async (data: ICheckoutDTO) => {
   try {
     payerEmail = resolvePayerEmail(data.auth.email);
   } catch (err) {
-    console.error("[BILLING] Mercado Pago payer setup failed", sanitizeGatewayError(err));
+    console.error(
+      "[BILLING] Falha na preparação da cobrança externa.",
+      sanitizePaymentGatewayError(err),
+    );
 
     return {
       status: 503,
@@ -388,19 +359,22 @@ export default async (data: ICheckoutDTO) => {
   try {
     gatewayReturnUrl = resolveGatewayBackUrl();
     gateway = getPaymentGateway();
-    gatewayPlanId = await ensureGatewayPlanId({
+    gatewayPlanId = await resolveGatewayPlanId({
       gateway,
       plan: professionalPlan,
       repository,
       returnUrl: gatewayReturnUrl,
     });
   } catch (err) {
-    console.error("[BILLING] Mercado Pago plan setup failed", sanitizeGatewayError(err));
+    console.error(
+      "[BILLING] Falha na preparação do plano externo.",
+      sanitizePaymentGatewayError(err),
+    );
 
     return {
-      status: isGatewayConfigError(err) ? 503 : 502,
+      status: isPaymentGatewayConfigurationError(err) ? 503 : 502,
       ...error(
-        isGatewayConfigError(err)
+        isPaymentGatewayConfigurationError(err)
           ? "billing_gateway_config_error"
           : "billing_gateway_checkout_failed",
         {},
@@ -512,16 +486,17 @@ export default async (data: ICheckoutDTO) => {
       await repository.cancelSubscription(pendingSubscription.id);
     }
 
-    console.error("[BILLING] Mercado Pago checkout failed", sanitizeGatewayError(err));
+    console.error(
+      "[BILLING] Falha ao iniciar a cobrança externa.",
+      sanitizePaymentGatewayError(err),
+    );
 
-    const configError = isGatewayConfigError(err);
+    const configError = isPaymentGatewayConfigurationError(err);
+    const publicError = resolvePaymentGatewayPublicError(err, "billing_gateway_checkout_failed");
 
     return {
-      status: configError ? 503 : 502,
-      ...error(
-        configError ? "billing_gateway_config_error" : "billing_gateway_checkout_failed",
-        {},
-      ),
+      status: configError ? 503 : publicError.status,
+      ...error(configError ? "billing_gateway_config_error" : publicError.code, {}),
     };
   }
 };

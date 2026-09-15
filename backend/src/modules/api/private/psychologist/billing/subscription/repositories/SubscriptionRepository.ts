@@ -1,9 +1,17 @@
-﻿import prisma, { type ORM } from "@/infra/database/prisma";
-import type {
-  payment_event,
-  payment_method,
-  professional_subscription,
-} from "@/interfaces/objects";
+import prisma, { type ORM } from "@/infra/database/prisma";
+import type { payment_method, professional_subscription } from "@/interfaces/objects";
+import { resolveEffectiveBillingSubscription } from "@/modules/billing/effective-subscription";
+import {
+  cancelledProfessionalGatewaySubscriptionWhere,
+  restoreFreePlanAfterProfessionalCancellation,
+} from "@/modules/billing/free-subscription";
+import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import {
+  buildGatewaySummaryPaymentHistoryItem,
+  buildPaymentHistoryItemsForSubscription,
+  mergeGatewaySummaryPaymentHistory,
+} from "@/modules/billing/payment-history";
+
 import {
   actionableProfessionalGatewaySubscriptionWhere,
   activeFreeSubscriptionWhere,
@@ -11,151 +19,23 @@ import {
 } from "@/utils/subscription-entitlement";
 import type {
   BillingPaymentHistoryItem,
-  BillingPaymentHistoryStatus,
   ISubscriptionRepository,
 } from "./interfaces/ISubscriptionRepository";
 
+export {
+  buildGatewaySummaryPaymentHistoryItem,
+  buildPaymentHistoryItemsForSubscription,
+  mergeGatewaySummaryPaymentHistory,
+} from "@/modules/billing/payment-history";
+
 const MAX_PAYMENT_EVENTS_TO_SCAN = 100;
-const MAX_PAYMENT_HISTORY_ITEMS = 10;
-
-const asRecord = (value: unknown): Record<string, unknown> | null =>
-  typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
-
-const toSafeString = (value: unknown) => {
-  if (typeof value === "string" && value.trim()) return value.trim();
-  if (typeof value === "number" && Number.isFinite(value)) return String(value);
-
-  return null;
-};
-
-const valueContainsReference = (value: unknown, references: string[], depth = 0): boolean => {
-  if (references.length === 0 || depth > 8) return false;
-
-  const stringValue = toSafeString(value);
-  if (stringValue) {
-    return references.some((reference) => stringValue.includes(reference));
-  }
-
-  if (Array.isArray(value)) {
-    return value.some((item) => valueContainsReference(item, references, depth + 1));
-  }
-
-  const record = asRecord(value);
-  if (!record) return false;
-
-  return Object.values(record).some((item) => valueContainsReference(item, references, depth + 1));
-};
-
-const findPayloadValue = (value: unknown, keys: string[], depth = 0): string | number | null => {
-  if (depth > 8) return null;
-
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = findPayloadValue(item, keys, depth + 1);
-      if (found !== null) return found;
-    }
-
-    return null;
-  }
-
-  const record = asRecord(value);
-  if (!record) {
-    return typeof value === "string" || typeof value === "number" ? value : null;
-  }
-
-  for (const [key, item] of Object.entries(record)) {
-    if (keys.includes(key) && (typeof item === "string" || typeof item === "number")) {
-      return item;
-    }
-  }
-
-  for (const item of Object.values(record)) {
-    const found = findPayloadValue(item, keys, depth + 1);
-    if (found !== null) return found;
-  }
-
-  return null;
-};
-
-const toAmountCents = (value: string | number | null) => {
-  if (value === null) return null;
-
-  const amount = typeof value === "number" ? value : Number(value.replace(",", "."));
-  if (!Number.isFinite(amount) || amount < 0) return null;
-
-  return Math.round(amount * 100);
-};
-
-const resolvePaymentHistoryStatus = (
-  event: payment_event,
-): { status: BillingPaymentHistoryStatus; label: string } => {
-  const payloadStatus = toSafeString(
-    findPayloadValue(event.payload, ["status", "status_detail", "action"]),
+const isMercadoPagoPaymentHistorySource = (subscription: professional_subscription | null) =>
+  Boolean(
+    subscription?.gateway_subscription_id &&
+      (subscription.source === "mercadopago" ||
+        subscription.gateway === "mercadopago" ||
+        !subscription.gateway),
   );
-  const source = `${payloadStatus ?? ""} ${event.type ?? ""}`.toLowerCase();
-
-  if (
-    source.includes("approved") ||
-    source.includes("accredited") ||
-    source.includes("authorized") ||
-    source.includes("paid")
-  ) {
-    return { status: "pago", label: "Pago" };
-  }
-
-  if (
-    source.includes("rejected") ||
-    source.includes("refused") ||
-    source.includes("charged_back") ||
-    source.includes("chargeback")
-  ) {
-    return { status: "recusado", label: "Recusado" };
-  }
-
-  if (source.includes("cancelled") || source.includes("canceled")) {
-    return { status: "cancelado", label: "Cancelado" };
-  }
-
-  if (source.includes("pending") || source.includes("in_process")) {
-    return { status: "pendente", label: "Pendente" };
-  }
-
-  return { status: "processado", label: "Processado" };
-};
-
-const buildPaymentHistoryItem = (
-  event: payment_event,
-  subscription: professional_subscription,
-): BillingPaymentHistoryItem => {
-  const type = event.type ?? "";
-  const isPaymentEvent = type.toLowerCase().includes("payment");
-  const status = resolvePaymentHistoryStatus(event);
-  const amountFromPayload = toAmountCents(
-    findPayloadValue(event.payload, [
-      "transaction_amount",
-      "amount",
-      "total_paid_amount",
-      "paid_amount",
-    ]),
-  );
-
-  return {
-    id: event.id ?? `${event.gateway ?? "mercadopago"}:${event.external_id ?? type}`,
-    title: isPaymentEvent ? "Assinatura mensal" : "Atualização da assinatura",
-    description: isPaymentEvent
-      ? "Cobrança registrada com sucesso."
-      : "Evento de cobrança confirmado.",
-    amount_cents:
-      amountFromPayload ?? (isPaymentEvent ? (subscription.plan?.price_cents ?? null) : null),
-    status: status.status,
-    status_label: status.label,
-    occurred_at: event.createdAt ?? null,
-    gateway: event.gateway ?? "mercadopago",
-    external_id: event.external_id ?? "",
-  };
-};
 
 export class SubscriptionRepository implements ISubscriptionRepository {
   readonly profileRepository: ORM["psychologist_profile"];
@@ -228,20 +108,41 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       },
     });
 
-    if (activeFree) return activeFree;
+    return (
+      resolveEffectiveBillingSubscription({
+        activeProfessional,
+        actionableGatewayProfessional,
+        activeFree,
+      }) ?? this.restoreFreeAfterLatestCancelledProfessional(psychologistId)
+    );
+  }
 
-    return this.subscriptionRepository.findFirst({
+  private async restoreFreeAfterLatestCancelledProfessional(
+    psychologistId: string,
+  ): Promise<professional_subscription | null> {
+    const cancelledProfessional = await this.subscriptionRepository.findFirst({
       where: {
+        ...cancelledProfessionalGatewaySubscriptionWhere(),
         psychologist_id: psychologistId,
-        deleted: false,
       },
       include: {
         plan: true,
       },
       orderBy: {
-        createdAt: "desc",
+        updatedAt: "desc",
       },
     });
+
+    if (!cancelledProfessional?.id) return null;
+
+    return prisma.$transaction(
+      async (tx) =>
+        (await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: cancelledProfessional.id,
+          psychologistId,
+          tx,
+        })) ?? null,
+    );
   }
 
   async findCancelableSubscription(
@@ -305,20 +206,36 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   async cancelSubscription(data: {
     subscriptionId: string;
     gatewaySubscriptionId: string;
-  }): Promise<professional_subscription> {
-    return this.subscriptionRepository.update({
-      where: {
-        id: data.subscriptionId,
-      },
-      data: {
-        status: "cancelada",
-        gateway: "mercadopago",
-        gateway_subscription_id: data.gatewaySubscriptionId,
-        current_period_end: null,
-      },
-      include: {
-        plan: true,
-      },
+  }): Promise<{
+    cancelled: professional_subscription;
+    current: professional_subscription;
+  }> {
+    return prisma.$transaction(async (tx) => {
+      const cancelled = await tx.professional_subscription.update({
+        where: {
+          id: data.subscriptionId,
+        },
+        data: {
+          status: "cancelada",
+          gateway: "mercadopago",
+          gateway_subscription_id: data.gatewaySubscriptionId,
+          current_period_end: null,
+        },
+        include: {
+          plan: true,
+        },
+      });
+      const current =
+        (await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: cancelled.id,
+          psychologistId: cancelled.psychologist_id,
+          tx,
+        })) ?? cancelled;
+
+      return {
+        cancelled,
+        current,
+      };
     });
   }
 
@@ -344,12 +261,6 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   ): Promise<BillingPaymentHistoryItem[]> {
     if (!subscription) return [];
 
-    const references = [subscription.id, subscription.gateway_subscription_id].filter(
-      (reference): reference is string => Boolean(reference),
-    );
-
-    if (references.length === 0) return [];
-
     const events = await this.paymentEventRepository.findMany({
       where: {
         gateway: subscription.gateway || "mercadopago",
@@ -361,9 +272,22 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       take: MAX_PAYMENT_EVENTS_TO_SCAN,
     });
 
-    return events
-      .filter((event) => valueContainsReference(event.payload, references))
-      .slice(0, MAX_PAYMENT_HISTORY_ITEMS)
-      .map((event) => buildPaymentHistoryItem(event, subscription));
+    const localItems = buildPaymentHistoryItemsForSubscription(events, subscription);
+
+    if (isMercadoPagoPaymentHistorySource(subscription)) {
+      try {
+        const gateway = getPaymentGateway();
+        const summary = await gateway.getSubscriptionPaymentSummary(
+          subscription.gateway_subscription_id!,
+        );
+        const gatewayItem = buildGatewaySummaryPaymentHistoryItem(subscription, summary);
+
+        return mergeGatewaySummaryPaymentHistory(localItems, gatewayItem);
+      } catch {
+        // Mantém o histórico local quando a reconciliação online não estiver disponível.
+      }
+    }
+
+    return localItems;
   }
 }

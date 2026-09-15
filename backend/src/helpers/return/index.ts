@@ -1,8 +1,14 @@
 import type { Response } from "express";
+import { captureOperationalError } from "@/infra/observability/sentry";
+import { sanitizePublicErrorData, sanitizePublicErrorMessage } from "@/utils/public-error";
+import { sanitizePublicResponseData } from "@/utils/public-response";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
-import entities from "./entities";
+import { applyUserAuthCookie } from "@/utils/user-auth-cookie";
 
 export type Resolve = {
+  allowAuthTokens?: boolean;
+  allowSignedMediaUrls?: boolean;
   status?: number;
   success: boolean;
   data?: unknown;
@@ -10,53 +16,77 @@ export type Resolve = {
   errors?: unknown;
   error?: string;
   code?: unknown;
-  entity?: keyof typeof entities;
+  entity?: "c" | "d" | "s";
   type?: number | string;
 };
 
 export const send = (res: Response, resolve: Resolve) => {
+  const cookieAwareResolve = applyUserAuthCookie(res.req, res, resolve);
+  const {
+    allowAuthTokens = false,
+    allowSignedMediaUrls = false,
+    entity: _entity,
+    type: _type,
+    ...publicResolve
+  } = cookieAwareResolve;
   const sanitizedResolve = {
-    ...resolve,
-    data: sanitizeSensitiveData(resolve.data),
+    ...publicResolve,
+    data: sanitizePublicResponseData(
+      sanitizeSensitiveData(cookieAwareResolve.data, {
+        allowSignedMediaUrls,
+        removeAuthTokens: !allowAuthTokens,
+      }),
+      {
+        viewerId: res.req.auth?.id,
+        revealAnonymousAuthors: Boolean(res.req.admin?.id),
+      },
+    ),
   };
 
   if (sanitizedResolve.success) {
     return res.status(sanitizedResolve.status || 200).send(sanitizedResolve);
-  } else {
-    if (!sanitizedResolve.success && !sanitizedResolve.entity) sanitizedResolve.entity = "s";
-
-    let currentEntity: string | undefined;
-    if (sanitizedResolve.entity) {
-      currentEntity = entities?.[sanitizedResolve.entity];
-    }
-
-    const objectError: Omit<Resolve, "entity"> & { entity?: string } = {
-      status: sanitizedResolve.status,
-      success: sanitizedResolve.success,
-    };
-
-    if (sanitizedResolve.message) objectError.message = sanitizedResolve.message;
-    if (sanitizedResolve.error) objectError.error = sanitizedResolve.error;
-    if (sanitizedResolve.errors)
-      objectError.errors = sanitizeSensitiveData(sanitizedResolve.errors);
-    objectError.code = sanitizedResolve.code || "Unknown";
-    if (sanitizedResolve.data) objectError.data = sanitizedResolve.data;
-    if (currentEntity) objectError.entity = currentEntity;
-    if (sanitizedResolve.type) objectError.type = sanitizedResolve.type;
-
-    return res.status(sanitizedResolve.status || 400).send(objectError);
   }
+
+  const objectError: Resolve = {
+    status: sanitizedResolve.status,
+    success: false,
+  };
+
+  if (sanitizedResolve.message) {
+    objectError.message = sanitizePublicErrorMessage(sanitizedResolve.message);
+  }
+  if (sanitizedResolve.error) {
+    objectError.error = sanitizePublicErrorMessage(sanitizedResolve.error);
+  }
+  if (sanitizedResolve.errors)
+    objectError.errors = sanitizePublicErrorData(
+      sanitizeSensitiveData(sanitizedResolve.errors, {
+        removeAuthTokens: true,
+        removePii: true,
+      }),
+    );
+  if (sanitizedResolve.code) objectError.code = sanitizedResolve.code;
+  // `error()` usa `data` internamente para interpolar traduções. Esses parâmetros
+  // (por exemplo nomes de modelos) não fazem parte do contrato público de falha.
+
+  return res.status(sanitizedResolve.status || 400).send(objectError);
 };
 
 export const error500 = (res: Response, type: number | string, err: unknown) => {
-  const message = err instanceof Error ? err.message : "Message not found";
-
-  console.error(`[INTERNAL ERROR TYPE ${type}]:${message}`);
+  captureOperationalError(err, {
+    boundary: "http_controller",
+    classification: "HttpControllerError",
+    operation: type,
+  });
+  console.error("[INTERNAL ERROR] Falha ao processar a solicitação.", {
+    ...toSafeErrorLog(err),
+    type,
+  });
 
   return send(res, {
     status: 500,
     success: false,
-    error: "Internal Server Error",
+    error: "Não foi possível concluir a solicitação agora.",
     type,
   });
 };

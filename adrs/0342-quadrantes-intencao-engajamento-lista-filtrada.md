@@ -1,4 +1,4 @@
-﻿# ADR-0342: Quadrantes de Intencao x Engajamento navegam para lista filtrada
+# ADR-0342: Quadrantes de Intencao x Engajamento navegam para lista filtrada
 
 ## Status
 

@@ -1,10 +1,11 @@
 //Repository
 
 //Libs
-import { differenceInMinutes } from "date-fns";
 //Types
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { isCodeWithinValidity } from "@/utils/code";
+import { getCodeValidityMinutes } from "@/utils/runtime-config";
 //Utils
 import { getDevice } from "../../../../middlewares/_auth/utils/device";
 import { LoginRepository } from "../../../../public/auth/login/repositories/LoginRepository";
@@ -13,7 +14,7 @@ import { LoginRepository } from "../../../../public/auth/login/repositories/Logi
 import type { IConfirmDTO } from "../DTOs/IConfirmDTO";
 import { ConfirmRepository } from "../repositories/ConfirmRepository";
 
-const _VALID = Number(process.env.CODE_API_USER_VALID_MINUTES);
+const _VALID = getCodeValidityMinutes();
 
 export default async (data: IConfirmDTO): Promise<Resolve> => {
   const device = getDevice(data);
@@ -48,8 +49,8 @@ export default async (data: IConfirmDTO): Promise<Resolve> => {
     };
 
   //Verify if time is valid
-  const diff = find?.confirm_date ? differenceInMinutes(new Date(), find.confirm_date) : null;
-  if (diff === null || diff > _VALID)
+  const verifiedAt = new Date();
+  if (!find.confirm_date || !isCodeWithinValidity(find.confirm_date, _VALID, verifiedAt.getTime()))
     return {
       status: 403,
       ...error("code_expired", {
@@ -58,19 +59,19 @@ export default async (data: IConfirmDTO): Promise<Resolve> => {
       entity: "c",
     };
 
-  await _LOGIN.update({
-    p: { id: find.id! },
-    b: {
-      confirmed: true,
-      confirmed_date: new Date(),
-      confirm_code: null,
-    },
-    auth: data.auth,
+  const consumed = await _CONFIRM.consume({
+    userId: find.id!,
+    code: data.p.code,
+    issuedAt: find.confirm_date,
+    verifiedAt,
+    validityMinutes: _VALID,
   });
+  if (!consumed) return { status: 400, ...error("code_incorrect", {}), entity: "c" };
 
   const res = await _LOGIN.hidrate(find, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("confirmed_success", {
       //If you need a custom text

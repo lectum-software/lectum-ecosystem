@@ -13,12 +13,15 @@ import {
 import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDeleteReply, useMutePost } from "@/api/callers/posts";
+import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostListPost, UserPostReply } from "@/api/generator/types/posts";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+
+import { getReplyOwnerActionCopy } from "./reply-owner-action-copy";
 
 type OwnerActionReply = Pick<
   UserPostReply,
@@ -44,31 +47,8 @@ type ReplyOwnerActionMenuProps = {
   reply: OwnerActionReply;
 };
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
-const errorMessageFromUnknown = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
-
-  return rawMessage || "Não foi possível concluir a ação. Tente novamente.";
-};
-
-const errorStatusFromUnknown = (error: unknown) => {
-  const apiError = error as ApiError;
-
-  return apiError?.data?.status;
-};
+const errorMessageFromUnknown = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível concluir a ação. Tente novamente.");
 
 const ReplyActionModal = ({
   action,
@@ -204,13 +184,11 @@ export const ReplyOwnerActionMenu = ({
     () => (reply.parent_reply_id ? "resposta" : "comentário"),
     [reply.parent_reply_id],
   );
-  const replyKindLabel = replyKind === "resposta" ? "Resposta" : "Comentário";
-  const deleteTitle = `Excluir ${replyKind}?`;
-  const deleteDescription = isPsychologistReply
-    ? `Este ${replyKind} e as respostas encadeadas abaixo dele serão removidos.\n\nEsta ação não poderá ser desfeita.`
-    : reply.replies_received_count > 0
-      ? `Este ${replyKind} já possui respostas de outros membros.\n\nAo excluir, as respostas encadeadas abaixo dele também serão removidas.\n\nEsta ação não poderá ser desfeita.`
-      : "Esta ação não poderá ser desfeita.";
+  const copy = getReplyOwnerActionCopy({
+    kind: replyKind,
+    isPsychologist: isPsychologistReply,
+    hasReplies: reply.replies_received_count > 0,
+  });
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -252,7 +230,7 @@ export const ReplyOwnerActionMenu = ({
       { postId: post.id, replyId: reply.id },
       {
         onError: (error) => {
-          if (errorStatusFromUnknown(error) === 409) {
+          if (getApiErrorStatus(error) === 409) {
             setDeleteModalOpen(false);
             setBlockedModalOpen(true);
             return;
@@ -362,13 +340,12 @@ export const ReplyOwnerActionMenu = ({
           open={editModalOpen}
           postId={post.id}
           reply={reply}
-          sourceText={reply.parent_content ?? post.title}
         />
       ) : null}
 
       <ReplyActionModal
         action="Excluir"
-        description={deleteDescription}
+        description={copy.deleteDescription}
         disabled={deleteMutation.isPending}
         icon={<Trash2 className="h-5 w-5" aria-hidden="true" />}
         onAction={handleDeleteConfirm}
@@ -377,7 +354,7 @@ export const ReplyOwnerActionMenu = ({
           setActionError(null);
         }}
         open={deleteModalOpen}
-        title={deleteTitle}
+        title={copy.deleteTitle}
         variant="destructive"
       >
         {actionError ? (
@@ -389,7 +366,7 @@ export const ReplyOwnerActionMenu = ({
 
       <ReplyActionModal
         action={post.muted_by_current_user ? "Silenciada" : "Silenciar"}
-        description={`Este ${replyKind} já recebeu contribuições de psicólogos da comunidade.\n\nPara preservar o conteúdo compartilhado pelos profissionais, comentários e respostas que já receberam respostas de psicólogos não podem ser excluídos por pacientes.\n\nVocê pode silenciar a conversa para parar de receber novas notificações desse post.`}
+        description={copy.blockedDescription}
         disabled={muteMutation.isPending}
         icon={<AlertTriangle className="h-5 w-5" aria-hidden="true" />}
         onAction={handleBlockedMute}
@@ -398,14 +375,14 @@ export const ReplyOwnerActionMenu = ({
           setActionError(null);
         }}
         open={blockedModalOpen}
-        title={`Não é possível excluir este ${replyKind}`}
+        title={copy.blockedTitle}
       >
         {actionError ? (
           <InlineAlert title="Não foi possível silenciar" variant="error">
             {actionError}
           </InlineAlert>
         ) : (
-          <InlineAlert title={`${replyKindLabel} preservado`} variant="info">
+          <InlineAlert title={copy.preservedTitle} variant="info">
             Psicólogos podem excluir seus próprios comentários e respostas a qualquer momento; esta
             restrição vale para pacientes quando já existe contribuição profissional abaixo.
           </InlineAlert>

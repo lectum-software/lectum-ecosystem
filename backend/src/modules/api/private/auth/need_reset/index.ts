@@ -11,7 +11,7 @@ import validator from "./validator";
 const routes = Router();
 
 //Middlewares
-import middlewares from "../../../middlewares";
+import { authenticateUserSession as middlewares } from "../../../middlewares/_auth";
 
 //Routes
 routes.post("", middlewares, validator, need_reset);

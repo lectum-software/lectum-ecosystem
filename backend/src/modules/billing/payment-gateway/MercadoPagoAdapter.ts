@@ -1,6 +1,6 @@
-﻿import { createHmac, timingSafeEqual } from "node:crypto";
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
-import type { Options as MercadoPagoOptions } from "mercadopago/dist/types";
+import type { PaymentGatewayErrorDetails } from "./error-log";
+import { buildCardUpdateIdempotencyKey } from "./idempotency";
 import type {
   BillingSubscriptionStatus,
   GatewayCancelSubscriptionInput,
@@ -16,11 +16,9 @@ import type {
   PaymentGateway,
   VerifyWebhookSignatureInput,
 } from "./PaymentGateway";
+import { verifyMercadoPagoWebhookSignature } from "./webhook-signature";
 
 type RecordBody = Record<string, unknown>;
-type MercadoPagoRequestOptions = MercadoPagoOptions & {
-  headers?: Record<string, string>;
-};
 
 type MercadoPagoWebhookBody = {
   id?: string | number;
@@ -43,35 +41,10 @@ type MercadoPagoPreApprovalRaw = {
 };
 
 const GATEWAY = "mercadopago";
+const MERCADO_PAGO_CURRENT_USER_URL = "https://api.mercadopago.com/users/me";
+const MERCADO_PAGO_REQUEST_TIMEOUT_MS = 10_000;
 
-type MercadoPagoSafeErrorDetails = {
-  operation: string;
-  name?: string;
-  cause_message?: string;
-  status?: number;
-  code?: string;
-  blocked_by?: string;
-};
-
-const firstHeaderValue = (value?: string | string[]) => {
-  if (Array.isArray(value)) return value[0];
-  return value;
-};
-
-const parseSignatureHeader = (signature?: string | string[]) => {
-  const header = firstHeaderValue(signature);
-  if (!header) return null;
-
-  return header.split(/[;,]/).reduce<Record<string, string>>((acc, item) => {
-    const [rawKey, ...rawValue] = item.trim().split("=");
-    const key = rawKey?.trim();
-    const value = rawValue.join("=").trim();
-
-    if (key && value) acc[key] = value;
-
-    return acc;
-  }, {});
-};
+type MercadoPagoSafeErrorDetails = PaymentGatewayErrorDetails;
 
 const normalizeStatus = (status?: string | null): BillingSubscriptionStatus => {
   switch (status) {
@@ -102,7 +75,11 @@ const toStringOrNull = (value: unknown) => {
 
 const toSafeString = (value: unknown) => (typeof value === "string" ? value : undefined);
 
-const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : undefined);
+const toSafeGatewayCode = (value: unknown) => {
+  const normalized = toStringOrNull(value)?.trim().toLowerCase() || "";
+
+  return /^[a-z0-9_]{2,80}$/.test(normalized) ? normalized : undefined;
+};
 
 const toFiniteNumberOrNull = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -133,29 +110,28 @@ const toIsoDateString = (value?: Date | string | null) => {
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 };
 
-const sanitizeMercadoPagoError = (operation: string, err: unknown): MercadoPagoSafeErrorDetails => {
-  if (err instanceof Error) {
-    return {
-      operation,
-      name: err.name,
-      cause_message: err.message,
-    };
-  }
+const sanitizeMercadoPagoError = (err: unknown): MercadoPagoSafeErrorDetails => {
+  if (!isObject(err)) return {};
 
-  if (!isObject(err)) {
-    return {
-      operation,
-      cause_message: "Unknown Mercado Pago error",
-    };
-  }
+  const rawStatus = toFiniteNumberOrNull(err.status);
+  const status =
+    rawStatus !== null && Number.isInteger(rawStatus) && rawStatus >= 100 && rawStatus <= 599
+      ? rawStatus
+      : undefined;
+  const rawCause = Array.isArray(err.cause) ? err.cause : [];
+  const causeCodes = rawCause
+    .map((item) => {
+      if (!isObject(item)) return toSafeGatewayCode(item);
+
+      return toSafeGatewayCode(item.code ?? item.status_detail ?? item.error);
+    })
+    .filter((item): item is string => Boolean(item));
 
   return {
-    operation,
-    name: toSafeString(err.name),
-    cause_message: toSafeString(err.message) || toSafeString(err.error),
-    status: toSafeNumber(err.status),
-    code: toSafeString(err.code),
-    blocked_by: toSafeString(err.blocked_by),
+    status,
+    status_detail: toSafeGatewayCode(err.status_detail),
+    error: toSafeGatewayCode(err.error ?? err.code),
+    cause_codes: Array.from(new Set(causeCodes)).slice(0, 8),
   };
 };
 
@@ -165,19 +141,20 @@ export class MercadoPagoAdapterError extends Error {
   constructor(operation: string, cause: unknown) {
     super(`MERCADO_PAGO_${operation.toUpperCase()}_FAILED`);
     this.name = "MercadoPagoAdapterError";
-    this.details = sanitizeMercadoPagoError(operation, cause);
+    this.details = sanitizeMercadoPagoError(cause);
   }
 }
 
 export class MercadoPagoAdapter implements PaymentGateway {
   private readonly accessToken: string;
-  private readonly usesStageScope: boolean;
   private readonly preApproval: PreApproval;
   private readonly preApprovalPlan: PreApprovalPlan;
+  private readonly shouldValidateSandboxSeller: boolean;
   private readonly webhookSecret: string | null;
+  private sandboxSellerValidation: Promise<void> | null = null;
 
   constructor() {
-    const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim();
 
     if (!accessToken) {
       throw new Error("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED");
@@ -189,19 +166,29 @@ export class MercadoPagoAdapter implements PaymentGateway {
       throw new Error("MERCADO_PAGO_ENV_INVALID");
     }
 
+    const isSandbox = gatewayEnv === "sandbox";
+
+    if (isSandbox && accessToken.startsWith("TEST-")) {
+      throw new Error("MERCADO_PAGO_SANDBOX_TEST_SELLER_ACCESS_TOKEN_REQUIRED");
+    }
+
+    if (!accessToken.startsWith("APP_USR-")) {
+      throw new Error("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH");
+    }
+
     this.accessToken = accessToken;
-    this.usesStageScope = gatewayEnv === "sandbox" && accessToken.startsWith("TEST-");
+    this.shouldValidateSandboxSeller = isSandbox;
 
     const subscriptionConfig = new MercadoPagoConfig({
       accessToken,
       options: {
-        timeout: 10_000,
+        timeout: MERCADO_PAGO_REQUEST_TIMEOUT_MS,
       },
     });
     const planConfig = new MercadoPagoConfig({
       accessToken,
       options: {
-        timeout: 10_000,
+        timeout: MERCADO_PAGO_REQUEST_TIMEOUT_MS,
       },
     });
 
@@ -210,25 +197,51 @@ export class MercadoPagoAdapter implements PaymentGateway {
     this.webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET || null;
   }
 
-  private withRequestOptions(
-    extra?: MercadoPagoRequestOptions,
-    options: { stageScope?: boolean } = {},
-  ): MercadoPagoRequestOptions | undefined {
-    if (this.usesStageScope && options.stageScope) {
-      return {
-        ...extra,
+  private async validateSandboxSellerAccount(): Promise<void> {
+    let response: Response;
+    let body: unknown;
+
+    try {
+      response = await fetch(MERCADO_PAGO_CURRENT_USER_URL, {
         headers: {
-          ...(extra?.headers ?? {}),
           Authorization: `Bearer ${this.accessToken}`,
-          "X-scope": "stage",
         },
-      };
+        signal: AbortSignal.timeout(MERCADO_PAGO_REQUEST_TIMEOUT_MS),
+      });
+      body = await response.json();
+    } catch {
+      throw new Error("MERCADO_PAGO_SANDBOX_SELLER_VALIDATION_FAILED");
     }
 
-    return extra;
+    if (!response.ok) {
+      throw new Error("MERCADO_PAGO_SANDBOX_SELLER_VALIDATION_FAILED");
+    }
+
+    const tags = isObject(body) && Array.isArray(body.tags) ? body.tags : [];
+
+    if (!tags.includes("test_user")) {
+      throw new Error("MERCADO_PAGO_SANDBOX_SELLER_ACCOUNT_REQUIRED");
+    }
+  }
+
+  private async ensureCredentialContext(): Promise<void> {
+    if (!this.shouldValidateSandboxSeller) return;
+
+    if (!this.sandboxSellerValidation) {
+      this.sandboxSellerValidation = this.validateSandboxSellerAccount();
+    }
+
+    try {
+      await this.sandboxSellerValidation;
+    } catch (err) {
+      this.sandboxSellerValidation = null;
+      throw err;
+    }
   }
 
   private async runGatewayOperation<T>(operation: string, action: () => Promise<T>): Promise<T> {
+    await this.ensureCredentialContext();
+
     try {
       return await action();
     } catch (err) {
@@ -258,9 +271,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "active",
         },
-        requestOptions: this.withRequestOptions({
+        requestOptions: {
           idempotencyKey: idempotencyKey || undefined,
-        }),
+        },
       }),
     );
 
@@ -280,7 +293,6 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const response = await this.runGatewayOperation("get_subscription_plan", () =>
       this.preApprovalPlan.get({
         preApprovalPlanId: gatewayPlanId,
-        requestOptions: this.withRequestOptions(),
       }),
     );
 
@@ -323,12 +335,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "authorized",
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: `lectum-preapproval-${subscriptionId}`,
-          },
-          { stageScope: true },
-        ),
+        requestOptions: {
+          idempotencyKey: `lectum-preapproval-${subscriptionId}`,
+        },
       }),
     );
 
@@ -356,12 +365,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
         body: {
           card_token_id: cardToken,
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: `lectum-preapproval-card-${gatewaySubscriptionId}`,
-          },
-          { stageScope: true },
-        ),
+        requestOptions: {
+          idempotencyKey: buildCardUpdateIdempotencyKey({ gatewaySubscriptionId, cardToken }),
+        },
       }),
     );
 
@@ -384,12 +390,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
         body: {
           status: "cancelled",
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: `lectum-preapproval-cancel-${gatewaySubscriptionId}`,
-          },
-          { stageScope: true },
-        ),
+        requestOptions: {
+          idempotencyKey: `lectum-preapproval-cancel-${gatewaySubscriptionId}`,
+        },
       }),
     );
 
@@ -407,7 +410,6 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const response = await this.runGatewayOperation("get_subscription", () =>
       this.preApproval.get({
         id: gatewaySubscriptionId,
-        requestOptions: this.withRequestOptions(undefined, { stageScope: true }),
       }),
     );
 
@@ -438,30 +440,8 @@ export class MercadoPagoAdapter implements PaymentGateway {
     };
   }
 
-  verifyWebhookSignature({ signature, requestId, dataId }: VerifyWebhookSignatureInput): boolean {
-    if (!this.webhookSecret || !dataId) return false;
-
-    const parsed = parseSignatureHeader(signature);
-    const ts = parsed?.ts;
-    const signatureV1 = parsed?.v1;
-    const requestIdValue = firstHeaderValue(requestId);
-
-    if (!ts || !signatureV1 || !requestIdValue) return false;
-
-    const manifest = `id:${dataId};request-id:${requestIdValue};ts:${ts};`;
-    const expected = createHmac("sha256", this.webhookSecret).update(manifest).digest("hex");
-
-    try {
-      const expectedBuffer = Buffer.from(expected, "hex");
-      const signatureBuffer = Buffer.from(signatureV1, "hex");
-
-      return (
-        expectedBuffer.length === signatureBuffer.length &&
-        timingSafeEqual(expectedBuffer, signatureBuffer)
-      );
-    } catch {
-      return false;
-    }
+  verifyWebhookSignature(input: VerifyWebhookSignatureInput): boolean {
+    return verifyMercadoPagoWebhookSignature({ ...input, secret: this.webhookSecret });
   }
 
   parseWebhookEvent(body: unknown): GatewayWebhookEvent | null {

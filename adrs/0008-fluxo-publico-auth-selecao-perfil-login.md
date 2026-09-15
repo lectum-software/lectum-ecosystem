@@ -643,3 +643,90 @@ retornava erro generico de credenciais quando o e-mail nao existia.
 - `pnpm --dir frontend check` ficou bloqueado por erro de sintaxe preexistente em
   `frontend/src/templates/private/index.tsx`, arquivo ja modificado antes desta
   correcao.
+
+
+## Atualizacao em 2026-08-13: branding do OAuth Google controlado pelo provedor
+
+### Contexto
+
+No seletor de conta do Google em `accounts.google.com`, o usuario viu "Prosseguir para
+lectum.com.br" e solicitou substituir o dominio por "Lectum". A tela pertence ao Google,
+nao ao frontend Lectum, e aparece antes do retorno para `/auth/redirect`.
+
+### Decisao
+
+- Nao alterar o contrato OAuth do backend nem tentar sobrescrever o texto por query
+  string, porque o authorization endpoint oficial aceita parametros como `client_id`,
+  `redirect_uri`, `scope`, `state`, `login_hint` e `prompt`, mas nao um nome de app por
+  request.
+- Manter o fluxo real existente (`/api/public/google/login/:deviceId` -> Google ->
+  callback -> `/auth/redirect`) com `prompt=select_account`, `scope=[profile,email]` e
+  `state` protegido.
+- Tratar a troca de "lectum.com.br" para "Lectum" como configuracao externa do Google
+  Auth Platform/OAuth consent branding: App information > App name = `Lectum` no projeto
+  OAuth usado por homologacao e producao.
+- Se o Google exigir publicacao, revisao ou verificacao do branding para exibir o app
+  name, a liberacao depende desse processo do provedor.
+
+### Consequencias
+
+- Nao ha mudanca segura no repositorio capaz de produzir imediatamente o texto "Lectum"
+  na pagina hospedada pelo Google.
+- A pendencia deve ser executada por alguem com acesso ao Google Cloud Console do projeto
+  OAuth, sem expor `GOOGLE_CLIENT_SECRET_API_USER` ou outros segredos.
+- O OAuth continua compativel com homologacao e producao, sem env nova, pacote novo,
+  migration ou endpoint paralelo.
+
+### Validacao
+
+- Inspecao do fluxo em `backend/src/modules/api/public/google/login/index.ts`,
+  `backend/src/modules/api/middlewares/_auth/passport.ts`,
+  `backend/src/modules/api/public/google/utils/config.ts` e
+  `frontend/src/utils/trusted-navigation.ts`.
+- Consulta a documentacao oficial do Google sobre OAuth consent/branding e parametros do
+  authorization endpoint.
+- `pnpm check:encoding`
+- `pnpm check:adrs`
+- `pnpm check:tasks`
+- `pnpm check:version`
+
+## Atualizacao em 2026-08-16: mensagem acionável para login Google sem cadastro
+
+### Contexto
+
+A tentativa de login com Google usando e-mail inexistente já não criava cadastro
+automaticamente e retornava `account_not_registered`, mas o callback público descartava
+o código de domínio e redirecionava para `/auth/error` com a mensagem genérica
+"Não foi possível concluir a autenticação com o Google.".
+
+### Decisao
+
+- Mapear somente o código conhecido `account_not_registered`, no callback Google, para a
+  mensagem pública específica: "Não localizamos cadastro para este e-mail. Crie uma conta
+  ou use outra conta do Google.".
+- Manter fallback genérico para qualquer outro erro de OAuth/callback, evitando repassar
+  mensagens técnicas, PII, stack trace, URL interna ou detalhes do provedor.
+- Não criar endpoint paralelo nem alterar o contrato de login/cadastro: o backend
+  continua usando o `state` protegido para diferenciar login, cadastro, vínculo Google e
+  reautenticação de exclusão.
+
+### Consequencias
+
+- O usuário entende que a conta Google selecionada não tem cadastro na Lectum e recebe
+  dois caminhos claros: criar conta ou voltar ao login e escolher outro Google.
+- O fluxo preserva o trade-off já aceito em 2026-06-30 de revelar, nesse caso específico
+  de login público, que o e-mail não existe.
+- O cadastro Google real e o login Google de contas existentes permanecem compatíveis
+  entre versões durante o rollout.
+
+### Validacao
+
+- `pnpm --dir backend exec node --import tsx --test src/modules/api/public/google/utils/callback-error.test.ts`
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local em `/auth/error?error=...&clearSession=1`, validando a renderização da
+  mensagem específica no card de erro.

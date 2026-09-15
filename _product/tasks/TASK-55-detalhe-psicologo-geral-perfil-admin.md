@@ -295,16 +295,16 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou `200`.
 - `pnpm check` foi executado: frontend e biome backend passaram, mas backend ficou bloqueado em `prisma generate` por `ENOTEMPTY` ao remover `backend/src/external/generated/prisma/models`, fora do escopo deste ajuste Admin/frontend.
 
-## Ajuste complementar 2026-07-19 - refinamento dos cards de situa��o e assinatura
+## Ajuste complementar 2026-07-19 - refinamento dos cards de situação e assinatura
 
-- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psic�logo.
-- No bloco `Situa��o do registro`, foram removidas as linhas `Origem`, `Respons�vel` e `�ltima atualiza��o`, mantendo apenas `Regional CRP`, `N� CRP` e `Data de inscri��o`.
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicólogo.
+- No bloco `Situação do registro`, foram removidas as linhas `Origem`, `Responsável` e `última atualização`, mantendo apenas `Regional CRP`, `Nº CRP` e `Data de inscrição`.
 - No bloco `Dados da assinatura`, o LTV permanece destacado por peso/tamanho/cor do texto, mas sem fundo azul na linha.
-- O bot�o `Abrir assinatura` foi mantido no card para navega��o direta � aba de assinatura.
-- Os cards `Situa��o da conta`, `Situa��o do registro` e `Dados da assinatura` passaram a usar altura alinhada na grid desktop, preservando empilhamento mobile-first.
-- N�o houve altera��o de backend, endpoint, schema Prisma, migrations, packages ou dados persistidos.
+- O botão `Abrir assinatura` foi mantido no card para navegação direta à aba de assinatura.
+- Os cards `Situação da conta`, `Situação do registro` e `Dados da assinatura` passaram a usar altura alinhada na grid desktop, preservando empilhamento mobile-first.
+- Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou dados persistidos.
 
-### Valida��o complementar do refinamento dos cards
+### Validação complementar do refinamento dos cards
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
@@ -314,10 +314,10 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 ## Ajuste complementar 2026-07-19 - plano de cortesia no resumo de assinatura
 
 - Pedido direto de produto aplicado no card `Dados da assinatura` da aba Admin `Geral`.
-- A linha `Plano atual` passou a usar a mesma regra visual do header: assinatura `source="admin_grant"` ativa com plano profissional � exibida como `Plano de cortesia`, em vez de `Plano Profissional`.
-- A mudan�a � somente de apresenta��o no Admin; n�o altera plano, assinatura, endpoint, schema Prisma, migrations ou dados persistidos.
+- A linha `Plano atual` passou a usar a mesma regra visual do header: assinatura `source="admin_grant"` ativa com plano profissional é exibida como `Plano de cortesia`, em vez de `Plano Profissional`.
+- A mudança é somente de apresentação no Admin; não altera plano, assinatura, endpoint, schema Prisma, migrations ou dados persistidos.
 
-### Valida��o complementar do plano de cortesia no resumo
+### Validação complementar do plano de cortesia no resumo
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
@@ -494,3 +494,105 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.
 - Validacao visual autenticada em browser interativo nao foi executada porque o ambiente nao expoe a sessao Admin do navegador do usuario; a validacao local ficou limitada ao build, checks, referencia visual e smoke HTTP da rota.
+
+## Ajuste pos-feedback 2026-08-13 - nome profissional no header Admin
+
+- Pedido direto de produto aplicado ao header do detalhe Admin do psicologo.
+- A causa do bug era que `header.name` vinha de `user.name` (nome da conta/login), enquanto o card **Dados pessoais** ja usava o nome profissional separado em `psychologist_profile.professional_first_name` + `professional_last_name`.
+- O endpoint `GET /api/admin/private/psychologists/:id` agora monta `header.name` pela mesma regra de `profile.personal.full_name`: nome profissional separado quando existir e fallback real para `user.name` em perfis legados.
+- Nao houve alteracao de schema Prisma, migration, package, seed, mock, endpoint novo ou contrato quebravel; o campo `header.name` permanece string e apenas sua fonte foi corrigida.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable neste ambiente; as referencias auditaveis foram a captura enviada pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- ADR atualizado: `adrs/0313-admin-dados-pessoais-nomes-exibicao.md`.
+
+### Criterios do ajuste pos-feedback
+
+- [x] O header do detalhe Admin do psicologo usa o nome profissional separado quando disponivel.
+- [x] O header e o campo **Nome completo** nao divergem mais para psicologos com `user.name` diferente do nome profissional.
+- [x] Perfis legados sem nome profissional separado continuam exibindo fallback real de `user.name`.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+
+### Validacao complementar planejada/executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`
+- Smoke de homologacao apos push em `homolog`: backend `/ping`, `/health`, `/ready` e Admin `/version`.
+
+## Ajuste pos-feedback 2026-08-13 - alerta de configuracao do perfil no menu Admin
+
+- Pedido direto de produto aplicado ao header/tabs do detalhe Admin do psicologo.
+- O icone de alerta da aba `Perfil e cadastro` deixou de representar CRP pendente de revisao manual.
+- O alerta agora aparece somente quando o perfil nao esta visivel para pacientes e faltam configuracoes necessarias para a publicacao publica do perfil: video, modalidade, especialidade, servico, abordagem, publico atendido, genero, CPF, nascimento, CRP e cidade/estado.
+- Quando o psicologo apenas desativa a preferencia `Perfil visivel para pacientes` e o perfil esta configurado, a aba nao mostra alerta.
+- A descricao da linha `Perfil visivel para pacientes` foi ajustada para diferenciar pendencia de configuracao de desativacao explicita pelo psicologo.
+- Nao houve alteracao de backend, endpoint, contrato, schema Prisma, migration, package novo, mock, seed ou dado persistido.
+- UI permanece mobile-first por reutilizar o header/tabs e o `FieldRow` responsivo da TASK-55.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable neste ambiente; as referencias auditaveis foram as capturas enviadas pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- ADR atualizado: `adrs/0253-admin-visibilidade-publica-perfil-psicologo.md`.
+
+### Criterios do ajuste pos-feedback
+
+- [x] Sebastiao Rezende nao exibe alerta na aba `Perfil e cadastro` apenas por CRP pendente.
+- [x] Austin exibe alerta na aba `Perfil e cadastro` quando o perfil nao esta visivel por falta de configuracoes publicas.
+- [x] Desativar manualmente `Perfil visivel para pacientes`, com perfil completo, nao aciona alerta.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validacao complementar planejada/executada
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `pnpm check:version`
+- `git diff --check`
+- Smoke de homologacao apos push em `homolog`: backend `/ping`, `/health`, `/ready`, frontend `/version` e Admin `/version`.
+
+## Ajuste pos-feedback 2026-09-10 - CRP sem zero artificial no Admin
+
+- Pedido direto do usuário: a regra deve ser geral e o painel administrativo não deve acrescentar
+  zero ao número do CRP; no caso reportado, o correto é `21/3324`, não `21/03324`.
+- O header do detalhe Admin, o resumo `Situação do registro`, a aba `Perfil e cadastro > Registro
+  profissional`, a aba `Assinatura`/`Cortesia ativa` e o ranking administrativo de comunidades
+  passaram a usar helper comum que normaliza a regional para 2 dígitos e não aplica padding no
+  número do registro.
+- O backend também normaliza as respostas administrativas relacionadas a detalhe, lista,
+  dashboard, revisão de registro, cortesia, comunidades e financeiro para impedir que dados legados
+  com zero artificial continuem vazando para a UI.
+- Novas aprovações manuais e concessões de cortesia gravam o número normalizado, sem alterar schema
+  nem executar backfill em dados publicados.
+- A UI permanece mobile-first por reutilizar os cards/linhas existentes e não introduz `<img>` cru.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; a evidência visual usada foi o print do usuário
+  e os PNGs locais de `_product/proto/admin/Psicologos/Detalhes do psicologo/`.
+- ADR atualizado: `adrs/0493-crp-publico-sem-zero-artificial.md`.
+
+### Critérios do ajuste pos-feedback
+
+- [x] O header Admin exibe `21/3324`, sem `21/03324`.
+- [x] O card `Cortesia ativa` exibe `CRP 3324`, sem `03324`.
+- [x] A aba de registro e novas ações administrativas usam a mesma regra sem padding.
+- [x] Contratos de API permanecem aditivos e tolerantes a rollout com frontend/backend/admin em
+  versões diferentes.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, migration ou backfill foi
+  criado.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validação complementar planejada/executada
+
+- `pnpm --dir backend exec node --import tsx --test src/utils/professional-registry.test.ts`.
+- `pnpm --dir admin exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/crp-formatters.test.mjs`.
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`, `pnpm check:version`, commit/push e smoke de homologação serão registrados após o
+  bump de versão e deploy.
+
+### Validacao final do ajuste antes do commit
+
+- Versao sincronizada para `0.1.307` com `pnpm version:bump`.
+- `pnpm check:version` executado com sucesso.
+- `pnpm check` executado com sucesso apos as validacoes focadas e builds.

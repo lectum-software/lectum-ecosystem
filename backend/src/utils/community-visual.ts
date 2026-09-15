@@ -1,4 +1,4 @@
-﻿type RgbColor = {
+type RgbColor = {
   b: number;
   g: number;
   r: number;

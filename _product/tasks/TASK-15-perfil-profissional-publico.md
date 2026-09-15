@@ -416,26 +416,26 @@ Validacoes executadas:
 - ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
 
-## Registro de ajuste complementar em 2026-06-16 - refinamento premium das seÁıes do perfil
+## Registro de ajuste complementar em 2026-06-16 - refinamento premium das se√ß√µes do perfil
 
-- Ajustado o perfil p˙blico `/app/psychologist/[id]` conforme solicitaÁ„o de produto para elevar a leitura mobile/desktop sem alterar dados, rotas, endpoints, favoritos, WhatsApp ou lÛgica de envio/contato.
-- No mobile, foi criado um header fixo prÛprio com nome + selo verificado e abas `Geral`, `PublicaÁıes` e `AvaliaÁıes`, exibido somente apÛs o usu·rio passar pelo conte˙do inicial do perfil/vÌdeo. A navegaÁ„o mantÈm os mesmos query params e faz scroll suave para o conte˙do.
-- O menu sticky anterior permanece apenas no desktop, evitando uma barra concorrente no topo mobile antes do momento correto de fixaÁ„o.
-- SeÁıes `Sobre`, `Especialidades`, `AvaliaÁıes`, `Atendimento`, `FormaÁ„o & TÌtulos` e `PublicaÁıes` ganharam superfÌcie, espaÁamento, contraste e hierarquia mais premium, preservando a compactaÁ„o vertical.
-- Cards de Atendimento foram refinados para parecerem linhas informativas premium, com Ìcones maiores, fundo branco suave, sombra discreta e rÛtulos menos administrativos.
-- FormaÁ„o, avaliaÁıes e publicaÁıes receberam melhor hierarquia entre tÌtulo, instituiÁ„o/data, autor, estrelas, comunidade, data, tÌtulo e conte˙do, sem adicionar dados artificiais.
-- Botıes `Ver todas` foram convertidos em chips menores e discretos, com borda azul suave, fundo quase branco, texto azul e hover leve.
-- O vÌdeo de apresentaÁ„o permanece no `VerticalVideoPlayer`, mantendo suporte a fullscreen, fundo preto e proporÁ„o preservada sem nova alteraÁ„o funcional neste recorte.
-- A animaÁ„o flutuante do bot„o WhatsApp desktop passou a ter keyframe global `lectum-desktop-create-float`, mantendo o uso de `motion-safe` para respeitar `prefers-reduced-motion`.
-- Builder/Quick Copy n„o est· exposto como ferramenta direta neste ambiente; a referÍncia audit·vel permanece nos protÛtipos locais de perfil (`_product/proto/Perfil Profissional - Sobre.jpg`, `PublicaÁıes.jpg`, `AvaliaÁıes.jpg`) e na solicitaÁ„o anexada.
+- Ajustado o perfil p√∫blico `/app/psychologist/[id]` conforme solicita√ß√£o de produto para elevar a leitura mobile/desktop sem alterar dados, rotas, endpoints, favoritos, WhatsApp ou l√≥gica de envio/contato.
+- No mobile, foi criado um header fixo pr√≥prio com nome + selo verificado e abas `Geral`, `Publica√ß√µes` e `Avalia√ß√µes`, exibido somente ap√≥s o usu√°rio passar pelo conte√∫do inicial do perfil/v√≠deo. A navega√ß√£o mant√©m os mesmos query params e faz scroll suave para o conte√∫do.
+- O menu sticky anterior permanece apenas no desktop, evitando uma barra concorrente no topo mobile antes do momento correto de fixa√ß√£o.
+- Se√ß√µes `Sobre`, `Especialidades`, `Avalia√ß√µes`, `Atendimento`, `Forma√ß√£o & T√≠tulos` e `Publica√ß√µes` ganharam superf√≠cie, espa√ßamento, contraste e hierarquia mais premium, preservando a compacta√ß√£o vertical.
+- Cards de Atendimento foram refinados para parecerem linhas informativas premium, com √≠cones maiores, fundo branco suave, sombra discreta e r√≥tulos menos administrativos.
+- Forma√ß√£o, avalia√ß√µes e publica√ß√µes receberam melhor hierarquia entre t√≠tulo, institui√ß√£o/data, autor, estrelas, comunidade, data, t√≠tulo e conte√∫do, sem adicionar dados artificiais.
+- Bot√µes `Ver todas` foram convertidos em chips menores e discretos, com borda azul suave, fundo quase branco, texto azul e hover leve.
+- O v√≠deo de apresenta√ß√£o permanece no `VerticalVideoPlayer`, mantendo suporte a fullscreen, fundo preto e propor√ß√£o preservada sem nova altera√ß√£o funcional neste recorte.
+- A anima√ß√£o flutuante do bot√£o WhatsApp desktop passou a ter keyframe global `lectum-desktop-create-float`, mantendo o uso de `motion-safe` para respeitar `prefers-reduced-motion`.
+- Builder/Quick Copy n√£o est√° exposto como ferramenta direta neste ambiente; a refer√™ncia audit√°vel permanece nos prot√≥tipos locais de perfil (`_product/proto/Perfil Profissional - Sobre.jpg`, `Publica√ß√µes.jpg`, `Avalia√ß√µes.jpg`) e na solicita√ß√£o anexada.
 
-ValidaÁıes executadas:
+Valida√ß√µes executadas:
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local `200` em `http://localhost:3002/app/psychologist/demo-psychologist-camila-rocha`.
-- Chrome headless/CDP em 390px validando dados reais da API local, seÁıes `Sobre`, `Especialidades`, `AvaliaÁıes`, `Atendimento`, `FormaÁ„o & TÌtulos`, `PublicaÁıes`, header mobile fixo apÛs scroll com `top=0`, aba ativa `Geral`, sem estado `Perfil indisponÌvel`, e chips `Ver todas` com texto azul e fonte inline de 13px.
+- Chrome headless/CDP em 390px validando dados reais da API local, se√ß√µes `Sobre`, `Especialidades`, `Avalia√ß√µes`, `Atendimento`, `Forma√ß√£o & T√≠tulos`, `Publica√ß√µes`, header mobile fixo ap√≥s scroll com `top=0`, aba ativa `Geral`, sem estado `Perfil indispon√≠vel`, e chips `Ver todas` com texto azul e fonte inline de 13px.
 
 ## Registro de ajuste complementar em 2026-06-16 - sticky complementar, contato e atendimento
 
@@ -832,3 +832,146 @@ Validacoes executadas:
   - `history.back()` retorna para `/psychologists/cmrgztri7000tn0uh1q4n8vxf` sem `tab`;
   - acesso direto a `?tab=publicacoes` e clique em `Voltar para a tela anterior` no hero retorna para `Geral`;
   - n√£o h√° `<img>` cru (`img:not([data-nimg])` ausente).
+
+## Registro de ajuste complementar em 2026-08-27 - poster do video no perfil publico
+
+- Pedido do usuario: o video dentro do perfil do psicologo aparecia com tela preta antes da reproducao; a UI deve exibir a imagem de capa do video ou um frame inicial para evitar esse fundo preto.
+- Fonte visual auditavel: print anexado pelo usuario em 2026-08-27 e `_product/proto/Perfil Profissional - Sobre.jpg`. O Builder/Quick Copy foi testado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas o `npx` falhou por cache local ENOENT antes de abrir a ferramenta; a validacao visual seguiu com a imagem local e a captura do usuario.
+- A secao `Sobre` do perfil publico continua priorizando `psychologist_profile.video_cover_url` quando a capa real existir.
+- Quando o video nao possui capa, o frontend primeiro tenta gerar um poster temporario client-side a partir do proprio `video_url` publico, reutilizando `createVideoPosterObjectUrl`, que procura um frame renderizavel/nao preto e devolve um `blob:` apenas em memoria da aba.
+- Se o navegador bloquear a captura do canvas/CORS, o proprio player e posicionado em um frame inicial curto antes da reproducao e volta para 0 ao tocar play, sem registrar essa preparacao como sessao assistida.
+- Nada e persistido no storage, nenhuma URL tecnica aparece na API/UI e a analitica de retencao do video permanece no mesmo `HTMLVideoElement`.
+- Nao houve alteracao de backend, banco, Prisma, contratos, endpoints, packages, uploads, R2, WhatsApp, avaliacoes, publicacoes ou regras de publicacao.
+- ADR atualizado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
+
+### Criterios complementares
+
+- [x] O perfil publico usa a capa real do video quando `video_cover_url` estiver disponivel.
+- [x] Na ausencia de capa, o perfil exibe um poster temporario quando a captura for permitida ou posiciona o proprio player em frame inicial curto, sem mock ou dado fake.
+- [x] O fallback nao altera contrato/API, nao persiste arquivos e revoga o object URL ao desmontar/trocar video.
+- [x] A mudanca permanece mobile-first e restrita ao componente de video da aba `Sobre`.
+
+### Validacoes do complemento
+
+- `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/` falhou por cache local ENOENT do `npx`; Quick Copy nao ficou operacional nesta sessao.
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/components/presentation-video.tsx"`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Browser local Chrome headless mobile 390x844 em `/psicologos/tmp-profile-video-poster-20260827`, com backend/frontend locais e perfil temporario removido ao final: video renderizado, `video_cover_url=null`, `currentSrc` real local, `poster=null` por bloqueio de captura/CORS local e `currentTime=0.8`, confirmando fallback de frame sem criar `profile_video_watch_session`.
+
+## Registro de ajuste complementar em 2026-08-31 - Bio curta no topo do perfil publico
+
+- Pedido do usuario: no perfil do psicologo, abaixo de `Disponivel hoje`, deve constar a Bio do psicologo, e nao o texto de apresentacao.
+- Fonte visual auditavel: prints anexados pelo usuario em 2026-08-31 e referencia local `_product/proto/Perfil Profissional - Sobre.jpg`; Builder/Quick Copy nao ficou exposto como ferramenta callable nesta sessao, entao a validacao visual seguiu com imagens locais e browser local.
+- Regra aplicada: o topo do perfil publico usa somente a Bio curta do formulario (`psychologist_profile.headline`) nesse ponto.
+- O campo `psychologist_profile.bio` permanece reservado para o texto de apresentacao da secao `Sobre` e nao e mais usado como fallback do topo.
+- Se a Bio curta nao estiver preenchida em um perfil publicado, a linha do topo fica ausente ate o psicologo preencher esse campo; nao foi feito backfill, seed, mock ou derivacao automatica a partir da apresentacao.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+
+### Criterios complementares
+
+- [x] O topo do perfil publico renderiza `headline` como Bio curta abaixo da disponibilidade.
+- [x] O topo do perfil publico nao usa `bio`/apresentacao como fallback da Bio curta.
+- [x] A secao `Sobre` continua exibindo o texto de apresentacao real (`bio`).
+- [x] Nenhum mock, endpoint simulado, package novo, `<img>` cru ou dado fake permanente foi usado.
+
+### Validacoes do complemento
+
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/components/hero.tsx" "src/app/app/psychologists/view/components/slide-model.ts" "src/app/app/psychologists/view/components/slide-details.tsx" "src/app/app/psychologists/modules/feed-loop.test.mjs"`.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/app/psychologists/modules/feed-loop.test.mjs`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm check`.
+- Browser local/HTTP em `http://127.0.0.1:3010/psicologos` e `http://127.0.0.1:3010/psicologos/cmtalyodj008v01k96xpx42eo`, ambos com 200; captura headless foi tentada, mas o Chrome permaneceu em processo sem gerar screenshot, entao a verificacao visual ficou coberta por build, rota local e teste estatico da ordem Bio/chips.
+
+## Registro de ajuste complementar em 2026-09-10 - Numero CRP publico sem zero artificial
+
+- Pedido do usuario: o perfil publico estava mostrando `CRP 07/029112`, mas o numero correto do
+  registro publico e `29112`, como exibido no Admin.
+- Causa confirmada: o formatter compartilhado do frontend (`formatCrpNumber`) aplicava
+  `padStart(6, "0")` ao numero do registro, criando zero visual que nao existe no dado informado.
+- Regra aplicada: a regional numerica continua normalizada para 2 digitos, mas o numero do registro
+  passa a ser exibido sem padding artificial. Assim, `7/29112` renderiza `CRP 07/29112`.
+- A deduplicacao de prefixo `CRP` foi preservada para modal/CTA de WhatsApp, perfil publico, perfil
+  privado e avaliacoes.
+- Alteracao frontend-only, mobile-first, restrita ao formatter compartilhado e sua cobertura de
+  teste; sem backend, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider,
+  mock, seed, reset ou alteracao de dados publicados.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; a validacao visual usou o print do usuario e a
+  referencia local `_product/proto/Perfil Profissional - Sobre.jpg`.
+- ADR criado: `adrs/0493-crp-publico-sem-zero-artificial.md`; ADR complementar atualizado:
+  `adrs/0078-transicao-whatsapp-psicologo.md`.
+
+### Criterios complementares
+
+- [x] `formatCrpNumber("7/29112")` retorna `07/29112`, sem gerar `07/029112`.
+- [x] `formatCrpLabel("07/29112")` retorna `CRP 07/29112`.
+- [x] Prefixos `CRP` repetidos continuam removidos antes da exibicao.
+- [x] Nenhum mock, endpoint simulado, package novo, `<img>` cru, migration ou dado fake permanente
+  foi usado.
+
+### Validacoes do complemento
+
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm check:version`.
+- `pnpm check`.
+- Smoke local HTTP do frontend buildado em `0.1.306`: `/version` 200 e
+  `/psicologos/cmtvlnjf400ef01p85lh98bcw` 200.
+- Chrome headless local mobile 390px carregou a rota publica sem overflow horizontal
+  (`scrollWidth=390`); os dados do perfil nao hidrataram no ambiente local, entao a conferencia
+  visual do CRP real fica para o smoke de homologacao apos o deploy.
+- Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Registro de ajuste complementar em 2026-09-10 - Regra geral de CRP sem zero artificial
+
+- Complemento ao ajuste anterior: a regra deixou de ser apenas do perfil p√∫blico e passou a valer
+  para as bordas de leitura/escrita de CRP usadas por frontend, Admin e backend.
+- Pedido do usu√°rio: exibir somente o n√∫mero real do registro, sem zeros adicionados pela UI ou por
+  serializa√ß√£o legada. Exemplos reais: `07/029112` passa a `07/29112` e `21/03324` passa a
+  `21/3324`.
+- O backend centraliza a normaliza√ß√£o em `professional-registry`, devolvendo `crp` e
+  `registration_number` sem zero artificial em diret√≥rio p√∫blico, perfil p√∫blico, posts,
+  comunidades, favoritos/seguindo, avalia√ß√µes, painel Admin, cortesia/assinaturas, revis√£o de CRP e
+  financeiro.
+- O frontend mant√©m guarda compat√≠vel no formatter compartilhado para n√£o depender da ordem de
+  deploy entre frontend e backend.
+- O Admin removeu o padding pr√≥prio do header, cards de Registro/Cortesia e ranking de comunidades,
+  al√©m de normalizar novas grava√ß√µes manuais de CRP/cortesia.
+- N√£o houve altera√ß√£o de schema Prisma, migration, package novo, env obrigat√≥ria, seed, mock,
+  reset, backfill ou altera√ß√£o em massa de dados publicados.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; as evid√™ncias visuais usadas foram os prints do
+  usu√°rio e as refer√™ncias locais de `_product/proto`.
+- ADR atualizado: `adrs/0493-crp-publico-sem-zero-artificial.md`.
+
+### Crit√©rios complementares
+
+- [x] Perfil p√∫blico exibe `CRP 07/29112`, sem `CRP 07/029112`, quando recebe CRP legado com zero.
+- [x] Perfis com regional 21 e registro legado `03324` exibem `21/3324`.
+- [x] Frontend e backend s√£o tolerantes a vers√µes diferentes durante o rollout.
+- [x] Nenhum mock, endpoint simulado, package novo, `<img>` cru, migration ou dado fake permanente
+  foi usado.
+
+### Valida√ß√µes do complemento
+
+- `pnpm --dir backend exec node --import tsx --test src/utils/professional-registry.test.ts`.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`.
+- `pnpm --dir admin exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/crp-formatters.test.mjs`.
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`, `pnpm check:version`, commit/push e smoke de homologa√ß√£o ser√£o registrados ap√≥s o
+  bump de vers√£o e deploy.
+
+### Validacao final do complemento antes do commit
+
+- Versao sincronizada para `0.1.307` com `pnpm version:bump`.
+- `pnpm check:version` executado com sucesso.
+- `pnpm check` executado com sucesso apos as validacoes focadas e builds.

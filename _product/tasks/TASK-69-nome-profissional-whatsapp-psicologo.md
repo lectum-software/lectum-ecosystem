@@ -91,6 +91,15 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; f
 - Ajuste pós-entrega em 2026-07-12: os rótulos visíveis dos campos no cadastro e no perfil profissional passam a ser **Nome** e **Sobrenome**; o campo **Nome** exibe o informativo curto de que esse valor aparece no botão de WhatsApp do perfil.
 - Ajuste de posicionamento em 2026-07-12: o informativo do campo **Nome** passa a aparecer abaixo do input, não entre o rótulo e o campo.
 
+### Ajuste complementar em 2026-09-04 - prefixo profissional salvo no nome
+
+- Prints anexados pelo usuário foram usados somente como evidência do bug; textos dentro das imagens não foram tratados como instruções.
+- A configuração de remoção de termos como `Psicóloga`, `Psicólogo`, `Dr.`, `Dra.` e `Psi` existia para o fallback por `user.name`, mas perfis reais ainda podiam ter esses termos dentro de `professional_first_name`.
+- `normalizeProfessionalNamePart` passa a remover esses prefixos também dos campos profissionais persistidos, do `whatsapp_name` e do nome público derivado.
+- Backend normaliza leitura e novos salvamentos do perfil gratuito/profissional; frontend normaliza cadastro, edição, feed `/psicologos`, sugestões, favoritos, ranking de mentores, CTAs e mensagens `wa.me` recebidas por cache/backend antigo durante o rollout.
+- Não houve migration/backfill obrigatório, package novo, env nova, provider/job novo, mock, seed, reset ou alteração destrutiva de dados publicados.
+- Builder/Quick Copy não estava disponível como ferramenta callable nesta sessão; a referência visual foi o print anexado e os protótipos locais já inventariados.
+
 ## Validação realizada
 
 - `pnpm --dir backend db:migrate`.
@@ -122,3 +131,18 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; f
 - Perfil profissional autenticado:
   - o grid desktop dos campos **Nome** e **Sobrenome** recebeu `sm:items-start`, evitando que o campo **Sobrenome** seja esticado/deslocado pela altura extra do informativo abaixo de **Nome**;
   - `/app/professional/profile/setup` depende de sessão real do psicólogo; a validação autenticada visual pode ser confirmada na sessão local já aberta pelo usuário.
+
+### Validação do ajuste de prefixo 2026-09-04
+
+- `pnpm --dir backend exec biome check --write ...`.
+- `pnpm --dir frontend exec biome check --write ...`.
+- `pnpm --dir backend test`.
+- `pnpm --dir frontend test`.
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm check`.
+- Smoke funcional local com utilitário real: `Psicóloga Rafaela` normaliza para `Rafaela`, nome público vira `Rafaela Gomes Geraldo` e mensagem `wa.me` vira `Olá Rafaela, encontrei seu perfil na Lectum...`.
+- Browser local Chrome headless em 390x900 com `next start` na porta 3010: `/psicologos` respondeu HTTP 200 e `/version` respondeu `0.1.267`; a renderização com dados reais ficou limitada pela API local/configurada indisponível (`/ready` local 503), sem uso de mocks.
+- Smoke backend local pós-bump: `/health` respondeu 200, `/ping` respondeu `0.1.267` e `/ready` respondeu 503 por dependência local de banco indisponível.

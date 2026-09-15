@@ -269,7 +269,7 @@ Validacao desta execucao complementar:
 - O grafico donut passou a usar composicao lado a lado somente em `2xl`, preservando leitura em
   desktops menores sem forcar largura extra.
 - Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; a referencia
-  auditavel foi `_product/proto/admin/TrÃ¡fego.png` e a captura enviada pelo usuario.
+  auditavel foi `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
 - ADR atualizado: `adrs/0263-admin-psicologos-piloto-premium.md`.
 
 Validacao desta execucao complementar:

@@ -1,4 +1,4 @@
-﻿# ADR 0347 - Conversao por exposicao no Admin de psicologos
+# ADR 0347 - Conversao por exposicao no Admin de psicologos
 
 ## Status
 

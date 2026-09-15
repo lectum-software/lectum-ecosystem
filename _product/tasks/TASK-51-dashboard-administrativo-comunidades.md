@@ -1140,7 +1140,7 @@ Regras de UI obrigatórias:
 ## Ajuste complementar 2026-07-27 - Peso textual no dashboard de comunidades
 
 - Pedido do usuario: reduzir o peso textual dos textos em negrito no dashboard administrativo `/comunidades`.
-- Frontend Admin: os pesos `font-black`, `font-extrabold` e `font-bold` do dashboard foram suavizados para `font-semibold` ou `font-medium`, preservando a hierarquia visual por tamanho, cor, espa�amento e cards existentes.
+- Frontend Admin: os pesos `font-black`, `font-extrabold` e `font-bold` do dashboard foram suavizados para `font-semibold` ou `font-medium`, preservando a hierarquia visual por tamanho, cor, espaçamento e cards existentes.
 - O ajuste ficou restrito a apresentacao visual em `admin/src/app/(admin)/comunidades/client.tsx`; nao houve alteracao de backend, contrato HTTP, dados persistidos, schema Prisma/migrations, packages, filtros, endpoint simulado ou uso de `<img>` cru.
 - Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
 - ADR nao aplicavel: ajuste pontual de tipografia sem nova decisao arquitetural, regra de dominio, integracao ou trade-off tecnico.

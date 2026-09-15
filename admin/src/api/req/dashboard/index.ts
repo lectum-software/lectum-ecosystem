@@ -1,6 +1,8 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
+import type { AdminPublicSource } from "@/api/public-response";
 import type { ApiResponse } from "@/api/types";
+import { resolveSafeCsvFilename } from "@/lib/download";
 
 export type DashboardMetric = {
   change_percent: number | null;
@@ -131,7 +133,7 @@ export type DashboardIntentConversionFlow = {
   intents: DashboardIntentConversionNode[];
   psychologist_conversions: DashboardIntentConversionNode[];
   privacy_note: string;
-  source: "contact_request.channel=whatsapp+user.createdAt+platform_percentiles";
+  source: AdminPublicSource<"contact_request.channel=whatsapp+user.createdAt+platform_percentiles">;
   total_pairs: number;
   unavailable_reason: string | null;
 };
@@ -163,7 +165,7 @@ export type DashboardWhatsAppClickDistribution = {
   gini: number | null;
   psychologists_with_clicks: number;
   psychologists_without_clicks: number;
-  source: "contact_request.channel=whatsapp+psychologist_profile.published";
+  source: AdminPublicSource<"contact_request.channel=whatsapp+psychologist_profile.published">;
   summary: string;
   top_10_percent: DashboardWhatsAppClickDistributionSegment;
   top_20_percent: DashboardWhatsAppClickDistributionSegment;
@@ -186,11 +188,11 @@ export type AdminDashboardSummary = {
     posts: DashboardDailyPoint[];
     psychologist_posts: DashboardDailyPoint[];
     psychologist_replies: DashboardDailyPoint[];
-    source: "community_post+post_reply+user.role";
+    source: AdminPublicSource<"community_post+post_reply+user.role">;
   };
   devices: {
     items: DashboardDeviceItem[];
-    source: "visitor_session.device_type";
+    source: AdminPublicSource<"visitor_session.device_type">;
     total: number;
   };
   financial: {
@@ -199,18 +201,18 @@ export type AdminDashboardSummary = {
     label: string;
     mrr_cents: number;
     period_estimate_cents: number;
-    source: "active_subscription_estimate";
+    source: AdminPublicSource<"active_subscription_estimate">;
     unavailable_reason: string | null;
   };
   intent_conversion_flow: DashboardIntentConversionFlow;
   locations: {
     items: DashboardLocationItem[];
-    source: "visitor_location.country";
+    source: AdminPublicSource<"visitor_location.country">;
     total: number;
   };
   pending_reports: {
     items: DashboardPendingReport[];
-    source: "post_report";
+    source: AdminPublicSource<"post_report">;
     total: number;
   };
   period: DashboardPeriod;
@@ -223,13 +225,6 @@ const cleanParams = (input: DashboardSummaryQuery) => ({
   ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
-
-const resolveFilename = (header?: string) => {
-  if (!header) return null;
-
-  const filenameMatch = header.match(/filename="?([^";]+)"?/i);
-  return filenameMatch?.[1] ?? null;
-};
 
 export const getAdminDashboardSummary = async (input: DashboardSummaryQuery) => {
   const response = await adminApi.get<ApiResponse<AdminDashboardSummary>>(
@@ -247,9 +242,10 @@ export const exportAdminDashboardSummary = async (input: DashboardSummaryQuery) 
     params: cleanParams(input),
     responseType: "blob",
   });
-  const filename =
-    resolveFilename(response.headers["content-disposition"]) ||
-    `lectum-admin-dashboard-${input.from || "default"}-${input.to || "default"}.csv`;
+  const filename = resolveSafeCsvFilename(
+    response.headers["content-disposition"],
+    `lectum-admin-dashboard-${input.from || "default"}-${input.to || "default"}.csv`,
+  );
 
   return {
     blob: response.data,

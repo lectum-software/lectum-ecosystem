@@ -1,7 +1,7 @@
-import { faker } from "@faker-js/faker";
+import { randomDigit } from "./random";
 
 export function cpf(): string {
-  const base: number[] = Array.from({ length: 9 }, () => faker.number.int({ min: 0, max: 9 }));
+  const base: number[] = Array.from({ length: 9 }, () => randomDigit());
 
   let sum = 0;
   for (let i = 0; i < 9; i++) {

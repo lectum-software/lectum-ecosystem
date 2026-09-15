@@ -1,5 +1,4 @@
 import { Router } from "express";
-import adminAuth from "../../../middlewares/_auth";
 import {
   createApproach,
   createCategory,
@@ -48,7 +47,6 @@ import {
 
 const routes = Router();
 
-routes.use(adminAuth);
 routes.get("/", indexValidator, index);
 routes.post("/restore-defaults", restoreDefaultsValidator, restoreDefaults);
 routes.post("/reorder", reorderValidator, reorder);

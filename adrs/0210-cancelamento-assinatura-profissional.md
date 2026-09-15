@@ -1,4 +1,4 @@
-﻿# ADR-0210: Cancelamento discreto de assinatura profissional
+# ADR-0210: Cancelamento discreto de assinatura profissional
 
 ## Status
 

@@ -1,4 +1,4 @@
-﻿import type { AdminCommunitiesDashboardDateRange } from "../../DTOs/IAdminCommunitiesDashboardDTO";
+import type { AdminCommunitiesDashboardDateRange } from "../../DTOs/IAdminCommunitiesDashboardDTO";
 
 export type CommunityPostRecord = {
   anonymous: boolean;

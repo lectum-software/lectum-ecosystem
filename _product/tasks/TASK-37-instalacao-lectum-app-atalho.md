@@ -186,7 +186,7 @@ Persistência local:
   - `pnpm --dir frontend build`;
   - `pnpm check`;
   - browser local mobile `390x844` com usuário real de desenvolvimento `psicologo`, confirmando ausência de `Não mostrar novamente`, chave legada `lectum.pwaInstall.neverShowAgain` ignorada, cooldown de 48h nas duas primeiras recusas e 7 dias na terceira.
-- ADR criado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
+- ADR criado: `adrs/0431-insistencia-controlada-atalho-notificacoes-psicologos.md`.
 
 ## Refinamento 2026-06-30 - exibição somente após cadastro concluído
 
@@ -203,7 +203,7 @@ Persistência local:
   - `pnpm --dir frontend build`;
   - browser local mobile `390x844` em `next start` na porta `3002`, confirmando prompt oculto para psicólogo incompleto e visível após assinatura ativa + WhatsApp + `published=true`.
 - `pnpm --dir frontend check` e `pnpm check` foram reexecutados, mas ficaram bloqueados por alterações pendentes fora deste refinamento em `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx` e `frontend/src/app/app/community/[slug]/logic.tsx`.
-- ADR atualizado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
+- ADR atualizado: `adrs/0431-insistencia-controlada-atalho-notificacoes-psicologos.md`.
 
 ## Refinamento 2026-07-04 - copy explícita de PWA/atalho
 
@@ -226,3 +226,98 @@ Persistência local:
   - `pnpm --dir frontend build`;
   - `pnpm check`;
   - browser local via Chrome/CDP em `http://127.0.0.1:3007/app/favorites`, viewport mobile `390x844`, user agent iOS/Safari e estado local temporário de usuário confirmado, confirmando nova copy, CTA **"Adicionar à tela inicial"** e ausência de **"O ícone ficará visível"**.
+
+## Complemento 2026-08-12 - opção de instalação para pacientes Android
+
+- Pedido do usuario: garantir que a opcao de instalar aplicativo apareca corretamente para pacientes; no Android, sem a Lectum instalada, a opcao nao estava aparecendo.
+- Diagnostico: o fluxo usava `lectum.pwaInstall.installed` como bloqueio para a entrada persistente do perfil. Essa marca local pode ficar obsoleta quando o usuario desinstala o atalho/app fora do navegador, porque o site nao recebe evento confiavel de desinstalacao.
+- Referencia tecnica: a documentacao atual do Chrome/web.dev informa que `beforeinstallprompt` so dispara quando o navegador considera o app elegivel e atende heuristicas como interacao/tempo; portanto a UI Android nao pode depender exclusivamente desse evento para existir.
+- Frontend: a entrada `Instalar aplicativo` no perfil passou a depender apenas de experiencia mobile e ausencia de modo `standalone` real, ignorando a marca local possivelmente obsoleta de instalado.
+- Frontend: clicar em `Instalar` no perfil tambem deixou de abortar por causa da marca local; se nao houver `beforeinstallprompt`, abre instrucoes manuais para Android/iOS/generico.
+- Frontend: a modal contextual em Android agora tambem pode oferecer fallback manual quando o `beforeinstallprompt` ainda nao foi disponibilizado; se houver prompt nativo, ele continua sendo preferido e chamado apenas apos o CTA.
+- Frontend: o prompt contextual ainda respeita `Agora nao`/cooldown e modo `standalone`; a marca local de instalado continua evitando insistencia automatica quando nao ha indicio nativo de instalabilidade, mas nao remove a acao manual do perfil.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, notificacoes, service worker ou dados publicados.
+
+### Criterios de aceite do complemento
+
+- [x] Paciente em Android/mobile, fora de `standalone`, continua vendo a entrada de instalar no perfil mesmo se existir uma marca local antiga `lectum.pwaInstall.installed=true`.
+- [x] O modo `standalone` real continua ocultando a entrada de instalar.
+- [x] Android sem `beforeinstallprompt` recebe instrucao manual em vez de ficar sem opcao.
+- [x] Android com `beforeinstallprompt` continua usando o prompt nativo somente apos toque no CTA.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend test`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile no frontend buildado validou `/manifest.webmanifest`, `/auth/login` e `/app/perfil` com HTTP 200; captura mobile 390x844 gerada em `/auth/login`; a regra autenticada do perfil/PWA foi coberta por testes unitarios e sera revalidada em homologacao Android real.
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Refinamento 2026-09-04 - pull-to-refresh convencional no mobile/PWA
+
+- Pedido de produto: fazer o arraste para baixo funcionar da forma mais convencional em navegador
+  mobile e PWA.
+- Decisao: o gesto atualiza a tela atual, nao executa hard refresh destrutivo. A atualizacao usa
+  `router.refresh()`, invalida queries ativas do TanStack Query e tenta atualizar o registro PWA de
+  forma best-effort quando o navegador suportar.
+- Implementacao frontend-only:
+  - `frontend/src/components/pull-to-refresh.tsx` cria o indicador mobile-first e captura o gesto
+    somente no topo da pagina;
+  - `frontend/src/utils/pull-to-refresh.ts` centraliza limiares, rotas habilitadas e guardas contra
+    campos/editaveis, modais e cadeias de scroll ainda roladas;
+  - `frontend/src/app/layout.tsx` monta o componente dentro do `QueryClientProvider`;
+  - `frontend/src/app/globals.css` contem o overscroll mobile para evitar concorrencia com o gesto
+    nativo do navegador;
+  - `frontend/src/utils/pull-to-refresh.test.mjs` cobre limiar visual e rotas habilitadas/bloqueadas.
+- Rotas de login/cadastro, configuracoes/conta, assinatura/checkout/WhatsApp, setup/edicao e
+  criacao/sugestao de conteudo ficam sem o gesto para reduzir risco de perda de progresso.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados
+  `_product/tasks/PROTO-INVENTORY.md`, o shell mobile existente e a modal PWA atual.
+- Alteracao frontend-only, mobile-first; sem backend, admin UI, schema, migration, endpoint, env
+  obrigatoria, package novo, provider, seed, reset ou dados publicados. Rollback simples reverte o
+  commit.
+
+### Criterios de aceite do refinamento
+
+- [x] O gesto em experiencia mobile/PWA atualiza a tela com comportamento convencional de dados/rota,
+  sem `window.location.reload()` como padrao.
+- [x] O acionamento exige estar no topo e soltar apos limiar visual claro.
+- [x] O indicador usa tokens Lectum, copy PT-BR e nenhuma tag `<img>`.
+- [x] Campos/editaveis, modais, rotas de formulario/checkout/setup e scroll interno fora do topo nao
+  disparam refresh; cards, links e botoes de listas permitem o arrasto vertical convencional.
+- [x] Nenhum pacote novo, backend, admin, env, schema ou migration foi adicionado.
+- [x] ADR criado: `adrs/0482-pull-to-refresh-convencional-frontend.md`.
+
+### Validacoes do refinamento
+
+- [x] `pnpm --dir frontend exec biome check --write src/app/layout.tsx src/app/globals.css src/components/pull-to-refresh.tsx src/utils/pull-to-refresh.ts src/utils/pull-to-refresh.test.mjs package.json`
+- [x] `pnpm --dir frontend exec tsc --noEmit --pretty false`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/pull-to-refresh.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` reexecutado apos o bump para validar o estado `0.1.266`.
+- [x] `pnpm --dir video check` passou apos integrar `homolog` remoto e ajustar testes de caminho do
+  novo servico de video para Windows/Linux.
+- [x] `pnpm check` passou apos corrigir encoding de comentario detectado na primeira tentativa e
+  revalidar o estado rebaseado.
+- [x] Browser local/headless no build final, viewport mobile 390x844, validou `/psicologos` com indicador "Solte para atualizar", estado "Atualizando..." apos soltar e retorno para idle; `/auth/login` permaneceu sem texto/estado de pull-to-refresh; `/version` retornou frontend `0.1.266`.
+- [x] `git diff --check`
+- [x] `pnpm check:adrs` e `pnpm check:tasks`
+- [x] `pnpm version:bump` e `pnpm check:version` antes do commit (`0.1.264` -> `0.1.265`).
+- [ ] Push em `homolog` e smoke de homologacao apos deploy automatico.
+
+### Complemento de homologacao do refinamento
+
+- O smoke remoto em `https://homolog.lectum.com.br/psicologos` mostrou que a tela publicada possui
+  botoes transparentes de video cobrindo a area do feed. Para preservar o comportamento mais
+  convencional, a protecao deixou de bloquear `button`/`a` genericos e passou a bloquear apenas
+  campos/editaveis, sliders/textboxes e alvos marcados explicitamente com
+  `data-lectum-pull-refresh-ignore="true"`.
+- [x] `pnpm version:bump` adicional para o complemento (`0.1.265` -> `0.1.266`).
+- [x] Revalidado localmente com `pnpm --dir frontend check`, `pnpm --dir frontend build`, browser
+  local/headless e `pnpm check` completo na versao `0.1.266`.

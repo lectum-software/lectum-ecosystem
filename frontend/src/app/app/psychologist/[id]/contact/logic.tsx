@@ -12,9 +12,10 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologist, useDirectoryPsychologistContact } from "@/api/callers/directory";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import {
   openPsychologistWhatsApp,
   PsychologistWhatsAppRedirectModal,
@@ -28,6 +29,8 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
+import { navigateBackToPersistedOrigin } from "@/utils/persisted-origin-navigation";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { toContactPhoneE164, useForm, type WhatsAppContactForm } from "./use-form";
 
@@ -43,10 +46,7 @@ type ApiError = Error & {
 
 const resolveApiErrorMessage = (error: unknown, fallback: string) => {
   const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (apiError?.data?.status === 404 || normalized.includes("não encontr")) {
@@ -54,7 +54,7 @@ const resolveApiErrorMessage = (error: unknown, fallback: string) => {
   }
 
   if (normalized.includes("whatsapp") && normalized.includes("verific")) {
-    return "Este perfil ainda não possui WhatsApp verificado. O contato será liberado após verificação real.";
+    return "Este perfil ainda não possui WhatsApp verificado. O contato será liberado após a verificação.";
   }
 
   if (normalized.includes("whatsapp")) {
@@ -70,7 +70,7 @@ const resolveApiErrorMessage = (error: unknown, fallback: string) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em instantes.";
   }
 
   return rawMessage || fallback;
@@ -114,8 +114,8 @@ const PrivacyCard = () => {
       </div>
       <div className="grid gap-2 rounded-2xl border border-border bg-surface p-3 text-xs leading-5 text-muted">
         <p className="flex gap-2">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-          Não enviamos mensagens ativas por API do WhatsApp neste MVP.
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />O
+          contato é iniciado pelo WhatsApp; nenhuma mensagem é enviada automaticamente.
         </p>
         <p className="flex gap-2">
           <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
@@ -129,6 +129,7 @@ const PrivacyCard = () => {
 
 export const PsychologistContactLogic = () => {
   const params = useParams<{ id?: string | string[] }>();
+  const router = useRouter();
   const psychologistId = getParamId(params?.id);
   const storedUser = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -157,21 +158,28 @@ export const PsychologistContactLogic = () => {
   };
 
   const startWhatsappTransition = (url: string) => {
-    setWhatsappUrl(url);
-    setWhatsappRedirectUrl(url);
+    const trustedUrl = normalizeTrustedWhatsAppUrl(url);
+    if (!trustedUrl) {
+      setApiError("Não foi possível abrir o WhatsApp com segurança.");
+      return;
+    }
+
+    setWhatsappUrl(trustedUrl);
+    setWhatsappRedirectUrl(trustedUrl);
     setManualFallbackVisible(false);
     setIsWhatsAppTransitionOpen(true);
     setRedirectTimer(
       () => setManualFallbackVisible(true),
       WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS,
     );
-    setRedirectTimer(() => openPsychologistWhatsApp(url), WHATSAPP_REDIRECT_MIN_DELAY_MS);
+    setRedirectTimer(() => openPsychologistWhatsApp(trustedUrl), WHATSAPP_REDIRECT_MIN_DELAY_MS);
   };
 
   const handleManualWhatsappOpen = () => {
-    if (!whatsappRedirectUrl) return;
+    const trustedUrl = normalizeTrustedWhatsAppUrl(whatsappRedirectUrl);
+    if (!trustedUrl) return;
 
-    window.open(whatsappRedirectUrl, "_blank", "noopener,noreferrer");
+    window.open(trustedUrl, "_blank", "noopener,noreferrer");
   };
 
   const contact = useDirectoryPsychologistContact(psychologistId, {
@@ -213,6 +221,10 @@ export const PsychologistContactLogic = () => {
     isUnavailable ||
     !professional;
 
+  const goBackToPersistedOrigin = () => {
+    navigateBackToPersistedOrigin(router, "/psicologos");
+  };
+
   const onSubmit = hook.handleSubmit((values: WhatsAppContactForm) => {
     setApiError(null);
     setWhatsappUrl(null);
@@ -222,7 +234,7 @@ export const PsychologistContactLogic = () => {
 
     if (!professional?.whatsapp_available) {
       setApiError(
-        "Este perfil ainda não possui WhatsApp verificado. O contato será liberado após verificação real.",
+        "Este perfil ainda não possui WhatsApp verificado. O contato será liberado após a verificação.",
       );
       return;
     }
@@ -285,8 +297,8 @@ export const PsychologistContactLogic = () => {
         {!isProfileLoading && profileErrorMessage ? (
           <EmptyState
             action={
-              <Button asChild variant="outline">
-                <Link href="/psicologos">Voltar para a busca</Link>
+              <Button onClick={goBackToPersistedOrigin} type="button" variant="outline">
+                Voltar à página anterior
               </Button>
             }
             description={profileErrorMessage}
@@ -313,8 +325,8 @@ export const PsychologistContactLogic = () => {
 
             {isUnavailable ? (
               <InlineAlert title="WhatsApp ainda indisponível" variant="warning">
-                Este perfil não possui WhatsApp verificado. O número só será liberado no fluxo de
-                contato quando houver verificação real por SMS/OTP.
+                Este perfil não possui WhatsApp verificado. O número só será liberado após a
+                confirmação por código.
               </InlineAlert>
             ) : (
               <InlineAlert title="Número protegido" variant="info">

@@ -1,10 +1,13 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { crpExperienceYears } from "@/utils/professional-experience";
+import { resolveProfessionalExperienceTagVisibility } from "@/utils/professional-experience-tag";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -253,6 +256,7 @@ export class FavoriteRepository implements IFavoriteRepository {
                 select: {
                   professional_first_name: true,
                   professional_last_name: true,
+                  updatedAt: true,
                   headline: true,
                   bio: true,
                   cover_image_url: true,
@@ -276,6 +280,8 @@ export class FavoriteRepository implements IFavoriteRepository {
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),
                     select: {
+                      createdAt: true,
+                      grant_started_at: true,
                       id: true,
                       source: true,
                     },
@@ -347,6 +353,11 @@ export class FavoriteRepository implements IFavoriteRepository {
             fallbackName: displayName,
             firstName: profile.professional_first_name,
           });
+          const showExperienceTag = resolveProfessionalExperienceTagVisibility({
+            profile,
+            subscription: profile.subscriptions[0] ?? null,
+            hasProfessionalEntitlement: profile.subscriptions.length > 0,
+          });
 
           return {
             id: item.psychologist.id,
@@ -360,7 +371,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             cover_image_url: profile.cover_image_url,
             video_url: profile.video_url,
             video_cover_url: profile.video_cover_url,
-            crp: profile.crp,
+            crp: normalizeStoredCrp(profile.crp),
             gender: profile.gender,
             modality: profile.modality,
             languages: normalizeStringArray(profile.languages),
@@ -372,7 +383,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             discount_first_session: profile.discount_first_session,
             social_value: profile.social_value,
             accepts_insurance: profile.accepts_insurance,
-            show_experience_tag: profile.show_experience_tag,
+            show_experience_tag: showExperienceTag,
             whatsapp_url: buildWhatsappUrl(profile.whatsapp, displayName, whatsappDisplayName),
             favorited: item.psychologist.favorited_by_patients.length > 0,
             followed: item.psychologist.followed_by_patients.length > 0,
@@ -425,90 +436,84 @@ export class FavoriteRepository implements IFavoriteRepository {
   }
 
   async favorite(userId: string, psychologistId: string): Promise<FavoriteActionResponse> {
-    const existing = await this.repository.findUnique({
-      where: {
-        user_id_psychologist_id: {
-          user_id: userId,
-          psychologist_id: psychologistId,
-        },
-      },
-      select: {
-        id: true,
-        deleted: true,
-      },
-    });
-
-    let favoriteId = existing?.id ?? null;
-    const shouldNotify = !existing || existing.deleted;
-
-    if (existing) {
-      const favorite = await this.repository.update({
+    return withSerializableTransaction(async (transaction) => {
+      const existing = await transaction.psychologist_favorite.findUnique({
         where: {
           user_id_psychologist_id: {
             user_id: userId,
             psychologist_id: psychologistId,
           },
         },
-        data: {
-          deleted: false,
-          deletedAt: null,
-        },
         select: {
           id: true,
+          deleted: true,
         },
       });
-      favoriteId = favorite.id;
-    } else {
-      const favorite = await this.repository.create({
-        data: {
-          user_id: userId,
-          psychologist_id: psychologistId,
-        },
-        select: {
-          id: true,
-        },
-      });
-      favoriteId = favorite.id;
-    }
 
-    return {
-      psychologist_id: psychologistId,
-      favorited: true,
-      notification_event_id: shouldNotify ? favoriteId : null,
-    };
+      const favorite = existing
+        ? await transaction.psychologist_favorite.update({
+            where: {
+              user_id_psychologist_id: {
+                user_id: userId,
+                psychologist_id: psychologistId,
+              },
+            },
+            data: {
+              deleted: false,
+              deletedAt: null,
+            },
+            select: { id: true },
+          })
+        : await transaction.psychologist_favorite.create({
+            data: {
+              user_id: userId,
+              psychologist_id: psychologistId,
+            },
+            select: { id: true },
+          });
+      const shouldNotify = !existing || existing.deleted;
+
+      return {
+        psychologist_id: psychologistId,
+        favorited: true,
+        notification_event_id: shouldNotify ? favorite.id : null,
+      };
+    });
   }
 
   async unfavorite(userId: string, psychologistId: string): Promise<FavoriteActionResponse> {
-    const existing = await this.repository.findUnique({
-      where: {
-        user_id_psychologist_id: {
-          user_id: userId,
-          psychologist_id: psychologistId,
-        },
-      },
-      select: {
-        deleted: true,
-      },
-    });
-
-    if (existing && !existing.deleted) {
-      await this.repository.update({
+    return withSerializableTransaction(async (transaction) => {
+      const existing = await transaction.psychologist_favorite.findUnique({
         where: {
           user_id_psychologist_id: {
             user_id: userId,
             psychologist_id: psychologistId,
           },
         },
-        data: {
+        select: {
           deleted: true,
-          deletedAt: new Date(),
         },
       });
-    }
 
-    return {
-      psychologist_id: psychologistId,
-      favorited: false,
-    };
+      if (existing && !existing.deleted) {
+        await transaction.psychologist_favorite.update({
+          where: {
+            user_id_psychologist_id: {
+              user_id: userId,
+              psychologist_id: psychologistId,
+            },
+          },
+          data: {
+            deleted: true,
+            deletedAt: new Date(),
+          },
+        });
+      }
+
+      return {
+        psychologist_id: psychologistId,
+        favorited: false,
+      };
+    });
   }
 }

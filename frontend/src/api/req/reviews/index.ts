@@ -1,4 +1,4 @@
-﻿import { callEndpoint } from "@/api/generator";
+import { callEndpoint } from "@/api/generator";
 import type {
   CreatePatientReviewPayload,
   CreatePatientReviewResponse,

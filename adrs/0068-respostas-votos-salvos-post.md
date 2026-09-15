@@ -1,4 +1,4 @@
-﻿# ADR-0068: Respostas, votos e salvos no detalhe do post
+# ADR-0068: Respostas, votos e salvos no detalhe do post
 
 ## Status
 

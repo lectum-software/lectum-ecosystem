@@ -31,7 +31,7 @@ As referências visuais são norte de produto e layout. Elas não autorizam recr
 
 ## Contexto
 
-O usuário não-dev precisa conseguir abrir a aplicação, escolher se quer entrar como paciente ou psicólogo e autenticar sem cair em loops de login. O backend já possui base de autenticação e o frontend já possui sessão com cookies, Redux Persist, proxy e `useUserSet`; esta task deve consolidar esse fluxo com visual aderente aos protótipos.
+O usuário não-dev precisa conseguir abrir a aplicação, escolher se quer entrar como paciente ou psicólogo e autenticar sem cair em loops de login. O backend já possui base de autenticação e o frontend usa cookie de sessão `HttpOnly`, Redux somente em memória, proxy e `useUserSet`; esta task deve consolidar esse fluxo com visual aderente aos protótipos.
 
 ## Objetivo
 
@@ -55,7 +55,7 @@ Implementação esperada:
 
 - Criar ou ajustar `/auth/profile-selection` com cards/CTAs para Paciente e Psicólogo.
 - Revisar `/auth/login` usando o protótipo `Login.jpg` e componentes existentes.
-- Preservar `useUserSet`, cookies, Redux Persist, `proxy.ts` e redirects pós-login.
+- Preservar `useUserSet`, cookie `HttpOnly`, Redux em memória, `proxy.ts` e redirects pós-login.
 - Adicionar estados de loading, erro de credenciais, erro Google e sucesso sem textos técnicos.
 - Atualizar `frontend/src/api/req/auth`, `frontend/src/api/callers/auth` e `frontend/src/api/cache/keys.ts` se houver contrato novo.
 
@@ -505,4 +505,55 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check` executado; bloqueado por erro de sintaxe preexistente no frontend antes de chegar ao backend.
 - Script local com `credentials(...)` e e-mail inexistente confirmou `status=404`, `code="account_not_registered"` e contagem de usuários inalterada (`0 -> 0`).
 - `pnpm --dir frontend check` foi executado e ficou bloqueado por erro de sintaxe preexistente em `frontend/src/templates/private/index.tsx`, arquivo que já estava modificado antes desta correção.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+
+## Ajuste posterior em 2026-08-13: branding exibido pelo Google no seletor de conta
+
+- Pedido direto de produto: no acesso com Google, substituir o texto "lectum.com.br" por
+  "Lectum" na tela do Google que mostra "Prosseguir para ...".
+- Diagnostico: essa tela e renderizada por `accounts.google.com`, fora do frontend da
+  Lectum. O backend apenas inicia o OAuth real com `clientID`, `redirect_uri`, `scope`,
+  `state` e `prompt=select_account`; nao existe parametro suportado no request atual para
+  sobrescrever o nome exibido pelo Google por chamada.
+- Decisao pendente externa: atualizar o projeto OAuth no Google Cloud/Google Auth
+  Platform usado por homologacao e producao, em Branding > App information > App name,
+  para `Lectum`, e publicar/revisar o branding se o console exigir.
+- Nenhuma mudanca de codigo, pacote, env, schema, migration, endpoint ou fluxo paralelo
+  foi feita para evitar quebrar o OAuth real enquanto a configuracao externa nao for
+  aplicada.
+
+### Validacao do ajuste
+
+- Inspecao de `backend/src/modules/api/public/google/login/index.ts`,
+  `backend/src/modules/api/middlewares/_auth/passport.ts`,
+  `backend/src/modules/api/public/google/utils/config.ts` e
+  `frontend/src/utils/trusted-navigation.ts`.
+- Documentacao oficial do Google confirmou que a tela de consentimento/branding define o
+  que e exibido ao usuario e que os parametros do authorization endpoint nao incluem nome
+  de app por request.
+- `pnpm check:encoding`
+- `pnpm check:adrs`
+- `pnpm check:tasks`
+- `pnpm check:version`
+
+## Ajuste posterior em 2026-08-16: erro específico para login Google sem cadastro
+
+- Pedido direto de produto: quando o usuário tentar fazer login com uma conta Google cujo e-mail ainda não possui cadastro na Lectum, a tela de erro deve informar que o e-mail não foi localizado e orientar cadastro ou uso de outra conta.
+- A referência visual usada foi o print enviado pelo usuário da tela `/auth/error`; o inventário ativo mantém `_product/proto/Login.jpg` e `_product/proto/Seleção de Perfil.jpg` como referências locais para a jornada de autenticação. Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- O callback Google passou a transformar o código `account_not_registered` em uma mensagem pública específica: `Não localizamos cadastro para este e-mail. Crie uma conta ou use outra conta do Google.`.
+- O erro continua sem expor o endereço de e-mail real, dados técnicos, stack trace, URL interna ou detalhes do provedor.
+- O fluxo de cadastro Google permanece inalterado e continua criando conta somente quando o `state` representa cadastro real; o login sem cadastro continua sem criar usuário.
+- Nenhum pacote, schema, migration, env nova, endpoint paralelo ou mock foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir backend exec node --import tsx --test src/modules/api/public/google/utils/callback-error.test.ts`
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local de `/auth/error?error=...&clearSession=1`, confirmando renderização da mensagem específica.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

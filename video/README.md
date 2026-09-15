@@ -1,0 +1,125 @@
+# Lectum Video Service
+
+Aplicação Node independente para transformações assíncronas de vídeo. A primeira operação comprime
+MP4/MOV/WebM para MP4 H.264/AAC. Ela **não** substitui Cloudflare Stream e não deve ser chamada pelo
+browser: backend/jobs internos autorizados usam Bearer secret.
+
+## Processos
+
+- Runtime padrao: `pnpm start` / `pnpm start:all` (`dist/all.js`) sobe API e worker no mesmo
+  processo Node, garantindo que jobs sociais tenham consumidor ativo e o mesmo volume local da API
+  em deployments de um unico servico.
+- API isolada: `pnpm start:api` (`dist/api.js`)
+- Worker isolado: `pnpm start:worker` (`dist/worker.js`)
+- Redis privado com AOF
+- Volume privado igual na API e no worker
+
+## Desenvolvimento local
+
+```bash
+cp .env.example .env
+# Troque os dois placeholders; não versione .env.
+pnpm install --frozen-lockfile
+pnpm check
+pnpm build
+docker compose up --build
+```
+
+Verifique:
+
+```bash
+curl -fsS http://localhost:3003/health
+curl -fsS http://localhost:3003/ready
+curl -fsS http://localhost:3003/version
+```
+
+O E2E usa Redis e FFmpeg reais. Gere dois arquivos técnicos locais, informe
+`VIDEO_E2E_FILE` e, para também provar cancelamento ativo, `VIDEO_E2E_CANCEL_FILE`; então execute:
+
+```bash
+pnpm test:e2e
+```
+
+Essas três envs `VIDEO_E2E_*` são exclusivas do teste local e não pertencem ao deploy.
+Sem `VIDEO_E2E_CANCEL_FILE`, o resumo informa cancelamento como **não testado**. O `pnpm check`
+valida também o formato desse resumo, mas não executa o E2E nem comprova processamento ou
+cancelamento real de jobs.
+
+Envie um vídeo sem imprimir o segredo no histórico:
+
+```bash
+read -s VIDEO_SERVICE_API_KEY
+curl --fail-with-body \
+  -H "Authorization: Bearer ${VIDEO_SERVICE_API_KEY}" \
+  -F "video=@/caminho/video.mov" \
+  http://localhost:3003/api/private/jobs/compress
+unset VIDEO_SERVICE_API_KEY
+```
+
+Consulte `job_id` no endpoint retornado. O download exige o mesmo header e aceita somente um Range.
+
+Para iniciar a renderização social via URL assinada/validada pelo backend:
+
+```bash
+read -s VIDEO_SERVICE_API_KEY
+curl --fail-with-body \
+  -H "Authorization: Bearer ${VIDEO_SERVICE_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"source_url":"https://customer-code.cloudflarestream.com/eyJhbGci.eyJzdWIi.assinatura/manifest/video.m3u8","metadata":{"cardLabel":"Respondido na Lectum","sourceText":"Como lidar com ansiedade antes de dormir?","professionalName":"Ana Martins","professionalRoleLabel":"Psicóloga","professionalVerified":true,"responseText":null}}' \
+  http://localhost:3003/api/private/jobs/social-share
+unset VIDEO_SERVICE_API_KEY
+```
+
+## Contrato operacional
+
+- input/output nunca entram no Redis;
+- paths não usam nome original;
+- FFmpeg roda sem shell: compressão aceita somente `file,pipe`; render social aceita origem HTTPS validada pelo backend/worker com whitelist `file,http,https,tcp,tls,crypto` para HLS remoto, roda com locale UTF-8, resolve uma fonte DejaVu local quando disponível, omite `fontfile` se a imagem não tiver o caminho Debian, usa filtergraph 9:16 `scale+crop+drawbox+drawtext` sem filtros secundários de fundo (`overlay`, `eq`, `fps`, `format`, `setsar`, `gblur`), tenta fallback portátil `scale+pad+drawbox+drawtext` quando o grafo padrão falha antes do progresso e não herda segredos da aplicação;
+- arquivo inválido/cancelado não recebe retry;
+- falha transitória recebe retry exponencial limitado;
+- falhas de processo registram `diagnostic_code` classificado a partir de stderr em memória, sem
+  expor stderr bruto, URLs, stack, segredos ou payloads de mídia;
+- outputs expiram conforme `VIDEO_OUTPUT_TTL_SECONDS`;
+- reserva atômica no Redis evita que uploads simultâneos prometam mais disco do que o disponível;
+- worker padrão processa um job por vez;
+- nenhum diretório é publicado com `express.static`.
+
+## Deploy em servidor dedicado
+
+O deploy padrao usa um servico/container `video` com o comando
+`node --enable-source-maps dist/all.js` e dominio/ingress apenas para a API. Esse entrypoint inicia
+API e worker no mesmo processo Node, preservando shutdown gracioso e evitando jobs enfileirados sem
+consumidor ou output em volume diferente.
+
+Para escalar horizontalmente, use a mesma imagem em servicos separados:
+
+1. `api`: comando `node --enable-source-maps dist/api.js`, domínio/ingress e porta `PORT`;
+2. `worker`: comando `node --enable-source-maps dist/worker.js`, sem domínio nem porta pública;
+3. Redis privado com senha/TLS quando suportado e AOF persistente;
+4. volume persistente montado em `VIDEO_STORAGE_ROOT` nos dois serviços.
+
+No `docker-compose`, o `worker` fica tanto na rede `video-private` quanto na `video-edge`. Ele nao
+publica portas, mas precisa de egresso HTTPS para baixar/sondar midias first-party ou Stream durante
+jobs `social_share`. O Redis permanece somente em `video-private`, que continua `internal: true`, e
+nao deve ter porta publica. A rota `/ready` valida não só binários FFmpeg/ffprobe, mas também
+capacidades mínimas do render social (`drawtext`, `scale`, `drawbox`, `libx264`, `aac` e ao menos
+um caminho de fundo: `crop` ou `pad`), registrando apenas códigos diagnósticos controlados
+quando algo faltar.
+
+Cadastre `VIDEO_SERVICE_API_KEY` e `REDIS_URL` como secrets de runtime. Nenhuma variável desta app é
+build-time. Em produção, a URL Redis precisa incluir autenticação e `VIDEO_STORAGE_ROOT` precisa ser
+um caminho absoluto dedicado ao volume (nunca `/`). Não publique a porta do Redis. O Compose injeta
+as envs de runtime diretamente e não depende da criação de um arquivo `.env` no servidor. `/ready`
+da API fica 503 enquanto não houver worker vivo quando `VIDEO_REQUIRE_WORKER_READY=true`.
+Ela também exige espaço para um input máximo, um output máximo e a reserva livre configurada;
+readiness concorrente usa probes de escrita isolados e não disputa um arquivo global.
+
+No encerramento, o worker deixa o job ativo terminar durante o prazo configurado. Se o container for
+forçado a sair, o BullMQ recupera o job como stalled e o input persistido permite nova tentativa; um
+restart de deploy não é tratado como cancelamento do usuário.
+
+## Limite de escala inicial
+
+O volume local funciona para API e worker no mesmo host. Antes de colocar workers em hosts distintos,
+substitua input/output por object storage privado com URLs curtas; não use NFS improvisado nem Redis
+para bytes de vídeo.

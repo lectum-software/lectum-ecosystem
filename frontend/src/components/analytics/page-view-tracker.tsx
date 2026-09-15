@@ -8,13 +8,15 @@ import {
   sendPageViewDurationBeacon,
   updatePageViewDuration,
 } from "@/api/req/analytics";
+import { useAppSelector } from "@/hooks/redux";
 import { isAdminViewAsActive } from "@/utils/admin-view-as";
+import { ANALYTICS_ATTRIBUTION_KEY, ANALYTICS_REFERRER_SENT_KEY } from "@/utils/analytics-session";
+import { getBrowserStorage } from "@/utils/browser-storage";
 import { documentHasUserAttention } from "./attention";
 import { getOrCreateAnalyticsIdentity, safeGetItem, safeSetItem } from "./storage";
 
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
-const SESSION_ATTRIBUTION_KEY = "lectum:analytics:session-attribution";
-const REFERRER_SENT_KEY = "lectum:analytics:initial-referrer-sent";
+const MAX_REFERRER_LENGTH = 2048;
 
 type UtmKey = (typeof UTM_KEYS)[number];
 type SessionAttribution = Partial<Record<UtmKey, string>>;
@@ -48,9 +50,10 @@ const getDisplayMode = (): DisplayMode => {
 };
 
 const safeReadAttribution = (): SessionAttribution => {
-  if (typeof window === "undefined") return {};
+  const storage = getBrowserStorage("sessionStorage");
+  if (!storage) return {};
 
-  const value = safeGetItem(window.sessionStorage, SESSION_ATTRIBUTION_KEY);
+  const value = safeGetItem(storage, ANALYTICS_ATTRIBUTION_KEY);
   if (!value) return {};
 
   try {
@@ -71,7 +74,11 @@ const resolveAttribution = (searchParams: URLSearchParams): SessionAttribution =
   }
 
   if (Object.keys(current).length > 0) {
-    safeSetItem(window.sessionStorage, SESSION_ATTRIBUTION_KEY, JSON.stringify(current));
+    safeSetItem(
+      getBrowserStorage("sessionStorage"),
+      ANALYTICS_ATTRIBUTION_KEY,
+      JSON.stringify(current),
+    );
     return current;
   }
 
@@ -79,13 +86,30 @@ const resolveAttribution = (searchParams: URLSearchParams): SessionAttribution =
 };
 
 const consumeInitialReferrer = () => {
-  if (typeof window === "undefined") return undefined;
+  const storage = getBrowserStorage("sessionStorage");
+  if (!storage || typeof document === "undefined") return undefined;
 
-  if (safeGetItem(window.sessionStorage, REFERRER_SENT_KEY) === "true") return undefined;
+  if (safeGetItem(storage, ANALYTICS_REFERRER_SENT_KEY) === "true") return undefined;
 
-  safeSetItem(window.sessionStorage, REFERRER_SENT_KEY, "true");
+  safeSetItem(storage, ANALYTICS_REFERRER_SENT_KEY, "true");
 
-  return document.referrer || undefined;
+  const rawReferrer = document.referrer.trim();
+  if (!rawReferrer || rawReferrer.length > MAX_REFERRER_LENGTH) return undefined;
+
+  try {
+    const referrer = new URL(rawReferrer);
+    if (
+      (referrer.protocol !== "http:" && referrer.protocol !== "https:") ||
+      referrer.username ||
+      referrer.password
+    ) {
+      return undefined;
+    }
+
+    return `${referrer.origin}${referrer.pathname}`;
+  } catch {
+    return undefined;
+  }
 };
 
 const buildPathWithSearch = (pathname: string, search: string) => {
@@ -115,6 +139,8 @@ export const PageViewTracker = () => {
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const routeKey = buildPathWithSearch(pathname, search);
+  const analyticsUserKey = useAppSelector((state) => state.user?.id ?? "anonymous");
+  const trackingKey = `${routeKey}:${analyticsUserKey}`;
   const { mutateAsync: trackPageView } = usePageViewTracking();
   const { mutateAsync: trackImportantAction } = useImportantActionTracking();
   const currentRef = useRef<CurrentPageView | null>(null);
@@ -182,10 +208,10 @@ export const PageViewTracker = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (lastRouteKeyRef.current === routeKey) return;
+    if (lastRouteKeyRef.current === trackingKey) return;
 
     flushCurrentDuration(false, true);
-    lastRouteKeyRef.current = routeKey;
+    lastRouteKeyRef.current = trackingKey;
     if (pathname === "/auth/admin-view-as" || isAdminViewAsActive()) return;
 
     const identity = getOrCreateAnalyticsIdentity();
@@ -193,7 +219,7 @@ export const PageViewTracker = () => {
 
     const attribution = resolveAttribution(new URLSearchParams(search));
     const startedAt = Date.now();
-    const requestKey = routeKey;
+    const requestKey = trackingKey;
 
     void trackPageView({
       display_mode: getDisplayMode(),
@@ -230,7 +256,7 @@ export const PageViewTracker = () => {
       .catch(() => {
         // Analytics must fail silently.
       });
-  }, [flushCurrentDuration, pathname, routeKey, search, trackPageView]);
+  }, [flushCurrentDuration, pathname, search, trackPageView, trackingKey]);
 
   useEffect(() => {
     const pauseCurrentDuration = () => {

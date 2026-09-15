@@ -1,7 +1,6 @@
 //Client
 
 //Types
-import prisma from "@/infra/database/prisma";
 //Objects
 import type { notification_preference } from "@/interfaces/objects";
 import {
@@ -9,32 +8,35 @@ import {
   normalizeNotificationPrefs,
   normalizeNotificationPrefsForJson,
 } from "@/main/notification/preferences";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 //Interfaces
 import type { IShowRepository } from "./interfaces/IShowRepository";
 
 export class ShowRepository implements IShowRepository {
   async getOrCreate(userId: string, role: NotificationUserRole): Promise<notification_preference> {
-    const existing = await prisma.notification_preference.findUnique({
-      where: { user_id: userId },
-    });
+    return withSerializableTransaction(async (transaction) => {
+      const existing = await transaction.notification_preference.findUnique({
+        where: { user_id: userId },
+      });
 
-    if (existing) {
-      const normalized = normalizeNotificationPrefs(existing.prefs, role);
+      if (existing) {
+        const normalized = normalizeNotificationPrefs(existing.prefs, role);
 
-      if (JSON.stringify(existing.prefs) === JSON.stringify(normalized)) {
-        return existing;
+        if (JSON.stringify(existing.prefs) === JSON.stringify(normalized)) {
+          return existing;
+        }
+
+        return transaction.notification_preference.update({
+          where: { user_id: userId },
+          data: {
+            prefs: normalizeNotificationPrefsForJson(existing.prefs, role),
+          },
+        });
       }
 
-      return prisma.notification_preference.update({
-        where: { user_id: userId },
-        data: {
-          prefs: normalizeNotificationPrefsForJson(existing.prefs, role),
-        },
+      return transaction.notification_preference.create({
+        data: { user_id: userId, prefs: normalizeNotificationPrefsForJson({}, role) },
       });
-    }
-
-    return prisma.notification_preference.create({
-      data: { user_id: userId, prefs: normalizeNotificationPrefsForJson({}, role) },
     });
   }
 }

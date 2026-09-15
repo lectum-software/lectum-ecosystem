@@ -89,8 +89,10 @@ export type AdminFinancePaymentHistoryItem = {
   external_id: string;
   gateway: "mercadopago";
   internal_id: number;
+  internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
+  source: "gateway_subscription_summary" | "payment_event";
   status: AdminFinancePaymentHistoryStatus;
   status_detail: string | null;
   status_label: string;
@@ -102,7 +104,9 @@ export type AdminFinancePaymentHistory = {
   available: boolean;
   items: AdminFinancePaymentHistoryItem[];
   reason: string | null;
-  source: "payment_event.filtered_by_subscription_reference";
+  source:
+    | "payment_event.filtered_by_subscription_reference"
+    | "payment_event+gateway_subscription_summary";
   total: number;
 };
 
@@ -116,7 +120,7 @@ export type AdminFinancePaymentHealth = {
   last_success_at: string | null;
   notes: string[];
   pending_payments: number;
-  source: "payment_event+professional_subscription";
+  source: "payment_event+gateway_subscription_summary+professional_subscription";
   status: AdminFinancePaymentHealthStatus;
   successful_payments: number;
   success_rate_percent: number | null;
@@ -179,8 +183,10 @@ export type AdminFinanceChargeItem = {
   external_id: string;
   gateway: "mercadopago";
   internal_id: number;
+  internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
+  source: "gateway_subscription_summary" | "payment_event";
   status: "confirmed";
   status_label: "Confirmada";
   subscription: AdminFinanceSubscriptionItem | null;
@@ -210,7 +216,7 @@ export type AdminFinanceDashboard = {
     description: string;
     linked_confirmed_payments: number;
     paid_psychologist_count: number;
-    source: "payment_event_linked_to_paid_psychologists";
+    source: "payment_event+gateway_subscription_summary_linked_to_paid_psychologists";
     unavailable_reason: string | null;
     value_cents: number;
   };
@@ -242,7 +248,7 @@ export type AdminFinanceDashboard = {
   };
   latest_charges: {
     items: AdminFinanceChargeItem[];
-    source: "payment_event+professional_subscription";
+    source: "payment_event+gateway_subscription_summary+professional_subscription";
     total: number;
   };
   new_subscriptions: {
@@ -253,7 +259,7 @@ export type AdminFinanceDashboard = {
   period: AdminFinancePeriod;
   series: {
     points: AdminFinanceSeriesPoint[];
-    source: "payment_event+professional_subscription";
+    source: "payment_event+gateway_subscription_summary+professional_subscription";
   };
   subscription_relation: {
     items: AdminFinanceSubscriptionItem[];

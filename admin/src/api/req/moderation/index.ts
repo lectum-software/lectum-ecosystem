@@ -1,5 +1,6 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
+import type { AdminPublicSource } from "@/api/public-response";
 import type { ApiResponse } from "@/api/types";
 
 export type AdminModerationDecision = "allow_sensitive" | "block" | "safety_hold";
@@ -176,7 +177,7 @@ export type AdminModerationReportAction = {
   content_already_unavailable: boolean;
   content_removed: boolean;
   report: AdminModerationReportItem;
-  source: "post_report+admin_activity_log";
+  source: AdminPublicSource<"post_report+admin_activity_log">;
 };
 
 export type AdminModerationReportChartType =
@@ -258,7 +259,7 @@ export type AdminModerationOperationalAlerts = {
     title: string;
   }[];
   items: AdminModerationOperationalAlert[];
-  source: "post_report+community_post+post_reply+user+psychologist_profile+professional_subscription+profile_view_event+contact_request+post_vote+post_save+post_reply_save+post_share";
+  source: AdminPublicSource<"post_report+community_post+post_reply+user+psychologist_profile+professional_subscription+profile_view_event+contact_request+post_vote+post_save+post_reply_save+post_share">;
   thresholds: {
     patient_post_without_coverage_hours: number;
     psychologist_adaptation_days: number;
@@ -288,6 +289,89 @@ export type AdminModerationOperationalAlertsQuery = {
   userRole?: "all" | "paciente" | "psicologo";
 };
 
+export type AdminCommunitySuggestionStatus = "all" | "agrupada" | "arquivada" | "pendente";
+
+export type AdminCommunitySuggestionBlockStatus =
+  | "arquivada"
+  | "candidata"
+  | "convertida"
+  | "monitorando";
+
+export type AdminCommunitySuggestionUser = {
+  id: string;
+  name: string;
+  role: string;
+  role_label: string;
+  show_verified_badge: boolean;
+};
+
+export type AdminCommunitySuggestionBlockSummary = {
+  community: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  created_at: string;
+  description: string | null;
+  id: string;
+  latest_suggestion_at: string | null;
+  status: AdminCommunitySuggestionBlockStatus;
+  suggestions_count: number;
+  title: string;
+  updated_at: string;
+};
+
+export type AdminCommunitySuggestionItem = {
+  block: AdminCommunitySuggestionBlockSummary | null;
+  created_at: string;
+  id: string;
+  status: Exclude<AdminCommunitySuggestionStatus, "all">;
+  theme: string;
+  updated_at: string;
+  user: AdminCommunitySuggestionUser;
+};
+
+export type AdminCommunitySuggestionsQuery = {
+  blockId?: "all" | "unassigned" | string;
+  from?: string;
+  limit?: number;
+  page?: number;
+  q?: string;
+  status?: AdminCommunitySuggestionStatus;
+  to?: string;
+  userRole?: "all" | "paciente" | "psicologo";
+};
+
+export type AdminCommunitySuggestionsResponse = {
+  blocks: AdminCommunitySuggestionBlockSummary[];
+  count: number;
+  page: number;
+  pages: number;
+  per_page: number;
+  source: AdminPublicSource<"community_suggestion+community_suggestion_block">;
+  suggestions: AdminCommunitySuggestionItem[];
+  summary: {
+    archived_total: number;
+    candidate_blocks: number;
+    grouped_total: number;
+    latest_suggestion_at: string | null;
+    monitoring_blocks: number;
+    total_blocks: number;
+    total_suggestions: number;
+    ungrouped_total: number;
+  };
+};
+
+export type AdminCommunitySuggestionBlockInput = {
+  description?: string | null;
+  status?: AdminCommunitySuggestionBlockStatus;
+  title?: string;
+};
+
+export type AdminCommunitySuggestionMoveInput = {
+  blockId?: string | null;
+};
+
 export type AdminModerationOperationalAlertsPage = {
   count: number;
   counts: AdminModerationOperationalAlerts["counts"];
@@ -297,7 +381,7 @@ export type AdminModerationOperationalAlertsPage = {
   page: number;
   pages: number;
   per_page: number;
-  source: AdminModerationOperationalAlerts["source"];
+  source: AdminPublicSource<AdminModerationOperationalAlerts["source"]>;
   thresholds: AdminModerationOperationalAlerts["thresholds"];
 };
 
@@ -306,11 +390,15 @@ export type AdminModerationSummary = {
   by_decision: Record<string, number>;
   by_severity: Record<string, number>;
   by_status: Record<string, number>;
+  community_suggestions?: {
+    new_suggestions_total?: number;
+    total_suggestions?: number;
+  };
   latest_pending: AdminModerationEvent[];
   operational_alerts: AdminModerationOperationalAlerts;
   overview_charts: AdminModerationOverviewCharts;
   pending_total: number;
-  source: "content_moderation_event";
+  source: AdminPublicSource<"content_moderation_event">;
   urgent_pending_total: number;
 };
 
@@ -334,7 +422,7 @@ export type AdminModerationEvents = {
   page: number;
   pages: number;
   per_page: number;
-  source: "content_moderation_event";
+  source: AdminPublicSource<"content_moderation_event">;
 };
 
 export type AdminModerationResolveInput = {
@@ -374,6 +462,17 @@ const cleanOperationalAlertsParams = (input: AdminModerationOperationalAlertsQue
   ...(input.userRole && input.userRole !== "all" ? { userRole: input.userRole } : {}),
 });
 
+const cleanCommunitySuggestionsParams = (input: AdminCommunitySuggestionsQuery = {}) => ({
+  ...(input.blockId && input.blockId !== "all" ? { blockId: input.blockId } : {}),
+  ...(input.from ? { from: input.from } : {}),
+  ...(input.limit ? { limit: input.limit } : {}),
+  ...(input.page ? { page: input.page } : {}),
+  ...(input.q ? { q: input.q } : {}),
+  ...(input.status && input.status !== "all" ? { status: input.status } : {}),
+  ...(input.to ? { to: input.to } : {}),
+  ...(input.userRole && input.userRole !== "all" ? { userRole: input.userRole } : {}),
+});
+
 export const getAdminModerationSummary = async () => {
   const response = await adminApi.get<ApiResponse<AdminModerationSummary>>(
     "/api/admin/private/moderation/summary",
@@ -397,6 +496,15 @@ export const getAdminModerationOperationalAlerts = async (
   const response = await adminApi.get<ApiResponse<AdminModerationOperationalAlertsPage>>(
     "/api/admin/private/moderation/operational-alerts",
     { params: cleanOperationalAlertsParams(input) },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminCommunitySuggestions = async (input: AdminCommunitySuggestionsQuery = {}) => {
+  const response = await adminApi.get<ApiResponse<AdminCommunitySuggestionsResponse>>(
+    "/api/admin/private/moderation/community-suggestions",
+    { params: cleanCommunitySuggestionsParams(input) },
   );
 
   return resolveApiData(response.data);
@@ -437,6 +545,51 @@ export const resolveAdminModerationReport = async (
   const response = await adminApi.post<ApiResponse<AdminModerationReportAction>>(
     `/api/admin/private/moderation/reports/${encodeURIComponent(reportId)}/resolve`,
     input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const createAdminCommunitySuggestionBlock = async (
+  input: AdminCommunitySuggestionBlockInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminCommunitySuggestionBlockSummary>>(
+    "/api/admin/private/moderation/community-suggestion-blocks",
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const updateAdminCommunitySuggestionBlock = async (
+  blockId: string,
+  input: AdminCommunitySuggestionBlockInput,
+) => {
+  const response = await adminApi.put<ApiResponse<AdminCommunitySuggestionBlockSummary>>(
+    `/api/admin/private/moderation/community-suggestion-blocks/${encodeURIComponent(blockId)}`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const moveAdminCommunitySuggestion = async (
+  suggestionId: string,
+  input: AdminCommunitySuggestionMoveInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminCommunitySuggestionItem>>(
+    `/api/admin/private/moderation/community-suggestions/${encodeURIComponent(suggestionId)}/move`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const archiveAdminCommunitySuggestion = async (suggestionId: string) => {
+  const response = await adminApi.post<ApiResponse<AdminCommunitySuggestionItem>>(
+    `/api/admin/private/moderation/community-suggestions/${encodeURIComponent(
+      suggestionId,
+    )}/archive`,
   );
 
   return resolveApiData(response.data);

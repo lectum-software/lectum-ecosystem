@@ -1,4 +1,4 @@
-﻿# ADR-0093: Seletor simples de comunidade na criação de post
+# ADR-0093: Seletor simples de comunidade na criação de post
 
 ## Status
 

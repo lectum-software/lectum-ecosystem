@@ -1,4 +1,4 @@
-﻿# ADR-0410: Upload gerenciado para Imagem Open Graph no Admin
+# ADR-0410: Upload gerenciado para Imagem Open Graph no Admin
 
 Status: Accepted  
 Data: 2026-08-03

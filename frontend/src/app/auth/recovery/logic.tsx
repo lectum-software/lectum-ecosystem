@@ -4,16 +4,17 @@ import { ArrowLeftToLine, Loader2, MailCheck, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/api/callers/auth";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { type RecoveryForm, useForm } from "./use-form";
+import { type RecoveryForm, recoverySchema, useForm } from "./use-form";
 
-const resolveRecoveryErrorMessage = (error: unknown) => {
-  const message = error instanceof Error ? error.message : null;
-
-  return message || "Não foi possível enviar o link agora. Tente novamente em alguns instantes.";
-};
+const resolveRecoveryErrorMessage = (error: unknown) =>
+  getSafeApiErrorMessage(
+    error,
+    "Não foi possível enviar o link agora. Tente novamente em alguns instantes.",
+  );
 
 export const RecoveryLogic = () => {
   const { Form, formProps, hook } = useForm();
@@ -23,9 +24,8 @@ export const RecoveryLogic = () => {
   const { recovery } = useAuth({
     callbacks: {
       recovery: {
-        onSuccess: () => {
-          const currentEmail = hook.getValues("email");
-          setSentEmail(currentEmail);
+        onSuccess: (_result, variables) => {
+          setSentEmail(variables.email);
           setApiError(null);
         },
         onError: (error) => {
@@ -36,20 +36,23 @@ export const RecoveryLogic = () => {
   });
 
   const handleSubmit = (data: RecoveryForm) => {
+    if (recovery.isPending) return;
     setApiError(null);
     recovery.mutate(data);
   };
 
   const handleResend = () => {
-    const email = sentEmail || hook.getValues("email");
+    if (recovery.isPending) return;
+    const submitted = recoverySchema.safeParse({ email: sentEmail });
 
-    if (!email) {
+    if (!submitted.success) {
       setSentEmail(null);
+      setApiError("Informe um e-mail válido para continuar.");
       return;
     }
 
     setApiError(null);
-    recovery.mutate({ email });
+    recovery.mutate(submitted.data);
   };
 
   if (sentEmail) {
@@ -61,10 +64,10 @@ export const RecoveryLogic = () => {
 
         <section className="mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[390px] flex-col px-4 py-6 sm:py-8">
           <div className="grid flex-1 content-center rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-8 text-center shadow-[var(--lectum-shadow-soft)]">
-            <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-primary-soft/80 text-primary shadow-[inset_0_0_0_20px_rgb(255_255_255/55%)]">
+            <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-primary-soft/80 text-primary shadow-lectum-soft">
               <span className="relative grid h-20 w-20 place-items-center rounded-full bg-surface shadow-[var(--lectum-shadow-soft)]">
                 <MailCheck className="h-10 w-10" aria-hidden="true" />
-                <span className="absolute -right-1.5 -top-1.5 grid h-7 w-7 place-items-center rounded-full bg-primary text-white shadow-[var(--lectum-shadow-soft)]">
+                <span className="absolute -right-1.5 -top-1.5 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-[var(--lectum-shadow-soft)]">
                   <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
               </span>
@@ -123,7 +126,12 @@ export const RecoveryLogic = () => {
           </p>
         </div>
 
-        <Form className="mt-7 grid gap-2" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
+        <Form
+          className="mt-7 grid gap-2"
+          {...formProps}
+          onlyRead={recovery.isPending}
+          onSubmit={hook.handleSubmit(handleSubmit)}
+        >
           {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
 
           <Button className="mt-2 w-full" disabled={recovery.isPending} type="submit">

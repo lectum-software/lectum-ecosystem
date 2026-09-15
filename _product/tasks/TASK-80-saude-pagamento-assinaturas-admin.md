@@ -344,8 +344,8 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - `pnpm --dir admin check`.
 - `pnpm --dir admin build`.
 - `pnpm check`.
-- `rg -n "Próxima/Cancel|PrÃ³xima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" "admin/src/app/(admin)/financeiro"` sem ocorrências.
-- `rg -n "Próxima/Cancel|PrÃ³xima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" admin/.next/static admin/.next/server -g "!cache/**"` sem ocorrências após build.
+- `rg -n "Próxima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" "admin/src/app/(admin)/financeiro"` sem ocorrências.
+- `rg -n "Próxima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" admin/.next/static admin/.next/server -g "!cache/**"` sem ocorrências após build.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
 
 ## Ajuste pós-feedback 2026-07-23 - Bloco Cancelamento no grid de métricas
@@ -373,3 +373,17 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - `pnpm --dir admin build`.
 - Smoke de serviço real com `.env` local: `listAdminFinanceSubscriptions({ period: "all", status: "cancelada", limit: 5 })` retornou `status=200`, `count=1` e item cancelado com `cancelled_at`.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+
+## Ajuste pós-feedback 2026-08-13 - Saúde de pagamento com resumo do gateway
+
+- A saúde e o histórico por assinatura no Financeiro Admin agora aceitam o resumo real do Mercado Pago como complemento ao `payment_event` local, sem criar eventos sintéticos.
+- Quando o resumo do gateway representa a mesma cobrança do dia, a visualização consolida a entrada para evitar duplicidade e mantém o status de sucesso em verde.
+- O título do histórico financeiro vinculado à assinatura usa o nome do plano.
+- ADR atualizado: `adrs/0309-admin-assinaturas-saude-pagamento.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] Assinaturas com cobrança aprovada no Mercado Pago podem ficar saudáveis mesmo sem webhook local gravado.
+- [x] A UI não exibe linhas duplicadas do mesmo dia quando o resumo do gateway confirma a cobrança.
+- [x] O status de sucesso confirmado pelo gateway é renderizado como sucesso.
+- [x] Nenhum mock, seed, migration, package ou evento financeiro artificial foi adicionado.

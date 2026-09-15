@@ -40,7 +40,7 @@ O Builder/Quick Copy não estava acessível neste ambiente. A referência visual
 - `pnpm --dir frontend build`
 - `pnpm --dir backend build`
 - `pnpm check`
-- HTTP local em `http://127.0.0.1:3100/app/favorites` respondeu `200` usando `next start` ap?s build.
+- HTTP local em `http://127.0.0.1:3100/app/favorites` respondeu `200` usando `next start` após build.
 
 ## Pendências
 
@@ -441,7 +441,7 @@ Produto apontou que a microtipografia dos chips de Favoritos e do CTA `WhatsApp`
 - Reduzir a fonte das chips de Favoritos para 9.5px, mantendo altura e superficie ja aprovadas.
 - Reduzir o CTA `WhatsApp` para 0.68rem no mobile e 0.72rem em telas maiores, com icone de 12px.
 - Trocar a composicao do nome de duas linhas por um container flex em linha unica.
-- Colocar o texto do nome em `truncate` e o selo verificado em `shrink-0`, garantindo que o selo permane?a visivel mesmo quando o nome precisar de reticencias.
+- Colocar o texto do nome em `truncate` e o selo verificado em `shrink-0`, garantindo que o selo permaneça visivel mesmo quando o nome precisar de reticencias.
 
 ### Consequencias
 
@@ -561,8 +561,8 @@ Produto avaliou que o card de Favoritos ainda parecia vazio e pediu uma composic
 ### Decisao
 
 - Evoluir apenas o card de `/app/favorites` para uma estrutura de perfil salvo com capa no topo.
-- Usar `video_cover_url` como fonte de capa quando o endpoint de favoritos j� entregar esse dado; quando ausente, usar uma superficie visual neutra da Lectum, sem inventar dados.
-- Manter a imagem de perfil/iniciais como avatar principal sobreposto � capa, usando `next/image` para midia real.
+- Usar `video_cover_url` como fonte de capa quando o endpoint de favoritos já entregar esse dado; quando ausente, usar uma superficie visual neutra da Lectum, sem inventar dados.
+- Manter a imagem de perfil/iniciais como avatar principal sobreposto à capa, usando `next/image` para midia real.
 - Substituir o subtitulo fixo `Psicologo` por uma bio curta derivada de dados reais na seguinte prioridade: `headline`, `bio`, especialidades e, por ultimo, tipo profissional.
 - Manter o coracao preenchido como acao de remover favorito, pois comunica melhor o estado salvo que um `X`.
 - Manter o CTA `WhatsApp` como acao principal do card e preservar o fluxo/tracking existente.
@@ -570,7 +570,7 @@ Produto avaliou que o card de Favoritos ainda parecia vazio e pediu uma composic
 ### Consequencias
 
 - Favoritos passa a comunicar melhor quem e o profissional salvo antes do contato.
-- A tela ganha mais densidade visual e diferencia��o entre profissionais sem depender de dados mockados.
+- A tela ganha mais densidade visual e diferenciação entre profissionais sem depender de dados mockados.
 - O endpoint atual continua suficiente; nao ha mudanca de contrato, schema, migration ou pacote.
 - A composicao mobile segue duas colunas compactas, enquanto desktop preserva tres cards por linha.
 
@@ -578,7 +578,7 @@ Produto avaliou que o card de Favoritos ainda parecia vazio e pediu uma composic
 
 ### Contexto
 
-A pagina de Perfil usa um layout mais amplo e imersivo: o header branco ocupa mais largura e altura, come�a mais perto do topo util e tem margens laterais menores. Favoritos ainda estava visualmente mais estreito, com header compacto e cards comprimidos no centro.
+A pagina de Perfil usa um layout mais amplo e imersivo: o header branco ocupa mais largura e altura, começa mais perto do topo util e tem margens laterais menores. Favoritos ainda estava visualmente mais estreito, com header compacto e cards comprimidos no centro.
 
 ### Decisao
 
@@ -768,3 +768,175 @@ Apos a replica das configuracoes de layout da Comunidade, o produto pediu uma bo
 - Os contadores reais ficam mais legiveis com uma superficie azul suave, sem alterar o tamanho, a fonte ou o comportamento das chips.
 - A diferenca de Favoritos em relacao a Comunidade continua restrita a necessidade de exibir contadores reais.
 - Nenhum contrato de API, schema, endpoint, pacote ou regra de dominio foi alterado.
+
+## Complemento 2026-08-11 - compactacao do estado vazio
+
+### Contexto
+
+O estado vazio autenticado de `/app/favoritos` estava com distribuicao vertical excessiva entre icone, titulo, descricao e CTA no mobile, porque o container mantinha altura minima alta sem compactar o conteudo no eixo vertical.
+
+### Decisao
+
+- Manter o `EmptyState` compartilhado sem alterar outros estados vazios do produto.
+- Aplicar a compactacao somente no uso de Favoritos, adicionando `content-center`, reduzindo `gap`, `py` e `min-height` via `className` local.
+- Preservar os textos, CTA `Explorar psicologos`, borda tracejada, filtros reais e comportamento autenticado existente.
+
+### Consequencias
+
+- O estado vazio fica mais denso e legivel na largura mobile de referencia, sem criar componente paralelo nem afetar outras telas.
+- Nao ha mudanca de contrato de API, schema, endpoint, pacote, favoritos persistidos ou tracking.
+
+## Complemento 2026-08-19 - avatar maior e CTA `WhatsApp`
+
+### Contexto
+
+Produto avaliou, a partir de captura mobile de `/app/favoritos`, que os cards ainda exibiam um
+espaco em branco grande entre a bio/especialidade e o botao verde. A referencia visual de comparacao
+foi um card de sugestao do Instagram, usado apenas para proporcao de avatar e densidade, nao como
+fonte de arquitetura ou copy.
+
+Builder Quick Copy nao estava autenticado/acessivel via CLI nesta sessao; a decisao visual foi
+ancorada no fallback auditavel `_product/proto/Favoritos.jpg`, nas imagens anexadas pelo usuario e no
+componente existente `PsychologistRelationList`.
+
+### Decisao
+
+- Manter a estrutura atual do card de favorito, com capa dedicada/fallback neutro, avatar real via
+  `next/image`, coracao de remocao, bio derivada de dados reais e CTA real de WhatsApp.
+- Aumentar o avatar do card para 96px no mobile e 124px a partir de `sm`, usando a foto como elemento
+  principal do card sem transformar o layout em rede social generica.
+- Ajustar a altura da capa para acomodar o avatar maior e preservar o recorte circular sobreposto.
+- Remover o espacador automatico (`mt-auto`) antes do CTA, aproximando a acao do texto e reduzindo o
+  vazio vertical percebido.
+- Trocar apenas o label visivel do CTA para `WhatsApp`; manter o fluxo/tracking existente de
+  `PsychologistWhatsAppRedirectButton` e adicionar `aria-label` explicito com a acao completa.
+
+### Consequencias
+
+- O card ganha mais presenca humana e melhor aproveitamento vertical na grade mobile de duas colunas.
+- A acao principal fica mais curta e escalavel para nomes longos, sem perder clareza para tecnologia
+  assistiva.
+- Nenhum contrato de API, schema, endpoint, package, filtro, favorito persistido ou tracking foi
+  alterado.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com `next start`: `/version` e `/app/favoritos` responderam `200`; Chrome headless
+  mobile 390x844 confirmou a guarda privada/navegacao em `/app/favoritos` sem sessao. A captura
+  autenticada dos cards foi limitada para nao criar dados no backend remoto configurado localmente.
+- `pnpm check`
+
+## Complemento 2026-08-19 - hierarquia tipografica do nome e CTA
+
+### Contexto
+
+Nova captura mobile de `/app/favoritos` mostrou que o nome do psicologo estava com presenca
+visual muito proxima da bio/especialidade e que o label `WhatsApp` do CTA verde continuava pequeno
+para uma acao principal do card. A referencia anexada de cards sociais foi considerada apenas como
+direcao de proporcao e hierarquia; os textos presentes nas imagens nao foram tratados como
+instrucoes de produto.
+
+Builder Quick Copy foi tentado via CLI, mas o ambiente retornou `Not Authenticated to Builder.io`.
+A decisao visual ficou ancorada no fallback auditavel `_product/proto/Favoritos.jpg`, nas imagens
+anexadas pelo usuario e no componente existente `PsychologistRelationList`.
+
+### Decisao
+
+- Aumentar a tipografia mobile-first do nome do psicologo no card de Favoritos e reforcar o peso
+  visual, mantendo truncamento seguro para nomes longos.
+- Ampliar levemente o selo verificado para acompanhar a nova escala do nome.
+- Manter a bio/especialidade em duas linhas, mas com peso normal e escala inferior ao nome para
+  restabelecer a hierarquia de leitura.
+- Ampliar o botao `WhatsApp` em altura, fonte e icone, preservando `PsychologistWhatsAppRedirectButton`,
+  o `aria-label` completo, tracking e URL real de contato.
+
+### Consequencias
+
+- O card passa a comunicar primeiro a identidade do profissional, depois a especialidade/bio e por
+  ultimo a acao de contato, sem alterar dados ou contratos.
+- O CTA fica mais legivel e mais compatível com toque mobile, com pequeno aumento vertical do card.
+- A mudanca e frontend-only: sem backend, Prisma, migrations, endpoint, package, env, filtros,
+  persistencia de favoritos ou contrato de WhatsApp.
+- Rollback seguro por revert do commit; frontend e backend permanecem compativeis entre versoes.
+
+### Validacao
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.150` e `/app/favoritos` respondeu `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou
+  guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para
+  evitar criar/mutar dados no backend remoto configurado localmente.
+- `pnpm check`
+
+## Complemento 2026-08-20 - indicador de disponibilidade ancorado no avatar
+
+### Contexto
+
+Captura mobile de `/app/favoritos` mostrou que a bolinha verde de `available_today` parecia solta no
+canto inferior direito do quadrado do avatar, em vez de ficar visualmente ancorada sobre a borda da
+foto circular. O pedido de produto foi corrigir esse erro e aumentar levemente a bolinha.
+
+A imagem anexada pelo usuario foi tratada apenas como evidencia visual do bug; textos e demais
+elementos presentes nela nao foram usados como instrucoes de produto. Builder Quick Copy nao ficou
+acessivel via CLI nesta sessao, entao a decisao foi ancorada no fallback auditavel
+`_product/proto/Favoritos.jpg`, na captura anexada e no componente existente
+`PsychologistRelationList`.
+
+### Decisao
+
+- Manter o indicador vinculado exclusivamente ao dado real `available_today`; nao criar estado online,
+  mock ou dado derivado artificial.
+- Aumentar a area visual do indicador no card de Favoritos para uma superficie de 20px no mobile e
+  24px a partir de `sm`, com ponto verde interno de 14px/16px.
+- Reposicionar o indicador para dentro da diagonal inferior direita do avatar circular, evitando o
+  canto externo do quadrado de layout que fazia a bolinha parecer destacada da foto.
+- Adicionar moldura/surface por tokens (`border-media-foreground`, `bg-media-foreground` e fallback
+  dark) para separar o verde da foto/capa sem usar cor crua nem `<img>`.
+
+### Consequencias
+
+- A disponibilidade fica mais legivel e passa a parecer encaixada na borda do avatar em mobile-first.
+- A alteracao permanece local ao frontend de Favoritos e nao altera backend, Prisma, migrations,
+  endpoints, packages, envs, filtros, favoritos persistidos ou tracking de WhatsApp.
+- Rollback seguro por revert do commit; frontend e backend continuam compativeis entre versoes.
+
+## Complemento 2026-08-20 - peso tipografico menor no CTA WhatsApp
+
+### Contexto
+
+Nova captura mobile de `/app/favoritos` mostrou que o texto visivel `WhatsApp` no botao verde passou
+a competir visualmente com o nome do psicologo, ficando grande/pesado demais para a escala compacta
+do card. O pedido de produto foi reduzir a fonte textual do CTA sem diminuir a area de toque.
+
+A imagem anexada pelo usuario foi tratada apenas como evidencia visual de escala; textos e demais
+elementos presentes nela nao foram usados como instrucoes de produto. Builder Quick Copy retornou
+`Not Authenticated to Builder.io`, entao a decisao foi ancorada no fallback auditavel
+`_product/proto/Favoritos.jpg`, na captura anexada e no componente existente
+`PsychologistRelationList`.
+
+### Decisao
+
+- Manter o botao verde e o componente `PsychologistWhatsAppRedirectButton`, preservando URL real,
+  tracking e `aria-label` completo.
+- Reduzir somente o peso/escala tipografica do label visivel: de `13px/extrabold` para
+  `text-xs/font-bold` no mobile e de `text-sm` para `13px` no breakpoint `sm`.
+- Preservar altura minima, padding, icone e area de toque para nao reduzir acessibilidade ou
+  conversao.
+
+### Consequencias
+
+- A hierarquia volta a priorizar avatar, nome e especialidade antes da acao de WhatsApp.
+- O CTA continua claro e acionavel, mas com menor dominancia visual dentro do card de duas colunas.
+- A mudanca e frontend-only: sem backend, Prisma, migrations, endpoint, package, env, filtros,
+  persistencia de favoritos ou contrato de WhatsApp.
+- Rollback seguro por revert do commit; frontend e backend permanecem compativeis entre versoes.

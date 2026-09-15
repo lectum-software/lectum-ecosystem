@@ -10,16 +10,19 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { user } from "@/api/generator/types";
+import { isCompleteOtpValue } from "@/components/controllers/otp/value";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { getUserHomePath } from "@/utils/auth-redirect";
+import { getUserHomePath, resolveAuthReturnTo } from "@/utils/auth-redirect";
 import { useForm, type VerifyEmailForm } from "./use-form";
 
 type ApiErrorData = {
@@ -36,13 +39,7 @@ const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 const getRawErrorMessage = (error: unknown) => {
-  const apiError = error as ApiError;
-
-  return (
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "")
-  );
+  return getSafeApiErrorMessage(error, "");
 };
 
 const resolveVerificationErrorMessage = (error: unknown) => {
@@ -113,7 +110,8 @@ const formatCooldown = (seconds: number) => {
 };
 
 export const VerifyEmailLogic = () => {
-  const { setter } = useUserSet("/dashboard");
+  const { setter } = useUserSet("/app", { reloadAfterSet: true });
+  const searchParams = useSearchParams();
   const { Form, formProps, hook } = useForm();
   const storedUser = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -168,11 +166,15 @@ export const VerifyEmailLogic = () => {
     () => hydratedUser || storedUser || null,
     [hydratedUser, storedUser],
   );
-  const continueHref = getUserHomePath(currentUser, "/dashboard");
+  const explicitContinueHref = resolveAuthReturnTo(
+    searchParams.get("redirectTo"),
+    searchParams.get("callbackUrl"),
+  );
+  const continueHref = explicitContinueHref ?? getUserHomePath(currentUser, "/app");
   const currentEmail = maskEmail(currentUser?.email);
   const isConfirmed = Boolean(currentUser?.confirmed) || alreadyConfirmed;
   const isHydrating = hidrate.isLoading || hidrate.isPending;
-  const canSubmit = code.length === CODE_LENGTH && !verifyCode.isPending && !isConfirmed;
+  const canSubmit = isCompleteOtpValue(code, CODE_LENGTH) && !verifyCode.isPending && !isConfirmed;
   const canResend =
     cooldown === 0 && !sendConfirmCode.isPending && !verifyCode.isPending && !isConfirmed;
 
@@ -261,7 +263,7 @@ export const VerifyEmailLogic = () => {
             <span className="grid h-16 w-16 place-items-center rounded-full bg-surface shadow-[var(--lectum-shadow-soft)]">
               <MailCheck className="h-8 w-8" aria-hidden="true" />
             </span>
-            <span className="absolute -right-1 top-3 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-[var(--lectum-shadow-soft)]">
+            <span className="absolute -right-1 top-3 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-[var(--lectum-shadow-soft)]">
               <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             </span>
           </div>

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { CommunityRouteLogic } from "@/app/app/community/[slug]/logic";
 import { COMMUNITY_FEED_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 import { resolveCommunitySeoMetadata, resolveSeoMetadata } from "@/lib/seo-metadata";

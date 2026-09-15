@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { resolveApiError } from "@/api/handle";
 import { InputController } from "@/components/controllers";
 import { Form } from "@/hooks/form";
+import { normalizeSafeAdminRedirect } from "@/lib/safe-redirect";
 import { useAdminAuth } from "@/providers/admin-auth";
 import { type AdminLoginForm, useAdminLoginForm } from "./use-form";
 
@@ -14,7 +15,7 @@ export const LoginPageClient = () => {
   const form = useAdminLoginForm();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = normalizeSafeAdminRedirect(searchParams.get("callbackUrl"));
   const { isAuthenticated, isHydrating, login } = useAdminAuth();
 
   useEffect(() => {
@@ -34,17 +35,17 @@ export const LoginPageClient = () => {
   };
 
   return (
-    <main className="grid min-h-dvh bg-background p-4 sm:p-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(440px,0.62fr)] lg:p-0">
+    <main className="grid min-h-dvh grid-cols-[minmax(0,1fr)] overflow-x-hidden bg-background p-4 sm:p-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(440px,0.62fr)] lg:p-0">
       <section className="relative hidden overflow-hidden bg-sidebar p-10 text-sidebar-foreground lg:block">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(51,0,255,0.46),transparent_34%),radial-gradient(circle_at_82%_12%,rgba(48,140,232,0.32),transparent_28%)]" />
+        <div className="admin-login-backdrop absolute inset-0" />
         <div className="relative z-10 flex h-full flex-col justify-between">
           <div>
             <Image
               alt="Lectum"
-              height={54}
+              className="brightness-0 invert"
+              height={39}
               priority
               src="/logo-light.png"
-              style={{ height: "auto", width: 190 }}
               width={190}
             />
             <div className="mt-16 max-w-xl">
@@ -55,16 +56,16 @@ export const LoginPageClient = () => {
                 Gestão separada do site principal.
               </h1>
               <p className="mt-5 max-w-lg text-lg leading-8 text-sidebar-muted">
-                Acesse com uma conta administrativa real criada no backend. Nenhum dado de usuário
-                do app principal é reutilizado aqui.
+                Acesse com uma conta administrativa do Lectum. Nenhum dado de usuário do site
+                principal é reutilizado aqui.
               </p>
             </div>
           </div>
-          <p className="text-sm text-sidebar-muted">Lectum Admin · porta local 3002</p>
+          <p className="text-sm text-sidebar-muted">Lectum Admin · acesso restrito</p>
         </div>
       </section>
 
-      <section className="mx-auto flex w-full max-w-md flex-col justify-center lg:px-12">
+      <section className="mx-auto flex min-w-0 w-full max-w-md flex-col justify-center lg:px-12">
         <div className="mb-8 flex items-center gap-3 lg:hidden">
           <Image
             alt="Lectum"
@@ -79,14 +80,14 @@ export const LoginPageClient = () => {
           </span>
         </div>
 
-        <div className="rounded-[28px] border border-border bg-surface p-6 shadow-admin sm:p-8">
+        <div className="min-w-0 max-w-full rounded-[28px] border border-border bg-surface p-6 shadow-admin sm:p-8">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.22em] text-primary">Admin</p>
             <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-foreground">
               Entrar no painel
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted">
-              Use as credenciais administrativas cadastradas pela fundação backend da TASK-45.
+              Use as credenciais administrativas cadastradas para o painel.
             </p>
           </div>
 
@@ -100,7 +101,7 @@ export const LoginPageClient = () => {
             ))}
 
             <button
-              className="mt-2 h-12 w-full rounded-2xl bg-primary px-5 text-sm font-black text-white shadow-admin-soft transition hover:bg-primary-hover focus-visible:outline-primary disabled:opacity-60"
+              className="mt-2 h-12 w-full rounded-2xl bg-primary px-5 text-sm font-black text-primary-foreground shadow-admin-soft transition hover:bg-primary-hover focus-visible:outline-primary disabled:opacity-60"
               disabled={form.formState.isSubmitting || isHydrating}
               type="submit"
             >

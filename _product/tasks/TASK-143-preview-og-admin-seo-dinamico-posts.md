@@ -105,3 +105,53 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 
 - [x] A lista **Páginas públicas** do Admin SEO/Metadados passa a exibir a rota `/community` como **Explorar comunidades**, diferenciando a listagem pública do template de comunidade específica (`/community/[slug]`).
 - [x] O DTO de SEO resolve labels sistêmicos a partir dos defaults atuais, preservando metadados editáveis já salvos e refletindo o novo nome mesmo em bases de desenvolvimento com a linha antiga persistida.
+
+## Ajuste pos-feedback 2026-08-10 - capa automatica nos videos de comunidades
+
+- [x] Os players de videos de posts e respostas de comunidade passam a usar `thumbnail_url` persistido como `poster`, incluindo feed, detalhe, thread, perfil profissional, meus posts e salvos.
+- [x] Videos legados ou registros sem `thumbnail_url` tentam uma capa transitoria no navegador a partir do proprio arquivo de video, sem persistir backfill nem alterar dados publicados.
+- [x] A geracao automatica de miniatura no navegador deixa de depender de um unico frame em `0.5s` e tenta pontos diferentes do video, priorizando o primeiro frame com luminosidade/contraste suficientes para reduzir capas pretas.
+- [x] Nao foi adicionada opcao manual de capa para psicologos em videos de comunidade; a capa segue sendo derivada automaticamente de uma parte real do video enviado.
+- [x] Nao houve alteracao de banco, env nova, pacote novo, mock ou backfill destrutivo de videos antigos.
+
+## Ajuste pos-feedback 2026-08-22 - link preview de videos no WhatsApp
+
+- [x] Referencia visual do usuario registrada em `_product/proto/WhatsApp preview video link Instagram referencia.jpeg`; os textos de conversa dentro do print foram tratados como historico visual do WhatsApp, nao como instrucao de produto.
+- [x] O compartilhamento nativo de videos profissionais prioriza enviar o link publico da Lectum para permitir card Open Graph no WhatsApp, mantendo geracao/exportacao do arquivo social apenas como fallback se o link nativo/copia falhar.
+- [x] Links de video-resposta passam a apontar para `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, abrindo a arvore do video dentro da Lectum e permitindo metadados especificos da resposta.
+- [x] O endpoint publico de SEO usa o nome profissional do psicologo em `og_title` para posts/respostas com video profissional, no formato `[Nome] na Lectum`, preservando o titulo editorial no `title` HTML.
+- [x] O fallback de arquivo compartilhado inclui `url` junto do payload de Web Share quando o navegador/destino aceitar, para nao perder o link de abertura na Lectum.
+- [x] Nao houve alteracao de banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Ajuste pos-feedback 2026-08-22 - arquivo social primeiro e titulo no OG do WhatsApp
+
+- [x] Referencia visual do novo feedback registrada em `_product/proto/WhatsApp preview link sem arte social referencia.jpeg`; os textos do print foram tratados como evidencia do efeito no WhatsApp, nao como instrucao isolada.
+- [x] A decisao de priorizar link puro foi revertida no fluxo de video para restaurar as opcoes de Instagram Reels/Stories e manter a arte 9:16 com caixinha de pergunta como compartilhamento principal.
+- [x] O link publico permanece na URL do payload de arquivo quando o destino aceitar e como fallback se a geracao/compartilhamento do arquivo falhar.
+- [x] `og_description` de posts/respostas com video profissional passa a usar o titulo do post, evitando que o WhatsApp mostre o texto da resposta como descricao do card.
+- [x] A rota canonica de resposta `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]` e o `og_title` no formato `[Nome] na Lectum` foram preservados.
+- [x] Revalidado com teste direcionado de compartilhamento/SEO, checks e builds de frontend/backend, `pnpm check`, `pnpm version:bump` para `0.1.184` e `pnpm check:version`.
+- [x] Nao houve alteracao de banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Ajuste pos-feedback 2026-08-22 - rota WhatsApp sem `og:video`
+
+- [x] Criadas rotas publicas `/comunidades/[slug]/publicacao/[id]/whatsapp` e `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp` para previews de link no WhatsApp.
+- [x] As rotas reutilizam a pagina publica canonica, mas geram metadata com `shareTarget="whatsapp"`, suprimindo `og:video` e mantendo `og:image`/`og:title`/`og:description` para card clicavel.
+- [x] O `og:url` aponta para a propria rota `/whatsapp`, enquanto o canonical permanece na rota publica original de post/thread; o clique no card continua abrindo o conteudo dentro da Lectum.
+- [x] A descricao do card de videos profissionais continua sendo o titulo do post, conforme ajuste anterior.
+- [x] Nao houve alteracao de backend, banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Ajuste pos-feedback 2026-08-27 - imagem Open Graph quadrada por entidade
+
+- [x] Perfis publicos de psicologo passam a publicar `og:image` para uma rota publica versionada que renderiza PNG quadrado `1200x1200` a partir de `user.avatar`.
+- [x] Comunidades especificas passam a publicar `og:image` para uma rota publica versionada que renderiza PNG quadrado `1200x1200` a partir de `community.avatar_url`.
+- [x] A imagem configurada no Admin SEO/Metadados permanece como fallback do template quando a entidade nao tem foto/avatar ou quando o SEO dinamico nao estiver disponivel.
+- [x] As rotas de imagem usam apenas fonte publica ja validada pelo SEO dinamico, sem aceitar URL arbitraria do cliente e sem usar elemento HTML cru de imagem.
+- [x] Nao houve alteracao de backend, banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Ajuste pos-feedback 2026-08-28 - aviso de imagem personalizada no Admin
+
+- [x] O campo **Imagem Open Graph** dos templates `psychologist_profile` e `community_detail` passa a informar que a imagem principal do compartilhamento real e personalizada automaticamente pela entidade.
+- [x] O upload permanece disponivel nesses templates apenas como fallback, evitando retirar a configuracao sem explicar sua utilidade residual.
+- [x] A previa Open Graph do Admin explicita que perfis reais usam foto do psicologo e comunidades reais usam avatar da comunidade, enquanto a tela mostra o fallback do template.
+- [x] Nao houve alteracao de backend, banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.

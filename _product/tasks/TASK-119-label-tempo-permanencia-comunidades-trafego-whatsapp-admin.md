@@ -11,14 +11,14 @@ A TASK-117 passou a exibir metricas reais medias por conteudo nas sublinhas de C
 Referencias visuais consultadas:
 
 - `_product/tasks/PROTO-INVENTORY.md`;
-- `_product/proto/admin/Psic?logos/Psic?logos - Dashboard.png` como referencia local auditavel;
+- `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` como referencia local auditavel;
 - screenshot enviado pelo usuario em 2026-07-31 mostrando as sublinhas de Comunidades expandidas em `http://localhost:3002/psicologos`.
 
 Builder/Quick Copy ativo: `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`. Nesta execucao, a ferramenta Builder/Quick Copy nao esta callable no ambiente via MCP/tooling disponivel; a implementacao usa as referencias locais e o screenshot enviado, registrando esta limitacao.
 
 ## Objetivo
 
-Trocar o label exibido nos chips da metrica `average_visibility` de `Visibilidade` para `Tempo de perman?ncia` nas sublinhas de Comunidades, sem alterar calculos, ids tecnicos ou demais cards de Visibilidade do dashboard.
+Trocar o label exibido nos chips da metrica `average_visibility` de `Visibilidade` para `Tempo de permanência` nas sublinhas de Comunidades, sem alterar calculos, ids tecnicos ou demais cards de Visibilidade do dashboard.
 
 ## Dependencias
 
@@ -33,7 +33,7 @@ Todas as dependencias acima estao concluidas.
 
 ## Escopo executado
 
-- Alterar somente o label de exibicao das metricas `average_visibility` retornadas pelo backend para `Tempo de perman?ncia`.
+- Alterar somente o label de exibicao das metricas `average_visibility` retornadas pelo backend para `Tempo de permanência`.
 - Preservar o id tecnico `average_visibility`, o calculo por media de `visibilitySeconds` e a unidade em segundos.
 - Validar a renderizacao desktop e mobile ~390px no browser local.
 
@@ -48,10 +48,10 @@ Todas as dependencias acima estao concluidas.
 
 ## Criterios de aceite
 
-- [x] Os chips `average_visibility` das quatro sublinhas de conteudo de Comunidades aparecem como `Tempo de perman?ncia`.
+- [x] Os chips `average_visibility` das quatro sublinhas de conteudo de Comunidades aparecem como `Tempo de permanência`.
 - [x] O label `Visibilidade` nao aparece mais como chip nessas sublinhas de Comunidades.
 - [x] Os ids tecnicos `average_visibility` e os calculos existentes permanecem inalterados.
-- [x] O label `Reten??o` continua exclusivo de posts/respostas com video.
+- [x] O label `Retenção` continua exclusivo de posts/respostas com video.
 - [x] Nenhum `<img>` cru foi adicionado.
 - [x] Nao foram usados mocks, seeds, dados fake permanentes, backfill ou endpoint simulado.
 - [x] Builder/Quick Copy nao estava callable; imagem local e screenshot do usuario foram usados como referencia.
@@ -65,7 +65,7 @@ Todas as dependencias acima estao concluidas.
 - `pnpm --dir backend biome:fix`
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
-- Script API via `node --input-type=module -` validando `average_visibility` com label `Tempo de perman?ncia`, `Reten??o` apenas em fontes com video e ausencia do label antigo nos chips.
+- Script API via `node --input-type=module -` validando `average_visibility` com label `Tempo de permanência`, `Retenção` apenas em fontes com video e ausencia do label antigo nos chips.
 - `pnpm check`
 - `$env:NODE_OPTIONS='--max-old-space-size=8192'; pnpm --dir admin build`
 - Browser local desktop e mobile ~390px via CDP em `http://localhost:3002/psicologos`, com screenshots temporarios em `.tmp/task119-admin-psicologos-desktop.png` e `.tmp/task119-admin-psicologos-mobile.png`.

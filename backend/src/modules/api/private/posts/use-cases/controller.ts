@@ -1,12 +1,21 @@
-﻿import type { NextFunction, Request, Response } from "express";
+import { Readable } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
+import type { NextFunction, Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  abortReplyMediaMultipartUpload as abortReplyMediaMultipartUploadService,
   authorizeReplyMediaUpload as authorizeReplyMediaUploadService,
+  completeReplyMediaMultipartUpload as completeReplyMediaMultipartUploadService,
   createReply as createReplyService,
   deletePost as deletePostService,
   deleteReply as deleteReplyService,
+  getRenderShareArtifactJobFile as getRenderShareArtifactJobFileService,
+  getRenderShareArtifactJob as getRenderShareArtifactJobService,
+  getShareArtifact as getShareArtifactService,
+  initiateReplyMediaMultipartUpload as initiateReplyMediaMultipartUploadService,
   mine as mineService,
   mute as muteService,
+  renderShareArtifact as renderShareArtifactService,
   replies as repliesService,
   replyThread as replyThreadService,
   report as reportService,
@@ -15,14 +24,18 @@ import {
   save as saveService,
   share as shareService,
   show as showService,
+  startRenderShareArtifactJob as startRenderShareArtifactJobService,
   unmute as unmuteService,
   unsaveReply as unsaveReplyService,
   unsave as unsaveService,
   updatePost as updatePostService,
   updateReply as updateReplyService,
+  uploadReplyMediaMultipartPart as uploadReplyMediaMultipartPartService,
   uploadReplyMedia as uploadReplyMediaService,
+  uploadShareArtifact as uploadShareArtifactService,
   vote as voteService,
 } from "./services";
+import { isRenderShareArtifactJobFileResult } from "./services/share-render";
 
 export const mine = async (req: Request, res: Response) => {
   try {
@@ -147,6 +160,57 @@ export const uploadReplyMedia = async (req: Request, res: Response) => {
   }
 };
 
+export const initiateReplyMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await initiateReplyMediaMultipartUploadService(
+      req as unknown as Parameters<typeof initiateReplyMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_multipart_initiate", err);
+  }
+};
+
+export const uploadReplyMediaMultipartPart = async (req: Request, res: Response) => {
+  try {
+    const resolve = await uploadReplyMediaMultipartPartService({
+      auth: req.auth,
+      b: req.body as Parameters<typeof uploadReplyMediaMultipartPartService>[0]["b"],
+      file: req.file,
+      p: req.params as unknown as Parameters<typeof uploadReplyMediaMultipartPartService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_multipart_part", err);
+  }
+};
+
+export const completeReplyMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await completeReplyMediaMultipartUploadService(
+      req as unknown as Parameters<typeof completeReplyMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_multipart_complete", err);
+  }
+};
+
+export const abortReplyMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await abortReplyMediaMultipartUploadService(
+      req as unknown as Parameters<typeof abortReplyMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_multipart_abort", err);
+  }
+};
+
 export const report = async (req: Request, res: Response) => {
   try {
     const resolve = await reportService(req as unknown as Parameters<typeof reportService>[0]);
@@ -164,6 +228,100 @@ export const share = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_share", err);
+  }
+};
+
+export const getShareArtifact = async (req: Request, res: Response) => {
+  try {
+    const resolve = await getShareArtifactService(
+      req as unknown as Parameters<typeof getShareArtifactService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact", err);
+  }
+};
+
+export const uploadShareArtifact = async (req: Request, res: Response) => {
+  try {
+    const file = req.file as (Express.Multer.File & { key?: string; path?: string }) | undefined;
+    const resolve = await uploadShareArtifactService({
+      auth: req.auth,
+      file,
+      p: req.params as unknown as Parameters<typeof uploadShareArtifactService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_upload", err);
+  }
+};
+
+export const renderShareArtifact = async (req: Request, res: Response) => {
+  try {
+    const resolve = await renderShareArtifactService({
+      auth: req.auth,
+      p: req.params as unknown as Parameters<typeof renderShareArtifactService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_render", err);
+  }
+};
+
+export const startRenderShareArtifactJob = async (req: Request, res: Response) => {
+  try {
+    const resolve = await startRenderShareArtifactJobService({
+      auth: req.auth,
+      p: req.params as unknown as Parameters<typeof startRenderShareArtifactJobService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_render_job_start", err);
+  }
+};
+
+export const getRenderShareArtifactJob = async (req: Request, res: Response) => {
+  try {
+    const resolve = await getRenderShareArtifactJobService({
+      auth: req.auth,
+      p: req.params as unknown as Parameters<typeof getRenderShareArtifactJobService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_render_job", err);
+  }
+};
+
+export const getRenderShareArtifactJobFile = async (req: Request, res: Response) => {
+  try {
+    const input: Parameters<typeof getRenderShareArtifactJobFileService>[0] = {
+      auth: req.auth,
+      p: req.params as unknown as Parameters<typeof getRenderShareArtifactJobFileService>[0]["p"],
+    };
+    if (typeof req.headers.range === "string") {
+      input.range = req.headers.range;
+    }
+    const resolve = await getRenderShareArtifactJobFileService(input);
+
+    if (isRenderShareArtifactJobFileResult(resolve)) {
+      Object.entries(resolve.headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+      });
+      res.status(resolve.status);
+      Readable.fromWeb(resolve.body as NodeReadableStream<Uint8Array>)
+        .on("error", () => res.destroy())
+        .pipe(res);
+      return;
+    }
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_render_job_file", err);
   }
 };
 

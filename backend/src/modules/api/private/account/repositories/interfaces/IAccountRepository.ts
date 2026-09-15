@@ -2,6 +2,8 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import type { professional_subscription, user } from "@/interfaces/objects";
 
 export interface IAccountRepository {
+  deactivateNotificationSubscriptions: (userId: string, deviceId: string) => Promise<void>;
+  deleteToken: (userId: string, deviceId: string, token: string) => Promise<void>;
   deleteTokens: (userId: string) => Promise<void>;
   deleteOwnAccount: (user: user) => Promise<void>;
   findBlockingSubscription: (userId: string) => Promise<professional_subscription | null>;

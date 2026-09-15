@@ -285,7 +285,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Ajuste complementar em 2026-06-17 - posts alinhados aos cards de comentarios
 
-- Na aba "Posts" de `/app/posts/mine`, os cards deixam de exibir avatar, nome e metadados do autor, mantendo apenas a linha de contexto `Postado em [comunidade] � [tempo]` no topo.
+- Na aba "Posts" de `/app/posts/mine`, os cards deixam de exibir avatar, nome e metadados do autor, mantendo apenas a linha de contexto `Postado em [comunidade] · [tempo]` no topo.
 - A linha `Postado em` passa a usar o mesmo tom discreto dos cards de comentarios, com comunidade em destaque leve e tempo na mesma linha.
 - O `CommunityPostCard` recebeu props opt-in para ocultar o header de autor, mostrar tempo na linha de comunidade e trocar a `CommunityActionBar` para a apresentacao inline usada em comentarios.
 - A aba "Posts" passa a usar a mesma barra padrao da aba "Comentarios": upvote/downvote inline, comentarios, salvamentos e compartilhar, sem alterar endpoints, schema Prisma ou ordenacao.
@@ -466,3 +466,51 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e browser local mobile `390x844` em `/app/posts/mine`.
 - ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
 - Browser headless sem sessao persistida redirecionou para `/auth/login?callbackUrl=/app/posts/mine`; a regra autenticada foi validada por codigo, referencias locais e reuso do papel real da sessao.
+
+## Ajuste complementar em 2026-08-10 - contexto de comentário pai em respostas
+
+- Pedido direto de produto: quando uma resposta/comentário listado em `/app/posts/mine` for sobre outro comentário, o card não deve exibir o bloco **Post de origem**; deve exibir o comentário de origem.
+- Frontend: `ReplyItemCard` passou a decidir o preview pelo `reply.parent_reply_id` real. Respostas aninhadas usam o `reply.parent_content` retornado pelo contrato existente e mostram o rótulo **COMENTÁRIO DE ORIGEM**; comentários diretos no post preservam **POST DE ORIGEM** com título e trecho do post.
+- A mudança é mobile-first e apenas de apresentação: não altera endpoint, DTO, schema Prisma, ordenação, votos, salvamentos, compartilhamento, edição, exclusão, notificações, packages ou dados persistidos.
+- Referências visuais consultadas: screenshot enviado pelo usuário em 2026-08-10 e `_product/proto/Meus Posts - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+
+### Critérios de aceite do ajuste
+
+- [x] Respostas aninhadas em `/app/posts/mine` exibem **COMENTÁRIO DE ORIGEM**.
+- [x] O texto exibido para respostas aninhadas vem do `parent_content` real do comentário pai.
+- [x] Comentários diretos ao post continuam exibindo **POST DE ORIGEM** com título e trecho do post.
+- [x] Nenhum mock, endpoint novo, migration ou package novo foi usado.
+
+### Validacao do ajuste 2026-08-10
+
+- `pnpm --dir frontend exec biome check --write src/app/app/posts/mine/components/reply-item-card.tsx`
+- `pnpm --dir frontend check`
+- `pnpm check:version`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com Next dev em `/app/publicacoes/minhas`: `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, confirmando rota privada acessivel e guard preservado sem sessao.
+
+## Ajuste complementar em 2026-08-10 - clique em comentario abre foco no post
+
+- Pedido direto de produto: na pagina de `Minhas respostas/comentarios`, clicar em um comentario deve redirecionar para o post com foco no comentario clicado.
+- Frontend: `ReplyItemCard` passou a expor a area de contexto/texto do comentario como `Link` real para `/comunidades/:slug/publicacao/:id?focusReplyId=:replyId#reply-:replyId`, mantendo o handler do card para toques no restante da superficie.
+- Os controles interativos do card continuam isolados: comunidade, menu, votos, contador de comentarios, salvar, compartilhar e video nao disparam navegacao indevida.
+- O detalhe do post ja consumia `focusReplyId` para buscar a pagina correta de respostas e aplicar foco visual no elemento `reply-:replyId`; por isso nao houve alteracao de backend, endpoint, schema Prisma, migration, package, mock ou dados persistidos.
+- Mobile-first: a superficie inteira do card agora mantem affordance de clique tambem no mobile, preservando a referencia de lista em `_product/proto/Meus Posts - Paciente.jpg`/`_product/proto/Meus Posts - Psicologo.jpg`.
+
+### Criterios de aceite do ajuste
+
+- [x] Clicar no texto/contexto de um comentario em `/app/publicacoes/minhas` abre o post de origem com `focusReplyId` do comentario clicado.
+- [x] Clicar no restante nao interativo do card usa o mesmo destino focado.
+- [x] Acoes do card nao navegam acidentalmente para o post.
+- [x] Nenhum mock, endpoint novo, migration ou package novo foi usado.
+
+### Validacao do ajuste 2026-08-10
+
+- `pnpm --dir frontend exec biome check --write src/app/app/posts/mine/components/reply-item-card.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check:version`
+- `pnpm check` executado antes do amend final; uma nova tentativa posterior foi bloqueada por alteracoes concorrentes nao relacionadas antes de serem isoladas.
+- `git diff --check`
+- Smoke local com Next dev em `/app/publicacoes/minhas`: `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, preservando o guard privado sem sessao.

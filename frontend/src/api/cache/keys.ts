@@ -1,10 +1,17 @@
-﻿const keys = {
+const keys = {
+  legal: {
+    root: () => ["legal"],
+    current: () => ["legal", "current"],
+    document: (id: string) => ["legal", "document", id],
+    status: (userId: string) => ["legal", "status", userId],
+  },
   auth: {
     root: () => ["auth_hydrate"],
     hydrate: (cache?: unknown) => ["auth_hydrate", cache],
   },
   account: {
-    security: () => ["account_security"],
+    securityRoot: () => ["account_security"],
+    security: (userId?: string | null) => ["account_security", userId ?? "anonymous"],
     tips: (userId?: string | null) => ["account_onboarding_tips", userId ?? "anonymous"],
   },
   notification: {
@@ -75,6 +82,13 @@
   psychologistAnalytics: {
     root: () => ["psychologist_analytics"],
     show: (filters?: unknown) => ["psychologist_analytics", filters],
+  },
+  videoAssets: {
+    playback: (assetId?: string | null, viewerId?: string | null) => [
+      "video_asset_playback",
+      assetId ?? "none",
+      viewerId ?? "anonymous",
+    ],
   },
   psychologistReviews: {
     root: () => ["psychologist_reviews"],

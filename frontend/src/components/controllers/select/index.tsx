@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Search } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, type FieldValues, useWatch } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
@@ -59,6 +59,11 @@ export function SelectController<FormType extends FieldValues>({
     hasDynamicOptions && !dependentValue ? (optionsByField?.emptyLabel ?? emptyLabel) : emptyLabel;
   const resolvedDisabled = disabled || (hasDynamicOptions && !dependentValue);
 
+  const closeDropdownAndRestoreFocus = useCallback(() => {
+    selectRootRef.current?.querySelector<HTMLElement>('[role="combobox"]')?.focus();
+    setIsOpen(false);
+  }, []);
+
   const normalize = (value: string) =>
     value
       .normalize("NFD")
@@ -103,10 +108,21 @@ export function SelectController<FormType extends FieldValues>({
 
     document.addEventListener("pointerdown", handleDocumentPointerDown, true);
 
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !(event.target instanceof Node)) return;
+      if (!selectRootRef.current?.contains(event.target)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      closeDropdownAndRestoreFocus();
+    };
+    document.addEventListener("keydown", handleEscape, true);
+
     return () => {
       document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
+      document.removeEventListener("keydown", handleEscape, true);
     };
-  }, [isOpen]);
+  }, [closeDropdownAndRestoreFocus, isOpen]);
 
   return (
     <Controller
@@ -156,12 +172,12 @@ export function SelectController<FormType extends FieldValues>({
                   )}
                   disabled={option.disabled}
                   aria-selected={String(field.value) === optionValue}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
                     field.onChange(option.value);
                     onChangeCallback?.(option.value);
                     setQuery("");
-                    setIsOpen(false);
+                    closeDropdownAndRestoreFocus();
                   }}
                   role="option"
                   type="button"
@@ -183,12 +199,12 @@ export function SelectController<FormType extends FieldValues>({
               (field.value === null || field.value === undefined || field.value === "") &&
                 selectOptionSelectedClassName,
             )}
-            onMouseDown={(event) => {
-              event.preventDefault();
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
               field.onChange(null);
               onChangeCallback?.(null);
               setQuery("");
-              setIsOpen(false);
+              closeDropdownAndRestoreFocus();
             }}
             role="option"
             aria-selected={field.value === null || field.value === undefined || field.value === ""}
@@ -239,6 +255,7 @@ export function SelectController<FormType extends FieldValues>({
                     setIsOpen((current) => !current);
                   }}
                   role="combobox"
+                  ref={field.ref}
                   tabIndex={tabIndex}
                   type="button"
                 >
@@ -399,6 +416,7 @@ export function SelectController<FormType extends FieldValues>({
                   disabled={resolvedDisabled || readOnly || loading}
                   id={inputId}
                   onClick={() => setIsOpen((current) => !current)}
+                  ref={field.ref}
                   role="combobox"
                   tabIndex={tabIndex}
                   type="button"

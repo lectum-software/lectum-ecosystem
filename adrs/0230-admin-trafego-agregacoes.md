@@ -1,4 +1,4 @@
-﻿# ADR-0230: Agregacoes administrativas de trafego sem BI externo
+# ADR-0230: Agregacoes administrativas de trafego sem BI externo
 
 ## Status
 

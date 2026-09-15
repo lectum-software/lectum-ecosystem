@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Suspense } from "react";
@@ -8,6 +8,8 @@ import { AdminViewAsBanner } from "@/components/admin-view-as-banner";
 import { LocationCapture } from "@/components/analytics/location-capture";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
+import { MobileZoomGuard } from "@/components/mobile-zoom-guard";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { absoluteUrl, getSiteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 import { Progress } from "@/providers/progress";
@@ -94,6 +96,15 @@ export const metadata: Metadata = {
   category: "health",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -112,8 +123,10 @@ export default function RootLayout({
           enableSystem={false}
         >
           <Progress />
+          <MobileZoomGuard />
           <Redux>
             <Query>
+              <PullToRefresh />
               <AdminViewAsBanner />
               <LocationCapture />
               <Suspense fallback={null}>
@@ -123,7 +136,12 @@ export default function RootLayout({
                 {children}
                 <Socket />
                 <PwaInstallPrompt />
-                <Toaster richColors position="top-right" />
+                <Toaster
+                  containerAriaLabel="Notificações"
+                  position="top-right"
+                  richColors
+                  toastOptions={{ closeButtonAriaLabel: "Fechar notificação" }}
+                />
               </ProgressiveConversionBoundary>
             </Query>
           </Redux>

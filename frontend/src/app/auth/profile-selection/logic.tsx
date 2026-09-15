@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 import { AuthTemplate } from "@/templates/auth";
+import { buildAuthRouteWithRedirect, resolveAuthReturnTo } from "@/utils/auth-redirect";
 
 const profileOptions = [
   {
@@ -24,16 +25,11 @@ const profileOptions = [
 
 export const ProfileSelectionLogic = () => {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? searchParams.get("callbackUrl");
-  const appendRedirect = (href: string) => {
-    if (!redirectTo) return href;
-
-    const params = new URLSearchParams({
-      redirectTo,
-    });
-
-    return `${href}?${params.toString()}`;
-  };
+  const redirectTo = resolveAuthReturnTo(
+    searchParams.get("redirectTo"),
+    searchParams.get("callbackUrl"),
+  );
+  const appendRedirect = (href: string) => buildAuthRouteWithRedirect(href, redirectTo);
 
   return (
     <AuthTemplate contentClassName="items-stretch justify-start py-0">

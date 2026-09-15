@@ -1,4 +1,4 @@
-﻿import type { user } from "@/interfaces/objects";
+import type { user } from "@/interfaces/objects";
 
 export type PsychologistAnalyticsPeriodKey =
   | "7d"

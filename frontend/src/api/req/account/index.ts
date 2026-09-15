@@ -91,6 +91,7 @@ export const deleteAccount = async (body: AccountDeletePayload) => {
   return handleReq<boolean>({
     ...handle,
     hideError: true,
+    signOutOnUnauthorized: false,
   });
 };
 

@@ -1,4 +1,4 @@
-﻿# ADR-0393 - Eixos independentes na matriz de cruzamento de dados Admin
+# ADR-0393 - Eixos independentes na matriz de cruzamento de dados Admin
 
 ## Status
 

@@ -1,4 +1,4 @@
-﻿# ADR-0391 - Matriz expansivel dentro do funil comportamental por conversao Admin
+# ADR-0391 - Matriz expansivel dentro do funil comportamental por conversao Admin
 
 ## Status
 

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { PsychologistProfileLogic } from "@/app/app/psychologist/[id]/logic";
 import { SITE_NAME } from "@/lib/seo";
 import { resolvePsychologistSeoMetadata } from "@/lib/seo-metadata";

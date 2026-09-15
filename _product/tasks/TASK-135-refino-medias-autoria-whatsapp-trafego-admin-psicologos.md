@@ -1,4 +1,4 @@
-﻿# TASK-135 - Refino de medias e autoria nos cliques WhatsApp do trafego Admin
+# TASK-135 - Refino de medias e autoria nos cliques WhatsApp do trafego Admin
 
 ## Status
 

@@ -1,12 +1,15 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: o seed genérico opera sobre DMMF e delegates Prisma determinados em tempo de execução.
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import { getDMMF } from "@prisma/internals";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 import { prisma } from "../../external/prisma/client";
 import { recreate } from "./reset";
+import { assertSafeSeedTarget } from "./safety";
 
 /**
  * Lê o schema e retorna o DMMF
@@ -179,12 +182,13 @@ async function tryCreateOneRecord(modelDataMap, modelName) {
   try {
     const created = await prisma[modelName].create({ data });
     modelDataMap[modelName].createdRecords.push(created);
-    console.log(
-      `  ✅ Registro criado em ${modelName} (ID: ${created.id || Object.values(created)[0]})`,
-    );
+    console.log(`  ✅ Registro criado em ${modelName}.`);
     return true;
   } catch (err) {
-    console.warn(`  🛠️ Falha ao criar ${modelName}. Aguardar próxima passada...`, err.message);
+    console.warn(
+      `  🛠️ Falha ao criar ${modelName}. Aguardar próxima passada...`,
+      toSafeErrorLog(err, "SeedCreateError"),
+    );
     return false;
   }
 }
@@ -230,11 +234,11 @@ async function updateSelfRelationForAllRecords(modelDataMap, modelName) {
         where: { id: record.id },
         data: updateData,
       });
-      console.log(`  ✅ Self-relation atualizada para ${modelName} (ID: ${record.id})`);
+      console.log(`  ✅ Self-relation atualizada para ${modelName}.`);
     } catch (err) {
       console.error(
-        `  🛠️ Falha ao atualizar self-relation para ${modelName} (ID: ${record.id})`,
-        err.message,
+        `  🛠️ Falha ao atualizar self-relation para ${modelName}.`,
+        toSafeErrorLog(err, "SeedRelationError"),
       );
     }
   }
@@ -285,6 +289,8 @@ async function multiPassCreate(dmmf, maxPasses = 5) {
  * Função principal de geração da seed
  */
 async function generateSeedData(seedPath) {
+  assertSafeSeedTarget();
+
   try {
     console.log("Lendo schema.prisma...");
     const dmmfData = await loadDMMF(seedPath);
@@ -304,7 +310,7 @@ async function generateSeedData(seedPath) {
 
     console.log("\n✅ Seed finalizado com sucesso!");
   } catch (error) {
-    console.error("❌ Erro durante a geração de seed:", error);
+    console.error("Erro durante a geração de seed.", toSafeErrorLog(error, "SeedGenerationError"));
     throw error;
   } finally {
     await prisma.$disconnect();

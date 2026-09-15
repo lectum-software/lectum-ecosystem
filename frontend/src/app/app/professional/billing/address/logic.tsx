@@ -1,19 +1,13 @@
 "use client";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Loader2,
-  MapPin,
-  RefreshCw,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, Loader2, MapPin, RefreshCw, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { ProfessionalSubscription } from "@/api/generator/types/billing";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -26,30 +20,60 @@ import {
   isAdministrativeCourtesySubscription,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+import { CITY_OPTIONS_BY_STATE } from "../../profile/setup/brazil-cities";
 import {
   type BillingAddressForm,
   toBillingAddressPayload,
   useBillingAddressForm,
 } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
+const resolveApiError = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível salvar o endereço agora.");
+
+const VIACEP_ENDPOINT = "https://viacep.com.br/ws";
+const VIACEP_ZIP_PATTERN = /^\d{8}$/;
+const AUTOFILLED_ADDRESS_FIELDS = {
+  shouldDirty: true,
+  shouldValidate: true,
+} as const;
+
+type ViaCepAddressResponse = {
+  erro?: boolean;
+  logradouro?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  localidade?: string | null;
+  uf?: string | null;
 };
 
-type ApiError = Error & {
-  data?: ApiErrorData;
+const getViaCepValue = (value?: string | null) => {
+  const normalized = value?.trim();
+  return normalized || null;
 };
 
-const resolveApiError = (error: unknown) => {
-  const apiError = error as ApiError;
+const getViaCepState = (value?: string | null) => {
+  const normalized = getViaCepValue(value)?.toUpperCase();
+  return normalized && /^[A-Z]{2}$/.test(normalized) ? normalized : null;
+};
 
-  return (
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "") ||
-    "Não foi possível salvar o endereço agora."
+const normalizeLocationOption = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
+
+const getCityValueForState = (state: string | null, city?: string | null) => {
+  const normalizedCity = getViaCepValue(city);
+  if (!state || !normalizedCity) return null;
+
+  const cityOption = (CITY_OPTIONS_BY_STATE[state] ?? []).find(
+    (option) =>
+      normalizeLocationOption(String(option.value)) === normalizeLocationOption(normalizedCity),
   );
+
+  return cityOption ? String(cityOption.value) : null;
 };
 
 const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
@@ -65,6 +89,11 @@ const isActiveProfessional = (subscription?: ProfessionalSubscription | null) =>
   subscription.plan?.slug === "profissional" &&
   isCurrentPeriodValid(subscription.current_period_end);
 
+const shouldLeavePaidAddressStep = (subscription?: ProfessionalSubscription | null) =>
+  !subscription ||
+  subscription.status === "cancelada" ||
+  (subscription.status === "ativa" && subscription.plan?.slug === "gratuito");
+
 const AddressHeader = () => (
   <header className="text-center">
     <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary">
@@ -77,8 +106,7 @@ const AddressHeader = () => (
       Complete os dados da sua assinatura
     </h1>
     <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-muted">
-      Este endereço fica vinculado ao seu cadastro de cobrança e só é salvo depois da assinatura
-      profissional estar ativa na Lectum.
+      Informe seu endereço comercial para faturamento.
     </p>
   </header>
 );
@@ -87,6 +115,10 @@ export const ProfessionalBillingAddressLogic = () => {
   const router = useRouter();
   const user = useAppSelector((state) => state.user);
   const billingAddressForm = useBillingAddressForm();
+  const { control, getValues, setValue } = billingAddressForm.hook;
+  const zip = useWatch({ control, name: "zip" });
+  const state = useWatch({ control, name: "state" });
+  const previousStateRef = useRef<string | undefined>(undefined);
   const AddressForm = billingAddressForm.Form;
 
   const billing = usePsychologistBilling({
@@ -94,7 +126,10 @@ export const ProfessionalBillingAddressLogic = () => {
       address: {
         onSuccess: (data) => {
           toast.success("Endereço de faturamento salvo");
-          router.push(data.next_path || PSYCHOLOGIST_ONBOARDING_PATHS.phone);
+          router.push(
+            normalizeSafeInternalRedirect(data.next_path, PSYCHOLOGIST_ONBOARDING_PATHS.phone) ||
+              PSYCHOLOGIST_ONBOARDING_PATHS.phone,
+          );
         },
         onError: (error) => toast.error(resolveApiError(error)),
       },
@@ -104,9 +139,24 @@ export const ProfessionalBillingAddressLogic = () => {
   const current = billing.current.data?.current ?? null;
   const activeProfessional = isActiveProfessional(current);
   const activeCourtesy = isAdministrativeCourtesySubscription(current);
+  const currentIsError = billing.current.isError;
+  const userWithCurrentSubscription =
+    user && current?.status === "ativa" && user.psychologist_profile
+      ? {
+          ...user,
+          psychologist_profile: {
+            ...user.psychologist_profile,
+            subscriptions: [current],
+          },
+        }
+      : user;
   const courtesyRedirectPath = user
     ? (getPsychologistRegistrationRequirementPath(user) ?? "/app/profissional/assinatura")
     : null;
+  const freeFallbackRedirectPath = userWithCurrentSubscription
+    ? (getPsychologistRegistrationRequirementPath(userWithCurrentSubscription) ??
+      "/app/profissional/assinatura")
+    : PSYCHOLOGIST_ONBOARDING_PATHS.plans;
   const isLoading = billing.current.isLoading;
 
   useEffect(() => {
@@ -114,6 +164,84 @@ export const ProfessionalBillingAddressLogic = () => {
 
     router.replace(courtesyRedirectPath);
   }, [activeCourtesy, courtesyRedirectPath, router]);
+
+  useEffect(() => {
+    if (isLoading || currentIsError || activeProfessional) return;
+    if (!shouldLeavePaidAddressStep(current)) return;
+
+    router.replace(freeFallbackRedirectPath);
+  }, [activeProfessional, current, currentIsError, freeFallbackRedirectPath, isLoading, router]);
+
+  useEffect(() => {
+    const currentState = typeof state === "string" ? state : "";
+    const previousState = previousStateRef.current;
+    previousStateRef.current = currentState;
+
+    if (previousState === undefined || previousState === currentState) {
+      return;
+    }
+
+    const currentCity = getValues("city");
+    if (!currentCity) return;
+
+    const cityBelongsToState = (CITY_OPTIONS_BY_STATE[currentState] ?? []).some(
+      (option) => String(option.value) === currentCity,
+    );
+
+    if (!cityBelongsToState) {
+      setValue("city", "", AUTOFILLED_ADDRESS_FIELDS);
+    }
+  }, [getValues, setValue, state]);
+
+  useEffect(() => {
+    const normalizedZip = typeof zip === "string" ? zip.replace(/\D/g, "") : "";
+    if (!VIACEP_ZIP_PATTERN.test(normalizedZip)) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const applyAutofilledValue = (
+      name: "street" | "complement" | "district" | "city" | "state",
+      value: string | null,
+    ) => {
+      if (!value) return;
+
+      setValue(name, value, AUTOFILLED_ADDRESS_FIELDS);
+    };
+
+    const autofillAddress = async () => {
+      try {
+        const response = await fetch(`${VIACEP_ENDPOINT}/${normalizedZip}/json/`, {
+          cache: "no-store",
+          credentials: "omit",
+          referrerPolicy: "no-referrer",
+          signal: controller.signal,
+        });
+
+        if (!response.ok) return;
+
+        const data = (await response.json()) as ViaCepAddressResponse;
+        if (controller.signal.aborted || data.erro) return;
+        if (getValues("zip") !== normalizedZip) return;
+
+        const nextState = getViaCepState(data.uf);
+        applyAutofilledValue("street", getViaCepValue(data.logradouro));
+        applyAutofilledValue("complement", getViaCepValue(data.complemento));
+        applyAutofilledValue("district", getViaCepValue(data.bairro));
+        applyAutofilledValue("state", nextState);
+        applyAutofilledValue("city", getCityValueForState(nextState, data.localidade));
+      } catch {
+        // A consulta por CEP é apenas conveniência: em falha, os campos permanecem editáveis.
+      }
+    };
+
+    void autofillAddress();
+
+    return () => {
+      controller.abort();
+    };
+  }, [getValues, setValue, zip]);
 
   const submitAddress = billingAddressForm.hook.handleSubmit((values: BillingAddressForm) => {
     billing.address.mutate(toBillingAddressPayload(values));
@@ -125,21 +253,13 @@ export const ProfessionalBillingAddressLogic = () => {
       await billing.current.refetch();
       toast.success("Status da assinatura atualizado");
     } catch {
-      // handleReq já exibe o erro real da API.
+      // handleReq já exibe o erro público sanitizado.
     }
   };
 
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
-        <Link
-          className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground"
-          href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Voltar para pagamento
-        </Link>
-
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)] md:px-8">
           <AddressHeader />
 
@@ -149,7 +269,7 @@ export const ProfessionalBillingAddressLogic = () => {
             </div>
           ) : null}
 
-          {billing.current.isError ? (
+          {currentIsError ? (
             <InlineAlert
               className="mt-8"
               title="Não foi possível verificar a assinatura"
@@ -159,7 +279,10 @@ export const ProfessionalBillingAddressLogic = () => {
             </InlineAlert>
           ) : null}
 
-          {!isLoading && !billing.current.isError && !activeProfessional ? (
+          {!isLoading &&
+          !currentIsError &&
+          !activeProfessional &&
+          !shouldLeavePaidAddressStep(current) ? (
             <div className="mt-8">
               <EmptyState
                 description="A assinatura profissional ainda não está ativa. Conclua o checkout e aguarde a confirmação do pagamento antes de salvar o endereço."
@@ -187,42 +310,30 @@ export const ProfessionalBillingAddressLogic = () => {
             </div>
           ) : null}
 
-          {!isLoading && !billing.current.isError && activeProfessional ? (
+          {!isLoading && !currentIsError && activeProfessional ? (
             activeCourtesy ? (
               <div className="mt-8">
                 <LoadingState label="Redirecionando para sua próxima etapa" />
               </div>
             ) : (
-              <>
-                <div className="mt-6 flex justify-center">
-                  <span
-                    className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm font-extrabold text-success"
-                    role="status"
-                  >
-                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                    Pagamento bem-sucedido
-                  </span>
-                </div>
-
-                <AddressForm
-                  className="mt-6 grid gap-1 md:grid-cols-2 md:gap-x-4"
-                  {...billingAddressForm.formProps}
-                  onSubmit={submitAddress}
+              <AddressForm
+                className="mt-6 grid gap-1 md:grid-cols-2 md:gap-x-4"
+                {...billingAddressForm.formProps}
+                onSubmit={submitAddress}
+              >
+                <Button
+                  className="mt-3 h-14 w-full rounded-full text-base md:col-span-2"
+                  disabled={billing.address.isPending}
+                  type="submit"
                 >
-                  <Button
-                    className="mt-3 h-14 w-full rounded-full text-base md:col-span-2"
-                    disabled={billing.address.isPending}
-                    type="submit"
-                  >
-                    {billing.address.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    )}
-                    Salvar e continuar
-                  </Button>
-                </AddressForm>
-              </>
+                  Salvar e continuar
+                  {billing.address.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </Button>
+              </AddressForm>
             )
           ) : null}
         </div>

@@ -1,4 +1,4 @@
-﻿# TASK-64: Tela administrativa de notificações
+# TASK-64: Tela administrativa de notificações
 
 ## Metadata
 
@@ -298,22 +298,22 @@ UI:
 
 ## Ajuste complementar 2026-07-21 - CTA e topo simplificado
 
-- Pedido do usu?rio: remover filtros de **Per?odo**, **De** e **At?** do header, mover **Nova notifica??o** para **Campanhas manuais**, remover a faixa operacional, simplificar o subt?tulo de contagem, remover a linha acima dos filtros e ajustar o grid para n?o cortar o ?ltimo campo de data.
-- O header fica apenas com contexto, t?tulo e subt?tulo; m?tricas seguem consultando **Todo o per?odo** por padr?o e os filtros de per?odo/data ficam somente nos blocos das tabelas.
-- O CTA **Nova notifica??o** passa a morar no cabe?alho do card **Campanhas manuais**.
-- O aviso operacional ?Esta tela cria campanhas manuais...? foi removido; a contagem de campanhas fica como `0 campanha(s) encontrada(s).`.
-- O cabe?alho do card n?o renderiza mais borda divis?ria acima dos filtros; os filtros ganharam `min-w-0`, padding `md:p-5` e grid em `xl`/`2xl` para preservar margem padr?o e evitar corte no campo **Data: At?**.
-- N?o houve mudan?a de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais dispon?veis ou formul?rios RHF/Zod.
-- Builder/Quick Copy n?o esteve dispon?vel como ferramenta callable neste ambiente; a refer?ncia visual audit?vel permaneceu `_product/proto/admin/Notifica??es.png` e a captura enviada pelo usu?rio.
+- Pedido do usuário: remover filtros de **Período**, **De** e **Até** do header, mover **Nova notificação** para **Campanhas manuais**, remover a faixa operacional, simplificar o subtítulo de contagem, remover a linha acima dos filtros e ajustar o grid para não cortar o Último campo de data.
+- O header fica apenas com contexto, título e subtítulo; métricas seguem consultando **Todo o período** por padrão e os filtros de período/data ficam somente nos blocos das tabelas.
+- O CTA **Nova notificação** passa a morar no cabeçalho do card **Campanhas manuais**.
+- O aviso operacional “Esta tela cria campanhas manuais...” foi removido; a contagem de campanhas fica como `0 campanha(s) encontrada(s).`.
+- O cabeçalho do card não renderiza mais borda divisória acima dos filtros; os filtros ganharam `min-w-0`, padding `md:p-5` e grid em `xl`/`2xl` para preservar margem padrão e evitar corte no campo **Data: Até**.
+- Não houve mudança de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais disponíveis ou formulários RHF/Zod.
+- Builder/Quick Copy não esteve disponível como ferramenta callable neste ambiente; a referência visual auditável permaneceu `_product/proto/admin/Notificações.png` e a captura enviada pelo usuário.
 
-### Valida??o deste ajuste
+### Validação deste ajuste
 
 - `pnpm --dir admin exec biome check "src/app/(admin)/notificacoes/client.tsx"`
 - `pnpm --dir admin exec eslint "src/app/(admin)/notificacoes/client.tsx"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
-- Browser autenticado completo n?o foi repetido nesta execu??o porque n?o h? sess?o Admin interativa acess?vel ao ambiente; a valida??o visual usou a captura enviada pelo usu?rio e o PNG local de refer?ncia.
+- Browser autenticado completo não foi repetido nesta execução porque não há sessão Admin interativa acessível ao ambiente; a validação visual usou a captura enviada pelo usuário e o PNG local de referência.
 
 ## Ajuste complementar 2026-07-21 - Copy de notificações e setas dos filtros
 
@@ -409,3 +409,25 @@ UI:
 - `pnpm --dir admin build`
 
 - Servidor local `localhost:3002` reiniciado após build; chunk client de Notificações contém **Engajamento** e não contém **Alcance/Abertura/Cliques**.
+
+## Ajuste complementar 2026-08-24 - Título real nos logs de notificações
+
+- Pedido do usuário: nas tabelas de notificação, exibir o título da notificação enviada em vez de **Notificação automática** ou rótulo equivalente por origem.
+- A tabela **Notificações automáticas** passou a renderizar `notification_title` retornado pela API Admin, com fallback honesto **Título não disponível** apenas para registros legados sem dados suficientes.
+- O backend agora resolve `notification_title` a partir de metadados persistidos, `notification.message_props.title`, templates reais de `main/notification/constants` e `trigger_key` quando não há `notification_id`.
+- Novas entregas automáticas e manuais passam a gravar `metadata.notification_title`, preservando o título usado por push/e-mail/canais sem notificação in-app vinculada.
+- A mudança é aditiva e tolera rollout com Admin e backend em versões diferentes: o campo novo é opcional no cliente e não exige migração, package ou env nova.
+- Builder/Quick Copy não esteve disponível como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Notificações.png` e a captura enviada pelo usuário.
+- ADR: `adrs/0468-titulo-real-logs-notificacoes-admin.md`.
+
+### Validação deste ajuste
+
+- `pnpm --dir backend exec biome check --write "src/main/notification/index.ts" "src/modules/api/admin/private/notifications/use-cases/services/delivery.ts" "src/modules/api/admin/private/notifications/use-cases/services/metrics.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/notifications/index.ts" "src/app/(admin)/notificacoes/components/logs.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em Chrome abriu `http://localhost:3002/notificacoes` e confirmou a rota protegida até o login administrativo; a inspeção autenticada completa dos dados reais depende de sessão Admin interativa.
+- Build do Admin não contém mais o literal **Notificação automática** no chunk de `/notificacoes`.

@@ -1,4 +1,4 @@
-﻿# ADR-0317: Filtro Cortesia no dashboard Admin de psicologos
+# ADR-0317: Filtro Cortesia no dashboard Admin de psicologos
 
 ## Status
 

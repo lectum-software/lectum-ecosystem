@@ -26,18 +26,22 @@ Adotar as decisões registradas em `_product/decisions.md`:
 - Push: web-push real com VAPID e `notification_subscription`.
 - LGPD/termos: telas padrão e aceite explícito no MVP; revisão posterior.
 - Moderação: reativa manual no MVP.
-- Observabilidade: Sentry decidido, implementação em task dedicada.
+- Observabilidade: Sentry implementado como complemento da TASK-34, conforme ADR-0465.
 - Pagamento: Mercado Pago confirmado; plano Profissional R$ 29,90/mês, sem trial; preço atualizado por decisão de produto em 2026-08-03.
 
 ## Consequências
 
 - Tasks futuras não podem usar mocks para simular integração externa.
-- Se credenciais de R2, Resend, Twilio, VAPID, Mercado Pago ou Sentry estiverem ausentes, a task deve pedir ao usuário e registrar bloqueio operacional.
+- Se credenciais de R2, Resend, Twilio, VAPID ou Mercado Pago estiverem ausentes, a task deve pedir
+  ao usuário e registrar bloqueio operacional. No Sentry, a ausência bloqueia somente a ativação e
+  a validação no provider; código, build e boot permanecem seguros em modo no-op, com a pendência
+  operacional registrada.
 - Upload de documentos CRP precisa respeitar privacidade: persistir chave de arquivo e não URL pública.
 - `psychologist_profile.cfp_verified_at` so pode ser preenchido por consulta real InfoSimples ou provider futuro aprovado por ADR.
 - `psychologist_profile.whatsapp_verified_at` só pode ser preenchido depois de validação real por código.
 - Push pode ser implementado como canal real; se VAPID/browser falhar, a UI deve mostrar estado honesto.
-- Sentry está decidido, mas não deve ser instalado fora da task dedicada.
+- Sentry foi implementado como complemento operacional da TASK-34, com fronteiras registradas no
+  ADR-0465.
 
 ## Validação
 
@@ -51,5 +55,5 @@ Adotar as decisões registradas em `_product/decisions.md`:
 - Buckets e credenciais Cloudflare R2 definitivos.
 - Test credentials/números Twilio para desenvolvimento.
 - Chaves VAPID reais por ambiente.
-- Implementação dedicada de Sentry.
+- Provisionamento das envs Sentry em homologação e produção, conforme ADR-0465.
 - Bucket/politica privada para documentos CRP (`CLOUDFLARE_R2_PRIVATE_BUCKET_NAME` ou equivalente); a fonte/API CFP foi decidida na ADR-0026.

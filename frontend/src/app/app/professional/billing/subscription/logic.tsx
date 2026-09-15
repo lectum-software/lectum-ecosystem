@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { ProfessionalSubscription } from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -39,9 +40,8 @@ const formatDate = (value?: string | null) => {
   return dateFormatter.format(date);
 };
 
-const getErrorMessage = (error: unknown) => {
-  return error instanceof Error ? error.message : "Não foi possível carregar sua assinatura agora.";
-};
+const getErrorMessage = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível carregar sua assinatura agora.");
 
 type BenefitGroup = {
   icon: LucideIcon;
@@ -61,14 +61,18 @@ const professionalBenefitGroups: BenefitGroup[] = [
     items: [
       "Prioridade na busca de pacientes",
       "Respostas destacadas nas comunidades",
-      "Respostas nas comunidades com mídia",
+      "Respostas com mídia nas comunidades",
       "Elegível ao Top Mentor",
     ],
   },
   {
     icon: BarChart3,
     title: "Mais recursos para seu perfil",
-    items: ["Até 10 especialidades", "Serviços profissionais ilimitados", "Estatísticas de perfil"],
+    items: [
+      "Até 10 especialidades",
+      "Serviços profissionais ilimitados",
+      "Analytics do seu perfil",
+    ],
   },
 ];
 
@@ -124,8 +128,10 @@ export const ProfessionalBillingSubscriptionView = ({
     subscription?.source === "admin_grant" &&
     subscription.status === "ativa" &&
     subscription.plan?.slug === "profissional";
-  const isFreePlan = subscription?.plan?.slug === "gratuito";
-  const planName = subscription?.plan?.name || "Plano não encontrado";
+  const isFreePlan = !subscription || subscription.plan?.slug === "gratuito";
+  const planName = isFreePlan
+    ? "Plano Gratuito"
+    : subscription?.plan?.name || "Plano não encontrado";
   const expirationLabel = formatDate(subscription?.current_period_end);
   const shouldShowPlanDetails = Boolean(subscription) && !isFreePlan;
   const shouldShowExpiration =
@@ -275,7 +281,7 @@ export const ProfessionalBillingSubscriptionView = ({
       </section>
 
       {shouldShowUpgradeCta ? (
-        <div className="fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-6">
+        <div className="fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[var(--lectum-bottom-fixed-padding)] md:px-6">
           <div className="mx-auto w-full max-w-[430px] rounded-[var(--lectum-card-radius)] border border-border/80 bg-surface/95 p-2 shadow-[var(--lectum-shadow)] backdrop-blur supports-[backdrop-filter]:bg-surface/90 md:max-w-3xl">
             <Button asChild className="h-12 w-full rounded-full text-base">
               <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}>

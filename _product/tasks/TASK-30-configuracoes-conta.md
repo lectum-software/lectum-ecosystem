@@ -180,3 +180,313 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem alteração em formulários, validações de senha/e-mail, endpoints de conta, Google OAuth, packages ou schema Prisma.
 - ADR criado: `adrs/0119-header-secundario-premium-compartilhado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em mobile 390x844 e desktop 1024x768 sem overflow horizontal.
+
+## Ajuste complementar em 2026-08-15 - exclusão de conta Google sem senha local
+
+- Pedido direto de produto: a captura do usuário mostrou uma conta cadastrada com Google recebendo
+  campo obrigatório de **Senha atual** no modal de exclusão.
+- Referência visual: screenshot anexo do usuário e `_product/proto/Configurações de Conta - Login Google.jpg`.
+  Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- Decisão: em exclusão própria, `user.provider="google"` passa a exigir reautenticação Google,
+  independentemente de existir senha local legada. Senha atual fica restrita a contas não Google com
+  senha cadastrada.
+- Backend: `POST /api/private/account/delete/google-intent` passa a aceitar contas Google com senha
+  legada; `POST /api/private/account/delete` valida reautenticação Google recente antes de excluir
+  qualquer conta Google.
+- Frontend: o modal não renderiza **Senha atual** para contas Google e aguarda carregar o contrato
+  real de segurança antes de exibir o formulário destrutivo, evitando flicker de senha durante o
+  loading.
+- ADR criado: `adrs/0461-exclusao-conta-google-sem-senha-local.md`; ADR-0113 atualizado para deixar
+  claro que a confirmação por Google prevalece sobre senhas locais legadas.
+- Sem migration, sem package novo, sem variável de ambiente nova e sem mocks.
+- Validações executadas durante o ajuste:
+  - `pnpm --dir backend exec tsc --noEmit --pretty false`;
+  - `pnpm --dir frontend exec tsc --noEmit --pretty false`;
+  - `pnpm --dir backend test`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend build`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir admin build`;
+  - `pnpm check:version`;
+  - `pnpm check`.
+- Validação local em browser autenticado ficou limitada: a tentativa de subir `next start` local em
+  processo auxiliar foi bloqueada pela política da ferramenta. A validação visual/operacional final
+  fica registrada pelo build de produção e pelo smoke publicado em homologação após o push.
+
+## Ajuste complementar em 2026-08-15 - confirmação Google de exclusão com device no login
+
+- Pedido direto de produto: ao tocar em **Confirmar com Google** no modal de exclusão de uma conta
+  Google, o navegador abriu a API de homologação com 404 genérico.
+- Diagnóstico: o endpoint público de OAuth exige o identificador do dispositivo no caminho
+  `/api/public/google/login/{deviceId}`. A navegação de exclusão passa a recompor esse caminho a
+  partir da intenção assinada retornada pelo backend, usando o mesmo fingerprint/dispositivo do
+  cliente, em vez de apenas confiar na URL absoluta recebida.
+- Backend: `GET /api/public/google/login` sem device agora responde `400 device_id_not_found`,
+  mantendo falha fechada e sem expor detalhes técnicos quando houver cliente antigo ou URL
+  incompleta.
+- Frontend: a URL da intenção de exclusão é validada contra a origem pública da API, os parâmetros
+  assinados (`intent`, `delete_token`, `callbackUrl`) são preservados e o path final sempre inclui o
+  device id antes de navegar para o OAuth Google.
+- ADR atualizado: `adrs/0461-exclusao-conta-google-sem-senha-local.md`.
+- Sem migration, sem package novo, sem variável de ambiente nova e sem mocks.
+- Validações executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir backend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - `git diff --check`;
+  - smoke de homologação registrado no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-15 - desbloqueio do modal após intenção Google
+
+- Pedido direto de produto: após a correção anterior, o modal passou a exibir **Exclusão bloqueada**
+  com a mensagem “Não foi possível iniciar a confirmação com o Google.”.
+- Diagnóstico: a validação local da URL da intenção ficou estrita demais e podia bloquear a
+  navegação mesmo quando o backend já entregava uma URL confiável com `/api/public/google/login/{deviceId}`.
+- Decisão: se a intenção assinada já vier com uma URL confiável de login Google contendo o device no
+  caminho, o frontend navega diretamente. A recomposição local é usada somente quando a URL confiável
+  ainda não tem o device, preferindo `device_id` retornado pelo backend e usando fingerprint local
+  apenas como fallback de compatibilidade.
+- Backend: a resposta de `POST /api/private/account/delete/google-intent` passa a incluir
+  `device_id` de forma aditiva, sem quebrar clientes antigos.
+- Frontend: `buildTrustedGoogleLoginUrlFromIntent` passou a aceitar URL confiável já pronta e o modal
+  evita uma segunda resolução assíncrona de fingerprint quando ela não é necessária.
+- ADR atualizado: `adrs/0461-exclusao-conta-google-sem-senha-local.md`.
+- Sem migration, sem package novo, sem variável de ambiente nova e sem mocks.
+- Validações executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - smoke de homologação registrado no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-15 - conclusão da exclusão após reautenticação Google
+
+- Pedido direto de produto: após confirmar com Google, clicar em **Excluir conta** retornava para a
+  página inicial e a conta continuava sem ser excluída.
+- Diagnóstico: o callback Google de exclusão voltava direto para a tela final, sem passar pelo fluxo
+  `/auth/redirect` que consome o cookie transitório e recria a sessão `HttpOnly` do frontend. Em
+  paralelo, uma eventual resposta `401` no `POST /api/private/account/delete` disparava signout
+  automático, ocultando o erro real no modal.
+- Backend: o callback `intent=delete_account` agora grava o cookie transitório de troca e redireciona
+  para `/auth/redirect?intent=delete_account&callbackUrl=...`, preservando o retorno interno
+  `deleteReauth=ok`.
+- Frontend: `/auth/redirect` passou a ignorar apenas os bloqueios de onboarding/plano quando a
+  intenção é `delete_account`, permitindo voltar ao modal mesmo se o psicólogo ainda tiver etapas
+  obrigatórias pendentes.
+- Frontend: a chamada final de exclusão não faz signout automático em `401`; falhas permanecem no
+  modal com mensagem segura. Após sucesso real, a sessão local é limpa diretamente e o usuário é
+  levado a `/auth/login`, sem uma segunda chamada de logout contra a conta já anonimizada.
+- Sem migration, sem package novo, sem variável de ambiente nova e sem mocks.
+- Validação local em browser não executou exclusão real de conta para preservar dados publicados; a
+  validação operacional é limitada a checks, builds e smoke de rotas públicas/saúde após deploy.
+- Validações executadas durante o ajuste:
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - `pnpm check:version`;
+  - `git diff --check`;
+  - smoke de homologação registrado no fechamento do ajuste.
+
+
+## Ajuste complementar em 2026-08-15 - retorno estavel da exclusao Google
+
+- Pedido direto de produto: o fluxo ainda apresentava problema em homologacao e havia duvida se a versao local que funcionava estava salva.
+- Diagnostico: o historico Git preserva a versao anterior (`0.1.130` / `4d2c3391`) como referencia, mas reverter diretamente a branch publicada poderia desfazer correcoes ja implantadas. A causa provavel do comportamento em homologacao e que o retorno pos-Google usava telas de perfil que podem ser interceptadas pelo bloqueio de onboarding/assinatura de psicologos pendentes.
+- Decisao: manter a correcao incremental e direcionar toda reautenticacao Google de exclusao para `/app/configuracoes/conta?deleteReauth=ok`, rota ja permitida durante bloqueios obrigatorios.
+- Frontend: a tela de **Email e senha** passa a renderizar a secao de exclusao de conta tambem para contas Google-only; ao retornar do Google, a modal reabre nessa rota estavel.
+- Backend: a intencao e o callback de exclusao Google ignoram callbacks antigos para telas de perfil e normalizam o retorno para configuracoes da conta, preservando `deleteReauth=ok`.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir backend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - `pnpm check:version`;
+  - `git diff --check`;
+  - smoke de homologacao registrado no fechamento do ajuste.
+
+
+## Ajuste complementar em 2026-08-16 - reautenticacao Google fail-closed para exclusao
+
+- Evidencia de produto: video enviado em 2026-08-16 mostra que, apos escolher o perfil no Google, o usuario era levado para /psicologos e a conta nao era excluida.
+- Diagnostico: esse destino e o fallback de login normal; portanto, a intencao de exclusao nao podia depender apenas do retorno padrao do OAuth. Se a intencao curta se perder no retorno mobile, o fluxo deve falhar fechado em vez de virar login normal.
+- Decisao: o inicio do OAuth de exclusao passa a gravar um cookie HttpOnly assinado e curto com device, callback e delete_token. O callback e a estrategia Google aceitam esse cookie como fallback quando o state/nonce nao estiver disponivel, validando depois o delete_token e o e-mail Google antes de marcar a reautenticacao recente.
+- Frontend: a URL de intencao de exclusao Google agora exige intent=delete_account e delete_token antes de navegar. URL incompleta nao abre Google como login normal.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir backend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - `pnpm check:version`;
+  - `git diff --check`;
+  - smoke de homologacao registrado no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-16 - origem publica da API no cliente
+
+- Evidencia de produto: a captura enviada em 2026-08-16 mostra o erro local **Exclusao bloqueada** com a mensagem "Nao foi possivel iniciar a confirmacao com o Google." antes de abrir o OAuth.
+- Diagnostico: a validacao do frontend dependia exclusivamente de `NEXT_PUBLIC_API_URL` para aceitar a URL absoluta retornada pelo backend. Se a env publica estiver ausente, vazia ou normalizada de forma diferente no build, a URL `https://homolog-api.lectum.com.br/...` e recusada antes da navegacao, mesmo contendo `intent=delete_account` e `delete_token`.
+- Decisao: manter a navegacao fail-closed, mas aceitar URLs HTTPS absolutas dos hosts publicos da API Lectum (`api.lectum.com.br` e `*-api.lectum.com.br`) somente para o endpoint `/api/public/google/login` e somente quando a intencao de exclusao assinada estiver presente.
+- Frontend: `buildTrustedGoogleLoginUrlFromIntent` passa a usar essa origem publica confiavel como fallback quando `normalizeTrustedApiUrl` nao puder validar a env local, preservando a recomposicao do path com device quando necessario.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir frontend build`;
+  - demais checks e smoke de homologacao registrados no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-16 - recomposicao por parametros assinados
+
+- Evidencia de produto: mesmo apos publicar a origem publica da API, o modal continuou exibindo "Nao foi possivel iniciar a confirmacao com o Google".
+- Diagnostico: a mensagem ainda so ocorre antes de abrir o OAuth, quando o cliente nao consegue montar uma URL confiavel a partir da resposta autenticada da API. Para cobrir diferencas de origem, URL legada ou resposta sem origem validavel no bundle carregado, o frontend deve depender menos da URL inteira e mais da intencao assinada pelo backend.
+- Decisao: quando a resposta autenticada contiver `intent=delete_account` e `delete_token`, o cliente pode extrair apenas os parametros assinados e recompor `/api/public/google/login/{device}` na origem confiavel configurada da API. A URL original nunca e usada para navegar quando a origem nao e confiavel.
+- Frontend: `buildTrustedGoogleLoginUrlFromIntent` preserva o comportamento fail-closed sem token, mas passa a tolerar origem desconhecida ou URL legada como fonte de parametros, sempre redirecionando para a API Lectum configurada.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir frontend check`;
+  - demais checks, build, versionamento e smoke de homologacao registrados no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-16 - preservar delete_token na resposta de intencao
+
+- Evidencia de produto: mesmo apos recompor a URL no cliente, o modal continuou exibindo "Nao foi possivel iniciar a confirmacao com o Google".
+- Diagnostico real: a API privada criava corretamente a URL de OAuth com `delete_token`, mas o helper global de resposta redigia strings com padrao de JWT por seguranca. Assim, o frontend recebia `url: "[REDACTED]"`, nao encontrava `intent=delete_account`/`delete_token` e bloqueava antes de abrir o Google.
+- Decisao: a resposta especifica de `POST /api/private/account/delete/google-intent` passa a marcar `allowAuthTokens: true`, limitada ao payload `{ device_id, url }` e ao token curto/escopado de reautenticacao Google. A sanitizacao global permanece fail-closed para as demais respostas.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir backend check`;
+  - demais checks, build, versionamento e smoke de homologacao registrados no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-16 - bloquear exclusao com assinatura ativa antes do Google
+
+- Pedido direto de produto: verificar se o erro estava associado a assinatura de plano e, quando a conta tiver assinatura ativa, informar que o psicologo deve cancelar a assinatura primeiro.
+- Diagnostico: a exclusao ja bloqueava assinatura paga/gateway antes de apagar a conta, mas essa validacao acontecia somente depois da confirmacao forte. Para contas Google, isso podia levar o usuario ao fluxo de reautenticacao antes de receber a orientacao correta sobre a assinatura.
+- Decisao: a criacao da intencao Google de exclusao passa a verificar assinatura bloqueante do psicologo antes de criar `delete_token` e antes de abrir o OAuth. Quando houver assinatura ativa/paga vinculada ao gateway ou estado inadimplente, o backend retorna erro de dominio e o frontend exibe: "Cancele a assinatura ativa antes de excluir sua conta."
+- A validacao final de exclusao continua preservada como defesa em profundidade, evitando corrida caso a assinatura mude entre a intencao e a exclusao.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend build`;
+  - `pnpm --dir frontend build`;
+  - demais checks, versionamento e smoke de homologacao registrados no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-20 - preservar intenções Google no transporte por cookie
+
+- Evidência real em homologação: `POST /api/private/account/delete/google-intent` respondeu `200`,
+  mas entregou `data.url="[REDACTED]"`; o frontend então bloqueou antes de navegar e exibiu “Não foi
+  possível iniciar a confirmação com o Google.”.
+- Diagnóstico: o endpoint já marcava o DTO mínimo `{ device_id, url }` com
+  `allowAuthTokens: true`, mas `applyUserAuthCookie` sobrescrevia a autorização para `false` em toda
+  request com `Lectum-User-Cookie-Auth`, mesmo quando a resposta não continha `user_tokens` de
+  sessão. O sanitizador voltava a detectar o JWT curto dentro da URL e redigia a string inteira.
+- Decisão: a transformação cookie-aware só remove `user_tokens` e força `allowAuthTokens: false`
+  quando o payload realmente possui esse contrato top-level. Respostas sem `user_tokens` preservam
+  a política explícita do caso de uso; sem opt-in, a sanitização continua fail-closed.
+- O mesmo limite passa a preservar a intenção curta de vínculo Google (`link_token`), que também é
+  ligada a usuário, e-mail e device e expira em dez minutos. A resposta continua limitada a
+  `{ url }`; nenhum JWT de sessão é liberado no JSON do cliente compatível com cookie.
+- Escopo backend-only, sem alteração de frontend, banco, migration, package ou env. O rollout é
+  aditivo e tolera clientes antigos/novos; rollback é revert do commit.
+
+### Critérios de aceite do complemento
+
+- [x] A intenção de exclusão explicitamente autorizada atravessa
+  `send -> applyUserAuthCookie -> sanitizeSensitiveData` sem virar `[REDACTED]`.
+- [x] Resposta sem opt-in continua redigindo a mesma string com JWT.
+- [x] Payload com `user_tokens` continua gravando cookie HttpOnly, removendo o campo do JSON e
+  forçando sanitização de tokens de sessão, inclusive quando o array está vazio ou malformado.
+- [x] A intenção de vínculo Google marca explicitamente o DTO transitório mínimo como autorizado.
+- [x] Testes backend, check, build, checks da raiz, versionamento, commit, push e smoke de
+  homologação são concluídos sem expor tokens nem excluir conta real.
+- [x] ADR-0074, ADR-0461 e a regra de autenticação em `ARCHITECTURE.md` registram a fronteira de
+  segurança.
+
+## Ajuste complementar em 2026-08-27 - exclusao de conta local com senha
+
+- Evidencia de produto: captura enviada pelo usuario em 2026-08-26 mostrou uma conta criada com
+  e-mail e senha tentando excluir a propria conta, mas recebendo **Exclusao bloqueada** com a
+  mensagem generica "Voce nao tem permissao para realizar esta acao.".
+- Diagnostico: o cache React Query de `account.security` era compartilhado por chave estatica.
+  Em trocas de sessao/conta dentro da mesma experiencia mobile/PWA, a modal podia reaproveitar um
+  contrato de seguranca antigo durante o refetch e esconder **Senha atual** para uma conta local que
+  possui senha. O submit entao chegava sem senha atual e o status `403` era apresentado pela camada
+  generica de erro antes de usar o `code` seguro retornado pelo backend.
+- Decisao: o cache de seguranca passa a ser escopado pelo `user.id` autenticado, a query so roda
+  depois de existir usuario autenticado no estado local e a modal aguarda tambem `isFetching`
+  antes de renderizar/permitir o formulario destrutivo.
+- Frontend: o formulario de exclusao agora exige **Senha atual** no Zod quando o contrato real
+  informa `has_password=true`, preserva a senha digitada sem `trim()` e mapeia `code` de falha de
+  exclusao para mensagens especificas em PT-BR, evitando o `403` generico no modal.
+- Backend: sem alteracao; a regra existente continua sendo `user.provider="google"` para
+  reautenticacao Google e conta nao Google com `user.password` para confirmacao por senha atual.
+- Sem migration, sem package novo, sem variavel de ambiente nova, sem mock, sem seed e sem exclusao
+  real de conta em ambiente publicado. Rollback e reverter o commit do frontend.
+
+### Criterios de aceite do complemento
+
+- [x] O cache de `account.security` e isolado por usuario autenticado e nao reaproveita dados de
+  outra conta ao abrir a modal de exclusao.
+- [x] A modal destrutiva aguarda carregamento/refetch do contrato de seguranca antes de mostrar o
+  formulario e antes de habilitar a exclusao.
+- [x] Contas com e-mail/senha continuam exigindo **Senha atual** e o campo e validado no cliente
+  antes do submit.
+- [x] Erros seguros de exclusao (`account_current_password_invalid`, `device_not_found`,
+  `token_not_authorized` e confirmacao invalida) nao aparecem mais como permissao generica.
+- [x] A correcao foi registrada em ADR, validada com TypeScript/check/build e preparada para
+  deploy independente do frontend.
+
+## Ajuste complementar em 2026-08-27 - preservar indicador has_password
+
+- Evidencia de produto: nova captura enviada em 2026-08-26 22:31 mostrou a mensagem correta de
+  senha invalida, mas ainda sem renderizar o campo **Senha atual** para uma conta informada como
+  cadastrada por e-mail e senha.
+- Diagnostico confirmado no codigo: o pipeline HTTP `send -> sanitizeSensitiveData` normalizava
+  `has_password` para `haspassword` e removia o campo porque ele termina com `password`. A UI
+  recebia `has_password` ausente e concluia incorretamente que a exclusao nao precisava pedir
+  senha, embora o backend destrutivo continuasse exigindo a senha atual em profundidade.
+- Decisao backend: preservar somente o metadado booleano `has_password` no sanitizador global;
+  qualquer valor nao booleano com a mesma chave e qualquer segredo real de senha continuam removidos.
+- Decisao frontend: alem do booleano, provedores locais `manual`, `email` e `local` passam a
+  exigir **Senha atual** como fallback de rollout caso um backend antigo ainda omita o indicador.
+- Sem migration, sem package novo, sem variavel de ambiente nova, sem mock, sem seed e sem exclusao
+  real de conta em ambiente publicado. Rollback e reverter este complemento; o backend segue
+  bloqueando exclusao sem senha atual.
+
+### Criterios de aceite do complemento
+
+- [x] O backend preserva `has_password: true/false` em respostas publicas autenticadas sem expor
+  `password`, hash ou valor textual relacionado.
+- [x] O modal de exclusao de conta local mostra **Senha atual** quando `provider=manual`/local/e-mail,
+  mesmo durante rollout com `has_password` ausente.
+- [x] O submit de conta local nao envia exclusao sem senha atual; a validacao Zod bloqueia antes da
+  chamada destrutiva.
+- [x] Checks backend/frontend, build relevante, versionamento, commit, push e smoke de homologacao
+  sao registrados sem excluir conta real.
+
+## Ajuste complementar em 2026-08-31 - exclusao centralizada em E-mail e senha
+
+- Pedido do usuario: remover `Excluir minha conta` das telas de edicao de perfil e manter a acao somente em `E-mail e senha`.
+- A rota `/app/configuracoes/conta` (alias `/app/settings/account`) continua renderizando `AccountDeleteSection` como unico ponto de entrada da exclusao self-service.
+- As telas `/app/profissional/perfil/configurar` e `/app/perfil/editar` deixam de importar/renderizar a secao destrutiva, evitando duplicidade e misturas entre perfil e seguranca de conta.
+- Nenhuma regra do backend foi alterada: continuam valendo confirmacao `EXCLUIR`, senha atual quando aplicavel, reautenticacao Google e bloqueio de assinatura do psicologo.
+
+Criterios complementares:
+
+- [x] `AccountDeleteSection` permanece em `frontend/src/app/app/settings/account/logic.tsx`.
+- [x] `AccountDeleteSection` nao aparece nas telas de edicao de perfil pessoal/profissional.
+- [x] O teste de politica cobre a centralizacao da exclusao em `E-mail e senha`.

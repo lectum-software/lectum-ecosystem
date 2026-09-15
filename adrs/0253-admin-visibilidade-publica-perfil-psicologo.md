@@ -21,10 +21,23 @@ Exibir em `Dados profissionais` a linha `Perfil visível para pacientes` sem cri
 
 A decisão evita duplicar regras de elegibilidade no frontend e preserva o backend como fonte do estado consolidado de visibilidade pública.
 
+### Ajuste 2026-08-13 — alerta no menu `Perfil e cadastro`
+
+O ícone de alerta da aba `Perfil e cadastro` não deve representar revisão manual de CRP nem a decisão explícita do psicólogo de desativar a visibilidade pública. O alerta passa a representar somente o caso operacional em que o perfil não está visível para pacientes porque ainda faltam configurações exigidas para publicação pública.
+
+Para evitar novo contrato, o Admin usa `header.active` e os dados reais já retornados em `profile`:
+
+- sem alerta quando `header.active=true`;
+- sem alerta quando o perfil está completo e a não visibilidade decorre apenas de `published=false`;
+- com alerta quando `header.active=false` e faltam campos de configuração usados para ativação pública: vídeo, modalidade, especialidade, serviço, abordagem, público atendido, gênero, CPF, nascimento, CRP e cidade/estado.
+
+O status de CRP pendente continua visível no card `Registro profissional`, mas não aciona o alerta do menu por si só.
+
 ## Consequências
 
 - O Admin enxerga a mesma informação operacional que importa para suporte: se pacientes conseguem ver o perfil agora.
 - Quando o psicólogo habilitou a visibilidade, mas o perfil segue inelegível, o Admin recebe uma explicação sem confundir `published` com exibição pública efetiva.
+- O alerta da aba `Perfil e cadastro` passa a apontar para pendência de configuração do perfil, reduzindo falso positivo em profissionais com CRP pendente, mas perfil público já configurado.
 - Nenhuma migration, endpoint ou package novo é necessário.
 - Se futuramente o produto separar formalmente “preferência de publicação” e “visibilidade pública efetiva” no contrato, este campo deve ser revisitado para usar nomes explícitos no DTO.
 

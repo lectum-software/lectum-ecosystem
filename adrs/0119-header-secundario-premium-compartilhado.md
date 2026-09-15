@@ -1,4 +1,4 @@
-﻿# ADR-0119: Header secundário premium compartilhado
+# ADR-0119: Header secundário premium compartilhado
 
 ## Status
 

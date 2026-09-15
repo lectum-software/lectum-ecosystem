@@ -401,14 +401,14 @@ Regras:
   - `rg` confirmou ausÃªncia da faixa "DenÃºncias relacionadas...", da linha "PerÃ­odo consultado" e do chip `reports.active_filters_count` na aba **DenÃºncias**.
 - Browser local/headless em 390px e desktop para `http://localhost:3002/psicologos/test-id?tab=denuncias` confirmou rota/guard Admin sem quebrar o deep link, redirecionando para login por ausÃªncia de sessÃ£o no contexto headless.
 
-## Ajuste complementar 2026-07-16 - Revisão auditada de denúncias encerradas
+## Ajuste complementar 2026-07-16 - RevisÃ£o auditada de denÃºncias encerradas
 
-- Pedido do usuário: permitir alterar/revogar o status de denúncias já encerradas.
-- Denúncias encerradas em comunidade e no detalhe do psicólogo agora exibem a ação **Revisar decisão**.
-- A revisão exige motivo obrigatório, confirmação forte `REVISAR DECISAO` e escolha de novo status: **Pendente**, **Improcedente** ou **Procedente**.
-- A revisão registra nova auditoria em `admin_activity_log` sem apagar a decisão anterior; conteúdo removido não é restaurado automaticamente.
-- Comunidades revisam o grupo de denúncias do mesmo conteúdo; detalhe do psicólogo revisa a denúncia selecionada.
-- Não houve schema Prisma/migration, package novo, mock, endpoint simulado ou tabela nova.
+- Pedido do usuÃ¡rio: permitir alterar/revogar o status de denÃºncias jÃ¡ encerradas.
+- DenÃºncias encerradas em comunidade e no detalhe do psicÃ³logo agora exibem a aÃ§Ã£o **Revisar decisÃ£o**.
+- A revisÃ£o exige motivo obrigatÃ³rio, confirmaÃ§Ã£o forte `REVISAR DECISAO` e escolha de novo status: **Pendente**, **Improcedente** ou **Procedente**.
+- A revisÃ£o registra nova auditoria em `admin_activity_log` sem apagar a decisÃ£o anterior; conteÃºdo removido nÃ£o Ã© restaurado automaticamente.
+- Comunidades revisam o grupo de denÃºncias do mesmo conteÃºdo; detalhe do psicÃ³logo revisa a denÃºncia selecionada.
+- NÃ£o houve schema Prisma/migration, package novo, mock, endpoint simulado ou tabela nova.
 
 
 ## Ajuste complementar 2026-07-16 - Identidade do autor nos cards de denÃºncias

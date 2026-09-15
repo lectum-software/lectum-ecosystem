@@ -1,21 +1,18 @@
-import "dotenv/config";
+import "@/config/dotenv";
+import {
+  captureOperationalError,
+  flushSentry,
+  initializeSentry,
+} from "@/infra/observability/sentry";
 
-import { prisma } from "@/external/prisma/client";
-import { startNotificationDigestScheduler } from "@/main/notification/digests";
-import app from "@/main/server/app";
-import { env } from "@/main/server/environment";
+initializeSentry();
 
-const server = app.listen(env.PORT, () => {
-  console.log(`Backend listening on ${env.BASE}`);
-  startNotificationDigestScheduler();
+void import("@/main/server/bootstrap").catch(async (error) => {
+  captureOperationalError(error, {
+    boundary: "boot",
+    classification: "BackendBootError",
+  });
+  console.error("[BOOT] Não foi possível iniciar o backend com segurança.");
+  process.exitCode = 1;
+  await flushSentry();
 });
-
-const shutdown = async () => {
-  await prisma.$disconnect();
-  server.close(() => process.exit(0));
-};
-
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
-
-export default app;

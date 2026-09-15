@@ -2,6 +2,8 @@ const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g,
 
 const stripCrpPrefix = (value: string) => value.replace(/^(?:CRP\s*[:\-–—]?\s*)+/i, "").trim();
 
+const stripArtificialLeadingZeros = (value: string) => value.replace(/^0+(?=\d)/, "");
+
 export const formatCrpNumber = (value?: string | null) => {
   const normalized = stripCrpPrefix(value?.trim() ?? "");
   if (!normalized) return null;
@@ -11,7 +13,9 @@ export const formatCrpNumber = (value?: string | null) => {
   const numberDigits = onlyDigits(rawNumberParts.join("/")).slice(0, 6);
 
   if (regionDigits && numberDigits) {
-    return `${regionDigits.padStart(2, "0")}/${numberDigits.padStart(6, "0")}`;
+    // Regional usa 2 digitos, mas o numero publico do registro nao deve ganhar
+    // nem preservar zeros artificiais que nao foram o registro real digitado.
+    return `${regionDigits.padStart(2, "0")}/${stripArtificialLeadingZeros(numberDigits)}`;
   }
 
   return normalized;

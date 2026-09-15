@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import jwt, { type SignOptions } from "jsonwebtoken";
-import { getJwtSecret } from "./jwt-secret";
+import { getUserJwtTtlSeconds } from "@/utils/runtime-config";
+import { getJwtSecret, JWT_ALGORITHM } from "./jwt-secret";
 
 export const generateToken = (
   data: { id: string; email: string },
@@ -18,5 +19,9 @@ export const generateToken = (
     device_id,
   };
 
-  return jwt.sign(options, getJwtSecret(), signOptions);
+  return jwt.sign(options, getJwtSecret(), {
+    expiresIn: getUserJwtTtlSeconds(),
+    ...signOptions,
+    algorithm: JWT_ALGORITHM,
+  });
 };

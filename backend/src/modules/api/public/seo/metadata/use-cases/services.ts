@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { msg } from "@/helpers/translate";
 import { SeoMetadataRepository } from "@/modules/seo/repositories/SeoMetadataRepository";
 

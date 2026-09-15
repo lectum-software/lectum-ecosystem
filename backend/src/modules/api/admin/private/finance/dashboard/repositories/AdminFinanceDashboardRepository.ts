@@ -372,9 +372,11 @@ export class AdminFinanceDashboardRepository {
         },
       },
       select: {
+        gateway: true,
         gateway_subscription_id: true,
         id: true,
         psychologist_id: true,
+        source: true,
       },
     });
   }

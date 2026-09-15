@@ -1,4 +1,4 @@
-﻿# ADR 0150: Penalidade leve de downvotes no ranking da comunidade
+# ADR 0150: Penalidade leve de downvotes no ranking da comunidade
 
 ## Status
 

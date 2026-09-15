@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import { useController, useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,8 @@ export const CheckboxGroupController = <TFormValues extends FieldValues>({
   const { control } = useFormContext<TFormValues>();
   const { field, fieldState } = useController({ control, name });
   const values = Array.isArray(field.value) ? (field.value as string[]) : [];
-  const errorId = `${String(name)}-error`;
+  const controlId = useId();
+  const errorId = `${controlId}-error`;
   const hasError = Boolean(fieldState.error?.message);
 
   const toggleValue = (value: string, checked: boolean) => {
@@ -63,7 +65,7 @@ export const CheckboxGroupController = <TFormValues extends FieldValues>({
             return (
               <label
                 className={cn(
-                  "flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-border bg-white px-3 py-2 text-sm font-bold text-foreground transition",
+                  "flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-bold text-foreground transition",
                   "hover:border-primary/40 hover:bg-primary-soft/40",
                   checked ? "border-primary bg-primary-soft text-primary" : null,
                   optionDisabled ? "cursor-not-allowed opacity-60" : null,

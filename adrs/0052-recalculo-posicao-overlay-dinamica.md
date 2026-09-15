@@ -1,4 +1,4 @@
-﻿# ADR-0052: Recalcular posição dos botões conforme mudanças dinâmicas do overlay
+# ADR-0052: Recalcular posição dos botões conforme mudanças dinâmicas do overlay
 
 ## Status
 

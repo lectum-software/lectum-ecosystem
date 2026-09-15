@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { type Field, useFormList } from "@/hooks/form";
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
@@ -38,7 +38,8 @@ const fields = [
     name: "cpf",
     field: "cpf",
     label: "CPF",
-    description: "Informe seu CPF para buscar seu registro no Conselho Federal de Psicologia",
+    description:
+      "Informe seu CPF para buscarmos seu registro junto ao Conselho Federal de Psicologia",
     placeholder: "000.000.000-00",
     autoComplete: "off",
     inputClassName: "h-[55px] rounded-[14px] bg-surface text-base shadow-sm",

@@ -117,15 +117,8 @@ export const store = async (req: Request) => {
 
   if (userId && userId === target.authorId) {
     const result: ContentVideoWatchResult = {
-      completed: false,
-      id: null,
-      session_id: data.b.session_id,
       skipped_reason: "self_view",
-      target_id: target.targetId,
-      target_type: target.targetType,
       tracked: false,
-      user_id: userId,
-      visitor_id: data.b.visitor_id,
     };
 
     return {
@@ -135,7 +128,24 @@ export const store = async (req: Request) => {
     };
   }
 
-  await repository.upsertVisitorSession(data.b.visitor_id, data.b.session_id, userId);
+  const visitorSession = await repository.upsertVisitorSession(
+    data.b.visitor_id,
+    data.b.session_id,
+    userId,
+  );
+
+  if (!visitorSession) {
+    const result: ContentVideoWatchResult = {
+      skipped_reason: "session_unavailable",
+      tracked: false,
+    };
+
+    return {
+      status: 200,
+      ...msg("content_video_watch_skipped", {}),
+      data: result,
+    };
+  }
 
   const durationSeconds = normalizeInteger(data.b.duration_seconds, MAX_VIDEO_SECONDS);
   const maxPositionSeconds = Math.min(
@@ -172,16 +182,22 @@ export const store = async (req: Request) => {
     ...milestones,
   });
 
+  if (!stored) {
+    const result: ContentVideoWatchResult = {
+      skipped_reason: "session_unavailable",
+      tracked: false,
+    };
+
+    return {
+      status: 200,
+      ...msg("content_video_watch_skipped", {}),
+      data: result,
+    };
+  }
+
   const result: ContentVideoWatchResult = {
-    completed: stored.completed,
-    id: stored.id,
-    session_id: data.b.session_id,
     skipped_reason: null,
-    target_id: target.targetId,
-    target_type: target.targetType,
     tracked: true,
-    user_id: userId,
-    visitor_id: data.b.visitor_id,
   };
 
   return {

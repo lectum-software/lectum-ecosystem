@@ -1,4 +1,4 @@
-﻿# ADR-0327: Dashboard Admin enxuto sem blocos analíticos secundários
+# ADR-0327: Dashboard Admin enxuto sem blocos analíticos secundários
 
 ## Status
 

@@ -1,11 +1,16 @@
 import { error, msg } from "@/helpers/translate";
+import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { notifyNewCommunityPost } from "@/main/notification/domain-events";
+import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
+import { videoStreamUploadRequired } from "@/modules/video-assets/upload-policy";
 import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import { type ModerationResult, moderatePatientText } from "@/utils/content-moderation";
 import {
   findModerationCommunityBySlug,
   recordContentModerationEvent,
 } from "@/utils/content-moderation-events";
+import { publicFileUrl } from "@/utils/public-origin";
+import { isPublicPostMediaUrl } from "../../posts/repositories/support/post-media-url";
 import type {
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
@@ -108,21 +113,6 @@ const ensureCommunityMemberAuth = (data: ICommunityMembershipDTO) => {
   };
 };
 
-const publicFileUrl = (key: string) => {
-  const rawBase = String(process.env.BASE || "").trim();
-  let base = rawBase.replace(/\/$/, "");
-
-  try {
-    base = rawBase ? new URL(rawBase).origin : "";
-  } catch (_err) {
-    base = rawBase.replace(/\/$/, "");
-  }
-
-  const publicPath = `/public/files/${key}`;
-
-  return base ? `${base}${publicPath}` : publicPath;
-};
-
 const mediaTypeFromMime = (mimetype?: string | null): "image" | "video" | null => {
   if (mimetype?.startsWith("image/")) return "image";
   if (mimetype?.startsWith("video/")) return "video";
@@ -134,16 +124,6 @@ const normalizePostMediaType = (value?: string | null): "image" | "video" | null
   if (value === "image" || value === "video") return value;
 
   return null;
-};
-
-const isPublicPostMediaUrl = (value?: string | null) => {
-  if (!value) return false;
-
-  try {
-    return new URL(value).pathname.startsWith("/public/files/posts/media/");
-  } catch (_err) {
-    return value.startsWith("/public/files/posts/media/");
-  }
 };
 
 const invalidPostMedia = () => ({
@@ -361,7 +341,18 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     nextMediaType = "image";
     nextThumbnailUrl = undefined;
   } else if (hasLegacyMedia) {
-    if (!mediaUrl || !mediaType || !isPublicPostMediaUrl(mediaUrl)) {
+    const streamVideoReference =
+      mediaUrl && mediaType === "video" && isVideoAssetPlaybackReference(mediaUrl)
+        ? await resolveReadyOwnedVideoAssetReference({
+            contextId: data.p.slug,
+            ownerId: data.auth.id!,
+            purpose: "community_post",
+            reference: mediaUrl,
+          })
+        : null;
+    const streamVideoReady = Boolean(streamVideoReference);
+
+    if (!mediaUrl || !mediaType || (!isPublicPostMediaUrl(mediaUrl) && !streamVideoReady)) {
       return invalidPostMedia();
     }
 
@@ -371,7 +362,8 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
 
     normalizedMediaItems =
       mediaType === "image" ? [{ mediaType: "image", mediaUrl, position: 0 }] : [];
-    nextThumbnailUrl = mediaType === "video" ? thumbnailUrl : undefined;
+    nextMediaUrl = streamVideoReference || mediaUrl;
+    nextThumbnailUrl = mediaType === "video" && !streamVideoReady ? thumbnailUrl : undefined;
   } else if (thumbnailUrl) {
     return invalidPostMedia();
   }
@@ -479,6 +471,8 @@ export const uploadPostMedia = async (data: ICommunityUploadPostMediaDTO) => {
 
   const key = data.file?.path || data.file?.key;
   const mediaType = mediaTypeFromMime(data.file?.mimetype);
+
+  if (mediaType === "video") return videoStreamUploadRequired();
 
   if (!key?.startsWith("posts/media/") || !mediaType) {
     return {

@@ -48,72 +48,72 @@ Decisões adicionais:
 
 Consequência: o piloto passa a testar não só tema/cores/cards, mas também acabamento fino de tipografia e data visualization antes de virar task transversal.
 
-## Ajuste de sombras p?s-feedback
+## Ajuste de sombras pós-feedback
 
-Ap?s nova revis?o visual, o excesso de sombras no piloto foi considerado cafona e menos premium. A decis?o foi migrar o acabamento para uma linguagem mais editorial: superf?cie limpa, borda sutil e sombra quase impercept?vel apenas para separa??o de camadas.
+Após nova revisão visual, o excesso de sombras no piloto foi considerado cafona e menos premium. A decisão foi migrar o acabamento para uma linguagem mais editorial: superfície limpa, borda sutil e sombra quase imperceptível apenas para separação de camadas.
 
-Decis?es adicionais:
+Decisões adicionais:
 
 - Reduzir drasticamente `--admin-shadow`, `--admin-shadow-soft` e `--admin-shadow-control` dentro de `admin-premium-pilot`.
-- For?ar `shadow-admin`, `shadow-admin-soft` e `shadow-control` no escopo premium a usarem sombras m?nimas.
-- N?o trocar os componentes nem expandir a altera??o para o Admin inteiro at? aprova??o do piloto.
+- Forçar `shadow-admin`, `shadow-admin-soft` e `shadow-control` no escopo premium a usarem sombras mínimas.
+- Não trocar os componentes nem expandir a alteração para o Admin inteiro até aprovação do piloto.
 
-Consequ?ncia: o piloto passa a depender mais de espa?amento, borda e hierarquia tipogr?fica do que de profundidade artificial.
+Consequência: o piloto passa a depender mais de espaçamento, borda e hierarquia tipográfica do que de profundidade artificial.
 
-## Ajuste do gr?fico multi-linha p?s-feedback
+## Ajuste do gráfico multi-linha pós-feedback
 
-O fundador esclareceu que todas as s?ries devem continuar vis?veis no mesmo gr?fico, mas o desenho das linhas e o fundo sombreado do plot n?o estavam alinhados com a est?tica premium.
+O fundador esclareceu que todas as séries devem continuar visíveis no mesmo gráfico, mas o desenho das linhas e o fundo sombreado do plot não estavam alinhados com a estética premium.
 
-Decis?es adicionais:
+Decisões adicionais:
 
-- Manter o gr?fico multi-linha e a sele??o por cards/chips.
-- Remover o halo/glow das linhas para evitar apar?ncia artificial ou cafona.
+- Manter o gráfico multi-linha e a seleção por cards/chips.
+- Remover o halo/glow das linhas para evitar aparência artificial ou cafona.
 - Reduzir strokes e marcadores para uma leitura mais editorial.
-- Trocar o fundo sombreado do plot por superf?cie limpa com borda sutil.
-- Aplicar a mesma dire??o ao dashboard e ao detalhe Estat?sticas de Psic?logos.
+- Trocar o fundo sombreado do plot por superfície limpa com borda sutil.
+- Aplicar a mesma direção ao dashboard e ao detalhe Estatísticas de Psicólogos.
 
-Consequ?ncia: o gr?fico preserva compara??o entre s?ries, mas com menos ru?do visual e sem efeito sombreado.
+Consequência: o gráfico preserva comparação entre séries, mas com menos ruído visual e sem efeito sombreado.
 
-## Ajuste da lista de psic?logos p?s-feedback
+## Ajuste da lista de psicólogos pós-feedback
 
-A revis?o visual da lista mostrou que a tabela ainda destoava das demais telas do piloto: pesos textuais mais duros e largura m?nima fixa que gerava barra horizontal.
+A revisão visual da lista mostrou que a tabela ainda destoava das demais telas do piloto: pesos textuais mais duros e largura mínima fixa que gerava barra horizontal.
 
-Decis?es adicionais:
+Decisões adicionais:
 
-- Remover a largura m?nima fixa da tabela de psic?logos e fazer a grade ocupar 100% da largura ?til dispon?vel.
-- Substituir o wrapper com rolagem horizontal por conten??o sem scrollbar no desktop.
-- Redistribuir colunas por percentuais para preservar todas as informa??es da lista sem barra horizontal.
-- Reduzir o peso textual da p?gina, dos controles, cabe?alhos e c?lulas para seguir a tipografia do piloto premium.
+- Remover a largura mínima fixa da tabela de psicólogos e fazer a grade ocupar 100% da largura Útil disponível.
+- Substituir o wrapper com rolagem horizontal por contenção sem scrollbar no desktop.
+- Redistribuir colunas por percentuais para preservar todas as informações da lista sem barra horizontal.
+- Reduzir o peso textual da página, dos controles, cabeçalhos e células para seguir a tipografia do piloto premium.
 - Adicionar leitura em cards no breakpoint mobile, evitando tabela comprimida ou scroll horizontal em telas menores.
 
-Consequ?ncia: a lista mant?m todos os dados reais e a??es existentes, mas passa a se comportar como parte da mesma fam?lia visual do dashboard e do detalhe de Psic?logos.
+Consequência: a lista mantém todos os dados reais e ações existentes, mas passa a se comportar como parte da mesma família visual do dashboard e do detalhe de Psicólogos.
 
-## Remo??o de colunas de baixa prioridade na lista
+## Remoção de colunas de baixa prioridade na lista
 
-Ap?s revis?o visual, as colunas **Favoritos** e **WhatsApp** foram consideradas ru?do para a leitura principal da lista administrativa. A decis?o foi remov?-las da tabela desktop e dos cards mobile, preservando esses dados nos contratos e em telas anal?ticas/detalhes onde fazem mais sentido.
+Após revisão visual, as colunas **Favoritos** e **WhatsApp** foram consideradas ruído para a leitura principal da lista administrativa. A decisão foi removê-las da tabela desktop e dos cards mobile, preservando esses dados nos contratos e em telas analíticas/detalhes onde fazem mais sentido.
 
-Decis?es adicionais:
+Decisões adicionais:
 
-- Manter na lista apenas dados de identifica??o, plano, status de perfil, status de registro, avalia??o e a??es.
-- Redistribuir a largura ?til da tabela entre as colunas restantes.
-- N?o alterar backend, queries, ordena??o ou contratos neste ajuste visual.
+- Manter na lista apenas dados de identificação, plano, status de perfil, status de registro, avaliação e ações.
+- Redistribuir a largura Útil da tabela entre as colunas restantes.
+- Não alterar backend, queries, ordenação ou contratos neste ajuste visual.
 
-Consequ?ncia: a lista fica mais limpa, respira melhor na largura dispon?vel e evita competir com dashboards/estat?sticas para m?tricas de engajamento.
+Consequência: a lista fica mais limpa, respira melhor na largura disponível e evita competir com dashboards/estatísticas para métricas de engajamento.
 
-## Busca autom?tica na lista de psic?logos
+## Busca automática na lista de psicólogos
 
-Ap?s revis?o do fluxo da lista, o bot?o **Buscar** foi considerado atrito desnecess?rio para uma busca simples por nome ou CRP. A decis?o foi transformar o campo em busca autom?tica com debounce, mantendo o estado real em URL e a mesma query backend j? existente.
+Após revisão do fluxo da lista, o botão **Buscar** foi considerado atrito desnecessário para uma busca simples por nome ou CRP. A decisão foi transformar o campo em busca automática com debounce, mantendo o estado real em URL e a mesma query backend já existente.
 
-Decis?es adicionais:
+Decisões adicionais:
 
-- Remover o bot?o expl?cito de busca da lista.
-- Aplicar filtro automaticamente ap?s digita??o com debounce de 350ms.
+- Remover o botão explícito de busca da lista.
+- Aplicar filtro automaticamente após digitação com debounce de 350ms.
 - Manter `q` nos search params para deep link, reload e compartilhamento interno do estado da lista.
-- N?o alterar contratos, endpoints ou regras de filtro no backend.
+- Não alterar contratos, endpoints ou regras de filtro no backend.
 
-Consequ?ncia: a intera??o fica mais leve e compat?vel com a est?tica premium, sem criar estado paralelo nem endpoint novo.
+Consequência: a interação fica mais leve e compatível com a estética premium, sem criar estado paralelo nem endpoint novo.
 
-## Valida??o
+## Validação
 
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
@@ -123,33 +123,33 @@ Consequ?ncia: a intera??o fica mais leve e compat?vel com a est?tica premium, se
   - `pnpm --dir admin check`
   - `pnpm --dir admin build`
   - `pnpm check`
-- Ajuste de sombras p?s-feedback:
+- Ajuste de sombras pós-feedback:
   - `pnpm --dir admin exec biome check --write "src/app/globals.css"`
   - `pnpm --dir admin check`
   - `pnpm --dir admin build`
-- Ajuste do gr?fico multi-linha p?s-feedback:
+- Ajuste do gráfico multi-linha pós-feedback:
   - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/psicologos/[id]/client.tsx"`
   - `pnpm --dir admin check`
   - `pnpm --dir admin build`
-- Browser local com sess?o Admin real j? existente:
+- Browser local com sessão Admin real já existente:
   - `/psicologos` em desktop;
   - `/psicologos/lista` em desktop;
   - `/psicologos/[id]?tab=estatisticas` em desktop.
 - Capturas locais foram usadas para inspeção visual durante a execução e descartadas como artefatos temporários.
 
-- Ajuste da lista de psic?logos p?s-feedback:
+- Ajuste da lista de psicólogos pós-feedback:
   - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
   - `pnpm --dir admin check`
   - `pnpm --dir admin build`
   - Smoke HTTP local: `GET http://localhost:3002/psicologos/lista` retornou 200.
 
-- Remo??o das colunas Favoritos e WhatsApp na lista:
+- Remoção das colunas Favoritos e WhatsApp na lista:
   - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
   - `pnpm --dir admin check`
   - `pnpm --dir admin build`
   - Smoke HTTP local: `GET http://localhost:3002/psicologos/lista` retornou 200.
 
-- Busca autom?tica na lista de psic?logos:
+- Busca automática na lista de psicólogos:
   - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
   - `pnpm --dir admin check`
   - `pnpm --dir admin build`
@@ -322,7 +322,7 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou 200.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01?tab=perfil` retornou 200.
-- `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em m?dulos backend n?o alterados nesta execu??o.
+- `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em módulos backend não alterados nesta execução.
 
 ## Expansao 2026-07-21: Configuracoes no piloto premium
 

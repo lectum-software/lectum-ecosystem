@@ -262,3 +262,55 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados, ordenacao ou packages.
 - ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/community` e Chrome/CDP em desktop 1440x900 e mobile 390x844 validando 4 cards populares sem descricoes, titulos com overflow visivel/line-height maior e `documentWidth=390` no mobile.
+
+## Execucao complementar: quantidade de posts nos cards populares (2026-08-15)
+
+- Pedido do usuario: no carrossel `Mais Populares`, substituir a quantidade de seguidores pela quantidade de posts.
+- Fonte visual/auditavel: screenshot do usuario em `/comunidades` e referencia local `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: os cards populares passaram a formatar a contagem como `post/posts`, consumindo `posts_count` no `CommunityExploreCard` e mantendo categoria, titulo, CTA, link, imagem e comportamento mobile-first do carrossel/grid.
+- Backend: `GET /api/private/community` agora calcula `posts_count` real de posts publicados para as comunidades listadas tambem quando a rota e consumida sem usuario autenticado, preservando `following`, `new_posts_count` e os demais metadados dependentes de sessao.
+- Compatibilidade de deploy: o contrato continua aditivo/tolerante; o frontend usa fallback `0` se uma versao antiga do backend ainda nao enviar `posts_count` durante o rollout.
+- Nao houve alteracao de Prisma schema, migrations, dados persistidos, seeds, variaveis de ambiente ou packages.
+- ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write src/app/app/community/logic.tsx src/app/app/community/explore-content.ts`, `pnpm --dir backend exec biome check --write src/modules/api/private/community/repositories/queries/CommunityCoreRepository.ts`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local em `/comunidades` (`200`) com `/version` retornando `0.1.117`.
+- Criterios de aceite revalidados: [x] dados reais sem mock, [x] UI mobile-first preservada, [x] endpoints seguem `DATA-MODEL.md`, [x] nenhum package/env/migration novo, [x] checks/builds relevantes executados.
+
+## Execucao complementar: loop do voltar apos sugestao enviada (2026-08-15)
+
+- Pedido do usuario: ao enviar uma sugestao de nova comunidade e finalizar a confirmacao, o botao
+  voltar do navegador nao deve retornar para a tela de confirmacao e prender o usuario no ciclo
+  confirmacao -> comunidades -> voltar -> confirmacao.
+- Fonte visual/auditavel: screenshots do usuario em `/comunidades` e na tela de confirmacao; as
+  imagens anexadas foram tratadas apenas como evidencia visual. As referencias locais consultadas
+  foram `_product/proto/Explorar Comunidades.jpg`, `_product/proto/Sugerir Comunidade.jpg` e
+  `_product/proto/Confirmação de Sugestão de Comunidade.jpg`; Builder/Quick Copy nao esta exposto
+  como ferramenta callable neste ambiente.
+- Frontend: apos o `POST /api/private/community/suggestions` confirmar sucesso, o formulario passa
+  a navegar para `/app/comunidades/sugerir/sucesso` com `router.replace`, removendo o formulario
+  concluido da pilha de historico.
+- Frontend: os CTAs da confirmacao que voltam para `/comunidades` usam `replace`, removendo a tela
+  de sucesso da pilha. Assim, o voltar do navegador nao reabre a confirmacao ja finalizada.
+- A decisao preserva o submit real, a tela de confirmacao, as rotas canonicas PT-BR e a
+  compatibilidade das rotas legadas em ingles.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados,
+  permissoes, variaveis de ambiente ou packages.
+- ADR atualizado: `adrs/0106-ilustracao-solicitacao-comunidade.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Enviar uma sugestao bem sucedida nao deixa o formulario concluido como proximo destino do
+  botao voltar.
+- [x] Finalizar/fechar a confirmacao nao deixa a tela de sucesso como proximo destino do botao
+  voltar.
+- [x] O fluxo continua usando sugestao real via API e nao cria mock, endpoint novo ou dado fake.
+- [x] Nenhum package, env, schema ou migration novo foi criado.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/community/suggest/logic.tsx src/app/app/community/suggest/success/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version`, `/comunidades`,
+  `/app/comunidades/sugerir` e `/app/comunidades/sugerir/sucesso`.
+- `pnpm check`
+- `pnpm check:version`

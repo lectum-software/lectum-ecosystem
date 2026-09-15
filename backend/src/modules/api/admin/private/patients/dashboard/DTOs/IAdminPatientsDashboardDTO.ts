@@ -39,6 +39,7 @@ export type AdminPatientsDashboardMetric = {
 
 export type AdminPatientsDashboardDailyPoint = {
   active_patients: number;
+  deleted_accounts: number;
   date: string;
   inactive_patients: number;
   new_signups: number;
@@ -297,7 +298,7 @@ export type AdminPatientsDashboardIntentFilteredMetrics = {
   locations: {
     cities: AdminPatientsDashboardLocationItem[];
     countries: AdminPatientsDashboardLocationItem[];
-    source: "visitor_location";
+    source: "patient_profile.city/state";
     states: AdminPatientsDashboardLocationItem[];
     total: number;
   };
@@ -362,6 +363,7 @@ export type AdminPatientsDashboardSummary = {
   anonymous_conversion: AdminPatientsDashboardAnonymousConversion;
   cards: {
     active_patients: AdminPatientsDashboardMetric;
+    deleted_accounts: AdminPatientsDashboardMetric;
     inactive_patients: AdminPatientsDashboardMetric;
     new_signups: AdminPatientsDashboardMetric;
     total_patients: AdminPatientsDashboardMetric;
@@ -391,7 +393,7 @@ export type AdminPatientsDashboardSummary = {
   locations: {
     cities: AdminPatientsDashboardLocationItem[];
     countries: AdminPatientsDashboardLocationItem[];
-    source: "visitor_location";
+    source: "patient_profile.city/state";
     states: AdminPatientsDashboardLocationItem[];
     total: number;
   };
@@ -400,12 +402,12 @@ export type AdminPatientsDashboardSummary = {
   platform_usage: AdminPatientsDashboardPlatformUsage;
   recent_patients: {
     items: AdminPatientsDashboardRecentPatient[];
-    source: "user+patient_profile+visitor_location+community_activity";
+    source: "user+patient_profile+community_activity";
     total: number;
   };
   series: {
     points: AdminPatientsDashboardDailyPoint[];
-    source: "user.createdAt+user.active";
+    source: "user.createdAt+user.active+user.deletedAt";
   };
   unavailable: AdminPatientsDashboardUnavailableMetric[];
 };

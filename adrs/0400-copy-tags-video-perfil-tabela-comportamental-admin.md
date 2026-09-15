@@ -1,4 +1,4 @@
-﻿# ADR-0400 - Ajustes finais da tabela comportamental Admin
+# ADR-0400 - Ajustes finais da tabela comportamental Admin
 
 ## Status
 

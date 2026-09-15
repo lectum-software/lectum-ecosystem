@@ -11,6 +11,8 @@ datasource db {
 }
 
 model user {
+  legal_acceptances legal_acceptance[]
+
   id                                      String                        @id @default(cuid())
   deleted                                 Boolean                       @default(false)
   deletedAt                               DateTime?                     @map("deleted_at")
@@ -86,6 +88,7 @@ model user {
   logs                                    log__user[]                   @relation("log__user_user")
   notifications                           notification[]                @relation("notifications")
   notification_preference                 notification_preference?      @relation("notification_preference_user")
+  video_assets                            video_asset[]                 @relation("video_asset_owner")
 
   @@index([email, deleted])
   @@index([active, deleted])
@@ -117,6 +120,7 @@ model admin {
   activity_logs          admin_activity_log[]          @relation("admin_activity_log_admin")
   notification_campaigns admin_notification_campaign[] @relation("admin_notification_campaign_admin")
   moderation_reviews     content_moderation_event[]    @relation("content_moderation_event_admin")
+  suggestion_blocks      community_suggestion_block[]  @relation("community_suggestion_block_admin")
 
   @@index([email, deleted])
   @@index([active, deleted])
@@ -390,9 +394,12 @@ model patient_profile {
   birthdate               DateTime?
   phone                   String?
   bio                     String?
+  city                    String?
+  state                   String?
   onboarding_completed_at DateTime?
   user                    user      @relation("patient_profile_user", fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@index([state, city])
   @@index([user_id])
   @@map("patient_profiles")
 }
@@ -447,6 +454,7 @@ model psychologist_profile {
   user                            user                          @relation("psychologist_profile_user", fields: [user_id], references: [id], onDelete: Cascade)
   subscriptions                   professional_subscription[]   @relation("professional_subscription_psychologist")
   registry_checks                 professional_registry_check[] @relation("professional_registry_check_psychologist")
+  subscription_history            professional_subscription_history[]
 
   @@index([user_id])
   @@index([published, deleted])
@@ -670,31 +678,83 @@ model subscription_plan {
 }
 
 model professional_subscription {
-  id                      String               @id @default(cuid())
-  internal_id             Int                  @unique @default(autoincrement()) @map("internal_id")
-  deleted                 Boolean              @default(false)
-  deletedAt               DateTime?            @map("deleted_at")
-  updatedAt               DateTime             @default(now()) @updatedAt @map("updated_at")
-  createdAt               DateTime             @default(now()) @map("created_at")
-  psychologist_id         String
-  plan_id                 String
-  status                  String               @default("inativa")
-  source                  String               @default("legacy")
-  gateway                 String?
-  gateway_subscription_id String?
-  current_period_end      DateTime?
-  grant_reason            String?
-  grant_notes             String?
-  granted_by              String?
-  grant_started_at        DateTime?
-  psychologist            psychologist_profile @relation("professional_subscription_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
-  plan                    subscription_plan    @relation("professional_subscription_plan", fields: [plan_id], references: [id])
+  id                       String               @id @default(cuid())
+  internal_id              Int                  @unique @default(autoincrement()) @map("internal_id")
+  deleted                  Boolean              @default(false)
+  deletedAt                DateTime?            @map("deleted_at")
+  updatedAt                DateTime             @default(now()) @updatedAt @map("updated_at")
+  createdAt                DateTime             @default(now()) @map("created_at")
+  psychologist_id          String
+  plan_id                  String
+  status                   String               @default("inativa")
+  source                   String               @default("legacy")
+  gateway                  String?
+  gateway_subscription_id  String?
+  current_period_end       DateTime?
+  billing_issue_started_at DateTime?
+  billing_grace_ends_at    DateTime?
+  billing_downgraded_at    DateTime?
+  billing_last_notice_key  String?
+  grant_reason             String?
+  grant_notes              String?
+  granted_by               String?
+  grant_started_at         DateTime?
+  psychologist             psychologist_profile @relation("professional_subscription_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  plan                     subscription_plan    @relation("professional_subscription_plan", fields: [plan_id], references: [id])
 
   @@index([psychologist_id, status])
   @@index([plan_id])
   @@index([source, status])
   @@index([status, current_period_end])
+  @@index([status, billing_grace_ends_at])
+  @@index([billing_last_notice_key, billing_grace_ends_at])
   @@map("professional_subscriptions")
+}
+
+// Observed coverage only: no subscription state is inferred before started_at.
+model professional_plan_history_coverage {
+  id         Int      @id
+  started_at DateTime @db.Timestamp(3)
+
+  @@map("professional_plan_history_coverage")
+}
+
+// Independent source snapshots avoid races between catalog and subscription writes.
+model subscription_plan_history {
+  id          BigInt   @id @default(autoincrement())
+  plan_id     String
+  observed_at DateTime @db.Timestamp(3)
+  observation String
+  deleted     Boolean
+  active      Boolean
+  slug        String
+  name        String
+  price_cents Int
+
+  @@index([plan_id, observed_at, id], map: "plan_history_lookup_idx")
+  @@map("subscription_plan_history")
+}
+
+model professional_subscription_history {
+  id                          BigInt               @id @default(autoincrement())
+  subscription_id             String
+  psychologist_id             String
+  plan_id                     String
+  observed_at                 DateTime             @db.Timestamp(3)
+  observation                 String
+  deleted                     Boolean
+  source_created_at           DateTime             @db.Timestamp(3)
+  status                      String
+  source                      String
+  gateway                     String?
+  has_gateway_subscription_id Boolean
+  current_period_end          DateTime?            @db.Timestamp(3)
+  grant_started_at            DateTime?            @db.Timestamp(3)
+  psychologist                psychologist_profile @relation(fields: [psychologist_id], references: [id], onDelete: Cascade)
+
+  @@index([psychologist_id, observed_at, id], map: "subscription_history_profile_idx")
+  @@index([subscription_id, observed_at, id], map: "subscription_history_lookup_idx")
+  @@map("professional_subscription_history")
 }
 
 model billing_address {
@@ -870,6 +930,7 @@ model community {
   moderation_events            content_moderation_event[]    @relation("content_moderation_event_community")
   content_video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_community")
   content_attention_sessions   content_attention_session[]   @relation("content_attention_session_community")
+  suggestion_blocks            community_suggestion_block[]  @relation("community_suggestion_block_community")
 
   @@index([slug])
   @@index([slug, active, deleted])
@@ -914,18 +975,43 @@ model community_member {
 }
 
 model community_suggestion {
-  id        String    @id @default(cuid())
-  deleted   Boolean   @default(false)
-  deletedAt DateTime? @map("deleted_at")
-  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
-  createdAt DateTime  @default(now()) @map("created_at")
+  id        String                      @id @default(cuid())
+  deleted   Boolean                     @default(false)
+  deletedAt DateTime?                   @map("deleted_at")
+  updatedAt DateTime                    @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime                    @default(now()) @map("created_at")
   user_id   String
+  block_id  String?                     @map("block_id")
   theme     String
-  status    String    @default("pendente")
-  user      user      @relation("community_suggestion_user", fields: [user_id], references: [id], onDelete: Cascade)
+  status    String                      @default("pendente")
+  user      user                        @relation("community_suggestion_user", fields: [user_id], references: [id], onDelete: Cascade)
+  block     community_suggestion_block? @relation("community_suggestion_block_suggestions", fields: [block_id], references: [id], onDelete: SetNull)
 
   @@index([status])
+  @@index([block_id])
+  @@index([status, block_id])
   @@map("community_suggestions")
+}
+
+model community_suggestion_block {
+  id                  String                 @id @default(cuid())
+  deleted             Boolean                @default(false)
+  deletedAt           DateTime?              @map("deleted_at")
+  updatedAt           DateTime               @default(now()) @updatedAt @map("updated_at")
+  createdAt           DateTime               @default(now()) @map("created_at")
+  title               String
+  description         String?
+  status              String                 @default("monitorando")
+  created_by_admin_id String?                @map("created_by_admin_id")
+  community_id        String?                @map("community_id")
+  created_by_admin    admin?                 @relation("community_suggestion_block_admin", fields: [created_by_admin_id], references: [id], onDelete: SetNull)
+  community           community?             @relation("community_suggestion_block_community", fields: [community_id], references: [id], onDelete: SetNull)
+  suggestions         community_suggestion[] @relation("community_suggestion_block_suggestions")
+
+  @@index([status, deleted])
+  @@index([created_by_admin_id])
+  @@index([community_id])
+  @@map("community_suggestion_blocks")
 }
 
 model community_post {
@@ -957,6 +1043,7 @@ model community_post {
   shares               post_share[]                  @relation("post_share_post")
   notification_mutes   post_notification_mute[]      @relation("post_notification_mute_post")
   reports              post_report[]                 @relation("post_report_post")
+  share_artifacts      post_share_artifact[]         @relation("post_share_artifact_post")
   video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_post")
   attention_sessions   content_attention_session[]   @relation("content_attention_session_post")
 
@@ -964,6 +1051,65 @@ model community_post {
   @@index([author_id])
   @@index([author_id, status, createdAt])
   @@map("community_posts")
+}
+
+model video_asset {
+  id                         String    @id @default(cuid())
+  deleted                    Boolean   @default(false)
+  deletedAt                  DateTime? @map("deleted_at")
+  updatedAt                  DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt                  DateTime  @default(now()) @map("created_at")
+  owner_id                   String    @map("owner_id")
+  provider                   String    @default("cloudflare_stream")
+  provider_uid               String    @unique @map("provider_uid")
+  purpose                    String
+  context_id                 String?   @map("context_id")
+  status                     String    @default("uploading")
+  mime_type                  String    @map("mime_type")
+  size_bytes                 BigInt    @map("size_bytes")
+  duration_seconds           Float?    @map("duration_seconds")
+  width                      Int?
+  height                     Int?
+  upload_expires_at          DateTime  @map("upload_expires_at")
+  last_provider_sync_at      DateTime? @map("last_provider_sync_at")
+  ready_at                   DateTime? @map("ready_at")
+  error_code                 String?   @map("error_code")
+  last_webhook_at            DateTime? @map("last_webhook_at")
+  last_webhook_digest        String?   @map("last_webhook_digest")
+  source_provider            String?   @map("source_provider")
+  source_reference           String?   @map("source_reference")
+  source_thumbnail_reference String?   @map("source_thumbnail_reference")
+  migration_key              String?   @unique @map("migration_key")
+  migrated_at                DateTime? @map("migrated_at")
+  owner                      user      @relation("video_asset_owner", fields: [owner_id], references: [id], onDelete: Cascade)
+
+  @@index([owner_id, purpose, deleted, createdAt])
+  @@index([status, deleted, updatedAt])
+  @@index([context_id, purpose, deleted])
+  @@map("video_assets")
+}
+
+// Operational retention is independent from user/content lifetime; never cascade it.
+model video_retention_record {
+  id                String    @id @default(cuid())
+  deleted           Boolean   @default(false)
+  deletedAt         DateTime? @map("deleted_at")
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  identity_hash     String    @unique
+  provider          String
+  storage_namespace String
+  object_key        String
+  reason            String
+  retained_at       DateTime  @default(now())
+  review_after      DateTime?
+  deletion_hold     Boolean   @default(true)
+  size_bytes        BigInt?
+  source_etag       String?
+
+  @@index([provider, deletion_hold, review_after])
+  @@index([deleted, retained_at, id])
+  @@map("video_retention_records")
 }
 
 model community_post_media {
@@ -1008,6 +1154,7 @@ model post_reply {
   shares               post_share[]                  @relation("post_share_reply")
   saves                post_reply_save[]             @relation("post_reply_save_reply")
   reports              post_report[]                 @relation("post_report_reply")
+  share_artifacts      post_share_artifact[]         @relation("post_share_artifact_reply")
   video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_reply")
   attention_sessions   content_attention_session[]   @relation("content_attention_session_reply")
 
@@ -1153,6 +1300,35 @@ model post_share {
   @@index([user_id, createdAt])
   @@index([device_id, createdAt])
   @@map("post_shares")
+}
+
+model post_share_artifact {
+  id                 String         @id @default(cuid())
+  deleted            Boolean        @default(false)
+  deletedAt          DateTime?      @map("deleted_at")
+  updatedAt          DateTime       @default(now()) @updatedAt @map("updated_at")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  cache_key          String         @unique @map("cache_key")
+  post_id            String         @map("post_id")
+  reply_id           String?        @map("reply_id")
+  target_type        String         @map("target_type")
+  source_media_url   String         @map("source_media_url")
+  source_fingerprint String         @map("source_fingerprint")
+  layout_version     String         @map("layout_version")
+  storage_key        String         @map("storage_key")
+  file_name          String?        @map("file_name")
+  content_type       String         @map("content_type")
+  size_bytes         Int            @map("size_bytes")
+  expires_at         DateTime       @map("expires_at")
+  last_accessed_at   DateTime       @default(now()) @map("last_accessed_at")
+  post               community_post @relation("post_share_artifact_post", fields: [post_id], references: [id], onDelete: Cascade)
+  reply              post_reply?    @relation("post_share_artifact_reply", fields: [reply_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id, expires_at])
+  @@index([reply_id, expires_at])
+  @@index([expires_at])
+  @@index([storage_key])
+  @@map("post_share_artifacts")
 }
 
 model post_reply_save {
@@ -1352,4 +1528,43 @@ model log__user {
 
   @@index([ref_id])
   @@map("log__users")
+}
+
+model legal_document_version {
+  id                    String             @id @default(cuid())
+  kind                  String
+  version               Int
+  status                String             @default("draft")
+  revision              Int                @default(1)
+  title                 String
+  body                  String
+  change_summary        String
+  content_hash          String
+  created_by_admin_id   String
+  updated_by_admin_id   String
+  published_by_admin_id String?
+  published_at          DateTime?
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @default(now()) @updatedAt @map("updated_at")
+  acceptances           legal_acceptance[]
+
+  @@unique([kind, version])
+  @@index([kind, status, published_at])
+  @@map("legal_document_versions")
+}
+
+model legal_acceptance {
+  id              String                 @id @default(cuid())
+  user_id         String
+  document_id     String
+  document_hash   String
+  action          String
+  adult_confirmed Boolean
+  accepted_at     DateTime               @default(now())
+  user            user                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  document        legal_document_version @relation(fields: [document_id], references: [id], onDelete: Restrict)
+
+  @@unique([user_id, document_id])
+  @@index([document_id, accepted_at])
+  @@map("legal_acceptances")
 }

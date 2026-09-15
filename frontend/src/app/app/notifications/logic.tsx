@@ -5,6 +5,7 @@ import {
   Bell,
   Bookmark,
   CheckCheck,
+  CreditCard,
   Eye,
   Heart,
   MessageSquare,
@@ -29,6 +30,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 type NotificationItem = ApiNotification;
 type NotificationActor = NonNullable<NotificationItem["actor"]>;
@@ -108,6 +110,12 @@ const LABELS: Record<string, NotificationView> = {
     icon: Bookmark,
     tone: NOTIFICATION_ICON_TONE,
   },
+  billing_subscription_status: {
+    title: "Atualização da sua assinatura",
+    description: "Acompanhe a regularização do pagamento.",
+    icon: CreditCard,
+    tone: NOTIFICATION_ICON_TONE,
+  },
 };
 
 const fallbackView: NotificationView = {
@@ -138,6 +146,12 @@ const getStringProp = (value: unknown, key: string) => {
 
   const prop = value[key];
   return typeof prop === "string" ? prop : undefined;
+};
+
+const getDisplayStringProp = (value: unknown, key: string) => {
+  const prop = getStringProp(value, key)?.trim().replace(/\s+/g, " ");
+
+  return prop ? prop.slice(0, 80) : undefined;
 };
 
 const getInitials = (name?: string | null) => {
@@ -192,9 +206,12 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
   }
 
   if (actor && item.message_key === "novo_post") {
+    const communityName = getDisplayStringProp(item.message_props, "community_name");
+
     return (
       <>
-        <ActorName actor={actor} /> publicou na comunidade.
+        <ActorName actor={actor} /> postou{" "}
+        {communityName ? <>em {communityName}</> : "na comunidade"}.
       </>
     );
   }
@@ -344,7 +361,7 @@ const NotificationsHeaderActions = ({
 
             {isConfirmOpen ? (
               <div
-                className="absolute right-0 top-[calc(100%+8px)] z-30 w-56 rounded-2xl border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.14)]"
+                className="absolute right-0 top-[calc(100%+8px)] z-30 w-56 rounded-2xl border border-border bg-surface p-1.5 shadow-lectum-soft"
                 role="menu"
               >
                 <button
@@ -422,11 +439,12 @@ export const NotificationsLogic = () => {
     const className = cn(
       "group flex w-full items-start gap-4 rounded-3xl border border-transparent px-3 py-3 text-left transition hover:bg-surface-muted/70",
     );
+    const redirect = normalizeSafeInternalRedirect(item.redirect);
 
     return (
       <li key={item.id}>
-        {item.redirect ? (
-          <Link className={className} href={item.redirect} onClick={markAsRead}>
+        {redirect ? (
+          <Link className={className} href={redirect} onClick={markAsRead}>
             {content}
           </Link>
         ) : (

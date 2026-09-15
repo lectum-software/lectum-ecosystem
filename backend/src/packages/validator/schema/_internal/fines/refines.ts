@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: despacha refinements declarativos por chave em tempo de execução.
 
 //Types
 import type { RefinementCtx } from "zod";

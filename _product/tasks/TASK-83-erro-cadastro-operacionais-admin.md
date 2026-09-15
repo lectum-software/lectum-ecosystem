@@ -1,4 +1,4 @@
-﻿# TASK-83: Erro no cadastro em Operacionais Admin
+# TASK-83: Erro no cadastro em Operacionais Admin
 
 ## Metadata
 

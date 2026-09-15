@@ -1,6 +1,8 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
+import type { AdminPublicSource } from "@/api/public-response";
 import type { ApiResponse } from "@/api/types";
+import { resolveSafeCsvFilename } from "@/lib/download";
 
 export type TrafficPeriodValue =
   | "7d"
@@ -139,7 +141,7 @@ export type TrafficOnlineNow = {
   new_visitors: number;
   patients: number;
   psychologists: number;
-  source: "visitor_session.last_seen_at+visitor_session.first_seen_at";
+  source: AdminPublicSource<"visitor_session.last_seen_at+visitor_session.first_seen_at">;
   unique_visitors: number;
   window: {
     from: string;
@@ -154,34 +156,34 @@ export type AdminTrafficSummary = {
     post_signup: {
       items: TrafficConversionAction[];
       overall: TrafficConversionChart;
-      source: "user+domain_events";
+      source: AdminPublicSource<"user+domain_events">;
       total_users: number;
     };
     pre_signup: {
       actions: TrafficConversionAction[];
       charts: TrafficConversionChart[];
-      source: "visitor_id+user+important_action_event";
+      source: AdminPublicSource<"visitor_id+user+important_action_event">;
       total_visitors: number;
     };
   };
   conversions: {
     items: TrafficMetric[];
-    source: "domain_events";
+    source: AdminPublicSource<"domain_events">;
   };
   devices: {
     items: TrafficDeviceItem[];
-    source: "visitor_session.device_type+visitor_session.os+page_view_event.display_mode";
+    source: AdminPublicSource<"visitor_session.device_type+visitor_session.os+page_view_event.display_mode">;
     total: number;
   };
   entry_pages: {
     items: TrafficEntryPage[];
-    source: "page_view_event.is_entry+important_action_event.session_id";
+    source: AdminPublicSource<"page_view_event.is_entry+important_action_event.session_id">;
     total: number;
   };
   locations: {
     cities: TrafficLocationItem[];
     countries: TrafficLocationItem[];
-    source: "visitor_location";
+    source: AdminPublicSource<"visitor_location">;
     states: TrafficLocationItem[];
     total: number;
   };
@@ -190,36 +192,36 @@ export type AdminTrafficSummary = {
   period: TrafficPeriod;
   quality: {
     items: TrafficMetric[];
-    source: "page_view_event+important_action_event+visitor_session";
+    source: AdminPublicSource<"page_view_event+important_action_event+visitor_session">;
   };
   top_communities: {
     items: TrafficRankingItem[];
-    source: "page_view_event.target_type=community";
+    source: AdminPublicSource<"page_view_event.target_type=community">;
     total: number;
   };
   top_posts: {
     items: TrafficRankingItem[];
-    source: "page_view_event.page_kind=community_post";
+    source: AdminPublicSource<"page_view_event.page_kind=community_post">;
     total: number;
   };
   top_psychologists: {
     items: TrafficRankingItem[];
-    source: "page_view_event.target_type=psychologist";
+    source: AdminPublicSource<"page_view_event.target_type=psychologist">;
     total: number;
   };
   timeline: {
     points: TrafficTimelinePoint[];
-    source: "visitor_session+page_view_event+important_action_event";
+    source: AdminPublicSource<"visitor_session+page_view_event+important_action_event">;
   };
   traffic_sources: {
     items: TrafficBreakdownItem[];
-    source: "page_view_event.traffic_source+traffic_medium+utm_*";
+    source: AdminPublicSource<"page_view_event.traffic_source+traffic_medium+utm_*">;
     total: number;
   };
   unavailable: TrafficUnavailableMetric[];
   user_types: {
     items: TrafficUserTypeItem[];
-    source: "visitor_session.user.role";
+    source: AdminPublicSource<"visitor_session.user.role">;
     total: number;
   };
 };
@@ -229,13 +231,6 @@ const cleanParams = (input: TrafficSummaryQuery) => ({
   ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
-
-const resolveFilename = (header?: string) => {
-  if (!header) return null;
-
-  const filenameMatch = header.match(/filename="?([^";]+)"?/i);
-  return filenameMatch?.[1] ?? null;
-};
 
 export const getAdminTrafficSummary = async (input: TrafficSummaryQuery) => {
   const response = await adminApi.get<ApiResponse<AdminTrafficSummary>>(
@@ -253,9 +248,10 @@ export const exportAdminTrafficSummary = async (input: TrafficSummaryQuery) => {
     params: cleanParams(input),
     responseType: "blob",
   });
-  const filename =
-    resolveFilename(response.headers["content-disposition"]) ||
-    `lectum-admin-trafego-${input.from || "default"}-${input.to || "default"}.csv`;
+  const filename = resolveSafeCsvFilename(
+    response.headers["content-disposition"],
+    `lectum-admin-trafego-${input.from || "default"}-${input.to || "default"}.csv`,
+  );
 
   return {
     blob: response.data,

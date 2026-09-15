@@ -183,7 +183,7 @@ export const useContentVideoWatchTracking = (
         const start = Math.max(0, Math.floor(Math.min(from, to)));
         const end = Math.min(MAX_TRACKED_SECONDS, Math.max(0, Math.ceil(Math.max(from, to))));
 
-        for (let second = start; second <= end; second += 1) {
+        for (let second = start; second < end; second += 1) {
           watchedSecondsRef.current.add(second);
         }
       };

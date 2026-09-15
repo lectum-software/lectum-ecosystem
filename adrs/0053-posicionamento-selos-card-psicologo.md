@@ -1,4 +1,4 @@
-﻿# ADR-0053: Posicionar selos de forma ascendente em relação ao overlay do card
+# ADR-0053: Posicionar selos de forma ascendente em relação ao overlay do card
 
 ## Status
 

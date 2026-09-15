@@ -14,7 +14,7 @@ export type CommunityExploreContent = {
 export type CommunityExploreCard = CommunityExploreContent & {
   communityId: string;
   slug: string;
-  membersCount: number;
+  postsCount: number;
 };
 
 const DEFAULT_COMMUNITY_IMAGE = "/images/community/explore/autocuidado.png";
@@ -101,6 +101,6 @@ export const buildCommunityExploreCard = (
     isFeatured: content?.isFeatured ?? false,
     isPopular: content?.isPopular ?? true,
     growthLabel: content?.growthLabel,
-    membersCount: community.members_count,
+    postsCount: community.posts_count ?? 0,
   };
 };

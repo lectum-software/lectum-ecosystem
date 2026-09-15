@@ -10,10 +10,10 @@ import {
   PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
+import { assertAdultRegistration } from "@/modules/legal/registration";
 
 //Utils
 import { log } from "@/utils/logs";
-import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 //DTOs
 import type { IHasDTO, IStoreDTO } from "../DTOs/IStoreDTO";
 import type { IStoreRepository } from "./interfaces/IStoreRepository";
@@ -47,13 +47,17 @@ export class StoreRepository implements IStoreRepository {
       const {
         professional_first_name,
         professional_last_name,
+        password_confirm: _passwordConfirm,
         terms_accepted,
+        adult_confirmed,
         terms_version,
         analytics_session_id,
         analytics_visitor_id,
         ...userData
       } = props.b;
+      void _passwordConfirm;
       const role = userData.role || "paciente";
+      await assertAdultRegistration(adult_confirmed, tx);
       const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
         analytics_session_id,
         analytics_visitor_id,
@@ -115,6 +119,19 @@ export class StoreRepository implements IStoreRepository {
         });
       }
 
+      if (adult_confirmed === true) {
+        await tx.user_background.create({
+          data: {
+            user_id: item.id,
+            type: "adult_declaration",
+            data: {
+              declared_at: new Date().toISOString(),
+              minimum_age: 18,
+              source: "registration",
+            },
+          },
+        });
+      }
       if (terms_accepted) {
         await tx.user_background.create({
           data: {
@@ -131,15 +148,17 @@ export class StoreRepository implements IStoreRepository {
         });
       }
 
-      const newItem = {
-        ...item,
-      };
-
       await tx.log__user.create({
         data: {
           action: log.store,
           ref_id: item.id,
-          new: JSON.stringify(sanitizeSensitiveData(newItem, { removeAuthTokens: true })),
+          new: JSON.stringify({
+            active: item.active,
+            confirmed: item.confirmed,
+            need_reset: item.need_reset,
+            provider: item.provider,
+            role: item.role,
+          }),
         },
       });
 

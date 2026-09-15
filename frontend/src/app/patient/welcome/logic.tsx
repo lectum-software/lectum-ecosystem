@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { usePatient } from "@/api/callers/patient";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
@@ -27,22 +28,8 @@ const getRedirectPathForGoal = (goal: unknown) =>
     ? patientWelcomeRedirectPaths[goal]
     : patientWelcomeRedirectPaths.encontrar_psicologo;
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const resolvePatientErrorMessage = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("perfil") || normalized.includes("autoriz")) {
@@ -188,10 +175,10 @@ export const WelcomePatientLogic = () => {
               <Image
                 alt="Lectum"
                 className="lectum-welcome-symbol h-auto w-11 sm:w-[58px]"
-                height={512}
+                height={1500}
                 priority
-                src="/icon.png"
-                width={512}
+                src="/logo-icon.svg"
+                width={1500}
               />
               <h1 className="lectum-welcome-brand mt-5 max-w-[318px] text-[1.58rem] font-extrabold leading-[1.08] tracking-[-0.04em] sm:max-w-[680px] sm:text-[2.65rem]">
                 Bem-vindo &agrave; Lectum
@@ -209,7 +196,7 @@ export const WelcomePatientLogic = () => {
                 </InlineAlert>
               ) : null}
               <button
-                className="group flex h-[60px] w-full items-center justify-center gap-4 rounded-[16px] bg-primary px-6 !text-[1rem] !font-extrabold tracking-[-0.012em] text-surface shadow-[var(--lectum-shadow)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:h-[60px] sm:rounded-[18px] dark:text-foreground"
+                className="group flex h-[60px] w-full items-center justify-center gap-4 rounded-[16px] bg-primary px-6 !text-[1rem] !font-extrabold tracking-[-0.012em] text-primary-foreground shadow-[var(--lectum-shadow)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:h-[60px] sm:rounded-[18px]"
                 onClick={goNext}
                 type="button"
               >

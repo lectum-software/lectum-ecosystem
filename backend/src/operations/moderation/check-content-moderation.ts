@@ -1,4 +1,4 @@
-﻿import { moderatePatientText } from "@/utils/content-moderation";
+import { moderatePatientText } from "@/utils/content-moderation";
 
 type Case = {
   expected: ReturnType<typeof moderatePatientText>["decision"];

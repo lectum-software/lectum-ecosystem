@@ -1,7 +1,7 @@
-import { faker } from "@faker-js/faker";
+import { randomDigits } from "./random";
 
 export function cep(): string {
-  const fiveDigits = faker.string.numeric(5);
-  const threeDigits = faker.string.numeric(3);
+  const fiveDigits = randomDigits(5);
+  const threeDigits = randomDigits(3);
   return `${fiveDigits}-${threeDigits}`;
 }

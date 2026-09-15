@@ -1,39 +1,177 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import packageMetadata from "./package.json";
+import { isLoopbackHostname, parseConfiguredHttpOrigin } from "./src/lib/http-origin-policy";
+import {
+  parseSentryDsn,
+  parseSentryEnvironment,
+  resolveSentryBuildConfiguration,
+} from "./src/lib/sentry-policy";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const remoteHosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+const DEFAULT_API_URL = "http://localhost:3001";
+const apiUrl =
+  parseConfiguredHttpOrigin(process.env.NEXT_PUBLIC_API_URL) ??
+  (process.env.NODE_ENV === "development" ? new URL(DEFAULT_API_URL) : null);
+const sentryDsnConfiguration = parseSentryDsn(process.env.NEXT_PUBLIC_SENTRY_DSN);
+const sentryEnvironment = parseSentryEnvironment(process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT);
+const sentryBuildConfiguration = resolveSentryBuildConfiguration(process.env);
+const sentryUploadConfiguration =
+  sentryDsnConfiguration && sentryEnvironment ? sentryBuildConfiguration : null;
+const canUploadSentrySourceMaps = Boolean(sentryUploadConfiguration);
+let didWarnAboutSentryUploadFailure = false;
+type ImageRemotePattern = {
+  hostname: string;
+  port?: string;
+  protocol: "http" | "https";
+};
+const imageRemotePatterns = new Map<string, ImageRemotePattern>();
+const addImageRemotePattern = (pattern: ImageRemotePattern) => {
+  const key = `${pattern.protocol}://${pattern.hostname}:${pattern.port ?? "*"}`;
+  imageRemotePatterns.set(key, pattern);
+};
+
+addImageRemotePattern({ hostname: "lh3.googleusercontent.com", port: "", protocol: "https" });
+if (process.env.NODE_ENV === "development") {
+  for (const hostname of ["localhost", "127.0.0.1", "[::1]"]) {
+    addImageRemotePattern({ hostname, protocol: "http" });
+    addImageRemotePattern({ hostname, protocol: "https" });
+  }
+}
+
+const assetCspSources = new Set([
+  "https://lh3.googleusercontent.com",
+  ...(apiUrl ? [apiUrl.origin] : []),
+  ...(process.env.NODE_ENV === "development"
+    ? [
+        "http://localhost:*",
+        "https://localhost:*",
+        "http://127.0.0.1:*",
+        "https://127.0.0.1:*",
+        "http://[::1]:*",
+        "https://[::1]:*",
+      ]
+    : []),
+]);
 
 const addRemoteHost = (value?: string | null) => {
   const normalized = value?.trim();
   if (!normalized) return;
 
-  try {
-    remoteHosts.add(
-      new URL(normalized.includes("://") ? normalized : `https://${normalized}`).hostname,
-    );
-  } catch {
-    // Mantém hosts locais explícitos quando a env não for uma URL absoluta.
+  const explicitUrl = normalized.includes("://");
+  const url = parseConfiguredHttpOrigin(normalized, { allowHostname: true });
+  if (!url) return;
+
+  addImageRemotePattern({
+    hostname: url.hostname,
+    port: url.port,
+    protocol: url.protocol === "https:" ? "https" : "http",
+  });
+  assetCspSources.add(url.origin);
+
+  if (!explicitUrl && process.env.NODE_ENV === "development" && isLoopbackHostname(url.hostname)) {
+    addImageRemotePattern({ hostname: url.hostname, port: url.port, protocol: "http" });
+    assetCspSources.add(`http://${url.host}`);
   }
 };
 
-addRemoteHost(apiUrl);
+if (apiUrl) addRemoteHost(apiUrl.toString());
 process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",").forEach(addRemoteHost);
 
-const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: Array.from(remoteHosts).flatMap((hostname) => [
-      {
-        hostname,
-        protocol: "http",
-      },
-      {
-        hostname,
-        protocol: "https",
-      },
-    ]),
+const getApiCspSources = () => {
+  if (!apiUrl) return [];
+
+  const socketProtocol = apiUrl.protocol === "https:" ? "wss:" : "ws:";
+
+  return [apiUrl.origin, `${socketProtocol}//${apiUrl.host}`];
+};
+
+const getConnectCspSources = () => {
+  const sources = new Set(getApiCspSources());
+  if (sentryDsnConfiguration && sentryEnvironment) sources.add(sentryDsnConfiguration.origin);
+
+  return Array.from(sources);
+};
+
+const configuredAssetSources = Array.from(assetCspSources).join(" ");
+const cloudflareStreamCspSource = "https://*.cloudflarestream.com";
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  `img-src 'self' data: blob: ${configuredAssetSources} ${cloudflareStreamCspSource}`,
+  `media-src 'self' blob: ${configuredAssetSources} ${cloudflareStreamCspSource}`,
+  `connect-src 'self' ${getConnectCspSources().join(" ")} ${cloudflareStreamCspSource}`,
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+].join("; ");
+const securityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: contentSecurityPolicy,
   },
-  outputFileTracingRoot: process.cwd(),
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  { key: "X-Robots-Tag", value: "noindex, nofollow" },
+];
+
+if (process.env.NODE_ENV === "production") {
+  securityHeaders.push({
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  });
+}
+
+const nextConfig: NextConfig = {
+  env: {
+    LECTUM_APP_VERSION: packageMetadata.version,
+  },
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  images: {
+    remotePatterns: Array.from(imageRemotePatterns.values()),
+  },
+  turbopack: {
+    root: process.cwd(),
+  },
   poweredByHeader: false,
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  ...(sentryUploadConfiguration ?? {}),
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+    excludeReplayWorker: true,
+    excludeTracing: true,
+  },
+  errorHandler: () => {
+    if (didWarnAboutSentryUploadFailure) return;
+    didWarnAboutSentryUploadFailure = true;
+    console.warn("O upload dos mapas de código de observabilidade não foi concluído.");
+  },
+  release: {
+    create: canUploadSentrySourceMaps,
+    finalize: canUploadSentrySourceMaps,
+    name: `lectum-admin@${packageMetadata.version}`,
+  },
+  routeManifestInjection: false,
+  silent: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+    disable: !canUploadSentrySourceMaps,
+  },
+  suppressOnRouterTransitionStartWarning: true,
+  telemetry: false,
+  widenClientFileUpload: false,
+});

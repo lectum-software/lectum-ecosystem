@@ -24,6 +24,11 @@ export const adminNavItems = [
       { label: "Compliance", href: "/moderacao/compliance", badge: "compliance" },
       { label: "Operacionais", href: "/moderacao/operacionais", badge: "operacionais" },
       {
+        label: "Sugestões de comunidades",
+        href: "/moderacao/sugestoes-comunidades",
+        badge: "sugestoesComunidades",
+      },
+      {
         label: "Conteúdo sensível",
         href: "/moderacao/conteudo-sensivel",
         badge: "conteudoSensivel",
@@ -76,6 +81,7 @@ export const adminNavItems = [
       { label: "Filtros", href: "/configuracoes" },
       { label: "SEO / Metadados", href: "/configuracoes/seo-metadados" },
       { label: "Assinatura", href: "/configuracoes/assinatura" },
+      { label: "Documentos legais", href: "/configuracoes/documentos-legais" },
     ],
   },
 ] as const;

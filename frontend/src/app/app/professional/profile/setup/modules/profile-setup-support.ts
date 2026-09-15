@@ -1,0 +1,294 @@
+import type { CSSProperties } from "react";
+import type { FieldErrors } from "react-hook-form";
+import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/api/errors";
+import type {
+  FreeProfessionalProfile,
+  FreeProfessionalProfilePayload,
+  FreeProfileCatalogCategory,
+  FreeProfileCatalogItem,
+} from "@/api/generator/types/free-profile";
+import { normalizeProfessionalNamePart } from "@/utils/professional-name";
+import type { FreeProfileForm } from "../use-form";
+import { getLanguages, toBirthdateIso, toWhatsappPhoneE164 } from "../use-form";
+
+export const PROFESSIONAL_PROFILE_MENU_HREF = "/app/perfil";
+
+export const PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR =
+  '[data-psychologist-tip-target="profile-video"]';
+
+export type ProfileSetupScrollTarget = keyof FreeProfileForm | "profile_video";
+
+export const PROFILE_SETUP_SCROLL_TARGETS = [
+  "professional_first_name",
+  "professional_last_name",
+  "cpf",
+  "birthdate",
+  "gender",
+  "crp_region",
+  "crp_number",
+  "whatsapp",
+  "profile_video",
+  "specialty_ids",
+  "approach_ids",
+  "service_ids",
+  "target_audience",
+  "language",
+  "modality",
+  "address_state",
+  "address_city",
+] satisfies ProfileSetupScrollTarget[];
+
+const PROFILE_SETUP_SCROLL_OFFSET_PX = 96;
+
+const PROFILE_SETUP_FOCUSABLE_SELECTOR =
+  'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const escapeSelectorValue = (value: string) => {
+  if (typeof CSS !== "undefined" && CSS.escape) {
+    return CSS.escape(value);
+  }
+
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+};
+
+export const getFirstProfileSetupErrorTarget = (
+  errors: Partial<Record<keyof FreeProfileForm, unknown>>,
+): ProfileSetupScrollTarget | null => {
+  for (const target of PROFILE_SETUP_SCROLL_TARGETS) {
+    if (target !== "profile_video" && Object.hasOwn(errors, target)) {
+      return target;
+    }
+  }
+
+  const [fallback] = Object.keys(errors);
+
+  return fallback ? (fallback as keyof FreeProfileForm) : null;
+};
+
+export const scrollToProfileSetupField = (target: ProfileSetupScrollTarget) => {
+  if (typeof document === "undefined" || typeof window === "undefined") return false;
+
+  const element = document.querySelector(
+    `[data-profile-field="${escapeSelectorValue(String(target))}"]`,
+  );
+
+  if (!element) return false;
+
+  const top = Math.max(
+    element.getBoundingClientRect().top + window.scrollY - PROFILE_SETUP_SCROLL_OFFSET_PX,
+    0,
+  );
+
+  window.scrollTo({ behavior: "smooth", top });
+
+  const focusable = element.matches(PROFILE_SETUP_FOCUSABLE_SELECTOR)
+    ? element
+    : element.querySelector(PROFILE_SETUP_FOCUSABLE_SELECTOR);
+
+  if (focusable instanceof HTMLElement) {
+    window.setTimeout(() => focusable.focus({ preventScroll: true }), 260);
+  }
+
+  return true;
+};
+
+export const handleProfileSetupInvalidSubmit = (errors: FieldErrors<FreeProfileForm>) => {
+  const target = getFirstProfileSetupErrorTarget(errors);
+
+  if (target) {
+    scrollToProfileSetupField(target);
+  }
+
+  toast.error("Preencha os campos obrigatórios destacados.");
+};
+
+export const resolveApiError = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível salvar o perfil agora.");
+
+export type CatalogTagGroup = {
+  title: string;
+  items: FreeProfileCatalogItem[];
+};
+
+export const catalogCollator = new Intl.Collator("pt-BR", { sensitivity: "base" });
+
+export const compareCatalogItems = (
+  left: FreeProfileCatalogItem,
+  right: FreeProfileCatalogItem,
+) => {
+  const leftPosition = left.position ?? Number.POSITIVE_INFINITY;
+  const rightPosition = right.position ?? Number.POSITIVE_INFINITY;
+
+  if (leftPosition !== rightPosition) return leftPosition - rightPosition;
+
+  return catalogCollator.compare(left.name, right.name);
+};
+
+export const compareCatalogCategories = (
+  left: FreeProfileCatalogCategory,
+  right: FreeProfileCatalogCategory,
+) => {
+  const leftPosition = left.position ?? Number.POSITIVE_INFINITY;
+  const rightPosition = right.position ?? Number.POSITIVE_INFINITY;
+
+  if (leftPosition !== rightPosition) return leftPosition - rightPosition;
+
+  return catalogCollator.compare(left.name, right.name);
+};
+
+export const createOrderedSpecialtyGroups = (profile?: FreeProfessionalProfile) => {
+  const groups = new Map<
+    string,
+    {
+      items: FreeProfileCatalogItem[];
+      order: number;
+      position: number;
+      title: string;
+    }
+  >();
+  const categories = [...(profile?.catalogs.specialty_categories ?? [])].sort(
+    compareCatalogCategories,
+  );
+
+  for (const [order, category] of categories.entries()) {
+    if (!category.active) continue;
+    groups.set(category.id, {
+      items: [],
+      order,
+      position: category.position ?? Number.POSITIVE_INFINITY,
+      title: category.name,
+    });
+  }
+
+  for (const item of profile?.catalogs.specialties ?? []) {
+    const key = item.category?.id || "uncategorized";
+    const current = groups.get(key) ?? {
+      items: [],
+      order: groups.size,
+      position: item.category?.position ?? Number.POSITIVE_INFINITY,
+      title: item.category?.name || "Outras especialidades",
+    };
+
+    current.items.push(item);
+    groups.set(key, current);
+  }
+
+  return Array.from(groups.values())
+    .filter((group) => group.items.length > 0)
+    .sort((left, right) => {
+      if (left.order !== right.order) return left.order - right.order;
+      if (left.position !== right.position) return left.position - right.position;
+      return catalogCollator.compare(left.title, right.title);
+    })
+    .map((group) => ({
+      items: group.items.sort(compareCatalogItems),
+      title: group.title,
+    }));
+};
+
+export const toFreeProfessionalProfilePayload = (
+  values: FreeProfileForm,
+  profile: FreeProfessionalProfile | undefined,
+  lockProfessionalIdentity: boolean,
+): FreeProfessionalProfilePayload => {
+  const lockedIdentityProfile = lockProfessionalIdentity ? profile?.profile : null;
+  const professionalFirstName = normalizeProfessionalNamePart(values.professional_first_name);
+  const professionalLastName = normalizeProfessionalNamePart(values.professional_last_name);
+
+  return {
+    name: [professionalFirstName, professionalLastName].filter(Boolean).join(" "),
+    professional_first_name: professionalFirstName,
+    professional_last_name: professionalLastName,
+    cpf: lockedIdentityProfile ? lockedIdentityProfile.cpf : values.cpf || null,
+    birthdate: toBirthdateIso(values.birthdate),
+    gender: values.gender || null,
+    race_color: values.race_color || null,
+    religion: values.religion || null,
+    crp_region: lockedIdentityProfile
+      ? lockedIdentityProfile.crp_region
+      : values.crp_region || null,
+    crp_number: lockedIdentityProfile
+      ? lockedIdentityProfile.crp_number
+      : values.crp_number || null,
+    whatsapp: toWhatsappPhoneE164(values.whatsapp, values.countryCode),
+    headline: values.headline || null,
+    bio: values.bio || null,
+    modality: values.modality || null,
+    languages: getLanguages(values.language),
+    target_audience: values.target_audience,
+    discount_first_session: values.discount_first_session,
+    social_value: values.social_value,
+    accepts_insurance: values.accepts_insurance,
+    show_experience_tag: profile?.plan.is_free ? false : values.show_experience_tag,
+    academic: values.academic_formations[0]
+      ? {
+          title: values.academic_formations[0].title || null,
+          institution: values.academic_formations[0].institution || null,
+          graduation_year: values.academic_formations[0].graduation_year || null,
+        }
+      : { title: null, institution: null, graduation_year: null },
+    academic_formations: values.academic_formations.map((item) => ({
+      title: item.title || null,
+      institution: item.institution || null,
+      graduation_year: item.graduation_year || null,
+    })),
+    available_days: values.available_days,
+    address: {
+      street: values.address_street || null,
+      number: values.address_number || null,
+      complement: values.address_complement || null,
+      district: values.address_district || null,
+      zip: values.address_zip || null,
+      city: values.address_city || null,
+      state: values.address_state || null,
+    },
+    specialty_ids: values.specialty_ids,
+    service_ids: values.service_ids,
+    approach_ids: values.approach_ids,
+    published: values.published,
+  };
+};
+
+export const submitProfileSetupForm = ({
+  lockProfessionalIdentity,
+  profile,
+  updateProfile,
+  values,
+  videoSrc,
+}: {
+  lockProfessionalIdentity: boolean;
+  profile: FreeProfessionalProfile | undefined;
+  updateProfile: (payload: FreeProfessionalProfilePayload) => void;
+  values: FreeProfileForm;
+  videoSrc: string | null;
+}) => {
+  if (values.published && !videoSrc) {
+    scrollToProfileSetupField("profile_video");
+    toast.error("Adicione um vídeo de apresentação antes de publicar seu perfil.");
+    return;
+  }
+
+  updateProfile(toFreeProfessionalProfilePayload(values, profile, lockProfessionalIdentity));
+};
+
+export const toggleValue = (values: string[], id: string) => {
+  return values.includes(id) ? values.filter((item) => item !== id) : [...values, id];
+};
+
+export const profileSetupSelectableChip =
+  "inline-flex h-auto min-h-9 items-center justify-center rounded-[14px] border border-border/90 bg-surface px-3.5 py-2 text-xs font-semibold leading-4 text-foreground shadow-lectum-soft transition hover:border-primary/45 hover:bg-primary-soft/70 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-border dark:bg-surface";
+
+export const profileSetupSelectableChipStyle: CSSProperties = {
+  fontSize: "12px",
+  lineHeight: "16px",
+  fontWeight: 600,
+  padding: "8px 14px",
+  minHeight: "36px",
+  height: "auto",
+  borderRadius: "14px",
+  borderWidth: "1.25px",
+};
+
+export const profileSetupButtonGroup =
+  "m-0 flex w-full min-w-0 flex-wrap items-center gap-2 border-0 bg-transparent p-0";

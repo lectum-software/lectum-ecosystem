@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { eligibility, index, store } from "./use-cases/controller";
 import { eligibilityValidator, indexValidator, storeValidator } from "./validator";
 

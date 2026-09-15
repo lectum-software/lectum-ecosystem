@@ -5,30 +5,17 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSuggestCommunity } from "@/api/callers/community";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { components } from "@/components/controllers";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { toSuggestCommunityPayload, useSuggestCommunityForm } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const COMMUNITY_REQUEST_ILLUSTRATION_SRC = "/images/community-request-illustration.svg";
 
 const resolveSuggestError = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("token") || normalized.includes("sess")) {
@@ -40,7 +27,7 @@ const resolveSuggestError = (error: unknown) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em alguns instantes.";
   }
 
   return rawMessage || "Não foi possível enviar sua sugestão agora.";
@@ -54,7 +41,7 @@ export const SuggestCommunityLogic = () => {
   const mutation = useSuggestCommunity({
     onSuccess: () => {
       setApiError(null);
-      router.push("/app/comunidades/sugerir/sucesso");
+      router.replace("/app/comunidades/sugerir/sucesso");
     },
     onError: (error) => setApiError(resolveSuggestError(error)),
   });

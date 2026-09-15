@@ -1,6 +1,8 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
+import type { AdminPublicSource } from "@/api/public-response";
 import type { ApiResponse } from "@/api/types";
+import { resolveSafeCsvFilename } from "@/lib/download";
 
 export type FinanceGroupBy = "day" | "month" | "week";
 export type FinancePeriodValue =
@@ -94,8 +96,10 @@ export type FinancePaymentHistoryItem = {
   external_id: string;
   gateway: "mercadopago";
   internal_id: number;
+  internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
+  source: "gateway_subscription_summary" | "payment_event";
   status: FinancePaymentHistoryStatus;
   status_detail: string | null;
   status_label: string;
@@ -107,7 +111,10 @@ export type FinancePaymentHistory = {
   available: boolean;
   items: FinancePaymentHistoryItem[];
   reason: string | null;
-  source: "payment_event.filtered_by_subscription_reference";
+  source: AdminPublicSource<
+    | "payment_event.filtered_by_subscription_reference"
+    | "payment_event+gateway_subscription_summary"
+  >;
   total: number;
 };
 
@@ -121,7 +128,7 @@ export type FinancePaymentHealth = {
   last_success_at: string | null;
   notes: string[];
   pending_payments: number;
-  source: "payment_event+professional_subscription";
+  source: AdminPublicSource<"payment_event+gateway_subscription_summary+professional_subscription">;
   status: FinancePaymentHealthStatus;
   successful_payments: number;
   success_rate_percent: number | null;
@@ -184,8 +191,10 @@ export type FinanceChargeItem = {
   external_id: string;
   gateway: "mercadopago";
   internal_id: number;
+  internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
+  source: "gateway_subscription_summary" | "payment_event";
   status: "confirmed";
   status_label: "Confirmada";
   subscription: FinanceSubscriptionItem | null;
@@ -208,7 +217,7 @@ export type AdminFinanceDashboard = {
     description: string;
     linked_confirmed_payments: number;
     paid_psychologist_count: number;
-    source: "payment_event_linked_to_paid_psychologists";
+    source: AdminPublicSource<"payment_event+gateway_subscription_summary_linked_to_paid_psychologists">;
     unavailable_reason: string | null;
     value_cents: number;
   };
@@ -216,7 +225,7 @@ export type AdminFinanceDashboard = {
     available: boolean;
     cancelled_subscription_count: number;
     description: string;
-    source: "cancelled_paid_subscriptions";
+    source: AdminPublicSource<"cancelled_paid_subscriptions">;
     unavailable_reason: string | null;
     value_days: number;
     value_months: number;
@@ -235,27 +244,27 @@ export type AdminFinanceDashboard = {
   };
   mrr: {
     description: string;
-    source: "active_paid_subscriptions";
+    source: AdminPublicSource<"active_paid_subscriptions">;
     value_cents: number;
   };
   latest_charges: {
     items: FinanceChargeItem[];
-    source: "payment_event+professional_subscription";
+    source: AdminPublicSource<"payment_event+gateway_subscription_summary+professional_subscription">;
     total: number;
   };
   new_subscriptions: {
     items: FinanceSubscriptionItem[];
-    source: "professional_subscription+subscription_plan+psychologist_profile+user";
+    source: AdminPublicSource<"professional_subscription+subscription_plan+psychologist_profile+user">;
     total: number;
   };
   period: FinancePeriod;
   series: {
     points: FinanceSeriesPoint[];
-    source: "payment_event+professional_subscription";
+    source: AdminPublicSource<"payment_event+gateway_subscription_summary+professional_subscription">;
   };
   subscription_relation: {
     items: FinanceSubscriptionItem[];
-    source: "professional_subscription+subscription_plan+psychologist_profile+user";
+    source: AdminPublicSource<"professional_subscription+subscription_plan+psychologist_profile+user">;
     total: number;
   };
   unavailable: Array<{
@@ -278,13 +287,6 @@ const cleanParams = (input: FinanceRequestQuery) => ({
   ...(input.to ? { to: input.to } : {}),
 });
 
-const resolveFilename = (header?: string) => {
-  if (!header) return null;
-
-  const filenameMatch = header.match(/filename="?([^";]+)"?/i);
-  return filenameMatch?.[1] ?? null;
-};
-
 export const getAdminFinanceDashboard = async (input: FinanceDashboardQuery) => {
   const response = await adminApi.get<ApiResponse<AdminFinanceDashboard>>(
     "/api/admin/private/finance/dashboard",
@@ -298,7 +300,12 @@ export const getAdminFinanceDashboard = async (input: FinanceDashboardQuery) => 
 
 export const getAdminFinanceCharges = async (input: FinanceListQuery) => {
   const response = await adminApi.get<
-    ApiResponse<FinanceListResponse<FinanceChargeItem, "payment_event+professional_subscription">>
+    ApiResponse<
+      FinanceListResponse<
+        FinanceChargeItem,
+        "payment_event+gateway_subscription_summary+professional_subscription"
+      >
+    >
   >("/api/admin/private/finance/charges", {
     params: cleanParams(input),
   });
@@ -326,9 +333,10 @@ export const exportAdminFinanceDashboard = async (input: FinanceDashboardQuery) 
     params: cleanParams(input),
     responseType: "blob",
   });
-  const filename =
-    resolveFilename(response.headers["content-disposition"]) ||
-    `lectum-financeiro-${input.from || "default"}_${input.to || "default"}.csv`;
+  const filename = resolveSafeCsvFilename(
+    response.headers["content-disposition"],
+    `lectum-financeiro-${input.from || "default"}_${input.to || "default"}.csv`,
+  );
 
   return {
     blob: response.data,

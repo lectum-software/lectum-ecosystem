@@ -1,4 +1,4 @@
-import { faker } from "@faker-js/faker";
+import { randomBoolean, randomDigits, randomInteger } from "./random";
 
 export function phone(): string {
   const cellRegex = /^(\+?\d{11,14})?$/;
@@ -6,15 +6,15 @@ export function phone(): string {
 
   let value: string;
   do {
-    const isCell = Math.random() < 0.5;
+    const isCell = randomBoolean();
     let len: number;
     if (isCell) {
-      len = faker.number.int({ min: 11, max: 14 });
+      len = randomInteger(11, 14);
     } else {
-      len = faker.number.int({ min: 10, max: 13 });
+      len = randomInteger(10, 13);
     }
-    const digits = faker.string.numeric(len);
-    value = Math.random() < 0.5 ? `+${digits}` : digits;
+    const digits = randomDigits(len);
+    value = randomBoolean() ? `+${digits}` : digits;
   } while (!cellRegex.test(value) && !residentialRegex.test(value));
 
   return value.replace(/\D/g, "");

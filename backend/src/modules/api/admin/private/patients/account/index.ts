@@ -1,5 +1,4 @@
-﻿import { Router } from "express";
-import adminAuth from "../../../middlewares/_auth";
+import { Router } from "express";
 import {
   changeEmail,
   deactivateAccount,
@@ -23,7 +22,6 @@ import {
 
 const routes = Router();
 
-routes.use(adminAuth);
 routes.get("/:id/account", showAccountValidator, show);
 routes.post("/:id/account/change-email", changeEmailValidator, changeEmail);
 routes.post("/:id/account/send-email-confirmation", reasonOnlyValidator, sendEmailConfirmation);

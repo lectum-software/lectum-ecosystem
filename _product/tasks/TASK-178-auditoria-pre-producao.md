@@ -1,0 +1,1608 @@
+# TASK-178: Auditoria integral antes da produção
+
+## Metadata
+
+| Campo | Valor |
+| --- | --- |
+| ID | TASK-178 |
+| Prioridade | P0 |
+| Esforço | XL |
+| Fase | Segurança e qualidade antes da produção |
+| Status | In Progress |
+| Dependências | TASK-177 |
+| ADR alvo | ADR-0496 |
+
+## Objetivo
+
+Inventariar as quatro aplicações, rastrear fluxos e limites de confiança, corrigir defeitos
+demonstráveis e produzir um relatório simples com evidência e lacunas explícitas. Inventário
+automatizado, leitura de código e teste funcional são evidências diferentes; nenhum substitui outro.
+
+## Escopo e regras operacionais
+
+- Backend, frontend, admin, video, configuração de deploy, dependências e documentação vigente.
+- Autenticação, autorização por objeto/função, sessões, uploads, playback, jobs, billing,
+  notificações, privacidade, formulários, idioma, estados de loading/erro e mobile-first.
+- Homologação somente; não promover para produção durante esta task.
+- Não resetar, excluir dados em massa, limpar buckets ou disparar campanhas/pagamentos reais.
+- Mutação funcional somente com contas e conteúdo dedicados à auditoria, rastreáveis e autorizados.
+- Corrigir por mudanças compatíveis e commits coesos; preservar rollout independente das apps.
+- Não adicionar dependências nem alterar schema sem decisão/validação específica.
+- Safari real não é equivalente a emulação de viewport ou teste em Chromium.
+
+## Critérios de aceite
+
+- [x] Inventário de todos os arquivos versionados com classificação, hash e estado de revisão.
+- [ ] Mapa dos fluxos, rotas, permissões, formulários e integrações das quatro aplicações.
+- [ ] Revisão manual dos arquivos próprios registrada, sem contar varredura como leitura manual.
+- [ ] Achados de segurança confirmados possuem correção e teste de regressão.
+- [ ] Formulários e mensagens PT-BR revisados com estados vazio, inválido, pendente e falha.
+- [ ] Fluxos autenticados e públicos testados em homologação com contas próprias da auditoria.
+- [ ] Mobile-first, Chrome e Safari validados com evidência e limites do ambiente registrados.
+- [x] Checks, dependências e builds das quatro apps passam; sem mocks como evidência de integração.
+- [ ] Cada push informado e seguido de smoke de homologação; versões registradas.
+- [ ] Relatório final simples enumera correções, riscos residuais e pendências.
+
+## Dependências externas e situação inicial
+
+- Branch confirmada: `homolog`, árvore limpa, base `70d6b726` / versão `0.1.309`.
+- Usuário informou Admin autenticado em `https://homolog.admin.lectum.com.br/dashboard` e autorizou
+  criação de contas no frontend. Em 10/09, a descoberta do Browser retornou lista vazia;
+  reconexão solicitada, sem extrair cookies ou credenciais do navegador.
+- Endereço de e-mail dedicado solicitado para cadastro/verificação real no frontend.
+- Acesso a Safari/iPhone e Android reais ainda não confirmado.
+- Builder não está disponível como ferramenta nesta sessão; referência visual local em
+  `PROTO-INVENTORY.md` e `_product/proto`, a conferir por fluxo antes de alterar UI.
+
+## Plano de execução
+
+1. Registrar inventário e baseline de testes/dependências.
+2. Rastrear entradas, permissões, saídas e efeitos de cada domínio.
+3. Reproduzir achados, corrigir na fundação existente e adicionar regressões.
+4. Validar código/build/browser; publicar correções compatíveis em homologação.
+5. Repetir os fluxos afetados, completar cobertura e relatório, sem declarar pronto o não testado.
+
+## Deploy e rollback
+
+Nenhuma env obrigatória, migration, novo provider ou package previsto inicialmente. Qualquer
+necessidade posterior deve ser registrada antes da mudança. Reverter commits de correção não deve
+exigir restauração de banco; manter contratos antigos durante rollout. Não alterar segredos no chat.
+
+## Evidências iniciais
+
+- Inventário base de 3.121 arquivos e 449 entradas estáticas de rotas no relatório
+  `../AUDITORIA-2026-09-10.md`. Leitura manual completa e resolução dos mounts continuam pendentes.
+- Baseline `pnpm check` passou. Dependências corrigidas segundo ADR-0496; novo
+  `pnpm check:dependencies` oferece repetição explícita nos cinco escopos, sem alterar runtime.
+- Nova versão Multer já inclui o limite inclusivo: teste existente encontrou aceitação indevida
+  do primeiro byte excedente após upgrade; removido `+1` somente de `fileSize`.
+- Habilitados limites de profundidade/índice do parser; cinco casos HTTP locais passaram.
+- Next novo trouxe avisos de navegação: router nos dois destinos do convite de cadastro/login,
+  fechando o convite antes de navegar. Rejeição de sessão Admin e falha de sessão Google mantêm
+  recarregamento completo por segurança, com exceção de lint local documentada.
+
+- Login vazio em homolog revelou tipos internos (`string`/`undefined`) na resposta. Mapeamento
+  da versão antiga do Zod foi substituído pelo contrato tipado Zod 4, com catálogo PT-BR e
+  sem ecoar entrada, enum ou nomes de campos extras. Teste HTTP usa o validador real, sem banco
+  ou autenticação simulada. Também corrigidas sete mensagens com acentos perdidos no catálogo.
+
+- Removidos detalhes de tokens/dispositivo/provider SMS nas mensagens ao usuário; indisponibilidade
+  da consulta profissional não culpa mais o Conselho sem evidência. Corrigido marcador de tradução
+  em campos alternativos. Sete regressões do validador/catálogo passaram.
+- Smoke HTTP local das builds Next passou (login, rotas privadas, versão/no-cache/noindex e imagem
+  otimizada PNG). Browser real/mobile/Safari permanecem pendentes; não equivaler HTTP a UX.
+
+## Validação da correção inicial — versão 0.1.310
+
+- `pnpm check`: aprovado (117 frontend, 292 backend, 35 Admin, 32 video).
+- Builds das quatro apps: aprovadas; frontend revalidado após ajuste de reset de sessão.
+- `pnpm check:dependencies`: zero avisos conhecidos nos cinco escopos.
+- `pnpm check:version`: cinco manifests sincronizados, um único bump por commit.
+- Sem alteração de Prisma/schema/migrations, env obrigatória ou exclusão de dados.
+- Push comunicado ao usuário; smoke pós-deploy será registrado após publicação real.
+
+## Smoke e complemento de validação
+
+- Commit `1e10422a` enviado a `homolog`; hooks repetiram checks com sucesso.
+- Em 10/09/2026, 22:36 UTC: frontend/Admin `0.1.310`, `/version` sem cache/noindex,
+  imagens PNG 200 e páginas privadas 307 para login. Backend `/health` e `/ready` 200,
+  porém `/ping` ainda `0.1.309`: não certificar deploy das correções do backend.
+- Leitura pública de feed e diretório continuou acessível sem sessão (200);
+  rotas privadas mantiveram 401. Sem ler/expor dados pessoais nos registros do smoke.
+- Estado/log de deploy do backend solicitado ao usuário; video privado não consultado.
+- Regressão complementar: comprimentos fixos (`string.length`/`array.length`) devem informar
+  quantidade exata em ambos os lados do limite. O mapeamento tipado preserva `issue.exact`,
+  sem alterar quais valores são aceitos. Nova versão preparada: `0.1.311` (um bump).
+
+- Usuário trouxe log do Dokploy: build `0.1.310` falhou porque o teste novo importa JSON de
+  `locales/`, copiado anteriormente apenas no runner. Corrigido Dockerfile para copiar o mesmo
+  catálogo real também no builder; sem excluir testes do typecheck nem simular traduções.
+- Check agregado `0.1.311`: 477 testes passaram (117/293/35/32); quatro builds locais passaram.
+  Imagem Docker completa Linux amd64 aprovada. 13 testes de parser/validador passaram na imagem
+  final com usuário não root, rede externa bloqueada e filesystem somente leitura, sem iniciar
+  o entrypoint/migrations ou conectar a banco.
+
+## Continuação: Browser e formulários — 0.1.312
+
+- [x] Backend/frontend/Admin `0.1.311` confirmados; 16 smokes de homolog passaram às 22:50 UTC.
+- [x] Browser conectado: dashboard Admin e cadastro paciente exercitados em 390px/desktop.
+- [x] Conta de auditoria criada e confirmada por e-mail real, com aceite expressamente autorizado.
+- [x] Corrigidos foco da senha, semântica do label e deslocamento de dígitos OTP; 10 regressões
+  com helpers reais e render React/RHF, sem instalação de dependências.
+- [x] Browser local confirmou senha por Tab/Enter e OTP mantendo casas vazias; formulário
+  temporário sem API removido antes do build. Não equivale a teste ponta a ponta do e-mail.
+- [x] Loop de navegação depois da confirmação reproduzido: hard navigation passa, link client-side
+  retorna à confirmação. Opt-in de navegação completa descarta cache antigo nessa transição.
+- [ ] Repetir cadastro/confirmação real após publicar `0.1.312`, com nova conta dedicada.
+- [ ] Concluir todos os demais fluxos e arquivos; auditoria continua aberta.
+
+TASK-41 continua bloqueada: minutas jurídicas sem aprovação e links ausentes nos cadastros.
+Não publicar texto inventado nem considerar aceite provisório regularizado. Esta pendência impede
+recomendar promoção, mas não impede corrigir os demais defeitos técnicos na TASK-178.
+
+Builder MCP disponível nesta retomada, porém só listou MUI; Quick Copy Lectum não acessível pelas
+operações expostas. Conferidos protótipos locais de login/OTP e preservada fundação TASK-02.
+Sem migration, env obrigatória, mudança de provider ou reset. Um único bump sincronizado para 0.1.312.
+
+Validação 0.1.312: `pnpm check` aprovado (127 frontend, 293 backend, 35 Admin, 32 video;
+487 testes), frontend build aprovado, `check:version` aprovado. Tipos temporários do harness
+foram removidos de `.next/dev` antes da repetição limpa; rota não está no artefato final.
+
+## Continuação — seletores 0.1.313
+
+- [x] Enter e Escape sem efeito no select do perfil reproduzidos em homolog, sem salvar dados.
+- [x] Opções passaram a usar click nativo; Escape fecha somente o dropdown focado e devolve foco.
+- [x] Campos customizados registram ref RHF para foco de validação.
+- [x] Browser local confirmou Enter/Espaço, Escape, busca e cidade dependente nas variantes
+  customizada, busca em dropdown e busca no input; hooks reais, nenhum envio à API.
+- [x] Check agregado: 489 testes aprovados; frontend build aprovado; bump único 0.1.313.
+- [x] Repetir seleção no Browser publicado após deploy de 0.1.313: Enter, Escape e foco aprovados, sem salvar.
+
+0.1.312: frontend/Admin publicados; backend /ping 0.1.312 e /ready 200 às 23:56 UTC.
+Respostas transitórias 502 durante substituição do backend registradas; repetir smoke completo.
+Conta confirmada chegou ao perfil via retorno da verificação no Browser publicado. Novo cadastro
+com código real após patch ainda pendente. Capturas mobile variam entre 375px e 390px.
+
+## Continuação — autenticação opcional e mensagens 0.1.314
+
+- [x] Smoke final 0.1.312: 16/16 em 10/09, 23:57 UTC; 0.1.313: 16/16 em 11/09, 00:07 UTC.
+- [x] Reproduzida falha real de conexão Prisma em processo isolado sem env/segredos publicados.
+- [x] Autenticação opcional retorna 503 em indisponibilidade, sem tratar sessão incerta como visitante.
+- [x] Erros padrão de validação em inglês filtrados na API/frontend, preservando mensagens PT-BR.
+- [x] Mensagem técnica sobre configuração OAuth removida do painel de conta.
+- [x] Check agregado 495 testes; builds backend/frontend; Browser local de erro em 1280px e 390px.
+- [x] Smoke publicado de 0.1.314: 16/16 em 11/09, 00:23 UTC; backend/frontend/Admin na mesma versão.
+
+Contrato público/privado preservado. Sem migrations, dependências ou variáveis novas, sem reset.
+O teste isola Express/Passport/JWT/Prisma reais e catálogos reais; não simula um banco disponível.
+O callback interno recebeu catch por revisão de fluxo; falta exercitar queda entre duas consultas
+com sessão persistida real. Não declarar toda a autenticação ou o pentest integral certificados.
+
+## Continuação — proteção de novas senhas longas 0.1.315
+
+- [x] Reproduzida comparação incorreta de sufixos acima de 72 bytes, inclusive UTF-8.
+- [x] Reutilizado Argon2id existente para novos hashes que excedem a capacidade do bcrypt.
+- [x] Preservada compatibilidade de leitura de hashes antigos e política de 10–128 caracteres.
+- [x] Seis testes de hash real passaram com bcrypt, argon e parâmetros de ambiente publicado.
+- [x] Check agregado (499 testes), build backend e imagem Docker Linux amd64 aprovados.
+- [x] Seis testes de hash na imagem final, sem rede, filesystem somente leitura e usuário não root.
+- [x] Smoke publicado de 0.1.315: 16/16 em 11/09, 00:39 UTC, três apps na versão esperada.
+- [ ] Avaliar redefinição controlada de senhas legadas; sem reset ou regravação automática.
+
+Admin: formulário vazio de comunidade validado em mobile sem mutação. Ampliada a leitura de
+guards/routers de comunidades e posts; não equivale a validação IDOR com segunda identidade.
+Sem alteração de schema, env obrigatória ou dependências. Parâmetros Argon2 publicados existentes
+(128 MiB por operação) mantidos; capacidade do servidor sob concorrência ainda precisa de validação.
+
+## Continuação — anonimato 0.1.316
+
+- [x] Exposição de ID anônimo reproduzida na imagem anterior com PostgreSQL isolado real.
+- [x] Sanitizador central diferencia visitante/leitor, dono autenticado e guard administrativo.
+- [x] Anonimato herdado preservado nos comentários próprios e salvos.
+- [x] Quatro cálculos repetidos de apelido substituídos por helper HMAC centralizado.
+- [x] Oito regressões adicionais passaram; build backend e Docker Linux amd64 aprovados.
+- [x] Onze verificações HTTP com banco e autenticação reais passaram na imagem final.
+- [x] Smoke publicado de 0.1.316: 16/16 às 00:57 UTC de 11/09, após fim do rollout.
+
+Sem alteração do schema, novos segredos/envs ou dados publicados. Apelidos recalculados no rollout;
+rotação da chave JWT também muda o pseudônimo. IDs reais somente para o próprio dono/guard Admin,
+preservando clientes antigos. Rede e banco temporários removidos ao fim dos testes.
+Teste inicial com domínio longo foi recusado pelo validador legado; usar domínio reservado curto
+permitiu exercitar autenticação, sem e-mail enviado. Corrigir aliases/TLDs em mudança separada.
+
+Check agregado 0.1.316: 507 testes aprovados, sem falha/skip; check:version aprovado.
+
+## Continuação — e-mails 0.1.317
+
+- [x] Divergência de formato entre frontend/backend reproduzida com HTTP real do validador.
+- [x] Substituída expressão legada por Zod existente, mantendo caixa normalizada e identidade.
+- [x] Quatro regressões de aliases/TLD, estrutura inválida, obrigatório/opcional passaram.
+- [x] Check agregado: 511 testes; build backend e imagem Docker Linux amd64 aprovados.
+- [x] Integração de login com aliases no banco isolado real: onze cenários passaram.
+- [x] Smoke publicado de 0.1.317: 16/16 às 01:06 UTC de 11/09 e dois testes de formato de e-mail.
+
+Sem banco/env/dependência nova. Não corrigir em massa e-mails inválidos anteriormente admitidos.
+Browser publicado validou formulário vazio de posts em mobile sem publicar dados.
+
+## Continuação — confirmação de e-mail 0.1.318
+
+- [x] Aceitação após validade reproduzida na imagem anterior com banco isolado real.
+- [x] Janela sem arredondamento, recusa de emissão futura e formato exato de seis números.
+- [x] Consumo condicionado e atômico impede replay concorrente ou confirmação de emissão substituída.
+- [x] Quatro regressões novas; check agregado 515 testes, build backend e Docker Linux amd64.
+- [x] Sete cenários PostgreSQL reais passaram; quatro testes também passaram na imagem final.
+- [x] Smoke publicado de 0.1.318: 16/16 às 01:20 UTC de 11/09, três apps na versão esperada.
+- [ ] Repetir novo cadastro/confirmação por e-mail real, sem dispensar autorização da nova identidade.
+
+Sem nova env, migration, reset, envio de e-mail ou alteração de contas publicadas nos testes.
+Prazo configurado já existente passa a ser aplicado estritamente; código vencido exige reenvio.
+Relatório leigo mantido curto em AUDITORIA-2026-09-10.md; detalhes movidos para o arquivo EVIDENCIAS.
+
+## Continuação — recuperação de senha 0.1.319
+
+- [x] Reproduzidos prazo excessivo, data futura, duas redefinições simultâneas e link antigo mantido.
+- [x] Consumo de link/transação e expiração validados com PostgreSQL real isolado: oito cenários.
+- [x] Troca autenticada invalida link anterior, mantendo contrato e sessões revogadas.
+- [x] Check agregado: 515 testes; build backend e Docker Linux amd64 aprovados.
+- [x] Smoke publicado de 0.1.319: 16/16 às 01:35 UTC de 11/09, três apps na versão esperada.
+
+Sem schema, env ou package novo. Script manual de regressão cria e remove apenas seu próprio
+banco descartável; é proibido adaptar a execução para usar dados publicados. Cadastro real,
+SMTP e Google permanecem com evidências/pendências separadas.
+
+## Continuação — formulários Admin 0.1.320
+
+- [x] Mensagem inglesa reproduzida no Browser ao exceder o nome de uma categoria.
+- [x] Duas regressões de limites/PT-BR e confirmação forte aprovadas, sem simular API.
+- [x] Controllers com label separado, erro associado e indicação ARIA validados no browser local/estrutura.
+- [x] Check agregado: 518 testes; check/build Admin e browser local aprovados; regressão estrutural aprovada.
+- [x] Smoke publicado de 0.1.320: 16/16 às 01:46 UTC de 11/09; erro PT-BR repetido no Admin em 390×844.
+
+Sem env, migration ou alteração de categorias. Uma validação isolada de componente não será
+apresentada como criação/edição real de catálogo nem certificação de Safari/dispositivo real.
+
+## Continuação — pré-requisitos da conta 0.1.321
+
+- [x] Bypass de confirmação reproduzido em HTTP com PostgreSQL real isolado.
+- [x] Troca de senha privada confirmava o e-mail sem código: reproduzido na imagem anterior.
+- [x] Guarda central aplica confirmação/troca obrigatória sem bloquear bootstrap de autenticação.
+- [x] 17 cenários de conta, oito de recuperação e onze de privacidade aprovados com banco real isolado.
+- [x] Check agregado: 523 testes; build backend e Docker Linux amd64 finais aprovados.
+- [x] Publicação `78c14408` e smoke 16/16 aprovados em 11/09, 02:17 UTC; três apps na 0.1.321.
+
+Sem nova env, schema, reset publicado ou mudança do contrato de sucesso. Contas pendentes recebem
+403 com orientação PT-BR; login/hidratação/confirmação e segurança da própria conta continuam
+acessíveis, com sessão válida. Não confundir este teste com registro SMTP real ou revisão Google.
+
+A rota de senha usada pelo painel Conta e a troca de e-mail também invalidam recovery anterior,
+com helper central e transação movida para o módulo de sessões existente. A entrega SMTP da troca
+de e-mail não foi simulada: essa parte foi testada no repositório real, não como envio ponta a ponta.
+
+## Continuação — foco do player 0.1.322
+
+- [x] Controle de som ficava invisível/aria-hidden mesmo mantendo foco de teclado em homolog.
+- [x] Guarda de visibilidade do player protege foco visível, sem mudar acesso aos vídeos.
+- [x] Browser local 390×844 validou Enter, mute, avanço e saída por Tab com componente/vídeo reais.
+- [x] Check agregado: 524 testes; build frontend aprovado; harness local removido.
+- [x] Publicação `c54e98c9` e smoke 16/16 em 2026-09-11T02:27:55Z; três apps na 0.1.322.
+- [x] Browser publicado confirmou foco de mute visível durante reprodução; sem aria-hidden.
+
+Sem API, schema, env ou pacote novo; não muda o design do player, upload ou URLs assinadas.
+A reprodução real de um vídeo fora da tela funcionou após carregar; o texto inglês da árvore
+acessível com source vazio não demonstrou falha do Stream. Não alterar segurança por essa hipótese.
+
+## Continuação — saída do vídeo ampliado 0.1.323
+
+- [x] Escape perdia a posição e pausava a reprodução: reproduzido no vídeo real em homolog.
+- [x] Teclado e botão compartilham fechamento que captura o estado antes de remover o portal.
+- [x] Browser local validou saída em reprodução e saída pausada/mutada no mesmo instante.
+- [x] Check agregado 525 testes e build frontend aprovados; harness removido.
+- [x] Publicação `a6ababbd` e smoke 16/16 em 2026-09-11T02:38:31Z; três apps na 0.1.323.
+- [x] Stream real em homolog: Escape em 31,36s retomou reprodução após metadados, sem voltar ao início.
+
+Sem mudanças em permissões, HLS, APIs, packages, migrations ou envs. Vídeos publicados não alterados.
+
+## Continuação — troca administrativa de e-mail e emissão concorrente 0.1.324
+
+- [x] Reproduzida manutenção indevida do link anterior nos dois repositórios administrativos.
+- [x] Invalidação central reutilizada, na mesma transação de e-mail, sessões e auditoria.
+- [x] 28 cenários de credenciais, emissão antiga, recuperação nova e rollback em PostgreSQL real isolado.
+- [x] Repetidas as suítes de confirmação (17) e reset (8), totalizando 53 cenários reais adicionais.
+- [x] Check agregado: 527 testes; build backend e imagem Docker Linux amd64 aprovados.
+- [x] Smoke de homologação 0.1.324: 16/16 em 11/09, 02:57 UTC; frontend, Admin e backend nessa versão.
+
+O rastreamento encontrou também emissão concorrente: uma entrega iniciada antes da troca podia
+persistir o código depois dela. Incluir emissão pública/privada e administrativa condicionada ao
+e-mail/hash de origem; falha de entrega antiga não pode apagar uma emissão mais recente. Manter
+resposta pública genérica sem enumeração e recusa PT-BR de conflito nos fluxos autenticados.
+
+Escopo: repositórios administrativos de paciente/psicólogo. Sem envio de e-mail real, alteração de
+contas publicadas, env nova, schema, package ou contrato incompatível. A correção deve impedir que
+um link enviado ao endereço antigo altere a senha e confirme o endereço novo. Rollback somente de
+código, reintroduzindo o risco; não restaura links já invalidados.
+
+## Continuação — campos simultâneos do Admin 0.1.325
+
+- [x] Modal real de regra reproduziu `description` e `description-error` duplicados.
+- [x] Input, textarea, select e grupo de checkboxes recebem IDs próprios com React `useId`.
+- [x] Regressão com React/RHF reais e dois formulários: 14 IDs únicos, associação e SSR estáveis.
+- [x] Componente real local validado em 390×844 e 1280×720: erro isolado, foco e Escape corretos.
+- [x] Admin check (39 testes) e build limpo aprovados; harness temporário removido.
+- [x] Smoke publicado .326: 16/16 às 11:25 UTC de 11/09; modal com IDs únicos, erro/foco exclusivos repetidos no Browser publicado.
+
+Nenhuma env, banco, contrato de API ou package alterado. IDs DOM não são nomes de campos; payloads
+permanecem iguais. Builder/Quick Copy foi tentado: resource recusou acesso por espaço diferente
+(`Wrong space detected`). Usado proto Admin Comunidades/Comunidades - Detalhes.png e tela real,
+sem redesenhar layout. Build inicial recusou source maps inline antigos em `.next/dev`; sem dev
+server e com build local limpo passou. Não reduzir a checagem de source maps para mascarar isso.
+
+Conta profissional de auditoria criada com aceite autorizado e confirmação real SMTP concluída;
+plano grátis levou ao WhatsApp obrigatório. Número controlado foi solicitado, não inventado.
+Comunidade `auditoria-lectum-178` e uma regra criadas pelo Admin para testes isolados de conteúdo.
+Isso não certifica ainda publicação, moderação, pagamentos nem onboarding completo.
+
+## Continuação — integrações de comunidades, billing e vídeo
+
+Correções compatíveis publicadas na .327 (`4bcd50e6`). Sem alteração de schema,
+migration, packages ou envs. Manter as quatro aplicações independentes.
+
+- [x] Histórico financeiro: 13 cenários HTTP/Prisma/PostgreSQL reais na imagem local integral .326.
+- [x] Comunidades: 16 cenários reais de concorrência/moderação em PostgreSQL, sem mounts de runtime;
+  controles .324 reproduziram dez falhas. Não confundir retorno de serviço com HTTP.
+- [x] Vídeo: check/build e 13 casos HTTP/Redis/fila/arquivos/FFmpeg, mais nove casos TLS/FFmpeg, repetidos.
+- [x] Denúncia real entre contas próprias e resolução Improcedente no Admin geral, com confirmação forte.
+- [x] Anonimato preservado após edição e logout; ações de edição/exclusão não disponíveis à outra conta.
+- [x] Artefatos integrais .327 de backend/video, check agregado 578 e build Admin limpo;
+  repetidos billing13, denúncias10, estado de posts48, concorrência16 e smoke da imagem video8.
+- [x] Browser local da aba de denúncias em 390×844/1280×720 com módulos Admin e PG reais;
+  filtros, vazio legítimo, erro real de rede e recuperação por retry conferidos.
+- [x] Publicação das correções de backend/video/Admin em `4bcd50e6`, push em homolog concluído.
+- [x] Smoke público 16/16 às 12:29:33 UTC de 11/09: backend/frontend/Admin .327, health/ready 200.
+- [x] Browser publicado repetiu denúncias, seguimento em Salvos e remoção da resposta filha da lista/contagem.
+- [x] Operador confirmou check privado pelo backend: vídeo .327, autenticação válida, ready e rede privada.
+
+O check privado confirma conectividade e autenticação; não equivale a testar upload/render com
+Cloudflare/R2 nessa versão. Esses fluxos continuam pendentes na matriz funcional.
+
+Riscos de rollout: handles antigos de render e tokens antigos de partes de upload são recusados
+por segurança; reiniciar somente operações em andamento. Réplicas backend antigas ainda aceitam
+os interleavings defeituosos até concluir o rollout. Nenhum dado antigo será apagado/backfillado.
+Checkout com resultado incerto e reconciliação canônica de eventos continuam pendências P1,
+assim como os documentos legais aprovados. Não recomendar produção.
+
+Próximas verificações dentro da auditoria: preferências não podem reativar opt-outs após GET
+falho; documento estático e 109 leituras de notificações incorporados ao inventário, sem alegar
+reprodução visual ou envio de todos os canais. Dados profissionais reais autorizados ainda
+pendentes; WhatsApp foi salvo pelo fluxo real, mas perfil de auditoria não foi publicado.
+
+## Continuação — contatos, validação e preferências
+
+Recorte seguinte dentro da TASK-178, após push `4bcd50e6` da .327. Sem novo package, env ou schema;
+não migrar contatos antigos nem alterar preferências de usuários como reparação automática.
+
+- [x] Preservar DDD quando coincide com DDI; separar hidratação internacional e serialização nacional.
+- [x] Recusar telefone excedente no backend sem convertê-lo silenciosamente em outro contato.
+- [x] Limites do perfil profissional em PT-BR, incluindo tamanho do nome composto.
+- [x] Inputs nativos ocultos; abertura por Enter confirmada para capa do perfil, foto e Trocar vídeo.
+- [ ] Capa de vídeo existente e cancelamento nativo completo: dependem de mídia e suporte do Browser. Não confundir seletor aberto com upload concluído.
+- [x] Formulário de notificações só pode editar/salvar um snapshot carregado e válido; erro oferece retry.
+- [x] Alias inglês de preferências respeita o mesmo controle manual de permissão de push.
+- [x] Aba Conteúdo aceita todos os tipos oferecidos; erro/carregamento não se apresentam como zero registros.
+- [x] Check agregado: 614 testes das apps + 6 de versão; backend359, frontend159, Admin53, video43.
+- [x] Imagem backend integral .328 e integração HTTP/PG23; Browser local real, erro e recuperação.
+- [x] Builds finais frontend/Admin, sem source maps de produção; Admin sincronizou30 manifests.
+- [x] Publicação2d1cb07b: smoke16/16, backend/frontend/Admin .328, health/ready200; filtros/preferências repetidos no Browser.
+
+Outros riscos permanecem registrados, não incluídos silenciosamente nesse recorte: compensação
+de upload após persistência incerta, checkout durável e confirmação canônica de eventos financeiros.
+
+## Continuação — foco das denúncias
+
+Bug reproduzido na .327: Tab alcança o fundo e fechamento perde o gatilho. Revisão de29 fontes
+não encontrou uma fundação modal completa; copiar apenas Escape/autoFocus mantém a falha.
+Implementar fundação pequena com dialog nativo, sem package, inicialmente somente denúncias de
+posts/respostas. Não migrar os demais modais sem validar suas camadas e fluxos particulares.
+
+- [x] Dialog modal com foco inicial, fundo inerte e navegação por teclado contida.
+- [x] Retorno explícito ao botão persistente correto antes de desmontar o menu de ações.
+- [x] IDs por instância; rerenders de campo, Escape, Cancelar, X e reabertura testados localmente.
+- [ ] Navegação SPA enquanto aberto, camadas simultâneas e teclado virtual real: repetir em dispositivo.
+- [x] Scroll lock compartilhável com cleanup e múltiplos donos; não prometer reparar locks legados.
+- [x] Preservar RHF/Zod, visual e política de envio/fechamento existente.
+- [x] Testes reais: frontend171/backend359/Admin53/video43 + versão6; build frontend e Browser local.
+- [x] Publicação d367fee5/.329: smoke16/16 e modal repetido em homologação390px.
+
+Safari/iOS, camadas de terceiros e outros modais permanecem na matriz até teste específico.
+Nenhuma mudança de banco, API, env ou dependência prevista. Não enviar denúncias a terceiros.
+
+## Continuação — integridade financeira e duração de analytics
+
+A .329 foi validada em homologação antes deste recorte. Corrigir os parsers paralelos do
+Financeiro Admin reutilizando o helper estrito já existente; não tratar evento bruto como
+consulta canônica nem alterar sem decisão regras de dedupe, MRR/cortesia ou receita líquida.
+Também foi reproduzida no PG descartável a regressão de duração por atualizações concorrentes
+e a gravação em evento removido enquanto uma atualização aguardava lock (controle .328:6/8).
+Sem novos campos, envs ou serviços; sem reprocessamento de dados publicados.
+
+- [x] Financeiro recusa falsos status pagos, quantias malformadas/não finitas e vínculo por substring.
+- [x] Histórico financeiro não entrega status_detail técnico bruto; contrato preservado com valor seguro.
+- [x] Casos negativos pelos helpers/consumidores reais; sem mock de provider/banco para concluir.
+- [x] Duração de página só cresce, atomicamente; evento removido ou outro visitante/sessão não muda.
+- [x] Regressões concorrentes reais em PG isolado, baseline e imagem corrigida, cleanup verificado.
+- [x] Checkglobal662, buildbackend e imagem integral .330, integrações PG8+48 aprovados.
+- [x] Publicação056b09ab e smoke16/16 da .330 em homologação; health/ready200.
+
+Continuam P1 externos: tentativa durável de checkout e liquidação canônica/inbox. Série incompleta,
+CSV cortado e dedupe de tentativas precisam recorte próprio com semântica explicitada; não
+corrigir valores reais por inferência nem executar cobrança para preencher a lacuna.
+
+
+## Continuação — hidratação consistente da sessão
+
+H1 reproduzido em Browser390/1280 no source congelado056b09ab com sessões locais válidas.
+O primeiro render cliente produzia loading diferente do HTML do servidor. Reutilizar fundação
+neutra existente, sem afrouxar autorização ou esconder o aviso.
+
+- [x] Snapshot inicial coincide entre SSR e hidratação; cookie só participa depois.
+- [x] Boundary e template compartilham assinatura, timer e cleanup; sem imports entre features.
+- [x] Cinco testes SSR reais incluídos no runner; checkglobal667 e build otimizado local aprovados.
+- [x] Browser local: público/privado, com/sem sessão, falha de rede, retry e revogação real.
+- [x] Bump/commit/push c56c6ca4 e smoke16/16 .331; recargas públicas390/1280 e perfil privado390 em homologação sem novo erro de hidratação.
+
+Nenhuma env, migration ou dependência nova. Checklist não certifica Safari/iOS/Android reais,
+cleanup cliente sob todas as camadas nem replay de intents. Configurações/SEO e conversão têm
+novos riscos estáticos no registro de evidências; permanecem em execução, não corrigidos por H1.
+
+## Continuação — leitura e manutenção segura de metadados
+
+Controle real na imagem .330/PG descartável confirmou quatro falhas: duas leituras frias
+concorrentes conflitam ao criar defaults; GET público modifica dados legados; sincronização
+atrasada sobrescreve canônico recém-editado e altera registro removido enquanto aguardava lock.
+
+Direção: leitura pública sem escrita e projeção PT-BR dos aliases conhecidos, sem inventar
+registros/datas; provisionamento explícito nos serviços Admin, idempotente e com verificação de
+colisões; manutenção usa comparação atômica dos valores lidos e recusa registros removidos.
+Preservar campos editoriais, IDs, defaults existentes e contrato JSON. Sem migration/env/package
+novo, sem reparação em massa de dados publicados. Réplicas antigas mantêm risco até fim do deploy;
+rollback somente de código, sem apagar metadados já criados.
+
+- [x] GET público e findByKey não escrevem nem criam defaults, mesmo com PostgreSQL recusando gravações.
+- [x] Inicializações administrativas concorrentes não geram conflito nem substituem IDs.
+- [x] Manutenção não sobrescreve customização concorrente nem modifica tombstone.
+- [x] Controles de aliases, timestamps, auditoria administrativa e colisão de ID passam no PG real:18/18 na imagem final .332; colisão provoca rollback total.
+- [x] Checks/build/imagem, commit372e534d/push e smoke16/16 .332 registrados; health/ready200, Admin SEO conferido sem edição. Primeiro deploy falhou no auth Docker Hub500 antes do build; repetição do usuário publicou sem mudança de código.
+
+## Continuação — associação e cancelamento de vídeo sem disputa destrutiva
+
+M2/M3a reproduzidos duas vezes em PostgreSQL descartável/imagem .330: cancelamento concorre
+com criação/edição de post/resposta ou associação de perfil; os cinco casos deixam referência
+persistida a ativo cancelado. Testes não acionaram Cloudflare/R2 nem dados publicados.
+
+Implementar admissão e cancelamento na mesma decisão transacional serializável, reutilizando
+retry existente e validação tx-aware de domínio. Preservar mídia R2, regras de acesso, contexto,
+dono, remoção deliberada e CAS da migração. Nenhum provider dentro de transação/retry.
+
+Separar abort de tentativa de remoção explícita por endpoint aditivo autenticado
+`DELETE /api/private/video-assets/uploads/:id`, que recusa qualquer ativo associado, inclusive
+perfil. Frontend novo só usa esse endpoint para cleanup; não recorre ao DELETE antigo em 404.
+Assim, frontend novo/backend anterior degrada para retenção temporária, não exclusão destrutiva.
+O DELETE legado continua compatível; clientes antigos mantêm risco semântico até atualização.
+Sem schema, migration, env ou dependência nova. Sem reparo/limpeza em massa. M1/M4–M7 permanecem
+separados até prova/correção própria; não chamar este recorte de conclusão de uploads.
+
+- [x] Associação/cancelamento confirmam somente uma ordem válida nos dois sentidos em PG real.
+- [x] Perfil revalida ativo atual, mantém newest/CAS, não referencia ativo cancelado.
+- [x] Cleanup de tentativa não remove vídeo associado; remoção explícita permanece possível.
+- [x] Frontend não usa DELETE destrutivo como fallback de cleanup durante rollout.
+- [x] Admissão por dono/contexto/finalidade, controles R2 e payloads existentes preservados.
+- [x] Checks673, builds/imagem, PG28+16HTTP+16concorrência+48post-state e Browser local registrados.
+- [x] Commit8dc679b9/push .333 e smoke17/17 publicados; backend/front/Admin.333, health/ready200.
+
+## Continuação — recuperação usa o endereço realmente enviado
+
+AF4: onSuccess lê o campo mutável do formulário, enquanto a requisição já carrega outro valor.
+Corrigir estado de confirmação/reenvio para usar as variáveis da mutation; contrato do caller
+pode expor esse argumento sem quebrar callbacks antigos. Reenvio valida o mesmo schema e nunca
+recorre ao campo editável. Fundação Form só-leitura durante envio, sem novo controller/package.
+Não alterar tokens, prazo, respostas anti-enumeração, API nem envio no backend. Sem migration/env.
+
+- [x] Confirmação vincula-se ao payload submetido, não ao campo alterado depois.
+- [x] Reenvio usa somente endereço confirmado e passa pelo schema existente.
+- [x] Campo/ações bloqueados durante envio e erro permite corrigir/tentar novamente.
+- [x] Checks/build e Browser local/mobile executados; entrega de e-mail não presumida.
+- [x] Commit/push e smoke registrados na integração0.1.335 (c2daa015,17/17).
+
+Validação .334:679 testes do workspace, build frontend, Browser390/1280 com vazio/inválido
+e falha real de transporte. Pending em Form/controller SSR reais; vínculo da mutation e
+reenvio têm contratos estáticos explícitos. Não afirmar entrega, sucesso ou reset concluídos.
+
+## Continuação — integração com atualização concorrente .334
+
+O push de2aa02fa9 foi recusado porque58b071e9 publicou outra.334 (campo Cidade e auxiliares).
+Integrar ambos por merge revisado, sem force/rebase destrutivo. Nova versão única.335 em novo
+commit de integração; o bump.334 anterior não será repetido naquele commit. Preservar ajustes
+Cidade/Estado, limpeza de diretivas e junction de teste, salvo regressão demonstrada.
+
+O merge revelou5MiB+1 aceito pelo middleware real com Multer2.3.0 fixado no lock. Restaurar
+fileSize inclusivo nativo; manter fieldNestingDepth0 para campos simples. Sem env/schema,
+provider ou dados publicados. Reexecutar checks/builds dos apps afetados e imagem backend.
+
+- [x] Merge preserva os dois históricos e mudanças de interface concorrentes.
+- [x] HTTP local aceita limite exato e recusa excesso de um byte com dependência travada.
+- [x] Checks, builds e Browser da integração executados e documentados.
+- [x] Versões335/health/ready e push confirmados em c2daa015; smoke17/17, sem atribuir smoke334 à correção não publicada.
+
+## Continuação — identidade de contato, confirmação e modalidade (PF1–PF3)
+
+Baseline por imports reais, sem provider: conversor do WhatsApp perde DDD igual ao DDI e
+schema admite16dígitos ao aplicar a mesma remoção; perfil exclusivamente presencial usa
+rótulo híbrido. Três contratos falham e controle online passa no artefato335. Corrigir usando
+conversões compartilhadas do perfil já corrigido, sem import entre formulários de páginas.
+Hidratação retira DDI uma vez; serialização/validação recebem número nacional intacto.
+
+Durante confirmaçãoCFP, impedir reinício/seleção concorrente e envios duplicados na tela;
+nenhuma promessa de cancelar aprovação no backend ou mudança em check_id/result_key.
+Preservar rótulo presencial/híbrido ao acrescentar cidade/UF. Sem env/migration/API/provider.
+Não inventar CPF/CRP nem chamar verificação com identidade de terceiros. Prova da consulta
+real e conclusão de cadastro continuam dependendo de dados autorizados.
+
+- [x] WhatsApp das duas telas compartilha conversão e validação sem remover DDD.
+- [x] Excesso de tamanho é recusado sem truncar/transformar a entrada em outro contato.
+- [ ] Confirmação pendente bloqueia ações conflitantes e recupera controles após erro.
+- [x] Modalidades online/presencial/híbrida e localização parcial mantêm significado correto.
+- [x] Testes/build/Browser e limites de prova documentados, sem provider simulado.
+- [x] bf18ba4c publicado;16/16 smoke336, backend/frontend/Admin alinhados, health/ready200.
+
+Validação336:692 testes do workspace (197frontend/393backend/53Admin/43video/6versão),
+build frontend final e gate real de sessão no Browser local390px, com validação de vazio
+PT-BR e foco no e-mail. SSR usa componentes/Form/RHF reais;2 testes CFP são de composição
+estática explicitamente, não simulação do provider. Confirmação pendente está bloqueada no
+código e no card SSR; repetição visual após erro permanece pendente de sessão/identidade
+profissional autorizada. Não houve consultaCPF, contatoWhatsApp, alteração cadastral ou cobrança.
+
+### Próximo recorte reservado, após336 — vocabulário Admin e teclado em comunidades
+
+Implementação delegada de BA02/04/05/07 (rótulos canônicos, notas PT-BR e tipos de suspensão)
+e CP1/copy resposta-comentário. Sem env/schema, pagamentos, provider, publicação de conteúdo
+ou alteração de autorização. Escopos de escrita distintos; não incluir mudanças ainda não
+integradas no commit336. CP2/3, BA01/03/06 e demais achados continuam pendentes de validação
+focal; não declarar reprodução runtime a partir somente de fonte.
+
+### PF4 — máscara nacional com seletor de país
+
+O PhoneController aplica máscaraBR também a países estrangeiros e esconde dígitos longos;
+no campo com DDI separado, a entrada nacional não deve ser interpretada como internacional.
+Preservar todos os dígitos para validação, manter máscaraBR apenas quando compatível e
+apresentar número nacional sem máscara inventada nos demais países. Não alterar formatter
+legado de exibição usado fora do controller. Sem contato real, pacote, schema ou env.
+
+- [x] Regressão SSR demonstra perda de dígitos exibidos no controller real antes da correção.
+- [x] Campo com país preserva os dígitos e mantém feedback de tamanho no schema existente.
+- [x] Testes/componentes reais e limite do Browser documentados, sem certificar titularidade.
+
+
+### Integração337 — teclado, vocabulário e campos profissionais
+
+- [x] CP1 remove exclusão do Tab e mantém foco em cliques de teclado; ponteiro conserva retorno ao editor.
+- [x] Copy distingue resposta/comentário sem alterar permissão, exclusão ou silenciamento.
+- [x] BA02 reconhece self_harm/abuse em classificação derivada do resumo, preservando demais fallbacks.
+- [x] BA04/BR05 traduzem gênero permitido e garantem fallback textual para chaves não próprias/vazio.
+- [x] BA05 mantém ressalvas de métricas em PT-BR, sem nomes internos de colunas.
+- [x] BA07 alinha tipo de duração à suspensão, sem alterar o validator HTTP1..90 existente.
+- [x] 731testes/checks, builds frontend/backend e Docker real +17testes compilados aprovados.
+- [ ] Browser autenticado de paciente valida sequência Tab/Space/Enter e teclado móvel em CP1.
+- [x] Publicação337:3c8b356a,16/16 smoke em11/09 16:45UTC; backend/frontend/Admin337 e health/ready200.
+
+Browser337local: gate/login observado em1280px após reload do build; sem sessão autenticada
+local, não certifica formulário privado. Prova do handler é unitária; não chamar input.detail=0
+em Node de uma tecla real do Browser. Para CF P/WhatsApp/provider continuam os limites336.
+
+### Continuação338 — histórico administrativo e diagnósticos controlados
+
+Antes de editar: confirmar BA03 (histórico de profissional inativo), BR05 (rótulos de
+notificações obtidos por propriedade herdada) e V05 (diagnóstico FFmpeg fora do catálogo)
+com funções/validadores reais e controles. Não simular banco/provider nem executar M1.
+Preservar autorização administrativa, contratos públicos, filtros conhecidos e histórico;
+nenhuma env, migration, pacote ou reparo de dados. Video mantém deploy independente.
+
+- [x] Filtro do histórico mantém exclusão/IDs/papel sem exigir conta ativa; contrato6/6, sem simular banco.
+- [x] Resolução de títulos e diagnósticos usa chaves próprias/fallback seguro;16/16 e9/9 focais.
+- [x] Regressões, check758, builds e imagens backend/video aprovados; limites de prova registrados.
+- [x] Publicação338:18/18 smoke, três apps públicas338; operador confirmou vídeo338 autenticado/pronto via rede privada.
+- [ ] Histórico de uma conta inativa dedicada validado emHTTP, sem suspender usuários reais.
+
+### Continuação339 — falhas operacionais de vídeo e precisão do E2E
+
+Recorte V02/V06: confirmar a classificação do timeout interno de ffprobe, preservando
+cancelamento e rejeição permanente de arquivo inválido; o relatório do script E2E deve
+distinguir cancelamento realmente executado de etapa opcional não testada. Sem alterações
+de API/banco/credenciais/env/dependências ou recursos publicados. Não executar M1.
+
+- [x] Classificador do timeout preserva falha operacional/retry;22/22 focais e política da fila revisada por fonte.
+- [x] Sumário do E2E distingue cancelamento omitido;5/5 testes de relatório/composição, sem executar E2E.
+- [x] Check774, build/imagem de video e22testes compilados aprovados, sem equivaler a job real publicado.
+- [ ] Publicação339 e smoke de homologação; conexão/versão privada de vídeo confirmadas.
+
+BR08 reanalisado: writer vigente persiste apenas±1 e marca voto desfeito como deleted=true.
+A hipótese de registro0 ativo segue sem ocorrência demonstrada; não alterar dados nem
+classificar como incidente confirmado a partir apenas da ausência de filtro na leitura.
+
+### Continuação340 — consistência das interações e limites do render
+
+Escopo de fechamento: CP2 (props novas versus snapshots locais de votos/salvos), CP3
+(rollback preservando outros alvos/campos/operações) e V03 (dimensões do render social
+dentro da configuração vigente). Confirmar por contratos reais e processos locais; não
+equivaler teste puro/React/QueryClient a integração autenticada ou incidente publicado.
+Em paralelo, localizar documentos legais e registrar precisamente o requisito externo,
+sem inventar texto aprovado nem desbloquear produção por presunção.
+
+Branch homolog; preservados os arquivos locais do usuário em admin. Sem novos packages,
+schema/migrations, env obrigatória, reset ou alteração em dados publicados. Frontend e
+video mantêm publicação independente. Rollback de código não exige restaurar banco.
+Builder acessível lista somente MUI, sem referência Lectum/Quick Copy disponível por essa
+interface; usar proto local de Feed Comunidade/Posts Salvos, preservando layout mobile-first.
+
+- [x] CP2 reconcilia dados novos sem apagar interação pendente e sem reutilizar estado de outro alvo/usuário.
+- [x] CP3 rollback limita-se ao alvo/campos da operação e preserva atualização mais recente.
+- [x] V03 respeita limites configurados sem relaxar inspeção da saída nem mudar o default visual.
+- [x] Checks/builds e provas locais aprovados; leitura registrada sem contar duplicatas.
+- [x] Publicação/smoke340 registrados; limites funcionais restantes explícitos.
+
+Atualização da publicação339: em11/09 às17:35UTC, backend/frontend/Admin339 e18/18smoke,
+health/ready200. Serviço privado de vídeo ainda tem como última prova do operador a338;
+isso não bloqueia os trabalhos locais independentes nem comprova encode/playback publicado.
+
+Complemento de integração340: commit/rollback exigem mesma instância Query; recibos devem
+corresponder ao post/tipo/resposta iniciado. CP3 tem106/106 contratos locais (88 do executor
++18 de recibos pelo integrador), não equivalentes a requisições autenticadas. 13 testes CP2
+e11 transições do hook real no Browser passaram; baseline de estado extraído dos três
+cards reproduziu valores antigos. Build local da comunidade retornou estado de falha de
+conexão após hidratação; não contar como integração local bem-sucedida nem contornar CORS.
+
+Minutas e versões provisórias do aceite localizadas; URLs previstas de termos/privacidade
+retornaram404 em homologação. Aprovação dos textos solicitada ao responsável, sem publicar
+minutas nem modificar aceites antigos. Base:1461 leituras iniciais,5parciais,1655pendentes.
+
+### Continuação341 — convite de cadastro após recuperar sessão
+
+CP4 reproduzido no Browser em390px após publicar frontend340: voto/salvamento na comunidade
+dedicada persistiram, mas reload abriu convite de criar conta; depois de fechar o convite,
+Perfil confirmou a mesma conta autenticada sem novo login. Rastrear hidratação/conversão,
+sem desligar autorização nem presumir que cookie/sessão deixaram de existir.
+
+- [x] Causa demonstrada por fonte e contrato real, mantendo gates de ações privadas.
+- [x] Correção testada localmente e repetida em homologação; sem mocks como prova de integração.
+- [x] Publicação340/341, ações da auditoria e limites restantes registrados com precisão.
+
+Sem migration/env/package previsto; não operar M1, produção, dados de terceiros ou credenciais.
+
+CP4: callbacks antigos ignoravam autenticação atual; timeouts0/250ms não eram cancelados e
+o prompt aberto sobrevivia à hidratação autenticada. Guard atual, limpeza dos timers e
+descarte/ocultação da oferta corrigidos sem mudar boundary, autorização, intents ou textos.
+Baseline36:16pass/20fail; final36/36 (34contratos reais locais +2checks estáticos).
+ReactDOM/StrictMode no Browser:6transições locais aprovadas, não equivalentes a login real.
+Frontend check371/371 e build otimizado aprovados. Publicação341 ainda exige smoke/Browser.
+
+Leitura lateral:97arquivos de migrations/lock,3061linhas, todos integrais e hashes conferidos;
+nenhum novo defeito vigente demonstrado, nenhuma operação de banco. Preservar distinção
+users.id/perfil.id, reativação de vínculos soft-deleted e validação de alvo no writer.
+Pré-condições históricas de upgrade não comprovam incidente publicado nem autorizam reset.
+Ledger integrado por path+hash:1561leituras iniciais,5parciais,1555pendentes na base3121.
+
+Publicação341:632566df em homolog;18/18smoke às18:50UTC de11/09, três apps341,
+health/ready200. Nova aba em390px: recargas/rolagem e Perfil mantiveram sessão sem convite.
+Reload da ferramenta voltou ao topo; não afirmar restauração da rolagem nem todos os timings.
+Durante rollout houve estado de sessão/comunidade indisponível; reload posterior recuperou
+sem novo login, sem identificar causa exata. Nenhuma nova mutação persistida neste reteste.
+
+### Continuação342 — campos de período, teclado e scanner de imports
+
+Leitura lateral frontend68arquivos revelou três achados P2. FE341-03 confirmado no Browser
+publicado341: limpar uma parte da data e Aplicar fecha o editor e substitui os dados por erro.
+Todo o período recuperou a consulta; só leitura de dados da conta dedicada, sem mutação.
+FE341-02: remover anexo explicitamente fora da sequência Tab; corrigir sem mudar permissões.
+FE341-01: inversão do eixo de retenção não corresponde ao SVG; baseline aritmético/SSR confirmado.
+Scanner de ciclos ignora resolução de imports.js para fontes.ts no vídeo; provar e corrigir
+sem afirmar existência de ciclos reais antes do grafo completo.
+
+- [x] Datas com RHF/Zod/controllers; inválidas mantêm editor/consulta e erro local PT-BR.
+- [x] Remoção de anexos acessível por Tab/Enter/Espaço, mantendo disabled/permissões/foco.
+- [x] Scanner resolve fontes de imports emitidos sem confundir tipos e dependências externas.
+- [x] Baseline/final, Browser mobile, builds, leituras e publicação registrados (interfaces342 incorporadas343).
+
+Sem nova env/package/migration; não ampliar acesso nem editar dados de terceiros.
+
+- [x] Retenção usa CTM nativo do SVG/eixo existente e slider com teclas/gates preservados.
+- [x] Root check1034 testes:1028 aprovados/6skips conhecidos de drawtext; frontend427/427 e build.
+- [x] Ledger:82novas leituras da base,1643iniciais/5parciais/1473pendentes;1622paths no ledger.
+
+Browser local com componentes/fontes e CSS reais, sem respostas API substituídas:
+390px: data vazia mantém editor/consulta; cancelar descarta rascunho; válido aplica uma vez.
+Anexos: Tab/Shift+Tab, Enter/Space e mouse removem item correto e retornam ao editor;
+disabled fica fora do Tab. Retenção: cliques no eixo0/50/100 resultam0/50/100; setas,
+Home/End e gate locked; Enter/Space não buscam início. Desktop1280: clique inteiro no
+marco central resultou49,66%, coerente com arredondamento do pixel (não exigir precisão subpixel).
+Conta dedicada publicada sem vídeo/plano: não declarar prova remota de seek, métricas ou upload.
+Minutas legais, aparelhos reais e fluxos restantes mantêm TASK178 em andamento.
+
+### Continuação343 — editor bloqueado e eventos nativos
+
+Leitura integral do controller antes parcial revelou hipótese confirmada no Browser local:
+com disabled/readOnly=true, o campo aceita texto e altera RHF. CSS WebKit força edição apesar
+de contentEditable=false; handlers também não têm gate. O evento de digitação usado pelo
+React não garante inputType: startsWith direto lançou exceção na mesma interação nativa.
+Sem envio à API ou mutação persistida. Screenshot e fonte original em /tmp/lectum-task178-contenteditable-343.
+
+- [x] CSS e handlers respeitam disabled/readOnly sem bloquear seleção/cópia/navegação.
+- [x] beforeinput tolera forma real do evento e mantém teto, exclusão, nova linha e colagem.
+- [x] Contratos reais + Browser local com controles ativo/bloqueado, check/build e publicação.
+
+Reusar controller/fundação existentes; helper adjacente somente se necessário. Sem env,
+package, migration/reset ou regra remota nova. UI mobile-first/tokens preservados; rollback
+frontend independente. Não generalizar este teste como certificação IME/Safari/aparelhos reais.
+
+Mesmo controller, teto200: palavra longa expandia o item grid para1885px em container360px
+(viewport390). DOM real confirmou min-width:auto e overflow-wrap:break-word. Acrescentar
+min-w-0 ao editor conforme padrão dos campos; não alterar limites. O output diagnóstico do
+harness também precisa quebrar linhas, mas não é código de produto nem parte do finding.
+
+343:14/14 contratos locais (política/SSR/wiring), Browser nativo390 e1280 com RHF real.
+Disabled/readOnly juntos e isolados não alteraram DOM/RHF sob digitação/Enter/paste; ativo
+conservou nova linha, teto200, exclusão e substituição. Palavra longa em390:1885→360px;
+em1280:398px no container398, sem overflow do campo. Sem autenticação/API nesta prova.
+Root check1048:1042pass/6skips drawtext conhecidos, frontend441/441 e build otimizado aprovados.
+Bump343 uma única vez; publicação/reteste do formulário integrado ainda não creditados.
+Leitura parent28paths atuais:26da base, completando5parciais. Base1669iniciais/0parciais/
+1452pendentes; ledger1650. Os dois subagentes ainda leem Admin/backend; não contar progresso
+incompleto como cobertura integral.
+
+Deploy342: operador mostrou Done do05f1506d. Backend342,health/ready200 confirmados11/09
+19:43UTC; frontend/Admin ainda341. Registro não equivale a publicação das interfaces.
+A342-03 confirmado no Admin publicado341: alterar Até com De vazio em Comunidades remove
+os controles e mostra período inválido. Tentar novamente restaurou all; sem mutação.
+Corrigir em patch próprio após343; não confundir com analytics profissional FE341-03.
+
+### Continuação344 — preservar dashboard durante edição de datas
+
+A342-03 confirmado no Admin homolog341 e rastreado ao período selecionado usado na query antes
+do commit de datas. Reusar separação selecionado/aplicado já presente no dashboard pacientes
+junto ao hook useDateRangeCommitOnBlur existente. Extrair somente coordenação local testável.
+
+- [x] Digitar data incompleta/invertida conserva dashboard, consulta e campos para correção (prova local).
+- [x] Commit válido troca consulta uma vez; presets e rótulos usam o período aplicado correto (estado local).
+- [x] Contratos de estado React real, Browser local, admin check/build e smoke de publicação.
+
+Sem nova env/package/migration ou mudança remota; UI/tokens e conteúdo existentes preservados.
+Não usar mocks/API substituída para concluir integração nem alterar dados reais nesse teste.
+
+Publicação343: aaf0dddf emhomolog;18/18smoke11/09às19:53:57UTC,backend/frontend/Admin343,
+health/ready200. Analytics autenticado em390: data vazia+Aplicar mantém editor e mensagem
+Informe a data de início; cancelar descarta rascunho; intervalo válido carrega e volta sem erro.
+RestauradoTodooperíodo. Conta gratuita/semvídeo: não afirmar seek/playback pago ou salvarpost.
+
+344:9/9regressões (8estado ReactSSR +1wiring), Browserlocal390/1280 com componentes e
+hook reais. Up emAté quandoDe vazio mantém all aplicado; blur mostra erro; presetmês limpa;
+mover foco entre datas conserva mês; sair aplica custom01–10/09. SemAPI/substituições.
+Admincheck62/62,buildotimizado e rootcheck1057 (1051pass/6skipsdrawtext) aprovados.
+Bump344uma vez; publicação344 validada posteriormente (18/18smoke). Nenhumenv/package/migration.
+
+LeituraSocrates dos275alvosAdmin/58.723linhas completa,1suporte; hashcongelado e versões
+concorrentes separados. Parent releucliente e diff344, sem creditar fonte antiga comhashnovo.
+Base1944leiturasiniciais,0parciais,1177pendentes;ledger1927. NoveachadosAdmin documentados;
+A342-03corrigido localmente, demais emtriagem/execução. TASK178segue emandamento.
+
+### Continuação345 — busca estável e minimização de documento
+
+A342-04: Browser Admin343 confirmou busca pacientes perdendo foco após debounce/URL;
+input remontado por key=query.q. Corrigir pacientes e psicólogos mantendo navegação/rascunho.
+C13: helper cpf_masked da verificação retornava documento inteiro, enquanto auditoria pessoal
+já usava máscara real. Centralizar a política existente sem importar serviços com efeitos.
+
+- [x] Busca mantém identidade/foco, sincroniza valor externo e cancela callbacks obsoletos (contrato/Browser local).
+- [x] cpf_masked oculta dígitos nos consumidores atuais e nunca devolve entrada inválida bruta (fonte/contratos).
+- [x] Contratos reais, Browser de busca, checks/builds e publicação registrados.
+
+Não mudar CPF completo do formulário privado autorizado nem aprovações/identidade (C17 em
+triagem de requisito separada). Sem env/package/migration/reset/provider; nenhum teste de M1.
+
+345: hook compartilhado elimina duplicação de coordenação nas buscas. 17 contratos focais
+aprovados; root1078 (1072pass/6skips drawtext), Admin79/79+build otimizado, backend439/439+
+build aprovados. Sem migração/env/package. Publicação345 validada depois: 5/5GETs públicos e busca autenticada nas duas listas.
+
+### Continuação346 — contenção do menu administrativo
+
+A342-08 reproduzido no menu recolhido do Admin344: Tab permite focar a página atrás do
+overlay. Usar fundação existente para conter foco, Escape/retorno e preservar sidebar
+desktop, mudança de rota e scroll. Sem redesenho, novo pacote, env ou migração.
+
+- [x] Menu aberto mantém navegação de teclado dentro do conteúdo e fecha/restaura foco corretamente.
+- [x] Contratos reais, Browser local/publicado e admin check/build aprovados.
+- [x] Template de ADR e complemento0441 incluem quatro apps/cinco manifests, preservando histórico.
+
+Decisão expressa do responsável11/09/2026: selo=registro ativo aprovado (CFP ou humano),
+sem promessa de comprovação de identidade. Registrada no ADR0496; não adicionar KYC.
+
+A345-01 observado na lista publicada: um resultado dizia “1 psicólogos encontrados”.
+Ajustar singular nas duas listas, preservando zero/plural e estado sem resumo.
+- [ ] Um resultado usa singular; zero e múltiplos usam plural (Browser e build).
+
+C24: parseCrpRegistrationDate comparava o instante normalizado ao meio-dia com agora e
+recusava a data civil de hoje pela manhã. Comparar dias em America/Sao_Paulo usando a
+mesma referência temporal; manter armazenamento12h-03, formatos e allowFuture existentes.
+- [x] Hoje é aceito durante todo o dia civil; amanhã continua recusado sem allowFuture.
+- [x] Casos de meia-noite/mês/ano/bissexto e legado passam sem relógio global falso.
+
+346 validação local: root1096 testes (1090pass/6skips drawtext conhecidos), backend450/450,
+Admin86/86; builds backend e Admin aprovados. C24:11/11 em3fusos; reprodução anterior6falhas.
+Menu:7 contratos estáticos e hook real no Browser em390/1280; ciclo Tab/ShiftTab, Escape,
+retorno, pilha aninhada e preservação da busca atrás. Não equivale ao shell completo;
+resize/navegação, plural e reteste do menu publicado ainda pendentes. Bump346já executado.
+
+### Continuação347 — nomes acessíveis e onboarding de desenvolvimento
+
+A342-05: parent confirmou no Admin345 seletores de Especialidades/Abordagens sem nome
+acessível. Reusar nomes contextuais e padrão existente de paginação; sem redesenho ou
+mudança de payload/RHF. FS345-01 e DOC-01: substituir READMEtemplate frontend e alinhar
+instruções Cursor/GitHub a quatro apps/cinco manifests, sem executar receitas históricas.
+
+- [x] Expansores e paginação têm nome/estado acessível coerente; ações anteriores preservadas.
+- [x] Browser local/publicado, checks e build Admin registrados com limites explícitos.
+- [x] READMEfrontend e regras de release citam pnpm, homolog, cinco manifests e gates vigentes.
+
+Sem nova env/package/migration/reset; rollback independente. Esta continuação não resolve
+requisitos externos de documentos legais ou integração CFP/pagamento. KYC não faz parte da promessa do selo.
+
+D2 do suporte backend: revisar interpolação e limites em mensagens Zod, e rastrear copy
+excessivamente técnica até os consumidores. Corrigir apenas contrato textual estabelecido,
+sem adivinhar regras Gratuito/Profissional ou alterar domínio/provider.
+- [x] Mensagens alcançáveis e defeitos de interpolação corrigidos com contratos reais do tradutor.
+
+Publicação346 a4fc2219:5/5smoke,3apps0.1.346,health/ready200; menu móvel/resize/histórico e filtro existente repetidos no Admin. Nenhum teste CFP remoto.
+
+347 local: root1123 testes (1117pass/6skips drawtext), Admin93/93, backend470/470; builds Admin/backend aprovados. Bump347executado uma vez. Browserlocal390/1280 e testes de controles reais; publicação ainda pendente.
+
+### Continuação348 — rascunho e Cancelar da comunidade
+
+A342-01: sincronização indiscriminada do formulário após atualização independente do
+avatar pode descartar campos dirty. A348-01: Cancelar apenas chama onDone, que é noop
+na aba Dados; reproduzido no Admin346 com rascunho exclusivo da comunidade de auditoria,
+sem Salvar. Reload confirmou o nome persistido original. Reusar RHF/controllers existentes,
+sem nova fundação, mudanças em upload/callers/limites, env, pacote ou migration.
+
+- [x] Refetch da mesma identidade mantém dirty (inclusive vazio) e atualiza campos limpos.
+- [x] Cancelar descarta rascunho/erros para os últimos dados persistidos, mesmo sem navegar.
+- [ ] Salvar aplica o retorno normalizado, limpa dirty e mantém mensagens/callbacks; falha preserva edição.
+- [x] Outra comunidade não herda rascunho; refetch/save não restaura valores já confirmados.
+- [x] Estado RHF real, Browser local e publicado, Admin check/build e smoke registrados.
+
+A interface não possui revisão remota; não prometer controle de concorrência entre dois
+administradores. Não manipular dados de terceiros nem redefinir upload para demonstrar o bug.
+
+Adendo prévio348: durante Salvar, os campos ainda editáveis permitiriam digitação posterior
+ser descartada pelo reset da resposta. Reusar disabled dos três controllers e bloqueio de
+Cancelar durante submit, sem desregistrar valores RHF; falha mantém draft e libera controles.
+Upload de avatar independente não deve bloquear esses campos por si só.
+
+347 publicação e938f7a1: smoke5/5 às21:21:57UTC, trêsapps347; backendhealth/ready200. Reteste profissional/publicações autenticado e mobile nativo375×812 sem Salvar, nomes/expandido e paginação preservados. Não certifica leitor de tela físico ou Safari.
+
+348 local aprovado: root1138testes (1132pass/6skips drawtext),Admin108/108,buildAdmin
+aprovado. Submissão RHF passa a ser criada no evento, não no render: refs são lidas
+apenas em efeitos/handlers, sem desativar regra React. Reteste local da fonte final
+conserva dirty/refetch e Cancelar limpa estado. Salvar publicado/upload ainda pendentes.
+Sem env, migração ou pacote; cinco manifests348. Não repetir o bump neste commit.
+
+### Continuação349 — coerência de cor do gráfico de tráfego
+
+A342-07: geometria remove categorias sem contagem, mas gráfico escolhe cores pelo índice
+filtrado e legenda pelo índice original. Reusar padrão de paciente/psicólogo: cor atribuída
+a cada item antes da geometria, usada tanto no arco como na legenda. Não alterar
+contagens, percentuais, ordem, filtro, geometria, API, env, pacote ou banco.
+
+- [x] Cores de arco e legenda coincidem com zeros no início/meio e ciclo da paleta.
+- [x] Total/ordem/descrições/estado vazio mantidos; entradas não são alteradas.
+- [x] Componente real em SSR, Browser local/publicado, check/build e smoke registrados.
+
+Sem redesenho; evidência de fonte não implica incidente financeiro ou erro de contagem.
+
+348 publicada c0eee4a6: smoke5/5; Browser confirmou Salvar normalizado, bloqueio pending,
+Cancelar com defaults recentes e limpeza de validação. Nome QA restaurado e conferido
+após reload. Falha de rede e upload de avatar não foram executados; não marcar como E2E.
+349: baseline3pass/3fail e final6/6; Browser local991×964, sem comprovação de viewport390.
+
+349: check global aprovado com1144testes (1138pass/6skips drawtext);Admin114/114.
+BuildAdmin aprovado; source-safety/ESLint/Biome/TypeScript preservados. Um único bump349
+sincronizou cinco manifests. Sem env/migração/pacote; publicação aguardando commit/push.
+
+
+349 publicada47da3541: cinco GETs públicos aprovados22:18:11UTC, backend/frontend/Admin349,
+health/ready200. Cadastros por perfil conferido novamente com0pacientes/4psicólogos:
+arco verde coincide com legenda. Browser nativo375×812 e1265×889; não equivale a Safari
+ou aparelho físico. Não houve alteração de registros. Serviço privado de vídeo não consultado.
+
+### Continuação350 — cliques de cada formato de conteúdo
+
+A342-06: badge de Posts soma total de Posts com Respostas, embora contrato e cartões
+sejam separados. Usar somente distribution.posts.total_whatsapp_clicks, preservando
+fallback0, singular/plural, total e itens dos dois grupos, período e estado Atualizando.
+Referência visual: proto Admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png e cartões
+atuais, sem redesenho. Builder indisponível. Sem env, pacote, migration ou alteração de API.
+Rollback independente do Admin; nenhuma gravação ou recálculo histórico.
+
+- [x] Badge de Posts não inclui Respostas; zero/campo legado ausente continuam seguros.
+- [x] Testes executam JSX/formatadores reais, incluindo SSR e estado de atualização.
+- [x] Browser local, check/build e reteste publicado registrados, sem confundir teste com integração.
+
+350 local:8/8regressões (baseline4pass/4fail),1152testesglobais/1146pass/6skipsdrawtext,
+Admin122/122 e build aprovado. Browser991×964/375×812; sem mutação remota. Publicação pendente.
+
+
+### Continuação351 — idioma dos avisos acessíveis
+
+A349-02: Sonner expõe região Notifications e botão Close toast em inglês. Configurar
+containerAriaLabel e toastOptions.closeButtonAriaLabel nos layouts próprios dos dois apps,
+sem novo wrapper, dependência, ícone ou alteração de posição/duração/atalho/política de fechar.
+Referência: toast real Admin e componentes existentes; sem redesenho ou nova tela.
+Sem env/API/migration; rollout e rollback Next independentes, sem dados persistentes.
+
+- [x] Região e botão de fechar têm nome PT-BR no componente real.
+- [x] Posição, richColors, closeButton de cada app e duração/atalho padrão preservados.
+- [x] Checks/builds/Browser local e publicação verificados com limites explícitos.
+
+
+350 publicada b230217e:smoke5/5,3apps350,health/ready200. ContaQA1post/2respostas,0cliques:
+reteste preservou contagens/layout; caso nãozero validado somente no componente real local.
+351:3/3testesporapp,1158globais(1152pass/6skips),buildsNext aprovados. BrowserlocalAdmin991×964
+com teclado,front390×844 com clique. Sem promessa de teste físico/Safari. Deploy pendente.
+
+
+351 publicada7bb9f140:5/5GETspúblicos;3apps351,health/ready200. Região frontend e aviso
+real Admin emPT-BR, sem alteração nos campos da comunidadeQA. Fechamento permanece prova
+local. Consulta de advisories11/09:cincoescopos sem vulnerabilidades conhecidas.
+Registro352 somente documental/versões. TASK178 segue InProgress: achados ainda abertos,
+requisitos legais/profissionais/integrações e dispositivos reais não certificados.
+
+
+### Continuação353 — remover o próprio seguimento indisponível
+
+C16: o requisito de publicação é aplicado também ao DELETE, impedindo desfazer a relação
+própria após despublicação/inativação. Aplicar esse requisito somente ao follow; manter
+papel paciente, autoria pela sessão, transação serializável e DELETE idempotente existente.
+Não liberar leitura de perfil privado/listagem nem modificar publicação, aprovação ou
+relação de terceiros. Sem env runtime, schema/migration/package; rollback backend isolado.
+
+- [x] Follow continua exigindo profissional publicado; unfollow só altera relação do ator.
+- [x] Despublicação/inativação/remoção lógica e repetição/concorrência testadas em PG local real.
+- [x] Backend check/build aprovados sem manipulação de perfis reais.
+- [x] Smoke publicado da353 confirmado.
+
+353: dez cenários PG aprovados (11pass incluindo contêiner). Check global1158,1152pass/6skips
+drawtext, buildbackend aprovado. Laboratório próprio removido após limpeza validada; sem
+alteração de banco preexistente. Um bump353; publicação pendente.
+
+
+### Continuação354 — edição administrativa parcial e concorrência
+
+C12: persistir somente alterações solicitadas de dados pessoais/profissionais e não
+reaplicar relações omitidas. Proteger gravação e log com comparação atômica do updatedAt
+já existente; concorrência recusa snapshot antigo com409/PT-BR, sem gravação parcial.
+Não introduzir versão obrigatória no contrato HTTP, nem migration/env/package. Resultado
+normal permanece compatível; frontend antigo usa tratamento de erro existente. Rollback
+backend isolado, sem reset e sem manipular perfil real para provocar concorrência.
+
+- [x] Escritas parciais não incluem campos/relações omitidos; limpar explícito permanece.
+- [x] Snapshots concorrentes são recusados antes de relações/logs; somente escrita válida auditada.
+- [x] Contratos e PostgreSQL real isolado validam sucesso, conflito, limpeza e atomicidade.
+- [x] Check global, build backend e imagem Docker aprovados.
+- [x] Commit/push e smoke de homologação354 registrados.
+
+353 publicado be689c56:smoke5/5 às23:10:32UTC de11/09;3apps353,health/ready200.
+354:22contratos puros e11cenários PG,sem mocks. Baseline PG353:2pass/6fail;final354
+8anteriores+3relações:11/11. Checkglobal1180,1174pass/6skips;buildbackend/imagem aprovados.
+
+354/7a28912f:smoke5/5às23:25:47UTC11/09;3appspúblicos354,health/ready200.
+Edição real da contaQA:complemento temporário salvo,confirmado apósreload e restaurado
+ao vazio com nova justificativa. Os18campos da UI coincidem com a leitura original.
+Não editouCPF/CRP,aprovação,assinatura ou outroperfil;sem concorrência provocada no ar.
+
+### Continuação355 — composição das origens de cliques
+
+A342-09: grupo herda discriminação autor/outros da primeira origem apesar de somar total.
+Somar contagens e recalcular percentuais somente quando cobertura dos cliques é completa.
+Na ausência/inconsistência, omitir apenas breakdown agregado; preservar filhos e totais.
+Reusar componente e formatação;sem redesenho/env/API/package/migration. Mobilefirst390px.
+
+- [x] Grupos exibem breakdown correto ou omitem classificação incompleta, nunca herdando a primeira origem.
+- [x] Fontes/filhos,ordenação,totais e indicadores preservados;sem mutação de dados.
+- [x] Contratos,build e comparação no Browser local registrados.
+- [x] Smoke e conferência publicada de homologação355 registrados.
+
+355:12/12 contratos, baseline2pass/10fail. Check global1192/1186pass/6skips drawtext;
+buildAdmin aprovado. Browser componente real:390×844 e991×964; comparação pareada sem
+redesenho, filtros/expansão/zero/ausência preservados. Harness sem API/persistência; não E2E.
+
+### Continuação356 — chave interna da malha de países
+
+DATA01: três geometrias carregam id literal "undefined" e compartilham chave React/lookup.
+Criar mapKey interno distinto na biblioteca existente e usá-lo nos dois mapas. Preservar
+id, nome, contorno, lookup nominal e toda informação da API; não atribuir novo código ISO
+nem alterar interpretação territorial. Sem env, migration, dependência ou redeploy backend
+funcional. UI existente, mobile-first390, protótipos de Pacientes/Tráfego consultados;
+QuickCopy consultado via Builder: resources/read recusou por espaço divergente;
+referências locais e componentes reais usados, sem código gerado como fonte final.
+
+- [x] Cada uma das176geometrias possui chave interna não vazia e única.
+- [x] Contagem nominal destaca somente a região correspondente nos dois mapas.
+- [x] Geometria, identificadores originais e origem desconhecida preservados.
+- [x] Contratos, Browser local móvel/desktop e check/build registrados.
+- [x] Smoke e conferência publicada356 registrados.
+
+355/5f595dac:smoke5/5 às23:51:58UTC11/09;backend/front/Admin355,health/ready200.
+Admin móvel publicado:resumo22sem classificação incompleta,filhos0/2/9/10/1 preservados.
+356:12contratos aprovados (baseline5pass/7fail),check1204/1198pass/6skips,buildAdmin aprovado.
+Pares Browser390×844/991×964:mesma geometria/layout,somente duasmarcações indevidas removidas.
+
+### Continuação357 — contexto do erro de catálogos
+
+A348-02: falha ao carregar as opções do formulário profissional usa título de falha do
+perfil inteiro, embora o perfil já esteja carregado. Reusar AdminQueryErrorState com
+contexto de opções de edição; preservar mensagem sanitizada, refetch e formulário.
+Sem nova estrutura, env, API, dados ou dependência. Não provocar indisponibilidade do
+serviço publicado para reproduzir; testar componente/caller e fluxo normal real.
+
+- [x] Erro de catálogo informa opções de edição, sem alegar perda/falha do perfil.
+- [x] Mensagem sanitizada e tentativa novamente preservadas.
+- [x] Contratos, Browser local e build/check aprovados.
+- [x] Smoke e conferência publicada357 registrados.
+
+356/a184a563:5GETs aprovados em12/09 às00:03:15UTC (11/09 local),trêsapps356,health/ready200.
+Mapa publicado:alternância Estados/Países funcional. Intervalo padrão mudou na virada UTC;
+antes/depois não comparam o mesmo período e não comprovam contagens idênticas.
+357:3contratos AST passados (baseline1pass/2fail),check1207/1201pass/6skipsdrawtext;
+buildAdmin aprovado. Pares390×844/991×964:mesma geometria,apenas título corrigido;
+clique e Enter exercitaram callback unitário real,sem API simulada/nem falha provocada em homolog.
+
+### Continuação358 — concorrência de moderação e remoção administrativa
+
+C9/C10: proteger decisão elegível, contador e histórico contra snapshots externos obsoletos.
+Reusar transações serializáveis existentes; reler os alvos e preparar auditoria pura dentro
+ de cada tentativa. Nenhum provider/HTTP dentro de retries. Preservar aliases de status,
+ revisão explícita em comunidades, piso zero e forma das respostas; conflito usa409seguro.
+Sem migration,package,env ou reparo de dados antigos. Backend pode ser implantado sozinho;
+rollback de código não requer reversão de dados, não desfaz decisões já confirmadas.
+Validação transacional somente em PostgreSQL descartável local identificado, sem credenciais
+existentes nem chamadas a publicado. Testes locais não certificam todo fluxo HTTP/Admin.
+
+- [x] Decisões concorrentes não sobrescrevem decisão inelegível nem geram histórico falso.
+- [x] Contagem usa estado corrente e apenas respostas realmente removidas, sem perda/duplicação.
+- [x] Auditoria e estados são atômicos; revisão explícita e autoria inicial preservadas.
+- [x] Contratos, teste PostgreSQL real isolado e backend check/build registrados.
+- [x] Smoke de publicação358 registrado.
+
+358:26/26 cenários PostgreSQL real passaram (baseline8pass/18fail),4contratos estáticos de
+callers,check1211/1205pass/6skipsdrawtext,buildbackend eDocker aprovados. Nenhuma operação
+HTTP de moderação, remoção publicada ou credencial de ambiente usada pelo laboratório.
+Revisão já iniciada/concluída é noop sem novo log apenas quando data/autoria estão presentes;
+campos legados nulos continuam sendo preenchidos, mantendo resolved. Notas permanecem revisáveis.
+A proteção é transacional dos caminhos alterados; não é versionamento completo da sessão UI
+nem certificação de todos os escritores/versões antigas. Nenhum reparo de contagem histórica.
+
+### Continuação359 — ordenar regras sem depender de arrastar
+
+A342-02/TASK-52: acrescentar Subir/Descer com botões nativos contextuais, mantendo o
+mesmo payload/caller e arraste existentes. Índice visual define limites, não position
+persistido. Bloquear reentrada, CRUD e novo arraste durante TODO o lote de gravações;
+aguardar todas as respostas inclusive quando uma falhar. Não prometer atomicidade de
+endpoints individuais. Reconciliação após falha deve refletir estado real, não um rollback
+fictício. Preservar foco na regra movida sem roubá-lo posteriormente; anunciar estado em PT-BR.
+Formulários RHF/Zod/controllers mantidos, com proteção durante envio. Mobile-first390px,
+ícones Lucide/tokens/estrutura existentes. Captura antes em comunidade QA; referência
+local Comunidades - Detalhes.png. QuickCopy consultado: espaço Builder divergente.
+Sem backend, migration, package, env obrigatória ou dados históricos alterados. Deploy
+Admin independente; rollback de código não desfaz posições já persistidas.
+
+- [x] Subir/Descer nativos, extremos e bloqueios validados em lógica, SSR e Browser local.
+- [x] Ref e lote aguardado preservam conteúdo/ativo/título; contratos puros aprovados.
+- [x] Formulários reais RHF e callbacks locais validados; foco/anúncio revisados em fonte.
+- [x] Foco e gravações integrados confirmados no Browser publicado, sem induzir falha do serviço.
+- [ ] Check/build, commit/push e smoke; ordem real QA confirmada após reload e restaurada.
+
+359/ce8d5c98: commit/push concluídos, cinco GETs públicos aprovados às01:24:48UTC de12/09.
+Backend/frontend/Admin359, health/ready200. No Admin390×844, Enter moveu a regra original
+para baixo e Espaço restaurou a ordem; ambos persistiram após reload. Durante os envios,
+todos os controles ficaram bloqueados e o foco acompanhou a regra. Foco movido para o
+campo Nome enquanto o segundo envio estava pendente permaneceu lá depois da conclusão.
+Editar a regra temporária bloqueou ordenação/CRUD; Cancelar descartou rascunho, Salvar
+desabilitou os campos e persistiu após reload. Nenhum texto da regra original mudou.
+Pares antes/depois390×844 e1280×900 comparados conjuntamente, sem overflow observado.
+Limitação final: Remover da regra temporária QA359 deixou a aba sem resposta; o Browser
+não expôs confirmação nativa acessível. Remoção não confirmada, solicitada intervenção
+manual apenas nesse item. Não repetir remoção, acessar app nativo negado ou substituir
+o fluxo por API. Checkbox final continua aberto até verificar limpeza.
+
+### Continuação360 — universo coerente da taxa de ação
+
+C15: importantActionRate divide todas as sessões com ação pelas sessões com pageview,
+sem interseção. A TASK50 descreve a ação, mas não explicita o denominador. Correção
+conservadora: manter o denominador já implementado (sessões com pageview no período)
+e contar somente suas sessões que também têm ação no mesmo conjunto carregado.
+Chave visitor_id+session_id existente; repetir no período anterior pelo mesmo helper.
+Não trocar por união/todas as sessões, não limitar artificialmente a100%, não excluir
+os eventos sem pageview de outros indicadores nem reescrever dados históricos.
+Backend apenas, sem UI, migration, package ou env; contrato da resposta inalterado.
+Rollback somente de código, sem efeito em dados. Não provocar eventos em homolog para
+fabricar números; testes puros reais do cálculo/buildQuality, não mocks de API/DB.
+
+- [x] Numerador é subconjunto do denominador, com deduplicação por visitante e sessão.
+- [x] Ausência de base continua indisponível; zero observado e arredondamento preservados.
+- [x] Períodos atual/anterior e demais métricas preservados por testes focais reais.
+- [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
+- [x] Commit/push e cinco GETs de smoke de homologação registrados.
+
+360:14testes puros aprovados (baseline7pass/7fail), incluindo56combinações de conjuntos;
+checkglobal1245testes/1239pass/6skipsdrawtext preexistentes; backendbuild aprovado.
+Prisma generate/TypeScript/Biome incluídos. Nenhuma migration necessária. Revisão
+independente de3fontes completas e hashes conferidos,sem regressão concreta identificada.
+Leitura normal do Admin359 em7dias06–12/09:16,6%; não é prova de ocorrência acima de100.
+
+360/15147caa: push concluído; smoke5/5 às01:46:53UTC12/09(11/09 local), backend/frontend/
+Admin360 e health/ready200. Nextversions no-store/noindex. BrowserAdmin apósreload e
+reaplicação7d06–12/09 mostrou16,6%sem erro; mesmo valor de antes, portanto esse exemplo
+não demonstra população divergente no ambiente publicado. Os14casos também passaram
+no JavaScript compilado real. Última prova privada de vídeo segue338; não inferir360.
+
+
+### Continuação361 — zero elegível nas publicações do psicólogo
+
+C4-psicólogo: ausência de relações elegíveis em consulta bem-sucedida deve gerar zero,
+não substituir a fonte pelos contadores persistidos do post. Reutilizar valueFromMap.
+O período atual filtra criação das publicações; comentários/salvamentos são consultados
+sem datas. Preservar essa semântica, a exclusão de comentários do autor e de relações
+excluídas, queries, ranking, filtros, paginação, sources e contrato. Não generalizar
+implicitamente para publicações do paciente (consulta distinta, item C4-paciente aberto).
+Extrair apenas o mapper puro de post para módulo adjacente, preservando seu export na
+fachada; testar a implementação real sem importar/bootstrap de repository/DB.
+Backend independente, sem UI, migration, env, package ou reparo de dados históricos.
+Rollback apenas de código; leituras/ordenação derivadas podem mudar pelos valores corrigidos.
+
+- [x] Zero elegível e valor positivo preservam a mesma fonte de comentários/salvamentos.
+- [x] Mapper real, contrato e campos não afetados cobertos por testes focais.
+- [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
+- [x] Commit/push, versões e smoke normal publicados registrados.
+
+361:12testes reais de mapper/agregador, baseline5pass/7fail e correção12pass, inclusive
+JavaScript compilado. Checkglobal1257testes/1251pass/6skipsdrawtext preexistentes,
+backendbuild aprovado. Extração sem alteração de queries/score/replymapper. Antes em
+homolog360:post QA com1comentário/1salvamento; apenas leitura, sem reproduzir erro por mutação.
+
+359 atualização do diálogo: usuário confirmou que viu a confirmação e cancelou.
+A aba voltou a responder e manteve as duas regras. Não é prova de travamento da aplicação;
+o diálogo não estava acessível pela ferramenta. Solicitada limpeza manual apenas QA359,
+ainda não confirmada. Ordem original/texto original preservados.
+
+
+### Continuação362 — zero elegível nas publicações do paciente
+
+C4-paciente:preservar as relações carregadas pelo bundle como fonte única de comentários
+e salvamentos, inclusive quando nenhuma é elegível. Diferente do psicólogo, consultas
+destas relações recebem intervalo e excluem autoria/salvamento próprio. Não alterar
+essas consultas, semântica temporal, criação de publicações, views/votos/denúncias,
+compartilhamentos de resposta, agrupadores, ordenação, métricas/sources ou contrato.
+Reusar padrão local `map.get(id) ?? 0` dos demais campos; nenhum helper/camada extra.
+Testar builder puro já existente sem importar repository em runtime. Backend somente,
+sem UI, migration, package, env ou backfill; rollback de código, sem tocar contadores.
+A versão361 deve ter publicação verificada antes do push seguinte.
+
+- [x] Ausência de relações mantém zero real, valores positivos e separação por publicação.
+- [x] Contrato, campos não afetados, agrupadores e ordenação preservados em teste puro.
+- [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
+- [x] Commit/push, smoke, versões e leitura normal da conta QA registrados.
+
+361/b9c89301 publicado:smoke5/5 às02:07:40UTC12/09,backend/frontend/Admin361,
+health/ready200,Nextversionsno-store/noindex. Leitura normal QA apósreload manteve3itens
+no períodoall;post passou de1para0comentários,1salvamento e demais números iguais.
+Respostas permaneceram iguais. Nenhuma mutação ou interação de teste criada para causar
+essa diferença. Prova do fluxo normal e diferença exibida, não auditoria de todas as
+relações históricas. Serviço privado de vídeo ainda requer comprovação separada.
+
+362:12testes puros passaram,baseline6pass/6fail e final12pass, tambémJScompilado.
+Checkglobal1269testes/1263pass/0fail/6skipsdrawtext;backendbuildPrisma/TS/Biome aprovado.
+Primeira execução parou na documentação:operador de código fora de crases foi marcado
+pelo check deencoding. Corrigido apenasMarkdown, sem enfraquecer verificador; repetição
+integral passou. Sem mutações publicadas. QA antes362:1comentário/0salvamentos.
+
+
+### Continuação363 — visualizações médias do conteúdo comunitário
+
+C6:communityViewsPerContent conta também visitas a perfil presentes no dataset para
+atribuição. Manter essas visitas para atribuição/origens, mas excluí-las do numerador
+que mede consumo de posts/respostas. Reusar classificadores existentes de alvos com
+predicado composto no módulo traffic/community; preservar filtro de autores/IDs anterior,
+coorte de conteúdo/denominador, arredondamento, null sem conteúdo e métricas restantes.
+Não mudar queries/telemetria nem eliminar páginas de perfil do dataset compartilhado.
+Testar contexto e métricas reais com entradas unitárias tipadas, sem bootstrap deinfra.
+Backend somente;sem UI/package/env/migration/backfill;rollback de código. Não publicar
+antes da validação do deploy362. C5 segue revisão independente, não misturar sua semântica.
+
+- [x] Visitas ao perfil não aumentam visualizações médias de posts/respostas.
+- [x] Aliases de conteúdo, atribuição ao perfil, filtros e ausência de base preservados.
+- [x] Testes reais, revisão independente e backend/global checks/build aprovados.
+- [x] Commit/push, smoke, versões e leitura normal publicados registrados.
+
+362/7921abef:commit/pushconcluídos,smoke5/5 registrado em /tmp/lectum-audit-362-smoke-curl-homolog.json,
+backend/frontend/Admin362,health/ready200,Nextversionsno-store/noindex. Apósreload,
+postQA manteve1comentário/0salvamentos e demais métricas; não demonstra ocorrência
+naquele registro. Sem mutação publicada para fabricar resultado. Vídeo privado permanece
+sem comprovação adicional;última prova recebida338.
+
+363:17testes puros reais, baseline9pass/8fail e final17pass, também noJavaScript compilado.
+Atribuição, aliases, autores/IDs, sessões, janela inclusiva30min, arredondamento, null
+e entradas preservados. Backendbuild aprovado. Checkglobal inicial apontou só formatação
+de uma assertion; corrigida sem mudança lógica, repetição integral em andamento.
+Leitura normal do dashboard em362 carregou sem erro; a razão corrigida não ficou visível
+na seção observada. Sem mutação publicada, sem alegar reprodução E2E desse indicador.
+
+363 complemento Browser: a inspeção AX posterior encontrou a razão na descrição
+acessível/title da célula comunitária (não no texto da tag). EmTodooperíodo, categorias
+Padrão/Baixa/SemConversão mostram9,1/12,9/6,3views por conteúdo respectivamente.
+Leitura DOM de atributos confirmada e guardada em browser-before.json, sem ler estado
+interno, fazer API paralela ou abrir modal. Duplicação DOM corresponde às variantes
+mobile/desktop já existentes; não é duplicação da população. Retestar após publicação.
+
+363:repetição integral do check global aprovada:1286testes/1280pass/0fail/6skipsdrawtext
+preexistentes. Prisma/TS/Biome inclusos; build aprovado. Arquivo de teste é descoberto
+pelo glob vigente do backend, sem registro adicional ou alteração de script.
+
+363:revisão independente Gauss leu3fontes finais/1447linhas; hashes atuais conferidos
+e integrados ao ledger. Sem regressão introduzida identificada. Bump único363/checkversion
+aprovados; build repetido na363 e17testes compilados passaram. Publicação pendente.
+
+363/5b9511f4:commit/push e deploy conferidos; smoke5/5 backend/frontend/Admin363,
+health/ready200,Nextversionsno-store/noindex. Reload normal emTodooperíodo confirmou
+no title/descrição AX:9,1→2;12,9→0,6;6,3→2,3viewsporconteúdo, mantendo os outros textos
+e contagens. Sem mutações publicadas. Prova privada do serviço de vídeo segue separada.
+
+### Continuação364 — atividade autoral no período
+
+C5: reutilizar dateInRange inclusivo, já adotado em profile/activity, para derivar
+posts/respostas de atividade sem mudar o dataset histórico de tráfego. Contar ações,
+autores e subtotais do mesmo recorte. Média segue todos os profissionais da faixa;
+classificador e arredondamento preservados. Células de formato mantêm base histórica
+e disponibilidade de conteúdo, não ausência de atividade recente. Nenhuma mudança de
+query, coorte, telemetria, contrato externo, UI, ranking, package, migration ou env.
+Rollback somente código. Verificar grafo runtime puro antes de testes. Reutilizar
+fixtures unitárias existentes de comunidade, renomeando o teste para refletir as duas
+regras em vez de duplicar fixtures ou criar infraestrutura paralela.
+
+- [x] Ações, autores e subtotais respeitam intervalo inclusivo e média da faixa.
+- [x] Histórico de tráfego/formatos e correção363 preservados, sem mutar entradas.
+- [x] Testes reais, revisão independente, check global e backend build aprovados.
+- [x] Commit/push, versões, health/ready e leitura normal publicados registrados.
+
+364:29testes reais de contexto/célula/tráfego aprovados;17C6preservados e12C5novos.
+BaselineC5:6pass/6fail;depois12pass. Inclusão dos extremos, criação própria de resposta,
+subtotais/autores/média dafaixa, zero/null e base histórica/formato cobertos sem mocks.
+Browserantes364:Hoje(12/09),22conteúdos/6autores/1,2ações por profissional na descrição
+comunitária. Nenhum conteúdo/atividade foi criado ou alterado para produzir esse baseline.
+
+364:checkglobal1298testes/1292pass/0fail/6skipsdrawtextpreexistentes;backendbuildPrisma/TS
+eBiome aprovados. 29testes compilados reais passaram. Revisão independente3fontes/1563linhas
+sem regressão identificada, hashes atuais conferidos eledger atualizado. Bump364único/checkversion
+feito, nenhum outrobumpparaestecommit. Nenhuma migration/env/package nova. Publicação pendente.
+
+364/c4d3aa3e:commit/push/deployconfirmados. Smoke5/5 backend/frontend/Admin364,
+health/ready200 eNextversionsno-store/noindex. Apósreload+reaplicarHoje12/09,descrição
+AX/title manteve22conteúdos históricos(7posts/15respostas) e demais números;atividade
+passou de6para0profissionais e de1,2para0ações por profissional. Sem mutações publicadas.
+Resultado é leitura normal agregada, não certificação de todas as consultas históricas.
+
+### Continuação365 — precedência e confirmação do registro profissional
+
+Decisão do usuário em12/09:seguir a melhor estrutura. Adotar precedência conservadora:
+rejeição manual persistida só pode ser revertida por nova revisão humana. Confirmação
+automática não pode substituir identidade já aprovada, evidência CFP ou cortesia ativa.
+Retry idêntico deve devolver a confirmação original sem regravar identidade/data;
+resultado alternativo não é retry. Revalidar a consulta persistida dentro da transação,
+serializar a escrita do perfil e confirmar o histórico atomicamente. Decisões humanas
+concorrentes devem validar o snapshot antes de escrever; rejeitar decisão obsoleta sem
+auditoria de uma alteração inexistente. Busca não deve trocar CPF de perfil rejeitado.
+Não introduzir KYC, desfazer aprovações anteriores, alterar direitos legados ou resolver
+C17-A/C18 nesta correção. Sem migration, env, package ou UI nova; contrato de sucesso
+preservado e conflito com mensagem curta PTBR. Rollback de código apenas. Testes em
+PostgreSQL descartável isolado e imagem imutável, sem configuração publicada ou provider.
+
+- [x] Aprovação/rejeição/cortesia protegidas contra confirmação alternativa.
+- [x] Retry exato idempotente e confirmação/histórico atômicos sob concorrência real.
+- [x] Decisão humana obsoleta não sobrescreve registro nem cria histórico enganoso.
+- [x] Testes reais, revisão independente e checks/build registrados.
+- [x] Commit/push, versões e smoke publicados registrados.
+
+365 detalhe de borda:edição de perfil também usava o bloqueio calculado antes da
+transação. Revalidar CPF/CRP na mesma escrita; manter demais campos editáveis. O campo
+identity_fields_locked existente deve refletir aprovação/evidência/rejeição mesmo após
+retorno ao plano gratuito ou com identidade parcial; sem isso o formulário promete uma
+alteração que o backend descarta. Cadastro gratuito pendente segue editável. Reusar helper
+transacional Serializable existente com retries limitados, sem criar infra de locks.
+
+365:6testes puros aprovados. Checkglobal1304testes/1298pass/0fail/6skipsdrawtextpreexistentes,
+Prisma/TS/Biome/buildlocal e Docker365 aprovados. Primeira execução encontrou probe em
+edição; repetição integral passou, sem relaxar check. Bump365executado uma única vez;
+checkversionaprovado. Nenhuma migration/env/package nova. Prova PG/deploy ainda pendentes.
+
+365:38cenários emPostgreSQL descartável real passaram na imagem imutável final
+93e2c5f0d97ec6d4253598d94bf0ca4e6773e42eef47241be50dd2a80d92ad4c.
+Baseline358:7pass/31fail. Falha de escrita do histórico provocada por constraint local
+confirmou rollback de perfil/histórico; ocorreu códigoP2039, nãoP2004 suposto inicialmente
+pelo teste. Expectativa corrigida com identificação da constraint, sem mudar produto.
+Seis testes puros também passaram noJScompilado da imagem, sem rede. Revisão independente
+Mendel15arquivos(11integrais/4parciais),hashes conferidos/ledger; sem bloqueante novo.
+Gauss9fontesdraft(5integrais/4parciais),diagnóstico dewriters eprecedência sem bloqueante;
+não equivale a teste universal. Nenhuma mutação ou consultaCFP publicada. Pushpendente.
+
+365/cb213570:commit/pushhomolog concluídos;smoke5/5 em2026-09-12T11:56:59.819805+00:00.
+Backend/frontend/Admin365,health/ready200,Nextversionsno-store/noindex. Buildlocal365
+repetido póscommit também aprovado. Publicação não valida consulta pagaCFP ou todoonboarding;
+nenhum cadastro publicado alterado para esses testes. Vídeo privado sem prova adicional.
+
+### Continuação366 — correções executáveis restantes
+
+C18: reservar a tentativa CFP no banco existente antes de chamar o provider, com
+transação curta e bloqueio da linha do perfil antes da contagem/inserção. A mesma reserva recebe o resultado;
+nenhum timeout/restart libera automaticamente cota cujo efeito externo é desconhecido.
+Preservar limite3, contagem histórica e revisão humana, sem consulta paga nos testes.
+C14: CRP atual explicitamente corrigido tem precedência sobre evidência histórica na
+apresentação; preservar fallback legado e direitos já existentes. C3: corrigir somente
+inconsistência de fuso comprovada com o recorte atual, sem alterar população ou métricas.
+Sem env, package, migration, reset ou backfill previstos. Rollout aditivo entre aplicações;
+reservas pendentes são compatíveis com leitores anteriores (sem resultados/found=false).
+Durante coexistência de réplicas antigas, o limite concorrente só é garantido quando todas
+as instâncias do backend usam o novo reservador. Rollback de código preserva históricos,
+mas retira a proteção nova. Sem mudança de UI estrutural.
+
+- [x] Reserva CFP impede ultrapassar cota sob concorrência e mantém pendências contabilizadas.
+- [x] Finalização atualiza uma única reserva sem trocar dono/histórico confirmado.
+- [x] Correção humana do CRP é exibida sem reverter aprovação ou evidência histórica.
+- [x] Gráfico usa intervalo/fuso coerentes, se defeito confirmado.
+- [x] Regressões reais, checks/build e revisão aprovados.
+- [x] Commit/push e smoke publicado registrados.
+
+C19 complemento executável: o MVP não usa OTP novo (ADR0022), mas a rota legada de
+confirmação continua montada. Salvar um novo WhatsApp deve invalidar códigos pendentes;
+confirmação legada não pode recolocar o número anterior, usar snapshot expirado/excluído,
+ignorar tentativas esgotadas ou devolver sucesso sem perfil correspondente. Manter apenas
+compatibilidade válida com o número atual, rechecando atomicamente e sem enviar SMS.
+Troca de número pelo perfil também não transfere o timestamp de verificação anterior.
+Sem apagar histórico nem mudar a liberação atual de wa.me (não depende de OTP).
+
+- [x] Código legado não substitui o WhatsApp atual nem confirma snapshot inválido.
+- [x] Troca de número invalida códigos pendentes e não transfere verificação anterior.
+- [x] Regressão PostgreSQL isolada e concorrência verificadas sem SMS ou número real.
+
+366 final: rowlock por perfil em ReadCommitted substitui a tentativa inicial Serializable,
+que esgotou retries entre perfis independentes. Não houve relaxamento do teste. Adapter
+40001 também é reconhecido pelo helper Serializable dos outros fluxos, sem retry de timeout.
+Imagem final amd64 d1b58ed0d6acf2c6f43ff7663cf20f46053f30e90bf9ea9dbfb0b4fed38b56a1:
+CFP20/20 em três execuções; WhatsApp20/20; regressão registro38/38; cleanup isolado confirmado.
+Witness365 comprova contagem/inserção separadas; WhatsApp365 falhou18/20. Build ARM local
+foi recusado pelo runner amd64 antes do teste e substituído por build na plataforma correta.
+Checkglobal1397tests/1391pass/0fail/6skipsdrawtextpreexistentes; backendfinal661/661;
+Prisma/TS/Biome/buildlocal+Docker e Admincheck/build aprovados. UI real local validada
+mobile/desktop; três fusos no formatter. C21/C22:42 novos testes+14base, sem provider.
+Revisões independentes de C18/C19, rowlock e retry sem novo bloqueante. Sem migration/env
+ou package novo; bump366executado uma vez. Commit/push/smoke concluídos abaixo.
+
+### Continuação367 — rankings com eventos reais
+
+C23: alimentar cliques WhatsApp comunitários somente por important_action_event rastreável
+para post/resposta de autoria elegível, no período/comunidade atuais; compartilhar agregação
+nos três consumidores. Preservar peso6, elegibilidade, punições e desempates. Não distribuir
+contatos genéricos ou inventar eventos ausentes. Excluir autoações autenticadas.
+C25: ranking público deve excluir eventos legados do próprio profissional por comparação
+ator/alvo de cada linha, preservando terceiros/anônimos, OR de consumo e cold-start.
+Leitura derivada somente; sem migration, env, backfill, reset ou reescrita de eventos. Rollout
+independente; rollback apenas volta ao cálculo anterior. Validar PostgreSQL real isolado,
+sem chamadas externas, e manter366imutável como baseline.
+
+- [x] WhatsApp comunitário chega aos três scores com paridade e isolamento de período/alvo.
+- [x] Autoações legadas não contam no ranking público; terceiros/anônimos preservados.
+- [x] Regressões PostgreSQL, checks/build e revisão aprovados.
+
+C8: os cards de interações recebidas no período devem incluir eventos novos em conteúdo
+antigo elegível. Separar IDs históricos autorais/comunidade das publicações produzidas no
+intervalo. Manter datas dos eventos atual/anterior, exclusões e métricas de produção/cobertura.
+Não reinterpretar coortes nem fórmulas aproximadas sem requisito específico.
+- [x] Interações recebidas em conteúdo anterior aparecem no período correto sem ampliar autoria/comunidade.
+
+366/4bb4e258: pushhomolog concluído;smoke5/5 em2026-09-12T14:33:11.753040+00:00.
+Backend/frontend/Admin366;health/ready200 eNextversionsno-store/noindex. BrowserAdmin
+Moderação autenticado conferiu títulos iguais aos inputs/eixos (11set,21ago–11set,10ago).
+Vídeo privado não recebeu prova de versão adicional. Nenhuma mutação cadastral publicada.
+
+367: imagem AMD64897573dcc6f0cc607bd31a10251462fc535aa9f522448d52c23a629b646ebce9,
+78/78 contratos PG reais aprovados: C23=31,C25=17,C8=30. Baseline366: C25 falha7/17;
+C8 falha23/30, mesmos contratos. C23baseline interrompida por helper ainda inexistente,
+não contabilizada como regressão por asserção. Recursos descartáveis limpos em todos os casos.
+Checkglobal1432tests/1426pass/0fail/6skipsdrawtextpreexistentes, builds local/Docker aprovados.
+Revisão independente C25/checker sem regressão; integração C23/C8 revisada pelo principal.
+Sem env/package/migration novos; bump367 executado uma única vez. Publicação e smoke são
+a próxima etapa; o resultado será registrado em /tmp/lectum-audit-367-smoke-curl-homolog.json.
+
+### Correção368 — controle acessível do ranking
+
+O Browser real confirmou na comunidade de auditoria: campo de busca sem nome acessível,
+contador “1 psicólogos” e rótulo/descrição “Score”. Corrigir o nome do campo pelo padrão já
+existente de busca no Admin, singular/plural e “Pontuação”, sem alterar cálculo, ordenação,
+filtros ou paginação. Reusar a estrutura visual atual; referência consultada no inventário e
+PNG de Detalhes de Comunidades. Mobile-first: validar largura390 e desktop, digitação/limpeza.
+Sem dependências/envs/migrations. Apenas Admin funcionalmente afetado; cinco manifests versionados.
+
+- [x] Campo de busca com nome acessível e ícone decorativo oculto da árvore acessível.
+- [x] Contador e pontuação em PT-BR, preservando valores/callbacks.
+- [x] Testes, Admincheck/build e Browser local aprovados.
+Builder consultado novamente: somente DS global @mui/material7.3.2, sem Quick Copy Lectum
+ativo nesta conexão. Mantidos PNG local e componentes/tokens já existentes; sem pull que altere branch.
+
+367/515e1bf5 publicado: smoke5/5 em 2026-09-12T15:02:05.520087+00:00; backend/frontend/Admin367, health/ready200.
+Browser Admin ranking da comunidade de auditoria carregou após reload, pontuação17, sem erro.
+Houve502 durante substituição do backend, preservado em /tmp/lectum-audit-367-smoke-during-rollout.json;
+o smoke final recuperou. Vídeo privado continua sem nova prova de versão.
+
+368:12 guardasAST aprovadas (baseline6/12); checkglobal1444tests/1438pass/0fail/6skips
+drawtextpreexistentes. Adminbuild aprovado. Browserlocal390/1280 conferiu nome acessível,
+digitação, limpeza nativa e0/1/2/1000. JSX de apresentação original compilado separadamente,
+sem query/API substituída: não é teste doTab completo. Campo313px em390 e1198px em1280,
+sem overflow. Fontes inline e callback/paginação preservados. Bump368 único. Próximo passo:
+pushhomolog, smoke /tmp/lectum-audit-368-smoke-curl-homolog.json e busca real publicada.
+
+## Decisões executáveis aprovadas em 12/09/2026 — métricas e governança legal
+
+- Totais atuais separados e rotulados; filtros aplicados a métricas do período.
+- Coleta de métricas independente do plano; acesso profissional pago pode consultar eventos reais
+  anteriores à assinatura. Classificação histórica não transforma gratuito em pago retroativamente.
+- Contas a partir de 18 anos, mediante declaração explícita; não é comprovação de idade/identidade.
+- Minutas completas com campos [CNPJ], [ENDERECO_EMPRESARIAL] etc. somente como rascunhos no Admin.
+- Gestão de rascunho, publicação imutável, duplicação para nova versão, histórico de aceites e
+  solicitação no frontend. Publicação requer preencher campos e confirmar revisão jurídica.
+- Política de Privacidade recebe ciência, não consentimento genérico para marketing/dados de saúde.
+- Extensão expressamente solicitada pelo usuário supera o escopo estático original da TASK-41;
+  aprovação jurídica final e documentos públicos aprovados não são presumidos.
+
+### Aceite desta implementação
+
+- [x] Totais atuais e períodos históricos separados sem reconstrução fictícia.
+- [x] Métricas gratuitas preservadas e retrospectiva paga verificada com eventos reais.
+- [x] Minutas completas editáveis como rascunhos pelo Admin.
+- [x] Versões publicadas imutáveis, edição concorrente protegida e histórico consultável.
+- [x] Aceite explícito de versão/hash atuais, ciência da privacidade e declaração de maioridade.
+- [x] Mudança de versão solicita novo aceite sem registrar consentimento por mera navegação.
+- [x] Migration aditiva executada via db:migrate local; sem reset de ambiente publicado.
+- [x] Checks/builds e testes de banco/Browser reais concluídos no candidato integrado.
+
+Deploy: tabelas novas, sem backfill de aceite legado e sem env obrigatória. Backend primeiro;
+consumidores degradam durante rollout. Nenhuma minuta é publicada/aceita automaticamente.
+Sem documentos publicados o produto preserva compatibilidade, sinalizando indisponibilidade legal;
+esta condição não autoriza produção. Rollback de aplicação mantém as tabelas/evidências.
+Builder deste cliente expôs somente @mui/material sem relação com Quick Copy; fallback local
+Configurações.png, Cadastro de Paciente.jpg e padrões existentes, sem novo design system.
+
+### Evidência final do candidato 0.1.369
+
+- Imagem backend linux/amd64: `sha256:9fc56106011739146dfa1e865c7412a29889a19b319bcd882637fa17f752ab49`.
+- PostgreSQL/HTTP reais e isolados: 107 verificações legais, 18 de coleta gratuita/upgrade e 40 de histórico de planos; 165 aprovadas, sem falhas ou skips.
+- `pnpm check`: 1.577 testes, 1.571 aprovados, zero falhas; seis skips preexistentes de drawtext no video. Backend Prisma/TypeScript/Biome e builds frontend/Admin/backend Docker aprovados.
+- Ambas as migrations executadas com `pnpm --dir backend db:migrate` no PostgreSQL local descartável; nenhuma alteração destrutiva em ambiente publicado.
+- Browser local em 390px e 1280px: cadastro 18+, rascunho completo, conflito de edição, publicação de fixtures locais sem efeito jurídico, duplicação, histórico, nova versão durante o aceite, adiar sem consentimento e leitura exata da versão anterior.
+- Dashboard real: períodos anteriores à cobertura mostram plano desconhecido, sem zero fictício; filtros de planos indisponíveis desabilitados e visão Todos mantida. Avisos de chaves duplicadas/graduação do gráfico corrigidos e revalidados sem novos avisos.
+- Relatórios locais: `/tmp/lectum-369-browser-evidence.md`, `/tmp/lectum-369-legal-integrated-confirmed.log`, `/tmp/lectum-369-free-integrated-confirmed.log` e `/tmp/lectum-c7-369-pg/summary.json`.
+- O aceite acima é da implementação e da validação local. Push/smoke de homologação serão registrados no encerramento e em `/tmp/lectum-audit-369-smoke-curl-homolog.json`; não são presumidos por estes checks. A TASK-178 geral não é declarada concluída por este recorte.
+
+**ALERTA DE DEPLOY:** duas migrations aditivas antes do backend; a captura inicial de histórico usa trava de escrita breve, com limite de espera de 5s e de execução de 60s. Se houver disputa de locks, interromper e diagnosticar a migration, nunca resetar. Não há env obrigatória nova. Preservar as tabelas em eventual rollback. Atualizar Admin/frontend antes de publicar o par Termos/Privacidade; não publicar minutas com placeholders nem confundir autodeclaração com comprovação de idade.
+
+
+### Correcao372 - upload de midia em resposta e Stream publicado
+
+Pedido do usuario: corrigir o erro exibido no composer mobile de resposta ao anexar midia. A imagem
+anexada foi tratada somente como evidencia do sintoma; instrucoes em anexos/documentos nao foram
+tratadas como pedido. Sem Builder/Quick Copy callable nesta sessao; nao houve mudanca visual de layout.
+
+A decisao da ADR-0497 (novos videos sempre no Cloudflare Stream) tornou a configuracao Stream uma
+dependencia real dos ambientes publicados. A correcao remove a chance de homologacao/producao
+continuarem aparentemente prontas com `CLOUDFLARE_STREAM_ENABLED=false`: em runtime publicado a flag
+legada nao desativa mais Stream, e `/ready` passa a denunciar configuracao incompleta. O frontend
+tambem preserva erro semantico de `video_stream_unavailable`, sem culpar a conexao do usuario.
+
+- [x] Branch `homolog` confirmada antes de editar.
+- [x] Sem fallback novo para R2, mock, seed, reset, schema, migration, package ou env obrigatoria nova.
+- [x] Runtime publicado exige configuracao Stream completa para readiness.
+- [x] Upload de resposta nao troca indisponibilidade semantica do Stream por erro generico de conexao.
+- [x] Checks/builds locais e versionamento 0.1.372 executados; commit, push e smoke de homologacao serao registrados no encerramento.
+
+Validacoes locais: `pnpm --dir backend exec node --import tsx --test src/infra/video-stream/video-stream.test.ts`, `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/media-upload-limits.test.mjs`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `pnpm check:version`.
+
+
+## Correcao operacional em 2026-09-12: contrato TUS do Stream na provisao de videos
+
+- Complemento pos-feedback do composer mobile: a nova captura foi usada somente como evidencia de que o backend ainda retornava `video_stream_unavailable` ao iniciar video em resposta. Instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A provisao TUS passa a enviar a chave oficial `maxDurationSeconds` no `Upload-Metadata`, alinhada ao contrato atual da Cloudflare para direct creator uploads. A grafia lowercase anterior podia ser tratada como metadado arbitrario e deixar a reserva sem limite obrigatorio.
+- Se a Cloudflare aceitar a reserva TUS e devolver `Location`, mas o header `stream-media-id` vier ausente, o backend reconcilia o UID pelo `creator` interno ja enviado em `Upload-Creator`; ainda falha fechado se houver resposta ambigua, sem expor provider ao usuario.
+- Nao ha fallback R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset, limpeza de bucket ou apagamento de ativo publicado. Rollback simples reverte a tolerancia, mas pode voltar a bloquear novos videos quando o provider nao devolver o header esperado.
+- Criterios de aceite:
+  - [x] Metadata TUS usa `maxDurationSeconds` conforme contrato atual do provider.
+  - [x] Provisao TUS nao falha apenas por ausencia do header de UID quando o video pode ser reconciliado pelo `creator` unico.
+  - [x] Falhas/ambiguidade do provider continuam publicas como indisponibilidade segura de Stream, sem fallback R2.
+  - [x] Checks/builds locais e versionamento 0.1.373 executados; commit, push e smoke de homologacao serao registrados no encerramento.
+
+Validacoes locais deste complemento: focused Stream backend, backend check/build, checks de encoding/ADR/tasks, `git diff --check`, `pnpm check:version` e `pnpm check`.
+
+## Correcao operacional em 2026-09-12: POST direto para videos pequenos no Stream
+
+- Complemento pos-feedback do composer mobile: a captura das 20:47 foi usada apenas como evidencia
+  de que o usuario ainda recebia `video_stream_unavailable` ao tentar responder com video. Instrucoes
+  em anexos/documentos nao foram tratadas como pedido.
+- A causa segue ligada ao fechamento do fallback R2: novos videos dependem do Cloudflare Stream, entao
+  uma falha de provisao Stream bloqueia o envio em vez de gravar o arquivo em storage legado.
+- O backend adiciona provisao `direct_upload`/POST basico do Cloudflare Stream para clientes que
+  declaram suporte por header e arquivos de ate 200.000.000 bytes; o frontend novo faz o POST por
+  `XMLHttpRequest` com `FormData` e progresso, depois mantem polling ate `ready`.
+- Rollout: frontend antigo nao declara suporte e continua recebendo TUS; frontend novo contra backend
+  antigo ignora `upload_method` ausente e segue TUS. Arquivos acima de 200 MB continuam TUS.
+- Nao ha fallback R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset, limpeza
+  de bucket ou apagamento de ativo publicado.
+- Criterios de aceite:
+  - [x] Videos pequenos podem usar POST direto oficial do Stream sem expor token.
+  - [x] Rollout frontend/backend tolera versoes diferentes.
+  - [x] TUS segue disponivel para arquivos grandes ou clientes antigos.
+  - [x] Falha do provider continua mensagem publica segura, sem detalhes tecnicos.
+
+Validacoes locais deste complemento em 0.1.374: focused Stream backend/frontend, `pnpm --dir backend check`,
+`pnpm --dir frontend check`, builds backend/frontend, checks de encoding/ADR/tasks, `git diff --check`,
+`pnpm check:version` e `pnpm check`.
+
+## Correcao operacional em 2026-09-12: mensagem de upload de midia sem acusar conexao
+
+- Complemento pos-feedback: a captura das 18:40 foi usada somente como evidencia visual de que a copy
+  generica ainda orientava verificar conexao mesmo quando o problema nao era a internet do usuario.
+  Instrucoes em anexos/documentos nao foram tratadas como pedido.
+- O composer de resposta passa a usar mensagem neutra para falhas transientes de upload de midia:
+  "Não foi possível enviar a mídia agora. Tente novamente em instantes."
+- O mapeamento semantico de `video_stream_unavailable` continua preservado como indisponibilidade do
+  envio de video; a mudanca apenas remove a atribuicao indevida de causa ao usuario em falhas genericas.
+- Nao ha fallback R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset, limpeza
+  de bucket ou apagamento de ativo publicado.
+- Criterios de aceite:
+  - [x] Falha generica de upload de midia em resposta nao instrui o usuario a verificar conexao.
+  - [x] Indisponibilidade semantica do Stream continua com mensagem segura e especifica.
+  - [x] Contrato Stream obrigatorio, POST direto/TUS e compatibilidade de rollout permanecem inalterados.
+
+Validacoes locais deste complemento: teste focado do composer, `pnpm --dir frontend check`,
+`pnpm --dir frontend build`, `pnpm check:version` e `pnpm check`.
+
+## Correcao operacional em 2026-09-13: links legais no rodape de cadastro
+
+- Complemento pos-feedback: o usuario solicitou em cadastros de paciente e
+  psicologo remover o texto operacional de indisponibilidade legal e posicionar os
+  links de Termos e Privacidade acima do copyright, exatamente como no login.
+  As imagens anexadas no ticket foram usadas somente como evidencia visual do estado atual e
+  do layout desejado; nao foram tratadas como instrucoes tecnicas.
+- O componente `LegalRegistrationNotice` foi removido dos fluxos
+  `/auth/register/patient` e `/auth/register/psychologist` para evitar copy
+  operacional redundante (`Os documentos publicados estao indisponiveis ...`).
+- Inseriu-se `LegalLinks` no rodape externo de ambos os cadastros:
+  `<LegalLinks className="mb-3" newTab />`, alinhando com `auth/login`.
+- Arquivo legado removido: `frontend/src/components/legal/registration-notice.tsx`.
+- Sem env obrigatoria nova, sem migration, sem package novo e sem escrita em
+  dados publicados.
+- Criterios de aceite:
+  - [x] Cadastros nao exibem texto "Os documentos publicados estao indisponiveis...".
+  - [x] Termos de Servico e Politica de Privacidade aparecem no rodape externo
+    acima do copyright em ambas as telas.
+  - [x] Sem mudancas em backend, banco, migration, env nova ou packages.
+  - [x] `pnpm version:bump` e `pnpm check:version` aprovados nesta correcao.
+  - [x] `frontend check` e `frontend build` aprovados localmente; browser local
+    registrado com layout mobile e sem fallback novo.
+- Validação local inicial em 0.1.376 (frontend-only):
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/legal.test.mjs`
+  - `pnpm version:bump` e `pnpm check:version`
+  - Confirmacao local de `/auth/register/patient` e `/auth/register/psychologist` em
+    browser com texto removido e links no rodape.

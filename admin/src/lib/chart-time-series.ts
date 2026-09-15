@@ -10,6 +10,13 @@ const chartMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "UTC",
 });
 
+const calendarDayMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "short",
+  // Datas civis são representadas à meia-noite UTC, sem conversão para o fuso do browser.
+  timeZone: "UTC",
+});
+
 export type CalendarChartGranularity = "day" | "month";
 export type CalendarMetricAggregation = "last" | "sum";
 export type CalendarChartPoint<K extends string> = Record<K, number> & {
@@ -40,9 +47,21 @@ export const parseCalendarChartDate = (value: string) => {
   if (!match) return null;
 
   const [, year, month, day] = match;
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  const numericYear = Number(year);
+  const numericMonth = Number(month);
+  const numericDay = Number(day);
+  const date = new Date(Date.UTC(numericYear, numericMonth - 1, numericDay));
 
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getUTCFullYear() !== numericYear ||
+    date.getUTCMonth() !== numericMonth - 1 ||
+    date.getUTCDate() !== numericDay
+  ) {
+    return null;
+  }
+
+  return date;
 };
 
 export const formatCalendarShortDate = (date: Date) =>
@@ -55,6 +74,12 @@ export const formatCalendarTooltipDate = (date: Date | string) => {
   const parsed = typeof date === "string" ? parseCalendarChartDate(date) : date;
 
   return parsed ? dateOnlyFormatter.format(parsed) : String(date);
+};
+
+export const formatCalendarDayMonth = (value: string) => {
+  const parsed = parseCalendarChartDate(value);
+
+  return parsed ? calendarDayMonthFormatter.format(parsed) : value;
 };
 
 const formatCalendarMonth = (date: Date) => {
@@ -92,7 +117,8 @@ const applyMetricValue = <T extends { date: string }, K extends Extract<keyof T,
   key: K,
   aggregation: CalendarMetricAggregation,
 ) => {
-  const value = Number(source[key] ?? 0);
+  const parsedValue = Number(source[key] ?? 0);
+  const value = Number.isFinite(parsedValue) ? parsedValue : 0;
   const metricTarget = target as Record<K, number>;
 
   metricTarget[key] = aggregation === "last" ? value : Number(metricTarget[key] ?? 0) + value;
@@ -256,4 +282,10 @@ export const buildSmoothSvgPath = (points: readonly SvgChartPoint[]) => {
       endControlPoint.y,
     )} ${formatSvgCoordinate(point.x)},${formatSvgCoordinate(point.y)}`;
   }, "");
+};
+
+// Rounded axes with small values must not render repeated lines/React keys.
+export const buildRoundedChartTicks = (maximum: number): number[] => {
+  const limit = Number.isFinite(maximum) ? Math.max(1, maximum) : 1;
+  return [...new Set([0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(limit * ratio)))];
 };

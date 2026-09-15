@@ -98,10 +98,6 @@ export const getPsychologistPaidOnboardingRequirementPath = (
     return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 
-  if (!profile.published) {
-    return PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
-  }
-
   return null;
 };
 
@@ -139,10 +135,6 @@ export const getPsychologistRegistrationRequirementPath = (
 
   return (
     getPsychologistPaidOnboardingRequirementPath(data) ??
-    (!profile.whatsapp
-      ? PSYCHOLOGIST_ONBOARDING_PATHS.phone
-      : !profile.published
-        ? PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup
-        : null)
+    (!profile.whatsapp ? PSYCHOLOGIST_ONBOARDING_PATHS.phone : null)
   );
 };

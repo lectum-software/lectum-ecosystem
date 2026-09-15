@@ -1,0 +1,420 @@
+import {
+  findPayloadValue,
+  isConfirmedPaymentStatus,
+  valueContainsReference as payloadContainsAnyReference,
+  toAmountCents,
+} from "@/modules/billing/payment-event-values";
+import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
+import {
+  addDays,
+  endOfDate,
+  resolveCalendarPeriod,
+  startOfDate,
+  startOfMonth,
+  toDateKey,
+} from "@/utils/date-range";
+import type {
+  AdminFinanceChargeItem,
+  AdminFinanceDateRange,
+  AdminFinanceGroupBy,
+  AdminFinanceMetric,
+  AdminFinancePaymentHealth,
+  AdminFinancePeriod,
+  AdminFinanceQuery,
+} from "../../DTOs/IAdminFinanceDashboardDTO";
+import type { AdminFinanceDashboardRepository } from "../../repositories/AdminFinanceDashboardRepository";
+
+export { findPayloadValue, isConfirmedPaymentStatus, payloadContainsAnyReference, toAmountCents };
+
+export const DEFAULT_PERIOD_DAYS = 30;
+
+export const MAX_PERIOD_DAYS = 3660;
+
+export const DEFAULT_SUBSCRIPTION_TAKE = 50;
+
+export const DEFAULT_LIST_LIMIT = 20;
+
+export const MAX_LIST_LIMIT = 50;
+
+export const DASHBOARD_TABLE_PREVIEW_TAKE = 5;
+
+export const MAX_PAYMENT_HISTORY_ITEMS = 10;
+
+export const DAYS_PER_AVERAGE_MONTH = 30.4375;
+
+export const MILLISECONDS_PER_DAY = 86_400_000;
+
+export const CHARGE_STATUS_FILTERS = new Set<AdminFinanceChargeItem["status"]>(["confirmed"]);
+
+export const SUBSCRIPTION_STATUS_FILTERS = new Set(["ativa", "cancelada", "inadimplente"]);
+
+export const PAYMENT_HEALTH_FILTERS = new Set<AdminFinancePaymentHealth["status"]>([
+  "attention",
+  "critical",
+  "healthy",
+  "insufficient_history",
+  "risk",
+]);
+
+export const resolveGroupBy = (
+  value: AdminFinanceQuery["groupBy"],
+  days: number,
+): AdminFinanceGroupBy => {
+  if (value === "month" || value === "week") return value;
+  if (days > 180) return "month";
+  if (days > 62) return "week";
+
+  return "day";
+};
+
+export type FinancePeriodResolution = {
+  current: AdminFinanceDateRange;
+  days: number;
+  groupBy: AdminFinanceGroupBy;
+  period: AdminFinancePeriod;
+  previous: AdminFinanceDateRange;
+};
+
+export type PeriodResult =
+  | {
+      period: FinancePeriodResolution;
+      success: true;
+    }
+  | {
+      code: string;
+      success: false;
+    };
+
+export const resolveAdminFinancePeriod = (
+  query: AdminFinanceQuery,
+  allPeriodStartDate?: Date | null,
+): PeriodResult => {
+  const resolved = resolveCalendarPeriod(query, {
+    allPeriodStartDate,
+    clampFutureAllStart: true,
+    defaultDays: DEFAULT_PERIOD_DAYS,
+    maxDays: MAX_PERIOD_DAYS,
+  });
+  if (!resolved) return { code: "invalid_analytics_date_range", success: false };
+
+  const { days, end, label, previousEnd, previousStart, start } = resolved;
+  const groupBy = resolveGroupBy(query.groupBy, days);
+  return {
+    period: {
+      current: { end, start },
+      days,
+      groupBy,
+      period: {
+        days,
+        from: toDateKey(start),
+        group_by: groupBy,
+        label,
+        max_days: MAX_PERIOD_DAYS,
+        previous_from: toDateKey(previousStart),
+        previous_to: toDateKey(previousEnd),
+        timezone: "server-local",
+        to: toDateKey(end),
+      },
+      previous: { end: previousEnd, start: previousStart },
+    },
+    success: true,
+  };
+};
+
+export type Bucket = {
+  end: Date;
+  end_date: string;
+  start: Date;
+  start_date: string;
+};
+
+export const endOfMonth = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+
+export const minDate = (left: Date, right: Date) => (left < right ? left : right);
+
+export const maxDate = (left: Date, right: Date) => (left > right ? left : right);
+
+export const buildBuckets = (
+  range: AdminFinanceDateRange,
+  groupBy: AdminFinanceGroupBy,
+): Bucket[] => {
+  const buckets: Bucket[] = [];
+  let cursor = startOfDate(range.start);
+
+  while (cursor <= range.end) {
+    let bucketStart = cursor;
+    let bucketEnd: Date;
+
+    if (groupBy === "week") {
+      bucketEnd = endOfDate(addDays(bucketStart, 6));
+    } else if (groupBy === "month") {
+      bucketStart = maxDate(startOfMonth(cursor), startOfDate(range.start));
+      bucketEnd = endOfMonth(cursor);
+    } else {
+      bucketEnd = endOfDate(cursor);
+    }
+
+    const clippedEnd = minDate(bucketEnd, range.end);
+    buckets.push({
+      end: clippedEnd,
+      end_date: toDateKey(clippedEnd),
+      start: bucketStart,
+      start_date: toDateKey(bucketStart),
+    });
+
+    cursor = startOfDate(addDays(clippedEnd, 1));
+  }
+
+  return buckets;
+};
+
+export const roundPercent = (value: number) => Math.round(value * 10) / 10;
+
+export const percentageChange = (current: number, previous: number) => {
+  if (previous === 0) return current === 0 ? 0 : null;
+
+  return roundPercent(((current - previous) / previous) * 100);
+};
+
+export const metric = (params: {
+  available?: boolean;
+  current: number;
+  description: string;
+  id: AdminFinanceMetric["id"];
+  label: string;
+  previous: number;
+  ratePercent?: number | null;
+  source: string;
+  unit: AdminFinanceMetric["unit"];
+  unavailableReason?: string | null;
+}): AdminFinanceMetric => {
+  const available = params.available ?? true;
+  const change = available ? percentageChange(params.current, params.previous) : null;
+
+  return {
+    available,
+    change_percent: change,
+    description: params.description,
+    id: params.id,
+    label: params.label,
+    previous_value: params.previous,
+    rate_percent: params.ratePercent ?? null,
+    source: params.source,
+    trend:
+      !available || change === null
+        ? "unavailable"
+        : change > 0
+          ? "up"
+          : change < 0
+            ? "down"
+            : "flat",
+    unit: params.unit,
+    unavailable_reason: params.unavailableReason ?? null,
+    value: params.current,
+  };
+};
+
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+export const normalizeText = (value: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+export const formatFinanceOperationalCode = (prefix: "A" | "C", internalId: number) =>
+  `${prefix}${String(internalId).padStart(5, "0")}`;
+
+export const extractPaymentAmountCents = (payload: unknown) =>
+  (() => {
+    const directAmount = findPayloadValue(payload, [
+      "transaction_amount",
+      "total_paid_amount",
+      "paid_amount",
+    ]);
+    const fallbackAmount = directAmount ?? findPayloadValue(payload, ["amount"]);
+
+    return toAmountCents(isRecord(fallbackAmount) ? fallbackAmount.value : fallbackAmount);
+  })();
+
+export const isPaymentEvent = (type: string, payload: unknown) => {
+  const typeText = normalizeText(type);
+  if (typeText.includes("payment")) return true;
+
+  const topic = normalizeText(findPayloadValue(payload, ["topic", "type", "action"]));
+  return topic.includes("payment");
+};
+
+export type PaymentEventRecord = Awaited<
+  ReturnType<AdminFinanceDashboardRepository["listPaymentEvents"]>
+>[number];
+
+export type LifetimeSubscriptionRecord = Awaited<
+  ReturnType<AdminFinanceDashboardRepository["listPaidSubscriptionsForLifetime"]>
+>[number];
+
+export type GatewaySummaryBySubscriptionId = Map<string, GatewaySubscriptionPaymentSummary>;
+
+export type CancelledLifetimeSubscriptionRecord = Awaited<
+  ReturnType<AdminFinanceDashboardRepository["listCancelledPaidSubscriptionsForLifetime"]>
+>[number];
+
+export type PaymentRevenue = {
+  confirmed_count: number;
+  missing_amount_count: number;
+  revenue_cents: number;
+};
+
+export const summarizeChargeItemsRevenue = (
+  items: Pick<AdminFinanceChargeItem, "amount_available" | "amount_cents">[],
+): PaymentRevenue =>
+  items.reduce<PaymentRevenue>(
+    (accumulator, item) => {
+      accumulator.confirmed_count += 1;
+
+      if (!item.amount_available || item.amount_cents === null) {
+        accumulator.missing_amount_count += 1;
+        return accumulator;
+      }
+
+      accumulator.revenue_cents += item.amount_cents;
+      return accumulator;
+    },
+    { confirmed_count: 0, missing_amount_count: 0, revenue_cents: 0 },
+  );
+
+export const summarizeRevenue = (events: PaymentEventRecord[]): PaymentRevenue =>
+  events.reduce<PaymentRevenue>(
+    (accumulator, event) => {
+      if (!isPaymentEvent(event.type, event.payload) || !isConfirmedPaymentStatus(event.payload)) {
+        return accumulator;
+      }
+
+      const amount = extractPaymentAmountCents(event.payload);
+      accumulator.confirmed_count += 1;
+
+      if (amount === null) {
+        accumulator.missing_amount_count += 1;
+        return accumulator;
+      }
+
+      accumulator.revenue_cents += amount;
+      return accumulator;
+    },
+    { confirmed_count: 0, missing_amount_count: 0, revenue_cents: 0 },
+  );
+
+export const summarizeAverageLtv = (
+  subscriptions: LifetimeSubscriptionRecord[],
+  paymentEvents: PaymentEventRecord[],
+  gatewaySummaries?: GatewaySummaryBySubscriptionId,
+) => {
+  const paidPsychologistCount = new Set(
+    subscriptions.map((subscription) => subscription.psychologist_id),
+  ).size;
+  let gatewayLinkedConfirmedPayments = 0;
+  let gatewayMissingAmountCount = 0;
+  let gatewayRevenueCents = 0;
+  const subscriptionsWithoutGatewaySummary: LifetimeSubscriptionRecord[] = [];
+
+  for (const subscription of subscriptions) {
+    const summary = gatewaySummaries?.get(subscription.id);
+    if (!summary || summary.charged_quantity <= 0) {
+      subscriptionsWithoutGatewaySummary.push(subscription);
+      continue;
+    }
+
+    gatewayLinkedConfirmedPayments += summary.charged_quantity;
+
+    if (summary.charged_quantity > 0 && summary.charged_amount_cents === null) {
+      gatewayMissingAmountCount += 1;
+      continue;
+    }
+
+    gatewayRevenueCents += summary.charged_amount_cents ?? 0;
+  }
+
+  const references = subscriptions.map((subscription) => ({
+    id: subscription.id,
+    values: [subscription.id, subscription.gateway_subscription_id].filter(
+      (reference): reference is string => Boolean(reference && reference.length > 3),
+    ),
+  }));
+  const subscriptionsUsingLocalHistory = new Set(
+    subscriptionsWithoutGatewaySummary.map((subscription) => subscription.id),
+  );
+
+  let linkedConfirmedPayments = 0;
+  let missingAmountCount = 0;
+  let revenueCents = 0;
+
+  if (references.length > 0) {
+    for (const event of paymentEvents) {
+      if (!isPaymentEvent(event.type, event.payload)) continue;
+      if (!isConfirmedPaymentStatus(event.payload)) continue;
+      // Validate each owner separately; a union would accept A's local ID with B's gateway ID.
+      const matches = references.filter((reference) =>
+        payloadContainsAnyReference(event.payload, reference.values),
+      );
+      if (matches.length !== 1 || !subscriptionsUsingLocalHistory.has(matches[0].id)) continue;
+
+      linkedConfirmedPayments += 1;
+      const amount = extractPaymentAmountCents(event.payload);
+      if (amount === null) {
+        missingAmountCount += 1;
+        continue;
+      }
+
+      revenueCents += amount;
+    }
+  }
+
+  const totalMissingAmountCount = missingAmountCount + gatewayMissingAmountCount;
+  const totalRevenueCents = revenueCents + gatewayRevenueCents;
+  const available = totalMissingAmountCount === 0;
+
+  return {
+    available,
+    linkedConfirmedPayments: linkedConfirmedPayments + gatewayLinkedConfirmedPayments,
+    paidPsychologistCount,
+    unavailableReason: available ? null : "pagamento_confirmado_sem_valor_monetario_extraivel",
+    valueCents:
+      available && paidPsychologistCount > 0
+        ? Math.round(totalRevenueCents / paidPsychologistCount)
+        : 0,
+  };
+};
+
+export const summarizeAverageSubscriptionLifetime = (
+  subscriptions: CancelledLifetimeSubscriptionRecord[],
+) => {
+  if (subscriptions.length === 0) {
+    return {
+      available: false,
+      cancelledSubscriptionCount: 0,
+      unavailableReason: "Sem assinaturas pagas canceladas em todo o período.",
+      valueDays: 0,
+      valueMonths: 0,
+    };
+  }
+
+  const totalDays = subscriptions.reduce((sum, subscription) => {
+    const durationInDays = Math.max(
+      0,
+      (subscription.updatedAt.getTime() - subscription.createdAt.getTime()) / MILLISECONDS_PER_DAY,
+    );
+
+    return sum + durationInDays;
+  }, 0);
+  const valueDays = roundPercent(totalDays / subscriptions.length);
+
+  return {
+    available: true,
+    cancelledSubscriptionCount: subscriptions.length,
+    unavailableReason: null,
+    valueDays,
+    valueMonths: roundPercent(valueDays / DAYS_PER_AVERAGE_MONTH),
+  };
+};

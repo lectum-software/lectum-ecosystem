@@ -1,4 +1,4 @@
-﻿# ADR-0254 - Suporte administrativo de conta do psicólogo
+# ADR-0254 - Suporte administrativo de conta do psicólogo
 
 ## Status
 

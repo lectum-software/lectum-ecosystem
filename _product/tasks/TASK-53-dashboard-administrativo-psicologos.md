@@ -204,15 +204,15 @@ Packages usados:
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
 
-### Corre��o UX/dados em 2026-07-12 - churn com contagem absoluta
+### Correção UX/dados em 2026-07-12 - churn com contagem absoluta
 
-- A tag visual **estimado** foi removida dos cards do dashboard de psic�logos; para churn sem base, a UI mant�m o estado honesto **Indispon�vel**.
+- A tag visual **estimado** foi removida dos cards do dashboard de psicólogos; para churn sem base, a UI mantém o estado honesto **Indisponível**.
 - O card **Churn** passa a exibir o valor no formato `cancelamentos (percentual)`, por exemplo `0 (0%)`.
-- O backend preserva `value` como percentual do churn e adiciona `value_count`/`previous_value_count` opcionais ao contrato de m�trica para expor a contagem absoluta de cancelamentos reais Mercado Pago do per�odo sem alterar a s�rie temporal.
-- N�o houve altera��o de Prisma schema, migrations, f�rmula de churn, mock ou fonte paralela de dados.
-- Refer�ncia visual local mantida: `_product/proto/admin/Psic�logos/Psic�logos - Dashboard.png`; Builder/Quick Copy n�o estava dispon�vel como ferramenta callable no ambiente.
-- Valida��es desta corre��o: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
-- `pnpm check` foi executado, mas falhou por erros TypeScript preexistentes/concomitantes fora do escopo desta corre��o em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.
+- O backend preserva `value` como percentual do churn e adiciona `value_count`/`previous_value_count` opcionais ao contrato de métrica para expor a contagem absoluta de cancelamentos reais Mercado Pago do período sem alterar a série temporal.
+- Não houve alteração de Prisma schema, migrations, fórmula de churn, mock ou fonte paralela de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+- `pnpm check` foi executado, mas falhou por erros TypeScript preexistentes/concomitantes fora do escopo desta correção em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.
 
 
 ### Correção dados em 2026-07-12 - denominador clássico do churn
@@ -369,3 +369,31 @@ Packages usados:
 - O ajuste é apenas de copy/hierarquia visual no Admin, mobile-first, sem alteração de backend, contrato HTTP, Prisma, migration, package novo, mock, seed ou fonte de dados.
 - Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a alteração usou a referência local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e o screenshot enviado pelo usuário.
 - Validações deste ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200. O build exigiu pausar/reiniciar o dev server Admin local para liberar o lock do Next; o servidor foi reiniciado depois.
+
+## Ajuste pos-feedback 2026-08-17 - contador de Descadastros
+
+- Pedido do usuario: no dashboard Admin de psicologos, adicionar em **Visao geral** um contador de **Descadastros**, representando psicologos que excluiram a conta.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passa a retornar `cards.deleted_accounts` e `timeline.points[].deleted_accounts`, calculados por `user.role="psicologo"`, `user.deleted=true`, `user.account_status="deleted"` e `user.deletedAt` dentro do periodo selecionado.
+- O card de **Descadastros** usa comparativo com o periodo anterior; a serie temporal agrega descadastros por dia/mes sem somar esses usuarios aos totais ativos do dashboard.
+- A UI Admin adiciona o card em **Visao geral**, com toggle de serie no grafico e grade responsiva mobile-first para comportar o novo contador.
+- Nenhum schema Prisma, migration, package novo, seed, mock, endpoint simulado, env nova ou backfill artificial foi criado.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Psicologos/Psicologos - Dashboard.png` e os screenshots enviados pelo usuario.
+- ADR criado: `adrs/0462-descadastros-dashboard-admin.md`.
+
+### Criterios complementares
+
+- [x] O dashboard `/psicologos` exibe o card **Descadastros** na **Visao geral**.
+- [x] O backend conta somente contas de psicologos soft-deletadas com `deletedAt` no periodo selecionado.
+- [x] A serie temporal possui `deleted_accounts` em todos os pontos do grafico.
+- [x] Totais e segmentos de psicologos continuam excluindo contas deletadas.
+- [x] Nenhum mock, seed artificial, migration, package novo ou endpoint simulado foi adicionado.
+
+### Validacao complementar
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm check`
+- Smoke de service local `buildPsychologistsDashboard({ period: "all" })` confirmou `cards.deleted_accounts` numerico e `timeline.points[].deleted_accounts` numerico.
+- Smoke HTTP local em `http://localhost:3002/psicologos` retornou 200 no servidor Admin buildado.

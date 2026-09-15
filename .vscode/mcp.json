@@ -3,7 +3,7 @@
     "builder-mcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["@builder.io/dev-tools@latest", "mcp"]
+      "args": ["@builder.io/dev-tools@1.79.0", "mcp"]
     }
   }
 }

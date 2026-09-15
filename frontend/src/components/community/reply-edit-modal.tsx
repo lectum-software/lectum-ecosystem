@@ -6,8 +6,12 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useUpdatePostReply, useUploadPostReplyMedia } from "@/api/callers/posts";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PostReply, UserPostReply } from "@/api/generator/types/posts";
+import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
+import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import {
+  createReplyVideoThumbnail,
   detectReplyMediaOrientation,
   mediaTypeFromFile,
   ReplyMediaAttachmentControl,
@@ -17,14 +21,18 @@ import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { type Field, useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
+import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
-import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
+import { isUploadPreparationCanceled } from "@/utils/media-preparation";
 import {
-  createVideoThumbnailFile,
-  type LectumVideoThumbnailFrameOptions,
-} from "@/utils/video-thumbnail";
+  getCommunityMediaSelectionSizeError,
+  resolveMediaUploadError,
+} from "@/utils/media-upload-error";
+import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
+import { isVideoAssetReference } from "@/utils/video-stream";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 
 const replyEditSchema = z.object({
   content: z.string().trim().max(2000, "Use no máximo 2000 caracteres no texto"),
@@ -40,29 +48,20 @@ type EditableReply = Pick<
   replies_received_count?: number;
 };
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 type ReplyEditModalProps = {
   onClose: () => void;
   onUpdated?: (reply: PostReply) => void;
   open: boolean;
   postId: string;
   reply: EditableReply;
-  sourceText?: string | null;
 };
+
+const normalizeReplyEditContent = (content: string) => content.trimEnd();
 
 const fields = [
   {
     name: "content",
-    field: "textarea",
+    field: "contenteditable",
     id: "edit-reply-content",
     placeholder: "Edite seu comentário",
     max: 2000,
@@ -74,47 +73,7 @@ const fields = [
   },
 ] satisfies Field<ReplyEditForm>[];
 
-const errorMessageFromUnknown = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
-
-  return rawMessage || "Não foi possível salvar as alterações agora. Tente novamente.";
-};
-
-const resolveMediaUploadError = (error: unknown) => {
-  const rawMessage = errorMessageFromUnknown(error);
-  const normalized = rawMessage.toLowerCase();
-
-  if (
-    normalized.includes("tamanho") ||
-    normalized.includes("limite") ||
-    normalized.includes("50")
-  ) {
-    return "A mídia precisa ter até 50MB.";
-  }
-
-  if (normalized.includes("tipo") || normalized.includes("permit")) {
-    return "Envie uma imagem ou vídeo em formato permitido.";
-  }
-
-  if (normalized.includes("plano") || normalized.includes("verific")) {
-    return "Mídia disponível apenas para psicólogos verificados.";
-  }
-
-  return rawMessage || "Não foi possível anexar a mídia agora. Tente novamente.";
-};
-
-export function ReplyEditModal({
-  onClose,
-  onUpdated,
-  open,
-  postId,
-  reply,
-  sourceText,
-}: ReplyEditModalProps) {
+export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: ReplyEditModalProps) {
   const storedUser = useAppSelector((state) => state.user);
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const canManageMedia = mediaPermission.canAttach && reply.author.role === "psicologo";
@@ -127,12 +86,19 @@ export function ReplyEditModal({
     fields,
     schema: replyEditSchema,
     defaultValues: {
-      content: reply.content,
+      content: normalizeReplyEditContent(reply.content),
     },
   });
   const { formProps, hook } = form;
+  const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
+    useCommunityVideoUpload();
+  const handleClose = useCallback(() => {
+    abortActiveVideoUpload();
+    onClose();
+  }, [abortActiveVideoUpload, onClose]);
   const uploadMutation = useUploadPostReplyMedia({
     onError: (error) => {
+      if (isUploadPreparationCanceled(error)) return;
       setActionError(resolveMediaUploadError(error));
     },
   });
@@ -140,10 +106,10 @@ export function ReplyEditModal({
     onSuccess: (updatedReply) => {
       toast.success("Comentário atualizado!");
       onUpdated?.(updatedReply);
-      onClose();
+      handleClose();
     },
     onError: (error) => {
-      setActionError(errorMessageFromUnknown(error));
+      setActionError(getSafeApiErrorMessage(error, "Não foi possível atualizar o comentário."));
     },
   });
   const isSubmitting = uploadMutation.isPending || updateMutation.isPending;
@@ -156,6 +122,39 @@ export function ReplyEditModal({
       document.getElementById("edit-reply-content")?.focus({ preventScroll: true });
     }, 0);
   }, []);
+
+  const scheduleSelectedMediaPreviewPreparation = useCallback(
+    (previewUrl: string, type: SelectedReplyMedia["type"]) => {
+      window.setTimeout(() => {
+        window.requestAnimationFrame(() => {
+          void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
+            setSelectedMedia((current) =>
+              current?.previewUrl === previewUrl ? { ...current, orientation } : current,
+            );
+          });
+
+          if (type !== "video") return;
+
+          void createReplyVideoThumbnail(previewUrl)
+            .then((thumbnailUrl) => {
+              setSelectedMedia((current) =>
+                current?.previewUrl === previewUrl
+                  ? { ...current, isPreparingPreview: false, thumbnailUrl }
+                  : current,
+              );
+            })
+            .catch(() => {
+              setSelectedMedia((current) =>
+                current?.previewUrl === previewUrl
+                  ? { ...current, isPreparingPreview: false }
+                  : current,
+              );
+            });
+        });
+      }, 120);
+    },
+    [],
+  );
 
   const revokeSelectedMediaPreview = useCallback(() => {
     if (!selectedMediaPreviewUrlRef.current) return;
@@ -180,7 +179,7 @@ export function ReplyEditModal({
     const previousBodyOverflow = document.body.style.overflow;
     const previousDocumentOverflow = document.documentElement.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") handleClose();
     };
 
     document.body.style.overflow = "hidden";
@@ -193,7 +192,7 @@ export function ReplyEditModal({
       document.documentElement.style.overflow = previousDocumentOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, open]);
+  }, [handleClose, open]);
 
   useEffect(() => {
     return () => revokeSelectedMediaPreview();
@@ -213,25 +212,35 @@ export function ReplyEditModal({
       return;
     }
 
+    const type = mediaTypeFromFile(file);
+    if (!type) {
+      setActionError("Envie uma imagem ou vídeo em formato permitido.");
+      focusEditor();
+      return;
+    }
+
+    const sizeError = getCommunityMediaSelectionSizeError(file, type);
+    if (sizeError) {
+      setActionError(resolveMediaUploadError(sizeError));
+      focusEditor();
+      return;
+    }
+
     revokeSelectedMediaPreview();
     const previewUrl = URL.createObjectURL(file);
-    const type = mediaTypeFromFile(file);
     selectedMediaPreviewUrlRef.current = previewUrl;
     setSelectedMedia({
       file,
+      isPreparingPreview: type === "video",
       orientation: undefined,
       previewUrl,
       type,
-    });
-    void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
-      setSelectedMedia((current) =>
-        current?.previewUrl === previewUrl ? { ...current, orientation } : current,
-      );
     });
     setRemoveMedia(false);
     setActionError(null);
     hook.clearErrors("content");
     focusEditor();
+    scheduleSelectedMediaPreviewPreparation(previewUrl, type);
   };
 
   const handleSubmit = hook.handleSubmit(async (values) => {
@@ -245,39 +254,48 @@ export function ReplyEditModal({
       return;
     }
 
-    try {
-      const uploadedMedia = selectedMedia
-        ? await uploadMutation.mutateAsync({
-            file: selectedMedia.file,
-            id: postId,
-          })
-        : null;
-      const thumbnailFrame =
-        selectedMedia && reply.author.role === "psicologo"
-          ? ({
-              cardLabel: "Respondido na Lectum",
-              professional: {
-                avatar: reply.author.avatar,
-                name: reply.author.name,
-                roleLabel: normalizeLectumShareProfessionalRole(reply.author.type_label),
-                verified: reply.author.verified,
-              },
-              sourceText: sourceText ?? reply.content,
-            } satisfies LectumVideoThumbnailFrameOptions)
-          : null;
-      const thumbnailFile =
-        selectedMedia && uploadedMedia?.media_type === "video"
-          ? await createVideoThumbnailFile(selectedMedia.file, {
-              lectumShareFrame: thumbnailFrame,
-            })
-          : null;
-      const uploadedThumbnail = thumbnailFile
-        ? await uploadMutation.mutateAsync({
-            file: thumbnailFile,
-            id: postId,
-          })
-        : null;
+    let stagedStreamVideoReference: string | null = null;
 
+    try {
+      const { uploadedMedia, uploadedThumbnail } = await (async () => {
+        const operation = selectedMedia?.type === "video" ? beginVideoUpload() : null;
+
+        try {
+          const uploadedMedia = selectedMedia
+            ? await uploadMutation.mutateAsync({
+                file: selectedMedia.file,
+                id: postId,
+                onProgress: operation?.onProgress,
+                signal: operation?.signal,
+              })
+            : null;
+          stagedStreamVideoReference = isVideoAssetReference(uploadedMedia?.media_url)
+            ? uploadedMedia?.media_url || null
+            : null;
+          const thumbnailFile =
+            selectedMedia &&
+            uploadedMedia?.media_type === "video" &&
+            !isVideoAssetReference(uploadedMedia.media_url)
+              ? await createVideoThumbnailFile(selectedMedia.file, {
+                  signal: operation?.signal,
+                })
+              : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+          const uploadedThumbnail = thumbnailFile
+            ? await uploadMutation.mutateAsync({
+                file: thumbnailFile,
+                id: postId,
+                purpose: "generated-video-thumbnail",
+                signal: operation?.signal,
+              })
+            : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+
+          return { uploadedMedia, uploadedThumbnail };
+        } finally {
+          operation?.complete();
+        }
+      })();
       await updateMutation.mutateAsync({
         body: {
           content: values.content.trim(),
@@ -300,7 +318,9 @@ export function ReplyEditModal({
         postId,
         replyId: reply.id,
       });
+      stagedStreamVideoReference = null;
     } catch {
+      await cleanupDetachedVideoAsset(stagedStreamVideoReference);
       // Feedback fica nas mutations para preservar o texto e a mídia escolhida.
     }
   });
@@ -322,19 +342,19 @@ export function ReplyEditModal({
     <div
       aria-labelledby="edit-reply-title-heading"
       aria-modal="true"
-      className="fixed inset-0 z-[1000] flex pointer-events-auto items-center justify-center overflow-y-auto bg-slate-950/55 px-4 py-[max(1rem,env(safe-area-inset-top))] text-foreground backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-[1000] flex pointer-events-auto items-center justify-center overflow-y-auto bg-media-background/55 px-4 py-[max(1rem,env(safe-area-inset-top))] text-foreground backdrop-blur-md animate-in fade-in duration-200"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) handleClose();
       }}
       role="dialog"
     >
-      <section className="pointer-events-auto flex max-h-[min(88dvh,44rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-surface shadow-[0_28px_90px_rgba(15,23,42,0.28)] animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 dark:shadow-[var(--lectum-shadow)]">
+      <section className="pointer-events-auto flex max-h-[min(88dvh,44rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-surface shadow-lectum-soft animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 dark:shadow-[var(--lectum-shadow)]">
         <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
           <button
             aria-label="Fechar edição de comentário"
             className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
-            onClick={onClose}
+            onClick={handleClose}
             type="button"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -354,7 +374,11 @@ export function ReplyEditModal({
 
               {canManageMedia ? (
                 <ReplyMediaAttachmentControl
-                  currentMedia={{ mediaType: reply.media_type, mediaUrl: reply.media_url }}
+                  currentMedia={{
+                    mediaType: reply.media_type,
+                    mediaUrl: reply.media_url,
+                    thumbnailUrl: reply.thumbnail_url,
+                  }}
                   disabled={isSubmitting}
                   fileInputRef={fileInputRef}
                   isUploading={uploadMutation.isPending}
@@ -376,6 +400,13 @@ export function ReplyEditModal({
                 />
               ) : null}
 
+              {videoUploadProgress ? (
+                <CommunityVideoUploadProgress
+                  onCancel={cancelActiveVideoUpload}
+                  progress={videoUploadProgress}
+                />
+              ) : null}
+
               {actionError ? (
                 <InlineAlert title="Não foi possível salvar" variant="error">
                   {actionError}
@@ -384,19 +415,19 @@ export function ReplyEditModal({
             </div>
           </div>
 
-          <footer className="shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:px-5">
+          <footer className="shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[var(--lectum-bottom-fixed-padding-compact)] backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:px-5">
             <div className="grid gap-2 sm:flex sm:justify-end">
               <Button
                 className="h-12 rounded-full border-border bg-surface px-6 font-bold text-muted shadow-none hover:border-primary/25 hover:bg-primary-soft hover:text-foreground focus-visible:outline-primary active:scale-[0.98] disabled:opacity-60"
                 disabled={isSubmitting}
-                onClick={onClose}
+                onClick={handleClose}
                 type="button"
                 variant="outline"
               >
                 Cancelar
               </Button>
               <Button
-                className="h-12 rounded-full bg-primary px-6 font-black text-white shadow-[0_14px_30px_rgba(48,140,232,0.26)] hover:bg-primary-hover focus-visible:outline-primary active:scale-[0.98] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
+                className="h-12 rounded-full bg-primary px-6 font-black text-primary-foreground shadow-lectum-soft hover:bg-primary-hover focus-visible:outline-primary active:scale-[0.98] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
                 disabled={isSubmitting || !canSubmit}
                 type="submit"
               >

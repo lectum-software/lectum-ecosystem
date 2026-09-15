@@ -1,5 +1,6 @@
 import { i18n, language } from "../../../i18n";
 import { custom } from "../handlers/custom";
+import { isConditionValuePresent } from "./presence";
 import type { RefineRelation } from "./types";
 
 export default function ({ keys, ctx, cont }: RefineRelation) {
@@ -11,14 +12,14 @@ export default function ({ keys, ctx, cont }: RefineRelation) {
     value: cont?.[key],
   }));
 
-  const definedKeys = keyDetails.filter(({ value }, idx) => (!idx ? true : value));
+  const definedKeys = keyDetails.filter(({ value }, idx) => !idx || isConditionValuePresent(value));
 
   if (definedKeys.length > 1) {
     const firstKey = definedKeys[0];
     const otherKeys = definedKeys.slice(1);
 
     otherKeys.forEach(({ key, name, value }) => {
-      if (firstKey.value <= value && firstKey.value && value) {
+      if (isConditionValuePresent(firstKey.value) && firstKey.value <= value) {
         ctx.addIssue({
           code: "custom",
           path: [key],

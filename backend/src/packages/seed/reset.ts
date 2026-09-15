@@ -1,10 +1,13 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: o reset genérico resolve modelos e relações pela DMMF em tempo de execução.
 
 import { readFileSync } from "node:fs";
 
 import { getDMMF } from "@prisma/internals";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 import { prisma } from "../../external/prisma/client";
+import { assertSafeSeedTarget } from "./safety";
 
 /** Load DMMF from your schema.prisma */
 async function loadDMMF(schemaPath) {
@@ -74,7 +77,7 @@ async function clearAllData(dmmf) {
         await prisma[modelName].deleteMany();
         console.log(`  ✅ Cleared ${modelName}`);
       } catch (err) {
-        console.warn(`  ⚠️ Failed to clear ${modelName}: ${err.message}`);
+        console.warn(`  ⚠️ Failed to clear ${modelName}.`, toSafeErrorLog(err, "SeedResetError"));
         failed.push(modelName);
       }
     }
@@ -95,6 +98,8 @@ async function clearAllData(dmmf) {
 }
 
 export async function recreate(seedPath) {
+  assertSafeSeedTarget();
+
   // 1. Load the DMMF
   console.log("📖 Reading schema and building DMMF...");
   const dmmf = await loadDMMF(seedPath);

@@ -3,8 +3,7 @@ import type { Application, Request, Response } from "express";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
-//Middlewares
-import authMiddleware from "@/modules/api/middlewares/_auth";
+import { videoStreamImportObjectKey } from "@/utils/video-stream-import-source";
 
 const getRequestedFile = (file?: string | string[]) => {
   return Array.isArray(file) ? file.join("/") : file;
@@ -20,15 +19,27 @@ type ObjectHeaders = {
   LastModified?: Date;
 };
 
+const isSafeObjectKey = (file: string | undefined) =>
+  Boolean(
+    file &&
+      file.length <= 1024 &&
+      !file.includes("\\") &&
+      !file.includes("\0") &&
+      !file.split("/").some((part) => part === "." || part === ".."),
+  );
+
 const isAllowedPublicFile = (file: string | undefined) =>
   Boolean(
-    file?.startsWith("psychologist/avatar/") ||
-      file?.startsWith("community/avatar/") ||
-      file?.startsWith("psychologist/cover-image/") ||
-      file?.startsWith("psychologist/video/") ||
-      file?.startsWith("psychologist/video-cover/") ||
-      file?.startsWith("patient/avatar/") ||
-      file?.startsWith("posts/media/"),
+    isSafeObjectKey(file) &&
+      (file?.startsWith("psychologist/avatar/") ||
+        file?.startsWith("community/avatar/") ||
+        file?.startsWith("psychologist/cover-image/") ||
+        file?.startsWith("psychologist/video/") ||
+        file?.startsWith("psychologist/video-cover/") ||
+        file?.startsWith("patient/avatar/") ||
+        file?.startsWith("posts/media/") ||
+        file?.startsWith("posts/share-artifacts/") ||
+        file?.startsWith("seo/og-image/")),
   );
 
 const setObjectResponseHeaders = (res: Response, data: ObjectHeaders) => {
@@ -45,7 +56,7 @@ const setObjectResponseHeaders = (res: Response, data: ObjectHeaders) => {
 };
 
 const normalizeRangeHeader = (value: string | undefined) => {
-  if (!value?.startsWith("bytes=")) return undefined;
+  if (!value || value.length > 100 || !/^bytes=(?:\d+-\d*|-\d+)$/.test(value)) return undefined;
 
   return value;
 };
@@ -57,7 +68,26 @@ const sendNotFound = (res: Response) =>
     type: 2,
   });
 
-const headFile = async (file: string | undefined, res: Response) => {
+const isVideoObject = (file: string, contentType?: string) =>
+  contentType?.trim().toLowerCase().startsWith("video/") === true ||
+  /\.(?:mov|mp4|webm)$/i.test(file);
+
+const setStreamImportResponseHeaders = (res: Response) => {
+  res.setHeader("Cache-Control", "private, no-store, max-age=0");
+  res.setHeader("CDN-Cache-Control", "no-store");
+  res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+};
+
+type FileResponseOptions = {
+  streamImport?: boolean;
+};
+
+const headFile = async (
+  file: string | undefined,
+  res: Response,
+  options: FileResponseOptions = {},
+) => {
   if (!file) {
     return sendNotFound(res);
   }
@@ -68,15 +98,28 @@ const headFile = async (file: string | undefined, res: Response) => {
       Key: file,
     });
     const data = await S3.send(command);
+    if (options.streamImport && !isVideoObject(file, data.ContentType)) {
+      return sendNotFound(res);
+    }
+    const contentRange =
+      isVideoObject(file, data.ContentType) && data.ContentLength && data.ContentLength > 0
+        ? `bytes 0-${data.ContentLength - 1}/${data.ContentLength}`
+        : undefined;
 
-    setObjectResponseHeaders(res, data);
+    setObjectResponseHeaders(res, { ...data, ContentRange: contentRange });
+    if (options.streamImport) setStreamImportResponseHeaders(res);
     return res.status(200).end();
-  } catch (_err: any) {
+  } catch {
     return sendNotFound(res);
   }
 };
 
-const streamFile = async (file: string | undefined, req: Request, res: Response) => {
+const streamFile = async (
+  file: string | undefined,
+  req: Request,
+  res: Response,
+  options: FileResponseOptions = {},
+) => {
   if (!file) {
     return sendNotFound(res);
   }
@@ -93,16 +136,40 @@ const streamFile = async (file: string | undefined, req: Request, res: Response)
       return sendNotFound(res);
     }
 
-    setObjectResponseHeaders(res, data);
+    const body = data.Body as NodeJS.ReadableStream & { destroy?: (error?: Error) => void };
+    if (options.streamImport && !isVideoObject(file, data.ContentType)) {
+      body.destroy?.();
+      return sendNotFound(res);
+    }
+
+    const fullContentRange =
+      options.streamImport && !range && data.ContentLength && data.ContentLength > 0
+        ? `bytes 0-${data.ContentLength - 1}/${data.ContentLength}`
+        : undefined;
+    setObjectResponseHeaders(res, { ...data, ContentRange: data.ContentRange ?? fullContentRange });
+    if (options.streamImport) setStreamImportResponseHeaders(res);
 
     if (data.ContentRange) {
       res.status(206);
     }
 
-    (data.Body as NodeJS.ReadableStream).pipe(res);
+    const destroyBody = () => body.destroy?.();
+
+    body.once("error", () => {
+      if (!res.headersSent) res.status(502);
+      res.destroy();
+    });
+    res.once("close", destroyBody);
+    res.once("finish", () => res.off("close", destroyBody));
+    body.pipe(res);
     return undefined;
-  } catch (err: any) {
-    if (err?.$metadata?.httpStatusCode === 416) {
+  } catch (err) {
+    const httpStatusCode =
+      err && typeof err === "object" && "$metadata" in err
+        ? (err.$metadata as { httpStatusCode?: number } | undefined)?.httpStatusCode
+        : undefined;
+
+    if (httpStatusCode === 416) {
       res.setHeader("Accept-Ranges", "bytes");
       return res.status(416).end();
     }
@@ -125,18 +192,21 @@ export const filesRoute = (server: Application) => {
     return req.method === "HEAD" ? headFile(file, res) : streamFile(file, req, res);
   };
 
-  server.head("/public/files/*file", handlePublicFileRequest);
-  server.get("/public/files/*file", handlePublicFileRequest);
+  const handleVideoStreamImportSource = async (req: Request, res: Response) => {
+    if (Object.keys(req.query).length > 0) return sendNotFound(res);
 
-  const handlePrivateFileRequest = async (req: Request, res: Response) => {
-    const params = req.params as {
-      file?: string | string[];
-    };
-    const file = getRequestedFile(params.file);
+    const params = req.params as { source?: string };
+    const file = videoStreamImportObjectKey(params.source);
+    if (!file) return sendNotFound(res);
 
-    return req.method === "HEAD" ? headFile(file, res) : streamFile(file, req, res);
+    const options = { streamImport: true } as const;
+    return req.method === "HEAD"
+      ? headFile(file, res, options)
+      : streamFile(file, req, res, options);
   };
 
-  server.head("/files/*file", authMiddleware, handlePrivateFileRequest);
-  server.get("/files/*file", authMiddleware, handlePrivateFileRequest);
+  server.head("/public/files/*file", handlePublicFileRequest);
+  server.get("/public/files/*file", handlePublicFileRequest);
+  server.head("/public/video-stream-import/v1/:source", handleVideoStreamImportSource);
+  server.get("/public/video-stream-import/v1/:source", handleVideoStreamImportSource);
 };

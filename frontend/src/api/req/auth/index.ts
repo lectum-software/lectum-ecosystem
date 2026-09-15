@@ -22,6 +22,7 @@ export type RegisterPatientPayload = {
   password: string;
   password_confirm: string;
   role: "paciente";
+  adult_confirmed: boolean;
   terms_accepted: true;
   terms_version: string;
   analytics_visitor_id?: string;
@@ -36,6 +37,7 @@ export type RegisterPsychologistPayload = {
   password: string;
   password_confirm: string;
   role: "psicologo";
+  adult_confirmed: boolean;
   terms_accepted: true;
   terms_version: string;
   analytics_visitor_id?: string;
@@ -55,12 +57,20 @@ export const login = async (body: LoginPayload) => {
   return handleReq<user>({
     ...handle,
     hideError: true,
+    signOutOnUnauthorized: false,
   });
 };
 
-export const hidrate = async () => {
+export const hidrate = async (bearerToken?: string) => {
   const handle = callEndpoint({
     route: "/api/private/auth/hidrate",
+    config: bearerToken
+      ? {
+          headers: {
+            Authorization: `Bearer ${bearerToken}`,
+          },
+        }
+      : undefined,
   });
 
   return handleReq<user>(handle);

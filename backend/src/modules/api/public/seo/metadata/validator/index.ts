@@ -1,3 +1,3 @@
-﻿import { validator } from "@/utils/validator";
+import { validator } from "@/utils/validator";
 
 export const indexValidator = validator({});

@@ -1,4 +1,4 @@
-﻿# ADR 0261: Padronização de granularidade temporal dos gráficos Admin
+# ADR 0261: Padronização de granularidade temporal dos gráficos Admin
 
 ## Status
 

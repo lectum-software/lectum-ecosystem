@@ -1,14 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { type ReactNode, useEffect, useState } from "react";
+import { type MouseEventHandler, type ReactNode, useCallback, useEffect, useState } from "react";
 import {
   type ContentVideoWatchTrackingTarget,
   useContentVideoWatchTracking,
 } from "@/components/analytics/content-video-watch-tracker";
+import { useCommunityVideoAutoplay } from "@/components/community/community-feed-video-autoplay";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { isVideoAssetReference } from "@/utils/video-stream";
+import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 
 export type CommunityMediaFrameVariant = "post" | "detail" | "reply";
 export type CommunityMediaOrientation = "landscape" | "portrait" | "square";
@@ -222,16 +225,27 @@ export const getCommunityMediaSizes = (
   orientation: CommunityMediaOrientation,
 ) => mediaFrameSizes[variant][orientation];
 
+export type CommunityMediaOverlayAction = {
+  ariaLabel: string;
+  disabled?: boolean;
+  icon: ReactNode;
+  onClick: MouseEventHandler<HTMLButtonElement>;
+};
+
 type CommunityMediaBlockProps = {
   alt: string;
   analyticsTarget?: ContentVideoWatchTrackingTarget;
   className?: string;
+  enableCommunityAutoplay?: boolean;
+  enableFeedAutoplay?: boolean;
   footer?: ReactNode;
   imageClassName?: string;
   mediaType: string | null;
   mediaUrl: string | null;
+  overlayAction?: CommunityMediaOverlayAction;
   roundedClassName?: string;
   sizes?: string;
+  thumbnailUrl?: string | null;
   variant?: CommunityMediaFrameVariant;
   videoClassName?: string;
   viewportClassName?: string;
@@ -241,10 +255,13 @@ export const CommunityMediaBlock = ({
   alt,
   analyticsTarget,
   className,
+  enableCommunityAutoplay = false,
+  enableFeedAutoplay = false,
   footer,
   imageClassName,
   mediaType,
   mediaUrl,
+  overlayAction,
   roundedClassName = "rounded-[22px]",
   sizes,
   variant = "post",
@@ -253,6 +270,15 @@ export const CommunityMediaBlock = ({
 }: CommunityMediaBlockProps) => {
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
+  const isStreamVideo = normalizedMediaType === "video" && isVideoAssetReference(mediaUrl);
+  const communityAutoplayEnabled =
+    (enableCommunityAutoplay || enableFeedAutoplay) && normalizedMediaType === "video";
+  // Players internos nao usam thumbnail_url: registros antigos podem conter a arte social exportavel.
+  const fallbackPosterKey = normalizedMediaType === "video" && !isStreamVideo ? resolvedUrl : null;
+  const [fallbackPoster, setFallbackPoster] = useState<{ key: string; url: string } | null>(null);
+  const fallbackPosterUrl =
+    fallbackPoster && fallbackPoster.key === fallbackPosterKey ? fallbackPoster.url : null;
+  const resolvedPosterUrl = fallbackPosterUrl;
   const handleVideoElementReady = useContentVideoWatchTracking(
     normalizedMediaType === "video" && analyticsTarget
       ? {
@@ -260,6 +286,18 @@ export const CommunityMediaBlock = ({
           videoUrl: analyticsTarget.videoUrl ?? resolvedUrl,
         }
       : null,
+  );
+  const {
+    handleVideoElementReady: handleCommunityVideoElementReady,
+    onSoundEnabledChange: handleCommunitySoundEnabledChange,
+    soundEnabled: communitySoundEnabled,
+  } = useCommunityVideoAutoplay(communityAutoplayEnabled);
+  const handleVideoReady = useCallback(
+    (video: HTMLVideoElement | null) => {
+      handleVideoElementReady(video);
+      handleCommunityVideoElementReady(video);
+    },
+    [handleCommunityVideoElementReady, handleVideoElementReady],
   );
   const [detectedMedia, setDetectedMedia] = useState<{
     height?: number | null;
@@ -270,7 +308,38 @@ export const CommunityMediaBlock = ({
   } | null>(null);
 
   useEffect(() => {
-    if (!resolvedUrl || !normalizedMediaType) {
+    if (!fallbackPosterKey) {
+      return;
+    }
+
+    let active = true;
+    let objectUrl: string | null = null;
+
+    createVideoPosterObjectUrl(fallbackPosterKey).then((posterUrl) => {
+      if (!active) {
+        if (posterUrl) URL.revokeObjectURL(posterUrl);
+        return;
+      }
+
+      if (!posterUrl) {
+        setFallbackPoster(null);
+        return;
+      }
+
+      objectUrl = posterUrl;
+      setFallbackPoster({ key: fallbackPosterKey, url: posterUrl });
+    });
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [fallbackPosterKey]);
+
+  useEffect(() => {
+    if (!resolvedUrl || !normalizedMediaType || isStreamVideo) {
       return;
     }
 
@@ -291,12 +360,15 @@ export const CommunityMediaBlock = ({
     return () => {
       isMounted = false;
     };
-  }, [normalizedMediaType, resolvedUrl]);
+  }, [isStreamVideo, normalizedMediaType, resolvedUrl]);
 
   if (!mediaUrl || !resolvedUrl || !normalizedMediaType) return null;
 
-  const orientation =
-    detectedMedia?.src === resolvedUrl && detectedMedia.type === normalizedMediaType
+  const shouldForceReplyVideoAspectRatio =
+    normalizedMediaType === "video" && (variant === "reply" || isStreamVideo);
+  const orientation = shouldForceReplyVideoAspectRatio
+    ? "portrait"
+    : detectedMedia?.src === resolvedUrl && detectedMedia.type === normalizedMediaType
       ? detectedMedia.orientation
       : "landscape";
   const hasFooter = Boolean(footer);
@@ -313,6 +385,7 @@ export const CommunityMediaBlock = ({
   );
   const resolvedSizes = sizes ?? getCommunityMediaSizes(variant, orientation);
   const videoAspectRatio =
+    !shouldForceReplyVideoAspectRatio &&
     normalizedMediaType === "video" &&
     detectedMedia?.src === resolvedUrl &&
     detectedMedia.type === normalizedMediaType &&
@@ -324,21 +397,55 @@ export const CommunityMediaBlock = ({
   if (normalizedMediaType === "video") {
     return (
       <div className={frameClassName}>
-        <VerticalVideoPlayer
-          className={cn(
-            "w-full border-border shadow-none",
-            videoMediaFrameAspectClassName[orientation],
-            mediaRoundedClassName,
-            viewportClassName,
-            videoClassName,
-          )}
-          fit="contain"
-          fullscreenVariant="content"
-          onVideoElementReady={handleVideoElementReady}
-          src={resolvedUrl}
-          style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
-          title={alt}
-        />
+        <div className="relative w-full">
+          <VerticalVideoPlayer
+            className={cn(
+              "w-full border-border shadow-none",
+              videoMediaFrameAspectClassName[orientation],
+              mediaRoundedClassName,
+              viewportClassName,
+              videoClassName,
+            )}
+            controlsVariant="persistent"
+            fit="contain"
+            fullscreenVariant="content"
+            mutedControlVisibility={communityAutoplayEnabled ? "when-hidden" : "default"}
+            onSoundEnabledChange={
+              communityAutoplayEnabled ? handleCommunitySoundEnabledChange : undefined
+            }
+            onVideoElementReady={handleVideoReady}
+            persistentControlsLayout="media"
+            poster={resolvedPosterUrl}
+            src={resolvedUrl}
+            style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
+            title={alt}
+            videoProps={
+              communityAutoplayEnabled
+                ? {
+                    "data-lectum-community-video-autoplay": "true",
+                    "data-lectum-feed-video-autoplay": enableFeedAutoplay ? "true" : undefined,
+                    muted: !communitySoundEnabled,
+                  }
+                : undefined
+            }
+          />
+          {overlayAction ? (
+            <button
+              aria-label={overlayAction.ariaLabel}
+              className="absolute top-3 right-3 z-20 grid h-11 w-11 place-items-center rounded-full border border-media-foreground/25 bg-media-background/35 text-media-foreground backdrop-blur-md transition hover:bg-media-background/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 disabled:pointer-events-none disabled:opacity-60"
+              data-post-card-ignore-click="true"
+              disabled={overlayAction.disabled}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                overlayAction.onClick(event);
+              }}
+              type="button"
+            >
+              {overlayAction.icon}
+            </button>
+          ) : null}
+        </div>
         {footer}
       </div>
     );

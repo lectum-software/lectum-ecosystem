@@ -1,4 +1,4 @@
-﻿import { SuggestCommunitySuccessLogic } from "./logic";
+import { SuggestCommunitySuccessLogic } from "./logic";
 
 export default function SuggestCommunitySuccessPage() {
   return <SuggestCommunitySuccessLogic />;

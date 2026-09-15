@@ -1,7 +1,5 @@
-//#ignore
-import { z } from "zod";
+import { webPushSubscriptionSchema } from "@/utils/push-subscription";
 import { type IValidatorRequest, validator } from "@/utils/validator";
-//@ignore
 
 export const schema: IValidatorRequest = {
   params: [
@@ -19,7 +17,7 @@ export const schema: IValidatorRequest = {
       method: "string",
       coerse: "string",
       //#ignore
-      custom: z.any(),
+      custom: webPushSubscriptionSchema,
       //@ignore
     },
     //#ignore

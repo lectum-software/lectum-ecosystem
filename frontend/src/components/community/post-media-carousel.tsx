@@ -208,7 +208,7 @@ export const PostMediaCarousel = ({
           <>
             <button
               aria-label="Imagem anterior"
-              className="absolute top-1/2 left-2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-slate-950/65 p-0 text-white shadow-none backdrop-blur-md transition hover:bg-slate-950/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 active:scale-95 sm:left-3 sm:grid sm:h-10 sm:w-10"
+              className="absolute top-1/2 left-2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-media-foreground/45 bg-media-background/65 p-0 text-primary-foreground shadow-none backdrop-blur-md transition hover:bg-media-background/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/75 active:scale-95 sm:left-3 sm:grid sm:h-10 sm:w-10"
               data-post-card-ignore-click="true"
               onClick={(event) => {
                 event.preventDefault();
@@ -221,7 +221,7 @@ export const PostMediaCarousel = ({
             </button>
             <button
               aria-label="Próxima imagem"
-              className="absolute top-1/2 right-2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-slate-950/65 p-0 text-white shadow-none backdrop-blur-md transition hover:bg-slate-950/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 active:scale-95 sm:right-3 sm:grid sm:h-10 sm:w-10"
+              className="absolute top-1/2 right-2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-media-foreground/45 bg-media-background/65 p-0 text-primary-foreground shadow-none backdrop-blur-md transition hover:bg-media-background/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/75 active:scale-95 sm:right-3 sm:grid sm:h-10 sm:w-10"
               data-post-card-ignore-click="true"
               onClick={(event) => {
                 event.preventDefault();
@@ -238,8 +238,8 @@ export const PostMediaCarousel = ({
                 <button
                   aria-label={`Mostrar imagem ${index + 1}`}
                   className={cn(
-                    "h-2 rounded-full bg-white/65 transition-all hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/70",
-                    index === safeActiveIndex ? "w-5 bg-white" : "w-2",
+                    "h-2 rounded-full bg-surface/65 transition-all hover:bg-surface focus:outline-none focus:ring-2 focus:ring-media-foreground/70",
+                    index === safeActiveIndex ? "w-5 bg-surface" : "w-2",
                   )}
                   data-post-card-ignore-click="true"
                   key={item.itemKey}

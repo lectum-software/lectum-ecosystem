@@ -1,39 +1,39 @@
-﻿# ADR-0078 - TransiÃ§Ã£o segura para WhatsApp do psicÃ³logo
+# ADR-0078 - Transição segura para WhatsApp do psicólogo
 
 Status: Accepted
 
 ## Contexto
 
-CTAs diretos de WhatsApp em listagens, feed da comunidade e perfil pÃºblico abriam o `wa.me`
+CTAs diretos de WhatsApp em listagens, feed da comunidade e perfil público abriam o `wa.me`
 imediatamente. Isso reduzia a clareza sobre qual profissional havia sido escolhido e, em alguns
-pontos, nÃ£o passava pelo registro persistido de intenÃ§Ã£o/clique de contato.
+pontos, não passava pelo registro persistido de intenção/clique de contato.
 
-## DecisÃ£o
+## Decisão
 
-- Centralizar CTAs de WhatsApp de psicÃ³logos em um componente client-side reutilizÃ¡vel.
-- Exibir uma transiÃ§Ã£o com foto, nome, profissÃ£o e CRP antes de sair da Lectum.
+- Centralizar CTAs de WhatsApp de psicólogos em um componente client-side reutilizável.
+- Exibir uma transição com foto, nome, profissão e CRP antes de sair da Lectum.
 - Registrar o clique em `contact_request` por um endpoint privado leve:
   `POST /api/private/directory/psychologists/:id/contact-click`.
-- Usar o link retornado pelo backend quando disponÃ­vel e manter fallback para o `whatsapp_url`
-  jÃ¡ recebido no DTO, para nÃ£o bloquear o usuÃ¡rio se o tracking demorar ou falhar.
-- Expor `crp` nos autores psicÃ³logos de comunidade/posts para a transiÃ§Ã£o nÃ£o depender de mock.
-- Reutilizar a mesma modal tambÃ©m no fluxo dedicado `/app/psychologist/:id/contact`, mantendo o
+- Usar o link retornado pelo backend quando disponível e manter fallback para o `whatsapp_url`
+  já recebido no DTO, para não bloquear o usuário se o tracking demorar ou falhar.
+- Expor `crp` nos autores psicólogos de comunidade/posts para a transição não depender de mock.
+- Reutilizar a mesma modal também no fluxo dedicado `/app/psychologist/:id/contact`, mantendo o
   registro completo de contato antes do redirecionamento e removendo links diretos de fallback.
-- Renderizar a transiÃ§Ã£o de redirecionamento via portal em `document.body`, com camada `fixed`
-  global, para que a modal cubra sidebar, feed, botÃµes flutuantes e navegaÃ§Ã£o em qualquer rota que
+- Renderizar a transição de redirecionamento via portal em `document.body`, com camada `fixed`
+  global, para que a modal cubra sidebar, feed, botões flutuantes e navegação em qualquer rota que
   use o CTA.
 
-## ConsequÃªncias
+## Consequências
 
-- A experiÃªncia fica mais segura e consistente entre feed, perfil pÃºblico, listagem, respostas e
-  tela dedicada de contato do psicÃ³logo.
-- MÃ©tricas de contato passam a capturar CTAs diretos alÃ©m do fluxo com formulÃ¡rio.
-- NÃ£o houve alteraÃ§Ã£o de schema/migration; a persistÃªncia usa `contact_request` existente.
-- O fallback manual continua disponÃ­vel se o navegador nÃ£o redirecionar automaticamente.
-- A camada visual da transiÃ§Ã£o deixa de depender do container em que o CTA foi acionado; isso evita
-  deslocamento lateral em `/app/psychologists` e mantÃ©m o mesmo comportamento em comunidade/feed.
+- A experiência fica mais segura e consistente entre feed, perfil público, listagem, respostas e
+  tela dedicada de contato do psicólogo.
+- Métricas de contato passam a capturar CTAs diretos além do fluxo com formulário.
+- Não houve alteração de schema/migration; a persistência usa `contact_request` existente.
+- O fallback manual continua disponível se o navegador não redirecionar automaticamente.
+- A camada visual da transição deixa de depender do container em que o CTA foi acionado; isso evita
+  deslocamento lateral em `/app/psychologists` e mantém o mesmo comportamento em comunidade/feed.
 
-## ValidaÃ§Ãµes
+## Validações
 
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
@@ -45,7 +45,7 @@ pontos, nÃ£o passava pelo registro persistido de intenÃ§Ã£o/clique de cont
 
 ### Contexto
 
-A modal de transicao para WhatsApp exibia `Psicologa â€¢ CRP CRP DEMO/00005` quando o campo `crp` ja vinha persistido com o prefixo `CRP`.
+A modal de transicao para WhatsApp exibia `Psicologa • CRP CRP DEMO/00005` quando o campo `crp` ja vinha persistido com o prefixo `CRP`.
 
 ### Decisao
 
@@ -69,3 +69,30 @@ A modal de transicao para WhatsApp exibia `Psicologa â€¢ CRP CRP DEMO/00005`
 - `git diff --check`
 - Smoke do formatter: `CRP DEMO/00005` e `CRP CRP DEMO/00005` renderizam como `CRP DEMO/00005`.
 - HTTP local com cookie de sessao de desenvolvimento em `/app/psychologists`, `/app/favorites`, `/app/community/feed`, `/app/community/top-mentors`, `/app/profile` e `/app/psychologist/demo` respondeu `200`.
+
+## Atualizacao em 2026-09-10: numero CRP sem padding artificial
+
+### Contexto
+
+O perfil publico exibia `CRP 07/029112` para um registro cujo numero correto, conferido no Admin,
+era `29112`. O problema vinha do `formatCrpNumber`, que preenchia o numero do registro com zero a
+esquerda por regra visual.
+
+### Decisao
+
+- Ver ADR-0493 para a regra vigente de exibicao do CRP publico.
+- A regional numerica continua normalizada para 2 digitos.
+- O numero do registro nao recebe mais `padStart`; a exibicao publica preserva o numero recebido no
+  contrato, sem criar zero artificial.
+- A deduplicacao de prefixo `CRP` permanece centralizada em `formatCrpLabel`.
+
+### Consequencias
+
+- CTAs/modal de WhatsApp, perfil publico, perfil privado e avaliacoes passam a exibir o registro
+  publico sem zero inventado quando usarem o formatter compartilhado.
+- Nao ha alteracao de backend, contrato de API, schema Prisma, migration, package, env ou dado
+  persistido.
+
+### Validacoes
+
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`

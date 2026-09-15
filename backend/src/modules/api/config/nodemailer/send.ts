@@ -1,11 +1,10 @@
+import "@/config/dotenv";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import hbs from "nodemailer-express-handlebars";
 
-dotenv.config();
-
+import packageMetadata from "../../../../../package.json";
 import type { MessageProps } from "./types";
 
 type Send = {
@@ -18,8 +17,19 @@ type Send = {
 
 type TemplateContext = Record<string, unknown>;
 
-const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "erro desconhecido";
+export const isTransactionalEmailConfigured = () => {
+  const port = Number(process.env.EMAIL_API_PORT);
+
+  return Boolean(
+    process.env.EMAIL_API_HOST?.trim() &&
+      Number.isInteger(port) &&
+      port > 0 &&
+      port <= 65_535 &&
+      process.env.EMAIL_API_EMAIL?.trim() &&
+      process.env.EMAIL_API_KEY?.trim() &&
+      process.env.EMAIL_API_SENDER?.trim(),
+  );
+};
 
 const getTemplateValue = (context: TemplateContext, key: string) => {
   return key.split(".").reduce<unknown>((acc, item) => {
@@ -76,6 +86,21 @@ const renderTemplate = (template: string, context: TemplateContext) => {
   );
 };
 
+export const resolveEmailLogoUrl = (logoUrl: string | undefined) => {
+  const value = logoUrl?.trim();
+  if (!value) return undefined;
+
+  try {
+    const parsed = new URL(value);
+    if (!["http:", "https:"].includes(parsed.protocol)) return value;
+
+    parsed.searchParams.set("v", packageMetadata.version);
+    return parsed.toString();
+  } catch {
+    return value;
+  }
+};
+
 const send = async ({
   to,
   subject,
@@ -84,18 +109,16 @@ const send = async ({
   messageProps,
 }: Send): Promise<boolean> => {
   try {
-    if (process.env.NODE_ENV === "test") return Promise.resolve(true);
-
     const user = process.env.EMAIL_API_EMAIL;
     //Replace all ' and all ""
     const pass = process.env.EMAIL_API_KEY?.replace(/'/g, "").replace(/"/g, "");
 
-    if (!user || !pass) {
-      console.warn("[EMAIL] Credenciais SMTP ausentes; envio ignorado.");
-      return Promise.resolve(true);
+    if (!isTransactionalEmailConfigured() || !user || !pass) {
+      console.warn("[EMAIL] Configuração SMTP ausente ou inválida; envio cancelado.");
+      return false;
     }
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_API_HOST,
         port: Number(process.env.EMAIL_API_PORT),
@@ -122,7 +145,7 @@ const send = async ({
 
       transporter.use("compile", hbs(handlebarOptions as unknown as Parameters<typeof hbs>[0]));
 
-      const headers: any = {};
+      const headers: Record<string, string> = {};
 
       if (type === "marketing") {
         headers["List-Unsubscribe"] = `<mailto:${process.env.EMAIL_API_UNSUBSCRIBE!}>`;
@@ -149,7 +172,7 @@ const send = async ({
         context: {
           ...messageProps,
           system: process.env.SYSTEM_NAME!,
-          logo: process.env.SYSTEM_LOGO!,
+          logo: resolveEmailLogoUrl(process.env.SYSTEM_LOGO),
         },
         tls: {
           minVersion: "TLSv1.2",
@@ -159,19 +182,20 @@ const send = async ({
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.error("[EMAIL] Falha ao enviar mensagem", {
-            code: (error as { code?: string }).code,
-            message: getErrorMessage(error),
+            name: "EmailProviderError",
           });
-          return reject(new Error(`Failed to send email: ${error.message}`));
+          return reject(new Error("EMAIL_SEND_FAILED"));
         } else {
-          console.log(`Email sent: ${info.response}`);
+          console.log("[EMAIL] Mensagem aceita pelo provedor.", {
+            accepted: info.accepted.length,
+          });
           resolve(true);
         }
       });
     });
-  } catch (e) {
+  } catch {
     console.error("[EMAIL] Erro inesperado no envio", {
-      message: getErrorMessage(e),
+      name: "EmailSendError",
     });
     return false;
   }

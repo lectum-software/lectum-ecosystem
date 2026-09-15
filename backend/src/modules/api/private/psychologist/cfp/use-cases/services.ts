@@ -1,21 +1,20 @@
-﻿import { randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { error, msg } from "@/helpers/translate";
-import type { professional_registry_check } from "@/interfaces/objects";
 import type {
-  CfpResult,
   CfpSearchAttempts,
   ICfpConfirmDTO,
   ICfpSearchDTO,
   StoredRegistryCheckRaw,
 } from "../DTOs/ICfpDTO";
+import { toAttempts } from "../domain/search-attempts";
+import { extractStoredResults } from "../domain/stored-results";
 import {
   InfoSimplesCfpProvider,
   InfoSimplesCfpProviderError,
-  normalizeCfpResults,
 } from "../providers/InfoSimplesCfpProvider";
 import { CfpRepository } from "../repositories/CfpRepository";
 
-const CPF_SEARCH_ATTEMPT_LIMIT = 3;
+const PROVIDER_UNAVAILABLE_CODES = new Set([609, 615]);
 
 const normalizeDigits = (value?: string | null) => (value || "").replace(/\D/g, "");
 const normalizeText = (value?: string | null) => {
@@ -27,7 +26,8 @@ const normalizeUf = (value?: string | null) => normalizeText(value)?.toUpperCase
 const isProviderConfigError = (code: number | null) => code === 601 || code === 602 || code === 603;
 const isProviderValidationError = (code: number | null) => code === 606;
 const isProviderNotFound = (code: number | null) => code === 612;
-const isProviderUnavailable = (code: number | null) => code === 609;
+const isProviderUnavailable = (code: number | null) =>
+  code !== null && PROVIDER_UNAVAILABLE_CODES.has(code);
 const isProviderRateLimit = (code: number | null, message: string | null) => {
   const text = (message || "").toLowerCase();
   if (isProviderUnavailable(code)) return false;
@@ -36,12 +36,6 @@ const isProviderRateLimit = (code: number | null, message: string | null) => {
 };
 
 const isCfpLogEnabled = () => process.env.CFP_PROVIDER_LOGS !== "false";
-
-const toAttempts = (used: number): CfpSearchAttempts => ({
-  limit: CPF_SEARCH_ATTEMPT_LIMIT,
-  remaining: Math.max(CPF_SEARCH_ATTEMPT_LIMIT - used, 0),
-  used,
-});
 
 const withAttempts = <T extends Record<string, unknown>>(
   data: T,
@@ -81,8 +75,6 @@ const summarizeProviderResponse = (
   return {
     elapsedMs: response.elapsed_ms,
     httpStatus: response.http_status,
-    providerCode: response.code,
-    providerMessage: response.code_message,
     resultsCount: response.results.length,
   };
 };
@@ -90,7 +82,8 @@ const summarizeProviderResponse = (
 const logProviderUnavailable = (err: unknown, traceId: string) => {
   if (err instanceof InfoSimplesCfpProviderError) {
     logCfpSearchError("CFP_PROVIDER_UNAVAILABLE", {
-      context: err.context,
+      elapsedMs: err.context.elapsedMs,
+      httpStatus: err.context.httpStatus,
       reason: err.reason,
       traceId,
     });
@@ -98,29 +91,9 @@ const logProviderUnavailable = (err: unknown, traceId: string) => {
   }
 
   logCfpSearchError("CFP_PROVIDER_UNAVAILABLE", {
-    name: err instanceof Error ? err.name : typeof err,
+    reason: "unknown",
     traceId,
   });
-};
-
-const asStoredRaw = (value: unknown): StoredRegistryCheckRaw | null => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-
-  const raw = value as Partial<StoredRegistryCheckRaw>;
-  if (raw.provider !== "infosimples") return null;
-
-  return raw as StoredRegistryCheckRaw;
-};
-
-const extractStoredResults = (check: professional_registry_check): CfpResult[] => {
-  const raw = asStoredRaw(check.raw);
-  if (Array.isArray(raw?.normalized_results)) return raw.normalized_results;
-
-  if (raw?.response && typeof raw.response === "object") {
-    return normalizeCfpResults(raw.response as Parameters<typeof normalizeCfpResults>[0]);
-  }
-
-  return [];
 };
 
 const createStoredRaw = (props: {
@@ -136,7 +109,9 @@ const createStoredRaw = (props: {
 }): StoredRegistryCheckRaw => ({
   provider: "infosimples",
   request: props.request,
-  response: props.response?.raw ?? null,
+  // Os resultados normalizados são suficientes para confirmação. O payload cru do
+  // provedor pode conter detalhes técnicos e não deve ser persistido em novas consultas.
+  response: null,
   normalized_results: props.response?.results ?? [],
   attempt_finished_at: new Date().toISOString(),
   attempt_status: props.status,
@@ -147,8 +122,9 @@ const createProviderErrorRaw = (err: unknown): Pick<StoredRegistryCheckRaw, "pro
   if (err instanceof InfoSimplesCfpProviderError) {
     return {
       provider_error: {
-        context: { ...err.context },
-        name: err.name,
+        classification: "provider_unavailable",
+        elapsed_ms: err.context.elapsedMs,
+        http_status: err.context.httpStatus,
         reason: err.reason,
       },
     };
@@ -156,7 +132,7 @@ const createProviderErrorRaw = (err: unknown): Pick<StoredRegistryCheckRaw, "pro
 
   return {
     provider_error: {
-      name: err instanceof Error ? err.name : typeof err,
+      classification: "provider_unavailable",
     },
   };
 };
@@ -228,8 +204,6 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  const usedAttempts = request.cpf ? await repository.countCpfSearchAttempts(profile.id!) : 0;
-
   if (request.cpf) {
     await repository.saveSubmittedCpf({
       cpf: request.cpf,
@@ -249,8 +223,12 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  if (request.cpf && usedAttempts >= CPF_SEARCH_ATTEMPT_LIMIT) {
-    const attempts = toAttempts(usedAttempts);
+  const reservation = await repository.reserveSearch({ psychologistId: profile.id!, request });
+  if (!reservation.ok && reservation.reason === "profile_not_found") {
+    return { status: 404, ...error("not_found", { model: "psychologist_profile" }) };
+  }
+  if (!reservation.ok) {
+    const attempts = toAttempts(reservation.used);
 
     logCfpSearchError("CFP_SEARCH_ATTEMPT_LIMIT_REACHED", {
       attempts,
@@ -264,7 +242,7 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  const attempts = request.cpf ? toAttempts(usedAttempts + 1) : null;
+  const attempts = reservation.used === null ? null : toAttempts(reservation.used);
   const provider = new InfoSimplesCfpProvider();
   let response: Awaited<ReturnType<InfoSimplesCfpProvider["search"]>>;
 
@@ -279,7 +257,8 @@ export const search = async (data: ICfpSearchDTO) => {
   } catch (err) {
     logProviderUnavailable(err, traceId);
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -288,7 +267,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response: null,
         status: "provider_unavailable",
       }),
-      request,
     });
 
     return {
@@ -303,7 +281,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -311,7 +290,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_config_error",
       }),
-      request,
     });
 
     return {
@@ -326,7 +304,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -334,7 +313,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_validation_error",
       }),
-      request,
     });
 
     return {
@@ -349,7 +327,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -357,7 +336,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_unavailable",
       }),
-      request,
     });
 
     return {
@@ -372,7 +350,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -380,7 +359,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_rate_limited",
       }),
-      request,
     });
 
     return {
@@ -397,7 +375,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -405,7 +384,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_error",
       }),
-      request,
     });
 
     return {
@@ -416,9 +394,9 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  const check = await repository.createCheck({
+  const check = await repository.completeSearch({
+    checkId: reservation.check.id!,
     psychologistId: profile.id!,
-    request,
     found: response.results.length > 0,
     raw: {
       ...createStoredRaw({
@@ -430,7 +408,6 @@ export const search = async (data: ICfpSearchDTO) => {
   });
 
   logCfpSearch("CFP_SEARCH_PERSISTED", {
-    checkId: check.id,
     found: response.results.length > 0,
     response: summarizeProviderResponse(response),
     traceId,
@@ -496,17 +473,28 @@ export const confirm = async (data: ICfpConfirmDTO) => {
     };
   }
 
-  const updatedProfile = await repository.confirmResult({
+  const outcome = await repository.confirmResult({
     check,
     result: selected,
   });
 
-  return {
-    status: 200,
-    ...msg("cfp_confirm_success", {}),
-    data: {
-      result: selected,
-      profile: updatedProfile,
-    },
-  };
+  if (!outcome.ok) {
+    const code =
+      outcome.reason === "profile_locked"
+        ? "cfp_confirmation_locked"
+        : outcome.reason === "result_not_active"
+          ? "cfp_result_not_active"
+          : "cfp_result_not_found";
+    return {
+      status:
+        outcome.reason === "profile_locked"
+          ? 409
+          : outcome.reason === "result_not_active"
+            ? 400
+            : 404,
+      ...error(code, {}),
+    };
+  }
+
+  return { status: 200, ...msg("cfp_confirm_success", {}), data: outcome.data };
 };

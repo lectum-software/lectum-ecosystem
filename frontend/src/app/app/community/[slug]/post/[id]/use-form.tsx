@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import { z } from "zod";
 import type {
   CreatePostReplyPayload,
@@ -22,20 +22,20 @@ export const postReportSchema = z.object({
 
 export type PostReportForm = z.infer<typeof postReportSchema>;
 
-const buildFields = (replyingToName?: string | null) =>
+const buildFields = () =>
   [
     {
       name: "content",
-      field: "textarea",
+      field: "contenteditable",
       className: "gap-0 [&>span:last-child]:hidden",
       label: undefined,
-      placeholder: replyingToName ? `Responder ${replyingToName}` : "Comentar no post",
+      placeholder: "Adicionar comentário",
       required: false,
       rows: 1,
       max: 2000,
       autoGrow: true,
       inputClassName:
-        "min-h-[44px] max-h-[160px] rounded-[16px] border-[#E5EAF0] bg-white px-3.5 py-2.5 text-sm leading-5 shadow-none placeholder:text-[#94A3B8] focus:border-[#308CE8] focus:ring-[#308CE8]/10 dark:bg-surface",
+        "min-h-[44px] max-h-[160px] rounded-[24px] border-border bg-surface px-3.5 py-2.5 text-sm leading-5 shadow-none placeholder:text-subtle focus:border-primary focus:ring-primary/10 dark:bg-surface",
     },
   ] satisfies Field<ReplyComposerForm>[];
 
@@ -63,7 +63,7 @@ const reportFields = [
     max: 500,
     autoGrow: true,
     inputClassName:
-      "min-h-[96px] rounded-[18px] border-[#E5EAF0] bg-white px-4 py-3 text-sm leading-6 shadow-none placeholder:text-[#94A3B8] focus:border-[#308CE8] focus:ring-[#308CE8]/10 dark:bg-surface",
+      "min-h-[96px] rounded-[18px] border-border bg-surface px-4 py-3 text-sm leading-6 shadow-none placeholder:text-subtle focus:border-primary focus:ring-primary/10 dark:bg-surface",
   },
 ] satisfies Field<PostReportForm>[];
 
@@ -82,8 +82,8 @@ export const toPostReportPayload = (values: PostReportForm): PostReportPayload =
   reason: values.reason as PostReportReason,
 });
 
-export const useReplyComposerForm = (replyingToName?: string | null) => {
-  const fields = useMemo(() => buildFields(replyingToName), [replyingToName]);
+export const useReplyComposerForm = () => {
+  const fields = useMemo(() => buildFields(), []);
 
   return useFormList<ReplyComposerForm>({
     fields,

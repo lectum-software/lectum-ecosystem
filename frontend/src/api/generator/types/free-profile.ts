@@ -100,6 +100,9 @@ export type FreeProfessionalProfile = {
     approaches: FreeProfileCatalogItem[];
   };
   activation: FreeProfessionalProfileActivation;
+  upload_limits?: {
+    presentation_video_mb: number;
+  };
   catalogs: {
     genders: FreeProfileCatalogItem[];
     specialty_categories: FreeProfileCatalogCategory[];
@@ -156,6 +159,32 @@ export type FreeProfessionalProfileAvatarRemoval = {
 export type FreeProfessionalProfileVideoUpload = {
   video_url: string;
   profile: FreeProfessionalProfile | null;
+};
+
+export type FreeProfessionalProfileVideoMultipartInitiatePayload = {
+  fileName: string;
+  mimeType: string;
+  size: number;
+};
+
+export type FreeProfessionalProfileVideoMultipartInitiateResponse = {
+  chunk_size: number;
+  max_file_size: number;
+  upload_session_id: string;
+};
+
+export type FreeProfessionalProfileVideoMultipartPartResponse = {
+  part_id?: string;
+  part_number: number;
+  part_token?: string;
+};
+
+export type FreeProfessionalProfileVideoMultipartCompletePayload = {
+  parts: Array<{
+    partId: string;
+    partNumber: number;
+  }>;
+  uploadSessionId: string;
 };
 
 export type FreeProfessionalProfileVideoCoverUpload = {

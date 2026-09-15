@@ -1,400 +1,50 @@
 "use client";
 
-import {
-  Bell,
-  ChevronLeft,
-  Heart,
-  Home,
-  LogIn,
-  Plus,
-  Search,
-  ShieldCheck,
-  UserPlus,
-  UserRound,
-} from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ComponentType, CSSProperties, PropsWithChildren } from "react";
-import {
-  type MouseEvent as ReactMouseEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
-import type { user } from "@/api/generator/types";
+import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
+import { LegalAcceptanceRequest } from "@/components/legal/acceptance-request";
+import { canPromptLegalOnPath } from "@/components/legal/policy";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Logo, LogoIcon } from "@/components/ui/logo";
 import { PageShell } from "@/components/ui/page-shell";
 import { useSignOut } from "@/hooks/cookies/signout";
-import { getToken } from "@/hooks/cookies/token";
 import { NotificationManager } from "@/hooks/notification";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
-import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
-import {
-  COMMUNITY_FEED_SLUG,
-  DEFAULT_COMMUNITY_FEED_HREF,
-  LEGACY_COMMUNITY_FEED_HREF,
-} from "@/utils/community";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
+import { getPsychologistPaidOnboardingRequirementPath } from "@/utils/psychologist-onboarding";
+
 import {
-  getPsychologistPaidOnboardingRequirementPath,
-  PSYCHOLOGIST_ONBOARDING_PATHS,
-} from "@/utils/psychologist-onboarding";
-
-type PrivateTemplateProps = PropsWithChildren<{
-  allowAnonymous?: boolean;
-  autoHideNavigation?: boolean;
-  bottomNavigationCenterAction?: {
-    ariaLabel: string;
-    href: string;
-    onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
-    scroll?: boolean;
-    title?: string;
-  };
-  contentClassName?: string;
-  desktopSidebarDefaultCollapsed?: boolean;
-  desktopNavigation?: "bottom" | "sidebar";
-  navigationDimmed?: boolean;
-  navigationHidden?: boolean;
-  navigationTheme?: "default" | "solidWhite";
-  showHeader?: boolean;
-  showMobileNavigation?: boolean;
-  showNavigation?: boolean;
-}>;
-
-type UserRole = NonNullable<user["role"]>;
-
-type NavigationIconProps = {
-  "aria-hidden"?: boolean | "false" | "true";
-  className?: string;
-};
-
-type NavigationIcon = ComponentType<NavigationIconProps>;
-
-type NavigationItem = {
-  href: string;
-  icon: NavigationIcon;
-  label: string;
-  mobileIcon?: NavigationIcon;
-  title: string;
-};
-
-const NOTIFICATIONS_HREF = "/app/notificacoes";
-const NEED_RESET_PATH = "/app/conta/redefinir-senha";
-const DEFAULT_RESTRICTED_AREA_COPY = {
-  description:
-    "Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar sua experiência na Lectum.",
-  title: "Acesse sua conta",
-};
-const COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY = {
-  ...DEFAULT_RESTRICTED_AREA_COPY,
-  description:
-    "Faça login para acessar o ranking dos principais mentores da comunidade e acompanhar quem mais contribui nas discussões.",
-};
-
-const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_AREA_COPY>([
-  ["/app/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
-  ["/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
-  [
-    "/app/favoritos",
-    {
-      description:
-        "Crie uma conta gratuita para salvar psicólogos, posts e respostas que quiser consultar depois.",
-      title: "Salve seus favoritos",
-    },
-  ],
-  [
-    "/app/notificacoes",
-    {
-      description:
-        "Entre ou crie sua conta para acompanhar respostas, interações e atualizações das comunidades.",
-      title: "Acompanhe suas notificações",
-    },
-  ],
-  [
-    "/app/perfil",
-    {
-      description:
-        "Crie sua conta gratuita para salvar suas preferências e continuar sua experiência na Lectum.",
-      title: "Acesse sua conta",
-    },
-  ],
-]);
-
-const NotificationUnreadIndicator = () => (
-  <span
-    aria-hidden="true"
-    className="-right-1 -top-1 absolute h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-surface"
-  />
-);
-
-const fallbackNavigation: NavigationItem[] = [
-  {
-    href: DEFAULT_COMMUNITY_FEED_HREF,
-    icon: Home,
-    label: "Início",
-    title: "Início",
-  },
-  {
-    href: "/psicologos",
-    icon: Search,
-    label: "Psicólogos",
-    title: "Encontre seu psicólogo",
-  },
-  {
-    href: "/app/favoritos",
-    icon: Heart,
-    label: "Favoritos",
-    title: "Favoritos",
-  },
-  {
-    href: "/app/notificacoes",
-    icon: Bell,
-    label: "Notificações",
-    title: "Notificações",
-  },
-  {
-    href: "/app/perfil",
-    icon: UserRound,
-    label: "Perfil",
-    title: "Meu Perfil",
-  },
-];
-
-const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, NavigationItem[]> = {
-  paciente: [
-    {
-      href: DEFAULT_COMMUNITY_FEED_HREF,
-      icon: Home,
-      label: "Início",
-      title: "Início",
-    },
-    {
-      href: "/psicologos",
-      icon: Search,
-      label: "Psicólogos",
-      title: "Encontre seu psicólogo",
-    },
-    {
-      href: "/app/favoritos",
-      icon: Heart,
-      label: "Favoritos",
-      title: "Favoritos",
-    },
-    {
-      href: "/app/notificacoes",
-      icon: Bell,
-      label: "Notificações",
-      title: "Notificações",
-    },
-    {
-      href: "/app/perfil",
-      icon: UserRound,
-      label: "Perfil",
-      title: "Meu Perfil",
-    },
-  ],
-  psicologo: [
-    {
-      href: DEFAULT_COMMUNITY_FEED_HREF,
-      icon: Home,
-      label: "Início",
-      title: "Início",
-    },
-    {
-      href: "/psicologos",
-      icon: Search,
-      label: "Psicólogos",
-      title: "Psicólogos",
-    },
-    {
-      href: "/app/favoritos",
-      icon: Heart,
-      label: "Favoritos",
-      title: "Favoritos",
-    },
-    {
-      href: "/app/notificacoes",
-      icon: Bell,
-      label: "Notificações",
-      title: "Notificações",
-    },
-    {
-      href: "/app/perfil",
-      icon: UserRound,
-      label: "Perfil",
-      title: "Meu Perfil",
-    },
-  ],
-};
-
-const getNavigation = (role?: user["role"] | null) => {
-  if (role === "paciente" || role === "psicologo") {
-    return navigationByRole[role];
-  }
-
-  return fallbackNavigation;
-};
-
-const normalizePathname = (pathname: string) => {
-  if (pathname.length <= 1) return pathname;
-
-  return pathname.replace(/\/+$/, "");
-};
-
-const isPathOrDescendant = (pathname: string, target: string) =>
-  pathname === target || pathname.startsWith(`${target}/`);
-
-const canStayDuringPaidOnboarding = (pathname: string, requiredPath: string) => {
-  if (isPathOrDescendant(pathname, requiredPath)) return true;
-
-  if (requiredPath === PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress) {
-    return isPathOrDescendant(pathname, PSYCHOLOGIST_ONBOARDING_PATHS.checkout);
-  }
-
-  return PAID_ONBOARDING_MANAGEMENT_PATHS.has(pathname);
-};
-
-const getNavigationContextPathname = (pathname: string) => {
-  const normalizedPathname = normalizePathname(pathname);
-  const segments = normalizedPathname.split("/").filter(Boolean);
-
-  if (normalizedPathname === LEGACY_COMMUNITY_FEED_HREF) {
-    return DEFAULT_COMMUNITY_FEED_HREF;
-  }
-
-  if (
-    segments.length === 5 &&
-    segments[0] === "app" &&
-    (segments[1] === "community" || segments[1] === "comunidades") &&
-    (segments[3] === "post" || segments[3] === "publicacao") &&
-    (segments[4] === "new" || segments[4] === "nova")
-  ) {
-    if (segments[2] === COMMUNITY_FEED_SLUG) {
-      return DEFAULT_COMMUNITY_FEED_HREF;
-    }
-
-    return `/comunidades/${segments[2]}`;
-  }
-
-  return normalizedPathname;
-};
-
-const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
-  "/psicologos",
-  "/app/favoritos",
-  DEFAULT_COMMUNITY_FEED_HREF,
-  "/app/notificacoes",
-  "/app/perfil",
-]);
-
-const PAID_ONBOARDING_MANAGEMENT_PATHS = new Set([
-  "/app/profissional/assinatura",
-  "/app/profissional/assinatura/cartao",
-  "/app/profissional/assinatura/planos",
-  "/app/profissional/assinatura/gerenciar",
-  "/app/configuracoes/conta",
+  canStayDuringPaidOnboarding,
+  DEFAULT_RESTRICTED_AREA_COPY,
+  getMobileNavigationActiveHref,
+  getNavigation,
+  getNavigationContextPathname,
+  isDesktopActivePath,
+  isPathOrDescendant,
+  isPrimaryDesktopNavigationPath,
   NEED_RESET_PATH,
-]);
+  NOTIFICATIONS_HREF,
+  NotificationUnreadIndicator,
+  normalizePathname,
+  type PrivateTemplateProps,
+  RESTRICTED_AREA_COPY_BY_PATH,
+  shouldShowMobileNavigationForPath,
+} from "./navigation";
 
-const isPrimaryDesktopNavigationPath = (pathname: string) => {
-  return PRIMARY_DESKTOP_NAVIGATION_PATHS.has(pathname);
-};
-
-const isDesktopActivePath = (pathname: string, item: NavigationItem) => {
-  return isPrimaryDesktopNavigationPath(pathname) && pathname === item.href;
-};
-
-const MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH = new Map<string, string>([
-  ["/psicologos", "/psicologos"],
-  ["/app/favoritos", "/app/favoritos"],
-  [DEFAULT_COMMUNITY_FEED_HREF, DEFAULT_COMMUNITY_FEED_HREF],
-  ["/app/notificacoes", "/app/notificacoes"],
-  ["/app/perfil", "/app/perfil"],
-]);
-
-const COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS = new Set([
-  COMMUNITY_FEED_SLUG,
-  "publicacao",
-  "post",
-  "suggest",
-  "top-mentors",
-  "top-mentores",
-]);
-
-const isCommunityMainMobileNavigationPath = (pathname: string) => {
-  const segments = normalizePathname(pathname).split("/").filter(Boolean);
-
-  return (
-    segments.length === 2 &&
-    (segments[0] === "community" || segments[0] === "comunidades") &&
-    !COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS.has(segments[1])
-  );
-};
-
-const isPsychologistProfileMobileNavigationPath = (pathname: string) => {
-  const segments = normalizePathname(pathname).split("/").filter(Boolean);
-
-  return segments.length === 2 && (segments[0] === "psychologists" || segments[0] === "psicologos");
-};
-
-const shouldShowMobileNavigationForPath = (pathname: string) => {
-  const normalizedPathname = normalizePathname(pathname);
-
-  return (
-    MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.has(normalizedPathname) ||
-    isCommunityMainMobileNavigationPath(normalizedPathname) ||
-    isPsychologistProfileMobileNavigationPath(normalizedPathname)
-  );
-};
-
-const getMobileNavigationActiveHref = (pathname: string) => {
-  const normalizedPathname = normalizePathname(pathname);
-
-  if (isPsychologistProfileMobileNavigationPath(normalizedPathname)) {
-    return "/psicologos";
-  }
-
-  return MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.get(normalizedPathname) ?? null;
-};
-
-const DESKTOP_SIDEBAR_STORAGE_KEY_PREFIX = "lectum.desktopSidebar";
-const DESKTOP_SIDEBAR_STORAGE_EVENT = "lectum:desktop-sidebar-change";
-
-const getDesktopSidebarStorageKey = (pathname: string) => {
-  return `${DESKTOP_SIDEBAR_STORAGE_KEY_PREFIX}:${pathname}`;
-};
-
-const readDesktopSidebarPreference = (pathname: string) => {
-  if (typeof window === "undefined") return null;
-
-  const storedPreference = window.localStorage.getItem(getDesktopSidebarStorageKey(pathname));
-
-  if (storedPreference === "collapsed") return true;
-  if (storedPreference === "expanded") return false;
-
-  return null;
-};
-
-const subscribeDesktopSidebarPreference = (onStoreChange: () => void) => {
-  if (typeof window === "undefined") return () => undefined;
-
-  const handleStoreChange = () => onStoreChange();
-
-  window.addEventListener("storage", handleStoreChange);
-  window.addEventListener(DESKTOP_SIDEBAR_STORAGE_EVENT, handleStoreChange);
-
-  return () => {
-    window.removeEventListener("storage", handleStoreChange);
-    window.removeEventListener(DESKTOP_SIDEBAR_STORAGE_EVENT, handleStoreChange);
-  };
-};
+import {
+  readDesktopSidebarPreference,
+  subscribeDesktopSidebarPreference,
+  writeDesktopSidebarPreference,
+} from "./sidebar-preference";
 
 export const PrivateTemplate = ({
   allowAnonymous = false,
@@ -416,11 +66,7 @@ export const PrivateTemplate = ({
   const dispatch = useAppDispatch();
   const storedUser = useAppSelector((state) => state.user);
   const { out } = useSignOut();
-  const [hasToken] = useState(() => {
-    if (typeof window === "undefined") return false;
-
-    return Boolean(getToken());
-  });
+  const hasToken = useAuthTokenPresence();
 
   const { hidrate } = useAuth({ enableHidrate: hasToken });
   const { hasUnread: hasUnreadNotifications } = useUnreadNotificationStatus(hasToken);
@@ -431,7 +77,7 @@ export const PrivateTemplate = ({
     }
   }, [dispatch, hidrate.data]);
 
-  const sessionUser = hasToken ? (hidrate.data ?? storedUser) : null;
+  const sessionUser = hasToken && !hidrate.isError ? (hidrate.data ?? storedUser) : null;
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
   const shouldShowNavigation = showNavigation ?? showHeader;
   const normalizedPathname = normalizePathname(pathname);
@@ -457,9 +103,12 @@ export const PrivateTemplate = ({
   const isMobileNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
   const mobileNavigationActiveHref = getMobileNavigationActiveHref(navigationContextPathname);
   const lastScrollY = useRef(0);
+  const scrollAnimationFrameRef = useRef<number | null>(null);
   const ticking = useRef(false);
   const navigationAwarePageShellClassName = cn(
-    shouldRenderMobileNavigation ? "pb-28 sm:pb-32" : undefined,
+    shouldRenderMobileNavigation
+      ? "pb-[var(--lectum-mobile-bottom-nav-aware-padding)] sm:pb-[calc(var(--lectum-mobile-bottom-nav-height)_+_1.25rem)]"
+      : undefined,
     shouldRenderDesktopSidebar
       ? cn(isDesktopSidebarCollapsed ? "lg:pl-[88px]" : "lg:pl-[240px]", "lg:pb-8")
       : undefined,
@@ -467,18 +116,19 @@ export const PrivateTemplate = ({
   const pageShellClassName = cn(navigationAwarePageShellClassName, contentClassName);
   const mobileNavigationAwareFabBottom =
     shouldRenderMobileNavigation && isMobileNavigationRenderedVisible
-      ? "calc(4rem + env(safe-area-inset-bottom) + 0.625rem)"
-      : "calc(env(safe-area-inset-bottom) + 1rem)";
+      ? "calc(var(--lectum-mobile-bottom-nav-height) + 0.625rem)"
+      : "var(--lectum-bottom-fixed-padding)";
   const mobileNavigationAwareFabBottomSm =
     shouldRenderMobileNavigation && isMobileNavigationRenderedVisible
-      ? "calc(5rem + env(safe-area-inset-bottom) + 0.625rem)"
-      : "calc(env(safe-area-inset-bottom) + 1rem)";
+      ? "calc(var(--lectum-mobile-bottom-nav-height) + 1.625rem)"
+      : "var(--lectum-bottom-fixed-padding)";
   const pageShellStyle = {
     "--lectum-mobile-nav-aware-fab-bottom": mobileNavigationAwareFabBottom,
     "--lectum-mobile-nav-aware-fab-bottom-sm": mobileNavigationAwareFabBottomSm,
   } as CSSProperties;
-  const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
-  const shouldShowSessionError = Boolean(hasToken && hidrate.isError && !sessionUser);
+  const isSessionLoading =
+    hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending || hidrate.isFetching);
+  const shouldShowSessionError = Boolean(hasToken && hidrate.isError);
   const restrictedAreaCopy =
     RESTRICTED_AREA_COPY_BY_PATH.get(normalizedPathname) ?? DEFAULT_RESTRICTED_AREA_COPY;
   const restrictedAreaReturnTo = normalizedPathname;
@@ -495,7 +145,7 @@ export const PrivateTemplate = ({
 
   const navigateToAuth = (href: string) => {
     if (hasToken || shouldShowSessionError) {
-      out(href);
+      void out(href);
       return;
     }
 
@@ -536,13 +186,14 @@ export const PrivateTemplate = ({
 
       ticking.current = true;
 
-      requestAnimationFrame(() => {
+      scrollAnimationFrameRef.current = requestAnimationFrame(() => {
         const currentY = window.scrollY;
 
         if (currentY <= 12) {
           setIsNavigationVisible(true);
           lastScrollY.current = currentY;
           ticking.current = false;
+          scrollAnimationFrameRef.current = null;
 
           return;
         }
@@ -557,6 +208,7 @@ export const PrivateTemplate = ({
 
         lastScrollY.current = currentY;
         ticking.current = false;
+        scrollAnimationFrameRef.current = null;
       });
     };
 
@@ -565,19 +217,18 @@ export const PrivateTemplate = ({
 
     return () => {
       window.removeEventListener("scroll", onScroll);
+      if (scrollAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(scrollAnimationFrameRef.current);
+        scrollAnimationFrameRef.current = null;
+      }
+      ticking.current = false;
     };
   }, [shouldAutoHideNavigation]);
 
   const toggleDesktopSidebar = () => {
     const nextValue = !isDesktopSidebarCollapsed;
 
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        getDesktopSidebarStorageKey(navigationContextPathname),
-        nextValue ? "collapsed" : "expanded",
-      );
-      window.dispatchEvent(new Event(DESKTOP_SIDEBAR_STORAGE_EVENT));
-    }
+    writeDesktopSidebarPreference(navigationContextPathname, nextValue);
   };
 
   const bottomNavigationMarkup = shouldRenderMobileNavigation ? (
@@ -587,11 +238,12 @@ export const PrivateTemplate = ({
         "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] lg:hidden",
         navigationDimmed ? "opacity-55 brightness-90 saturate-75" : "opacity-100",
         navigationTheme === "solidWhite"
-          ? "border-t border-[#e5e7eb] bg-white text-foreground shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] dark:border-border dark:bg-surface dark:shadow-[0_-14px_34px_rgb(0_0_0_/_28%)]"
-          : "border-t border-border bg-surface/95 text-foreground shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:border dark:shadow-[0_-14px_34px_rgb(0_0_0_/_28%)]",
+          ? "border-t border-border bg-surface text-foreground shadow-lectum-soft dark:border-border dark:bg-surface dark:shadow-lectum-soft"
+          : "border-t border-border bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:border dark:shadow-lectum-soft",
       )}
       style={{
-        paddingBottom: "env(safe-area-inset-bottom)",
+        minHeight: "var(--lectum-mobile-bottom-nav-height)",
+        paddingBottom: "var(--lectum-bottom-nav-padding)",
         transform: isMobileNavigationRenderedVisible ? "translateY(0)" : "translateY(140%)",
         pointerEvents: isMobileNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
       }}
@@ -608,7 +260,7 @@ export const PrivateTemplate = ({
               <li className="relative flex min-h-16 items-center justify-center" key="create-post">
                 <Link
                   aria-label={bottomNavigationCenterAction.ariaLabel}
-                  className="absolute -top-3 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-primary text-white shadow-[0_12px_28px_rgba(48,140,232,0.28)] transition hover:-translate-y-px hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-surface dark:shadow-[0_14px_30px_rgb(0_0_0_/_35%)]"
+                  className="absolute -top-3 grid h-14 w-14 place-items-center rounded-full border-[5px] border-media-foreground bg-primary text-primary-foreground shadow-lectum-soft transition hover:-translate-y-px hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-surface dark:shadow-lectum-soft"
                   href={bottomNavigationCenterAction.href}
                   onClick={bottomNavigationCenterAction.onClick}
                   scroll={bottomNavigationCenterAction.scroll}
@@ -666,7 +318,7 @@ export const PrivateTemplate = ({
       <button
         aria-label={isDesktopSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
         aria-pressed={!isDesktopSidebarCollapsed}
-        className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-[0_3px_10px_rgb(15_23_42_/_8%)] transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-[0_6px_14px_rgb(15_23_42_/_10%)] focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
+        className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-lectum-soft transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-lectum-soft focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
         onClick={toggleDesktopSidebar}
         title={isDesktopSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
         type="button"
@@ -807,6 +459,14 @@ export const PrivateTemplate = ({
   }
 
   if (!hasToken || shouldShowSessionError) {
+    const visibleCopy = shouldShowSessionError
+      ? {
+          description:
+            "Não conseguimos confirmar sua sessão agora. Tente novamente sem perder seus dados ou entre de novo.",
+          title: "Não foi possível validar sua sessão",
+        }
+      : restrictedAreaCopy;
+
     return (
       <>
         <NotificationManager />
@@ -817,59 +477,13 @@ export const PrivateTemplate = ({
           )}
           style={pageShellStyle}
         >
-          <section className="w-full max-w-[460px] px-1 text-center">
-            <div className="relative overflow-hidden rounded-[2rem] border border-[#DCEBFA] bg-white px-6 py-8 shadow-[0_24px_70px_rgba(31,95,159,0.12)] ring-1 ring-white/80 sm:px-8 sm:py-10">
-              <div
-                aria-hidden="true"
-                className="-top-24 -right-20 absolute h-48 w-48 rounded-full bg-primary/10 blur-3xl"
-              />
-              <div
-                aria-hidden="true"
-                className="-bottom-24 -left-20 absolute h-48 w-48 rounded-full bg-[#9DD7FF]/20 blur-3xl"
-              />
-
-              <div className="relative z-10 grid justify-items-center">
-                <div className="relative mb-5 grid h-20 w-20 place-items-center rounded-[1.65rem] bg-gradient-to-br from-primary-soft via-white to-[#E9F5FF] text-primary shadow-[0_16px_34px_rgba(47,141,235,0.16)] ring-1 ring-[#CFE5FB]">
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-2 rounded-[1.3rem] border border-white/80"
-                  />
-                  <ShieldCheck className="h-9 w-9" aria-hidden="true" />
-                </div>
-
-                <p className="mb-3 rounded-full border border-[#CFE5FB] bg-[#F7FBFF] px-3 py-1 text-[11px] font-extrabold tracking-[0.16em] text-primary uppercase">
-                  Área restrita
-                </p>
-
-                <h1 className="text-2xl font-extrabold tracking-[-0.04em] text-foreground sm:text-3xl">
-                  {restrictedAreaCopy.title}
-                </h1>
-                <p className="mt-3 max-w-[360px] text-balance text-sm leading-6 text-muted sm:text-base">
-                  {restrictedAreaCopy.description}
-                </p>
-
-                <div className="mt-7 grid w-full gap-3 sm:grid-cols-2">
-                  <Button
-                    className="h-12 rounded-2xl text-sm font-extrabold shadow-[0_14px_30px_rgba(47,141,235,0.22)]"
-                    onClick={() => navigateToAuth(restrictedAreaSignupHref)}
-                    type="button"
-                  >
-                    <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Criar conta</span>
-                  </Button>
-                  <Button
-                    className="h-12 rounded-2xl border-[#CFE5FB] bg-white text-sm font-extrabold text-primary shadow-none hover:border-primary/40 hover:bg-primary-soft/50"
-                    onClick={() => navigateToAuth(restrictedAreaLoginHref)}
-                    type="button"
-                    variant="outline"
-                  >
-                    <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Fazer login</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </section>
+          <RestrictedAreaState
+            copy={visibleCopy}
+            onLogin={() => navigateToAuth(restrictedAreaLoginHref)}
+            onRetry={() => void hidrate.refetch()}
+            onSignup={() => navigateToAuth(restrictedAreaSignupHref)}
+            sessionUnavailable={shouldShowSessionError}
+          />
         </PageShell>
         {navigationMarkup}
       </>
@@ -901,6 +515,9 @@ export const PrivateTemplate = ({
         {children}
       </PageShell>
       {navigationMarkup}
+      {sessionUser?.id && !sessionUser.need_reset && canPromptLegalOnPath(normalizedPathname) ? (
+        <LegalAcceptanceRequest key={sessionUser.id} userId={sessionUser.id} />
+      ) : null}
     </>
   );
 };

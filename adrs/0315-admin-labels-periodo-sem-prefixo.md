@@ -30,7 +30,7 @@ O pedido de produto de 2026-07-25 é que esses blocos mostrem somente o valor se
 ## Validação
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/comunidades/client.tsx"` - OK.
-- `rg -n "Período:|PerÃ­odo:" admin/src` - OK, sem ocorrências.
+- `rg -n "Período:" admin/src` - OK, sem ocorrências.
 - `pnpm --dir admin check` - OK na reexecução isolada.
 - Smoke HTTP local no Admin: `GET /psicologos`, `GET /pacientes` e `GET /comunidades` retornaram 200 em `localhost:3002`.
 - `pnpm --dir admin build` foi executado, mas o workspace atual está bloqueado por uma alteração não relacionada já presente em `admin/src/api/req/patients/index.ts`, que exige `operating_systems` em itens de device usage e quebra `admin/src/app/(admin)/pacientes/[id]/client.tsx:2539`.

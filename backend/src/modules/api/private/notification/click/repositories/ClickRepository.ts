@@ -1,4 +1,4 @@
-﻿import prisma, { type ORM } from "@/infra/database/prisma";
+import prisma, { type ORM } from "@/infra/database/prisma";
 import type { notification } from "@/interfaces/objects";
 import { markNotificationDeliveriesClicked } from "@/main/notification/deliveries";
 import type { IClickDTO } from "../DTOs/IClickDTO";

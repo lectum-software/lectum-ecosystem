@@ -1,4 +1,4 @@
-﻿# ADR-0133: Navegação contextual de respostas salvas
+# ADR-0133: Navegação contextual de respostas salvas
 
 ## Status
 

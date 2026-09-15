@@ -1,20 +1,27 @@
+import { Readable } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import type { NextFunction, Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
+import { isRenderShareArtifactJobFileResult } from "@/modules/api/private/posts/use-cases/services/share-render";
 import {
   createCommunity as createCommunityService,
   createRule as createRuleService,
   deleteRule as deleteRuleService,
+  getContentVideoArtRenderJobFile as getContentVideoArtRenderJobFileService,
+  getContentVideoArtRenderJob as getContentVideoArtRenderJobService,
   listActivities as listActivitiesService,
   listCommunities as listCommunitiesService,
   listContent as listContentService,
   listRanking as listRankingService,
   listReports as listReportsService,
   listRules as listRulesService,
+  prepareContentOriginalVideoDownload as prepareContentOriginalVideoDownloadService,
   removeContent as removeContentService,
   resolveReports as resolveReportsService,
   showCommunity as showCommunityService,
   showContentDetail as showContentDetailService,
   showStatistics as showStatisticsService,
+  startContentVideoArtRenderJob as startContentVideoArtRenderJobService,
   updateCommunity as updateCommunityService,
   updateCommunityStatus as updateCommunityStatusService,
   updateRule as updateRuleService,
@@ -188,6 +195,70 @@ export const contentDetail = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_community_content_detail", err);
+  }
+};
+
+export const prepareContentOriginalVideoDownload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await prepareContentOriginalVideoDownloadService(
+      req as unknown as Parameters<typeof prepareContentOriginalVideoDownloadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_content_original_video_download", err);
+  }
+};
+
+export const startContentVideoArtRenderJob = async (req: Request, res: Response) => {
+  try {
+    const resolve = await startContentVideoArtRenderJobService(
+      req as unknown as Parameters<typeof startContentVideoArtRenderJobService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_content_video_art_render_job_start", err);
+  }
+};
+
+export const getContentVideoArtRenderJob = async (req: Request, res: Response) => {
+  try {
+    const resolve = await getContentVideoArtRenderJobService(
+      req as unknown as Parameters<typeof getContentVideoArtRenderJobService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_content_video_art_render_job", err);
+  }
+};
+
+export const getContentVideoArtRenderJobFile = async (req: Request, res: Response) => {
+  try {
+    const input: Parameters<typeof getContentVideoArtRenderJobFileService>[0] = {
+      p: req.params as unknown as Parameters<typeof getContentVideoArtRenderJobFileService>[0]["p"],
+    };
+    if (typeof req.headers.range === "string") {
+      input.range = req.headers.range;
+    }
+
+    const resolve = await getContentVideoArtRenderJobFileService(input);
+
+    if (isRenderShareArtifactJobFileResult(resolve)) {
+      Object.entries(resolve.headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+      });
+      res.status(resolve.status);
+      Readable.fromWeb(resolve.body as NodeReadableStream<Uint8Array>)
+        .on("error", () => res.destroy())
+        .pipe(res);
+      return;
+    }
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_content_video_art_render_job_file", err);
   }
 };
 

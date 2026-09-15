@@ -2,6 +2,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { getStoredDevice, setStoredDevice } from "@/lib/storage";
 
 let devicePromise: Promise<string> | null = null;
+const FINGERPRINT_TIMEOUT_MS = 3_000;
 
 const createFallbackDeviceId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -16,8 +17,19 @@ const resolveDeviceId = async () => {
   if (stored) return stored;
 
   try {
-    const agent = await FingerprintJS.load();
-    const result = await agent.get();
+    const result = await new Promise<
+      Awaited<ReturnType<Awaited<ReturnType<typeof FingerprintJS.load>>["get"]>>
+    >((resolve, reject) => {
+      const timeout = window.setTimeout(
+        () => reject(new Error("Fingerprint indisponível")),
+        FINGERPRINT_TIMEOUT_MS,
+      );
+
+      void FingerprintJS.load()
+        .then((agent) => agent.get())
+        .then(resolve, reject)
+        .finally(() => window.clearTimeout(timeout));
+    });
     const visitorId = `admin-${result.visitorId}`;
     setStoredDevice(visitorId);
     return visitorId;

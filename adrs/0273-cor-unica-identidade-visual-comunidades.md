@@ -1,4 +1,4 @@
-﻿# ADR-0273: Cor unica para identidade visual de comunidades
+# ADR-0273: Cor unica para identidade visual de comunidades
 
 ## Status
 

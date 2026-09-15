@@ -3,6 +3,7 @@ import path from "node:path";
 import i18next from "i18next";
 import Backend from "i18next-fs-backend";
 import * as middleware from "i18next-http-middleware";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 const getFolderNames = (): string[] => {
   const localesPath = path.join(process.cwd(), "locales");
@@ -37,7 +38,7 @@ i18next
     },
   })
   .catch((err) => {
-    console.error("Erro ao inicializar i18next:", err);
+    console.error("Erro ao inicializar i18next.", toSafeErrorLog(err, "I18nStartupError"));
   });
 
 export default i18next;

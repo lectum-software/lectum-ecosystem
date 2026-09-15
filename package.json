@@ -1,24 +1,45 @@
 {
   "name": "lectum-ecosystem",
-  "version": "0.1.0",
+  "version": "0.1.392",
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "prepare": "lefthook install",
     "run": "pnpm dev",
-    "check": "pnpm check:frontend && pnpm check:backend && pnpm check:admin",
+    "check": "pnpm check:version && pnpm check:secrets && pnpm check:encoding && pnpm check:adrs && pnpm check:tasks && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles && pnpm check:frontend && pnpm check:backend && pnpm check:admin && pnpm check:video",
+    "check:adrs": "node scripts/check-adrs.mjs",
+    "check:deploy-branch": "node scripts/check-deploy-branch.mjs",
+    "check:env": "node --test scripts/check-env-examples.test.mjs && node scripts/check-env-examples.mjs",
+    "check:tasks": "node scripts/check-product-tasks.mjs",
+    "check:encoding": "node scripts/check-text-encoding.mjs",
+    "check:source-safety": "node scripts/check-source-safety.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:source-size": "node scripts/check-source-size.mjs",
+    "check:cycles": "node --test scripts/check-import-cycles.test.mjs && node scripts/check-import-cycles.mjs",
+    "check:version": "node --test scripts/release-version-policy.test.mjs && node scripts/release-version.mjs check",
     "check:frontend": "pnpm --dir frontend check",
     "check:backend": "pnpm --dir backend check",
     "check:admin": "pnpm --dir admin check",
+    "check:video": "pnpm --dir video check",
     "commitlint": "commitlint",
     "dev": "node scripts/dev.mjs",
     "dev:frontend": "pnpm --dir frontend exec next dev --webpack --port 3000",
     "dev:backend": "pnpm --dir backend dev",
-    "dev:admin": "pnpm --dir admin dev"
+    "dev:admin": "pnpm --dir admin dev",
+    "dev:video": "pnpm --dir video dev:api",
+    "version:bump": "node scripts/release-version.mjs bump",
+    "version:check-commit": "node scripts/release-version.mjs check-staged",
+    "check:dependencies": "pnpm audit --prod && pnpm --dir backend audit --prod && pnpm --dir frontend audit --prod && pnpm --dir admin audit --prod && pnpm --dir video audit --prod"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "lefthook": "^2.1.9"
+  },
+  "pnpm": {
+    "overrides": {
+      "fast-uri": "3.1.6",
+      "js-yaml": "4.3.1"
+    }
   }
 }

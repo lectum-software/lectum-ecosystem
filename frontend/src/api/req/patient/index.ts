@@ -31,6 +31,8 @@ export type UpdatePatientProfilePayload = {
   birthdate?: string | null;
   phone?: string | null;
   bio?: string | null;
+  city?: string | null;
+  state?: string | null;
 };
 
 export type FavoritePsychologistResponse = {
@@ -73,7 +75,7 @@ export const updatePatientProfile = async (body: UpdatePatientProfilePayload) =>
 
   return handleReq<PatientPrivateProfile>({
     ...handle,
-    showSuccess: true,
+    hideError: true,
   });
 };
 
@@ -89,6 +91,7 @@ export const uploadPatientProfileAvatar = async (file: File) => {
 
   return handleReq<PatientProfileAvatarUpload>({
     ...handle,
+    hideError: true,
     showSuccess: true,
   });
 };
@@ -101,6 +104,7 @@ export const deletePatientProfileAvatar = async () => {
 
   return handleReq<PatientProfileAvatarRemoval>({
     ...handle,
+    hideError: true,
     showSuccess: true,
   });
 };

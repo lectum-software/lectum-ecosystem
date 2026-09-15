@@ -1,4 +1,4 @@
-﻿# ADR-0387 - Donut de Atividade no dashboard Admin de psicologos
+# ADR-0387 - Donut de Atividade no dashboard Admin de psicologos
 
 ## Status
 

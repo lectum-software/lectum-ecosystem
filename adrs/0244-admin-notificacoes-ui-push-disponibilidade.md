@@ -1,4 +1,4 @@
-﻿# ADR-0244: UI administrativa de notificacoes e disponibilidade real de push
+# ADR-0244: UI administrativa de notificacoes e disponibilidade real de push
 
 ## Status
 

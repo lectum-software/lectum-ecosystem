@@ -1,4 +1,4 @@
-﻿# ADR-0049: Simplificar controles de mídia do card de psicólogo
+# ADR-0049: Simplificar controles de mídia do card de psicólogo
 
 ## Status
 

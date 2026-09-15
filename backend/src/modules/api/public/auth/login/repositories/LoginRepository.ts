@@ -1,9 +1,8 @@
 //Client
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
-
 //Objects
 import type { user, user_token } from "@/interfaces/objects";
-
 //Utils
 import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateToken";
 import {
@@ -13,11 +12,13 @@ import {
   PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
+import { assertAdultRegistration } from "@/modules/legal/registration";
 //
 import { loginInclude } from "@/query/login";
+import { withInvalidatedRecovery } from "@/utils/account-credentials";
 import { isSuspensionExpired } from "@/utils/account-status";
 import { log } from "@/utils/logs";
-import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
+import { getUserTokenLimit } from "@/utils/runtime-config";
 import type { IFindByEmailDTO } from "../DTOs/IFindByEmailDTO";
 import type { IFindToEmitDTO } from "../DTOs/IFindToEmitDTO";
 //DTOs
@@ -27,13 +28,13 @@ import type { IUpdateDTO } from "../DTOs/IUpdateDTO";
 //Types
 import type { ILoginRepository } from "./interfaces/ILoginRepository";
 
-const _MAX = Number(process.env.TOKEN_API_USER_MAX);
+const _MAX = getUserTokenLimit();
 type SensitiveField = { model: string; columns: string[] };
 
 export class LoginRepository implements ILoginRepository {
   readonly repository: ORM["user"];
   readonly user_token: ORM["user_token"];
-  readonly tokens: any;
+  readonly tokens: Prisma.user$user_tokensArgs;
   readonly device_id: string;
 
   constructor(device_id = "", _allowedSensitive: SensitiveField[] = []) {
@@ -44,7 +45,7 @@ export class LoginRepository implements ILoginRepository {
       where: {
         device_id,
       },
-      take: _MAX,
+      take: 1,
       orderBy: { createdAt: "desc" },
     };
   }
@@ -142,12 +143,14 @@ export class LoginRepository implements ILoginRepository {
         professional_first_name,
         professional_last_name,
         terms_accepted,
+        adult_confirmed,
         terms_version,
         analytics_session_id,
         analytics_visitor_id,
         ...userData
       } = data.b;
       const role = userData.role || "paciente";
+      await assertAdultRegistration(adult_confirmed, tx);
       const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
         analytics_session_id,
         analytics_visitor_id,
@@ -216,6 +219,19 @@ export class LoginRepository implements ILoginRepository {
         });
       }
 
+      if (adult_confirmed === true) {
+        await tx.user_background.create({
+          data: {
+            user_id: user.id,
+            type: "adult_declaration",
+            data: {
+              declared_at: new Date().toISOString(),
+              minimum_age: 18,
+              source: "registration",
+            },
+          },
+        });
+      }
       if (terms_accepted) {
         await tx.user_background.create({
           data: {
@@ -236,7 +252,13 @@ export class LoginRepository implements ILoginRepository {
         data: {
           action: log.store,
           ref_id: user.id,
-          new: JSON.stringify(sanitizeSensitiveData(user, { removeAuthTokens: true })),
+          new: JSON.stringify({
+            active: user.active,
+            confirmed: user.confirmed,
+            need_reset: user.need_reset,
+            provider: user.provider,
+            role: user.role,
+          }),
         },
       });
 
@@ -257,6 +279,25 @@ export class LoginRepository implements ILoginRepository {
       },
     });
     return res;
+  }
+
+  async updateAndClearTokens(data: IUpdateDTO): Promise<user | null> {
+    return prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: data.p.id },
+        data: withInvalidatedRecovery(data.b),
+        include: {
+          user_tokens: this.tokens,
+          ...loginInclude(),
+        },
+      });
+
+      await tx.user_token.deleteMany({
+        where: { user_id: data.p.id },
+      });
+
+      return { ...user, user_tokens: [] };
+    });
   }
 
   async tokenByDevice(where: ITokenByDeviceDTO): Promise<user_token | null> {

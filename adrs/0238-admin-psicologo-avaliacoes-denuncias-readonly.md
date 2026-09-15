@@ -1,4 +1,4 @@
-﻿# ADR-0238: Avaliações e denúncias do psicólogo no Admin são somente leitura
+# ADR-0238: Avaliações e denúncias do psicólogo no Admin são somente leitura
 
 ## Status
 

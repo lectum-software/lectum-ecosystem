@@ -8,3 +8,11 @@ export interface IConfirmDTO {
   auth: user;
   headers?: Request["headers"];
 }
+
+export type ConsumeConfirmationInput = {
+  userId: string;
+  code: string;
+  issuedAt: Date;
+  verifiedAt: Date;
+  validityMinutes: number;
+};

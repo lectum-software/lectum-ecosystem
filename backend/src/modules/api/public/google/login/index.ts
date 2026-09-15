@@ -1,26 +1,69 @@
 //Lib
 import { Router } from "express";
-
+import { getLimiter } from "@/external/limiter";
+import { send } from "@/helpers/return";
+import { error } from "@/helpers/translate";
 //Middlewares
-import session from "@/modules/api/middlewares/_auth/_session";
 import passport from "@/modules/api/middlewares/_auth/passport";
+import { isGoogleOAuthConfigured } from "../utils/config";
+import {
+  createGoogleDeleteReauthStateCookie,
+  createGoogleOAuthState,
+  GOOGLE_DELETE_REAUTH_STATE_COOKIE,
+  GOOGLE_OAUTH_STATE_COOKIE,
+  googleDeleteReauthStateCookieOptions,
+  googleOAuthStateCookieOptions,
+  isValidGoogleDeviceId,
+} from "../utils/state";
 
 //Route Infos
 const routes = Router();
+const limiter = getLimiter({ window: 5, max: 30 });
 
-session(routes);
+routes.use((_req, res, next) => {
+  if (!isGoogleOAuthConfigured()) {
+    return send(res, { status: 503, ...error("google_oauth_not_configured", {}) });
+  }
+  next();
+});
+routes.use(passport.initialize());
 
 //Routes
-routes.get("/:id", (req, res, next) => {
+routes.get("/", limiter, (_req, res) =>
+  send(res, {
+    status: 400,
+    ...error("device_id_not_found", {}),
+  }),
+);
+
+routes.get("/:id", limiter, (req, res, next) => {
+  const deviceId = typeof req.params.id === "string" ? req.params.id : "";
+
+  if (!isValidGoogleDeviceId(deviceId)) {
+    return send(res, {
+      status: 400,
+      ...error("device_id_not_found", {}),
+    });
+  }
+
+  const { nonce, state } = createGoogleOAuthState(deviceId, req.query);
+  const deleteReauthCookie = createGoogleDeleteReauthStateCookie(deviceId, req.query);
+  res.cookie(GOOGLE_OAUTH_STATE_COOKIE, nonce, googleOAuthStateCookieOptions());
+  if (deleteReauthCookie) {
+    res.cookie(
+      GOOGLE_DELETE_REAUTH_STATE_COOKIE,
+      deleteReauthCookie,
+      googleDeleteReauthStateCookieOptions(),
+    );
+  }
+
   passport.authenticate("google", {
     // Forca o seletor/confirmacao de conta do Google mesmo quando ha uma
     // sessao Google ativa no navegador, permitindo trocar o e-mail antes do OAuth.
     prompt: "select_account",
+    session: false,
     scope: ["profile", "email"],
-    state: JSON.stringify({
-      device_id: req.params.id,
-      query: req.query,
-    }),
+    state,
   })(req, res, next);
 });
 

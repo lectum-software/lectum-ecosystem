@@ -91,7 +91,7 @@ export const AdminCommunityCreateClient = () => {
   const onSubmit = async (values: CommunityCreateFormValues) => {
     try {
       const community = await createMutation.mutateAsync(toPayload(values));
-      toast.success("Comunidade criada com dados reais.");
+      toast.success("Comunidade criada com sucesso.");
       router.push(`/comunidades/${community.slug}?tab=dados`);
     } catch (error) {
       toast.error(resolveApiError(error));
@@ -110,7 +110,7 @@ export const AdminCommunityCreateClient = () => {
               Criar nova comunidade
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Cadastre uma comunidade real no catálogo público da plataforma.
+              Cadastre uma comunidade no catálogo público da plataforma.
             </p>
           </div>
           <Link
@@ -187,7 +187,7 @@ export const AdminCommunityCreateClient = () => {
                     placeholder="#FF8A2A"
                   />
                   <p className="-mt-4 text-xs font-medium leading-5 text-muted">
-                    Deixe em branco para usar o azul padrao ate o avatar real definir a identidade
+                    Deixe em branco para usar o azul padrão até o avatar definir a identidade
                     visual.
                   </p>
                 </div>
@@ -199,7 +199,7 @@ export const AdminCommunityCreateClient = () => {
                 >
                   <div className="flex min-h-24 items-end gap-3 p-4">
                     <span
-                      className="grid h-14 w-14 place-items-center rounded-[1.1rem] text-xs font-black text-white ring-4 ring-white/80"
+                      className="grid h-14 w-14 place-items-center rounded-[1.1rem] text-xs font-black text-primary-foreground ring-4 ring-primary-foreground/80"
                       style={{
                         background: selectedPalette.primaryColor,
                       }}
@@ -230,7 +230,7 @@ export const AdminCommunityCreateClient = () => {
                 Cancelar
               </Link>
               <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-bold text-white shadow-control transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-bold text-primary-foreground shadow-control transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
                 disabled={createMutation.isPending}
                 type="submit"
               >

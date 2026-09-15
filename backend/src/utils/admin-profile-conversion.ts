@@ -126,7 +126,7 @@ export const ADMIN_PROFILE_CONVERSION_QUALITY_CONFIG = {
   },
   no_conversion: {
     description:
-      "Psicólogo sem cliques reais no WhatsApp no período selecionado, abaixo da meta operacional.",
+      "Psicólogo sem cliques no WhatsApp no período selecionado, abaixo da meta operacional.",
     label: "Abaixo da meta",
   },
 } satisfies Record<AdminProfileConversionQualityId, { description: string; label: string }>;

@@ -135,14 +135,14 @@ export const ActionableCoachMark = ({
     <div className="pointer-events-none fixed inset-0 z-[135]" data-actionable-coach-mark>
       <span
         aria-hidden="true"
-        className="fixed border-2 border-primary/70 shadow-[0_0_0_9999px_rgb(15_23_42_/_42%)] ring-4 ring-primary/25 ring-offset-2 ring-offset-background/80 motion-safe:animate-pulse"
+        className="fixed border-2 border-primary/70 shadow-lectum-soft ring-4 ring-primary/25 ring-offset-2 ring-offset-background/80 motion-safe:animate-pulse"
         style={position.ringStyle}
       />
 
       <section
         aria-live="polite"
         className={cn(
-          "pointer-events-auto fixed rounded-[24px] border border-border bg-surface p-4 pr-11 text-left text-foreground shadow-[0_24px_70px_rgb(15_23_42_/_24%)] ring-1 ring-primary/10",
+          "pointer-events-auto fixed rounded-[24px] border border-border bg-surface p-4 pr-11 text-left text-foreground shadow-lectum-soft ring-1 ring-primary/10",
           className,
         )}
         style={position.bubbleStyle}

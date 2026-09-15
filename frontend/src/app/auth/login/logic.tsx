@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { AuthCard } from "@/components/ui/auth-card";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -13,14 +14,16 @@ import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { AuthTemplate } from "@/templates/auth";
+import { buildAuthRouteWithRedirect, resolveAuthReturnTo } from "@/utils/auth-redirect";
 import { fingerprint } from "@/utils/fingerprint";
+import { buildTrustedGoogleLoginUrl } from "@/utils/trusted-navigation";
 import { type LoginForm, useForm } from "./use-form";
 
 const allowedRoles = ["paciente", "psicologo"] as const;
 const DEFAULT_AUTHENTICATED_REDIRECT = "/psicologos";
 
 const resolveErrorMessage = (error: unknown) => {
-  return error instanceof Error ? error.message : "Não foi possível entrar. Tente novamente.";
+  return getSafeApiErrorMessage(error, "Não foi possível entrar. Tente novamente.");
 };
 
 export const AuthLogic = () => {
@@ -29,6 +32,11 @@ export const AuthLogic = () => {
   const searchParams = useSearchParams();
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
+  const authReturnTo = resolveAuthReturnTo(
+    searchParams.get("redirectTo"),
+    searchParams.get("callbackUrl"),
+  );
+  const signupHref = buildAuthRouteWithRedirect("/auth/profile-selection", authReturnTo);
 
   const { login } = useAuth({
     callbacks: {
@@ -56,29 +64,18 @@ export const AuthLogic = () => {
       setApiError(null);
 
       const currentDeviceId = await fingerprint();
-      const loginUrl =
-        process.env.NEXT_PUBLIC_LOGIN_URL ||
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/public/google/login`;
-
       const role = searchParams.get("role");
-      const redirectTo = searchParams.get("redirectTo");
-      const callbackUrl = searchParams.get("callbackUrl");
       const query = new URLSearchParams();
 
       if (role && allowedRoles.includes(role as (typeof allowedRoles)[number])) {
         query.set("role", role);
       }
 
-      if (redirectTo) {
-        query.set("redirectTo", redirectTo);
-      } else if (callbackUrl) {
-        query.set("callbackUrl", callbackUrl);
+      if (authReturnTo) {
+        query.set("redirectTo", authReturnTo);
       }
 
-      const queryString = query.toString();
-      window.location.href = `${loginUrl}/${currentDeviceId}${
-        queryString ? `?${queryString}` : ""
-      }`;
+      window.location.href = buildTrustedGoogleLoginUrl(currentDeviceId, query);
     } catch {
       setGooglePending(false);
       setApiError("Não foi possível iniciar o login com Google. Tente novamente.");
@@ -95,10 +92,7 @@ export const AuthLogic = () => {
           footer={
             <span>
               Não tem uma conta?{" "}
-              <a
-                className="font-semibold text-primary hover:text-primary-hover"
-                href="/auth/profile-selection"
-              >
+              <a className="font-semibold text-primary hover:text-primary-hover" href={signupHref}>
                 Cadastre-se
               </a>
             </span>

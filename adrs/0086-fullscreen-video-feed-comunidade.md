@@ -1,4 +1,4 @@
-﻿# ADR-0086 - Fullscreen vertical dos videos do feed de comunidade
+# ADR-0086 - Fullscreen vertical dos videos do feed de comunidade
 
 ## Status
 

@@ -1,14 +1,27 @@
 import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
+import { shouldClearLogoutCookie } from "@/utils/logout-cookie";
+import { clearUserAuthCookie } from "@/utils/user-auth-cookie";
 import {
   createDeleteGoogleIntent,
   destroy as destroyService,
+  logout as logoutService,
   onboardingTips as onboardingTipsService,
   security as securityService,
   updateEmail,
   updateOnboardingTips,
   updatePassword,
 } from "./services";
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    const resolve = await logoutService(req as unknown as Parameters<typeof logoutService>[0]);
+    if (shouldClearLogoutCookie(resolve)) clearUserAuthCookie(res);
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "account_logout", err);
+  }
+};
 
 export const security = async (req: Request, res: Response) => {
   try {
@@ -79,6 +92,7 @@ export const deleteGoogleIntent = async (req: Request, res: Response) => {
 export const destroy = async (req: Request, res: Response) => {
   try {
     const resolve = await destroyService(req as unknown as Parameters<typeof destroyService>[0]);
+    if (resolve.success) clearUserAuthCookie(res);
 
     return send(res, resolve);
   } catch (err) {

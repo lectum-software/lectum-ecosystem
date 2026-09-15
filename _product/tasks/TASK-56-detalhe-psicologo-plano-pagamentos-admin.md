@@ -42,7 +42,7 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
   - CPF/CRP/regional já preenchidos quando existirem;
   - data de inscrição no CRP obrigatória quando necessária para concessão;
   - confirmação antes de aplicar.
-- O botão "Cancelar assinatura" fica fora da V1 se não houver cancelamento real via gateway com confirmação forte.
+- O botao "Cancelar assinatura" aparece somente quando houver assinatura Mercado Pago cancelavel e usa cancelamento real via gateway com confirmacao forte.
 - "Alterar forma de pagamento" pelo Admin fica fora da V1; cartão deve continuar sendo tokenizado pelo usuário/gateway.
 
 ## Escopo backend
@@ -50,12 +50,13 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Criar endpoints admin privados:
   - `GET /api/admin/private/psychologists/:id/billing`;
   - `POST /api/admin/private/psychologists/:id/billing/grant-courtesy`;
+  - `POST /api/admin/private/psychologists/:id/billing/subscription/cancel`;
 - Reutilizar a regra do comando `subscription:grant`, sem duplicar regra de domínio.
 - Registrar auditoria real do admin responsável quando a audiência admin estiver disponível.
 
 ## Fora do escopo
 
-- Cancelar assinatura paga via Admin.
+- Cancelar assinatura paga via Admin sem gateway real, sem motivo interno ou sem confirmacao forte.
 - Alterar cartão pelo Admin.
 - Criar cobrança manual.
 - Simular pagamentos Mercado Pago.
@@ -80,7 +81,7 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 
 - [x] Aba só abre para admin autenticado.
 - [x] Plano atual usa `professional_subscription` real.
-- [x] Plano atual exibe quantidade de mensalidades pagas e Lifetime Value (LTV) do psic?logo quando existe assinatura, usando `payment_event` real.
+- [x] Plano atual exibe quantidade de mensalidades pagas e Lifetime Value (LTV) do psicólogo quando existe assinatura, usando `payment_event` real.
 - [x] Histórico financeiro usa dados reais ou exibe indisponível honesto.
 - [x] Cortesia pela UI reutiliza regra real do comando operacional.
 - [x] CPF, Regional e CRP da cortesia são editáveis no Admin.
@@ -92,6 +93,9 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - [x] Sobrescrita administrativa de identidade não preenche `cfp_verified_at` sem consulta real.
 - [x] Data de inscrição CRP é exigida quando necessária.
 - [x] Cancelar assinatura e alterar cartão não aparecem/habilitam sem implementação real.
+- [x] Cancelamento administrativo de assinatura paga chama o gateway real antes de atualizar o plano local.
+- [x] Cancelamento administrativo exige confirmacao forte `CANCELAR ASSINATURA` e motivo interno no frontend e backend.
+- [x] Cancelamento administrativo registra auditoria segura em `admin_activity_log` e aparece como atividade financeira.
 - [x] Não há simulação de pagamento.
 - [x] Form usa React Hook Form/Zod/controllers.
 - [x] UI mobile-first validada.
@@ -195,6 +199,7 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Nao houve alteracao de backend, endpoint, regra de revogacao, banco, packages ou dados persistidos.
 - Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou a nova copy, `Até 10/07/2027`, ausencia do bloco operacional, ausencia de e-mail/id do admin e `scrollWidth=390`.
 - Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+- Smoke local: `GET http://127.0.0.1:3215/version` retornou 200 e a rota protegida `/psicologos/cmsix7srr006k01p9j8f4yy3n?tab=plano` retornou 307 para login, esperado sem sessao Admin local.
 
 ## Ajuste complementar 2026-07-11 - Plano atual enxuto com revogacao inline
 
@@ -251,15 +256,15 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 
 ## Ajuste complementar 2026-07-11 - mensalidades pagas e LTV no Plano atual
 
-- Pedido do usu?rio: quando o psic?logo possuir assinatura, o card `Plano atual` deve exibir `Quantidade de mensalidades pagas` e `Lifetime Value (LTV)` daquele psic?logo.
+- Pedido do usuário: quando o psicólogo possuir assinatura, o card `Plano atual` deve exibir `Quantidade de mensalidades pagas` e `Lifetime Value (LTV)` daquele psicólogo.
 - O endpoint `GET /api/admin/private/psychologists/:id/billing` passou a retornar os campos `paid_installments_count`, `lifetime_value_cents`, `lifetime_value_available` e `lifetime_value_unavailable_reason` em `plan`.
-- A contagem e o LTV s?o derivados exclusivamente de `payment_event` real associado ?s assinaturas Mercado Pago do psic?logo por `professional_subscription.id` ou `gateway_subscription_id`; n?o h? proje??o por pre?o do plano nem dado simulado.
-- Quando houver pagamento confirmado sem valor monet?rio extra?vel do payload bruto, o LTV fica indispon?vel com motivo honesto, sem somat?rio parcial.
-- A UI mobile-first do Admin exibe as duas linhas no card `Plano atual` somente quando h? assinatura (`plan.id`) e mant?m cortesia/notas/revoga??o no mesmo fluxo existente.
-- N?o houve altera??o de schema Prisma, migrations, packages, gateway ou regra de cortesia.
-- Valida??o API local com psic?logo real `cmrglzdds000ajkuhqedavedb` retornou `Plano Profissional`, `paid_installments_count=0`, `lifetime_value_cents=0` e `lifetime_value_available=true`, sem muta??o de dados.
-- Browser local/headless acessou `http://localhost:3002/psicologos/cmrglzdds000ajkuhqedavedb?tab=plano` com status HTTP 200; a valida??o visual autenticada ficou limitada ? sess?o Admin n?o exposta ao ambiente de automa??o, ent?o a evid?ncia principal de renderiza??o veio de `admin check/build` e da rota compilada.
-- Valida??es executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+- A contagem e o LTV são derivados exclusivamente de `payment_event` real associado ?s assinaturas Mercado Pago do psicólogo por `professional_subscription.id` ou `gateway_subscription_id`; não há projeção por preço do plano nem dado simulado.
+- Quando houver pagamento confirmado sem valor monetário extraível do payload bruto, o LTV fica indisponível com motivo honesto, sem somatório parcial.
+- A UI mobile-first do Admin exibe as duas linhas no card `Plano atual` somente quando há assinatura (`plan.id`) e mantém cortesia/notas/revogação no mesmo fluxo existente.
+- Não houve alteração de schema Prisma, migrations, packages, gateway ou regra de cortesia.
+- Validação API local com psicólogo real `cmrglzdds000ajkuhqedavedb` retornou `Plano Profissional`, `paid_installments_count=0`, `lifetime_value_cents=0` e `lifetime_value_available=true`, sem mutação de dados.
+- Browser local/headless acessou `http://localhost:3002/psicologos/cmrglzdds000ajkuhqedavedb?tab=plano` com status HTTP 200; a validação visual autenticada ficou limitada à sessão Admin não exposta ao ambiente de automação, então a evidência principal de renderização veio de `admin check/build` e da rota compilada.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
 
 ## Ajuste complementar 2026-07-11 - reconciliação de LTV pelo resumo real do gateway
 
@@ -373,3 +378,63 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou cálculo financeiro.
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `git diff --check` nos arquivos alterados, verificação estática do `CurrentPlanCard` e smoke HTTP local em `/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=plano` com status 200. `pnpm check` foi executado e ficou bloqueado por formatação em alterações locais não relacionadas da TASK-72 nos módulos backend de métricas/engajamento e no arquivo não rastreado `backend/src/utils/admin-psychologist-analytics.ts`.
+
+
+## Ajuste complementar 2026-08-13 - historico de pagamentos conciliado no Admin
+
+- Pedido do usuario: corrigir o historico de pagamentos do detalhe Admin porque eventos brutos do mesmo dia apareciam como varias linhas, o valor podia ser exibido a partir de identificadores do Mercado Pago, a descricao precisava mostrar o nome do plano e o status de sucesso precisava ficar verde.
+- Diagnostico: o detalhe do psicologo usava `payment_event` local bruto para a tabela. Webhooks de `preapproval`/atualizacao eram elegiveis, e o parser legado podia aceitar primitivos aninhados quando buscava campos monetarios, permitindo que `data.id` do provedor fosse tratado como valor.
+- O backend agora consulta o resumo real do Mercado Pago para assinaturas `mercadopago` com `gateway_subscription_id` e usa a ultima cobranca confirmada para substituir linhas locais do mesmo dia, preservando historico local valido de outros dias quando existir.
+- O fallback local por `payment_event` ficou restrito a eventos de pagamento, deduplica sucessos no mesmo dia por data/valor/plano, usa apenas chaves monetarias explicitas e nunca converte IDs do provedor em valor financeiro.
+- A coluna de descricao passa a exibir o nome real do plano como titulo do item, e pagamentos aprovados usam `status=pago` com label `Sucesso`, preservando a badge verde ja existente no Admin.
+- Nao houve alteracao de schema Prisma, migrations, envs, packages, dados publicados ou simulacao de pagamento.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e a tela ja existente da TASK-56.
+- Validacoes executadas: `pnpm --dir backend exec node --import tsx --test "src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts"`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`. Smoke HTTP local do Admin nao foi concluido porque nao havia servidor ativo em `localhost:3002` e a ferramenta bloqueou iniciar processo em background; a validacao visual ficou limitada ao build e a conferencia estatica da tela existente.
+
+
+## Ajuste complementar 2026-08-13 - cancelamento administrativo de assinatura
+
+- Pedido do usuario: criar no Admin uma opcao para cancelar assinaturas pagas com confirmacao forte.
+- O endpoint Admin privado `POST /api/admin/private/psychologists/:id/billing/subscription/cancel` foi adicionado e aceita somente assinaturas `source="mercadopago"`, plano `profissional`, com `gateway_subscription_id` e status ainda nao cancelado.
+- A operacao exige a frase `CANCELAR ASSINATURA` e um motivo interno de pelo menos 10 caracteres tanto no frontend quanto no backend.
+- O backend chama o cancelamento real do gateway Mercado Pago antes de persistir `professional_subscription.status="cancelada"` e `current_period_end=null`; se o gateway falhar, o plano local nao e cancelado.
+- A UI Admin mostra a acao somente quando `billing.plan.can_cancel=true`, abre uma modal mobile-first com resumo da assinatura, alerta de impacto, campo de motivo e campo de confirmacao forte.
+- A acao grava `admin_activity_log` com `action="psychologist_subscription_cancelled"`, `domain="psychologist_subscription"`, `area="financeiro"`, motivo e snapshots seguros, sem expor token, PAN/CVV, payload bruto ou detalhes tecnicos do provedor.
+- Nao houve alteracao de schema Prisma, migrations, envs, packages, dados publicados ou simulacao de pagamento.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Plano e pagamentos.png` e a captura enviada pelo usuario.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e smoke HTTP local do Admin em `GET http://127.0.0.1:3002/version` + `GET /psicologos/cmsrqz0qj000f01qvd2um0qgg?tab=plano`, ambos com status 200.
+
+## Ajuste complementar 2026-08-13 - copy curta do botao de cancelamento
+
+- Pedido do usuario: no card de cancelamento da aba Assinatura do detalhe do psicologo, trocar o texto do botao de `Cancelar assinatura` para `Cancelar`.
+- A mudanca e apenas visual no botao que abre a modal; titulo do bloco, titulo da modal, confirmacao forte `CANCELAR ASSINATURA`, endpoint real, gateway e auditoria permanecem inalterados.
+- Nao houve alteracao de backend, schema Prisma, migrations, envs, packages, dados publicados ou regra de dominio.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e a tela ja existente da TASK-56.
+- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+
+## Ajuste complementar 2026-08-15 - confirmacao forte de cancelamento em modal de viewport
+
+- Pedido do usuario: a confirmacao forte do cancelamento administrativo de assinatura deve aparecer em forma de modal.
+- A acao `Cancelar` continua disponivel somente quando `billing.plan.can_cancel=true` e preserva o contrato real com frase `CANCELAR ASSINATURA` e motivo interno.
+- A UI do Admin passou a renderizar a confirmacao de cancelamento via `createPortal(document.body)`, com overlay de viewport, backdrop e dialog acessivel `role="dialog"` para evitar que a confirmacao fique parecendo um bloco inline dentro da aba.
+- O modal mantem resumo da assinatura, alerta de impacto, campo de motivo, campo de confirmacao forte e bloqueio de fechamento durante a chamada real ao gateway.
+- Nao houve alteracao de backend, endpoint, schema Prisma, migrations, envs, packages, dados publicados ou regra de dominio/gateway.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e a tela existente da TASK-56.
+
+### Criterios complementares
+
+- [x] Cancelamento administrativo continua exigindo a frase `CANCELAR ASSINATURA`.
+- [x] Confirmacao forte abre em modal sobre a viewport do Admin, nao como conteudo inline da aba.
+- [x] Modal preserva motivo interno obrigatorio e chamada real ao endpoint/gateway.
+- [x] Nenhum mock, dado fake permanente, package novo ou alteracao de banco foi usado.
+
+### Validacoes executadas
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/modules/tabs/billing/cards.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check:version`
+- `pnpm check`
+- `git diff --check`
+- Smoke HTTP local do Admin ficou limitado: a ferramenta bloqueou as tentativas de iniciar servidor local em background; a validacao visual foi coberta por build, checagem estatica do modal portalado e smoke de homologacao apos o push.

@@ -14,6 +14,7 @@ import type {
   FreeProfessionalProfileVideoUpload,
 } from "@/api/generator/types/free-profile";
 import * as api from "@/api/req/psychologist-free-profile";
+import { prepareUpload } from "@/utils/media-preparation";
 
 export interface UsePsychologistFreeProfileProps {
   enabled?: boolean;
@@ -53,6 +54,12 @@ export interface UsePsychologistFreeProfileProps {
   };
 }
 
+export type PsychologistProfileVideoUploadInput = {
+  file: File;
+  onProgress?: (percentage: number) => void;
+  signal?: AbortSignal;
+};
+
 export const usePsychologistFreeProfile = ({
   callbacks,
   enabled = true,
@@ -80,7 +87,10 @@ export const usePsychologistFreeProfile = ({
   });
 
   const uploadAvatar = useMutation({
-    mutationFn: (file: File) => api.uploadPsychologistFreeProfileAvatar(file),
+    mutationFn: async (file: File) => {
+      const prepared = await prepareUpload({ file, purpose: "professional-avatar" });
+      return api.uploadPsychologistFreeProfileAvatar(prepared.file);
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
@@ -112,7 +122,10 @@ export const usePsychologistFreeProfile = ({
   });
 
   const uploadCoverImage = useMutation({
-    mutationFn: (file: File) => api.uploadPsychologistFreeProfileCoverImage(file),
+    mutationFn: async (file: File) => {
+      const prepared = await prepareUpload({ file, purpose: "professional-cover" });
+      return api.uploadPsychologistFreeProfileCoverImage(prepared.file);
+    },
     onSuccess: (data) => {
       if (data.profile) {
         queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);
@@ -148,7 +161,8 @@ export const usePsychologistFreeProfile = ({
   });
 
   const uploadVideo = useMutation({
-    mutationFn: (file: File) => api.uploadPsychologistFreeProfileVideo(file),
+    mutationFn: ({ file, onProgress, signal }: PsychologistProfileVideoUploadInput) =>
+      api.uploadPsychologistFreeProfileVideo(file, onProgress, signal),
     onSuccess: (data) => {
       if (data.profile) {
         queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);
@@ -167,7 +181,10 @@ export const usePsychologistFreeProfile = ({
   });
 
   const uploadVideoCover = useMutation({
-    mutationFn: (file: File) => api.uploadPsychologistFreeProfileVideoCover(file),
+    mutationFn: async (file: File) => {
+      const prepared = await prepareUpload({ file, purpose: "profile-video-cover" });
+      return api.uploadPsychologistFreeProfileVideoCover(prepared.file);
+    },
     onSuccess: (data) => {
       if (data.profile) {
         queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);

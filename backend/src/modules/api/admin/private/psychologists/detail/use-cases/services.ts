@@ -3,10 +3,10 @@ import { error, msg } from "@/helpers/translate";
 import { timeToFirstPaidSubscription } from "@/utils/admin-psychologist-analytics";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import {
-  normalizeProfessionalDisplayName,
+  buildProfessionalFullDisplayName,
   normalizeProfessionalNamePart,
 } from "@/utils/professional-name";
-import { parseStoredCrp } from "@/utils/professional-registry";
+import { normalizeStoredCrp, parseStoredCrp } from "@/utils/professional-registry";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
 import { buildAdminPsychologistActivityItems } from "../../activities/use-cases/services";
 import type {
@@ -52,19 +52,12 @@ const normalizeCatalogItems = <T extends { id: string; name: string; slug: strin
     .map((item) => ({ id: item.id, name: item.name, slug: item.slug }))
     .sort((left, right) => left.name.localeCompare(right.name, "pt-BR"));
 
-const normalizeName = (name: string) =>
-  normalizeProfessionalDisplayName(name) || name.replace(/\s+/g, " ").trim() || "Psicólogo";
-
-const buildPersonalFullName = (profile: AdminPsychologistDetailRecord) => {
-  const professionalName = [
-    normalizeProfessionalNamePart(profile.professional_first_name),
-    normalizeProfessionalNamePart(profile.professional_last_name),
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return professionalName || normalizeProfessionalNamePart(profile.user.name) || "Psicólogo";
-};
+const buildPersonalFullName = (profile: AdminPsychologistDetailRecord) =>
+  buildProfessionalFullDisplayName({
+    fallbackName: profile.user.name,
+    firstName: normalizeProfessionalNamePart(profile.professional_first_name),
+    lastName: normalizeProfessionalNamePart(profile.professional_last_name),
+  }) || "Psicólogo";
 
 const ratingAverage = (value: number) => Math.round((value / 100) * 10) / 10;
 const roundScore = (value: number) => Math.round(value * 1000) / 10;
@@ -460,6 +453,7 @@ const buildDetail = async (
       }
     : null;
   const status = mapStatus(profile, now);
+  const normalizedCrp = normalizeStoredCrp(profile.crp);
   const { regional_crp, registration_number } = splitCrp(profile.crp);
   const accountHistory = buildAccountHistory(profile, currentSubscription);
   const recentActivity: AdminPsychologistDetailEvent[] = (activityFeed?.activities ?? [])
@@ -492,10 +486,10 @@ const buildDetail = async (
       active: isListedInPublicDirectory,
       avatar: profile.user.avatar,
       created_at: profile.user.createdAt,
-      crp: profile.crp,
+      crp: normalizedCrp,
       id: userId,
       last_access_at: latestAccessAt(profile),
-      name: normalizeName(profile.user.name),
+      name: buildPersonalFullName(profile),
       plan_name: currentSubscription.plan_name,
       plan_slug: currentSubscription.plan_slug,
       public_profile_url: `/psicologos/${userId}`,
@@ -547,7 +541,7 @@ const buildDetail = async (
         approaches: normalizeCatalogItems(
           profile.user.psychologist_approaches.map(({ approach }) => approach),
         ),
-        crp: trimOrNull(profile.crp),
+        crp: normalizedCrp,
         crp_registration_date: profile.crp_registration_date,
         crp_status: profile.crp_status,
         experience_years: crpExperienceYears(profile.crp_registration_date),

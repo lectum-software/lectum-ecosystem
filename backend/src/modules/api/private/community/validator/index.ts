@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const paginationQuery = [
@@ -20,6 +21,25 @@ const paginationQuery = [
     optional: true,
   },
 ] satisfies IValidatorRequest["query"];
+
+const communitySlugParams = [
+  {
+    key: "slug",
+    coerse: "string",
+    method: "string",
+    min: 1,
+    max: 120,
+    format: "lower",
+  },
+] satisfies IValidatorRequest["params"];
+
+const multipartSessionIdField = {
+  key: "uploadSessionId",
+  coerse: "string",
+  method: "string",
+  min: 1,
+  max: 4096,
+} satisfies NonNullable<IValidatorRequest["body"]>[number];
 
 export const indexSchema: IValidatorRequest = {
   query: [
@@ -157,16 +177,7 @@ export const topMentorsSchema: IValidatorRequest = {
 };
 
 export const showSchema: IValidatorRequest = {
-  params: [
-    {
-      key: "slug",
-      coerse: "string",
-      method: "string",
-      min: 1,
-      max: 120,
-      format: "lower",
-    },
-  ],
+  params: communitySlugParams,
 };
 
 export const createPostSchema: IValidatorRequest = {
@@ -242,6 +253,81 @@ export const createPostSchema: IValidatorRequest = {
   ],
 };
 
+export const postMediaMultipartInitiateSchema: IValidatorRequest = {
+  params: communitySlugParams,
+  body: [
+    {
+      key: "fileName",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 255,
+      optional: true,
+    },
+    {
+      key: "mimeType",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 80,
+    },
+    {
+      key: "size",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      max: UPLOAD_LIMITS.community.postMediaMultipartTotalMb * 1024 * 1024,
+    },
+  ],
+};
+
+export const postMediaMultipartPartSchema: IValidatorRequest = {
+  params: communitySlugParams,
+  body: [
+    multipartSessionIdField,
+    {
+      key: "partNumber",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      max: 10_000,
+    },
+  ],
+};
+
+export const postMediaMultipartCompleteSchema: IValidatorRequest = {
+  params: communitySlugParams,
+  body: [
+    multipartSessionIdField,
+    {
+      key: "parts",
+      custom: z
+        .array(
+          z
+            .object({
+              partId: z.string().min(1).max(4096).optional(),
+              partNumber: z.number().int().min(1).max(10_000),
+              partToken: z.string().min(1).max(4096).optional(),
+            })
+            .strict()
+            .refine((part) => Boolean(part.partId || part.partToken), {
+              message: "Informe a parte enviada.",
+              path: ["partId"],
+            }),
+        )
+        .min(1)
+        .max(10_000),
+    },
+  ],
+};
+
+export const postMediaMultipartAbortSchema: IValidatorRequest = {
+  params: communitySlugParams,
+  body: [multipartSessionIdField],
+};
+
 export const indexValidator = validator(indexSchema);
 export const feedValidator = validator(feedSchema);
 export const topMentorsValidator = validator(topMentorsSchema);
@@ -250,5 +336,9 @@ export const showValidator = validator(showSchema);
 export const membershipValidator = validator(showSchema);
 export const postsValidator = validator(postsSchema);
 export const createPostValidator = validator(createPostSchema);
+export const postMediaMultipartInitiateValidator = validator(postMediaMultipartInitiateSchema);
+export const postMediaMultipartPartValidator = validator(postMediaMultipartPartSchema);
+export const postMediaMultipartCompleteValidator = validator(postMediaMultipartCompleteSchema);
+export const postMediaMultipartAbortValidator = validator(postMediaMultipartAbortSchema);
 
 export default indexValidator;

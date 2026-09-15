@@ -3,7 +3,7 @@
 }
 
 #nprogress .bar {
-  background: #308ce8;
+  background: var(--lectum-primary);
   height: 2px;
   left: 0;
   position: fixed;

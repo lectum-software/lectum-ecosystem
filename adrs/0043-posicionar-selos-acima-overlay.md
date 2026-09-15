@@ -1,4 +1,4 @@
-﻿# ADR-0043: Posicionar selos acima do overlay no card de psicólogo
+# ADR-0043: Posicionar selos acima do overlay no card de psicólogo
 
 ## Status
 

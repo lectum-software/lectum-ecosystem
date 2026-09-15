@@ -1,4 +1,4 @@
-﻿# ADR-0128: Controles essenciais no player de video dos Analytics
+# ADR-0128: Controles essenciais no player de video dos Analytics
 
 ## Status
 

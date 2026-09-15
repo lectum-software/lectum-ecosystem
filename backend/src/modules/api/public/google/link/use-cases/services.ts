@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { error, msg } from "@/helpers/translate";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { AccountRepository } from "@/modules/api/private/account/repositories/AccountRepository";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import { createGoogleOAuthLoginUrl, isGoogleOAuthConfigured } from "../../utils/config";
@@ -48,7 +48,7 @@ export const createIntent = async (data: IGoogleLinkDTO) => {
       device_id: device.id,
     },
     getJwtSecret(),
-    { expiresIn: LINK_TOKEN_EXPIRES_IN },
+    { algorithm: JWT_ALGORITHM, expiresIn: LINK_TOKEN_EXPIRES_IN },
   );
 
   const url = createGoogleOAuthLoginUrl(device.id);
@@ -69,6 +69,7 @@ export const createIntent = async (data: IGoogleLinkDTO) => {
   };
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("google_link_intent_created", {}),
     data: response,
@@ -123,6 +124,7 @@ export const unlink = async (data: IGoogleLinkDTO) => {
   const hydrated = await loginRepository.hidrate(updated, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("google_unlink_success", {}),
     data: hydrated,

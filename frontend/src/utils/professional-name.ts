@@ -13,6 +13,13 @@ export const normalizeProfessionalDisplayName = (fullName?: string | null) =>
     .replace(/\s{2,}/g, " ")
     .trim();
 
+export const normalizeProfessionalNamePart = (value?: string | null) =>
+  String(value ?? "")
+    .trim()
+    .replace(PROFESSIONAL_TITLE_PREFIX_PATTERN, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
 export const getProfessionalShortDisplayName = (
   fullName?: string | null,
   fallback = "psic\u00f3logo",

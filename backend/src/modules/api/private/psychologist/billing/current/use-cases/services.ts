@@ -1,4 +1,4 @@
-﻿import { error, msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 import type { ICurrentDTO } from "../DTOs/ICurrentDTO";
 import { CurrentRepository } from "../repositories/CurrentRepository";
 

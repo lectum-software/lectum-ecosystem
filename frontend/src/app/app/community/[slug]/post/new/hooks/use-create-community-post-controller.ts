@@ -1,0 +1,681 @@
+"use client";
+
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import {
+  type ChangeEvent,
+  type PointerEvent as ReactPointerEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
+import {
+  useCommunities,
+  useCreateCommunityPost,
+  useUploadCommunityPostMedia,
+} from "@/api/callers/community";
+import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
+import { useAppSelector } from "@/hooks/redux";
+import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
+import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import * as createPostAuthReturn from "@/utils/community-post-auth-return";
+import { mapWithConcurrency } from "@/utils/map-with-concurrency";
+import { isUploadPreparationCanceled, resolvePublicMediaKind } from "@/utils/media-preparation";
+import {
+  getCommunityMediaFileSelectionSizeError,
+  resolveMediaUploadError,
+} from "@/utils/media-upload-error";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
+import {
+  classifyUploadedCommunityMedia,
+  createSelectedMediaId,
+  EDITOR_FIELD_IDS,
+  getCreatePostInitialEditorFocusDelays,
+  LAST_CREATED_POST_HREF_KEY,
+  MAX_POST_CAROUSEL_IMAGES,
+  moveContenteditableCaretToEnd,
+  normalizeParam,
+  prepareSelectedVideoPreview,
+  resolveCommunityOptions,
+  resolveCreatePostCloseFallbackHref,
+  resolveCreatePostDefaultSlug,
+  resolveCreatePostError,
+  resolveKeyboardViewportOffset,
+  type SelectedPostMedia,
+  SHEET_CLOSE_DELAY_MS,
+  scheduleCorrectedCreatePostErrorClear,
+  type UseCreateCommunityPostControllerOptions,
+} from "../modules/create-post-support";
+import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "../use-form";
+import { useCreatePostDiscardConfirmation } from "./use-create-post-discard-confirmation";
+
+export const useCreateCommunityPostController = ({
+  onCloseComplete,
+}: UseCreateCommunityPostControllerOptions = {}) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const params = useParams<{ slug?: string | string[] }>();
+  const routeSlug = normalizeParam(params?.slug);
+  const communitySlugFromQuery = searchParams.get("community")?.trim() || null;
+  const storedUser = useAppSelector((state) => state.user);
+  const isPsychologist = storedUser?.role === "psicologo";
+  const mediaPermission = getCommunityMediaPermission(storedUser);
+  const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
+  const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [hasSheetOpened, setHasSheetOpened] = useState(false);
+  const [keyboardViewportOffset, setKeyboardViewportOffset] = useState(0);
+  const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
+  const closeTimerRef = useRef<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const lastFocusedEditorIdRef = useRef("create-post-title");
+  const selectedMediaPreviewGenerationRef = useRef(0);
+  const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
+  const titleAutoFocusCancelledRef = useRef(false);
+
+  const communitiesQuery = useCommunities({ limit: 50 });
+  const communityOptions = useMemo(
+    () => resolveCommunityOptions(communitiesQuery.data?.data ?? []),
+    [communitiesQuery.data?.data],
+  );
+  const defaultCommunitySlug = resolveCreatePostDefaultSlug({ communitySlugFromQuery, routeSlug });
+
+  const form = useCreateCommunityPostForm({
+    communityOptions,
+    defaultCommunitySlug,
+    isPsychologist,
+    loadingCommunities: communitiesQuery.isLoading,
+  });
+  const { formProps, hook } = form;
+  const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
+    useCommunityVideoUpload();
+
+  const mutation = useCreateCommunityPost({
+    onSuccess: (post) => {
+      const publicationHref = `/comunidades/${encodeURIComponent(post.community.slug)}/publicacao/${encodeURIComponent(post.id)}`;
+
+      try {
+        window.sessionStorage.setItem(LAST_CREATED_POST_HREF_KEY, publicationHref);
+      } catch {
+        // A rota de sucesso também recebe o destino por URL e não depende do storage.
+      }
+      setIsSheetOpen(false);
+      createPostAuthReturn.clearCreatePostAuthReturnTarget();
+      toast.success("Post publicado!");
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = window.setTimeout(() => {
+        router.replace(publicationHref);
+      }, SHEET_CLOSE_DELAY_MS);
+    },
+    onError: (error) => {
+      const resolution = resolveCreatePostError(error);
+
+      if (resolution.field) {
+        hook.setError(
+          resolution.field,
+          {
+            message: resolution.message,
+            type: "server",
+          },
+          { shouldFocus: true },
+        );
+        return;
+      }
+
+      toast.error(resolution.message);
+    },
+  });
+  const uploadMutation = useUploadCommunityPostMedia({
+    onError: (error) => {
+      if (isUploadPreparationCanceled(error)) return;
+      toast.error(resolveMediaUploadError(error));
+    },
+  });
+
+  useEffect(() => {
+    if (!defaultCommunitySlug || communityOptions.length === 0) return;
+
+    const selected = hook.getValues("community_slug");
+    const hasOption = communityOptions.some((option) => option.value === defaultCommunitySlug);
+
+    if (!selected && hasOption) {
+      hook.setValue("community_slug", defaultCommunitySlug, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: true,
+      });
+    } else if (selected === defaultCommunitySlug && !hasOption) {
+      hook.setValue("community_slug", "", {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: true,
+      });
+    }
+  }, [communityOptions, defaultCommunitySlug, hook]);
+
+  const watchedCommunitySlug = hook.watch("community_slug");
+  const watchedTitle = hook.watch("title");
+  const watchedContent = hook.watch("content");
+  const selectedCommunityIsValid = communityOptions.some(
+    (option) => option.value === watchedCommunitySlug,
+  );
+  const titleMeetsMinimum = String(watchedTitle ?? "").trim().length >= 3;
+  const contentMeetsMinimum = String(watchedContent ?? "").trim().length >= 10;
+  const hasDraftContent = Boolean(
+    String(watchedTitle ?? "").trim().length > 0 ||
+      String(watchedContent ?? "").trim().length > 0 ||
+      selectedMediaItems.length > 0,
+  );
+  const requiredFieldsReady = Boolean(
+    selectedCommunityIsValid && titleMeetsMinimum && contentMeetsMinimum,
+  );
+  const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
+  const isSubmitting =
+    hook.formState.isSubmitting || mutation.isPending || uploadMutation.isPending;
+  const isSubmitDisabled = isSubmitting || communitiesQuery.isLoading || hasNoCommunities;
+  const sheetMotionState = isSheetOpen ? "enter" : hasSheetOpened ? "exit" : "initial";
+
+  useEffect(() => {
+    if (selectedCommunityIsValid && hook.formState.errors.community_slug) {
+      hook.clearErrors("community_slug");
+    }
+  }, [hook, hook.formState.errors.community_slug, selectedCommunityIsValid]);
+
+  useEffect(() => {
+    if (titleMeetsMinimum && hook.formState.errors.title) {
+      hook.clearErrors("title");
+    }
+  }, [hook, hook.formState.errors.title, titleMeetsMinimum]);
+
+  useEffect(() => {
+    if (contentMeetsMinimum && hook.formState.errors.content) {
+      hook.clearErrors("content");
+    }
+  }, [contentMeetsMinimum, hook, hook.formState.errors.content]);
+
+  const registerEditorInteraction = useCallback((targetId = lastFocusedEditorIdRef.current) => {
+    lastFocusedEditorIdRef.current = targetId;
+    if (targetId !== "create-post-title") {
+      titleAutoFocusCancelledRef.current = true;
+    }
+  }, []);
+
+  const focusEditorElement = useCallback(
+    (
+      targetId = lastFocusedEditorIdRef.current,
+      options: { moveCaretToEnd?: boolean; registerInteraction?: boolean } = {},
+    ) => {
+      const target = document.getElementById(targetId);
+
+      if (!target) return;
+
+      if (options.registerInteraction) {
+        registerEditorInteraction(targetId);
+      }
+
+      target.focus({ preventScroll: true });
+
+      if (target instanceof HTMLElement && target.isContentEditable) {
+        if (options.moveCaretToEnd !== false) {
+          moveContenteditableCaretToEnd(target);
+        }
+        return;
+      }
+
+      try {
+        if (
+          options.moveCaretToEnd !== false &&
+          (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) &&
+          typeof target.setSelectionRange === "function"
+        ) {
+          const cursorPosition = target.value.length;
+          target.setSelectionRange(cursorPosition, cursorPosition);
+        }
+      } catch {
+        // Alguns inputs mobile podem nao suportar selecao programatica; o foco ainda abre o teclado.
+      }
+    },
+    [registerEditorInteraction],
+  );
+
+  const focusEditorFromUserGesture = useCallback(
+    (targetId: string) => {
+      registerEditorInteraction(targetId);
+      const target = document.getElementById(targetId);
+
+      if (!target || document.activeElement === target) return;
+
+      target.focus({ preventScroll: true });
+    },
+    [registerEditorInteraction],
+  );
+
+  const focusLastEditor = useCallback(() => {
+    window.setTimeout(() => {
+      focusEditorElement();
+    }, 0);
+  }, [focusEditorElement]);
+
+  const preserveEditorFocusFromBlankTap = (
+    event: ReactPointerEvent<HTMLElement>,
+    targetEditorId = lastFocusedEditorIdRef.current,
+  ) => {
+    if (event.target !== event.currentTarget) return;
+
+    event.preventDefault();
+    registerEditorInteraction(targetEditorId);
+    focusEditorElement(targetEditorId);
+  };
+
+  const revokeSelectedMediaPreview = useCallback(() => {
+    selectedMediaPreviewUrlsRef.current.forEach((previewUrl) => {
+      URL.revokeObjectURL(previewUrl);
+    });
+    selectedMediaPreviewUrlsRef.current = [];
+  }, []);
+
+  const clearSelectedMedia = () => {
+    selectedMediaPreviewGenerationRef.current += 1;
+    revokeSelectedMediaPreview();
+    setSelectedMediaItems([]);
+  };
+
+  const removeSelectedMediaAt = (index: number) => {
+    selectedMediaPreviewGenerationRef.current += 1;
+    setSelectedMediaItems((currentItems) => {
+      const removedItem = currentItems[index];
+      if (!removedItem) return currentItems;
+
+      const urlsToRevoke = [removedItem.previewUrl, removedItem.thumbnailUrl].filter(
+        (previewUrl): previewUrl is string => Boolean(previewUrl),
+      );
+      urlsToRevoke.forEach((previewUrl) => {
+        URL.revokeObjectURL(previewUrl);
+      });
+      selectedMediaPreviewUrlsRef.current = selectedMediaPreviewUrlsRef.current.filter(
+        (previewUrl) => !urlsToRevoke.includes(previewUrl),
+      );
+
+      return currentItems.filter((_, currentIndex) => currentIndex !== index);
+    });
+  };
+
+  const updateSelectedMediaOrientation = (id: string, orientation: "landscape" | "portrait") => {
+    setSelectedMediaItems((currentItems) =>
+      currentItems.map((item) => (item.id === id ? { ...item, orientation } : item)),
+    );
+  };
+
+  const performClose = () => {
+    abortActiveVideoUpload();
+    setIsSheetOpen(false);
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+
+    closeTimerRef.current = window.setTimeout(() => {
+      if (onCloseComplete) {
+        onCloseComplete();
+        return;
+      }
+
+      const fallbackHref = resolveCreatePostCloseFallbackHref({
+        communitySlugFromQuery,
+        routeSlug,
+      });
+
+      if (createPostAuthReturn.replaceCreatePostAuthReturnWithHome(router)) return;
+      navigateBackWithFallback(router, fallbackHref);
+    }, SHEET_CLOSE_DELAY_MS);
+  };
+
+  const {
+    cancelDiscardConfirmation,
+    confirmDiscardAndClose,
+    discardConfirmationOpen,
+    requestClose: handleClose,
+  } = useCreatePostDiscardConfirmation({
+    hasDraftContent,
+    onCancel: focusLastEditor,
+    onClose: performClose,
+  });
+
+  useEffect(() => {
+    const visualViewport = window.visualViewport;
+
+    if (!visualViewport) return;
+
+    let frame: number | null = null;
+    const updateKeyboardOffset = () => {
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        setKeyboardViewportOffset(resolveKeyboardViewportOffset());
+      });
+    };
+
+    updateKeyboardOffset();
+    visualViewport.addEventListener("resize", updateKeyboardOffset);
+    visualViewport.addEventListener("scroll", updateKeyboardOffset);
+    window.addEventListener("orientationchange", updateKeyboardOffset);
+
+    return () => {
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+      visualViewport.removeEventListener("resize", updateKeyboardOffset);
+      visualViewport.removeEventListener("scroll", updateKeyboardOffset);
+      window.removeEventListener("orientationchange", updateKeyboardOffset);
+    };
+  }, []);
+
+  useEffect(() => {
+    let openFrame: number | null = null;
+    const frame = window.requestAnimationFrame(() => {
+      openFrame = window.requestAnimationFrame(() => {
+        setHasSheetOpened(true);
+        setIsSheetOpen(true);
+      });
+    });
+    const focusTitle = () => {
+      const activeElement = document.activeElement;
+
+      if (
+        titleAutoFocusCancelledRef.current ||
+        (activeElement instanceof HTMLElement &&
+          EDITOR_FIELD_IDS.has(activeElement.id) &&
+          activeElement.id !== "create-post-title") ||
+        lastFocusedEditorIdRef.current !== "create-post-title"
+      ) {
+        return;
+      }
+
+      focusEditorElement("create-post-title");
+    };
+    const focusTimers = getCreatePostInitialEditorFocusDelays().map((delay) =>
+      window.setTimeout(focusTitle, delay),
+    );
+    const lockedScrollX = window.scrollX;
+    const lockedScrollY = window.scrollY;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyRight = document.body.style.right;
+    const previousBodyLeft = document.body.style.left;
+    const previousBodyWidth = document.body.style.width;
+    const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    const previousDocumentOverscrollBehavior = document.documentElement.style.overscrollBehavior;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.right = "0";
+    document.body.style.left = "0";
+    document.body.style.width = "100%";
+    document.body.style.overscrollBehavior = "none";
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (openFrame !== null) window.cancelAnimationFrame(openFrame);
+      focusTimers.forEach((timer) => {
+        window.clearTimeout(timer);
+      });
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.right = previousBodyRight;
+      document.body.style.left = previousBodyLeft;
+      document.body.style.width = previousBodyWidth;
+      document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+      document.documentElement.style.overscrollBehavior = previousDocumentOverscrollBehavior;
+      window.removeEventListener("keydown", handleEscape);
+      window.scrollTo(lockedScrollX, lockedScrollY);
+    };
+  }, [focusEditorElement, handleClose]);
+
+  useEffect(() => {
+    return () => revokeSelectedMediaPreview();
+  }, [revokeSelectedMediaPreview]);
+
+  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.currentTarget.value = "";
+
+    if (files.length === 0) return;
+
+    if (!mediaPermission.canAttach) {
+      toast.error(mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.");
+      focusLastEditor();
+      return;
+    }
+
+    if (files.some((file) => resolvePublicMediaKind(file) === null)) {
+      toast.error("Envie uma imagem ou vídeo em formato permitido.");
+      focusLastEditor();
+      return;
+    }
+
+    const sizeError = files.map(getCommunityMediaFileSelectionSizeError).find(Boolean);
+    if (sizeError) {
+      toast.error(resolveMediaUploadError(sizeError));
+      focusLastEditor();
+      return;
+    }
+
+    const videoFiles = files.filter((file) => resolvePublicMediaKind(file) === "video");
+    const imageFiles = files.filter((file) => resolvePublicMediaKind(file) === "image");
+
+    if (videoFiles.length > 0) {
+      if (files.length > 1 || imageFiles.length > 0) {
+        toast.error(
+          "Vídeos devem ser anexados individualmente. Para carrossel, selecione apenas imagens.",
+        );
+        focusLastEditor();
+        return;
+      }
+
+      clearSelectedMedia();
+      const previewGeneration = selectedMediaPreviewGenerationRef.current + 1;
+      selectedMediaPreviewGenerationRef.current = previewGeneration;
+      const previewUrl = URL.createObjectURL(videoFiles[0]);
+      const selectedVideoItem: SelectedPostMedia = {
+        file: videoFiles[0],
+        id: createSelectedMediaId(),
+        isPreparingPreview: true,
+        previewUrl,
+        thumbnailUrl: null,
+        type: "video",
+      };
+      selectedMediaPreviewUrlsRef.current = [previewUrl];
+      setSelectedMediaItems([selectedVideoItem]);
+      prepareSelectedVideoPreview({
+        getCurrentPreviewGeneration: () => selectedMediaPreviewGenerationRef.current,
+        mediaItem: selectedVideoItem,
+        previewGeneration,
+        rememberPreviewUrl: (url) => selectedMediaPreviewUrlsRef.current.push(url),
+        setSelectedMediaItems,
+      });
+      focusLastEditor();
+      return;
+    }
+
+    const replacingVideo = selectedMediaItems.some((item) => item.type === "video");
+    const baseItems = replacingVideo
+      ? []
+      : selectedMediaItems.filter((item) => item.type === "image");
+    const availableSlots = MAX_POST_CAROUSEL_IMAGES - baseItems.length;
+
+    if (availableSlots <= 0) {
+      toast.error(`Você pode anexar até ${MAX_POST_CAROUSEL_IMAGES} imagens por post.`);
+      focusLastEditor();
+      return;
+    }
+
+    if (replacingVideo) {
+      clearSelectedMedia();
+    }
+
+    const filesToAttach = imageFiles.slice(0, availableSlots);
+    if (imageFiles.length > availableSlots) {
+      toast.error(
+        `Só foi possível anexar ${availableSlots} imagem(ns). O limite é ${MAX_POST_CAROUSEL_IMAGES}.`,
+      );
+    }
+
+    const nextItems = filesToAttach.map((file) => {
+      const previewUrl = URL.createObjectURL(file);
+      selectedMediaPreviewUrlsRef.current.push(previewUrl);
+
+      return {
+        file,
+        id: createSelectedMediaId(),
+        previewUrl,
+        type: "image" as const,
+      };
+    });
+
+    setSelectedMediaItems([...baseItems, ...nextItems]);
+    focusLastEditor();
+  };
+
+  const onSubmit = hook.handleSubmit(async (values) => {
+    let stagedStreamVideoReference: string | null = null;
+
+    try {
+      const mediaFiles = mediaPermission.canAttach ? selectedMediaItems : [];
+      const selectedVideo = mediaFiles.find((mediaItem) => mediaItem.type === "video") ?? null;
+      const { uploadedMedia, uploadedThumbnail } = await (async () => {
+        const operation = selectedVideo ? beginVideoUpload() : null;
+
+        try {
+          const uploadedMedia = selectedVideo
+            ? [
+                await uploadMutation.mutateAsync({
+                  file: selectedVideo.file,
+                  onProgress: operation?.onProgress,
+                  signal: operation?.signal,
+                  slug: values.community_slug,
+                }),
+              ]
+            : mediaFiles.length > 0
+              ? await mapWithConcurrency(mediaFiles, 2, (mediaItem) =>
+                  uploadMutation.mutateAsync({
+                    file: mediaItem.file,
+                    slug: values.community_slug,
+                  }),
+                )
+              : [];
+          const { streamVideoReference } = classifyUploadedCommunityMedia(uploadedMedia);
+          stagedStreamVideoReference = streamVideoReference;
+          const thumbnailFile =
+            selectedVideo && !streamVideoReference
+              ? await createVideoThumbnailFile(selectedVideo.file, {
+                  signal: operation?.signal,
+                })
+              : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+          const uploadedThumbnail = thumbnailFile
+            ? await uploadMutation.mutateAsync({
+                file: thumbnailFile,
+                purpose: "generated-video-thumbnail",
+                signal: operation?.signal,
+                slug: values.community_slug,
+              })
+            : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+
+          return { uploadedMedia, uploadedThumbnail };
+        } finally {
+          operation?.complete();
+        }
+      })();
+      const firstMedia = uploadedMedia[0] ?? null;
+      const imageMediaItems = classifyUploadedCommunityMedia(uploadedMedia).imageItems;
+
+      await mutation.mutateAsync({
+        slug: values.community_slug,
+        body: {
+          ...toCreateCommunityPostPayload(values, isPsychologist),
+          ...(firstMedia
+            ? {
+                mediaType: firstMedia.media_type,
+                mediaUrl: firstMedia.media_url,
+                ...(firstMedia.media_type === "video" && uploadedThumbnail
+                  ? { thumbnailUrl: uploadedThumbnail.media_url }
+                  : {}),
+              }
+            : {}),
+          ...(imageMediaItems.length > 0 ? { mediaItems: imageMediaItems } : {}),
+        },
+      });
+      stagedStreamVideoReference = null;
+    } catch {
+      await cleanupDetachedVideoAsset(stagedStreamVideoReference);
+      // O feedback fica centralizado nas mutations para preservar o rascunho do post.
+    }
+  });
+
+  const clearCorrectedFormErrorsSoon = () =>
+    scheduleCorrectedCreatePostErrorClear({
+      clearErrors: hook.clearErrors,
+      communityValues: communityOptions.map((option) => option.value),
+      getValues: hook.getValues,
+    });
+
+  return {
+    clearCorrectedFormErrorsSoon,
+    cancelActiveVideoUpload,
+    cancelDiscardConfirmation,
+    communitiesQuery,
+    confirmDiscardAndClose,
+    discardConfirmationOpen,
+    fileInputRef,
+    focusEditorFromUserGesture,
+    focusLastEditor,
+    formProps,
+    handleClose,
+    handleMediaChange,
+    hasNoCommunities,
+    hook,
+    isAnonymousTipDismissed,
+    isGuidanceOpen,
+    isPsychologist,
+    isSheetOpen,
+    isSubmitDisabled,
+    isSubmitting,
+    keyboardViewportOffset,
+    lastFocusedEditorIdRef,
+    mediaPermission,
+    onSubmit,
+    preserveEditorFocusFromBlankTap,
+    registerEditorInteraction,
+    removeSelectedMediaAt,
+    requiredFieldsReady,
+    selectedMediaItems,
+    setIsAnonymousTipDismissed,
+    setIsGuidanceOpen,
+    sheetMotionState,
+    updateSelectedMediaOrientation,
+    uploadMutation,
+    videoUploadProgress,
+  };
+};
+
+export type CreateCommunityPostController = ReturnType<typeof useCreateCommunityPostController>;

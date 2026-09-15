@@ -17,19 +17,18 @@ export default async (data: IStoreDTO) => {
       ...msg("store", {
         //If you need a custom text
       }),
-      data: subscription,
+      data: { subscribed: true },
     };
   }
   //@ignore
 
-  let res = null;
-  res = await _NOTIFICATION_SUBSCRIPTION.store(data);
+  await _NOTIFICATION_SUBSCRIPTION.store(data);
 
   return {
     status: 200,
     ...msg("store", {
       //If you need a custom text
     }),
-    data: res,
+    data: { subscribed: true },
   };
 };

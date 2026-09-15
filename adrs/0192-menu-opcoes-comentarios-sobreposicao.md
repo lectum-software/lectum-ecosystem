@@ -1,4 +1,4 @@
-﻿# ADR-0192: Menu de opcoes dos comentarios acima do composer fixo
+# ADR-0192: Menu de opcoes dos comentarios acima do composer fixo
 
 ## Status
 

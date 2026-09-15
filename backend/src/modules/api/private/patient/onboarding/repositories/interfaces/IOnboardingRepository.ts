@@ -1,4 +1,4 @@
-﻿import type { patient_profile } from "@/interfaces/objects";
+import type { patient_profile } from "@/interfaces/objects";
 import type { IOnboardingDTO } from "../../DTOs/IOnboardingDTO";
 
 export interface IOnboardingRepository {

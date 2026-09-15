@@ -58,7 +58,7 @@ export function SwitchController<FormType extends FieldValues>({
             >
               <span
                 className={cn(
-                  "absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition",
+                  "absolute left-1 top-1 h-5 w-5 rounded-full bg-surface shadow-sm transition",
                   checked && "translate-x-5",
                 )}
               />

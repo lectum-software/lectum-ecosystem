@@ -1,17 +1,18 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "0.1.392",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
     "dev:turbo": "next dev --turbo",
-    "build": "next build --webpack",
+    "build": "next build --webpack && node scripts/remove-production-source-maps.mjs",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings=0",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/psychologist/cfp/components/cfp-copy.test.mjs src/app/app/psychologists/modules/feed-loop.test.mjs src/components/ui/vertical-video-player-support.test.mjs src/lib/seo-metadata.test.mjs src/utils/auth-redirect.test.mjs src/utils/crp.test.mjs src/utils/lectum-share-media.test.mjs src/utils/image-preparation.test.mjs src/utils/map-with-concurrency.test.mjs src/utils/media-preparation.test.mjs src/utils/media-upload-limits.test.mjs src/utils/persisted-origin-navigation.test.mjs src/utils/post-reply-composer-layout.test.mjs src/utils/public-policy.test.mjs src/utils/pull-to-refresh.test.mjs src/utils/sentry-policy.test.mjs src/utils/session-policy.test.mjs src/utils/upload-lifecycle.test.mjs src/utils/video-stream.test.mjs src/components/controllers/controllers.test.mjs src/api/errors.test.mjs src/app/app/professional/profile/setup/use-form.test.mjs src/app/app/settings/notifications/notifications.test.mjs src/components/ui/modal.test.mjs src/hooks/use-auth-token-presence.test.mjs src/app/auth/recovery/recovery.test.mjs src/app/app/professional/whatsapp/verify/use-form.test.mjs src/app/psychologist/cfp/components/result-screens.test.mjs src/utils/professional-attendance.test.mjs src/components/community/community-post-controls.test.mjs src/components/community/interaction-snapshot.test.mjs src/components/community/community-feed-video-autoplay.test.mjs src/api/callers/posts/interaction-cache.test.mjs src/components/conversion/progressive-conversion.test.mjs src/app/app/professional/analytics/components/custom-period-form.test.mjs src/components/community/post-edit-media-preview.test.mjs src/app/app/professional/analytics/components/retention-chart-interaction.test.mjs src/components/controllers/contenteditable/input-policy.test.mjs && node scripts/toaster-contract.test.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/legal.test.mjs src/app/app/professional/analytics/analytics-access.test.mjs",
     "typecheck": "tsc --noEmit --pretty false",
-    "biome:check": "biome check .",
+    "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck"
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",
@@ -19,23 +20,25 @@
     "@mercadopago/sdk-react": "^1.0.7",
     "@radix-ui/react-slot": "^1.2.4",
     "@reduxjs/toolkit": "^2.12.0",
+    "@sentry/nextjs": "10.70.0",
     "@tanstack/react-query": "^5.101.0",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "hls.js": "1.7.2",
     "js-cookie": "^3.0.8",
     "lucide-react": "^1.17.0",
-    "next": "16.2.9",
+    "next": "16.3.3",
     "next-themes": "^0.4.6",
     "nprogress": "^0.2.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.77.0",
     "react-redux": "^9.3.0",
-    "redux-persist": "^6.0.0",
     "socket.io-client": "^4.8.3",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
+    "tus-js-client": "4.3.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -47,14 +50,26 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli",
+      "sharp",
+      "unrs-resolver"
+    ],
     "overrides": {
+      "baseline-browser-mapping": "2.11.0",
+      "brace-expansion@>=3.0.0 <5.0.9": "5.0.9",
+      "browserslist": "4.28.7",
+      "fast-uri": "3.1.6",
       "form-data": "4.0.6",
-      "postcss": "8.5.16",
+      "nanoid@<3.3.17": "3.3.17",
+      "postcss": "8.5.26",
+      "sharp": "0.35.4",
+      "socket.io-parser": "4.2.7",
       "ws": "8.21.0"
     }
   }

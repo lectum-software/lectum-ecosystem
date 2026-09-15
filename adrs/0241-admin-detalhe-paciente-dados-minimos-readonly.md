@@ -50,11 +50,11 @@ O detalhe de paciente continua retornando o `provider` bruto para auditoria, mas
 
 Essa decis√£o evita expor marcadores operacionais/legados como forma de cadastro ao usu√°rio Admin, sem ampliar dados pessoais, criar endpoint novo, schema Prisma, migration, mock, seed ou backfill.
 
-## AtualizaÁ„o 2026-07-19: ˙ltimo acesso no cabeÁalho
+## Atualiza√ß√£o 2026-07-19: √∫ltimo acesso no cabe√ßalho
 
-O cabeÁalho do detalhe do paciente passa a exibir **⁄ltimo acesso** em vez da combinaÁ„o de data de cadastro e conclus„o de onboarding. O valor vem de metadados reais de `user_token.createdAt/updatedAt`, seguindo o padr„o j· adotado no detalhe administrativo de psicÛlogos, e retorna `null` quando n„o existir token confi·vel.
+O cabe√ßalho do detalhe do paciente passa a exibir **√öltimo acesso** em vez da combina√ß√£o de data de cadastro e conclus√£o de onboarding. O valor vem de metadados reais de `user_token.createdAt/updatedAt`, seguindo o padr√£o j√° adotado no detalhe administrativo de psic√≥logos, e retorna `null` quando n√£o existir token confi√°vel.
 
-Essa exposiÁ„o permanece somente para Admin autenticado, n„o adiciona tracking, schema Prisma, migration, mock, seed ou backfill e n„o transforma login em item de atividade recente da V1.
+Essa exposi√ß√£o permanece somente para Admin autenticado, n√£o adiciona tracking, schema Prisma, migration, mock, seed ou backfill e n√£o transforma login em item de atividade recente da V1.
 
 
 ## Atualizacao 2026-07-20: excecao auditada para edicao de genero

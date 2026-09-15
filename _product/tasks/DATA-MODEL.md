@@ -82,8 +82,8 @@ Verificação de e-mail **reaproveita os campos já existentes** `user.confirmed
 
 Resumo dos campos relevantes do `user` atual (fonte: `schema.prisma`):
 
-- `name`, `email @unique`, `avatar?`, `provider @default("manual")`, `password?`, `password_confirm?`.
-- `active @default(true)`, `account_status @default("active")`, `account_status_changed_at?`, `account_status_expires_at?`, `need_reset @default(false)`.
+- `name`, `email @unique`, `avatar?`, `provider @default("manual")`, `password?`, `password_confirm?` legado.
+- `active @default(true)`, `account_status @default("active")`, `account_status_changed_até`, `account_status_expires_até`, `need_reset @default(false)`.
 - `confirmed @default(false)`, `confirmed_date?`, `confirm_code?`, `confirm_date?` → verificação de e-mail.
 - `has_seen_discover_psychologists_tip @default(false)`, `has_seen_psychologists_my_search_tip @default(false)`, `has_seen_psychologist_whatsapp_tip @default(false)`, `has_seen_psychologist_profile_video_tip @default(false)`, `has_seen_psychologist_reply_tip @default(false)`, `has_seen_psychologist_original_post_tip @default(false)`, `has_seen_community_post_tip @default(false)` → dicas/onboarding one-shot por usuário.
 - `recovery_code?`, `recovery_date?` → recuperação de senha.
@@ -141,7 +141,7 @@ Não construir no MVP. Reservado aqui para que nenhuma task trate admin como `us
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `name`, `email`, `password?`, `password_confirm?` | | mesma forma de auth do `user` |
+| `name`, `email`, `password?`, `password_confirm?` legado | | mesma forma de auth do `user` |
 | `active @default(true)`, `confirmed`, `confirmed_date?`, `confirm_code?`, `confirm_date?`, `recovery_code?`, `recovery_date?`, `need_reset` | | fluxo de login/recovery/confirm próprio |
 | `admin_tokens` | `admin_token[]` | |
 | `@@index([email, deleted])`, `@@map("admins")` | | |
@@ -163,7 +163,7 @@ Não construir no MVP. Reservado aqui para que nenhuma task trate admin como `us
 
 Complemento TASK-67 (2026-07-11): edição administrativa de Dados pessoais e Dados profissionais do psicólogo usa endpoints Admin próprios, não impersona o psicólogo, não altera `user.email`, credenciais, plano, gateway, cortesia, `crp_status` ou `cfp_verified_at`. Alteração de CPF em psicólogo aprovado exige confirmação e motivo, mas não revalida nem invalida CRP automaticamente. Eventos novos entram em `/api/admin/private/psychologists/:id/activities` a partir de `admin_activity_log`; histórico anterior não é retroagido.
 
-Complemento TASK-68 (2026-07-11): suporte administrativo de Conta e acesso do psicólogo usa somente campos existentes de `user`, `user_token` e `admin_activity_log`. Alteração administrativa de e-mail atualiza `user.email`, gera novo `user.confirm_code`/`confirm_date`, marca `confirmed=false`, limpa `confirmed_date` e remove sessões do psicólogo em `user_token`. Reenvio de confirmação e link de redefinição usam `user.confirm_code`/`confirm_date` e `user.recovery_code`/`recovery_date` sem expor códigos. Senha temporária salva somente hash em `user.password`/`password_confirm`, limpa recovery, define `need_reset=true` e exige troca no próximo login via `/api/private/auth/need_reset`. Eventos administrativos entram em `admin_activity_log` com `domain="psychologist_account"`, `area="conta_e_acesso"` e payload seguro sem senha, hash, códigos ou tokens.
+Complemento TASK-68 (2026-07-11), atualizado pela auditoria de 2026-08-07: suporte administrativo de Conta e acesso do psicólogo usa somente campos existentes de `user`, `user_token` e `admin_activity_log`. Alteração administrativa de e-mail atualiza `user.email`, gera novo `user.confirm_code`/`confirm_date`, marca `confirmed=false`, limpa `confirmed_date` e remove sessões do psicólogo em `user_token`. Reenvio de confirmação e link de redefinição usam `user.confirm_code`/`confirm_date` e `user.recovery_code`/`recovery_date` sem expor códigos. Senha temporária salva somente o hash em `user.password`, mantém `password_confirm=null`, limpa recovery, define `need_reset=true` e exige troca no próximo login via `/api/private/auth/need_reset`. O campo `password_confirm` permanece nullable apenas por compatibilidade de schema; confirmação é payload transitório e nunca deve ser persistida. Eventos administrativos entram em `admin_activity_log` com `domain="psychologist_account"`, `area="conta_e_acesso"` e payload seguro sem senha, hash, códigos ou tokens.
 
 Complemento TASK-73 (2026-07-14): ações administrativas de status da conta do psicólogo usam `user.account_status` com valores `"active" | "suspended" | "deactivated" | "deleted"` e `user.account_status_changed_at` como trilha operacional mínima. Suspensão e desativação mantêm o usuário em `deleted=false`, mas gravam `active=false`, encerram `user_token` e removem o perfil da descoberta pública pelos filtros existentes. Exclusão administrativa usa o mesmo soft delete/anonymization do fluxo próprio de exclusão de conta, grava `account_status="deleted"`, bloqueia login e preserva auditoria em `admin_activity_log`; contas com assinatura paga vinculada a gateway ou inadimplente continuam bloqueadas para exclusão até regularização/cancelamento operacional.
 
@@ -187,6 +187,8 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `bio` | `String?` | curto |
 | `onboarding_completed_at` | `DateTime?` | null = onboarding pendente (TASK-08) |
 | `@@index([user_id])` | | |
+
+Complemento 2026-08-22: `onboarding_completed_at`, `goal` e `gender` permanecem historicos/opcionais. O frontend nao usa mais `onboarding_completed_at=null` como gate automatico de pos-cadastro/login; retornos autenticados priorizam `redirectTo`/`callbackUrl` seguro e, sem retorno explicito, pacientes seguem para `/psicologos`. Nao ha migration nem backfill nesta mudanca.
 
 Complemento 2026-07-23: o nome de exibicao do paciente permanece em `user.name`, nao em
 `patient_profile`. O Admin pode corrigir esse nome pelo endpoint auditado
@@ -229,6 +231,21 @@ fluxo.
 | `rating_count` | `Int @default(0)` | total de avaliações aprovadas |
 | `published` | `Boolean @default(false)` | só `true` aparece na busca (PRD §7: apenas ativos/verificados) |
 | `@@index([user_id])`, `@@index([published, deleted])` | | |
+
+Complemento TASK-163: novos vídeos de apresentação usam `psychologist_profile.video_url` somente
+como referência estável `/api/private/video-assets/:id/playback` para um `video_asset` pronto do
+mesmo proprietário e com `purpose="profile_presentation"`. `video_cover_url` permanece `null` nesse
+caminho porque a miniatura assinada é derivada no momento do playback. Apenas o upload de perfil
+mais recente pode substituir a referência atual depois de ficar pronto; um upload ainda em
+processamento ou com erro não remove o vídeo funcional anterior. URLs R2 legadas continuam válidas
+durante o rollout. Ao concluir a troca, os outros `video_assets` de apresentação daquele dono são
+aposentados logicamente na mesma transação; a exclusão física no Stream e a remoção da mídia R2
+substituída são best effort posteriores ao commit.
+
+Complemento 2026-09-12: a exceção temporária da TASK-171 está encerrada. Novos vídeos de
+apresentação sempre usam Cloudflare Stream; os endpoints legados single/multipart de vídeo recusam
+clientes antigos com erro público seguro e não gravam novas URLs R2. URLs R2 existentes continuam
+legíveis apenas para reprodução legado, auditoria e migração TASK-165, sem apagar objetos/capas.
 
 Regra complementar de identidade profissional (TASK-34, atualizada em 2026-07-11): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` quando houver assinatura profissional ativa não gratuita com `crp_status="aprovado"` ou `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Complemento de cortesia: uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`, plano não gratuito, status vigente) também bloqueia CPF, Regional do CRP e Nº de registro CRP na edição do psicólogo, mesmo sem preencher artificialmente `cfp_verified_at`, porque o Admin passa a ser a fonte operacional desses campos durante a cortesia. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados.
 
@@ -555,14 +572,94 @@ Complemento TASK-52 (2026-07-09): regras exibidas dentro da comunidade deixam de
 
 Backfill canônico TASK-52 para comunidades existentes: `Respeito e empatia`, `Sem dados pessoais`, `Proibido conteúdo nocivo`, `Psicólogos não fazem atendimento` e `Para atendimento, use o WhatsApp`. O detalhe público/privado de comunidade (`GET /api/private/community/:slug`) deve retornar apenas regras `active=true` e `deleted=false`, ordenadas por `position`, para substituir a copy hardcoded na interface.
 
-`community_suggestion` (TASK-22, "Sugerir Comunidade"):
+`community_suggestion` (TASK-22, "Sugerir Comunidade"; complemento TASK-149 Admin):
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | `user_id` | `String` | autor |
+| `block_id` | `String?` | bloco administrativo de demanda; nullable para compatibilidade com todas as sugestões já recebidas |
 | `theme` | `String` | tema sugerido |
-| `status` | `String @default("pendente")` | `"pendente" \| "aprovada" \| "rejeitada"` |
-| `@@index([status])` | | |
+| `status` | `String @default("pendente")` | `"pendente" \| "agrupada" \| "arquivada"` no fluxo Admin atual; valores legados `"aprovada"`/`"rejeitada"` não devem quebrar leituras |
+| `@@index([status])`, `@@index([block_id])`, `@@index([status, block_id])` | | leitura administrativa por status/bloco |
+
+`community_suggestion_block` (TASK-149, blocos de demanda internos do Admin):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `title` | `String` | nome interno do agrupador de demanda |
+| `description` | `String?` | notas internas do Admin |
+| `status` | `String @default("monitorando")` | `"monitorando" \| "candidata" \| "convertida" \| "arquivada"` |
+| `created_by_admin_id` | `String?` | admin criador; `SetNull` se admin for removido fisicamente |
+| `community_id` | `String?` | comunidade real aberta futuramente; não é preenchido automaticamente nesta task |
+| `@@index([status, deleted])`, `@@index([created_by_admin_id])`, `@@index([community_id])` | | gestão administrativa |
+
+Complemento TASK-149 (2026-08-10): o usuário final continua apenas enviando `community_suggestion`; blocos são entidade interna do Admin para análise de demanda e não publicam comunidade automaticamente. Mover/arquivar sugestões e criar/atualizar blocos deve registrar auditoria em `admin_activity_log` com snapshots seguros.
+
+`video_asset` / `video_assets` (TASK-163, plano de controle do Cloudflare Stream):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `owner_id` | `String` | dono autenticado; relação `user.video_assets`, cascade apenas em exclusão física de usuário |
+| `provider` | `String @default("cloudflare_stream")` | provider técnico fechado da V1; não expor em DTO público |
+| `provider_uid` | `String @unique` | UID privado no banco/backend; nunca é referência de domínio nem prova de autorização |
+| `purpose` | `String` | `"profile_presentation" \| "community_post" \| "community_reply"` |
+| `context_id` | `String?` | perfil para apresentação, slug da comunidade antes de criar post, ou ID do post para resposta |
+| `status` | `String @default("uploading")` | `"uploading" \| "processing" \| "ready" \| "error" \| "canceled"` |
+| `mime_type` / `size_bytes` | `String` / `BigInt` | declaração autorizada antes de provisionar TUS; tamanho também vai em `Upload-Length` |
+| `duration_seconds` | `Float?` | duração derivada do provider após processamento |
+| `width` / `height` | `Int?` | dimensões derivadas do provider após processamento |
+| `upload_expires_at` | `DateTime` | expiração RFC3339 enviada ao provisionamento TUS e usada para fechar upload abandonado |
+| `last_provider_sync_at` / `ready_at` | `DateTime?` | reconciliação limitada e momento em que o ativo ficou reproduzível |
+| `error_code` | `String?` | classificação interna controlada; mensagem crua do provider não é persistida/exposta |
+| `last_webhook_at` / `last_webhook_digest` | `DateTime?` / `String?` | idempotência do webhook autenticado, sem armazenar assinatura ou corpo bruto |
+| `source_provider` | `String?` | TASK-165: `"cloudflare_r2"` somente em ativo criado pelo backfill; nulo nos uploads Stream normais |
+| `source_reference` | `String?` | TASK-165: referência R2 observada antes da troca, preservada para auditoria/rollback; não é devolvida no playback |
+| `source_thumbnail_reference` | `String?` | TASK-165: capa R2 observada antes da troca; preservada e nullable |
+| `migration_key` | `String? @unique` | TASK-165: SHA-256 determinístico por finalidade/alvo/object key para deduplicação e retomada |
+| `migrated_at` | `DateTime?` | TASK-165: preenchido somente após associação atômica da referência Stream |
+| `deleted` / `deleted_at` | `Boolean` / `DateTime?` | cancelamento/aposentadoria lógica; TASK-181: pronto/substituído é retido sem exclusão física |
+| `@@index([owner_id, purpose, deleted, createdAt])` | | histórico e limitação de provisionamentos por dono/finalidade |
+| `@@index([status, deleted, updatedAt])` | | reconciliação/limpeza futura de estados |
+| `@@index([context_id, purpose, deleted])` | | validação de associação ao contexto autorizado |
+
+Contratos derivados:
+
+- O banco não armazena URL TUS nem token de playback. Campos de conteúdo guardam a referência
+  estável `/api/private/video-assets/:id/playback`; o `:id` é Lectum, não `provider_uid`.
+- O JWT de playback Cloudflare é assinado e não criptografado; o UID pode ser observado ao
+  decodificar o `sub`. Ele não é segredo e não concede acesso sem assinatura válida. Não devolver o
+  UID como campo separado nem usá-lo como autorização.
+- Ativo de perfil é associado automaticamente apenas quando o upload mais recente daquele dono
+  chega a `ready`. Post/resposta só aceitam ativo `ready`, do mesmo autor, finalidade e contexto.
+- Antes da chamada externa, uma linha transitória reserva atomicamente a cota do dono (três uploads
+  abertos e vinte criações por hora). O UID definitivo substitui a referência de reserva antes que a
+  URL TUS seja devolvida; reservas falhas são canceladas logicamente.
+- Dono autenticado pode assistir ao próprio ativo pronto. Terceiros e visitantes anônimos recebem
+  token somente quando a referência estiver em perfil publicado/ativo ou conteúdo publicado de
+  comunidade ativa; Admin usa endpoint autenticado separado. Ativo sem associação pública retorna
+  `404` para não revelar sua existência.
+- Vídeos R2 anteriores e seus campos nullable continuam válidos. Não houve backfill, cópia, reset
+  ou remoção de objeto no rollout da TASK-163. A TASK-165 adiciona uma operação manual: copia em
+  lotes, associa somente depois de `ready`, preserva as referências de origem e nunca remove o
+  objeto/capa R2.
+
+`video_retention_record` / `video_retention_records` (TASK-181):
+
+- Catálogo operacional independente de publicação e de exclusão de usuário, sem FK cascade.
+- `identity_hash @unique`: SHA-256 do provider, namespace e chave do objeto; deduplicação,
+  não autorização. `provider`, `storage_namespace`, `object_key` são apenas internos.
+- `reason`: `legacy_r2_inventory`, `replaced` ou `removed`; não presume que o objeto é órfão.
+- `retained_at`: primeira marcação; reexecução não altera essa data. `review_after DateTime?`
+  é data opcional de revisão UTC, nunca expiração nem autorização de exclusão.
+- `deletion_hold Boolean @default(true)`: bloqueio conservador, sem endpoint de liberação
+  ou job destrutivo nesta entrega. `size_bytes BigInt?` e `source_etag String?` registram
+  observação da origem; divergência não sobrescreve o inventário silenciosamente.
+- Campos padrão id/deleted/deletedAt/createdAt/updatedAt; índices por provider/hold/revisão
+  e por deleted/data/id. Listagem CLI pagina pelo hash único, não expõe chaves ou UIDs.
+- Aposentadoria de vídeo Stream preserva estado deleted/canceled e autorização existente,
+  mas não remove fisicamente cópias substituídas ou vídeos que já chegaram a ready.
+- Acervo R2 é catalogado manualmente após migration, em dry-run/apply; não há movimentação
+  de bytes, backfill no start ou restauração implícita. O cadastro não torna R2 privado.
 
 `community_member` (seguir/participar, TASK-25; PRD "Comunidades seguidas"):
 
@@ -601,6 +698,23 @@ Complemento 2026-06-22: posts de comunidade passam a suportar carrossel de image
 - `community_post.media_url`/`media_type` permanecem como compatibilidade e refletem a primeira midia ativa; `thumbnail_url` acompanha videos; os DTOs passam a retornar tambem `media_items` ordenado por `position` com `thumbnail_url`.
 - Edicao de post substitui o conjunto anterior do carrossel com soft delete dos itens antigos; remocao usa `mediaItems:null` e/ou `mediaUrl:null`/`mediaType:null`.
 
+Complemento TASK-163/2026-09-12: imagens e carrosséis continuam no R2. Vídeo único usa sempre
+upload TUS direto e `community_post.media_url` recebe a referência interna de um `video_asset`
+pronto, do autor e do contexto da comunidade; `thumbnail_url=null`, pois a capa assinada é derivada
+no playback. O backend continua aceitando as URLs R2 legadas durante o rollout.
+
+Complemento 2026-09-12: a exceção temporária da TASK-173 está encerrada para
+`community_post`. Novos vídeos de post sempre usam Cloudflare Stream; os transportes R2 de post
+(single/multipart) permanecem somente para imagens e recusam vídeo com erro público seguro. URLs R2
+legadas em posts continuam legíveis e são migradas pelo comando seguro da TASK-165, sem apagar
+origem ou miniatura.
+
+Complemento TASK-176 (2026-09-08): o render social owner-only resolve videos de posts pelo primeiro
+`community_post_media` ativo quando houver carrossel/colecao retornada no post; o fallback legado
+`community_post.media_url`/`media_type` permanece valido. A autorizacao publica de playback de
+`video_asset` com `purpose="community_post"` e a deteccao de ativo anexado tambem consideram
+`community_post_media` ativo para nao invalidar videos ja associados fora do campo legado.
+
 Complemento 2026-06-21: na comunidade, `author.verified` para psicologos considera `cfp_verified_at` preenchido **ou** cortesia administrativa ativa (`professional_subscription.source="admin_grant"` com entitlement profissional ativo). A URL derivada `author.whatsapp_url` deve ser exposta para posts e respostas de qualquer psicologo com WhatsApp publico cadastrado, inclusive no plano gratuito, sem depender de selo ou assinatura profissional. `highlighted_professional_reply` e flags como `has_verified_professional_reply` passam a tratar cortesia administrativa ativa como equivalencia publica de psicologo verificado.
 
 Complemento 2026-07-26: posts raiz de pacientes classificados como `block` ou `safety_hold` pela moderacao textual deterministica passam a ser persistidos como `community_post.status="bloqueado"` para auditoria e detalhe protegido no Admin. Esses registros nao entram nos endpoints publicos/privados de feed/detalhe, nao geram notificacao de nova postagem e nao devem receber interacoes publicas. Respostas/comentarios bloqueados continuam snapshot-only em `content_moderation_event` ate existir status proprio em `post_reply`.
@@ -627,13 +741,27 @@ Contratos da tela interna do post (TASK-26):
 - `GET /api/private/posts/:id/replies?page&limit` retorna comentarios de primeiro nivel paginados e descendentes hidratados ate a profundidade visual vigente, com `current_user_vote` por resposta. A ordenacao de irmaos dentro de cada arvore segue: maior score de votos (`upvotes_count - downvotes_count * 0,6`), melhor posicao de mentor/psicologo na comunidade quando houver ranking aplicavel, e comentario mais recente.
 - Os DTOs de comentario/resposta da tela interna retornam `is_post_author`; quando o autor do post publicou anonimamente e ele mesmo comenta ou responde dentro da thread, o backend mascara essa autoria com o mesmo alias `Membro Anônimo #XXXX` derivado de `author_id`, sem expor nome/avatar reais em replies ou notificações. O frontend usa `is_post_author` para exibir o metadado `Autor · há...` antes do horario.
 - `POST /api/private/posts/:id/replies/media` recebe multipart `media` e retorna `{ media_url, media_type }`; permitido apenas para psicologos com CFP verificado e Plano Profissional ativo, ou psicologos com cortesia administrativa ativa (`professional_subscription.source="admin_grant"`).
+- Para respostas com midia grande, o frontend deve usar o fluxo aditivo multipart de resposta (`/api/private/posts/:id/replies/media/multipart/initiate`, `/part`, `/complete` e abort best-effort) com partes pequenas, mantendo o mesmo prefixo publico `/public/files/posts/media/` e o mesmo contrato final `{ media_url, media_type }`. Esse fluxo evita requests monoliticos grandes ao backend e nao altera o payload de criacao da resposta.
 - `POST /api/private/posts/:id/replies` recebe `{ content?, parentReplyId?, mediaUrl?, mediaType?, thumbnailUrl? }` e exige pelo menos texto ou midia valida; `parentReplyId` pode apontar para comentario/resposta ativa do mesmo post, preservando a arvore hierarquica, e midia/thumbnail so sao aceitos quando originados do upload permitido.
 - `PUT /api/private/posts/:id/replies/:replyId` recebe `{ content?, mediaUrl?, mediaType?, thumbnailUrl? }`, exige autor autenticado da resposta/comentario e atualiza texto e/ou midia; deve permanecer pelo menos texto ou midia valida apos a edicao; autoria, post e hierarquia permanecem imutaveis. Quando `mediaUrl` e `mediaType` sao enviados com URL publica originada do upload permitido (`/public/files/posts/media/`), substitui a midia da resposta; `thumbnailUrl` e persistido apenas para video; quando ambos sao `null`, remove a midia atual.
 - `DELETE /api/private/posts/:id/replies/:replyId` exige autor autenticado e remove a resposta/comentario e sua subarvore. Se o autor for psicologo, pode excluir a qualquer momento; se o autor nao for psicologo, a exclusao e bloqueada quando a subarvore ativa ja contem contribuicao de psicologo, preservando a mesma regra de protecao usada em posts de pacientes com respostas profissionais.
 - `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes atualizam contadores denormalizados de posts e comentarios para ranking interno, mas não devem ser exibidos como número público nem gerar item na central de notificações.
 - `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
-- `POST /api/private/posts/:id/share` e `POST /api/private/posts/:id/replies/:replyId/share` persistem compartilhamentos reais via `post_share` apos sucesso de `navigator.share` ou clipboard no frontend. A rota usa `optionalAuth`, aceita `{ channel?: "clipboard"|"web_share", replyId? }`, deduplica por 1 hora por usuario/dispositivo e nao notifica o proprio autor. Na TASK-42, vídeo-respostas profissionais continuam usando essa mesma rota de reply share após Web Share API ou fallback de download/cópia de link; não há novo alvo de métrica.
+- `POST /api/private/posts/:id/share` e `POST /api/private/posts/:id/replies/:replyId/share` persistem compartilhamentos aceitos via `post_share` apos sucesso de `navigator.share` ou clipboard no frontend. A rota usa `optionalAuth`, aceita `{ channel?: "clipboard"|"web_share", replyId? }`, deduplica por 1 hora por usuario/dispositivo e nao notifica o proprio autor. Na TASK-42, video-respostas profissionais continuam usando essa mesma rota de reply share apos Web Share API ou fallback de link; clicar em `Redes sociais` antes da conclusao da folha nativa nao grava contagem. A Web Share API nao expoe qual app foi escolhido dentro da folha do celular, entao nao ha rastreamento confiavel de clique especifico no Instagram.
+- Complemento TASK-42 (2026-08-22/2026-08-23): `GET /api/private/posts/:id/share-artifact`, `POST /api/private/posts/:id/share-artifact`, `GET /api/private/posts/:id/replies/:replyId/share-artifact` e `POST /api/private/posts/:id/replies/:replyId/share-artifact` controlam cache temporario do arquivo social com arte. A leitura reaproveita arte ja preparada; o upload exige usuario autenticado e aceita somente arquivo de video gerado no fluxo real de publicacao/compartilhamento. O cache e aquecido em background apos publicacao/edicao de post com video profissional ou criacao bem-sucedida de resposta profissional com video e continua podendo ser criado sob demanda quando faltar no primeiro share. Novos artefatos expiram em 7 dias; leituras `GET` nao renovam o prazo, e apenas `post_share.shared=true` renova por mais 7 dias.
 - `POST /api/private/posts/:id/report` e `POST /api/private/posts/:id/replies/:replyId/report` registram denuncia reativa com motivo e descricao opcional, sem remocao automatica do conteudo; o alvo fica normalizado em `post_report.target_type`/`target_id` para triagem/admin futuro.
+
+Complemento TASK-163: novos vídeos de resposta podem usar referência interna de `video_asset`
+`ready`, pertencente ao autor, com `purpose="community_reply"` e `context_id` igual ao post. A capa
+é emitida de forma assinada no playback e não é persistida em `thumbnail_url`; objetos R2 antigos
+seguem aceitos. Remover o conteúdo e remover o ativo são operações separadas para não apagar um
+vídeo ainda associado por engano.
+
+Complemento 2026-09-12: a exceção temporária da TASK-173 está encerrada para
+`community_reply`. Novos vídeos de comentários/respostas sempre usam Cloudflare Stream; os
+transportes R2 de resposta (single/multipart) permanecem somente para imagens e recusam vídeo com
+erro público seguro. URLs R2 legadas em respostas continuam legíveis e são migradas pelo comando
+seguro da TASK-165, sem apagar origem ou miniatura.
 
 Complemento 2026-07-01: autoações autenticadas do autor sobre o próprio `community_post` ou
 `post_reply` (comentar no próprio post/comentário, upvote ativo, salvamento ou compartilhamento do
@@ -671,24 +799,24 @@ Acompanhamento de comentarios do usuario em `GET /api/private/posts/mine?type=re
 
 Complemento 2026-06-29: o painel administrativo ainda e reservado/futuro e nao deve ser criado na audiencia `user`; a preparacao desta etapa e persistir denuncias com alvo normalizado e unicidade transacional para que uma futura audiencia admin consiga listar/tria-las sem migrar dados historicos.
 
-`content_moderation_event` / `content_moderation_events` (TASK-74, modera??o textual determin?stica de pacientes):
+`content_moderation_event` / `content_moderation_events` (TASK-74, moderação textual determinística de pacientes):
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | `target_type` | `String` | `"community_post" | "post_reply" | "submitted_post" | "submitted_reply"`; posts raiz bloqueados/segurados a partir de 2026-07-26 usam `community_post` com registro interno `status="bloqueado"`; snapshots legados e respostas bloqueadas podem usar `submitted_*` sem conteudo publico persistido |
 | `target_id` | `String?` | id de `community_post`/`post_reply` quando `allow_sensitive`; id de `community_post.status="bloqueado"` para post raiz bloqueado/segurado; `null` quando o evento for snapshot-only antes da publicacao |
 | `community_id` | `String?` | FK opcional para `community`, `onDelete: SetNull` |
-| `author_id` | `String` | FK para `user`; V1 aplica regras autom?ticas apenas quando `user.role="paciente"` |
-| `decision` | `String` | `"allow_sensitive" | "block" | "safety_hold"`; `allow` n?o gera evento |
+| `author_id` | `String` | FK para `user`; V1 aplica regras automáticas apenas quando `user.role="paciente"` |
+| `decision` | `String` | `"allow_sensitive" | "block" | "safety_hold"`; `allow` não gera evento |
 | `categories` | `Json` | lista de categorias internas: `external_link`, `sexual_health`, `explicit_sexual`, `minor_sexual_risk`, `self_harm_suicide`, `abuse_violence`, `spam_scam`, `other` |
 | `severity` | `String` | `"low" | "medium" | "high" | "urgent"`; `safety_hold` usa `urgent` |
 | `status` | `String @default("pending")` | `"pending" | "reviewing" | "resolved"` para fila Admin |
-| `reason_code` | `String` | c?digo interno da regra determin?stica, sem publicar lista completa de bypass |
-| `matched_rules` | `Json?` | nomes internos de regras para revis?o Admin, n?o exibidos ao paciente |
-| `title_snapshot` | `String?` | t?tulo original enviado, quando houver |
+| `reason_code` | `String` | código interno da regra determinística, sem publicar lista completa de bypass |
+| `matched_rules` | `Json?` | nomes internos de regras para revisão Admin, não exibidos ao paciente |
+| `title_snapshot` | `String?` | título original enviado, quando houver |
 | `content_excerpt` | `String` | trecho seguro para listas Admin |
 | `content_snapshot` | `String?` | snapshot completo restrito ao detalhe Admin autenticado |
-| `reviewed_by_admin_id`, `reviewed_at`, `resolved_at`, `admin_note` | `String?` / `DateTime?` | auditoria operacional de revis?o/resolu??o; a??es criam `admin_activity_log` |
+| `reviewed_by_admin_id`, `reviewed_at`, `resolved_at`, `admin_note` | `String?` / `DateTime?` | auditoria operacional de revisão/resolução; ações criam `admin_activity_log` |
 | `@@index([status, severity, createdAt])`, `@@index([decision, createdAt])`, `@@index([target_type, target_id])`, `@@index([community_id, createdAt])`, `@@index([author_id, createdAt])` | | consultas da central Admin e dashboard de comunidades |
 
 Contratos TASK-74: `POST /api/private/community/:slug/posts` e `POST /api/private/posts/:id/replies` classificam texto de pacientes antes da persistencia. `allow_sensitive` publica e cria evento pendente; `block`/`safety_hold` de post raiz cria `community_post.status="bloqueado"` apenas interno/Admin, cria evento pendente apontando para esse post e retorna erro 422 com mensagem publica conservadora; `block`/`safety_hold` de resposta/comentario segue sem criar `post_reply` e usa snapshot protegido no evento. URLs/dominios digitados por pacientes sao bloqueados mesmo que a UI renderize texto puro. Endpoints Admin privados: `GET /api/admin/private/moderation/summary`, `GET /events`, `GET /events/:id`, `POST /events/:id/review` e `POST /events/:id/resolve`.
@@ -717,6 +845,41 @@ Regras: criar evento somente no fluxo real de compartilhamento da interface; ded
 usuario/dispositivo/alvo; emitir `compartilhamento` para o autor do post ou comentario, respeitando preferencias e
 silenciamento do post. A identidade de quem compartilhou nao e exposta na central.
 
+`post_share_artifact` / `post_share_artifacts` (TASK-42, artefatos legados do video com arte):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `cache_key` | `String @unique` | hash legado do alvo, midia, fingerprint do conteudo e versao do layout |
+| `post_id` | `String` | post compartilhado ou post pai da resposta |
+| `reply_id` | `String?` | resposta compartilhada, quando aplicavel |
+| `target_type` | `String` | `"post" \| "reply"` |
+| `source_media_url` | `String` | URL publica da midia original usada como fonte no cache legado |
+| `source_fingerprint` | `String` | hash legado de titulo/texto/autoria/metadados que invalidavam a arte |
+| `layout_version` | `String` | versao logica legada do canvas social |
+| `storage_key` | `String` | objeto publico legado em R2 sob `posts/share-artifacts/` |
+| `file_name` | `String?` | nome seguro do arquivo gerado no navegador |
+| `content_type` | `String` | `video/mp4` ou `video/webm` normalizado |
+| `size_bytes` | `Int` | tamanho do arquivo com arte |
+| `expires_at` | `DateTime` | histórico da antiga expiração; TASK-181 não usa essa data como autorização de exclusão; novos artefatos não são criados nem renovados desde 2026-08-28 |
+| `last_accessed_at` | `DateTime @default(now())` | historico legado, sem renovacao pelo fluxo atual |
+| `@@index([post_id, expires_at])`, `@@index([reply_id, expires_at])`, `@@index([expires_at])`, `@@index([storage_key])` | | consulta do histórico legado; não habilita limpeza |
+
+Regras desde 2026-09-05: a previa social de video e owner-only e o proprio psicologo baixa o arquivo personalizado sob demanda. O frontend nao consulta, nao envia, nao preaquece, nao persiste e nao renova cache remoto/R2 de `post_share_artifacts`; reaproveita somente o arquivo preparado em memoria durante a mesma interacao. O backend mantem as rotas `share-artifact` por compatibilidade e reativa apenas os render-jobs efemeros: valida o dono, resolve a origem HTTPS do video, delega o processamento ao app `video/` e faz proxy do download sem criar objeto R2 ou registro novo. Desde a TASK-181, a rotina de limpeza legada foi removida; objetos são preservados e catalogados manualmente para revisão, sem alterar os registros históricos ou reativar acesso. `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env porque nao ha mais criacao/renovacao de TTL para novos artefatos.
+
+Regras desde 2026-09-08: para posts com `community_post_media`, o render social usa o primeiro item
+ordenado por `position` quando ele e video, alinhado ao frontend; se nao houver carrossel, preserva
+o legado `community_post.media_url/media_type`. Jobs em andamento podem ser reaproveitados somente
+em memoria na sessao do navegador para evitar duplicacao quando o render demora; nenhum novo campo,
+registro persistido ou cache R2 e criado.
+
+Complemento TASK-183 (2026-09-15): o Admin pode baixar vídeos de conteúdos de Comunidades sem criar
+modelo novo. O download com arte reutiliza os render-jobs efêmeros `social_share`, os mesmos
+metadados e o mesmo `fileName` do fluxo do psicólogo, mas a autorização é administrativa e continua
+sem persistir `post_share_artifacts` ou objetos R2 novos. O download original de vídeos Stream usa
+consulta/criação do MP4 de download no Cloudflare Stream e URL assinada curta emitida pelo backend
+somente para o Admin; vídeos legados R2 usam a fonte pública já validada de `posts/media/`. Não há
+migration, backfill, seed, limpeza ou alteração de dados históricos.
+
 ### Ranking de mentores (TASK-27 - derivado)
 
 Nao ha modelo persistido obrigatorio nesta etapa. O ranking e **derivado** de eventos persistidos por comunidade e do entitlement profissional ativo (`professional_subscription`, PRD secao 10: so Plano Profissional). A formula foi aprovada, ajustada pelo PDF local `Sistema de Ranking de Mentores.pdf` em ADR-0070 e recalibrada em 2026-07-30 para priorizar relacionamento util e cobertura real:
@@ -735,6 +898,13 @@ comunitario rastreavel, a metrica permanece zerada. Nao usar mocks para preenche
 necessario materializar para performance, criar `mentor_score_snapshot`
 (`psychologist_id`, `community_id`, `score Int`, `period String`, `position Int`) ou modelo equivalente apos ADR
 especifica de snapshot.
+
+Complemento 2026-08-13: o contrato `GET /api/private/community/top-mentors` pode retornar, em
+`professional`, os campos derivados `whatsapp_name` e `whatsapp_url` para acionar o CTA de WhatsApp
+na tela Top Mentores. Esses campos usam `psychologist_profile.whatsapp`,
+`psychologist_profile.professional_first_name` e o helper canônico de mensagem pronta de WhatsApp,
+sem persistir novo dado e sem alterar a fórmula, ordenação, elegibilidade ou snapshot do ranking.
+Frontends devem tratar esses campos como opcionais durante rollout entre versões.
 
 Complemento 2026-08-02: o bloco `communities` do `GET /api/private/psychologist/analytics` considera comunidades
 ativas em que o psicologo segue (`community_member`) ou tem participacao real por posts/respostas, mas a UI nao expõe
@@ -763,6 +933,8 @@ Complemento 2026-06-26: `downvote` permanece como chave histórica/compatível n
 
 Complemento 2026-06-26: a listagem `GET /api/private/notification/index` pode retornar o campo derivado `actor` para notificações individuais em que a autoria melhora o contexto de conversa ou conversão: `novo_post`, `nova_resposta`, `nova_avaliacao`, `novo_favorito` e `clique_whatsapp` autenticado. A hidratação usa os ids persistidos em `message_props` (`post_id`, `reply_id`, `review_id`, `favorite_id`, `contact_request_id` ou `source_id` conforme `source_type`) e não altera o schema Prisma. `actor` contém `{ id, name, avatar, role, professional_label, verified, anonymous, deleted }` para apresentação in-app. Autores anônimos de posts devem usar o mesmo alias `Membro Anônimo #1234` derivado de `author_id`, com `id=null` e `avatar=null`; avaliações nunca são anônimas; favoritos exigem usuário autenticado; e cliques no WhatsApp sem usuário autenticado permanecem com `actor=null` e copy genérica. Psicólogos podem receber `verified=true` quando o perfil profissional tiver verificação atual equivalente à comunidade, mas a central não exibe sufixos como `· Psicólogo`; o selo verificado é suficiente para diferenciar profissionais. `visualizacao_perfil` permanece sem identificação do usuário. Interações passivas (`upvote`, `salvamento`, `compartilhamento` etc.) permanecem sem identificação de autor.
 
+Complemento 2026-08-30: para notificacoes `novo_post`, a listagem `GET /api/private/notification/index` pode retornar contexto derivado em `message_props` (`community_name`, preservando/derivando tambem `community_id` e `community_slug`) a partir do `community_post` ativo e sua `community`. Esse contexto serve somente para apresentacao in-app da copy `postou em [nome da comunidade]`, nao altera o schema Prisma e nao exige snapshot persistido do nome da comunidade na tabela `notification`.
+
 `notification_preference` (TASK-29A, "Configurações de Notificações"):
 
 | Campo | Tipo | Notas |
@@ -785,10 +957,12 @@ Push real foi decidido na TASK-03 (ver ADR-0006), usando `web-push`/VAPID e `not
 Complemento 2026-07-10 / TASK-63: o Admin passa a ter fundação de campanhas e logs sem e-mail.
 
 - `admin_notification_campaign` (`@@map("admin_notification_campaigns")`): rascunho/agendamento/envio/cancelamento de campanhas manuais criadas por `admin`, com `title`, `body`, `redirect`, `audience`, `channels Json` limitado a `in_app`/`push`, `status` (`draft`, `scheduled`, `sending`, `sent`, `canceled`, `failed`), `scheduled_at`, `sent_at`, `canceled_at` e `created_by_admin_id`.
-- `notification_delivery` (`@@map("notification_deliveries")`): log por usuário/canal/origem com `campaign_id?`, `notification_id?`, `user_id`, `source` (`manual`/`automatic`), `trigger_key`, `channel` (`in_app`/`push`), `status` (`queued`, `sent`, `delivered`, `read`, `clicked`, `failed`, `skipped`), `sent_at`, `delivered_at`, `read_at`, `clicked_at`, `failure_reason` e `metadata`.
+- `notification_delivery` (`@@map("notification_deliveries")`): log por usuário/canal/origem com `campaign_id?`, `notification_id?`, `user_id`, `source` (`manual`/`automatic`), `trigger_key`, `channel` (`in_app`/`push`/`email`), `status` (`queued`, `sent`, `delivered`, `read`, `clicked`, `failed`, `skipped`), `sent_at`, `delivered_at`, `read_at`, `clicked_at`, `failure_reason` e `metadata`.
 - `message_key="admin_campaign"` representa uma notificação manual do Admin na central in-app. As preferências existentes são respeitadas por chave/canal; se o usuário tiver `admin_campaign.enabled=false`, `in_app=false` ou `push=false`, a entrega é registrada como `skipped` sem alcance.
 - Abertura in-app usa o evento real de leitura (`PUT /api/private/notification/update/:id` ou `clean`) e clique usa `POST /api/private/notification/:id/click`. Push não tem abertura por recebimento; só pode ser contado quando houver interação real registrada.
 - Endpoints Admin privados: `/api/admin/private/notifications/campaigns`, `/api/admin/private/notifications/campaigns/:id`, `/send`, `/schedule`, `/cancel`, `/automatic-logs` e `/metrics`. E-mail, SMTP, pixel de tracking e métricas inventadas permanecem fora do escopo.
+
+Complemento TASK-156 (2026-08-15): a régua de cobrança usa `message_key="billing_subscription_status"` para notificações automáticas in-app, push web e e-mail transacional dos estágios `payment_failed`, `reminder_d3`, `final_d6`, `downgraded` e `regularized`. A preferência aparece como **Cobrança da assinatura** apenas para psicólogos; canais desabilitados geram `notification_delivery.status="skipped"`. Redirects de problema de cobrança apontam para `/app/profissional/assinatura/cartao`; regularização aponta para `/app/profissional/assinatura`.
 
 ---
 
@@ -824,7 +998,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `cancelled` | `cancelada` |
 | pagamento recorrente rejeitado / chargeback | `inadimplente` |
 
-**Soberania de dados:** o entitlement ("é Pro?") é respondido pelo nosso banco (`professional_subscription.status` + `current_period_end`, atualizado via webhook ou concessão administrativa auditada) — nunca por chamada síncrona ao MP. `gateway` (= `"mercadopago"`), `gateway_subscription_id`, `gateway_token` e `payment_event` bruto sustentam auditoria, replay e reconciliação.
+**Soberania de dados:** o entitlement ("é Pro?") é respondido pelo nosso banco (`professional_subscription.status` + `current_period_end` e, na régua de cobrança, `billing_grace_ends_at`/`billing_downgraded_at`, atualizado via webhook/sync, scheduler ou concessão administrativa auditada) — nunca por chamada síncrona ao MP. `gateway` (= `"mercadopago"`), `gateway_subscription_id`, `gateway_token` e `payment_event` bruto sustentam auditoria, replay e reconciliação.
 
 `subscription_plan` (TASK-31; PRD §13):
 
@@ -857,12 +1031,17 @@ com valor hardcoded; ausência do plano deve retornar erro honesto.
 | `gateway` | `String?` | nome do provedor (TASK-03) |
 | `gateway_subscription_id` | `String?` | id externo; nunca dados de cartão |
 | `current_period_end` | `DateTime?` | obrigatório para concessões administrativas com prazo; `null` em plano gratuito/legado sem expiração |
+| `billing_issue_started_at` | `DateTime?` | início da régua de cobrança D+0 para assinatura paga recorrente previamente ativa |
+| `billing_grace_ends_at` | `DateTime?` | fim da janela de graça D+7; enquanto futuro e sem downgrade, mantém entitlement profissional |
+| `billing_downgraded_at` | `DateTime?` | momento em que a régua D+7 removeu benefícios profissionais por inadimplência |
+| `billing_last_notice_key` | `String?` | última etapa enviada (`payment_failed`, `reminder_d3`, `final_d6`, `downgraded`) para idempotência |
 | `grant_reason` | `String?` | campo legado opcional; o fluxo vigente de cortesia administrativa não coleta motivo |
 | `grant_notes` | `String?` | observações internas opcionais da concessão |
 | `granted_by` | `String?` | responsável operacional pela concessão; texto livre enquanto `admin` segue fora do MVP |
 | `grant_started_at` | `DateTime?` | data/hora da concessão administrativa |
 | `@@index([psychologist_id, status])` | | habilita selo/destaque/ranking quando `ativa` |
 | `@@index([source, status])`, `@@index([status, current_period_end])` | | auditoria e filtro de entitlement ativo não expirado |
+| `@@index([status, billing_grace_ends_at])`, `@@index([billing_last_notice_key, billing_grace_ends_at])` | | scheduler da régua de cobrança e consultas de inadimplência |
 
 Complemento 2026-07-23: contratos administrativos de leitura financeira que retornam `professional_subscription`
 podem expor `cancelled_at` como campo derivado e nullable. Para `status="cancelada"`, `cancelled_at`
@@ -882,6 +1061,10 @@ Complemento 2026-07-10: no Admin, a mesma operação de cortesia pode sobrescrev
 
 Complemento 2026-07-10: quando uma cortesia administrativa ativa precisa ser revogada pelo Admin, a operação cancela somente a assinatura `professional_subscription` vigente com `source="admin_grant"`, gravando `status="cancelada"` e `current_period_end` no momento da revogação. A revogação não cancela assinatura Mercado Pago, não altera cartão e não apaga CPF/Regional/CRP do `psychologist_profile`; esses campos permanecem como histórico operacional e eventual ponto de partida para nova concessão.
 
+Complemento TASK-56 (2026-08-13): o cancelamento administrativo de assinatura paga usa `professional_subscription` existente e nao cria nova coluna. A operacao e permitida somente para assinatura Mercado Pago do plano `profissional` com `gateway_subscription_id`, exige motivo interno e confirmacao forte `CANCELAR ASSINATURA`, chama o gateway real antes de gravar `status="cancelada"` e `current_period_end=null`, e registra `admin_activity_log` com `action="psychologist_subscription_cancelled"`, `domain="psychologist_subscription"`, `area="financeiro"`, snapshots seguros e metadata sem token de gateway, PAN/CVV, payload bruto ou detalhes sensiveis do provedor.
+
+Complemento TASK-156 (2026-08-15): falha de cobrança recorrente em assinatura Mercado Pago previamente ativa abre régua local D+0/D+3/D+6/D+7. Em D+0 o sync/webhook grava `status="inadimplente"`, `billing_issue_started_at=now`, `billing_grace_ends_at=now+7 dias` e `billing_last_notice_key="payment_failed"`, mantendo benefícios profissionais até o fim da graça. O scheduler, habilitado somente com `BILLING_DUNNING_SCHEDULER_ENABLED=true`, envia lembrete D+3 (`reminder_d3`), aviso final D+6 (`final_d6`) e, no D+7, grava `billing_downgraded_at` e `billing_last_notice_key="downgraded"`, removendo o entitlement profissional sem apagar a assinatura nem chamar cobrança manual. Regularização confirmada pelo gateway (`status="ativa"`) limpa os campos da régua e gera aviso `regularized`. Falha na primeira tentativa de checkout que ainda estava `inativa` não entra na régua.
+
 `billing_address` (TASK-32, "Endereço de Faturamento"):
 
 | Campo | Tipo | Notas |
@@ -897,7 +1080,7 @@ Complemento 2026-07-10: quando uma cortesia administrativa ativa precisa ser rev
 | `user_id` | `String` | |
 | `gateway` | `String` | |
 | `gateway_token` | `String` | **token do provedor**; nunca PAN/CVV. Cartão é delegado ao gateway |
-| `brand?`, `last4?`, `exp_month?`, `exp_year?` | display only | |
+| `brand?`, `last4?`, `exp_monthá`, `exp_year?` | display only | |
 | `@@index([user_id])` | | |
 
 O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re-tokenizar somente cartão de crédito (`credit_card`) no client, enviar `payment_type_id = credit_card` ao backend e rejeitar débito/pré-pago.
@@ -1016,6 +1199,8 @@ Complemento TASK-145: `route_path` e `canonical_url` gerenciados passam a usar U
 
 Complemento 2026-08-03: o link publico de compartilhamento de respostas/comentarios usa `page_key="community_post_reply"` e `route_path="/comunidades/[slug]/publicacao/[id]/resposta/[replyId]"`, separado de `community_post` para aparecer explicitamente no Admin SEO/Metadados e permitir fallback/robots/OG especificos quando o SEO dinamico da resposta nao estiver disponivel.
 
+Complemento 2026-08-22: em posts/respostas com video profissional, `og_title` dos endpoints publicos de SEO usa o nome publico do psicologo no formato `[Nome] na Lectum`, enquanto `title` preserva o titulo editorial da pagina. Links de compartilhamento de video-resposta devem usar a rota canonica de resposta `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]` para que crawlers como WhatsApp coletem metadados da resposta e abram o video dentro da Lectum. A descricao Open Graph (`og_description`) desses videos usa o titulo do post, nao o corpo da resposta, para que cards de WhatsApp exibam a pergunta/titulo como contexto publico.
+
 
 ## Convencao de rotas (frontend e backend)
 
@@ -1072,6 +1257,7 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 - Links `author.whatsapp_url` e `whatsapp_url` de perfil/listagem/contato passam a incluir mensagem pronta com o mesmo nome exibido no CTA `Fale com ...` do psicólogo quando disponível.
 - A partir da TASK-69, esse nome vem prioritariamente de `psychologist_profile.professional_first_name`; se o campo estiver vazio em perfil legado, o fallback continua usando o primeiro nome útil derivado de `user.name`.
 - O fallback de primeiro nome útil normaliza espaços, remove prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usa o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du`, `e`); se não houver nome, mantém fallback genérico.
+- Complemento 2026-09-04: a mesma remoção de prefixos/títulos profissionais também se aplica ao próprio `professional_first_name` e ao nome público derivado de `professional_first_name` + `professional_last_name`, porque perfis reais podem ter salvado `Psicóloga`, `Psicólogo`, `Dr.`, `Dra.` ou `Psi` dentro do campo **Nome**. A correção é de leitura/normalização e não exige migration/backfill obrigatório.
 - O texto do `wa.me` é contextual: perfil (`encontrei seu perfil na Lectum`), post profissional (`encontrei seu post na Lectum`) e resposta/comentário profissional (`encontrei sua resposta na Lectum`).
 - O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção.
 
@@ -1087,3 +1273,24 @@ cliques WhatsApp, mantendo `whatsapp_clicks` preenchido somente quando o item me
 persistidos sem origem de video registrada. Cliques WhatsApp de Perfil e Favoritos usam somente
 `important_action_event.action_type=whatsapp_click` com `target_type="psychologist"`, `target_id` do psicologo e
 contexto de pagina/caminho real; `contact_request` continua sendo total geral e nao e redistribuido sem origem.
+
+## Governança legal versionada — decisão de 12/09/2026 (TASK-178)
+
+`legal_document_version`: tipo terms/privacy, número sequencial por tipo, estado draft/published,
+título, corpo textual, resumo de alterações, hash SHA-256, revisão otimista, datas e autoria Admin.
+Publicação é imediata e imutável; nova alteração exige outro rascunho. Sem exclusão pela API.
+`legal_acceptance`: usuário, documento exato, hash, instante de registro no servidor, ação
+terms_accept/privacy_acknowledge e declaração de maioridade. Unique usuário/documento; retries
+não alteram o primeiro aceite. Sem IP, fingerprint, credenciais ou backfill de evidência antiga.
+Tabelas são expansão aditiva. Restrição imutável no banco protege documentos publicados e
+atualizações de aceite. Exclusão definitiva do usuário continua sujeita ao fluxo de privacidade
+existente; cascade das evidências não transforma seus logs antigos em consentimento novo.
+
+### TASK-178 — história observada de planos (0.1.369)
+
+- `professional_plan_history_coverage`: início verificável da cobertura (uma linha).
+- `subscription_plan_history`: revisões observadas de atributos do catálogo que afetam a classificação.
+- `professional_subscription_history`: revisões observadas da assinatura, com vínculo ao perfil e exclusão em cascata ao apagar esse perfil.
+- Baseline e triggers transacionais não alteram assinatura, pagamento ou entitlement. Antes da cobertura, o plano é desconhecido, não gratuito/pago presumido.
+- Atualizações relevantes e exclusões geram novas observações; IDs de gateway, documentos pessoais e notas não são copiados para a história.
+- A cobertura de classificação não corta os eventos de Analytics já coletados. A leitura paga pode apresentar eventos anteriores ao upgrade, sem fabricar eventos ausentes.

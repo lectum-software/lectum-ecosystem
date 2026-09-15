@@ -116,7 +116,7 @@ Arquitetura backend obrigatória:
 Packages permitidos nesta task:
 
 - Next.js App Router
-- Redux Persist
+- Redux Toolkit em memória + hidratação da sessão pela API
 - TanStack Query
 - lucide-react
 

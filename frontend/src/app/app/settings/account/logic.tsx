@@ -15,7 +15,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useAccount } from "@/api/callers/account";
+import { getSafeApiErrorMessage } from "@/api/errors";
+import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
+import { LegalLinks } from "@/components/legal/links";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -26,24 +29,15 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
+import {
+  GOOGLE_ACCOUNT_MANAGEMENT_URL,
+  normalizeTrustedGoogleAccountUrl,
+} from "@/utils/external-url";
+import { normalizeTrustedApiUrl } from "@/utils/trusted-navigation";
 import { type AccountForm, emailFields, passwordFields, useAccountForm } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const resolveAccountError = (error: unknown, fallback: string) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("senha atual") || normalized.includes("incorreta")) {
@@ -63,7 +57,7 @@ const resolveAccountError = (error: unknown, fallback: string) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em instantes.";
   }
 
   return rawMessage || fallback;
@@ -199,7 +193,7 @@ const GoogleConnectionPanel = ({
       </div>
       {disabled ? (
         <InlineAlert title="Google indisponível" variant="info">
-          Vínculo com Google bloqueado neste ambiente porque o OAuth não está configurado.
+          Não é possível conectar sua conta ao Google agora. Tente novamente mais tarde.
         </InlineAlert>
       ) : null}
       <Button
@@ -260,6 +254,8 @@ export const AccountSettingsLogic = () => {
   const form = useAccountForm(currentEmail);
   const isSaving = account.updateEmail.isPending || account.updatePassword.isPending;
   const isGoogleOnly = Boolean(security?.google.connected && !security.has_password);
+  const googleManageUrl =
+    normalizeTrustedGoogleAccountUrl(security?.google.manage_url) ?? GOOGLE_ACCOUNT_MANAGEMENT_URL;
 
   useEffect(() => {
     if (googleConnectedFromRedirect) {
@@ -337,7 +333,13 @@ export const AccountSettingsLogic = () => {
     setSuccessMessage(null);
     account.createGoogleLinkIntent.mutate(undefined, {
       onSuccess: (data) => {
-        window.location.href = data.url;
+        const url = normalizeTrustedApiUrl(data.url);
+        if (!url) {
+          setApiError("Não foi possível iniciar o vínculo com Google.");
+          return;
+        }
+
+        window.location.assign(url);
       },
       onError: (error) => {
         setApiError(resolveAccountError(error, "Não foi possível iniciar o vínculo com Google."));
@@ -378,7 +380,7 @@ export const AccountSettingsLogic = () => {
           backHref="/app/perfil"
           backLabel="Voltar para meu perfil"
           className="mb-4"
-          title="Email e senha"
+          title="E-mail e senha"
         />
 
         {account.security.isLoading || account.security.isPending ? (
@@ -398,7 +400,7 @@ export const AccountSettingsLogic = () => {
         {!account.security.isLoading && !securityError && !security ? (
           <div className="py-6">
             <EmptyState
-              description="Não encontramos dados reais de conta para editar neste momento."
+              description="Não encontramos os dados da conta para edição neste momento."
               icon={ShieldCheck}
               title="Nenhum dado de conta encontrado"
             />
@@ -406,7 +408,7 @@ export const AccountSettingsLogic = () => {
         ) : null}
 
         {security && isGoogleOnly ? (
-          <GoogleOnlyView email={security.email} manageUrl={security.google.manage_url} />
+          <GoogleOnlyView email={security.email} manageUrl={googleManageUrl} />
         ) : null}
 
         {security && !isGoogleOnly ? (
@@ -458,12 +460,18 @@ export const AccountSettingsLogic = () => {
               hasPassword={security.has_password}
               isLinking={account.createGoogleLinkIntent.isPending}
               isUnlinking={account.unlinkGoogle.isPending}
-              manageUrl={security.google.manage_url}
+              manageUrl={googleManageUrl}
               onLink={handleGoogleLink}
               onUnlink={handleGoogleUnlink}
             />
           </div>
         ) : null}
+
+        <Card className="mt-6">
+          <h2 className="text-base font-black">Termos e privacidade</h2>
+          <LegalLinks className="justify-start" newTab />
+        </Card>
+        {security ? <AccountDeleteSection className="mt-6" /> : null}
       </section>
     </PrivateTemplate>
   );

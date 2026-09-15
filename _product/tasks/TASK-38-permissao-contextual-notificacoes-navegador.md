@@ -220,7 +220,7 @@ Packages usados:
   - `pnpm --dir frontend build`;
   - `pnpm check`;
   - browser local mobile `390x844` com usuário real de desenvolvimento `psicologo`, confirmando prompt contextual de notificações com copy profissional, ausência de `Não mostrar novamente`, chave legada `lectum.notificationsPermissionPrompt.neverAskAgain` ignorada, nenhuma chamada a `Notification.requestPermission()` antes de CTA e cooldown de 48h no `Agora não`.
-- ADR criado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
+- ADR criado: `adrs/0431-insistencia-controlada-atalho-notificacoes-psicologos.md`.
 
 ## Refinamento 2026-06-29 - padrão visual da modal
 
@@ -256,7 +256,7 @@ Packages usados:
   - `pnpm --dir frontend build`;
   - browser local mobile `390x844` em `next start` na porta `3002`, confirmando a regra compartilhada de elegibilidade pós-cadastro usada pelos prompts.
 - `pnpm --dir frontend check` e `pnpm check` foram reexecutados, mas ficaram bloqueados por alterações pendentes fora deste refinamento em `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx` e `frontend/src/app/app/community/[slug]/logic.tsx`.
-- ADR atualizado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
+- ADR atualizado: `adrs/0431-insistencia-controlada-atalho-notificacoes-psicologos.md`.
 
 ## Refinamento 2026-07-04 - copy curta e sem faixa secundária
 

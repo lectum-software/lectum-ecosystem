@@ -76,6 +76,39 @@ function parsePositiveInteger(value, fallback) {
   return parsed;
 }
 
+function parseOptionalHttpOrigin(value, label) {
+  const normalized = value?.trim();
+  if (!normalized) return undefined;
+  if (
+    normalized.length > 2048 ||
+    !/^https?:\/\/[^/\\]/iu.test(normalized) ||
+    normalized.startsWith("//") ||
+    normalized.includes("*") ||
+    normalized.includes("\\") ||
+    /[\u0000-\u001f\u007f]/u.test(normalized)
+  ) {
+    throw new Error(`${label} deve ser uma origem HTTP(S) válida, sem credenciais ou caminho.`);
+  }
+
+  try {
+    const url = new URL(normalized);
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.pathname !== "/" ||
+      url.search ||
+      url.hash
+    ) {
+      throw new Error("invalid origin");
+    }
+
+    return url.origin;
+  } catch {
+    throw new Error(`${label} deve ser uma origem HTTP(S) válida, sem credenciais ou caminho.`);
+  }
+}
+
 function assertCommandExists(command, installHint, versionArgs = ["--version"]) {
   const result = spawnSync(command, versionArgs, {
     stdio: "ignore",
@@ -130,6 +163,15 @@ function shouldRouteToBackend(url = "/") {
   );
 }
 
+function normalizeProxyPath(rawUrl = "/") {
+  try {
+    const parsed = new URL(rawUrl, "http://lectum.local");
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return "/";
+  }
+}
+
 function proxyTargetFor(url, backendPort, frontendPort) {
   const port = shouldRouteToBackend(url) ? backendPort : frontendPort;
 
@@ -140,26 +182,67 @@ function proxyTargetFor(url, backendPort, frontendPort) {
   };
 }
 
-function appendForwardedHeaders(headers, target, publicUrl) {
+function normalizeForwardedHost(value) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw || raw.length > 255 || /[\u0000-\u0020\u007f*\\/?#@]/u.test(raw)) return "localhost";
+
+  try {
+    const parsed = new URL(`https://${raw}`);
+    if (!parsed.hostname || parsed.username || parsed.password || parsed.pathname !== "/") {
+      return "localhost";
+    }
+
+    return parsed.host;
+  } catch {
+    return "localhost";
+  }
+}
+
+function appendForwardedHeaders(headers, target, publicUrl, remoteAddress) {
+  const sanitizedHeaders = Object.fromEntries(
+    Object.entries(headers).filter(([key]) => {
+      const normalizedKey = key.toLowerCase();
+      return (
+        normalizedKey !== "forwarded" &&
+        normalizedKey !== "cf-connecting-ip" &&
+        normalizedKey !== "x-real-ip" &&
+        !normalizedKey.startsWith("x-forwarded-")
+      );
+    }),
+  );
   const forwardedProto = publicUrl ? new URL(publicUrl).protocol.replace(":", "") : "https";
+  const forwardedHost = publicUrl
+    ? new URL(publicUrl).host
+    : normalizeForwardedHost(headers.host);
+  const forwardedPort =
+    new URL(`${forwardedProto}://${forwardedHost}`).port ||
+    (forwardedProto === "https" ? "443" : "80");
 
   return {
-    ...headers,
+    ...sanitizedHeaders,
     host: `127.0.0.1:${target.port}`,
-    "x-forwarded-host": headers.host,
+    "x-forwarded-for": remoteAddress || "127.0.0.1",
+    "x-forwarded-host": forwardedHost,
+    "x-forwarded-port": forwardedPort,
     "x-forwarded-proto": forwardedProto,
   };
 }
 
 function startProxyServer({ backendPort, frontendPort, proxyPort, publicUrl }) {
   const server = createServer((incoming, response) => {
-    const target = proxyTargetFor(incoming.url, backendPort, frontendPort);
-    const targetUrl = new URL(incoming.url || "/", target.origin);
+    const proxyPath = normalizeProxyPath(incoming.url);
+    const target = proxyTargetFor(proxyPath, backendPort, frontendPort);
+    const targetUrl = new URL(proxyPath, target.origin);
 
     const proxyRequest = request(
       targetUrl,
       {
-        headers: appendForwardedHeaders(incoming.headers, target, publicUrl),
+        headers: appendForwardedHeaders(
+          incoming.headers,
+          target,
+          publicUrl,
+          incoming.socket.remoteAddress,
+        ),
         method: incoming.method,
       },
       (proxyResponse) => {
@@ -168,20 +251,33 @@ function startProxyServer({ backendPort, frontendPort, proxyPort, publicUrl }) {
       },
     );
 
-    proxyRequest.on("error", (error) => {
+    proxyRequest.on("error", () => {
+      console.error("[dev-proxy] Serviço de destino indisponível.");
+
+      if (response.headersSent) {
+        response.destroy();
+        return;
+      }
+
       response.writeHead(502, { "content-type": "text/plain; charset=utf-8" });
-      response.end(`Lectum dev tunnel proxy falhou: ${error.message}`);
+      response.end("Serviço temporariamente indisponível.");
     });
 
     incoming.pipe(proxyRequest);
   });
 
   server.on("upgrade", (incoming, socket, head) => {
-    const target = proxyTargetFor(incoming.url, backendPort, frontendPort);
+    const proxyPath = normalizeProxyPath(incoming.url);
+    const target = proxyTargetFor(proxyPath, backendPort, frontendPort);
     const upstream = net.connect(target.port, target.hostname, () => {
-      upstream.write(`${incoming.method} ${incoming.url} HTTP/${incoming.httpVersion}\r\n`);
+      upstream.write(`${incoming.method} ${proxyPath} HTTP/${incoming.httpVersion}\r\n`);
 
-      const headers = appendForwardedHeaders(incoming.headers, target, publicUrl);
+      const headers = appendForwardedHeaders(
+        incoming.headers,
+        target,
+        publicUrl,
+        incoming.socket.remoteAddress,
+      );
       for (const [key, value] of Object.entries(headers)) {
         if (Array.isArray(value)) {
           for (const item of value) upstream.write(`${key}: ${item}\r\n`);
@@ -239,7 +335,7 @@ async function waitForHttpOk(url, label, timeoutMs) {
   const startedAt = Date.now();
   const deadline = startedAt + timeoutMs;
 
-  console.log(`Aguardando ${label} responder em ${url}...`);
+  console.log(`Aguardando ${label} responder...`);
 
   while (Date.now() < deadline) {
     if (await requestOk(url)) {
@@ -251,7 +347,7 @@ async function waitForHttpOk(url, label, timeoutMs) {
     await delay(1000);
   }
 
-  throw new Error(`${label} nao respondeu em ${url} apos ${timeoutMs}ms.`);
+  throw new Error(`${label} nao respondeu dentro do tempo esperado.`);
 }
 
 const backendPort = parsePort(envValue("PORT"), 3001);
@@ -264,7 +360,7 @@ const tunnelEnabled = parseBoolean(envValue("DEV_TUNNEL_ENABLED"), false);
 const tunnelProvider = (envValue("DEV_TUNNEL_PROVIDER") || "cloudflared").trim().toLowerCase();
 const tunnelProxyPort = parsePort(envValue("DEV_TUNNEL_PROXY_PORT"), 3005);
 const tunnelName = envValue("DEV_TUNNEL_NAME")?.trim();
-const tunnelPublicUrl = envValue("DEV_TUNNEL_URL")?.trim();
+const tunnelPublicUrl = parseOptionalHttpOrigin(envValue("DEV_TUNNEL_URL"), "DEV_TUNNEL_URL");
 const backendReadyTimeoutMs = parsePositiveInteger(
   envValue("DEV_BACKEND_READY_TIMEOUT_MS"),
   90_000,
@@ -355,7 +451,7 @@ function startApp(app) {
     const reason = signal ? `signal ${signal}` : `exit code ${code ?? 0}`;
     console.error(`\n[${app.name}] finalizou com ${reason}. Encerrando os demais processos...`);
     stopAll();
-    process.exit(code ?? 1);
+    process.exit(typeof code === "number" && code !== 0 ? code : 1);
   });
 
   return child;
@@ -439,11 +535,10 @@ if (tunnelEnabled) {
 
 console.log("Iniciando aplicações Lectum:");
 for (const app of apps) {
-  console.log(`- ${app.name}: ${app.url}`);
+  console.log(`- ${app.name}`);
 }
 
 if (tunnelEnabled) {
-  console.log(`- tunnel proxy local: http://localhost:${tunnelProxyPort}`);
   console.log(`- tunnel provider: ${tunnelProvider}`);
   console.log(
     "  Rotas /api, /socket.io, /docs e /swagger seguem para o backend; demais rotas seguem para o frontend.",
@@ -478,7 +573,11 @@ const [backendApp, ...dependentApps] = apps;
 startApp(backendApp);
 
 try {
-  await waitForHttpOk(`${backendApp.url}/health`, "Backend", backendReadyTimeoutMs);
+  await waitForHttpOk(
+    `${backendApp.url}/ready`,
+    "Backend e banco de dados",
+    backendReadyTimeoutMs,
+  );
 } catch (error) {
   console.error(`\n${error instanceof Error ? error.message : "Backend nao ficou pronto."}`);
   stopAll();

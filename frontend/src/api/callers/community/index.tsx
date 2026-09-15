@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
@@ -15,6 +15,18 @@ import type {
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import * as api from "@/api/req/community";
+import {
+  type MediaPreparationPurpose,
+  type MediaUploadProgress,
+  prepareUpload,
+  requireMediaPreparationFileKind,
+  resolveCommunityPostPreparationPurpose,
+} from "@/utils/media-preparation";
+import { COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES } from "@/utils/media-upload-error";
+import {
+  assertMediaUploadFinalSize,
+  assertMediaUploadSourceSize,
+} from "@/utils/media-upload-limits";
 
 const invalidateDirectoryPsychologistQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
   queryClient.invalidateQueries({
@@ -182,8 +194,51 @@ export const useUploadCommunityPostMedia = (callbacks?: {
   onSuccess?: (data: CommunityPostMediaUploadResponse) => void;
 }) => {
   return useMutation({
-    mutationFn: ({ file, slug }: { file: File; slug: string }) =>
-      api.uploadCommunityPostMedia(slug, file),
+    mutationFn: async ({
+      file,
+      onProgress,
+      purpose,
+      signal,
+      slug,
+    }: {
+      file: File;
+      onProgress?: (progress: MediaUploadProgress) => void;
+      purpose?: Extract<
+        MediaPreparationPurpose,
+        "community-post-image" | "community-post-video" | "generated-video-thumbnail"
+      >;
+      signal?: AbortSignal;
+      slug: string;
+    }) => {
+      const resolvedPurpose = purpose ?? resolveCommunityPostPreparationPurpose(file);
+      const kind = requireMediaPreparationFileKind(file, resolvedPurpose);
+      if (kind === "image") {
+        assertMediaUploadSourceSize(file, kind, COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES);
+      }
+      const prepared = await prepareUpload({
+        file,
+        onProgress: (progress) => onProgress?.({ ...progress, phase: "preparing" }),
+        purpose: resolvedPurpose,
+        signal,
+      });
+      try {
+        if (prepared.kind === "image") {
+          assertMediaUploadFinalSize(
+            prepared.file,
+            prepared.kind,
+            COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES,
+          );
+        }
+        return await api.uploadCommunityPostMedia(
+          slug,
+          prepared.file,
+          (percentage) => onProgress?.({ percentage, phase: "uploading", stage: "uploading" }),
+          signal,
+        );
+      } finally {
+        await prepared.cleanup?.();
+      }
+    },
     onError: callbacks?.onError,
     onSuccess: callbacks?.onSuccess,
   });

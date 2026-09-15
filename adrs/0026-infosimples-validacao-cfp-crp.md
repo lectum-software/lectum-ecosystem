@@ -80,5 +80,57 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Quando a consulta automatica falhar por indisponibilidade da origem CFP/InfoSimples, a UI deve explicar que o cadastro do Conselho Federal de Psicologia esta instavel no momento.
 - O psicologo deve receber um caminho claro para falar com o suporte da Lectum e solicitar aprovacao manual, sem aprovacao automatica, mock ou preenchimento de `cfp_verified_at`.
 - A mensagem de erro backend de `cfp_provider_unavailable` passa a refletir essa orientacao operacional.
-- A pagina CFP tambem exibe no rodape o CTA "Problemas? Fale com o suporte" apontando para o WhatsApp operacional `wa.me/5537998739534`.
+- A pagina CFP tambem exibe no rodape o CTA "Problemas? Fale com o suporte" apontando para o WhatsApp operacional `wa.me/5511936220962`.
 - Como falhas de proxy/backend podem chegar ao frontend apenas como HTTP 5xx generico, sem `code` JSON do backend, a tela CFP tambem trata status >= 500 como indisponibilidade operacional e mostra a orientacao de suporte/aprovacao manual.
+
+## Compatibilidade com o codigo de indisponibilidade 615 em 2026-08-06
+
+- Em homologacao, uma consulta real chegou a InfoSimples e recebeu HTTP 200 em aproximadamente 5,3s, mas o payload funcional retornou `code=615` e informou que o site ou aplicativo de origem estava indisponivel.
+- O backend passa a classificar tanto `code=609` quanto `code=615` como indisponibilidade temporaria da origem (`cfp_provider_unavailable`), preservando compatibilidade com os dois codigos observados em operacao.
+- Esse tratamento nao aprova automaticamente o psicologo, nao preenche `cfp_verified_at` e nao cria mock ou retry cego. A tentativa permanece auditada e o caminho alternativo e a aprovacao humana existente no Admin, conforme ADR-0251.
+- A resposta HTTP permanece `502`, pois a dependencia externa nao concluiu a consulta; o codigo de dominio permite que a interface apresente a orientacao correta de suporte e aprovacao manual, em vez de erro inesperado generico.
+
+## Ajuste 2026-08-14 - copy do selo verificado
+
+- A decisao de dominio permanece a mesma: o selo de verificado so pode ser concedido apos validacao real automatica ou aprovacao manual auditada.
+- A tela `/psychologist/cfp` passa a deixar explicito que a consulta existe para conceder o selo de verificado, reduzindo ambiguidade sobre liberacao de configuracao de perfil.
+- O helper do CPF passa a mencionar a busca do registro junto ao Conselho Federal de Psicologia.
+- Nao houve mudanca de provider, endpoint, dados persistidos, seguranca, env, schema Prisma ou politica de fallback.
+
+## Ajuste 2026-08-15 - mensagens publicas de falha CFP
+
+- A decisao de dominio permanece a mesma: falha automatica nunca aprova o psicologo nem preenche `cfp_verified_at`.
+- O limite de 3 consultas por CPF (`cfp_search_attempts_exceeded`) passa a ser comunicado como excesso de tentativas do usuario, com orientacao para contato com suporte.
+- Indisponibilidade da origem (`cfp_provider_unavailable`), HTTP 5xx ou falha generica de conexao no fluxo CFP passam a ser apresentados como indisponibilidade do sistema do Conselho Federal de Psicologia, com orientacao para consulta manual do registro pelo suporte.
+- As mensagens publicas evitam mencionar InfoSimples, token, endpoint, stack, payload ou detalhes tecnicos; a auditoria e os logs sanitizados continuam sendo a camada operacional para diagnostico.
+- Nao houve mudanca de provider, endpoint, schema Prisma, env, pacote, armazenamento de dados ou politica de fallback.
+
+## Ajuste 2026-08-29 - suporte em qualquer falha da tela CFP
+
+- Decisao de produto: qualquer falha nas acoes da tela de verificacao profissional deve oferecer contato com suporte para continuidade manual da verificacao.
+- A UI passa a exibir o CTA de suporte para todos os erros resolvidos por `/psychologist/cfp` e `/app/profissional/cfp`, inclusive `cfp_provider_validation_error` retornado quando a API automatica rejeita os dados enviados.
+- Falhas na confirmacao de um resultado encontrado tambem exibem a mesma orientacao, mantendo uma unica saida operacional para o psicologo.
+- A mudanca nao altera contrato, provider, banco, limite de tentativas, logs, armazenamento ou regra de aprovacao: falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional.
+- Mensagens publicas permanecem sanitizadas e nao expõem InfoSimples, token, endpoint, CPF completo, payload tecnico, stack ou detalhes internos.
+
+## Ajuste 2026-08-29 - copy publica de indisponibilidade do CFP
+
+- Decisao de produto: falhas relacionadas ao provedor/sistema CFP devem usar uma mensagem unica que atribui a indisponibilidade ao sistema do Conselho Federal de Psicologia e direciona o psicologo ao suporte para verificacao manual.
+- O alerta da UI passa a usar o titulo "Sistema do CFP indisponivel" nas falhas da busca e da confirmacao CFP.
+- A UI mapeia `cfp_provider_config_error`, `cfp_provider_validation_error`, `cfp_provider_rate_limited`, `cfp_provider_unavailable`, `cfp_provider_error`, HTTP 5xx e falhas genericas de conexao para a copy escolhida: "O sistema do Conselho Federal de Psicologia esta indisponivel no momento. Fale com o suporte para continuarmos a verificacao manual do seu registro."
+- As traducoes backend dos erros `cfp_provider_*` foram alinhadas a mesma copy publica para tolerar rollout com frontend/backend em versoes diferentes e evitar termos como API automatica, configuracao, rate limit, token, endpoint ou provider.
+- A decisao nao altera provider, contrato, schema, armazenamento, limite de tentativas, logs ou politica de aprovacao: falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional.
+
+## Complemento 2026-08-29 - copy de suporte CFP sem repeticao
+
+- Decisao de produto: o alerta de falha CFP deve evitar repetir a orientacao de continuidade manual quando a mensagem principal ja informa esse caminho.
+- A UI mantem a mensagem publica de indisponibilidade e o CTA `Fale com o suporte pelo WhatsApp`, mas remove o paragrafo adicional "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp.".
+- A mudanca reduz redundancia visual no card mobile-first e nao altera provider, backend, contrato, codigos de erro, env, schema, armazenamento, limite de tentativas, logs ou politica de aprovacao.
+- Falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional; a continuidade manual segue pelo suporte/WhatsApp e aprovacao humana auditada.
+
+
+## Ajuste 2026-09-14 - numero operacional do suporte Lectum
+
+- Decisao de produto: o canal de suporte por WhatsApp para a verificacao profissional passa a usar o numero `11 93622-0962`.
+- A UI CFP centraliza o destino em `supportLinkProps` e os botoes/links de suporte agora apontam para `wa.me/5511936220962` mantendo a mensagem pre-preenchida existente.
+- A alteracao nao muda regra de aprovacao, provider, contrato, banco, env, logs ou tracking; falhas automaticas continuam sem preencher `cfp_verified_at` e a continuidade manual segue por suporte humano/auditoria.

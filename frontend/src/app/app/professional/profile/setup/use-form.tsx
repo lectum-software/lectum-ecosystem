@@ -7,9 +7,17 @@ import { onlyDigits } from "@/components/controllers/utils";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
 import {
   COUNTRY_CALLING_CODE_OPTIONS,
-  DEFAULT_COUNTRY_CALLING_CODE,
   findCountryCallingCode,
 } from "@/utils/country-calling-codes";
+import {
+  isNationalPhoneLengthValid,
+  toWhatsappPhoneE164,
+  toWhatsappPhoneInput,
+} from "@/utils/phone-number";
+import {
+  normalizeProfessionalDisplayName,
+  normalizeProfessionalNamePart,
+} from "@/utils/professional-name";
 import {
   CRP_REGION_OPTIONS,
   GENDER_OPTIONS,
@@ -62,34 +70,13 @@ export type FreeProfileForm = {
   available_days: string[];
 };
 
-const getNationalDigits = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
-  const digits = onlyDigits(value);
+export { toWhatsappPhoneE164, toWhatsappPhoneInput };
 
-  if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
-    return digits.slice(countryCode.length);
-  }
+export const toBirthdateIso = (value?: string | null) => {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value?.trim() ?? "");
+  if (!match) return null;
 
-  return digits;
-};
-
-const isPhoneLengthValid = (value: string, countryCode: string) => {
-  const nationalDigits = getNationalDigits(value, countryCode);
-  const totalLength = (countryCode + nationalDigits).length;
-
-  return nationalDigits.length >= 6 && totalLength <= 15;
-};
-
-export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
-  const nationalDigits = getNationalDigits(value, countryCode);
-
-  return nationalDigits ? `+${countryCode}${nationalDigits}` : null;
-};
-
-const isValidBirthdate = (value: string) => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return false;
-
-  const [, yearValue, monthValue, dayValue] = match;
+  const [, dayValue, monthValue, yearValue] = match;
   const year = Number(yearValue);
   const month = Number(monthValue);
   const day = Number(dayValue);
@@ -101,93 +88,183 @@ const isValidBirthdate = (value: string) => {
     parsed.getUTCMonth() !== month - 1 ||
     parsed.getUTCDate() !== day
   ) {
-    return false;
+    return null;
   }
 
   const today = new Date();
   const todayTime = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
 
-  return time <= todayTime && time >= Date.UTC(1900, 0, 1);
+  if (time > todayTime || time < Date.UTC(1900, 0, 1)) {
+    return null;
+  }
+
+  return `${yearValue}-${monthValue}-${dayValue}`;
 };
+
+const isValidBirthdate = (value: string) => Boolean(toBirthdateIso(value));
+
+const toBirthdateInput = (value?: string | null) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? "");
+  if (!match) return "";
+
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
+};
+
+const requiredText = (message: string) => z.string({ error: message }).trim().min(1, message);
+
+const optionalText = (max: number, message: string) =>
+  z.string({ error: message }).trim().max(max, message).nullable();
+
+const stringArray = (message: string) => z.array(z.string(), { error: message });
 
 export const freeProfileSchema = z
   .object({
-    professional_first_name: z.string().trim().min(2, "Informe seu nome").max(80),
-    professional_last_name: z.string().trim().min(1, "Informe seu sobrenome").max(120),
-    gender: z.string().trim().min(1, "Selecione seu gênero").max(40),
-    race_color: z.string().trim().max(40).nullable(),
-    religion: z.string().trim().max(80).nullable(),
-    cpf: z.string().refine((value) => onlyDigits(value).length === 11, "Informe um CPF válido"),
+    professional_first_name: requiredText("Nome é obrigatório")
+      .min(2, "Informe seu nome")
+      .max(80, "O nome deve ter no máximo 80 caracteres"),
+    professional_last_name: requiredText("Sobrenome é obrigatório").max(
+      120,
+      "O sobrenome deve ter no máximo 120 caracteres",
+    ),
+    gender: requiredText("Gênero é obrigatório").max(
+      40,
+      "O gênero deve ter no máximo 40 caracteres",
+    ),
+    race_color: optionalText(40, "Raça/cor deve ter no máximo 40 caracteres"),
+    religion: optionalText(80, "Religião deve ter no máximo 80 caracteres"),
+    cpf: requiredText("CPF é obrigatório").refine(
+      (value) => onlyDigits(value).length === 11,
+      "Informe um CPF válido",
+    ),
     birthdate: z
-      .string()
+      .string({ error: "Data de nascimento é obrigatória" })
       .trim()
-      .min(1, "Informe sua data de nascimento")
+      .min(1, "Data de nascimento é obrigatória")
       .refine(isValidBirthdate, "Informe uma data de nascimento válida"),
-    crp_region: z
-      .string()
-      .trim()
-      .min(1, "Selecione a Regional do CRP")
-      .max(120, "Regional muito longa"),
-    crp_number: z
-      .string()
-      .trim()
-      .min(1, "Informe o Nº Registro CRP")
-      .max(40, "Registro muito longo"),
-    countryCode: z.string().min(1, "Selecione o país"),
-    whatsapp: z.string(),
+    crp_region: requiredText("Regional do CRP é obrigatória").max(120, "Regional muito longa"),
+    crp_number: requiredText("Nº Registro CRP é obrigatório").max(40, "Registro muito longo"),
+    countryCode: requiredText("País é obrigatório"),
+    whatsapp: requiredText("WhatsApp profissional é obrigatório"),
     headline: z
-      .string()
+      .string({ error: "Bio deve ser um texto válido" })
       .trim()
       .max(120, "A bio curta deve ter no máximo 120 caracteres")
       .refine((value) => value.length === 0 || value.length >= 3, {
         message: "Informe uma bio com pelo menos 3 caracteres",
       }),
     bio: z
-      .string()
+      .string({ error: "Apresentação deve ser um texto válido" })
       .trim()
-      .max(2000)
+      .max(2000, "A apresentação deve ter no máximo 2000 caracteres")
       .refine((value) => value.length === 0 || value.length >= 20, {
         message: "Escreva uma apresentação com pelo menos 20 caracteres",
       }),
-    modality: z.enum(["online", "presencial", "hibrido", ""], {
-      message: "Selecione a modalidade",
-    }),
-    language: z.string().trim().min(2, "Selecione um idioma"),
-    published: z.boolean(),
-    discount_first_session: z.boolean(),
-    social_value: z.boolean(),
-    accepts_insurance: z.boolean(),
-    show_experience_tag: z.boolean(),
+    modality: z
+      .enum(["online", "presencial", "hibrido", ""], {
+        error: "Modalidade é obrigatória",
+      })
+      .refine((value) => value !== "", "Modalidade é obrigatória"),
+    language: requiredText("Idioma é obrigatório").min(2, "Selecione um idioma"),
+    published: z.boolean({ error: "Visibilidade do perfil deve ser informada" }),
+    discount_first_session: z.boolean({ error: "Informe se oferece desconto na primeira sessão" }),
+    social_value: z.boolean({ error: "Informe se oferece valor social" }),
+    accepts_insurance: z.boolean({ error: "Informe se aceita convênios" }),
+    show_experience_tag: z.boolean({ error: "Informe se deseja exibir tempo de experiência" }),
     academic_formations: z
       .array(
         z.object({
-          title: z.string().trim().max(160),
-          institution: z.string().trim().max(160),
-          graduation_year: z.string().trim().max(20),
+          title: z
+            .string({ error: "Título deve ser um texto válido" })
+            .trim()
+            .max(160, "O título deve ter no máximo 160 caracteres"),
+          institution: z
+            .string({ error: "Instituição deve ser um texto válido" })
+            .trim()
+            .max(160, "A instituição deve ter no máximo 160 caracteres"),
+          graduation_year: z
+            .string({ error: "Ano de formação deve ser um texto válido" })
+            .trim()
+            .max(20, "O ano de formação deve ter no máximo 20 caracteres"),
         }),
+        { error: "Formações acadêmicas devem ser informadas em uma lista válida" },
       )
       .max(5, "Adicione no máximo 5 formações"),
-    address_street: z.string().trim().max(160),
-    address_number: z.string().trim().max(40),
-    address_complement: z.string().trim().max(80),
-    address_district: z.string().trim().max(120),
-    address_zip: z.string().trim().max(20),
-    address_city: z.string().trim().min(1, "Selecione a cidade").max(120),
-    address_state: z.string().trim().min(2, "Selecione o estado").max(2),
-    specialty_ids: z.array(z.string()),
-    service_ids: z.array(z.string()),
-    approach_ids: z.array(z.string()).min(1, "Selecione uma abordagem"),
-    target_audience: z.array(z.string()).min(1, "Selecione pelo menos um público"),
-    available_days: z.array(z.string()),
+    address_street: z
+      .string({ error: "Logradouro deve ser um texto válido" })
+      .trim()
+      .max(160, "O logradouro deve ter no máximo 160 caracteres"),
+    address_number: z
+      .string({ error: "Número deve ser um texto válido" })
+      .trim()
+      .max(40, "O número deve ter no máximo 40 caracteres"),
+    address_complement: z
+      .string({ error: "Complemento deve ser um texto válido" })
+      .trim()
+      .max(80, "O complemento deve ter no máximo 80 caracteres"),
+    address_district: z
+      .string({ error: "Bairro deve ser um texto válido" })
+      .trim()
+      .max(120, "O bairro deve ter no máximo 120 caracteres"),
+    address_zip: z
+      .string({ error: "CEP deve ser um texto válido" })
+      .trim()
+      .max(20, "O CEP deve ter no máximo 20 caracteres"),
+    address_city: requiredText("Cidade é obrigatória").max(
+      120,
+      "A cidade deve ter no máximo 120 caracteres",
+    ),
+    address_state: requiredText("Estado é obrigatório")
+      .min(2, "Estado é obrigatório")
+      .max(2, "O estado deve ter no máximo 2 caracteres"),
+    specialty_ids: stringArray("Especialidades devem estar em uma lista válida").min(
+      1,
+      "Especialidade é obrigatória",
+    ),
+    service_ids: stringArray("Serviços devem estar em uma lista válida").min(
+      1,
+      "Serviço é obrigatório",
+    ),
+    approach_ids: stringArray("Abordagem é obrigatória").min(1, "Abordagem é obrigatória"),
+    target_audience: stringArray("Público atendido é obrigatório").min(
+      1,
+      "Público atendido é obrigatório",
+    ),
+    available_days: stringArray("Dias disponíveis devem estar em uma lista válida"),
   })
-  .refine((data) => isPhoneLengthValid(data.whatsapp, data.countryCode), {
-    message: "Informe um WhatsApp válido",
-    path: ["whatsapp"],
-  });
+  .superRefine((data, context) => {
+    const name = [
+      normalizeProfessionalNamePart(data.professional_first_name),
+      normalizeProfessionalNamePart(data.professional_last_name),
+    ]
+      .filter(Boolean)
+      .join(" ");
 
-const PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS = COUNTRY_CALLING_CODE_OPTIONS.map((option) =>
-  option.country === "BR" ? { ...option, label: "+55" } : option,
-);
+    if (name.length > 160) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Nome e sobrenome devem ter juntos no máximo 160 caracteres",
+        path: ["professional_last_name"],
+      });
+    }
+
+    if (!onlyDigits(data.whatsapp)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "WhatsApp profissional é obrigatório",
+        path: ["whatsapp"],
+      });
+      return;
+    }
+
+    if (!isNationalPhoneLengthValid(data.whatsapp, data.countryCode)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Informe um WhatsApp válido",
+        path: ["whatsapp"],
+      });
+    }
+  });
 
 type ProfileCatalogFieldOptions = {
   genderOptions?: FieldOption[];
@@ -258,8 +335,10 @@ export const createFields = ({
       name: "birthdate",
       field: "calendar",
       label: "Data de Nascimento",
+      placeholder: "00/00/0000",
       required: true,
       autoComplete: "bday",
+      dateDisplayFormat: "pt-BR",
     },
     {
       name: "crp_region",
@@ -281,9 +360,9 @@ export const createFields = ({
       field: "phone",
       label: "WhatsApp profissional",
       placeholder: "(00) 00000-0000",
-      countryCodeClassName: "w-20 min-w-20 shrink-0 px-2 py-0.5",
+      countryCodeClassName: "w-32 min-w-32 shrink-0 px-2 py-0.5",
       countryCodeName: "countryCode",
-      countryCodeOptions: PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS,
+      countryCodeOptions: COUNTRY_CALLING_CODE_OPTIONS,
       required: true,
       autoComplete: "tel",
     },
@@ -368,9 +447,6 @@ export const createFields = ({
 
 export const fields = createFields();
 
-const toWhatsappPhoneInput = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) =>
-  getNationalDigits(value, countryCode).slice(0, 15);
-
 export const getLanguages = (value: string) => (value ? [value] : []);
 
 const emptyAcademicFormation = (): AcademicFormationForm => ({
@@ -445,11 +521,7 @@ const catalogNameOptions = (items?: FreeProfileCatalogItem[] | null) =>
   (items ?? []).map((item) => ({ label: item.name, value: item.name }));
 
 const splitProfessionalNameFallback = (fullName?: string | null) => {
-  const parts = String(fullName ?? "")
-    .trim()
-    .replace(/\s{2,}/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
+  const parts = normalizeProfessionalDisplayName(fullName).split(/\s+/).filter(Boolean);
 
   return {
     firstName: parts[0] ?? "",
@@ -461,13 +533,16 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
   const fallbackName = splitProfessionalNameFallback(data?.user.name);
 
   return {
-    professional_first_name: data?.profile.professional_first_name || fallbackName.firstName,
-    professional_last_name: data?.profile.professional_last_name || fallbackName.lastName,
+    professional_first_name:
+      normalizeProfessionalNamePart(data?.profile.professional_first_name) ||
+      fallbackName.firstName,
+    professional_last_name:
+      normalizeProfessionalNamePart(data?.profile.professional_last_name) || fallbackName.lastName,
     gender: data?.profile.gender || "",
     race_color: data?.profile.race_color || "",
     religion: data?.profile.religion || "",
     cpf: data?.profile.cpf || "",
-    birthdate: data?.profile.birthdate?.slice(0, 10) || "",
+    birthdate: toBirthdateInput(data?.profile.birthdate),
     crp_region: data?.profile.crp_region || "",
     crp_number: data?.profile.crp_number || "",
     countryCode,

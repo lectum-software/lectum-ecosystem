@@ -1,4 +1,4 @@
-﻿# ADR-0291 - Paridade da aba Conta do paciente com psicologo no Admin
+# ADR-0291 - Paridade da aba Conta do paciente com psicologo no Admin
 
 Data: 2026-07-20
 Status: Aceito

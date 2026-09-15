@@ -1,5 +1,6 @@
 //Libs
 import * as argon2 from "argon2";
+import { isPublishedRuntime } from "../runtime-config";
 
 export interface Argon2Options {
   type?: 0 | 1 | 2; // 0=argon2d, 1=argon2i, 2=argon2id
@@ -38,16 +39,12 @@ const ENVIRONMENT_OPTIONS = {
 };
 
 const getEnvironmentOptions = (): Partial<Argon2Options> => {
-  const env = process.env.NODE_ENV || "development";
+  const env = process.env.NODE_ENV?.trim().toLowerCase() || "development";
 
-  switch (env) {
-    case "production":
-      return ENVIRONMENT_OPTIONS.production;
-    case "high-security":
-      return ENVIRONMENT_OPTIONS.highSecurity;
-    default:
-      return ENVIRONMENT_OPTIONS.development;
-  }
+  if (isPublishedRuntime(env)) return ENVIRONMENT_OPTIONS.production;
+  if (env === "high-security") return ENVIRONMENT_OPTIONS.highSecurity;
+
+  return ENVIRONMENT_OPTIONS.development;
 };
 
 const validateInput = (value: string): string | null => {
@@ -71,11 +68,11 @@ const normalizeOptions = (options: Argon2Options = {}): argon2.Options & { peppe
   const envOptions = getEnvironmentOptions();
 
   return {
-    type: options.type || DEFAULT_OPTIONS.type,
-    memoryCost: options.memoryCost || envOptions.memoryCost || DEFAULT_OPTIONS.memoryCost,
-    timeCost: options.timeCost || envOptions.timeCost || DEFAULT_OPTIONS.timeCost,
-    parallelism: options.parallelism || envOptions.parallelism || DEFAULT_OPTIONS.parallelism,
-    hashLength: options.hashLength || DEFAULT_OPTIONS.hashLength,
+    type: options.type ?? DEFAULT_OPTIONS.type,
+    memoryCost: options.memoryCost ?? envOptions.memoryCost ?? DEFAULT_OPTIONS.memoryCost,
+    timeCost: options.timeCost ?? envOptions.timeCost ?? DEFAULT_OPTIONS.timeCost,
+    parallelism: options.parallelism ?? envOptions.parallelism ?? DEFAULT_OPTIONS.parallelism,
+    hashLength: options.hashLength ?? DEFAULT_OPTIONS.hashLength,
     pepper: options.pepper,
   };
 };

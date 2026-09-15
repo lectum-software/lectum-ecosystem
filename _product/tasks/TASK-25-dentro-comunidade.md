@@ -354,6 +354,29 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio`.
 
+## Complemento 2026-08-13 - contraste controlado no degrade do header
+
+- Pedido do usuário: no header da comunidade, tornar a parte mais escura do degradê um pouco mais escura porque o efeito estava suave demais.
+- Frontend: o `CommunityHeader` manteve o início claro do degradê, mas passou a misturar o ponto intermediário com `--community-primary-color` e o ponto final com `--community-primary-dark`, reforçando apenas a região mais profunda da faixa.
+- A decisão preserva a paleta derivada/persistida da comunidade, o avatar, o botão de seguir, as ações de busca/compartilhamento e o CTA de Top Mentores.
+- Escopo: sem alteração de backend, Prisma, migrations, endpoints, dados, membership, posts, filtros, ranking, envs ou packages.
+- Fonte visual/auditável: screenshot do usuário `WhatsApp Image 2026-08-12 at 19.35.40.jpeg` e `_product/proto/Dentro da Comunidade.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
+
+### Critérios específicos deste complemento
+
+- [x] A parte escura do degradê do header da comunidade ficou mais contrastada sem transformar toda a faixa em tom escuro.
+- [x] O início claro do degradê e a identidade por comunidade foram preservados.
+- [x] Nenhum dado persistido, contrato de API, migration, env ou package novo foi criado.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser/smoke da rota de comunidade (dev server local carregou a rota, mas a API publicada bloqueou a origem local; validação visual real registrada no smoke de homologação após o push)
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Commit próprio criado e push em `homolog` executado.
+
 ## Complemento 2026-07-04 - avatar da comunidade em rota publica/ngrok
 
 - Pedido do usuario: corrigir novamente o avatar da comunidade na rota publica `/community/depressao`, onde a requisicao de `depressao.png` retornava 404 e o alt text aparecia dentro do card.

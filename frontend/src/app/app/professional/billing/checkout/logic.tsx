@@ -1,15 +1,16 @@
 "use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
-import { CreditCard, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, RefreshCw } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   BillingCheckoutResponse,
   ProfessionalSubscription,
-  SubscriptionPlan,
 } from "@/api/generator/types/billing";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -19,55 +20,27 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
+  isMercadoPagoPublicConfigurationValid,
+  mercadoPagoPublicKey,
+  resolveMercadoPagoPayerEmail,
+} from "@/utils/mercado-pago";
+import {
   getPsychologistRegistrationRequirementPath,
   isAdministrativeCourtesySubscription,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+import { SummaryCard } from "./summary-card";
 
-const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
-const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
-const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim();
-
-const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
-  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
-    return sandboxPayerEmail;
-  }
-
-  return authenticatedEmail;
-};
-
-if (publicKey) {
-  initMercadoPago(publicKey, {
+if (isMercadoPagoPublicConfigurationValid && mercadoPagoPublicKey) {
+  initMercadoPago(mercadoPagoPublicKey, {
     locale: "pt-BR",
     advancedFraudPrevention: true,
   });
 }
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const formatPrice = (priceCents: number) => currencyFormatter.format(priceCents / 100);
-
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-});
-
-const formatDate = (value?: string | null) => {
-  if (!value) return null;
-
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime()) ? null : dateFormatter.format(date);
-};
-
 const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "Não foi possível carregar o checkout agora.";
+  getSafeApiErrorMessage(error, "Não foi possível carregar o checkout agora.");
 
 const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
   if (!currentPeriodEnd) return true;
@@ -90,6 +63,9 @@ const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
 const AUTO_SYNC_INTERVAL_MS = 3000;
 const AUTO_SYNC_MAX_ATTEMPTS = 20;
+const CARD_PAYMENT_LOAD_TIMEOUT_MS = 10_000;
+const PAYMENT_SUCCESS_REDIRECT_DELAY_MS = 1200;
+const APPROVED_GATEWAY_STATUSES = new Set(["authorized", "approved", "accredited"]);
 
 type CardPaymentFormData = {
   token?: string;
@@ -101,63 +77,18 @@ type CardPaymentAdditionalData = {
   paymentTypeId?: string;
 };
 
-const SummaryCard = ({
-  isCourtesyRenewal,
-  plan,
-  renewalDate,
-}: {
-  isCourtesyRenewal: boolean;
-  plan: SubscriptionPlan;
-  renewalDate?: string | null;
-}) => {
-  const renewalDateLabel = formatDate(renewalDate);
+const isApprovedGatewayStatus = (status?: string | null) =>
+  APPROVED_GATEWAY_STATUSES.has(String(status || "").toLowerCase());
 
-  return (
-    <aside className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
-      <div className="flex items-start gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-          <CreditCard className="h-6 w-6" aria-hidden />
-        </span>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-            {isCourtesyRenewal ? "Cobrança futura" : "Plano Profissional"}
-          </p>
-          <h2 className="mt-1 text-xl font-bold text-foreground">
-            {isCourtesyRenewal ? "Plano Profissional após cortesia" : plan.name}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            {isCourtesyRenewal
-              ? "Cadastre o cartão agora para manter os benefícios profissionais quando a cortesia terminar."
-              : "Assinatura mensal com perfil verificado, prioridade na busca, avaliações, analytics e destaque nas comunidades."}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-6 rounded-2xl bg-surface-muted p-4">
-        <p className="text-sm font-semibold text-muted">
-          {isCourtesyRenewal ? "Início previsto" : "Valor recorrente"}
-        </p>
-        {isCourtesyRenewal ? (
-          <div className="mt-2 grid gap-2">
-            <strong className="text-2xl font-bold leading-tight text-foreground">
-              {renewalDateLabel ? `Após ${renewalDateLabel}` : "Ao fim da cortesia"}
-            </strong>
-            <span className="text-sm font-semibold text-muted">
-              {formatPrice(plan.price_cents)} /mês quando a cobrança iniciar
-            </span>
-          </div>
-        ) : (
-          <div className="mt-2 flex items-end gap-2">
-            <strong className="text-3xl font-bold leading-none text-foreground">
-              {formatPrice(plan.price_cents)}
-            </strong>
-            <span className="pb-1 text-sm font-semibold text-muted">/mês</span>
-          </div>
-        )}
-      </div>
-    </aside>
-  );
-};
+const PaymentSuccessBadge = () => (
+  <span
+    className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm font-extrabold text-success"
+    role="status"
+  >
+    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+    Pagamento bem-sucedido
+  </span>
+);
 
 export const ProfessionalBillingCheckoutLogic = () => {
   const router = useRouter();
@@ -174,7 +105,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
           setCheckoutResult(data);
           if (isCourtesyRenewal) {
             toast.success("Cartão cadastrado para cobrança futura");
-            router.replace(data.next_path || "/app/profissional/assinatura");
+            router.replace(
+              normalizeSafeInternalRedirect(data.next_path, "/app/profissional/assinatura") ||
+                "/app/profissional/assinatura",
+            );
           }
         },
       },
@@ -189,6 +123,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const syncMutateAsyncRef = useRef(syncMutateAsync);
   const currentRefetchRef = useRef(currentRefetch);
   const autoSyncInFlightRef = useRef(false);
+  const [cardPaymentStatus, setCardPaymentStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
+  const [cardPaymentRetryIndex, setCardPaymentRetryIndex] = useState(0);
 
   useEffect(() => {
     checkoutMutateAsyncRef.current = checkoutMutateAsync;
@@ -212,11 +150,19 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const shouldBypassActiveRedirect = isCourtesyRenewal && activeCourtesy;
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
+  const showPaymentSuccessBadge = Boolean(
+    !isCourtesyRenewal &&
+      checkoutResult &&
+      (activeProfessional || isApprovedGatewayStatus(checkoutResult.gateway_status)),
+  );
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
-  const canRenderCardPayment = Boolean(publicKey && amount > 0 && payerEmail);
+  const canRenderCardPayment = Boolean(
+    isMercadoPagoPublicConfigurationValid && amount > 0 && payerEmail,
+  );
   const cardPaymentKey = `${payerEmail || "anonymous"}-${amount}-${
     isCourtesyRenewal ? "courtesy" : "checkout"
   }`;
+  const cardPaymentInstanceKey = `${cardPaymentKey}-${cardPaymentRetryIndex}`;
 
   useEffect(() => {
     if (isCurrentSubscriptionLoading || !activeProfessional || shouldBypassActiveRedirect) return;
@@ -228,6 +174,16 @@ export const ProfessionalBillingCheckoutLogic = () => {
       return;
     }
 
+    if (showPaymentSuccessBadge) {
+      const redirectTimeout = window.setTimeout(() => {
+        router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
+      }, PAYMENT_SUCCESS_REDIRECT_DELAY_MS);
+
+      return () => {
+        window.clearTimeout(redirectTimeout);
+      };
+    }
+
     router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
   }, [
     activeCourtesy,
@@ -236,6 +192,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
     isCurrentSubscriptionLoading,
     router,
     shouldBypassActiveRedirect,
+    showPaymentSuccessBadge,
   ]);
 
   const initialization = useMemo(
@@ -276,7 +233,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
       const last4 = additionalData?.lastFourDigits || null;
 
       if (!token) {
-        toast.error("Não foi possível tokenizar o cartão. Tente novamente.");
+        toast.error("Não foi possível validar os dados do cartão. Tente novamente.");
         return;
       }
 
@@ -298,19 +255,24 @@ export const ProfessionalBillingCheckoutLogic = () => {
           payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
         });
       } catch {
-        // handleReq já exibe o erro real da API; impedir rejeição não tratada no Brick.
+        // handleReq já exibe o erro público sanitizado; impedir rejeição não tratada no Brick.
       }
     },
     [isCourtesyRenewal],
   );
 
   const handleBrickReady = useCallback(() => {
-    // Callback obrigatório do Brick; mantém a renderização real sem efeitos paralelos.
+    setCardPaymentStatus("ready");
   }, []);
 
-  const handleBrickError = useCallback((error: unknown) => {
-    console.error("[Billing CardPayment]", error);
+  const handleBrickError = useCallback(() => {
+    setCardPaymentStatus("error");
     toast.error("Não foi possível carregar o formulário de cartão.");
+  }, []);
+
+  const handleRetryCardPayment = useCallback(() => {
+    setCardPaymentStatus("loading");
+    setCardPaymentRetryIndex((current) => current + 1);
   }, []);
 
   const handleSyncStatus = useCallback(async () => {
@@ -319,7 +281,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
       await currentRefetchRef.current();
       toast.success("Status da assinatura atualizado");
     } catch {
-      // handleReq já exibe o erro real da API.
+      // handleReq já exibe o erro público sanitizado.
     }
   }, []);
 
@@ -360,17 +322,38 @@ export const ProfessionalBillingCheckoutLogic = () => {
     };
   }, [activeProfessional, pendingProfessional]);
 
+  useEffect(() => {
+    if (!canRenderCardPayment || cardPaymentStatus !== "loading") return;
+
+    const timeout = setTimeout(() => {
+      setCardPaymentStatus((currentStatus) =>
+        currentStatus === "ready" ? currentStatus : "error",
+      );
+    }, CARD_PAYMENT_LOAD_TIMEOUT_MS);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [canRenderCardPayment, cardPaymentStatus]);
+
   if (!isCurrentSubscriptionLoading && activeProfessional && !shouldBypassActiveRedirect) {
     return (
       <PrivateTemplate showHeader={false}>
         <section className="mx-auto grid min-h-[55vh] w-full max-w-[430px] place-items-center">
-          <LoadingState
-            label={
-              activeCourtesy
-                ? "Redirecionando para sua próxima etapa"
-                : "Redirecionando para endereço"
-            }
-          />
+          {showPaymentSuccessBadge ? (
+            <div className="grid justify-items-center gap-5 text-center">
+              <PaymentSuccessBadge />
+              <LoadingState label="Redirecionando para endereço" />
+            </div>
+          ) : (
+            <LoadingState
+              label={
+                activeCourtesy
+                  ? "Redirecionando para sua próxima etapa"
+                  : "Redirecionando para endereço"
+              }
+            />
+          )}
         </section>
       </PrivateTemplate>
     );
@@ -379,6 +362,16 @@ export const ProfessionalBillingCheckoutLogic = () => {
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl">
+        <Button
+          asChild
+          className="h-11 w-11 justify-self-start rounded-full bg-primary-soft p-0 text-primary shadow-[var(--lectum-shadow-soft)] hover:bg-primary-soft/80"
+          variant="ghost"
+        >
+          <Link aria-label="Voltar para Minha Assinatura" href="/app/profissional/assinatura">
+            <ArrowLeft className="h-5 w-5" aria-hidden />
+          </Link>
+        </Button>
+
         <div className="grid justify-items-center gap-3 text-center">
           <span className="grid h-16 w-16 place-items-center rounded-[var(--lectum-card-radius)] bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
             <CreditCard className="h-8 w-8" aria-hidden />
@@ -410,7 +403,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
         {!isLoading && !hasError && !professionalPlan ? (
           <EmptyState
-            description="O plano profissional não foi encontrado no backend. Cadastre o plano real antes de continuar."
+            description="Nenhum plano profissional ativo está disponível no momento. Tente novamente mais tarde."
             icon={CreditCard}
             title="Plano indisponível"
           />
@@ -426,21 +419,27 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
             <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] md:p-6">
               <div className="grid gap-5">
-                {!publicKey ? (
+                {!isMercadoPagoPublicConfigurationValid ? (
                   <InlineAlert title="Formulário de cartão indisponível" variant="error">
                     Não foi possível carregar o formulário seguro de cartão. Tente novamente mais
                     tarde.
                   </InlineAlert>
                 ) : null}
 
-                {publicKey && amount > 0 && !payerEmail ? (
+                {isMercadoPagoPublicConfigurationValid && amount > 0 && !payerEmail ? (
                   <InlineAlert title="E-mail do pagador ausente" variant="error">
                     Recarregue a sessão antes de abrir o formulário de cartão. O e-mail da sua conta
                     é necessário para iniciar o pagamento.
                   </InlineAlert>
                 ) : null}
 
-                {canRenderCardPayment ? (
+                {showPaymentSuccessBadge ? (
+                  <div className="flex justify-center rounded-3xl border border-success/20 bg-success/5 p-4">
+                    <PaymentSuccessBadge />
+                  </div>
+                ) : null}
+
+                {!showPaymentSuccessBadge && canRenderCardPayment ? (
                   <div
                     className={cn(
                       "rounded-3xl border border-border bg-surface-muted p-3 md:p-4",
@@ -452,19 +451,54 @@ export const ProfessionalBillingCheckoutLogic = () => {
                       <p className="mt-2 text-sm leading-6 text-muted">
                         {isCourtesyRenewal
                           ? "Seu cartão será usado apenas para a cobrança futura ao fim da cortesia."
-                          : "Aceitamos apenas cartão de crédito para manter sua assinatura mensal ativa."}
+                          : "Adicione um cartão de crédito para ativar sua assinatura."}
                       </p>
                     </div>
-                    <CardPayment
-                      customization={customization}
-                      id="lectum-card-payment-brick"
-                      initialization={initialization}
-                      key={cardPaymentKey}
-                      locale="pt-BR"
-                      onError={handleBrickError}
-                      onReady={handleBrickReady}
-                      onSubmit={handleSubmit}
-                    />
+                    {cardPaymentStatus === "error" ? (
+                      <InlineAlert
+                        className="bg-surface"
+                        title="Campos do cartão não carregaram"
+                        variant="error"
+                      >
+                        <div className="grid gap-3">
+                          <p>Recarregue o formulário seguro para informar o cartão de crédito.</p>
+                          <Button
+                            className="h-10 w-fit rounded-full"
+                            onClick={handleRetryCardPayment}
+                            type="button"
+                            variant="outline"
+                          >
+                            Tentar novamente
+                          </Button>
+                        </div>
+                      </InlineAlert>
+                    ) : (
+                      <div
+                        className={cn(
+                          "relative",
+                          cardPaymentStatus === "loading" && "min-h-[220px]",
+                        )}
+                      >
+                        {cardPaymentStatus === "loading" ? (
+                          <LoadingState
+                            className="absolute inset-0 rounded-2xl bg-surface px-4 py-8"
+                            label="Carregando campos seguros do cartão"
+                          />
+                        ) : null}
+                        <div className={cn(cardPaymentStatus === "loading" && "opacity-0")}>
+                          <CardPayment
+                            customization={customization}
+                            id="lectum-card-payment-brick"
+                            initialization={initialization}
+                            key={cardPaymentInstanceKey}
+                            locale="pt-BR"
+                            onError={handleBrickError}
+                            onReady={handleBrickReady}
+                            onSubmit={handleSubmit}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : null}
 

@@ -1,8 +1,11 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: os validators são inspecionados dinamicamente a partir de schemas Zod heterogêneos.
 
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { isPublishedRuntime } from "../../../utils/runtime-config";
+import { toSafeErrorLog } from "../../../utils/safe-error-log";
 
 const zodToSwagger = (zodSchema, location = "body") => {
   if (!zodSchema?._def) return [];
@@ -69,8 +72,8 @@ export async function loadValidations(route) {
 
     let fileValidator = path.resolve(route.validator);
 
-    const isProd = process.env.NODE_ENV?.includes("prod");
-    if (fileValidator.endsWith(".ts") && isProd) {
+    const pointsToCompiledValidator = fileValidator.includes(`${path.sep}dist${path.sep}`);
+    if (fileValidator.endsWith(".ts") && (isPublishedRuntime() || pointsToCompiledValidator)) {
       fileValidator = fileValidator
         .replace(path.join(process.cwd(), "src"), path.join(process.cwd(), "dist"))
         .replace(/\.ts$/, ".js");
@@ -80,12 +83,21 @@ export async function loadValidations(route) {
       return [];
     }
 
-    const mod = await import(pathToFileURL(fileValidator).href);
+    // O build CommonJS transforma este import dinâmico em require(). Por isso, validators
+    // compilados continuam usando caminho absoluto. No Windows, o loader ESM usado por tsx
+    // em desenvolvimento exige file:// para importar arquivos TypeScript em src.
+    const importTarget =
+      process.platform === "win32" && fileValidator.endsWith(".ts")
+        ? pathToFileURL(fileValidator).href
+        : fileValidator;
+    const mod = await import(importTarget);
     const validator =
       typeof mod.default === "function"
         ? mod.default
         : route.middlewares
-            ?.map((middleware) => mod[middleware])
+            // No dist, o TypeScript escreve validator_1.nomeDoValidator.
+            ?.flatMap((middleware) => [middleware, middleware.split(".").at(-1)])
+            .map((middleware) => (middleware ? mod[middleware] : undefined))
             .find((item) => typeof item === "function");
 
     if (typeof validator !== "function") {
@@ -100,7 +112,10 @@ export async function loadValidations(route) {
     return [body, params, query].flat();
   } catch (e) {
     if (process.env.SWAGGER_DEBUG === "true") {
-      console.warn("[SWAGGER]: Falha ao carregar validação de rota", e);
+      console.warn(
+        "[SWAGGER]: Falha ao carregar validação de rota",
+        toSafeErrorLog(e, "SwaggerValidationLoadError"),
+      );
     }
     return [];
   }

@@ -1,4 +1,5 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import type { ProfessionalPlanHistory } from "@/utils/professional-plan-history";
 import type {
   AdminPsychologistsDashboardDateRange,
   AdminPsychologistsDashboardDirectoryFilters,
@@ -9,6 +10,7 @@ export type AdminPsychologistSubscriptionRecord = {
   current_period_end: Date | null;
   gateway: string | null;
   gateway_subscription_id?: string | null;
+  has_gateway_subscription_id?: boolean;
   grant_started_at: Date | null;
   id: string;
   plan: {
@@ -52,6 +54,7 @@ export type AdminPsychologistProfileRecord = {
   show_experience_tag: boolean;
   social_value: boolean;
   subscriptions: AdminPsychologistSubscriptionRecord[];
+  plan_history?: ProfessionalPlanHistory;
   target_audience: Prisma.JsonValue | null;
   updatedAt: Date;
   user: {
@@ -86,6 +89,12 @@ export type AdminPsychologistProfileRecord = {
   user_id: string;
   video_url: string | null;
   whatsapp: string | null;
+};
+
+export type AdminPsychologistDeletedAccountRecord = {
+  createdAt: Date;
+  deletedAt: Date | null;
+  id: string;
 };
 
 export type AdminPsychologistRankingCandidateRecord = Omit<
@@ -432,7 +441,12 @@ export interface IAdminPsychologistsDashboardRepository {
     range: AdminPsychologistsDashboardDateRange,
     psychologistIds: string[],
   ): Promise<AdminPsychologistProfileTrafficPlatformDataset>;
-  listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
+  listDeletedPsychologistAccounts(): Promise<AdminPsychologistDeletedAccountRecord[]>;
+  listPsychologistSignupDates(): Promise<{ user: { createdAt: Date } }[]>;
+  listPsychologistProfiles(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistProfileRecord[]>;
+  planHistoryCoverage(): Promise<Date | null>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(
     range: AdminPsychologistsDashboardDateRange,

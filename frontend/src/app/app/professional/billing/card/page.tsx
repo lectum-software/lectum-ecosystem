@@ -1,4 +1,4 @@
-﻿import { Suspense } from "react";
+import { Suspense } from "react";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ProfessionalBillingCardLogic } from "./logic";
 

@@ -1,4 +1,4 @@
-﻿# ADR-0148 - Proporcao 16:9 para imagens horizontais em posts e respostas
+# ADR-0148 - Proporcao 16:9 para imagens horizontais em posts e respostas
 
 ## Status
 

@@ -1,4 +1,4 @@
-﻿# ADR-0062: Comunidades reais e feed paginado
+# ADR-0062: Comunidades reais e feed paginado
 
 ## Status
 

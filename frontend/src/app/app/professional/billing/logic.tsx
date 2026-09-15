@@ -1,8 +1,7 @@
-﻿"use client";
+"use client";
 
 import {
   AlertTriangle,
-  ArrowRight,
   BadgeCheck,
   CalendarClock,
   CheckCircle2,
@@ -14,13 +13,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   BillingPaymentHistoryItem,
   BillingPaymentMethod,
   ProfessionalSubscription,
 } from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
-import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -59,6 +58,15 @@ const formatDate = (value?: string | null) => {
   return dateFormatter.format(date);
 };
 
+const isFutureDate = (value?: string | null) => {
+  if (!value) return false;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+
+  return date.getTime() > Date.now();
+};
+
 const formatPaymentDate = (value?: string | null) => {
   if (!value) return "Data indisponível";
 
@@ -86,7 +94,7 @@ const formatCardBrand = (brand?: string | null) => {
 };
 
 const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "Não foi possível carregar sua assinatura agora.";
+  getSafeApiErrorMessage(error, "Não foi possível carregar sua assinatura agora.");
 
 const statusLabel: Record<string, string> = {
   ativa: "Ativo",
@@ -190,14 +198,6 @@ const StatusBadge = ({ label, status }: { label?: string; status?: string | null
   );
 };
 
-const paymentHistoryTone: Record<string, string> = {
-  cancelado: "border-warning/30 bg-warning/10 text-warning",
-  pago: "border-success/30 bg-success/10 text-success",
-  pendente: "border-warning/30 bg-warning/10 text-warning",
-  processado: "border-primary/25 bg-primary-soft text-primary",
-  recusado: "border-danger/30 bg-danger/10 text-danger",
-};
-
 const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) => (
   <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
     <div className="flex gap-3">
@@ -231,14 +231,6 @@ const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) =
                   {formatPrice(item.amount_cents)}
                 </p>
               ) : null}
-              <span
-                className={cn(
-                  "mt-1 inline-flex rounded-full border px-2.5 py-0.5 text-[0.68rem] font-black uppercase tracking-[0.08em]",
-                  paymentHistoryTone[item.status] ?? paymentHistoryTone.processado,
-                )}
-              >
-                {item.status_label || "Processado"}
-              </span>
             </div>
           </li>
         ))}
@@ -295,7 +287,20 @@ export const ProfessionalBillingLogic = () => {
   const canManageCard = Boolean(hasGatewayBilling && subscription?.status !== "cancelada");
   const canCancelSubscription = Boolean(hasGatewayBilling && subscription?.status === "ativa");
   const priceTitle = isCourtesy ? "Valor da cortesia" : "Valor recorrente";
-  const periodTitle = isCourtesy ? "Expiração da cortesia" : "Próxima renovação";
+  const billingGraceEndsAt = subscription?.billing_grace_ends_at ?? null;
+  const billingDowngradedAt = subscription?.billing_downgraded_at ?? null;
+  const isBillingDunningGrace = Boolean(
+    subscription?.status === "inadimplente" &&
+      billingGraceEndsAt &&
+      !billingDowngradedAt &&
+      isFutureDate(billingGraceEndsAt),
+  );
+  const periodTitle = isBillingDunningGrace
+    ? "Regularizar até"
+    : isCourtesy
+      ? "Expiração da cortesia"
+      : "Próxima renovação";
+  const periodDate = isBillingDunningGrace ? billingGraceEndsAt : subscription?.current_period_end;
   const priceLabel = useMemo(
     () => (isCourtesy ? "Sem cobrança" : `${formatPrice(subscription?.plan?.price_cents)} / mês`),
     [isCourtesy, subscription?.plan?.price_cents],
@@ -309,14 +314,11 @@ export const ProfessionalBillingLogic = () => {
     ? visiblePaymentMethod
       ? "Alterar"
       : "Adicionar"
-    : "Alterar";
+    : isBillingDunningGrace
+      ? "Regularizar cartão"
+      : "Alterar";
 
-  if (
-    !subscriptionQuery.isLoading &&
-    !subscriptionQuery.isError &&
-    subscription?.status === "ativa" &&
-    isFreePlan
-  ) {
+  if (!subscriptionQuery.isLoading && !subscriptionQuery.isError && (!subscription || isFreePlan)) {
     return (
       <ProfessionalBillingSubscriptionView
         error={subscriptionQuery.error}
@@ -352,22 +354,6 @@ export const ProfessionalBillingLogic = () => {
           <InlineAlert title="Não foi possível carregar sua assinatura" variant="error">
             {getErrorMessage(subscriptionQuery.error)}
           </InlineAlert>
-        ) : null}
-
-        {!subscriptionQuery.isLoading && !subscriptionQuery.isError && !subscription ? (
-          <EmptyState
-            action={
-              <Button asChild className="h-11 rounded-full">
-                <Link href="/app/profissional/assinatura/planos">
-                  Escolher plano
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
-            }
-            description="Nenhuma assinatura real foi encontrada para o seu perfil. Escolha um plano para continuar."
-            icon={CreditCard}
-            title="Assinatura não encontrada"
-          />
         ) : null}
 
         {!subscriptionQuery.isLoading && !subscriptionQuery.isError && subscription ? (
@@ -421,7 +407,7 @@ export const ProfessionalBillingLogic = () => {
                     <div>
                       <p className="text-sm font-bold text-muted">{periodTitle}</p>
                       <p className="mt-1 text-sm font-extrabold text-foreground">
-                        {formatDate(subscription.current_period_end)}
+                        {formatDate(periodDate)}
                       </p>
                     </div>
                   </div>
@@ -526,8 +512,20 @@ export const ProfessionalBillingLogic = () => {
 
                 {subscription.status === "inadimplente" ? (
                   <InlineAlert title="Regularize seu pagamento" variant="error">
-                    Identificamos pendência na cobrança. Atualize o cartão ou regularize o pagamento
-                    para manter os benefícios do plano.
+                    <div className="grid gap-3">
+                      <p>
+                        {isBillingDunningGrace
+                          ? `Você mantém os benefícios do Plano Profissional até ${formatDate(
+                              billingGraceEndsAt,
+                            )}. Atualize o cartão para evitar o downgrade para o Gratuito.`
+                          : "Identificamos pendência na cobrança. Atualize o cartão ou regularize o pagamento para retomar os benefícios do plano."}
+                      </p>
+                      {canManageCard ? (
+                        <Button asChild className="h-10 w-full rounded-full text-xs font-extrabold">
+                          <Link href="/app/profissional/assinatura/cartao">Regularizar cartão</Link>
+                        </Button>
+                      ) : null}
+                    </div>
                   </InlineAlert>
                 ) : null}
 

@@ -127,7 +127,7 @@ auditáveis usadas foram `_product/proto/Notificações.jpg` e
   - overlay escuro com blur e ícone `/icon.png` via `next/image` visíveis na modal contextual;
   - React/Next dev: bootstrap não fica preso em `isChecking` após cleanup do primeiro effect;
   - coordenação com TASK-37: `lectum.activePrompt` impede empilhamento simultâneo.
-- Refinamento 2026-06-29 validado no ADR-0183 para backoff por perfil e remoção do opt-out
+- Refinamento 2026-06-29 validado no ADR-0431 para backoff por perfil e remoção do opt-out
   permanente.
 - Refinamento 2026-07-04 validado com `pnpm --dir frontend check`, `pnpm --dir frontend build`,
   `pnpm check` e Chrome/CDP mobile `390x844` via URL local exposta por ngrok, confirmando copy curta,

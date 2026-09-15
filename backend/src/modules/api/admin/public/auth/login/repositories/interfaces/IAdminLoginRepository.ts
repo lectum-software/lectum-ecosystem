@@ -1,4 +1,4 @@
-﻿import type { admin, admin_token } from "@/interfaces/objects";
+import type { admin, admin_token } from "@/interfaces/objects";
 
 export type AdminTokenLookup = {
   admin_id: string;

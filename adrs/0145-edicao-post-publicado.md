@@ -1,4 +1,4 @@
-﻿# ADR-0145: Edição de post publicado
+# ADR-0145: Edição de post publicado
 
 ## Status
 

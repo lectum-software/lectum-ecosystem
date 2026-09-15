@@ -1,16 +1,10 @@
 import { error, msg } from "@/helpers/translate";
-import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import {
+  getPaymentGateway,
+  isPaymentGatewayConfigurationError,
+} from "@/modules/billing/payment-gateway";
 import type { ISubscriptionDTO } from "../DTOs/ISubscriptionDTO";
 import { SubscriptionRepository } from "../repositories/SubscriptionRepository";
-
-const isGatewayConfigError = (err: unknown) => {
-  const message = err instanceof Error ? err.message : "";
-
-  return (
-    message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_ENV_INVALID")
-  );
-};
 
 export const showSubscription = async (data: ISubscriptionDTO) => {
   if (data.auth.role !== "psicologo") {
@@ -104,7 +98,7 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
       };
     }
 
-    const cancelledSubscription = await repository.cancelSubscription({
+    const cancellation = await repository.cancelSubscription({
       subscriptionId: subscription.id!,
       gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
     });
@@ -113,14 +107,14 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
       status: 200,
       ...msg("billing_subscription_cancelled", {}),
       data: {
-        current: cancelledSubscription,
-        subscription: cancelledSubscription,
+        current: cancellation.current,
+        subscription: cancellation.cancelled,
         gateway_status: gatewayResult.gateway_status,
         canceled: true,
       },
     };
   } catch (err) {
-    const configError = isGatewayConfigError(err);
+    const configError = isPaymentGatewayConfigurationError(err);
 
     return {
       status: configError ? 503 : 502,

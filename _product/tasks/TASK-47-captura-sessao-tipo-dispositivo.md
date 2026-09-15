@@ -160,3 +160,6 @@ Regras anti-recriação:
 - Smoke autenticado com usuario/token transitorios confirmou vinculo de `user_id`; os dados de smoke foram removidos.
 - Build/start local temporario do frontend em porta 3010 respondeu HTTP 200 para `/`.
 - ADR criado: `adrs/0227-sessoes-visitantes-tipo-dispositivo.md`.
+- Complemento 2026-08-10: captura de localizacao passou a tentar provider por IP quando headers
+  de proxy trouxerem apenas pais, para enriquecer cidade/estado sem armazenar IP bruto; ADR
+  `adrs/0447-captura-localizacao-cidade-prioritaria.md`.

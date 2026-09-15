@@ -4,7 +4,101 @@ Este documento é obrigatório para qualquer task de produto. Ele existe para im
 
 ## Princípio
 
-Frontend e backend estão no mesmo repositório apenas para desenvolvimento. Em código, decisões e validação, trate-os como aplicações separadas.
+Frontend, backend, admin e o serviço de vídeo estão no mesmo repositório apenas para
+desenvolvimento. Em código, decisões, deploy e validação, trate-os como aplicações separadas.
+
+## Operação em ambientes publicados
+
+Desde **2026-08-07**, `frontend/`, `backend/` e `admin/` possuem homologação e produção publicadas. A arquitetura deve assumir dados persistentes e deploys independentes, não um projeto descartável de desenvolvimento.
+
+### Branches e rollout
+
+- `homolog` dispara automaticamente o ambiente de homologação.
+- `main` dispara automaticamente produção.
+- Toda mudança nasce e é publicada primeiro em `homolog`. Se o trabalho estiver em `main`, interromper antes de editar/commitar e orientar o usuário a trocar de branch.
+- Push direto em `main` é proibido. A promoção ocorre por merge revisado após checks, builds e smoke test de homologação.
+- O desenvolvedor não técnico permanece em `homolog`. Uma solicitação explícita para colocar em produção é executada pelo agente como PR `homolog` → `main` via `gh`, espera dos checks, merge sem excluir `homolog` e smoke de produção; não há commit/push direto em `main` nem etapa manual delegada ao usuário salvo bloqueio real de acesso.
+- Backend, frontend, admin e video podem permanecer temporariamente em versões diferentes. Contratos novos devem ser aditivos, consumidores devem tolerar campos ausentes e remoções só podem ocorrer depois que nenhum consumidor antigo depender delas.
+- Um push em `homolog` já é uma operação de deploy e deve ser comunicado como tal.
+
+### Versão dos artefatos
+
+- `package.json`, `backend/package.json`, `frontend/package.json`, `admin/package.json` e
+  `video/package.json` mantêm a mesma versão SemVer.
+- Cada novo commit criado por agente deve executar `pnpm version:bump` exatamente uma vez antes de ser preparado; uma repetição do mesmo commit após falha não recebe outro bump.
+- O Lefthook bloqueia commit sem incremento ou com manifests dessincronizados; `pnpm check:version` valida a sincronização.
+- Backend expõe sua versão de forma aditiva em `/ping`; frontend, admin e video expõem `/version`
+  sem autenticação, cache ou indexação e sem links/sitemap.
+- A versão é incorporada por cada build. Divergência temporária entre aplicações durante rollout é esperada e observável; não usar env manual para sobrescrever a versão.
+
+### Evolução segura do banco
+
+Usar o padrão **expandir → migrar → contrair**:
+
+1. expandir com tabela/campo/índice compatível com registros e código existentes;
+2. publicar backend que aceite os formatos antigo e novo;
+3. executar backfill pequeno, observável, retomável e seguro para repetição;
+4. validar contagens e comportamento em homologação;
+5. somente em task/deploy posterior tornar campo obrigatório, remover fallback ou contrair schema.
+
+Regras:
+
+- migration aplicada é imutável; correções entram em uma migration nova;
+- não adicionar coluna `NOT NULL` sem default seguro ou backfill prévio de todas as linhas;
+- não renomear/remover tabela, coluna ou enum no mesmo deploy que remove seu uso;
+- não usar `prisma db push` em homologação/produção;
+- não executar reset, truncate, seed destrutivo ou exclusão em massa em ambiente publicado;
+- alteração de banco exige ADR com compatibilidade, volume esperado, ordem de deploy, verificação e rollback;
+- `pnpm --dir backend db:migrate` continua obrigatório no banco local quando schema/migrations mudarem; isso não substitui `prisma migrate deploy` do pipeline publicado.
+
+### Evolução segura de configuração
+
+- Preferir env opcional/default seguro no primeiro deploy e só exigir o valor depois de provisioná-lo em todos os ambientes.
+- Se uma env precisar nascer obrigatória, emitir **ALERTA DE DEPLOY** antes do commit/push com: nome da chave, app afetado, se é segredo, ordem de cadastro em homologação e produção, comportamento se faltar e forma de validar. Nunca registrar o valor.
+- Variável backend-only nunca usa prefixo `NEXT_PUBLIC_`; segredos nunca entram no bundle, Git, logs ou relatório.
+- Remover env também exige rollout em duas etapas: primeiro código deixa de depender dela; depois a configuração é removida.
+
+### Segurança operacional
+
+- Não retornar nem exibir stack trace, SQL, nomes internos, mensagens cruas de provider, URLs internas, token, segredo ou PII.
+- Logs devem usar contexto mínimo, identificadores de correlação e dados sanitizados.
+- Jobs, campanhas e migrações de dados que possam produzir efeitos reais começam desabilitados e exigem ativação explícita depois de inspecionar registros pendentes. Exceções de startup só são permitidas com inventário prévio, ADR, lock/idempotência, skip seguro por ambiente e opção de pausa documentada.
+- Para mudança backend, validar `/health` (processo) e `/ready` (dependências) após deploy em homologação.
+- Toda task deve declarar riscos de deploy, rollback e ações manuais; “nenhum” também deve ser registrado quando confirmado.
+
+### Observabilidade de aplicações
+
+- Frontend, backend e admin usam projetos Sentry separados e mantêm SDK, DSN, release, build e
+  configuração próprios. O repositório compartilhado não autoriza um runtime ou projeto Sentry
+  único para as três aplicações.
+- O rollout inicial é somente de erros. Tracing/performance, Replay, Logs, User Feedback e profiling
+  permanecem desabilitados até task e ADR específicos avaliarem custo, consentimento e privacidade.
+- DSN ou environment explícito ausente/inválido desabilita a integração sem impedir boot,
+  build, navegação, jobs, `/health`, `/ready`, `/ping` ou `/version`. Não existe fallback de
+  ativação para `NODE_ENV`, evitando misturar eventos de homolog e produção. Observabilidade é
+  degradável; produto e deploy não dependem da disponibilidade do provider.
+- Eventos nunca incluem usuário, e-mail, CPF, telefone, cookies, headers, request/response body,
+  query string, token, segredo, SQL, variáveis de stack, context lines, breadcrumbs ou mensagens
+  cruas de provider. A allowlist mantém tipo genérico/controlado da exceção, frames com
+  identificadores sintéticos sem segmentos ou símbolos da origem, tags operacionais literais e
+  metadados técnicos validados necessários à simbolicação, como event id, timestamp, level,
+  platform, release, environment e debug ids; caminho absoluto de filesystem não pode sair da
+  aplicação.
+- Erros 4xx, autenticação recusada, rate limit, health/readiness degradado e demais respostas
+  esperadas não viram issues. Falhas 5xx e catches operacionais inesperados podem ser capturados
+  depois de sanitização.
+- Nos apps Next, `NEXT_PUBLIC_SENTRY_DSN` e o environment público explícito são incorporados no
+  build; o token de upload de source maps é segredo exclusivo do CI/build. Upload exige também
+  DSN, environment, organização e projeto válidos; uma limpeza pós-build verificada impede publicar
+  mapas externos ou inline mesmo se o provider falhar. A CSP permite apenas o origin HTTPS validado
+  do DSN, nunca o DSN completo ou uma origem ampla.
+- No backend, a inicialização do SDK precede Express, Prisma e demais integrações instrumentadas;
+  o middleware de erro fica depois das rotas e antes do handler público existente. Source maps
+  locais são consumidos com `--enable-source-maps`, sem expô-los por rota pública. Handlers fatais
+  próprios imprimem somente mensagem genérica mesmo quando a DSN estiver ausente ou inválida.
+- Falha no upload de source maps não bloqueia o build. O rollback completo remove/desativa DSN,
+  environment e credenciais de upload da aplicação afetada; nenhuma alteração de banco, contrato
+  de API ou dado persistido depende da integração.
 
 ## Escopo profissional V1
 
@@ -45,6 +139,20 @@ backend/src/modules/api/{public|private}/{dominio}/{caso}/
 
 Para rotas simples de listagem, é aceitável começar com menos arquivos, mas a task deve justificar. Fluxos com regra de domínio, persistência ou autenticação devem usar controller/service/repository.
 
+### Divisão de responsabilidades no backend
+
+O `sample/backend` pode ser consultado **somente quando a task ou o usuário o citar como referência técnica**, principalmente para entender divisão de responsabilidades. Ele não é fonte de versões, contratos, regras de negócio, mocks ou código a ser copiado. No código atual:
+
+- `index.ts` registra middleware, validator e rota; não contém regra de negócio;
+- `controller.ts` traduz HTTP para o caso de uso e devolve a resposta padronizada;
+- `services.ts` é uma fachada/orquestrador: coordena autorização, repositórios e módulos de domínio, sem concentrar milhares de linhas de cálculo;
+- `repositories/` concentra persistência e não importa controller ou composição HTTP;
+- cálculos, agregações, builders e regras extensas vivem abaixo do próprio caso de uso, por domínio, por exemplo `use-cases/services/{perfil,trafego,assinaturas}` ou `application/{calculators,services}`;
+- interfaces e DTOs ficam próximos do limite que representam, sem um arquivo genérico crescente;
+- imports seguem uma direção única: rota/controller → service/orquestrador → domínio → repository/infra. Um módulo interno não importa de volta sua fachada.
+
+Arquivos `index.ts`, `controller.ts` e `services.ts` são limites públicos/composição, não depósitos de implementação. Preserve seus exports durante extrações para evitar breaking changes em rotas, Swagger, validator e packages portados.
+
 ### Registro de rotas
 
 - Registrar novas rotas em `backend/src/main/server/imports/write.ts`.
@@ -84,13 +192,35 @@ Para rotas simples de listagem, é aceitável começar com menos arquivos, mas a
 
 ### Autenticação e sessão
 
-- Fluxos privados dependem de token JWT e header `x-device`.
-- Não contornar `getDevice`, `passToken`, `LoginRepository.hidrate` ou cookies/store no frontend.
-- Login Google precisa preservar token real retornado pelo backend.
+- Fluxos privados dependem de JWT, cookie de sessão `HttpOnly` e header `x-device`.
+- Em produção, o frontend usa `lectum_user_session` (`HttpOnly`, `Secure`, `SameSite=Lax`) e o admin
+  usa `lectum_admin_session` (`HttpOnly`, `Secure`, `SameSite=Strict`, restrito a `/api/admin`).
+- O backend aceita temporariamente `Authorization: Bearer` antes do cookie para permitir rollout
+  independente e sessões de clientes antigos. Esse fallback é compatibilidade de deploy, não o
+  padrão para código novo.
+- Os headers de capacidade `X-Requested-With: Lectum-User-Cookie-Auth` e
+  `X-Requested-With: Lectum-Admin-Cookie-Auth` permitem ao backend omitir JWTs do JSON somente para
+  clientes que já entendem cookie. Não remover o fallback bearer antes de confirmar que versões
+  antigas não estão mais em uso.
+- No transporte do usuário, a conversão para cookie só pode sobrescrever `allowAuthTokens` quando a
+  resposta realmente trouxer o contrato de sessão top-level `user_tokens`. Respostas sem
+  `user_tokens` permanecem sob a política padrão do `send`; uma exceção `allowAuthTokens: true`
+  exige DTO mínimo, token transitório curto e escopado e ADR específico. Nunca liberar essa exceção
+  globalmente nem usá-la para devolver JWT de sessão ao cliente compatível com cookie.
+- O cookie legível pelo frontend é apenas um marcador de navegação. Ele nunca substitui a validação
+  da API e não pode conter JWT no cliente atual.
+- Não contornar `getDevice`, `passToken`, `LoginRepository.hidrate`, cookies de sessão ou o fluxo de
+  logout/revogação.
+- Login Google e “visualizar como” devem trocar o token transitório por cookie `HttpOnly`; nunca
+  persistir o JWT em URL, `localStorage` ou Redux.
 
 ### Documentação de API
 
 - Manter estrutura compatível com `src/packages/swagger`, que lê rotas, validators e arquivos.
+- O backend é compilado como CommonJS: a geração deve continuar válida tanto sobre `src` no
+  desenvolvimento quanto sobre `dist` no container. Preserve a resolução dos nomes compilados dos
+  validators e não troque o import dinâmico de caminho absoluto por URL `file://` sem mudar e testar
+  todo o runtime.
 - Se um endpoint novo não aparecer em docs, corrigir a estrutura em vez de criar documentação paralela manual.
 
 ## Frontend
@@ -101,7 +231,7 @@ Stack atual:
 - React 19;
 - Tailwind CSS 4;
 - TanStack Query 5;
-- Redux Toolkit + Redux Persist;
+- Redux Toolkit;
 - Axios;
 - React Hook Form + Zod;
 - Sonner;
@@ -127,18 +257,44 @@ frontend/src/app/{rota}/logic.tsx
 frontend/src/app/{rota}/use-form.tsx           # quando houver formulário
 ```
 
+Em telas complexas, essa estrutura mínima deve crescer **dentro da própria rota**, seguindo a forma de composição observada no `sample/frontend` quando ele for referência técnica explícita:
+
+```text
+frontend/src/app/{rota}/
+  page.tsx                  # entrada da rota e dados de servidor, quando houver
+  logic.tsx                 # composição dos hooks e do view model
+  use-form.tsx              # schema/fields/submit da fundação de formulários
+  components/               # partes visuais exclusivas da rota
+  hooks/                    # estado, efeitos e ações por responsabilidade
+  modules/                  # funções puras, formatadores e regras locais
+  context/ ou *-context.tsx # estado compartilhado somente quando necessário
+  types.ts                  # contrato local compartilhado
+```
+
+No admin, `client.tsx` tem o mesmo papel de composição de `logic.tsx`. `page.tsx`, `logic.tsx` e `client.tsx` não devem concentrar ao mesmo tempo fetching, estado, regras, eventos e milhares de linhas de JSX. Componentes filhos recebem contratos explícitos; hooks não importam a view; módulos puros não dependem de React.
+
 Templates/shells devem viver em `frontend/src/templates`.
+
+### Limites arquiteturais automatizados
+
+- `pnpm check:source-size` limita novas raízes de composição (`page.tsx`, `logic.tsx`, `client.tsx`, `controller.ts` e `services.ts`) a **600 linhas** e demais fontes a **700 linhas**. O objetivo recomendado é manter raízes perto de 300 linhas; 600 é teto, não meta.
+- Arquivo legado acima do teto só pode permanecer no baseline no tamanho atual ou menor. Ao cair abaixo do teto, sua entrada deve ser removida; nunca aumente o baseline para acomodar código novo.
+- `pnpm check:cycles` impede ciclos de imports locais em backend, frontend, admin e video.
+- Extrair apenas por contagem não basta: cada arquivo novo deve ter responsabilidade nomeável, direção de dependência clara e contrato tipado.
+- `index.ts` pode expor a API pública de uma pasta, mas não deve ocultar dependências circulares nem virar implementação central.
 
 ### Regras de UI
 
 - **Mobile-first obrigatório**: projetar e implementar primeiro para mobile (base ~390px dos protótipos) e progredir para telas maiores com breakpoints. Toda task com UI deve tornar isso explícito na execução.
 - **Nunca usar `<img>`**: sempre o componente `Image` de `next/image` (otimização e estabilidade de layout). `<img>` cru é proibido.
-- **Tema claro/escuro/sistema** via `next-themes` (`attribute="class"`, `defaultTheme="system"`, `enableSystem`). Cores SEMPRE por tokens (`bg-background`, `bg-surface`, `text-foreground`, `text-muted`, `text-subtle`, `border-border`, `text-primary`/`bg-primary`/`bg-primary-soft`…), **nunca valores hardcoded** (`zinc-*`, `#fff`, `bg-[#...]`). A paleta dark vive em `.dark` no `frontend/src/app/globals.css`; toda tela deve funcionar nos dois temas.
+- **Tema claro/escuro/sistema** via `next-themes` (`attribute="class"`, `defaultTheme="system"`, `enableSystem`). Cores SEMPRE por tokens (`bg-background`, `bg-surface`, `text-foreground`, `text-muted`, `text-subtle`, `border-border`, `text-primary`/`bg-primary`/`bg-primary-soft`…), **nunca valores hardcoded** (`zinc-*`, `#fff`, `bg-[#...]`) nem cores nominais da paleta Tailwind (`white`, `black`, `red-*`, `emerald-*` etc.). A paleta dark vive em `.dark` no `frontend/src/app/globals.css`; toda tela deve funcionar nos dois temas. O Admin segue a mesma regra com tokens `--admin-*` em `admin/src/app/globals.css`.
+- Exceções técnicas de cor ficam isoladas: manifests PWA exigem literais serializáveis; canvas pode manter fallbacks no adaptador de tema; e cores configuráveis de comunidades podem ser persistidas como hexadecimal apenas em módulos de paleta. Essas exceções não autorizam cores cruas em JSX, componentes ou estilos inline. `pnpm check:source-safety` fiscaliza essa fronteira.
 - Primeiro ajustar e reutilizar componentes existentes.
 - Não criar um design system paralelo.
 - Design foundation deve transformar `registry/new-york-v4` e `components/ui` no padrão Lectum.
 - Componentes de interface devem usar ícones `lucide-react` quando houver equivalente.
 - Telas devem consultar `PROTO-INVENTORY.md` antes da implementação.
+- Barras fixas inferiores no mobile, como o composer principal de comentários, devem ancorar em `bottom-0` com safe area; offset de teclado só pode vir de medição ativa (`visualViewport`) e não de `env(keyboard-inset-height)` como fallback permanente, para evitar barras flutuando após o teclado fechar.
 - Quando Builder/Quick Copy estiver disponível no cliente, usar o Quick Copy ativo para complementar a leitura visual.
 - Quando Builder/Quick Copy não estiver acessível no ambiente, usar as imagens exportadas em `_product/proto` e registrar a limitação.
 - Imagens de protótipo não autorizam copiar arquitetura, criar mocks ou aceitar código gerado automaticamente.
@@ -146,7 +302,12 @@ Templates/shells devem viver em `frontend/src/templates`.
 
 ### Estado, sessão e guards
 
-- Sessão real usa cookie de token e Redux Persist.
+- A sessão real é validada pelo backend por cookie `HttpOnly` + `x-device`; Redux mantém apenas o
+  usuário da aba em memória e é reidratado pela API.
+- O frontend mantém somente um marcador não sensível para decidir se tenta hidratar. `proxy.ts` e
+  esse marcador melhoram navegação, mas não são controle de autorização; a API é a autoridade.
+- O admin não persiste usuário ou JWT em `localStorage`. Durante o rollout, um bearer legado pode
+  existir apenas em memória/`sessionStorage` e deve desaparecer depois da hidratação por cookie.
 - `proxy.ts` protege rotas privadas.
 - Apos a TASK-145, `/app` e namespace autenticado/noindex: paginas publicas de descoberta/leitura vivem fora de
   `/app` (`/`, `/psicologos`, `/psicologos/[id]`, `/comunidades`, `/comunidades/[slug]`,
@@ -157,7 +318,8 @@ Templates/shells devem viver em `frontend/src/templates`.
   `/app/favoritos`, `/app/publicacoes/*`, `/app/avaliacoes/*`, `/app/configuracoes/*`,
   `/app/profissional/*`, `/app/comunidades/*` e `/app/psicologo/*`. Rotas privadas antigas em ingles
   existem apenas por redirect de compatibilidade.
-- `useUserSet` é o caminho para gravar usuário/token pós-login.
+- `useUserSet` é o caminho para gravar o usuário pós-login; o JWT é responsabilidade do cookie
+  `HttpOnly` emitido pelo backend.
 - Não criar usuário fake em store para passar por rota privada.
 
 ### Forms
@@ -187,6 +349,167 @@ Templates/shells devem viver em `frontend/src/templates`.
 - Para listas muito longas, avaliar `@tanstack/react-virtual`.
 - Para tabelas/datagirds complexos, avaliar `@tanstack/react-table`.
 - Não instalar TanStack Router enquanto Next App Router for a arquitetura vigente.
+
+### Plano de controle e plano de dados de vídeo
+
+- O backend Lectum é o **plano de controle**: autoriza o dono, persiste `video_asset`, valida a
+  associação com perfil/post/resposta, recebe webhook assinado e emite playback curto.
+- Cloudflare Stream é o **plano de dados** dos novos vídeos: o navegador envia por TUS diretamente
+  para `upload.videodelivery.net` e reproduz HLS diretamente de `cloudflarestream.com`. Next e
+  Express não transportam partes nem fazem proxy de manifestos/segmentos.
+- O limite total de cada vídeo tem fonte única no backend: apresentação usa
+  `UPLOAD_LIMIT_PSYCHOLOGIST_VIDEO_MULTIPART_MB`, post usa
+  `UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MULTIPART_MB` e resposta usa
+  `UPLOAD_LIMIT_POST_REPLY_MEDIA_MULTIPART_MB`. O frontend não compara o tamanho do vídeo com teto
+  numérico próprio; envia finalidade, MIME e bytes declarados ao plano de controle, que responde
+  `413/exceeded_file_limit` antes de emitir a URL TUS. A UI pode exibir o limite devolvido com
+  segurança pelo backend, sem substituir por valor compilado no bundle.
+- As envs `*_SIMPLE_MB` e `*_MULTIPART_CHUNK_MB` são proteções dos transportes R2 legados e não
+  definem o total aceito pelo Stream. Limites client-side de imagens continuam independentes desta
+  política, e os hard caps defensivos do backend não podem ser removidos por configuração.
+- `CLOUDFLARE_STREAM_API_TOKEN`, signing private key e webhook secret existem somente no backend.
+  A URL TUS é uma capability temporária devolvida apenas ao dono e nunca é persistida/logada.
+- Todo vídeo Stream nasce com `requiresignedurls` e `allowedorigins`. O player solicita uma URL
+  assinada no endpoint público com autenticação opcional: associação a conteúdo público autoriza
+  qualquer visitante; a sessão autoriza a prévia do dono. Rascunho, conteúdo removido/inativo e
+  ativo sem vínculo público falham como `404`. A URL assinada fica apenas em memória/cache curto e
+  nunca em banco, Redux, storage, analytics, export ou toast.
+- O token Cloudflare é um JWT assinado, não criptografado. Portanto, seu payload técnico pode ser
+  decodificado pelo cliente; o UID do provider não é uma credencial e jamais deve ser usado como
+  autorização. A segurança vem da assinatura RS256, expiração, allowed origins e decisão do backend.
+- Campos de vídeo novos (`video_url`, `media_url`) armazenam somente a referência estável Lectum
+  `/api/private/video-assets/:id/playback`. Vídeos R2 antigos seguem legíveis apenas como legado
+  de leitura/migração durante rollout.
+- A partir de 2026-09-12, não existe fallback de escrita de vídeo para R2. O frontend envia todo
+  vídeo de apresentação, post e resposta pelo Cloudflare Stream; se a provisão/upload/processamento
+  do Stream falhar, a operação falha de forma segura e pode ser tentada novamente, sem gravar R2.
+  Os endpoints legados de vídeo recusam clientes antigos com erro público seguro; R2 permanece
+  permitido somente para imagens e para servir origens legadas até a migração TASK-165.
+- O endpoint canônico de emissão é `GET /api/public/video-assets/:id/playback`. O path privado
+  persistido é tratado como identificador opaco e alias read-only temporário para compatibilidade;
+  uploads, status e exclusão permanecem sob autenticação obrigatória.
+- Safari/iPhone usa HLS nativo; Chrome/Android/Admin usa `hls.js` quando MSE está disponível. Tokens
+  de playback público/privado continuam sem download. A exceção é o endpoint privado do Admin
+  introduzido na TASK-183: após autenticação administrativa e resolução de um conteúdo específico,
+  o backend pode emitir URL de MP4 de download do Cloudflare Stream com `downloadable` e
+  `flags.original`, ou fonte pública legada R2, sem expor isso ao player nem a rotas públicas.
+- O backend precisa manter a configuracao Stream ativa para upload, associacao e playback. A flag
+  publica de upload nao controla mais a escolha de transporte: novos videos sempre dependem do
+  Stream. Em runtime publicado, a flag backend legada `CLOUDFLARE_STREAM_ENABLED` nao pode
+  desativar essa dependencia; `/ready` deve falhar se a configuracao Stream obrigatoria estiver
+  incompleta. Rollback de escrita nao deve recriar fallback R2; se o Stream publicado ficar
+  indisponivel, bloquear temporariamente novos videos e mais seguro do que gerar arquivos originais
+  em R2. Nunca apagar ativos Stream ou objetos R2 no rollback.
+- O backfill de referências R2 existentes pertence à TASK-165. Desde TASK-180 ele nunca
+  inicia no boot, em nenhum ambiente. A CLI continua disponível para dry-run e aplicação
+  manual, retomável, com confirmação explícita do ambiente; preserva os objetos de origem.
+- TASK-181 registra retenção recuperável em catálogo interno separado, inclusive para
+  arquivos legados sem video_asset. Vídeos Stream substituídos/prontos removidos recebem
+  marcação na transação da aposentadoria, sem exclusão física e sem reativar o playback.
+  Data de revisão não é TTL: deletion_hold começa true, review_after pode ficar null e
+  nenhum job destrutivo é ativado. Catálogo de R2 é manual, sem upload de vídeo em R2.
+- A importação por link reconstrói a origem com o `BASE` atual, valida o objeto no R2 e exige
+  `HEAD`/`GET Range` antes de chamar Stream. `creator` e `migration_key` determinísticos permitem
+  retomada; resposta ambígua do provider falha fechada.
+- A origem desse backfill usa o endpoint técnico extensionless e no-store da TASK-166, não a URL
+  legada com extensão. Isso preserva `HEAD` + `GET Range` quando o Cloudflare Proxy converte uma
+  requisição cacheável antes de consultar a origem e mantém a reprodução final fora do backend.
+- Campos de perfil/post/resposta só recebem a referência Lectum depois de `ready` e por
+  compare-and-swap da origem observada. A operação não apaga vídeo/capa R2; retenção e contração
+  futuras exigem task própria depois de homologação e inventário zero.
+
+
+### Serviço isolado de processamento de vídeo
+
+- `video/` é uma quarta aplicação Node independente; não importa código nem lockfile de
+  `backend/`, `frontend/` ou `admin/` e não participa do caminho crítico do Cloudflare Stream.
+- A API privada recebe uploads autenticados de serviços internos, grava bytes em volume não
+  público e enfileira somente metadados opacos no BullMQ/Redis. O browser nunca recebe sua chave.
+- Workers executam FFmpeg/ffprobe por `spawn` com argumentos fechados e `shell: false`. MediaBunny,
+  FFmpeg no browser, Chromium e execução de shell interpolado não são permitidos.
+- O runtime padrão de `video/` sobe API e worker no mesmo processo Node via `dist/all.js`, mantendo
+  BullMQ/Redis e volume local único para evitar job social sem consumidor ou output em volume
+  diferente. Quando escalar, API e worker podem voltar a processos/serviços separados desde que
+  compartilhem storage persistente equivalente. Em `docker-compose`, o worker isolado tambem deve
+  participar de uma rede de egresso nao-internal para buscar midias HTTPS first-party/Stream antes
+  do `ffprobe`/FFmpeg; ele continua sem porta publicada, enquanto o Redis permanece apenas na rede
+  privada interna.
+- A saída de compressão é MP4 H.264/AAC validada e publicada por rename atômico. Download exige
+  Bearer interno, suporta Range único e nunca usa `express.static`.
+- A operacao `social_share` reativa o video social 9:16 sem MediaBunny: o backend continua sendo o
+  plano de controle owner-only, resolve uma origem HTTPS segura (playback assinado Cloudflare Stream
+  ou midia publica legada de `posts/media/`) e chama a API privada do `video/`; quando a origem e
+  Stream privado, tambem envia uma origem web publica permitida para que o worker use `Origin` e
+  `Referer` seguros no `ffprobe`/FFmpeg. Midias legadas absolutas ja persistidas podem manter uma
+  origem HTTPS publica anterior mesmo quando a `BASE` atual diverge, desde que continuem sob
+  `/public/files/posts/media/`, sem credenciais, query ou fragmento; isso evita invalidar posts e
+  respostas reais por troca de hostname. O worker valida DNS publico para origens externas; a unica
+  excecao first-party e midia publica Lectum em `homolog-api.lectum.com.br` ou `api.lectum.com.br`,
+  sempre HTTPS e no prefixo exato `/public/files/posts/media/`, que pode resolver por rota
+  privada/overlay do proprio ambiente sem virar SSRF generico. `ffprobe`/FFmpeg usam `User-Agent`
+  controlado, probe remoto com reconexao e aplicam `-allowed_extensions ALL` somente a HLS `.m3u8`,
+  nunca a MP4/MOV/WebM direto; para midia remota direta, o worker baixa primeiro para storage
+  privado efemero com `fetch`, redirects proibidos e headers seguros, valida assinatura/tamanho e
+  entao roda `ffprobe`/FFmpeg sobre arquivo local. O render social gera 1080x1920 com FFmpeg
+  H.264/AAC em preset rapido, executa processos com locale UTF-8, escapa textos livres antes do
+  `drawtext`, usa `fonts-manrope` no container para aproximar a tipografia da previa/app e compoe a
+  arte Reels por `scale+pad+overlay+drawtext` no caminho padrao e `scale+pad+drawbox+drawtext` no
+  fallback portatil: canvas final 9:16 fixo, video inteiro
+  centralizado sem crop e faixas pretas preservadas/criadas quando a origem nao preenche o canvas,
+  cartao superior sem sombra, moldura de celular ou watermark, largura 860px, x=110, y=250, raio
+  32px, fundo PNG anti-aliased no caminho padrao e drawbox de 1px no fallback, cabecalho azul
+  `#308ce8` com 88px, simbolo Lectum branco recortado do asset oficial `logo-light.png` a esquerda do label e
+  deslocado 4px para cima para alinhamento optico com o texto,
+  corpo branco com 266px, margens laterais internas ampliadas, texto preto `#151922` centralizado em
+  ate 3 linhas de 30 caracteres, fonte Manrope bold 50px e compacta 44px quando a pergunta ocupar 3
+  linhas, com entrelinha 60px para caber mais texto sem vazamento horizontal. As credenciais ficam sobre o video em y=1400/y=1440, grupo
+  centralizado com nome branco Manrope bold 34px, profissao Manrope medium 21px alinhada ao inicio
+  do nome e selo verificado azul em asset PNG de 26x24px. O rotulo do cartao e `Postado na Lectum` para
+  post e `Respondido na Lectum` para resposta; o rotulo legado `Perguntaram na Lectum` e normalizado
+  para resposta durante rollout. O grafo evita filtros de blur e filtros secundarios de fundo
+  dependentes de build (`eq`, `fps`, `format`, `setsar`) e mantem o arquivo apenas como saida efemera
+  do job. Se o grafo padrao ou os assets falharem antes de emitir progresso, o worker tenta variantes
+  portateis sem assets/fontes explicitas, preservando `scale+pad`, `drawbox+drawtext` e ausencia de `crop`.
+  As falhas de processo sao classificadas em `diagnostic_code` seguro a partir de stderr
+  em memoria, com codigos allowlist por filtro conhecido quando possivel, sem expor stderr bruto,
+  URLs, stack, segredos, SQL, PII ou payload tecnico. Para posts, a associacao de video
+  considera `community_post_media` ativo antes do fallback legado `media_url/media_type`. O frontend
+  pode repetir chamadas transitorias de start/status/download, aguardar videos maiores e reutilizar o
+  job em andamento na mesma sessao, iniciar o preparo do arquivo somente apos clique/toque no botao
+  de download, manter a tela acordada por Wake Lock best-effort durante esse preparo acionado pelo
+  usuario e exibir na modal uma previa instantanea do video original com a mesma arte visual
+  sobreposta por CSS em proporcoes equivalentes (`cqw/cqh`), sem sombra na caixa de pergunta, com
+  raio `2.95cqw`, corpo `px-[6.6cqw]`, quebra em ate 3 linhas de 30 caracteres e usando o asset branco oficial da logo
+  no cabecalho. As credenciais da previa recebem calibracao optica contra o MP4 real baixado: grupo
+  em `top:69.35%`, nome Manrope Bold em `2.95cqw`, profissao em `1.8cqw`, espacamento de
+  `0.55cqw` e selo em `2.22cqw x 2.05cqw`, para ficar sobre a identificacao gravada no video
+  final quando comparadas em sobreposicao; o controle de audio fica como icone discreto, com fundo
+  transparente, sobre o proprio video no canto inferior direito, sem botao textual separado. O
+  arquivo baixado continua
+  sendo o MP4 gerado pelo app `video/`, e a paridade exigida da previa e de layout/posicionamento,
+  nao de bytes. Depois que o job conclui, o frontend dispara automaticamente a entrega do arquivo:
+  tenta Web Share quando permitido pelo navegador e, se a ativacao do usuario tiver expirado ou a
+  folha nativa nao puder abrir, cai para o download por objeto local sem exigir um segundo clique no
+  botao. A UI exibe
+  ao usuario apenas diagnostico publico controlado (etapa, motivo em PT-BR, referencia `SR-xx`,
+  status HTTP e estado/progresso do job quando existirem), mas nunca volta a gerar video no browser
+  nem baixa o original sem arte quando o job falha. A UI nao pode expor mensagem crua de erro, stack,
+  SQL, URL, segredo, PII, payload tecnico ou detalhe de provider.
+- O Admin pode iniciar a mesma operação `social_share` para conteúdos de Comunidades de autoria de
+  psicólogo, usando os mesmos metadados, rótulos e `fileName` do fluxo do psicólogo. O job continua
+  efêmero, sem persistência de arte no R2 e sem endpoint público; apenas o Admin autenticado recebe o
+  arquivo final por proxy do backend.
+- Novas operações, como marca d'água ou thumbnail, entram como job/processador explícito com ADR,
+  limites e retenção próprios; não devem ser adicionadas ao backend HTTP.
+- O backend acessa essa aplicação somente por cliente server-to-server, usando origem privada
+  configurada (IP interno ou DNS interno) ou HTTPS dedicado protegido pelo Bearer exclusivo de
+  runtime. HTTP público e loopback em runtime publicado são recusados; redirects também são
+  recusados para impedir encaminhamento da credencial. Respostas operacionais têm
+  tamanho/contrato limitados e a URL nunca vai ao browser.
+- A conectividade autenticada é validada por operação compilada sem criar jobs. Enquanto nenhum
+  fluxo de produto depender do serviço, ele não participa do boot nem do `/ready` do backend;
+  indisponibilidade de processamento offline não pode derrubar login, feed ou playback Stream.
+- `pnpm --dir video check` e `pnpm --dir video build` são obrigatórios quando a aplicação mudar.
 
 ## Anti-recriação
 
@@ -228,3 +551,17 @@ Regras obrigatórias:
 - A camada de controller/service nao deve conhecer detalhes do fornecedor; criar interface de provider para permitir troca futura sem mudar contratos das rotas `/api/private/psychologist/cfp/*`.
 - Falhas de configuracao, rate limit, timeout ou resultado ambiguo devem falhar de forma honesta, sem mock e sem aprovar profissional automaticamente.
 - O token `DOCUMENT_TOKEN` nunca pode sair do backend nem aparecer em logs, respostas HTTP, traces ou codigo frontend.
+
+
+## Inicialização e propriedade de mídia (TASK-180 / ADR-0500)
+
+- Mídia de vídeo publicada: Cloudflare Stream, sem fallback de upload para R2.
+- Imagens: R2; o storage compartilhado só aceita JPEG, PNG e WebP, com validação de assinatura.
+- O start aplica migrations Prisma configuradas e inicia a API/schedulers normais. Nunca executa
+  backfill R2 → Stream, varredura de mídia ou migração de arquivos.
+- Backfill legado pertence a `backend/src/operations/video-assets/migrate-r2-to-stream.ts`,
+  executado manualmente no container, inicialmente em dry-run e depois com confirmação explícita.
+- Leitura legada e cancelamento de uploads antigos permanecem compatíveis até conclusão manual;
+  preservar objetos R2, capas e regras de visibilidade/propriedade existentes.
+- Arquivos temporários de processamento FFmpeg continuam no volume do serviço dedicado, sem
+  converter esse volume em bucket público nem introduzir upload de vídeo R2.

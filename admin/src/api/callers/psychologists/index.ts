@@ -1,10 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminCommunitiesKeys, adminDashboardKeys, adminPsychologistsKeys } from "@/api/cache/keys";
+import {
+  adminCommunitiesKeys,
+  adminDashboardKeys,
+  adminFinanceKeys,
+  adminPsychologistsKeys,
+} from "@/api/cache/keys";
 import {
   type AdminPsychologistAccountReasonInput,
   type AdminPsychologistAccountStatusActionInput,
   type AdminPsychologistActivitiesQuery,
   type AdminPsychologistApproveRegistryVerificationInput,
+  type AdminPsychologistCancelSubscriptionInput,
   type AdminPsychologistChangeEmailInput,
   type AdminPsychologistGrantCourtesyInput,
   type AdminPsychologistPublicationsQuery,
@@ -19,6 +25,7 @@ import {
   type AdminPsychologistUpdateProfessionalDataInput,
   type AdminPsychologistUpdateRegistryIdentityInput,
   approveAdminPsychologistRegistryVerification,
+  cancelAdminPsychologistSubscription,
   changeAdminPsychologistAccountEmail,
   deactivateAdminPsychologistAccount,
   deleteAdminPsychologistAccount,
@@ -356,6 +363,23 @@ export const useAdminPsychologistRevokeCourtesy = (id: string) => {
         queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
         queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
         queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.billing(id) }),
+      ]);
+    },
+  });
+};
+
+export const useAdminPsychologistCancelSubscription = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistCancelSubscriptionInput) =>
+      cancelAdminPsychologistSubscription(id, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.billing(id) }),
+        queryClient.invalidateQueries({ queryKey: adminFinanceKeys.all }),
       ]);
     },
   });

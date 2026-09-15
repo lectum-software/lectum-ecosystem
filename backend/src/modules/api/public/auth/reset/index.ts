@@ -1,5 +1,6 @@
 //Lib
 import { Router } from "express";
+import { getLimiter } from "@/external/limiter";
 
 //Controllers
 import { reset } from "./use-cases/controller";
@@ -9,8 +10,9 @@ import validator from "./validator";
 
 //Route Infos
 const routes = Router();
+const limiter = getLimiter({ window: 15, max: 10 });
 
 //Routes
-routes.post("/:code", validator, reset);
+routes.post("/:code", limiter, validator, reset);
 
 export default routes;

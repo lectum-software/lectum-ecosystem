@@ -239,6 +239,12 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 - O provider InfoSimples CFP passa a usar timeout padrao de 90s, configuravel por `DOCUMENT_REQUEST_TIMEOUT_MS`, e registra logs sanitizados de erro operacional.
 - `code=609` passa a ser indisponibilidade temporaria (`cfp_provider_unavailable`) em vez de rate limit/saldo; o fluxo permanece sem mock e sem aprovacao automatica quando a origem falha.
 
+## Compatibilidade de indisponibilidade InfoSimples em 2026-08-06
+
+- Caso real de homologacao retornou HTTP 200 com `code=615` e mensagem de indisponibilidade do site/aplicativo de origem apos aproximadamente 5,3s, confirmando que token, rede e timeout estavam operacionais.
+- O backend passa a reconhecer `code=609` e `code=615` como `cfp_provider_unavailable`, mantendo a resposta HTTP 502 e encaminhando a interface para a orientacao de suporte.
+- O fallback de produto e exclusivamente a aprovacao humana auditada pelo Admin (TASK-66/ADR-0251): a falha automatica nao altera `crp_status`, nao preenche `cfp_verified_at` e nao aprova o profissional.
+
 ## Observabilidade InfoSimples em 2026-07-04
 
 - O fluxo CFP passa a emitir logs estruturados e sanitizados com `traceId` para correlacionar request, provider e classificacao final.
@@ -249,7 +255,7 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 
 - Quando a consulta automatica ao cadastro CFP falhar por instabilidade da origem, a tela passa a informar que o sistema do Conselho Federal de Psicologia esta instavel no momento.
 - A tela tambem passa a exibir um link de suporte para o psicologo solicitar aprovacao manual, mantendo a regra de nao aprovar automaticamente sem validacao real/manual.
-- A pagina CFP exibe no rodape "Problemas? Fale com o suporte" com link para o WhatsApp operacional `wa.me/5537998739534`.
+- A pagina CFP exibe no rodape "Problemas? Fale com o suporte" com link para o WhatsApp operacional `wa.me/5511936220962`.
 - A UI tambem cobre falhas HTTP 5xx genericas, como 502 de proxy/backend sem `code` JSON, exibindo a mensagem de suporte em vez do texto tecnico do cliente HTTP.
 
 ## Correcao de preservacao CRP no perfil em 2026-07-04
@@ -266,4 +272,133 @@ Validacoes executadas:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou que o CRP confirmado e exposto como `06ª Região - SP/161904`, preservando `nome_regional` e `registro` da auditoria CFP.
+- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou que o CRP confirmado e exposto como `<REGIÃO>/<REGISTRO>`, preservando `nome_regional` e `registro` da auditoria CFP.
+
+## Ajuste pos-feedback 2026-08-14 - copy da verificacao profissional
+
+- Pedido direto de produto aplicado em `/psychologist/cfp`.
+- A copy principal passa a explicar que a consulta e necessaria para conceder o selo de verificado.
+- A descricao do campo CPF passa a informar que a busca sera feita junto ao Conselho Federal de Psicologia.
+- Nao houve alteracao de backend, endpoint, contrato, schema Prisma, migration, package novo, mock, seed ou dado persistido.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a imagem anexada pelo usuario foi usada como referencia visual e textual.
+- UI mantida mobile-first, reaproveitando a tela, componentes e formulario existentes da TASK-10/TASK-02.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] Texto principal da tela de verificacao profissional ajustado conforme pedido.
+- [x] Texto auxiliar do campo CPF ajustado conforme pedido.
+- [x] Nenhum contrato, banco, provider ou fluxo de aprovacao CFP foi alterado.
+
+## Ajuste pos-feedback 2026-08-15 - mensagens de falha CFP
+
+- Pedido direto de produto aplicado ao fluxo `/psychologist/cfp`, usando a imagem anexada pelo usuario como evidencia visual do estado de erro.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia local `_product/proto/Verificação de CPF - Consulta CFP.jpg` foi consultada como fallback visual da TASK-10.
+- Quando o backend retorna `cfp_search_attempts_exceeded`, a UI passa a informar que o psicologo excedeu o numero de tentativas de busca de CPF e deve entrar em contato com o suporte para continuar a verificacao.
+- Quando o erro for `cfp_provider_unavailable`, HTTP 5xx ou falha generica de conexao no fluxo CFP, a UI passa a informar que o sistema do Conselho Federal de Psicologia esta indisponivel e orienta contato com suporte para consulta manual do registro.
+- A traducao backend de `cfp_provider_unavailable` e `cfp_search_attempts_exceeded` foi alinhada ao mesmo texto publico, sem expor InfoSimples, stack, token, CPF ou detalhes tecnicos.
+- Nao houve alteracao de schema Prisma, migrations, endpoints, env, packages, mocks, seeds ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] Limite de 3 tentativas de busca de CPF exibe orientacao para contato com suporte.
+- [x] Erro de conexao/indisponibilidade da consulta CFP exibe orientacao para consulta manual pelo suporte.
+- [x] Mensagens publicas permanecem sem detalhes tecnicos do provider e sem alterar a regra de aprovacao real/manual.
+
+## Ajuste pos-feedback 2026-08-29 - suporte em qualquer falha CFP
+
+- Pedido direto de produto aplicado ao fluxo `/psychologist/cfp` e ao alias `/app/profissional/cfp`: qualquer erro retornado pelas acoes de busca ou confirmacao da verificacao profissional passa a exibir orientacao explicita para contato com o suporte.
+- A mensagem especifica de tentativa excedida e a mensagem de indisponibilidade operacional continuam priorizadas quando aplicaveis; os demais erros seguros mantem a copy retornada pelo backend, mas agora tambem mostram o CTA de suporte para continuidade manual da verificacao.
+- O erro de validacao da API automatica (`cfp_provider_validation_error`), visto no print anexado pelo usuario, passa a entrar no conjunto de falhas com suporte, sem expor InfoSimples, token, endpoint, stack, CPF completo ou payload tecnico.
+- A tela de confirmacao de resultado tambem passa a mostrar o mesmo CTA quando a etapa de confirmar registro falhar.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a imagem anexada pelo usuario e a referencia local `_product/proto/Verificação de CPF - Consulta CFP.jpg` foram usadas como evidencia visual.
+- Alteracao frontend-only, mobile-first, sem schema Prisma, migration, endpoint, env, package, mock, seed, reset ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] Falhas de busca CFP, incluindo `cfp_provider_validation_error`, exibem orientacao para contato com suporte.
+- [x] Falhas de confirmacao CFP exibem a mesma orientacao de suporte.
+- [x] Mensagens publicas continuam sanitizadas e a regra de aprovacao real/manual nao foi alterada.
+
+## Ajuste pos-feedback 2026-08-29 - copy de indisponibilidade do CFP
+
+- Pedido direto de produto aplicado ao fluxo `/psychologist/cfp` e ao alias `/app/profissional/cfp`: a segunda opcao de copy foi adotada para falhas relacionadas ao sistema do Conselho Federal de Psicologia.
+- O titulo publico do alerta passa a ser "Sistema do CFP indisponivel".
+- Para `cfp_provider_config_error`, `cfp_provider_validation_error`, `cfp_provider_rate_limited`, `cfp_provider_unavailable`, `cfp_provider_error`, HTTP 5xx e falhas genericas de conexao, a UI passa a exibir: "O sistema do Conselho Federal de Psicologia esta indisponivel no momento. Fale com o suporte para continuarmos a verificacao manual do seu registro."
+- A traducao backend dos erros `cfp_provider_*` foi alinhada para compatibilidade durante rollout com frontend/backend em versoes diferentes; os codigos de dominio, statuses, limites de tentativa, provider e contrato nao foram alterados.
+- O CTA de suporte permanece no alerta, agora como complemento curto de acao pelo WhatsApp, sem repetir a mesma frase da mensagem principal.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a imagem anexada pelo usuario e a referencia local `_product/proto/Verificacao de CPF - Consulta CFP.jpg` foram usadas como evidencia visual.
+- Alteracao de copy frontend/backend locale, mobile-first, sem schema Prisma, migration, endpoint, env, package novo, mock, seed, reset ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] O alerta de falhas do sistema CFP usa o titulo "Sistema do CFP indisponivel".
+- [x] Falhas `cfp_provider_*`, incluindo `cfp_provider_validation_error` do print, informam que o sistema do Conselho Federal de Psicologia esta indisponivel e orientam suporte para verificacao manual.
+- [x] Mensagens publicas continuam sanitizadas e a regra de aprovacao real/manual nao foi alterada.
+
+### Validacoes executadas pos-feedback
+
+- `pnpm version:bump` e `pnpm check:version` sincronizaram os manifests em `0.1.237`.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- Smoke estatico Node confirmou titulo, corpo, `cfp_provider_validation_error`, CTA de suporte e traducoes backend `cfp_provider_*` alinhados.
+- `pnpm check`
+- Browser local mobile-first 390x884 em `http://localhost:3000/psychologist/cfp`: rota protegida renderizou/redirecionou para login sem sessao, preservando o shell privado; o estado de erro nao foi forjado com mock.
+
+## Ajuste pos-feedback 2026-08-29 - remocao de copy duplicada no suporte CFP
+
+- Pedido direto de produto aplicado ao fluxo `/psychologist/cfp` e ao alias `/app/profissional/cfp`: remover o trecho "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp." do alerta de suporte.
+- `SupportGuidance` passa a renderizar apenas o CTA `Fale com o suporte pelo WhatsApp`, evitando repetir a orientacao manual que ja aparece na mensagem principal de indisponibilidade CFP.
+- A mensagem principal `cfpProviderUnavailableMessage`, o titulo `Sistema do CFP indisponivel`, o link de WhatsApp, os codigos de erro, o backend e a regra de aprovacao real/manual permanecem inalterados.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; o print anexado pelo usuario e a referencia local `_product/proto/Verificacao de CPF - Consulta CFP.jpg` foram usados como evidencia visual.
+- Alteracao frontend-only, mobile-first, sem schema Prisma, migration, endpoint, env, package novo, mock, seed, reset ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] O trecho "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp." nao aparece mais antes do botao de WhatsApp.
+- [x] O CTA `Fale com o suporte pelo WhatsApp` permanece disponivel no alerta CFP.
+- [x] Mensagens publicas continuam sanitizadas e a regra de aprovacao real/manual nao foi alterada.
+
+### Validacoes executadas pos-feedback
+
+- [x] `pnpm --dir frontend exec biome check --write "package.json" "src/app/psychologist/cfp/components/cfp-layout.tsx" "src/app/psychologist/cfp/components/cfp-copy.test.mjs"`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/psychologist/cfp/components/cfp-copy.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm version:bump` e `pnpm check:version` sincronizaram os manifests em `0.1.241`.
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] Browser local mobile-first 390x884 em `/psychologist/cfp`: rota protegida renderizou/redirecionou para login sem sessao, preservando o shell privado; o estado de erro nao foi forjado com mock.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+
+
+## Ajuste pos-feedback 2026-09-14 - novo WhatsApp do suporte
+
+- Pedido direto de produto aplicado aos botoes de suporte por WhatsApp da jornada de verificacao profissional do psicologo (`/psychologist/cfp` e alias `/app/profissional/cfp`).
+- O numero operacional do suporte Lectum passa a ser `11 93622-0962`, gerando link `wa.me/5511936220962` com a mensagem existente de ajuda na verificacao profissional.
+- A busca no codigo confirmou que `SupportFooterLink`, `SupportGuidance` e o CTA `Falar com suporte` do resultado CFP reutilizam `supportLinkProps`; os outros `wa.me` encontrados pertencem a contato de psicologos ou tracking, nao suporte Lectum.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia local `_product/proto/Verificacao de CPF - Consulta CFP.jpg` segue como fallback visual da tela mobile-first.
+- Alteracao frontend-only, mobile-first, sem schema Prisma, migration, endpoint, env, package novo, mock, seed, reset, provider ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] Botoes/links de suporte da etapa CFP usam `wa.me/5511936220962`.
+- [x] O link antigo do suporte nao permanece no codigo da tela CFP.
+- [x] Demais links de WhatsApp de psicologos permanecem inalterados.
+
+### Validacoes executadas pos-feedback
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/psychologist/cfp/modules/support.ts" "src/app/psychologist/cfp/components/cfp-copy.test.mjs"`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/psychologist/cfp/components/cfp-copy.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm version:bump` e `pnpm check:version` sincronizaram os manifests em `0.1.377`.
+- [x] `pnpm check`
+- [x] Browser local Chrome headless mobile-first 390x884 em `/psychologist/cfp`: sem sessao real, a rota redirecionou para login como esperado; nenhum estado autenticado foi forjado com mock.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.

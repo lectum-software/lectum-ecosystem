@@ -26,6 +26,7 @@ export const schema: IValidatorRequest = {
   ],
 
   body: [
+    { key: "adult_confirmed", custom: z.boolean().optional() },
     //*
     {
       key: "name",
@@ -52,12 +53,6 @@ export const schema: IValidatorRequest = {
       key: "email",
       method: "email",
       coerse: "string",
-    },
-    {
-      key: "active",
-      method: "boolean",
-      coerse: "boolean",
-      optional: true,
     },
     {
       key: "password",

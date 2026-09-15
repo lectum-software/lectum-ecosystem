@@ -1,4 +1,5 @@
 import { resolve } from "@/helpers/translate/resolve";
+import { resolvePublicWebUrl } from "@/utils/public-origin";
 import { send } from "../../send";
 
 export interface IRecoveryEmailSend {
@@ -10,7 +11,14 @@ export interface IRecoveryEmailSend {
 export const recoveryEmailSend = async (props: IRecoveryEmailSend) => {
   const name = props?.name?.split(" ")?.[0];
   const minutes = process.env.CODE_API_USER_VALID_MINUTES;
-  const url = `${process.env.WEB_URL?.split(",")[0]}${process.env.RECOVERY_URL}?code=${props.code}`;
+  const recoveryUrl = resolvePublicWebUrl(process.env.RECOVERY_URL);
+  if (!recoveryUrl) {
+    console.warn("[EMAIL] Link público de recuperação indisponível; envio cancelado.");
+    return false;
+  }
+
+  const url = new URL(recoveryUrl);
+  url.searchParams.set("code", props.code);
 
   return send({
     to: props.email,
@@ -26,7 +34,7 @@ export const recoveryEmailSend = async (props: IRecoveryEmailSend) => {
       }),
       on_click_to_recovery: resolve("email.on_click_to_recovery"),
       btn_recovery_password: resolve("email.btn_recovery_password"),
-      url,
+      url: url.toString(),
       send_for: resolve("email.send_for"),
     },
   });

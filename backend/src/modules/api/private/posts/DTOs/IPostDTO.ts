@@ -240,6 +240,44 @@ export type PostReplyMediaUploadResponse = {
   media_type: "image" | "video";
 };
 
+export type PostReplyMediaType = PostReplyMediaUploadResponse["media_type"];
+
+export type PostReplyMediaMultipartInitiateBody = {
+  fileName?: string;
+  mimeType: string;
+  size: number;
+};
+
+export type PostReplyMediaMultipartPartBody = {
+  partNumber: number | string;
+  uploadSessionId: string;
+};
+
+export type PostReplyMediaMultipartCompleteBody = {
+  parts: Array<{
+    partNumber: number;
+    partId?: string;
+    partToken?: string;
+  }>;
+  uploadSessionId: string;
+};
+
+export type PostReplyMediaMultipartAbortBody = {
+  uploadSessionId: string;
+};
+
+export type PostReplyMediaMultipartInitiateResponse = {
+  chunk_size: number;
+  max_file_size: number;
+  upload_session_id: string;
+};
+
+export type PostReplyMediaMultipartPartResponse = {
+  part_id: string;
+  part_number: number;
+  part_token?: string;
+};
+
 export type PostReportResponse = {
   id: string;
   post_id: string;
@@ -259,6 +297,15 @@ export type PostShareResponse = {
   target_type: "post" | "reply";
   notification_event_id: string | null;
   shared: boolean;
+};
+
+export type PostShareArtifactResponse = {
+  available: boolean;
+  artifact_url: string | null;
+  content_type: string | null;
+  expires_at: Date | null;
+  file_name: string | null;
+  size_bytes: number | null;
 };
 
 export type PostReplyDeleteResponse = {
@@ -338,6 +385,53 @@ export type IPostUploadReplyMediaDTO = {
   p: PostParams;
   auth: user;
   file?: Express.Multer.File & { key?: string; path?: string };
+};
+
+export type IPostShareArtifactDTO = {
+  p: PostParams & { replyId?: string };
+  auth?: user;
+};
+
+export type IPostRenderShareArtifactDTO = {
+  p: PostParams & { replyId?: string };
+  auth: user;
+};
+
+export type IPostRenderShareArtifactJobDTO = {
+  p: PostParams & { jobId?: string; replyId?: string };
+  auth: user;
+  range?: string;
+};
+
+export type IPostUploadShareArtifactDTO = {
+  p: PostParams & { replyId?: string };
+  auth: user;
+  file?: Express.Multer.File & { key?: string; path?: string };
+};
+
+export type IPostInitiateReplyMediaMultipartDTO = {
+  p: PostParams;
+  b: PostReplyMediaMultipartInitiateBody;
+  auth: user;
+};
+
+export type IPostUploadReplyMediaMultipartPartDTO = {
+  p: PostParams;
+  b: PostReplyMediaMultipartPartBody;
+  auth: user;
+  file?: Express.Multer.File;
+};
+
+export type IPostCompleteReplyMediaMultipartDTO = {
+  p: PostParams;
+  b: PostReplyMediaMultipartCompleteBody;
+  auth: user;
+};
+
+export type IPostAbortReplyMediaMultipartDTO = {
+  p: PostParams;
+  b: PostReplyMediaMultipartAbortBody;
+  auth: user;
 };
 
 export type IPostReportDTO = {

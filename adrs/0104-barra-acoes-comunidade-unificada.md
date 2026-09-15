@@ -70,3 +70,93 @@ Validacao complementar:
 - pnpm --dir frontend build
 - pnpm check
 - Chrome/CDP autenticado validando 11 barras no post e 3 barras na thread, todas com salvar/compartilhar, toggle visual de salvo e link copiado com ancora de reply.
+
+## Atualizacao 2026-08-12 - borda interna do cluster de votos no feed
+
+### Contexto
+
+No feed mobile, o pill agrupado de upvote/downvote podia aparecer com parte do contorno cortada. A causa visual provavel era a combinacao de `ring` desenhado para fora da caixa do cluster com a action bar em linha unica e overflow horizontal, alem de o cluster estar alguns pixels mais alto que os demais controles.
+
+### Decisao
+
+- Manter a `CommunityActionBar` como fonte unica da barra de acoes.
+- Trocar a moldura do cluster padrao de votos de `ring` externa para `border` interna, evitando que o contorno dependa de pixels fora da caixa do componente.
+- Reduzir o padding externo do cluster para `p-px` e compactar os controles internos dos tamanhos `sm` e `md` em uma etapa apenas quando a apresentacao for `cluster`.
+- Preservar a apresentacao `inline` usada em comentarios/respostas e preservar a variante `xs` sem mudanca de comportamento.
+
+### Consequencias
+
+- O pill de votos do feed fica alguns pixels menor e alinhado aos demais botoes da action bar.
+- A borda passa a ser menos suscetivel a cortes por overflow sem alterar handlers, contadores, estados ativos, voto otimista, salvamento ou compartilhamento.
+- A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs ou packages.
+
+## Atualizacao 2026-08-12 - acoes iconicas em comentarios
+
+### Contexto
+
+A linha de acoes dos comentarios vinha exibindo `Responder`, `Compartilhar` e `Salvar` por texto. Em cards empilhados no mobile, esses textos ocupavam largura horizontal demais e repetiam a mesma leitura em cada comentario. O produto pediu acoes mais compactas por icone e a ordem especifica `Responder`, `Salvar`, `Compartilhar`.
+
+### Decisao
+
+- Manter `CommunityActionBar` como fonte unica da barra de acoes.
+- Adicionar `reply.iconOnly` para permitir que o botao de responder use o icone `Reply` sem texto visivel, preservando label acessivel e handler.
+- No modo `secondaryActionsPlacement="inline"`, renderizar salvar antes de compartilhar.
+- No `ReplyVoteBar`, deixar responder, salvar e compartilhar como botoes icon-only, mantendo `size="xs"` e votos inline sem capsula.
+
+### Consequencias
+
+- Comentarios e respostas ficam mais compactos no mobile, com ordem visual Responder, Salvar e Compartilhar depois dos votos.
+- A semantica acessivel continua disponivel por `aria-label`/`title`, e os mesmos handlers de responder, salvar e compartilhar permanecem ativos.
+- A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs, packages, permissao, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.
+
+## Atualizacao 2026-08-12 - responder com icone de comentario
+
+### Contexto
+
+A acao `Responder` dos comentarios estava icon-only, mas usava o icone de seta curvada (`Reply`), diferente do icone de balao usado pela acao de comentar do post original. O produto pediu consistencia visual entre responder um comentario e comentar no post.
+
+### Decisao
+
+- Manter `CommunityActionBar` como fonte unica da barra de acoes.
+- Renderizar `reply` com `MessageCircle`, reutilizando o mesmo icone da acao `comments`.
+- Preservar `aria-label`, `title`, handler, modo icon-only, ordem das acoes compactas e estados de votos/salvos/compartilhamento.
+
+### Consequencias
+
+- A linha de comentarios passa a comunicar resposta/comentario com a mesma linguagem visual do post original.
+- A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs, packages, permissao, votos, salvos, compartilhamento, denuncia, edicao, exclusao ou arvore de respostas.
+
+Validacao complementar:
+
+- Validacao estatica confirmou que `CommunityActionBar` usa `MessageCircle` tanto em `comments` quanto em `reply`.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Next local buildado em `http://127.0.0.1:3049`: `/version` respondeu `0.1.75` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`.
+- `pnpm check`: sucesso.
+- `pnpm check:encoding`: sucesso.
+- `pnpm check:adrs`: sucesso.
+- `pnpm check:tasks`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm version:bump` para `0.1.75`: sucesso.
+- `pnpm check:version`: sucesso.
+
+
+## Atualizacao 2026-08-13 - acoes no header flutuante do post
+
+### Contexto
+
+No detalhe do post mobile, o header flutuante exibido durante a rolagem para cima ainda usava um menu de 3 pontinhos no lado direito. O produto pediu que esse header priorize acoes frequentes do post, exibindo Salvar e Compartilhar diretamente como icones.
+
+### Decisao
+
+- Reutilizar as primitivas existentes `PostActionButton`, `Bookmark` e `Share2` no `PostDetailFloatingHeader`.
+- Substituir o menu de 3 pontinhos apenas no header flutuante; o header/card principal continua usando as opcoes contextuais existentes de proprietario ou denuncia.
+- Conectar Salvar a `handleTogglePostSave`, preservando estado ativo, label acessivel, mutation otimista e fluxo de conversao para visitante anonimo.
+- Conectar Compartilhar a `sharePost`, preservando o preview/share padrao da Lectum.
+- Manter o titulo `Post` centralizado por grid de tres colunas simetricas no mobile.
+
+### Consequencias
+
+- O usuario ganha acesso direto a salvar e compartilhar no header fixo sem abrir menu.
+- Acoes menos frequentes continuam disponiveis no contexto principal do post, evitando duplicar menus no header flutuante.
+- A mudanca e apenas visual/estrutural no frontend; nao altera API, backend, banco, envs, packages, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.

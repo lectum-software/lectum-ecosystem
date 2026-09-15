@@ -1,4 +1,5 @@
 import { type RequestHandler, Router } from "express";
+import adminAuth from "@/modules/api/admin/middlewares/_auth";
 import apiAdminPrivateAuthHidrate from "@/modules/api/admin/private/auth/hidrate";
 import apiAdminPrivateAuthLogout from "@/modules/api/admin/private/auth/logout";
 import apiAdminPrivateCommunitiesDashboard from "@/modules/api/admin/private/communities/dashboard";
@@ -27,12 +28,14 @@ import apiAdminPrivatePsychologistsList from "@/modules/api/admin/private/psycho
 import apiAdminPrivatePsychologistsProfileEdit from "@/modules/api/admin/private/psychologists/profile-edit";
 import apiAdminPrivatePsychologistsRegistryVerification from "@/modules/api/admin/private/psychologists/registry-verification";
 import apiAdminPrivateSettingsCatalogs from "@/modules/api/admin/private/settings/catalogs";
+import apiAdminPrivateSettingsLegal from "@/modules/api/admin/private/settings/legal";
 import apiAdminPrivateSettingsSeo from "@/modules/api/admin/private/settings/seo";
 import apiAdminPrivateSettingsSubscriptionPlan from "@/modules/api/admin/private/settings/subscription-plan";
 import apiAdminPrivateTrafficExport from "@/modules/api/admin/private/traffic/export";
 import apiAdminPrivateTrafficSummary from "@/modules/api/admin/private/traffic/summary";
+import apiAdminPrivateVideoAssets from "@/modules/api/admin/private/video-assets";
 import apiAdminPublicAuthLogin from "@/modules/api/admin/public/auth/login";
-import privateAuth from "@/modules/api/middlewares/_auth";
+import privateAuth, { authenticateUserSession } from "@/modules/api/middlewares/_auth";
 import optionalAuth from "@/modules/api/middlewares/optional-auth";
 import { requireRole } from "@/modules/api/middlewares/require-role";
 import apiPrivateAccount from "@/modules/api/private/account";
@@ -43,6 +46,7 @@ import apiPrivateAuthNeedReset from "@/modules/api/private/auth/need_reset";
 import apiPrivateAuthReset from "@/modules/api/private/auth/reset";
 import apiPrivateCommunity from "@/modules/api/private/community";
 import apiPrivateDirectoryPsychologists from "@/modules/api/private/directory/psychologists";
+import apiPrivateLegal from "@/modules/api/private/legal";
 import apiPrivateNotificationClean from "@/modules/api/private/notification/clean";
 import apiPrivateNotificationClick from "@/modules/api/private/notification/click";
 import apiPrivateNotificationIndex from "@/modules/api/private/notification/index";
@@ -70,6 +74,7 @@ import apiPrivatePsychologistCfp from "@/modules/api/private/psychologist/cfp";
 import apiPrivatePsychologistFreeProfile from "@/modules/api/private/psychologist/free-profile";
 import apiPrivatePsychologistReviews from "@/modules/api/private/psychologist/reviews";
 import apiPrivatePsychologistWhatsappVerification from "@/modules/api/private/psychologist/whatsapp-verification";
+import apiPrivateVideoAssets from "@/modules/api/private/video-assets";
 import apiPublicAnalyticsAction from "@/modules/api/public/analytics/action";
 import apiPublicAnalyticsContentAttention from "@/modules/api/public/analytics/content-attention";
 import apiPublicAnalyticsContentVideoWatch from "@/modules/api/public/analytics/content-video-watch";
@@ -83,55 +88,76 @@ import apiPublicGoogleCallback from "@/modules/api/public/google/callback";
 import apiPublicGoogleLink from "@/modules/api/public/google/link";
 import apiPublicGoogleLogin from "@/modules/api/public/google/login";
 import apiPublicGoogleMe from "@/modules/api/public/google/me";
+import apiPublicLegal from "@/modules/api/public/legal";
 import apiPublicSeoCommunity from "@/modules/api/public/seo/community";
 import apiPublicSeoCommunityPost from "@/modules/api/public/seo/community-post";
 import apiPublicSeoMetadata from "@/modules/api/public/seo/metadata";
 import apiPublicSeoPsychologist from "@/modules/api/public/seo/psychologist";
 import apiPublicUser from "@/modules/api/public/user";
+import apiPublicVideoAssets from "@/modules/api/public/video-assets";
+import apiPublicVideoStreamWebhook from "@/modules/api/public/video-stream/webhook";
+import {
+  listPrivateRoutePolicyViolations,
+  type MountedRoutePolicyRecord,
+  type PrivateRoleGuard,
+} from "./route-policy";
 
 const endpoint = Router();
 type ExpressRouter = ReturnType<typeof Router>;
 type MountHandler = ExpressRouter | RequestHandler;
-type RoleGuard = "paciente" | "psicologo";
-type MountedRoute = {
-  path: string;
-  role?: RoleGuard;
-};
 
-const mountedRoutes: MountedRoute[] = [];
+const mountedRoutes: MountedRoutePolicyRecord[] = [];
 const endpointUse = endpoint.use.bind(endpoint) as (
   path: string,
   ...handlers: MountHandler[]
 ) => void;
 
 const mountRoute = (path: string, ...handlers: MountHandler[]) => {
-  mountedRoutes.push({ path });
-  endpointUse(path, ...handlers);
+  const adminProtected = path.startsWith("/api/admin/private/");
+  mountedRoutes.push({ adminProtected, path });
+  endpointUse(path, ...(adminProtected ? [adminAuth, ...handlers] : handlers));
 };
 
-const mountRoleGuardedRoute = (path: string, role: RoleGuard, router: ExpressRouter) => {
+const mountAuthOnlyRoute = (path: string, router: ExpressRouter) => {
+  mountedRoutes.push({ authOnly: true, path });
+  endpointUse(path, privateAuth, router);
+};
+
+const mountLegacyPublicVideoPlaybackRoute = (router: ExpressRouter) => {
+  const path = "/api/private/video-assets";
+  mountedRoutes.push({ legacyPublicPlayback: true, path });
+  endpointUse(path, optionalAuth, router);
+};
+
+const mountRoleGuardedRoute = (path: string, role: PrivateRoleGuard, router: ExpressRouter) => {
   mountedRoutes.push({ path, role });
   endpointUse(path, privateAuth, requireRole(role), router);
 };
 
-const getExpectedRole = (path: string): RoleGuard | null => {
-  if (path.startsWith("/api/private/patient/")) return "paciente";
-  if (path.startsWith("/api/private/psychologist/")) return "psicologo";
-
-  return null;
-};
-
 const assertPrivateRoleGuards = () => {
-  const violations = mountedRoutes.filter((route) => {
-    const expectedRole = getExpectedRole(route.path);
+  const { roleGuardViolations, unprotectedAdminRoutes, userAuthOnlyViolations } =
+    listPrivateRoutePolicyViolations(mountedRoutes);
 
-    return Boolean(expectedRole && route.role !== expectedRole);
-  });
-
-  if (violations.length > 0) {
+  if (roleGuardViolations.length > 0) {
     throw new Error(
-      `[security] Rotas privadas sem requireRole correto: ${violations
+      `[security] Rotas privadas sem requireRole correto: ${roleGuardViolations
         .map((route) => `${route.path}=>${route.role || "sem-role"}`)
+        .join(", ")}`,
+    );
+  }
+
+  if (userAuthOnlyViolations.length > 0) {
+    throw new Error(
+      `[security] Rotas privadas user-level sem _auth-only: ${userAuthOnlyViolations
+        .map((route) => `${route.path}=>${route.role || "sem-auth-only"}`)
+        .join(", ")}`,
+    );
+  }
+
+  if (unprotectedAdminRoutes.length > 0) {
+    throw new Error(
+      `[security] Rotas administrativas privadas sem autenticação central: ${unprotectedAdminRoutes
+        .map((route) => route.path)
         .join(", ")}`,
     );
   }
@@ -142,7 +168,8 @@ mountRoute("/api/private/auth/confirm", apiPrivateAuthConfirm);
 mountRoute("/api/private/auth/hidrate", apiPrivateAuthHidrate);
 mountRoute("/api/private/auth/need_reset", apiPrivateAuthNeedReset);
 mountRoute("/api/private/auth/reset", apiPrivateAuthReset);
-mountRoute("/api/private/account", privateAuth, apiPrivateAccount);
+// Segurança/logout da própria conta precisam continuar acessíveis antes da confirmação.
+mountRoute("/api/private/account", authenticateUserSession, apiPrivateAccount);
 mountRoute("/api/private/community", optionalAuth, apiPrivateCommunity);
 mountRoute("/api/private/posts", optionalAuth, apiPrivatePosts);
 mountRoute("/api/public/analytics/action", apiPublicAnalyticsAction);
@@ -163,6 +190,10 @@ mountRoute("/api/public/seo/community-post", apiPublicSeoCommunityPost);
 mountRoute("/api/public/seo/metadata", apiPublicSeoMetadata);
 mountRoute("/api/public/seo/psychologist", apiPublicSeoPsychologist);
 mountRoute("/api/public/user", apiPublicUser);
+mountRoute("/api/public/legal", apiPublicLegal);
+mountAuthOnlyRoute("/api/private/legal", apiPrivateLegal);
+mountRoute("/api/public/video-assets", optionalAuth, apiPublicVideoAssets);
+mountRoute("/api/public/video-stream/webhook", apiPublicVideoStreamWebhook);
 mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);
 mountRoute("/api/admin/private/auth/hidrate", apiAdminPrivateAuthHidrate);
 mountRoute("/api/admin/private/auth/logout", apiAdminPrivateAuthLogout);
@@ -192,6 +223,7 @@ mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsEngag
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsFeedback);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsActivities);
 mountRoute("/api/admin/private/settings/catalogs", apiAdminPrivateSettingsCatalogs);
+mountRoute("/api/admin/private/settings/legal", apiAdminPrivateSettingsLegal);
 mountRoute("/api/admin/private/settings/seo", apiAdminPrivateSettingsSeo);
 mountRoute(
   "/api/admin/private/settings/subscription-plan",
@@ -199,8 +231,14 @@ mountRoute(
 );
 mountRoute("/api/admin/private/traffic/summary", apiAdminPrivateTrafficSummary);
 mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
-mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);
-mountRoute("/api/private/user/reviews", privateAuth, apiPrivatePatientReviews);
+mountRoute("/api/admin/private/video-assets", apiAdminPrivateVideoAssets);
+mountAuthOnlyRoute("/api/private/user/favorites", apiPrivatePatientFavorites);
+mountAuthOnlyRoute("/api/private/user/reviews", apiPrivatePatientReviews);
+// Compatibilidade de rollout: versões anteriores do frontend tratam esta
+// referência opaca como endpoint. O router compatível contém somente GET playback;
+// uploads, status e exclusão continuam caindo no mount autenticado logo abaixo.
+mountLegacyPublicVideoPlaybackRoute(apiPublicVideoAssets);
+mountAuthOnlyRoute("/api/private/video-assets", apiPrivateVideoAssets);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/follows", "paciente", apiPrivatePatientFollows);
 mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);

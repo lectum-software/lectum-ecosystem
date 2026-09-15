@@ -56,17 +56,19 @@ export default async (data: INeedResetDTO): Promise<Resolve> => {
 
   const password = await encrypt(data.b.password);
 
-  const res = await _LOGIN.update({
+  await _LOGIN.updateAndClearTokens({
     p: { id: find.id! },
     b: {
       password,
-      password_confirm: password,
+      password_confirm: null,
       need_reset: false,
     },
     auth: data.auth,
   });
+  const res = await _LOGIN.hidrate(find, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("auth_reset_success", {
       //If you need a custom text

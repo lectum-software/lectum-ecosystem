@@ -1,4 +1,4 @@
-﻿# TASK-43: Scrollbar mobile app-like em telas principais
+# TASK-43: Scrollbar mobile app-like em telas principais
 
 ## Metadata
 

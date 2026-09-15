@@ -1,4 +1,4 @@
-﻿# ADR-0301: Ordem publica das categorias de especialidades segue Configuracoes
+# ADR-0301: Ordem publica das categorias de especialidades segue Configuracoes
 
 ## Status
 

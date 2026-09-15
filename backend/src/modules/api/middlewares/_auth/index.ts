@@ -5,7 +5,14 @@ import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 //Types
 import type { user } from "@/interfaces/objects";
-import { shouldBlockAdminViewAsWrite } from "@/utils/admin-view-as";
+import {
+  getAdminViewAsPayloadFromRequest,
+  resolveUserRequestDeviceId,
+  shouldBlockAdminViewAsWrite,
+} from "@/utils/admin-view-as";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
+import { getPendingAccountRequirement } from "./helpers/account-requirements";
 import { passLogin } from "./helpers/login";
 import { passToken } from "./helpers/token";
 //Libs
@@ -21,9 +28,11 @@ type Not_Authorized = {
 const isAuthUnavailable = (authError?: Not_Authorized) =>
   authError?.status === 503 || authError?.message === "auth_unavailable";
 
-const privateRouteVerifier = async (req: Request, res: Response, next: NextFunction) => {
+// Somente bootstrap de autenticação e segurança da própria conta podem usar esta variante.
+export const authenticateUserSession = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req?.headers?.authorization;
-  if (!authHeader)
+  const requestToken = getUserRequestToken(req);
+  if (!requestToken)
     return send(res, {
       status: 401,
       ...error("token_not_provided", {
@@ -31,7 +40,7 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
       }),
     });
 
-  if (!authHeader.startsWith("Bearer "))
+  if (authHeader && !authHeader.startsWith("Bearer "))
     return send(res, {
       status: 401,
       ...error("token_mal_formatted", {
@@ -39,12 +48,22 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
       }),
     });
 
-  if (shouldBlockAdminViewAsWrite(req)) {
+  const adminViewAsPayload = getAdminViewAsPayloadFromRequest(req);
+  if (shouldBlockAdminViewAsWrite(req, adminViewAsPayload)) {
     return send(res, {
       status: 403,
       ...error("admin_view_as_read_only", {}),
     });
   }
+
+  const device = getDevice(req);
+  if (device.err) {
+    return send(res, {
+      status: 403,
+      ...error(device.err, {}),
+    });
+  }
+  const authenticationDeviceId = resolveUserRequestDeviceId(req, device.id, adminViewAsPayload);
 
   try {
     passport.authenticate("jwt-user-api", async (authError: Not_Authorized, login: user) => {
@@ -58,18 +77,14 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
 
         if (login) {
           //Token
-          const device_id = req?.headers?.["x-device"] as string;
-          const token = await passToken(login, device_id, authHeader.split(" ")[1]);
+          const token = await passToken(login, authenticationDeviceId, requestToken);
           if (token.err) return send(res, token.err);
 
           //Login
           const logged = await passLogin(login);
           if (logged.err) return send(res, logged.err);
 
-          const device = getDevice(req);
-          if (device.err) return send(res, { error: device.err, success: false });
-
-          req.device = device.id;
+          req.device = authenticationDeviceId;
 
           req.auth = login;
           return next();
@@ -82,7 +97,10 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
           }),
         });
       } catch (err) {
-        console.error("[USER AUTH] Falha ao hidratar sessão de usuário.", err);
+        console.error(
+          "[USER AUTH] Falha ao hidratar sessão de usuário.",
+          toSafeErrorLog(err, "UnknownUserSessionError"),
+        );
         return send(res, {
           status: 503,
           ...error("auth_unavailable", {}),
@@ -98,5 +116,17 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
     });
   }
 };
+
+export const requireReadyAccount = (req: Request, res: Response, next: NextFunction) => {
+  const requirement = getPendingAccountRequirement(req.auth);
+  if (requirement) return send(res, { status: 403, ...error(requirement, {}) });
+  return next();
+};
+
+const privateRouteVerifier = (req: Request, res: Response, next: NextFunction) =>
+  authenticateUserSession(req, res, (err) => {
+    if (err) return next(err);
+    return requireReadyAccount(req, res, next);
+  });
 
 export default privateRouteVerifier;

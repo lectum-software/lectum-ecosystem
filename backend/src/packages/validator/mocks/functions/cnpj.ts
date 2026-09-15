@@ -1,7 +1,6 @@
-import { faker } from "@faker-js/faker";
+import { randomDigit } from "./random";
 
 export function cnpj(): string {
-  const randomDigit = () => faker.number.int({ min: 0, max: 9 });
   const cnpjBase: number[] = Array.from({ length: 12 }, () => randomDigit());
 
   const calcDigit = (digits: number[], weights: number[]): number => {

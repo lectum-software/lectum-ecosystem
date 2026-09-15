@@ -22,20 +22,15 @@ type LabelProps = {
   className: string;
   htmlFor?: string;
   skipHtmlFor?: boolean;
-  testId: string;
 };
 
-function Label({ children, className, htmlFor, skipHtmlFor, testId }: LabelProps) {
+function Label({ children, className, htmlFor, skipHtmlFor }: LabelProps) {
   if (skipHtmlFor) {
-    return (
-      <div className={className} data-testid={testId}>
-        {children}
-      </div>
-    );
+    return <span className={className}>{children}</span>;
   }
 
   return (
-    <label className={className} data-testid={testId} htmlFor={htmlFor}>
+    <label className={className} htmlFor={htmlFor}>
       {children}
     </label>
   );
@@ -56,14 +51,12 @@ export function Container({
   const id = htmlFor || name;
 
   return (
-    <Label
+    <div
       className={cn("grid min-w-0 gap-2 text-sm font-semibold text-foreground", className)}
-      htmlFor={htmlFor}
-      skipHtmlFor={skipHtmlFor}
-      testId={`input-controller-${name}`}
+      data-testid={`input-controller-${name}`}
     >
       {label ? (
-        <span className="flex items-center gap-1.5">
+        <Label className="flex items-center gap-1.5" htmlFor={htmlFor} skipHtmlFor={skipHtmlFor}>
           <span>{label}</span>
           {required ? <span className="text-danger">*</span> : null}
           {tooltip ? (
@@ -71,7 +64,7 @@ export function Container({
               <Info className="h-4 w-4" aria-hidden="true" />
             </span>
           ) : null}
-        </span>
+        </Label>
       ) : null}
 
       {description ? (
@@ -91,6 +84,6 @@ export function Container({
       >
         {error}
       </span>
-    </Label>
+    </div>
   );
 }

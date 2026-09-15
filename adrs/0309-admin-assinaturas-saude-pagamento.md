@@ -47,3 +47,18 @@ O modelo atual não possui relação formal entre `payment_event` e `professiona
 - O filtro de confiabilidade é aplicado no service depois de mapear a saúde real de pagamento, porque a classificação depende de `payment_event` reconciliado e não existe coluna persistida dedicada. Isso preserva a honestidade do dado, mas pode exigir otimização futura se a lista crescer muito.
 - A precisão da reconciliação continua limitada ao payload bruto do Mercado Pago até existir uma relação persistida dedicada entre pagamento e assinatura.
 - A UI fica preparada para exibir métricas mais completas futuramente se o backend passar a persistir tentativas de cobrança normalizadas.
+
+## Ajuste 2026-08-13: resumo do gateway como complemento de confiabilidade
+
+A mesma divergência observada no Financeiro pode afetar a saúde de pagamento por assinatura quando o Mercado Pago confirma cobrança no `preapproval.summarized`, mas o webhook local não gerou `payment_event` útil.
+
+Decisões:
+
+- O histórico e a saúde financeira por assinatura podem usar o resumo real do gateway como complemento aos `payment_event` locais.
+- Quando o resumo do gateway e um evento local representam a mesma cobrança do mesmo dia, a visualização consolida em uma única entrada para evitar linhas duplicadas.
+- O título/descrição principal da cobrança vinculada à assinatura usa o nome do plano, preservando a tag de sucesso em verde quando a cobrança confirmada vem do gateway.
+
+Consequências:
+
+- Assinaturas aprovadas recentemente deixam de aparecer como histórico insuficiente apenas porque o webhook local não gravou a cobrança.
+- A UI continua sem expor payload bruto, IDs externos ou mensagens técnicas do provedor; o resumo do gateway é usado apenas para estado, data e valor seguros.

@@ -12,3 +12,12 @@ export interface IResetDTO {
   auth: user;
   headers?: Request["headers"];
 }
+
+export type ConsumeRecoveryInput = {
+  userId: string;
+  code: string;
+  issuedAt: Date;
+  verifiedAt: Date;
+  validityMinutes: number;
+  passwordHash: string;
+};

@@ -7,8 +7,8 @@ export interface IIndexDTO {
     limit?: number;
     page?: number;
     search?: string;
-    orderKey?: string;
-    orderValue?: string;
+    orderKey?: "createdAt";
+    orderValue?: "asc" | "desc";
     startDate?: Date;
     endDate?: Date;
   };

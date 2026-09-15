@@ -1,4 +1,4 @@
-﻿# TASK-32: Checkout de assinatura
+# TASK-32: Checkout de assinatura
 
 ## Metadata
 
@@ -207,3 +207,35 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A criação de `/preapproval_plan` exige `MERCADO_PAGO_BACK_URL` público e válido; `localhost` é rejeitado pelo Mercado Pago, então testes locais precisam de domínio/túnel HTTPS ou de um `MERCADO_PAGO_PREAPPROVAL_PLAN_ID` já criado no painel/API.
 - A criação da assinatura via `/preapproval` passa a enviar `preapproval_plan_id`, `card_token_id`, `payer_email`, `external_reference` e `status="authorized"`, herdando a recorrência do plano do gateway.
 - Logs seguros do adapter foram enriquecidos com operação/status/código quando disponíveis, sem expor access token, public key, webhook secret, PAN, CVV ou token de cartão.
+
+## Correção de homologação em 2026-08-06
+
+- A configuração local que já possuía assinaturas `authorized` foi adotada como baseline, evitando
+  novas mudanças por tentativa e erro.
+- Desenvolvimento e homologação usam plano associado com Public Key/Access Token `APP_USR-*` da
+  aplicação criada dentro de uma conta Mercado Pago vendedora de teste, sem `X-scope: stage`.
+- O backend valida em `/users/me` que a credencial sandbox possui a tag `test_user`; token da conta
+  real ou credencial `TEST-*` falha antes da criação de recursos.
+- O e-mail da conta compradora de teste é obrigatório e idêntico no frontend e no backend.
+- O caminho alternativo sem plano e os retries experimentais foram removidos. Uma referência de
+  plano só é limpa automaticamente quando o Mercado Pago confirma `404`.
+- Decisão e configuração operacional consolidadas em `adrs/0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md`.
+
+## Ajuste de mensagens de recusa em 2026-08-13
+
+- Recusas de cartão no checkout e na atualização de método de pagamento passaram a traduzir
+  `status_detail`/códigos seguros do Mercado Pago para mensagens públicas em PT-BR.
+- Erros esperados de cartão retornam `402` e deixam de aparecer como falha genérica de conexão.
+- Configuração/credencial do gateway continua retornando indisponibilidade operacional, sem expor
+  detalhes do provedor.
+- Logs do gateway registram apenas `status`, `status_detail` e `cause_codes` sanitizados.
+- ADR registrado: `adrs/0456-mensagens-publicas-recusa-cartao-mercado-pago.md`.
+
+## Ajuste visual do endereço em 2026-08-13
+
+- A etapa `/app/profissional/assinatura/endereco` deixou de exibir a faixa verde
+  "Pagamento bem-sucedido" no formulário de endereço, tanto no mobile quanto no desktop.
+- No desktop, o grid do endereço foi reorganizado para manter Número à direita de Logradouro e
+  Cidade à direita de Estado, preservando a ordem vertical mobile e os controllers da TASK-02.
+- Sem mudança de contrato, banco, gateway ou env; rollback é revert do ajuste visual.
+- ADR atualizado: `adrs/0455-autopreenchimento-cep-endereco-assinatura.md`.

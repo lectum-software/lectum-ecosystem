@@ -132,7 +132,7 @@ Validacao complementar:
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
-- Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso, confirmando `Psic?logo ? h? 1 d ? editado` no comentario editado.
+- Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso, confirmando `Psicólogo · há 1 d · editado` no comentario editado.
 
 ## Complemento 2026-06-22 - comentarios com texto ou midia
 

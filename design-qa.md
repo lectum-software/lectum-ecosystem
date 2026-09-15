@@ -1,4 +1,4 @@
-﻿# Design QA - Boas-vindas do paciente
+# Design QA - Boas-vindas do paciente
 
 final result: passed
 

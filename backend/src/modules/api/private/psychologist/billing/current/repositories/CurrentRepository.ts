@@ -1,5 +1,10 @@
-﻿import prisma, { type ORM } from "@/infra/database/prisma";
+import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription } from "@/interfaces/objects";
+import { resolveEffectiveBillingSubscription } from "@/modules/billing/effective-subscription";
+import {
+  cancelledProfessionalGatewaySubscriptionWhere,
+  restoreFreePlanAfterProfessionalCancellation,
+} from "@/modules/billing/free-subscription";
 import {
   actionableProfessionalGatewaySubscriptionWhere,
   activeFreeSubscriptionWhere,
@@ -57,8 +62,6 @@ export class CurrentRepository implements ICurrentRepository {
       },
     });
 
-    if (actionableGatewayProfessional) return actionableGatewayProfessional;
-
     const activeFree = await this.subscriptionRepository.findFirst({
       where: {
         ...activeFreeSubscriptionWhere(),
@@ -72,19 +75,40 @@ export class CurrentRepository implements ICurrentRepository {
       },
     });
 
-    if (activeFree) return activeFree;
+    return (
+      resolveEffectiveBillingSubscription({
+        activeProfessional,
+        actionableGatewayProfessional,
+        activeFree,
+      }) ?? this.restoreFreeAfterLatestCancelledProfessional(profile.id)
+    );
+  }
 
-    return this.subscriptionRepository.findFirst({
+  private async restoreFreeAfterLatestCancelledProfessional(
+    psychologistId: string,
+  ): Promise<professional_subscription | null> {
+    const cancelledProfessional = await this.subscriptionRepository.findFirst({
       where: {
-        psychologist_id: profile.id,
-        deleted: false,
+        ...cancelledProfessionalGatewaySubscriptionWhere(),
+        psychologist_id: psychologistId,
       },
       include: {
         plan: true,
       },
       orderBy: {
-        createdAt: "desc",
+        updatedAt: "desc",
       },
     });
+
+    if (!cancelledProfessional?.id) return null;
+
+    return prisma.$transaction(
+      async (tx) =>
+        (await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: cancelledProfessional.id,
+          psychologistId,
+          tx,
+        })) ?? null,
+    );
   }
 }

@@ -1,4 +1,4 @@
-﻿# ADR-0181: Controles imersivos do video de descoberta de psicologos
+# ADR-0181: Controles imersivos do video de descoberta de psicologos
 
 ## Status
 
@@ -41,6 +41,88 @@ A pagina publica de descoberta de psicologos usa um player customizado, diferent
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
+
+## Complemento 2026-08-15 - progresso acima da bottom nav no Android
+
+### Contexto
+
+Screenshots enviados pelo usuario mostraram que a barra de progresso do feed de psicologos aparecia no iOS, mas ficava
+invisivel no Android. A barra era posicionada por um offset fixo baseado em `64px + env(safe-area-inset-bottom)`,
+enquanto a bottom nav compartilhada do `PrivateTemplate` calcula sua altura real por
+`--lectum-mobile-bottom-nav-height`. Em Android, onde o safe-area inferior e normalmente zero, o offset fixo podia deixar
+a barra dentro da area branca da navegacao e abaixo do stacking context da nav.
+
+### Decisao
+
+- O feed de psicologos passa a posicionar a barra customizada usando `--lectum-mobile-bottom-nav-height`, a mesma fonte
+  de verdade da bottom nav compartilhada.
+- O offset desktop continua `0px`, preservando a barra no rodape do card desktop.
+- O modo imersivo continua usando os controles persistentes do `VerticalVideoPlayer`; a barra customizada segue
+  restrita a UI visivel do feed.
+
+### Consequencias
+
+- A barra fica imediatamente acima da navegacao inferior em Android e iOS, sem depender de safe-area para corrigir a
+  altura da nav.
+- A mudanca evita duplicar calculo de altura de navegacao na tela de psicologos e reduz divergencia futura caso a bottom
+  nav mude de tamanho.
+- Nao ha mudanca de backend, schema, API, dados persistidos, packages ou analytics.
+
+## Complemento 2026-08-15 - respiro mobile no Android
+
+### Contexto
+
+Depois da primeira correção, novas capturas comparando iPhone e Android mostraram que o Android ainda mantinha a barra
+de progresso muito colada na bottom nav e com menor legibilidade, além de menor respiro entre chips, WhatsApp e a área
+inferior. O iPhone parecia melhor porque o safe-area inferior adicionava espaço adicional que não existe na maioria dos
+Androids.
+
+### Decisão
+
+- Introduzir `MOBILE_BOTTOM_NAV_OFFSET` como alias semântico de `--lectum-mobile-bottom-nav-height` para todos os
+  elementos inferiores da tela de psicólogos que precisam acompanhar a bottom nav.
+- Posicionar a barra de progresso em `calc(var(--lectum-mobile-bottom-nav-height) + 0.625rem)`, elevando-a da borda da
+  nav também quando `env(safe-area-inset-bottom)` é zero.
+- Aumentar contraste/espessura da barra customizada e ampliar os offsets mobile de bio/chips e rail de ações, sem
+  alterar a âncora desktop nem duplicar o player compartilhado.
+
+### Consequências
+
+- Android passa a receber uma folga própria equivalente ao efeito visual que o safe-area já produzia no iPhone.
+- A UI inferior fica mais legível em telas compactas e a barra permanece manipulável quando o modo de seek estiver
+  habilitado.
+- Não há mudança de contrato, banco, packages, backend, analytics ou dados persistidos.
+
+## Complemento 2026-08-30 - controles sempre visiveis no modo imersivo
+
+### Contexto
+
+Um print enviado pelo usuario em 2026-08-29 destacou a barra inferior do video imersivo da pagina de psicologos: play/pause, minutagem, progresso e volume. O comportamento esperado para essa superficie e diferente do player de comunidade: em psicologos, o modo imersivo ja troca a UI Lectum por controles persistentes e esses controles devem permanecer visiveis durante toda a reproducao.
+
+A regressao veio do comportamento imersivo centralizado em `VerticalVideoPlayer`, criado para esconder temporariamente os controles de comunidade durante a reproducao. Aplicar a mesma regra ao feed de psicologos contrariava a decisao original deste ADR.
+
+### Decisao
+
+- Adicionar ao `VerticalVideoPlayer` o opt-in `persistentControlsVisibility`, com valores `auto` e `always`.
+- Manter `auto` como default para preservar a experiencia imersiva dos videos de comunidade e demais superficies que usam controles persistentes.
+- Usar `persistentControlsVisibility="always"` no slide da pagina de psicologos quando o modo imersivo ativa os controles persistentes.
+- Centralizar a regra de ocultacao em `shouldHidePersistentVideoControls` para deixar a diferenca testavel e evitar overlays paralelos.
+
+### Consequencias
+
+- O modo imersivo de psicologos exibe os controles durante toda a reproducao, inclusive apos o tempo que antes acionava auto-hide.
+- Videos de comunidade continuam escondendo os controles durante a reproducao e revelando-os temporariamente por toque, porque nao passam o opt-in `always`.
+- Nao ha mudanca de contrato, backend, schema, storage, env, package ou dados persistidos.
+
+### Validacao
+
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/ui/vertical-video-player-support.test.mjs` - OK.
+- `pnpm --dir frontend check` - OK.
+- `pnpm --dir frontend build` - OK.
+- `pnpm check` - OK.
+- `pnpm check:version` - OK.
+- `git diff --check` - OK.
+- Browser local mobile `390x844` em `/psicologos` - sem app error, com `/version` local em `0.1.251`; API local configurada via tunnel registrou bloqueio CORS e nao retornou videos reais para interacao visual.
 
 ## Pendencias
 

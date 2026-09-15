@@ -13,6 +13,8 @@ export type patient_profile = {
   birthdate?: string | null;
   phone?: string | null;
   bio?: string | null;
+  city?: string | null;
+  state?: string | null;
   onboarding_completed_at?: string | null;
   createdAt?: string;
   updatedAt?: string;

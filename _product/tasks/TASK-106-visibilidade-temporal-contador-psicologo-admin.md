@@ -1,4 +1,4 @@
-﻿# TASK-106 - Visibilidade temporal no contador principal do psicologo Admin
+# TASK-106 - Visibilidade temporal no contador principal do psicologo Admin
 
 ## Metadata
 

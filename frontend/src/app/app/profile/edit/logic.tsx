@@ -7,12 +7,12 @@ import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { usePatient } from "@/api/callers/patient";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   PatientPrivateProfile,
   PatientProfileAvatarRemoval,
   PatientProfileAvatarUpload,
 } from "@/api/generator/types";
-import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -22,20 +22,10 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaKind } from "@/utils/media-preparation";
 import { toPatientProfilePayload, usePatientProfileForm } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
-const AVATAR_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 const getInitials = (name?: string | null, email?: string | null) => {
   const source = name?.trim() || email?.split("@")[0] || "Lectum";
@@ -47,14 +37,13 @@ const getInitials = (name?: string | null, email?: string | null) => {
 };
 
 const resolvePatientProfileError = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("telefone")) return "Informe um telefone válido ou deixe o campo vazio.";
+  if (normalized.includes("estado") || normalized.includes("cidade")) {
+    return "Informe estado e cidade ou deixe os dois campos vazios.";
+  }
   if (normalized.includes("perfil") || normalized.includes("autoriz")) {
     return "A edição deste perfil é exclusiva para perfis pessoais.";
   }
@@ -153,7 +142,7 @@ export const ProfileEditLogic = () => {
       return;
     }
 
-    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+    if (resolvePublicMediaKind(file) !== "image") {
       setApiError("Envie uma foto PNG, JPG ou WebP.");
       return;
     }
@@ -228,7 +217,7 @@ export const ProfileEditLogic = () => {
                   aria-expanded={isAvatarMenuOpen}
                   aria-haspopup="menu"
                   aria-label="Abrir opções da foto de perfil"
-                  className="absolute right-1 bottom-1 z-10 grid h-9 w-9 place-items-center rounded-full bg-primary text-white ring-4 ring-surface shadow-[var(--lectum-shadow-soft)] transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="absolute right-1 bottom-1 z-10 grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground ring-4 ring-surface shadow-[var(--lectum-shadow-soft)] transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isSavingAvatar || !isPatient}
                   onClick={() => setIsAvatarMenuOpen((current) => !current)}
                   type="button"
@@ -249,7 +238,7 @@ export const ProfileEditLogic = () => {
                       type="button"
                     />
                     <div
-                      className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 overflow-hidden rounded-[28px] border border-border bg-white p-2 text-left shadow-[0_24px_70px_rgba(15,23,42,0.22)] ring-1 ring-[#D9E8F8]/70 sm:absolute sm:top-[calc(100%+0.75rem)] sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-56 sm:-translate-x-1/2 sm:rounded-2xl"
+                      className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 overflow-hidden rounded-[28px] border border-border bg-surface p-2 text-left shadow-lectum-soft ring-1 ring-border/70 sm:absolute sm:top-[calc(100%+0.75rem)] sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-56 sm:-translate-x-1/2 sm:rounded-2xl"
                       role="menu"
                     >
                       <button
@@ -331,7 +320,6 @@ export const ProfileEditLogic = () => {
             </Button>
           </form>
         ) : null}
-        {!profile.isLoading && !profile.isPending ? <AccountDeleteSection /> : null}
       </section>
     </PrivateTemplate>
   );

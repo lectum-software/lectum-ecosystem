@@ -1,4 +1,4 @@
-﻿# ADR-0409: Miniaturas persistidas para Open Graph de videos de posts
+# ADR-0409: Miniaturas persistidas para Open Graph de videos de posts
 
 Status: Accepted  
 Data: 2026-08-03
@@ -60,3 +60,77 @@ Essa decisao aproxima o preview de links no WhatsApp do comportamento de Instagr
 - `pnpm check`
 - Smoke HTTP dos endpoints publicos e da tela Admin.
 - Browser local/headless mobile-first da rota Admin SEO/Metadados.
+
+## Complemento 2026-08-10 - poster automatico no player de comunidades
+
+Decisao complementar: o `thumbnail_url` persistido para videos de posts e respostas de comunidade tambem passa a ser a fonte do `poster` do player inline. A regra evita uma segunda origem de capa, nao cria upload manual para o psicologo e garante que feed, detalhe, thread, perfil profissional, posts do usuario e salvos reaproveitem a miniatura gerada no envio/edicao. Quando um video legado ainda nao tiver `thumbnail_url`, o frontend tenta gerar uma capa transitoria com `video` + `canvas` a partir do proprio arquivo, sem persistir backfill nem alterar dados publicados.
+
+A extracao no navegador tambem deixa de capturar apenas `0.5s`: o utilitario tenta tempos diferentes do proprio arquivo e usa uma heuristica simples de luminosidade/contraste para pular frames provavelmente pretos. Se todos os candidatos forem escuros, preserva o melhor frame encontrado em vez de bloquear a publicacao. Videos antigos sem `thumbnail_url` continuam sem backfill automatico nesta mudanca; eles podem ganhar capa ao serem editados ou em uma task futura de backfill real.
+
+## Complemento 2026-08-31 - poster interno desacoplado da miniatura social
+
+Feedback de produto posterior mostrou que a arte `Postado/Respondido na Lectum` nao deve aparecer em videos dentro da Lectum, nem como foto de capa. A decisao de 2026-08-10, que reaproveitava `thumbnail_url` como poster inline, fica substituida para superficies internas: players e previews de edicao devem usar o proprio video para gerar/mostrar a capa.
+
+`thumbnail_url` permanece no contrato por compatibilidade e SEO externo, mas nao deve ser tratada como fonte visual confiavel para capa interna de video. A separacao operacional completa esta registrada em ADR-0476.
+
+## Complemento 2026-08-22 - preview WhatsApp de link de video
+
+### Contexto
+
+Novo feedback mostrou que, ao compartilhar um video da Lectum pelo WhatsApp, a experiencia desejada e um card de link semelhante ao preview do Instagram: miniatura vertical, nome do psicologo no titulo e URL abrindo o video dentro da Lectum. A imagem anexada foi usada apenas como referencia visual de formato; textos de conversa dentro do print nao sao instrucoes de produto.
+
+### Decisao
+
+- Para videos profissionais, a folha nativa passa a priorizar o compartilhamento do link publico da Lectum em vez do arquivo gerado, permitindo que o WhatsApp busque `og:image`, `og:title`, `og:url` e `og:video`.
+- Video-respostas usam a rota canonica de thread `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, e nao mais o post com `focusReplyId`/anchor como link primario de compartilhamento.
+- O endpoint publico de SEO de posts/respostas com video profissional resolve o nome profissional do psicologo via `professional_first_name`/`professional_last_name` com fallback seguro para `user.name`, e publica `og_title` como `[Nome] na Lectum`.
+- O titulo HTML/editorial permanece baseado no post/resposta para SEO de pagina; a mudanca de autoria e especifica para Open Graph/social preview.
+- A exportacao do arquivo social com arte permanece como fallback se o link nativo/copia falhar; quando usada, o payload tambem inclui a URL da Lectum se o destino aceitar.
+
+### Consequencias
+
+- WhatsApp tende a montar o card clicavel no formato esperado, sujeito ao cache e as regras do crawler do proprio WhatsApp.
+- O link compartilhado abre diretamente a pagina publica da resposta/thread, preservando leitura anonima permitida e contexto da comunidade.
+- Instagram/TikTok podem receber link quando escolhidos pela mesma folha nativa; compartilhamento de arquivo continua apenas como fallback porque a Web nao informa previamente qual app sera escolhido.
+- Rollback: voltar a priorizar arquivo restaura o envio do MP4 social, mas o WhatsApp deixa de ter card Open Graph como caminho principal.
+- Deploy: mudanca aditiva de frontend/backend, sem banco, migration, env obrigatoria, package, provider, seed, mock ou alteracao de dados publicados.
+
+## Complemento 2026-08-22 - titulo do post no OG e arquivo social como caminho principal
+
+### Contexto
+
+Feedback imediatamente posterior mostrou um trade-off da decisao link-first: a folha nativa deixou de oferecer destinos de arquivo, como Instagram Reels/Stories, e o compartilhamento perdeu a arte social da caixinha de pergunta. O mesmo print mostrou que, quando o WhatsApp monta card de link, a descricao estava vindo do corpo da resposta em vez do titulo/pergunta do post.
+
+### Decisao
+
+- Reverter o caminho principal de videos para arquivo social 9:16 com arte, mantendo o link publico no payload quando o destino aceitar e como fallback quando o arquivo nao puder ser compartilhado.
+- Preservar a rota canonica de resposta e `og_title` `[Nome] na Lectum`.
+- Alterar `og_description` de posts/respostas com video profissional para o titulo do post, evitando expor o texto da resposta como descricao principal do card WhatsApp.
+- Reconhecer explicitamente a limitacao da Web Share API: a Web nao sabe se o usuario escolhera WhatsApp ou Instagram antes da folha nativa; por isso, nao ha como otimizar simultaneamente todos os destinos por canal sem uma escolha manual previa no produto.
+
+### Consequencias
+
+- Reels/Stories e outros destinos que dependem de arquivo voltam a aparecer porque o payload principal inclui o MP4 social.
+- WhatsApp pode receber arquivo com arte e, quando aceitar URL/metadados no mesmo payload ou quando cair no fallback de link, usara titulo do post como descricao Open Graph.
+- Cards ja cacheados pelo WhatsApp podem demorar a refletir a nova descricao ate expirar/serem recarregados pelo crawler.
+- Deploy: mudanca aditiva de frontend/backend, sem banco, migration, env obrigatoria, package, provider, seed, mock ou alteracao de dados publicados.
+
+## Complemento 2026-08-22 - preview WhatsApp sem `og:video`
+
+### Contexto
+
+Com a escolha explicita de destino, o WhatsApp deixa de precisar receber o arquivo social. O requisito passa a ser um card de link com capa vertical, nome do psicologo e descricao pelo titulo do post, levando o clique para a Lectum e sem reproduzir o video dentro da conversa.
+
+### Decisao
+
+- Criar rotas publicas especificas para preview do WhatsApp: `/comunidades/[slug]/publicacao/[id]/whatsapp` e `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp`.
+- Essas rotas renderizam o mesmo conteudo publico do post/thread, mas chamam `resolveCommunityPostSeoMetadata` com `shareTarget="whatsapp"`.
+- O modo WhatsApp suprime `og:video`, força `openGraph.type="article"`, preserva `og:image`/`og:title`/`og:description` e define `og:url` para a propria rota `/whatsapp`, enquanto o canonical permanece na rota publica original.
+- O helper de metadata passa a respeitar `video: null` como override explicito, impedindo fallback acidental para video.
+
+### Consequencias
+
+- WhatsApp deve montar um card clicavel em vez de tentar reproduzir o arquivo de video, sujeito ao cache do crawler do proprio WhatsApp.
+- A rota canonica continua sendo a pagina publica normal, mas o card compartilhado se declara pela rota `/whatsapp`; essa rota existe para metadados por canal e pode ser aberta por usuarios sem perder contexto.
+- O backend de SEO permanece aditivo e inalterado; a diferenca de canal e aplicada no frontend/Next metadata.
+- Rollback: remover as rotas `/whatsapp` e voltar a usar a rota canonica no destino WhatsApp reintroduz `og:video` nos previews.

@@ -2,13 +2,15 @@
 
 import { Eye, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
-import { removeToken } from "@/hooks/cookies/token";
-import { removeUser } from "@/hooks/cookies/user";
+import { toast } from "sonner";
+import { revokeSession } from "@/hooks/cookies/signout";
 import { cn } from "@/lib/utils";
 import {
   ADMIN_VIEW_AS_STORAGE_EVENT,
   type AdminViewAsSession,
   clearAdminViewAsSession,
+  getAdminViewAsExpirationDelay,
+  normalizeAdminReturnUrl,
   readAdminViewAsSession,
 } from "@/utils/admin-view-as";
 
@@ -31,6 +33,7 @@ const formatExpiresAt = (session: AdminViewAsSession) => {
 
 export const AdminViewAsBanner = () => {
   const [session, setSession] = useState<AdminViewAsSession | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
     const syncSession = () => setSession(readAdminViewAsSession());
@@ -45,22 +48,53 @@ export const AdminViewAsBanner = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!session) return;
+
+    const expirationDelay = getAdminViewAsExpirationDelay(session.expiresAt);
+    if (expirationDelay === null) return;
+
+    const expireSession = () => {
+      const returnUrl = normalizeAdminReturnUrl(session.adminReturnUrl) || "/auth/login";
+      clearAdminViewAsSession();
+      setSession(null);
+      window.location.href = returnUrl;
+    };
+
+    if (expirationDelay === 0) {
+      expireSession();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(expireSession, expirationDelay);
+    return () => window.clearTimeout(timeoutId);
+  }, [session]);
+
   if (!session) return null;
 
   const expiresAt = formatExpiresAt(session);
 
-  const exitViewAs = () => {
-    const returnUrl = session.adminReturnUrl || "/auth/login";
-    clearAdminViewAsSession();
-    removeToken();
-    removeUser();
-    window.location.href = returnUrl;
+  const exitViewAs = async () => {
+    if (isExiting) return;
+
+    setIsExiting(true);
+    const returnUrl = normalizeAdminReturnUrl(session.adminReturnUrl) || "/auth/login";
+    try {
+      await revokeSession();
+      clearAdminViewAsSession();
+      window.location.href = returnUrl;
+    } catch {
+      setIsExiting(false);
+      toast.error(
+        "Não foi possível encerrar a visualização. Verifique sua conexão e tente novamente.",
+      );
+    }
   };
 
   return (
     <div
       className={cn(
-        "fixed top-3 right-3 left-3 z-[90] mx-auto max-w-3xl rounded-2xl border border-primary/30 bg-white/95 px-3 py-3 text-foreground shadow-[0_16px_45px_rgba(15,23,42,0.16)] backdrop-blur",
+        "fixed top-3 right-3 left-3 z-[90] mx-auto max-w-3xl rounded-2xl border border-primary/30 bg-surface/95 px-3 py-3 text-foreground shadow-lectum-soft backdrop-blur",
         "sm:left-1/2 sm:right-auto sm:w-[min(720px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:px-4",
       )}
       role="status"
@@ -82,11 +116,12 @@ export const AdminViewAsBanner = () => {
         </div>
         <button
           className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary-soft px-3 text-sm font-extrabold text-primary transition hover:border-primary/40 hover:bg-primary-soft/80 sm:w-auto"
+          disabled={isExiting}
           onClick={exitViewAs}
           type="button"
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
-          Sair da visualização
+          {isExiting ? "Saindo..." : "Sair da visualização"}
         </button>
       </div>
     </div>

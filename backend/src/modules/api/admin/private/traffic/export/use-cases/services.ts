@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { msg } from "@/helpers/translate";
+import { csvPublicProvenance, csvRow } from "@/utils/csv";
 import type {
   AdminTrafficBreakdownItem,
   AdminTrafficConversion,
@@ -17,12 +18,7 @@ import type {
 } from "../../summary/DTOs/IAdminTrafficSummaryDTO";
 import { buildTrafficSummary } from "../../summary/use-cases/services";
 
-const csvCell = (value: unknown) => {
-  const normalized = value === null || value === undefined ? "" : String(value);
-  return `"${normalized.replace(/"/g, '""')}"`;
-};
-
-const csvRow = (values: unknown[]) => values.map(csvCell).join(",");
+const productSource = (source: string) => (source.trim() ? "Lectum" : "");
 
 const appendMetricRows = (rows: string[], section: string, metrics: AdminTrafficMetric[]) => {
   for (const metric of metrics) {
@@ -33,7 +29,7 @@ const appendMetricRows = (rows: string[], section: string, metrics: AdminTraffic
         metric.label,
         "",
         metric.value,
-        metric.source,
+        productSource(metric.source),
         `unit=${metric.unit};previous=${metric.previous_value};change_percent=${
           metric.change_percent ?? "n/a"
         };unavailable=${metric.unavailable}`,
@@ -50,7 +46,7 @@ const appendOnlineNowRows = (rows: string[], onlineNow: AdminTrafficOnlineNow) =
       "Usuários online agora",
       onlineNow.window.to,
       onlineNow.unique_visitors,
-      onlineNow.source,
+      productSource(onlineNow.source),
       `window_minutes=${onlineNow.window.minutes};active_sessions=${onlineNow.active_sessions};authenticated_users=${onlineNow.authenticated_users};anonymous_visitors=${onlineNow.anonymous_visitors}`,
     ]),
   );
@@ -63,7 +59,7 @@ const appendOnlineNowRows = (rows: string[], onlineNow: AdminTrafficOnlineNow) =
         item.label,
         onlineNow.window.to,
         item.count,
-        onlineNow.source,
+        productSource(onlineNow.source),
         `percentage=${item.percentage};window_minutes=${onlineNow.window.minutes}`,
       ]),
     );
@@ -84,7 +80,7 @@ const appendBreakdownRows = (
         item.label,
         "",
         item.count,
-        source,
+        productSource(source),
         `percentage=${item.percentage}`,
       ]),
     );
@@ -103,7 +99,7 @@ const appendDeviceRows = (rows: string[], items: AdminTrafficDeviceItem[], sourc
           `${device.label} - ${operatingSystem.label}`,
           "",
           operatingSystem.count,
-          source,
+          productSource(source),
           `device=${device.id};device_count=${device.count};device_percentage=${device.percentage};operating_system=${operatingSystem.operating_system};percentage=${operatingSystem.percentage}`,
         ]),
       );
@@ -125,7 +121,7 @@ const appendLocationRows = (
         item.label,
         "",
         item.count,
-        source,
+        productSource(source),
         `percentage=${item.percentage}`,
       ]),
     );
@@ -141,7 +137,7 @@ const appendEntryPageRows = (rows: string[], items: AdminTrafficEntryPage[], sou
         item.label,
         "",
         item.count,
-        source,
+        productSource(source),
         `percentage=${item.percentage};conversions=${item.conversions}`,
       ]),
     );
@@ -157,10 +153,8 @@ const appendConversionRows = (rows: string[], items: AdminTrafficConversion[], s
         item.label,
         "",
         item.value,
-        source,
-        `metric_source=${item.source};previous=${item.previous_value};change_percent=${
-          item.change_percent ?? "n/a"
-        }`,
+        productSource(source),
+        `previous=${item.previous_value};change_percent=${item.change_percent ?? "n/a"}`,
       ]),
     );
   }
@@ -179,7 +173,7 @@ const appendConversionChartRows = (
         `${chart.label} - ${item.label}`,
         "",
         item.count,
-        chart.source,
+        productSource(chart.source),
         `percentage=${item.percentage};total=${chart.total};description=${chart.description}`,
       ]),
     );
@@ -199,7 +193,7 @@ const appendConversionActionRows = (
         item.label,
         "",
         item.events,
-        item.source,
+        productSource(item.source),
         `actors=${item.actors};patient_actors=${item.patient_actors};psychologist_actors=${item.psychologist_actors};actor_label=${item.actor_label};actor_percentage=${item.actor_percentage};description=${item.description}`,
       ]),
     );
@@ -220,8 +214,8 @@ const appendRankingRows = (
         item.label,
         "",
         item.sessions,
-        source,
-        `pageviews=${item.count};percentage=${item.percentage};path=${item.path ?? ""}`,
+        productSource(source),
+        `visualizacoes=${item.count};percentual=${item.percentage};pagina=${item.path ?? ""}`,
       ]),
     );
   }
@@ -230,7 +224,15 @@ const appendRankingRows = (
 const appendTimelineRows = (rows: string[], items: AdminTrafficTimelinePoint[], source: string) => {
   for (const item of items) {
     rows.push(
-      csvRow(["overview_timeline", "sessions", "Sessões", item.date, item.sessions, source, ""]),
+      csvRow([
+        "overview_timeline",
+        "sessions",
+        "Sessões",
+        item.date,
+        item.sessions,
+        productSource(source),
+        "",
+      ]),
     );
     rows.push(
       csvRow([
@@ -239,7 +241,7 @@ const appendTimelineRows = (rows: string[], items: AdminTrafficTimelinePoint[], 
         "Usuários únicos",
         item.date,
         item.unique_visitors,
-        source,
+        productSource(source),
         "",
       ]),
     );
@@ -250,7 +252,7 @@ const appendTimelineRows = (rows: string[], items: AdminTrafficTimelinePoint[], 
         "Novos visitantes",
         item.date,
         item.new_visitors,
-        source,
+        productSource(source),
         "",
       ]),
     );
@@ -261,7 +263,7 @@ const appendTimelineRows = (rows: string[], items: AdminTrafficTimelinePoint[], 
         "Visitantes recorrentes",
         item.date,
         item.recurring_visitors,
-        source,
+        productSource(source),
         "",
       ]),
     );
@@ -273,7 +275,7 @@ const buildCsv = (summary: AdminTrafficSummary) => {
   rows.push(csvRow(["Lectum Admin Tráfego"]));
   rows.push(csvRow(["period", summary.period.from, summary.period.to, summary.period.label]));
   rows.push("");
-  rows.push(csvRow(["section", "id", "label", "date", "value", "source", "extra"]));
+  rows.push(csvRow(["section", "id", "label", "date", "value", "origem", "extra"]));
   appendMetricRows(rows, "overview", summary.overview_cards);
   appendOnlineNowRows(rows, summary.online_now);
   appendTimelineRows(rows, summary.timeline.points, summary.timeline.source);
@@ -324,7 +326,17 @@ const buildCsv = (summary: AdminTrafficSummary) => {
   );
 
   for (const item of summary.unavailable) {
-    rows.push(csvRow(["unavailable", item.id, item.label, "", "", item.source, item.description]));
+    rows.push(
+      csvRow([
+        "unavailable",
+        item.id,
+        item.label,
+        "",
+        "",
+        csvPublicProvenance(item.source),
+        item.description,
+      ]),
+    );
   }
 
   return rows.join("\r\n");

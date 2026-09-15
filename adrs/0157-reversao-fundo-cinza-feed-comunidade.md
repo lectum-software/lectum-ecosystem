@@ -1,4 +1,4 @@
-﻿# ADR 0157: Reversão do fundo branco no feed da comunidade
+# ADR 0157: Reversão do fundo branco no feed da comunidade
 
 ## Status
 

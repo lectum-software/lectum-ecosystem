@@ -164,3 +164,19 @@ Psicólogos com `professional_subscription.source="admin_grant"` recebem todos o
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/professional/billing`, viewport 390x844, com psicólogo temporário real no Plano Gratuito removido ao final, confirmou `Respostas nas comunidades com mídia`, ausência de `Atendimento prioritário`/`Suporte prioritário via WhatsApp` e `scrollWidth=390`.
 - Cleanup confirmado com `codex_smoke_users=0`.
+
+
+## Ajuste de copy em 2026-08-13: midia e analytics na tela Minha assinatura
+
+- Para manter consistencia com a tela de planos, a secao `O que voce desbloqueia com a Assinatura Profissional` em `/app/professional/billing/subscription` passou a usar `Respostas com midia nas comunidades` e `Analytics do seu perfil`.
+- A lista continua apenas comercial/explicativa; nao muda entitlement, API, gateway, preco, schema Prisma, env ou pacote.
+- Impacto de deploy: alteracao frontend compativel, sem ordem especial entre aplicacoes; rollback por reversao do commit.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/plans/logic.tsx src/app/app/professional/billing/subscription/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check:version`
+- Script local de validacao estatica confirmou os novos textos compartilhados com a tela de planos.
+- ADR atualizado: `adrs/0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md`.

@@ -1,4 +1,4 @@
-﻿# ADR-0324: Canais canônicos de origem do tráfego no Admin
+# ADR-0324: Canais canônicos de origem do tráfego no Admin
 
 ## Status
 

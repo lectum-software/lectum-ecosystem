@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, UserRound } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useReviewEligibility } from "@/api/callers/reviews";
@@ -9,6 +10,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { formatCrpLabel } from "@/utils/crp";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
@@ -25,6 +27,38 @@ const getInitials = (name?: string | null) => {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const ReviewSuccessProfessionalAvatar = ({
+  avatar,
+  name,
+}: {
+  avatar?: string | null;
+  name?: string | null;
+}) => {
+  const avatarSrc = resolvePublicMediaUrl(avatar ?? null);
+  const displayName = name?.trim() || "profissional avaliado";
+
+  return (
+    <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-primary">
+      {avatarSrc ? (
+        <Image
+          alt={`Foto de perfil de ${displayName}`}
+          className="object-cover"
+          fill
+          sizes="48px"
+          src={avatarSrc}
+          unoptimized={isPublicMediaUrl(avatar ?? null)}
+        />
+      ) : name ? (
+        <span className="text-sm font-extrabold" aria-hidden="true">
+          {getInitials(name)}
+        </span>
+      ) : (
+        <UserRound className="h-5 w-5" aria-hidden="true" />
+      )}
+    </span>
+  );
 };
 
 export const ReviewsSuccessLogic = () => {
@@ -52,15 +86,10 @@ export const ReviewsSuccessLogic = () => {
             </p>
           </div>
           <section className="flex w-full items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 text-left shadow-[var(--lectum-shadow-soft)]">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-              {professional ? (
-                <span className="text-sm font-extrabold" aria-hidden="true">
-                  {getInitials(professional.psychologist_name)}
-                </span>
-              ) : (
-                <UserRound className="h-5 w-5" aria-hidden="true" />
-              )}
-            </span>
+            <ReviewSuccessProfessionalAvatar
+              avatar={professional?.psychologist_avatar}
+              name={professional?.psychologist_name}
+            />
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase text-primary">AVALIAÇÃO CONCLUÍDA</p>
               <p className="mt-1 inline-flex max-w-full items-center gap-1.5 font-semibold text-foreground">

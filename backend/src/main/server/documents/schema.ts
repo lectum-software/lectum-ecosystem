@@ -1,10 +1,12 @@
-//Dotenv
-import dotenv from "dotenv";
+import "@/config/dotenv";
+import path from "node:path";
+import { isPublishedRuntime } from "@/utils/runtime-config";
 
-dotenv.config();
+const runtimeRoot = path.resolve(__dirname, "../../..");
+const isCompiledRuntime = path.basename(runtimeRoot) === "dist";
 
 export const schema = {
-  base: "src/modules",
+  base: isPublishedRuntime() || isCompiledRuntime ? "dist/modules" : "src/modules",
   modules: [
     {
       options: {

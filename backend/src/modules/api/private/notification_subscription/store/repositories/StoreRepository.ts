@@ -1,10 +1,8 @@
 //Client
 
 //Types
-import type { Prisma } from "@/external/generated/prisma/client";
+import { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
-//Objects
-import type { notification_subscription } from "@/interfaces/objects";
 //DTOs
 import type { IStoreDTO } from "../DTOs/IStoreDTO";
 import type { IStoreRepository } from "./interfaces/IStoreRepository";
@@ -17,7 +15,7 @@ export class StoreRepository implements IStoreRepository {
   }
 
   //#ignore
-  async findSubscription(data: IStoreDTO): Promise<notification_subscription | null> {
+  async findSubscription(data: IStoreDTO): Promise<{ id: string } | null> {
     const subscription = await this.repository.findFirst({
       where: {
         user_id: data.auth.id!,
@@ -27,24 +25,22 @@ export class StoreRepository implements IStoreRepository {
       orderBy: {
         createdAt: "desc",
       },
+      select: {
+        id: true,
+      },
     });
 
     return subscription;
   }
   //@ignore
 
-  async store(props: IStoreDTO): Promise<notification_subscription> {
-    //#ignore
-    delete props.b.force;
-    //@ignore
-
+  async store(props: IStoreDTO): Promise<{ id: string }> {
     const args: Prisma.notification_subscriptionCreateArgs = {
       data: {
-        //*
-        ...props.b,
         //#ignore
         user_id: props.auth.id!,
         device_id: props.device,
+        subscription: props.b.subscription,
         //@ignore
       },
     };
@@ -60,6 +56,7 @@ export class StoreRepository implements IStoreRepository {
         data: {
           deleted: true,
           deletedAt: new Date(),
+          subscription: Prisma.DbNull,
         },
       });
       //@ignore
@@ -67,6 +64,9 @@ export class StoreRepository implements IStoreRepository {
       const item = await tx.notification_subscription.create({
         //*
         ...args,
+        select: {
+          id: true,
+        },
       });
 
       return item;

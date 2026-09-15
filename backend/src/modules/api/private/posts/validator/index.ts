@@ -1,4 +1,5 @@
-﻿import { z } from "zod";
+import { z } from "zod";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const idParams = [
@@ -21,6 +22,14 @@ const replyIdParams = [
     max: 120,
   },
 ] satisfies IValidatorRequest["params"];
+
+const shareRenderJobIdParam = {
+  key: "jobId",
+  coerse: "string",
+  method: "string",
+  min: 8,
+  max: 120,
+} satisfies NonNullable<IValidatorRequest["params"]>[number];
 
 const paginationQuery = [
   {
@@ -117,6 +126,80 @@ export const createReplySchema: IValidatorRequest = {
       min: 1,
       max: 500,
       optional: true,
+    },
+  ],
+};
+
+export const replyMediaMultipartInitiateSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "fileName",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 255,
+      optional: true,
+    },
+    {
+      key: "mimeType",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 80,
+    },
+    {
+      key: "size",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      max: UPLOAD_LIMITS.postReply.multipartTotalMb * 1024 * 1024,
+    },
+  ],
+};
+
+export const replyMediaMultipartCompleteSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "uploadSessionId",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 4096,
+    },
+    {
+      key: "parts",
+      custom: z
+        .array(
+          z
+            .object({
+              partId: z.string().min(1).max(4096).optional(),
+              partNumber: z.number().int().min(1).max(10_000),
+              partToken: z.string().min(1).max(4096).optional(),
+            })
+            .strict()
+            .refine((part) => Boolean(part.partId || part.partToken), {
+              message: "Informe a parte enviada.",
+              path: ["partId"],
+            }),
+        )
+        .min(1)
+        .max(10_000),
+    },
+  ],
+};
+
+export const replyMediaMultipartAbortSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "uploadSessionId",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 4096,
     },
   ],
 };
@@ -281,6 +364,14 @@ export const replySaveSchema: IValidatorRequest = {
   params: replyIdParams,
 };
 
+export const shareRenderJobSchema: IValidatorRequest = {
+  params: [...idParams, shareRenderJobIdParam],
+};
+
+export const replyShareRenderJobSchema: IValidatorRequest = {
+  params: [...replyIdParams, shareRenderJobIdParam],
+};
+
 export const reportSchema: IValidatorRequest = {
   params: idParams,
   body: [
@@ -311,6 +402,9 @@ export const showValidator = validator(showSchema);
 export const repliesValidator = validator(repliesSchema);
 export const listValidator = validator(listSchema);
 export const createReplyValidator = validator(createReplySchema);
+export const replyMediaMultipartInitiateValidator = validator(replyMediaMultipartInitiateSchema);
+export const replyMediaMultipartCompleteValidator = validator(replyMediaMultipartCompleteSchema);
+export const replyMediaMultipartAbortValidator = validator(replyMediaMultipartAbortSchema);
 export const updatePostValidator = validator(updatePostSchema);
 export const updateReplyValidator = validator(updateReplySchema);
 export const voteValidator = validator(voteSchema);
@@ -318,6 +412,8 @@ export const shareValidator = validator(shareSchema);
 export const replyShareValidator = validator(replyShareSchema);
 export const saveValidator = validator(showSchema);
 export const replySaveValidator = validator(replySaveSchema);
+export const shareRenderJobValidator = validator(shareRenderJobSchema);
+export const replyShareRenderJobValidator = validator(replyShareRenderJobSchema);
 export const reportValidator = validator(reportSchema);
 export const replyReportValidator = validator(replyReportSchema);
 

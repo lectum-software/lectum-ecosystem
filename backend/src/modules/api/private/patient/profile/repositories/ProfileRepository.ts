@@ -3,6 +3,8 @@ import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { patient_profile } from "@/interfaces/objects";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import { publicFileKeyFromUrl } from "@/utils/public-origin";
 import type { IUpdateProfileDTO, PatientPrivateProfileResponse } from "../DTOs/IProfileDTO";
 import type { IProfileRepository } from "./interfaces/IProfileRepository";
 
@@ -17,19 +19,7 @@ const userSelect = {
 } satisfies Prisma.userSelect;
 
 const publicPatientAvatarKeyFromUrl = (value?: string | null) => {
-  if (!value) return null;
-
-  try {
-    const url = new URL(value, process.env.BASE || "http://localhost");
-    const prefix = "/public/files/";
-
-    if (!url.pathname.startsWith(prefix)) return null;
-
-    const key = decodeURIComponent(url.pathname.slice(prefix.length));
-    return key.startsWith("patient/avatar/") ? key : null;
-  } catch (_err) {
-    return null;
-  }
+  return publicFileKeyFromUrl(value, ["patient/avatar/"]);
 };
 
 const deletePublicPatientAvatar = async (value?: string | null) => {
@@ -56,30 +46,32 @@ export class ProfileRepository implements IProfileRepository {
   }
 
   async getOrCreate(userId: string): Promise<patient_profile> {
-    const existing = await this.repository.findUnique({
-      where: {
-        user_id: userId,
-      },
-    });
-
-    if (existing && !existing.deleted) return existing;
-
-    if (existing?.deleted) {
-      return this.repository.update({
+    return withSerializableTransaction(async (transaction) => {
+      const existing = await transaction.patient_profile.findUnique({
         where: {
           user_id: userId,
         },
+      });
+
+      if (existing && !existing.deleted) return existing;
+
+      if (existing?.deleted) {
+        return transaction.patient_profile.update({
+          where: {
+            user_id: userId,
+          },
+          data: {
+            deleted: false,
+            deletedAt: null,
+          },
+        });
+      }
+
+      return transaction.patient_profile.create({
         data: {
-          deleted: false,
-          deletedAt: null,
+          user_id: userId,
         },
       });
-    }
-
-    return this.repository.create({
-      data: {
-        user_id: userId,
-      },
     });
   }
 
@@ -91,6 +83,8 @@ export class ProfileRepository implements IProfileRepository {
       birthdate: data.b.birthdate ?? null,
       phone: data.b.phone ?? null,
       bio: data.b.bio ?? null,
+      city: data.b.city ?? null,
+      state: data.b.state ?? null,
     };
 
     const [user, updatedProfile] = await prisma.$transaction([

@@ -1,4 +1,5 @@
 //Types
+import type { Request } from "express";
 import type {
   //*
   Prisma,
@@ -18,11 +19,13 @@ export interface IStoreDTO {
     password_confirm: string;
     role?: "paciente" | "psicologo";
     terms_accepted?: boolean;
+    adult_confirmed?: boolean;
     terms_version?: string;
     analytics_visitor_id?: string;
     analytics_session_id?: string;
   };
   device_id?: string;
+  headers?: Request["headers"];
   select?: Prisma.userSelect;
   include?: Prisma.userInclude;
 }

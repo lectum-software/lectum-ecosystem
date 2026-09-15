@@ -1,12 +1,14 @@
 "use client";
 
-import { AlertTriangle, ChevronDown, ChevronLeft, LogOut, Menu, X } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronLeft, Loader2, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useAdminModerationSummary } from "@/api/callers/moderation";
-import { setSidebarCollapsed } from "@/lib/storage";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
+import { getSidebarCollapsed, setSidebarCollapsed } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useAdminAuth } from "@/providers/admin-auth";
 import { adminNavItems } from "./nav";
@@ -18,7 +20,12 @@ type SidebarContentProps = {
   premiumPilot?: boolean;
 };
 
-type ModerationSubmenuBadge = "compliance" | "conteudoSensivel" | "denuncias" | "operacionais";
+type ModerationSubmenuBadge =
+  | "compliance"
+  | "conteudoSensivel"
+  | "denuncias"
+  | "operacionais"
+  | "sugestoesComunidades";
 
 const hrefPathname = (href: string) => href.split("?")[0].split("#")[0];
 
@@ -37,6 +44,7 @@ const moderationSubmenuBadgeTone: Record<ModerationSubmenuBadge, "danger" | "war
   conteudoSensivel: "warning",
   denuncias: "danger",
   operacionais: "warning",
+  sugestoesComunidades: "warning",
 };
 
 const isPremiumPilotPath = (pathname: string) =>
@@ -68,7 +76,7 @@ const SidebarContent = ({
   premiumPilot = false,
 }: SidebarContentProps) => {
   const pathname = usePathname();
-  const { admin, logout } = useAdminAuth();
+  const { admin, isLoggingOut, logout } = useAdminAuth();
   const activeGroupHref = useMemo(
     () =>
       adminNavItems.find((item) => "children" in item && isNavPathActive(pathname, item.href))
@@ -82,9 +90,12 @@ const SidebarContent = ({
   const openGroupHref =
     openGroupOverride?.pathname === pathname ? openGroupOverride.href : activeGroupHref;
   const moderationSummary = useAdminModerationSummary();
+  const communitySuggestionsNewTotal =
+    moderationSummary.data?.community_suggestions?.new_suggestions_total ?? 0;
   const moderationPendingTotal =
     (moderationSummary.data?.pending_total ?? 0) +
-    (moderationSummary.data?.operational_alerts?.counts.total ?? 0);
+    (moderationSummary.data?.operational_alerts?.counts.total ?? 0) +
+    communitySuggestionsNewTotal;
   const moderationUrgentTotal =
     (moderationSummary.data?.urgent_pending_total ?? 0) +
     (moderationSummary.data?.operational_alerts?.counts.urgent_total ?? 0);
@@ -94,6 +105,7 @@ const SidebarContent = ({
     conteudoSensivel: moderationSummary.data?.pending_total ?? 0,
     denuncias: moderationSummary.data?.operational_alerts?.counts.pending_reports ?? 0,
     operacionais: moderationSummary.data?.operational_alerts?.counts.operational_total ?? 0,
+    sugestoesComunidades: communitySuggestionsNewTotal,
   };
   const moderationTotalLabel = `${moderationPendingTotal} ${
     moderationPendingTotal === 1 ? "ação" : "ações"
@@ -116,6 +128,13 @@ const SidebarContent = ({
     const names = adminName.split(" ").filter(Boolean);
     return `${names[0]?.[0] || "A"}${names[1]?.[0] || "D"}`.toUpperCase();
   }, [adminName]);
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      toast.error("Não foi possível encerrar a sessão. Verifique sua conexão e tente novamente.");
+    }
+  };
 
   return (
     <div
@@ -169,7 +188,7 @@ const SidebarContent = ({
                       "relative flex min-h-12 w-full items-center gap-2 rounded-2xl px-3 text-left text-sm font-bold transition",
                       premiumPilot
                         ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
-                        : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                        : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-sidebar-foreground",
                       isActive &&
                         (premiumPilot
                           ? "bg-sidebar-active text-primary shadow-control ring-1 ring-primary/10"
@@ -203,8 +222,8 @@ const SidebarContent = ({
                         className={cn(
                           "ml-auto inline-flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-2 text-[0.68rem] font-black shadow-admin-soft",
                           moderationUrgentTotal > 0
-                            ? "bg-danger text-white"
-                            : "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+                            ? "bg-danger text-primary-foreground"
+                            : "bg-warning-soft text-warning ring-1 ring-warning-border",
                           collapsed &&
                             "absolute -right-1 top-1 ml-0 h-5 min-w-5 gap-0 px-1 text-[0.62rem]",
                         )}
@@ -250,7 +269,7 @@ const SidebarContent = ({
                           ? moderationSubmenuBadgeTone[childBadge]
                           : null;
                         const childPendingTitle =
-                          childPendingCount === null
+                          childPendingCount === null || childPendingCount <= 0
                             ? null
                             : `${pendingCountLabel(childPendingCount)} em ${child.label}`;
 
@@ -261,11 +280,11 @@ const SidebarContent = ({
                               "flex min-h-10 items-center gap-2 rounded-xl border-l px-3 pl-4 text-sm font-bold transition",
                               premiumPilot
                                 ? "border-border text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
-                                : "border-white/10 text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground focus-visible:outline-white",
+                                : "border-sidebar-foreground/10 text-sidebar-muted hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground focus-visible:outline-sidebar-foreground",
                               childIsActive &&
                                 (premiumPilot
                                   ? "border-primary/30 bg-sidebar-active text-primary"
-                                  : "bg-white/10 text-sidebar-foreground"),
+                                  : "bg-sidebar-foreground/10 text-sidebar-foreground"),
                             )}
                             href={child.href}
                             key={child.href}
@@ -275,7 +294,7 @@ const SidebarContent = ({
                             }}
                           >
                             <span className="min-w-0 flex-1 truncate">{child.label}</span>
-                            {childPendingCount !== null ? (
+                            {childPendingCount !== null && childPendingCount > 0 ? (
                               <>
                                 <span
                                   aria-hidden="true"
@@ -311,7 +330,7 @@ const SidebarContent = ({
                   "relative flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition",
                   premiumPilot
                     ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
-                    : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                    : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-sidebar-foreground",
                   isActive &&
                     (premiumPilot
                       ? "bg-sidebar-active text-primary shadow-control ring-1 ring-primary/10"
@@ -334,8 +353,8 @@ const SidebarContent = ({
                     className={cn(
                       "ml-auto inline-flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-2 text-[0.68rem] font-black shadow-admin-soft",
                       moderationUrgentTotal > 0
-                        ? "bg-danger text-white"
-                        : "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+                        ? "bg-danger text-primary-foreground"
+                        : "bg-warning-soft text-warning ring-1 ring-warning-border",
                       collapsed &&
                         "absolute -right-1 top-1 ml-0 h-5 min-w-5 gap-0 px-1 text-[0.62rem]",
                     )}
@@ -360,7 +379,10 @@ const SidebarContent = ({
       </nav>
 
       <div
-        className={cn("shrink-0 border-t p-3", premiumPilot ? "border-border" : "border-white/10")}
+        className={cn(
+          "shrink-0 border-t p-3",
+          premiumPilot ? "border-border" : "border-sidebar-foreground/10",
+        )}
       >
         <div
           className={cn(
@@ -368,7 +390,7 @@ const SidebarContent = ({
             collapsed && "justify-center",
           )}
         >
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-sm font-black text-white">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-sm font-black text-primary-foreground">
             {initials}
           </div>
           <div className={cn("min-w-0 flex-1", collapsed && "sr-only")}>
@@ -379,18 +401,24 @@ const SidebarContent = ({
 
         <button
           aria-label="Sair do painel administrativo"
+          aria-busy={isLoggingOut}
           className={cn(
             "mt-2 flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-sm font-bold text-sidebar-muted transition",
             premiumPilot
               ? "hover:bg-sidebar-active hover:text-primary"
-              : "hover:bg-white/10 hover:text-sidebar-foreground",
+              : "hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground",
             collapsed && "justify-center px-2",
           )}
-          onClick={() => void logout()}
+          disabled={isLoggingOut}
+          onClick={() => void handleLogout()}
           type="button"
         >
-          <LogOut aria-hidden className="h-5 w-5" />
-          <span className={cn(collapsed && "sr-only")}>Sair</span>
+          {isLoggingOut ? (
+            <Loader2 aria-hidden className="h-5 w-5 animate-spin" />
+          ) : (
+            <LogOut aria-hidden className="h-5 w-5" />
+          )}
+          <span className={cn(collapsed && "sr-only")}>{isLoggingOut ? "Saindo..." : "Sair"}</span>
         </button>
       </div>
     </div>
@@ -399,9 +427,52 @@ const SidebarContent = ({
 
 export const AdminShell = ({ children }: PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerPathname, setDrawerPathname] = useState<string | null>(null);
+  const drawerTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const desktopTriggerRef = useRef<HTMLButtonElement | null>(null);
   const pathname = usePathname();
+  const drawerOpen = drawerPathname !== null && drawerPathname === pathname;
   const premiumPilot = isPremiumPilotPath(pathname);
+  const closeDrawer = () => setDrawerPathname(null);
+  const drawerRef = useAdminDialogLifecycle(closeDrawer, {
+    enabled: drawerOpen,
+    onRestoreFocus: () => {
+      const trigger = drawerTriggerRef.current;
+      const target = trigger?.getClientRects().length ? trigger : desktopTriggerRef.current;
+      if (target?.isConnected) target.focus({ preventScroll: true });
+    },
+  });
+
+  // Discard the old route's drawer state before it can reopen on history navigation.
+  if (drawerPathname !== null && drawerPathname !== pathname) setDrawerPathname(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setCollapsed(getSidebarCollapsed()));
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    // Keep this boundary aligned with the shell's lg:hidden / lg:block classes.
+    const desktopMedia = window.matchMedia("(min-width: 64rem)");
+    const closeOnDesktop = () => {
+      if (desktopMedia.matches) setDrawerPathname(null);
+    };
+    const closeOnHistory = () => setDrawerPathname(null);
+    const frame = window.requestAnimationFrame(closeOnDesktop);
+    desktopMedia.addEventListener("change", closeOnDesktop);
+    window.addEventListener("popstate", closeOnHistory);
+    window.addEventListener("hashchange", closeOnHistory);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      desktopMedia.removeEventListener("change", closeOnDesktop);
+      window.removeEventListener("popstate", closeOnHistory);
+      window.removeEventListener("hashchange", closeOnHistory);
+    };
+  }, [drawerOpen]);
 
   const toggleCollapsed = () => {
     setCollapsed((current) => {
@@ -425,15 +496,17 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden border-r transition-[width] duration-200 lg:block",
-          premiumPilot ? "border-border shadow-admin-soft" : "border-white/10",
+          premiumPilot ? "border-border shadow-admin-soft" : "border-sidebar-foreground/10",
           collapsed ? "w-20" : "w-64",
         )}
+        inert={drawerOpen}
       >
         <button
           aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
           aria-pressed={!collapsed}
-          className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-[0_3px_10px_rgb(15_23_42_/_8%)] transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-[0_6px_14px_rgb(15_23_42_/_10%)] focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
+          className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-control transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-admin-soft focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
           onClick={toggleCollapsed}
+          ref={desktopTriggerRef}
           title={collapsed ? "Expandir menu" : "Recolher menu"}
           type="button"
         >
@@ -454,11 +527,20 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
       </aside>
 
       {drawerOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div
+          aria-label="Menu administrativo"
+          aria-modal="true"
+          className="fixed inset-0 z-50 lg:hidden"
+          id="admin-mobile-navigation"
+          ref={drawerRef}
+          role="dialog"
+          tabIndex={-1}
+        >
           <button
             aria-label="Fechar menu administrativo"
             className="absolute inset-0 bg-overlay"
-            onClick={() => setDrawerOpen(false)}
+            onClick={closeDrawer}
+            tabIndex={-1}
             type="button"
           />
           <aside className="relative h-full w-[min(80vw,300px)] shadow-admin">
@@ -468,16 +550,16 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
                 "absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full",
                 premiumPilot
                   ? "border border-border bg-surface text-foreground"
-                  : "bg-white/10 text-white",
+                  : "bg-sidebar-foreground/10 text-sidebar-foreground",
               )}
-              onClick={() => setDrawerOpen(false)}
+              onClick={closeDrawer}
               type="button"
             >
               <X aria-hidden className="h-5 w-5" />
             </button>
             <SidebarContent
               collapsed={false}
-              onNavigate={() => setDrawerOpen(false)}
+              onNavigate={closeDrawer}
               premiumPilot={premiumPilot}
             />
           </aside>
@@ -489,13 +571,17 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
           "min-w-0 max-w-full overflow-x-clip transition-[padding] duration-200 lg:pl-64",
           collapsed && "lg:pl-20",
         )}
+        inert={drawerOpen}
       >
         <main className="mx-auto w-full min-w-0 max-w-full overflow-x-clip px-4 py-5 sm:px-6 lg:px-8 lg:py-8 xl:max-w-[1440px]">
           <div className="mb-4 flex lg:hidden">
             <button
+              aria-controls="admin-mobile-navigation"
+              aria-expanded={drawerOpen}
               aria-label="Abrir menu administrativo"
               className="grid h-11 w-11 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-border-strong"
-              onClick={() => setDrawerOpen(true)}
+              onClick={() => setDrawerPathname(pathname)}
+              ref={drawerTriggerRef}
               type="button"
             >
               <Menu aria-hidden className="h-5 w-5" />

@@ -1,0 +1,56 @@
+export const VIDEO_ASSET_PURPOSES = [
+  "profile_presentation",
+  "community_post",
+  "community_reply",
+] as const;
+
+export type VideoAssetPurpose = (typeof VIDEO_ASSET_PURPOSES)[number];
+export type VideoAssetStatus = "canceled" | "error" | "processing" | "ready" | "uploading";
+export type VideoAssetUploadMethod = "basic" | "tus";
+
+export type VideoStreamDetails = {
+  durationSeconds: number | null;
+  errorCode: string | null;
+  height: number | null;
+  providerUid: string;
+  status: VideoAssetStatus;
+  width: number | null;
+};
+
+export type ProvisionVideoUploadInput = {
+  assetId: string;
+  expiresAt: Date;
+  maxDurationSeconds: number;
+  purpose: VideoAssetPurpose;
+  sizeBytes: number;
+  uploadMethod: VideoAssetUploadMethod;
+};
+
+export type ProvisionedVideoUpload = {
+  providerUid: string;
+  uploadMethod: VideoAssetUploadMethod;
+  uploadUrl: string;
+};
+
+export type ImportVideoByUrlInput = {
+  assetId: string;
+  sourceUrl: string;
+};
+
+export type SignedVideoPlayback = {
+  expiresAt: Date;
+  hlsUrl: string;
+  thumbnailUrl: string;
+};
+
+export type SignedVideoDownload = {
+  downloadUrl: string;
+  expiresAt: Date;
+};
+
+export type VideoStreamDownloadStatus = "error" | "inprogress" | "ready";
+
+export type VideoStreamDownloadDetails = {
+  percentComplete: number | null;
+  status: VideoStreamDownloadStatus;
+};

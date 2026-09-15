@@ -1,4 +1,4 @@
-﻿import type { user } from "@/interfaces/objects";
+import type { professional_registry_check, user } from "@/interfaces/objects";
 
 export type CfpSearchBody = {
   cpf?: string;
@@ -52,6 +52,7 @@ export type StoredRegistryCheckRaw = {
   response: unknown;
   normalized_results: CfpResult[];
   attempt_status?:
+    | "pending"
     | "success"
     | "empty"
     | "provider_config_error"
@@ -61,9 +62,10 @@ export type StoredRegistryCheckRaw = {
     | "provider_error";
   attempt_finished_at?: string;
   provider_error?: {
-    name?: string;
-    reason?: string;
-    context?: Record<string, unknown>;
+    classification: "provider_unavailable";
+    reason?: "invalid_json" | "network" | "timeout";
+    elapsed_ms?: number;
+    http_status?: number;
   };
   confirmed_result_key?: string;
   confirmed_at?: string;
@@ -78,3 +80,14 @@ export interface ICfpConfirmDTO {
   b: CfpConfirmBody;
   auth: user;
 }
+
+export type CfpSearchReservation =
+  | { ok: true; check: professional_registry_check; used: number | null }
+  | { ok: false; reason: "profile_not_found" | "attempts_exceeded"; used: number };
+
+export type CfpConfirmationOutcome =
+  | { ok: true; data: CfpConfirmResponse }
+  | {
+      ok: false;
+      reason: "profile_locked" | "check_not_found" | "result_not_found" | "result_not_active";
+    };

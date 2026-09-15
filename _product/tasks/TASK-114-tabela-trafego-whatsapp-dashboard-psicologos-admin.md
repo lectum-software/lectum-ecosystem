@@ -1,4 +1,4 @@
-﻿# TASK-114 - Tabela de trafego por WhatsApp no dashboard Admin de psicologos
+# TASK-114 - Tabela de trafego por WhatsApp no dashboard Admin de psicologos
 
 ## Status
 

@@ -5,6 +5,7 @@ import type { z } from "zod";
 export type FieldType =
   | "input"
   | "textarea"
+  | "contenteditable"
   | "checkbox"
   | "select"
   | "switch"
@@ -48,6 +49,7 @@ export type Field<FormType extends FieldValues> = {
   id?: string;
   type?: React.HTMLInputTypeAttribute;
   autoComplete?: string;
+  dateDisplayFormat?: "native" | "pt-BR";
   autoFocus?: boolean;
   autoGrow?: boolean;
   tabIndex?: number;

@@ -9,7 +9,7 @@ Este documento substitui o inventário Figma como referência visual ativa.
 - Total de arquivos JPEG: 63
 - Total de telas de produto: 61
 - Asset isolado: 1 ícone `post_add_24dp_64748B_FILL0_wght400_GRAD0_opsz24 1.jpg`
-- Referências complementares de produto: 1 PNG gerado/aprovado em conversa para compartilhamento social (`_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`) e 1 JPEG de referência de preview WhatsApp para vídeo vertical (`_product/proto/WhatsApp preview video vertical Open Graph referencia.jpeg`).
+- Referências complementares de produto: 1 PNG gerado/aprovado em conversa para compartilhamento social (`_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`) e 2 JPEGs de referência de preview WhatsApp para vídeo vertical (`_product/proto/WhatsApp preview video vertical Open Graph referencia.jpeg` e `_product/proto/WhatsApp preview video link Instagram referencia.jpeg`).
 - Referência complementar do painel Admin: 19 PNGs enviados em conversa e salvos em `_product/proto/admin` (Dashboard, Tráfego, Comunidades, Psicólogos, Pacientes, Financeiro, Notificações e Configurações).
 
 As imagens e o Builder MCP são referência de produto, layout, estados, hierarquia visual e nomenclatura. Elas não definem a arquitetura final, qualidade final de código, contratos de API nem componentes finais.
@@ -30,20 +30,17 @@ Configuração criada:
 Validação local em 2026-06-03:
 
 - `node --version`: `v24.15.0`
-- `npx "@builder.io/dev-tools@latest" --help`: OK, CLI `1.63.1`
-- `npx "@builder.io/dev-tools@latest" code --help`: OK
-- `npx "@builder.io/dev-tools@latest" auth status`: autenticado no espaço `Lectum`
-- Space ID: `01ea07af363545a1936f2baa569cd24c`
-- User ID: `g8Kq1m9Zn5bCQZwa99dd7c8FGu93`
+- `npx "@builder.io/dev-tools@1.79.0" --help`: versão local auditada e fixada em 08/08/2026.
+- `npx "@builder.io/dev-tools@1.79.0" code --help`: OK
+- `npx "@builder.io/dev-tools@1.79.0" auth status`: autenticado no espaço `Lectum`
 
 Validação do Quick Copy:
 
 - Comando executado em diretório temporário fora do projeto:
 
 ```bash
-npx "@builder.io/dev-tools@latest" code \
+npx "@builder.io/dev-tools@1.79.0" code \
   --url vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a \
-  --spaceId 01ea07af363545a1936f2baa569cd24c \
   --cwd /tmp/lectum-builder-check-14HnQJ \
   --mode exact \
   --prompt "Access validation only..."
@@ -62,13 +59,13 @@ Resultado:
 
 Observação:
 
-- O servidor `npx "@builder.io/dev-tools@latest" mcp` sobe em stdio, mas não respondeu ao handshake manual `initialize/tools/list` feito por script local. Na prática, o acesso ao Quick Copy e ao código virtual foi confirmado pelo fluxo oficial `builder.io code`.
+- O servidor `npx "@builder.io/dev-tools@1.79.0" mcp` sobe em stdio, mas não respondeu ao handshake manual `initialize/tools/list` feito por script local. Na prática, o acesso ao Quick Copy e ao código virtual foi confirmado pelo fluxo oficial `builder.io code`.
 
 Uso controlado do CLI:
 
 ```bash
 cd frontend
-npx "@builder.io/dev-tools@latest" code --url vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a --cwd .
+npx "@builder.io/dev-tools@1.79.0" code --url vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a --cwd .
 ```
 
 O comando acima não deve ser usado como geração final automática. Quando usado, deve ser com prompt pequeno, depois de ler `ARCHITECTURE.md`, `PACKAGES.md`, `.builderignore` e `frontend/.builder/rules/lectum-frontend.mdc`.
@@ -119,7 +116,7 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Avaliações | Confirmação de Avaliação | `_product/proto/Confirmação de Avaliação.jpg` | 390x1006 | TASK-17 |
 | Avaliações | Avaliações Feitas - Paciente | `_product/proto/Avaliações Feitas - Paciente.jpg` | 390x1056 | TASK-17 |
 | Psicólogo privado | Perfil - Psicólogo | `_product/proto/Perfil - Psicólogo.jpg` | 430x1254 | TASK-18 |
-| Psicólogo privado | Editar Perfil - Psicólogo | `_product/proto/Editar Perfil - Psicólogo.jpg` | 394x4078 | TASK-18 |
+| Psicólogo privado | Editar Perfil - Psicólogo | `_product/proto/Editar Perfil - Psicólogo.jpg` | 394x4078 | TASK-18, TASK-157, TASK-158 |
 | Psicólogo privado | Modal de Atualização de Perfil do Psicólogo | `_product/proto/Modal de Atualização de Perfil do Psicólogo.jpg` | 430x925 | TASK-18 |
 | Psicólogo privado | Minhas Avaliações - Psicólogo | `_product/proto/Minhas Avaliações - Psicólogo.jpg` | 390x1506 | TASK-19 |
 | Psicólogo privado | Meus Analytics - Psicólogo | `_product/proto/Meus Analytics - Psicólogo.jpg` | 390x1284 | TASK-20 |
@@ -140,6 +137,8 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Posts | Posts Salvos | `_product/proto/Posts Salvos.jpg` | 390x1784 | TASK-28 |
 | Posts | Compartilhamento Lectum - vídeo-resposta stories referência | `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png` | 941x1672 | TASK-42 |
 | Posts | Preview WhatsApp para vídeo vertical Open Graph | `_product/proto/WhatsApp preview video vertical Open Graph referencia.jpeg` | 941x1280 | TASK-143 |
+| Posts | Preview WhatsApp de link de vídeo estilo Instagram | `_product/proto/WhatsApp preview video link Instagram referencia.jpeg` | 590x1280 | TASK-143 |
+| Posts | Preview WhatsApp de link sem arte social/reels | `_product/proto/WhatsApp preview link sem arte social referencia.jpeg` | 590x1280 | TASK-42, TASK-143 |
 | Conta | Notificações | `_product/proto/Notificações.jpg` | 414x1317 | TASK-29A |
 | Conta | Configurações de Notificações | `_product/proto/Configurações de Notificações.jpg` | 390x1099 | TASK-29A |
 | Conta | Configurações de Conta - Login Google | `_product/proto/Configurações de Conta - Login Google.jpg` | 390x884 | TASK-30 |
@@ -150,7 +149,7 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Assinatura | Minhas Assinatura - Psicólogo | `_product/proto/Minhas Assinatura - Psicólogo.jpg` | 430x924 | TASK-33 |
 | Assinatura | Alterar cartão de crédito | `_product/proto/Alterar cartão de crédito.jpg` | 466x1218 | TASK-33 |
 | Assinatura | Cartão Alterado com Sucesso | `_product/proto/Cartão Alterado com Sucesso.jpg` | 414x827 | TASK-33 |
-| Admin | Dashboard administrativo | `_product/proto/admin/Dashboard.png` | 1920x1200 | TASK-48 |
+| Admin | Dashboard administrativo | `_product/proto/admin/Dashboard.png` | 1536x1024 | TASK-48 |
 | Admin | Tráfego administrativo | `_product/proto/admin/Tráfego.png` | 1024x1535 | TASK-50 |
 | Admin | Comunidades - Dashboard | `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` | 1122x1402 | TASK-51 |
 | Admin | Comunidades - Detalhes | `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` | 1536x1024 | TASK-52 |

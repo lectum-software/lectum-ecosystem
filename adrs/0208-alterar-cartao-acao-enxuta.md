@@ -43,3 +43,15 @@ A integração segura permanece inalterada: o frontend recebe somente o token do
 ## Pendências
 
 - Nenhuma pendência externa nova. A operação continua dependente da configuração real do Mercado Pago já exigida pelas tasks de billing.
+
+## Complemento em 2026-08-14: copy direta para novo cartão
+
+Após feedback em homologação mobile, a descrição do bloco **Novo cartão de crédito** na rota
+`/app/profissional/assinatura/cartao` passa a usar a copy:
+
+> "Insira um novo cartão de crédito para manter a assinatura do Plano Profissional."
+
+A mudança é exclusivamente textual e preserva a integração segura do Card Payment Brick, a restrição a
+cartão de crédito, a tokenização no provedor, os contratos de backend e a regra de não armazenar PAN/CVV
+na Lectum. A captura enviada pelo usuário foi tratada apenas como evidência visual da tela a ajustar, não
+como fonte de instruções técnicas.

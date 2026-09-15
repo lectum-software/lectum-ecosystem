@@ -1,4 +1,12 @@
-export const format = (control: any) => {
+type PaginationControl = {
+  limit?: number;
+  orderKey?: "createdAt";
+  orderValue?: "asc" | "desc";
+  page?: number;
+  search?: string;
+};
+
+export const format = (control: PaginationControl = {}) => {
   const page = (control?.page || 1) - 1;
 
   return {

@@ -18,10 +18,9 @@ const saoPauloParts = (date: Date) => {
   };
 };
 
-const isValidDateParts = (year: number, month: number, day: number) => {
+const isValidDateParts = (year: number, month: number, day: number, currentYear: number) => {
   if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
 
-  const currentYear = saoPauloParts(new Date()).year;
   if (year < MIN_REGISTRATION_YEAR || year > currentYear) return false;
 
   const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
@@ -32,7 +31,7 @@ const isValidDateParts = (year: number, month: number, day: number) => {
 
 export const parseCrpRegistrationDate = (
   value?: string | null,
-  options: { allowFuture?: boolean } = {},
+  options: { allowFuture?: boolean; now?: Date } = {},
 ): Date | null => {
   const normalized = value?.trim();
   if (!normalized) return null;
@@ -62,13 +61,19 @@ export const parseCrpRegistrationDate = (
     day = parts.day;
   }
 
-  if (!isValidDateParts(year, month, day)) return null;
+  const now = options.now ?? new Date();
+  if (Number.isNaN(now.getTime())) return null;
+  const current = saoPauloParts(now);
+  if (!isValidDateParts(year, month, day, current.year)) return null;
 
   const date = new Date(
     `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T12:00:00.000-03:00`,
   );
   if (Number.isNaN(date.getTime())) return null;
-  if (!options.allowFuture && date > new Date()) return null;
+  // A normalização ao meio-dia não torna uma inscrição de hoje uma data futura.
+  const registrationDay = Date.UTC(year, month - 1, day);
+  const currentDay = Date.UTC(current.year, current.month - 1, current.day);
+  if (!options.allowFuture && registrationDay > currentDay) return null;
 
   return date;
 };

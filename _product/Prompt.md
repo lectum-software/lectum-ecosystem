@@ -1,3 +1,10 @@
+# Referência histórica de planejamento
+
+Documento inicial de junho/2026, preservado para contexto. Não é uma ordem de execução.
+O workspace atual contém backend, frontend, admin e video, com publicação independente.
+Para regras atuais, use [índice de tasks](tasks/README.md), arquitetura, política de packages
+e instruções do workspace; não execute automaticamente as receitas históricas abaixo.
+
 Nos estamos desenvolvendo um novo sistema focado em psicólogos e pacientes, estamos utilizando atualmente as pastas:
 - /Users/rezende/Desktop/lectum-ecosystem/backend
 - /Users/rezende/Desktop/lectum-ecosystem/frontend

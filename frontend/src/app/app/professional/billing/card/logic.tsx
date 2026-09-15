@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import { ArrowRight, CheckCircle2, CreditCard } from "lucide-react";
@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { BillingPaymentMethod, ProfessionalSubscription } from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,18 +17,12 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import {
+  isMercadoPagoPublicConfigurationValid,
+  mercadoPagoPublicKey,
+  resolveMercadoPagoPayerEmail,
+} from "@/utils/mercado-pago";
 
-const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
-const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
-const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim();
-
-const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
-  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
-    return sandboxPayerEmail;
-  }
-
-  return authenticatedEmail;
-};
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
 
 type CardPaymentFormData = {
@@ -54,7 +49,7 @@ const formatPrice = (priceCents?: number | null) => {
 };
 
 const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "Não foi possível carregar a gestão do cartão agora.";
+  getSafeApiErrorMessage(error, "Não foi possível carregar a gestão do cartão agora.");
 
 const canUpdateCard = (subscription?: ProfessionalSubscription | null) =>
   subscription?.plan?.slug === "profissional" && Boolean(subscription.gateway_subscription_id);
@@ -68,30 +63,32 @@ const PaymentMethodPreview = ({
   const brand = paymentMethod?.brand ? paymentMethod.brand.toUpperCase() : "Cartão seguro";
 
   return (
-    <div className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#0f5be8] via-primary to-[#6bb6ff] p-5 text-white shadow-[0_24px_70px_rgba(47,141,235,0.28)]">
+    <div className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-primary via-primary to-primary p-5 text-primary-foreground shadow-lectum-soft">
       <div
         aria-hidden
-        className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-white/15 blur-xl"
+        className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-media-foreground/15 blur-xl"
       />
       <div
         aria-hidden
-        className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+        className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-media-foreground/10 blur-2xl"
       />
       <div className="relative z-10 flex min-h-[154px] flex-col justify-between">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/75">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/75">
               Cartão atual
             </p>
             <p className="mt-2 text-lg font-extrabold">{brand}</p>
           </div>
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/15 backdrop-blur">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-media-foreground/15 backdrop-blur">
             <CreditCard className="h-6 w-6" aria-hidden="true" />
           </span>
         </div>
         <div>
           <p className="text-2xl font-extrabold tracking-[0.18em]">{last4}</p>
-          <p className="mt-2 text-xs font-semibold text-white/70">Tokenizado com segurança</p>
+          <p className="mt-2 text-xs font-semibold text-primary-foreground/70">
+            Tokenizado com segurança
+          </p>
         </div>
       </div>
     </div>
@@ -120,9 +117,9 @@ export const ProfessionalBillingCardLogic = () => {
   }, [billing.paymentMethod.mutateAsync]);
 
   useEffect(() => {
-    if (!publicKey) return;
+    if (!isMercadoPagoPublicConfigurationValid || !mercadoPagoPublicKey) return;
 
-    initMercadoPago(publicKey, {
+    initMercadoPago(mercadoPagoPublicKey, {
       locale: "pt-BR",
       advancedFraudPrevention: true,
     });
@@ -135,6 +132,8 @@ export const ProfessionalBillingCardLogic = () => {
   const paymentMethod = subscriptionQuery.data?.payment_method ?? null;
   const canSubmit = canUpdateCard(subscription);
   const amount = subscription?.plan?.price_cents ? subscription.plan.price_cents / 100 : 0;
+  const isDunningSubscription = subscription?.status === "inadimplente";
+  const cardActionLabel = isDunningSubscription ? "Regularizar cartão" : "Alterar cartão";
 
   const initialization = useMemo(
     () => ({
@@ -159,11 +158,11 @@ export const ProfessionalBillingCardLogic = () => {
           theme: "default",
         },
         texts: {
-          formSubmit: "Alterar cartão",
+          formSubmit: cardActionLabel,
         },
       },
     }),
-    [],
+    [cardActionLabel],
   );
 
   const handleSubmit = useCallback(
@@ -172,7 +171,7 @@ export const ProfessionalBillingCardLogic = () => {
       const paymentTypeId = additionalData?.paymentTypeId;
 
       if (!token) {
-        toast.error("Não foi possível tokenizar o cartão. Tente novamente.");
+        toast.error("Não foi possível validar os dados do cartão. Tente novamente.");
         return;
       }
 
@@ -189,14 +188,13 @@ export const ProfessionalBillingCardLogic = () => {
           last4: additionalData?.lastFourDigits || null,
         });
       } catch {
-        // handleReq já exibe o erro real da API; impedir rejeição não tratada no Brick.
+        // handleReq já exibe o erro público sanitizado; impedir rejeição não tratada no Brick.
       }
     },
     [],
   );
 
-  const handleBrickError = useCallback((error: unknown) => {
-    console.error("[Billing CardPayment - card update]", error);
+  const handleBrickError = useCallback(() => {
     toast.error("Não foi possível carregar o formulário de cartão.");
   }, []);
 
@@ -206,7 +204,7 @@ export const ProfessionalBillingCardLogic = () => {
         <AppPageHeader
           backHref="/app/profissional/assinatura"
           backLabel="Voltar"
-          title="Alterar cartão"
+          title={cardActionLabel}
         />
 
         {subscriptionQuery.isLoading ? <LoadingState label="Carregando sua assinatura" /> : null}
@@ -227,7 +225,7 @@ export const ProfessionalBillingCardLogic = () => {
                 </Link>
               </Button>
             }
-            description="Nenhuma assinatura real foi encontrada para permitir a troca do cartão."
+            description="Nenhuma assinatura foi encontrada para permitir a troca do cartão."
             icon={CreditCard}
             title="Assinatura não encontrada"
           />
@@ -263,7 +261,9 @@ export const ProfessionalBillingCardLogic = () => {
                       Cartão alterado com sucesso
                     </h2>
                     <p className="mt-3 max-w-md text-sm leading-6 text-muted md:text-base md:leading-7">
-                      O novo cartão de crédito já está vinculado à sua assinatura.
+                      {isDunningSubscription
+                        ? "O novo cartão de crédito já está vinculado à sua assinatura. A regularização será confirmada quando o pagamento retornar com sucesso."
+                        : "O novo cartão de crédito já está vinculado à sua assinatura."}
                     </p>
                   </div>
                   <div className="grid w-full gap-3 sm:max-w-sm sm:grid-cols-2">
@@ -292,8 +292,9 @@ export const ProfessionalBillingCardLogic = () => {
                           Novo cartão de crédito
                         </h2>
                         <p className="mt-2 text-sm leading-6 text-muted">
-                          Aceitamos apenas cartão de crédito para manter a recorrência mensal do
-                          Plano Profissional.
+                          {isDunningSubscription
+                            ? "Insira um novo cartão de crédito para regularizar a pendência da assinatura do Plano Profissional."
+                            : "Insira um novo cartão de crédito para manter a assinatura do Plano Profissional."}
                         </p>
                       </div>
                     </div>
@@ -312,14 +313,14 @@ export const ProfessionalBillingCardLogic = () => {
                     />
                   ) : null}
 
-                  {!publicKey ? (
+                  {!isMercadoPagoPublicConfigurationValid ? (
                     <InlineAlert title="Formulário de cartão indisponível" variant="error">
                       Não foi possível carregar o formulário seguro de cartão. Tente novamente mais
                       tarde.
                     </InlineAlert>
                   ) : null}
 
-                  {publicKey && canSubmit && amount > 0 ? (
+                  {isMercadoPagoPublicConfigurationValid && canSubmit && amount > 0 ? (
                     <div
                       className={cn(
                         "rounded-3xl border border-border bg-surface-muted p-3 md:p-4",

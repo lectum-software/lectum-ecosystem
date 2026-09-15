@@ -58,7 +58,7 @@ e os screenshots enviados, registrando esta limitacao.
   migrations ou query keys.
 - Criar endpoint, mock, seed, dado fake permanente, ranking individual ou navegacao de drill-down.
 - Instalar package novo ou biblioteca de grafico.
-- Usar Figma como fonte ativa.
+- Tratar Figma como fonte visual ativa; a fonte vigente é Builder/proto.
 
 ## Criterios de aceite
 

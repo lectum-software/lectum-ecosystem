@@ -106,23 +106,20 @@
               border-left: 1px solid #bbb9b9;
               border-top: 1px solid #bbb9b9;
               border-radius: 20px 20px 0 0;
-              background-color: #0f2140;
+              background-color: #f6f8ff;
             '
             width='100%'
           >
           {{#if logo}}
-          <img          
-              src={{logo}}
-              alt='Logo - {{system}}'
+          <img
+              src='{{logo}}'
+              alt='Logo {{system}}'
               border='0'
-              style='display: block; object-fit: contain'
-              ,
-              width='300px'
-              height='160px'
-              ;
+              width='280'
+              style='display: block; width: 280px; max-width: 80%; height: auto; margin: 0 auto;'
             />
           {{else}}
-          <h1 style="color: white; font-size: 20px; line-height: 28px; font-family: 'Poppins', sans-serif; margin: 10px 0 0 30px;">{{system}}</h1>
+          <h1 style="color: #172554; font-size: 20px; line-height: 28px; font-family: 'Poppins', sans-serif; margin: 10px 0 0 30px;">{{system}}</h1>
           {{/if}}
           </td>
           

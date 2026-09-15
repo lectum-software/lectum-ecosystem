@@ -1,76 +1,144 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import packageMetadata from "./package.json";
+import {
+  getPublicApiSource,
+  getPublicAssetSources,
+  isIpLiteralHostname,
+  isLocalAssetHostname,
+  parsePublicAssetSource,
+} from "./src/utils/public-asset-sources";
+import {
+  getSentryIngestOrigin,
+  resolveSentryBuildConfiguration,
+  resolveSentryRelease,
+} from "./src/utils/sentry-policy";
 
 type RemotePattern = NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]>[number];
 
-const remotePatterns: RemotePattern[] = [
-  {
-    protocol: "https",
-    hostname: "lh3.googleusercontent.com",
-  },
-  {
-    protocol: "http",
-    hostname: "localhost",
-  },
-  {
-    protocol: "http",
-    hostname: "127.0.0.1",
-  },
-];
+const publicAssetSources = getPublicAssetSources();
+const remotePatterns: RemotePattern[] = publicAssetSources.map((source) => ({
+  hostname: source.hostname,
+  port: source.port,
+  protocol: source.protocol,
+}));
+const assetCspSources = publicAssetSources.map((source) => source.origin);
 const allowedDevOrigins = new Set<string>();
+const mercadoPagoCoreCspSources = [
+  "https://mercadopago.com",
+  "https://*.mercadopago.com",
+  "https://mercadopago.com.br",
+  "https://*.mercadopago.com.br",
+];
+const mercadoPagoStaticCspSources = [
+  "https://http2.mlstatic.com",
+  "https://api-static.mercadopago.com",
+];
+const cepLookupCspSources = ["https://viacep.com.br"];
+const cloudflareStreamCspSources = ["https://*.cloudflarestream.com"];
+const cloudflareStreamUploadCspSources = ["https://upload.videodelivery.net"];
+const sentryIngestOrigin = getSentryIngestOrigin(
+  process.env.NEXT_PUBLIC_SENTRY_DSN,
+  process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT,
+);
+const mercadoPagoScriptCspSources = [
+  "https://sdk.mercadopago.com",
+  "https://www.mercadopago.com",
+  "https://www.mercadopago.com.br",
+  ...mercadoPagoStaticCspSources,
+];
 
-const isLocalHostname = (hostname: string) =>
-  hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0";
+const getApiCspSources = () => {
+  const source = getPublicApiSource();
+  if (!source) return [];
+
+  const socketProtocol = source.protocol === "https" ? "wss:" : "ws:";
+  return [source.origin, `${socketProtocol}//${source.host}`];
+};
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} ${mercadoPagoScriptCspSources.join(" ")}`,
+  `style-src 'self' 'unsafe-inline' ${mercadoPagoStaticCspSources.join(" ")}`,
+  `font-src 'self' data: ${mercadoPagoStaticCspSources.join(" ")}`,
+  `img-src 'self' data: blob: ${assetCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")}`,
+  `media-src 'self' blob: ${assetCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")}`,
+  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${cepLookupCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")} ${cloudflareStreamUploadCspSources.join(" ")} ${sentryIngestOrigin ?? ""} https://*.mercadolibre.com`,
+  `frame-src ${mercadoPagoCoreCspSources.join(" ")} https://*.mercadolibre.com`,
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+].join("; ");
+const securityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: contentSecurityPolicy,
+  },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
+if (process.env.NODE_ENV === "production") {
+  securityHeaders.push({
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  });
+}
 
 const addAllowedDevOrigin = (value?: string | null) => {
-  if (!value) return;
-
-  try {
-    const url = new URL(value.includes("://") ? value : `https://${value}`);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return;
-    if (isLocalHostname(url.hostname)) return;
-
-    allowedDevOrigins.add(url.host);
-  } catch {
-    // Ignora entradas inválidas: Next deve receber apenas hosts explícitos.
+  const raw = value?.trim();
+  const hasControlCharacter = value
+    ? Array.from(value).some((character) => {
+        const code = character.charCodeAt(0);
+        return code <= 31 || code === 127;
+      })
+    : false;
+  if (!raw || raw.length > 2048 || raw.includes("*") || raw.includes("\\") || hasControlCharacter) {
+    return;
   }
+
+  let source: ReturnType<typeof parsePublicAssetSource>;
+  try {
+    const url = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (url.username || url.password) return;
+
+    source = parsePublicAssetSource(url.origin);
+  } catch {
+    return;
+  }
+
+  if (
+    !source ||
+    isIpLiteralHostname(source.hostname) ||
+    isLocalAssetHostname(source.hostname) ||
+    source.protocol === "http"
+  ) {
+    return;
+  }
+
+  allowedDevOrigins.add(source.host);
 };
 
-const addRemotePattern = (value?: string | null) => {
-  if (!value) return;
-
-  try {
-    const url = new URL(value.includes("://") ? value : `https://${value}`);
-    const protocol = url.protocol.replace(":", "");
-
-    if (protocol !== "http" && protocol !== "https") return;
-
-    const exists = remotePatterns.some(
-      (pattern) => pattern.protocol === protocol && pattern.hostname === url.hostname,
-    );
-
-    if (!exists) {
-      remotePatterns.push({
-        protocol,
-        hostname: url.hostname,
-      });
-    }
-  } catch {
-    // Ignora entradas inválidas: Next deve receber apenas hosts/protocolos explícitos.
-  }
-};
-
-addRemotePattern(process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001");
 addAllowedDevOrigin(process.env.NEXT_PUBLIC_API_URL);
 addAllowedDevOrigin(process.env.NEXT_PUBLIC_LOGIN_URL);
 process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",")
   .map((entry) => entry.trim())
   .filter(Boolean)
   .forEach((entry) => {
-    addRemotePattern(entry);
     addAllowedDevOrigin(entry);
   });
 
 const nextConfig: NextConfig = {
+  env: {
+    LECTUM_APP_VERSION: packageMetadata.version,
+  },
   async redirects() {
     return [
       {
@@ -82,11 +150,6 @@ const nextConfig: NextConfig = {
         source: "/psychologist/cfp/:path*",
         destination: "/app/profissional/cfp/:path*",
         permanent: false,
-      },
-      {
-        source: "/patient/welcome",
-        destination: "/paciente/boas-vindas",
-        permanent: true,
       },
       {
         source: "/app/account/need-reset",
@@ -328,6 +391,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/:path*",
+        headers: securityHeaders,
+      },
+      {
         source: "/app/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
@@ -360,6 +427,44 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
 };
 
-export default nextConfig;
+const sentryBuildConfiguration = resolveSentryBuildConfiguration(process.env);
+const canUploadSentrySourceMaps = Boolean(sentryIngestOrigin && sentryBuildConfiguration);
+const sentryRelease = resolveSentryRelease(packageMetadata.version);
+let didWarnAboutSentryUploadFailure = false;
+
+export default withSentryConfig(nextConfig, {
+  authToken: canUploadSentrySourceMaps ? sentryBuildConfiguration?.authToken : undefined,
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+    excludeReplayWorker: true,
+    excludeTracing: true,
+  },
+  errorHandler: () => {
+    if (didWarnAboutSentryUploadFailure) return;
+    didWarnAboutSentryUploadFailure = true;
+    console.warn("[observability] Não foi possível publicar os mapas de origem.");
+  },
+  org: canUploadSentrySourceMaps ? sentryBuildConfiguration?.org : undefined,
+  project: canUploadSentrySourceMaps ? sentryBuildConfiguration?.project : undefined,
+  release: {
+    create: canUploadSentrySourceMaps,
+    finalize: canUploadSentrySourceMaps,
+    name: canUploadSentrySourceMaps ? sentryRelease : undefined,
+  },
+  routeManifestInjection: false,
+  silent: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+    disable: !canUploadSentrySourceMaps,
+    filesToDeleteAfterUpload: [".next/static/**/*.map"],
+  },
+  suppressOnRouterTransitionStartWarning: true,
+  telemetry: false,
+  widenClientFileUpload: false,
+});

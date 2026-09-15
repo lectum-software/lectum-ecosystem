@@ -1,4 +1,4 @@
-﻿# ADR-0024 - Bloqueio da TASK-18 por dependência de validação CRP
+# ADR-0024 - Bloqueio da TASK-18 por dependência de validação CRP
 
 ## Status
 

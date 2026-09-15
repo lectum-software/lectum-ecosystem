@@ -14,6 +14,10 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "Lectum Admin",
   description: "Painel administrativo separado da plataforma Lectum.",
+  icons: {
+    icon: [{ type: "image/svg+xml", url: "/logo-icon.svg" }],
+    shortcut: "/logo-icon.svg",
+  },
 };
 
 export const viewport: Viewport = {
@@ -29,7 +33,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <QueryProvider>
           <AdminAuthProvider>{children}</AdminAuthProvider>
         </QueryProvider>
-        <Toaster closeButton position="top-right" richColors />
+        <Toaster
+          closeButton
+          containerAriaLabel="Notificações"
+          position="top-right"
+          richColors
+          toastOptions={{ closeButtonAriaLabel: "Fechar notificação" }}
+        />
       </body>
     </html>
   );

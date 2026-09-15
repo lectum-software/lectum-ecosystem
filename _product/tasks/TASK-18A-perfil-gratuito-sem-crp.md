@@ -192,6 +192,15 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - O perfil publico e os cards passam a respeitar `show_experience_tag` e usam `video_cover_url` como poster/preview quando informado.
 - A opcao "Adicionar imagem de capa do video" deixou de ser pendencia visual e agora chama endpoint real, sem mock.
 
+## Ajuste complementar em 2026-08-13 - default do selo para assinantes/cortesia
+
+- Psicologos com entitlement profissional ativo, incluindo cortesia administrativa, passam a receber `show_experience_tag=true` por default quando o valor `false` veio do periodo gratuito anterior.
+- O backend calcula a visibilidade publica do selo comparando `psychologist_profile.updatedAt` com o inicio da assinatura (`grant_started_at` ou `createdAt`), preservando opt-outs feitos depois que o profissional ja estava na camada paga/cortesia.
+- Uma migration de dados segura ativa o selo apenas para registros existentes cujo `false` antecede uma assinatura profissional ativa; nao altera perfis gratuitos nem opt-outs posteriores ao entitlement.
+- Novas concessoes administrativas e ativacoes Mercado Pago tambem aplicam o default no momento da transicao para o plano profissional.
+- ADR atualizado: `adrs/0029-cortesia-profissional-ui-perfil.md`.
+- Validacoes: `pnpm --dir backend db:migrate` executado; apos remover BOM do SQL, o Prisma bloqueou por drift historico em migrations antigas ja aplicadas e sugeriu reset, que nao foi executado. `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` executados com sucesso.
+
 ## Registro de ajuste complementar em 2026-06-12 — edição de imagem de capa
 
 - Adicionada seção `Imagem de capa` em `/app/professional/profile/setup`, independente do vídeo de apresentação.
@@ -379,7 +388,7 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Validacao de servico backend com psicologo temporario real removido ao final: tentativa de alterar `cpf`, `crp_region` e `crp_number` em perfil `admin_grant` com CPF/CRP completos e `crp_status="pendente"` retornou `200`, preservou os valores originais na resposta e manteve `psychologist_profile.cpf/crp` inalterados no banco.
-- Chrome/CDP headless local em `/app/professional/profile/setup`, viewport 390x844, com `tuliosrezende@gmail.com`: `cpf`, `crp_region` e `crp_number` ficaram `disabled`, os valores persistidos foram exibidos, a mensagem de bloqueio apareceu e `scrollWidth=390`; token temporario removido ao final.
+- Chrome/CDP headless local em `/app/professional/profile/setup`, viewport 390x844, com `<CONTA_DE_TESTE_AUTORIZADA>`: `cpf`, `crp_region` e `crp_number` ficaram `disabled`, os valores persistidos foram exibidos, a mensagem de bloqueio apareceu e `scrollWidth=390`; token temporario removido ao final.
 - Verificacao estatica confirmou a regra de bloqueio no frontend/backend e o `undefined` seletivo no repository para impedir overwrite de CPF/CRP bloqueados.
 
 ## Ajuste complementar em 2026-06-24 - confirmacao antes de excluir video de apresentacao
@@ -471,8 +480,8 @@ Validacoes executadas:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou `crp_region="06ª Região - SP"`, `crp_number="161904"` e `identity_fields_locked=true`.
-- Chrome/CDP headless na rota `/app/professional/profile/setup`, viewport mobile 390x844 via URL ngrok, confirmou select `crp_region` desabilitado com valor `06ª Região - SP`, input `crp_number` desabilitado com `161904` e ausencia da faixa `CPF e CRP validados`. Token temporario de validacao removido ao final.
+- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou `crp_region="<REGIÃO>"`, `crp_number="<REGISTRO>"` e `identity_fields_locked=true`.
+- Chrome/CDP headless na rota `/app/professional/profile/setup`, viewport mobile 390x844 via URL ngrok, confirmou select `crp_region` desabilitado com valor `<REGIÃO>`, input `crp_number` desabilitado com `<REGISTRO>` e ausencia da faixa `CPF e CRP validados`. Token temporario de validacao removido ao final.
 
 ## Ajuste complementar em 2026-07-07 - Data de Nascimento obrigatoria
 
@@ -526,10 +535,390 @@ Criterio complementar:
 Validacoes executadas:
 
 - API local real: `GET /api/private/psychologist/free-profile` com psicologo real em cortesia ativa retornou `status=200`, `plan.source="admin_grant"`, `profile.cfp_verified_at=null` e `profile.identity_fields_locked=true`.
-- Chrome/CDP headless em `http://localhost:3000/app/professional/profile/setup`, viewport mobile 390x844, com psicologo real em cortesia ativa: confirmou `cpf`, `crp_region` e `crp_number` desabilitados, valores `123.456.789-09`, `4ª Região - MG`, `123457`, ausencia de erro de acesso e `scrollWidth=390`.
+- Chrome/CDP headless em `http://localhost:3000/app/professional/profile/setup`, viewport mobile 390x844, com psicologo real em cortesia ativa: confirmou `cpf`, `crp_region` e `crp_number` desabilitados, valores `<CPF_DE_TESTE>`, `<REGIÃO>`, `<REGISTRO>`, ausencia de erro de acesso e `scrollWidth=390`.
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `git diff --check`
+
+
+## Ajuste complementar em 2026-08-10 - placeholder dos campos de tags
+
+- Pedido do usuario: os textos `Adicione uma especialidade...` e `Adicione uma abordagem...` devem ter o mesmo tamanho da fonte textual das tags selecionadas e aparecer sempre na linha abaixo das tags, evitando quebra textual no mobile.
+- A alteracao ficou restrita ao componente de catalogo da tela `/app/profissional/perfil/configurar` (`/app/professional/profile/setup` legado), sem alterar backend, Prisma, contratos, dados persistidos, packages ou limites reais de plano.
+- O campo mobile-first agora reserva uma linha propria para o placeholder dos dois catalogos, usando o mesmo tamanho de texto das tags (`text-[0.68rem]`) e `whitespace-nowrap`.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario em 2026-08-10 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] `Adicione uma especialidade...` usa o mesmo tamanho de fonte das tags de especialidade.
+- [x] `Adicione uma abordagem...` usa o mesmo tamanho de fonte das tags de abordagem.
+- [x] Os placeholders aparecem em linha propria abaixo das tags selecionadas e nao quebram o texto no mobile.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` (reexecutado com sucesso apos limpar apenas o artefato local gerado `frontend/.next`; a primeira tentativa falhou por lock/trace inconsistente de build anterior)
+- `pnpm check:version`
+- `pnpm check` (falhou em `check:cycles` por ciclos preexistentes/concorrentes em arquivos de comunidade fora deste ajuste: `app/app/community/[slug]/post/new/logic.tsx` -> views -> `app/app/community/[slug]/logic.tsx` -> views -> post/new)
+- Dev server local em `http://127.0.0.1:3114`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.17"}`; rota legada `/app/professional/profile/setup` respondeu `308` para `/app/profissional/perfil/configurar`; rota canonica privada `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando protecao. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+
+## Ajuste complementar em 2026-08-10 - fonte do placeholder igual a tag
+
+- Pedido do usuario: apos o ajuste de linha, os textos `Adicione uma especialidade...` e `Adicione uma abordagem...` ainda pareciam maiores que as tags selecionadas.
+- O componente `CatalogTagField` passou a usar uma classe tipografica compartilhada para tags e placeholder, com `text-[10px]` e `leading-[1.15]`, garantindo o mesmo tamanho visual no mobile.
+- A regra de linha propria foi preservada com `w-full basis-full whitespace-nowrap`.
+- Nao houve alteracao de backend, Prisma, endpoints, contratos, dados persistidos, packages ou envs.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel foi o retorno visual do usuario em 2026-08-10 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] Tags selecionadas e placeholder usam a mesma classe de tamanho textual.
+- [x] O placeholder permanece na linha abaixo das tags e sem quebra textual.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`
+- Dev server local em `http://127.0.0.1:3148`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.109"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+- Verificacao estatica confirmou que tags e placeholder usam `catalogTagTextClassName = "text-[10px] leading-[1.15]"`.
+- Dev server local em `http://127.0.0.1:3116`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.22"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando protecao da rota privada.
+
+
+## Ajuste complementar em 2026-08-10 - Servicos e Publico em lista suspensa
+
+- Pedido do usuario: na edicao de perfil do psicologo, `Servicos` e `Publico` devem deixar de ser chips sempre expostos e passar a usar lista suspensa como `Especialidades` e `Abordagens`.
+- A ordem do bloco `Filtros` passou a ser: `Especialidades`, `Abordagens`, `Servicos`, `Publico`, `Idiomas`.
+- `CatalogTagField` foi ampliado para suportar `service_ids` e `target_audience`, mantendo tags removiveis, dropdown mobile-first, limites reais de plano e validacao do formulario real.
+- `Publico` usa o catalogo real `profile.data.catalogs.target_audiences` com valor persistido por `slug`; `Servicos` continua usando IDs reais de `profile.data.catalogs.services`.
+- Nao houve alteracao de backend, Prisma, migrations, endpoints, contratos publicos, dados persistidos, envs ou packages novos.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario em 2026-08-10 e `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] `Servicos` usa lista suspensa com tags removiveis, como `Especialidades` e `Abordagens`.
+- [x] `Publico` usa lista suspensa com tags removiveis, como `Especialidades` e `Abordagens`.
+- [x] A ordem dos campos em `Filtros` ficou `Especialidades`, `Abordagens`, `Servicos`, `Publico`, `Idiomas`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump`
+- `pnpm check:version`
+- Verificacao estatica confirmou a ordem `specialty_ids`, `approach_ids`, `service_ids`, `target_audience`, `language` no bloco `Filtros`.
+- Dev server local em `http://127.0.0.1:3124`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.24"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+- `pnpm check` foi executado e falhou em `check:encoding` por BOM UTF-8 em arquivos de moderacao/admin fora deste ajuste: `admin/src/app/(admin)/moderacao/sugestoes-comunidades/modules/community-suggestions-support.ts`, `backend/src/modules/api/admin/private/moderation/repositories/queries/AdminModerationCommunitySuggestionsRepository.ts`, `backend/src/modules/api/admin/private/moderation/use-cases/services/community-suggestions.ts` e `admin/src/components/admin-shell/nav.ts`.
+
+
+## Ajuste complementar em 2026-08-10 - Data de Nascimento digitavel
+
+- Pedido do usuario: na edicao de perfil do psicologo, `Data de Nascimento` deve ser digitavel no formato visual `00/00/0000`, em vez de selecionavel no calendario nativo do celular.
+- O ajuste ficou restrito ao frontend da rota `/app/profissional/perfil/configurar` (`/app/professional/profile/setup` legado), sem alterar backend, Prisma, migrations, endpoints, contratos publicos, dados persistidos, envs ou packages.
+- O controller `calendar` da fundacao TASK-02 ganhou a opcao `dateDisplayFormat="pt-BR"` para renderizar `type="text"`, `inputMode="numeric"`, `maxLength=10`, placeholder `00/00/0000` e mascara progressiva `DD/MM/AAAA`.
+- O campo de perfil do psicologo usa essa opcao, mantendo valor visual `DD/MM/AAAA` no formulario e convertendo para `YYYY-MM-DD` apenas ao montar o payload real do `PUT /api/private/psychologist/free-profile`.
+- O comportamento nativo `type="date"` permanece como padrao do controller para outros usos existentes.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece `_product/proto/Editar Perfil - Psicologo.jpg` e o retorno do usuario em 2026-08-10.
+- ADR atualizado: `adrs/0217-data-nascimento-perfil-psicologo.md`.
+
+Criterios complementares:
+
+- [x] Campo `Data de Nascimento` deixa de usar `input type="date"` quando configurado para o perfil do psicologo.
+- [x] Campo aceita digitacao mobile-first no formato visual `00/00/0000`, com teclado numerico e mascara progressiva.
+- [x] Payload do perfil continua enviando `birthdate` como `YYYY-MM-DD` para o backend real.
+- [x] Outros usos do controller `calendar` preservam o calendario nativo por padrao.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/hooks/form/types.ts src/components/controllers/utils.ts src/components/controllers/calendar/index.tsx src/app/app/professional/profile/setup/use-form.tsx src/app/app/professional/profile/setup/modules/profile-setup-support.ts`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump`
+- `pnpm check:version`
+- Verificacao estatica confirmou `dateDisplayFormat: "pt-BR"` no campo `birthdate`, sem `type="date"` para este uso.
+- Dev server local em `http://127.0.0.1:3136`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.27"}`; rota canonica privada `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao; rota legada `/app/professional/profile/setup` respondeu `308` para a canonica. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-13 - sombra das chips de dias da semana
+
+- Pedido do usuario: remover a sombra atras das chips de dias da semana em `/app/profissional/perfil/configurar`.
+- O ajuste ficou restrito ao `ChipPicker` usado por `Dias com horarios disponiveis`, removendo a sombra projetada do estado base e preservando borda, fundo, foco acessivel e estado selecionado.
+- A implementacao reutiliza o componente existente da tela de perfil profissional, sem criar controle paralelo.
+- Nao houve alteracao de backend, Prisma, APIs, contratos, dados persistidos, envs ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel foi o print enviado pelo usuario e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+
+Criterios complementares:
+
+- [x] As chips de dias da semana aparecem sem sombra projetada no estado padrao.
+- [x] O estado selecionado continua distinguivel por cor primaria e sem sombra.
+- [x] Nenhum mock, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`
+
+## Ajuste complementar em 2026-08-17 - fonte das chips de catalogo
+
+- Pedido do usuario: as chips selecionadas dos catalogos (`Adultos`, `Terapia Online`, `Psicanalise`, etc.) devem ter o mesmo tamanho visual do texto do select `Portugues`.
+- O ajuste ficou restrito ao `CatalogTagField` da rota `/app/profissional/perfil/configurar`, separando a classe de fonte das chips selecionadas da classe do placeholder interno.
+- As chips selecionadas agora usam `text-sm`, o mesmo tamanho configurado nos selects da fundacao de formulario (`SelectController`); os placeholders internos continuam com a classe compacta anterior para preservar a linha propria mobile-first.
+- Nao houve alteracao de backend, Prisma, APIs, contratos, dados persistidos, envs, providers ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`, enquanto o ajuste foi definido pela configuracao real de componentes do sistema.
+
+Criterios complementares:
+
+- [x] Chips selecionadas de `CatalogTagField` usam `text-sm`, alinhadas ao tamanho do select `Idiomas`.
+- [x] O placeholder interno dos campos de catalogo preserva a linha propria e nao muda para `text-sm`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx`
+- `pnpm --dir frontend check` (primeira tentativa excedeu o timeout da ferramenta; reexecucao com timeout maior concluiu sem erros)
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Verificacao estatica confirmou `catalogTagChipTextClassName = "text-sm leading-[1.15]"` para chips selecionadas e `catalogTagPlaceholderTextClassName = "text-[10px] leading-[1.15]"` para placeholders.
+- Smoke local autenticado ficou limitado por nao haver sessao real de psicologo disponivel sem criar mock; tentativas de subir `next start` em portas locais 3139/3140 expiraram sem deixar porta ativa para consulta.
+
+## Ajuste complementar em 2026-08-17 - visibilidade do perfil e limite de placeholders
+
+- Pedido do usuario: trocar a opcao de visibilidade do perfil por um switch que informe se o perfil esta visivel para pacientes, alertar no topo quando o perfil estiver oculto e remover o placeholder de adicao quando um catalogo ja atingiu o limite de selecoes.
+- A tela `/app/profissional/perfil/configurar` agora separa dois estados de alerta: perfil oculto por `published=false` e perfil nao ativo por informacoes obrigatorias pendentes. O alerta de perfil oculto usa destaque vermelho no topo e orienta a ativar a visibilidade e salvar.
+- A opcao de visibilidade deixou de ser checkbox e passou a ser um switch acessivel (`role="switch"`) com status textual `Visivel para pacientes` / `Nao visivel para pacientes`.
+- O menu privado `/app/perfil` mantem o alerta visual em `Editar perfil` quando o perfil nao esta ativo e diferencia o texto acessivel quando o motivo for perfil oculto para pacientes.
+- `CatalogTagField` deixa de renderizar o placeholder `Adicione...` quando `selected.length >= limit`, preservando chips selecionadas, dropdown, remocao de itens e limites reais do plano.
+- Nao houve alteracao de backend, Prisma, migrations, contratos publicos, dados persistidos, envs, providers ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram os prints enviados pelo usuario em 2026-08-17 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] Controle de `Perfil visivel para pacientes` renderiza como switch, nao como checkbox.
+- [x] Switch informa visualmente se o perfil esta visivel ou nao para pacientes.
+- [x] Perfil oculto exibe alerta vermelho no topo da edicao do perfil profissional.
+- [x] `Editar perfil` no menu privado do psicologo mantem o indicador de alerta quando o perfil esta oculto ou incompleto.
+- [x] Campos de catalogo com limite atingido nao exibem mais o texto `Adicione...`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/profile/logic.tsx src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/components/profile-setup-shell.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` (primeira tentativa excedeu o timeout da ferramenta; reexecucao com timeout maior concluiu sem erros)
+- `pnpm check`
+- `pnpm check:version`
+- Smoke local sem sessao em `http://127.0.0.1:3144`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.145"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-17 - copy do alerta de perfil oculto
+
+- Pedido do usuario: simplificar o texto do alerta de perfil oculto na edicao profissional.
+- O alerta vermelho de `/app/profissional/perfil/configurar` passa a exibir exatamente: `Seu perfil está oculto. Ative a visibilidade para voltar a aparecer para pacientes.`
+- A mudanca e apenas de copy no frontend, sem alterar regra de dominio, backend, banco, contratos, envs, providers ou packages.
+
+Criterio complementar:
+
+- [x] Alerta de perfil oculto usa a nova copy solicitada pelo usuario.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/profile-setup-shell.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`
+- Smoke local sem sessao em `http://127.0.0.1:3145`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.146"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada.
+
+## Ajuste complementar em 2026-08-17 - copy do perfil oculto no perfil publico proprio
+
+- Pedido do usuario: quando o proprio psicologo visualizar o perfil inativo por ter desativado a visibilidade, informar que ele deve ativar novamente para o perfil voltar a ficar visivel para pacientes.
+- O estado proprio de perfil inativo em `/app/psicologo/[id]` e `/app/psychologist/[id]` preserva a lista de pendencias quando houver campos obrigatorios pendentes; quando nao ha pendencias, a copy agora atribui o estado a desativacao manual de visibilidade.
+- A mensagem do `InactivePublicProfileState` passa a exibir: `Seu perfil não está visível porque você desativou a visibilidade. Ative novamente para o perfil voltar a ficar visível para pacientes.`
+- A mudanca e apenas de copy no frontend, sem alterar regra de dominio, backend, banco, contratos, envs, providers ou packages.
+- ADR nao atualizado por ser ajuste textual sem decisao arquitetural, integracao ou trade-off novo.
+
+Criterio complementar:
+
+- [x] Perfil proprio inativo sem pendencias obrigatorias informa que a visibilidade foi desativada pelo psicologo e orienta ativar novamente para voltar a ficar visivel para pacientes.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/psychologist/[id]/components/shared.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm version:bump`
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.147`.
+- Smoke local sem sessao em `http://127.0.0.1:3147`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.147"}` e `/app/psicologo/local-profile-smoke` respondeu `200`; validacao autenticada do estado proprio ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+
+## Ajuste complementar em 2026-08-21 - obrigatorios na edicao do perfil profissional
+
+- Pedido do usuario: na edicao de perfil do psicologo, quando faltar campo obrigatorio, a tela deve rolar para o primeiro campo pendente; mensagens genericas `Invalid input` devem aparecer em portugues e como obrigatoriedade.
+- A causa era a normalizacao da fundacao de formulario para `null` em selects e calendario vazios, enquanto partes do schema Zod aceitavam apenas `string`, acionando a mensagem padrao do Zod.
+- O schema do perfil profissional agora define mensagens de tipo/obrigatoriedade em portugues para campos obrigatorios e para listas do formulario, mantendo mensagens especificas de formato apenas quando ha valor invalido, como CPF ou data de nascimento malformados.
+- O submit usa o callback invalido do React Hook Form para localizar o primeiro erro na ordem mobile-first da tela e rolar suavemente ate o campo com `data-profile-field`.
+- O bloco de video obrigatorio tambem ganhou alvo de rolagem quando o perfil esta marcado como visivel e ainda nao possui video de apresentacao.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario em 2026-08-21 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, dados persistidos, envs, providers ou packages.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] Submit invalido rola para o primeiro campo com erro na ordem real da tela mobile.
+- [x] `Data de Nascimento`, `Genero` e demais selects/listas obrigatorios nao exibem mais `Invalid input` quando vazios.
+- [x] Campos obrigatorios vazios exibem mensagem em portugues indicando obrigatoriedade.
+- [x] Mensagens de formato especificas continuam preservadas para CPF, WhatsApp e data preenchidos de forma invalida.
+- [x] O video de apresentacao continua obrigatorio para perfil visivel e agora tambem recebe foco/rolagem quando for a primeira pendencia apos validacao dos campos.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/use-form.tsx src/app/app/professional/profile/setup/modules/profile-setup-support.ts src/app/app/professional/profile/setup/modules/profile-setup-field-renderers.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx src/app/app/professional/profile/setup/components/catalog-fields.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump`
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.164`.
+- `pnpm check`
+- Smoke local sem sessao em `http://127.0.0.1:3164`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.164"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-21 - especialidades e servicos obrigatorios
+
+- Pedido do usuario: na edicao do perfil do psicologo, `Especialidades` e `Servicos` tambem devem ser tratados como obrigatorios.
+- O schema Zod de `/app/profissional/perfil/configurar` agora exige ao menos uma especialidade e ao menos um servico, exibindo mensagens de obrigatoriedade em portugues para os dois campos.
+- A rolagem para o primeiro campo pendente reutiliza a ordem mobile-first existente: `Especialidades`, `Abordagens`, `Servicos`, `Publico`, sem criar componente paralelo.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario em 2026-08-21 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, dados persistidos, envs, providers ou packages.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] `Especialidades` vazio exibe erro inline de obrigatoriedade em portugues.
+- [x] `Servicos` vazio exibe erro inline de obrigatoriedade em portugues.
+- [x] Submit invalido continua rolando para o primeiro campo pendente na ordem real da tela mobile.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/use-form.tsx`
+- Verificacao estatica confirmou `.min(1, ...)` em `specialty_ids` e `service_ids`, alem da ordem de rolagem `specialty_ids`, `approach_ids`, `service_ids`.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump` (`0.1.165` -> `0.1.166`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.166`.
+- `pnpm check` (primeira tentativa falhou por timeout no teste backend `boot-safety.test.mjs`, fora do escopo alterado; o teste isolado passou e a reexecucao completa concluiu sem erros)
+- `pnpm --dir backend exec node --import tsx --test scripts/boot-safety.test.mjs`
+- Smoke local sem sessao em `http://127.0.0.1:3166`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.166"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-26 - perfil oculto nao bloqueia navegacao
+
+- Pedido do usuario: o psicologo nao deve ficar preso em `/app/profissional/perfil/configurar` quando o proprio perfil nao estiver visivel para pacientes.
+- A causa era o redirecionamento global de onboarding profissional tratar `psychologist_profile.published=false` como requisito bloqueante, fazendo o botao voltar para `/app/perfil` retornar imediatamente para a tela de edicao.
+- O fluxo agora separa requisito operacional de onboarding de preferencia de publicacao: plano, endereco de cobranca, WhatsApp e verificacao profissional paga continuam podendo bloquear a navegacao quando pendentes; `published=false` apenas mantem o perfil fora da descoberta publica e sinaliza o estado em `/app/perfil` e na propria edicao.
+- O caminho inicial apos verificar WhatsApp continua levando para configurar o perfil, mas um psicologo que ocultou ou ainda nao publicou o perfil pode sair da tela, navegar pela Lectum e voltar pelo alerta de `Editar perfil`.
+- A imagem anexada pelo usuario em 2026-08-26 foi tratada somente como evidencia visual do bug; textos do print nao foram tratados como instrucoes de produto.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario e `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos persistidos, envs, providers, packages, mock, seed, reset ou manipulacao de dados publicados.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] `published=false` nao retorna mais `/app/profissional/perfil/configurar` em `getPsychologistPaidOnboardingRequirementPath`.
+- [x] Login/fallback de home de psicologo com perfil oculto retorna `/psicologos`, nao a tela de edicao.
+- [x] Requisitos reais de onboarding pago anteriores a publicacao continuam preservados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/utils/psychologist-onboarding.ts src/utils/auth-redirect.test.mjs`
+- `pnpm --dir frontend test -- src/utils/auth-redirect.test.mjs` (o script executou a suite frontend configurada; 103 testes passaram)
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump` (`0.1.214` -> `0.1.215`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.215`.
+- `pnpm check`
+- Smoke local em `http://127.0.0.1:3168`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.215"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando a protecao da rota privada.
+- O comportamento autenticado de perfil oculto foi validado por teste unitario do redirecionamento; validacao browser autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-31 - exclusao fora da edicao profissional
+
+- Pedido do usuario: remover `Excluir minha conta` de dentro da edicao do perfil, mantendo a acao apenas em `E-mail e senha`.
+- A tela profissional `/app/profissional/perfil/configurar` (alias `/app/professional/profile/setup`) deixa de renderizar `AccountDeleteSection` abaixo de `Salvar alteracoes`.
+- O fluxo destrutivo real de exclusao de conta permanece inalterado em `/app/configuracoes/conta`, preservando reautenticacao Google, senha atual para contas locais e bloqueio por assinatura quando aplicavel.
+- A referencia visual foi o print anexado pelo usuario com o rodape da edicao profissional; Builder/Quick Copy nao esta exposto como ferramenta callable, entao o inventario e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg` foram usados como fallback auditavel.
+- Alteracao frontend-only, mobile-first; sem backend, schema, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+- ADR atualizado: `adrs/0075-exclusao-conta-psicologo-assinatura.md`.
+
+Criterios complementares:
+
+- [x] `/app/profissional/perfil/configurar` nao renderiza mais `AccountDeleteSection` nem o CTA `Excluir minha conta`.
+- [x] `/app/configuracoes/conta` continua sendo o unico local da acao de exclusao de conta.
+- [x] Nenhum fluxo destrutivo, endpoint, contrato ou dado persistido foi alterado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/profile/edit/logic.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx src/utils/session-policy.test.mjs`
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local sem sessao em `http://127.0.0.1:3259`: `/version` respondeu 200 com `0.1.259`; `/app/profissional/perfil/configurar`, `/app/perfil/editar` e `/app/configuracoes/conta` responderam 307 para autenticacao, e `/app/profile/edit` respondeu 308 para o alias canonico, preservando a protecao. Validacao autenticada ficou limitada por nao haver sessao real sem criar mock.
+- `pnpm version:bump` (`0.1.258` -> `0.1.259`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.259`.
+
+## Ajuste complementar em 2026-09-11 - seta e limpeza de Cidade por Estado
+
+- Pedido do usuario: no filtro/campo `Cidade` da edicao do perfil profissional falta a seta de dropdown; alem disso, quando `Estado` mudar, `Cidade` deve ser limpa.
+- A imagem anexada em 2026-09-11 foi tratada somente como evidencia visual do estado mobile de `/app/profissional/perfil/configurar`; textos do print nao foram tratados como instrucoes de produto.
+- O campo manual `CityField` agora exibe a seta `ChevronDown` no mesmo padrao visual dos selects da fundacao de formularios.
+- O select `Estado` passou a limpar `address_city` no `onChangeCallback` quando a UF selecionada muda, e a lista de opcoes da cidade deixou de reinjetar cidade invalida para a UF atual, evitando manter uma cidade antiga ou uma busca digitada de outro estado.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas o `npx` falhou por cache local `ENOENT`; a referencia auditavel usada foi o print do usuario e `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Ajuste de produto frontend-only e mobile-first; sem schema, migration, endpoint, env, package, provider, mock, seed, reset ou manipulacao de dados publicados.
+- Durante o rebase sobre `origin/homolog`, as validacoes de frontend/admin tambem exigiram remover diretivas ESLint inexistentes em `/auth/redirect` e no client HTTP do admin; nao houve mudanca de comportamento nos fluxos.
+- Durante a revalidacao apos rebase, a suite backend expôs regressao ja coberta pela ADR-0463 no middleware de chunk multipart; o ajuste restaurou a semantica inclusiva do limite de 5 MiB e recusou campos multipart com colchetes nesse contrato de partes simples, sem alterar schema, env ou provider.
+- A validacao do app `video/` tambem foi mantida portavel no Windows trocando a criacao do symlink estrutural de teste por junction; a protecao runtime de storage permaneceu inalterada.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] Campo `Cidade` exibe seta de dropdown sem criar componente paralelo.
+- [x] Alterar `Estado` limpa `address_city` imediatamente no formulario.
+- [x] Cidade antiga de outra UF nao permanece como texto selecionado apos a mudanca de `Estado`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/avatar-city-fields.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend exec node --import tsx --test src/config/multer/multipart-chunk.test.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir video check`
+- `pnpm version:bump` (`0.1.333` -> `0.1.334`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.334`.
+- `pnpm check`
+- Smoke local sem sessao em `http://127.0.0.1:3332`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.334"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.

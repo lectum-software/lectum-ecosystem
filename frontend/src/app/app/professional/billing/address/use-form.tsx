@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { z } from "zod";
 import type { BillingAddressPayload } from "@/api/generator/types/billing";
 import { type Field, useFormList } from "@/hooks/form";
+import { CITY_OPTIONS_BY_STATE } from "../../profile/setup/brazil-cities";
 import { STATE_OPTIONS } from "../../profile/setup/options";
 
 export type BillingAddressForm = {
@@ -33,7 +34,42 @@ export const billingAddressFields = [
     placeholder: "00000-000",
     required: true,
     autoComplete: "postal-code",
-    className: "md:col-span-1",
+    className: "md:col-start-1 md:col-end-2 md:row-start-1",
+  },
+  {
+    name: "street",
+    field: "input",
+    label: "Logradouro",
+    placeholder: "Ex.: Rua das Flores",
+    required: true,
+    autoComplete: "address-line1",
+    className: "md:col-start-1 md:col-end-2 md:row-start-2",
+  },
+  {
+    name: "number",
+    field: "input",
+    label: "Número",
+    placeholder: "123",
+    required: true,
+    autoComplete: "address-line2",
+    className: "md:col-start-2 md:col-end-3 md:row-start-2",
+  },
+  {
+    name: "district",
+    field: "input",
+    label: "Bairro",
+    placeholder: "Ex.: Centro",
+    required: true,
+    autoComplete: "address-level3",
+    className: "md:col-start-1 md:col-end-2 md:row-start-3",
+  },
+  {
+    name: "complement",
+    field: "input",
+    label: "Complemento",
+    placeholder: "Apto, sala ou referência",
+    autoComplete: "address-line3",
+    className: "md:col-start-2 md:col-end-3 md:row-start-3",
   },
   {
     name: "state",
@@ -45,51 +81,25 @@ export const billingAddressFields = [
     useCustomSelect: true,
     searchable: true,
     searchMode: "dropdown",
-    className: "md:col-span-1",
+    className: "md:col-start-1 md:col-end-2 md:row-start-4",
   },
   {
     name: "city",
-    field: "input",
+    field: "select",
     label: "Cidade",
-    placeholder: "Ex.: São Paulo",
     required: true,
     autoComplete: "address-level2",
-    className: "md:col-span-1",
-  },
-  {
-    name: "district",
-    field: "input",
-    label: "Bairro",
-    placeholder: "Ex.: Centro",
-    required: true,
-    autoComplete: "address-level3",
-    className: "md:col-span-1",
-  },
-  {
-    name: "street",
-    field: "input",
-    label: "Logradouro",
-    placeholder: "Ex.: Rua das Flores",
-    required: true,
-    autoComplete: "address-line1",
-    className: "md:col-span-2",
-  },
-  {
-    name: "number",
-    field: "input",
-    label: "Número",
-    placeholder: "123",
-    required: true,
-    autoComplete: "address-line2",
-    className: "md:col-span-1",
-  },
-  {
-    name: "complement",
-    field: "input",
-    label: "Complemento",
-    placeholder: "Apto, sala ou referência",
-    autoComplete: "address-line3",
-    className: "md:col-span-1",
+    optionsByField: {
+      name: "state",
+      options: CITY_OPTIONS_BY_STATE,
+      emptyLabel: "Selecione o estado primeiro",
+    },
+    emptyLabel: "Selecione a cidade",
+    searchable: true,
+    searchMode: "dropdown",
+    searchPlaceholder: "Buscar cidade",
+    emptySearchLabel: "Nenhuma cidade encontrada para este estado.",
+    className: "md:col-start-2 md:col-end-3 md:row-start-4",
   },
 ] satisfies Field<BillingAddressForm>[];
 

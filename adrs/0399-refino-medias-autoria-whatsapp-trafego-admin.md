@@ -1,4 +1,4 @@
-﻿# ADR-0399 - Media no contexto da base e breakdown de autoria no trafego WhatsApp Admin
+# ADR-0399 - Media no contexto da base e breakdown de autoria no trafego WhatsApp Admin
 
 ## Status
 

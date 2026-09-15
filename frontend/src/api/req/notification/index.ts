@@ -6,6 +6,7 @@ import type { IndexFilters, Pagination } from "@/api/types";
 export type NotificationPrefs = Record<
   string,
   {
+    email?: boolean;
     enabled?: boolean;
     in_app?: boolean;
     post_author_scope?: "patients_only" | "professionals_only" | "all" | "favorites";

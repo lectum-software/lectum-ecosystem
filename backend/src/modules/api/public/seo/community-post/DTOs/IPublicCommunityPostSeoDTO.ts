@@ -1,4 +1,4 @@
-﻿export type PublicCommunityPostSeoSource = "community_post" | "post_reply";
+export type PublicCommunityPostSeoSource = "community_post" | "post_reply";
 
 export type PublicCommunityPostSeoDTO = {
   canonical_url: string;

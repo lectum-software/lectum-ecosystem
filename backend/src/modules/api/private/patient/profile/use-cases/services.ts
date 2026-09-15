@@ -1,5 +1,6 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { error, msg } from "@/helpers/translate";
+import { publicFileUrl } from "@/utils/public-origin";
 import type { IProfileDTO, IUpdateProfileDTO, IUploadAvatarDTO } from "../DTOs/IProfileDTO";
 import { ProfileRepository } from "../repositories/ProfileRepository";
 
@@ -10,6 +11,9 @@ const normalizeNullableText = (value?: string | null) => {
   return normalized.length > 0 ? normalized : null;
 };
 
+const normalizeState = (value?: IUpdateProfileDTO["b"]["state"]) =>
+  (normalizeNullableText(value)?.toUpperCase() ?? null) as IUpdateProfileDTO["b"]["state"];
+
 const normalizePhone = (value?: string | null) => {
   const normalized = normalizeNullableText(value);
   if (!normalized) return null;
@@ -18,21 +22,6 @@ const normalizePhone = (value?: string | null) => {
   if (!parsed?.isValid()) return null;
 
   return parsed.number;
-};
-
-const publicFileUrl = (key: string) => {
-  const rawBase = String(process.env.BASE || "").trim();
-  let base = rawBase.replace(/\/$/, "");
-
-  try {
-    base = rawBase ? new URL(rawBase).origin : "";
-  } catch (_err) {
-    base = rawBase.replace(/\/$/, "");
-  }
-
-  const publicPath = `/public/files/${key}`;
-
-  return base ? `${base}${publicPath}` : publicPath;
 };
 
 export const show = async (data: IProfileDTO) => {
@@ -69,6 +58,15 @@ export const update = async (data: IUpdateProfileDTO) => {
     };
   }
 
+  const city = normalizeNullableText(data.b.city);
+  const state = normalizeState(data.b.state);
+  if (Boolean(city) !== Boolean(state)) {
+    return {
+      status: 400,
+      ...error("patient_profile_location_pair_required", {}),
+    };
+  }
+
   const repository = new ProfileRepository();
   const res = await repository.update({
     ...data,
@@ -77,9 +75,11 @@ export const update = async (data: IUpdateProfileDTO) => {
       name: data.b.name.trim(),
       phone,
       bio: normalizeNullableText(data.b.bio),
+      city,
       goal: data.b.goal ?? null,
       gender: data.b.gender ?? null,
       birthdate: data.b.birthdate ?? null,
+      state,
     },
   });
 

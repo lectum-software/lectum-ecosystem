@@ -13,11 +13,14 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { getCurrentAnalyticsPath, normalizeAnalyticsPath } from "@/utils/analytics-path";
 import { formatCrpLabel } from "@/utils/crp";
+import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import {
   getProfessionalShortDisplayName,
   normalizeProfessionalDisplayName,
+  normalizeProfessionalNamePart,
 } from "@/utils/professional-name";
 
 export const WHATSAPP_REDIRECT_MIN_DELAY_MS = 900;
@@ -90,27 +93,68 @@ const getDisplayMode = (): DisplayMode => {
   return "unknown";
 };
 
-const currentAnalyticsPath = () => {
-  if (typeof window === "undefined") return "/";
+const normalizeLectumWhatsAppTextGreeting = (
+  text: string,
+  psychologist: PsychologistWhatsAppIdentity,
+) => {
+  if (!text.includes("Lectum")) return text;
 
-  return `${window.location.pathname || "/"}${window.location.search || ""}`;
+  const suffix = text.replace(/^Olá(?:\s+[^,]*)?,\s*/iu, "");
+  if (suffix === text) return text;
+
+  const whatsappName = getPsychologistWhatsappDisplayName(psychologist);
+  const greeting = whatsappName ? `Olá ${whatsappName},` : "Olá,";
+
+  return `${greeting} ${suffix}`;
 };
 
-const preserveFallbackWhatsAppText = (fallbackUrl: string, trackedUrl?: string | null) => {
-  if (!trackedUrl) return fallbackUrl;
+const normalizeFallbackWhatsAppUrlText = (
+  fallbackUrl?: string | null,
+  psychologist?: PsychologistWhatsAppIdentity,
+) => {
+  const safeFallbackUrl = normalizeTrustedWhatsAppUrl(fallbackUrl);
+  if (!safeFallbackUrl) return "";
+  if (!psychologist) return safeFallbackUrl;
 
   try {
-    const fallback = new URL(fallbackUrl);
+    const fallback = new URL(safeFallbackUrl);
     const fallbackText = fallback.searchParams.get("text");
 
-    if (!fallbackText) return trackedUrl;
+    if (!fallbackText) return safeFallbackUrl;
 
-    const tracked = new URL(trackedUrl);
+    fallback.searchParams.set(
+      "text",
+      normalizeLectumWhatsAppTextGreeting(fallbackText, psychologist),
+    );
+
+    return fallback.toString();
+  } catch {
+    return safeFallbackUrl;
+  }
+};
+
+const preserveFallbackWhatsAppText = (
+  fallbackUrl: string,
+  trackedUrl: string | null | undefined,
+  psychologist: PsychologistWhatsAppIdentity,
+) => {
+  const safeFallbackUrl = normalizeFallbackWhatsAppUrlText(fallbackUrl, psychologist);
+  const safeTrackedUrl = normalizeTrustedWhatsAppUrl(trackedUrl);
+  if (!safeFallbackUrl) return "";
+  if (!safeTrackedUrl) return safeFallbackUrl;
+
+  try {
+    const fallback = new URL(safeFallbackUrl);
+    const fallbackText = fallback.searchParams.get("text");
+
+    if (!fallbackText) return safeTrackedUrl;
+
+    const tracked = new URL(safeTrackedUrl);
     tracked.searchParams.set("text", fallbackText);
 
     return tracked.toString();
   } catch {
-    return fallbackUrl;
+    return safeFallbackUrl;
   }
 };
 
@@ -130,10 +174,12 @@ const professionalLabel = (psychologist: PsychologistWhatsAppIdentity) => {
 };
 
 export const getPsychologistWhatsappDisplayName = (psychologist: PsychologistWhatsAppIdentity) =>
-  psychologist.whatsappName?.trim() || getProfessionalShortDisplayName(psychologist.name);
+  normalizeProfessionalNamePart(psychologist.whatsappName) ||
+  getProfessionalShortDisplayName(psychologist.name);
 
 export const openPsychologistWhatsApp = (url: string) => {
-  window.location.assign(url);
+  const trustedUrl = normalizeTrustedWhatsAppUrl(url);
+  if (trustedUrl) window.location.assign(trustedUrl);
 };
 
 export const PsychologistWhatsAppButtonContent = ({
@@ -248,7 +294,7 @@ export const PsychologistWhatsAppRedirectModal = ({
         {manualFallbackVisible ? (
           <div className="mt-5 grid gap-3">
             <Button
-              className="h-11 rounded-2xl bg-success text-white hover:bg-success/90"
+              className="h-11 rounded-2xl bg-success text-primary-foreground hover:bg-success/90"
               disabled={!redirectUrl}
               onClick={onManualOpen}
             >
@@ -321,7 +367,9 @@ export const PsychologistWhatsAppRedirectButton = ({
 
     if (disabled || !psychologist.whatsappUrl) return;
 
-    const fallbackUrl = psychologist.whatsappUrl;
+    const fallbackUrl = normalizeFallbackWhatsAppUrlText(psychologist.whatsappUrl, psychologist);
+
+    if (!fallbackUrl) return;
 
     if (!conversion.requestWhatsAppAccess(fallbackUrl)) {
       return;
@@ -341,7 +389,7 @@ export const PsychologistWhatsAppRedirectButton = ({
           display_mode: getDisplayMode(),
           occurred_at: new Date().toISOString(),
           page_kind: trackingContext?.pageKind,
-          path: trackingContext?.path ?? currentAnalyticsPath(),
+          path: normalizeAnalyticsPath(trackingContext?.path ?? getCurrentAnalyticsPath()),
           session_id: analyticsIdentity.sessionId,
           target_id: trackingContext?.targetId ?? undefined,
           target_type: trackingContext?.targetType ?? undefined,
@@ -354,7 +402,7 @@ export const PsychologistWhatsAppRedirectButton = ({
 
     const trackedUrlPromise = tracking
       .mutateAsync()
-      .then((data) => preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url))
+      .then((data) => preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url, psychologist))
       .catch(() => fallbackUrl);
 
     const nextUrl =
@@ -369,9 +417,10 @@ export const PsychologistWhatsAppRedirectButton = ({
   };
 
   const handleManualOpen = () => {
-    if (!redirectUrl) return;
+    const trustedUrl = normalizeTrustedWhatsAppUrl(redirectUrl);
+    if (!trustedUrl) return;
 
-    window.open(redirectUrl, "_blank", "noopener,noreferrer");
+    window.open(trustedUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -381,7 +430,7 @@ export const PsychologistWhatsAppRedirectButton = ({
           "inline-flex min-w-0 max-w-full items-center justify-center gap-2 whitespace-nowrap",
           className,
         )}
-        disabled={disabled || !psychologist.whatsappUrl}
+        disabled={disabled || !normalizeTrustedWhatsAppUrl(psychologist.whatsappUrl)}
         onClick={handleClick}
         type="button"
         {...props}
