@@ -323,7 +323,7 @@ export const LectumShareDownloadDialog = ({
             <VerticalVideoPlayer
               className="absolute inset-0 h-full w-full rounded-none border-0 shadow-none"
               controls={false}
-              fit="cover"
+              fit="contain"
               fullscreenVariant="content"
               poster={target.posterUrl ?? undefined}
               preload="auto"

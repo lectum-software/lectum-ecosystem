@@ -140,8 +140,8 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(dialogSource, /target\.cardLabel/);
   assert.match(dialogSource, /target\.sourceText/);
   assert.match(dialogSource, /poster=\{target\.posterUrl \?\? undefined\}/);
-  assert.match(dialogSource, /fit="cover"/);
-  assert.doesNotMatch(dialogSource, /fit="contain"/);
+  assert.match(dialogSource, /fit="contain"/);
+  assert.doesNotMatch(dialogSource, /fit="cover"/);
   assert.doesNotMatch(dialogSource, /preparedPreviewUrl/);
   assert.doesNotMatch(dialogSource, /URL\.createObjectURL/);
   assert.doesNotMatch(dialogSource, /Preparar v\\u00eddeo/);

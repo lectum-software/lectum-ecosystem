@@ -32,7 +32,7 @@ const metadata = {
 };
 
 describe("FFmpeg social share command", () => {
-  it("gera MP4 9:16 de alta qualidade sem shell e com arte Lectum", () => {
+  it("gera MP4 9:16 de alta qualidade sem shell, com arte Lectum e sem cortar o video", () => {
     const args = buildSocialShareVideoArguments({
       config,
       metadata,
@@ -46,8 +46,12 @@ describe("FFmpeg social share command", () => {
     const command = args.join(" ");
 
     assert.match(command, /-filter_complex/);
-    assert.match(command, /scale=1080:1920/);
-    assert.match(command, /crop=1080:1920/);
+    assert.match(
+      command,
+      /scale=1080:1920:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos/,
+    );
+    assert.match(command, /pad=1080:1920:\(ow-iw\)\/2:\(oh-ih\)\/2:color=black/);
+    assert.equal(command.includes("crop="), false);
     assert.match(command, /-loop 1 -i .*lectum-symbol-white\.png/);
     assert.match(command, /-loop 1 -i .*verified-badge\.png/);
     assert.match(command, /overlay=x=329:y=274:format=auto/);

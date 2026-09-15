@@ -450,8 +450,9 @@ Templates/shells devem viver em `frontend/src/templates`.
   entao roda `ffprobe`/FFmpeg sobre arquivo local. O render social gera 1080x1920 com FFmpeg
   H.264/AAC em preset rapido, executa processos com locale UTF-8, escapa textos livres antes do
   `drawtext`, usa `fonts-manrope` no container para aproximar a tipografia da previa/app e compoe a
-  arte Reels por `scale+crop+drawbox+drawtext+overlay`: video em tela cheia, cartao superior sem
-  moldura de celular/watermark, largura 860px, x=110, y=250, raio 24px, cabecalho azul `#308ce8`
+  arte Reels por `scale+pad+drawbox+drawtext+overlay`: canvas final 9:16 fixo, video inteiro
+  centralizado sem crop e faixas pretas preservadas/criadas quando a origem nao preenche o canvas,
+  cartao superior sem moldura de celular/watermark, largura 860px, x=110, y=250, raio 24px, cabecalho azul `#308ce8`
   com 88px, simbolo Lectum branco recortado do asset oficial `logo-light.png` a esquerda do label e
   deslocado 4px para cima para alinhamento optico com o texto,
   corpo branco com 266px, margens laterais internas reduzidas, texto preto `#151922` centralizado em
@@ -463,7 +464,7 @@ Templates/shells devem viver em `frontend/src/templates`.
   para resposta durante rollout. O grafo evita filtros de blur e filtros secundarios de fundo
   dependentes de build (`eq`, `fps`, `format`, `setsar`) e mantem o arquivo apenas como saida efemera
   do job. Se o grafo padrao ou os assets falharem antes de emitir progresso, o worker tenta variantes
-  portateis com `scale+pad` e fallback sem assets, preservando `drawbox+drawtext` sem `crop`.
+  portateis sem assets/fontes explicitas, preservando `scale+pad`, `drawbox+drawtext` e ausencia de `crop`.
   As falhas de processo sao classificadas em `diagnostic_code` seguro a partir de stderr
   em memoria, com codigos allowlist por filtro conhecido quando possivel, sem expor stderr bruto,
   URLs, stack, segredos, SQL, PII ou payload tecnico. Para posts, a associacao de video

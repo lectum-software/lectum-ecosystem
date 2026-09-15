@@ -296,11 +296,11 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Contrato visual: posts usam `Postado na Lectum`; respostas usam `Respondido na Lectum`. O label
   legado `Perguntaram na Lectum` e normalizado no worker para tolerar rollout entre frontend,
   backend e app `video`.
-- Video: o render padrao passa a usar video em tela cheia 9:16 com `scale+crop` e arte desenhada por
-  `drawbox+drawtext` nas proporcoes da referencia Reels: cartao azul/branco superior, texto da
-  pergunta centralizado, nome/cargo centralizados e selo verificado. A moldura de celular, watermark
-  textual e filtros secundarios (`overlay`, `eq`, `fps`, `format`, `setsar`, `gblur`) nao entram no
-  grafo padrao. A variante portatil `scale+pad+drawbox+drawtext` permanece como fallback seguro.
+- Video: o render padrao passa a usar canvas 9:16 com video inteiro encaixado por `scale+pad` e arte
+  desenhada por `drawbox+drawtext` nas proporcoes da referencia Reels: cartao azul/branco superior,
+  texto da pergunta centralizado, nome/cargo centralizados e selo verificado. A moldura de celular,
+  watermark textual e filtros secundarios (`eq`, `fps`, `format`, `setsar`, `gblur`) nao entram no
+  grafo padrao. As variantes portateis preservam `scale+pad` e ausencia de `crop`.
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
@@ -584,3 +584,38 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `pnpm version:bump` para `0.1.305`.
 - [x] `pnpm check:version` em `0.1.305`.
 - [x] Smoke local HTTP do frontend em `0.1.305`: `/version` 200 e rota publica do post 200.
+
+## Ajuste pos-feedback em 2026-09-15 - preservar enquadramento e faixas pretas
+
+- Evidencia: o usuario comparou captura do video original com a captura do MP4 social baixado e apontou perda de qualidade/percepcao de zoom. As imagens anexadas foram usadas somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Decisao: manter o canvas final 9:16 e a arte Lectum exatamente nas proporcoes/posicoes ja calibradas para Instagram, mas trocar o encaixe do video de `scale+crop` para `scale+pad` no render padrao do app `video/`.
+- O arquivo social continua sendo MP4 1080x1920 H.264/AAC com overlay Lectum, porem o video de origem passa a caber inteiro no canvas, sem corte automatico. Quando a origem nao preenche 9:16, as sobras ficam pretas; se a origem ja trouxer faixas pretas, elas sao preservadas.
+- A previa da modal `Publique nas redes sociais` passa a usar `fit="contain"`, mantendo paridade visual com o artefato baixado: canvas/arte fixos e video completo centralizado.
+- O scale padrao usa `flags=lanczos` para reduzir artefatos de redimensionamento; a variante portatil continua sem flags extras para fallback de compatibilidade.
+- Nao ha alteracao no upload: navegador/backend seguem enviando o arquivo original ao Cloudflare Stream sem compressao/redimensionamento client-side. O processamento/adaptacao do Stream e o render social continuam etapas separadas.
+- Sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados.
+- Rollback simples reverte o commit e volta ao comportamento de crop; jobs/arquivos sociais continuam efemeros.
+
+### Criterios de aceite do ajuste
+
+- [x] Render social mantem canvas 9:16 e arte Lectum nas mesmas coordenadas.
+- [x] Video de origem e encaixado inteiro por `scale+pad`, sem `crop` no grafo padrao.
+- [x] Faixas pretas sao preservadas/criadas quando a proporcao da origem nao preencher o canvas.
+- [x] Previa da modal usa `contain` para representar o mesmo enquadramento do MP4 baixado.
+- [x] Testes cobrem ausencia de `crop`, presenca de `pad` e troca da previa de `cover` para `contain`.
+- [x] Nenhum banco/schema/migration, package novo ou env obrigatoria foi criado; `db:migrate` nao se aplica.
+
+### Validacoes locais do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, TASK-176, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0492 consultados conforme aplicavel.
+- [x] Testes focados: `pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts src/infra/ffmpeg/social-share-output.test.ts`.
+- [x] Teste focado frontend: `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir video check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir video build` em `0.1.387`.
+- [x] `pnpm --dir frontend build` em `0.1.387`.
+- [x] `pnpm version:bump` para `0.1.387` e `pnpm check:version`.
+- [x] `pnpm check` completo em `0.1.387`.
+- [x] Smoke local HTTP do frontend buildado em `http://127.0.0.1:3378`: `/version` respondeu `0.1.387` e `/comunidades` respondeu 200.
+- [x] Validacao visual autenticada da modal social fica para homologacao apos deploy, porque o ambiente local nao possui sessao real de psicologo dono do video e nao foram usados mocks.

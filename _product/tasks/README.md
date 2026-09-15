@@ -1638,9 +1638,9 @@ Uma task só pode ser marcada como concluída quando:
   sistema. Desktop sem Web Share continua usando `download` por objeto local.
 - Arte: posts usam `Postado na Lectum`; respostas usam `Respondido na Lectum`. O app `video/`
   normaliza o rotulo legado `Perguntaram na Lectum` para resposta durante rollout e renderiza a
-  referencia Reels sem moldura de celular/watermark textual: video 9:16 em tela cheia,
-  `scale+crop+drawbox+drawtext`, cartao azul/branco superior, texto centralizado e nome/cargo do
-  profissional centralizados. O fallback portatil permanece `scale+pad+drawbox+drawtext`.
+  referencia Reels sem moldura de celular/watermark textual: canvas 9:16 fixo, video inteiro
+  preservado por `scale+pad+drawbox+drawtext`, cartao azul/branco superior, texto centralizado e
+  nome/cargo do profissional centralizados. As variantes portateis tambem preservam `scale+pad`.
 - Alteracao frontend+backend+video com documentacao; sem schema/migration, env obrigatoria nova,
   package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de
   dados/buckets publicados. Rollback simples reverte o commit.
@@ -2057,3 +2057,18 @@ fluxos de aceite persistido.
   - [x] `pnpm --dir frontend check` e `pnpm --dir frontend build` executados.
   - [x] Teste focado `frontend/scripts/legal.test.mjs` atualizado.
   - [x] ADR registrada: `adrs/0498-links-legais-no-rodape-cadastros.md`.
+
+## Ajuste em 2026-09-15: video social preserva enquadramento e faixas pretas
+
+- Complemento pos-feedback da TASK-176/TASK-42: o video social para redes mantem canvas 9:16 e a arte Lectum nas mesmas coordenadas calibradas para Instagram, mas deixa de cortar o video de origem.
+- O render padrao do app `video/` troca `scale+crop` por `scale+pad`: o video cabe inteiro no MP4 1080x1920, com sobras pretas quando a origem nao preenche 9:16 e preservando faixas pretas que ja vierem no upload/playback.
+- A previa da modal `Publique nas redes sociais` passa de `fit="cover"` para `fit="contain"`, alinhando a percepcao da previa ao download final sem reposicionar a arte.
+- Upload permanece inalterado: Lectum nao comprime/redimensiona o arquivo no frontend/backend antes do Cloudflare Stream; o render social continua sendo etapa server-side separada e reencodada em H.264/AAC.
+- Alteracao frontend+video com documentacao e ADR; sem backend, schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Criterios de aceite:
+  - [x] MP4 social continua 9:16 com arte nas mesmas coordenadas.
+  - [x] Video de origem entra inteiro por `scale+pad`, sem `crop` no grafo padrao.
+  - [x] Faixas pretas sao preservadas/criadas quando necessario.
+  - [x] Previa social usa `contain` e nao `cover`.
+  - [x] Testes focados, checks, builds, versionamento e smoke local executados em `0.1.387`.
+- Validacoes locais: testes focados frontend/video, `pnpm --dir frontend check`, `pnpm --dir video check`, builds frontend/video, `pnpm version:bump`, `pnpm check:version`, `pnpm check` e smoke local do frontend (`/version` 0.1.387 e `/comunidades` 200). A validacao visual autenticada da modal fica para homologacao apos deploy, sem mocks locais.

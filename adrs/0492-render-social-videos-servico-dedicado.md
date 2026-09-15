@@ -282,13 +282,13 @@ preservar a geracao server-side dedicada, mas separar preparo e salvamento/compa
 - desktop sem Web Share continua usando download por objeto local, sem upload para storage nem
   persistencia nova.
 
-A arte do worker tambem foi alinhada ao contrato visual solicitado: video 9:16 em tela cheia,
-cartao superior azul/branco, pergunta centralizada, nome/cargo centralizados e selo verificado. O
-rotulo e `Postado na Lectum` para posts e `Respondido na Lectum` para respostas; o valor legado
-`Perguntaram na Lectum` e normalizado no worker para tolerar rollout entre apps. O grafo padrao
-remove moldura de celular, watermark textual e filtros secundarios (`overlay`, `eq`, `fps`,
-`format`, `setsar`, `gblur`), ficando em `scale+crop+drawbox+drawtext`; a variante portatil
-`scale+pad+drawbox+drawtext` permanece como fallback.
+A arte do worker tambem foi alinhada ao contrato visual solicitado: canvas 9:16 fixo, video inteiro
+preservado por `scale+pad`, cartao superior azul/branco, pergunta centralizada, nome/cargo
+centralizados e selo verificado. O rotulo e `Postado na Lectum` para posts e `Respondido na Lectum`
+para respostas; o valor legado `Perguntaram na Lectum` e normalizado no worker para tolerar rollout
+entre apps. O grafo padrao remove moldura de celular, watermark textual e filtros secundarios (`eq`,
+`fps`, `format`, `setsar`, `gblur`), ficando em `scale+pad+drawbox+drawtext`; as variantes
+portateis preservam `scale+pad` e ausencia de `crop`.
 
 A mudanca nao adiciona env, schema, pacote, provider, persistencia de artefato, mock, seed, reset ou
 limpeza de dados publicados. As mensagens publicas seguem sem stderr bruto, URL, segredo, PII,
@@ -671,3 +671,23 @@ A mudanca e visual e compativel com jobs existentes, sem alteracao de schema, co
 - pnpm --dir video build em 0.1.304 antes do bump.
 - pnpm check, git diff --check, pnpm version:bump para 0.1.305 e pnpm check:version em 0.1.305.
 - Smoke local HTTP do frontend em 0.1.305: /version 200 e rota publica do post 200.
+
+## Atualizacao de preservacao de enquadramento em 2026-09-15
+
+Novo feedback visual comparou o video original e o MP4 social baixado e mostrou perda perceptivel de qualidade por corte/zoom no encaixe do video. A decisao foi preservar a arte social ja calibrada para Instagram e alterar somente a composicao da camada de video:
+
+- canvas final 1080x1920 permanece fixo para Stories/Reels/TikTok;
+- card, logo, pergunta, credenciais e selo mantem as mesmas coordenadas/proporcoes;
+- o grafo padrao troca `scale+crop` por `scale+pad`, para encaixar o video inteiro sem corte automatico;
+- sobras de proporcao ficam pretas e faixas pretas ja existentes na origem sao preservadas;
+- a previa CSS usa `fit="contain"` para refletir o mesmo enquadramento do render final;
+- o scale padrao usa `flags=lanczos`; a variante portatil permanece sem flags extras como fallback.
+
+A mudanca toca frontend e app `video/`, nao altera upload, Cloudflare Stream, contrato publico, backend, schema, env obrigatoria, package, provider, persistencia, mock, seed, reset ou dados publicados. Rollback operacional: reverter o commit retorna ao crop anterior; jobs sociais sao efemeros e nao exigem contracao de dados.
+
+## Validacao da atualizacao de preservacao de enquadramento
+
+- Testes focados do app `video`: `social-share.test.ts` e `social-share-output.test.ts` confirmam `pad`, `force_original_aspect_ratio=decrease` e ausencia de `crop`.
+- Teste focado do frontend confirma que a previa social usa `fit="contain"` e nao `fit="cover"`.
+- `pnpm --dir video check`, `pnpm --dir frontend check`, `pnpm --dir video build`, `pnpm --dir frontend build`, `pnpm version:bump` para `0.1.387`, `pnpm check:version` e `pnpm check` executados com sucesso.
+- Smoke local HTTP do frontend buildado: `/version` respondeu `0.1.387` e `/comunidades` respondeu 200. A modal autenticada com video real sera validada em homologacao apos deploy, sem criar mocks locais.

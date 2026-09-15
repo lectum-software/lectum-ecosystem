@@ -68,6 +68,9 @@ describe("social share output limits", () => {
             // Compose at the established design size, then scale the entire output.
             const filter = args.at(args.indexOf("-filter_complex") + 1) ?? "";
             assert.match(filter, /scale=1080:1920/);
+            assert.match(filter, /force_original_aspect_ratio=decrease/);
+            assert.match(filter, /pad=1080:1920:\(ow-iw\)\/2:\(oh-ih\)\/2:color=black/);
+            assert.equal(filter.includes("crop="), false);
             assert.match(filter, /drawbox=x=110:y=274:w=860:h=64/);
             assert.match(filter, /drawtext=text='Psicólogo\(a\)':.*:y=1440:fontsize=21/);
             assert.equal(args.at(args.indexOf("-pix_fmt") + 1), "yuv420p");
