@@ -13,6 +13,13 @@ import {
   videoAssetIdFromReference,
   videoAssetPlaybackApiPaths,
 } from "./video-stream.ts";
+import {
+  boundedUploadNumber,
+  isRetryableVideoUploadStatus,
+  tusHttpStatus,
+  VIDEO_UPLOAD_RETRY_DELAYS_MS,
+  VideoUploadFailure,
+} from "./video-upload-diagnostics.ts";
 
 const readSource = (...segments) =>
   readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), ...segments), "utf8");
@@ -107,17 +114,18 @@ describe("Cloudflare Stream frontend contract", () => {
     assert.equal(shouldCleanupVideoAssetAfterFailure(true, new Error("processing timeout")), false);
   });
 
-  it("negocia upload básico do Stream sem quebrar backend antigo", () => {
+  it("prioriza TUS em redes móveis preservando leitura de contrato básico legado", () => {
     const requestSource = readSource("../api/req/video-assets/index.ts");
     const uploadSource = readSource("./video-asset-upload.ts");
 
     assert.match(requestSource, /"X-Lectum-Video-Upload-Methods": ACCEPTED_VIDEO_UPLOAD_METHODS/);
-    assert.match(requestSource, /const ACCEPTED_VIDEO_UPLOAD_METHODS = "basic,tus"/);
+    assert.match(requestSource, /const ACCEPTED_VIDEO_UPLOAD_METHODS = "tus"/);
     assert.match(uploadSource, /provisioned\.upload_method === "basic"/);
     assert.match(uploadSource, /uploadBasicDirect\(\{/);
     assert.match(uploadSource, /uploadTus\(\{/);
-    assert.match(uploadSource, /new FormData\(\)/);
-    assert.match(uploadSource, /request\.open\("POST", uploadUrl\)/);
+    const transportSource = readSource("./video-upload-transport.ts");
+    assert.match(transportSource, /new FormData\(\)/);
+    assert.match(transportSource, /request\.open\("POST", uploadUrl\)/);
   });
 
   it("cleanup usa endpoint de tentativa sem fallback para remoção explícita", () => {
@@ -139,8 +147,9 @@ describe("Cloudflare Stream frontend contract", () => {
     const source = readSource("./video-asset-upload.ts");
     assert.match(source, /await cancelVideoAssetUpload\(provisioned\.asset_id\)/);
     assert.doesNotMatch(source, /deleteVideoAsset/);
-    assert.match(source, /\.abort\(false\)/);
-    assert.doesNotMatch(source, /\.abort\(true\)|\.terminate\(/);
+    const transport = readSource("./video-upload-transport.ts");
+    assert.match(transport, /\.abort\(false\)/);
+    assert.doesNotMatch(transport, /\.abort\(true\)|\.terminate\(/);
     const profile = readSource("../api/req/psychologist-free-profile/index.ts");
     const removal = profile.split("export const deletePsychologistFreeProfileVideo =")[1];
     assert.match(removal, /route: `\$\{route\}\/video`, method: "DELETE"/);
@@ -154,5 +163,49 @@ describe("Cloudflare Stream frontend contract", () => {
     assert.equal(isVideoPlaybackFresh("invalid", now), false);
     assert.equal(isVideoPlaybackFresh("2030-01-02T03:04:15.000Z", now), false);
     assert.equal(isVideoPlaybackFresh("2030-01-02T03:05:05.000Z", now), true);
+  });
+});
+
+describe("diagnóstico seguro do upload direto", () => {
+  it("limita retries a falhas transientes e números a intervalos fechados", () => {
+    for (const status of [0, 408, 409, 423, 429, 500, 502, 503, 599])
+      assert.equal(isRetryableVideoUploadStatus(status), true);
+    for (const status of [200, 201, 400, 401, 403, 404, 413, 422, 600, -1, NaN])
+      assert.equal(isRetryableVideoUploadStatus(status), false);
+    assert.deepEqual(VIDEO_UPLOAD_RETRY_DELAYS_MS, [0, 1000, 3000, 5000, 10000]);
+    assert.equal(boundedUploadNumber(Infinity, 100), 0);
+    assert.equal(boundedUploadNumber(-1, 100), 0);
+    assert.equal(boundedUploadNumber(1000, 100), 100);
+  });
+  it("erro público não carrega causa, URL nem objeto remoto", () => {
+    const error = new VideoUploadFailure(503);
+    assert.equal(error.httpStatus, 503);
+    assert.equal(error.reason, "http");
+    assert.deepEqual(Object.keys(error).sort(), ["httpStatus", "name", "reason"]);
+    assert.equal(new VideoUploadFailure(0).reason, "network");
+    assert.equal(new VideoUploadFailure(0, "processing_timeout").reason, "processing_timeout");
+    for (const malformed of [
+      null,
+      "secret",
+      new Error("https://example.com/secret"),
+      { originalResponse: {} },
+    ])
+      assert.equal(tusHttpStatus(malformed), 0);
+    assert.doesNotMatch(error.message, /503|provider|http|token|URL/);
+  });
+  it("diagnóstico best-effort não desconecta sessão nem afeta o resultado", () => {
+    const api = readSource("../api/req/video-assets/index.ts").split(
+      "export const reportVideoAssetUploadEvent",
+    )[1];
+    assert.match(api, /timeout: 2_000/);
+    assert.match(api, /hideError: true/);
+    assert.match(api, /signOutOnUnauthorized: false/);
+    assert.match(api, /catch/);
+    assert.doesNotMatch(api, /console\.|throw /);
+    const upload = readSource("./video-asset-upload.ts");
+    assert.match(upload, /report\("transfer_complete"\)/);
+    assert.match(upload, /report\("ready"\)/);
+    assert.match(upload, /document.removeEventListener\("visibilitychange", onVisibilityChange\)/);
+    assert.doesNotMatch(upload, /userAgent|file.name|console\./);
   });
 });

@@ -3,6 +3,7 @@ import { callEndpoint } from "@/api/generator";
 import type {
   VideoAssetPlaybackResponse,
   VideoAssetStatusResponse,
+  VideoAssetUploadEvent,
   VideoAssetUploadRequest,
   VideoAssetUploadResponse,
 } from "@/api/generator/types/video-assets";
@@ -14,7 +15,7 @@ import {
 } from "@/utils/video-stream";
 
 const route = "/api/private/video-assets";
-const ACCEPTED_VIDEO_UPLOAD_METHODS = "basic,tus";
+const ACCEPTED_VIDEO_UPLOAD_METHODS = "tus";
 
 export const createVideoAssetUpload = (body: VideoAssetUploadRequest, signal?: AbortSignal) =>
   handleReq<VideoAssetUploadResponse>({
@@ -90,5 +91,25 @@ export const getVideoAssetPlayback = async (assetId: string) => {
 
     // Compatibilidade temporária com backend anterior ao endpoint público.
     return requestVideoAssetPlayback(paths.legacy);
+  }
+};
+
+// Sem sinal do upload: o relato de falha/cancelamento tem seu próprio prazo curto.
+// Backend anterior, sessão expirada ou aparelho offline não podem quebrar o fluxo.
+export const reportVideoAssetUploadEvent = async (assetId: string, body: VideoAssetUploadEvent) => {
+  try {
+    await handleReq<{ received: boolean }>({
+      ...callEndpoint({
+        body,
+        config: { timeout: 2_000 },
+        method: "POST",
+        params: { id: assetId },
+        route: `${route}/:id/upload-events`,
+      }),
+      hideError: true,
+      signOutOnUnauthorized: false,
+    });
+  } catch {
+    // Não registrar o erro HTTP bruto: pode conter cabeçalhos de autenticação.
   }
 };

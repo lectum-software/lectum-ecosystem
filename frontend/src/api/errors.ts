@@ -64,6 +64,16 @@ const readStatus = (error: unknown, payload: UnknownRecord | null) => {
 
 export const getApiErrorStatus = (error: unknown) => readStatus(error, readPayload(error));
 
+// Status observado no transporte, sem confundir o fallback público 400 com uma
+// resposta HTTP real em falhas de rede. Não conserva headers ou corpo remoto.
+export const getApiErrorHttpStatus = (error: unknown) => {
+  const record = asRecord(error);
+  const status = record?.httpStatus ?? asRecord(record?.response)?.status;
+  return typeof status === "number" && Number.isInteger(status) && status >= 100 && status <= 599
+    ? status
+    : 0;
+};
+
 export const getApiErrorCode = (error: unknown) => {
   const code = readPayload(error)?.code;
 

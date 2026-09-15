@@ -33,3 +33,26 @@ export type VideoAssetPlaybackResponse = {
   hls_url: string;
   thumbnail_url: string;
 };
+
+// Diagnóstico fechado: não incluir URL, mensagem livre, arquivo ou dados de usuário.
+export type VideoAssetUploadEvent = {
+  event: "transfer_start" | "transfer_complete" | "ready" | "failed" | "canceled";
+  phase: "transfer" | "processing";
+  method: VideoAssetUploadMethod;
+  reason:
+    | "none"
+    | "network"
+    | "http"
+    | "transport"
+    | "processing"
+    | "processing_timeout"
+    | "canceled"
+    | "unknown";
+  httpStatus: number;
+  progress: number;
+  elapsedMs: number;
+  retryCount: number;
+  online: boolean;
+  visibility: "visible" | "hidden";
+  wasHidden: boolean;
+};

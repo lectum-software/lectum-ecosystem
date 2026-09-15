@@ -391,6 +391,7 @@
     "admin_community_suggestion_moved": "Sugestão movida com sucesso.",
     "admin_community_suggestion_archived": "Sugestão arquivada com sucesso.",
     "video_upload_created": "Envio de vídeo iniciado.",
+    "video_upload_event_received": "Diagnóstico de envio recebido.",
     "video_status_checked": "Status do vídeo atualizado.",
     "video_upload_canceled": "Envio de vídeo cancelado.",
     "video_playback_authorized": "Vídeo pronto para reprodução.",

@@ -2,6 +2,8 @@
 
 Fila sequencial de execução do produto Lectum.
 
+Em execução: [TASK-182 — Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md). Prioridade: falha de resposta com vídeo no Safari após provisionamento básico; sem presumir causa histórica nem alterar armazenamento/qualidade.
+
 Concluída: [TASK-181 — Retenção recuperável de vídeos](TASK-181-retencao-recuperavel-de-videos.md). Implementação 0.1.383 publicada e saudável; operador catalogou 64 vídeos R2 em lotes e confirmou inventário completo em reexecução somente leitura, sem falhas/conflitos ou pendências de marcação. Os arquivos continuam preservados no R2; sem limpeza automática, migração de bytes ou prazo de exclusão inventado. Isso não encerra a auditoria geral nem autoriza limpeza do acervo.
 
 Última correção operacional 14/09/2026: [TASK-180 — Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md).
@@ -23,7 +25,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 188 tasks: `TASK-00` a `TASK-181`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 189 tasks: `TASK-00` a `TASK-182`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -284,6 +286,7 @@ ou cortesia manual.
 | 179 | [TASK-179 - Restaurar preflight e provisionamento de upload Stream](TASK-179-corrigir-preflight-upload-stream.md) | Completed | 163, 173, 178 |
 | 180 | [TASK-180 - Start sem backfill e R2 somente para imagens](TASK-180-start-sem-backfill-e-r2-somente-imagens.md) | Completed | 163, 165, 166 |
 | 181 | [TASK-181 - Retenção recuperável de vídeos](TASK-181-retencao-recuperavel-de-videos.md) | Completed | 163, 165, 180 |
+| 182 | [TASK-182 - Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md) | In Progress | 179, 180, 181 |
 
 ## Ordem operacional recomendada sem bloqueios
 

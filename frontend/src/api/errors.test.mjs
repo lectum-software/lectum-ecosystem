@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { getSafeApiErrorMessage, getSafePublicErrorMessage } from "./errors.ts";
+import {
+  getApiErrorHttpStatus,
+  getSafeApiErrorMessage,
+  getSafePublicErrorMessage,
+} from "./errors.ts";
 
 test("erros padrão de validação externos usam orientação PT-BR", () => {
   for (const message of [
@@ -39,4 +43,12 @@ test("aviso de conexão Google não expõe configuração técnica", () => {
   );
   assert.doesNotMatch(source, /OAuth não está configurado|bloqueado neste ambiente/);
   assert.match(source, /Não é possível conectar sua conta ao Google agora\./);
+});
+
+test("diagnóstico distingue HTTP real do fallback público sem resposta", () => {
+  assert.equal(getApiErrorHttpStatus({ data: { status: 400 } }), 0);
+  assert.equal(getApiErrorHttpStatus({ httpStatus: 503, data: { status: 400 } }), 503);
+  assert.equal(getApiErrorHttpStatus({ response: { status: 503 }, data: { status: 400 } }), 503);
+  for (const status of [null, "503", 0, -1, 600, Infinity])
+    assert.equal(getApiErrorHttpStatus({ response: { status } }), 0);
 });

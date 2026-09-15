@@ -18,10 +18,12 @@ type ApiResponse<T = unknown> = {
 
 class CustomError extends Error {
   public data: unknown;
+  public readonly httpStatus?: number;
 
-  constructor(message: string, data: unknown) {
+  constructor(message: string, data: unknown, httpStatus?: number) {
     super(message);
     this.data = data;
+    this.httpStatus = httpStatus;
   }
 }
 
@@ -61,7 +63,7 @@ export const handleReq = async <T = unknown>({
       const data = res.data;
 
       if (!data.success) {
-        throw new CustomError(getSafeApiErrorMessage(data), data);
+        throw new CustomError(getSafeApiErrorMessage(data), data, res.status);
       }
 
       if (showSuccess && (data.message || successMessage)) {
@@ -93,11 +95,11 @@ export const handleReq = async <T = unknown>({
         toast.error(message);
       }
 
-      throw new CustomError(message, {
-        ...res,
-        status: status || res?.status || 400,
-        method,
-      });
+      throw new CustomError(
+        message,
+        { ...res, status: status || res?.status || 400, method },
+        err?.response?.status ?? (err instanceof CustomError ? err.httpStatus : undefined),
+      );
     });
 
   return response;

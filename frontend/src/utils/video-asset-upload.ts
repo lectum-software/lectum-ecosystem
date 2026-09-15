@@ -1,18 +1,26 @@
-import { Upload } from "tus-js-client";
+import { getApiErrorHttpStatus } from "@/api/errors";
 import type {
   VideoAssetPurpose,
   VideoAssetStatusResponse,
+  VideoAssetUploadEvent,
 } from "@/api/generator/types/video-assets";
 import {
   cancelVideoAssetUpload,
   createVideoAssetUpload,
   getVideoAssetStatus,
+  reportVideoAssetUploadEvent,
 } from "@/api/req/video-assets";
-import { shouldCleanupVideoAssetAfterFailure, TUS_CHUNK_SIZE_BYTES } from "@/utils/video-stream";
+import { shouldCleanupVideoAssetAfterFailure } from "@/utils/video-stream";
+import {
+  boundedUploadNumber,
+  isRetryableVideoUploadStatus,
+  VIDEO_UPLOAD_RETRY_DELAYS_MS,
+  VideoUploadFailure,
+} from "@/utils/video-upload-diagnostics";
+import { uploadBasicDirect, uploadTus } from "@/utils/video-upload-transport";
 
 const PROCESSING_POLL_INTERVAL_MS = 2_500;
 const PROCESSING_TIMEOUT_MS = 15 * 60 * 1_000;
-const RETRY_DELAYS_MS = [0, 1_000, 3_000, 5_000, 10_000];
 
 const canceledError = () => new DOMException("Envio cancelado.", "AbortError");
 
@@ -55,116 +63,6 @@ const wait = (milliseconds: number, signal?: AbortSignal) =>
     signal?.addEventListener("abort", onAbort, { once: true });
   });
 
-const uploadTus = ({
-  file,
-  onProgress,
-  signal,
-  uploadUrl,
-}: {
-  file: File;
-  onProgress?: (percentage: number) => void;
-  signal?: AbortSignal;
-  uploadUrl: string;
-}) =>
-  new Promise<void>((resolve, reject) => {
-    let settled = false;
-    const settle = (callback: () => void) => {
-      if (settled) return;
-      settled = true;
-      signal?.removeEventListener("abort", abort);
-      callback();
-    };
-    const upload = new Upload(file, {
-      chunkSize: TUS_CHUNK_SIZE_BYTES,
-      onError: () =>
-        settle(() => reject(new Error("Não foi possível enviar o vídeo. Tente novamente."))),
-      onProgress: (uploaded, total) => {
-        if (total <= 0) return;
-        onProgress?.(Math.min(95, Math.round((uploaded / total) * 95)));
-      },
-      onSuccess: () => settle(resolve),
-      removeFingerprintOnSuccess: true,
-      retryDelays: RETRY_DELAYS_MS,
-      storeFingerprintForResuming: false,
-      uploadSize: file.size,
-      uploadUrl,
-    });
-
-    function abort() {
-      if (settled) return;
-      settled = true;
-      signal?.removeEventListener("abort", abort);
-      // Interromper transporte não autoriza apagar mídia que o backend já associou.
-      // O cleanup abaixo decide a exclusão pelo endpoint autenticado, não por TUS DELETE.
-      void upload
-        .abort(false)
-        .catch(() => undefined)
-        .then(() => reject(canceledError()));
-    }
-
-    if (signal?.aborted) {
-      abort();
-      return;
-    }
-
-    signal?.addEventListener("abort", abort, { once: true });
-    upload.start();
-  });
-
-const uploadBasicDirect = ({
-  file,
-  onProgress,
-  signal,
-  uploadUrl,
-}: {
-  file: File;
-  onProgress?: (percentage: number) => void;
-  signal?: AbortSignal;
-  uploadUrl: string;
-}) =>
-  new Promise<void>((resolve, reject) => {
-    let settled = false;
-    const request = new XMLHttpRequest();
-    const settle = (callback: () => void) => {
-      if (settled) return;
-      settled = true;
-      signal?.removeEventListener("abort", abort);
-      callback();
-    };
-
-    function abort() {
-      if (settled) return;
-      request.abort();
-      settle(() => reject(canceledError()));
-    }
-
-    request.upload.onprogress = (event) => {
-      if (!event.lengthComputable || event.total <= 0) return;
-      onProgress?.(Math.min(95, Math.round((event.loaded / event.total) * 95)));
-    };
-    request.onerror = () =>
-      settle(() => reject(new Error("Não foi possível enviar o vídeo. Tente novamente.")));
-    request.onabort = () => settle(() => reject(canceledError()));
-    request.onload = () => {
-      if (request.status >= 200 && request.status < 300) {
-        settle(resolve);
-        return;
-      }
-      settle(() => reject(new Error("Não foi possível enviar o vídeo. Tente novamente.")));
-    };
-
-    if (signal?.aborted) {
-      abort();
-      return;
-    }
-
-    signal?.addEventListener("abort", abort, { once: true });
-    const body = new FormData();
-    body.append("file", file, file.name || "video");
-    request.open("POST", uploadUrl);
-    request.send(body);
-  });
-
 type ReadyVideoAsset = VideoAssetStatusResponse & {
   media_url: string;
   status: "ready";
@@ -174,26 +72,42 @@ const waitUntilReady = async (
   assetId: string,
   onProgress?: (percentage: number) => void,
   signal?: AbortSignal,
+  onRetry?: () => void,
 ): Promise<ReadyVideoAsset> => {
   const deadline = Date.now() + PROCESSING_TIMEOUT_MS;
+  let failures = 0;
 
   while (Date.now() < deadline) {
     if (signal?.aborted) throw canceledError();
 
-    const status = await getVideoAssetStatus(assetId, signal);
+    const status = await getVideoAssetStatus(assetId, signal).catch(async (error) => {
+      if (signal?.aborted) throw canceledError();
+      const httpStatus = getApiErrorHttpStatus(error);
+      if (
+        isRetryableVideoUploadStatus(httpStatus) &&
+        failures < VIDEO_UPLOAD_RETRY_DELAYS_MS.length
+      ) {
+        onRetry?.();
+        await wait(VIDEO_UPLOAD_RETRY_DELAYS_MS[failures++], signal);
+        return null;
+      }
+      throw new VideoUploadFailure(httpStatus);
+    });
+    if (!status) continue;
+    failures = 0;
     if (status.status === "ready" && status.media_url) {
       onProgress?.(100);
       return { ...status, media_url: status.media_url, status: "ready" };
     }
     if (status.status === "error" || status.status === "canceled") {
-      throw new Error("Não foi possível processar o vídeo. Selecione o arquivo novamente.");
+      throw new VideoUploadFailure(0, "processing");
     }
 
     onProgress?.(98);
     await wait(PROCESSING_POLL_INTERVAL_MS, signal);
   }
 
-  throw new Error("O vídeo ainda está sendo processado. Tente novamente em instantes.");
+  throw new VideoUploadFailure(0, "processing_timeout");
 };
 
 export const uploadVideoAsset = async ({
@@ -224,18 +138,77 @@ export const uploadVideoAsset = async ({
   });
 
   let uploadCompleted = false;
+  let progress = 0;
+  let retryCount = 0;
+  let wasHidden = document.visibilityState === "hidden";
+  const startedAt = Date.now();
+  const method = provisioned.upload_method === "basic" ? "basic" : "tus";
+  const onVisibilityChange = () => {
+    wasHidden ||= document.visibilityState === "hidden";
+  };
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  const trackProgress = (percentage: number) => {
+    progress = boundedUploadNumber(percentage, 100);
+    onProgress?.(percentage);
+  };
+  const onRetry = () => {
+    retryCount = Math.min(100, retryCount + 1);
+  };
+  const report = (event: VideoAssetUploadEvent["event"], error?: unknown) => {
+    const canceled = error instanceof DOMException && error.name === "AbortError";
+    return reportVideoAssetUploadEvent(provisioned.asset_id, {
+      event,
+      phase: uploadCompleted ? "processing" : "transfer",
+      method,
+      reason: canceled
+        ? "canceled"
+        : error instanceof VideoUploadFailure
+          ? error.reason
+          : error
+            ? "unknown"
+            : "none",
+      httpStatus: error instanceof VideoUploadFailure ? error.httpStatus : 0,
+      progress,
+      retryCount,
+      elapsedMs: boundedUploadNumber(Date.now() - startedAt, 86_400_000),
+      online: navigator.onLine,
+      visibility: document.visibilityState === "hidden" ? "hidden" : "visible",
+      wasHidden,
+    });
+  };
+  void report("transfer_start");
   try {
     if (provisioned.upload_method === "basic") {
-      await uploadBasicDirect({ file, onProgress, signal, uploadUrl: provisioned.upload_url });
+      await uploadBasicDirect({
+        file,
+        onProgress: trackProgress,
+        signal,
+        uploadUrl: provisioned.upload_url,
+      });
     } else {
-      await uploadTus({ file, onProgress, signal, uploadUrl: provisioned.upload_url });
+      await uploadTus({
+        file,
+        onProgress: trackProgress,
+        onRetry,
+        signal,
+        uploadUrl: provisioned.upload_url,
+      });
     }
+    void report("transfer_complete");
     uploadCompleted = true;
-    return await waitUntilReady(provisioned.asset_id, onProgress, signal);
+    const ready = await waitUntilReady(provisioned.asset_id, trackProgress, signal, onRetry);
+    void report("ready");
+    return ready;
   } catch (error) {
+    await report(
+      error instanceof DOMException && error.name === "AbortError" ? "canceled" : "failed",
+      error,
+    );
     if (shouldCleanupVideoAssetAfterFailure(uploadCompleted, error)) {
       await cancelVideoAssetUpload(provisioned.asset_id).catch(() => undefined);
     }
     throw error;
+  } finally {
+    document.removeEventListener("visibilitychange", onVisibilityChange);
   }
 };

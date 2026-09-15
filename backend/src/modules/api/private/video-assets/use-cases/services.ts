@@ -5,9 +5,14 @@ import {
   provisionVideoAssetUpload,
   showOwnedVideoAssetStatus,
 } from "@/modules/video-assets/service";
+import { recordOwnedVideoUploadClientEvent } from "@/modules/video-assets/upload-diagnostics";
 import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import { resolveProfileVideoAccess } from "../../psychologist/free-profile/use-cases/services/profile-video-policy";
-import type { IVideoAssetActionDTO, IVideoAssetUploadDTO } from "../DTOs/IVideoAssetsDTO";
+import type {
+  IVideoAssetActionDTO,
+  IVideoAssetUploadDTO,
+  IVideoAssetUploadEventDTO,
+} from "../DTOs/IVideoAssetsDTO";
 
 const VIDEO_UPLOAD_METHODS_HEADER = "x-lectum-video-upload-methods";
 
@@ -82,6 +87,9 @@ export const createUpload = async (data: IVideoAssetUploadDTO) => {
 
 export const showStatus = (data: IVideoAssetActionDTO) =>
   showOwnedVideoAssetStatus(data.p.id, data.auth.id!);
+
+export const receiveUploadEvent = (data: IVideoAssetUploadEventDTO) =>
+  recordOwnedVideoUploadClientEvent(data.p.id, data.auth.id!, data.b);
 
 export const destroy = (data: IVideoAssetActionDTO) =>
   cancelOwnedVideoAsset(data.p.id, data.auth.id!);

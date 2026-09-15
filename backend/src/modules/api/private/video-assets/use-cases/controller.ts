@@ -4,8 +4,20 @@ import {
   cancelUpload as cancelUploadService,
   createUpload,
   destroy as destroyService,
+  receiveUploadEvent,
   showStatus,
 } from "./services";
+
+export const uploadEvent = async (req: Request, res: Response) => {
+  try {
+    return send(
+      res,
+      await receiveUploadEvent(req as unknown as Parameters<typeof receiveUploadEvent>[0]),
+    );
+  } catch (err) {
+    return error500(res, "video_asset_upload_event", err);
+  }
+};
 
 export const store = async (req: Request, res: Response) => {
   try {
