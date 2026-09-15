@@ -23,7 +23,11 @@ import {
   videoAssetIdFromReference,
   videoAssetPlaybackReference,
 } from "./reference";
-import { createSignedVideoPlayback, signVideoPlaybackToken } from "./signing";
+import {
+  createSignedVideoDownload,
+  createSignedVideoPlayback,
+  signVideoPlaybackToken,
+} from "./signing";
 import { verifyVideoStreamWebhook } from "./webhook";
 
 const createSigningMaterial = () => {
@@ -315,6 +319,54 @@ describe("Cloudflare Stream direct upload", () => {
     assert.equal((await adapter.getVideo(providerUid)).status, "ready");
   });
 
+  it("consulta e cria MP4 de download sob demanda sem expor token da conta", async () => {
+    const config = createConfig();
+    const providerUid = "0123456789abcdef0123456789abcdef";
+    const calls: Array<{ init?: RequestInit; url: string }> = [];
+    const fetcher = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      const url = String(input);
+      calls.push({ init, url });
+
+      if (calls.length === 1) {
+        return Response.json({
+          result: {},
+          success: true,
+        });
+      }
+
+      return Response.json({
+        result: {
+          default: {
+            percentComplete: 0,
+            status: "inprogress",
+          },
+        },
+        success: true,
+      });
+    }) as typeof fetch;
+    const adapter = new CloudflareStreamAdapter(config, fetcher);
+    const download = await adapter.ensureVideoDownload(providerUid);
+
+    assert.deepEqual(download, {
+      percentComplete: 0,
+      status: "inprogress",
+    });
+    assert.deepEqual(
+      calls.map((call) => [call.url, call.init?.method ?? "GET"]),
+      [
+        [
+          "https://api.cloudflare.com/client/v4/accounts/account_123/stream/0123456789abcdef0123456789abcdef/downloads",
+          "GET",
+        ],
+        [
+          "https://api.cloudflare.com/client/v4/accounts/account_123/stream/0123456789abcdef0123456789abcdef/downloads",
+          "POST",
+        ],
+      ],
+    );
+    assert.doesNotMatch(JSON.stringify(download), /private-api-token/);
+  });
+
   it("importa URL HTTPS como vídeo privado e associa o creator ao ativo interno", async () => {
     const providerUid = "0123456789abcdef0123456789abcdef";
     let capturedInit: RequestInit | undefined;
@@ -451,6 +503,29 @@ describe("Cloudflare Stream private playback", () => {
     const playback = createSignedVideoPlayback(config, providerUid);
     assert.match(playback.hlsUrl, /\/manifest\/video\.m3u8$/);
     assert.match(playback.thumbnailUrl, /\/thumbnails\/thumbnail\.jpg\?/);
+  });
+
+  it("gera URL assinada de MP4 original somente para download administrativo", () => {
+    const config = createConfig();
+    const providerUid = "0123456789abcdef0123456789abcdef";
+    const download = createSignedVideoDownload(config, providerUid, {
+      fileName: "Ana Rúbia - Ansiedade Lectum.mp4",
+      original: true,
+    });
+    const [, encodedToken] =
+      download.downloadUrl.match(/cloudflarestream\.com\/([^/]+)\/downloads\/default\.mp4/) ?? [];
+    assert.ok(encodedToken);
+    const [, encodedPayload] = encodedToken.split(".");
+    const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8"));
+
+    assert.equal(payload.sub, providerUid);
+    assert.equal(payload.downloadable, true);
+    assert.deepEqual(payload.flags, { original: true });
+    assert.match(
+      download.downloadUrl,
+      /\/downloads\/default\.mp4\?filename=Ana-Rubia-Ansiedade-Lectum$/,
+    );
+    assert.ok(download.expiresAt > new Date());
   });
 
   it("verifica HMAC sobre os bytes crus e rejeita alteração ou timestamp vencido", () => {

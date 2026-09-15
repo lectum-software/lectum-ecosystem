@@ -537,3 +537,4 @@ Formato recomendado:
 - [ADR-0501 — Retenção recuperável de vídeos](0501-retencao-recuperavel-de-videos.md)
 
 - [ADR-0502 — Upload móvel retomável e diagnóstico seguro](0502-upload-movel-retomavel-e-diagnostico.md)
+- [ADR-0503 — Downloads de vídeos no Admin de Comunidades](0503-admin-download-videos-comunidade.md)

@@ -175,7 +175,13 @@ export const ContentAuthorIdentity = ({
   item: AdminCommunityContentItem;
 }) => <AuthorIdentity author={item.author} className={className} />;
 
-export const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {
+export const ContentItemMain = ({
+  item,
+  slug,
+}: {
+  item: AdminCommunityContentItem;
+  slug: string;
+}) => {
   const mediaTextGridClass = cn(
     "mt-3 grid min-w-0 gap-3",
     item.media && "sm:grid-cols-[112px_1fr]",
@@ -187,7 +193,7 @@ export const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) =
         <ContentItemHeader item={item} />
         <ContentAuthorIdentity className="mt-3" item={item} />
         <div className={mediaTextGridClass}>
-          <ContentMediaThumbnail item={item} />
+          <ContentMediaThumbnail communityId={slug} item={item} />
           <div className="min-w-0">
             <ContentItemBody item={item} />
           </div>
@@ -201,7 +207,7 @@ export const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) =
       <ContentItemHeader item={item} />
       <ContentAuthorIdentity className="mt-3" item={item} />
       <div className={mediaTextGridClass}>
-        <ContentMediaThumbnail item={item} />
+        <ContentMediaThumbnail communityId={slug} item={item} />
         <ContentItemBody item={item} />
       </div>
     </div>
@@ -217,7 +223,7 @@ export const ContentItemCard = ({
 }) => (
   <article className="rounded-2xl border border-border bg-surface p-4">
     <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
-      <ContentItemMain item={item} />
+      <ContentItemMain item={item} slug={slug} />
       <div className="flex justify-end gap-2 lg:flex-col">
         <Link
           aria-label="Ver analytics do conteúdo no Admin"

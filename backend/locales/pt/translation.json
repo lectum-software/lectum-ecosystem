@@ -240,6 +240,8 @@
     "admin_community_suggestion_block_title_required": "Informe um título para o bloco de demanda.",
     "patient_profile_location_pair_required": "Informe estado e cidade ou deixe ambos em branco.",
     "video_stream_unavailable": "O serviço de vídeo está temporariamente indisponível. Tente novamente em instantes.",
+    "video_download_preparing": "O vídeo está sendo preparado para download.",
+    "video_download_ready": "Download do vídeo disponível.",
     "video_asset_not_found": "Este vídeo não está disponível.",
     "video_upload_invalid": "Selecione um vídeo válido dentro do limite permitido.",
     "video_upload_stream_required": "Envie vídeos pelo fluxo de streaming. Atualize a página e tente novamente.",

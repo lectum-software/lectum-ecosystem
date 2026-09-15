@@ -116,9 +116,9 @@ const PII_VALUE_PATTERNS = [
 const containsPattern = (value: string, patterns: readonly RegExp[]) =>
   patterns.some((pattern) => pattern.test(value));
 
-const SIGNED_MEDIA_URL_KEYS = new Set(["hlsurl", "thumbnailurl"]);
+const SIGNED_MEDIA_URL_KEYS = new Set(["downloadurl", "hlsurl", "thumbnailurl"]);
 const SIGNED_CLOUDFLARE_STREAM_URL =
-  /^https:\/\/customer-[a-zA-Z0-9_-]{1,128}\.cloudflarestream\.com\/eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\/(?:manifest\/video\.m3u8|thumbnails\/thumbnail\.jpg)(?:\?[^\s#]*)?$/;
+  /^https:\/\/customer-[a-zA-Z0-9_-]{1,128}\.cloudflarestream\.com\/eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\/(?:downloads\/default\.mp4|manifest\/video\.m3u8|thumbnails\/thumbnail\.jpg)(?:\?[^\s#]*)?$/;
 
 const isAllowedSignedMediaUrl = (
   key: string | undefined,

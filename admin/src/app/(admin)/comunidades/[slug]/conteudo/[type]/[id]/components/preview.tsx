@@ -12,6 +12,7 @@ import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { isAdminPublicMediaUrl, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
+import { ContentVideoDownloadActions } from "../../../../components/content-video-download-actions";
 
 import {
   ContentStatusBadge,
@@ -159,7 +160,17 @@ export const ContentMediaPreview = ({
   }
 
   if (videoSrc)
-    return <ContentVideoPreview label={`Vídeo de ${contentTitle(detail)}`} src={videoSrc} />;
+    return (
+      <div className="mx-auto grid w-full max-w-[220px] gap-2 xl:ml-0 xl:mr-auto">
+        <ContentVideoPreview label={`Vídeo de ${contentTitle(detail)}`} src={videoSrc} />
+        <ContentVideoDownloadActions
+          allowArtDownload={detail.author.role === "psicologo"}
+          communityId={detail.community.slug}
+          targetId={detail.content.id}
+          targetType={detail.content.type}
+        />
+      </div>
+    );
 
   return (
     <div className="grid min-h-48 place-items-center rounded-[24px] border border-border bg-surface-muted p-6 text-center text-sm font-bold text-muted">

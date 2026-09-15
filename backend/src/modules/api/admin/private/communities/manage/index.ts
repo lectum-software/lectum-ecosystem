@@ -10,13 +10,17 @@ import {
   create,
   createRule,
   deleteRule,
+  getContentVideoArtRenderJob,
+  getContentVideoArtRenderJobFile,
   list,
+  prepareContentOriginalVideoDownload,
   ranking,
   removeContent,
   reports,
   resolveReports,
   rules,
   show,
+  startContentVideoArtRenderJob,
   statistics,
   status,
   update,
@@ -27,6 +31,8 @@ import {
   avatarValidator,
   contentDetailValidator,
   contentValidator,
+  contentVideoDownloadJobValidator,
+  contentVideoDownloadValidator,
   createValidator,
   deleteRuleValidator,
   listValidator,
@@ -52,6 +58,26 @@ routes.patch("/:id/status", statusValidator, status);
 routes.get("/:id/statistics", statisticsValidator, statistics);
 routes.get("/:id/content", contentValidator, content);
 routes.get("/:id/content/:targetType/:targetId/detail", contentDetailValidator, contentDetail);
+routes.post(
+  "/:id/content/:targetType/:targetId/video-downloads/original",
+  contentVideoDownloadValidator,
+  prepareContentOriginalVideoDownload,
+);
+routes.post(
+  "/:id/content/:targetType/:targetId/video-downloads/art/render-jobs",
+  contentVideoDownloadValidator,
+  startContentVideoArtRenderJob,
+);
+routes.get(
+  "/:id/content/:targetType/:targetId/video-downloads/art/render-jobs/:jobId",
+  contentVideoDownloadJobValidator,
+  getContentVideoArtRenderJob,
+);
+routes.get(
+  "/:id/content/:targetType/:targetId/video-downloads/art/render-jobs/:jobId/file",
+  contentVideoDownloadJobValidator,
+  getContentVideoArtRenderJobFile,
+);
 routes.post("/:id/content/:targetType/:targetId/remove", removeContentValidator, removeContent);
 routes.get("/:id/ranking", rankingValidator, ranking);
 routes.post("/:id/reports/:targetType/:targetId/resolve", resolveReportsValidator, resolveReports);

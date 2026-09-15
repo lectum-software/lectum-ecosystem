@@ -42,3 +42,15 @@ export type SignedVideoPlayback = {
   hlsUrl: string;
   thumbnailUrl: string;
 };
+
+export type SignedVideoDownload = {
+  downloadUrl: string;
+  expiresAt: Date;
+};
+
+export type VideoStreamDownloadStatus = "error" | "inprogress" | "ready";
+
+export type VideoStreamDownloadDetails = {
+  percentComplete: number | null;
+  status: VideoStreamDownloadStatus;
+};

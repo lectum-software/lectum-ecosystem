@@ -58,7 +58,7 @@ type VideoServiceEnvelope = {
   success?: unknown;
 };
 
-type ShareRenderTarget = {
+export type ShareRenderTarget = {
   cardLabel: string;
   fileName: string;
   mediaUrl: string;
@@ -69,6 +69,14 @@ type ShareRenderTarget = {
   replyId: string | null;
   responseText: string | null;
   sourceText: string;
+};
+
+export type ResolvedShareRenderTarget = ShareRenderTarget & ShareRenderSource;
+
+type ShareRenderJobScope = {
+  ownerId: string;
+  postId: string;
+  replyId: string | null;
 };
 
 export type RenderShareArtifactJobFileResult =
@@ -162,10 +170,13 @@ const isVideoJobData = (value: unknown): value is VideoServiceJobData => {
   );
 };
 
-const jobScope = (data: IPostRenderShareArtifactJobDTO) => ({
-  ownerId: data.auth.id ?? "",
-  postId: data.p.id,
-  replyId: data.p.replyId ?? null,
+const targetJobScope = (
+  ownerId: string,
+  target: Pick<ShareRenderTarget, "postId" | "replyId">,
+): ShareRenderJobScope => ({
+  ownerId,
+  postId: target.postId,
+  replyId: target.replyId,
 });
 
 const jobResponse = (status: number, data: VideoServiceJobData, handle: string): Resolve => ({
@@ -198,7 +209,11 @@ const mapVideoServiceFailure = async (response: Response | null): Promise<Resolv
   return renderUnavailable();
 };
 
-const normalizeText = (value: string | null | undefined, fallback: string, maxLength: number) => {
+export const normalizeShareText = (
+  value: string | null | undefined,
+  fallback: string,
+  maxLength: number,
+) => {
   const normalized = String(value ?? "")
     .replace(/\s+/gu, " ")
     .trim();
@@ -217,7 +232,9 @@ const slugifyFileSegment = (value: string) => {
   return normalized || "video";
 };
 
-const buildShareFileName = (professionalName: string, sourceText: string) => {
+const normalizeText = normalizeShareText;
+
+export const buildShareFileName = (professionalName: string, sourceText: string) => {
   const name = slugifyFileSegment(professionalName);
   const context = slugifyFileSegment(sourceText);
   return `${name}-${context}-Lectum.mp4`;
@@ -288,7 +305,7 @@ const streamMediaSourceUrl = async (
   };
 };
 
-const resolveSourceUrl = async (target: ShareRenderTarget, ownerId: string) =>
+export const resolveShareRenderSourceUrl = async (target: ShareRenderTarget, ownerId: string) =>
   (await streamMediaSourceUrl(target.mediaUrl, ownerId)) ??
   resolveLegacyPostMediaSourceUrlForRender(target.mediaUrl);
 
@@ -339,7 +356,7 @@ const replyTargetSelect = {
 
 const resolveShareRenderTarget = async (
   data: IPostRenderShareArtifactDTO | IPostRenderShareArtifactJobDTO,
-): Promise<Resolve | (ShareRenderTarget & ShareRenderSource)> => {
+): Promise<Resolve | ResolvedShareRenderTarget> => {
   const unauthorized = ensureCommunityActor(data);
   if (unauthorized) return unauthorized;
 
@@ -380,7 +397,7 @@ const resolveShareRenderTarget = async (
       responseText: normalizeText(reply.content, "Resposta profissional", 180),
       sourceText,
     };
-    const source = await resolveSourceUrl(target, reply.author.id);
+    const source = await resolveShareRenderSourceUrl(target, reply.author.id);
     return source ? { ...target, ...source } : invalidRenderMedia();
   }
 
@@ -412,23 +429,23 @@ const resolveShareRenderTarget = async (
     responseText: normalizeText(post.content, "Conteúdo profissional", 180),
     sourceText,
   };
-  const source = await resolveSourceUrl(target, post.author.id);
+  const source = await resolveShareRenderSourceUrl(target, post.author.id);
   return source ? { ...target, ...source } : invalidRenderMedia();
 };
 
 const isResolvedTarget = (
   value: Awaited<ReturnType<typeof resolveShareRenderTarget>>,
-): value is ShareRenderTarget & ShareRenderSource =>
+): value is ResolvedShareRenderTarget =>
   !(typeof value === "object" && value !== null && "success" in value && value.success === false);
 
 export const renderShareArtifact = async (data: IPostRenderShareArtifactDTO): Promise<Resolve> =>
   startRenderShareArtifactJob(data);
 
-export const startRenderShareArtifactJob = async (
-  data: IPostRenderShareArtifactJobDTO,
-): Promise<Resolve> => {
-  const target = await resolveShareRenderTarget(data);
-  if (!isResolvedTarget(target)) return target;
+export const startResolvedShareRenderArtifactJob = async (input: {
+  ownerId: string;
+  target: ResolvedShareRenderTarget;
+}): Promise<Resolve> => {
+  const { ownerId, target } = input;
 
   const response = await requestVideoService("/api/private/jobs/social-share", {
     body: JSON.stringify({
@@ -452,20 +469,36 @@ export const startRenderShareArtifactJob = async (
   const envelope = await readVideoServiceEnvelope(response);
   if (envelope?.success !== true || !isVideoJobData(envelope.data)) return renderUnavailable();
 
-  const handle = createShareRenderJobHandle(envelope.data.job_id, jobScope(data), getJwtSecret());
+  const handle = createShareRenderJobHandle(
+    envelope.data.job_id,
+    targetJobScope(ownerId, target),
+    getJwtSecret(),
+  );
   if (!handle) return renderUnavailable();
   return jobResponse(response.status, envelope.data, handle);
 };
 
-export const getRenderShareArtifactJob = async (
+export const startRenderShareArtifactJob = async (
   data: IPostRenderShareArtifactJobDTO,
 ): Promise<Resolve> => {
-  const handle = data.p.jobId?.trim() || "";
-  const jobId = resolveShareRenderJobId(handle, jobScope(data), getJwtSecret());
-  if (!jobId) return invalidRenderTarget(404);
-
   const target = await resolveShareRenderTarget(data);
   if (!isResolvedTarget(target)) return target;
+
+  return startResolvedShareRenderArtifactJob({ ownerId: data.auth.id ?? "", target });
+};
+
+export const getResolvedShareRenderArtifactJob = async (input: {
+  jobId?: string | null;
+  ownerId: string;
+  target: ResolvedShareRenderTarget;
+}): Promise<Resolve> => {
+  const handle = input.jobId?.trim() || "";
+  const jobId = resolveShareRenderJobId(
+    handle,
+    targetJobScope(input.ownerId, input.target),
+    getJwtSecret(),
+  );
+  if (!jobId) return invalidRenderTarget(404);
 
   const response = await requestVideoService(`/api/private/jobs/${encodeURIComponent(jobId)}`, {
     method: "GET",
@@ -478,6 +511,19 @@ export const getRenderShareArtifactJob = async (
 
   if (envelope.data.job_id !== jobId) return renderUnavailable();
   return jobResponse(response.status, envelope.data, handle);
+};
+
+export const getRenderShareArtifactJob = async (
+  data: IPostRenderShareArtifactJobDTO,
+): Promise<Resolve> => {
+  const target = await resolveShareRenderTarget(data);
+  if (!isResolvedTarget(target)) return target;
+
+  return getResolvedShareRenderArtifactJob({
+    jobId: data.p.jobId,
+    ownerId: data.auth.id ?? "",
+    target,
+  });
 };
 
 const fileHeaders = (target: ShareRenderTarget, response: Response) => {
@@ -497,19 +543,23 @@ const fileHeaders = (target: ShareRenderTarget, response: Response) => {
   return headers;
 };
 
-export const getRenderShareArtifactJobFile = async (
-  data: IPostRenderShareArtifactJobDTO,
-): Promise<RenderShareArtifactJobFileResult> => {
-  const handle = data.p.jobId?.trim() || "";
-  const jobId = resolveShareRenderJobId(handle, jobScope(data), getJwtSecret());
+export const getResolvedShareRenderArtifactJobFile = async (input: {
+  jobId?: string | null;
+  ownerId: string;
+  range?: string;
+  target: ResolvedShareRenderTarget;
+}): Promise<RenderShareArtifactJobFileResult> => {
+  const handle = input.jobId?.trim() || "";
+  const jobId = resolveShareRenderJobId(
+    handle,
+    targetJobScope(input.ownerId, input.target),
+    getJwtSecret(),
+  );
   if (!jobId) return invalidRenderTarget(404);
 
-  const target = await resolveShareRenderTarget(data);
-  if (!isResolvedTarget(target)) return target;
-
   const requestInit: RequestInit = { method: "GET" };
-  if (data.range) {
-    requestInit.headers = { Range: data.range };
+  if (input.range) {
+    requestInit.headers = { Range: input.range };
   }
 
   const response = await requestVideoService(
@@ -522,8 +572,22 @@ export const getRenderShareArtifactJobFile = async (
 
   return {
     body: response.body,
-    headers: fileHeaders(target, response),
+    headers: fileHeaders(input.target, response),
     kind: "file",
     status: response.status,
   };
+};
+
+export const getRenderShareArtifactJobFile = async (
+  data: IPostRenderShareArtifactJobDTO,
+): Promise<RenderShareArtifactJobFileResult> => {
+  const target = await resolveShareRenderTarget(data);
+  if (!isResolvedTarget(target)) return target;
+
+  return getResolvedShareRenderArtifactJobFile({
+    jobId: data.p.jobId,
+    ownerId: data.auth.id ?? "",
+    range: data.range,
+    target,
+  });
 };

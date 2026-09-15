@@ -17,4 +17,10 @@ export {
   removeContent,
   showContentDetail,
 } from "./services/content-operations";
+export {
+  getContentVideoArtRenderJob,
+  getContentVideoArtRenderJobFile,
+  prepareContentOriginalVideoDownload,
+  startContentVideoArtRenderJob,
+} from "./services/content-video-downloads";
 export { listActivities, listReports, resolveReports } from "./services/report-operations";

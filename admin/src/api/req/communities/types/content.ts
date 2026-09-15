@@ -184,6 +184,36 @@ export type AdminCommunityContentAnalyticsDetail = {
   };
 };
 
+export type AdminCommunityVideoDownloadTargetType = "comment" | "post" | "reply";
+
+export type AdminCommunityContentOriginalVideoDownload = {
+  available: boolean;
+  download_url: string | null;
+  expires_at: string | null;
+  file_name: string | null;
+  percent_complete: number | null;
+  retry_after_ms: number;
+  status: "error" | "inprogress" | "ready";
+};
+
+export type AdminCommunityContentVideoArtRenderJob = {
+  completed_at: string | null;
+  created_at: string;
+  download_url: null;
+  failed_at: string | null;
+  failure_code: "canceled" | "invalid_video" | "processing_failed" | null;
+  job_id: string;
+  output_size_bytes: number | null;
+  progress: number;
+  started_at: string | null;
+  status: "cancel_requested" | "canceled" | "completed" | "failed" | "processing" | "queued";
+};
+
+export type AdminCommunityContentVideoArtFile = {
+  blob: Blob;
+  file_name: string;
+};
+
 export type AdminCommunityRemoveContentInput = {
   confirmation: string;
   reason: string;

@@ -388,8 +388,11 @@ Templates/shells devem viver em `frontend/src/templates`.
 - O endpoint canônico de emissão é `GET /api/public/video-assets/:id/playback`. O path privado
   persistido é tratado como identificador opaco e alias read-only temporário para compatibilidade;
   uploads, status e exclusão permanecem sob autenticação obrigatória.
-- Safari/iPhone usa HLS nativo; Chrome/Android/Admin usa `hls.js` quando MSE está disponível. Em
-  nenhum caso o download/original é habilitado pelo token.
+- Safari/iPhone usa HLS nativo; Chrome/Android/Admin usa `hls.js` quando MSE está disponível. Tokens
+  de playback público/privado continuam sem download. A exceção é o endpoint privado do Admin
+  introduzido na TASK-183: após autenticação administrativa e resolução de um conteúdo específico,
+  o backend pode emitir URL de MP4 de download do Cloudflare Stream com `downloadable` e
+  `flags.original`, ou fonte pública legada R2, sem expor isso ao player nem a rotas públicas.
 - O backend precisa manter a configuracao Stream ativa para upload, associacao e playback. A flag
   publica de upload nao controla mais a escolha de transporte: novos videos sempre dependem do
   Stream. Em runtime publicado, a flag backend legada `CLOUDFLARE_STREAM_ENABLED` nao pode
@@ -492,6 +495,10 @@ Templates/shells devem viver em `frontend/src/templates`.
   status HTTP e estado/progresso do job quando existirem), mas nunca volta a gerar video no browser
   nem baixa o original sem arte quando o job falha. A UI nao pode expor mensagem crua de erro, stack,
   SQL, URL, segredo, PII, payload tecnico ou detalhe de provider.
+- O Admin pode iniciar a mesma operação `social_share` para conteúdos de Comunidades de autoria de
+  psicólogo, usando os mesmos metadados, rótulos e `fileName` do fluxo do psicólogo. O job continua
+  efêmero, sem persistência de arte no R2 e sem endpoint público; apenas o Admin autenticado recebe o
+  arquivo final por proxy do backend.
 - Novas operações, como marca d'água ou thumbnail, entram como job/processador explícito com ADR,
   limites e retenção próprios; não devem ser adicionadas ao backend HTTP.
 - O backend acessa essa aplicação somente por cliente server-to-server, usando origem privada

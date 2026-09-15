@@ -10,12 +10,16 @@ export {
   uploadAdminCommunityAvatar,
 } from "./activity-settings";
 export {
+  downloadAdminCommunityContentVideoArtRenderJobFile,
   getAdminCommunityContent,
   getAdminCommunityContentDetail,
+  getAdminCommunityContentVideoArtRenderJob,
   getAdminCommunityRanking,
   getAdminCommunityReports,
+  prepareAdminCommunityContentOriginalVideoDownload,
   removeAdminCommunityContent,
   resolveAdminCommunityReports,
+  startAdminCommunityContentVideoArtRenderJob,
 } from "./content-reports";
 export {
   createAdminCommunity,
@@ -28,11 +32,15 @@ export type {
   AdminCommunityContentAnalyticsDetail,
   AdminCommunityContentDetailQuery,
   AdminCommunityContentItem,
+  AdminCommunityContentOriginalVideoDownload,
   AdminCommunityContentQuery,
+  AdminCommunityContentVideoArtFile,
+  AdminCommunityContentVideoArtRenderJob,
   AdminCommunityRankingQuery,
   AdminCommunityRemoveContentInput,
   AdminCommunityRemoveContentResult,
   AdminCommunityResolveReportsInput,
+  AdminCommunityVideoDownloadTargetType,
 } from "./types/content";
 export type {
   AdminCommunitiesDashboard,

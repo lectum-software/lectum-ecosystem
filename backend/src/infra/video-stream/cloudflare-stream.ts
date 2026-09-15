@@ -1,11 +1,13 @@
 import type { VideoStreamConfig } from "./config";
-import { createSignedVideoPlayback } from "./signing";
+import { createSignedVideoDownload, createSignedVideoPlayback } from "./signing";
 import type {
   ImportVideoByUrlInput,
   ProvisionedVideoUpload,
   ProvisionVideoUploadInput,
+  SignedVideoDownload,
   VideoAssetUploadMethod,
   VideoStreamDetails,
+  VideoStreamDownloadDetails,
 } from "./types";
 
 type CloudflareVideo = {
@@ -25,6 +27,17 @@ type CloudflareEnvelope<T> = {
 type CloudflareDirectUploadResult = {
   uid?: unknown;
   uploadURL?: unknown;
+};
+
+type CloudflareDownload = {
+  percentComplete?: unknown;
+  status?: unknown;
+  url?: unknown;
+};
+
+type CloudflareDownloadsResult = {
+  audio?: CloudflareDownload;
+  default?: CloudflareDownload;
 };
 
 const API_BASE = "https://api.cloudflare.com/client/v4";
@@ -72,6 +85,20 @@ const toVideoStreamDetails = (
     providerUid,
     status: classifyStatus(video),
     width: toDimension(video.input?.width),
+  };
+};
+
+const toVideoDownloadDetails = (
+  download?: CloudflareDownload | null,
+): VideoStreamDownloadDetails | null => {
+  if (!download || typeof download !== "object") return null;
+  const status = typeof download.status === "string" ? download.status.trim().toLowerCase() : "";
+  if (status !== "ready" && status !== "inprogress" && status !== "error") return null;
+  const percent = Number(download.percentComplete);
+
+  return {
+    percentComplete: Number.isFinite(percent) && percent >= 0 ? Math.min(100, percent) : null,
+    status,
   };
 };
 
@@ -446,6 +473,62 @@ export class CloudflareStreamAdapter {
     return details;
   }
 
+  async getVideoDownload(providerUid: string): Promise<VideoStreamDownloadDetails | null> {
+    if (!isCloudflareStreamVideoUid(providerUid)) {
+      throw new VideoStreamProviderError("get_download_contract", null);
+    }
+    const response = await this.request(
+      `/${encodeURIComponent(providerUid)}/downloads`,
+      {},
+      "get_download",
+    );
+    let envelope: CloudflareEnvelope<CloudflareDownloadsResult>;
+
+    try {
+      envelope = (await response.json()) as CloudflareEnvelope<CloudflareDownloadsResult>;
+    } catch {
+      throw new VideoStreamProviderError("get_download_contract", response.status);
+    }
+
+    if (envelope.success !== true || !envelope.result || typeof envelope.result !== "object") {
+      throw new VideoStreamProviderError("get_download_contract", response.status);
+    }
+
+    return toVideoDownloadDetails(envelope.result.default ?? null);
+  }
+
+  async createVideoDownload(providerUid: string): Promise<VideoStreamDownloadDetails> {
+    if (!isCloudflareStreamVideoUid(providerUid)) {
+      throw new VideoStreamProviderError("create_download_contract", null);
+    }
+    const response = await this.request(
+      `/${encodeURIComponent(providerUid)}/downloads`,
+      { method: "POST" },
+      "create_download",
+    );
+    let envelope: CloudflareEnvelope<CloudflareDownloadsResult>;
+
+    try {
+      envelope = (await response.json()) as CloudflareEnvelope<CloudflareDownloadsResult>;
+    } catch {
+      throw new VideoStreamProviderError("create_download_contract", response.status);
+    }
+
+    const details = envelope.result ? toVideoDownloadDetails(envelope.result.default) : null;
+    if (envelope.success !== true || !details) {
+      throw new VideoStreamProviderError("create_download_contract", response.status);
+    }
+
+    return details;
+  }
+
+  async ensureVideoDownload(providerUid: string): Promise<VideoStreamDownloadDetails> {
+    const current = await this.getVideoDownload(providerUid);
+    if (current) return current;
+
+    return this.createVideoDownload(providerUid);
+  }
+
   async deleteVideo(providerUid: string) {
     if (!isCloudflareStreamVideoUid(providerUid)) {
       throw new VideoStreamProviderError("delete_video_contract", null);
@@ -458,5 +541,15 @@ export class CloudflareStreamAdapter {
       throw new VideoStreamProviderError("create_playback_contract", null);
     }
     return createSignedVideoPlayback(this.config, providerUid);
+  }
+
+  createDownload(
+    providerUid: string,
+    options: { fileName?: string | null; original?: boolean } = {},
+  ): SignedVideoDownload {
+    if (!isCloudflareStreamVideoUid(providerUid)) {
+      throw new VideoStreamProviderError("create_download_url_contract", null);
+    }
+    return createSignedVideoDownload(this.config, providerUid, options);
   }
 }

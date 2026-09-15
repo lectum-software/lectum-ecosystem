@@ -872,6 +872,14 @@ o legado `community_post.media_url/media_type`. Jobs em andamento podem ser reap
 em memoria na sessao do navegador para evitar duplicacao quando o render demora; nenhum novo campo,
 registro persistido ou cache R2 e criado.
 
+Complemento TASK-183 (2026-09-15): o Admin pode baixar vídeos de conteúdos de Comunidades sem criar
+modelo novo. O download com arte reutiliza os render-jobs efêmeros `social_share`, os mesmos
+metadados e o mesmo `fileName` do fluxo do psicólogo, mas a autorização é administrativa e continua
+sem persistir `post_share_artifacts` ou objetos R2 novos. O download original de vídeos Stream usa
+consulta/criação do MP4 de download no Cloudflare Stream e URL assinada curta emitida pelo backend
+somente para o Admin; vídeos legados R2 usam a fonte pública já validada de `posts/media/`. Não há
+migration, backfill, seed, limpeza ou alteração de dados históricos.
+
 ### Ranking de mentores (TASK-27 - derivado)
 
 Nao ha modelo persistido obrigatorio nesta etapa. O ranking e **derivado** de eventos persistidos por comunidade e do entitlement profissional ativo (`professional_subscription`, PRD secao 10: so Plano Profissional). A formula foi aprovada, ajustada pelo PDF local `Sistema de Ranking de Mentores.pdf` em ADR-0070 e recalibrada em 2026-07-30 para priorizar relacionamento util e cobertura real:

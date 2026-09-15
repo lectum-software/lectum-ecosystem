@@ -8,6 +8,7 @@ import type { AdminCommunityContentItem } from "@/api/req/communities";
 import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { isAdminPublicMediaUrl, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { cn } from "@/lib/utils";
+import { ContentVideoDownloadActions } from "./content-video-download-actions";
 
 export const ContentVideoMiniplayer = ({ label, src }: { label: string; src: string }) => {
   const expandedVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -188,7 +189,13 @@ export const ContentVideoMiniplayer = ({ label, src }: { label: string; src: str
   );
 };
 
-export const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentItem }) => {
+export const ContentMediaThumbnail = ({
+  communityId,
+  item,
+}: {
+  communityId: string;
+  item: AdminCommunityContentItem;
+}) => {
   if (!item.media) return null;
 
   const mediaType = item.media.media_type.toLowerCase();
@@ -197,11 +204,11 @@ export const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentIte
   const videoSrc = isVideo ? resolveAdminMediaUrl(item.media.media_url) : null;
   const mediaLabel = isVideo ? "Miniplayer de vídeo publicado" : "Miniatura de imagem publicada";
 
-  return (
+  const mediaFrame = (
     <div
       className={cn(
         "relative w-full overflow-hidden rounded-2xl border border-border bg-surface-muted",
-        isVideo ? "aspect-[9/16] max-w-40 sm:w-28 sm:max-w-none" : "h-24 sm:h-28 sm:w-28",
+        isVideo ? "aspect-[9/16]" : "h-24 sm:h-28 sm:w-28",
       )}
     >
       {imageSrc ? (
@@ -221,6 +228,21 @@ export const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentIte
           <span>Mídia publicada</span>
         </div>
       ) : null}
+    </div>
+  );
+
+  if (!isVideo) return mediaFrame;
+
+  return (
+    <div className="grid w-full max-w-40 gap-2 sm:w-28 sm:max-w-none">
+      {mediaFrame}
+      <ContentVideoDownloadActions
+        allowArtDownload={item.author.role === "psicologo"}
+        compact
+        communityId={communityId}
+        targetId={item.content_id}
+        targetType={item.type}
+      />
     </div>
   );
 };

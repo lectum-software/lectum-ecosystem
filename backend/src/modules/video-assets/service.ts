@@ -356,6 +356,71 @@ export const authorizeAdminVideoAssetPlayback = async (assetId: string) => {
   return playbackResponse(asset);
 };
 
+export const authorizeAdminVideoAssetOriginalDownload = async ({
+  assetId,
+  fileName,
+}: {
+  assetId: string;
+  fileName?: string | null;
+}) => {
+  const repository = new VideoAssetRepository();
+  const asset = await repository.findById(assetId);
+  if (
+    asset?.status !== "ready" ||
+    asset.provider !== "cloudflare_stream" ||
+    !isCloudflareStreamVideoUid(asset.provider_uid)
+  ) {
+    return assetNotFound();
+  }
+
+  const provider = getVideoStreamProvider();
+  if (!provider) return streamUnavailable();
+
+  try {
+    const download = await provider.ensureVideoDownload(asset.provider_uid);
+
+    if (download.status !== "ready") {
+      return {
+        allowSignedMediaUrls: true,
+        status: 200,
+        ...msg("video_download_preparing", {}),
+        data: {
+          available: false,
+          download_url: null,
+          expires_at: null,
+          file_name: null,
+          percent_complete: download.percentComplete,
+          retry_after_ms: 5_000,
+          status: download.status,
+        },
+      };
+    }
+
+    const signed = provider.createDownload(asset.provider_uid, {
+      fileName,
+      original: true,
+    });
+
+    return {
+      allowSignedMediaUrls: true,
+      status: 200,
+      ...msg("video_download_ready", {}),
+      data: {
+        available: true,
+        download_url: signed.downloadUrl,
+        expires_at: signed.expiresAt.toISOString(),
+        file_name: fileName || "lectum-video-original.mp4",
+        percent_complete: 100,
+        retry_after_ms: 0,
+        status: "ready",
+      },
+    };
+  } catch (providerError) {
+    console.warn("[VIDEO_STREAM_DOWNLOAD_DEGRADED]", safeProviderLog(providerError));
+    return streamUnavailable();
+  }
+};
+
 export const resolveReadyOwnedVideoAssetReference = async (input: {
   contextId: string;
   ownerId: string;
