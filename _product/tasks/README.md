@@ -2,7 +2,9 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Em execução: [TASK-184 — Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md). Unificar aquisição imediata do vídeo antes do preview, com cópia temporária privada, memória limitada por parte e transporte direto ao Stream; incidente da galeria Redmi ainda depende de validação física.
+Em execução: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Corrigir compatibilidade do SDK/CSP e concluir configuração Preview/Production, publicando código somente em homolog.
+
+Pendente de teste físico: [TASK-184 — Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md). Unificar aquisição imediata do vídeo antes do preview, com cópia temporária privada, memória limitada por parte e transporte direto ao Stream; incidente da galeria Redmi ainda depende de validação física.
 
 Concluída: [TASK-185 — Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md). Ajusta o pull-to-refresh mobile para feedback por ícone no topo sem textos visíveis, habilita refresh ao tocar no item ativo da navegação e aplica variação leve client-side no feed geral de Comunidades, sem alterar backend, banco, envs ou packages.
 
@@ -31,7 +33,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 192 tasks: `TASK-00` a `TASK-185`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 193 tasks: `TASK-00` a `TASK-186`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -296,6 +298,7 @@ ou cortesia manual.
 | 183 | [TASK-183 - Download de vídeos no Admin](TASK-183-admin-download-videos.md) | Completed | 164, 181 |
 | 184 | [TASK-184 - Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md) | In Progress | 182 |
 | 185 | [TASK-185 - Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md) | Completed | 62, 82, 90, 183 |
+| 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | In Progress | 179 |
 
 ## Ordem operacional recomendada sem bloqueios
 

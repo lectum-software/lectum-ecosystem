@@ -34,7 +34,7 @@ test("aceita DSN publico HTTPS do Sentry sem expor a chave no CSP", () => {
   });
 });
 
-test("recusa DSN inseguro, ambiguo ou fora do Sentry SaaS", () => {
+test("recusa DSN inseguro, ambiguo ou fora dos hosts permitidos", () => {
   for (const value of [
     undefined,
     "",
@@ -83,6 +83,7 @@ test("aceita configuracao build-time completa e recusa credenciais ambiguas", ()
       authToken: "sntrys_frontend_build_token",
       org: "lectum-org",
       project: "lectum-frontend",
+      sentryUrl: "https://sentry.io",
     },
   );
 
@@ -619,4 +620,79 @@ test("remove anexos e contexto do hint e descarta evento sem exceção", () => {
   assert.equal(hint.captureContext, undefined);
   assert.equal(hint.data, undefined);
   assert.equal(event, null);
+});
+
+const GLITCHTIP_DSN = "https://0123456789abcdef0123456789abcdef@glit.lectum.com.br/3";
+
+test("aceita GlitchTip Lectum exato sem liberar domínios semelhantes", () => {
+  assert.equal(parseSentryPublicDsn(GLITCHTIP_DSN)?.origin, "https://glit.lectum.com.br");
+  for (const host of [
+    "glit.lectum.com.br.evil.example",
+    "other.glit.lectum.com.br",
+    "api.lectum.com.br",
+    "127.0.0.1",
+    "localhost",
+    "glit.lectum.com.br:8443",
+  ]) {
+    assert.equal(parseSentryPublicDsn(GLITCHTIP_DSN.replace("glit.lectum.com.br", host)), null);
+  }
+  for (const dsn of [
+    GLITCHTIP_DSN.replace("https:", "http:"),
+    `${GLITCHTIP_DSN}?token=secret`,
+    `${GLITCHTIP_DSN}#fragment`,
+    GLITCHTIP_DSN.replace("@", ":secret@"),
+  ]) {
+    assert.equal(parseSentryPublicDsn(dsn), null);
+  }
+});
+
+test("source maps seguem destino do DSN sem vazar token para outro host", () => {
+  const env = {
+    NEXT_PUBLIC_SENTRY_DSN: GLITCHTIP_DSN,
+    SENTRY_AUTH_TOKEN: "build-token-example",
+    SENTRY_ORG: "lectum",
+    SENTRY_PROJECT: "homolog-frontend",
+  };
+  for (const url of [undefined, "", "https://glit.lectum.com.br", "https://glit.lectum.com.br/"]) {
+    assert.equal(
+      resolveSentryBuildConfiguration({ ...env, SENTRY_URL: url })?.sentryUrl,
+      "https://glit.lectum.com.br",
+    );
+  }
+  for (const url of [
+    "https://sentry.io",
+    "http://glit.lectum.com.br",
+    "https://glit.lectum.com.br.evil.example",
+    "https://glit.lectum.com.br:8443",
+    "https://user:secret@glit.lectum.com.br",
+    "https://glit.lectum.com.br/?secret=1",
+    "https://glit.lectum.com.br/#fragment",
+    "https://glit.lectum.com.br/path/..",
+    "https://glit.lectum.com.br\\evil",
+  ]) {
+    assert.equal(resolveSentryBuildConfiguration({ ...env, SENTRY_URL: url }), null);
+  }
+  assert.equal(
+    resolveSentryBuildConfiguration({
+      ...env,
+      NEXT_PUBLIC_SENTRY_DSN: VALID_DSN,
+      SENTRY_URL: "https://glit.lectum.com.br",
+    }),
+    null,
+  );
+  assert.equal(
+    resolveSentryBuildConfiguration({ ...env, NEXT_PUBLIC_SENTRY_DSN: "invalid" }),
+    null,
+  );
+});
+
+test("GlitchTip habilita somente erros e origem exata no CSP por ambiente", () => {
+  for (const environment of ["homolog", "production"]) {
+    const options = createSentryOptions(GLITCHTIP_DSN, environment);
+    assert.equal(options.environment, environment);
+    assert.equal(options.dataCollection.userInfo, false);
+    assert.equal(options.tracesSampleRate, 0);
+    assert.equal(getSentryIngestOrigin(GLITCHTIP_DSN, environment), "https://glit.lectum.com.br");
+  }
+  assert.equal(getSentryIngestOrigin(GLITCHTIP_DSN, undefined), null);
 });

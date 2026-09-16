@@ -542,3 +542,5 @@ Formato recomendado:
 
 - [ADR-0505 — Upload da galeria com leitura limitada por parte](0505-upload-galeria-com-leitura-limitada.md)
 - [ADR-0506 — Reload do feed estilo Instagram](0506-reload-feed-estilo-instagram.md)
+
+- [ADR-0507 — GlitchTip e ambientes Vercel](0507-glitchtip-vercel-ambientes.md)

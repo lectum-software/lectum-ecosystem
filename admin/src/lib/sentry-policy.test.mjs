@@ -12,7 +12,7 @@ import {
 const VALID_DSN =
   "https://0123456789abcdef0123456789abcdef@o4500000000000000.ingest.us.sentry.io/4500000000000001";
 
-test("aceita somente DSN público HTTPS hospedado pelo Sentry", () => {
+test("aceita DSN público HTTPS hospedado pelo Sentry", () => {
   assert.deepEqual(parseSentryDsn(VALID_DSN), {
     dsn: VALID_DSN,
     origin: "https://o4500000000000000.ingest.us.sentry.io",
@@ -42,7 +42,12 @@ test("habilita source maps somente com as três credenciais de build", () => {
       SENTRY_ORG: " lectum ",
       SENTRY_PROJECT: " admin ",
     }),
-    { authToken: "sntrys_example-token_123", org: "lectum", project: "admin" },
+    {
+      authToken: "sntrys_example-token_123",
+      org: "lectum",
+      project: "admin",
+      sentryUrl: "https://sentry.io",
+    },
   );
 
   assert.equal(
@@ -524,4 +529,68 @@ test("desliga explicitamente todas as categorias privadas da coleta automática"
     urlQueryParams: false,
     userInfo: false,
   });
+});
+
+const GLITCHTIP_DSN = "https://0123456789abcdef0123456789abcdef@glit.lectum.com.br/2";
+
+test("aceita GlitchTip Lectum exato sem liberar domínios semelhantes", () => {
+  assert.equal(parseSentryDsn(GLITCHTIP_DSN)?.origin, "https://glit.lectum.com.br");
+  for (const host of [
+    "glit.lectum.com.br.evil.example",
+    "other.glit.lectum.com.br",
+    "api.lectum.com.br",
+    "127.0.0.1",
+    "localhost",
+    "glit.lectum.com.br:8443",
+  ]) {
+    assert.equal(parseSentryDsn(GLITCHTIP_DSN.replace("glit.lectum.com.br", host)), null);
+  }
+  for (const dsn of [
+    GLITCHTIP_DSN.replace("https:", "http:"),
+    `${GLITCHTIP_DSN}?token=secret`,
+    `${GLITCHTIP_DSN}#fragment`,
+    GLITCHTIP_DSN.replace("@", ":secret@"),
+  ]) {
+    assert.equal(parseSentryDsn(dsn), null);
+  }
+});
+
+test("source maps seguem destino do DSN sem vazar token para outro host", () => {
+  const env = {
+    NEXT_PUBLIC_SENTRY_DSN: GLITCHTIP_DSN,
+    SENTRY_AUTH_TOKEN: "build-token-example",
+    SENTRY_ORG: "lectum",
+    SENTRY_PROJECT: "homolog-admin",
+  };
+  for (const url of [undefined, "", "https://glit.lectum.com.br", "https://glit.lectum.com.br/"]) {
+    assert.equal(
+      resolveSentryBuildConfiguration({ ...env, SENTRY_URL: url })?.sentryUrl,
+      "https://glit.lectum.com.br",
+    );
+  }
+  for (const url of [
+    "https://sentry.io",
+    "http://glit.lectum.com.br",
+    "https://glit.lectum.com.br.evil.example",
+    "https://glit.lectum.com.br:8443",
+    "https://user:secret@glit.lectum.com.br",
+    "https://glit.lectum.com.br/?secret=1",
+    "https://glit.lectum.com.br/#fragment",
+    "https://glit.lectum.com.br/path/..",
+    "https://glit.lectum.com.br\\evil",
+  ]) {
+    assert.equal(resolveSentryBuildConfiguration({ ...env, SENTRY_URL: url }), null);
+  }
+  assert.equal(
+    resolveSentryBuildConfiguration({
+      ...env,
+      NEXT_PUBLIC_SENTRY_DSN: VALID_DSN,
+      SENTRY_URL: "https://glit.lectum.com.br",
+    }),
+    null,
+  );
+  assert.equal(
+    resolveSentryBuildConfiguration({ ...env, NEXT_PUBLIC_SENTRY_DSN: "invalid" }),
+    null,
+  );
 });
