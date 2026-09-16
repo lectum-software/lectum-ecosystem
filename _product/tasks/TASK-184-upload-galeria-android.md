@@ -79,7 +79,7 @@ Escopo adicional (somente frontend; sem env/package/banco/qualidade/boot):
   do RHF; o editor pode rolar para alcançar a recuperação em alturas pequenas.
 - [x] Browser local com componente real, arquivo original e falha real em cópia temporária.
 - [x] `pnpm check` das quatro apps, build frontend e versão sincronizada 0.1.395.
-- [ ] Commit/push e smoke do seguimento (registrar resultado após publicação).
+- [x] Commit 2e2f4c1c, push e smoke do seguimento 0.1.395.
 - [ ] Resultado do mesmo vídeo no Chrome Android afetado após o seguimento.
 
 ### Evidência executada do seguimento
@@ -108,3 +108,67 @@ Validação do seguimento: `pnpm check` completo passou; build frontend 0.1.395 
 skipped, não contam como teste externo. O primeiro check encontrou somente types gerados
 pelo dev para a rota temporária já removida; artefatos dev descartados e check completo
 reexecutado com sucesso. Um único bump; sem alteração de código runtime de backend/admin/video.
+
+## Reestruturação autorizada — aquisição única antes do preview
+
+Usuário confirmou Redmi Note 10 5G / MIUI 14: mesma mídia funciona no Samsung e pelo
+seletor de arquivos no Redmi. Galeria permanece padrão; não selecionar fluxo por OEM.
+Seguimento 0.1.395 foi publicado no commit 2e2f4c1c, smoke das apps aprovado. Recuperação
+pelo explorador foi confirmada no aparelho, **não** encerra a seleção pela galeria.
+
+Ensaio local real: arrayBuffer, FileReader, Blob.stream, fetch(blob URL) e Blob composto
+leem os mesmos bytes quando acessíveis; todos falham após alteração de mtime da cópia
+selecionada. Uma cópia OPFS anterior permaneceu íntegra (48 partes / 250.743.537 bytes).
+Não é reprodução do provider Xiaomi nem prova de sua causa específica.
+
+Escopo aprovado em 15/09/2026: aquisição imediata compartilhada antes de preview e contrato
+Stream; cópia temporária OPFS por partes sequenciais de até 1 MiB, sem reencodar e sem vídeo inteiro
+em RAM. Worker para escrita compatível com Safari com sync access handles. Disposição no
+cancelamento, troca, descarte e unmount; reaproveitamento no submit/retry. Limpeza apenas do
+namespace local temporário próprio, protegida por lock; nunca limpar dados publicados.
+Sem package, env, banco, mudança de backend/filas/R2/start. Rollback somente frontend.
+Navegadores sem armazenamento privado disponível mantêm reader limitado validado; nunca
+mascarar erro de leitura como falta de armazenamento ou afirmar cópia independente nesse caso.
+
+- [x] Fonte preparada compartilhada em perfil, novo/edição post e nova/edição resposta.
+- [x] Estado preparando/cancelamento, rascunho preservado, submit bloqueado durante aquisição.
+- [x] Sem provisionar Stream para origem já recusada na preparação.
+- [x] Integridade, cancelamento por mensagem e limpeza testados com arquivos reais.
+- [ ] Troca rápida concorrente da seleção validada no aparelho afetado (guardas implementadas).
+- [x] Checks/build/browser local e ADR.
+- [ ] Commit/push/smoke da reestruturação (registrar após deploy).
+- [ ] Galeria do Redmi validada fisicamente com o arquivo original; pendente de reteste.
+
+### Evidência da reestruturação (0.1.396)
+
+- Browser real com hook/worker do produto: fonte preparada de 250.743.537 bytes; após
+  tornar SOMENTE a cópia de teste inacessível alterando mtime, o original selecionado foi
+  recusado e a cópia privada continuou legível. Todos os 48 SHA-256 por parte coincidiram
+  com o arquivo autorizado. Reuso no submit não apagou a fonte selecionada.
+- Cancelamento por botão/mensagem no worker real, descarte, sucesso e falha inicial de
+  arquivo vazio retornaram à quantidade anterior de temporários; nenhum novo resíduo.
+  Dois resíduos do ensaio anterior interrompido por reload permanecem sob coleta oportunista;
+  não se afirma limpeza garantida quando o navegador mata o worker.
+- Composer real em contêiner mobile de 390 px: preparação sem thumbnail prematuro, envio
+  desabilitado durante aquisição, texto mantido. Leitura integral local após submit, limpeza
+  após sucesso; arquivo vazio mostra erro PT-BR antes do transporte. Descartar só a tentativa
+  preserva o texto e libera envio. Recuperação pelo explorador é opcional, não padrão Android.
+- Harness temporário removido do app e arquivado fora do Git. Nenhum endpoint simulado,
+  postagem remota, alteração no vídeo original, credencial ou mídia adicionada ao repositório.
+- Revisão independente corrigiu limite também na origem (não apenas write), cessão real do
+  event loop e capability fallback anterior à escrita. Seis testes novos de preparação
+  passaram; três novos contratos de integração UI passaram, além dos anteriores.
+- Build frontend 0.1.396 passou, sem source maps públicos e sem rota de ensaio. Um único
+  bump sincronizou os cinco manifests. Check completo e publicação registrados a seguir.
+
+`pnpm check` completo da 0.1.396 aprovado: Prisma, TypeScript, Biome, ESLint e regressões;
+6 testes condicionais do serviço de vídeo skipped por FFmpeg local sem drawtext, não
+contabilizados como execução externa. Build frontend e `pnpm check:version` aprovados.
+
+Integração concorrente: o primeiro push foi recusado porque `469b2b10` já publicou 0.1.396.
+Rebase preservou TASK-185; os dois scripts de teste foram unidos e a versão foi avançada
+para **0.1.397** nos cinco manifests. A validação 0.1.396 acima foi local, não publicação
+desta mudança. Restauradas duas justificativas ESLint pontuais removidas pelo commit
+concorrente (callback OAuth e interceptor Admin); sem mudar runtime ou segurança.
+
+Após integração: build frontend 0.1.397 e `pnpm check` completo passaram novamente.

@@ -2,7 +2,7 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Em execução: [TASK-184 — Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md). Corrigir o transporte do arquivo original sem compressão, com memória limitada por parte e diagnóstico seguro; incidente Android ainda não encerrado.
+Em execução: [TASK-184 — Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md). Unificar aquisição imediata do vídeo antes do preview, com cópia temporária privada, memória limitada por parte e transporte direto ao Stream; incidente da galeria Redmi ainda depende de validação física.
 
 Concluída: [TASK-185 — Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md). Ajusta o pull-to-refresh mobile para feedback por ícone no topo sem textos visíveis, habilita refresh ao tocar no item ativo da navegação e aplica variação leve client-side no feed geral de Comunidades, sem alterar backend, banco, envs ou packages.
 

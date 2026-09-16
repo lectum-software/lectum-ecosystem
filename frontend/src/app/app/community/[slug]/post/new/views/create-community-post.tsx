@@ -388,6 +388,7 @@ export const CreateCommunityPostLogic = ({
         data-reply-media-trigger="true"
         disabled={!mediaPermission.canAttach || isSubmitting}
         onClick={() => {
+          if (fileInputRef.current) fileInputRef.current.value = "";
           fileInputRef.current?.click();
           focusLastEditor();
         }}

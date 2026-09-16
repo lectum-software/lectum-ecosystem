@@ -1,3 +1,5 @@
+import type { VideoPreparationFailure } from "./video-source-preparation-types";
+
 export const VIDEO_UPLOAD_RETRY_DELAYS_MS = [0, 1_000, 3_000, 5_000, 10_000];
 
 export type VideoUploadTransportDiagnostic = {
@@ -81,4 +83,7 @@ export class VideoUploadFailure extends Error {
 }
 
 export const isVideoSourceReadFailure = (error: unknown) =>
-  error instanceof VideoUploadFailure && error.transport?.source === "failed";
+  (error instanceof VideoUploadFailure && error.transport?.source === "failed") ||
+  (error instanceof Error &&
+    error.name === "VideoPreparationFailure" &&
+    (error as VideoPreparationFailure).code === "read_failed");

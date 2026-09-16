@@ -5,10 +5,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { PsychologistProfileVideoUploadInput } from "@/api/callers/psychologist-free-profile";
 import { prepareUpload } from "@/utils/media-preparation";
+import { resolveMediaUploadError } from "@/utils/media-upload-error";
 import { isAllowedProfileVideo } from "@/utils/profile-video-upload";
 import { isMediaUploadCanceled, throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 
-export type ProfileVideoUploadPhase = "uploading";
+export type ProfileVideoUploadPhase = "preparing" | "uploading";
 
 type ProfileVideoUploadOptions = {
   onFileSelected: () => void;
@@ -38,17 +39,23 @@ export const useProfileVideoUpload = ({
       let uploadStarted = false;
       let prepared: Awaited<ReturnType<typeof prepareUpload>> | null = null;
       activeControllerRef.current = controller;
-      setVideoUploadPhase("uploading");
+      setVideoUploadPhase("preparing");
       setVideoUploadProgress(0);
 
       try {
         prepared = await prepareUpload({
           file,
+          onProgress: ({ percentage }) => {
+            if (mountedRef.current && !controller.signal.aborted)
+              setVideoUploadProgress(percentage);
+          },
           purpose: "profile-presentation-video",
           signal: controller.signal,
         });
         throwIfMediaUploadCanceled(controller.signal);
 
+        setVideoUploadPhase("uploading");
+        setVideoUploadProgress(0);
         uploadStarted = true;
         await startUpload({
           file: prepared.file,
@@ -62,7 +69,7 @@ export const useProfileVideoUpload = ({
       } catch (error) {
         if (isMediaUploadCanceled(error)) return;
         if (!uploadStarted) {
-          toast.error("Não foi possível validar o vídeo. Escolha outro arquivo e tente novamente.");
+          toast.error(resolveMediaUploadError(error));
         }
         // Erros após o início do transporte usam a mensagem pública centralizada da mutation.
       } finally {
@@ -79,8 +86,8 @@ export const useProfileVideoUpload = ({
 
   const handleVideoChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      event.target.value = "";
+      const input = event.target;
+      const file = input.files?.[0];
 
       if (!file || activeControllerRef.current) return;
       onFileSelected();
@@ -90,7 +97,9 @@ export const useProfileVideoUpload = ({
         return;
       }
 
-      void uploadFile(file);
+      void uploadFile(file).finally(() => {
+        input.value = "";
+      });
     },
     [onFileSelected, uploadFile],
   );

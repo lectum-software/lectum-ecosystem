@@ -2,8 +2,9 @@ import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { createElement } from "react";
+import { Children, createElement, isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { VideoPreparationFailure } from "../../utils/video-source-preparation-types.ts";
 import {
   isVideoSourceReadFailure,
   VideoUploadFailure,
@@ -25,11 +26,15 @@ test("somente falha tipada de leitura oferece troca de seletor, não HTTP/rede/p
     ),
     true,
   );
+  assert.equal(isVideoSourceReadFailure(new VideoPreparationFailure("read_failed")), true);
   for (const error of [
     null,
     new Error("unreadable"),
     new VideoUploadFailure(403),
     new VideoUploadFailure(0, "processing"),
+    new VideoPreparationFailure("storage_full"),
+    new VideoPreparationFailure("storage_unavailable"),
+    new VideoPreparationFailure("storage_unsupported"),
     new VideoUploadFailure(0, "transport", {
       request: "HEAD",
       source: "not_read",
@@ -49,6 +54,42 @@ test("controle real é botão não submit, PT-BR, altura mobile e desabilitado s
   assert.match(html, /Escolher vídeo pelos arquivos/);
   assert.match(html, /Seu texto será mantido/);
   assert.match(html, /min-h-11/);
+  assert.doesNotMatch(html, /<input/);
+  assert.doesNotMatch(html, /Descartar tentativa/);
+});
+
+test("descarte opcional delega ao dono sem abrir seletor e mantém botões acessíveis no mobile", () => {
+  let discarded = 0;
+  let pickerOpened = 0;
+  const onDiscard = () => {
+    discarded += 1;
+  };
+  const props = {
+    fileInputRef: { current: null },
+    onDiscard,
+    onOpenDialog: () => {
+      pickerOpened += 1;
+    },
+  };
+  // Componente e callbacks reais, sem substituir DOM, hook, provider ou APIs.
+  const buttons = Children.toArray(VideoFileReadRecovery(props).props.children).filter(
+    (element) => isValidElement(element) && element.props.type === "button",
+  );
+  assert.equal(buttons.length, 2);
+  const discard = buttons.find((button) => button.props.onClick === onDiscard);
+  assert.ok(discard);
+  discard.props.onClick();
+  assert.equal(discarded, 1);
+  assert.equal(pickerOpened, 0);
+
+  const html = renderToStaticMarkup(
+    createElement(VideoFileReadRecovery, { ...props, disabled: true }),
+  );
+  assert.equal((html.match(/type="button"/g) ?? []).length, 2);
+  assert.equal((html.match(/disabled=""/g) ?? []).length, 2);
+  assert.equal((html.match(/min-h-11/g) ?? []).length, 2);
+  assert.match(html, /Descartar tentativa de vídeo/);
+  assert.match(html, /Seu texto será mantido/);
   assert.doesNotMatch(html, /<input/);
 });
 
@@ -82,4 +123,39 @@ test("erro de seleção é atualizado sem cache e recuperação do editor pode r
   assert.match(composer, /const visibleError = firstError \|\| apiError \|\| null/);
   assert.doesNotMatch(composer, /const visibleError = useMemo/);
   assert.match(editor, /min-h-0 flex-1 overflow-x-hidden overflow-y-auto/);
+});
+
+test("integração oferece recuperação após leitura recusada antes do preview, sem efeito de seleção superada", () => {
+  for (const source of [composer, editor]) {
+    const selection = source.slice(source.indexOf("const handleMediaChange ="));
+    const preparation = selection.slice(
+      selection.indexOf("await prepareVideo(file)"),
+      selection.indexOf("URL.createObjectURL(preparedFile)"),
+    );
+    assert.match(preparation, /catch \(error\)/);
+    const guardAt = preparation.indexOf("mediaSelectionGenerationRef.current");
+    const recoveryAt = preparation.indexOf(
+      "if (isVideoSourceReadFailure(error)) setNeedsReadableFile(true)",
+    );
+    assert.ok(guardAt > 0 && recoveryAt > guardAt);
+    assert.match(preparation, /resolveMediaUploadError\(error\)/);
+    assert.match(source, /\{needsReadableFile \? \(\s*<VideoFileReadRecovery/);
+    assert.doesNotMatch(source, /Escolher outro vídeo na galeria/);
+  }
+});
+
+test("integração oferece descarte sem preview e limpa somente mídia/erro, não o texto", () => {
+  for (const source of [composer, editor]) {
+    const recovery = source.slice(source.indexOf("<VideoFileReadRecovery")).split("/>")[0];
+    assert.match(recovery, /onDiscard=\{\s*!selectedMedia\s+\?/);
+    assert.match(recovery, /clearSelectedMedia\(\)/);
+    assert.doesNotMatch(recovery, /hook\.(?:reset|setValue)|onCancelContext|onClose/);
+    const clear = source
+      .slice(source.indexOf("const clearSelectedMedia ="))
+      .split(/\n {2}const /)[0];
+    assert.match(clear, /clearVideo\(\)/);
+    assert.match(clear, /setSelectedMedia\(null\)/);
+    assert.match(clear, /setNeedsReadableFile\(false\)/);
+    assert.doesNotMatch(clear, /hook\.(?:reset|setValue)/);
+  }
 });

@@ -98,3 +98,53 @@ Validação do seguimento 0.1.395: `pnpm check` completo e build frontend passar
 cinco regressões novas, browser real com recuperação e rejeição de tipo inválido.
 Seis testes condicionais de integração vídeo skipped, sem afirmar validação externa.
 Confirmação Android afetado continua necessária para encerrar o incidente.
+
+## Revisão estrutural — preparar a origem antes do preview
+
+Usuário autorizou reorganizar a aquisição, não forçar Android/OEM ao explorador. Fonte
+confirmada: Redmi Note 10 5G/MIUI 14 via galeria falha; mesmo arquivo no Samsung e seleção
+pelo explorador do Redmi funcionam. Não temos a versão do Chrome nem reprodução física.
+
+Experimento real com cópia do vídeo original: todos os cinco leitores testados falham após
+recusa de snapshot (arrayBuffer, FileReader, stream, fetch blob URL, Blob composto). Uma cópia
+privada preparada antes permaneceu íntegra. Não adicionar cadeia de leitores/retries como
+suposta cura de permissão ou snapshot já inválido.
+
+Decisão: aquisição compartilhada começa na seleção, precede thumbnail e provisionamento.
+Uma passagem sequencial por slices de até 1 MiB copia bytes para OPFS em worker; escrita sync access
+permite Safari sem createWritable. Cada leitura só começa após a escrita anterior e o loop
+cede uma task real para receber cancelamento. Não redimensiona, não reencoda, não altera container.
+A memória de trabalho da aplicação é proporcional à parte, não ao arquivo completo;
+isso não estabelece teto para caches do navegador/SO. Stream do Blob inteiro foi rejeitado
+na revisão: o WebKit pode antecipar buffers, mesmo com backpressure no consumidor.
+O transporte TUS permanece no SDK e usa a cópia, não reabre a galeria a cada PATCH.
+
+A seleção é dona da cópia: submit usa a mesma fonte, retry mantém bytes, troca/cancelamento/
+sucesso/unmount dispõem worker e arquivo. Lock por UUID protege contra janitor de outra aba.
+Resíduos de crash com mais de 24h são removidos somente do namespace privado próprio e sem
+lock ativo. Não tocar em outros dados da origem, IndexedDB/cookies/buckets ou banco remoto.
+
+Por capacidade: ausência de OPFS/worker/sync access usa origem direta com leitura limitada
+inicial/final validada, sem exigir navegador novo nem dizer que criou cópia independente.
+Não aplicar fallback para uma origem recusada, nem mascarar falta de espaço. A validação
+não promete que o arquivo direto seguirá legível para sempre. Leitura recusada imediatamente
+continua exigindo diagnóstico no aparelho; web não recupera bytes negados pelo provider.
+
+Riscos: uso temporário de disco equivalente ao tamanho do vídeo, latência adicional local,
+evicção/política de armazenamento e suspensão do browser. UI mostra preparação e permite
+cancelar. Encerrar aba não significa upload em background suportado. Nenhuma mudança em
+CF/R2/API principal/serviço de vídeo, plano/assinatura, dados ou qualidade.
+
+Referências primárias adicionais:
+- https://webkit.org/blog/12257/the-file-system-access-api-with-origin-private-file-system/
+- https://web.dev/articles/origin-private-file-system
+- https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/base/files/file_posix.cc
+
+Revisão independente: capability fallback apenas antes da escrita (SecurityError/NotSupportedError),
+nunca em quota, falha na escrita ou fonte inacessível. Coleta após 24h é oportunista, não prazo
+garantido de remoção após crash. Implementação consultada: https://github.com/WebKit/WebKit/blob/main/Source/WebCore/fileapi/Blob.cpp
+
+Validação 0.1.396: 48 hashes da fonte preparada coincidem com o original de 250.743.537 bytes,
+mesmo após a origem de teste tornar-se ilegível. Browser real confirmou cancelamento por mensagem,
+reuso e descarte, integridade e falha inicial segura; composer real preserva rascunho e bloqueia
+submit durante preparo. Não reproduz o provider Redmi, nem valida Safari físico. Sem mocks HTTP.

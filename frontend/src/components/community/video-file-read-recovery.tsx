@@ -6,10 +6,12 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 export function VideoFileReadRecovery({
   disabled,
   fileInputRef,
+  onDiscard,
   onOpenDialog,
 }: {
   disabled?: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
+  onDiscard?: () => void;
   onOpenDialog?: () => void;
 }) {
   return (
@@ -35,6 +37,17 @@ export function VideoFileReadRecovery({
       >
         Escolher vídeo pelos arquivos
       </Button>
+      {onDiscard ? (
+        <Button
+          className="h-auto min-h-11 w-full whitespace-normal px-3 py-2"
+          disabled={disabled}
+          onClick={onDiscard}
+          type="button"
+          variant="outline"
+        >
+          Descartar tentativa de vídeo
+        </Button>
+      ) : null}
     </div>
   );
 }

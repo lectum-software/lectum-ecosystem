@@ -7,6 +7,7 @@ import {
   type MediaUploadLimitKind,
   resolveMediaUploadApiSizeLimitMessage,
 } from "@/utils/media-upload-limits";
+import { VideoPreparationFailure } from "@/utils/video-source-preparation-types";
 
 export const COMMUNITY_IMAGE_SELECTION_LIMIT_MB = 200;
 export const COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES =
@@ -40,6 +41,7 @@ export const resolveMediaUploadSizeErrorMessage = (error: unknown) => {
 };
 
 export const resolveMediaUploadError = (error: unknown) => {
+  if (error instanceof VideoPreparationFailure) return error.message;
   const sizeErrorMessage = resolveMediaUploadSizeErrorMessage(error);
   if (sizeErrorMessage) return sizeErrorMessage;
 

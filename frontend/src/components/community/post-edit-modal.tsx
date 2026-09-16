@@ -3,6 +3,7 @@
 import Image from "next/image";
 import {
   type ChangeEvent,
+  type FormEvent,
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
@@ -20,6 +21,7 @@ import { components } from "@/components/controllers";
 import { useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
+import { useVideoSourcePreparation } from "@/hooks/use-video-source-preparation";
 import { cn } from "@/lib/utils";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { mapWithConcurrency } from "@/utils/map-with-concurrency";
@@ -84,10 +86,28 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   const { formProps, hook } = form;
   const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
+  const { prepareVideo, clearVideo, preparationProgress, isPreparingVideo } =
+    useVideoSourcePreparation();
+  const mediaSelectionGenerationRef = useRef(0);
+  const preparingVideoRef = useRef(false);
+  const mediaProgress = preparationProgress ?? videoUploadProgress;
+  const revokeSelectedMediaPreview = useCallback(() => {
+    for (const previewUrl of selectedMediaPreviewUrlsRef.current) URL.revokeObjectURL(previewUrl);
+    selectedMediaPreviewUrlsRef.current = [];
+  }, []);
+  const clearSelectedMedia = useCallback(() => {
+    mediaSelectionGenerationRef.current += 1;
+    preparingVideoRef.current = false;
+    revokeSelectedMediaPreview();
+    clearVideo();
+    setSelectedMediaItems([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [clearVideo, revokeSelectedMediaPreview]);
   const handleClose = useCallback(() => {
     abortActiveVideoUpload();
+    clearSelectedMedia();
     onClose();
-  }, [abortActiveVideoUpload, onClose]);
+  }, [abortActiveVideoUpload, clearSelectedMedia, onClose]);
   const uploadMutation = useUploadCommunityPostMedia({
     onError: (error) => {
       if (isUploadPreparationCanceled(error)) return;
@@ -188,14 +208,9 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     focusLastEditor();
   };
 
-  const revokeSelectedMediaPreview = useCallback(() => {
-    selectedMediaPreviewUrlsRef.current.forEach((previewUrl) => {
-      URL.revokeObjectURL(previewUrl);
-    });
-    selectedMediaPreviewUrlsRef.current = [];
-  }, []);
-
-  const removeSelectedMediaAt = useCallback((index: number) => {
+  const removeSelectedMediaAt = (index: number) => {
+    if (selectedMediaItems[index]?.type === "video") clearSelectedMedia();
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setSelectedMediaItems((currentItems) => {
       const removedItem = currentItems[index];
       if (!removedItem) return currentItems;
@@ -207,7 +222,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
 
       return currentItems.filter((_, currentIndex) => currentIndex !== index);
     });
-  }, []);
+  };
 
   const removeStoredMedia = useCallback((id: string) => {
     setRemovedStoredMediaIds((currentIds) =>
@@ -260,14 +275,22 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   }, [handleClose, open]);
 
   useEffect(() => {
-    return () => revokeSelectedMediaPreview();
-  }, [revokeSelectedMediaPreview]);
+    if (!open) return;
+    const input = fileInputRef.current;
+    const resetInput = () => {
+      if (input) input.value = "";
+    };
+    input?.addEventListener("click", resetInput);
+    return () => {
+      input?.removeEventListener("click", resetInput);
+      clearSelectedMedia();
+    };
+  }, [clearSelectedMedia, open]);
 
-  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
-    event.currentTarget.value = "";
 
-    if (files.length === 0) return;
+    if (files.length === 0 || isSubmitting || !open) return;
 
     if (!canManageMedia) {
       toast.error(mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.");
@@ -312,11 +335,24 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
         return;
       }
 
-      const previewUrl = URL.createObjectURL(videoFiles[0]);
+      const generation = ++mediaSelectionGenerationRef.current;
+      preparingVideoRef.current = true;
+      let preparedFile: File | null;
+      try {
+        preparedFile = await prepareVideo(videoFiles[0]);
+      } catch (error) {
+        if (generation === mediaSelectionGenerationRef.current)
+          toast.error(resolveMediaUploadError(error));
+        return;
+      } finally {
+        if (generation === mediaSelectionGenerationRef.current) preparingVideoRef.current = false;
+      }
+      if (!preparedFile || generation !== mediaSelectionGenerationRef.current) return;
+      const previewUrl = URL.createObjectURL(preparedFile);
       selectedMediaPreviewUrlsRef.current.push(previewUrl);
       setSelectedMediaItems([
         {
-          file: videoFiles[0],
+          file: preparedFile,
           id: createSelectedMediaId(),
           previewUrl,
           type: "video",
@@ -342,6 +378,9 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     }
 
     const filesToAttach = imageFiles.slice(0, availableSlots);
+    mediaSelectionGenerationRef.current += 1;
+    preparingVideoRef.current = false;
+    clearVideo();
     if (imageFiles.length > availableSlots) {
       toast.error(
         `Só foi possível anexar ${availableSlots} imagem(ns). O limite é ${MAX_POST_CAROUSEL_IMAGES}.`,
@@ -364,123 +403,128 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     focusLastEditor();
   };
 
-  const handleSubmit = hook.handleSubmit(async (values) => {
-    let stagedStreamVideoReference: string | null = null;
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const generation = mediaSelectionGenerationRef.current;
+    return hook.handleSubmit(async (values) => {
+      if (generation !== mediaSelectionGenerationRef.current) return;
+      if (isPreparingVideo || preparingVideoRef.current || isSubmitting || !open) return;
+      let stagedStreamVideoReference: string | null = null;
 
-    try {
-      const selectedVideo =
-        selectedMediaItems.find((mediaItem) => mediaItem.type === "video") ?? null;
-      const { uploadedMedia, uploadedThumbnail } = await (async () => {
-        const operation = selectedVideo ? beginVideoUpload() : null;
+      try {
+        const selectedVideo =
+          selectedMediaItems.find((mediaItem) => mediaItem.type === "video") ?? null;
+        const { uploadedMedia, uploadedThumbnail } = await (async () => {
+          const operation = selectedVideo ? beginVideoUpload() : null;
 
-        try {
-          const uploadedMedia = selectedVideo
-            ? [
-                await uploadMutation.mutateAsync({
-                  file: selectedVideo.file,
-                  onProgress: operation?.onProgress,
-                  signal: operation?.signal,
-                  slug: post.community.slug,
-                }),
-              ]
-            : selectedMediaItems.length > 0
-              ? await mapWithConcurrency(selectedMediaItems, 2, (mediaItem) =>
-                  uploadMutation.mutateAsync({
-                    file: mediaItem.file,
+          try {
+            const uploadedMedia = selectedVideo
+              ? [
+                  await uploadMutation.mutateAsync({
+                    file: selectedVideo.file,
+                    onProgress: operation?.onProgress,
+                    signal: operation?.signal,
                     slug: post.community.slug,
                   }),
-                )
-              : [];
-          const uploadedVideo = uploadedMedia.find((media) => media.media_type === "video");
-          stagedStreamVideoReference = isVideoAssetReference(uploadedVideo?.media_url)
-            ? uploadedVideo?.media_url || null
-            : null;
-          const thumbnailFile =
-            selectedVideo && !isVideoAssetReference(uploadedVideo?.media_url)
-              ? await createVideoThumbnailFile(selectedVideo.file, {
+                ]
+              : selectedMediaItems.length > 0
+                ? await mapWithConcurrency(selectedMediaItems, 2, (mediaItem) =>
+                    uploadMutation.mutateAsync({
+                      file: mediaItem.file,
+                      slug: post.community.slug,
+                    }),
+                  )
+                : [];
+            const uploadedVideo = uploadedMedia.find((media) => media.media_type === "video");
+            stagedStreamVideoReference = isVideoAssetReference(uploadedVideo?.media_url)
+              ? uploadedVideo?.media_url || null
+              : null;
+            const thumbnailFile =
+              selectedVideo && !isVideoAssetReference(uploadedVideo?.media_url)
+                ? await createVideoThumbnailFile(selectedVideo.file, {
+                    signal: operation?.signal,
+                  })
+                : null;
+            throwIfMediaUploadCanceled(operation?.signal);
+            const uploadedThumbnail = thumbnailFile
+              ? await uploadMutation.mutateAsync({
+                  file: thumbnailFile,
+                  purpose: "generated-video-thumbnail",
                   signal: operation?.signal,
+                  slug: post.community.slug,
                 })
               : null;
-          throwIfMediaUploadCanceled(operation?.signal);
-          const uploadedThumbnail = thumbnailFile
-            ? await uploadMutation.mutateAsync({
-                file: thumbnailFile,
-                purpose: "generated-video-thumbnail",
-                signal: operation?.signal,
-                slug: post.community.slug,
-              })
-            : null;
-          throwIfMediaUploadCanceled(operation?.signal);
+            throwIfMediaUploadCanceled(operation?.signal);
 
-          return { uploadedMedia, uploadedThumbnail };
-        } finally {
-          operation?.complete();
-        }
-      })();
-      const uploadedVideo = uploadedMedia.find((media) => media.media_type === "video") ?? null;
-      const uploadedImageMediaItems = uploadedMedia
-        .filter((media) => media.media_type === "image")
-        .map((media, index) => ({
-          mediaType: "image" as const,
-          mediaUrl: media.media_url,
-          position: index,
-        }));
-      const retainedImageMediaItems = visibleStoredMediaItems
-        .filter((media) => media.type === "image")
-        .map((media, index) => ({
-          mediaType: "image" as const,
-          mediaUrl: media.src,
-          position: index,
-        }));
-      const retainedVideoMedia = visibleStoredMediaItems.find((media) => media.type === "video");
-      const mediaChangeRequested =
-        removedStoredMediaIds.length > 0 || selectedMediaItems.length > 0;
-      const nextImageMediaItems = [...retainedImageMediaItems, ...uploadedImageMediaItems].map(
-        (media, index) => ({
-          ...media,
-          position: index,
-        }),
-      );
-      const mediaPayload = mediaChangeRequested
-        ? uploadedVideo
-          ? {
-              mediaType: "video" as const,
-              mediaUrl: uploadedVideo.media_url,
-              thumbnailUrl: uploadedThumbnail?.media_url ?? null,
-            }
-          : retainedVideoMedia
+            return { uploadedMedia, uploadedThumbnail };
+          } finally {
+            operation?.complete();
+          }
+        })();
+        const uploadedVideo = uploadedMedia.find((media) => media.media_type === "video") ?? null;
+        const uploadedImageMediaItems = uploadedMedia
+          .filter((media) => media.media_type === "image")
+          .map((media, index) => ({
+            mediaType: "image" as const,
+            mediaUrl: media.media_url,
+            position: index,
+          }));
+        const retainedImageMediaItems = visibleStoredMediaItems
+          .filter((media) => media.type === "image")
+          .map((media, index) => ({
+            mediaType: "image" as const,
+            mediaUrl: media.src,
+            position: index,
+          }));
+        const retainedVideoMedia = visibleStoredMediaItems.find((media) => media.type === "video");
+        const mediaChangeRequested =
+          removedStoredMediaIds.length > 0 || selectedMediaItems.length > 0;
+        const nextImageMediaItems = [...retainedImageMediaItems, ...uploadedImageMediaItems].map(
+          (media, index) => ({
+            ...media,
+            position: index,
+          }),
+        );
+        const mediaPayload = mediaChangeRequested
+          ? uploadedVideo
             ? {
                 mediaType: "video" as const,
-                mediaUrl: retainedVideoMedia.src,
-                thumbnailUrl: retainedVideoMedia.thumbnailUrl ?? null,
+                mediaUrl: uploadedVideo.media_url,
+                thumbnailUrl: uploadedThumbnail?.media_url ?? null,
               }
-            : nextImageMediaItems.length > 0
+            : retainedVideoMedia
               ? {
-                  mediaItems: nextImageMediaItems,
-                  mediaType: "image" as const,
-                  mediaUrl: nextImageMediaItems[0]?.mediaUrl ?? "",
+                  mediaType: "video" as const,
+                  mediaUrl: retainedVideoMedia.src,
+                  thumbnailUrl: retainedVideoMedia.thumbnailUrl ?? null,
                 }
-              : {
-                  mediaItems: null,
-                  mediaType: null,
-                  mediaUrl: null,
-                }
-        : {};
+              : nextImageMediaItems.length > 0
+                ? {
+                    mediaItems: nextImageMediaItems,
+                    mediaType: "image" as const,
+                    mediaUrl: nextImageMediaItems[0]?.mediaUrl ?? "",
+                  }
+                : {
+                    mediaItems: null,
+                    mediaType: null,
+                    mediaUrl: null,
+                  }
+          : {};
 
-      await updateMutation.mutateAsync({
-        id: post.id,
-        body: {
-          content: values.content.trim(),
-          title: values.title.trim(),
-          ...mediaPayload,
-        },
-      });
-      stagedStreamVideoReference = null;
-    } catch {
-      await cleanupDetachedVideoAsset(stagedStreamVideoReference);
-      // Feedback fica nas mutations para preservar o conteúdo editado.
-    }
-  });
+        await updateMutation.mutateAsync({
+          id: post.id,
+          body: {
+            content: values.content.trim(),
+            title: values.title.trim(),
+            ...mediaPayload,
+          },
+        });
+        stagedStreamVideoReference = null;
+      } catch {
+        await cleanupDetachedVideoAsset(stagedStreamVideoReference);
+        // Feedback fica nas mutations para preservar o conteúdo editado.
+      }
+    })(event);
+  };
   const clearCorrectedFormErrorsSoon = () => {
     window.setTimeout(() => {
       const values = hook.getValues();
@@ -592,7 +636,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
         )
       }
       isGuidanceOpen={isGuidanceOpen}
-      isSubmitting={isSubmitting}
+      isSubmitting={isSubmitting || isPreparingVideo}
       mediaPreview={
         <PostEditMediaPreview
           canManageMedia={canManageMedia}
@@ -620,10 +664,13 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       }}
       titleFields={formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
       uploadStatus={
-        videoUploadProgress ? (
+        mediaProgress ? (
           <CommunityVideoUploadProgress
-            onCancel={cancelActiveVideoUpload}
-            progress={videoUploadProgress}
+            onCancel={() => {
+              if (preparingVideoRef.current) clearSelectedMedia();
+              else cancelActiveVideoUpload();
+            }}
+            progress={mediaProgress}
           />
         ) : null
       }
