@@ -1,7 +1,10 @@
 import { readdir, readFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { pruneRemovedSourceMapsFromTraces } from "./source-map-traces.mjs";
+import {
+  pruneRemovedSourceMapsFromTraces,
+  removeBuildSourceMapLinks,
+} from "./source-map-traces.mjs";
 
 const adminRootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const nextBuildDir = join(adminRootDir, ".next");
@@ -27,6 +30,8 @@ const findBuildFiles = async (directory) => {
 const buildFiles = await findBuildFiles(nextBuildDir);
 const sourceMaps = buildFiles.filter((file) => file.endsWith(".map"));
 await Promise.all(sourceMaps.map((sourceMap) => rm(sourceMap, { force: true })));
+const sourceMapLinksRemoved = await removeBuildSourceMapLinks(nextBuildDir);
+console.log(`Removed ${sourceMapLinksRemoved} source map link(s) from build output.`);
 await pruneRemovedSourceMapsFromTraces(nextBuildDir, buildFiles);
 
 const remainingBuildFiles = await findBuildFiles(nextBuildDir);

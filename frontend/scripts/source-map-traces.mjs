@@ -1,5 +1,5 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 // O empacotador Vercel consome estes manifests após o postbuild. Mapas já
 // removidos não são dependências runtime e não podem permanecer nos traces.
@@ -24,6 +24,22 @@ export const pruneRemovedSourceMapsFromTraces = async (buildRoot, buildFiles) =>
     });
     if (files.length !== trace.files.length) {
       await writeFile(manifest, JSON.stringify({ ...trace, files }));
+    }
+  }
+  return removed;
+};
+
+// O adapter Next/Vercel cria links no output antes do postbuild. Remover o
+// mapa original não remove esses links; nunca seguir links para apagar alvos.
+export const removeBuildSourceMapLinks = async (directory) => {
+  let removed = 0;
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isSymbolicLink() && entry.name.endsWith(".map")) {
+      await rm(path, { force: true });
+      removed += 1;
+    } else if (entry.isDirectory()) {
+      removed += await removeBuildSourceMapLinks(path);
     }
   }
   return removed;

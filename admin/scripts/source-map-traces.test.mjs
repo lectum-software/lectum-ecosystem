@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { pruneRemovedSourceMapsFromTraces } from "./source-map-traces.mjs";
+import {
+  pruneRemovedSourceMapsFromTraces,
+  removeBuildSourceMapLinks,
+} from "./source-map-traces.mjs";
 
 test("remove apenas referências a mapas do build, preservando dependências e metadados", async () => {
   const temp = await mkdtemp(join(tmpdir(), "lectum-traces-"));
@@ -42,6 +45,28 @@ test("remove apenas referências a mapas do build, preservando dependências e m
       pruneRemovedSourceMapsFromTraces(root, [manifest]),
       /Invalid production trace/,
     );
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("remove mapas symlink do adapter sem seguir diretórios ou apagar alvo externo", async () => {
+  const temp = await mkdtemp(join(tmpdir(), "lectum-map-links-"));
+  try {
+    const root = join(temp, ".next");
+    const output = join(root, "output", "functions", "page.func");
+    const external = join(temp, "outside");
+    await mkdir(output, { recursive: true });
+    await mkdir(external);
+    await writeFile(join(external, "keep.map"), "private-map");
+    await symlink(join(root, "server", "chunks", "2442.js.map"), join(output, "2442.js.map"));
+    await symlink(join(external, "keep.map"), join(output, "external.js.map"));
+    await symlink(external, join(output, "dependencies"));
+    await symlink(join(external, "keep.map"), join(output, "runtime.js"));
+    assert.equal(await removeBuildSourceMapLinks(root), 2);
+    assert.equal(await readFile(join(external, "keep.map"), "utf8"), "private-map");
+    assert.equal(await readFile(join(output, "runtime.js"), "utf8"), "private-map");
+    assert.equal(await removeBuildSourceMapLinks(root), 0);
   } finally {
     await rm(temp, { recursive: true, force: true });
   }
