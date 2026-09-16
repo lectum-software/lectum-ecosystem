@@ -752,3 +752,18 @@ versao publicada, o bloqueio deixa de ser mascaravel por codigo e deve ser trata
 operacional pendente: validar, sem expor valores, `VIDEO_PROCESSING_SERVICE_URL` no backend, o mesmo
 `VIDEO_SERVICE_API_KEY` no backend e no `video/`, readiness/worker do servico dedicado e acesso
 server-to-server entre backend e video.
+
+## Atualizacao em 2026-09-16 - retries transitorios ate o deadline de preparo
+
+Novo relato com video de aproximadamente 151 segundos mostrou que o erro `SR-01` ainda podia aparecer
+na etapa de inicio da geracao depois da versao 0.1.405. A decisao e manter o contrato publico e
+permitir que falhas transitorias de start usem a janela completa de preparo ja existente no frontend,
+reutilizando o ultimo backoff seguro em vez de parar quando a lista inicial acaba. No backend, a
+criacao do job social tambem passa a consumir toda a janela server-side de retry para 503/5xx/408/425
+ou falha de rede, mas evita retry quando a configuracao do servico dedicado esta ausente/invalida.
+
+A decisao nao cria schema, storage, provider, pacote, env obrigatoria ou contrato novo. Se o mesmo
+`SR-01` persistir apos essa versao, a causa deve ser tratada como pendencia operacional do deploy:
+executar o check do backend no container de homologacao e validar, sem revelar valores,
+`VIDEO_PROCESSING_SERVICE_URL`, o `VIDEO_SERVICE_API_KEY` compartilhado, readiness/worker do app
+`video/` e rede server-to-server.

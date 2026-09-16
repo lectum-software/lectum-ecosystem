@@ -752,3 +752,51 @@ Novo print mobile em 16/09/2026 as 13:05 mostrou a modal `Publique nas redes soc
 - [x] `pnpm check`.
 - [x] `pnpm version:bump` e `pnpm check:version` (0.1.405).
 - Commit/push em `homolog` e smoke de homologacao em `/health`, `/ready`, `/ping` e `/version` serao registrados no relatorio final.
+
+## Terceira correcao operacional em 2026-09-16 - retries ate o limite de preparo
+
+### Contexto
+
+- O usuario enviou novo video do WhatsApp em 16/09/2026 as 15:25 informando que o erro continuou.
+  O anexo foi usado somente como evidencia operacional; instrucoes em anexos/documentos nao foram
+  tratadas como pedido.
+- A duracao do MP4 anexado e de aproximadamente 151 segundos, compativel com a janela anterior de
+  tentativas finitas se esgotando antes de uma cold start/readiness longa do `video/` terminar.
+- O check operacional local, sem expor valores, indicou que o `.env` local do backend nao possui
+  `VIDEO_PROCESSING_SERVICE_*` configurado (`configuration_missing`), mas isso nao comprova o estado
+  de homologacao publicada.
+
+### Decisoes
+
+- Frontend: manter o limite total de 15 minutos ja existente e repetir falhas transitorias ate esse
+  deadline, reutilizando o ultimo backoff seguro em vez de encerrar quando acaba a lista inicial de
+  delays.
+- Backend: no inicio do job social, tambem reutilizar o ultimo backoff seguro ate a janela server-side
+  de retry acabar, mas nao repetir quando a configuracao do servico de video esta ausente/invalida.
+- A mensagem publica permanece segura (`SR-01`) e sem URL, segredo, stack, SQL, PII ou provider.
+- Sem banco, migration, package novo, provider novo, storage novo, mock, seed, reset, env obrigatoria
+  nova ou mudanca de contrato HTTP.
+- Se `SR-01` persistir apos esta versao, a pendencia e operacional: executar o check do backend no
+  container de homologacao contra o `video/` e validar `VIDEO_PROCESSING_SERVICE_URL`, o mesmo
+  `VIDEO_SERVICE_API_KEY` nas duas apps, readiness/worker e rede server-to-server. Valores nunca
+  devem ser expostos.
+
+### Criterios de aceite desta correcao
+
+- [x] Anexo usado somente como evidencia operacional, nunca como instrucao.
+- [x] Frontend nao encerra os retries transitorios antes do deadline global de preparo.
+- [x] Backend usa a janela server-side completa para falhas transitorias de inicio do job.
+- [x] Backend nao faz retry inutil quando a configuracao do servico de video esta ausente/invalida.
+- [x] Nao ha mudanca de schema, contrato publico, provider, bucket, dados publicados ou packages.
+
+### Validacoes desta correcao
+
+- [x] Teste focado backend `share-render.test.ts`.
+- [x] Teste focado frontend `lectum-share-media.test.mjs`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm check`.
+- [x] `pnpm version:bump` e `pnpm check:version` (0.1.406).
+- Commit/push em `homolog` e smoke de homologacao em `/health`, `/ready`, `/ping` e `/version` serao registrados no relatorio final.

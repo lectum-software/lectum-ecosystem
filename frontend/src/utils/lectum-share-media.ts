@@ -61,6 +61,7 @@ const SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS = 30_000;
 const SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS = [
   1_000, 2_000, 4_000, 8_000, 12_000, 16_000, 24_000, 32_000, 45_000,
 ] as const;
+const SERVER_SHARE_RENDER_TRANSIENT_RETRY_MIN_DELAY_MS = 500;
 const preparedShareFileCache = new Map<string, PreparedShareFileCacheValue>();
 const preparedShareRenderJobCache = new Map<
   string,
@@ -204,6 +205,11 @@ const createShareRenderRequestError = (
   );
 };
 
+const getShareRenderTransientRetryDelay = (attempt: number) =>
+  SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS[
+    Math.min(attempt, SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS.length - 1)
+  ] ?? 45_000;
+
 const retryTransientShareRenderRequest = async <Result>(
   request: () => Promise<Result>,
   signal: AbortSignal,
@@ -217,8 +223,9 @@ const retryTransientShareRenderRequest = async <Result>(
     } catch (error) {
       if (isShareRenderAbortError(error, signal) || !isRetryableApiError(error)) throw error;
 
-      const delayMs = SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS[attempt];
-      if (delayMs === undefined || Date.now() + delayMs >= deadlineAt) throw error;
+      const remainingMs = deadlineAt - Date.now();
+      const delayMs = Math.min(getShareRenderTransientRetryDelay(attempt), remainingMs);
+      if (delayMs < SERVER_SHARE_RENDER_TRANSIENT_RETRY_MIN_DELAY_MS) throw error;
 
       attempt += 1;
       await waitForShareRenderPoll(delayMs, signal);

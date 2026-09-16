@@ -63,6 +63,9 @@ describe("post share render media selection", () => {
       /const VIDEO_SERVICE_START_RETRY_DELAYS_MS = \[1_000, 2_000, 4_000, 8_000, 12_000\]/,
     );
     assert.match(source, /isTransientVideoServiceStartResponse/);
+    assert.match(source, /getVideoServiceStartRetryDelay/);
+    assert.match(source, /Math\.min\(attempt,\s*VIDEO_SERVICE_START_RETRY_DELAYS_MS\.length - 1\)/);
+    assert.match(source, /VIDEO_SERVICE_START_RETRY_MIN_DELAY_MS/);
     assert.match(source, /requestVideoServiceForJobStart\(\s*"\/api\/private\/jobs\/social-share"/);
   });
 

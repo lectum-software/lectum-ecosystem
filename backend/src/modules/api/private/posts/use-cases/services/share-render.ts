@@ -38,6 +38,7 @@ const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
 const VIDEO_SERVICE_START_TIMEOUT_MS = 30_000;
 const VIDEO_SERVICE_START_RETRY_WINDOW_MS = 75_000;
 const VIDEO_SERVICE_START_RETRY_DELAYS_MS = [1_000, 2_000, 4_000, 8_000, 12_000] as const;
+const VIDEO_SERVICE_START_RETRY_MIN_DELAY_MS = 500;
 const VIDEO_SERVICE_CODE_PATTERN = /^[a-z][a-z0-9_]{1,64}$/;
 
 type VideoServiceJobData = {
@@ -157,10 +158,19 @@ const waitForVideoServiceRetry = (durationMs: number) =>
 const isTransientVideoServiceStartResponse = (response: Response | null) =>
   !response || response.status === 408 || response.status === 425 || response.status >= 500;
 
+const getVideoServiceStartRetryDelay = (attempt: number) =>
+  VIDEO_SERVICE_START_RETRY_DELAYS_MS[
+    Math.min(attempt, VIDEO_SERVICE_START_RETRY_DELAYS_MS.length - 1)
+  ] ?? 12_000;
+
 const requestVideoServiceForJobStart = async (
   path: string,
   init: RequestInit = {},
 ): Promise<Response | null> => {
+  if (!getVideoProcessingServiceConfig()) {
+    return requestVideoService(path, init, VIDEO_SERVICE_START_TIMEOUT_MS);
+  }
+
   const deadlineAt = Date.now() + VIDEO_SERVICE_START_RETRY_WINDOW_MS;
   let attempt = 0;
 
@@ -168,8 +178,9 @@ const requestVideoServiceForJobStart = async (
     const response = await requestVideoService(path, init, VIDEO_SERVICE_START_TIMEOUT_MS);
     if (!isTransientVideoServiceStartResponse(response)) return response;
 
-    const delayMs = VIDEO_SERVICE_START_RETRY_DELAYS_MS[attempt];
-    if (delayMs === undefined || Date.now() + delayMs >= deadlineAt) return response;
+    const remainingMs = deadlineAt - Date.now();
+    const delayMs = Math.min(getVideoServiceStartRetryDelay(attempt), remainingMs);
+    if (delayMs < VIDEO_SERVICE_START_RETRY_MIN_DELAY_MS) return response;
 
     if (response) {
       logShareRenderServiceWarning("start_transient_retry", { status: response.status });

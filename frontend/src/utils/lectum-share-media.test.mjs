@@ -78,6 +78,12 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(mediaSource, /SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS/);
   assert.match(mediaSource, /16_000/);
   assert.match(mediaSource, /45_000/);
+  assert.match(mediaSource, /getShareRenderTransientRetryDelay/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_TRANSIENT_RETRY_MIN_DELAY_MS/);
+  assert.match(
+    mediaSource,
+    /Math\.min\(attempt,\s*SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS\.length - 1\)/,
+  );
   assert.match(mediaSource, /SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS = 180_000/);
   assert.match(mediaSource, /SERVER_SHARE_RENDER_JOB_CACHE_TTL_MS/);
   assert.match(mediaSource, /preparedShareRenderJobCache/);
