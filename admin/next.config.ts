@@ -170,6 +170,7 @@ export default withSentryConfig(nextConfig, {
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
     disable: !canUploadSentrySourceMaps,
+    filesToDeleteAfterUpload: [".next/static/**/*.map"],
   },
   suppressOnRouterTransitionStartWarning: true,
   telemetry: false,

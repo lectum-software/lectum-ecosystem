@@ -47,3 +47,9 @@ Pedido de 16/09/2026: revisar todas as envs Vercel de frontend/admin em Preview 
 ## Integração concorrente
 
 O primeiro push (dc11c4d9) foi recusado por avanço remoto fe00ffec. Merge sem sobrescrita do trabalho do outro desenvolvedor; os dois commits usavam 0.1.398. O novo commit de integração recebe bump próprio para 0.1.399. O check pós-merge detectou a remoção remota de duas exceções ESLint já documentadas para hard reload em rejeição de sessão: restauradas as justificativas originais sem mudar comportamento de autenticação nem as alterações de ranking/destaque remoto. Checks/builds repetidos no resultado integrado.
+
+## Correção do empacotamento
+
+O build Vercel do Admin 0.1.399 enviou 104 artefatos ao GlitchTip, mas falhou no empacotamento por referência a mapa já removido. Postbuild de frontend/admin corrigido para remover referências de mapas da própria `.next` dos traces, preservando demais dependências. Builds locais anteriores sem upload não reproduziam essa condição. Revalidar com source maps realmente habilitados e deploy Vercel antes de concluir.
+
+- Patch 0.1.400: `pnpm check` aprovado novamente; 34 testes focados (32 políticas + 2 filesystem) aprovados. Build frontend executado com upload REAL habilitado para homolog; 194 mapas de servidor removidos no postbuild, nenhum mapa restante nem referência interna `.map` em manifests `.nft.json`. Build Admin aprovado; upload Admin é conferido no deploy Vercel, pois não há env local do Admin.

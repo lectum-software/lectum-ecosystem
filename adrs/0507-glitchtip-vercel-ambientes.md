@@ -29,3 +29,7 @@ A Vercel tinha envs apontando para GlitchTip Lectum, mas as políticas de fronte
 ## Rollback e validação
 
 Reverter a integração/configuração de observabilidade sem tocar nos dados. Testes incluem DSNs e destinos malformados, colisões de hostname e compatibilidade SaaS. Evidências de checks, builds e smoke real são registradas na TASK-186.
+
+## Validação de empacotamento Vercel
+
+O deploy 0.1.399 expôs um defeito latente no postbuild: após remover os source maps, os arquivos `.nft.json` ainda os listavam como dependências. Vercel falhou com ENOENT ao montar a função; versão anterior permaneceu atendendo. O plugin remove apenas mapas estáticos durante a compilação; o postbuild remove todos os mapas e poda somente referências `.map` dentro da própria `.next` nos manifests de tracing. Referências externas, JavaScript runtime e demais metadados são preservados. Testes usam filesystem temporário real e verificam idempotência e recusa de manifesto inválido. Não se resolve expondo mapas em produção nem ignorando falhas do empacotador.

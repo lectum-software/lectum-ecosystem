@@ -1,6 +1,7 @@
 import { readdir, readFile, rm } from "node:fs/promises";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { pruneRemovedSourceMapsFromTraces } from "./source-map-traces.mjs";
 
 const frontendRootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const nextBuildDir = join(frontendRootDir, ".next");
@@ -33,6 +34,7 @@ await rm(staleDevelopmentDir, { force: true, recursive: true });
 const generatedFiles = await listFiles(nextBuildDir);
 const sourceMaps = generatedFiles.filter((file) => file.endsWith(".map"));
 await Promise.all(sourceMaps.map((sourceMap) => rm(sourceMap, { force: true })));
+await pruneRemovedSourceMapsFromTraces(nextBuildDir, generatedFiles);
 
 const remainingFiles = await listFiles(nextBuildDir, { skipBuildCache: true });
 if (remainingFiles.some((file) => file.endsWith(".map"))) {
