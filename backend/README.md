@@ -1,5 +1,42 @@
 # Lectum Backend
 
+## Variáveis de produção no Dokploy
+
+O modelo é [`.env.production.example`](.env.production.example). A cópia preenchível local
+`.env.production` permanece fora do Git e do contexto Docker. Criar a cópia sem sobrescrever
+um arquivo já preenchido:
+
+```sh
+(umask 077; set -C; cat .env.production.example > .env.production)
+```
+
+Substituir todos os `YOUR_OWN_...` ativos e colar o conteúdo no **Environment da aplicação backend
+de produção** no Dokploy. Não colocar credenciais em build args nem no repositório. O backend
+**não carrega `.env.production` automaticamente**: no container usa as variáveis injetadas pelo
+Dokploy. Não iniciar o backend local com este modelo, nem testar migrations com banco publicado.
+
+O modelo preserva limites de vídeo de 1000 MB/600s e separa integrações opcionais. Banco, R2,
+OAuth, JWT, Stream, pagamentos, VAPID e API privada de vídeo exigem recursos/segredos apropriados
+de produção; não copiar automaticamente recursos de homolog. Não alterar chaves de produção
+existentes sem avaliar sessões, inscrições push e URLs assinadas.
+
+**Antes de publicar:**
+- Stream: há [um webhook por conta](https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/#limitations).
+  Não substituir o webhook de homolog para cadastrar produção; usar conta isolada ou definir
+  roteamento multiambiente. O segredo é devolvido pela Cloudflare, não inventado.
+- Vídeo dedicado: provisionar endpoint e segredo da instância de produção com fila/volume
+  isolados. `REDIS_URL` e configuração do worker pertencem a `video/`, não ao backend.
+- Mercado Pago: token de vendedor real e webhook correspondentes; a chave pública do frontend
+  ainda está dummy por decisão do usuário. O arquivo não torna pagamentos reais prontos.
+- GlitchTip: o parser **backend** ainda aceita somente Sentry SaaS; configurar DSN GlitchTip é
+  insuficiente. Ajustar/validar a política em task específica; observabilidade fica comentada no modelo.
+- SMS/Twilio: opcional e comentado até provisionamento, sem simulação de envio.
+- Manter campanhas/dunning desativados até revisão operacional; ausência de limpeza/backfill
+  no start não desativa os schedulers normais de produto.
+
+Preparar env não é autorização para promover `main`; homolog validada e merge revisado continuam
+obrigatórios. Nenhuma variável nova foi introduzida por este modelo.
+
 ## Inicialização e manutenção de mídia
 
 O start do container aplica somente as migrations Prisma configuradas e inicia a API e seus

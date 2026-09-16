@@ -2,6 +2,8 @@
 
 Fila sequencial de execução do produto Lectum.
 
+Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. GlitchTip backend, chaves e isolamento dos recursos continuam explicitamente pendentes de provisionamento/validação.
+
 Concluída: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Envs Preview/Production revisadas, SDK/CSP e empacotamento de mapas corrigidos; frontend/admin 0.1.402 Ready e smoke aprovado. Produção não promovida e dummy Mercado Pago mantido por decisão do usuário.
 
 Correcao operacional 16/09/2026 13:05: [TASK-42 - Layout de compartilhamento social para video-resposta](TASK-42-layout-compartilhamento-video-resposta.md) e [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) receberam ajuste para o erro `SR-01` no inicio da geracao. O backend passa a tolerar ate 30s ao criar o job `social_share`, o frontend amplia retries transitorios antes de exibir falha, e o `video/` aumenta a margem de `/ready`/healthcheck para cold start de FFmpeg. Sem banco, env obrigatoria nova, package novo, provider, storage ou mudanca de contrato.
@@ -44,7 +46,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 193 tasks: `TASK-00` a `TASK-186`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 194 tasks: `TASK-00` a `TASK-187`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -310,6 +312,7 @@ ou cortesia manual.
 | 184 | [TASK-184 - Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md) | In Progress | 182 |
 | 185 | [TASK-185 - Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md) | Completed | 62, 82, 90, 183 |
 | 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | Completed | 179 |
+| 187 | [TASK-187 - Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md) | Completed | 186 |
 
 ## Ordem operacional recomendada sem bloqueios
 

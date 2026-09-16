@@ -544,3 +544,5 @@ Formato recomendado:
 - [ADR-0506 — Reload do feed estilo Instagram](0506-reload-feed-estilo-instagram.md)
 
 - [ADR-0507 — GlitchTip e ambientes Vercel](0507-glitchtip-vercel-ambientes.md)
+
+- [ADR-0508 — Template de produção do backend no Dokploy](0508-template-backend-producao-dokploy.md)
