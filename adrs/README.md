@@ -541,3 +541,4 @@ Formato recomendado:
 - [ADR-0504 — Autoplay mudo no feed de Comunidades](0504-autoplay-mudo-feed-comunidades.md)
 
 - [ADR-0505 — Upload da galeria com leitura limitada por parte](0505-upload-galeria-com-leitura-limitada.md)
+- [ADR-0506 — Reload do feed estilo Instagram](0506-reload-feed-estilo-instagram.md)

@@ -4,6 +4,8 @@ Fila sequencial de execução do produto Lectum.
 
 Em execução: [TASK-184 — Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md). Corrigir o transporte do arquivo original sem compressão, com memória limitada por parte e diagnóstico seguro; incidente Android ainda não encerrado.
 
+Concluída: [TASK-185 — Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md). Ajusta o pull-to-refresh mobile para feedback por ícone no topo sem textos visíveis, habilita refresh ao tocar no item ativo da navegação e aplica variação leve client-side no feed geral de Comunidades, sem alterar backend, banco, envs ou packages.
+
 Concluída: [TASK-183 — Download de vídeos no Admin](TASK-183-admin-download-videos.md). Adiciona no painel administrativo downloads do vídeo original e do vídeo com arte Lectum para conteúdos de Comunidades, preservando o mesmo formato do fluxo do psicólogo e sem alterar banco, buckets ou packages. Ajuste pós-feedback: botões ficam abaixo do ícone de olho.
 
 Concluída: [TASK-182 — Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md). Correção 0.1.385 publicada, uploads reais e smoke aprovados; usuário confirmou funcionamento. Incidente encerrado sem atribuir causa histórica não comprovada nem alegar reprodução independente no Safari/iPhone. Não encerra a auditoria geral; sem alteração de armazenamento, qualidade ou plano da conta de auditoria.
@@ -29,7 +31,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 191 tasks: `TASK-00` a `TASK-184`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 192 tasks: `TASK-00` a `TASK-185`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -293,6 +295,7 @@ ou cortesia manual.
 | 182 | [TASK-182 - Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md) | Completed | 179, 180, 181 |
 | 183 | [TASK-183 - Download de vídeos no Admin](TASK-183-admin-download-videos.md) | Completed | 164, 181 |
 | 184 | [TASK-184 - Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md) | In Progress | 182 |
+| 185 | [TASK-185 - Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md) | Completed | 62, 82, 90, 183 |
 
 ## Ordem operacional recomendada sem bloqueios
 

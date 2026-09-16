@@ -3,8 +3,15 @@ import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { cn } from "@/lib/utils";
+import {
+  COMMUNITY_FEED_VARIATION_WINDOW_SIZE,
+  varyCommunityFeedItems,
+} from "@/utils/community-feed-variation";
 
 export const PAGE_LIMIT = 12;
+
+export const FEED_VARIATION_WINDOW_SIZE = COMMUNITY_FEED_VARIATION_WINDOW_SIZE;
+export const FEED_VARIATION_MAX_ITEMS = PAGE_LIMIT;
 
 export const COMMUNITY_POST_SORTS = [
   { icon: Flame, label: "Em destaque", value: "featured" },
@@ -213,6 +220,12 @@ export const flattenCommunityPostPages = (pages?: Array<{ data: CommunityPost[] 
 
   return posts;
 };
+
+export const varyCommunityFeedPosts = (posts: CommunityPost[], seed: number) =>
+  varyCommunityFeedItems(posts, seed, {
+    maxItems: FEED_VARIATION_MAX_ITEMS,
+    windowSize: FEED_VARIATION_WINDOW_SIZE,
+  });
 
 export const comparePostDates = (a: CommunityPost, b: CommunityPost) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();

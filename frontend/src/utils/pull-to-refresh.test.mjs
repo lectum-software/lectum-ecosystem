@@ -13,7 +13,7 @@ test("calcula progresso ate o ponto de soltar para atualizar", () => {
   assert.deepEqual(getPullToRefreshSnapshot(0), {
     progress: 0,
     status: "pulling",
-    translateY: 10,
+    translateY: 2,
   });
 
   assert.equal(getPullToRefreshSnapshot(PULL_TO_REFRESH_TRIGGER_PX - 1).status, "pulling");
