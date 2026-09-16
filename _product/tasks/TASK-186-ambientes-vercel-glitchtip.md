@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | In Progress |
+| Status | Completed |
 
 ## Escopo e dependências
 
@@ -24,8 +24,8 @@ Pedido de 16/09/2026: revisar todas as envs Vercel de frontend/admin em Preview 
 - [x] SDK e CSP aceitam domínio exato GlitchTip Lectum, mantendo Sentry SaaS e rejeitando outros hosts.
 - [x] Upload de source maps usa destino validado correspondente ao DSN, sem encaminhar token para URL arbitrária.
 - [x] Testes de regressão, checks e builds frontend/admin aprovados.
-- [ ] Smoke real do serviço de erros em homolog e verificação do deploy, sem dados pessoais.
-- [ ] ADR, manifests sincronizados, commit/push somente em homolog.
+- [x] Smoke real do serviço de erros em homolog e verificação do deploy, sem dados pessoais.
+- [x] ADR, manifests sincronizados, commit/push somente em homolog.
 
 ## Configuração realizada na Vercel
 
@@ -59,3 +59,14 @@ O build Vercel do Admin 0.1.399 enviou 104 artefatos ao GlitchTip, mas falhou no
 - Patch 0.1.402: o adapter oficial confirmou a causa ainda pendente na 0.1.401: `.vc-config.json` usa `filePathMap` relativo a `config.repoRoot`, além dos traces. A hipótese anterior de links não explicava a falha (zero links). Postbuild agora também poda essas entradas e hashes correspondentes, preservando todas as demais dependências. Oito testes filesystem aprovados (40 focados ao todo), incluindo standalone/monorepo, metadados e idempotência.
 - Reprodução local com adapter oficial temporário, sem dependência nova nas aplicações: build frontend com upload real ao GlitchTip removeu 194 mapas e 4.131 referências de funções. Build Admin com adapter também aprovado (sem credencial local de upload). Verificação de todos os `filePathMap` gerados registrada antes do novo deploy. Nenhum DNS ou credencial de pagamento alterado.
 - Pré-push 0.1.402: `pnpm check` raiz e `pnpm check:version` aprovados. Output real: frontend 241 funções/49.182 referências; Admin 77 funções/14.958 referências; zero referências internas de mapas e zero arquivos ausentes nos dois. Bump executado uma única vez para o commit corretivo.
+
+
+## Fechamento validado
+
+- Correção publicada no commit `0e54d558` (0.1.402), somente `homolog`; Vercel frontend e Admin **Ready**, statuses GitHub success.
+- Domínios homolog frontend/admin: `/version` HTTP 200, versão 0.1.402, no-cache/no-store e noindex. Login público HTTP 200; Browser confirmou Admin renderizado e frontend navegável com sessão preexistente, sem erros/warnings de console observados. Nenhum novo login, pagamento ou alteração de cadastro neste smoke.
+- CSP publicada nos dois inclui apenas a origem validada `https://glit.lectum.com.br` em connect-src. Três URLs de mapas derivadas dos scripts de cada login retornaram HTTP 403 (bloqueados na camada publicada, não prova isolada de inexistência); a ausência física e integridade das dependências foram verificadas no output local com adapter real. O smoke inicial esperava 404 estritamente; aceitação corrigida para bloqueio 403 ou inexistência 404, sem reduzir proteção.
+- GlitchTip confirmou releases frontend/admin 0.1.402; Admin com 92 artefatos e frontend com 473 artefatos (build local real e Vercel na mesma release). Captura real via SDK/política do frontend já confirmada no projeto homolog-frontend (issue HOMOLOG-FRONTEND-2). Essa captura operacional via SDK não equivale a provocar erro dentro do navegador do usuário.
+- Backend `/health`, `/ready` e `/ping` HTTP 200, versão 0.1.402; apenas bump sincronizado, sem lógica/banco alterados.
+- Encerramento documental recebe bump próprio 0.1.403 e push em homolog. Nenhuma promoção, reset ou mudança de DNS. TASK-184 e auditoria geral não são encerradas por este smoke.
+- Pendência externa aceita: Production Mercado Pago continua com dummy `***`; substituir pela chave real antes de habilitar pagamentos de produção. Env pronta para futuro build não valida um deploy de produção ainda não realizado.

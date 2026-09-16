@@ -2,7 +2,7 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Em execução: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Corrigir compatibilidade do SDK/CSP e concluir configuração Preview/Production, publicando código somente em homolog.
+Concluída: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Envs Preview/Production revisadas, SDK/CSP e empacotamento de mapas corrigidos; frontend/admin 0.1.402 Ready e smoke aprovado. Produção não promovida e dummy Mercado Pago mantido por decisão do usuário.
 
 Pendente de teste físico: [TASK-184 — Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md). Unificar aquisição imediata do vídeo antes do preview, com cópia temporária privada, memória limitada por parte e transporte direto ao Stream; incidente da galeria Redmi ainda depende de validação física.
 
@@ -300,7 +300,7 @@ ou cortesia manual.
 | 183 | [TASK-183 - Download de vídeos no Admin](TASK-183-admin-download-videos.md) | Completed | 164, 181 |
 | 184 | [TASK-184 - Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md) | In Progress | 182 |
 | 185 | [TASK-185 - Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md) | Completed | 62, 82, 90, 183 |
-| 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | In Progress | 179 |
+| 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | Completed | 179 |
 
 ## Ordem operacional recomendada sem bloqueios
 
