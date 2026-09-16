@@ -35,8 +35,8 @@ o upload. Rollback apenas de código, preservando dados. Não liberar assinatura
 - [x] Logs distinguem leitura de transporte sem mensagens livres; contrato compatível.
 - [x] Testes reais do arquivo informado e regressão automatizada sem mocks.
 - [x] Checks e builds das quatro apps e browser local.
-- [ ] Smoke do deploy homolog e upload real com a versão publicada.
-- [ ] ADR, versão, commit e push homolog.
+- [x] Smoke do deploy 0.1.394 e upload real com a versão publicada (desktop).
+- [x] ADR, versão 0.1.394, commit 7dbe044e e push homolog.
 - [ ] Confirmação no Chrome Android pela galeria; não substituir por desktop/emulação.
 
 ## Validação em andamento
@@ -62,3 +62,49 @@ o upload. Rollback apenas de código, preservando dados. Não liberar assinatura
 O agente não possui Android físico conectado. Publicação de mitigação e sucesso desktop não
 encerram o incidente Android. O provider da galeria ainda precisa permitir ler os bytes; caso
 recuse, mostrar erro de leitura em PT-BR e registrar somente classificação fechada.
+
+## Seguimento — fonte ilegível confirmada no Android
+
+Logs posteriores da 0.1.394 confirmam `source=failed/sourceFailure=unreadable`, antes
+que o primeiro PATCH transporte bytes. A materialização limitada não resolveu esse aparelho;
+contrato Stream provisionado com sucesso não significa que o navegador leu o arquivo.
+
+Escopo adicional (somente frontend; sem env/package/banco/qualidade/boot):
+- [x] Composer mantém um único input e FileList durante preview/envio/falha; não limpar no change.
+- [x] Editor de resposta também mantém a seleção até descarte, sucesso ou nova escolha.
+- [x] Falha tipada de leitura oferece botão explícito para seletor genérico; preserva texto e
+  bloqueia repetição do mesmo File ilegível até nova seleção válida ou remoção.
+- [x] Validação de MIME/limite/permissão mantida; cancelamento/arquivo inválido não liberam envio.
+- [x] Mensagem da seleção inválida tem precedência e não é memorizada pela identidade de errors
+  do RHF; o editor pode rolar para alcançar a recuperação em alturas pequenas.
+- [x] Browser local com componente real, arquivo original e falha real em cópia temporária.
+- [x] `pnpm check` das quatro apps, build frontend e versão sincronizada 0.1.395.
+- [ ] Commit/push e smoke do seguimento (registrar resultado após publicação).
+- [ ] Resultado do mesmo vídeo no Chrome Android afetado após o seguimento.
+
+### Evidência executada do seguimento
+
+Browser local: input conectado e FileList com 250.743.537 bytes após preview. Uma cópia
+fora do repositório teve somente mtime alterado após seleção, provocando recusa real de
+leitura pelo navegador. O rascunho foi preservado, envio bloqueado, recuperação exibida.
+Seleção de TXT pela recuperação foi recusada com mensagem PT-BR visível e sem liberar
+envio. Nova seleção do original removeu o bloqueio; leitura integral de 48 partes
+(250.743.537 bytes), texto mantido até sucesso e formulário limpo depois.
+Nenhum endpoint simulado, publicação ou alteração do original nesse ensaio. O harness
+local é temporário, arquivado fora do repositório e removido antes do build.
+
+Visual mobile-first: componente real contido em 390 px, Button e InlineAlert existentes;
+referência `_product/proto/Dentro do Post.jpg`. Builder indisponível nesta sessão.
+Revisão independente corrigiu scroll do editor e precedência de validação. Browser detectou
+cache inadequado do erro RHF, também removido. Não afirmar reprodução física Android.
+
+Preservar input é uma mitigação conservadora, **não prova de que sua remoção revoga o File**.
+O seletor genérico altera a rota de aquisição no Chromium consultado; não garante app Arquivos,
+fonte local ou permissão válida em toda versão/OEM. Não copiar vídeo inteiro para RAM/OPFS,
+não introduzir proxy na API principal, R2 ou compressão como solução para bytes inacessíveis.
+
+Validação do seguimento: `pnpm check` completo passou; build frontend 0.1.395 passou;
+5 regressões novas passaram. Os 6 testes condicionais do serviço de vídeo permanecem
+skipped, não contam como teste externo. O primeiro check encontrou somente types gerados
+pelo dev para a rota temporária já removida; artefatos dev descartados e check completo
+reexecutado com sucesso. Um único bump; sem alteração de código runtime de backend/admin/video.

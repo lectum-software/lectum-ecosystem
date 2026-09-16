@@ -18,9 +18,11 @@ import {
   createReplyVideoThumbnail,
   detectReplyMediaOrientation,
   mediaTypeFromFile,
+  REPLY_MEDIA_ACCEPT,
   ReplyMediaAttachmentControl,
   type SelectedReplyMedia,
 } from "@/components/community/reply-media-attachment-control";
+import { VideoFileReadRecovery } from "@/components/community/video-file-read-recovery";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import {
@@ -33,6 +35,7 @@ import {
   getCommunityMediaSelectionSizeError,
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
+import { isVideoSourceReadFailure } from "@/utils/video-upload-diagnostics";
 import {
   COMMENT_GUIDANCE_MESSAGE,
   confirmDiscardReplyDraft,
@@ -83,6 +86,7 @@ export const ReplyComposer = ({
   const [draggingToCancel, setDraggingToCancel] = useState(false);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
+  const [needsReadableFile, setNeedsReadableFile] = useState(false);
   const { beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
   const composerFormNodeRef = useRef<HTMLElement | null>(null);
@@ -98,13 +102,10 @@ export const ReplyComposer = ({
     startX: number;
     startY: number;
   } | null>(null);
-  const visibleError = useMemo(() => {
-    if (apiError) return apiError;
-    const firstError = Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
-    if (!hook.formState.isSubmitted && !firstError) return null;
-
-    return firstError;
-  }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
+  // RHF pode atualizar um erro mantendo a referência de errors; não memorizar esse valor.
+  // A seleção nova pode ser inválida; não esconder esse motivo atrás do upload anterior.
+  const firstError = Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
+  const visibleError = firstError || apiError || null;
   const content = hook.watch("content");
   const draft = String(content ?? "").trim();
   const hasDraft = draft.length > 0;
@@ -161,6 +162,8 @@ export const ReplyComposer = ({
   const clearSelectedMedia = useCallback(() => {
     revokeSelectedMediaPreview();
     setSelectedMedia(null);
+    setNeedsReadableFile(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }, [revokeSelectedMediaPreview]);
 
   const beginMediaPickerInteraction = useCallback(() => {
@@ -355,7 +358,6 @@ export const ReplyComposer = ({
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    event.target.value = "";
 
     if (!file || !mediaPermission.canAttach) {
       endMediaPickerInteraction();
@@ -386,6 +388,7 @@ export const ReplyComposer = ({
     revokeSelectedMediaPreview();
     const previewUrl = URL.createObjectURL(file);
     selectedMediaPreviewUrlRef.current = previewUrl;
+    setNeedsReadableFile(false);
     setSelectedMedia({
       file,
       isPreparingPreview: type === "video",
@@ -455,6 +458,7 @@ export const ReplyComposer = ({
   };
 
   const submitComposer = () => {
+    if (needsReadableFile) return;
     void hook.handleSubmit(async (values) => {
       if (!String(values.content ?? "").trim() && !selectedMedia) {
         hook.setError("content", {
@@ -473,7 +477,8 @@ export const ReplyComposer = ({
         endMediaPickerInteraction();
         updateComposerActive(false);
         onDraftStateChange?.(false);
-      } catch {
+      } catch (error) {
+        if (isVideoSourceReadFailure(error)) setNeedsReadableFile(true);
         // O estado de erro é tratado pela mutation para manter o campo preenchido.
       } finally {
         videoUploadOperation?.complete();
@@ -522,6 +527,14 @@ export const ReplyComposer = ({
       ref={assignComposerFormRef}
       style={composerStyle}
     >
+      {/* O seletor permanece montado e com o FileList durante preview, envio e erro. */}
+      <input
+        accept={REPLY_MEDIA_ACCEPT}
+        className="hidden"
+        onChange={handleMediaChange}
+        ref={fileInputRef}
+        type="file"
+      />
       {shouldShowGuidance ? (
         <p className="rounded-[14px] bg-surface-muted px-3 py-2 text-xs font-semibold leading-5 text-muted dark:bg-surface-muted dark:text-muted">
           {replyContextLabel}
@@ -534,6 +547,7 @@ export const ReplyComposer = ({
             <ReplyMediaAttachmentControl
               className="absolute top-1/2 left-1 z-10 -translate-y-1/2"
               composerMode="trigger"
+              renderInput={false}
               disabled={disabled}
               fileInputRef={fileInputRef}
               isUploading={disabled && Boolean(selectedMedia)}
@@ -549,6 +563,7 @@ export const ReplyComposer = ({
             <ReplyMediaAttachmentControl
               className="px-3.5 pb-3 pt-0"
               composerMode="preview"
+              renderInput={false}
               disabled={disabled}
               fileInputRef={fileInputRef}
               isUploading={disabled && Boolean(selectedMedia)}
@@ -564,7 +579,7 @@ export const ReplyComposer = ({
         <Button
           aria-label="Enviar resposta"
           className="h-11 w-11 shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-lectum-soft hover:bg-primary-hover disabled:bg-surface-muted disabled:text-subtle disabled:opacity-100 disabled:shadow-none"
-          disabled={disabled || !ready}
+          disabled={disabled || !ready || needsReadableFile}
           onClick={submitComposer}
           type="button"
         >
@@ -591,6 +606,13 @@ export const ReplyComposer = ({
         <InlineAlert title="Não foi possível responder" variant="error">
           {visibleError}
         </InlineAlert>
+      ) : null}
+      {needsReadableFile ? (
+        <VideoFileReadRecovery
+          disabled={disabled || !mediaPermission.canAttach}
+          fileInputRef={fileInputRef}
+          onOpenDialog={beginMediaPickerInteraction}
+        />
       ) : null}
     </div>
   );

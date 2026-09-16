@@ -17,6 +17,7 @@ import {
   ReplyMediaAttachmentControl,
   type SelectedReplyMedia,
 } from "@/components/community/reply-media-attachment-control";
+import { VideoFileReadRecovery } from "@/components/community/video-file-read-recovery";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { type Field, useFormList } from "@/hooks/form";
@@ -33,6 +34,7 @@ import {
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
+import { isVideoSourceReadFailure } from "@/utils/video-upload-diagnostics";
 
 const replyEditSchema = z.object({
   content: z.string().trim().max(2000, "Use no máximo 2000 caracteres no texto"),
@@ -81,6 +83,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
+  const [needsReadableFile, setNeedsReadableFile] = useState(false);
   const [removeMedia, setRemoveMedia] = useState(false);
   const form = useFormList<ReplyEditForm>({
     fields,
@@ -99,6 +102,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   const uploadMutation = useUploadPostReplyMedia({
     onError: (error) => {
       if (isUploadPreparationCanceled(error)) return;
+      if (isVideoSourceReadFailure(error)) setNeedsReadableFile(true);
       setActionError(resolveMediaUploadError(error));
     },
   });
@@ -115,7 +119,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   const isSubmitting = uploadMutation.isPending || updateMutation.isPending;
   const contentDraft = String(hook.watch("content") ?? "").trim();
   const hasEffectiveMedia = Boolean(selectedMedia || (!removeMedia && reply.media_url));
-  const canSubmit = Boolean(contentDraft || hasEffectiveMedia);
+  const canSubmit = Boolean(contentDraft || hasEffectiveMedia) && !needsReadableFile;
 
   const focusEditor = useCallback(() => {
     window.setTimeout(() => {
@@ -166,6 +170,8 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   const clearSelectedMedia = useCallback(() => {
     revokeSelectedMediaPreview();
     setSelectedMedia(null);
+    setNeedsReadableFile(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }, [revokeSelectedMediaPreview]);
 
   useEffect(() => {
@@ -200,7 +206,6 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
-    event.currentTarget.value = "";
 
     if (!file) return;
 
@@ -229,6 +234,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     revokeSelectedMediaPreview();
     const previewUrl = URL.createObjectURL(file);
     selectedMediaPreviewUrlRef.current = previewUrl;
+    setNeedsReadableFile(false);
     setSelectedMedia({
       file,
       isPreparingPreview: type === "video",
@@ -244,6 +250,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   };
 
   const handleSubmit = hook.handleSubmit(async (values) => {
+    if (needsReadableFile) return;
     setActionError(null);
 
     if (!String(values.content ?? "").trim() && !hasEffectiveMedia) {
@@ -368,7 +375,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
         </header>
 
         <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
-          <div className="min-h-0 flex-1 overflow-hidden px-5 py-5 sm:px-6">
+          <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-5 sm:px-6">
             <div className="grid gap-4">
               {FieldComponent ? <FieldComponent control={hook.control} {...contentField} /> : null}
 
@@ -411,6 +418,12 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
                 <InlineAlert title="Não foi possível salvar" variant="error">
                   {actionError}
                 </InlineAlert>
+              ) : null}
+              {needsReadableFile ? (
+                <VideoFileReadRecovery
+                  disabled={isSubmitting || !canManageMedia}
+                  fileInputRef={fileInputRef}
+                />
               ) : null}
             </div>
           </div>

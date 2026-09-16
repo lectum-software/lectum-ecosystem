@@ -79,3 +79,6 @@ export class VideoUploadFailure extends Error {
     if (transport) this.transport = transport;
   }
 }
+
+export const isVideoSourceReadFailure = (error: unknown) =>
+  error instanceof VideoUploadFailure && error.transport?.source === "failed";
