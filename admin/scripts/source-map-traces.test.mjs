@@ -9,6 +9,11 @@ import {
   removeBuildSourceMapLinks,
 } from "./source-map-traces.mjs";
 
+const isSymlinkUnavailable = (error) =>
+  error instanceof Error &&
+  "code" in error &&
+  ["EACCES", "ENOSYS", "EPERM"].includes(String(error.code));
+
 test("remove apenas referências a mapas do build, preservando dependências e metadados", async () => {
   const temp = await mkdtemp(join(tmpdir(), "lectum-traces-"));
   try {
@@ -51,7 +56,7 @@ test("remove apenas referências a mapas do build, preservando dependências e m
   }
 });
 
-test("remove mapas symlink do adapter sem seguir diretórios ou apagar alvo externo", async () => {
+test("remove mapas symlink do adapter sem seguir diretorios ou apagar alvo externo", async (t) => {
   const temp = await mkdtemp(join(tmpdir(), "lectum-map-links-"));
   try {
     const root = join(temp, ".next");
@@ -60,10 +65,16 @@ test("remove mapas symlink do adapter sem seguir diretórios ou apagar alvo exte
     await mkdir(output, { recursive: true });
     await mkdir(external);
     await writeFile(join(external, "keep.map"), "private-map");
-    await symlink(join(root, "server", "chunks", "2442.js.map"), join(output, "2442.js.map"));
-    await symlink(join(external, "keep.map"), join(output, "external.js.map"));
-    await symlink(external, join(output, "dependencies"));
-    await symlink(join(external, "keep.map"), join(output, "runtime.js"));
+    try {
+      await symlink(join(root, "server", "chunks", "2442.js.map"), join(output, "2442.js.map"));
+      await symlink(join(external, "keep.map"), join(output, "external.js.map"));
+      await symlink(external, join(output, "dependencies"));
+      await symlink(join(external, "keep.map"), join(output, "runtime.js"));
+    } catch (error) {
+      if (!isSymlinkUnavailable(error)) throw error;
+      t.skip("Ambiente local nao permite criar symlink sem permissao elevada.");
+      return;
+    }
     assert.equal(await removeBuildSourceMapLinks(root), 2);
     assert.equal(await readFile(join(external, "keep.map"), "utf8"), "private-map");
     assert.equal(await readFile(join(output, "runtime.js"), "utf8"), "private-map");

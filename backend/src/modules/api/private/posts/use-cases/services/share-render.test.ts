@@ -53,6 +53,16 @@ describe("post share render media selection", () => {
     assert.match(source, /streamPlaybackRequestOrigin/);
   });
 
+  it("usa timeout de inicio resiliente para criar job social no servico dedicado", async () => {
+    const source = await shareRenderServiceSource();
+
+    assert.match(source, /const VIDEO_SERVICE_START_TIMEOUT_MS = 30_000/);
+    assert.match(
+      source,
+      /requestVideoService\(\s*"\/api\/private\/jobs\/social-share"[\s\S]*VIDEO_SERVICE_START_TIMEOUT_MS/,
+    );
+  });
+
   it("usa rotulos sociais diferenciados para posts e respostas", async () => {
     const source = await shareRenderServiceSource();
 

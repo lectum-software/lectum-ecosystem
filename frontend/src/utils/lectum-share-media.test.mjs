@@ -76,6 +76,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(mediaSource, /createShareRenderRequestError/);
   assert.match(mediaSource, /isRetryableApiError/);
   assert.match(mediaSource, /SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS/);
+  assert.match(mediaSource, /16_000/);
   assert.match(mediaSource, /SERVER_SHARE_RENDER_JOB_CACHE_TTL_MS/);
   assert.match(mediaSource, /preparedShareRenderJobCache/);
   assert.match(mediaSource, /900_000/);

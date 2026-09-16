@@ -1,7 +1,7 @@
 import { isIP } from "node:net";
 import { isPublishedRuntime, parsePositiveInteger } from "@/utils/runtime-config";
 
-const DEFAULT_REQUEST_TIMEOUT_MS = 5_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 const MAX_CONFIGURED_URL_LENGTH = 2_048;
 const EXACT_HTTP_SCHEME_SEPARATOR = /^https?:\/\/[^/\\]/i;
 const INTERNAL_SERVICE_HOSTNAME_SUFFIXES = [

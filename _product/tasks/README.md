@@ -4,7 +4,9 @@ Fila sequencial de execução do produto Lectum.
 
 Concluída: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Envs Preview/Production revisadas, SDK/CSP e empacotamento de mapas corrigidos; frontend/admin 0.1.402 Ready e smoke aprovado. Produção não promovida e dummy Mercado Pago mantido por decisão do usuário.
 
-Pendente de teste físico: [TASK-184 — Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md). Unificar aquisição imediata do vídeo antes do preview, com cópia temporária privada, memória limitada por parte e transporte direto ao Stream; incidente da galeria Redmi ainda depende de validação física.
+Correcao operacional 16/09/2026 13:05: [TASK-42 - Layout de compartilhamento social para video-resposta](TASK-42-layout-compartilhamento-video-resposta.md) e [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) receberam ajuste para o erro `SR-01` no inicio da geracao. O backend passa a tolerar ate 30s ao criar o job `social_share`, o frontend amplia retries transitorios antes de exibir falha, e o `video/` aumenta a margem de `/ready`/healthcheck para cold start de FFmpeg. Sem banco, env obrigatoria nova, package novo, provider, storage ou mudanca de contrato.
+
+Pendente de teste fisico: [TASK-184 - Leitura estavel de video da galeria Android](TASK-184-upload-galeria-android.md). Unificar aquisicao imediata do video antes do preview, com copia temporaria privada, memoria limitada por parte e transporte direto ao Stream; incidente da galeria Redmi ainda depende de validacao fisica.
 
 Concluída: [TASK-185 — Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md). Ajusta o pull-to-refresh mobile para feedback por ícone no topo sem textos visíveis, habilita refresh ao tocar no item ativo da navegação e aplica variação leve client-side no feed geral de Comunidades, sem alterar backend, banco, envs ou packages.
 

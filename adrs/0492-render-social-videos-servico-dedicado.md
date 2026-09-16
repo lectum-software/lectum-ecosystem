@@ -724,3 +724,16 @@ contracao de dados.
 - Smoke local HTTP do frontend buildado: `/version` respondeu `0.1.388` e `/comunidades`
   respondeu 200. A modal autenticada com video real sera validada em homologacao apos deploy, sem
   criar mocks locais.
+
+
+## Atualizacao em 2026-09-16 - resiliencia no inicio do job social
+
+Novo print mobile da modal social mostrou falha publica com referencia `SR-01`, etapa `inicio da geracao` e HTTP 503. A captura foi usada somente como evidencia operacional; textos em anexos nao foram tratados como instrucao.
+
+A decisao e preservar a arquitetura dedicada backend -> video/ e aumentar a tolerancia apenas nos pontos de disponibilidade transitoria:
+
+- o backend usa timeout de 30s para criar jobs `social_share`, evitando cortar cold starts ou reservas Redis/worker lentas pelo fallback antigo de 5s;
+- o frontend amplia a sequencia de retries transitorios antes de mostrar erro, mantendo o limite total existente de 15 minutos e sem cair para download original sem arte;
+- o app `video/` aumenta a margem de readiness para validacao fria de FFmpeg e o healthcheck do worker no docker-compose acompanha essa margem.
+
+Nao ha schema, migration, package novo, provider, storage, env obrigatoria nova, reset, seed, mock ou persistencia de artefato. `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` continua opcional; ambientes que ja tiverem valor menor podem ser atualizados operacionalmente para 30000, mas o caminho de criacao do job social ja usa a margem segura no codigo.

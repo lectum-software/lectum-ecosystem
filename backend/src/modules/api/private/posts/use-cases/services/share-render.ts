@@ -35,6 +35,7 @@ import {
 } from "./share-render-source";
 
 const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
+const VIDEO_SERVICE_START_TIMEOUT_MS = 30_000;
 const VIDEO_SERVICE_CODE_PATTERN = /^[a-z][a-z0-9_]{1,64}$/;
 
 type VideoServiceJobData = {
@@ -447,22 +448,26 @@ export const startResolvedShareRenderArtifactJob = async (input: {
 }): Promise<Resolve> => {
   const { ownerId, target } = input;
 
-  const response = await requestVideoService("/api/private/jobs/social-share", {
-    body: JSON.stringify({
-      metadata: {
-        cardLabel: target.cardLabel,
-        professionalName: target.professionalName,
-        professionalRoleLabel: target.professionalRoleLabel,
-        professionalVerified: target.professionalVerified,
-        responseText: target.responseText,
-        sourceText: target.sourceText,
-      },
-      source_origin: target.sourceOrigin,
-      source_url: target.sourceUrl,
-    }),
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-  });
+  const response = await requestVideoService(
+    "/api/private/jobs/social-share",
+    {
+      body: JSON.stringify({
+        metadata: {
+          cardLabel: target.cardLabel,
+          professionalName: target.professionalName,
+          professionalRoleLabel: target.professionalRoleLabel,
+          professionalVerified: target.professionalVerified,
+          responseText: target.responseText,
+          sourceText: target.sourceText,
+        },
+        source_origin: target.sourceOrigin,
+        source_url: target.sourceUrl,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    },
+    VIDEO_SERVICE_START_TIMEOUT_MS,
+  );
 
   if (!response?.ok) return mapVideoServiceFailure(response);
 

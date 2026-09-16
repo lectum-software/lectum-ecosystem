@@ -57,6 +57,13 @@ describe("Video service default runtime", () => {
     assert(workerNetworks.includes("video-edge"));
     assert(workerNetworks.includes("video-private"));
     assert.doesNotMatch(workerBlock, /\n {4}ports:/u);
+    assert.match(workerBlock, /\n {6}timeout: 20s/u);
     assert.match(compose, /\n {2}video-private:\r?\n {4}internal: true/u);
+  });
+
+  it("mantem readiness com margem para validacao fria de FFmpeg", async () => {
+    const readinessSource = await readProjectFile("src/http/readiness.ts");
+
+    assert.match(readinessSource, /const READINESS_TIMEOUT_MS = 15_000/);
   });
 });

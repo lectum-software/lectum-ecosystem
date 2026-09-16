@@ -53,6 +53,17 @@ describe("video processing service configuration", () => {
     );
   });
 
+  it("usa timeout default compativel com cold start do servico de video", () => {
+    const resolution = resolveVideoProcessingServiceConfig({
+      NODE_ENV: "production",
+      VIDEO_PROCESSING_SERVICE_URL: "https://video.lectum.com.br",
+      VIDEO_SERVICE_API_KEY: "k".repeat(64),
+    });
+
+    assert.equal(resolution.status, "configured");
+    assert.equal(resolution.config?.requestTimeoutMs, 30_000);
+  });
+
   it("aceita endpoint dedicado seguro em runtime publicado", () => {
     assert.equal(
       parseVideoProcessingServiceUrl("http://192.168.250.2:3003", {

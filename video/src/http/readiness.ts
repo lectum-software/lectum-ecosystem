@@ -8,7 +8,7 @@ import {
 import type { VideoQueue } from "../infra/queue/client.js";
 import { assertStorageCapacity, ensureVideoStorage } from "../infra/storage/storage.js";
 
-const READINESS_TIMEOUT_MS = 5_000;
+const READINESS_TIMEOUT_MS = 15_000;
 const FFMPEG_CAPABILITY_STDOUT_LIMIT_BYTES = 2_097_152;
 let ffmpegSocialRenderCapabilityCheck: Promise<void> | null = null;
 
