@@ -36,6 +36,8 @@ import {
 
 const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
 const VIDEO_SERVICE_START_TIMEOUT_MS = 30_000;
+const VIDEO_SERVICE_START_RETRY_WINDOW_MS = 75_000;
+const VIDEO_SERVICE_START_RETRY_DELAYS_MS = [1_000, 2_000, 4_000, 8_000, 12_000] as const;
 const VIDEO_SERVICE_CODE_PATTERN = /^[a-z][a-z0-9_]{1,64}$/;
 
 type VideoServiceJobData = {
@@ -143,6 +145,40 @@ const requestVideoService = async (
   } catch {
     logShareRenderServiceWarning("request_failed");
     return null;
+  }
+};
+
+const waitForVideoServiceRetry = (durationMs: number) =>
+  new Promise<void>((resolve) => {
+    const timeout = setTimeout(resolve, durationMs);
+    timeout.unref();
+  });
+
+const isTransientVideoServiceStartResponse = (response: Response | null) =>
+  !response || response.status === 408 || response.status === 425 || response.status >= 500;
+
+const requestVideoServiceForJobStart = async (
+  path: string,
+  init: RequestInit = {},
+): Promise<Response | null> => {
+  const deadlineAt = Date.now() + VIDEO_SERVICE_START_RETRY_WINDOW_MS;
+  let attempt = 0;
+
+  while (true) {
+    const response = await requestVideoService(path, init, VIDEO_SERVICE_START_TIMEOUT_MS);
+    if (!isTransientVideoServiceStartResponse(response)) return response;
+
+    const delayMs = VIDEO_SERVICE_START_RETRY_DELAYS_MS[attempt];
+    if (delayMs === undefined || Date.now() + delayMs >= deadlineAt) return response;
+
+    if (response) {
+      logShareRenderServiceWarning("start_transient_retry", { status: response.status });
+      await response.body?.cancel().catch(() => undefined);
+    } else {
+      logShareRenderServiceWarning("start_transient_retry");
+    }
+    attempt += 1;
+    await waitForVideoServiceRetry(delayMs);
   }
 };
 
@@ -448,26 +484,22 @@ export const startResolvedShareRenderArtifactJob = async (input: {
 }): Promise<Resolve> => {
   const { ownerId, target } = input;
 
-  const response = await requestVideoService(
-    "/api/private/jobs/social-share",
-    {
-      body: JSON.stringify({
-        metadata: {
-          cardLabel: target.cardLabel,
-          professionalName: target.professionalName,
-          professionalRoleLabel: target.professionalRoleLabel,
-          professionalVerified: target.professionalVerified,
-          responseText: target.responseText,
-          sourceText: target.sourceText,
-        },
-        source_origin: target.sourceOrigin,
-        source_url: target.sourceUrl,
-      }),
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-    },
-    VIDEO_SERVICE_START_TIMEOUT_MS,
-  );
+  const response = await requestVideoServiceForJobStart("/api/private/jobs/social-share", {
+    body: JSON.stringify({
+      metadata: {
+        cardLabel: target.cardLabel,
+        professionalName: target.professionalName,
+        professionalRoleLabel: target.professionalRoleLabel,
+        professionalVerified: target.professionalVerified,
+        responseText: target.responseText,
+        sourceText: target.sourceText,
+      },
+      source_origin: target.sourceOrigin,
+      source_url: target.sourceUrl,
+    }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
 
   if (!response?.ok) return mapVideoServiceFailure(response);
 

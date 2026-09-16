@@ -710,3 +710,45 @@ Novo print mobile em 16/09/2026 as 13:05 mostrou a modal `Publique nas redes soc
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin/video `/version` quando publicados.
+
+## Segunda correcao operacional em 2026-09-16 - SR-01 ainda no inicio da geracao
+
+### Contexto
+
+- O usuario reportou que, mesmo com homologacao 0.1.404 publicada, a modal continuava exibindo a
+  mesma falha `SR-01` na etapa `inicio da geracao`, com status HTTP 503.
+- Isso indica falha antes da criacao do `job_id`; portanto, a resiliencia precisa cobrir a chamada
+  backend -> `video/` que cria o job, nao apenas o polling/download depois que o job existe.
+
+### Decisoes
+
+- Backend: adicionar retry curto e fechado para a criacao do job social no servico dedicado,
+  repetindo apenas respostas transitorias (`null`, 408, 425 e 5xx). Respostas de contrato,
+  permissao, alvo invalido ou midia invalida continuam falhando sem retry para nao mascarar erro
+  permanente nem expor detalhe tecnico.
+- Frontend: ampliar a janela de espera do inicio da geracao para acomodar o retry server-side e
+  cold start/readiness mais lento do `video/`.
+- Sem banco, migration, package novo, provider novo, storage novo, mock, seed, reset ou env
+  obrigatoria nova.
+- Se `SR-01` persistir apos essa versao, a pendencia passa a ser operacional: validar nomes/valores
+  de deploy de `VIDEO_PROCESSING_SERVICE_URL` no backend e `VIDEO_SERVICE_API_KEY` compartilhado com
+  `video/`, alem de readiness/worker do servico dedicado. Valores nunca devem ser expostos.
+
+### Criterios de aceite desta correcao
+
+- [x] Backend tenta novamente somente falhas transitorias ao criar `social_share`.
+- [x] Frontend aguarda a janela maior de inicio da geracao antes de exibir falha ao usuario.
+- [x] A mensagem publica continua segura e sem segredo, stack, URL interna ou provider.
+- [x] Nao ha mudanca de schema, contrato publico, provider, bucket, dados publicados ou packages.
+
+### Validacoes desta correcao
+
+- [x] Teste focado backend `share-render.test.ts`.
+- [x] Teste focado frontend `lectum-share-media.test.mjs`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm check`.
+- [x] `pnpm version:bump` e `pnpm check:version` (0.1.405).
+- Commit/push em `homolog` e smoke de homologacao em `/health`, `/ready`, `/ping` e `/version` serao registrados no relatorio final.

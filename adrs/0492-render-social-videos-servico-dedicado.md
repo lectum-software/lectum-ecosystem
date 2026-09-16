@@ -737,3 +737,18 @@ A decisao e preservar a arquitetura dedicada backend -> video/ e aumentar a tole
 - o app `video/` aumenta a margem de readiness para validacao fria de FFmpeg e o healthcheck do worker no docker-compose acompanha essa margem.
 
 Nao ha schema, migration, package novo, provider, storage, env obrigatoria nova, reset, seed, mock ou persistencia de artefato. `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` continua opcional; ambientes que ja tiverem valor menor podem ser atualizados operacionalmente para 30000, mas o caminho de criacao do job social ja usa a margem segura no codigo.
+
+## Atualizacao em 2026-09-16 - retry contra 503 persistente no inicio do job
+
+Mesmo apos ampliar timeouts, o feedback operacional indicou que a UI ainda recebia `SR-01` com
+HTTP 503 na etapa `inicio da geracao`. Como esse erro acontece antes de existir um `job_id`, a
+decisao foi tratar a criacao do job social como chamada sensivel a cold start/readiness do servico
+`video/`: o backend passa a repetir somente respostas transitorias (`null`, 408, 425 e 5xx) dentro
+de uma janela curta, sem repetir 400/401/403/404/422. O frontend tambem amplia a janela de espera
+do inicio para acomodar esses retries server-side.
+
+A decisao nao altera contrato HTTP, schema, storage ou provider. Se o mesmo `SR-01` persistir apos a
+versao publicada, o bloqueio deixa de ser mascaravel por codigo e deve ser tratado como requisito
+operacional pendente: validar, sem expor valores, `VIDEO_PROCESSING_SERVICE_URL` no backend, o mesmo
+`VIDEO_SERVICE_API_KEY` no backend e no `video/`, readiness/worker do servico dedicado e acesso
+server-to-server entre backend e video.

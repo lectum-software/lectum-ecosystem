@@ -57,10 +57,13 @@ describe("post share render media selection", () => {
     const source = await shareRenderServiceSource();
 
     assert.match(source, /const VIDEO_SERVICE_START_TIMEOUT_MS = 30_000/);
+    assert.match(source, /const VIDEO_SERVICE_START_RETRY_WINDOW_MS = 75_000/);
     assert.match(
       source,
-      /requestVideoService\(\s*"\/api\/private\/jobs\/social-share"[\s\S]*VIDEO_SERVICE_START_TIMEOUT_MS/,
+      /const VIDEO_SERVICE_START_RETRY_DELAYS_MS = \[1_000, 2_000, 4_000, 8_000, 12_000\]/,
     );
+    assert.match(source, /isTransientVideoServiceStartResponse/);
+    assert.match(source, /requestVideoServiceForJobStart\(\s*"\/api\/private\/jobs\/social-share"/);
   });
 
   it("usa rotulos sociais diferenciados para posts e respostas", async () => {
