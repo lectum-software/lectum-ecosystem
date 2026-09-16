@@ -2,6 +2,22 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { VIDEO_ASSET_PURPOSES } from "@/infra/video-stream/types";
 
+const transportDiagnosticSchema = z
+  .object({
+    request: z.enum(["HEAD", "PATCH", "POST", "unknown"]),
+    source: z.enum(["not_read", "reading", "ready", "failed"]),
+    sourceFailure: z.enum([
+      "none",
+      "unreadable",
+      "permission",
+      "missing",
+      "changed",
+      "invalid_range",
+      "unknown",
+    ]),
+  })
+  .strict();
+
 export const videoUploadClientEventSchema = z
   .object({
     event: z.enum(["transfer_start", "transfer_complete", "ready", "failed", "canceled"]),
@@ -24,6 +40,7 @@ export const videoUploadClientEventSchema = z
     online: z.boolean(),
     visibility: z.enum(["visible", "hidden"]),
     wasHidden: z.boolean(),
+    transport: transportDiagnosticSchema.optional(),
   })
   .strict();
 
@@ -39,6 +56,7 @@ export const toVideoUploadClientEventLog = (
   asset: { id: string; purpose: string },
 ) => {
   const purpose = purposeSchema.safeParse(asset.purpose);
+  const transport = transportDiagnosticSchema.safeParse(event.transport);
   return {
     event: event.event,
     phase: event.phase,
@@ -53,5 +71,6 @@ export const toVideoUploadClientEventLog = (
     wasHidden: event.wasHidden,
     purpose: purpose.success ? purpose.data : null,
     uploadRef: resolveVideoUploadRef(asset.id),
+    ...(transport.success ? { transport: transport.data } : {}),
   };
 };

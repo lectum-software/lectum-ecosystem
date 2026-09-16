@@ -539,3 +539,5 @@ Formato recomendado:
 - [ADR-0502 — Upload móvel retomável e diagnóstico seguro](0502-upload-movel-retomavel-e-diagnostico.md)
 - [ADR-0503 — Downloads de vídeos no Admin de Comunidades](0503-admin-download-videos-comunidade.md)
 - [ADR-0504 — Autoplay mudo no feed de Comunidades](0504-autoplay-mudo-feed-comunidades.md)
+
+- [ADR-0505 — Upload da galeria com leitura limitada por parte](0505-upload-galeria-com-leitura-limitada.md)

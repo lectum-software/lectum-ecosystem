@@ -130,4 +130,36 @@ describe("closed video upload diagnostics", () => {
       null,
     );
   });
+  it("accepts optional closed transport details without requiring them from legacy clients", () => {
+    const transport = { request: "PATCH", source: "failed", sourceFailure: "unreadable" };
+    assert.equal(videoUploadClientEventSchema.safeParse(event).success, true);
+    assert.equal(videoUploadClientEventSchema.safeParse({ ...event, transport }).success, true);
+    for (const invalid of [
+      null,
+      [],
+      "private text",
+      { ...transport, request: "DELETE" },
+      { ...transport, source: "private text" },
+      { ...transport, sourceFailure: "NotReadableError: secret" },
+      { ...transport, url: "https://private.invalid" },
+    ]) {
+      assert.equal(
+        videoUploadClientEventSchema.safeParse({ ...event, transport: invalid }).success,
+        false,
+      );
+    }
+    const safe = videoUploadClientEventSchema.parse({ ...event, transport });
+    assert.deepEqual(
+      toVideoUploadClientEventLog(safe, { id: "example", purpose: "community_reply" }).transport,
+      transport,
+    );
+    const polluted = { ...event, transport: { ...transport, token: "never logged" } };
+    assert.equal(
+      toVideoUploadClientEventLog(polluted as unknown as VideoUploadClientEvent, {
+        id: "example",
+        purpose: "community_reply",
+      }).transport,
+      undefined,
+    );
+  });
 });

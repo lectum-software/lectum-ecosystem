@@ -55,6 +55,7 @@ const validateUploadEvent = validator({
   body: Object.entries(videoUploadClientEventSchema.shape).map(([key, custom]) => ({
     key,
     custom,
+    optional: custom.isOptional(),
   })),
 } satisfies IValidatorRequest);
 

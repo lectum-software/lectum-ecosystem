@@ -36,6 +36,7 @@ adminApi.interceptors.response.use(
         const callbackUrl = `${window.location.pathname}${window.location.search}`;
         // A sessão rejeitada exige descartar todo o estado/cache administrativo em memória.
         // Este interceptor não é navegação comum nem executa dentro de um componente React.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Descartar integralmente o estado da sessão administrativa rejeitada.
         window.location.assign(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       }
     }

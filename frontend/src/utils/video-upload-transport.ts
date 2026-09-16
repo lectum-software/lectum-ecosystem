@@ -3,9 +3,12 @@ import { TUS_CHUNK_SIZE_BYTES } from "@/utils/video-stream";
 import {
   isRetryableVideoUploadStatus,
   tusHttpStatus,
+  tusRequestMethod,
   VIDEO_UPLOAD_RETRY_DELAYS_MS,
   VideoUploadFailure,
+  type VideoUploadTransportDiagnostic,
 } from "@/utils/video-upload-diagnostics";
+import { createBufferedVideoSource, VideoSourceFailure } from "@/utils/video-upload-source";
 
 const canceledError = () => new DOMException("Envio cancelado.", "AbortError");
 
@@ -24,17 +27,64 @@ export const uploadTus = ({
 }) =>
   new Promise<void>((resolve, reject) => {
     let settled = false;
+    const source = createBufferedVideoSource(file, TUS_CHUNK_SIZE_BYTES);
+    const diagnostic: VideoUploadTransportDiagnostic = {
+      request: "unknown",
+      source: "not_read",
+      sourceFailure: "none",
+    };
     const settle = (callback: () => void) => {
       if (settled) return;
       settled = true;
       signal?.removeEventListener("abort", abort);
+      source.close();
       callback();
     };
     const upload = new Upload(file, {
       chunkSize: TUS_CHUNK_SIZE_BYTES,
-      onError: (error) => settle(() => reject(new VideoUploadFailure(tusHttpStatus(error)))),
+      parallelUploads: 1,
+      fileReader: {
+        async openFile() {
+          if (settled || signal?.aborted) throw canceledError();
+          return {
+            size: source.size,
+            close: source.close,
+            async slice(start, end) {
+              diagnostic.source = "reading";
+              try {
+                const result = await source.slice(start, end);
+                diagnostic.source = "ready";
+                return result;
+              } catch (error) {
+                if (error instanceof VideoSourceFailure) {
+                  diagnostic.source = "failed";
+                  diagnostic.sourceFailure = error.code;
+                }
+                throw error;
+              }
+            },
+          };
+        },
+      },
+      onBeforeRequest: () => {
+        if (settled || signal?.aborted) throw canceledError();
+      },
+      onError: (error) =>
+        settle(() => {
+          const status = tusHttpStatus(error);
+          reject(
+            new VideoUploadFailure(status, status === 0 ? "transport" : undefined, {
+              ...diagnostic,
+              request: tusRequestMethod(error),
+            }),
+          );
+        }),
       onShouldRetry: (error) => {
-        const retry = isRetryableVideoUploadStatus(tusHttpStatus(error));
+        const retry =
+          !settled &&
+          !signal?.aborted &&
+          diagnostic.source !== "failed" &&
+          isRetryableVideoUploadStatus(tusHttpStatus(error));
         if (retry) onRetry?.();
         return retry;
       },
@@ -54,6 +104,7 @@ export const uploadTus = ({
       if (settled) return;
       settled = true;
       signal?.removeEventListener("abort", abort);
+      source.close();
       // Interromper transporte não autoriza apagar mídia que o backend já associou.
       // O cleanup abaixo decide a exclusão pelo endpoint autenticado, não por TUS DELETE.
       void upload
