@@ -262,11 +262,17 @@ export const professionalReplyVideoTieBreakScore = ({
 }: Pick<ProfessionalReplyResult, "media_type" | "media_url">) =>
   media_type === "video" && media_url ? 1 : 0;
 
+export const isProfessionalReplyVideoHighlightCandidate = (reply: ProfessionalReplyResult) =>
+  professionalReplyVideoTieBreakScore(reply) > 0;
+
 export const compareProfessionalRepliesForHighlight = (
   a: ProfessionalReplyResult,
   b: ProfessionalReplyResult,
   rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
 ) => {
+  const videoDiff = professionalReplyVideoTieBreakScore(b) - professionalReplyVideoTieBreakScore(a);
+  if (videoDiff !== 0) return videoDiff;
+
   const voteScoreDiff = professionalReplyVoteRankingScore(b) - professionalReplyVoteRankingScore(a);
   if (voteScoreDiff !== 0) return voteScoreDiff;
 
@@ -274,9 +280,6 @@ export const compareProfessionalRepliesForHighlight = (
     professionalReplyRankingPosition(a, rankingSignals) -
     professionalReplyRankingPosition(b, rankingSignals);
   if (rankingDiff !== 0) return rankingDiff;
-
-  const videoDiff = professionalReplyVideoTieBreakScore(b) - professionalReplyVideoTieBreakScore(a);
-  if (videoDiff !== 0) return videoDiff;
 
   const recencyDiff = b.createdAt.getTime() - a.createdAt.getTime();
   if (recencyDiff !== 0) return recencyDiff;
@@ -289,7 +292,7 @@ export const selectHighlightedProfessionalReplies = async (items: PostResult[]) 
   const itemsByCommunityId = new Map<string, PostResult[]>();
 
   for (const item of items) {
-    if (item.replies.length === 0) continue;
+    if (!item.replies.some(isProfessionalReplyVideoHighlightCandidate)) continue;
 
     const communityItems = itemsByCommunityId.get(item.community.id) ?? [];
     communityItems.push(item);
@@ -298,14 +301,16 @@ export const selectHighlightedProfessionalReplies = async (items: PostResult[]) 
 
   for (const [communityId, communityItems] of itemsByCommunityId.entries()) {
     const professionalIds = communityItems.flatMap((item) =>
-      item.replies.map((reply) => reply.author.id),
+      item.replies
+        .filter(isProfessionalReplyVideoHighlightCandidate)
+        .map((reply) => reply.author.id),
     );
     const rankingSignals = await getCommunityMentorRankingSignals(communityId, professionalIds);
 
     for (const item of communityItems) {
-      const highlightedReply = [...item.replies].sort((a, b) =>
-        compareProfessionalRepliesForHighlight(a, b, rankingSignals),
-      )[0];
+      const highlightedReply = item.replies
+        .filter(isProfessionalReplyVideoHighlightCandidate)
+        .sort((a, b) => compareProfessionalRepliesForHighlight(a, b, rankingSignals))[0];
 
       if (highlightedReply) repliesByPostId.set(item.id, highlightedReply);
     }

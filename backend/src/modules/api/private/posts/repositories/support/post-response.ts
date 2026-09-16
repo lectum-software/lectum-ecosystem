@@ -516,8 +516,11 @@ export const professionalReplyVideoTieBreakScore = ({
 }: Pick<ProfessionalReplyResult, "media_type" | "media_url">) =>
   media_type === "video" && media_url ? 1 : 0;
 
+export const isProfessionalReplyVideoPreviewCandidate = (reply: ProfessionalReplyResult) =>
+  professionalReplyVideoTieBreakScore(reply) > 0;
+
 export const selectHighlightedListProfessionalReply = (replies: ProfessionalReplyResult[]) =>
-  [...replies].sort((a, b) => {
+  replies.filter(isProfessionalReplyVideoPreviewCandidate).sort((a, b) => {
     const scoreDiff = professionalReplyPreviewScore(b) - professionalReplyPreviewScore(a);
     if (scoreDiff !== 0) return scoreDiff;
 

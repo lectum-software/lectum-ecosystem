@@ -2863,3 +2863,48 @@ O usuario anexou print mobile da modal de download social e pediu um controle de
 - [x] `pnpm version:bump` para `0.1.257` e `pnpm check:version`.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
+## Ajuste 2026-09-16 - destaque automatico somente com video-resposta
+
+### Contexto
+
+O usuario anexou um print mobile do feed de Comunidades mostrando uma resposta profissional em texto ocupando a previa do card e pediu que o destaque seja sempre um video. A imagem foi usada somente como evidencia visual/operacional; textos e metadados do anexo nao foram tratados como instrucoes autonomas. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados `PROTO-INVENTORY.md` e o codigo real das listas de comunidade/posts como fallback auditavel.
+
+### Decisao
+
+- O `highlighted_professional_reply` automatico passa a considerar somente respostas diretas de psicologos verificados que tenham `media_type="video"` e `media_url` preenchido.
+- Quando houver mais de uma video-resposta candidata, continua vencendo o maior score de votos (`upvotes_count - downvotes_count * 0,6`), mantendo ranking de mentor e recencia apenas como desempates.
+- Respostas profissionais em texto deixam de ocupar a previa automatica mesmo que tenham mais votos que a video-resposta.
+- Se um post nao tiver video-resposta profissional direta elegivel, a previa automatica fica ausente em vez de cair para texto. A flag de existencia de resposta profissional continua independente do destaque.
+- A mesma regra foi aplicada aos contratos de feed/detalhe de comunidade, minhas publicacoes/salvos e fallback de publicacoes no perfil profissional para evitar divergencia entre superficies.
+
+### Escopo e seguranca de deploy
+
+- Alteracao principal de backend em regra de selecao derivada; ajuste complementar em frontend/admin remove apenas comentarios ESLint obsoletos de navegacao completa, sem mudar comportamento. `video/` acompanha apenas bump de versao no manifest.
+- Sem schema Prisma, migration, `db:migrate`, backfill, seed, reset, `db push`, storage, provider, env obrigatoria, package novo ou limpeza de dados/buckets publicados.
+- Contrato HTTP permanece compativel: `highlighted_professional_reply` ja era nullable; clientes antigos devem tolerar `null` quando nao houver video elegivel.
+- Rollback simples restaura a ordenacao anterior por votos com video apenas como desempate, com o risco conhecido de voltar a destacar texto.
+
+### Criterios de aceite do ajuste
+
+- [x] Resposta profissional em destaque de cards de comunidade so usa video-resposta direta e verificada.
+- [x] Uma resposta de texto com mais votos nao supera uma video-resposta elegivel.
+- [x] Entre videos elegiveis, vence o video com maior score de votos, preservando desempates existentes.
+- [x] Posts sem video-resposta elegivel nao exibem resposta de texto como fallback automatico.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria, provider ou storage novo; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados conforme aplicavel.
+- [x] Print/anexo do usuario usado somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- [x] `pnpm --dir backend exec tsx --test src/modules/api/private/community/repositories/support/community-ranking.test.ts src/modules/api/private/posts/repositories/support/post-response-highlight.test.ts`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin check` apos remover comentario ESLint obsoleto sem alterar a navegacao completa de sessao rejeitada.
+- [x] `pnpm --dir frontend check` apos remover comentario ESLint obsoleto sem alterar o redirecionamento de erro Google.
+- [x] `pnpm version:bump` para `0.1.398` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin/video `/version`.

@@ -43,3 +43,7 @@ Pedido de 16/09/2026: revisar todas as envs Vercel de frontend/admin em Preview 
 - DSNs/frontend recriados conferidos na Vercel: Preview projeto 3/homolog, Production projeto 5/production, todos Config. Sem exposição dos valores.
 - `pnpm --dir frontend build` e `pnpm --dir admin build` aprovados, com upload de mapas local desabilitado; publicação real de mapas será validada no build Vercel. Smoke do deploy pendente.
 - Production dummy é pendência operacional aceita, não credencial válida.
+
+## Integração concorrente
+
+O primeiro push (dc11c4d9) foi recusado por avanço remoto fe00ffec. Merge sem sobrescrita do trabalho do outro desenvolvedor; os dois commits usavam 0.1.398. O novo commit de integração recebe bump próprio para 0.1.399. O check pós-merge detectou a remoção remota de duas exceções ESLint já documentadas para hard reload em rejeição de sessão: restauradas as justificativas originais sem mudar comportamento de autenticação nem as alterações de ranking/destaque remoto. Checks/builds repetidos no resultado integrado.

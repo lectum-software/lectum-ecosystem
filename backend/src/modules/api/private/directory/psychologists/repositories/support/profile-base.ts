@@ -233,8 +233,11 @@ export const professionalReplyVideoTieBreakScore = ({
 }: Pick<ProfileProfessionalReplyResult, "media_type" | "media_url">) =>
   media_type === "video" && media_url ? 1 : 0;
 
+export const isProfessionalReplyVideoPreviewCandidate = (reply: ProfileProfessionalReplyResult) =>
+  professionalReplyVideoTieBreakScore(reply) > 0;
+
 export const selectHighlightedProfileReplyPreview = (replies: ProfileProfessionalReplyResult[]) =>
-  [...replies].sort((a, b) => {
+  replies.filter(isProfessionalReplyVideoPreviewCandidate).sort((a, b) => {
     const scoreDiff =
       b.upvotes_count -
       b.downvotes_count * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT -
