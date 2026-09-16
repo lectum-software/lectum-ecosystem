@@ -27,27 +27,46 @@ validando a mesma assinatura e ignora com sucesso eventos de vídeos que não pe
 O encaminhamento pode repetir um evento quando um alvo falha após outro já o receber. Os handlers do
 backend devem permanecer idempotentes; não altere essa propriedade ao evoluir o webhook.
 
-## Configuração no Cloudflare
+## Publicação por CI/CD e configuração no Cloudflare
 
-Não use este arquivo como substituto de revisão operacional. Antes de trocar o webhook Stream,
-publique o Worker e confirme que sua rota pública HTTPS responde.
+O código deste Worker **não deve ser editado no painel Cloudflare**. A origem é este diretório e a
+publicação ocorre pelo workflow GitHub Actions `Deploy Cloudflare Stream webhook router`.
 
-1. Crie o Worker `lectum-stream-webhook-router` no painel Cloudflare e publique este diretório sem
-   criar package, token Stream ou binding adicional.
-2. Crie o segredo Worker `STREAM_WEBHOOK_SECRET` com o segredo atual retornado pelo Cloudflare
-   Stream. Não o cole em código, Git ou log.
-3. Cadastre `HOMOLOG_WEBHOOK_URL` com
+### Uma vez por conta/repositório
+
+1. No Cloudflare, crie um token exclusivo de deploy com escopo da conta atual e somente
+   **Workers Scripts: Edit**. Não reutilize token do Stream, R2 ou backend. Armazene-o apenas como
+   Secret do repositório GitHub `CLOUDFLARE_WORKER_DEPLOY_TOKEN`.
+2. No GitHub, cadastre também o Secret `CLOUDFLARE_ACCOUNT_ID`. Embora não seja senha, mantê-lo
+   fora do YAML evita acoplamento do repositório à conta do provider.
+3. O primeiro push em `homolog` que tocar este diretório executa testes e publica o código com
+   Wrangler. O arquivo `wrangler.toml` usa `keep_vars = true`: um deploy não apaga configurações
+   sensíveis ou destinos criados no provider. `workers_dev = false` remove o endpoint genérico
+   `*.workers.dev`; o tráfego só existirá na rota HTTPS definida abaixo.
+4. Enquanto `PRODUCTION_WEBHOOK_URL` estiver vazio, o workflow de `homolog` pode atualizar o
+   roteador compartilhado para validar a integração. Antes de habilitar produção, abra uma task de
+   promoção para trocar a esteira do Worker para `main` revisada/protegida. Nunca deixe produção
+   habilitada e continue publicando código do roteador automaticamente a partir de `homolog`.
+
+### Provider: variáveis, rota e webhook
+
+Depois de um deploy CI bem-sucedido, no painel Cloudflare do Worker:
+
+1. Crie o Secret `STREAM_WEBHOOK_SECRET` com o segredo atual retornado pelo Cloudflare Stream.
+   Não o cole em código, Git, log ou chat.
+2. Cadastre a variável comum `HOMOLOG_WEBHOOK_URL` com
    `https://homolog-api.lectum.com.br/api/public/video-stream/webhook`.
-4. Deixe `PRODUCTION_WEBHOOK_URL` vazio até que o backend de produção esteja publicado e seu
+3. Deixe `PRODUCTION_WEBHOOK_URL` ausente até que o backend produtivo esteja publicado e seu
    endpoint tenha sido validado. Depois cadastre exatamente
    `https://api.lectum.com.br/api/public/video-stream/webhook`.
-5. Associe o domínio/rota pública `stream-webhook.lectum.com.br/cloudflare-stream` ao Worker.
-   DNS/proxy deve permanecer gerenciado pela Cloudflare e HTTPS ativo.
-6. Só então altere a inscrição única do Stream para
+4. Associe a rota pública
+   `stream-webhook.lectum.com.br/cloudflare-stream` ao Worker. DNS/proxy deve permanecer
+   gerenciado pela Cloudflare e HTTPS ativo.
+5. Só então altere a inscrição única do Stream para
    `https://stream-webhook.lectum.com.br/cloudflare-stream`. Ao consultar/salvar a inscrição,
    confira se o segredo retornado continua igual; se mudar, atualize **o segredo do Worker e ambos
    os backends** de modo controlado antes de validar eventos.
-7. Faça upload real primeiro em homologação e confira `ready` no backend. Com produção habilitada,
+6. Faça upload real primeiro em homologação e confira `ready` no backend. Com produção habilitada,
    repita o teste em produção antes de qualquer promoção adicional.
 
 O token usado para configurar o Stream não é necessário no Worker. A chave RSA de playback tampouco

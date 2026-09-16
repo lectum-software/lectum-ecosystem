@@ -37,3 +37,10 @@ desabilitar o destino de produção no Worker. Não apagar dados ou assets. A tr
 segredo retornado pelo provider e manter Worker/backends sincronizados.
 
 Fonte: [Cloudflare Stream webhooks — limitation](https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/#limitations), [assinatura](https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/#validate-webhook-signatures) e [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/), consultadas em 2026-09-16.
+
+## Evolução operacional
+
+O source do roteador é publicado exclusivamente por GitHub Actions usando token Cloudflare
+dedicado e de privilégio mínimo. O painel do provider não é fonte de código: apenas mantém
+segredo, destinos e rota. Enquanto somente homologação é destino, a esteira controlada parte de
+`homolog`; antes de habilitar produção ela deve ser promovida para uma esteira revisada de `main`.

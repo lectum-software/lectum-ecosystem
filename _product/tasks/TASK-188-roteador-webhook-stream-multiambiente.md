@@ -21,6 +21,10 @@ quando habilitado, produção. Não alterar upload, reprodução, vídeo dedicad
   pelo provider. Sem troca automática no start ou por deploy de backend.
 - Nenhuma env nova é obrigatória nas aplicações existentes. O Worker exige seu Secret próprio no
   painel Cloudflare; se ausente, falha fechada e não encaminha eventos.
+- O source do Worker é publicado por GitHub Actions; o painel Cloudflare guarda somente
+  secret, URLs de destino e rota. Enquanto produção estiver desabilitada, `homolog` é a esteira
+  controlada. A promoção do roteador para `main` é obrigatória antes de habilitar o destino
+  produtivo.
 
 ## Critérios de aceite
 
@@ -28,7 +32,7 @@ quando habilitado, produção. Não alterar upload, reprodução, vídeo dedicad
 - [x] Assinatura e corpo bruto validados e encaminhados para destinos permitidos, com falha fechada.
 - [x] Testes locais cobrem assinatura, validade temporal, configuração, fan-out e falha de destino.
 - [x] Template/documentação de produção corrigidos para o roteador, sem segredo em Git.
-- [ ] Worker publicado, domínio/rota HTTPS associado e inscrição única Stream apontada para ele.
+- [ ] Esteira CI/CD do Worker configurada com token exclusivo, Worker publicado, domínio/rota HTTPS associado e inscrição única Stream apontada para ele.
 - [ ] Upload real em homolog confirmou o callback encaminhado; produção só será habilitada após
   backend e endpoint produtivos validados.
 - [ ] Checks, bump, commit/push em homolog e smoke pós-deploy registrados.
@@ -53,5 +57,6 @@ voltar a inscrição Stream para o endpoint direto de homolog previamente valida
 desabilitada; não apagar vídeos, bucket ou banco. Entrega a mesma assinatura ao backend, então os
 handlers continuam sendo a defesa final e precisam preservar idempotência para redeliveries.
 
-O deploy do Worker depende de ação no painel Cloudflare e será validado com evento real; até isso
-ocorrer esta task permanece em progresso, sem alegar que produção recebe callbacks.
+O deploy do Worker depende do workflow GitHub Actions e das configurações externas mínimas no
+painel Cloudflare; até isso ocorrer esta task permanece em progresso, sem alegar que produção
+recebe callbacks.
