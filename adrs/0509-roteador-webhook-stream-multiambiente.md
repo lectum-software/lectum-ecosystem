@@ -4,7 +4,7 @@ Data: 2026-09-16
 
 ## Status
 
-Aceita; publicação por CI validada, rota e inscrição Stream pendentes.
+Aceita; publicação por CI, rota, inscrição Stream e callback real de homologação validados.
 
 ## Contexto
 
@@ -37,6 +37,14 @@ logam corpo/segredo/UID.
 Rollback operacional: apontar a inscrição única para o endpoint direto de homolog já validado e
 desabilitar o destino de produção no Worker. Não apagar dados ou assets. A troca exige confirmar o
 segredo retornado pelo provider e manter Worker/backends sincronizados.
+
+## Evidência de operação
+
+Em 2026-09-16, o workflow de CI publicou o roteador, o Custom Domain passou a servir o endpoint
+restrito e a inscrição VOD foi atualizada para ele. Um upload real de 250.743.537 bytes via perfil
+profissional de auditoria em homologação concluiu o processamento; o backend recebeu o evento
+roteado e devolveu playback HLS assinado reproduzível. O destino de produção continua ausente do
+Worker: habilitá-lo requer API produtiva validada e promoção revisada para `main`.
 
 Fonte: [Cloudflare Stream webhooks — limitation](https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/#limitations), [assinatura](https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/#validate-webhook-signatures) e [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/), consultadas em 2026-09-16.
 

@@ -2,7 +2,7 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Em execução: [TASK-188 — Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md). Código do roteador único está versionado para uma conta Stream compartilhada; publicação no provider, troca controlada da inscrição e callback real seguem pendentes. Não altera upload/playback nem dados de vídeo.
+Última task concluída: [TASK-188 — Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md). O roteador único está publicado por CI, a inscrição Stream está apontada ao Custom Domain e um upload real em homolog confirmou callback e playback. Produção permanece desabilitada no roteador até a validação própria do endpoint produtivo.
 
 Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. GlitchTip backend, chaves e isolamento dos recursos continuam explicitamente pendentes de provisionamento/validação.
 
@@ -315,7 +315,7 @@ ou cortesia manual.
 | 185 | [TASK-185 - Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md) | Completed | 62, 82, 90, 183 |
 | 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | Completed | 179 |
 | 187 | [TASK-187 - Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md) | Completed | 186 |
-| 188 | [TASK-188 - Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md) | In Progress | 163, 179, 187 |
+| 188 | [TASK-188 - Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md) | Completed | 163, 179, 187 |
 
 ## Ordem operacional recomendada sem bloqueios
 

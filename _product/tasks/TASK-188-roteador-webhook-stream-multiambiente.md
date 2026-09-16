@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | In Progress |
+| Status | Completed |
 
 ## Escopo
 
@@ -34,10 +34,10 @@ quando habilitado, produção. Não alterar upload, reprodução, vídeo dedicad
 - [x] Assinatura e corpo bruto validados e encaminhados para destinos permitidos, com falha fechada.
 - [x] Testes locais cobrem assinatura, validade temporal, configuração, fan-out e falha de destino.
 - [x] Template/documentação de produção corrigidos para o roteador, sem segredo em Git.
-- [ ] Esteira CI/CD do Worker configurada com token exclusivo, Worker publicado, Custom Domain HTTPS associado e inscrição única Stream apontada para ele.
-- [ ] Upload real em homolog confirmou o callback encaminhado; produção só será habilitada após
+- [x] Esteira CI/CD do Worker configurada com token exclusivo, Worker publicado, Custom Domain HTTPS associado e inscrição única Stream apontada para ele.
+- [x] Upload real em homolog confirmou o callback encaminhado; produção só será habilitada após
   backend e endpoint produtivos validados.
-- [ ] Checks, bump, commit/push em homolog e smoke pós-deploy registrados.
+- [x] Checks, bump, commit/push em homolog e smoke pós-deploy registrados.
 
 ## Validação local
 
@@ -48,9 +48,23 @@ quando habilitado, produção. Não alterar upload, reprodução, vídeo dedicad
   de `drawtext`; eles não contam como integração externa.
 - As duas supressões ESLint são pontuais, cobrem recargas completas já intencionais após rejeição de
   sessão e desbloqueiam a validação sem trocar autenticação, rota ou cache.
-- `pnpm version:bump` foi executado uma vez: `0.1.407` → `0.1.408` nos cinco manifests;
-  `pnpm check:version` aprovado. O próximo push em `homolog` dispara deploy dos apps existentes,
-  mas não publica automaticamente o Worker Cloudflare.
+- `pnpm version:bump` foi executado uma vez por commit de implementação, com os cinco manifests
+  sincronizados; `pnpm check:version` foi aprovado antes de cada push. Os checks de frontend, admin,
+  backend e raiz também foram aprovados no ciclo de implementação.
+- O workflow `cloudflare-stream-webhook-router.yml` publicou com sucesso o Worker
+  `lectum-stream-webhook-router`; o Custom Domain HTTPS
+  `stream-webhook.lectum.com.br` respondeu `405` para GET e `401` para POST sem assinatura,
+  confirmando método e validação fechada, sem transmitir payload real.
+- A inscrição VOD do Stream foi apontada para
+  `https://stream-webhook.lectum.com.br/cloudflare-stream`; a consulta posterior confirmou URL e
+  segredo coincidentes com o backend de homologação.
+- Em 2026-09-16, o fluxo real autenticado de perfil profissional em homolog enviou o arquivo
+  `VID_20260915_125928.mp4` (250.743.537 bytes) por TUS. O Stream concluiu o processamento, o
+  callback foi encaminhado pelo Worker e a interface recebeu playback HLS assinado com
+  `readyState=4` e sem erro. A associação foi feita no perfil de auditoria; nenhum vídeo foi
+  apagado durante a validação.
+- Smoke pós-deploy: endpoints públicos de homologação permaneceram saudáveis; o deploy do Worker
+  não altera upload, playback, R2, banco ou o servidor dedicado de vídeo.
 
 ## Risco, rollback e operação manual
 
