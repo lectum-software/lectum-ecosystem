@@ -16,7 +16,9 @@ Banco, bucket, JWT, OAuth, pagamentos e vídeo exigem recursos/segredos apropria
 
 O parser Sentry do backend ainda aceita somente Sentry SaaS, ao contrário dos apps Next ajustados na TASK-186. O modelo registra essa limitação e mantém observabilidade opcional comentada; preencher um DSN GlitchTip não resolve incompatibilidade de código. Corrigir o SDK exige execução separada; não afirmar prontidão de observabilidade de produção.
 
-Cloudflare Stream permite um único webhook por conta; não substituir o de homolog para colocar produção. Configurar conta isolada ou projetar roteamento explícito antes de compartilhar conta. Fonte: https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/#limitations (consultada em 16/09/2026).
+Cloudflare Stream permite um único webhook por conta. A decisão posterior ADR-0509 adota o roteador
+explícito versionado antes de apontar a inscrição única; este template não configura o provider nem
+autoriza a troca. Fonte: https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/#limitations (consultada em 16/09/2026).
 
 ## Consequências e validação
 

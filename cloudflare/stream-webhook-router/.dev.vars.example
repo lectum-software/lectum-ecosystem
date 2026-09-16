@@ -1,0 +1,7 @@
+# Segredo retornado pela Cloudflare Stream ao consultar/configurar o webhook.
+# Nunca versionar o valor real nem colar este arquivo em logs.
+STREAM_WEBHOOK_SECRET=YOUR_OWN_STREAM_WEBHOOK_SECRET
+
+# Destinos fixos e HTTPS. Producao pode permanecer vazia ate o backend estar publicado.
+HOMOLOG_WEBHOOK_URL=https://homolog-api.lectum.com.br/api/public/video-stream/webhook
+PRODUCTION_WEBHOOK_URL=

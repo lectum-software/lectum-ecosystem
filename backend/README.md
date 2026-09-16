@@ -22,8 +22,10 @@ existentes sem avaliar sessões, inscrições push e URLs assinadas.
 
 **Antes de publicar:**
 - Stream: há [um webhook por conta](https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/#limitations).
-  Não substituir o webhook de homolog para cadastrar produção; usar conta isolada ou definir
-  roteamento multiambiente. O segredo é devolvido pela Cloudflare, não inventado.
+  Com conta compartilhada entre homolog e produção, publicar primeiro o roteador versionado em
+  [`../cloudflare/stream-webhook-router`](../cloudflare/stream-webhook-router) e só então trocar a
+  inscrição única. O segredo é devolvido pela Cloudflare, não inventado, e precisa permanecer
+  sincronizado entre Worker e backends que receberão eventos.
 - Vídeo dedicado: provisionar endpoint e segredo da instância de produção com fila/volume
   isolados. `REDIS_URL` e configuração do worker pertencem a `video/`, não ao backend.
 - Mercado Pago: token de vendedor real e webhook correspondentes; a chave pública do frontend

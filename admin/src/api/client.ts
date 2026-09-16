@@ -37,6 +37,7 @@ adminApi.interceptors.response.use(
         // A sessão rejeitada exige descartar todo o estado/cache administrativo em memória.
         // Este interceptor não é navegação comum nem executa dentro de um componente React.
         // Reload completo intencional para descartar integralmente o estado administrativo rejeitado.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- invalida sessão e cache de toda a aplicação.
         window.location.assign(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       }
     }

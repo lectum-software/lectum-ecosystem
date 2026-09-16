@@ -2,6 +2,8 @@
 
 Fila sequencial de execução do produto Lectum.
 
+Em execução: [TASK-188 — Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md). Código do roteador único está versionado para uma conta Stream compartilhada; publicação no provider, troca controlada da inscrição e callback real seguem pendentes. Não altera upload/playback nem dados de vídeo.
+
 Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. GlitchTip backend, chaves e isolamento dos recursos continuam explicitamente pendentes de provisionamento/validação.
 
 Concluída: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Envs Preview/Production revisadas, SDK/CSP e empacotamento de mapas corrigidos; frontend/admin 0.1.402 Ready e smoke aprovado. Produção não promovida e dummy Mercado Pago mantido por decisão do usuário.
@@ -46,7 +48,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 194 tasks: `TASK-00` a `TASK-187`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 195 tasks: `TASK-00` a `TASK-188`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -313,6 +315,7 @@ ou cortesia manual.
 | 185 | [TASK-185 - Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md) | Completed | 62, 82, 90, 183 |
 | 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | Completed | 179 |
 | 187 | [TASK-187 - Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md) | Completed | 186 |
+| 188 | [TASK-188 - Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md) | In Progress | 163, 179, 187 |
 
 ## Ordem operacional recomendada sem bloqueios
 

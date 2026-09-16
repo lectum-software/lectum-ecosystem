@@ -96,7 +96,8 @@ test("opcionais e lacunas de infraestrutura ficam explicitos sem configurar um p
     assert.match(template, new RegExp(`^# ${key}=`, "m"));
   }
   assert.equal(env.MERCADO_PAGO_PREAPPROVAL_PLAN_ID, "");
-  assert.match(template, /apenas UM webhook por conta/);
+  assert.match(template, /Stream permite apenas UM webhook por conta/);
+  assert.match(template, /stream-webhook\.lectum\.com\.br\/cloudflare-stream/);
   assert.match(template, /REJEITA glit\.lectum\.com\.br/);
   assert.match(template, /\.env\.production NAO e carregado automaticamente/);
   assert.match(template, /fila e armazenamento isolados/);

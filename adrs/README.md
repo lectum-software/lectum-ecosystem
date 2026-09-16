@@ -546,3 +546,4 @@ Formato recomendado:
 - [ADR-0507 — GlitchTip e ambientes Vercel](0507-glitchtip-vercel-ambientes.md)
 
 - [ADR-0508 — Template de produção do backend no Dokploy](0508-template-backend-producao-dokploy.md)
+- [ADR-0509 — Roteador único de webhook Stream multiambiente](0509-roteador-webhook-stream-multiambiente.md)

@@ -1,0 +1,6 @@
+name = "lectum-stream-webhook-router"
+main = "src/worker.mjs"
+compatibility_date = "2026-09-16"
+
+# A rota/custom domain e configurada no painel Cloudflare apos publicar o Worker.
+# Nao declarar segredos, account id, zona ou URL de producao neste arquivo versionado.
