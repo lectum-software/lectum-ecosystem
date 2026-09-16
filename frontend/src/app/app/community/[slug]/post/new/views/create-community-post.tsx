@@ -14,6 +14,7 @@ import { CommunityDeleteConfirmationModal } from "@/components/community/communi
 import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { useCreateCommunityPostController } from "../hooks/use-create-community-post-controller";
@@ -33,7 +34,10 @@ import {
 
 import { AnonymousPostSwitch } from "./anonymous-post-switch";
 
-export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPostLogicProps) => {
+export const CreateCommunityPostLogic = ({
+  asModalSlot = false,
+  onCloseComplete,
+}: CreateCommunityPostLogicProps) => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const touchScrollStateRef = useRef<CreatePostModalTouchScrollState>({
     startX: 0,
@@ -77,6 +81,8 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     uploadMutation,
     videoUploadProgress,
   } = controller;
+  useModalMediaSuspension(asModalSlot);
+
   const hasSelectedMedia = selectedMediaItems.length > 0;
   const preserveBlankTapFocus = hasSelectedMedia ? undefined : preserveEditorFocusFromBlankTap;
   const preserveTitleBlankTapFocus = preserveBlankTapFocus

@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, type RefObject, useLayoutEffect, useRef } from "react";
+import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { useModalScrollLock } from "@/hooks/use-modal-scroll-lock";
 
 type ModalSession = { href: string; returnTarget: HTMLElement | null };
@@ -24,6 +25,7 @@ export const Modal = ({
   const sessionRef = useRef<ModalSession | null>(null);
   const closeRequestedRef = useRef(false);
   useModalScrollLock(open);
+  useModalMediaSuspension(open);
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;

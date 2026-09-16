@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 // Real frontend modules only. SSR does not emulate dialog/focus/browser lifecycle APIs.
 
 const { Modal } = await import("./modal.tsx");
+const { createModalMediaSuspension } = await import("../../hooks/use-modal-media-suspension.ts");
 const { createModalScrollLock } = await import("../../hooks/use-modal-scroll-lock.ts");
 const { PostReportModal } = await import(
   "../../app/app/community/[slug]/post/[id]/components/post-report-modal.tsx"
@@ -192,4 +193,18 @@ test("ownership puro: instâncias independentes não compartilham donos", () => 
   assert.deepEqual(released, ["first"]);
   releaseSecond();
   assert.deepEqual(released, ["first", "second"]);
+});
+
+test("ownership puro de suspensao de midia: primeira modal pausa e ultima libera", () => {
+  const states = [];
+  const acquire = createModalMediaSuspension((suspended) => {
+    states.push(suspended);
+  });
+  const releaseA = acquire();
+  const releaseB = acquire();
+  assert.deepEqual(states, [true]);
+  releaseA();
+  assert.deepEqual(states, [true]);
+  releaseB();
+  assert.deepEqual(states, [true, false]);
 });

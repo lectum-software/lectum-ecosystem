@@ -2172,3 +2172,37 @@ fluxos de aceite persistido.
   `/version` respondendo `0.1.392` e `/comunidades` HTTP 200. Validacao visual autenticada com
   videos reais dentro de posts fica para homologacao apos deploy, porque nao ha sessao/dados reais
   locais nem ferramenta Builder/Quick Copy acessivel neste ambiente.
+
+## Complemento em 2026-09-15: pausar autoplay quando modal cobrir video
+
+- Pedido do usuario: quando uma modal abrir sobre um video, por exemplo a modal/folha de criar novo
+  post no feed, o video de fundo deve pausar mesmo estando sob autoplay.
+- Decisao aplicada no frontend: foi criada uma suspensao client-side de midia por modal, com
+  ownership por documento e evento interno `lectum:modal-media-suspension-change`.
+- A primitive `Modal` agora adquire essa suspensao enquanto aberta, e o fluxo customizado de criar
+  post faz o mesmo quando usado como slot modal (`asModalSlot`), cobrindo o caso do feed e da
+  comunidade sem afetar a rota full-page de criacao.
+- O gerenciador `community-feed-video-autoplay` pausa todos os videos registrados ao receber a
+  suspensao, bloqueia `play()` atrasado enquanto houver modal ativa e reavalia o candidato ao fechar
+  a ultima modal. Essa pausa programatica nao vira pausa manual do usuario.
+- Builder/Quick Copy foi tentado novamente via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validacao visual baseada em
+  `_product/proto/Feed Comunidade.jpg` e `_product/proto/Criar Nova Postagem - Pacientes.jpg`.
+- Alteracao exclusivamente frontend; sem package novo, backend, schema/migration, env obrigatoria,
+  mock, seed, bucket ou alteracao de dados publicados.
+- Criterios de aceite:
+  - [x] Abrir uma modal baseada na primitive `Modal` pausa videos comunitarios registrados ao fundo.
+  - [x] Abrir a modal/folha de criar post sobre o feed/comunidade pausa videos comunitarios ao fundo.
+  - [x] Enquanto houver modal ativa, o autoplay nao religa o video por avaliacao, `canplay` ou
+        `play()` atrasado.
+  - [x] Fechar a ultima modal libera o gerenciador para reavaliar o video em foco sem perder a
+        preferencia local de audio nem marcar a pausa como acao manual.
+  - [x] Controles existentes de play/pause/progresso/fullscreen/volume permanecem inalterados.
+  - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`,
+        `pnpm version:bump`, `pnpm check:version` e smoke local do frontend executados em `0.1.393`.
+- Validacoes locais: teste focado
+  `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-feed-video-autoplay.test.mjs src/components/ui/modal.test.mjs`;
+  `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; `pnpm version:bump` para
+  `0.1.393`; `pnpm check:version`; smoke local do frontend buildado. Validacao visual autenticada
+  com videos reais e modal sobreposta fica para homologacao apos deploy, porque nao ha sessao/dados
+  reais locais nem ferramenta Builder/Quick Copy acessivel neste ambiente.

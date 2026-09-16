@@ -1,7 +1,9 @@
+import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { selectCommunityFeedAutoplayCandidate } from "./community-feed-video-autoplay.ts";
+
+const { selectCommunityFeedAutoplayCandidate } = await import("./community-feed-video-autoplay.ts");
 
 test("autoplay do feed escolhe o video visivel mais central", () => {
   assert.equal(
@@ -49,7 +51,16 @@ test("autoplay do feed ignora videos pausados manualmente ou pouco visiveis", ()
 });
 
 test("comunidades ativam autoplay mudo sem remover controles existentes", () => {
+  const autoplaySource = readFileSync(
+    new URL("./community-feed-video-autoplay.ts", import.meta.url),
+    "utf8",
+  );
   const mediaSource = readFileSync(new URL("./community-media-frame.tsx", import.meta.url), "utf8");
+  const modalMediaSuspensionSource = readFileSync(
+    new URL("../../hooks/use-modal-media-suspension.ts", import.meta.url),
+    "utf8",
+  );
+  const modalSource = readFileSync(new URL("../ui/modal.tsx", import.meta.url), "utf8");
   const playerSource = readFileSync(
     new URL("../ui/vertical-video-player.tsx", import.meta.url),
     "utf8",
@@ -73,6 +84,13 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
     new URL("../../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
     "utf8",
   );
+  const createPostSource = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/new/views/create-community-post.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   assert.match(mediaSource, /enableCommunityAutoplay\?: boolean/);
   assert.match(mediaSource, /enableFeedAutoplay\?: boolean/);
@@ -87,4 +105,10 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.match(routeCardSource, /<ProfessionalReplyPreview\s+enableFeedAutoplay/);
   assert.match(postContentSource, /<CommunityMediaBlock[\s\S]*?enableCommunityAutoplay/);
   assert.match(replyCardSource, /enableCommunityAutoplay=\{enableCommunityAutoplay\}/);
+  assert.match(modalMediaSuspensionSource, /lectum:modal-media-suspension-change/);
+  assert.match(modalSource, /useModalMediaSuspension\(open\)/);
+  assert.match(createPostSource, /useModalMediaSuspension\(asModalSlot\)/);
+  assert.match(autoplaySource, /subscribeModalMediaSuspension/);
+  assert.match(autoplaySource, /pauseAllAutoplayItems\(\)/);
+  assert.match(autoplaySource, /if \(isModalMediaSuspended\(\)\)/);
 });
