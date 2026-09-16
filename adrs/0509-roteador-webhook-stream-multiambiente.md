@@ -4,7 +4,7 @@ Data: 2026-09-16
 
 ## Status
 
-Aceita; publicação no provider pendente.
+Aceita; publicação por CI validada, rota e inscrição Stream pendentes.
 
 ## Contexto
 
@@ -41,6 +41,8 @@ Fonte: [Cloudflare Stream webhooks — limitation](https://developers.cloudflare
 ## Evolução operacional
 
 O source do roteador é publicado exclusivamente por GitHub Actions usando token Cloudflare
-dedicado e de privilégio mínimo. O painel do provider não é fonte de código: apenas mantém
-segredo, destinos e rota. Enquanto somente homologação é destino, a esteira controlada parte de
-`homolog`; antes de habilitar produção ela deve ser promovida para uma esteira revisada de `main`.
+dedicado e de privilégio mínimo. O HMAC do Stream é um Secret GitHub distinto, gravado no Worker
+pela própria esteira antes de publicar o source; ele não aparece em código ou logs. O painel do
+provider não é fonte de código e mantém apenas URLs de destino e rota. Enquanto somente homologação
+é destino, a esteira controlada parte de `homolog`; antes de habilitar produção ela deve ser
+promovida para uma esteira revisada de `main`.

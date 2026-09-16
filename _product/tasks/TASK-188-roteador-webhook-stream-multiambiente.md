@@ -16,13 +16,14 @@ quando habilitado, produção. Não alterar upload, reprodução, vídeo dedicad
   transforma `cloudflare/` em uma quinta aplicação de produto.
 - A rota aceita somente os destinos canônicos HTTPS; env não vira URL arbitrária/SSRF.
 - Homolog é obrigatório; produção é opt-in e fica vazia até o endpoint de produção existir.
-- O segredo Stream é configurado como Secret do Worker e permanece validado novamente pelo backend.
+- O segredo Stream é configurado pela esteira como Secret do Worker e permanece validado novamente
+  pelo backend.
 - O source único do Stream só muda depois da publicação do Worker e da revisão do segredo retornado
   pelo provider. Sem troca automática no start ou por deploy de backend.
-- Nenhuma env nova é obrigatória nas aplicações existentes. O Worker exige seu Secret próprio no
-  painel Cloudflare; se ausente, falha fechada e não encaminha eventos.
-- O source do Worker é publicado por GitHub Actions; o painel Cloudflare guarda somente
-  secret, URLs de destino e rota. Enquanto produção estiver desabilitada, `homolog` é a esteira
+- Nenhuma env nova é obrigatória nas aplicações existentes. O Worker recebe seu Secret próprio da
+  esteira; se o Secret GitHub correspondente estiver ausente, ela falha fechada antes de publicar.
+- O source e o Secret do Worker são publicados por GitHub Actions; o painel Cloudflare guarda
+  somente URLs de destino e rota. Enquanto produção estiver desabilitada, `homolog` é a esteira
   controlada. A promoção do roteador para `main` é obrigatória antes de habilitar o destino
   produtivo.
 
