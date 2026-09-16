@@ -17,7 +17,7 @@ validando a mesma assinatura e ignora com sucesso eventos de vídeos que não pe
 
 ## Garantias de segurança
 
-- aceita somente `POST`, payload pequeno e assinatura Stream válida por até cinco minutos;
+- aceita exclusivamente `POST /cloudflare-stream`, payload pequeno e assinatura Stream válida por até cinco minutos;
 - usa o corpo bruto para validar e encaminhar, sem serializar novamente o JSON;
 - encaminha apenas para as duas URLs HTTPS imutáveis no código, nunca para URL livre de env;
 - não encaminha cookies, autorização, host, query ou headers arbitrários;
@@ -51,7 +51,7 @@ publicação ocorre pelo workflow GitHub Actions `Deploy Cloudflare Stream webho
    promoção para trocar a esteira do Worker para `main` revisada/protegida. Nunca deixe produção
    habilitada e continue publicando código do roteador automaticamente a partir de `homolog`.
 
-### Provider: variáveis, rota e webhook
+### Provider: variáveis, domínio e webhook
 
 Depois de um deploy CI bem-sucedido, no painel Cloudflare do Worker:
 
@@ -63,9 +63,10 @@ Depois de um deploy CI bem-sucedido, no painel Cloudflare do Worker:
 3. Deixe `PRODUCTION_WEBHOOK_URL` ausente até que o backend produtivo esteja publicado e seu
    endpoint tenha sido validado. Depois cadastre exatamente
    `https://api.lectum.com.br/api/public/video-stream/webhook`.
-4. Associe a rota pública
-   `stream-webhook.lectum.com.br/cloudflare-stream` ao Worker. DNS/proxy deve permanecer
-   gerenciado pela Cloudflare e HTTPS ativo.
+4. Em **Workers & Pages > lectum-stream-webhook-router > Settings > Domains & Routes**, associe o
+   **Custom Domain** `stream-webhook.lectum.com.br`. Como o Worker é a origem do endpoint, o
+   Custom Domain cria e mantém o DNS/HTTPS na Cloudflare; não crie rota para origem fictícia nem
+   use IP do backend. O Worker próprio aceita somente o caminho `/cloudflare-stream`.
 5. Só então altere a inscrição única do Stream para
    `https://stream-webhook.lectum.com.br/cloudflare-stream`. Ao consultar/salvar a inscrição,
    confira se o segredo retornado continua igual; se mudar, atualize **o segredo do Worker e ambos

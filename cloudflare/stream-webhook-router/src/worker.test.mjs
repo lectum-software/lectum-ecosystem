@@ -30,9 +30,14 @@ const environment = (overrides = {}) => ({
   ...overrides,
 });
 
-const request = async ({ body = payload, signature, method = "POST" } = {}) => {
+const request = async ({
+  body = payload,
+  path = "/cloudflare-stream",
+  signature,
+  method = "POST",
+} = {}) => {
   const resolvedSignature = signature ?? (await hmacHeader(body));
-  return new Request("https://stream-webhook.lectum.com.br/cloudflare-stream", {
+  return new Request(`https://stream-webhook.lectum.com.br${path}`, {
     method,
     headers: { "webhook-signature": resolvedSignature, "content-type": "application/json" },
     body: method === "POST" ? body : undefined,
@@ -132,4 +137,20 @@ test("recusa metodos diferentes de POST", async () => {
 
   assert.equal(result.status, 405);
   assert.equal(result.headers.get("allow"), "POST");
+});
+
+test("recusa caminho diferente antes de validar ou encaminhar", async () => {
+  let called = false;
+  const router = createWebhookRouter({
+    now: () => now,
+    fetchImpl: async () => {
+      called = true;
+      return new Response(null, { status: 204 });
+    },
+  });
+
+  const result = await router.fetch(await request({ path: "/outro-caminho" }), environment());
+
+  assert.equal(result.status, 404);
+  assert.equal(called, false);
 });

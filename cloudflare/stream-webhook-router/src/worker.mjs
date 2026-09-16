@@ -1,4 +1,5 @@
 const SIGNATURE_HEADER = "webhook-signature";
+const WEBHOOK_PATH = "/cloudflare-stream";
 const MAX_PAYLOAD_BYTES = 256 * 1024;
 const SIGNATURE_TOLERANCE_SECONDS = 5 * 60;
 const TARGET_TIMEOUT_MS = 10_000;
@@ -127,6 +128,7 @@ export const createWebhookRouter = ({
   timeoutMs = TARGET_TIMEOUT_MS,
 } = {}) => ({
   async fetch(request, environment) {
+    if (new URL(request.url).pathname !== WEBHOOK_PATH) return response(404, "Não encontrado.");
     if (request.method !== "POST") return response(405, "Método não permitido.", { allow: "POST" });
 
     const configuration = readConfiguration(environment);

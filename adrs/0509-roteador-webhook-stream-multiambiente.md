@@ -16,7 +16,9 @@ superfície operacional.
 
 ## Decisão
 
-Usar um Cloudflare Worker dedicado como roteador de eventos pequenos. Ele valida `Webhook-Signature`
+Usar um Cloudflare Worker dedicado como roteador de eventos pequenos exposto por **Custom Domain**
+`stream-webhook.lectum.com.br`, não por rota com origem de aplicação. Ele atende exclusivamente
+`POST /cloudflare-stream`, valida `Webhook-Signature`
 contra o corpo bruto e o segredo Stream, então encaminha os mesmos bytes e cabeçalho apenas para os
 endpoints HTTPS canônicos de homologação e produção. O alvo de produção é opcional até sua API estar
 pronta. Cada backend valida novamente a assinatura e ignora com sucesso um UID ausente no seu banco.
@@ -43,6 +45,6 @@ Fonte: [Cloudflare Stream webhooks — limitation](https://developers.cloudflare
 O source do roteador é publicado exclusivamente por GitHub Actions usando token Cloudflare
 dedicado e de privilégio mínimo. O HMAC do Stream é um Secret GitHub distinto, gravado no Worker
 pela própria esteira antes de publicar o source; ele não aparece em código ou logs. O painel do
-provider não é fonte de código e mantém apenas URLs de destino e rota. Enquanto somente homologação
+provider não é fonte de código e mantém apenas URLs de destino e o Custom Domain. Enquanto somente homologação
 é destino, a esteira controlada parte de `homolog`; antes de habilitar produção ela deve ser
 promovida para uma esteira revisada de `main`.
