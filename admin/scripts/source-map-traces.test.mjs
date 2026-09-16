@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
+  pruneRemovedSourceMapsFromFunctions,
   pruneRemovedSourceMapsFromTraces,
   removeBuildSourceMapLinks,
 } from "./source-map-traces.mjs";
@@ -71,3 +72,64 @@ test("remove mapas symlink do adapter sem seguir diretórios ou apagar alvo exte
     await rm(temp, { recursive: true, force: true });
   }
 });
+
+for (const app of ["", "frontend"]) {
+  test(`limpa filePathMap do adapter (${app || "standalone"}) e seus hashes sem alterar runtime`, async () => {
+    const temp = await mkdtemp(join(tmpdir(), "lectum-adapter-map-"));
+    try {
+      const root = join(temp, app, ".next");
+      const output = join(root, "output", "functions", "nested", "page.func");
+      await mkdir(output, { recursive: true });
+      await writeFile(
+        join(root, "required-server-files.json"),
+        JSON.stringify({ config: { repoRoot: temp } }),
+      );
+      const manifest = join(output, ".vc-config.json");
+      const map = join(app, ".next/server/chunks/2442.js.map");
+      const runtime = join(app, ".next/server/chunks/2442.js");
+      const keep = {
+        [runtime]: runtime,
+        "dependency.map": "node_modules/package/index.js.map",
+        "other.map": join(app, ".next-other/keep.map"),
+        "parent.map": "../outside/keep.map",
+        // A chave de destino não determina o tipo do arquivo de origem.
+        "runtime.map": runtime,
+      };
+      await writeFile(
+        manifest,
+        JSON.stringify({
+          runtime: "nodejs22.x",
+          handler: "launcher.cjs",
+          framework: { slug: "nextjs" },
+          filePathMap: { [map]: map, ...keep, renamed: join(root, "server/absolute.map") },
+          fileHashes: { [map]: "map-hash", renamed: "other-map-hash", [runtime]: "runtime-hash" },
+        }),
+      );
+      assert.equal(await pruneRemovedSourceMapsFromFunctions(root, [manifest]), 2);
+      assert.deepEqual(JSON.parse(await readFile(manifest, "utf8")), {
+        runtime: "nodejs22.x",
+        handler: "launcher.cjs",
+        framework: { slug: "nextjs" },
+        filePathMap: keep,
+        fileHashes: { [runtime]: "runtime-hash" },
+      });
+      assert.equal(await pruneRemovedSourceMapsFromFunctions(root, [manifest]), 0);
+      await writeFile(manifest, JSON.stringify({ filePathMap: { bad: null } }));
+      await assert.rejects(
+        pruneRemovedSourceMapsFromFunctions(root, [manifest]),
+        /Invalid production adapter file map/,
+      );
+      await writeFile(
+        join(root, "required-server-files.json"),
+        JSON.stringify({ config: { repoRoot: "relative" } }),
+      );
+      await assert.rejects(
+        pruneRemovedSourceMapsFromFunctions(root, [manifest]),
+        /Invalid production adapter root/,
+      );
+      assert.equal(await pruneRemovedSourceMapsFromFunctions(root, []), 0);
+    } finally {
+      await rm(temp, { recursive: true, force: true });
+    }
+  });
+}
