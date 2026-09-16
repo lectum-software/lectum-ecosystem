@@ -6,6 +6,8 @@ Em execução: [TASK-184 — Leitura estável de vídeo da galeria Android](TASK
 
 Concluída: [TASK-185 — Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md). Ajusta o pull-to-refresh mobile para feedback por ícone no topo sem textos visíveis, habilita refresh ao tocar no item ativo da navegação e aplica variação leve client-side no feed geral de Comunidades, sem alterar backend, banco, envs ou packages.
 
+Correção operacional 16/09/2026: [TASK-42 — Layout de compartilhamento social para vídeo-resposta](TASK-42-layout-compartilhamento-video-resposta.md) recebeu ajuste pós-feedback para que `highlighted_professional_reply` automatico seja sempre uma video-resposta direta e verificada; respostas de texto nao ocupam mais o destaque mesmo com mais votos. Sem banco, envs, packages ou mudanca de contrato alem do campo nullable ja existente.
+
 Concluída: [TASK-183 — Download de vídeos no Admin](TASK-183-admin-download-videos.md). Adiciona no painel administrativo downloads do vídeo original e do vídeo com arte Lectum para conteúdos de Comunidades, preservando o mesmo formato do fluxo do psicólogo e sem alterar banco, buckets ou packages. Ajuste pós-feedback: botões ficam abaixo do ícone de olho.
 
 Concluída: [TASK-182 — Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md). Correção 0.1.385 publicada, uploads reais e smoke aprovados; usuário confirmou funcionamento. Incidente encerrado sem atribuir causa histórica não comprovada nem alegar reprodução independente no Safari/iPhone. Não encerra a auditoria geral; sem alteração de armazenamento, qualidade ou plano da conta de auditoria.
