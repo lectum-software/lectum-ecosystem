@@ -80,6 +80,9 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(mediaSource, /45_000/);
   assert.match(mediaSource, /getShareRenderTransientRetryDelay/);
   assert.match(mediaSource, /SERVER_SHARE_RENDER_TRANSIENT_RETRY_MIN_DELAY_MS/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_START_RETRY_TIMEOUT_MS = 240_000/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_JOB_QUEUE_STALL_TIMEOUT_MS = 120_000/);
+  assert.match(mediaSource, /isQueuedShareRenderJobStalled/);
   assert.match(
     mediaSource,
     /Math\.min\(attempt,\s*SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS\.length - 1\)/,
@@ -94,6 +97,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.doesNotMatch(mediaSource, /userActivation/);
   assert.doesNotMatch(mediaSource, /shouldAvoidBrowserFilePreviewFallback/);
   assert.match(hookSource, /prepareLectumShareFileWithServerRender/);
+  assert.match(hookSource, /isLectumShareRenderAbortError/);
   assert.match(hookSource, /buildLectumShareRenderDiagnosticDescription/);
   assert.match(hookSource, /SHARE_RENDER_DIAGNOSTIC_COPY/);
   assert.match(hookSource, /description: diagnosticDescription/);
@@ -103,8 +107,10 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(hookSource, /Mantenha esta tela aberta enquanto o vídeo é preparado\./);
   assert.match(
     dialogHookSource,
-    /shareLectumTarget\(pendingTarget, \{ destination: "download" \}\)/,
+    /shareLectumTarget\(pendingTarget,[\s\S]*destination: "download"[\s\S]*signal: controller\.signal/,
   );
+  assert.match(dialogHookSource, /downloadAbortControllerRef/);
+  assert.match(dialogHookSource, /downloadAbortControllerRef\.current\?\.abort\(\)/);
   assert.doesNotMatch(dialogHookSource, /preparePendingTarget/);
   assert.doesNotMatch(dialogHookSource, /autoPreparedTargetRef/);
   assert.doesNotMatch(dialogHookSource, /preparedFile/);
@@ -145,6 +151,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
     dialogSource,
     /const downloadButtonLabel = preparing \? "Preparando\.\.\." : "Baixar v\\u00eddeo"/,
   );
+  assert.match(dialogSource, /disabled=\{!open\}/);
   assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 30, 3\)/);
   assert.match(dialogSource, /target\.cardLabel/);
   assert.match(dialogSource, /target\.sourceText/);

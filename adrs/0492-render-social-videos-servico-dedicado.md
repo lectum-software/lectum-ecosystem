@@ -767,3 +767,18 @@ A decisao nao cria schema, storage, provider, pacote, env obrigatoria ou contrat
 executar o check do backend no container de homologacao e validar, sem revelar valores,
 `VIDEO_PROCESSING_SERVICE_URL`, o `VIDEO_SERVICE_API_KEY` compartilhado, readiness/worker do app
 `video/` e rede server-to-server.
+
+## Atualizacao em 2026-09-16 - sem loading indefinido no preparo social
+
+Novo print mobile mostrou a modal de download social presa no estado `Preparando...`, sem baixar o
+arquivo. A decisao e separar tolerancia a indisponibilidade transitoria de espera por processamento
+real: o backend passa a consultar `/ready` do servico `video/` antes de criar jobs `social_share`, e o
+frontend deixa de aguardar indefinidamente quando o job permanece em fila sem `started_at` ou progresso.
+A modal tambem pode ser fechada durante o preparo; o cancelamento local aborta a espera e nao gera um
+toast de erro tecnico.
+
+A mudanca nao cria schema, pacote, storage, provider, env obrigatoria nem contrato HTTP publico novo.
+Se a UI ainda nao baixar apos esta versao, o codigo deve falhar de forma finita e a causa restante e
+operacional: validar worker/readiness do `video/`, fila Redis, `VIDEO_REQUIRE_WORKER_READY`,
+`VIDEO_PROCESSING_SERVICE_URL`, `VIDEO_SERVICE_API_KEY` compartilhado e rede backend -> video, sem
+expor valores.

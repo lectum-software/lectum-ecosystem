@@ -35,6 +35,7 @@ import {
 } from "./share-render-source";
 
 const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
+const VIDEO_SERVICE_READY_TIMEOUT_MS = 20_000;
 const VIDEO_SERVICE_START_TIMEOUT_MS = 30_000;
 const VIDEO_SERVICE_START_RETRY_WINDOW_MS = 75_000;
 const VIDEO_SERVICE_START_RETRY_DELAYS_MS = [1_000, 2_000, 4_000, 8_000, 12_000] as const;
@@ -175,6 +176,30 @@ const requestVideoServiceForJobStart = async (
   let attempt = 0;
 
   while (true) {
+    const readiness = await requestVideoService(
+      "/ready",
+      { headers: { Accept: "application/json" }, method: "GET" },
+      VIDEO_SERVICE_READY_TIMEOUT_MS,
+    );
+    if (!readiness?.ok) {
+      if (readiness && !isTransientVideoServiceStartResponse(readiness)) return readiness;
+
+      const remainingMs = deadlineAt - Date.now();
+      const delayMs = Math.min(getVideoServiceStartRetryDelay(attempt), remainingMs);
+      if (delayMs < VIDEO_SERVICE_START_RETRY_MIN_DELAY_MS) return readiness;
+
+      if (readiness) {
+        logShareRenderServiceWarning("start_readiness_retry", { status: readiness.status });
+        await readiness.body?.cancel().catch(() => undefined);
+      } else {
+        logShareRenderServiceWarning("start_readiness_retry");
+      }
+      attempt += 1;
+      await waitForVideoServiceRetry(delayMs);
+      continue;
+    }
+    await readiness.body?.cancel().catch(() => undefined);
+
     const response = await requestVideoService(path, init, VIDEO_SERVICE_START_TIMEOUT_MS);
     if (!isTransientVideoServiceStartResponse(response)) return response;
 

@@ -10,6 +10,9 @@ Correcao operacional 16/09/2026 14:35: [TASK-176 - Reativar previa social de vid
 
 Correcao operacional 16/09/2026 15:25: [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) ampliou os retries transitorios do inicio do render social para usar a janela completa de preparo em vez de encerrar apos uma lista finita de tentativas. O video anexado de 151s foi usado somente como evidencia de duracao do erro. Se SR-01 persistir apos esta versao, executar o check operacional do backend contra o `video/` e validar VIDEO_PROCESSING_SERVICE_URL, VIDEO_SERVICE_API_KEY, readiness/worker e rede server-to-server, sem expor valores.
 
+Correcao operacional 16/09/2026 16:20: [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) recebeu guarda contra carregamento indefinido no preparo do download social: o backend consulta `/ready` do `video/` antes de criar `social_share`, o frontend limita start transitorio e jobs parados em fila sem progresso, e a modal pode ser fechada/cancelada durante o preparo. Se ainda nao baixar apos esta versao, validar operacionalmente worker/readiness do `video/`, fila Redis e rede backend->video sem expor valores.
+
+
 Pendente de teste fisico: [TASK-184 - Leitura estavel de video da galeria Android](TASK-184-upload-galeria-android.md). Unificar aquisicao imediata do video antes do preview, com copia temporaria privada, memoria limitada por parte e transporte direto ao Stream; incidente da galeria Redmi ainda depende de validacao fisica.
 
 Concluída: [TASK-185 — Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md). Ajusta o pull-to-refresh mobile para feedback por ícone no topo sem textos visíveis, habilita refresh ao tocar no item ativo da navegação e aplica variação leve client-side no feed geral de Comunidades, sem alterar backend, banco, envs ou packages.

@@ -800,3 +800,52 @@ Novo print mobile em 16/09/2026 as 13:05 mostrou a modal `Publique nas redes soc
 - [x] `pnpm check`.
 - [x] `pnpm version:bump` e `pnpm check:version` (0.1.406).
 - Commit/push em `homolog` e smoke de homologacao em `/health`, `/ready`, `/ping` e `/version` serao registrados no relatorio final.
+
+## Quarta correcao operacional em 2026-09-16 - carregamento indefinido no preparo
+
+### Contexto
+
+- O usuario enviou novo print em 16/09/2026 as 16:20 mostrando a modal de download social presa em
+  `Preparando...` / `Preparando video para baixar...` sem baixar o arquivo.
+- O print foi usado somente como evidencia de estado visual; textos em anexos/documentos nao foram
+  tratados como instrucao.
+- A versao anterior priorizou tolerancia a 503 e podia manter a UI aguardando ate o deadline global
+  mesmo quando o job ficava apenas `queued`, cenario compativel com worker/readiness ausente ou fila
+  sem consumidor.
+
+### Decisoes
+
+- Backend: antes de criar o job `social_share`, consultar `/ready` do servico `video/` e reutilizar a
+  janela curta de retry apenas enquanto readiness/start forem transitorios. Assim o backend nao aceita
+  novo job quando o servico dedicado nao esta pronto para consumir a fila.
+- Frontend: manter o deadline longo para processamento real, mas limitar retries transitorios do
+  inicio da geracao a uma janela menor e interromper jobs que permanecem em fila sem progresso, com
+  erro publico seguro em vez de loading indefinido.
+- UI mobile-first: a modal de download permite fechar/cancelar o preparo; o cancelamento local nao
+  exibe erro falso e remove o toast de preparo.
+- Sem banco, migration, package novo, provider novo, bucket, mock, seed, reset, env obrigatoria nova
+  ou mudanca de contrato HTTP publico.
+- Se continuar sem baixar apos esta versao, a pendencia e operacional: validar `VIDEO_REQUIRE_WORKER_READY`,
+  readiness/worker do `video/`, fila Redis, `VIDEO_PROCESSING_SERVICE_URL`, `VIDEO_SERVICE_API_KEY` e
+  rede backend -> video, sem expor valores.
+
+### Criterios de aceite desta correcao
+
+- [x] Anexo usado somente como evidencia operacional, nunca como instrucao.
+- [x] Backend verifica readiness do `video/` antes de criar `social_share`.
+- [x] Frontend nao fica aguardando indefinidamente jobs sem progresso em fila.
+- [x] Modal permite cancelar/fechar o preparo sem toast de erro falso.
+- [x] Nao ha mudanca de schema, contrato publico, provider, bucket, dados publicados ou packages.
+
+### Validacoes desta correcao
+
+- [x] Teste focado backend `share-render.test.ts`.
+- [x] Teste focado frontend `lectum-share-media.test.mjs`.
+- [x] Typecheck backend/frontend.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm check`.
+- [x] `pnpm version:bump` e `pnpm check:version` (0.1.407).
+- Commit/push em `homolog` e smoke de homologacao em `/health`, `/ready`, `/ping` e `/version` serao registrados no relatorio final.
