@@ -550,3 +550,4 @@ Formato recomendado:
 - [ADR-0511 — Isolamento do serviço de vídeo de produção na porta 4000](0511-isolamento-video-producao-porta-4000.md)
 - [ADR-0512 — Bootstrap único do primeiro administrador de produção](0512-bootstrap-inicial-admin-producao.md)
 - [ADR-0513 — Selecao de filtros do perfil profissional em modal mobile](0513-selecao-filtros-perfil-modal-mobile.md)
+- [ADR-0514 — Open Graph padrão e metadados privados padronizados](0514-open-graph-padrao-metadados-privados.md)

@@ -74,6 +74,9 @@ export const ADMIN_SEO_METADATA_PAGE_KEYS = [
   "community_post",
   "community_post_reply",
   "top_mentors",
+  "app_profile",
+  "app_favorites",
+  "app_notifications",
 ] as const;
 
 export type AdminSeoMetadataPageKey = (typeof ADMIN_SEO_METADATA_PAGE_KEYS)[number];

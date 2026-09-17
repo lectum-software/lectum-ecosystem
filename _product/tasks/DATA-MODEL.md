@@ -1177,7 +1177,7 @@ Adicionado na TASK-141 para permitir que o Admin configure metadados das página
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `page_key` | `String @unique` | Chave operacional fechada: `default`, `home`, `psychologists`, `psychologist_profile`, `community`, `community_detail`, `community_post`, `community_post_reply`, `top_mentors`. |
+| `page_key` | `String @unique` | Chave operacional fechada: `default`, `home`, `psychologists`, `psychologist_profile`, `community`, `community_detail`, `community_post`, `community_post_reply`, `top_mentors`, `app_profile`, `app_favorites`, `app_notifications`. |
 | `route_path` | `String?` | Rota publica correspondente; pode ser `null` no fallback global e pode conter placeholders de rota dinamica como `/psicologos/[id]`. |
 | `label` | `String` | Nome exibido no Admin; não é editável pela tela. |
 | `title` | `String` | Título SEO renderizado server-side quando a página usa a configuração. |
@@ -1194,6 +1194,8 @@ A edição administrativa usa `PUT /api/admin/private/settings/seo/:page_key`, v
 Complemento TASK-143: `GET /api/public/seo/community-post/:slug/:id` e `GET /api/public/seo/community-post/:slug/:id/replies/:replyId` expoem metadados publicos derivados somente de `community_post.status="publicado"`, `deleted=false`, comunidade ativa e conteudo ja publico. Para posts com imagem, `og_image_url` usa a imagem publica persistida; para videos, `og_image_url` usa `thumbnail_url` quando existir e `og_video_url` usa `media_url`. Threads preferem a midia/miniatura da `post_reply` e caem para a midia do post raiz. Esses endpoints nao retornam dados de auditoria, autor privado ou campos sensiveis.
 
 Complemento TASK-144: a UI Admin nao edita `site_seo_setting.og_image_url` como campo textual. O operador faz upload de JPG/PNG/WebP em `POST /api/admin/private/settings/seo/:page_key/og-image`; o backend grava o arquivo no storage publico em `seo/og-image/` e retorna um caminho publico gerado internamente para o formulario salvar em `og_image_url`. O update de metadados continua sendo `PUT /api/admin/private/settings/seo/:page_key`, com auditoria em `admin_activity_log` quando `og_image_url` mudar.
+
+Complemento 2026-09-17: a imagem Open Graph padrao gerenciada passa a ser `/lectum-og-default.png`, gerada a partir da logo azul da Lectum em canvas 1200x630. Registros gerenciados que ainda usam o fallback legado `/logo-light.png` podem ser sincronizados para o novo valor sem sobrescrever uploads customizados. As chaves `app_profile`, `app_favorites` e `app_notifications` representam rotas privadas sob `/app` apenas para padronizacao de metadados no Admin; elas permanecem obrigatoriamente `robots_index=false` e `robots_follow=false`, sem virar paginas publicas indexaveis.
 
 Complemento TASK-145: `route_path` e `canonical_url` gerenciados passam a usar URLs publicas canonicas em PT-BR (`/psicologos`, `/psicologos/[id]`, `/comunidades`, `/comunidades/[slug]`, `/comunidades/[slug]/publicacao/[id]`, `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, `/comunidades/top-mentores`). Registros existentes com canonicos legados em ingles sao sincronizados para PT-BR sem sobrescrever customizacoes reais.
 

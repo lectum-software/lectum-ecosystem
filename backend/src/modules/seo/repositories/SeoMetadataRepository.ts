@@ -2,6 +2,8 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { managedSeoRouteDefaults } from "../managed-route-defaults";
 import {
+  DEFAULT_OPEN_GRAPH_IMAGE_URL,
+  PRIVATE_SEO_METADATA_PAGE_KEYS,
   SEO_METADATA_DEFAULTS,
   type SeoMetadataPageKey,
   type SeoMetadataSettingPayload,
@@ -10,6 +12,7 @@ import {
 } from "../metadata-settings";
 
 const settingsOrder = SEO_METADATA_DEFAULTS.map((setting) => setting.page_key);
+const LEGACY_DEFAULT_OPEN_GRAPH_IMAGE_URL = "/logo-light.png";
 
 const asJsonArray = (value?: string[] | null): Prisma.InputJsonValue => value ?? [];
 
@@ -75,6 +78,28 @@ export class SeoMetadataRepository {
     }
   }
 
+  private async syncManagedDefaultAssets() {
+    await prisma.site_seo_setting.updateMany({
+      data: { og_image_url: DEFAULT_OPEN_GRAPH_IMAGE_URL },
+      where: {
+        deleted: false,
+        og_image_url: LEGACY_DEFAULT_OPEN_GRAPH_IMAGE_URL,
+        page_key: { in: [...settingsOrder] },
+      },
+    });
+  }
+
+  private async syncPrivateRouteRobots() {
+    await prisma.site_seo_setting.updateMany({
+      data: { robots_follow: false, robots_index: false },
+      where: {
+        deleted: false,
+        page_key: { in: [...PRIVATE_SEO_METADATA_PAGE_KEYS] },
+        OR: [{ robots_follow: true }, { robots_index: true }],
+      },
+    });
+  }
+
   async ensureDefaults() {
     const existing = await prisma.site_seo_setting.findMany({
       select: { page_key: true },
@@ -103,6 +128,8 @@ export class SeoMetadataRepository {
     }
 
     await this.syncManagedRouteDefaults();
+    await this.syncManagedDefaultAssets();
+    await this.syncPrivateRouteRobots();
   }
 
   async list(): Promise<SeoMetadataSettingsDTO> {

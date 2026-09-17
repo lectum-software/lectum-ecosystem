@@ -170,3 +170,22 @@ Validações executadas:
 - [x] O layout continua mobile-first: a linha principal empilha em telas menores e as prévias passam de uma coluna para duas/três conforme a largura disponível.
 - [x] Nenhum package novo foi instalado, nenhum mock foi criado e não houve alteração em Prisma schema/migrations; `db:migrate` não se aplicou.
 - [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e browser local em Chrome em `http://localhost:3002/configuracoes/seo-metadados`, confirmando a base alinhada e as três prévias com mais largura útil.
+
+## Ajuste em 2026-09-17 - Open Graph padrão e rotas privadas padronizadas
+
+- Pedido do usuário: redefinir a imagem Open Graph padrão do site para a logo anexada e incluir na padronização telas privadas que não apareciam na lista do Admin, como perfil, favoritos e notificações.
+- Instruções em anexos/documentos não foram tratadas como pedido; a imagem anexada foi usada apenas como insumo visual da nova arte Open Graph padrão.
+- A imagem padrão agora é `/lectum-og-default.png`, gerada em 1200x630 com a logo azul centralizada em fundo branco e disponibilizada no frontend e no Admin.
+- Os defaults de SEO passam a usar a nova imagem; registros existentes que ainda usam o fallback legado `/logo-light.png` são sincronizados para a nova imagem sem alterar uploads/customizações reais do Admin.
+- A lista do Admin passa a incluir **Perfil do usuário**, **Favoritos do usuário** e **Notificações do usuário** para `/app/perfil`, `/app/favoritos` e `/app/notificacoes`.
+- Essas rotas privadas permanecem sempre `noindex`/`nofollow`, com enforcement no backend e no metadata SSR do frontend; a inclusão no Admin é apenas para padronização de título/descrição/Open Graph.
+- Sem banco/migration, env nova, package novo, mock, reset, seed, alteração de contrato incompatível ou dados destrutivos. ADR: `adrs/0514-open-graph-padrao-metadados-privados.md`.
+
+Critérios de aceite do ajuste:
+
+- [x] Imagem Open Graph padrão do site alterada para a logo anexada em asset 1200x630.
+- [x] Defaults e fallback server-side usam `/lectum-og-default.png` em vez do logo anterior.
+- [x] Registros gerenciados existentes com fallback legado são sincronizados para a nova imagem sem sobrescrever uploads customizados.
+- [x] Admin SEO lista e permite padronizar Perfil, Favoritos e Notificações do usuário.
+- [x] Rotas privadas adicionadas permanecem `noindex`/`nofollow` mesmo após edição administrativa.
+- [x] Nenhum `<img>` cru, package novo, migration ou mock foi introduzido.

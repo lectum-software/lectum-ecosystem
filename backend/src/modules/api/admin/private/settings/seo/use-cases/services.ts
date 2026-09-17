@@ -2,6 +2,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import {
+  isPrivateSeoMetadataPageKey,
   isSeoMetadataPageKey,
   type SeoMetadataPageKey,
   type SeoMetadataSettingDTO,
@@ -215,6 +216,11 @@ export const update = async (data: IAdminSettingsSeoDTO): Promise<Resolve> => {
     robots_index: data.b?.robots_index ?? true,
     title,
   };
+
+  if (isPrivateSeoMetadataPageKey(pageKey)) {
+    payload.robots_follow = false;
+    payload.robots_index = false;
+  }
 
   if (
     !isPathOrHttpUrl(payload.canonical_url) ||

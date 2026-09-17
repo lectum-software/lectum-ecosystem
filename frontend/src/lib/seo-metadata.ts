@@ -10,6 +10,7 @@ import {
 
 const COMMUNITY_ICON_MEDIA_PATH_PREFIX = "/community/icons/";
 const COMMUNITY_ICON_FRONTEND_PATH_PREFIX = "/images/community/explore/";
+const DEFAULT_OPEN_GRAPH_IMAGE_URL = "/lectum-og-default.png";
 const MAX_METADATA_URL_LENGTH = 8192;
 
 export type SeoMetadataPageKey =
@@ -21,7 +22,10 @@ export type SeoMetadataPageKey =
   | "community_detail"
   | "community_post"
   | "community_post_reply"
-  | "top_mentors";
+  | "top_mentors"
+  | "app_profile"
+  | "app_favorites"
+  | "app_notifications";
 
 type SeoOpenGraphType = "article" | "video.other" | "website";
 
@@ -75,6 +79,8 @@ type SeoMetadataOverrides = {
   ogDescription?: string | null;
   ogTitle?: string | null;
   openGraphUrl?: string | null;
+  robotsFollow?: boolean;
+  robotsIndex?: boolean;
   title?: string | null;
   type?: SeoOpenGraphType;
   video?: string | null;
@@ -262,17 +268,23 @@ export const resolveSeoMetadata = async (
   const title = overrides.title || setting?.title || fallback.title;
   const description = overrides.description || setting?.description || fallback.description;
   const canonical = overrides.canonical || setting?.canonical_url || fallback.canonical;
-  const image = overrides.image || setting?.og_image_url || fallback.image || "/logo-light.png";
+  const image =
+    overrides.image || setting?.og_image_url || fallback.image || DEFAULT_OPEN_GRAPH_IMAGE_URL;
   const video = overrides.video === null ? null : overrides.video || fallback.video;
   const ogTitle = overrides.ogTitle || setting?.og_title || fallback.ogTitle || title;
   const ogDescription =
     overrides.ogDescription || setting?.og_description || fallback.ogDescription || description;
-  const robotsIndex = setting?.robots_index ?? fallback.robotsIndex ?? true;
-  const robotsFollow = setting?.robots_follow ?? fallback.robotsFollow ?? true;
+  const robotsIndex =
+    overrides.robotsIndex ?? setting?.robots_index ?? fallback.robotsIndex ?? true;
+  const robotsFollow =
+    overrides.robotsFollow ?? setting?.robots_follow ?? fallback.robotsFollow ?? true;
   const resolvedImage = resolveSeoMediaUrl(image);
   const resolvedVideo = video === null ? undefined : resolveSeoMediaUrl(video);
-  const imageWidth = overrides.imageWidth ?? fallback.imageWidth ?? undefined;
-  const imageHeight = overrides.imageHeight ?? fallback.imageHeight ?? undefined;
+  const isDefaultOpenGraphImage = image === DEFAULT_OPEN_GRAPH_IMAGE_URL;
+  const imageWidth =
+    overrides.imageWidth ?? fallback.imageWidth ?? (isDefaultOpenGraphImage ? 1200 : undefined);
+  const imageHeight =
+    overrides.imageHeight ?? fallback.imageHeight ?? (isDefaultOpenGraphImage ? 630 : undefined);
   const videoWidth = overrides.videoWidth ?? fallback.videoWidth ?? undefined;
   const videoHeight = overrides.videoHeight ?? fallback.videoHeight ?? undefined;
   const videoType = overrides.videoType ?? fallback.videoType ?? resolveVideoType(resolvedVideo);
@@ -333,6 +345,19 @@ export const resolveSeoMetadata = async (
     },
   };
 };
+
+export const resolvePrivateSeoMetadata = (
+  pageKey: Extract<SeoMetadataPageKey, "app_profile" | "app_favorites" | "app_notifications">,
+  fallback: SeoMetadataFallback,
+): Promise<Metadata> =>
+  resolveSeoMetadata(
+    pageKey,
+    { ...fallback, robotsFollow: false, robotsIndex: false },
+    {
+      robotsFollow: false,
+      robotsIndex: false,
+    },
+  );
 
 const getPublicCommunityPostSeo = async ({
   id,

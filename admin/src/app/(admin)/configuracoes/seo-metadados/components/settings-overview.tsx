@@ -16,8 +16,9 @@ export const SettingsHeader = () => (
           SEO / Metadados
         </h1>
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
-          Configure títulos, descrições, Open Graph e regras de indexação das páginas públicas da
-          Lectum renderizadas para motores de busca. Áreas privadas permanecem fora de indexação.
+          Configure títulos, descrições, Open Graph e regras de indexação das rotas padronizadas da
+          Lectum. Áreas privadas aparecem para padronização de metadados, mas permanecem fora de
+          indexação.
         </p>
       </div>
     </div>
@@ -70,8 +71,10 @@ export const PageSelector = ({
         <Globe2 className="h-5 w-5" />
       </span>
       <div className="min-w-0">
-        <h2 className="text-lg font-bold text-foreground">Páginas públicas</h2>
-        <p className="text-sm text-muted">Selecione uma página para editar os metadados.</p>
+        <h2 className="text-lg font-bold text-foreground">Páginas e rotas</h2>
+        <p className="text-sm text-muted">
+          Selecione uma rota para editar os metadados padronizados.
+        </p>
       </div>
     </div>
     <div className="grid min-w-0 gap-2">

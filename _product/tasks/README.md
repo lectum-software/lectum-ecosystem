@@ -2,20 +2,32 @@
 
 Fila sequencial de execução do produto Lectum.
 
+Concluida em 17/09/2026: ajuste de SEO/Open Graph padrao. A imagem Open Graph padrao do site passa a ser `/lectum-og-default.png`, gerada a partir da logo anexada pelo usuario em 1200x630; registros gerenciados que ainda usavam `/logo-light.png` serao sincronizados para o novo fallback sem sobrescrever uploads customizados. O Admin SEO/Metadados passa a listar tambem Perfil, Favoritos e Notificacoes do usuario para padronizacao de metadados, mantendo essas rotas privadas sempre `noindex`/`nofollow`. Sem banco/migration, env nova, package novo, mock ou dados destrutivos. ADR: `adrs/0514-open-graph-padrao-metadados-privados.md`.
+
+Criterios de aceite do ajuste Open Graph/metadados privados:
+
+- [x] Asset Open Graph padrao criado a partir da logo anexada e publicado em frontend/admin.
+- [x] Defaults e fallback SSR usam `/lectum-og-default.png`.
+- [x] Registros gerenciados com fallback legado sincronizam para a nova imagem sem sobrescrever imagens customizadas.
+- [x] Admin SEO lista Perfil, Favoritos e Notificacoes do usuario.
+- [x] Rotas privadas continuam `noindex`/`nofollow` no backend e no frontend.
+
 Concluída: [TASK-191 — Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md). O primeiro administrador produtivo foi criado uma única vez por operação manual com senha via stdin, após recusa segura em homologação e smoke do deploy; o login foi confirmado. TASK-190 permanece bloqueada na comparação sanitizada de credenciais/recursos de vídeo.
 
-Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. Provisionamento, rotação e validação operacional das chaves dos recursos de produção continuam pendentes.
+Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. Provisionamento, rotação e validação operacional das chaves dos recursos de produção continuam pendentes.
 
-Concluida em 17/09/2026: Ajuste UX mobile da edicao de perfil profissional para psicologos com baixa familiaridade no celular. Os campos Especialidades, Abordagens, Servicos, Publico e Idiomas deixam de abrir dropdown inline e passam a abrir modal de selecao com busca, categorias quando existirem, selecao visual, contador e botao Concluir. A captura de WhatsApp de 17/09/2026 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Editar Perfil - Psicologo.jpg` e no componente existente. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0513-selecao-filtros-perfil-modal-mobile.md`.
+Concluída em 17/09/2026: Ajuste UX mobile da edição de perfil profissional para psicólogos com baixa familiaridade no celular. Os campos Especialidades, Abordagens, Serviços, Público e Idiomas deixam de abrir dropdown inline e passam a abrir modal de seleção com busca, categorias quando existirem, seleção visual, contador e botão Concluir. A captura de WhatsApp de 17/09/2026 foi usada apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referência visual baseada em `_product/proto/Editar Perfil - Psicólogo.jpg` e no componente existente. Alteração exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudança de contrato. ADR: `adrs/0513-selecao-filtros-perfil-modal-mobile.md`.
 
-Criterios de aceite do ajuste UX mobile de filtros:
+Critérios de aceite do ajuste UX mobile de filtros:
 
-- [x] Especialidades abre uma modal de selecao em vez de dropdown inline e preserva categorias.
-- [x] Abordagens, Servicos, Publico e Idiomas usam a mesma experiencia modal mobile-first.
-- [x] A modal oferece busca, estado selecionado claro, contador/limite quando aplicavel e acao explicita Concluir.
-- [x] O conteudo do formulario nao e empurrado nem fica coberto por dropdown inline persistente.
-- [x] Contrato de payload e validacao do perfil permanecem compativeis com backend atual.
+- [x] Especialidades abre uma modal de seleção em vez de dropdown inline e preserva categorias.
+- [x] Abordagens, Serviços, Público e Idiomas usam a mesma experiência modal mobile-first.
+- [x] A modal oferece busca, estado selecionado claro, contador/limite quando aplicável e ação explícita Concluir.
+- [x] O conteúdo do formulário não é empurrado nem fica coberto por dropdown inline persistente.
+- [x] Contrato de payload e validação do perfil permanecem compatíveis com backend atual.
 - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke local executados antes do versionamento.
+
+Incidente reaberto em 16/09/2026 após 0.1.407: [TASK-176 — Download social ainda com SR-01/503](TASK-176-reativar-preview-social-video-service.md). O operador executou o diagnóstico no container real do backend de homologação às 19:10: falha de autenticação HTTP 401 após os checks de readiness e versão. Verificar `VIDEO_SERVICE_API_KEY` do backend contra o segredo ativo do serviço de vídeo, sem expor valores, alterar produção ou rotacionar a chave compartilhada indiscriminadamente. A origem exata da rejeição e a correção aplicada ainda não foram verificadas. Frontend/backend/admin homolog estão em 0.1.407; não aumentar retries. Encerramento depende de repetir o probe autenticado e baixar um MP4 real com arte.
 
 Concluída: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Envs Preview/Production revisadas, SDK/CSP e empacotamento de mapas corrigidos; frontend/admin 0.1.402 Ready e smoke aprovado. Produção não promovida e dummy Mercado Pago mantido por decisão do usuário.
 
@@ -314,7 +326,7 @@ ou cortesia manual.
 | 173 | [TASK-173 - Corrigir upload de vídeos nos posts e respostas](TASK-173-corrigir-upload-video-posts-respostas.md) | Completed | 23, 24, 26, 163, 171 |
 | 174 | [TASK-174 - Fixar barra de comentários no detalhe do post](TASK-174-fixar-barra-comentarios-detalhe-post.md) | Completed | 23, 24, 26, 45 |
 | 175 | [TASK-175 - Conexão autenticada do backend ao serviço de vídeo](TASK-175-conexao-backend-servico-video.md) | Completed | 164 |
-| 176 | [TASK-176 - Reativar prévia social de vídeos pelo serviço dedicado](TASK-176-reativar-preview-social-video-service.md) | Completed | 42, 164, 167, 173, 175 |
+| 176 | [TASK-176 - Reativar prévia social de vídeos pelo serviço dedicado](TASK-176-reativar-preview-social-video-service.md) | Blocked | 42, 164, 167, 173, 175 |
 | 177 | [TASK-177 - Backend como fonte única dos limites de vídeo](TASK-177-backend-fonte-unica-limites-video.md) | Completed | 157, 159, 163, 171, 173 |
 | 178 | [TASK-178 - Auditoria integral antes da produção](TASK-178-auditoria-pre-producao.md) | In Progress | 177 |
 | 179 | [TASK-179 - Restaurar preflight e provisionamento de upload Stream](TASK-179-corrigir-preflight-upload-stream.md) | Completed | 163, 173, 178 |
