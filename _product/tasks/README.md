@@ -2,7 +2,7 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Task em execução: [TASK-191 — Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md). A criação é manual, única, sem senha em histórico e depende de identidade administrativa aprovada pelo operador. TASK-190 permanece bloqueada na comparação sanitizada de credenciais/recursos de vídeo.
+Concluída: [TASK-191 — Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md). O primeiro administrador produtivo foi criado uma única vez por operação manual com senha via stdin, após recusa segura em homologação e smoke do deploy; o login foi confirmado. TASK-190 permanece bloqueada na comparação sanitizada de credenciais/recursos de vídeo.
 
 Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. Provisionamento, rotação e validação operacional das chaves dos recursos de produção continuam pendentes.
 
@@ -318,7 +318,7 @@ ou cortesia manual.
 | 188 | [TASK-188 - Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md) | Completed | 163, 179, 187 |
 | 189 | [TASK-189 - Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md) | Completed | 186, 187 |
 | 190 | [TASK-190 - Validação isolada do serviço de vídeo de produção na porta 4000](TASK-190-video-producao-porta-4000.md) | Blocked | 189 |
-| 191 | [TASK-191 - Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md) | In Progress | 189 |
+| 191 | [TASK-191 - Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md) | Completed | 189 |
 
 ## Ordem operacional recomendada sem bloqueios
 

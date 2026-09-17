@@ -11,6 +11,7 @@
 # Homologação e produção
 
 - Desde **2026-08-07**, Lectum está publicado e os ambientes podem conter dados reais.
+- Desde **2026-09-17**, produção está ativa com deploys reais; merge revisado de `homolog` para `main` altera o ambiente produtivo e exige validação posterior.
 - `homolog` publica automaticamente em homologação; `main` publica automaticamente em produção.
 - Antes de editar, confirme a branch. Se for `main`, pare e oriente o usuário a usar `homolog`.
 - Nunca faça commit/push direto em `main`. Promova somente por merge revisado após validar homologação.

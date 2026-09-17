@@ -12,6 +12,7 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 ## Ambientes Publicados e Segurança de Deploy
 
 - Desde **2026-08-07**, Lectum está publicado em homologação e produção. Trate dados, filas, uploads, pagamentos e integrações desses ambientes como reais e persistentes.
+- Desde **2026-09-17**, produção está ativa com deploys reais: todo merge revisado de `homolog` para `main` pode alterar usuários, pagamentos, filas, mídia e integrações produtivas.
 - A branch `homolog` publica automaticamente em **homologação**; a branch `main` publica automaticamente em **produção**.
 - Toda implementação deve começar em `homolog`. Se a branch atual for `main`, pare antes de editar, commitar ou fazer push e oriente o usuário a mudar para `homolog`.
 - Nunca faça commit ou push direto em `main`. A promoção para produção ocorre somente depois de validar o deploy de homologação e por merge revisado de `homolog` para `main`.

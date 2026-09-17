@@ -27,3 +27,8 @@ sucesso/falha sanitizados.
   criação; o código não inventa identidade administrativa.
 - O comando não pode ser reutilizado para atualizar, restaurar ou criar um segundo administrador.
 - O fluxo existente de recuperação e gestão autenticada permanece o caminho de administração posterior.
+
+
+## Validação
+
+A modalidade publicada foi recusada em homologação, que possui origem de API distinta. Após o PR #4 e o smoke da versão `0.1.416` em produção, o operador executou a criação única com senha inserida localmente por stdin; o resultado foi sanitizado e o login administrativo foi confirmado.
