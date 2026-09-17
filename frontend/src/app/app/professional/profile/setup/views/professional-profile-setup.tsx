@@ -66,7 +66,7 @@ export const ProfessionalProfileSetupLogic = () => {
     handleVideoRemoval,
     handleVideoUploadCardClick,
     isSubmitting,
-    languageError,
+    languagesError,
     lockedCrpRegionFieldProps,
     lockedIdentityFieldProps,
     openVideoFilePicker,
@@ -82,7 +82,7 @@ export const ProfessionalProfileSetupLogic = () => {
     renderField,
     selectedApproaches,
     selectedDays,
-    selectedLanguage,
+    selectedLanguages,
     selectedServices,
     selectedSpecialties,
     selectedTargets,
@@ -446,15 +446,14 @@ export const ProfessionalProfileSetupLogic = () => {
                   valueKey="slug"
                 />
                 <CatalogTagField
-                  description="Selecione o idioma principal do seu atendimento."
-                  error={languageError}
+                  description="Selecione os idiomas do seu atendimento."
+                  error={languagesError}
                   items={orderedLanguageOptions}
-                  limit={1}
-                  name="language"
+                  name="languages"
                   onChange={setCatalogValue}
                   placeholder="Adicione um idioma..."
                   required
-                  selected={selectedLanguage ? [selectedLanguage] : []}
+                  selected={selectedLanguages}
                   title="Idiomas"
                   valueKey="name"
                 />

@@ -197,7 +197,8 @@ test("campos de filtros do perfil abrem selecao em modal com busca e conclusao e
   assert.match(catalogFields, /aria-haspopup="dialog"/u);
   assert.match(catalogFields, /placeholder="Buscar opção"/u);
   assert.match(catalogFields, /Concluir/u);
-  assert.match(profileView, /name="language"/u);
+  assert.match(profileView, /name="languages"/u);
   assert.match(profileView, /valueKey="name"/u);
+  assert.doesNotMatch(profileView, /limit=\{1\}/u);
   assert.doesNotMatch(profileView, /renderField\("language"\)/u);
 });

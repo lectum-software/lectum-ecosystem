@@ -159,7 +159,7 @@ export const updateSchema = z.object({
   headline: z.preprocess(emptyTextToNull, z.string().trim().min(3).max(120).nullable().optional()),
   bio: z.preprocess(emptyTextToNull, z.string().trim().min(20).max(2000).nullable().optional()),
   modality: z.enum(["online", "presencial", "hibrido"]).nullable().optional(),
-  languages: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
+  languages: z.array(z.string().trim().min(2).max(40)).optional(),
   target_audience: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
   discount_first_session: z.boolean().optional(),
   social_value: z.boolean().optional(),

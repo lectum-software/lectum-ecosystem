@@ -145,7 +145,7 @@ export const useProfessionalProfileSetupController = () => {
   const selectedServices = form.hook.watch("service_ids") || [];
   const selectedApproaches = form.hook.watch("approach_ids") || [];
   const selectedTargets = form.hook.watch("target_audience") || [];
-  const selectedLanguage = form.hook.watch("language") || "";
+  const selectedLanguages = form.hook.watch("languages") || [];
   const selectedDays = form.hook.watch("available_days") || [];
   const published = form.hook.watch("published");
   const whatsappPhone = form.hook.watch("whatsapp");
@@ -265,7 +265,7 @@ export const useProfessionalProfileSetupController = () => {
   const approachIdsError = form.hook.formState.errors.approach_ids?.message;
   const serviceIdsError = form.hook.formState.errors.service_ids?.message;
   const targetAudienceError = form.hook.formState.errors.target_audience?.message;
-  const languageError = form.hook.formState.errors.language?.message;
+  const languagesError = form.hook.formState.errors.languages?.message;
   const availableDaysError = form.hook.formState.errors.available_days?.message;
   const orderedApproachOptions = useMemo(
     () => [...(profile.data?.catalogs.approaches || [])].sort(compareCatalogItems),
@@ -317,20 +317,10 @@ export const useProfessionalProfileSetupController = () => {
   const setCatalogValue = (
     name: keyof Pick<
       FreeProfileForm,
-      "specialty_ids" | "service_ids" | "approach_ids" | "target_audience" | "language"
+      "specialty_ids" | "service_ids" | "approach_ids" | "target_audience" | "languages"
     >,
     value: string[],
-  ) => {
-    if (name === "language") {
-      form.hook.setValue("language", value[0] || "", {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      return;
-    }
-
-    form.hook.setValue(name, value, { shouldDirty: true, shouldValidate: true });
-  };
+  ) => form.hook.setValue(name, value, { shouldDirty: true, shouldValidate: true });
 
   const renderField = (
     name: keyof FreeProfileForm,
@@ -640,7 +630,7 @@ export const useProfessionalProfileSetupController = () => {
     isSubmitting,
     lockedCrpRegionFieldProps,
     lockedIdentityFieldProps,
-    languageError,
+    languagesError,
     openAvatarFilePicker,
     openCoverImageFilePicker,
     openVideoFilePicker,
@@ -656,7 +646,7 @@ export const useProfessionalProfileSetupController = () => {
     renderField,
     selectedApproaches,
     selectedDays,
-    selectedLanguage,
+    selectedLanguages,
     selectedServices,
     selectedSpecialties,
     selectedTargets,

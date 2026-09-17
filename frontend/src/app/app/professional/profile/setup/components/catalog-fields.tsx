@@ -30,7 +30,7 @@ type CatalogPickerFieldName = keyof Pick<
 
 type CatalogTagFieldName = keyof Pick<
   FreeProfileForm,
-  "specialty_ids" | "service_ids" | "approach_ids" | "target_audience" | "language"
+  "specialty_ids" | "service_ids" | "approach_ids" | "target_audience" | "languages"
 >;
 
 export const CatalogPicker = ({
