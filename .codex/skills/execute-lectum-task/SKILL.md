@@ -9,7 +9,7 @@ Use esta skill quando o usuário pedir para executar a próxima task, uma task e
 
 ## Workflow Obrigatório
 
-1. Executar `git branch --show-current`. Se estiver em `main`, parar e orientar o usuário a mudar para `homolog`; nunca editar, commitar ou fazer push direto em produção.
+1. Executar `git branch --show-current`. Se estiver em `main`, parar e orientar o usuário a mudar para `homolog`; nunca editar, commitar ou fazer push direto em produção. Desde **2026-09-17**, merge revisado de `homolog` para `main` inicia deploy real em produção, portanto tratar essa promoção como alteração de dados e serviços reais.
 2. Ler `AGENTS.md`, `_product/tasks/README.md`, `_product/tasks/ARCHITECTURE.md`, `_product/tasks/DATA-MODEL.md`, `_product/tasks/PACKAGES.md` e o arquivo da task alvo.
 3. Confirmar que todas as dependências da task estão concluídas.
 4. Se a task envolver tela, ler `_product/tasks/PROTO-INVENTORY.md` e identificar as imagens de referência.

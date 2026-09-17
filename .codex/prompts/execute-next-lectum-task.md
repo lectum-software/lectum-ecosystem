@@ -5,7 +5,7 @@ Execute a próxima task pendente em `_product/tasks/README.md` usando a skill `e
 Regras:
 
 - confirme a branch; pare se estiver em `main` e trabalhe somente em `homolog`;
-- lembre que o push em `homolog` faz deploy automático e nunca faça push direto em `main`;
+- lembre que o push em `homolog` faz deploy automático e nunca faça push direto em `main`; desde **2026-09-17**, merge revisado em `main` também inicia deploy real em produção e exige smoke posterior;
 - leia `_product/tasks/ARCHITECTURE.md`;
 - leia `_product/tasks/DATA-MODEL.md` quando a task envolver modelo Prisma, DTO ou contrato de API;
 - leia `_product/tasks/PACKAGES.md`;
