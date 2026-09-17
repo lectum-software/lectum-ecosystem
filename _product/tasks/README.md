@@ -2,7 +2,7 @@
 
 Fila sequencial de execução do produto Lectum.
 
-TASK-190 está bloqueada: a conectividade privada e o bloqueio público foram validados, mas falta comparar de modo sanitizado a segregação de credenciais/recursos entre homologação e produção. A decisão pendente está registrada na task; não assuma segregação sem evidência.
+Task em execução: [TASK-191 — Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md). A criação é manual, única, sem senha em histórico e depende de identidade administrativa aprovada pelo operador. TASK-190 permanece bloqueada na comparação sanitizada de credenciais/recursos de vídeo.
 
 Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. Provisionamento, rotação e validação operacional das chaves dos recursos de produção continuam pendentes.
 
@@ -48,7 +48,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 197 tasks: `TASK-00` a `TASK-190`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 198 tasks: `TASK-00` a `TASK-191`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -318,6 +318,7 @@ ou cortesia manual.
 | 188 | [TASK-188 - Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md) | Completed | 163, 179, 187 |
 | 189 | [TASK-189 - Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md) | Completed | 186, 187 |
 | 190 | [TASK-190 - Validação isolada do serviço de vídeo de produção na porta 4000](TASK-190-video-producao-porta-4000.md) | Blocked | 189 |
+| 191 | [TASK-191 - Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md) | In Progress | 189 |
 
 ## Ordem operacional recomendada sem bloqueios
 

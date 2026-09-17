@@ -1,30 +1,38 @@
+import { readFileSync } from "node:fs";
+
 import "@/config/dotenv";
 
 import prisma from "@/infra/database/prisma";
 import { encrypt } from "@/utils/crypt";
 import { assertDisposableLocalDatabaseTarget } from "@/utils/local-database-safety";
 
-const help = `Cria ou atualiza o primeiro administrador da Lectum.
+import {
+  assertInitialProductionBootstrapFlags,
+  assertInitialProductionBootstrapTarget,
+} from "./initial-production-bootstrap-policy";
 
-Uso:
+const help = `Cria ou atualiza um administrador local, ou cria exclusivamente o primeiro administrador de produção.
+
+Uso local:
   pnpm --dir backend admin:bootstrap -- --email admin@example.com --name "Admin Lectum" --password "senha-forte"
 
-Alternativa recomendada para evitar senha no hist\u00f3rico do shell:
-  $env:LECTUM_ADMIN_BOOTSTRAP_PASSWORD="senha-forte"; pnpm --dir backend admin:bootstrap -- --email admin@example.com --name "Admin Lectum" --password-env LECTUM_ADMIN_BOOTSTRAP_PASSWORD
+Uso de produção (somente primeiro administrador; senha via stdin):
+  printf '%s' "$ADMIN_PASSWORD" | node --enable-source-maps dist/operations/admin/bootstrap-admin.js --email admin@example.com --name "Admin Lectum" --password-stdin --confirm=production
 
-Flags obrigat\u00f3rias:
-  --email <email>
-  --name <nome>
-  --password <senha> ou --password-env <NOME_DA_ENV>
-
-Seguran\u00e7a:
-  A senha nunca \u00e9 exibida no output. Ao atualizar um admin existente, sess\u00f5es anteriores s\u00e3o revogadas.
+Segurança:
+  - o modo padrão aceita apenas banco local descartável;
+  - o modo publicado exige exatamente produção, a API canônica e zero administradores existentes;
+  - a senha nunca é exibida no output. Não a envie como argumento de shell.
 `;
 
+type PasswordSource = "argument" | "environment" | "stdin";
+
 type BootstrapArgs = {
+  confirm?: string;
   email: string;
   name: string;
   password: string;
+  passwordSource: PasswordSource;
 };
 
 const readFlags = (argv: string[]) => {
@@ -39,12 +47,12 @@ const readFlags = (argv: string[]) => {
     }
 
     if (!token.startsWith("--")) {
-      throw new Error(`Argumento inv\u00e1lido: ${token}`);
+      throw new Error(`Argumento inválido: ${token}`);
     }
 
     const [key, inlineValue] = token.slice(2).split("=", 2);
     if (!key) {
-      throw new Error(`Argumento inv\u00e1lido: ${token}`);
+      throw new Error(`Argumento inválido: ${token}`);
     }
 
     if (inlineValue !== undefined) {
@@ -76,13 +84,22 @@ const getRequiredString = (flags: Map<string, string | true>, key: string, messa
 const normalizeEmail = (email: string) => {
   const normalized = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
-    throw new Error("--email deve ser um e-mail v\u00e1lido.");
+    throw new Error("--email deve ser um e-mail válido.");
   }
 
   return normalized;
 };
 
-const parseArgs = (argv: string[]): BootstrapArgs | null => {
+const readPasswordFromStdin = () => {
+  const password = readFileSync(0, "utf8").replace(/\r?\n$/, "");
+  if (!password) {
+    throw new Error("A senha do admin deve ser informada por stdin.");
+  }
+
+  return password;
+};
+
+export const parseBootstrapArgs = (argv: string[]): BootstrapArgs | null => {
   const flags = readFlags(argv);
 
   if (flags.has("help")) {
@@ -90,7 +107,15 @@ const parseArgs = (argv: string[]): BootstrapArgs | null => {
     return null;
   }
 
-  const allowedFlags = new Set(["email", "help", "name", "password", "password-env"]);
+  const allowedFlags = new Set([
+    "confirm",
+    "email",
+    "help",
+    "name",
+    "password",
+    "password-env",
+    "password-stdin",
+  ]);
   for (const key of flags.keys()) {
     if (!allowedFlags.has(key)) {
       throw new Error(`Flag desconhecida: --${key}`);
@@ -99,37 +124,90 @@ const parseArgs = (argv: string[]): BootstrapArgs | null => {
 
   const passwordFlag = flags.get("password");
   const passwordEnvFlag = flags.get("password-env");
+  const passwordStdinFlag = flags.get("password-stdin");
+  const sources = [
+    typeof passwordFlag === "string" ? "argument" : null,
+    typeof passwordEnvFlag === "string" ? "environment" : null,
+    passwordStdinFlag === true ? "stdin" : null,
+  ].filter((source): source is PasswordSource => source !== null);
 
-  if (passwordFlag && passwordEnvFlag) {
-    throw new Error("Informe apenas uma origem de senha: --password ou --password-env.");
+  if (sources.length !== 1) {
+    throw new Error("Informe exatamente uma origem de senha.");
   }
 
-  let password: string | undefined;
-  if (typeof passwordFlag === "string") {
-    password = passwordFlag;
-  }
-
-  if (typeof passwordEnvFlag === "string") {
-    password = process.env[passwordEnvFlag];
-    if (!password) {
-      throw new Error(`A env ${passwordEnvFlag} n\u00e3o possui senha configurada.`);
-    }
-  }
+  const passwordSource = sources[0];
+  const password =
+    passwordSource === "argument"
+      ? (passwordFlag as string)
+      : passwordSource === "environment"
+        ? process.env[passwordEnvFlag as string]
+        : readPasswordFromStdin();
 
   if (!password || password.length < 8) {
     throw new Error("A senha do admin deve ter pelo menos 8 caracteres.");
   }
 
+  const confirm = flags.get("confirm");
+  if (confirm !== undefined && typeof confirm !== "string") {
+    throw new Error("--confirm exige um valor.");
+  }
+
   return {
-    email: normalizeEmail(getRequiredString(flags, "email", "--email \u00e9 obrigat\u00f3rio.")),
-    name: getRequiredString(flags, "name", "--name \u00e9 obrigat\u00f3rio."),
+    confirm,
+    email: normalizeEmail(getRequiredString(flags, "email", "--email é obrigatório.")),
+    name: getRequiredString(flags, "name", "--name é obrigatório."),
     password,
+    passwordSource,
   };
 };
 
 const bootstrapAdmin = async (args: BootstrapArgs) => {
-  assertDisposableLocalDatabaseTarget(process.env, "Bootstrap administrativo");
+  const initialProductionBootstrap = args.confirm !== undefined;
+
+  if (initialProductionBootstrap) {
+    assertInitialProductionBootstrapFlags({
+      confirm: args.confirm,
+      passwordSource: args.passwordSource,
+    });
+    assertInitialProductionBootstrapTarget(process.env);
+  } else {
+    assertDisposableLocalDatabaseTarget(process.env, "Bootstrap administrativo");
+  }
+
   const passwordHash = await encrypt(args.password);
+  const now = new Date();
+
+  if (initialProductionBootstrap) {
+    return prisma.$transaction(
+      async (tx) => {
+        const administratorCount = await tx.admin.count();
+        if (administratorCount !== 0) {
+          throw new Error("Bootstrap inicial bloqueado: já existe administrador.");
+        }
+
+        const admin = await tx.admin.create({
+          data: {
+            active: true,
+            confirmed: true,
+            confirmed_date: now,
+            email: args.email,
+            name: args.name,
+            need_reset: false,
+            password: passwordHash,
+          },
+          select: {
+            active: true,
+            confirmed: true,
+            id: true,
+          },
+        });
+
+        return { action: "created" as const, admin };
+      },
+      { isolationLevel: "Serializable" },
+    );
+  }
+
   const existing = await prisma.admin.findUnique({
     where: {
       email: args.email,
@@ -139,8 +217,7 @@ const bootstrapAdmin = async (args: BootstrapArgs) => {
     },
   });
 
-  const now = new Date();
-  const admin = await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     if (existing) {
       const updated = await tx.admin.update({
         where: {
@@ -161,9 +238,7 @@ const bootstrapAdmin = async (args: BootstrapArgs) => {
         select: {
           active: true,
           confirmed: true,
-          email: true,
           id: true,
-          name: true,
         },
       });
 
@@ -189,20 +264,16 @@ const bootstrapAdmin = async (args: BootstrapArgs) => {
       select: {
         active: true,
         confirmed: true,
-        email: true,
         id: true,
-        name: true,
       },
     });
 
     return { action: "created" as const, admin: created };
   });
-
-  return admin;
 };
 
 const main = async () => {
-  const args = parseArgs(process.argv.slice(2));
+  const args = parseBootstrapArgs(process.argv.slice(2));
   if (!args) return;
 
   const result = await bootstrapAdmin(args);
@@ -218,11 +289,13 @@ const main = async () => {
   );
 };
 
-main()
-  .catch((_error: unknown) => {
-    console.error("Não foi possível concluir a operação de administrador.");
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (require.main === module) {
+  main()
+    .catch((_error: unknown) => {
+      console.error("Não foi possível concluir a operação de administrador.");
+      process.exitCode = 1;
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
