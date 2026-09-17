@@ -2,7 +2,7 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Última task concluída: [TASK-188 — Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md). O roteador único está publicado por CI, a inscrição Stream está apontada ao Custom Domain e um upload real em homolog confirmou callback e playback. Produção permanece desabilitada no roteador até a validação própria do endpoint produtivo.
+Task em execução: [TASK-189 — Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md). A prioridade é aceitar exclusivamente o DSN canônico do GlitchTip no backend, preservar a sanitização error-only e validar o transporte apenas em homolog antes de qualquer promoção.
 
 Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. GlitchTip backend, chaves e isolamento dos recursos continuam explicitamente pendentes de provisionamento/validação.
 
@@ -48,7 +48,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 195 tasks: `TASK-00` a `TASK-188`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 196 tasks: `TASK-00` a `TASK-189`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -316,6 +316,7 @@ ou cortesia manual.
 | 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | Completed | 179 |
 | 187 | [TASK-187 - Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md) | Completed | 186 |
 | 188 | [TASK-188 - Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md) | Completed | 163, 179, 187 |
+| 189 | [TASK-189 - Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md) | In Progress | 186, 187 |
 
 ## Ordem operacional recomendada sem bloqueios
 

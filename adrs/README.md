@@ -547,3 +547,4 @@ Formato recomendado:
 
 - [ADR-0508 — Template de produção do backend no Dokploy](0508-template-backend-producao-dokploy.md)
 - [ADR-0509 — Roteador único de webhook Stream multiambiente](0509-roteador-webhook-stream-multiambiente.md)
+- [ADR-0510 — GlitchTip canônico para observabilidade backend](0510-glitchtip-backend-observabilidade.md)

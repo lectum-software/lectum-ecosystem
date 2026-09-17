@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.412",
+  "version": "0.1.413",
   "packageManager": "pnpm@10.33.0",
   "private": true,
   "prisma": {
@@ -30,7 +30,8 @@
     "video:retention": "node --enable-source-maps dist/operations/video-assets/video-retention.js",
     "video:migrate-r2-to-stream": "node --enable-source-maps dist/operations/video-assets/migrate-r2-to-stream.js",
     "test": "node --import tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.mjs\"",
-    "test:patient-follows-integration": "node --import tsx scripts/patient-follow.integration.mjs"
+    "test:patient-follows-integration": "node --import tsx scripts/patient-follow.integration.mjs",
+    "observability:check": "node --enable-source-maps dist/operations/observability/check-observability.js"
   },
   "engines": {
     "node": ">=22.0.0"
