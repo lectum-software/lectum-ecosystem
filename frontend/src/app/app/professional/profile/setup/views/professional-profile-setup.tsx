@@ -1,5 +1,4 @@
 "use client";
-
 import {
   BadgeCheck,
   BookOpen,
@@ -45,7 +44,6 @@ import {
   resolveApiError,
 } from "../modules/profile-setup-support";
 import { WEEKDAY_OPTIONS } from "../options";
-
 export const ProfessionalProfileSetupLogic = () => {
   const controller = useProfessionalProfileSetupController();
   const {
@@ -68,10 +66,12 @@ export const ProfessionalProfileSetupLogic = () => {
     handleVideoRemoval,
     handleVideoUploadCardClick,
     isSubmitting,
+    languageError,
     lockedCrpRegionFieldProps,
     lockedIdentityFieldProps,
     openVideoFilePicker,
     orderedApproachOptions,
+    orderedLanguageOptions,
     orderedServiceOptions,
     orderedSpecialtyGroups,
     orderedTargetAudienceOptions,
@@ -82,6 +82,7 @@ export const ProfessionalProfileSetupLogic = () => {
     renderField,
     selectedApproaches,
     selectedDays,
+    selectedLanguage,
     selectedServices,
     selectedSpecialties,
     selectedTargets,
@@ -110,7 +111,6 @@ export const ProfessionalProfileSetupLogic = () => {
     videoUploadProgress,
     whatsappUrl,
   } = controller;
-
   return (
     <PrivateTemplate
       desktopSidebarDefaultCollapsed
@@ -132,7 +132,6 @@ export const ProfessionalProfileSetupLogic = () => {
           </p>
         </ActionableCoachMark>
       ) : null}
-
       <VideoRemovalConfirmationModal
         disabled={deleteVideo.isPending}
         onClose={() => setVideoRemovalConfirmOpen(false)}
@@ -446,7 +445,19 @@ export const ProfessionalProfileSetupLogic = () => {
                   title="Público"
                   valueKey="slug"
                 />
-                {renderField("language")}
+                <CatalogTagField
+                  description="Selecione o idioma principal do seu atendimento."
+                  error={languageError}
+                  items={orderedLanguageOptions}
+                  limit={1}
+                  name="language"
+                  onChange={setCatalogValue}
+                  placeholder="Adicione um idioma..."
+                  required
+                  selected={selectedLanguage ? [selectedLanguage] : []}
+                  title="Idiomas"
+                  valueKey="name"
+                />
                 <div className="grid gap-3">
                   <h3 className="text-sm font-bold text-foreground">Selos e Facilidades</h3>
                   <BooleanBenefit

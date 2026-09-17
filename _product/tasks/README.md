@@ -6,6 +6,17 @@ Concluída: [TASK-191 — Bootstrap seguro do primeiro administrador de produç�
 
 Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. Provisionamento, rotação e validação operacional das chaves dos recursos de produção continuam pendentes.
 
+Concluida em 17/09/2026: Ajuste UX mobile da edicao de perfil profissional para psicologos com baixa familiaridade no celular. Os campos Especialidades, Abordagens, Servicos, Publico e Idiomas deixam de abrir dropdown inline e passam a abrir modal de selecao com busca, categorias quando existirem, selecao visual, contador e botao Concluir. A captura de WhatsApp de 17/09/2026 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Editar Perfil - Psicologo.jpg` e no componente existente. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0513-selecao-filtros-perfil-modal-mobile.md`.
+
+Criterios de aceite do ajuste UX mobile de filtros:
+
+- [x] Especialidades abre uma modal de selecao em vez de dropdown inline e preserva categorias.
+- [x] Abordagens, Servicos, Publico e Idiomas usam a mesma experiencia modal mobile-first.
+- [x] A modal oferece busca, estado selecionado claro, contador/limite quando aplicavel e acao explicita Concluir.
+- [x] O conteudo do formulario nao e empurrado nem fica coberto por dropdown inline persistente.
+- [x] Contrato de payload e validacao do perfil permanecem compativeis com backend atual.
+- [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke local executados antes do versionamento.
+
 Concluída: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Envs Preview/Production revisadas, SDK/CSP e empacotamento de mapas corrigidos; frontend/admin 0.1.402 Ready e smoke aprovado. Produção não promovida e dummy Mercado Pago mantido por decisão do usuário.
 
 Correcao operacional 16/09/2026 13:05: [TASK-42 - Layout de compartilhamento social para video-resposta](TASK-42-layout-compartilhamento-video-resposta.md) e [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) receberam ajuste para o erro `SR-01` no inicio da geracao. O backend passa a tolerar ate 30s ao criar o job `social_share`, o frontend amplia retries transitorios antes de exibir falha, e o `video/` aumenta a margem de `/ready`/healthcheck para cold start de FFmpeg. Sem banco, env obrigatoria nova, package novo, provider, storage ou mudanca de contrato.
