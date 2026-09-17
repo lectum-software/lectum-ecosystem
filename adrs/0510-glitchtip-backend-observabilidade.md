@@ -44,7 +44,11 @@ gerar um evento de verificação de transporte.
 ## Validação
 
 - Testes de parsing, saneamento, boot e operação manual; check/build backend e check raiz.
-- Smoke de homolog e confirmação do evento sanitizado no GlitchTip após deploy.
+- O commit `63fa9c3e` (release `lectum-backend@0.1.413`) foi publicado em homolog. `/health`,
+  `/ready` e `/ping` responderam saudáveis; o comando confirmado foi aceito pelo transporte.
+- O GlitchTip registrou o evento operacional `HOMOLOG-BACKEND-1` em `homolog`, com a release,
+  `observability_probe` e `runtime` como únicos metadados operacionais necessários. A inspeção
+  visual mostrou somente frames `runtime/*` saneados.
 
 ## Pendências
 

@@ -2,9 +2,9 @@
 
 Fila sequencial de execução do produto Lectum.
 
-Task em execução: [TASK-189 — Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md). A prioridade é aceitar exclusivamente o DSN canônico do GlitchTip no backend, preservar a sanitização error-only e validar o transporte apenas em homolog antes de qualquer promoção.
+Última task concluída: [TASK-189 — Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md). O backend aceita exclusivamente o DSN HTTPS canônico `glit.lectum.com.br` (além do Sentry SaaS já permitido), preserva a sanitização error-only e teve transporte confirmado em homolog no GlitchTip. Produção não foi promovida nesta task.
 
-Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. GlitchTip backend, chaves e isolamento dos recursos continuam explicitamente pendentes de provisionamento/validação.
+Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. Provisionamento, rotação e validação operacional das chaves dos recursos de produção continuam pendentes.
 
 Concluída: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Envs Preview/Production revisadas, SDK/CSP e empacotamento de mapas corrigidos; frontend/admin 0.1.402 Ready e smoke aprovado. Produção não promovida e dummy Mercado Pago mantido por decisão do usuário.
 
@@ -316,7 +316,7 @@ ou cortesia manual.
 | 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | Completed | 179 |
 | 187 | [TASK-187 - Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md) | Completed | 186 |
 | 188 | [TASK-188 - Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md) | Completed | 163, 179, 187 |
-| 189 | [TASK-189 - Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md) | In Progress | 186, 187 |
+| 189 | [TASK-189 - Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md) | Completed | 186, 187 |
 
 ## Ordem operacional recomendada sem bloqueios
 

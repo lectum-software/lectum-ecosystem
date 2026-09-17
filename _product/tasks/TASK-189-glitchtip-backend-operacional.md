@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | In Progress |
+| Status | Completed |
 
 ## Escopo e dependências
 
@@ -31,15 +31,15 @@ banco, filas, vídeos, R2, pagamentos ou dados de usuários.
 
 ## Critérios de aceite
 
-- [ ] A política aceita apenas DSN HTTPS do GlitchTip canônico ou Sentry SaaS já permitido, e
+- [x] A política aceita apenas DSN HTTPS do GlitchTip canônico ou Sentry SaaS já permitido, e
       rejeita variações, destinos arbitrários e formatos inseguros.
-- [ ] Sem DSN/environment válido, boot e fluxo de erro continuam disponíveis sem falhar aberto.
-- [ ] A captura continua limitada a erros operacionais sanitizados, sem dados pessoais, secretos ou
+- [x] Sem DSN/environment válido, boot e fluxo de erro continuam disponíveis sem falhar aberto.
+- [x] A captura continua limitada a erros operacionais sanitizados, sem dados pessoais, secretos ou
       detalhes técnicos em logs/eventos.
-- [ ] Existe comando manual confirmado que valida a configuração e o transporte sem incluir segredo
+- [x] Existe comando manual confirmado que valida a configuração e o transporte sem incluir segredo
       na saída e sem ser executado automaticamente.
-- [ ] Template de produção e documentação deixam de indicar uma limitação inexistente.
-- [ ] Checks, build, ADR, bump, commit/push em `homolog` e smoke pós-deploy são registrados.
+- [x] Template de produção e documentação deixam de indicar uma limitação inexistente.
+- [x] Checks, build, ADR, bump, commit/push em `homolog` e smoke pós-deploy são registrados.
 
 ## Validação esperada
 
@@ -50,3 +50,20 @@ banco, filas, vídeos, R2, pagamentos ou dados de usuários.
   Conferir no GlitchTip apenas o evento sanitizado/release/ambiente, sem publicar DSN ou payload.
 - Produção permanece sem promoção nesta task; o mesmo comando só poderá ser executado no runtime
   produtivo após merge revisado e com `--confirm=production`.
+
+## Evidências de conclusão
+
+- A política e o parser da operação possuem testes focados; `pnpm --dir backend check` (821 casos),
+  `pnpm --dir backend build` e `pnpm check` passaram localmente.
+- Sem DSN, a operação confirmada falha de forma segura com `configuration_invalid`, sem tentativa de
+  transmissão. O script compilado está disponível como `pnpm --dir backend observability:check --
+  --confirm=homolog`.
+- O commit funcional `63fa9c3e` foi publicado em `homolog` como versão `0.1.413`. Em homolog,
+  `/health`, `/ready` e `/ping` responderam saudáveis e o `/ping` informou `0.1.413`.
+- No runtime de homolog, a execução confirmada retornou
+  `[OBSERVABILITY_CHECK_OK] { environment: 'homolog', event: 'sanitized_operational_error',
+  transport: 'accepted' }`.
+- A interface autenticada do GlitchTip registrou o evento `HOMOLOG-BACKEND-1` no ambiente `homolog`,
+  release `lectum-backend@0.1.413`, operação `observability_probe` e boundary `runtime`. A tela
+  exibiu somente os frames saneados `runtime/*` e metadados permitidos.
+- Nenhuma promoção ou alteração de configuração de produção ocorreu nesta task.
