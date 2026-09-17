@@ -26,6 +26,8 @@ Campos afetados:
 
 A modal preserva as categorias quando existirem, como em Especialidades, adiciona busca, estado de selecao por checkbox visual, contador/limite e acoes explicitas `Cancelar` e `Concluir`. O formulario continua mobile-first: o campo no formulario atua como resumo/gatilho e a selecao acontece em uma superficie separada, sem empurrar conteudo nem cobrir ambiguamente o proximo campo.
 
+Em 2026-09-17, apos evidencia de que o teclado mobile abria automaticamente ao entrar na modal, a busca deixou de receber foco inicial. O foco acessivel inicial passa para o botao de fechar da modal; o teclado so abre quando a pessoa tocar explicitamente em `Buscar opcao`.
+
 Idiomas passa a ser tratado como selecao multipla sem limite visual de quantidade no frontend. O formulario usa `languages` como array e envia o mesmo campo `languages` no payload, preservando compatibilidade com perfis que ja tinham um ou mais idiomas. O backend tambem deixa de aplicar limite numerico fixo ao array de idiomas, mantendo apenas validacao de itens textuais.
 
 ## Impacto de deploy
@@ -41,5 +43,6 @@ Idiomas passa a ser tratado como selecao multipla sem limite visual de quantidad
 - Usuarios mobile tem um fluxo com fechamento explicito, reduzindo toques acidentais no campo inferior.
 - A modal ocupa a selecao temporariamente, entao a lista nao precisa empurrar conteudo no formulario.
 - A busca dentro da modal melhora listas longas sem adicionar dependencia.
+- O teclado mobile nao ocupa metade da tela ao abrir a modal, preservando a leitura das primeiras opcoes e categorias.
 - Psicologos podem declarar mais de um idioma de atendimento sem encontrar contador `1 de 1` ou bloqueio visual.
 - Validacao visual autenticada completa fica para homologacao, pois o ambiente local nao possui sessao real de psicologo e o browser controlado nao estava disponivel.
