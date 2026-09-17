@@ -5,6 +5,7 @@ import { RefreshCw } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { LECTUM_APP_REFRESH_EVENT, requestLectumAppRefresh } from "@/utils/app-refresh";
 import {
   getPullToRefreshSnapshot,
   hasBlockingPullToRefreshSurface,
@@ -24,8 +25,8 @@ type PullToRefreshGesture = {
 
 const MOBILE_EXPERIENCE_QUERY = "(max-width: 767px), (pointer: coarse)";
 const INTENT_DISTANCE_PX = 8;
-const MINIMUM_REFRESH_FEEDBACK_MS = 520;
-const DONE_FEEDBACK_MS = 420;
+const MINIMUM_REFRESH_FEEDBACK_MS = 380;
+const DONE_FEEDBACK_MS = 160;
 const PULL_TO_REFRESH_SCROLL_CLASS = "lectum-pull-to-refresh-enabled";
 
 const IDLE_GESTURE: PullToRefreshGesture = {
@@ -111,11 +112,11 @@ export function PullToRefresh() {
     const startedAt = performance.now();
 
     try {
-      router.refresh();
       await Promise.allSettled([
         queryClient.invalidateQueries({ refetchType: "active" }),
         updateRegisteredAppShell(),
       ]);
+      router.refresh();
 
       const elapsed = performance.now() - startedAt;
       if (elapsed < MINIMUM_REFRESH_FEEDBACK_MS) {
@@ -246,7 +247,7 @@ export function PullToRefresh() {
       resetTracking();
 
       if (shouldRefresh) {
-        void refreshCurrentView();
+        requestLectumAppRefresh("pull");
         return;
       }
 
@@ -269,54 +270,57 @@ export function PullToRefresh() {
       window.removeEventListener("touchcancel", handleTouchCancel);
       resetTracking();
     };
-  }, [
-    clearResetTimer,
-    isEnabled,
-    refreshCurrentView,
-    resetGesture,
-    resetTracking,
-    setGestureSafely,
-  ]);
+  }, [clearResetTimer, isEnabled, resetGesture, resetTracking, setGestureSafely]);
+
+  useEffect(() => {
+    const handleRefreshRequest = () => {
+      void refreshCurrentView();
+    };
+
+    window.addEventListener(LECTUM_APP_REFRESH_EVENT, handleRefreshRequest);
+
+    return () => {
+      window.removeEventListener(LECTUM_APP_REFRESH_EVENT, handleRefreshRequest);
+    };
+  }, [refreshCurrentView]);
 
   if (gesture.status === "idle") return null;
 
-  const label =
+  const ariaLabel =
     gesture.status === "refreshing"
-      ? "Atualizando..."
+      ? "Recarregando conteúdo"
       : gesture.status === "done"
-        ? "Atualizado"
+        ? "Conteúdo recarregado"
         : gesture.status === "ready"
-          ? "Solte para atualizar"
-          : "Puxe para atualizar";
+          ? "Solte para recarregar"
+          : "Puxe para recarregar";
 
   return (
     <div
+      aria-label={ariaLabel}
       aria-live="polite"
       className={cn(
-        "pointer-events-none fixed top-[max(0.75rem,env(safe-area-inset-top))] left-1/2 z-[65] flex items-center gap-2 rounded-full border border-border bg-surface/95 px-3 py-2 text-sm font-bold text-foreground opacity-100 shadow-lectum-soft backdrop-blur transition-[opacity,transform] duration-150 ease-out supports-[backdrop-filter]:bg-surface/85",
-        gesture.status === "done" ? "text-primary" : undefined,
+        "pointer-events-none fixed top-[max(0.625rem,env(safe-area-inset-top))] left-1/2 z-[65] grid h-10 w-10 place-items-center rounded-full border border-border/70 bg-surface/95 text-primary opacity-100 shadow-lectum-soft backdrop-blur transition-[opacity,transform] duration-150 ease-out supports-[backdrop-filter]:bg-surface/80",
+        gesture.status === "pulling" ? "text-muted" : undefined,
       )}
       role="status"
       style={{
         transform: `translate3d(-50%, ${gesture.translateY}px, 0) scale(${0.96 + gesture.progress * 0.04})`,
       }}
     >
-      <span className="grid h-8 w-8 place-items-center rounded-full bg-primary-soft text-primary">
-        <RefreshCw
-          aria-hidden="true"
-          className={cn(
-            "h-4 w-4 transition-transform duration-150 ease-out",
-            gesture.status === "refreshing" ? "animate-spin motion-reduce:animate-none" : undefined,
-          )}
-          style={{
-            transform:
-              gesture.status === "pulling" || gesture.status === "ready"
-                ? `rotate(${Math.round(gesture.progress * 180)}deg)`
-                : undefined,
-          }}
-        />
-      </span>
-      <span>{label}</span>
+      <RefreshCw
+        aria-hidden="true"
+        className={cn(
+          "h-[18px] w-[18px] transition-transform duration-150 ease-out",
+          gesture.status === "refreshing" ? "animate-spin motion-reduce:animate-none" : undefined,
+        )}
+        style={{
+          transform:
+            gesture.status === "pulling" || gesture.status === "ready"
+              ? `rotate(${Math.round(gesture.progress * 180)}deg)`
+              : undefined,
+        }}
+      />
     </div>
   );
 }

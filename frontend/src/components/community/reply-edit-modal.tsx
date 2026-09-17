@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Save, X } from "lucide-react";
-import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -17,11 +17,13 @@ import {
   ReplyMediaAttachmentControl,
   type SelectedReplyMedia,
 } from "@/components/community/reply-media-attachment-control";
+import { VideoFileReadRecovery } from "@/components/community/video-file-read-recovery";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { type Field, useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
+import { useVideoSourcePreparation } from "@/hooks/use-video-source-preparation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
@@ -33,6 +35,7 @@ import {
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
+import { isVideoSourceReadFailure } from "@/utils/video-upload-diagnostics";
 
 const replyEditSchema = z.object({
   content: z.string().trim().max(2000, "Use no máximo 2000 caracteres no texto"),
@@ -81,6 +84,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
+  const [needsReadableFile, setNeedsReadableFile] = useState(false);
   const [removeMedia, setRemoveMedia] = useState(false);
   const form = useFormList<ReplyEditForm>({
     fields,
@@ -92,13 +96,39 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   const { formProps, hook } = form;
   const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
+  const { prepareVideo, clearVideo, preparationProgress, isPreparingVideo } =
+    useVideoSourcePreparation();
+  const mediaSelectionGenerationRef = useRef(0);
+  const preparingVideoRef = useRef(false);
+  const mediaProgress = preparationProgress ?? videoUploadProgress;
+  const revokeSelectedMediaPreview = useCallback(() => {
+    if (!selectedMediaPreviewUrlRef.current) return;
+    URL.revokeObjectURL(selectedMediaPreviewUrlRef.current);
+    selectedMediaPreviewUrlRef.current = null;
+  }, []);
+  const clearSelectedMedia = useCallback(
+    (clearInput = true) => {
+      mediaSelectionGenerationRef.current += 1;
+      preparingVideoRef.current = false;
+      revokeSelectedMediaPreview();
+      clearVideo();
+      setSelectedMedia(null);
+      setNeedsReadableFile(false);
+      if (clearInput) {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    [clearVideo, revokeSelectedMediaPreview],
+  );
   const handleClose = useCallback(() => {
     abortActiveVideoUpload();
+    clearSelectedMedia();
     onClose();
-  }, [abortActiveVideoUpload, onClose]);
+  }, [abortActiveVideoUpload, clearSelectedMedia, onClose]);
   const uploadMutation = useUploadPostReplyMedia({
     onError: (error) => {
       if (isUploadPreparationCanceled(error)) return;
+      if (isVideoSourceReadFailure(error)) setNeedsReadableFile(true);
       setActionError(resolveMediaUploadError(error));
     },
   });
@@ -112,10 +142,12 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
       setActionError(getSafeApiErrorMessage(error, "Não foi possível atualizar o comentário."));
     },
   });
-  const isSubmitting = uploadMutation.isPending || updateMutation.isPending;
+  const isSubmitting =
+    hook.formState.isSubmitting || uploadMutation.isPending || updateMutation.isPending;
   const contentDraft = String(hook.watch("content") ?? "").trim();
   const hasEffectiveMedia = Boolean(selectedMedia || (!removeMedia && reply.media_url));
-  const canSubmit = Boolean(contentDraft || hasEffectiveMedia);
+  const canSubmit =
+    Boolean(contentDraft || hasEffectiveMedia) && !needsReadableFile && !isPreparingVideo;
 
   const focusEditor = useCallback(() => {
     window.setTimeout(() => {
@@ -127,6 +159,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     (previewUrl: string, type: SelectedReplyMedia["type"]) => {
       window.setTimeout(() => {
         window.requestAnimationFrame(() => {
+          if (selectedMediaPreviewUrlRef.current !== previewUrl) return;
           void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
             setSelectedMedia((current) =>
               current?.previewUrl === previewUrl ? { ...current, orientation } : current,
@@ -156,18 +189,6 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     [],
   );
 
-  const revokeSelectedMediaPreview = useCallback(() => {
-    if (!selectedMediaPreviewUrlRef.current) return;
-
-    URL.revokeObjectURL(selectedMediaPreviewUrlRef.current);
-    selectedMediaPreviewUrlRef.current = null;
-  }, []);
-
-  const clearSelectedMedia = useCallback(() => {
-    revokeSelectedMediaPreview();
-    setSelectedMedia(null);
-  }, [revokeSelectedMediaPreview]);
-
   useEffect(() => {
     if (!open) return;
 
@@ -195,14 +216,14 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   }, [handleClose, open]);
 
   useEffect(() => {
-    return () => revokeSelectedMediaPreview();
-  }, [revokeSelectedMediaPreview]);
+    if (!open) return;
+    return () => clearSelectedMedia();
+  }, [clearSelectedMedia, open]);
 
-  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
-    event.currentTarget.value = "";
 
-    if (!file) return;
+    if (!file || isSubmitting || !open) return;
 
     if (!canManageMedia) {
       setActionError(
@@ -226,11 +247,29 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
       return;
     }
 
-    revokeSelectedMediaPreview();
-    const previewUrl = URL.createObjectURL(file);
+    clearSelectedMedia(false);
+    const generation = mediaSelectionGenerationRef.current;
+    preparingVideoRef.current = type === "video";
+    setActionError(null);
+    hook.clearErrors("content");
+    let preparedFile: File | null = file;
+    try {
+      if (type === "video") preparedFile = await prepareVideo(file);
+    } catch (error) {
+      if (generation === mediaSelectionGenerationRef.current) {
+        if (isVideoSourceReadFailure(error)) setNeedsReadableFile(true);
+        setActionError(resolveMediaUploadError(error));
+      }
+      return;
+    } finally {
+      if (generation === mediaSelectionGenerationRef.current) preparingVideoRef.current = false;
+    }
+    if (!preparedFile || generation !== mediaSelectionGenerationRef.current) return;
+    const previewUrl = URL.createObjectURL(preparedFile);
     selectedMediaPreviewUrlRef.current = previewUrl;
+    setNeedsReadableFile(false);
     setSelectedMedia({
-      file,
+      file: preparedFile,
       isPreparingPreview: type === "video",
       orientation: undefined,
       previewUrl,
@@ -243,87 +282,93 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     scheduleSelectedMediaPreviewPreparation(previewUrl, type);
   };
 
-  const handleSubmit = hook.handleSubmit(async (values) => {
-    setActionError(null);
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const generation = mediaSelectionGenerationRef.current;
+    return hook.handleSubmit(async (values) => {
+      if (generation !== mediaSelectionGenerationRef.current) return;
+      if (needsReadableFile) return;
+      if (isPreparingVideo || preparingVideoRef.current || isSubmitting || !open) return;
+      setActionError(null);
 
-    if (!String(values.content ?? "").trim() && !hasEffectiveMedia) {
-      hook.setError("content", {
-        message: "Escreva um comentario ou mantenha/anexe uma midia.",
-        type: "manual",
-      });
-      return;
-    }
+      if (!String(values.content ?? "").trim() && !hasEffectiveMedia) {
+        hook.setError("content", {
+          message: "Escreva um comentario ou mantenha/anexe uma midia.",
+          type: "manual",
+        });
+        return;
+      }
 
-    let stagedStreamVideoReference: string | null = null;
+      let stagedStreamVideoReference: string | null = null;
 
-    try {
-      const { uploadedMedia, uploadedThumbnail } = await (async () => {
-        const operation = selectedMedia?.type === "video" ? beginVideoUpload() : null;
+      try {
+        const { uploadedMedia, uploadedThumbnail } = await (async () => {
+          const operation = selectedMedia?.type === "video" ? beginVideoUpload() : null;
 
-        try {
-          const uploadedMedia = selectedMedia
-            ? await uploadMutation.mutateAsync({
-                file: selectedMedia.file,
-                id: postId,
-                onProgress: operation?.onProgress,
-                signal: operation?.signal,
-              })
-            : null;
-          stagedStreamVideoReference = isVideoAssetReference(uploadedMedia?.media_url)
-            ? uploadedMedia?.media_url || null
-            : null;
-          const thumbnailFile =
-            selectedMedia &&
-            uploadedMedia?.media_type === "video" &&
-            !isVideoAssetReference(uploadedMedia.media_url)
-              ? await createVideoThumbnailFile(selectedMedia.file, {
+          try {
+            const uploadedMedia = selectedMedia
+              ? await uploadMutation.mutateAsync({
+                  file: selectedMedia.file,
+                  id: postId,
+                  onProgress: operation?.onProgress,
                   signal: operation?.signal,
                 })
               : null;
-          throwIfMediaUploadCanceled(operation?.signal);
-          const uploadedThumbnail = thumbnailFile
-            ? await uploadMutation.mutateAsync({
-                file: thumbnailFile,
-                id: postId,
-                purpose: "generated-video-thumbnail",
-                signal: operation?.signal,
-              })
-            : null;
-          throwIfMediaUploadCanceled(operation?.signal);
+            stagedStreamVideoReference = isVideoAssetReference(uploadedMedia?.media_url)
+              ? uploadedMedia?.media_url || null
+              : null;
+            const thumbnailFile =
+              selectedMedia &&
+              uploadedMedia?.media_type === "video" &&
+              !isVideoAssetReference(uploadedMedia.media_url)
+                ? await createVideoThumbnailFile(selectedMedia.file, {
+                    signal: operation?.signal,
+                  })
+                : null;
+            throwIfMediaUploadCanceled(operation?.signal);
+            const uploadedThumbnail = thumbnailFile
+              ? await uploadMutation.mutateAsync({
+                  file: thumbnailFile,
+                  id: postId,
+                  purpose: "generated-video-thumbnail",
+                  signal: operation?.signal,
+                })
+              : null;
+            throwIfMediaUploadCanceled(operation?.signal);
 
-          return { uploadedMedia, uploadedThumbnail };
-        } finally {
-          operation?.complete();
-        }
-      })();
-      await updateMutation.mutateAsync({
-        body: {
-          content: values.content.trim(),
-          ...(uploadedMedia
-            ? {
-                mediaType: uploadedMedia.media_type,
-                mediaUrl: uploadedMedia.media_url,
-                ...(uploadedMedia.media_type === "video" && uploadedThumbnail
-                  ? { thumbnailUrl: uploadedThumbnail.media_url }
-                  : {}),
-              }
-            : removeMedia
+            return { uploadedMedia, uploadedThumbnail };
+          } finally {
+            operation?.complete();
+          }
+        })();
+        await updateMutation.mutateAsync({
+          body: {
+            content: values.content.trim(),
+            ...(uploadedMedia
               ? {
-                  mediaType: null,
-                  mediaUrl: null,
-                  thumbnailUrl: null,
+                  mediaType: uploadedMedia.media_type,
+                  mediaUrl: uploadedMedia.media_url,
+                  ...(uploadedMedia.media_type === "video" && uploadedThumbnail
+                    ? { thumbnailUrl: uploadedThumbnail.media_url }
+                    : {}),
                 }
-              : {}),
-        },
-        postId,
-        replyId: reply.id,
-      });
-      stagedStreamVideoReference = null;
-    } catch {
-      await cleanupDetachedVideoAsset(stagedStreamVideoReference);
-      // Feedback fica nas mutations para preservar o texto e a mídia escolhida.
-    }
-  });
+              : removeMedia
+                ? {
+                    mediaType: null,
+                    mediaUrl: null,
+                    thumbnailUrl: null,
+                  }
+                : {}),
+          },
+          postId,
+          replyId: reply.id,
+        });
+        stagedStreamVideoReference = null;
+      } catch {
+        await cleanupDetachedVideoAsset(stagedStreamVideoReference);
+        // Feedback fica nas mutations para preservar o texto e a mídia escolhida.
+      }
+    })(event);
+  };
 
   if (!open || typeof document === "undefined") return null;
 
@@ -368,7 +413,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
         </header>
 
         <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
-          <div className="min-h-0 flex-1 overflow-hidden px-5 py-5 sm:px-6">
+          <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-5 sm:px-6">
             <div className="grid gap-4">
               {FieldComponent ? <FieldComponent control={hook.control} {...contentField} /> : null}
 
@@ -400,10 +445,13 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
                 />
               ) : null}
 
-              {videoUploadProgress ? (
+              {mediaProgress ? (
                 <CommunityVideoUploadProgress
-                  onCancel={cancelActiveVideoUpload}
-                  progress={videoUploadProgress}
+                  onCancel={() => {
+                    if (preparingVideoRef.current) clearSelectedMedia();
+                    else cancelActiveVideoUpload();
+                  }}
+                  progress={mediaProgress}
                 />
               ) : null}
 
@@ -411,6 +459,20 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
                 <InlineAlert title="Não foi possível salvar" variant="error">
                   {actionError}
                 </InlineAlert>
+              ) : null}
+              {needsReadableFile ? (
+                <VideoFileReadRecovery
+                  disabled={isSubmitting || !canManageMedia}
+                  fileInputRef={fileInputRef}
+                  onDiscard={
+                    !selectedMedia
+                      ? () => {
+                          clearSelectedMedia();
+                          setActionError(null);
+                        }
+                      : undefined
+                  }
+                />
               ) : null}
             </div>
           </div>

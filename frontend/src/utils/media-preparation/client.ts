@@ -6,6 +6,7 @@ import {
   withCanonicalImageFileType,
 } from "../image-preparation";
 import { isMediaUploadCanceled, throwIfMediaUploadCanceled } from "../upload-lifecycle";
+import { prepareVideoSource } from "../video-source-preparation";
 import {
   isVideoUploadPurpose,
   type MediaPreparationPurpose,
@@ -79,12 +80,17 @@ export const prepareUpload = async ({
 
   if (isVideoUploadPurpose(purpose)) {
     throwIfMediaUploadCanceled(signal);
+    const prepared = await prepareVideoSource(file, {
+      signal,
+      onProgress: (percentage) => onProgress?.({ stage: "analyzing", percentage }),
+    });
     return {
-      file,
+      file: prepared.file,
+      cleanup: prepared.cleanup,
       kind: "video",
       optimized: false,
       originalSize: file.size,
-      preparedSize: file.size,
+      preparedSize: prepared.file.size,
       purpose,
     };
   }

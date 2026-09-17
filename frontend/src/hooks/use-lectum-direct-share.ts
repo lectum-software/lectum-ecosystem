@@ -7,6 +7,7 @@ import {
   copyLectumShareTargetUrl,
   downloadPreparedLectumShareFile,
   getPreparedLectumShareFile,
+  isLectumShareRenderAbortError,
   isNativeShareAbortError,
   LectumShareRenderError,
   type LectumShareRenderErrorDiagnostic,
@@ -30,6 +31,7 @@ export type LectumShareDestination = "copy_link" | "download" | "social" | "what
 
 type ShareLectumTargetOptions = {
   destination?: LectumShareDestination;
+  signal?: AbortSignal;
 };
 
 type NavigatorWithUserAgentData = Navigator & {
@@ -219,7 +221,11 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
             screenWakeLock = await requestLectumScreenWakeLock();
           }
 
-          const file = cachedFile ?? (await prepareLectumShareFileWithServerRender(socialTarget));
+          const file =
+            cachedFile ??
+            (await prepareLectumShareFileWithServerRender(socialTarget, {
+              signal: shareOptions.signal,
+            }));
 
           if (loadingToastId !== null) {
             toast.dismiss(loadingToastId);
@@ -255,7 +261,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
           toast.dismiss(loadingToastId);
         }
 
-        if (isNativeShareAbortError(error)) return null;
+        if (isNativeShareAbortError(error) || isLectumShareRenderAbortError(error)) return null;
 
         if (target.kind === "link" || destination !== "download") {
           toast.error("Não foi possível abrir o compartilhamento. Tente copiar o link novamente.");

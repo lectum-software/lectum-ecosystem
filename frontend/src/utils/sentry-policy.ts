@@ -1,6 +1,7 @@
 import type { ErrorEvent, EventHint, Exception, StackFrame, Stacktrace } from "@sentry/nextjs";
 
 const SAFE_ERROR_MESSAGE = "Falha capturada pela aplicação.";
+const GLITCHTIP_ORIGIN = "https://glit.lectum.com.br";
 const MAX_DSN_LENGTH = 2_048;
 const MAX_ENVIRONMENT_LENGTH = 64;
 const SENTRY_PROJECT_ID_PATTERN = /^\d+$/;
@@ -109,6 +110,7 @@ export type SentryBuildConfiguration = {
   authToken: string;
   org: string;
   project: string;
+  sentryUrl: string;
 };
 
 const hasControlCharacter = (value: string) =>
@@ -117,8 +119,8 @@ const hasControlCharacter = (value: string) =>
     return code <= 31 || code === 127;
   });
 
-const isSentryCloudHostname = (hostname: string) =>
-  hostname === "sentry.io" || hostname.endsWith(".sentry.io");
+const hasAllowedErrorIngestHostname = (hostname: string) =>
+  hostname === "glit.lectum.com.br" || hostname === "sentry.io" || hostname.endsWith(".sentry.io");
 
 const removeControlCharacters = (value: string) => {
   let sanitized = "";
@@ -286,7 +288,7 @@ export const parseSentryPublicDsn = (value?: string | null): ParsedSentryDsn | n
 
     if (
       url.protocol !== "https:" ||
-      !isSentryCloudHostname(url.hostname) ||
+      !hasAllowedErrorIngestHostname(url.hostname) ||
       !SENTRY_PUBLIC_KEY_PATTERN.test(url.username) ||
       url.password ||
       url.port ||
@@ -349,7 +351,16 @@ export const resolveSentryBuildConfiguration = (
     return null;
   }
 
-  return { authToken, org, project };
+  const dsn = parseSentryPublicDsn(environment.NEXT_PUBLIC_SENTRY_DSN);
+  if (environment.NEXT_PUBLIC_SENTRY_DSN?.trim() && !dsn) return null;
+  const sentryUrl = dsn?.origin === GLITCHTIP_ORIGIN ? GLITCHTIP_ORIGIN : "https://sentry.io";
+  const configuredUrl = environment.SENTRY_URL?.trim();
+  // Nunca enviar o token de build para um host arbitrário ou diferente do DSN.
+  if (configuredUrl && configuredUrl !== sentryUrl && configuredUrl !== `${sentryUrl}/`) {
+    return null;
+  }
+
+  return { authToken, org, project, sentryUrl };
 };
 
 export const resolveSentryRelease = (version?: string | null) => {

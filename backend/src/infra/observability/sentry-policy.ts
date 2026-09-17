@@ -18,6 +18,7 @@ const SAFE_RELEASE_PATTERN = /^lectum-backend@\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$
 const SAFE_EVENT_ID_PATTERN = /^[a-f0-9]{32}$/;
 const SAFE_SENTRY_PUBLIC_KEY_PATTERN = /^[a-f0-9]{32}$/i;
 const SAFE_SENTRY_PROJECT_PATH_PATTERN = /^\/\d{1,20}$/;
+const GLITCHTIP_HOSTNAME = "glit.lectum.com.br";
 const SAFE_FRAME_EXTENSION_PATTERN = /\.(cjs|js|jsx|mjs|ts|tsx)(?:[?#].*)?$/i;
 const SAFE_STACK_PLATFORMS = new Set(["javascript", "node"]);
 const SENSITIVE_OPERATION_PATTERN = /(?:credential|credencial|secret|token|password|senha)/i;
@@ -52,10 +53,11 @@ export const parseSentryDsn = (value: unknown) => {
     const parsed = new URL(value.trim());
     const isSentrySaasHost =
       parsed.hostname === "sentry.io" || parsed.hostname.endsWith(".sentry.io");
+    const isLectumGlitchTipHost = parsed.hostname === GLITCHTIP_HOSTNAME;
 
     if (
       parsed.protocol !== "https:" ||
-      !isSentrySaasHost ||
+      !(isSentrySaasHost || isLectumGlitchTipHost) ||
       !SAFE_SENTRY_PUBLIC_KEY_PATTERN.test(parsed.username) ||
       parsed.password ||
       parsed.port ||

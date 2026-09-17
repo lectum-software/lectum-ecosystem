@@ -3,6 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   type ChangeEvent,
+  type FormEvent,
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
@@ -19,6 +20,7 @@ import {
 import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
 import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
+import { useVideoSourcePreparation } from "@/hooks/use-video-source-preparation";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import * as createPostAuthReturn from "@/utils/community-post-auth-return";
 import { mapWithConcurrency } from "@/utils/map-with-concurrency";
@@ -93,9 +95,25 @@ export const useCreateCommunityPostController = ({
   const { formProps, hook } = form;
   const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
+  const { prepareVideo, clearVideo, preparationProgress, isPreparingVideo } =
+    useVideoSourcePreparation();
+  const preparingVideoRef = useRef(false);
+  const revokeSelectedMediaPreview = useCallback(() => {
+    for (const previewUrl of selectedMediaPreviewUrlsRef.current) URL.revokeObjectURL(previewUrl);
+    selectedMediaPreviewUrlsRef.current = [];
+  }, []);
+  const clearSelectedMedia = (clearInput = true) => {
+    selectedMediaPreviewGenerationRef.current += 1;
+    preparingVideoRef.current = false;
+    revokeSelectedMediaPreview();
+    clearVideo();
+    setSelectedMediaItems([]);
+    if (clearInput && fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
+      clearSelectedMedia();
       const publicationHref = `/comunidades/${encodeURIComponent(post.community.slug)}/publicacao/${encodeURIComponent(post.id)}`;
 
       try {
@@ -168,15 +186,15 @@ export const useCreateCommunityPostController = ({
   const hasDraftContent = Boolean(
     String(watchedTitle ?? "").trim().length > 0 ||
       String(watchedContent ?? "").trim().length > 0 ||
-      selectedMediaItems.length > 0,
+      selectedMediaItems.length > 0 ||
+      isPreparingVideo,
   );
-  const requiredFieldsReady = Boolean(
-    selectedCommunityIsValid && titleMeetsMinimum && contentMeetsMinimum,
-  );
+  const requiredFieldsReady = selectedCommunityIsValid && titleMeetsMinimum && contentMeetsMinimum;
   const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
   const isSubmitting =
     hook.formState.isSubmitting || mutation.isPending || uploadMutation.isPending;
-  const isSubmitDisabled = isSubmitting || communitiesQuery.isLoading || hasNoCommunities;
+  const isSubmitDisabled =
+    isSubmitting || isPreparingVideo || communitiesQuery.isLoading || hasNoCommunities;
   const sheetMotionState = isSheetOpen ? "enter" : hasSheetOpened ? "exit" : "initial";
 
   useEffect(() => {
@@ -271,21 +289,10 @@ export const useCreateCommunityPostController = ({
     focusEditorElement(targetEditorId);
   };
 
-  const revokeSelectedMediaPreview = useCallback(() => {
-    selectedMediaPreviewUrlsRef.current.forEach((previewUrl) => {
-      URL.revokeObjectURL(previewUrl);
-    });
-    selectedMediaPreviewUrlsRef.current = [];
-  }, []);
-
-  const clearSelectedMedia = () => {
-    selectedMediaPreviewGenerationRef.current += 1;
-    revokeSelectedMediaPreview();
-    setSelectedMediaItems([]);
-  };
-
   const removeSelectedMediaAt = (index: number) => {
     selectedMediaPreviewGenerationRef.current += 1;
+    if (selectedMediaItems[index]?.type === "video") clearSelectedMedia();
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setSelectedMediaItems((currentItems) => {
       const removedItem = currentItems[index];
       if (!removedItem) return currentItems;
@@ -312,6 +319,7 @@ export const useCreateCommunityPostController = ({
 
   const performClose = () => {
     abortActiveVideoUpload();
+    clearSelectedMedia();
     setIsSheetOpen(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
 
@@ -451,14 +459,17 @@ export const useCreateCommunityPostController = ({
   }, [focusEditorElement, handleClose]);
 
   useEffect(() => {
-    return () => revokeSelectedMediaPreview();
+    return () => {
+      selectedMediaPreviewGenerationRef.current += 1;
+      preparingVideoRef.current = false;
+      revokeSelectedMediaPreview();
+    };
   }, [revokeSelectedMediaPreview]);
 
-  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
-    event.currentTarget.value = "";
 
-    if (files.length === 0) return;
+    if (files.length === 0 || isSubmitting) return;
 
     if (!mediaPermission.canAttach) {
       toast.error(mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.");
@@ -491,12 +502,24 @@ export const useCreateCommunityPostController = ({
         return;
       }
 
-      clearSelectedMedia();
-      const previewGeneration = selectedMediaPreviewGenerationRef.current + 1;
-      selectedMediaPreviewGenerationRef.current = previewGeneration;
-      const previewUrl = URL.createObjectURL(videoFiles[0]);
+      clearSelectedMedia(false);
+      const previewGeneration = selectedMediaPreviewGenerationRef.current;
+      preparingVideoRef.current = true;
+      let preparedFile: File | null;
+      try {
+        preparedFile = await prepareVideo(videoFiles[0]);
+      } catch (error) {
+        if (previewGeneration === selectedMediaPreviewGenerationRef.current)
+          toast.error(resolveMediaUploadError(error));
+        return;
+      } finally {
+        if (previewGeneration === selectedMediaPreviewGenerationRef.current)
+          preparingVideoRef.current = false;
+      }
+      if (!preparedFile || previewGeneration !== selectedMediaPreviewGenerationRef.current) return;
+      const previewUrl = URL.createObjectURL(preparedFile);
       const selectedVideoItem: SelectedPostMedia = {
-        file: videoFiles[0],
+        file: preparedFile,
         id: createSelectedMediaId(),
         isPreparingPreview: true,
         previewUrl,
@@ -528,8 +551,8 @@ export const useCreateCommunityPostController = ({
       return;
     }
 
-    if (replacingVideo) {
-      clearSelectedMedia();
+    if (replacingVideo || preparingVideoRef.current) {
+      clearSelectedMedia(false);
     }
 
     const filesToAttach = imageFiles.slice(0, availableSlots);
@@ -555,82 +578,74 @@ export const useCreateCommunityPostController = ({
     focusLastEditor();
   };
 
-  const onSubmit = hook.handleSubmit(async (values) => {
-    let stagedStreamVideoReference: string | null = null;
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const generation = selectedMediaPreviewGenerationRef.current;
+    return hook.handleSubmit(async (values) => {
+      if (generation !== selectedMediaPreviewGenerationRef.current) return;
+      if (isPreparingVideo || preparingVideoRef.current || isSubmitting) return;
+      let stagedStreamVideoReference: string | null = null;
 
-    try {
-      const mediaFiles = mediaPermission.canAttach ? selectedMediaItems : [];
-      const selectedVideo = mediaFiles.find((mediaItem) => mediaItem.type === "video") ?? null;
-      const { uploadedMedia, uploadedThumbnail } = await (async () => {
-        const operation = selectedVideo ? beginVideoUpload() : null;
+      try {
+        const mediaFiles = mediaPermission.canAttach ? selectedMediaItems : [];
+        const selectedVideo = mediaFiles.find((mediaItem) => mediaItem.type === "video") ?? null;
+        const { uploadedMedia, uploadedThumbnail } = await (async () => {
+          const operation = selectedVideo ? beginVideoUpload() : null;
 
-        try {
-          const uploadedMedia = selectedVideo
-            ? [
-                await uploadMutation.mutateAsync({
-                  file: selectedVideo.file,
-                  onProgress: operation?.onProgress,
-                  signal: operation?.signal,
-                  slug: values.community_slug,
-                }),
-              ]
-            : mediaFiles.length > 0
-              ? await mapWithConcurrency(mediaFiles, 2, (mediaItem) =>
-                  uploadMutation.mutateAsync({
-                    file: mediaItem.file,
-                    slug: values.community_slug,
-                  }),
-                )
-              : [];
-          const { streamVideoReference } = classifyUploadedCommunityMedia(uploadedMedia);
-          stagedStreamVideoReference = streamVideoReference;
-          const thumbnailFile =
-            selectedVideo && !streamVideoReference
-              ? await createVideoThumbnailFile(selectedVideo.file, {
-                  signal: operation?.signal,
-                })
-              : null;
-          throwIfMediaUploadCanceled(operation?.signal);
-          const uploadedThumbnail = thumbnailFile
-            ? await uploadMutation.mutateAsync({
-                file: thumbnailFile,
-                purpose: "generated-video-thumbnail",
+          try {
+            const uploadedMedia = await mapWithConcurrency(mediaFiles, 2, (mediaItem) =>
+              uploadMutation.mutateAsync({
+                file: mediaItem.file,
+                onProgress: operation?.onProgress,
                 signal: operation?.signal,
                 slug: values.community_slug,
-              })
-            : null;
-          throwIfMediaUploadCanceled(operation?.signal);
+              }),
+            );
+            const { streamVideoReference } = classifyUploadedCommunityMedia(uploadedMedia);
+            stagedStreamVideoReference = streamVideoReference;
+            const thumbnailFile =
+              selectedVideo && !streamVideoReference
+                ? await createVideoThumbnailFile(selectedVideo.file, {
+                    signal: operation?.signal,
+                  })
+                : null;
+            throwIfMediaUploadCanceled(operation?.signal);
+            const uploadedThumbnail = thumbnailFile
+              ? await uploadMutation.mutateAsync({
+                  file: thumbnailFile,
+                  purpose: "generated-video-thumbnail",
+                  signal: operation?.signal,
+                  slug: values.community_slug,
+                })
+              : null;
+            throwIfMediaUploadCanceled(operation?.signal);
 
-          return { uploadedMedia, uploadedThumbnail };
-        } finally {
-          operation?.complete();
-        }
-      })();
-      const firstMedia = uploadedMedia[0] ?? null;
-      const imageMediaItems = classifyUploadedCommunityMedia(uploadedMedia).imageItems;
+            return { uploadedMedia, uploadedThumbnail };
+          } finally {
+            operation?.complete();
+          }
+        })();
+        const firstMedia = uploadedMedia[0] ?? null;
+        const imageMediaItems = classifyUploadedCommunityMedia(uploadedMedia).imageItems;
 
-      await mutation.mutateAsync({
-        slug: values.community_slug,
-        body: {
-          ...toCreateCommunityPostPayload(values, isPsychologist),
-          ...(firstMedia
-            ? {
-                mediaType: firstMedia.media_type,
-                mediaUrl: firstMedia.media_url,
-                ...(firstMedia.media_type === "video" && uploadedThumbnail
-                  ? { thumbnailUrl: uploadedThumbnail.media_url }
-                  : {}),
-              }
-            : {}),
-          ...(imageMediaItems.length > 0 ? { mediaItems: imageMediaItems } : {}),
-        },
-      });
-      stagedStreamVideoReference = null;
-    } catch {
-      await cleanupDetachedVideoAsset(stagedStreamVideoReference);
-      // O feedback fica centralizado nas mutations para preservar o rascunho do post.
-    }
-  });
+        await mutation.mutateAsync({
+          slug: values.community_slug,
+          body: {
+            ...toCreateCommunityPostPayload(values, isPsychologist),
+            ...(firstMedia && { mediaType: firstMedia.media_type, mediaUrl: firstMedia.media_url }),
+            ...(firstMedia?.media_type === "video" &&
+              uploadedThumbnail && {
+                thumbnailUrl: uploadedThumbnail.media_url,
+              }),
+            ...(imageMediaItems.length > 0 ? { mediaItems: imageMediaItems } : {}),
+          },
+        });
+        stagedStreamVideoReference = null;
+      } catch {
+        await cleanupDetachedVideoAsset(stagedStreamVideoReference);
+        // O feedback fica centralizado nas mutations para preservar o rascunho do post.
+      }
+    })(event);
+  };
 
   const clearCorrectedFormErrorsSoon = () =>
     scheduleCorrectedCreatePostErrorClear({
@@ -641,7 +656,10 @@ export const useCreateCommunityPostController = ({
 
   return {
     clearCorrectedFormErrorsSoon,
-    cancelActiveVideoUpload,
+    cancelActiveVideoUpload: () => {
+      if (preparingVideoRef.current) clearSelectedMedia();
+      else cancelActiveVideoUpload();
+    },
     cancelDiscardConfirmation,
     communitiesQuery,
     confirmDiscardAndClose,
@@ -674,7 +692,7 @@ export const useCreateCommunityPostController = ({
     sheetMotionState,
     updateSelectedMediaOrientation,
     uploadMutation,
-    videoUploadProgress,
+    videoUploadProgress: preparationProgress ?? videoUploadProgress,
   };
 };
 

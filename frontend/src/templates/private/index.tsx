@@ -3,7 +3,7 @@
 import { ChevronLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
@@ -19,6 +19,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
 import * as userActions from "@/store/modules/user/actions";
+import { requestLectumAppRefresh } from "@/utils/app-refresh";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
 import { getPsychologistPaidOnboardingRequirementPath } from "@/utils/psychologist-onboarding";
 
@@ -231,6 +232,16 @@ export const PrivateTemplate = ({
     writeDesktopSidebarPreference(navigationContextPathname, nextValue);
   };
 
+  const handleNavigationItemClick = (
+    event: ReactMouseEvent<HTMLAnchorElement>,
+    isActive: boolean,
+  ) => {
+    if (!isActive) return;
+
+    event.preventDefault();
+    requestLectumAppRefresh("navigation");
+  };
+
   const bottomNavigationMarkup = shouldRenderMobileNavigation ? (
     <nav
       aria-label="Navegação principal"
@@ -287,6 +298,7 @@ export const PrivateTemplate = ({
                   isActive ? "text-primary" : "text-muted hover:text-primary",
                 )}
                 href={item.href}
+                onClick={(event) => handleNavigationItemClick(event, isActive)}
               >
                 <span className="relative inline-grid h-5 w-5 place-items-center">
                   <Icon className="h-5 w-5" aria-hidden={true} />
@@ -399,6 +411,7 @@ export const PrivateTemplate = ({
               )}
               href={item.href}
               key={item.href}
+              onClick={(event) => handleNavigationItemClick(event, isActive)}
               title={
                 isDesktopSidebarCollapsed
                   ? shouldShowUnreadIndicator

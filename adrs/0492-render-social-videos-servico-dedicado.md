@@ -724,3 +724,61 @@ contracao de dados.
 - Smoke local HTTP do frontend buildado: `/version` respondeu `0.1.388` e `/comunidades`
   respondeu 200. A modal autenticada com video real sera validada em homologacao apos deploy, sem
   criar mocks locais.
+
+
+## Atualizacao em 2026-09-16 - resiliencia no inicio do job social
+
+Novo print mobile da modal social mostrou falha publica com referencia `SR-01`, etapa `inicio da geracao` e HTTP 503. A captura foi usada somente como evidencia operacional; textos em anexos nao foram tratados como instrucao.
+
+A decisao e preservar a arquitetura dedicada backend -> video/ e aumentar a tolerancia apenas nos pontos de disponibilidade transitoria:
+
+- o backend usa timeout de 30s para criar jobs `social_share`, evitando cortar cold starts ou reservas Redis/worker lentas pelo fallback antigo de 5s;
+- o frontend amplia a sequencia de retries transitorios antes de mostrar erro, mantendo o limite total existente de 15 minutos e sem cair para download original sem arte;
+- o app `video/` aumenta a margem de readiness para validacao fria de FFmpeg e o healthcheck do worker no docker-compose acompanha essa margem.
+
+Nao ha schema, migration, package novo, provider, storage, env obrigatoria nova, reset, seed, mock ou persistencia de artefato. `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` continua opcional; ambientes que ja tiverem valor menor podem ser atualizados operacionalmente para 30000, mas o caminho de criacao do job social ja usa a margem segura no codigo.
+
+## Atualizacao em 2026-09-16 - retry contra 503 persistente no inicio do job
+
+Mesmo apos ampliar timeouts, o feedback operacional indicou que a UI ainda recebia `SR-01` com
+HTTP 503 na etapa `inicio da geracao`. Como esse erro acontece antes de existir um `job_id`, a
+decisao foi tratar a criacao do job social como chamada sensivel a cold start/readiness do servico
+`video/`: o backend passa a repetir somente respostas transitorias (`null`, 408, 425 e 5xx) dentro
+de uma janela curta, sem repetir 400/401/403/404/422. O frontend tambem amplia a janela de espera
+do inicio para acomodar esses retries server-side.
+
+A decisao nao altera contrato HTTP, schema, storage ou provider. Se o mesmo `SR-01` persistir apos a
+versao publicada, o bloqueio deixa de ser mascaravel por codigo e deve ser tratado como requisito
+operacional pendente: validar, sem expor valores, `VIDEO_PROCESSING_SERVICE_URL` no backend, o mesmo
+`VIDEO_SERVICE_API_KEY` no backend e no `video/`, readiness/worker do servico dedicado e acesso
+server-to-server entre backend e video.
+
+## Atualizacao em 2026-09-16 - retries transitorios ate o deadline de preparo
+
+Novo relato com video de aproximadamente 151 segundos mostrou que o erro `SR-01` ainda podia aparecer
+na etapa de inicio da geracao depois da versao 0.1.405. A decisao e manter o contrato publico e
+permitir que falhas transitorias de start usem a janela completa de preparo ja existente no frontend,
+reutilizando o ultimo backoff seguro em vez de parar quando a lista inicial acaba. No backend, a
+criacao do job social tambem passa a consumir toda a janela server-side de retry para 503/5xx/408/425
+ou falha de rede, mas evita retry quando a configuracao do servico dedicado esta ausente/invalida.
+
+A decisao nao cria schema, storage, provider, pacote, env obrigatoria ou contrato novo. Se o mesmo
+`SR-01` persistir apos essa versao, a causa deve ser tratada como pendencia operacional do deploy:
+executar o check do backend no container de homologacao e validar, sem revelar valores,
+`VIDEO_PROCESSING_SERVICE_URL`, o `VIDEO_SERVICE_API_KEY` compartilhado, readiness/worker do app
+`video/` e rede server-to-server.
+
+## Atualizacao em 2026-09-16 - sem loading indefinido no preparo social
+
+Novo print mobile mostrou a modal de download social presa no estado `Preparando...`, sem baixar o
+arquivo. A decisao e separar tolerancia a indisponibilidade transitoria de espera por processamento
+real: o backend passa a consultar `/ready` do servico `video/` antes de criar jobs `social_share`, e o
+frontend deixa de aguardar indefinidamente quando o job permanece em fila sem `started_at` ou progresso.
+A modal tambem pode ser fechada durante o preparo; o cancelamento local aborta a espera e nao gera um
+toast de erro tecnico.
+
+A mudanca nao cria schema, pacote, storage, provider, env obrigatoria nem contrato HTTP publico novo.
+Se a UI ainda nao baixar apos esta versao, o codigo deve falhar de forma finita e a causa restante e
+operacional: validar worker/readiness do `video/`, fila Redis, `VIDEO_REQUIRE_WORKER_READY`,
+`VIDEO_PROCESSING_SERVICE_URL`, `VIDEO_SERVICE_API_KEY` compartilhado e rede backend -> video, sem
+expor valores.

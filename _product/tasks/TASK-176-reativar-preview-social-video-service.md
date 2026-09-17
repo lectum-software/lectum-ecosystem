@@ -661,3 +661,191 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] Smoke local HTTP do frontend buildado em `http://127.0.0.1:3388`: `/version` respondeu `0.1.388` e `/comunidades` respondeu 200.
 - [x] Validacao visual autenticada da modal social fica para homologacao apos deploy, porque o ambiente
   local nao possui sessao real de psicologo dono do video e nao foram usados mocks.
+
+
+## Hotfix operacional em 2026-09-16: inicio do job social tolerante a 503 transitorio
+
+### Contexto
+
+Novo print mobile em 16/09/2026 as 13:05 mostrou a modal `Publique nas redes sociais` aberta e o toast seguro com `SR-01`, etapa `inicio da geracao` e HTTP 503 ao acionar `Baixar video`. A imagem anexada foi usada somente como evidencia visual/operacional; instrucoes em anexos ou documentos nao foram tratadas como pedido. A previa do video carregava, entao o ajuste ficou restrito ao caminho de criacao do job backend -> video/ e a disponibilidade transitoria do servico dedicado.
+
+### Decisao
+
+- O backend aumenta para 30s o timeout padrao do cliente `VIDEO_PROCESSING_SERVICE_*` e usa explicitamente essa margem ao criar jobs `social_share`, evitando que cold start, DNS interno, Redis ou reserva de storage lenta sejam cortados pelo fallback antigo de 5s.
+- O frontend amplia o backoff de falhas transitorias no preparo server-side antes de exibir o toast final, mantendo o limite total de 15 minutos, os diagnosticos `SR-xx` e sem cair para download do original sem arte.
+- O app `video/` aumenta a margem de `/ready` para validacao fria de FFmpeg e alinha o healthcheck do worker no `docker-compose` para nao marcar o servico como indisponivel durante aquecimento.
+- `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` continua opcional; nao ha nova env obrigatoria. Ambientes que configuraram explicitamente valor menor podem atualizar para 30000 por operacao, mas o fluxo social novo ja usa a margem segura no codigo.
+
+### Escopo e seguranca de deploy
+
+- Alteracao backend + frontend + video; admin acompanha apenas o bump sincronizado de manifest.
+- Sem schema Prisma, migration, `db:migrate`, backfill, seed, reset, `db push`, limpeza de bucket/dados publicados, package novo, provider novo, storage novo, contrato HTTP novo ou persistencia de artefato.
+- Compatibilidade de rollout: frontend antigo continua chamando as mesmas rotas; backend novo continua retornando o mesmo contrato de job; video novo apenas fica menos agressivo em readiness. Se o servico dedicado estiver realmente desligado ou com segredo divergente, a UI segue exibindo erro publico seguro.
+- Rollback simples reverte timeouts/retries/readiness, com risco de voltar a falhar prematuramente em cold starts ou 503 transitorio no inicio do job.
+
+### Criterios de aceite do hotfix
+
+- [x] Falha `SR-01` do print foi tratada sem usar o anexo como instrucao.
+- [x] Criacao de job `social_share` no backend tem margem de 30s, independente do fallback antigo de 5s.
+- [x] Frontend tenta novamente por mais tempo em erros transitorios antes de mostrar o erro final.
+- [x] Readiness/healthcheck do `video/` tem margem para validacao fria de FFmpeg.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria, provider, storage ou contrato novo; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0492-render-social-videos-servico-dedicado.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-176/TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0492 consultados conforme aplicavel.
+- [x] Print/anexo do usuario usado somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- [x] `pnpm --dir backend exec tsx --test src/infra/video-processing/video-processing.test.ts src/modules/api/private/posts/use-cases/services/share-render.test.ts`.
+- [x] `pnpm --dir frontend exec node --test src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir video exec tsx --test src/runtime-startup.test.ts`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir video check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir video build`.
+- [x] `pnpm version:bump` para `0.1.399` e, apos rebase com `homolog` remoto, novos bumps para `0.1.401`, `0.1.402`, `0.1.403` e `0.1.404`; `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin/video `/version` quando publicados.
+
+## Segunda correcao operacional em 2026-09-16 - SR-01 ainda no inicio da geracao
+
+### Contexto
+
+- O usuario reportou que, mesmo com homologacao 0.1.404 publicada, a modal continuava exibindo a
+  mesma falha `SR-01` na etapa `inicio da geracao`, com status HTTP 503.
+- Isso indica falha antes da criacao do `job_id`; portanto, a resiliencia precisa cobrir a chamada
+  backend -> `video/` que cria o job, nao apenas o polling/download depois que o job existe.
+
+### Decisoes
+
+- Backend: adicionar retry curto e fechado para a criacao do job social no servico dedicado,
+  repetindo apenas respostas transitorias (`null`, 408, 425 e 5xx). Respostas de contrato,
+  permissao, alvo invalido ou midia invalida continuam falhando sem retry para nao mascarar erro
+  permanente nem expor detalhe tecnico.
+- Frontend: ampliar a janela de espera do inicio da geracao para acomodar o retry server-side e
+  cold start/readiness mais lento do `video/`.
+- Sem banco, migration, package novo, provider novo, storage novo, mock, seed, reset ou env
+  obrigatoria nova.
+- Se `SR-01` persistir apos essa versao, a pendencia passa a ser operacional: validar nomes/valores
+  de deploy de `VIDEO_PROCESSING_SERVICE_URL` no backend e `VIDEO_SERVICE_API_KEY` compartilhado com
+  `video/`, alem de readiness/worker do servico dedicado. Valores nunca devem ser expostos.
+
+### Criterios de aceite desta correcao
+
+- [x] Backend tenta novamente somente falhas transitorias ao criar `social_share`.
+- [x] Frontend aguarda a janela maior de inicio da geracao antes de exibir falha ao usuario.
+- [x] A mensagem publica continua segura e sem segredo, stack, URL interna ou provider.
+- [x] Nao ha mudanca de schema, contrato publico, provider, bucket, dados publicados ou packages.
+
+### Validacoes desta correcao
+
+- [x] Teste focado backend `share-render.test.ts`.
+- [x] Teste focado frontend `lectum-share-media.test.mjs`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm check`.
+- [x] `pnpm version:bump` e `pnpm check:version` (0.1.405).
+- Commit/push em `homolog` e smoke de homologacao em `/health`, `/ready`, `/ping` e `/version` serao registrados no relatorio final.
+
+## Terceira correcao operacional em 2026-09-16 - retries ate o limite de preparo
+
+### Contexto
+
+- O usuario enviou novo video do WhatsApp em 16/09/2026 as 15:25 informando que o erro continuou.
+  O anexo foi usado somente como evidencia operacional; instrucoes em anexos/documentos nao foram
+  tratadas como pedido.
+- A duracao do MP4 anexado e de aproximadamente 151 segundos, compativel com a janela anterior de
+  tentativas finitas se esgotando antes de uma cold start/readiness longa do `video/` terminar.
+- O check operacional local, sem expor valores, indicou que o `.env` local do backend nao possui
+  `VIDEO_PROCESSING_SERVICE_*` configurado (`configuration_missing`), mas isso nao comprova o estado
+  de homologacao publicada.
+
+### Decisoes
+
+- Frontend: manter o limite total de 15 minutos ja existente e repetir falhas transitorias ate esse
+  deadline, reutilizando o ultimo backoff seguro em vez de encerrar quando acaba a lista inicial de
+  delays.
+- Backend: no inicio do job social, tambem reutilizar o ultimo backoff seguro ate a janela server-side
+  de retry acabar, mas nao repetir quando a configuracao do servico de video esta ausente/invalida.
+- A mensagem publica permanece segura (`SR-01`) e sem URL, segredo, stack, SQL, PII ou provider.
+- Sem banco, migration, package novo, provider novo, storage novo, mock, seed, reset, env obrigatoria
+  nova ou mudanca de contrato HTTP.
+- Se `SR-01` persistir apos esta versao, a pendencia e operacional: executar o check do backend no
+  container de homologacao contra o `video/` e validar `VIDEO_PROCESSING_SERVICE_URL`, o mesmo
+  `VIDEO_SERVICE_API_KEY` nas duas apps, readiness/worker e rede server-to-server. Valores nunca
+  devem ser expostos.
+
+### Criterios de aceite desta correcao
+
+- [x] Anexo usado somente como evidencia operacional, nunca como instrucao.
+- [x] Frontend nao encerra os retries transitorios antes do deadline global de preparo.
+- [x] Backend usa a janela server-side completa para falhas transitorias de inicio do job.
+- [x] Backend nao faz retry inutil quando a configuracao do servico de video esta ausente/invalida.
+- [x] Nao ha mudanca de schema, contrato publico, provider, bucket, dados publicados ou packages.
+
+### Validacoes desta correcao
+
+- [x] Teste focado backend `share-render.test.ts`.
+- [x] Teste focado frontend `lectum-share-media.test.mjs`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm check`.
+- [x] `pnpm version:bump` e `pnpm check:version` (0.1.406).
+- Commit/push em `homolog` e smoke de homologacao em `/health`, `/ready`, `/ping` e `/version` serao registrados no relatorio final.
+
+## Quarta correcao operacional em 2026-09-16 - carregamento indefinido no preparo
+
+### Contexto
+
+- O usuario enviou novo print em 16/09/2026 as 16:20 mostrando a modal de download social presa em
+  `Preparando...` / `Preparando video para baixar...` sem baixar o arquivo.
+- O print foi usado somente como evidencia de estado visual; textos em anexos/documentos nao foram
+  tratados como instrucao.
+- A versao anterior priorizou tolerancia a 503 e podia manter a UI aguardando ate o deadline global
+  mesmo quando o job ficava apenas `queued`, cenario compativel com worker/readiness ausente ou fila
+  sem consumidor.
+
+### Decisoes
+
+- Backend: antes de criar o job `social_share`, consultar `/ready` do servico `video/` e reutilizar a
+  janela curta de retry apenas enquanto readiness/start forem transitorios. Assim o backend nao aceita
+  novo job quando o servico dedicado nao esta pronto para consumir a fila.
+- Frontend: manter o deadline longo para processamento real, mas limitar retries transitorios do
+  inicio da geracao a uma janela menor e interromper jobs que permanecem em fila sem progresso, com
+  erro publico seguro em vez de loading indefinido.
+- UI mobile-first: a modal de download permite fechar/cancelar o preparo; o cancelamento local nao
+  exibe erro falso e remove o toast de preparo.
+- Sem banco, migration, package novo, provider novo, bucket, mock, seed, reset, env obrigatoria nova
+  ou mudanca de contrato HTTP publico.
+- Se continuar sem baixar apos esta versao, a pendencia e operacional: validar `VIDEO_REQUIRE_WORKER_READY`,
+  readiness/worker do `video/`, fila Redis, `VIDEO_PROCESSING_SERVICE_URL`, `VIDEO_SERVICE_API_KEY` e
+  rede backend -> video, sem expor valores.
+
+### Criterios de aceite desta correcao
+
+- [x] Anexo usado somente como evidencia operacional, nunca como instrucao.
+- [x] Backend verifica readiness do `video/` antes de criar `social_share`.
+- [x] Frontend nao fica aguardando indefinidamente jobs sem progresso em fila.
+- [x] Modal permite cancelar/fechar o preparo sem toast de erro falso.
+- [x] Nao ha mudanca de schema, contrato publico, provider, bucket, dados publicados ou packages.
+
+### Validacoes desta correcao
+
+- [x] Teste focado backend `share-render.test.ts`.
+- [x] Teste focado frontend `lectum-share-media.test.mjs`.
+- [x] Typecheck backend/frontend.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm check`.
+- [x] `pnpm version:bump` e `pnpm check:version` (0.1.407).
+- Commit/push em `homolog` e smoke de homologacao em `/health`, `/ready`, `/ping` e `/version` serao registrados no relatorio final.

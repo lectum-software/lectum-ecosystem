@@ -1631,3 +1631,25 @@ Na modal de download social, a previa do video podia reproduzir com som enquanto
 ### Validacao
 
 As validacoes finais foram registradas na TASK-42 em 0.1.257, incluindo teste estatico da previa social, `pnpm --dir frontend check`, `pnpm --dir frontend build`, browser local mobile em `next start`, guardas de documentacao/fonte, versionamento sincronizado e smoke de homologacao apos push.
+
+## Ajuste 2026-09-16 - destaque automatico somente com video-resposta
+
+### Contexto
+
+O feed de Comunidades podia destacar a resposta profissional direta com maior score de votos mesmo quando ela era apenas texto. Isso entrava em conflito com o uso do card como vitrine de video-respostas profissionais e podia ocultar um video menos votado.
+
+### Decisao
+
+A previa automatica `highlighted_professional_reply` passa a ser video-only: somente respostas diretas de psicologos verificados com `media_type="video"` e `media_url` preenchido entram na disputa. Entre videos, a ordenacao continua por score de votos, ranking de mentor, recencia e id. Respostas de texto deixam de ser fallback automatico; se nao houver video elegivel, o campo nullable permanece `null`.
+
+### Consequencias
+
+- Cards de feed/detalhe/listas passam a exibir a video-resposta mais votada, mesmo quando uma resposta textual tem mais votos.
+- Posts sem video-resposta elegivel podem perder a caixa de resposta profissional em destaque, preservando compatibilidade porque o campo ja era nullable.
+- A regra fica alinhada ao compartilhamento social e aos alvos de video-resposta sem criar contrato, tabela, migration, storage ou env novos.
+- O commit tambem remove comentarios ESLint obsoletos em redirecionamentos completos do Admin/Frontend para compatibilidade de lint apos a base remota, sem mudar a navegacao ou estado de sessao.
+- Rollback simples reverte a prioridade video-only para a ordenacao anterior por votos com video apenas como desempate.
+
+### Validacao
+
+Validacoes registradas na TASK-42 em 0.1.398, incluindo testes direcionados dos seletores de destaque, checks/builds backend, versionamento sincronizado, guardas de documentacao/fonte e smoke de homologacao apos push.

@@ -458,6 +458,7 @@ export default withSentryConfig(nextConfig, {
     name: canUploadSentrySourceMaps ? sentryRelease : undefined,
   },
   routeManifestInjection: false,
+  sentryUrl: canUploadSentrySourceMaps ? sentryBuildConfiguration?.sentryUrl : undefined,
   silent: true,
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,

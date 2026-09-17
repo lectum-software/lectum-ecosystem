@@ -1,0 +1,72 @@
+# TASK-186 — Ambientes Vercel e GlitchTip
+
+| Campo | Valor |
+|---|---|
+| Status | Completed |
+
+## Escopo e dependências
+
+Pedido de 16/09/2026: revisar todas as envs Vercel de frontend/admin em Preview e Production e corrigir código que rejeitava GlitchTip. TASK-179 concluída. TASK-184 permanece pendente de validação física; não é concluída por esta revisão. Sem nova UI, referência visual ou package.
+
+## Impacto de deploy
+
+- Frontend/admin independentes, sem alterações de backend, video, banco, API ou armazenamento.
+- `SENTRY_URL` opcional no build, com fallback seguro derivado do DSN. Nenhuma env nova obrigatória.
+- Configurar envs antes do próximo build; só Preview será publicado agora via `homolog`. Production recebe configurações para futura promoção revisada, não um deploy.
+- DSN e ambiente públicos, tokens de build privados. Não registrar seus valores em repositório/logs.
+- Falha de observabilidade não interrompe app/build; mantém coleta exclusivamente de erros sanitizados.
+- Rollback: reverter código/configuração de observabilidade, sem alteração de dados.
+- Chave pública Mercado Pago de Production permanece dummy por decisão expressa do usuário: pagamentos reais NÃO estão prontos.
+
+## Critérios de aceite
+
+- [x] Vercel: valores públicos e projetos GlitchTip corretos por aplicação/ambiente, tokens privados preservados.
+- [x] SDK e CSP aceitam domínio exato GlitchTip Lectum, mantendo Sentry SaaS e rejeitando outros hosts.
+- [x] Upload de source maps usa destino validado correspondente ao DSN, sem encaminhar token para URL arbitrária.
+- [x] Testes de regressão, checks e builds frontend/admin aprovados.
+- [x] Smoke real do serviço de erros em homolog e verificação do deploy, sem dados pessoais.
+- [x] ADR, manifests sincronizados, commit/push somente em homolog.
+
+## Configuração realizada na Vercel
+
+- Frontend: corrigidos descrição de Production, URL Admin de Production, organização/projetos/token de source maps nos dois ambientes; configurado `SENTRY_URL` privado de build. DSN/ambiente recriados como Config (eram Secret) com projetos exclusivos por ambiente.
+- Admin: organização/projetos/token e `SENTRY_URL` configurados; DSN/ambiente públicos já corretos. URLs Preview de API/frontend recriadas como Config após autorização específica. Production preservada.
+- URLs de API/site/login, cookies, aliases opcionais e sandbox revisados contra código. Nenhuma alteração de DNS necessária.
+- Alterações de env não mudam artefatos já publicados; exigem novo build de cada ambiente.
+
+## Validação
+
+- 32 testes focados de políticas frontend/admin aprovados.
+- `pnpm check` raiz aprovado (testes que exigem serviços locais externos permanecem explicitamente skipped; não usados como evidência de integração).
+- `pnpm version:bump` executado uma vez: 0.1.398; `pnpm check:version` aprovado.
+- Smoke real via SDK instalado + política frontend: evento operacional sanitizado recebido no projeto homolog-frontend, issue HOMOLOG-FRONTEND-2, ambiente homolog e release lectum-frontend@0.1.398. Conferido no painel GlitchTip; não é evidência de runtime no navegador publicado antes do deploy.
+- DSNs/frontend recriados conferidos na Vercel: Preview projeto 3/homolog, Production projeto 5/production, todos Config. Sem exposição dos valores.
+- `pnpm --dir frontend build` e `pnpm --dir admin build` aprovados, com upload de mapas local desabilitado; publicação real de mapas será validada no build Vercel. Smoke do deploy pendente.
+- Production dummy é pendência operacional aceita, não credencial válida.
+
+## Integração concorrente
+
+O primeiro push (dc11c4d9) foi recusado por avanço remoto fe00ffec. Merge sem sobrescrita do trabalho do outro desenvolvedor; os dois commits usavam 0.1.398. O novo commit de integração recebe bump próprio para 0.1.399. O check pós-merge detectou a remoção remota de duas exceções ESLint já documentadas para hard reload em rejeição de sessão: restauradas as justificativas originais sem mudar comportamento de autenticação nem as alterações de ranking/destaque remoto. Checks/builds repetidos no resultado integrado.
+
+## Correção do empacotamento
+
+O build Vercel do Admin 0.1.399 enviou 104 artefatos ao GlitchTip, mas falhou no empacotamento por referência a mapa já removido. Postbuild de frontend/admin corrigido para remover referências de mapas da própria `.next` dos traces, preservando demais dependências. Builds locais anteriores sem upload não reproduziam essa condição. Revalidar com source maps realmente habilitados e deploy Vercel antes de concluir.
+
+- Patch 0.1.400: `pnpm check` aprovado novamente; 34 testes focados (32 políticas + 2 filesystem) aprovados. Build frontend executado com upload REAL habilitado para homolog; 194 mapas de servidor removidos no postbuild, nenhum mapa restante nem referência interna `.map` em manifests `.nft.json`. Build Admin aprovado; upload Admin é conferido no deploy Vercel, pois não há env local do Admin.
+
+- A 0.1.400 ainda falhou no empacotador Vercel (Admin), apesar dos traces regulares limpos. Incluída limpeza de links simbólicos `.map` produzidos pelo adapter, sem seguir links de diretório nem remover alvos externos. Quatro testes de filesystem real aprovados (36 focados ao todo). Nenhuma promoção de produção; homolog mantém a última versão publicada até sucesso do novo build.
+
+- Patch 0.1.402: o adapter oficial confirmou a causa ainda pendente na 0.1.401: `.vc-config.json` usa `filePathMap` relativo a `config.repoRoot`, além dos traces. A hipótese anterior de links não explicava a falha (zero links). Postbuild agora também poda essas entradas e hashes correspondentes, preservando todas as demais dependências. Oito testes filesystem aprovados (40 focados ao todo), incluindo standalone/monorepo, metadados e idempotência.
+- Reprodução local com adapter oficial temporário, sem dependência nova nas aplicações: build frontend com upload real ao GlitchTip removeu 194 mapas e 4.131 referências de funções. Build Admin com adapter também aprovado (sem credencial local de upload). Verificação de todos os `filePathMap` gerados registrada antes do novo deploy. Nenhum DNS ou credencial de pagamento alterado.
+- Pré-push 0.1.402: `pnpm check` raiz e `pnpm check:version` aprovados. Output real: frontend 241 funções/49.182 referências; Admin 77 funções/14.958 referências; zero referências internas de mapas e zero arquivos ausentes nos dois. Bump executado uma única vez para o commit corretivo.
+
+
+## Fechamento validado
+
+- Correção publicada no commit `0e54d558` (0.1.402), somente `homolog`; Vercel frontend e Admin **Ready**, statuses GitHub success.
+- Domínios homolog frontend/admin: `/version` HTTP 200, versão 0.1.402, no-cache/no-store e noindex. Login público HTTP 200; Browser confirmou Admin renderizado e frontend navegável com sessão preexistente, sem erros/warnings de console observados. Nenhum novo login, pagamento ou alteração de cadastro neste smoke.
+- CSP publicada nos dois inclui apenas a origem validada `https://glit.lectum.com.br` em connect-src. Três URLs de mapas derivadas dos scripts de cada login retornaram HTTP 403 (bloqueados na camada publicada, não prova isolada de inexistência); a ausência física e integridade das dependências foram verificadas no output local com adapter real. O smoke inicial esperava 404 estritamente; aceitação corrigida para bloqueio 403 ou inexistência 404, sem reduzir proteção.
+- GlitchTip confirmou releases frontend/admin 0.1.402; Admin com 92 artefatos e frontend com 473 artefatos (build local real e Vercel na mesma release). Captura real via SDK/política do frontend já confirmada no projeto homolog-frontend (issue HOMOLOG-FRONTEND-2). Essa captura operacional via SDK não equivale a provocar erro dentro do navegador do usuário.
+- Backend `/health`, `/ready` e `/ping` HTTP 200, versão 0.1.402; apenas bump sincronizado, sem lógica/banco alterados.
+- Encerramento documental recebe bump próprio 0.1.403 e push em homolog. Nenhuma promoção, reset ou mudança de DNS. TASK-184 e auditoria geral não são encerradas por este smoke.
+- Pendência externa aceita: Production Mercado Pago continua com dummy `***`; substituir pela chave real antes de habilitar pagamentos de produção. Env pronta para futuro build não valida um deploy de produção ainda não realizado.

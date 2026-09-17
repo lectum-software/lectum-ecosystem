@@ -274,8 +274,8 @@ export const LectumShareDownloadDialog = ({
       <button
         aria-label="Fechar prévia do vídeo"
         className="absolute inset-0 cursor-default"
-        disabled={disabled || !open}
-        onClick={disabled ? undefined : onClose}
+        disabled={!open}
+        onClick={open ? onClose : undefined}
         type="button"
       />
 
@@ -310,7 +310,7 @@ export const LectumShareDownloadDialog = ({
           <button
             aria-label="Fechar"
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border bg-background text-muted-foreground transition hover:text-foreground disabled:opacity-60"
-            disabled={disabled || !open}
+            disabled={!open}
             onClick={open ? onClose : undefined}
             type="button"
           >

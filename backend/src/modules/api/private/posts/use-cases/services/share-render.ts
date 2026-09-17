@@ -35,6 +35,11 @@ import {
 } from "./share-render-source";
 
 const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
+const VIDEO_SERVICE_READY_TIMEOUT_MS = 20_000;
+const VIDEO_SERVICE_START_TIMEOUT_MS = 30_000;
+const VIDEO_SERVICE_START_RETRY_WINDOW_MS = 75_000;
+const VIDEO_SERVICE_START_RETRY_DELAYS_MS = [1_000, 2_000, 4_000, 8_000, 12_000] as const;
+const VIDEO_SERVICE_START_RETRY_MIN_DELAY_MS = 500;
 const VIDEO_SERVICE_CODE_PATTERN = /^[a-z][a-z0-9_]{1,64}$/;
 
 type VideoServiceJobData = {
@@ -142,6 +147,74 @@ const requestVideoService = async (
   } catch {
     logShareRenderServiceWarning("request_failed");
     return null;
+  }
+};
+
+const waitForVideoServiceRetry = (durationMs: number) =>
+  new Promise<void>((resolve) => {
+    const timeout = setTimeout(resolve, durationMs);
+    timeout.unref();
+  });
+
+const isTransientVideoServiceStartResponse = (response: Response | null) =>
+  !response || response.status === 408 || response.status === 425 || response.status >= 500;
+
+const getVideoServiceStartRetryDelay = (attempt: number) =>
+  VIDEO_SERVICE_START_RETRY_DELAYS_MS[
+    Math.min(attempt, VIDEO_SERVICE_START_RETRY_DELAYS_MS.length - 1)
+  ] ?? 12_000;
+
+const requestVideoServiceForJobStart = async (
+  path: string,
+  init: RequestInit = {},
+): Promise<Response | null> => {
+  if (!getVideoProcessingServiceConfig()) {
+    return requestVideoService(path, init, VIDEO_SERVICE_START_TIMEOUT_MS);
+  }
+
+  const deadlineAt = Date.now() + VIDEO_SERVICE_START_RETRY_WINDOW_MS;
+  let attempt = 0;
+
+  while (true) {
+    const readiness = await requestVideoService(
+      "/ready",
+      { headers: { Accept: "application/json" }, method: "GET" },
+      VIDEO_SERVICE_READY_TIMEOUT_MS,
+    );
+    if (!readiness?.ok) {
+      if (readiness && !isTransientVideoServiceStartResponse(readiness)) return readiness;
+
+      const remainingMs = deadlineAt - Date.now();
+      const delayMs = Math.min(getVideoServiceStartRetryDelay(attempt), remainingMs);
+      if (delayMs < VIDEO_SERVICE_START_RETRY_MIN_DELAY_MS) return readiness;
+
+      if (readiness) {
+        logShareRenderServiceWarning("start_readiness_retry", { status: readiness.status });
+        await readiness.body?.cancel().catch(() => undefined);
+      } else {
+        logShareRenderServiceWarning("start_readiness_retry");
+      }
+      attempt += 1;
+      await waitForVideoServiceRetry(delayMs);
+      continue;
+    }
+    await readiness.body?.cancel().catch(() => undefined);
+
+    const response = await requestVideoService(path, init, VIDEO_SERVICE_START_TIMEOUT_MS);
+    if (!isTransientVideoServiceStartResponse(response)) return response;
+
+    const remainingMs = deadlineAt - Date.now();
+    const delayMs = Math.min(getVideoServiceStartRetryDelay(attempt), remainingMs);
+    if (delayMs < VIDEO_SERVICE_START_RETRY_MIN_DELAY_MS) return response;
+
+    if (response) {
+      logShareRenderServiceWarning("start_transient_retry", { status: response.status });
+      await response.body?.cancel().catch(() => undefined);
+    } else {
+      logShareRenderServiceWarning("start_transient_retry");
+    }
+    attempt += 1;
+    await waitForVideoServiceRetry(delayMs);
   }
 };
 
@@ -447,7 +520,7 @@ export const startResolvedShareRenderArtifactJob = async (input: {
 }): Promise<Resolve> => {
   const { ownerId, target } = input;
 
-  const response = await requestVideoService("/api/private/jobs/social-share", {
+  const response = await requestVideoServiceForJobStart("/api/private/jobs/social-share", {
     body: JSON.stringify({
       metadata: {
         cardLabel: target.cardLabel,

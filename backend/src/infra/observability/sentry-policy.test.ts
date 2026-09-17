@@ -23,6 +23,17 @@ describe("Sentry backend policy", () => {
     assert.equal(parseSentryDsn("not-a-dsn"), undefined);
     assert.equal(parseSentryDsn(`http://${publicKey}@o123.ingest.sentry.io/123`), undefined);
     assert.equal(parseSentryDsn(`https://${publicKey}@example.com/123`), undefined);
+    assert.equal(
+      parseSentryDsn(`https://${publicKey}@glit.lectum.com.br/3`),
+      `https://${publicKey}@glit.lectum.com.br/3`,
+    );
+    assert.equal(
+      parseSentryDsn(`https://${publicKey}@glit.lectum.com.br.example.com/3`),
+      undefined,
+    );
+    assert.equal(parseSentryDsn(`https://${publicKey}@sub.glit.lectum.com.br/3`), undefined);
+    assert.equal(parseSentryDsn(`https://${publicKey}@glit.lectum.com.br:8443/3`), undefined);
+    assert.equal(parseSentryDsn(`https://${publicKey}@glit.lectum.com.br/prefix/3`), undefined);
     assert.equal(parseSentryDsn(`https://${publicKey}@localhost/123`), undefined);
     assert.equal(parseSentryDsn(`https://${publicKey}@127.0.0.1/123`), undefined);
     assert.equal(
@@ -36,6 +47,15 @@ describe("Sentry backend policy", () => {
     );
     assert.equal(parseSentryDsn(`https://${publicKey}@o123.ingest.sentry.io/project`), undefined);
     assert.equal(parseSentryDsn(`https://${publicKey}@o123.ingest.sentry.io/123/`), undefined);
+    const glitchTipDsn = `https://${publicKey}@glit.lectum.com.br/3`;
+    assert.deepEqual(
+      resolveSentryRuntimeConfig({
+        NODE_ENV: "homolog",
+        SENTRY_DSN: glitchTipDsn,
+        SENTRY_ENVIRONMENT: "homolog",
+      }),
+      { dsn: glitchTipDsn, enabled: true, environment: "homolog" },
+    );
     const validDsn = `https://${publicKey}@o123.ingest.us.sentry.io/4501234567890123`;
     assert.deepEqual(resolveSentryRuntimeConfig({ NODE_ENV: "homolog", SENTRY_DSN: validDsn }), {
       dsn: undefined,

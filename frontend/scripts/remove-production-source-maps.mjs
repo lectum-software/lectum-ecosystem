@@ -1,6 +1,11 @@
 import { readdir, readFile, rm } from "node:fs/promises";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  pruneRemovedSourceMapsFromFunctions,
+  pruneRemovedSourceMapsFromTraces,
+  removeBuildSourceMapLinks,
+} from "./source-map-traces.mjs";
 
 const frontendRootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const nextBuildDir = join(frontendRootDir, ".next");
@@ -33,6 +38,16 @@ await rm(staleDevelopmentDir, { force: true, recursive: true });
 const generatedFiles = await listFiles(nextBuildDir);
 const sourceMaps = generatedFiles.filter((file) => file.endsWith(".map"));
 await Promise.all(sourceMaps.map((sourceMap) => rm(sourceMap, { force: true })));
+const sourceMapLinksRemoved = await removeBuildSourceMapLinks(nextBuildDir);
+console.log(`Removed ${sourceMapLinksRemoved} source map link(s) from build output.`);
+await pruneRemovedSourceMapsFromTraces(nextBuildDir, generatedFiles);
+const functionMapReferencesRemoved = await pruneRemovedSourceMapsFromFunctions(
+  nextBuildDir,
+  generatedFiles,
+);
+console.log(
+  `Removed ${functionMapReferencesRemoved} source map reference(s) from adapter functions.`,
+);
 
 const remainingFiles = await listFiles(nextBuildDir, { skipBuildCache: true });
 if (remainingFiles.some((file) => file.endsWith(".map"))) {

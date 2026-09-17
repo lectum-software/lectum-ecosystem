@@ -17,6 +17,7 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
   const [pendingTarget, setPendingTarget] = useState<LectumShareSocialTarget | null>(null);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   const closeAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const downloadAbortControllerRef = useRef<AbortController | null>(null);
   const { isSharing, shareLectumTarget } = useLectumDirectShare(options);
 
   const clearCloseAnimationTimeout = useCallback(() => {
@@ -37,7 +38,10 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
   }, [clearCloseAnimationTimeout]);
 
   const closeLectumDownloadDialog = useCallback(() => {
-    if (isSharing) return;
+    if (isSharing) {
+      downloadAbortControllerRef.current?.abort();
+      downloadAbortControllerRef.current = null;
+    }
 
     closeAfterAnimation();
   }, [closeAfterAnimation, isSharing]);
@@ -54,7 +58,15 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
   const downloadPendingTarget = useCallback(async () => {
     if (!pendingTarget || isSharing) return;
 
-    const result = await shareLectumTarget(pendingTarget, { destination: "download" });
+    const controller = new AbortController();
+    downloadAbortControllerRef.current = controller;
+    const result = await shareLectumTarget(pendingTarget, {
+      destination: "download",
+      signal: controller.signal,
+    });
+    if (downloadAbortControllerRef.current === controller) {
+      downloadAbortControllerRef.current = null;
+    }
 
     if (result?.mode === "download") {
       closeAfterAnimation();
@@ -63,6 +75,8 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
 
   useEffect(
     () => () => {
+      downloadAbortControllerRef.current?.abort();
+      downloadAbortControllerRef.current = null;
       clearCloseAnimationTimeout();
     },
     [clearCloseAnimationTimeout],

@@ -1,0 +1,9 @@
+name = "lectum-stream-webhook-router"
+main = "src/worker.mjs"
+compatibility_date = "2026-09-16"
+keep_vars = true
+workers_dev = false
+
+# CI/CD preserva as variaveis e segredos configurados no provider; nao grave valores aqui.
+# workers.dev fica desabilitado: o endpoint publico sera somente o dominio HTTPS configurado no painel.
+# Nao declarar segredos, account id, zona, dominio ou URL de producao neste arquivo versionado.

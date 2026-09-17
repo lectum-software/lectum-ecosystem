@@ -2,11 +2,15 @@ import { Loader2, X } from "lucide-react";
 
 type ProfileVideoUploadProgressProps = {
   onCancel: () => void;
-  phase: "uploading";
+  phase: "preparing" | "uploading";
   progress: number | null;
 };
 
 const PHASE_CONTENT = {
+  preparing: {
+    description: "Preparando o arquivo original, sem reduzir a qualidade. Você pode cancelar.",
+    title: "Preparando vídeo",
+  },
   uploading: {
     description: "Mantenha esta tela aberta até o envio terminar.",
     title: "Enviando vídeo",

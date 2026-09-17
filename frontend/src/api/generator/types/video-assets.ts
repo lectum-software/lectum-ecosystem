@@ -55,4 +55,16 @@ export type VideoAssetUploadEvent = {
   online: boolean;
   visibility: "visible" | "hidden";
   wasHidden: boolean;
+  transport?: {
+    request: "HEAD" | "PATCH" | "POST" | "unknown";
+    source: "not_read" | "reading" | "ready" | "failed";
+    sourceFailure:
+      | "none"
+      | "unreadable"
+      | "permission"
+      | "missing"
+      | "changed"
+      | "invalid_range"
+      | "unknown";
+  };
 };

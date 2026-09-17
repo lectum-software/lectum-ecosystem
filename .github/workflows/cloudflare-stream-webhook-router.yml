@@ -1,0 +1,60 @@
+name: Deploy Cloudflare Stream webhook router
+
+on:
+  push:
+    branches:
+      - homolog
+    paths:
+      - "cloudflare/stream-webhook-router/**"
+      - ".github/workflows/cloudflare-stream-webhook-router.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-stream-webhook-router
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify router source
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test signature validation and forwarding
+        run: node --test cloudflare/stream-webhook-router/src/worker.test.mjs
+
+  deploy_homolog_router:
+    name: Deploy shared router from homolog
+    needs: verify
+    runs-on: ubuntu-24.04
+    environment: cloudflare-stream-router-homolog
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Stream webhook secret
+        shell: bash
+        run: |
+          if [ -z "${STREAM_WEBHOOK_SECRET:-}" ]; then
+            echo "::error::CLOUDFLARE_STREAM_WEBHOOK_SECRET ausente; o roteador nao sera publicado."
+            exit 1
+          fi
+
+          printf '%s' "$STREAM_WEBHOOK_SECRET" | \
+            npm exec --yes --package=wrangler@4.133.0 -- \
+            wrangler secret put STREAM_WEBHOOK_SECRET \
+              --config cloudflare/stream-webhook-router/wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKER_DEPLOY_TOKEN }}
+          STREAM_WEBHOOK_SECRET: ${{ secrets.CLOUDFLARE_STREAM_WEBHOOK_SECRET }}
+
+      - name: Deploy Worker source
+        run: >-
+          npm exec --yes --package=wrangler@4.133.0 --
+          wrangler deploy --config cloudflare/stream-webhook-router/wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKER_DEPLOY_TOKEN }}

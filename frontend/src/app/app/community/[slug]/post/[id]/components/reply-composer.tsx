@@ -18,21 +18,25 @@ import {
   createReplyVideoThumbnail,
   detectReplyMediaOrientation,
   mediaTypeFromFile,
+  REPLY_MEDIA_ACCEPT,
   ReplyMediaAttachmentControl,
   type SelectedReplyMedia,
 } from "@/components/community/reply-media-attachment-control";
+import { VideoFileReadRecovery } from "@/components/community/video-file-read-recovery";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import {
   type CommunityVideoUploadOperation,
   useCommunityVideoUpload,
 } from "@/hooks/use-community-video-upload";
+import { useVideoSourcePreparation } from "@/hooks/use-video-source-preparation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
   getCommunityMediaSelectionSizeError,
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
+import { isVideoSourceReadFailure } from "@/utils/video-upload-diagnostics";
 import {
   COMMENT_GUIDANCE_MESSAGE,
   confirmDiscardReplyDraft,
@@ -83,8 +87,14 @@ export const ReplyComposer = ({
   const [draggingToCancel, setDraggingToCancel] = useState(false);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
+  const [needsReadableFile, setNeedsReadableFile] = useState(false);
   const { beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
+  const { prepareVideo, clearVideo, preparationProgress, isPreparingVideo } =
+    useVideoSourcePreparation();
+  const mediaSelectionGenerationRef = useRef(0);
+  const preparingVideoRef = useRef(false);
+  const mediaProgress = preparationProgress ?? videoUploadProgress;
   const composerFormNodeRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const composerActivatedAtRef = useRef(0);
@@ -98,17 +108,15 @@ export const ReplyComposer = ({
     startX: number;
     startY: number;
   } | null>(null);
-  const visibleError = useMemo(() => {
-    if (apiError) return apiError;
-    const firstError = Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
-    if (!hook.formState.isSubmitted && !firstError) return null;
-
-    return firstError;
-  }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
+  // RHF pode atualizar um erro mantendo a referência de errors; não memorizar esse valor.
+  // A seleção nova pode ser inválida; não esconder esse motivo atrás do upload anterior.
+  const firstError = Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
+  const visibleError = firstError || apiError || null;
   const content = hook.watch("content");
   const draft = String(content ?? "").trim();
   const hasDraft = draft.length > 0;
-  const hasDiscardableDraft = hasDraft || Boolean(selectedMedia);
+  const hasDiscardableDraft =
+    hasDraft || Boolean(selectedMedia) || isPreparingVideo || needsReadableFile;
   const ready = hasDraft || Boolean(selectedMedia);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
@@ -158,10 +166,20 @@ export const ReplyComposer = ({
     selectedMediaPreviewUrlRef.current = null;
   }, []);
 
-  const clearSelectedMedia = useCallback(() => {
-    revokeSelectedMediaPreview();
-    setSelectedMedia(null);
-  }, [revokeSelectedMediaPreview]);
+  const clearSelectedMedia = useCallback(
+    (clearInput = true) => {
+      mediaSelectionGenerationRef.current += 1;
+      preparingVideoRef.current = false;
+      revokeSelectedMediaPreview();
+      clearVideo();
+      setSelectedMedia(null);
+      setNeedsReadableFile(false);
+      if (clearInput) {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    [clearVideo, revokeSelectedMediaPreview],
+  );
 
   const beginMediaPickerInteraction = useCallback(() => {
     mediaPickerActiveRef.current = true;
@@ -208,6 +226,7 @@ export const ReplyComposer = ({
     (previewUrl: string, type: SelectedReplyMedia["type"]) => {
       window.setTimeout(() => {
         window.requestAnimationFrame(() => {
+          if (selectedMediaPreviewUrlRef.current !== previewUrl) return;
           void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
             setSelectedMedia((current) =>
               current?.previewUrl === previewUrl ? { ...current, orientation } : current,
@@ -274,6 +293,7 @@ export const ReplyComposer = ({
   const canUseMobileCancelGesture = () =>
     composerActive &&
     !disabled &&
+    !hook.formState.isSubmitting &&
     typeof window !== "undefined" &&
     window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches;
 
@@ -297,7 +317,11 @@ export const ReplyComposer = ({
   }, [onComposerActiveChange]);
 
   useEffect(() => {
-    return () => revokeSelectedMediaPreview();
+    return () => {
+      mediaSelectionGenerationRef.current += 1;
+      preparingVideoRef.current = false;
+      revokeSelectedMediaPreview();
+    };
   }, [revokeSelectedMediaPreview]);
 
   useEffect(() => {
@@ -353,11 +377,10 @@ export const ReplyComposer = ({
     };
   }, [composerActive, dismissComposerKeyboard, isInline]);
 
-  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    event.target.value = "";
 
-    if (!file || !mediaPermission.canAttach) {
+    if (!file || !mediaPermission.canAttach || disabled || hook.formState.isSubmitting) {
       endMediaPickerInteraction();
       return;
     }
@@ -383,11 +406,29 @@ export const ReplyComposer = ({
       return;
     }
 
-    revokeSelectedMediaPreview();
-    const previewUrl = URL.createObjectURL(file);
+    clearSelectedMedia(false);
+    const generation = mediaSelectionGenerationRef.current;
+    preparingVideoRef.current = type === "video";
+    hook.clearErrors("content");
+    endMediaPickerInteraction();
+    updateComposerActive(true);
+    let preparedFile: File | null = file;
+    try {
+      if (type === "video") preparedFile = await prepareVideo(file);
+    } catch (error) {
+      if (generation !== mediaSelectionGenerationRef.current) return;
+      if (isVideoSourceReadFailure(error)) setNeedsReadableFile(true);
+      hook.setError("content", { message: resolveMediaUploadError(error), type: "manual" });
+      return;
+    } finally {
+      if (generation === mediaSelectionGenerationRef.current) preparingVideoRef.current = false;
+    }
+    if (!preparedFile || generation !== mediaSelectionGenerationRef.current) return;
+    const previewUrl = URL.createObjectURL(preparedFile);
     selectedMediaPreviewUrlRef.current = previewUrl;
+    setNeedsReadableFile(false);
     setSelectedMedia({
-      file,
+      file: preparedFile,
       isPreparingPreview: type === "video",
       orientation: undefined,
       previewUrl,
@@ -455,7 +496,12 @@ export const ReplyComposer = ({
   };
 
   const submitComposer = () => {
+    if (needsReadableFile) return;
+    if (disabled || hook.formState.isSubmitting || isPreparingVideo || preparingVideoRef.current)
+      return;
+    const generation = mediaSelectionGenerationRef.current;
     void hook.handleSubmit(async (values) => {
+      if (preparingVideoRef.current || generation !== mediaSelectionGenerationRef.current) return;
       if (!String(values.content ?? "").trim() && !selectedMedia) {
         hook.setError("content", {
           message: "Escreva um comentário ou anexe uma mídia.",
@@ -473,7 +519,8 @@ export const ReplyComposer = ({
         endMediaPickerInteraction();
         updateComposerActive(false);
         onDraftStateChange?.(false);
-      } catch {
+      } catch (error) {
+        if (isVideoSourceReadFailure(error)) setNeedsReadableFile(true);
         // O estado de erro é tratado pela mutation para manter o campo preenchido.
       } finally {
         videoUploadOperation?.complete();
@@ -522,6 +569,14 @@ export const ReplyComposer = ({
       ref={assignComposerFormRef}
       style={composerStyle}
     >
+      {/* O seletor permanece montado e com o FileList durante preview, envio e erro. */}
+      <input
+        accept={REPLY_MEDIA_ACCEPT}
+        className="hidden"
+        onChange={handleMediaChange}
+        ref={fileInputRef}
+        type="file"
+      />
       {shouldShowGuidance ? (
         <p className="rounded-[14px] bg-surface-muted px-3 py-2 text-xs font-semibold leading-5 text-muted dark:bg-surface-muted dark:text-muted">
           {replyContextLabel}
@@ -534,7 +589,8 @@ export const ReplyComposer = ({
             <ReplyMediaAttachmentControl
               className="absolute top-1/2 left-1 z-10 -translate-y-1/2"
               composerMode="trigger"
-              disabled={disabled}
+              renderInput={false}
+              disabled={disabled || hook.formState.isSubmitting}
               fileInputRef={fileInputRef}
               isUploading={disabled && Boolean(selectedMedia)}
               mediaPermission={mediaPermission}
@@ -549,7 +605,8 @@ export const ReplyComposer = ({
             <ReplyMediaAttachmentControl
               className="px-3.5 pb-3 pt-0"
               composerMode="preview"
-              disabled={disabled}
+              renderInput={false}
+              disabled={disabled || hook.formState.isSubmitting}
               fileInputRef={fileInputRef}
               isUploading={disabled && Boolean(selectedMedia)}
               mediaPermission={mediaPermission}
@@ -564,7 +621,13 @@ export const ReplyComposer = ({
         <Button
           aria-label="Enviar resposta"
           className="h-11 w-11 shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-lectum-soft hover:bg-primary-hover disabled:bg-surface-muted disabled:text-subtle disabled:opacity-100 disabled:shadow-none"
-          disabled={disabled || !ready}
+          disabled={
+            disabled ||
+            hook.formState.isSubmitting ||
+            isPreparingVideo ||
+            !ready ||
+            needsReadableFile
+          }
           onClick={submitComposer}
           type="button"
         >
@@ -580,10 +643,13 @@ export const ReplyComposer = ({
         {COMMENT_GUIDANCE_MESSAGE}
       </p>
 
-      {videoUploadProgress ? (
+      {mediaProgress ? (
         <CommunityVideoUploadProgress
-          onCancel={cancelActiveVideoUpload}
-          progress={videoUploadProgress}
+          onCancel={() => {
+            if (preparingVideoRef.current) clearSelectedMedia();
+            else cancelActiveVideoUpload();
+          }}
+          progress={mediaProgress}
         />
       ) : null}
 
@@ -591,6 +657,21 @@ export const ReplyComposer = ({
         <InlineAlert title="Não foi possível responder" variant="error">
           {visibleError}
         </InlineAlert>
+      ) : null}
+      {needsReadableFile ? (
+        <VideoFileReadRecovery
+          disabled={disabled || hook.formState.isSubmitting || !mediaPermission.canAttach}
+          fileInputRef={fileInputRef}
+          onDiscard={
+            !selectedMedia
+              ? () => {
+                  clearSelectedMedia();
+                  hook.clearErrors("content");
+                }
+              : undefined
+          }
+          onOpenDialog={beginMediaPickerInteraction}
+        />
       ) : null}
     </div>
   );

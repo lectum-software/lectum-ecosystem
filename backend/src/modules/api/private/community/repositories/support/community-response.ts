@@ -22,6 +22,8 @@ import {
   anonymousDisplayNameForAuthor,
   authorTypeLabel,
   buildProfessionalWhatsappUrl,
+  compareProfessionalRepliesForHighlight,
+  isProfessionalReplyVideoHighlightCandidate,
   isProfessionalVerified,
   mentorBadgeForScore,
   toCommunityResponse,
@@ -237,7 +239,11 @@ export const toPostResponse = (
     anonymous ? anonymousDisplayNameForAuthor(item.author.id) : undefined,
   );
   const highlightedReply = toHighlightedProfessionalReply(
-    highlightedProfessionalReply ?? item.replies[0],
+    highlightedProfessionalReply === undefined
+      ? item.replies
+          .filter(isProfessionalReplyVideoHighlightCandidate)
+          .sort((a, b) => compareProfessionalRepliesForHighlight(a, b, new Map()))[0]
+      : (highlightedProfessionalReply ?? undefined),
     savedReplyIds,
   );
 

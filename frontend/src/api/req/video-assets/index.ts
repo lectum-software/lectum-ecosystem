@@ -96,7 +96,10 @@ export const getVideoAssetPlayback = async (assetId: string) => {
 
 // Sem sinal do upload: o relato de falha/cancelamento tem seu próprio prazo curto.
 // Backend anterior, sessão expirada ou aparelho offline não podem quebrar o fluxo.
-export const reportVideoAssetUploadEvent = async (assetId: string, body: VideoAssetUploadEvent) => {
+export const reportVideoAssetUploadEvent = async (
+  assetId: string,
+  body: VideoAssetUploadEvent,
+): Promise<void> => {
   try {
     await handleReq<{ received: boolean }>({
       ...callEndpoint({
@@ -109,7 +112,13 @@ export const reportVideoAssetUploadEvent = async (assetId: string, body: VideoAs
       hideError: true,
       signOutOnUnauthorized: false,
     });
-  } catch {
+  } catch (error) {
+    // Rollout independente: backend anterior rejeita campos novos no contrato fechado.
+    if (body.transport && getApiErrorStatus(error) === 422) {
+      const legacyBody = { ...body };
+      delete legacyBody.transport;
+      await reportVideoAssetUploadEvent(assetId, legacyBody);
+    }
     // Não registrar o erro HTTP bruto: pode conter cabeçalhos de autenticação.
   }
 };

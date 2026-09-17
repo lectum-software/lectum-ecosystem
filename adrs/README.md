@@ -539,3 +539,12 @@ Formato recomendado:
 - [ADR-0502 — Upload móvel retomável e diagnóstico seguro](0502-upload-movel-retomavel-e-diagnostico.md)
 - [ADR-0503 — Downloads de vídeos no Admin de Comunidades](0503-admin-download-videos-comunidade.md)
 - [ADR-0504 — Autoplay mudo no feed de Comunidades](0504-autoplay-mudo-feed-comunidades.md)
+
+- [ADR-0505 — Upload da galeria com leitura limitada por parte](0505-upload-galeria-com-leitura-limitada.md)
+- [ADR-0506 — Reload do feed estilo Instagram](0506-reload-feed-estilo-instagram.md)
+
+- [ADR-0507 — GlitchTip e ambientes Vercel](0507-glitchtip-vercel-ambientes.md)
+
+- [ADR-0508 — Template de produção do backend no Dokploy](0508-template-backend-producao-dokploy.md)
+- [ADR-0509 — Roteador único de webhook Stream multiambiente](0509-roteador-webhook-stream-multiambiente.md)
+- [ADR-0510 — GlitchTip canônico para observabilidade backend](0510-glitchtip-backend-observabilidade.md)

@@ -6,10 +6,10 @@ export type PullToRefreshSnapshot = {
   translateY: number;
 };
 
-export const PULL_TO_REFRESH_TRIGGER_PX = 76;
-export const PULL_TO_REFRESH_MAX_DISTANCE_PX = 128;
-export const PULL_TO_REFRESH_RESTING_OFFSET_PX = 10;
-export const PULL_TO_REFRESH_READY_OFFSET_PX = 58;
+export const PULL_TO_REFRESH_TRIGGER_PX = 54;
+export const PULL_TO_REFRESH_MAX_DISTANCE_PX = 82;
+export const PULL_TO_REFRESH_RESTING_OFFSET_PX = 2;
+export const PULL_TO_REFRESH_READY_OFFSET_PX = 0;
 
 const PULL_TO_REFRESH_DISABLED_PREFIXES = ["/api", "/auth", "/dashboard", "/version"];
 
@@ -77,7 +77,7 @@ export const isPullToRefreshRouteEnabled = (pathname: string) => {
 export const getPullToRefreshSnapshot = (distancePx: number): PullToRefreshSnapshot => {
   const clampedDistance = Math.max(0, Math.min(distancePx, PULL_TO_REFRESH_MAX_DISTANCE_PX));
   const progress = Math.min(clampedDistance / PULL_TO_REFRESH_TRIGGER_PX, 1);
-  const translateY = Math.round(PULL_TO_REFRESH_RESTING_OFFSET_PX + clampedDistance * 0.56);
+  const translateY = Math.round(PULL_TO_REFRESH_RESTING_OFFSET_PX + clampedDistance * 0.32);
 
   return {
     progress,

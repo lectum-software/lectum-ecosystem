@@ -1,6 +1,10 @@
 "use client";
 
 import { type RefCallback, useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  isModalMediaSuspended,
+  subscribeModalMediaSuspension,
+} from "@/hooks/use-modal-media-suspension";
 
 const COMMUNITY_FEED_VIDEO_SOUND_STORAGE_KEY = "lectum:community-feed-video-sound-enabled";
 const MIN_AUTOPLAY_INTERSECTION_RATIO = 0.58;
@@ -35,6 +39,7 @@ let nextAutoplayOrder = 0;
 let activeVideoId: string | null = null;
 let autoplayObserver: IntersectionObserver | null = null;
 let autoplayEvaluationFrame: number | null = null;
+let modalMediaSuspensionListenerAttached = false;
 let visibilityListenerAttached = false;
 
 const soundPreferenceListeners = new Set<SoundPreferenceListener>();
@@ -88,6 +93,8 @@ const applySoundPreferenceToVideo = (video: HTMLVideoElement) => {
 };
 
 const playAutoplayItem = async (item: FeedVideoAutoplayItem) => {
+  if (isModalMediaSuspended()) return;
+
   applySoundPreferenceToVideo(item.video);
 
   try {
@@ -128,9 +135,21 @@ const pauseInactiveAutoplayItems = (exceptId: string | null) => {
   }
 };
 
+const pauseAllAutoplayItems = () => {
+  for (const item of autoplayItems.values()) {
+    pauseAutoplayItem(item);
+  }
+};
+
 const activateAutoplayItem = (nextId: string, options: { alreadyPlaying?: boolean } = {}) => {
   const item = autoplayItems.get(nextId);
   if (!item) return;
+
+  if (isModalMediaSuspended()) {
+    pauseAllAutoplayItems();
+    activeVideoId = null;
+    return;
+  }
 
   activeVideoId = nextId;
   item.pausedByUser = false;
@@ -164,6 +183,12 @@ export const selectCommunityFeedAutoplayCandidate = (
 
 const runAutoplayEvaluation = () => {
   autoplayEvaluationFrame = null;
+
+  if (isModalMediaSuspended()) {
+    pauseAllAutoplayItems();
+    activeVideoId = null;
+    return;
+  }
 
   const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
 
@@ -271,6 +296,28 @@ const ensureVisibilityListener = () => {
   visibilityListenerAttached = true;
 };
 
+const ensureModalMediaSuspensionListener = () => {
+  if (
+    modalMediaSuspensionListenerAttached ||
+    typeof document === "undefined" ||
+    typeof window === "undefined"
+  ) {
+    return;
+  }
+
+  subscribeModalMediaSuspension((suspended) => {
+    if (suspended) {
+      pauseAllAutoplayItems();
+      activeVideoId = null;
+      return;
+    }
+
+    scheduleAutoplayEvaluation();
+  });
+
+  modalMediaSuspensionListenerAttached = true;
+};
+
 const getAutoplayObserver = () => {
   if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") {
     return null;
@@ -308,6 +355,7 @@ const getAutoplayObserver = () => {
 
 const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoElement) => {
   ensureVisibilityListener();
+  ensureModalMediaSuspensionListener();
 
   const item: FeedVideoAutoplayItem = {
     distanceToViewportCenter: Number.MAX_SAFE_INTEGER,
@@ -337,6 +385,13 @@ const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoElement)
   }
 
   const handlePlay = () => {
+    if (isModalMediaSuspended()) {
+      item.pausedByUser = false;
+      if (activeVideoId === id) activeVideoId = null;
+      pauseAutoplayItem(item);
+      return;
+    }
+
     item.pausedByUser = false;
 
     if (activeVideoId !== id) {
@@ -358,7 +413,7 @@ const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoElement)
     if (activeVideoId === id) item.pausedByUser = true;
   };
   const handleCanPlay = () => {
-    if (activeVideoId === id && !item.pausedByUser) {
+    if (activeVideoId === id && !item.pausedByUser && !isModalMediaSuspended()) {
       void playAutoplayItem(item);
     }
   };

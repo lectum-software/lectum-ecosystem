@@ -34,6 +34,7 @@ type CurrentReplyMedia = {
 };
 
 type ReplyMediaAttachmentControlProps = {
+  renderInput?: boolean;
   className?: string;
   currentMedia?: CurrentReplyMedia;
   disabled?: boolean;
@@ -219,6 +220,7 @@ const editorPreviewClassNames = (orientation?: ReplyMediaOrientation) => {
 };
 
 export function ReplyMediaAttachmentControl({
+  renderInput = true,
   className,
   currentMedia,
   disabled,
@@ -314,7 +316,13 @@ export function ReplyMediaAttachmentControl({
     if (!mediaPermission.canAttach || disabled || selectedMedia) return;
 
     onOpenDialog?.();
-    fileInputRef.current?.click();
+    const input = fileInputRef.current;
+    if (input) {
+      // Limpar só ao abrir uma nova seleção, nunca depois de receber o arquivo.
+      input.value = "";
+      input.accept = REPLY_MEDIA_ACCEPT;
+      input.click();
+    }
     onAfterAction?.();
   };
 
@@ -431,7 +439,7 @@ export function ReplyMediaAttachmentControl({
 
     return (
       <div className={cn("flex shrink-0 items-center text-xs text-muted", className)}>
-        {composerMode !== "preview" ? mediaInput : null}
+        {renderInput && composerMode !== "preview" ? mediaInput : null}
         {composerMode === "preview"
           ? renderComposerPreview()
           : composerMode === "trigger"
@@ -523,7 +531,7 @@ export function ReplyMediaAttachmentControl({
       ) : null}
 
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        {mediaInput}
+        {renderInput ? mediaInput : null}
         {activeMedia ? null : (
           <button
             aria-label="Adicionar mídia"

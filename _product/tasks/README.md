@@ -2,6 +2,27 @@
 
 Fila sequencial de execução do produto Lectum.
 
+Última task concluída: [TASK-189 — Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md). O backend aceita exclusivamente o DSN HTTPS canônico `glit.lectum.com.br` (além do Sentry SaaS já permitido), preserva a sanitização error-only e teve transporte confirmado em homolog no GlitchTip. Produção não foi promovida nesta task.
+
+Concluída: [TASK-187 — Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md). Arquivo local protegido e modelo versionado com placeholders; sem configurar ou promover produção. Provisionamento, rotação e validação operacional das chaves dos recursos de produção continuam pendentes.
+
+Concluída: [TASK-186 — Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md). Envs Preview/Production revisadas, SDK/CSP e empacotamento de mapas corrigidos; frontend/admin 0.1.402 Ready e smoke aprovado. Produção não promovida e dummy Mercado Pago mantido por decisão do usuário.
+
+Correcao operacional 16/09/2026 13:05: [TASK-42 - Layout de compartilhamento social para video-resposta](TASK-42-layout-compartilhamento-video-resposta.md) e [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) receberam ajuste para o erro `SR-01` no inicio da geracao. O backend passa a tolerar ate 30s ao criar o job `social_share`, o frontend amplia retries transitorios antes de exibir falha, e o `video/` aumenta a margem de `/ready`/healthcheck para cold start de FFmpeg. Sem banco, env obrigatoria nova, package novo, provider, storage ou mudanca de contrato.
+
+Correcao operacional 16/09/2026 14:35: [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) recebeu retry backend para 503/5xx/unreachable no inicio do job social e janela maior no frontend. Se SR-01 persistir apos esta versao, validar operacionalmente VIDEO_PROCESSING_SERVICE_URL, VIDEO_SERVICE_API_KEY e readiness/worker do `video/`, sem expor valores.
+
+Correcao operacional 16/09/2026 15:25: [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) ampliou os retries transitorios do inicio do render social para usar a janela completa de preparo em vez de encerrar apos uma lista finita de tentativas. O video anexado de 151s foi usado somente como evidencia de duracao do erro. Se SR-01 persistir apos esta versao, executar o check operacional do backend contra o `video/` e validar VIDEO_PROCESSING_SERVICE_URL, VIDEO_SERVICE_API_KEY, readiness/worker e rede server-to-server, sem expor valores.
+
+Correcao operacional 16/09/2026 16:20: [TASK-176 - Reativar previa social de videos pelo servico dedicado](TASK-176-reativar-preview-social-video-service.md) recebeu guarda contra carregamento indefinido no preparo do download social: o backend consulta `/ready` do `video/` antes de criar `social_share`, o frontend limita start transitorio e jobs parados em fila sem progresso, e a modal pode ser fechada/cancelada durante o preparo. Se ainda nao baixar apos esta versao, validar operacionalmente worker/readiness do `video/`, fila Redis e rede backend->video sem expor valores.
+
+
+Pendente de teste fisico: [TASK-184 - Leitura estavel de video da galeria Android](TASK-184-upload-galeria-android.md). Unificar aquisicao imediata do video antes do preview, com copia temporaria privada, memoria limitada por parte e transporte direto ao Stream; incidente da galeria Redmi ainda depende de validacao fisica.
+
+Concluída: [TASK-185 — Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md). Ajusta o pull-to-refresh mobile para feedback por ícone no topo sem textos visíveis, habilita refresh ao tocar no item ativo da navegação e aplica variação leve client-side no feed geral de Comunidades, sem alterar backend, banco, envs ou packages.
+
+Correção operacional 16/09/2026: [TASK-42 — Layout de compartilhamento social para vídeo-resposta](TASK-42-layout-compartilhamento-video-resposta.md) recebeu ajuste pós-feedback para que `highlighted_professional_reply` automatico seja sempre uma video-resposta direta e verificada; respostas de texto nao ocupam mais o destaque mesmo com mais votos. Sem banco, envs, packages ou mudanca de contrato alem do campo nullable ja existente.
+
 Concluída: [TASK-183 — Download de vídeos no Admin](TASK-183-admin-download-videos.md). Adiciona no painel administrativo downloads do vídeo original e do vídeo com arte Lectum para conteúdos de Comunidades, preservando o mesmo formato do fluxo do psicólogo e sem alterar banco, buckets ou packages. Ajuste pós-feedback: botões ficam abaixo do ícone de olho.
 
 Concluída: [TASK-182 — Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md). Correção 0.1.385 publicada, uploads reais e smoke aprovados; usuário confirmou funcionamento. Incidente encerrado sem atribuir causa histórica não comprovada nem alegar reprodução independente no Safari/iPhone. Não encerra a auditoria geral; sem alteração de armazenamento, qualidade ou plano da conta de auditoria.
@@ -27,7 +48,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 190 tasks: `TASK-00` a `TASK-183`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 196 tasks: `TASK-00` a `TASK-189`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -290,6 +311,12 @@ ou cortesia manual.
 | 181 | [TASK-181 - Retenção recuperável de vídeos](TASK-181-retencao-recuperavel-de-videos.md) | Completed | 163, 165, 180 |
 | 182 | [TASK-182 - Upload móvel retomável e diagnóstico seguro](TASK-182-upload-movel-retomavel-e-diagnostico.md) | Completed | 179, 180, 181 |
 | 183 | [TASK-183 - Download de vídeos no Admin](TASK-183-admin-download-videos.md) | Completed | 164, 181 |
+| 184 | [TASK-184 - Leitura estável de vídeo da galeria Android](TASK-184-upload-galeria-android.md) | In Progress | 182 |
+| 185 | [TASK-185 - Reload do feed estilo Instagram](TASK-185-reload-feed-estilo-instagram.md) | Completed | 62, 82, 90, 183 |
+| 186 | [TASK-186 - Ambientes Vercel e GlitchTip](TASK-186-ambientes-vercel-glitchtip.md) | Completed | 179 |
+| 187 | [TASK-187 - Template de produção do backend no Dokploy](TASK-187-template-backend-producao-dokploy.md) | Completed | 186 |
+| 188 | [TASK-188 - Roteador único de webhook Stream multiambiente](TASK-188-roteador-webhook-stream-multiambiente.md) | Completed | 163, 179, 187 |
+| 189 | [TASK-189 - Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md) | Completed | 186, 187 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -2172,3 +2199,37 @@ fluxos de aceite persistido.
   `/version` respondendo `0.1.392` e `/comunidades` HTTP 200. Validacao visual autenticada com
   videos reais dentro de posts fica para homologacao apos deploy, porque nao ha sessao/dados reais
   locais nem ferramenta Builder/Quick Copy acessivel neste ambiente.
+
+## Complemento em 2026-09-15: pausar autoplay quando modal cobrir video
+
+- Pedido do usuario: quando uma modal abrir sobre um video, por exemplo a modal/folha de criar novo
+  post no feed, o video de fundo deve pausar mesmo estando sob autoplay.
+- Decisao aplicada no frontend: foi criada uma suspensao client-side de midia por modal, com
+  ownership por documento e evento interno `lectum:modal-media-suspension-change`.
+- A primitive `Modal` agora adquire essa suspensao enquanto aberta, e o fluxo customizado de criar
+  post faz o mesmo quando usado como slot modal (`asModalSlot`), cobrindo o caso do feed e da
+  comunidade sem afetar a rota full-page de criacao.
+- O gerenciador `community-feed-video-autoplay` pausa todos os videos registrados ao receber a
+  suspensao, bloqueia `play()` atrasado enquanto houver modal ativa e reavalia o candidato ao fechar
+  a ultima modal. Essa pausa programatica nao vira pausa manual do usuario.
+- Builder/Quick Copy foi tentado novamente via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validacao visual baseada em
+  `_product/proto/Feed Comunidade.jpg` e `_product/proto/Criar Nova Postagem - Pacientes.jpg`.
+- Alteracao exclusivamente frontend; sem package novo, backend, schema/migration, env obrigatoria,
+  mock, seed, bucket ou alteracao de dados publicados.
+- Criterios de aceite:
+  - [x] Abrir uma modal baseada na primitive `Modal` pausa videos comunitarios registrados ao fundo.
+  - [x] Abrir a modal/folha de criar post sobre o feed/comunidade pausa videos comunitarios ao fundo.
+  - [x] Enquanto houver modal ativa, o autoplay nao religa o video por avaliacao, `canplay` ou
+        `play()` atrasado.
+  - [x] Fechar a ultima modal libera o gerenciador para reavaliar o video em foco sem perder a
+        preferencia local de audio nem marcar a pausa como acao manual.
+  - [x] Controles existentes de play/pause/progresso/fullscreen/volume permanecem inalterados.
+  - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`,
+        `pnpm version:bump`, `pnpm check:version` e smoke local do frontend executados em `0.1.393`.
+- Validacoes locais: teste focado
+  `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-feed-video-autoplay.test.mjs src/components/ui/modal.test.mjs`;
+  `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; `pnpm version:bump` para
+  `0.1.393`; `pnpm check:version`; smoke local do frontend buildado. Validacao visual autenticada
+  com videos reais e modal sobreposta fica para homologacao apos deploy, porque nao ha sessao/dados
+  reais locais nem ferramenta Builder/Quick Copy acessivel neste ambiente.

@@ -52,7 +52,7 @@ const STACK_ARTIFACT_EXTENSIONS = [
   ".ts",
   ".js",
 ];
-const SENTRY_HOST_SUFFIX = ".sentry.io";
+const GLITCHTIP_ORIGIN = "https://glit.lectum.com.br";
 
 const DISABLED_SENTRY_INTEGRATIONS = new Set([
   "Breadcrumbs",
@@ -96,12 +96,13 @@ export type SentryBuildConfiguration = {
   authToken: string;
   org: string;
   project: string;
+  sentryUrl: string;
 };
 
 type SentryBuildEnvironment = Record<string, string | undefined>;
 
-const hasSentryHostname = (hostname: string) =>
-  hostname === "sentry.io" || hostname.endsWith(SENTRY_HOST_SUFFIX);
+const hasAllowedErrorIngestHostname = (hostname: string) =>
+  hostname === "glit.lectum.com.br" || hostname === "sentry.io" || hostname.endsWith(".sentry.io");
 
 const removeControlCharacters = (value: string) => {
   let sanitized = "";
@@ -319,7 +320,7 @@ export const parseSentryDsn = (value?: string | null): SentryDsnConfiguration | 
       !hasPublicKey ||
       !hasProject ||
       !hasOnlyDsnParts ||
-      !hasSentryHostname(url.hostname)
+      !hasAllowedErrorIngestHostname(url.hostname)
     ) {
       return null;
     }
@@ -348,7 +349,16 @@ export const resolveSentryBuildConfiguration = (
     return null;
   }
 
-  return { authToken, org, project };
+  const dsn = parseSentryDsn(environment.NEXT_PUBLIC_SENTRY_DSN);
+  if (environment.NEXT_PUBLIC_SENTRY_DSN?.trim() && !dsn) return null;
+  const sentryUrl = dsn?.origin === GLITCHTIP_ORIGIN ? GLITCHTIP_ORIGIN : "https://sentry.io";
+  const configuredUrl = environment.SENTRY_URL?.trim();
+  // Nunca enviar o token de build para um host arbitrário ou diferente do DSN.
+  if (configuredUrl && configuredUrl !== sentryUrl && configuredUrl !== `${sentryUrl}/`) {
+    return null;
+  }
+
+  return { authToken, org, project, sentryUrl };
 };
 
 export const parseSentryEnvironment = (configuredEnvironment?: string) => {

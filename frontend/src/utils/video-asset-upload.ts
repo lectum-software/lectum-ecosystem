@@ -174,6 +174,9 @@ export const uploadVideoAsset = async ({
       online: navigator.onLine,
       visibility: document.visibilityState === "hidden" ? "hidden" : "visible",
       wasHidden,
+      ...(error instanceof VideoUploadFailure && error.transport
+        ? { transport: error.transport }
+        : {}),
     });
   };
   void report("transfer_start");
