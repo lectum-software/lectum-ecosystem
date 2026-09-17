@@ -152,7 +152,7 @@ export const CatalogTagField = ({
   const [draftSelected, setDraftSelected] = useState<string[]>(selected);
   const [search, setSearch] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const descriptionId = useId();
   const isEmpty = items.length === 0;
@@ -288,7 +288,7 @@ export const CatalogTagField = ({
       </div>
 
       <Modal
-        initialFocusRef={searchRef}
+        initialFocusRef={closeButtonRef}
         labelledBy={titleId}
         onClose={closePicker}
         open={open}
@@ -309,6 +309,7 @@ export const CatalogTagField = ({
                 aria-label="Fechar seleção"
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
                 onClick={closePicker}
+                ref={closeButtonRef}
                 type="button"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
@@ -321,7 +322,6 @@ export const CatalogTagField = ({
                 className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-subtle"
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Buscar opção"
-                ref={searchRef}
                 type="search"
                 value={search}
               />
