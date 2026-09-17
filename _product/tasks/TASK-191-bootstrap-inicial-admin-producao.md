@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | In Progress |
+| Status | Completed |
 
 ## Escopo e dependências
 
@@ -27,10 +27,19 @@ a conectividade crítica do vídeo produtivo já foi validada e não é alterada
 
 ## Critérios de aceite
 
-- [ ] O bootstrap local existente continua bloqueado para banco/ambiente publicado por padrão.
-- [ ] A modalidade produtiva exige confirmação explícita, senha por stdin e alvo canônico de produção.
-- [ ] Homologação, URL de API divergente, senha por argumento/env e banco com admin existente são recusados.
-- [ ] A operação não emite PII, senha, token ou detalhes internos no resultado.
-- [ ] Testes de política, check/build do backend, ADR, versionamento, commit e push em `homolog` passam.
-- [ ] Após deploy de homolog, a operação é validada apenas em modo de recusa seguro; a criação real em
-      produção ocorre somente com nome/e-mail aprovados pelo operador e validação posterior de login.
+- [x] O bootstrap local existente continua bloqueado para banco/ambiente publicado por padrão.
+- [x] A modalidade produtiva exige confirmação explícita, senha por stdin e alvo canônico de produção.
+- [x] Homologação, URL de API divergente, senha por argumento/env e banco com admin existente são recusados.
+- [x] A operação não emite PII, senha, token ou detalhes internos no resultado.
+- [x] Testes de política, check/build do backend, ADR, versionamento, commit e push em `homolog` passam.
+- [x] Após deploy de homolog, a operação foi validada em modo de recusa seguro; a criação real em
+      produção ocorreu uma única vez com identidade aprovada pelo operador e login posterior confirmado.
+
+
+## Evidências de conclusão
+
+- Homologação publicou a versão `0.1.416` e respondeu `/ping`, `/health` e `/ready` com sucesso.
+- A tentativa com `--confirm=production` em homologação foi recusada e retornou apenas mensagem sanitizada, sem alterar dados.
+- O PR #4 (`homolog` → `main`) teve três checks aprovados e foi mesclado sem excluir a branch `homolog`.
+- Produção publicou `0.1.416` e respondeu `/ping`, `/health` e `/ready` com sucesso.
+- O operador executou o bootstrap uma vez no container produtivo com senha informada localmente por stdin; a criação e o login administrativo foram confirmados.
