@@ -21,7 +21,6 @@ import {
 import {
   CRP_REGION_OPTIONS,
   GENDER_OPTIONS,
-  LANGUAGE_OPTIONS,
   MODALITY_OPTIONS,
   RACE_COLOR_OPTIONS,
   RELIGION_OPTIONS,
@@ -49,7 +48,7 @@ export type FreeProfileForm = {
   headline: string;
   bio: string;
   modality: "online" | "presencial" | "hibrido" | "";
-  language: string;
+  languages: string[];
   published: boolean;
   discount_first_session: boolean;
   social_value: boolean;
@@ -165,7 +164,10 @@ export const freeProfileSchema = z
         error: "Modalidade é obrigatória",
       })
       .refine((value) => value !== "", "Modalidade é obrigatória"),
-    language: requiredText("Idioma é obrigatório").min(2, "Selecione um idioma"),
+    languages: stringArray("Idiomas devem estar em uma lista válida").min(
+      1,
+      "Selecione ao menos um idioma",
+    ),
     published: z.boolean({ error: "Visibilidade do perfil deve ser informada" }),
     discount_first_session: z.boolean({ error: "Informe se oferece desconto na primeira sessão" }),
     social_value: z.boolean({ error: "Informe se oferece valor social" }),
@@ -268,14 +270,12 @@ export const freeProfileSchema = z
 
 type ProfileCatalogFieldOptions = {
   genderOptions?: FieldOption[];
-  languageOptions?: FieldOption[];
   raceColorOptions?: FieldOption[];
   religionOptions?: FieldOption[];
 };
 
 export const createFields = ({
   genderOptions = GENDER_OPTIONS,
-  languageOptions = LANGUAGE_OPTIONS,
   raceColorOptions = RACE_COLOR_OPTIONS,
   religionOptions = RELIGION_OPTIONS,
 }: ProfileCatalogFieldOptions = {}) =>
@@ -390,14 +390,6 @@ export const createFields = ({
       options: MODALITY_OPTIONS,
     },
     {
-      name: "language",
-      field: "select",
-      label: "Idiomas",
-      placeholder: "Selecione o idioma",
-      required: true,
-      options: languageOptions,
-    },
-    {
       name: "address_street",
       field: "input",
       label: "Logradouro",
@@ -447,7 +439,7 @@ export const createFields = ({
 
 export const fields = createFields();
 
-export const getLanguages = (value: string) => (value ? [value] : []);
+export const getLanguages = (value: string[]) => value.map((item) => item.trim()).filter(Boolean);
 
 const emptyAcademicFormation = (): AcademicFormationForm => ({
   title: "",
@@ -517,9 +509,6 @@ const ensureCurrentOption = (
 const catalogSlugOptions = (items?: FreeProfileCatalogItem[] | null) =>
   (items ?? []).map((item) => ({ label: item.name, value: item.slug }));
 
-const catalogNameOptions = (items?: FreeProfileCatalogItem[] | null) =>
-  (items ?? []).map((item) => ({ label: item.name, value: item.name }));
-
 const splitProfessionalNameFallback = (fullName?: string | null) => {
   const parts = normalizeProfessionalDisplayName(fullName).split(/\s+/).filter(Boolean);
 
@@ -550,7 +539,7 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
     headline: data?.profile.headline || "",
     bio: data?.profile.bio || "",
     modality: (data?.profile.modality as FreeProfileForm["modality"]) || "",
-    language: data?.profile.languages[0] || "Português",
+    languages: data?.profile.languages.length ? data.profile.languages : ["Português"],
     published: data ? Boolean(data.profile.published || !hasConfiguredProfile(data)) : true,
     discount_first_session: Boolean(data?.profile.discount_first_session),
     social_value: Boolean(data?.profile.social_value),
@@ -577,7 +566,6 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
 export const useFreeProfileForm = (data?: FreeProfessionalProfile | null) => {
   const defaults = getDefaultValues(data);
   const genderOptions = catalogSlugOptions(data?.catalogs.genders);
-  const languageOptions = catalogNameOptions(data?.catalogs.languages);
   const raceColorOptions = catalogSlugOptions(data?.catalogs.race_colors);
   const religionOptions = catalogSlugOptions(data?.catalogs.religions);
 
@@ -587,11 +575,6 @@ export const useFreeProfileForm = (data?: FreeProfessionalProfile | null) => {
         genderOptions.length > 0 ? genderOptions : GENDER_OPTIONS,
         defaults.gender,
         GENDER_OPTIONS,
-      ),
-      languageOptions: ensureCurrentOption(
-        languageOptions.length > 0 ? languageOptions : LANGUAGE_OPTIONS,
-        defaults.language,
-        LANGUAGE_OPTIONS,
       ),
       raceColorOptions: ensureCurrentOption(
         raceColorOptions.length > 0 ? raceColorOptions : RACE_COLOR_OPTIONS,

@@ -182,3 +182,23 @@ test("pickers mantêm os mesmos inputs/handlers, ocultos como nos controles de m
     ["{videoCoverInputRef}", "{handleVideoCoverChange}", '"image/jpeg,image/png,image/webp"'],
   ]);
 });
+
+test("campos de filtros do perfil abrem selecao em modal com busca e conclusao explicita", () => {
+  const catalogFields = readFileSync(
+    new URL("components/catalog-fields.tsx", import.meta.url),
+    "utf8",
+  );
+  const profileView = readFileSync(
+    new URL("views/professional-profile-setup.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(catalogFields, /import \{ Modal \} from "@\/components\/ui\/modal"/u);
+  assert.match(catalogFields, /aria-haspopup="dialog"/u);
+  assert.match(catalogFields, /placeholder="Buscar opção"/u);
+  assert.match(catalogFields, /Concluir/u);
+  assert.match(profileView, /name="languages"/u);
+  assert.match(profileView, /valueKey="name"/u);
+  assert.doesNotMatch(profileView, /limit=\{1\}/u);
+  assert.doesNotMatch(profileView, /renderField\("language"\)/u);
+});

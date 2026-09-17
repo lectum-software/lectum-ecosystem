@@ -36,7 +36,6 @@ export const RedirectLogic = () => {
           toast.error(message);
           // Falha de sessão exige descartar também os caches em memória antes da revogação.
           // Reload completo intencional para descartar caches de sessao em memoria.
-          // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- invalida sessão e cache de toda a aplicação.
           window.location.href = `/auth/error?error=${encodeURIComponent(message)}&clearSession=1`;
         },
       },

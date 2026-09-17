@@ -1,5 +1,4 @@
 "use client";
-
 import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
@@ -48,7 +47,6 @@ import {
   useFreeProfileForm,
 } from "../use-form";
 import { useProfileVideoUpload } from "./use-profile-video-upload";
-
 export const useProfessionalProfileSetupController = () => {
   const router = useRouter();
   const currentUser = useAppSelector((state) => state.user);
@@ -147,6 +145,7 @@ export const useProfessionalProfileSetupController = () => {
   const selectedServices = form.hook.watch("service_ids") || [];
   const selectedApproaches = form.hook.watch("approach_ids") || [];
   const selectedTargets = form.hook.watch("target_audience") || [];
+  const selectedLanguages = form.hook.watch("languages") || [];
   const selectedDays = form.hook.watch("available_days") || [];
   const published = form.hook.watch("published");
   const whatsappPhone = form.hook.watch("whatsapp");
@@ -185,7 +184,6 @@ export const useProfessionalProfileSetupController = () => {
     ) {
       return;
     }
-
     hasPersistedProfileVideoTipSeenRef.current = true;
     accountTips.updateOnboardingTips.mutate(
       {
@@ -202,34 +200,26 @@ export const useProfessionalProfileSetupController = () => {
     accountTips.updateOnboardingTips,
     accountTips.userId,
   ]);
-
   useEffect(() => {
     hasShownProfileVideoTipThisVisitRef.current = false;
     hasPersistedProfileVideoTipSeenRef.current = false;
-
     const frame = window.requestAnimationFrame(() => setShowProfileVideoTip(false));
-
     if (!accountTips.userId) {
       return () => window.cancelAnimationFrame(frame);
     }
-
     return () => window.cancelAnimationFrame(frame);
   }, [accountTips.userId]);
-
   useEffect(() => {
     if (!canShowProfileVideoTip) return;
     if (hasShownProfileVideoTipThisVisitRef.current) return;
     if (videoActionsOpen || videoRemovalConfirmOpen) return;
-
     const timeout = window.setTimeout(() => {
       if (hasShownProfileVideoTipThisVisitRef.current) return;
       if (!document.querySelector(PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR)) return;
-
       hasShownProfileVideoTipThisVisitRef.current = true;
       setShowProfileVideoTip(true);
       persistProfileVideoTipSeen();
     }, 700);
-
     return () => window.clearTimeout(timeout);
   }, [
     canShowProfileVideoTip,
@@ -275,6 +265,7 @@ export const useProfessionalProfileSetupController = () => {
   const approachIdsError = form.hook.formState.errors.approach_ids?.message;
   const serviceIdsError = form.hook.formState.errors.service_ids?.message;
   const targetAudienceError = form.hook.formState.errors.target_audience?.message;
+  const languagesError = form.hook.formState.errors.languages?.message;
   const availableDaysError = form.hook.formState.errors.available_days?.message;
   const orderedApproachOptions = useMemo(
     () => [...(profile.data?.catalogs.approaches || [])].sort(compareCatalogItems),
@@ -292,19 +283,20 @@ export const useProfessionalProfileSetupController = () => {
     () => [...(profile.data?.catalogs.target_audiences || [])].sort(compareCatalogItems),
     [profile.data?.catalogs.target_audiences],
   );
+  const orderedLanguageOptions = useMemo(
+    () => [...(profile.data?.catalogs.languages || [])].sort(compareCatalogItems),
+    [profile.data?.catalogs.languages],
+  );
   const whatsappUrl = toWhatsappPhoneE164(whatsappPhone, countryCode)?.replace(
     /^\+/,
     "https://wa.me/",
   );
-
   useEffect(() => {
     if (!addressState || !addressCity) return;
-
     if (!baseCityOptions.some((item) => item.value === addressCity)) {
       form.hook.setValue("address_city", "", { shouldDirty: true, shouldValidate: true });
     }
   }, [addressCity, addressState, baseCityOptions, form.hook]);
-
   useEffect(() => {
     return () => {
       if (avatarDraftUrlRef.current) {
@@ -325,7 +317,7 @@ export const useProfessionalProfileSetupController = () => {
   const setCatalogValue = (
     name: keyof Pick<
       FreeProfileForm,
-      "specialty_ids" | "service_ids" | "approach_ids" | "target_audience"
+      "specialty_ids" | "service_ids" | "approach_ids" | "target_audience" | "languages"
     >,
     value: string[],
   ) => form.hook.setValue(name, value, { shouldDirty: true, shouldValidate: true });
@@ -638,10 +630,12 @@ export const useProfessionalProfileSetupController = () => {
     isSubmitting,
     lockedCrpRegionFieldProps,
     lockedIdentityFieldProps,
+    languagesError,
     openAvatarFilePicker,
     openCoverImageFilePicker,
     openVideoFilePicker,
     orderedApproachOptions,
+    orderedLanguageOptions,
     orderedServiceOptions,
     orderedSpecialtyGroups,
     orderedTargetAudienceOptions,
@@ -652,6 +646,7 @@ export const useProfessionalProfileSetupController = () => {
     renderField,
     selectedApproaches,
     selectedDays,
+    selectedLanguages,
     selectedServices,
     selectedSpecialties,
     selectedTargets,
