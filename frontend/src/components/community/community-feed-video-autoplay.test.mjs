@@ -65,6 +65,10 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
     new URL("../ui/vertical-video-player.tsx", import.meta.url),
     "utf8",
   );
+  const mutedOverlaySource = readFileSync(
+    new URL("../ui/vertical-video-player-muted-overlay-control.tsx", import.meta.url),
+    "utf8",
+  );
   const immersiveControlsSource = readFileSync(
     new URL("../ui/vertical-video-player-immersive-controls.ts", import.meta.url),
     "utf8",
@@ -101,6 +105,8 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.match(mediaSource, /"data-lectum-community-video-autoplay": "true"/);
   assert.match(immersiveControlsSource, /onSoundEnabledChange\?\.\(shouldEnableSound\)/);
   assert.match(playerSource, /mutedControlVisibility === "when-hidden"/);
+  assert.match(mutedOverlaySource, /data-lectum-muted-overlay-control="center"/);
+  assert.match(mutedOverlaySource, /top-1\/2 left-1\/2/);
   assert.match(routeCardSource, /<PostMedia\s+enableFeedAutoplay/);
   assert.match(routeCardSource, /<ProfessionalReplyPreview\s+enableFeedAutoplay/);
   assert.match(postContentSource, /<CommunityMediaBlock[\s\S]*?enableCommunityAutoplay/);

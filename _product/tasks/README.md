@@ -2258,3 +2258,17 @@ fluxos de aceite persistido.
   `0.1.393`; `pnpm check:version`; smoke local do frontend buildado. Validacao visual autenticada
   com videos reais e modal sobreposta fica para homologacao apos deploy, porque nao ha sessao/dados
   reais locais nem ferramenta Builder/Quick Copy acessivel neste ambiente.
+
+## Correção operacional em 2026-09-17: ícone central para ativar áudio no autoplay
+
+- Pedido do usuário: quando o usuário ainda não tiver habilitado o volume, o ícone de volume deve ficar no centro do vídeo, e não no canto inferior direito; aplicar também em produção após validação.
+- Decisão aplicada no frontend: o controle `VerticalVideoPlayerMutedOverlayControl`, usado pelos vídeos de Comunidades com autoplay mudo quando os controles persistentes estão ocultos, passa a ficar centralizado sobre a mídia.
+- A prévia de download social mantém seu botão próprio no canto inferior direito por ser fluxo separado e calibrado para a arte de compartilhamento.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local npm `ENOENT`; validação visual baseada no print real enviado e no componente existente.
+- Alteração exclusivamente frontend; sem backend, banco, migration, env obrigatória, package novo, mock, seed, reset, persistência server-side ou alteração de dados/buckets publicados. Rollback simples reverte o commit.
+- Critérios de aceite:
+  - [x] Ícone de ativar som aparece no centro do vídeo quando o autoplay está mudo e o usuário ainda não habilitou volume.
+  - [x] O estado/ação de habilitar áudio continua usando o controle e a preferência local existentes.
+  - [x] Controles existentes de play/pause/progresso/fullscreen/volume permanecem sem alteração.
+  - [x] A prévia social mantém o controle próprio no canto inferior direito.
+  - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, versionamento e smoke local executados antes da promoção.
