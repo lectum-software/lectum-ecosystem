@@ -552,3 +552,4 @@ Formato recomendado:
 - [ADR-0513 — Selecao de filtros do perfil profissional em modal mobile](0513-selecao-filtros-perfil-modal-mobile.md)
 - [ADR-0514 — Open Graph padrão e metadados privados padronizados](0514-open-graph-padrao-metadados-privados.md)
 - [ADR-0515 — Ícone central para ativar áudio em vídeos autoplay](0515-icone-volume-central-autoplay.md)
+- [ADR-0516 — Remocao do bloco legal em E-mail e senha](0516-remocao-bloco-legal-email-senha.md)
