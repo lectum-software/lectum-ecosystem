@@ -42,6 +42,7 @@ test("aviso de conexão Google não expõe configuração técnica", () => {
     "utf8",
   );
   assert.doesNotMatch(source, /OAuth não está configurado|bloqueado neste ambiente/);
+  assert.doesNotMatch(source, /Termos e privacidade|LegalLinks|components\/legal\/links/);
   assert.match(source, /Não é possível conectar sua conta ao Google agora\./);
 });
 

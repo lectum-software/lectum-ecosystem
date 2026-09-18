@@ -18,7 +18,6 @@ import { useAccount } from "@/api/callers/account";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
-import { LegalLinks } from "@/components/legal/links";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -467,10 +466,6 @@ export const AccountSettingsLogic = () => {
           </div>
         ) : null}
 
-        <Card className="mt-6">
-          <h2 className="text-base font-black">Termos e privacidade</h2>
-          <LegalLinks className="justify-start" newTab />
-        </Card>
         {security ? <AccountDeleteSection className="mt-6" /> : null}
       </section>
     </PrivateTemplate>

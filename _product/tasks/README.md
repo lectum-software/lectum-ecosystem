@@ -1,3 +1,12 @@
+Concluida em 17/09/2026: ajuste pontual em `E-mail e senha` remove o bloco `Termos e privacidade` da rota compartilhada de conta para pacientes e psicologos, preservando exclusao de conta, paginas publicas legais e governanca de aceite. Sem backend, banco, env, package novo, mock ou dados destrutivos. ADR: `adrs/0516-remocao-bloco-legal-email-senha.md`.
+
+Criterios de aceite do ajuste de `E-mail e senha`:
+
+- [x] O bloco `Termos e privacidade` nao aparece mais na pagina de conta para paciente/psicologo.
+- [x] `AccountDeleteSection` permanece centralizado em `E-mail e senha`.
+- [x] As paginas publicas de termos e privacidade continuam inalteradas.
+- [x] Teste focado e validacoes frontend executados antes do versionamento.
+
 # Lectum Product Tasks
 
 Fila sequencial de execução do produto Lectum.

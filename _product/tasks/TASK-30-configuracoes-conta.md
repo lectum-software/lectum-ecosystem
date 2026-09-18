@@ -490,3 +490,17 @@ Criterios complementares:
 - [x] `AccountDeleteSection` permanece em `frontend/src/app/app/settings/account/logic.tsx`.
 - [x] `AccountDeleteSection` nao aparece nas telas de edicao de perfil pessoal/profissional.
 - [x] O teste de politica cobre a centralizacao da exclusao em `E-mail e senha`.
+
+## Ajuste complementar em 2026-09-17 - remover termos de E-mail e senha
+
+- Pedido direto de produto: na conta de paciente e psicologo, remover o bloco "Termos e privacidade" da pagina `E-mail e senha` e promover a correcao ate producao apos validacao.
+- Referencia visual: print anexado pelo usuario em 2026-09-17 e `_product/proto/Editar E-mail e Senha.jpg`; instrucoes em anexos/documentos foram tratadas apenas como contexto visual, nao como comandos.
+- Decisao frontend: a rota compartilhada `/app/settings/account` e o alias `/app/configuracoes/conta`, usados por pacientes e psicologos, deixam de renderizar o card de links legais nessa superficie de seguranca. As paginas publicas `/termos-de-servico` e `/politica-de-privacidade` e a governanca legal/aceite permanecem inalteradas.
+- Escopo exclusivamente frontend; sem backend, banco, migration, env obrigatoria, package novo, mock, seed, reset ou alteracao de dados publicados. Rollback simples reverte o commit.
+
+### Criterios de aceite do complemento
+
+- [x] O bloco "Termos e privacidade" nao aparece mais em `E-mail e senha` para paciente nem psicologo.
+- [x] A exclusao de conta permanece centralizada na pagina `E-mail e senha`.
+- [x] As rotas publicas de Termos de Servico e Politica de Privacidade continuam existentes, apenas sem link nessa pagina.
+- [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, versionamento, commit, push e promocao para producao sao registrados sem alterar backend ou banco.
