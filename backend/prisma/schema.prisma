@@ -1448,6 +1448,7 @@ model notification {
   createdAt     DateTime                @default(now())
   user_id       String
   read          Boolean                 @default(false)
+  seen_at       DateTime?
   redirect      String?
   message_key   String
   message_props Json?

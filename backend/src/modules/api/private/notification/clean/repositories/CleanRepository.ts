@@ -22,6 +22,7 @@ export class CleanRepository implements ICleanRepository {
       },
       data: {
         read: true,
+        seen_at: new Date(),
       },
     });
 

@@ -490,6 +490,7 @@ export interface important_action_event extends PersistedObject {
 
 export interface notification extends PersistedObject {
   read?: boolean | null;
+  seen_at?: Date | null;
   redirect?: string | null;
   message_key?: string | null;
   message_props?: unknown;

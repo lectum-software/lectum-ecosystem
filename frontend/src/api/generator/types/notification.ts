@@ -1,6 +1,7 @@
 export type notification = {
   id?: string;
   read?: boolean;
+  seen_at?: string | null;
   redirect?: string | null;
   message_key?: string | null;
   message_props?: unknown;

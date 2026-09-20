@@ -558,3 +558,4 @@ Formato recomendado:
 - [ADR-0519 — Hotfix de foco e audio no autoplay de videos](0519-hotfix-foco-audio-autoplay-videos.md)
 
 - [ADR-0520 — Audio explicito persistido e suspensao de background](0520-audio-explicito-suspensao-background.md)
+- [ADR-0521 — Indicador de notificacoes visualizadas na abertura da central](0521-indicador-notificacoes-visualizadas.md)

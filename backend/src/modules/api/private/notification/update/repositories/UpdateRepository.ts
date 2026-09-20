@@ -54,6 +54,7 @@ export class UpdateRepository implements IUpdateRepository {
       data: {
         //*
         ...props.b,
+        ...(props.b.read ? { seen_at: new Date() } : {}),
       },
     };
 

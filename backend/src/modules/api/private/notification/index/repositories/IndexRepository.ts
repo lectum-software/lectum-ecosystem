@@ -437,7 +437,7 @@ export class IndexRepository implements IIndexRepository {
       message_key: {
         not: "downvote",
       },
-      read: props.q.search === "unread" ? false : undefined,
+      seen_at: props.q.search === "unread" ? null : undefined,
       createdAt: {
         gte: props.q.startDate ? startOfDay(props.q.startDate) : undefined,
         lte: props.q.endDate ? endOfDay(props.q.endDate) : undefined,
