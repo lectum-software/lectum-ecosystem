@@ -2,14 +2,13 @@
 
 import { LoaderCircle, Pause, Play, VolumeX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { documentHasUserAttention } from "@/components/analytics/attention";
 import { useAttachVideoSource, useVideoPlaybackSource } from "@/hooks/video-stream";
-import { playVideoWithSound, useActiveVideoPlaybackGuard } from "@/lib/video-playback";
-
 import {
-  globalSoundEnabled,
-  setGlobalSoundEnabled,
-  subscribeAudioPreference,
-} from "./psychologist-card-support";
+  playVideoWithActiveDocument,
+  playVideoWithSound,
+  useActiveVideoPlaybackGuard,
+} from "@/lib/video-playback";
 
 export const CardVideo = ({
   name,
@@ -30,14 +29,13 @@ export const CardVideo = ({
     videoRef,
   });
   const [playing, setPlaying] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(globalSoundEnabled);
-  const [controlMode, setControlMode] = useState<"hidden" | "media">(
-    globalSoundEnabled ? "hidden" : "media",
-  );
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [controlMode, setControlMode] = useState<"hidden" | "media">("media");
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
   useActiveVideoPlaybackGuard({ enabled: focused, videoRef });
   const posterExtractionStarted = useRef(false);
   const userInitiatedPlayRef = useRef(false);
+  const soundUnlockedForCurrentVideoRef = useRef(false);
   const controlsAutoHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearControlsAutoHideTimeout = useCallback(() => {
@@ -74,7 +72,7 @@ export const CardVideo = ({
     setControlMode("hidden");
 
     setSoundEnabled(true);
-    setGlobalSoundEnabled(true);
+    soundUnlockedForCurrentVideoRef.current = true;
     clearControlsAutoHideTimeout();
 
     userInitiatedPlayRef.current = true;
@@ -89,7 +87,13 @@ export const CardVideo = ({
       userInitiatedPlayRef.current = true;
       setControlMode("hidden");
       clearControlsAutoHideTimeout();
-      void playVideoWithSound(currentVideo);
+      if (soundUnlockedForCurrentVideoRef.current) {
+        void playVideoWithSound(currentVideo);
+        return;
+      }
+
+      currentVideo.muted = true;
+      void playVideoWithActiveDocument(currentVideo);
     } else {
       clearControlsAutoHideTimeout();
       currentVideo.pause();
@@ -132,7 +136,7 @@ export const CardVideo = ({
       }
 
       if (wasPlaying) {
-        void currentVideo.play().catch(() => {});
+        void playVideoWithActiveDocument(currentVideo);
       }
     };
 
@@ -180,6 +184,10 @@ export const CardVideo = ({
 
         setFocused(nextFocused);
         setControlMode(nextFocused ? "media" : "hidden");
+        if (!nextFocused) {
+          soundUnlockedForCurrentVideoRef.current = false;
+          setSoundEnabled(false);
+        }
       },
       {
         threshold: [0, 0.35],
@@ -188,10 +196,6 @@ export const CardVideo = ({
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    return subscribeAudioPreference(setSoundEnabled);
   }, []);
 
   useEffect(() => {
@@ -204,14 +208,15 @@ export const CardVideo = ({
     const currentVideo = videoRef.current;
     if (!currentVideo) return;
 
-    currentVideo.muted = !soundEnabled;
+    currentVideo.muted = !(soundEnabled && soundUnlockedForCurrentVideoRef.current);
 
-    if (!focused) {
+    if (!focused || !documentHasUserAttention()) {
       currentVideo.pause();
       return;
     }
 
-    void currentVideo.play().catch(() => {
+    void playVideoWithActiveDocument(currentVideo).then((didPlay) => {
+      if (didPlay) return;
       setPlaying(false);
     });
   }, [focused, soundEnabled]);
@@ -241,8 +246,12 @@ export const CardVideo = ({
         crossOrigin="anonymous"
         onCanPlay={() => {
           const currentVideo = videoRef.current;
-          if (!focused || !currentVideo) return;
-          void currentVideo.play().catch(() => setPlaying(false));
+          if (!focused || !currentVideo || !documentHasUserAttention()) return;
+
+          currentVideo.muted = !(soundEnabled && soundUnlockedForCurrentVideoRef.current);
+          void playVideoWithActiveDocument(currentVideo).then((didPlay) => {
+            if (!didPlay) setPlaying(false);
+          });
         }}
         onLoadedMetadata={handleVideoPosterExtraction}
         poster={playback.poster || videoPoster || undefined}

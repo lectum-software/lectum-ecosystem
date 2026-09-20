@@ -6,6 +6,7 @@ export const VIDEO_PAUSED_BY_FOCUS_GUARD_ATTRIBUTE = "data-lectum-paused-by-focu
 
 const DEFAULT_MIN_VISIBLE_RATIO = 0.35;
 const INTERSECTION_THRESHOLDS = [0, 0.2, 0.35, 0.5, 0.7, 1];
+const FOCUS_GUARD_PAUSE_MARK_DURATION_MS = 500;
 
 type ActiveVideoPlaybackGuardOptions = {
   enabled?: boolean;
@@ -24,11 +25,38 @@ const markFocusGuardPause = (video: HTMLVideoElement) => {
     if (wasVideoPauseRequestedByFocusGuard(video)) {
       video.removeAttribute(VIDEO_PAUSED_BY_FOCUS_GUARD_ATTRIBUTE);
     }
-  }, 0);
+  }, FOCUS_GUARD_PAUSE_MARK_DURATION_MS);
 };
 
 export const canResumeFocusedVideoPlayback = (visibleEnough: boolean) =>
   documentHasUserAttention() && visibleEnough;
+
+export const pauseVideoForFocusGuard = (video: HTMLVideoElement) => {
+  if (typeof window === "undefined" || video.paused || video.ended) return false;
+
+  markFocusGuardPause(video);
+  video.pause();
+  return true;
+};
+
+export const pauseAllVideosForInactiveDocument = () => {
+  if (typeof document === "undefined") return;
+
+  for (const video of document.querySelectorAll<HTMLVideoElement>("video")) {
+    pauseVideoForFocusGuard(video);
+  }
+};
+
+export const playVideoWithActiveDocument = async (video: HTMLVideoElement | null) => {
+  if (!video || !documentHasUserAttention()) return false;
+
+  try {
+    await video.play();
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 export const useActiveVideoPlaybackGuard = ({
   enabled = true,
@@ -46,8 +74,7 @@ export const useActiveVideoPlaybackGuard = ({
     if (!video || video.paused || video.ended) return;
 
     shouldResumeAfterFocusRef.current = true;
-    markFocusGuardPause(video);
-    video.pause();
+    pauseVideoForFocusGuard(video);
   }, [videoRef]);
 
   const syncPlaybackEligibility = useCallback(() => {
@@ -64,7 +91,7 @@ export const useActiveVideoPlaybackGuard = ({
     if (!shouldResumeAfterFocusRef.current) return;
 
     shouldResumeAfterFocusRef.current = false;
-    void video.play().catch(() => undefined);
+    void playVideoWithActiveDocument(video);
   }, [enabled, pauseForInactiveFocus, videoRef, visibleEnough]);
 
   useEffect(() => {
@@ -81,7 +108,10 @@ export const useActiveVideoPlaybackGuard = ({
   useEffect(() => {
     if (!enabled || typeof window === "undefined" || typeof document === "undefined") return;
 
-    const handleInactiveFocus = () => pauseForInactiveFocus();
+    const handleInactiveFocus = () => {
+      pauseForInactiveFocus();
+      pauseAllVideosForInactiveDocument();
+    };
     const handleActiveFocus = () => syncPlaybackEligibility();
     const handleVisibilityChange = () => {
       if (documentHasUserAttention()) {
@@ -89,23 +119,27 @@ export const useActiveVideoPlaybackGuard = ({
         return;
       }
 
-      pauseForInactiveFocus();
+      handleInactiveFocus();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     document.addEventListener("freeze", handleInactiveFocus);
+    document.addEventListener("resume", handleActiveFocus);
     window.addEventListener("blur", handleInactiveFocus);
     window.addEventListener("focus", handleActiveFocus);
     window.addEventListener("pagehide", handleInactiveFocus);
     window.addEventListener("pageshow", handleActiveFocus);
+    window.addEventListener("beforeunload", handleInactiveFocus);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       document.removeEventListener("freeze", handleInactiveFocus);
+      document.removeEventListener("resume", handleActiveFocus);
       window.removeEventListener("blur", handleInactiveFocus);
       window.removeEventListener("focus", handleActiveFocus);
       window.removeEventListener("pagehide", handleInactiveFocus);
       window.removeEventListener("pageshow", handleActiveFocus);
+      window.removeEventListener("beforeunload", handleInactiveFocus);
     };
   }, [enabled, pauseForInactiveFocus, syncPlaybackEligibility]);
 
@@ -155,12 +189,7 @@ export const playVideoWithSound = async (video: HTMLVideoElement | null) => {
 
   ensureVideoCanPlayWithSound(video);
 
-  try {
-    await video.play();
-    return true;
-  } catch {
-    return false;
-  }
+  return playVideoWithActiveDocument(video);
 };
 
 export const needsUserPlayWithSound = (video: HTMLVideoElement | null) =>

@@ -6,9 +6,12 @@ import {
   isModalMediaSuspended,
   subscribeModalMediaSuspension,
 } from "@/hooks/use-modal-media-suspension";
-import { wasVideoPauseRequestedByFocusGuard } from "@/lib/video-playback";
+import {
+  pauseAllVideosForInactiveDocument,
+  playVideoWithActiveDocument,
+  wasVideoPauseRequestedByFocusGuard,
+} from "@/lib/video-playback";
 
-const COMMUNITY_FEED_VIDEO_SOUND_STORAGE_KEY = "lectum:community-feed-video-sound-enabled";
 const MIN_AUTOPLAY_INTERSECTION_RATIO = 0.58;
 const EXIT_INTERSECTION_RATIO = 0.2;
 const INTERSECTION_THRESHOLDS = [0, 0.2, 0.35, 0.5, 0.58, 0.7, 0.85, 1];
@@ -22,6 +25,7 @@ type FeedVideoAutoplayItem = {
   isIntersecting: boolean;
   order: number;
   pausedByUser: boolean;
+  soundEnabledByUser: boolean;
   suppressNextPause: boolean;
   video: HTMLVideoElement;
 };
@@ -35,8 +39,6 @@ export type CommunityFeedVideoAutoplayCandidate = {
   pausedByUser?: boolean;
 };
 
-let memorySoundEnabled = false;
-let memorySoundPreferenceInitialized = false;
 let nextAutoplayOrder = 0;
 let activeVideoId: string | null = null;
 let autoplayObserver: IntersectionObserver | null = null;
@@ -48,40 +50,14 @@ const soundPreferenceListeners = new Set<SoundPreferenceListener>();
 const autoplayItems = new Map<string, FeedVideoAutoplayItem>();
 const observedVideoIds = new WeakMap<HTMLVideoElement, string>();
 
-const readStoredSoundPreference = () => {
-  if (typeof window === "undefined") return memorySoundEnabled;
-
-  try {
-    return window.localStorage.getItem(COMMUNITY_FEED_VIDEO_SOUND_STORAGE_KEY) === "true";
-  } catch {
-    return memorySoundEnabled;
-  }
-};
-
-const persistStoredSoundPreference = (soundEnabled: boolean) => {
-  if (typeof window === "undefined") return;
-
-  try {
-    window.localStorage.setItem(
-      COMMUNITY_FEED_VIDEO_SOUND_STORAGE_KEY,
-      soundEnabled ? "true" : "false",
-    );
-  } catch {
-    // Preferencia local e degradavel: se o storage estiver bloqueado, a sessao ainda funciona.
-  }
-};
-
 export const getCommunityFeedVideoSoundEnabled = () => {
-  if (!memorySoundPreferenceInitialized) {
-    memorySoundEnabled = readStoredSoundPreference();
-    memorySoundPreferenceInitialized = true;
-  }
-
-  return memorySoundEnabled;
+  const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
+  return Boolean(activeItem?.soundEnabledByUser);
 };
 
-const applySoundPreferenceToVideo = (video: HTMLVideoElement) => {
-  const soundEnabled = getCommunityFeedVideoSoundEnabled();
+const applySoundPreferenceToVideo = (item: FeedVideoAutoplayItem) => {
+  const soundEnabled = item.soundEnabledByUser;
+  const { video } = item;
 
   video.muted = !soundEnabled;
 
@@ -100,20 +76,15 @@ const isCommunityAutoplayContextActive = () =>
 const playAutoplayItem = async (item: FeedVideoAutoplayItem) => {
   if (!isCommunityAutoplayContextActive()) return;
 
-  applySoundPreferenceToVideo(item.video);
+  applySoundPreferenceToVideo(item);
 
-  try {
-    await item.video.play();
-  } catch {
-    if (!getCommunityFeedVideoSoundEnabled()) return;
+  if (await playVideoWithActiveDocument(item.video)) return;
 
+  if (item.soundEnabledByUser) {
+    item.soundEnabledByUser = false;
     item.video.muted = true;
-
-    try {
-      await item.video.play();
-    } catch {
-      // Autoplay pode ser bloqueado pelo navegador; mantemos controles manuais sem erro publico.
-    }
+    notifySoundPreferenceListeners(false);
+    await playVideoWithActiveDocument(item.video);
   }
 };
 
@@ -158,8 +129,10 @@ const activateAutoplayItem = (nextId: string, options: { alreadyPlaying?: boolea
 
   activeVideoId = nextId;
   item.pausedByUser = false;
+  item.soundEnabledByUser = false;
   pauseInactiveAutoplayItems(nextId);
-  applySoundPreferenceToVideo(item.video);
+  applySoundPreferenceToVideo(item);
+  notifySoundPreferenceListeners(false);
 
   if (!options.alreadyPlaying) {
     void playAutoplayItem(item);
@@ -251,23 +224,28 @@ const updateActiveVideoSoundPreference = () => {
   const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
   if (!activeItem) return;
 
-  applySoundPreferenceToVideo(activeItem.video);
+  applySoundPreferenceToVideo(activeItem);
+};
+
+const notifySoundPreferenceListeners = (soundEnabled: boolean) => {
+  for (const listener of soundPreferenceListeners) {
+    listener(soundEnabled);
+  }
 };
 
 export const setCommunityFeedVideoSoundEnabled = (soundEnabled: boolean) => {
-  const nextSoundEnabled = Boolean(soundEnabled);
-  const changed = !memorySoundPreferenceInitialized || memorySoundEnabled !== nextSoundEnabled;
+  const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
+  const nextSoundEnabled = Boolean(soundEnabled && activeItem && documentHasUserAttention());
+  const changed = getCommunityFeedVideoSoundEnabled() !== nextSoundEnabled;
 
-  memorySoundEnabled = nextSoundEnabled;
-  memorySoundPreferenceInitialized = true;
-  persistStoredSoundPreference(nextSoundEnabled);
-  updateActiveVideoSoundPreference();
+  if (activeItem) {
+    activeItem.soundEnabledByUser = nextSoundEnabled;
+    updateActiveVideoSoundPreference();
+  }
 
   if (!changed) return;
 
-  for (const listener of soundPreferenceListeners) {
-    listener(nextSoundEnabled);
-  }
+  notifySoundPreferenceListeners(nextSoundEnabled);
 };
 
 export const subscribeCommunityFeedVideoSoundPreference = (listener: SoundPreferenceListener) => {
@@ -294,12 +272,16 @@ const ensureVisibilityListener = () => {
       return;
     }
 
-    const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
-    if (activeItem) pauseAutoplayItem(activeItem);
+    pauseAllAutoplayItems();
+    pauseAllVideosForInactiveDocument();
+    activeVideoId = null;
+    notifySoundPreferenceListeners(false);
   };
 
   document.addEventListener("visibilitychange", pauseActiveWithoutAttention);
+  document.addEventListener("freeze", pauseActiveWithoutAttention);
   window.addEventListener("blur", pauseActiveWithoutAttention);
+  window.addEventListener("pagehide", pauseActiveWithoutAttention);
   window.addEventListener("focus", () => scheduleAutoplayEvaluation());
 
   visibilityListenerAttached = true;
@@ -373,6 +355,7 @@ const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoElement)
     isIntersecting: false,
     order: nextAutoplayOrder,
     pausedByUser: false,
+    soundEnabledByUser: false,
     suppressNextPause: false,
     video,
   };
@@ -380,7 +363,7 @@ const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoElement)
 
   autoplayItems.set(id, item);
   observedVideoIds.set(video, id);
-  applySoundPreferenceToVideo(video);
+  applySoundPreferenceToVideo(item);
 
   const observer = getAutoplayObserver();
 
