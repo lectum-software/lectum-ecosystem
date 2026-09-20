@@ -2439,3 +2439,31 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check:version`
 - Smoke de homologação será executado após o push de `homolog`, pois o push
   dispara o deploy automático.
+
+## Complemento 2026-09-18 - botao de seguir junto ao nome da comunidade
+
+- Pedido do usuario: dentro do post, o botao de seguir a comunidade deve ficar junto ao nome da comunidade, e nao alinhado a direita.
+- A captura enviada em `c:/Users/tulio/Downloads/WhatsApp Image 2026-09-17 at 21.34.56.jpeg` foi usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Fonte visual auditavel: screenshot anexada pelo usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`.
+- Diagnostico: o link do nome da comunidade no `PostHeader` do detalhe do post usava `flex-1`, ocupando todo o espaco livre e empurrando o `CommunityFollowToggle` para a extremidade direita.
+- Frontend: o link da comunidade passa a usar largura de conteudo encolhivel com `max-w-full shrink truncate`, mantendo ellipsis em nomes longos e deixando `Seguir`/`Seguindo` imediatamente ao lado do nome quando houver espaco.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, autenticacao, votos, salvos, compartilhamento, seguidores ou dados publicados.
+- ADR criado: `adrs/0517-botao-seguir-junto-comunidade-post.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O botao `Seguir`/`Seguindo` aparece junto ao nome da comunidade no cabecalho do detalhe do post.
+- [x] O nome da comunidade continua truncando com ellipsis em telas mobile quando nao houver espaco suficiente.
+- [x] O badge `Silenciado`, icone e rotulo `Postado em` permanecem sem encolhimento indevido.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica confirmou que o link da comunidade no `PostHeader` usa `max-w-full shrink truncate` e nao `flex-1`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm check`.
+- [x] `pnpm version:bump`.
+- [x] `pnpm check:version`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara o deploy automatico.
