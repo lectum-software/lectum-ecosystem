@@ -43,6 +43,7 @@ type ReplyMediaAttachmentControlProps = {
   mediaPermission: ReplyMediaPermissionLike;
   onAfterAction?: () => void;
   onOpenDialog?: () => void;
+  onPermissionDenied?: () => void;
   onMediaChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onRemoveCurrent?: () => void;
   onRemoveSelected: () => void;
@@ -229,6 +230,7 @@ export function ReplyMediaAttachmentControl({
   mediaPermission,
   onAfterAction,
   onOpenDialog,
+  onPermissionDenied,
   onMediaChange,
   onRemoveCurrent,
   onRemoveSelected,
@@ -313,7 +315,13 @@ export function ReplyMediaAttachmentControl({
   const editorPreview = editorPreviewClassNames(activeMedia?.orientation);
 
   const openFileDialog = () => {
-    if (!mediaPermission.canAttach || disabled || selectedMedia) return;
+    if (disabled || selectedMedia) return;
+
+    if (!mediaPermission.canAttach) {
+      onPermissionDenied?.();
+      onAfterAction?.();
+      return;
+    }
 
     onOpenDialog?.();
     const input = fileInputRef.current;
@@ -394,7 +402,7 @@ export function ReplyMediaAttachmentControl({
 
     const renderComposerTrigger = () => {
       const hasSelectedMedia = Boolean(selectedMedia);
-      const triggerDisabled = !mediaPermission.canAttach || disabled || hasSelectedMedia;
+      const triggerDisabled = disabled || hasSelectedMedia;
 
       if (hasSelectedMedia) return null;
 
@@ -410,7 +418,7 @@ export function ReplyMediaAttachmentControl({
           className={cn(
             "grid h-9 w-9 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:active:scale-100",
             !mediaPermission.canAttach || hasSelectedMedia
-              ? "cursor-not-allowed border-border bg-surface-muted text-subtle opacity-75"
+              ? "cursor-pointer border-border bg-surface-muted text-subtle opacity-75 hover:bg-surface-muted"
               : "border-primary bg-primary text-primary-foreground shadow-lectum-soft hover:border-primary-hover hover:bg-primary-hover",
             disabled && "opacity-60",
           )}
@@ -536,7 +544,7 @@ export function ReplyMediaAttachmentControl({
           <button
             aria-label="Adicionar mídia"
             className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-border bg-gradient-to-b from-surface to-surface-muted px-4 text-sm font-extrabold text-muted shadow-none transition hover:border-primary/35 hover:bg-primary-soft/70 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:bg-none disabled:text-muted disabled:opacity-60 dark:border-border dark:from-surface dark:to-surface-muted/40 dark:text-muted"
-            disabled={!mediaPermission.canAttach || disabled}
+            disabled={disabled}
             onClick={openFileDialog}
             onMouseDown={(event) => event.preventDefault()}
             title={mediaPermission.canAttach ? "Adicionar mídia" : mediaPermission.reason}

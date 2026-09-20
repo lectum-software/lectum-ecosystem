@@ -8,9 +8,11 @@ import {
   type TouchEvent as ReactTouchEvent,
   useEffect,
   useRef,
+  useState,
 } from "react";
 import { Controller } from "react-hook-form";
 import { CommunityDeleteConfirmationModal } from "@/components/community/community-delete-confirmation-modal";
+import { CommunityMediaUpgradeModal } from "@/components/community/community-media-upgrade-modal";
 import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -81,6 +83,7 @@ export const CreateCommunityPostLogic = ({
     uploadMutation,
     videoUploadProgress,
   } = controller;
+  const [mediaUpgradeModalOpen, setMediaUpgradeModalOpen] = useState(false);
   useModalMediaSuspension(asModalSlot);
 
   const hasSelectedMedia = selectedMediaItems.length > 0;
@@ -383,11 +386,17 @@ export const CreateCommunityPostLogic = ({
           "grid h-11 w-11 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:active:scale-100",
           mediaPermission.canAttach
             ? "border-primary bg-primary text-primary-foreground shadow-lectum-soft hover:border-primary-hover hover:bg-primary-hover"
-            : "cursor-not-allowed border-border bg-surface-muted text-subtle opacity-75",
+            : "cursor-pointer border-border bg-surface-muted text-subtle opacity-75 hover:bg-surface-muted",
         )}
         data-reply-media-trigger="true"
-        disabled={!mediaPermission.canAttach || isSubmitting}
+        disabled={isSubmitting}
         onClick={() => {
+          if (!mediaPermission.canAttach) {
+            setMediaUpgradeModalOpen(true);
+            focusLastEditor();
+            return;
+          }
+
           if (fileInputRef.current) fileInputRef.current.value = "";
           fileInputRef.current?.click();
           focusLastEditor();
@@ -404,12 +413,6 @@ export const CreateCommunityPostLogic = ({
         )}
         <span className="sr-only">Adicionar mídia</span>
       </button>
-
-      {!mediaPermission.canAttach && mediaPermission.reason ? (
-        <span className="min-w-0 flex-1 basis-52 whitespace-normal text-xs font-semibold leading-4 text-muted">
-          {mediaPermission.reason}
-        </span>
-      ) : null}
     </div>
   );
 
@@ -589,6 +592,10 @@ export const CreateCommunityPostLogic = ({
   return (
     <>
       {sheet}
+      <CommunityMediaUpgradeModal
+        onClose={() => setMediaUpgradeModalOpen(false)}
+        open={mediaUpgradeModalOpen}
+      />
       <CommunityDeleteConfirmationModal
         actionLabel="Excluir e fechar"
         closeLabel="Fechar confirmação de descarte"

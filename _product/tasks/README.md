@@ -1,3 +1,14 @@
+Concluida em 20/09/2026: ajuste UX do upload de mídia em Comunidades para psicólogos gratuitos. O botão de upload permanece visível em cinza para psicólogos sem permissão, mas abre uma modal com o texto aprovado e CTA `Fazer upgrade` em criação/edição de post e respostas de comentário; psicólogos verificados mantêm o upload atual e pacientes não passam a ver o controle. Referências visuais consultadas: `_product/proto/Criar Nova Postagem - Psicólogo.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não ficou acessível como ferramenta direta neste ambiente. Sem backend, banco, env nova, package novo, mock ou mudança de contrato. ADR: `adrs/0522-modal-upgrade-upload-midia-comunidades.md`.
+
+Criterios de aceite do ajuste de upload de mídia bloqueado:
+
+- [x] Psicólogos gratuitos veem o botão de upload de mídia em cinza na criação de post e ao responder comentários.
+- [x] Clicar no botão bloqueado não abre seletor de arquivos e exibe modal com o título/texto aprovado.
+- [x] A modal oferece CTA primário `Fazer upgrade` apontando para o fluxo de assinatura.
+- [x] Psicólogos verificados mantêm o upload de mídia existente em posts e respostas.
+- [x] Pacientes continuam sem acesso ao controle de upload de mídia.
+- [x] Nenhum mock, endpoint simulado, package novo, env nova, migration ou alteração backend foi usado.
+
 Concluida em 20/09/2026: ajuste UX de notificacoes para separar indicador global de novidade do estado lida/nao lida. O backend adiciona `notifications.seen_at` nullable e `POST /api/private/notification/seen`; o badge do shell passa a considerar notificacoes ainda nao visualizadas, e a central marca as notificacoes como visualizadas ao abrir sem marcar os itens como lidos. Referencia visual consultada: `_product/proto/Notificações.jpg`; Builder/Quick Copy nao ficou acessivel como ferramenta direta neste ambiente. Sem env nova, package novo, mock, seed ou operacao destrutiva. ADR: `adrs/0521-indicador-notificacoes-visualizadas.md`.
 
 Criterios de aceite do ajuste do indicador de notificacoes:

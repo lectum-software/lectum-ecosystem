@@ -9,6 +9,7 @@ import { useUpdatePostReply, useUploadPostReplyMedia } from "@/api/callers/posts
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PostReply, UserPostReply } from "@/api/generator/types/posts";
 import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
+import { CommunityMediaUpgradeModal } from "@/components/community/community-media-upgrade-modal";
 import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import {
   createReplyVideoThumbnail,
@@ -79,10 +80,12 @@ const fields = [
 export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: ReplyEditModalProps) {
   const storedUser = useAppSelector((state) => state.user);
   const mediaPermission = getCommunityMediaPermission(storedUser);
+  const canShowMediaControls = mediaPermission.showControl && reply.author.role === "psicologo";
   const canManageMedia = mediaPermission.canAttach && reply.author.role === "psicologo";
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [mediaUpgradeModalOpen, setMediaUpgradeModalOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
   const [needsReadableFile, setNeedsReadableFile] = useState(false);
   const [removeMedia, setRemoveMedia] = useState(false);
@@ -384,127 +387,136 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   };
 
   return createPortal(
-    <div
-      aria-labelledby="edit-reply-title-heading"
-      aria-modal="true"
-      className="fixed inset-0 z-[1000] flex pointer-events-auto items-center justify-center overflow-y-auto bg-media-background/55 px-4 py-[max(1rem,env(safe-area-inset-top))] text-foreground backdrop-blur-md animate-in fade-in duration-200"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) handleClose();
-      }}
-      role="dialog"
-    >
-      <section className="pointer-events-auto flex max-h-[min(88dvh,44rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-surface shadow-lectum-soft animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 dark:shadow-[var(--lectum-shadow)]">
-        <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
-          <button
-            aria-label="Fechar edição de comentário"
-            className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isSubmitting}
-            onClick={handleClose}
-            type="button"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <h2
-            className="text-[1.15rem] font-black tracking-[-0.03em]"
-            id="edit-reply-title-heading"
-          >
-            Editar comentário
-          </h2>
-        </header>
+    <>
+      <CommunityMediaUpgradeModal
+        onClose={() => setMediaUpgradeModalOpen(false)}
+        open={mediaUpgradeModalOpen}
+      />
+      <div
+        aria-labelledby="edit-reply-title-heading"
+        aria-modal="true"
+        className="fixed inset-0 z-[1000] flex pointer-events-auto items-center justify-center overflow-y-auto bg-media-background/55 px-4 py-[max(1rem,env(safe-area-inset-top))] text-foreground backdrop-blur-md animate-in fade-in duration-200"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) handleClose();
+        }}
+        role="dialog"
+      >
+        <section className="pointer-events-auto flex max-h-[min(88dvh,44rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-surface shadow-lectum-soft animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 dark:shadow-[var(--lectum-shadow)]">
+          <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
+            <button
+              aria-label="Fechar edição de comentário"
+              className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isSubmitting}
+              onClick={handleClose}
+              type="button"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <h2
+              className="text-[1.15rem] font-black tracking-[-0.03em]"
+              id="edit-reply-title-heading"
+            >
+              Editar comentário
+            </h2>
+          </header>
 
-        <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
-          <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-5 sm:px-6">
-            <div className="grid gap-4">
-              {FieldComponent ? <FieldComponent control={hook.control} {...contentField} /> : null}
+          <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
+            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-5 sm:px-6">
+              <div className="grid gap-4">
+                {FieldComponent ? (
+                  <FieldComponent control={hook.control} {...contentField} />
+                ) : null}
 
-              {canManageMedia ? (
-                <ReplyMediaAttachmentControl
-                  currentMedia={{
-                    mediaType: reply.media_type,
-                    mediaUrl: reply.media_url,
-                    thumbnailUrl: reply.thumbnail_url,
-                  }}
+                {canShowMediaControls ? (
+                  <ReplyMediaAttachmentControl
+                    currentMedia={{
+                      mediaType: reply.media_type,
+                      mediaUrl: reply.media_url,
+                      thumbnailUrl: reply.thumbnail_url,
+                    }}
+                    disabled={isSubmitting}
+                    fileInputRef={fileInputRef}
+                    isUploading={uploadMutation.isPending}
+                    mediaPermission={mediaPermission}
+                    onAfterAction={focusEditor}
+                    onMediaChange={handleMediaChange}
+                    onPermissionDenied={() => setMediaUpgradeModalOpen(true)}
+                    onRemoveCurrent={() => {
+                      clearSelectedMedia();
+                      setRemoveMedia(true);
+                    }}
+                    onRemoveSelected={() => {
+                      clearSelectedMedia();
+                      setRemoveMedia(false);
+                    }}
+                    onUndoRemove={() => setRemoveMedia(false)}
+                    removeCurrent={removeMedia}
+                    selectedMedia={selectedMedia}
+                    variant="editor"
+                  />
+                ) : null}
+
+                {mediaProgress ? (
+                  <CommunityVideoUploadProgress
+                    onCancel={() => {
+                      if (preparingVideoRef.current) clearSelectedMedia();
+                      else cancelActiveVideoUpload();
+                    }}
+                    progress={mediaProgress}
+                  />
+                ) : null}
+
+                {actionError ? (
+                  <InlineAlert title="Não foi possível salvar" variant="error">
+                    {actionError}
+                  </InlineAlert>
+                ) : null}
+                {needsReadableFile ? (
+                  <VideoFileReadRecovery
+                    disabled={isSubmitting || !canManageMedia}
+                    fileInputRef={fileInputRef}
+                    onDiscard={
+                      !selectedMedia
+                        ? () => {
+                            clearSelectedMedia();
+                            setActionError(null);
+                          }
+                        : undefined
+                    }
+                  />
+                ) : null}
+              </div>
+            </div>
+
+            <footer className="shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[var(--lectum-bottom-fixed-padding-compact)] backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:px-5">
+              <div className="grid gap-2 sm:flex sm:justify-end">
+                <Button
+                  className="h-12 rounded-full border-border bg-surface px-6 font-bold text-muted shadow-none hover:border-primary/25 hover:bg-primary-soft hover:text-foreground focus-visible:outline-primary active:scale-[0.98] disabled:opacity-60"
                   disabled={isSubmitting}
-                  fileInputRef={fileInputRef}
-                  isUploading={uploadMutation.isPending}
-                  mediaPermission={mediaPermission}
-                  onAfterAction={focusEditor}
-                  onMediaChange={handleMediaChange}
-                  onRemoveCurrent={() => {
-                    clearSelectedMedia();
-                    setRemoveMedia(true);
-                  }}
-                  onRemoveSelected={() => {
-                    clearSelectedMedia();
-                    setRemoveMedia(false);
-                  }}
-                  onUndoRemove={() => setRemoveMedia(false)}
-                  removeCurrent={removeMedia}
-                  selectedMedia={selectedMedia}
-                  variant="editor"
-                />
-              ) : null}
-
-              {mediaProgress ? (
-                <CommunityVideoUploadProgress
-                  onCancel={() => {
-                    if (preparingVideoRef.current) clearSelectedMedia();
-                    else cancelActiveVideoUpload();
-                  }}
-                  progress={mediaProgress}
-                />
-              ) : null}
-
-              {actionError ? (
-                <InlineAlert title="Não foi possível salvar" variant="error">
-                  {actionError}
-                </InlineAlert>
-              ) : null}
-              {needsReadableFile ? (
-                <VideoFileReadRecovery
-                  disabled={isSubmitting || !canManageMedia}
-                  fileInputRef={fileInputRef}
-                  onDiscard={
-                    !selectedMedia
-                      ? () => {
-                          clearSelectedMedia();
-                          setActionError(null);
-                        }
-                      : undefined
-                  }
-                />
-              ) : null}
-            </div>
-          </div>
-
-          <footer className="shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[var(--lectum-bottom-fixed-padding-compact)] backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:px-5">
-            <div className="grid gap-2 sm:flex sm:justify-end">
-              <Button
-                className="h-12 rounded-full border-border bg-surface px-6 font-bold text-muted shadow-none hover:border-primary/25 hover:bg-primary-soft hover:text-foreground focus-visible:outline-primary active:scale-[0.98] disabled:opacity-60"
-                disabled={isSubmitting}
-                onClick={handleClose}
-                type="button"
-                variant="outline"
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="h-12 rounded-full bg-primary px-6 font-black text-primary-foreground shadow-lectum-soft hover:bg-primary-hover focus-visible:outline-primary active:scale-[0.98] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
-                disabled={isSubmitting || !canSubmit}
-                type="submit"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                ) : (
-                  <Save className="h-5 w-5" aria-hidden="true" />
-                )}
-                Salvar alterações
-              </Button>
-            </div>
-          </footer>
-        </form>
-      </section>
-    </div>,
+                  onClick={handleClose}
+                  type="button"
+                  variant="outline"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="h-12 rounded-full bg-primary px-6 font-black text-primary-foreground shadow-lectum-soft hover:bg-primary-hover focus-visible:outline-primary active:scale-[0.98] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
+                  disabled={isSubmitting || !canSubmit}
+                  type="submit"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Save className="h-5 w-5" aria-hidden="true" />
+                  )}
+                  Salvar alterações
+                </Button>
+              </div>
+            </footer>
+          </form>
+        </section>
+      </div>
+    </>,
     document.body,
   );
 }

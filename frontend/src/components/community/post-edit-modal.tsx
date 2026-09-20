@@ -16,6 +16,7 @@ import { useUploadCommunityPostMedia } from "@/api/callers/community";
 import { useUpdatePost } from "@/api/callers/posts";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
+import { CommunityMediaUpgradeModal } from "@/components/community/community-media-upgrade-modal";
 import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import { components } from "@/components/controllers";
 import { useFormList } from "@/hooks/form";
@@ -58,6 +59,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   const lastFocusedEditorIdRef = useRef("edit-post-title");
   const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
+  const [mediaUpgradeModalOpen, setMediaUpgradeModalOpen] = useState(false);
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
   const [removedStoredMediaIds, setRemovedStoredMediaIds] = useState<string[]>([]);
   const [storedMediaOrientations, setStoredMediaOrientations] = useState<
@@ -613,67 +615,76 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   if (!open) return null;
 
   return (
-    <PostEditModalView
-      communityFields={formProps.fields
-        .filter((field) => field.name === "community_slug")
-        .map(renderFormField)}
-      contentFields={formProps.fields
-        .filter((field) => field.name === "content")
-        .map(renderFormField)}
-      footerControls={
-        canShowMediaControls ? (
-          <PostEditMediaButton
-            canManageMedia={canManageMedia}
-            fileInputRef={fileInputRef}
-            isSubmitting={isSubmitting}
-            isUploading={isUploadingMedia}
-            mediaPermissionReason={mediaPermission.reason}
-            onFocusEditor={focusLastEditor}
-            onMediaChange={handleMediaChange}
-          />
-        ) : (
-          <PostEditAnonymousControls control={hook.control} />
-        )
-      }
-      isGuidanceOpen={isGuidanceOpen}
-      isSubmitting={isSubmitting || isPreparingVideo}
-      mediaPreview={
-        <PostEditMediaPreview
-          canManageMedia={canManageMedia}
-          disabled={isSubmitting}
-          items={editableMediaItems}
-          onFocusEditor={focusLastEditor}
-          onRemoveSelected={removeSelectedMediaAt}
-          onRemoveStored={removeStoredMedia}
-          onUpdateSelectedOrientation={updateSelectedMediaOrientation}
-          onUpdateStoredOrientation={updateStoredMediaOrientation}
-        />
-      }
-      onClose={handleClose}
-      onFocusCapture={(event) => {
-        const target = event.target as HTMLElement;
-        if (EDITOR_FIELD_IDS.has(target.id)) {
-          lastFocusedEditorIdRef.current = target.id;
+    <>
+      <CommunityMediaUpgradeModal
+        onClose={() => setMediaUpgradeModalOpen(false)}
+        open={mediaUpgradeModalOpen}
+      />
+      <PostEditModalView
+        communityFields={formProps.fields
+          .filter((field) => field.name === "community_slug")
+          .map(renderFormField)}
+        contentFields={formProps.fields
+          .filter((field) => field.name === "content")
+          .map(renderFormField)}
+        footerControls={
+          canShowMediaControls ? (
+            <PostEditMediaButton
+              canManageMedia={canManageMedia}
+              fileInputRef={fileInputRef}
+              isSubmitting={isSubmitting}
+              isUploading={isUploadingMedia}
+              mediaPermissionReason={mediaPermission.reason}
+              onFocusEditor={focusLastEditor}
+              onMediaChange={handleMediaChange}
+              onPermissionDenied={() => setMediaUpgradeModalOpen(true)}
+            />
+          ) : (
+            <PostEditAnonymousControls control={hook.control} />
+          )
         }
-      }}
-      onPointerDown={preserveEditorFocusFromBlankTap}
-      onSubmit={handleSubmit}
-      onToggleGuidance={() => {
-        setIsGuidanceOpen((current) => !current);
-        focusLastEditor();
-      }}
-      titleFields={formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
-      uploadStatus={
-        mediaProgress ? (
-          <CommunityVideoUploadProgress
-            onCancel={() => {
-              if (preparingVideoRef.current) clearSelectedMedia();
-              else cancelActiveVideoUpload();
-            }}
-            progress={mediaProgress}
+        isGuidanceOpen={isGuidanceOpen}
+        isSubmitting={isSubmitting || isPreparingVideo}
+        mediaPreview={
+          <PostEditMediaPreview
+            canManageMedia={canManageMedia}
+            disabled={isSubmitting}
+            items={editableMediaItems}
+            onFocusEditor={focusLastEditor}
+            onRemoveSelected={removeSelectedMediaAt}
+            onRemoveStored={removeStoredMedia}
+            onUpdateSelectedOrientation={updateSelectedMediaOrientation}
+            onUpdateStoredOrientation={updateStoredMediaOrientation}
           />
-        ) : null
-      }
-    />
+        }
+        onClose={handleClose}
+        onFocusCapture={(event) => {
+          const target = event.target as HTMLElement;
+          if (EDITOR_FIELD_IDS.has(target.id)) {
+            lastFocusedEditorIdRef.current = target.id;
+          }
+        }}
+        onPointerDown={preserveEditorFocusFromBlankTap}
+        onSubmit={handleSubmit}
+        onToggleGuidance={() => {
+          setIsGuidanceOpen((current) => !current);
+          focusLastEditor();
+        }}
+        titleFields={formProps.fields
+          .filter((field) => field.name === "title")
+          .map(renderFormField)}
+        uploadStatus={
+          mediaProgress ? (
+            <CommunityVideoUploadProgress
+              onCancel={() => {
+                if (preparingVideoRef.current) clearSelectedMedia();
+                else cancelActiveVideoUpload();
+              }}
+              progress={mediaProgress}
+            />
+          ) : null
+        }
+      />
+    </>
   );
 }

@@ -54,6 +54,7 @@ type PostEditMediaButtonProps = {
   mediaPermissionReason?: string | null;
   onFocusEditor: () => void;
   onMediaChange: ChangeEventHandler<HTMLInputElement>;
+  onPermissionDenied?: () => void;
 };
 
 export const PostEditMediaButton = ({
@@ -64,6 +65,7 @@ export const PostEditMediaButton = ({
   mediaPermissionReason,
   onFocusEditor,
   onMediaChange,
+  onPermissionDenied,
 }: PostEditMediaButtonProps) => (
   <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
     <input
@@ -80,10 +82,16 @@ export const PostEditMediaButton = ({
         "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
         canManageMedia
           ? "border-border bg-surface-muted text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
-          : "cursor-not-allowed border-border bg-surface-muted text-subtle hover:border-border hover:bg-surface-muted hover:text-subtle",
+          : "cursor-pointer border-border bg-surface-muted text-subtle hover:border-border hover:bg-surface-muted hover:text-subtle",
       )}
-      disabled={!canManageMedia || isSubmitting}
+      disabled={isSubmitting}
       onClick={() => {
+        if (!canManageMedia) {
+          onPermissionDenied?.();
+          onFocusEditor();
+          return;
+        }
+
         fileInputRef.current?.click();
         onFocusEditor();
       }}
@@ -99,11 +107,5 @@ export const PostEditMediaButton = ({
       )}
       <span className="hidden sm:inline">Mídia</span>
     </button>
-
-    {!canManageMedia && mediaPermissionReason ? (
-      <span className="min-w-0 flex-1 basis-52 whitespace-normal text-muted text-xs font-semibold leading-4">
-        {mediaPermissionReason}
-      </span>
-    ) : null}
   </div>
 );
