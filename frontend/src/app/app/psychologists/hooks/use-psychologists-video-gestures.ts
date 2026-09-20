@@ -62,19 +62,9 @@ export const usePsychologistsVideoGestures = ({
     const currentVideo = backgroundVideoRef.current;
 
     if (shouldShowVideo && currentVideo) {
-      const shouldActivateVideoWithSound =
-        isVideoMuted ||
-        currentVideo.muted ||
-        currentVideo.volume <= 0 ||
-        currentVideo.paused ||
-        currentVideo.ended ||
-        isVideoPaused;
-
       currentVideo.controls = false;
-
-      if (shouldActivateVideoWithSound) {
-        playCurrentVideoWithSound();
-        setIsUiHidden(true);
+      if (currentVideo.paused || currentVideo.ended || isVideoPaused) {
+        playCurrentVideo();
         return;
       }
 
@@ -87,14 +77,7 @@ export const usePsychologistsVideoGestures = ({
     }
 
     setIsUiHidden((current) => !current);
-  }, [
-    backgroundVideoRef,
-    isVideoMuted,
-    isVideoPaused,
-    playCurrentVideoWithSound,
-    setIsUiHidden,
-    shouldShowVideo,
-  ]);
+  }, [backgroundVideoRef, isVideoPaused, playCurrentVideo, setIsUiHidden, shouldShowVideo]);
 
   const handleVideoAreaTap = useCallback(
     (psychologist: DirectoryPsychologist, uiHidden: boolean) => {
@@ -301,6 +284,10 @@ export const usePsychologistsVideoGestures = ({
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo || !shouldShowVideo) return;
 
+      if (currentVideo.paused || isVideoPaused) {
+        playCurrentVideo();
+        return;
+      }
       if (
         isVideoMuted ||
         currentVideo.muted ||
@@ -322,6 +309,7 @@ export const usePsychologistsVideoGestures = ({
       isVideoMuted,
       isVideoPaused,
       pauseVideoPlayback,
+      playCurrentVideo,
       playCurrentVideoWithSound,
       setIsUiHidden,
       shouldShowVideo,

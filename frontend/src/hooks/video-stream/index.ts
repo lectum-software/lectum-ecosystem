@@ -4,6 +4,10 @@ import type { RefObject } from "react";
 import { useEffect, useState } from "react";
 import { useVideoAssetPlayback } from "@/api/callers/video-assets";
 import {
+  documentHasUserAttention,
+  subscribeDocumentAttention,
+} from "@/components/analytics/attention";
+import {
   isVideoAssetReference,
   isVideoPlaybackFresh,
   selectAdaptiveVideoPlaybackAdapter,
@@ -73,6 +77,8 @@ export const useAttachVideoSource = ({
 
     let active = true;
     let destroyPlayer: (() => void) | null = null;
+    let syncLoading = () => {};
+    const unsubscribeAttention = subscribeDocumentAttention(() => syncLoading());
     let mediaRecoveryAttempts = 0;
     let networkRecoveryAttempts = 0;
     setFailedSource(null);
@@ -87,6 +93,7 @@ export const useAttachVideoSource = ({
       video.load();
 
       return () => {
+        unsubscribeAttention();
         if (video.currentSrc === source || video.src === source) {
           video.removeAttribute("src");
           video.load();
@@ -108,17 +115,24 @@ export const useAttachVideoSource = ({
         }
 
         const player = new Hls({
+          autoStartLoad: false,
           enableWorker: true,
           maxBufferLength: 30,
           maxMaxBufferLength: 60,
         });
+        syncLoading = () => {
+          if (!active) return;
+          if (documentHasUserAttention()) player.startLoad();
+          else player.stopLoad();
+        };
         destroyPlayer = () => player.destroy();
+        player.on(Hls.Events.MANIFEST_PARSED, syncLoading);
         player.on(Hls.Events.ERROR, (_event, data) => {
           if (!data.fatal) return;
 
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR && networkRecoveryAttempts < 1) {
             networkRecoveryAttempts += 1;
-            player.startLoad();
+            syncLoading();
             return;
           }
           if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRecoveryAttempts < 1) {
@@ -139,6 +153,7 @@ export const useAttachVideoSource = ({
 
     return () => {
       active = false;
+      unsubscribeAttention();
       destroyPlayer?.();
       if (video.currentSrc) {
         video.removeAttribute("src");

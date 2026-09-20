@@ -26,3 +26,9 @@ Em producao `0.1.426`, o usuario enviou evidencia de que um video continuava rep
 - `pauseAllVideosForInactiveDocument` pausa todos os `<video>` quando a pagina/app perde atencao.
 - O autoplay comunitario abandonou persistencia de som e reseta som por item ativo.
 - O card de psicologo passou a iniciar/retomar apenas mudo, a menos que o usuario tenha acionado o controle de volume daquele video.
+
+## Retificacao - TASK-194
+
+A regra acima de nao persistir audio foi interpretada incorretamente. A TASK-194
+restaura a persistencia apos o primeiro clique explicito no volume e complementa
+a guarda com caminhos de playback do feed de psicologos antes nao cobertos.

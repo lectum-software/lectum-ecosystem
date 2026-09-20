@@ -9,7 +9,10 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
-import { playVideoWithSound } from "@/lib/video-playback";
+
+import { documentHasUserAttention } from "@/components/analytics/attention";
+import { playVideoWithActiveDocument, playVideoWithSound } from "@/lib/video-playback";
+import { setVideoSoundEnabledByUser } from "@/lib/video-sound-preference";
 import {
   clearPsychologistsFeedReturnSnapshot,
   getCurrentInternalHref,
@@ -185,12 +188,13 @@ export const usePsychologistsFeedNavigation = ({
 
     currentVideo.playbackRate = videoPlaybackRate;
     setIsVideoPaused(false);
-    void currentVideo.play().catch(() => {
-      setIsVideoPaused(true);
+    void playVideoWithActiveDocument(currentVideo).then((played) => {
+      if (!played && documentHasUserAttention()) setIsVideoPaused(true);
     });
   }, [backgroundVideoRef, setIsVideoPaused, shouldShowVideo, videoPlaybackRate]);
 
   const unmuteCurrentVideo = useCallback(() => {
+    setVideoSoundEnabledByUser(true);
     const currentVideo = backgroundVideoRef.current;
 
     if (currentVideo) {

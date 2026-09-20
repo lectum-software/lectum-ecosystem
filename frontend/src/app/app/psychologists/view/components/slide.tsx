@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { DirectoryPsychologist } from "@/api/generator/types/directory";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
+import { setVideoSoundEnabledByUser } from "@/lib/video-sound-preference";
 import { isPublicMediaUrl } from "@/utils/media";
 import {
   MOBILE_BOTTOM_NAV_OFFSET,
@@ -103,6 +104,7 @@ export const PsychologistSlide = ({
               controls={slideUsesNativeVideoControls}
               controlsVariant={slideUsesNativeVideoControls ? "persistent" : "native"}
               persistentControlsVisibility="always"
+              onSoundEnabledChange={setVideoSoundEnabledByUser}
               fit="cover"
               onContentClick={slideUsesNativeVideoControls ? revealUiFromImmersiveVideo : undefined}
               poster={slidePosterSrc || undefined}
@@ -114,7 +116,7 @@ export const PsychologistSlide = ({
                 "data-psychologist-id": psychologist.id,
                 "data-psychologists-background": "true",
                 "data-psychologists-slide-index": String(index),
-                autoPlay: isActiveSlide && !isVideoPaused,
+                autoPlay: false,
                 controlsList: "nodownload",
                 loop: !canSwipeBetweenPsychologists,
                 muted: isVideoMuted,

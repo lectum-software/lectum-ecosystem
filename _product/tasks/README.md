@@ -362,6 +362,7 @@ ou cortesia manual.
 | 191 | [TASK-191 - Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md) | Completed | 189 |
 | 192 | [TASK-192 - Guarda de foco para reproducao de videos em stream](TASK-192-guarda-foco-playback-videos-stream.md) | Completed | 185 |
 | 193 | [TASK-193 - Hotfix de foco e audio no autoplay de videos](TASK-193-hotfix-playback-foco-audio-autoplay.md) | Completed | 192 |
+| 194 | [TASK-194 - Audio explicito persistido e suspensao de background](TASK-194-audio-explicito-suspensao-background.md) | Completed | 193 |
 
 ## Ordem operacional recomendada sem bloqueios
 

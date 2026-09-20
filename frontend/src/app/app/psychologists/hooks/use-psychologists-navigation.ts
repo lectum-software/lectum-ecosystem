@@ -1,6 +1,8 @@
 "use client";
 
 import { type FormEvent, type WheelEvent as ReactWheelEvent, useCallback, useEffect } from "react";
+import { documentHasUserAttention } from "@/components/analytics/attention";
+import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import { rememberPsychologistsFeedReturnPosition } from "@/utils/psychologists-feed-return-memory";
 import { buildFiltersParams } from "../modules/directory-url";
 import type { FilterFeatureKey, PsychologistFilterKey } from "../modules/filter-config";
@@ -269,8 +271,8 @@ export const usePsychologistsNavigation = ({
       if (!currentVideo || !shouldShowVideo) return;
 
       setIsVideoPaused(false);
-      void currentVideo.play().catch(() => {
-        setIsVideoPaused(true);
+      void playVideoWithActiveDocument(currentVideo).then((played) => {
+        if (!played && documentHasUserAttention()) setIsVideoPaused(true);
       });
     },
     [

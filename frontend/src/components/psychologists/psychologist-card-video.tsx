@@ -10,6 +10,12 @@ import {
   useActiveVideoPlaybackGuard,
 } from "@/lib/video-playback";
 
+import {
+  getVideoSoundEnabled,
+  setVideoSoundEnabledByUser,
+  subscribeVideoSoundPreference,
+} from "@/lib/video-sound-preference";
+
 export const CardVideo = ({
   name,
   poster,
@@ -32,10 +38,10 @@ export const CardVideo = ({
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [controlMode, setControlMode] = useState<"hidden" | "media">("media");
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
-  useActiveVideoPlaybackGuard({ enabled: focused, videoRef });
+  useActiveVideoPlaybackGuard({ videoRef });
   const posterExtractionStarted = useRef(false);
   const userInitiatedPlayRef = useRef(false);
-  const soundUnlockedForCurrentVideoRef = useRef(false);
+  useEffect(() => subscribeVideoSoundPreference(setSoundEnabled), []);
   const controlsAutoHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearControlsAutoHideTimeout = useCallback(() => {
@@ -72,7 +78,7 @@ export const CardVideo = ({
     setControlMode("hidden");
 
     setSoundEnabled(true);
-    soundUnlockedForCurrentVideoRef.current = true;
+    setVideoSoundEnabledByUser(true);
     clearControlsAutoHideTimeout();
 
     userInitiatedPlayRef.current = true;
@@ -87,7 +93,7 @@ export const CardVideo = ({
       userInitiatedPlayRef.current = true;
       setControlMode("hidden");
       clearControlsAutoHideTimeout();
-      if (soundUnlockedForCurrentVideoRef.current) {
+      if (getVideoSoundEnabled()) {
         void playVideoWithSound(currentVideo);
         return;
       }
@@ -184,10 +190,6 @@ export const CardVideo = ({
 
         setFocused(nextFocused);
         setControlMode(nextFocused ? "media" : "hidden");
-        if (!nextFocused) {
-          soundUnlockedForCurrentVideoRef.current = false;
-          setSoundEnabled(false);
-        }
       },
       {
         threshold: [0, 0.35],
@@ -208,7 +210,7 @@ export const CardVideo = ({
     const currentVideo = videoRef.current;
     if (!currentVideo) return;
 
-    currentVideo.muted = !(soundEnabled && soundUnlockedForCurrentVideoRef.current);
+    currentVideo.muted = !(soundEnabled && getVideoSoundEnabled());
 
     if (!focused || !documentHasUserAttention()) {
       currentVideo.pause();
@@ -248,7 +250,7 @@ export const CardVideo = ({
           const currentVideo = videoRef.current;
           if (!focused || !currentVideo || !documentHasUserAttention()) return;
 
-          currentVideo.muted = !(soundEnabled && soundUnlockedForCurrentVideoRef.current);
+          currentVideo.muted = !(soundEnabled && getVideoSoundEnabled());
           void playVideoWithActiveDocument(currentVideo).then((didPlay) => {
             if (!didPlay) setPlaying(false);
           });

@@ -556,3 +556,5 @@ Formato recomendado:
 - [ADR-0517 — Botao de seguir junto ao nome da comunidade no detalhe do post](0517-botao-seguir-junto-comunidade-post.md)
 - [ADR-0518 — Guarda de foco para playback de videos em stream](0518-guarda-foco-playback-videos-stream.md)
 - [ADR-0519 — Hotfix de foco e audio no autoplay de videos](0519-hotfix-foco-audio-autoplay-videos.md)
+
+- [ADR-0520 — Audio explicito persistido e suspensao de background](0520-audio-explicito-suspensao-background.md)

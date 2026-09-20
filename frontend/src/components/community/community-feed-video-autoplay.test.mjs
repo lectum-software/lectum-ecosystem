@@ -138,7 +138,7 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.match(autoplaySource, /pauseAllVideosForInactiveDocument\(\)/);
   assert.doesNotMatch(autoplaySource, /localStorage/);
   assert.doesNotMatch(autoplaySource, /COMMUNITY_FEED_VIDEO_SOUND_STORAGE_KEY/);
-  assert.match(autoplaySource, /soundEnabledByUser: false/);
+  assert.match(autoplaySource, /getVideoSoundEnabled/);
   assert.match(autoplaySource, /wasVideoPauseRequestedByFocusGuard\(video\)/);
   assert.match(
     videoPlaybackSource,
@@ -151,7 +151,37 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.match(videoPlaybackSource, /new IntersectionObserver/);
   assert.match(videoPlaybackSource, /shouldResumeAfterFocusRef\.current = true/);
   assert.match(psychologistCardVideoSource, /documentHasUserAttention\(\)/);
-  assert.match(psychologistCardVideoSource, /soundUnlockedForCurrentVideoRef/);
+  assert.match(psychologistCardVideoSource, /subscribeVideoSoundPreference/);
   assert.match(psychologistCardVideoSource, /playVideoWithActiveDocument\(currentVideo\)/);
   assert.doesNotMatch(psychologistCardVideoSource, /globalSoundEnabled/);
+});
+
+test("feed de psicologos separa volume explicito de tap e protege retomadas", () => {
+  const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
+  const base = "../../app/app/psychologists/";
+  for (const file of ["feed-navigation", "navigation", "video-analytics"]) {
+    const source = read(`${base}hooks/use-psychologists-${file}.ts`);
+    assert.doesNotMatch(source, /(?:currentVideo|activeVideo)\.play\(/);
+    assert.match(source, /playVideoWithActiveDocument/);
+  }
+  const gestures = read(`${base}hooks/use-psychologists-video-gestures.ts`);
+  const areaTap = gestures
+    .split("const runVideoAreaSingleTapAction")[1]
+    .split("const handleVideoAreaTap")[0];
+  assert.doesNotMatch(areaTap, /playCurrentVideoWithSound/);
+  assert.match(areaTap, /playCurrentVideo\(\)/);
+  assert.match(read(`${base}view/components/slide.tsx`), /autoPlay: false/);
+  const preference = read("../../lib/video-sound-preference.ts");
+  assert.match(preference, /let soundEnabled = false/);
+  assert.match(preference, /lectum:video-sound:explicit:v1/);
+  assert.match(preference, /localStorage.setItem/);
+  const playback = read("../../lib/video-playback.ts");
+  assert.match(playback, /await video.play\(\);\s*if \(!documentHasUserAttention\(\)\)/);
+  assert.match(playback, /video.addEventListener\("playing", enforce\)/);
+  const attention = read("../analytics/attention.ts");
+  assert.match(attention, /window.addEventListener\("blur", suspend\)/);
+  assert.match(attention, /document.addEventListener\("freeze", suspend\)/);
+  const stream = read("../../hooks/video-stream/index.ts");
+  assert.match(stream, /autoStartLoad: false/);
+  assert.match(stream, /player.stopLoad\(\)/);
 });

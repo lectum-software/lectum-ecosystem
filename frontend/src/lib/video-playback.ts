@@ -1,6 +1,9 @@
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { documentHasUserAttention } from "@/components/analytics/attention";
+import {
+  documentHasUserAttention,
+  subscribeDocumentAttention,
+} from "@/components/analytics/attention";
 
 export const VIDEO_PAUSED_BY_FOCUS_GUARD_ATTRIBUTE = "data-lectum-paused-by-focus-guard";
 
@@ -52,6 +55,10 @@ export const playVideoWithActiveDocument = async (video: HTMLVideoElement | null
 
   try {
     await video.play();
+    if (!documentHasUserAttention()) {
+      pauseVideoForFocusGuard(video);
+      return false;
+    }
     return true;
   } catch {
     return false;
@@ -108,9 +115,10 @@ export const useActiveVideoPlaybackGuard = ({
   useEffect(() => {
     if (!enabled || typeof window === "undefined" || typeof document === "undefined") return;
 
+    const unsubscribe = subscribeDocumentAttention(syncPlaybackEligibility);
+
     const handleInactiveFocus = () => {
       pauseForInactiveFocus();
-      pauseAllVideosForInactiveDocument();
     };
     const handleActiveFocus = () => syncPlaybackEligibility();
     const handleVisibilityChange = () => {
@@ -132,6 +140,7 @@ export const useActiveVideoPlaybackGuard = ({
     window.addEventListener("beforeunload", handleInactiveFocus);
 
     return () => {
+      unsubscribe();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       document.removeEventListener("freeze", handleInactiveFocus);
       document.removeEventListener("resume", handleActiveFocus);
@@ -142,6 +151,23 @@ export const useActiveVideoPlaybackGuard = ({
       window.removeEventListener("beforeunload", handleInactiveFocus);
     };
   }, [enabled, pauseForInactiveFocus, syncPlaybackEligibility]);
+
+  useEffect(() => {
+    void videoElementVersion;
+    const video = videoRef.current;
+    if (!enabled || !video) return;
+    const enforce = () => {
+      if (!canResumeFocusedVideoPlayback(visibleEnough)) pauseForInactiveFocus();
+    };
+    video.addEventListener("play", enforce);
+    video.addEventListener("playing", enforce);
+    video.addEventListener("timeupdate", enforce);
+    return () => {
+      video.removeEventListener("play", enforce);
+      video.removeEventListener("playing", enforce);
+      video.removeEventListener("timeupdate", enforce);
+    };
+  }, [enabled, pauseForInactiveFocus, videoElementVersion, videoRef, visibleEnough]);
 
   useEffect(() => {
     void videoElementVersion;

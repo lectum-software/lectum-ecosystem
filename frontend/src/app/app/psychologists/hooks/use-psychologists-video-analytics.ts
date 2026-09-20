@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect } from "react";
 import type { DirectoryPsychologistVideoWatchPayload } from "@/api/generator/types/directory";
-import { documentHasUserAttention } from "@/components/analytics/attention";
+import {
+  documentHasUserAttention,
+  subscribeDocumentAttention,
+} from "@/components/analytics/attention";
+import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import { resetVideoElementToStart } from "../modules/directory-url";
 import {
   clampNumber,
@@ -310,6 +314,13 @@ export const usePsychologistsVideoAnalytics = ({
     const handleFocus = () => syncAttentionBoundary();
     const handleBlur = () => syncAttentionBoundary({ flush: true });
     const handlePageHide = () => syncAttentionBoundary({ flush: true });
+    const unsubscribeAttention = subscribeDocumentAttention(() => {
+      // A feed mounted in background has no previous playback to resume.
+      // Honor its autoplay intent only after attention returns, never manual pause.
+      if (documentHasUserAttention() && !isVideoPaused && activeVideoSource) {
+        void playVideoWithActiveDocument(backgroundVideoRef.current);
+      }
+    });
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);
@@ -317,6 +328,7 @@ export const usePsychologistsVideoAnalytics = ({
     window.addEventListener("pagehide", handlePageHide);
 
     return () => {
+      unsubscribeAttention();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("blur", handleBlur);
@@ -328,6 +340,7 @@ export const usePsychologistsVideoAnalytics = ({
     ensureFeedVideoAnalyticsState,
     featuredPsychologistId,
     flushFeedVideoAnalytics,
+    isVideoPaused,
   ]);
 
   useEffect(() => {
@@ -426,8 +439,8 @@ export const usePsychologistsVideoAnalytics = ({
       return;
     }
 
-    void activeVideo.play().catch(() => {
-      setIsVideoPaused(true);
+    void playVideoWithActiveDocument(activeVideo).then((played) => {
+      if (!played && documentHasUserAttention()) setIsVideoPaused(true);
     });
   }, [
     activeVideoResetKey,

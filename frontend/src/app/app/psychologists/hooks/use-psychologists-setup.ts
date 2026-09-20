@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAccount } from "@/api/callers/account";
 import { useImportantActionTracking } from "@/api/callers/analytics";
 import { usePatient } from "@/api/callers/patient";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { useAppSelector } from "@/hooks/redux";
+import { subscribeVideoSoundPreference } from "@/lib/video-sound-preference";
 import {
   readPsychologistsFeedReturnSnapshot,
   shouldRestorePsychologistsFeedReturnSnapshot,
@@ -57,6 +58,7 @@ export const usePsychologistsSetup = () => {
   const [isSharing, setIsSharing] = useState(false);
 
   const [isVideoMuted, setIsVideoMuted] = useState(true);
+  useEffect(() => subscribeVideoSoundPreference((enabled) => setIsVideoMuted(!enabled)), []);
 
   const [isVideoPaused, setIsVideoPaused] = useState(false);
 
