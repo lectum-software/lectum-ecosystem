@@ -52,7 +52,7 @@ export const CommunityMediaUpgradeModal = ({ open, onClose }: CommunityMediaUpgr
 
         <div className="mt-6 grid gap-2 sm:grid-cols-[1fr_auto]">
           <Button asChild className="h-12 rounded-full font-black">
-            <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.plans} onClick={onClose}>
+            <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout} onClick={onClose}>
               Fazer upgrade
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>

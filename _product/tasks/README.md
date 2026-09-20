@@ -1,10 +1,10 @@
-Concluida em 20/09/2026: ajuste UX do upload de mídia em Comunidades para psicólogos gratuitos. O botão de upload permanece visível em cinza para psicólogos sem permissão, mas abre uma modal com o texto aprovado e CTA `Fazer upgrade` em criação/edição de post e respostas de comentário; psicólogos verificados mantêm o upload atual e pacientes não passam a ver o controle. Referências visuais consultadas: `_product/proto/Criar Nova Postagem - Psicólogo.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não ficou acessível como ferramenta direta neste ambiente. Sem backend, banco, env nova, package novo, mock ou mudança de contrato. ADR: `adrs/0522-modal-upgrade-upload-midia-comunidades.md`.
+Concluida em 20/09/2026: ajuste UX do upload de mídia em Comunidades para psicólogos gratuitos. O botão de upload permanece visível em cinza para psicólogos sem permissão, mas abre uma modal com o texto aprovado e CTA `Fazer upgrade` direto para o pagamento do plano profissional em criação/edição de post e respostas de comentário; psicólogos verificados mantêm o upload atual e pacientes não passam a ver o controle. Referências visuais consultadas: `_product/proto/Criar Nova Postagem - Psicólogo.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não ficou acessível como ferramenta direta neste ambiente. Sem backend, banco, env nova, package novo, mock ou mudança de contrato. ADR: `adrs/0522-modal-upgrade-upload-midia-comunidades.md`.
 
 Criterios de aceite do ajuste de upload de mídia bloqueado:
 
 - [x] Psicólogos gratuitos veem o botão de upload de mídia em cinza na criação de post e ao responder comentários.
 - [x] Clicar no botão bloqueado não abre seletor de arquivos e exibe modal com o título/texto aprovado.
-- [x] A modal oferece CTA primário `Fazer upgrade` apontando para o fluxo de assinatura.
+- [x] A modal oferece CTA primário `Fazer upgrade` apontando diretamente para o pagamento do plano profissional.
 - [x] Psicólogos verificados mantêm o upload de mídia existente em posts e respostas.
 - [x] Pacientes continuam sem acesso ao controle de upload de mídia.
 - [x] Nenhum mock, endpoint simulado, package novo, env nova, migration ou alteração backend foi usado.

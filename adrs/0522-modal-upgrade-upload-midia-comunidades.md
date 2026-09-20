@@ -18,7 +18,7 @@ Manter o controle de mídia visível em cinza para psicólogos sem permissão, p
 - Corpo: `Para publicar imagens ou vídeos em posts e respostas, é necessário ter o perfil profissional verificado.`
 - CTA primário: `Fazer upgrade`
 
-O CTA direciona para a rota de planos profissional (`PSYCHOLOGIST_ONBOARDING_PATHS.plans`). A regra continua sendo aplicada pelas permissões já existentes e pelo backend; a UI apenas substitui o feedback inline/toast por orientação explícita.
+O CTA direciona direto para o pagamento do plano profissional (`PSYCHOLOGIST_ONBOARDING_PATHS.checkout`), evitando uma etapa intermediária para quem já decidiu fazer upgrade. A regra continua sendo aplicada pelas permissões já existentes e pelo backend; a UI apenas substitui o feedback inline/toast por orientação explícita.
 
 ## Consequências
 
