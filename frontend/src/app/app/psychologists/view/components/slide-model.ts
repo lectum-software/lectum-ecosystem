@@ -20,12 +20,10 @@ export const buildPsychologistSlideView = ({
     currentUserId,
     favoriteOverrides,
     isUiHidden,
-    isVideoMuted,
     isVideoPaused,
     isVideoPlaybackFailed,
     metrics,
     videoProgress,
-    videoVolume,
   } = model.setup;
   const { favoritePendingId } = model.favorite;
 
@@ -96,7 +94,7 @@ export const buildPsychologistSlideView = ({
     isActiveSlide && slideShouldShowVideo && slideIsUiHidden && !slideUsesNativeVideoControls;
 
   const slideVideoAreaLabel =
-    isActiveSlide && slideShouldShowVideo && (isVideoMuted || videoVolume <= 0 || isVideoPaused)
+    isActiveSlide && slideShouldShowVideo && isVideoPaused
       ? `Ativar som e reproduzir vídeo de ${slideDisplayName}`
       : slideIsUiHidden
         ? `Mostrar interface de ${slideDisplayName}`
