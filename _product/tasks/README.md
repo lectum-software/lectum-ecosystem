@@ -360,6 +360,7 @@ ou cortesia manual.
 | 189 | [TASK-189 - Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md) | Completed | 186, 187 |
 | 190 | [TASK-190 - Validação isolada do serviço de vídeo de produção na porta 4000](TASK-190-video-producao-porta-4000.md) | Blocked | 189 |
 | 191 | [TASK-191 - Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md) | Completed | 189 |
+| 192 | [TASK-192 - Guarda de foco para reproducao de videos em stream](TASK-192-guarda-foco-playback-videos-stream.md) | Completed | 185 |
 
 ## Ordem operacional recomendada sem bloqueios
 

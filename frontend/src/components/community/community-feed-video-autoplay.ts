@@ -1,10 +1,12 @@
 "use client";
 
 import { type RefCallback, useCallback, useEffect, useId, useRef, useState } from "react";
+import { documentHasUserAttention } from "@/components/analytics/attention";
 import {
   isModalMediaSuspended,
   subscribeModalMediaSuspension,
 } from "@/hooks/use-modal-media-suspension";
+import { wasVideoPauseRequestedByFocusGuard } from "@/lib/video-playback";
 
 const COMMUNITY_FEED_VIDEO_SOUND_STORAGE_KEY = "lectum:community-feed-video-sound-enabled";
 const MIN_AUTOPLAY_INTERSECTION_RATIO = 0.58;
@@ -92,8 +94,11 @@ const applySoundPreferenceToVideo = (video: HTMLVideoElement) => {
   }
 };
 
+const isCommunityAutoplayContextActive = () =>
+  !isModalMediaSuspended() && documentHasUserAttention();
+
 const playAutoplayItem = async (item: FeedVideoAutoplayItem) => {
-  if (isModalMediaSuspended()) return;
+  if (!isCommunityAutoplayContextActive()) return;
 
   applySoundPreferenceToVideo(item.video);
 
@@ -145,7 +150,7 @@ const activateAutoplayItem = (nextId: string, options: { alreadyPlaying?: boolea
   const item = autoplayItems.get(nextId);
   if (!item) return;
 
-  if (isModalMediaSuspended()) {
+  if (!isCommunityAutoplayContextActive()) {
     pauseAllAutoplayItems();
     activeVideoId = null;
     return;
@@ -184,7 +189,7 @@ export const selectCommunityFeedAutoplayCandidate = (
 const runAutoplayEvaluation = () => {
   autoplayEvaluationFrame = null;
 
-  if (isModalMediaSuspended()) {
+  if (!isCommunityAutoplayContextActive()) {
     pauseAllAutoplayItems();
     activeVideoId = null;
     return;
@@ -283,15 +288,19 @@ const ensureVisibilityListener = () => {
     return;
   }
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
-      if (activeItem) pauseAutoplayItem(activeItem);
+  const pauseActiveWithoutAttention = () => {
+    if (documentHasUserAttention()) {
+      scheduleAutoplayEvaluation();
       return;
     }
 
-    scheduleAutoplayEvaluation();
-  });
+    const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
+    if (activeItem) pauseAutoplayItem(activeItem);
+  };
+
+  document.addEventListener("visibilitychange", pauseActiveWithoutAttention);
+  window.addEventListener("blur", pauseActiveWithoutAttention);
+  window.addEventListener("focus", () => scheduleAutoplayEvaluation());
 
   visibilityListenerAttached = true;
 };
@@ -385,7 +394,7 @@ const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoElement)
   }
 
   const handlePlay = () => {
-    if (isModalMediaSuspended()) {
+    if (!isCommunityAutoplayContextActive()) {
       item.pausedByUser = false;
       if (activeVideoId === id) activeVideoId = null;
       pauseAutoplayItem(item);
@@ -400,6 +409,11 @@ const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoElement)
     }
   };
   const handlePause = () => {
+    if (wasVideoPauseRequestedByFocusGuard(video)) {
+      item.suppressNextPause = false;
+      return;
+    }
+
     if (item.suppressNextPause) {
       item.suppressNextPause = false;
       return;
@@ -413,7 +427,7 @@ const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoElement)
     if (activeVideoId === id) item.pausedByUser = true;
   };
   const handleCanPlay = () => {
-    if (activeVideoId === id && !item.pausedByUser && !isModalMediaSuspended()) {
+    if (activeVideoId === id && !item.pausedByUser && isCommunityAutoplayContextActive()) {
       void playAutoplayItem(item);
     }
   };
