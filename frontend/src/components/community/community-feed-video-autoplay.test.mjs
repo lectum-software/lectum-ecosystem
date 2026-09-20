@@ -77,6 +77,10 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
     new URL("../../lib/video-playback.ts", import.meta.url),
     "utf8",
   );
+  const psychologistCardVideoSource = readFileSync(
+    new URL("../psychologists/psychologist-card-video.tsx", import.meta.url),
+    "utf8",
+  );
   const routeCardSource = readFileSync(
     new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
     "utf8",
@@ -123,13 +127,31 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.match(autoplaySource, /isCommunityAutoplayContextActive/);
   assert.match(autoplaySource, /documentHasUserAttention\(\)/);
   assert.match(autoplaySource, /window\.addEventListener\("blur", pauseActiveWithoutAttention\)/);
+  assert.match(
+    autoplaySource,
+    /window\.addEventListener\("pagehide", pauseActiveWithoutAttention\)/,
+  );
+  assert.match(
+    autoplaySource,
+    /document\.addEventListener\("freeze", pauseActiveWithoutAttention\)/,
+  );
+  assert.match(autoplaySource, /pauseAllVideosForInactiveDocument\(\)/);
+  assert.doesNotMatch(autoplaySource, /localStorage/);
+  assert.doesNotMatch(autoplaySource, /COMMUNITY_FEED_VIDEO_SOUND_STORAGE_KEY/);
+  assert.match(autoplaySource, /soundEnabledByUser: false/);
   assert.match(autoplaySource, /wasVideoPauseRequestedByFocusGuard\(video\)/);
   assert.match(
     videoPlaybackSource,
     /VIDEO_PAUSED_BY_FOCUS_GUARD_ATTRIBUTE = "data-lectum-paused-by-focus-guard"/,
   );
+  assert.match(videoPlaybackSource, /pauseAllVideosForInactiveDocument/);
+  assert.match(videoPlaybackSource, /playVideoWithActiveDocument/);
   assert.match(videoPlaybackSource, /document\.addEventListener\("visibilitychange"/);
   assert.match(videoPlaybackSource, /window\.addEventListener\("pagehide"/);
   assert.match(videoPlaybackSource, /new IntersectionObserver/);
   assert.match(videoPlaybackSource, /shouldResumeAfterFocusRef\.current = true/);
+  assert.match(psychologistCardVideoSource, /documentHasUserAttention\(\)/);
+  assert.match(psychologistCardVideoSource, /soundUnlockedForCurrentVideoRef/);
+  assert.match(psychologistCardVideoSource, /playVideoWithActiveDocument\(currentVideo\)/);
+  assert.doesNotMatch(psychologistCardVideoSource, /globalSoundEnabled/);
 });

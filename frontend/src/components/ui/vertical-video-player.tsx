@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
-import { useActiveVideoPlaybackGuard } from "@/lib/video-playback";
+import { playVideoWithActiveDocument, useActiveVideoPlaybackGuard } from "@/lib/video-playback";
 import {
   useInlineContentVideoExpansion,
   useMobileContentFullscreenStyles,
@@ -36,8 +36,7 @@ import {
 type BlobBackedVideoRequest = {
   controller: AbortController;
   promise: Promise<boolean>;
-  source: string;
-};
+} & { source: string };
 
 export const VerticalVideoPlayer = ({
   className,
@@ -251,7 +250,6 @@ export const VerticalVideoPlayer = ({
 
       pendingRequest?.controller.abort();
 
-      const source = effectiveSource;
       const controller = new AbortController();
       let request: BlobBackedVideoRequest | null = null;
 
@@ -265,10 +263,10 @@ export const VerticalVideoPlayer = ({
           request !== null &&
           blobBackedVideoRequestRef.current === request &&
           videoRef.current === video &&
-          latestSourceRef.current === source;
+          latestSourceRef.current === effectiveSource;
 
         try {
-          const blob = await fetchBoundedVideoBlob(source, controller.signal);
+          const blob = await fetchBoundedVideoBlob(effectiveSource, controller.signal);
           if (!blob || !isCurrentRequest()) return false;
 
           const objectUrl = URL.createObjectURL(blob);
@@ -283,7 +281,7 @@ export const VerticalVideoPlayer = ({
           }
 
           blobBackedVideoRef.current = {
-            source,
+            source: effectiveSource,
             url: objectUrl,
           };
 
@@ -312,7 +310,7 @@ export const VerticalVideoPlayer = ({
           }
 
           if (!wasPaused) {
-            void video.play().catch(() => undefined);
+            void playVideoWithActiveDocument(video);
           }
 
           return true;
@@ -326,7 +324,7 @@ export const VerticalVideoPlayer = ({
       request = {
         controller,
         promise,
-        source,
+        source: effectiveSource,
       };
       blobBackedVideoRequestRef.current = request;
 
@@ -490,7 +488,7 @@ export const VerticalVideoPlayer = ({
 
       if (wasPlayingBeforePersistentSeekRef.current) {
         wasPlayingBeforePersistentSeekRef.current = false;
-        void videoRef.current?.play().catch(() => undefined);
+        void playVideoWithActiveDocument(videoRef.current);
       }
     },
     [],

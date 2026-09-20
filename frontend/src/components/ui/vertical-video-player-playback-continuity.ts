@@ -1,6 +1,7 @@
 "use client";
 
 import { type RefObject, useCallback, useRef, useState } from "react";
+import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import { clampNumber } from "./vertical-video-player-support";
 
 type VideoPlaybackSnapshot = {
@@ -91,9 +92,8 @@ export const useVideoPlaybackContinuity = ({
         setIsPaused(snapshot.paused);
 
         if (!snapshot.paused) {
-          void video
-            .play()
-            .then(() => setIsPaused(false))
+          void playVideoWithActiveDocument(video)
+            .then((didPlay) => setIsPaused(!didPlay))
             .catch(() => setIsPaused(true));
         }
       };
