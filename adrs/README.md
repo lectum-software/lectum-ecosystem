@@ -553,3 +553,5 @@ Formato recomendado:
 - [ADR-0514 — Open Graph padrão e metadados privados padronizados](0514-open-graph-padrao-metadados-privados.md)
 - [ADR-0515 — Ícone central para ativar áudio em vídeos autoplay](0515-icone-volume-central-autoplay.md)
 - [ADR-0516 — Remocao do bloco legal em E-mail e senha](0516-remocao-bloco-legal-email-senha.md)
+- [ADR-0517 — Botao de seguir junto ao nome da comunidade no detalhe do post](0517-botao-seguir-junto-comunidade-post.md)
+- [ADR-0518 — Guarda de foco para playback de videos em stream](0518-guarda-foco-playback-videos-stream.md)

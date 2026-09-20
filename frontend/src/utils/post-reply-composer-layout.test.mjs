@@ -45,7 +45,7 @@ test("erro de upload de midia em resposta nao acusa conexao do usuario", () => {
   );
 });
 
-test("topo do detalhe do post mantem botao de seguir na mesma linha", () => {
+test("topo do detalhe do post mantem botao de seguir junto ao nome da comunidade", () => {
   const postContentSource = readSource(
     "../app/app/community/[slug]/post/[id]/components/post-content.tsx",
   );
@@ -56,8 +56,9 @@ test("topo do detalhe do post mantem botao de seguir na mesma linha", () => {
   );
   assert.match(
     postContentSource,
-    /<div className="flex min-w-0 flex-1 items-center gap-1\.5">\s*<Link\s*className="block min-w-0 flex-1 cursor-pointer truncate/s,
+    /<div className="flex min-w-0 flex-1 items-center gap-1\.5">\s*<Link\s*className="block min-w-0 max-w-full shrink truncate/s,
   );
   assert.match(postContentSource, /<CommunityFollowToggle\s*className="shrink-0"/);
+  assert.doesNotMatch(postContentSource, /className="block min-w-0 flex-1 cursor-pointer truncate/);
   assert.doesNotMatch(postContentSource, /flex-wrap items-center gap-x-1 gap-y-2/);
 });

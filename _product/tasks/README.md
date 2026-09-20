@@ -1,3 +1,12 @@
+Concluida em 18/09/2026: ajuste visual no detalhe do post para manter o botao `Seguir`/`Seguindo` junto ao nome da comunidade no cabecalho `Postado em`, em vez de alinhado a direita. A captura WhatsApp de 17/09/2026 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Dentro do Post.jpg` e no screenshot do usuario. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0517-botao-seguir-junto-comunidade-post.md`.
+
+Criterios de aceite do ajuste do botao seguir no detalhe do post:
+
+- [x] O botao `Seguir`/`Seguindo` aparece imediatamente junto ao nome da comunidade quando ha espaco.
+- [x] Nomes longos de comunidade continuam com ellipsis antes de deslocar controles da linha.
+- [x] O ajuste permanece frontend-only e compativel com backend atual.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
 Concluida em 17/09/2026: ajuste pontual em `E-mail e senha` remove o bloco `Termos e privacidade` da rota compartilhada de conta para pacientes e psicologos, preservando exclusao de conta, paginas publicas legais e governanca de aceite. Sem backend, banco, env, package novo, mock ou dados destrutivos. ADR: `adrs/0516-remocao-bloco-legal-email-senha.md`.
 
 Criterios de aceite do ajuste de `E-mail e senha`:
@@ -351,6 +360,7 @@ ou cortesia manual.
 | 189 | [TASK-189 - Observabilidade backend no GlitchTip](TASK-189-glitchtip-backend-operacional.md) | Completed | 186, 187 |
 | 190 | [TASK-190 - Validação isolada do serviço de vídeo de produção na porta 4000](TASK-190-video-producao-porta-4000.md) | Blocked | 189 |
 | 191 | [TASK-191 - Bootstrap seguro do primeiro administrador de produção](TASK-191-bootstrap-inicial-admin-producao.md) | Completed | 189 |
+| 192 | [TASK-192 - Guarda de foco para reproducao de videos em stream](TASK-192-guarda-foco-playback-videos-stream.md) | Completed | 185 |
 
 ## Ordem operacional recomendada sem bloqueios
 

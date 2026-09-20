@@ -3,7 +3,7 @@
 import { LoaderCircle, Pause, Play, VolumeX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAttachVideoSource, useVideoPlaybackSource } from "@/hooks/video-stream";
-import { playVideoWithSound } from "@/lib/video-playback";
+import { playVideoWithSound, useActiveVideoPlaybackGuard } from "@/lib/video-playback";
 
 import {
   globalSoundEnabled,
@@ -35,6 +35,7 @@ export const CardVideo = ({
     globalSoundEnabled ? "hidden" : "media",
   );
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
+  useActiveVideoPlaybackGuard({ enabled: focused, videoRef });
   const posterExtractionStarted = useRef(false);
   const userInitiatedPlayRef = useRef(false);
   const controlsAutoHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

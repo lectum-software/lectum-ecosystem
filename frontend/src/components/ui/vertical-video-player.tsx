@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
+import { useActiveVideoPlaybackGuard } from "@/lib/video-playback";
 import {
   useInlineContentVideoExpansion,
   useMobileContentFullscreenStyles,
@@ -116,6 +117,7 @@ export const VerticalVideoPlayer = ({
     });
 
   useMobileContentFullscreenStyles({ fullscreenVariant, videoRef });
+  useActiveVideoPlaybackGuard({ videoElementVersion, videoRef });
 
   const handleInlineContentExpansionRequest = useCallback(() => {
     capturePlaybackSnapshot();

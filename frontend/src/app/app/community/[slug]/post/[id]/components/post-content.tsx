@@ -189,7 +189,7 @@ export const PostHeader = ({
         <span className="shrink-0">Postado em</span>
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <Link
-            className="block min-w-0 flex-1 cursor-pointer truncate font-bold text-muted no-underline hover:text-muted hover:no-underline dark:text-muted dark:hover:text-muted"
+            className="block min-w-0 max-w-full shrink truncate font-bold text-muted no-underline hover:text-muted hover:no-underline dark:text-muted dark:hover:text-muted"
             href={`/comunidades/${post.community.slug}`}
           >
             {post.community.name}

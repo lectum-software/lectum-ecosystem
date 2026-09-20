@@ -73,6 +73,10 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
     new URL("../ui/vertical-video-player-immersive-controls.ts", import.meta.url),
     "utf8",
   );
+  const videoPlaybackSource = readFileSync(
+    new URL("../../lib/video-playback.ts", import.meta.url),
+    "utf8",
+  );
   const routeCardSource = readFileSync(
     new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
     "utf8",
@@ -116,5 +120,16 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.match(createPostSource, /useModalMediaSuspension\(asModalSlot\)/);
   assert.match(autoplaySource, /subscribeModalMediaSuspension/);
   assert.match(autoplaySource, /pauseAllAutoplayItems\(\)/);
-  assert.match(autoplaySource, /if \(isModalMediaSuspended\(\)\)/);
+  assert.match(autoplaySource, /isCommunityAutoplayContextActive/);
+  assert.match(autoplaySource, /documentHasUserAttention\(\)/);
+  assert.match(autoplaySource, /window\.addEventListener\("blur", pauseActiveWithoutAttention\)/);
+  assert.match(autoplaySource, /wasVideoPauseRequestedByFocusGuard\(video\)/);
+  assert.match(
+    videoPlaybackSource,
+    /VIDEO_PAUSED_BY_FOCUS_GUARD_ATTRIBUTE = "data-lectum-paused-by-focus-guard"/,
+  );
+  assert.match(videoPlaybackSource, /document\.addEventListener\("visibilitychange"/);
+  assert.match(videoPlaybackSource, /window\.addEventListener\("pagehide"/);
+  assert.match(videoPlaybackSource, /new IntersectionObserver/);
+  assert.match(videoPlaybackSource, /shouldResumeAfterFocusRef\.current = true/);
 });
