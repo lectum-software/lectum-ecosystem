@@ -1,16 +1,17 @@
 // Real-browser smoke, no fixtures or request interception. Supply an existing
 // playwright-core module path and a running Lectum origin with real public videos.
-// node scripts/video-focus-smoke.mjs <playwright-core-path> <origin>
+// node scripts/video-focus-smoke.mjs <playwright-core-path> <origin> <expected-version>
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
-const [modulePath, origin] = process.argv.slice(2);
-if (!modulePath || !origin) throw new Error("Supply playwright-core path and Lectum origin");
+const [modulePath, origin, expectedVersion] = process.argv.slice(2);
+if (!modulePath || !origin || !expectedVersion)
+  throw new Error("Supply module, origin and version");
 const { chromium } = createRequire(import.meta.url)(modulePath);
 const browser = await chromium.launch({
   channel: "chrome",
   headless: false,
-  args: ["--window-position=-1800,0"],
+  args: ["--window-position=0,0"],
 });
 try {
   const context = await browser.newContext({
@@ -19,9 +20,10 @@ try {
     hasTouch: true,
   });
   const page = await context.newPage();
+  const release = await (await context.request.get(`${origin}/version`)).json();
+  assert.equal(release.version, expectedVersion, "test the intended deployed artifact");
+  console.log(`Testing frontend ${release.version}`);
   const cdp = await context.newCDPSession(page);
-  // Playwright otherwise masks document.hasFocus in inactive tabs.
-  await cdp.send("Emulation.setFocusEmulationEnabled", { enabled: false });
   await page.goto(`${origin}/psicologos`, { waitUntil: "domcontentloaded", timeout: 240_000 });
   await page.bringToFront();
   const state = () =>
@@ -54,10 +56,8 @@ try {
   await area.click({ position: { x: 25, y: 180 } });
   await page.waitForTimeout(600);
   assert((await state()).videos.every((v) => v.muted));
-  await page
-    .getByRole("button", { name: /^Mostrar interface de/ })
-    .first()
-    .click({ position: { x: 25, y: 180 } });
+  const reveal = page.getByRole("button", { name: /^Mostrar interface do/ }).first();
+  if (await reveal.isVisible()) await reveal.click({ position: { x: 25, y: 180 } });
   await page.waitForTimeout(600);
   await page
     .getByRole("button", { name: /^Ativar som do/ })
@@ -74,8 +74,10 @@ try {
 
   const other = await context.newPage();
   const otherCdp = await context.newCDPSession(other);
-  await otherCdp.send("Emulation.setFocusEmulationEnabled", { enabled: false });
   await other.goto("about:blank");
+  // Disable automation focus emulation before testing actual lifecycle boundaries.
+  await otherCdp.send("Emulation.setFocusEmulationEnabled", { enabled: false });
+  await cdp.send("Emulation.setFocusEmulationEnabled", { enabled: false });
   await other.bringToFront();
   await page.waitForTimeout(1_000);
   const hidden = await state();
