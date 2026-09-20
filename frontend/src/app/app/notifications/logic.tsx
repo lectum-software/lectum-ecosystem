@@ -17,7 +17,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNotification } from "@/api/callers/notification";
 import type { notification as ApiNotification } from "@/api/generator/types";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -395,12 +395,21 @@ export const NotificationsLogic = () => {
 
     return Boolean(getToken());
   });
-  const { index, update, clean } = useNotification({ enabledIndex: hasAuthToken });
+  const hasMarkedNotificationsSeenRef = useRef(false);
+  const { index, update, clean, seen } = useNotification({ enabledIndex: hasAuthToken });
   const items = useMemo(
     () => index.data?.pages.flatMap((page) => page.data) ?? [],
     [index.data?.pages],
   );
   const groups = useMemo(() => groupNotifications(items), [items]);
+
+  useEffect(() => {
+    if (hasMarkedNotificationsSeenRef.current) return;
+    if (!hasAuthToken || index.isLoading || index.isError || seen.isPending) return;
+
+    hasMarkedNotificationsSeenRef.current = true;
+    seen.mutate();
+  }, [hasAuthToken, index.isError, index.isLoading, seen]);
 
   const renderItem = (item: NotificationItem) => {
     const view = getNotificationView(item.message_key, sessionRole);

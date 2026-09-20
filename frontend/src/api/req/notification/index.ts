@@ -49,6 +49,15 @@ export const clean = async () => {
   return handleReq<{ success: boolean }>(handle);
 };
 
+export const seen = async () => {
+  const handle = callEndpoint({
+    route: "/api/private/notification/seen",
+    method: "POST",
+  });
+
+  return handleReq<number>(handle);
+};
+
 export const preferences = async () => {
   const handle = callEndpoint({
     route: "/api/private/notification_preference/show",

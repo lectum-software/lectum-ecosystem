@@ -41,7 +41,14 @@ export const useNotification = ({
     },
   });
 
-  return { index, update, clean };
+  const seen = useMutation({
+    mutationFn: () => api.seen(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.notification.root() });
+    },
+  });
+
+  return { index, update, clean, seen };
 };
 
 export const useUnreadNotificationStatus = (enabled = true) => {

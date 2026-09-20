@@ -1,3 +1,12 @@
+Concluida em 20/09/2026: ajuste UX de notificacoes para separar indicador global de novidade do estado lida/nao lida. O backend adiciona `notifications.seen_at` nullable e `POST /api/private/notification/seen`; o badge do shell passa a considerar notificacoes ainda nao visualizadas, e a central marca as notificacoes como visualizadas ao abrir sem marcar os itens como lidos. Referencia visual consultada: `_product/proto/Notificações.jpg`; Builder/Quick Copy nao ficou acessivel como ferramenta direta neste ambiente. Sem env nova, package novo, mock, seed ou operacao destrutiva. ADR: `adrs/0521-indicador-notificacoes-visualizadas.md`.
+
+Criterios de aceite do ajuste do indicador de notificacoes:
+
+- [x] Abrir a central de notificacoes remove o indicador global de novidade do shell.
+- [x] Notificacoes visualizadas continuam podendo permanecer `read=false` e destacadas na lista ate clique ou marcar todas como lidas.
+- [x] Clicar em uma notificacao e marcar todas como lidas tambem preenchem a visualizacao quando aplicavel.
+- [x] A mudanca de banco e aditiva, nullable, sem backfill obrigatorio e compativel com dados existentes.
+- [x] Nenhum mock, dado fake permanente, package novo, env nova obrigatoria ou comando destrutivo foi usado.
 Concluida em 18/09/2026: ajuste visual no detalhe do post para manter o botao `Seguir`/`Seguindo` junto ao nome da comunidade no cabecalho `Postado em`, em vez de alinhado a direita. A captura WhatsApp de 17/09/2026 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Dentro do Post.jpg` e no screenshot do usuario. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0517-botao-seguir-junto-comunidade-post.md`.
 
 Criterios de aceite do ajuste do botao seguir no detalhe do post:

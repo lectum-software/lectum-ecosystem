@@ -50,6 +50,7 @@ import apiPrivateLegal from "@/modules/api/private/legal";
 import apiPrivateNotificationClean from "@/modules/api/private/notification/clean";
 import apiPrivateNotificationClick from "@/modules/api/private/notification/click";
 import apiPrivateNotificationIndex from "@/modules/api/private/notification/index";
+import apiPrivateNotificationSeen from "@/modules/api/private/notification/seen";
 import apiPrivateNotificationUpdate from "@/modules/api/private/notification/update";
 import apiPrivateNotificationPreferenceShow from "@/modules/api/private/notification_preference/show";
 import apiPrivateNotificationPreferenceUpdate from "@/modules/api/private/notification_preference/update";
@@ -307,6 +308,7 @@ mountRoleGuardedRoute(
 );
 mountRoute("/api/private/directory/psychologists", apiPrivateDirectoryPsychologists);
 mountRoute("/api/private/notification/clean", apiPrivateNotificationClean);
+mountRoute("/api/private/notification/seen", apiPrivateNotificationSeen);
 mountRoute("/api/private/notification", apiPrivateNotificationClick);
 mountRoute("/api/private/notification/index", apiPrivateNotificationIndex);
 mountRoute("/api/private/notification/update", apiPrivateNotificationUpdate);
