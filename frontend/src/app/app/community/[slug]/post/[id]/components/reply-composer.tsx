@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { CommunityMediaUpgradeModal } from "@/components/community/community-media-upgrade-modal";
 import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import {
   createReplyVideoThumbnail,
@@ -86,6 +87,7 @@ export const ReplyComposer = ({
   const [dragOffset, setDragOffset] = useState(0);
   const [draggingToCancel, setDraggingToCancel] = useState(false);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
+  const [mediaUpgradeModalOpen, setMediaUpgradeModalOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
   const [needsReadableFile, setNeedsReadableFile] = useState(false);
   const { beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
@@ -529,151 +531,162 @@ export const ReplyComposer = ({
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: wrapper handles focus and pointer state without using a native form element on iOS.
-    <div
-      className={cn(
-        "grid gap-2 border-border bg-surface p-3 dark:border-border dark:bg-surface",
-        draggingToCancel ? "transition-none" : "transition-transform duration-200 ease-out",
-        isInline
-          ? "mt-3 rounded-[20px] border shadow-none"
-          : cn(
-              "fixed inset-x-0 bottom-0 z-[80] rounded-t-[24px] border-t bg-surface shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
-              shouldUseKeyboardSafeArea
-                ? "pb-[var(--lectum-bottom-nav-padding)]"
-                : "pb-[var(--lectum-bottom-fixed-padding)]",
-            ),
-      )}
-      onBlur={(event) => {
-        const nextTarget = event.relatedTarget;
-        if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
-        if (mediaPickerActiveRef.current) return;
-        if (Date.now() - composerInternalPointerAtRef.current < 600) return;
-        updateComposerActive(false);
-        resetCancelDrag();
-      }}
-      onFocusCapture={(event) => {
-        const target = event.target;
-        if (target instanceof HTMLElement && target.closest("[data-reply-media-trigger='true']")) {
-          return;
-        }
-        composerActivatedAtRef.current = Date.now();
-        updateComposerActive(true);
-      }}
-      onMouseDownCapture={markComposerInternalPointer}
-      onPointerCancel={handleCancelPointerEnd}
-      onPointerDownCapture={markComposerInternalPointer}
-      onPointerDown={handleCancelPointerDown}
-      onPointerMove={handleCancelPointerMove}
-      onPointerUp={handleCancelPointerEnd}
-      onTouchStartCapture={markComposerInternalPointer}
-      ref={assignComposerFormRef}
-      style={composerStyle}
-    >
-      {/* O seletor permanece montado e com o FileList durante preview, envio e erro. */}
-      <input
-        accept={REPLY_MEDIA_ACCEPT}
-        className="hidden"
-        onChange={handleMediaChange}
-        ref={fileInputRef}
-        type="file"
+    <>
+      <CommunityMediaUpgradeModal
+        onClose={() => setMediaUpgradeModalOpen(false)}
+        open={mediaUpgradeModalOpen}
       />
-      {shouldShowGuidance ? (
-        <p className="rounded-[14px] bg-surface-muted px-3 py-2 text-xs font-semibold leading-5 text-muted dark:bg-surface-muted dark:text-muted">
-          {replyContextLabel}
-        </p>
-      ) : null}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper handles focus and pointer state without using a native form element on iOS. */}
+      <div
+        className={cn(
+          "grid gap-2 border-border bg-surface p-3 dark:border-border dark:bg-surface",
+          draggingToCancel ? "transition-none" : "transition-transform duration-200 ease-out",
+          isInline
+            ? "mt-3 rounded-[20px] border shadow-none"
+            : cn(
+                "fixed inset-x-0 bottom-0 z-[80] rounded-t-[24px] border-t bg-surface shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
+                shouldUseKeyboardSafeArea
+                  ? "pb-[var(--lectum-bottom-nav-padding)]"
+                  : "pb-[var(--lectum-bottom-fixed-padding)]",
+              ),
+        )}
+        onBlur={(event) => {
+          const nextTarget = event.relatedTarget;
+          if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
+          if (mediaPickerActiveRef.current) return;
+          if (Date.now() - composerInternalPointerAtRef.current < 600) return;
+          updateComposerActive(false);
+          resetCancelDrag();
+        }}
+        onFocusCapture={(event) => {
+          const target = event.target;
+          if (
+            target instanceof HTMLElement &&
+            target.closest("[data-reply-media-trigger='true']")
+          ) {
+            return;
+          }
+          composerActivatedAtRef.current = Date.now();
+          updateComposerActive(true);
+        }}
+        onMouseDownCapture={markComposerInternalPointer}
+        onPointerCancel={handleCancelPointerEnd}
+        onPointerDownCapture={markComposerInternalPointer}
+        onPointerDown={handleCancelPointerDown}
+        onPointerMove={handleCancelPointerMove}
+        onPointerUp={handleCancelPointerEnd}
+        onTouchStartCapture={markComposerInternalPointer}
+        ref={assignComposerFormRef}
+        style={composerStyle}
+      >
+        {/* O seletor permanece montado e com o FileList durante preview, envio e erro. */}
+        <input
+          accept={REPLY_MEDIA_ACCEPT}
+          className="hidden"
+          onChange={handleMediaChange}
+          ref={fileInputRef}
+          type="file"
+        />
+        {shouldShowGuidance ? (
+          <p className="rounded-[14px] bg-surface-muted px-3 py-2 text-xs font-semibold leading-5 text-muted dark:bg-surface-muted dark:text-muted">
+            {replyContextLabel}
+          </p>
+        ) : null}
 
-      <div className="flex items-end gap-2">
-        <div className="relative grid min-w-0 flex-1 rounded-[24px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
-          {shouldShowMediaTriggerInField ? (
-            <ReplyMediaAttachmentControl
-              className="absolute top-1/2 left-1 z-10 -translate-y-1/2"
-              composerMode="trigger"
-              renderInput={false}
-              disabled={disabled || hook.formState.isSubmitting}
-              fileInputRef={fileInputRef}
-              isUploading={disabled && Boolean(selectedMedia)}
-              mediaPermission={mediaPermission}
-              onMediaChange={handleMediaChange}
-              onOpenDialog={beginMediaPickerInteraction}
-              onRemoveSelected={clearSelectedMedia}
-              selectedMedia={selectedMedia}
-            />
-          ) : null}
-          <FieldComponent control={hook.control} {...composerContentField} />
-          {selectedMedia ? (
-            <ReplyMediaAttachmentControl
-              className="px-3.5 pb-3 pt-0"
-              composerMode="preview"
-              renderInput={false}
-              disabled={disabled || hook.formState.isSubmitting}
-              fileInputRef={fileInputRef}
-              isUploading={disabled && Boolean(selectedMedia)}
-              mediaPermission={mediaPermission}
-              onAfterAction={() => updateComposerActive(true)}
-              onMediaChange={handleMediaChange}
-              onOpenDialog={beginMediaPickerInteraction}
-              onRemoveSelected={clearSelectedMedia}
-              selectedMedia={selectedMedia}
-            />
-          ) : null}
+        <div className="flex items-end gap-2">
+          <div className="relative grid min-w-0 flex-1 rounded-[24px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
+            {shouldShowMediaTriggerInField ? (
+              <ReplyMediaAttachmentControl
+                className="absolute top-1/2 left-1 z-10 -translate-y-1/2"
+                composerMode="trigger"
+                renderInput={false}
+                disabled={disabled || hook.formState.isSubmitting}
+                fileInputRef={fileInputRef}
+                isUploading={disabled && Boolean(selectedMedia)}
+                mediaPermission={mediaPermission}
+                onMediaChange={handleMediaChange}
+                onOpenDialog={beginMediaPickerInteraction}
+                onPermissionDenied={() => setMediaUpgradeModalOpen(true)}
+                onRemoveSelected={clearSelectedMedia}
+                selectedMedia={selectedMedia}
+              />
+            ) : null}
+            <FieldComponent control={hook.control} {...composerContentField} />
+            {selectedMedia ? (
+              <ReplyMediaAttachmentControl
+                className="px-3.5 pb-3 pt-0"
+                composerMode="preview"
+                renderInput={false}
+                disabled={disabled || hook.formState.isSubmitting}
+                fileInputRef={fileInputRef}
+                isUploading={disabled && Boolean(selectedMedia)}
+                mediaPermission={mediaPermission}
+                onAfterAction={() => updateComposerActive(true)}
+                onMediaChange={handleMediaChange}
+                onOpenDialog={beginMediaPickerInteraction}
+                onPermissionDenied={() => setMediaUpgradeModalOpen(true)}
+                onRemoveSelected={clearSelectedMedia}
+                selectedMedia={selectedMedia}
+              />
+            ) : null}
+          </div>
+          <Button
+            aria-label="Enviar resposta"
+            className="h-11 w-11 shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-lectum-soft hover:bg-primary-hover disabled:bg-surface-muted disabled:text-subtle disabled:opacity-100 disabled:shadow-none"
+            disabled={
+              disabled ||
+              hook.formState.isSubmitting ||
+              isPreparingVideo ||
+              !ready ||
+              needsReadableFile
+            }
+            onClick={submitComposer}
+            type="button"
+          >
+            {disabled && ready ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Send className="h-4 w-4" aria-hidden="true" />
+            )}
+          </Button>
         </div>
-        <Button
-          aria-label="Enviar resposta"
-          className="h-11 w-11 shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-lectum-soft hover:bg-primary-hover disabled:bg-surface-muted disabled:text-subtle disabled:opacity-100 disabled:shadow-none"
-          disabled={
-            disabled ||
-            hook.formState.isSubmitting ||
-            isPreparingVideo ||
-            !ready ||
-            needsReadableFile
-          }
-          onClick={submitComposer}
-          type="button"
-        >
-          {disabled && ready ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Send className="h-4 w-4" aria-hidden="true" />
-          )}
-        </Button>
+
+        <p className={cn("text-[11px] font-medium leading-4 text-subtle", "pr-[3.25rem]")}>
+          {COMMENT_GUIDANCE_MESSAGE}
+        </p>
+
+        {mediaProgress ? (
+          <CommunityVideoUploadProgress
+            onCancel={() => {
+              if (preparingVideoRef.current) clearSelectedMedia();
+              else cancelActiveVideoUpload();
+            }}
+            progress={mediaProgress}
+          />
+        ) : null}
+
+        {visibleError ? (
+          <InlineAlert title="Não foi possível responder" variant="error">
+            {visibleError}
+          </InlineAlert>
+        ) : null}
+        {needsReadableFile ? (
+          <VideoFileReadRecovery
+            disabled={disabled || hook.formState.isSubmitting || !mediaPermission.canAttach}
+            fileInputRef={fileInputRef}
+            onDiscard={
+              !selectedMedia
+                ? () => {
+                    clearSelectedMedia();
+                    hook.clearErrors("content");
+                  }
+                : undefined
+            }
+            onOpenDialog={beginMediaPickerInteraction}
+          />
+        ) : null}
       </div>
-
-      <p className={cn("text-[11px] font-medium leading-4 text-subtle", "pr-[3.25rem]")}>
-        {COMMENT_GUIDANCE_MESSAGE}
-      </p>
-
-      {mediaProgress ? (
-        <CommunityVideoUploadProgress
-          onCancel={() => {
-            if (preparingVideoRef.current) clearSelectedMedia();
-            else cancelActiveVideoUpload();
-          }}
-          progress={mediaProgress}
-        />
-      ) : null}
-
-      {visibleError ? (
-        <InlineAlert title="Não foi possível responder" variant="error">
-          {visibleError}
-        </InlineAlert>
-      ) : null}
-      {needsReadableFile ? (
-        <VideoFileReadRecovery
-          disabled={disabled || hook.formState.isSubmitting || !mediaPermission.canAttach}
-          fileInputRef={fileInputRef}
-          onDiscard={
-            !selectedMedia
-              ? () => {
-                  clearSelectedMedia();
-                  hook.clearErrors("content");
-                }
-              : undefined
-          }
-          onOpenDialog={beginMediaPickerInteraction}
-        />
-      ) : null}
-    </div>
+    </>
   );
 };
 

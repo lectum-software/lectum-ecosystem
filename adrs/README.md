@@ -559,3 +559,4 @@ Formato recomendado:
 
 - [ADR-0520 — Audio explicito persistido e suspensao de background](0520-audio-explicito-suspensao-background.md)
 - [ADR-0521 — Indicador de notificacoes visualizadas na abertura da central](0521-indicador-notificacoes-visualizadas.md)
+- [ADR-0522 — Modal de upgrade para upload de mídia nas comunidades](0522-modal-upgrade-upload-midia-comunidades.md)
