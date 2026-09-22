@@ -1,3 +1,12 @@
+Correcao operacional em 22/09/2026: ajuste do refresh por navegacao ativa no feed de Comunidades. Ao tocar no item ativo `Inicio`, a Lectum agora retorna a viewport ao topo e so depois emite o refresh; se ja estiver no topo, recarrega sem rolagem extra. Pull-to-refresh permanece inalterado. O video anexado de 22/09/2026 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Feed Comunidade.jpg`. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0523-navegacao-ativa-topo-antes-refresh.md`.
+
+Criterios de aceite do ajuste de navegacao ativa no feed:
+
+- [x] Tocar no item ativo `Inicio` com a tela rolada volta ao topo antes de recarregar.
+- [x] Tocar no item ativo ja no topo recarrega sem rolagem extra.
+- [x] Pull-to-refresh segue imediato e sem alteracao visual.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
 Concluida em 20/09/2026: ajuste UX do upload de mídia em Comunidades para psicólogos gratuitos. O botão de upload permanece visível em cinza para psicólogos sem permissão, mas abre uma modal com o texto aprovado e CTA `Fazer upgrade` direto para o pagamento do plano profissional em criação/edição de post e respostas de comentário; psicólogos verificados mantêm o upload atual e pacientes não passam a ver o controle. Referências visuais consultadas: `_product/proto/Criar Nova Postagem - Psicólogo.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não ficou acessível como ferramenta direta neste ambiente. Sem backend, banco, env nova, package novo, mock ou mudança de contrato. ADR: `adrs/0522-modal-upgrade-upload-midia-comunidades.md`.
 
 Criterios de aceite do ajuste de upload de mídia bloqueado:

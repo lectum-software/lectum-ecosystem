@@ -19,7 +19,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
 import * as userActions from "@/store/modules/user/actions";
-import { requestLectumAppRefresh } from "@/utils/app-refresh";
+import { requestLectumAppRefreshAfterReturningToTop } from "@/utils/app-refresh";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
 import { getPsychologistPaidOnboardingRequirementPath } from "@/utils/psychologist-onboarding";
 
@@ -239,7 +239,7 @@ export const PrivateTemplate = ({
     if (!isActive) return;
 
     event.preventDefault();
-    requestLectumAppRefresh("navigation");
+    void requestLectumAppRefreshAfterReturningToTop("navigation");
   };
 
   const bottomNavigationMarkup = shouldRenderMobileNavigation ? (
