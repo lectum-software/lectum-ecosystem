@@ -26,7 +26,6 @@ import {
   isMercadoPagoSubscription,
   isPaymentEvent,
   PAYMENT_GATEWAY_FALLBACK,
-  PREVIOUS_SUBSCRIPTION_RESTORE_WINDOW_MS,
   toPaymentMethodBrandLabel,
   uniqueStrings,
   valueContainsReference,
@@ -380,7 +379,6 @@ export class AdminPsychologistBillingRepository {
           id: subscription.id,
         },
         select: {
-          createdAt: true,
           grant_notes: true,
           id: true,
           psychologist_id: true,
@@ -401,58 +399,6 @@ export class AdminPsychologistBillingRepository {
         });
       }
 
-      const restoreWindowStart = new Date(
-        grant.createdAt.getTime() - PREVIOUS_SUBSCRIPTION_RESTORE_WINDOW_MS,
-      );
-      const restoreWindowEnd = new Date(
-        grant.createdAt.getTime() + PREVIOUS_SUBSCRIPTION_RESTORE_WINDOW_MS,
-      );
-      const previousSubscriptionWhere = {
-        deleted: false,
-        gateway: null,
-        gateway_subscription_id: null,
-        id: {
-          not: grant.id,
-        },
-        plan: {
-          active: true,
-          deleted: false,
-        },
-        psychologist_id: grant.psychologist_id,
-        source: {
-          not: ADMIN_GRANT_SOURCE,
-        },
-        status: "cancelada",
-      } satisfies Prisma.professional_subscriptionWhereInput;
-      const previousSubscriptionOrderBy = [
-        {
-          createdAt: "desc" as const,
-        },
-        {
-          updatedAt: "desc" as const,
-        },
-      ];
-      const previousSubscription =
-        (await tx.professional_subscription.findFirst({
-          where: {
-            ...previousSubscriptionWhere,
-            updatedAt: {
-              gte: restoreWindowStart,
-              lte: restoreWindowEnd,
-            },
-          },
-          orderBy: previousSubscriptionOrderBy,
-        })) ??
-        (await tx.professional_subscription.findFirst({
-          where: {
-            ...previousSubscriptionWhere,
-            createdAt: {
-              lt: grant.createdAt,
-            },
-          },
-          orderBy: previousSubscriptionOrderBy,
-        }));
-
       const revokedGrant = await tx.professional_subscription.update({
         where: {
           id: grant.id,
@@ -464,16 +410,11 @@ export class AdminPsychologistBillingRepository {
         },
       });
 
-      if (previousSubscription) {
-        await tx.professional_subscription.update({
-          where: {
-            id: previousSubscription.id,
-          },
-          data: {
-            status: "ativa",
-          },
-        });
-      }
+      await restoreFreePlanAfterProfessionalCancellation({
+        cancelledSubscriptionId: grant.id,
+        psychologistId: grant.psychologist_id,
+        tx,
+      });
 
       return revokedGrant;
     });

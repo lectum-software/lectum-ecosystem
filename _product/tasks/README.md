@@ -392,6 +392,7 @@ ou cortesia manual.
 | 192 | [TASK-192 - Guarda de foco para reproducao de videos em stream](TASK-192-guarda-foco-playback-videos-stream.md) | Completed | 185 |
 | 193 | [TASK-193 - Hotfix de foco e audio no autoplay de videos](TASK-193-hotfix-playback-foco-audio-autoplay.md) | Completed | 192 |
 | 194 | [TASK-194 - Audio explicito persistido e suspensao de background](TASK-194-audio-explicito-suspensao-background.md) | Completed | 193 |
+| 195 | [TASK-195 - Normalizacao de catalogos no downgrade para gratuito](TASK-195-normalizacao-downgrade-gratuito.md) | Completed | 31, 31A, 31B, 32, 33 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -2322,3 +2323,12 @@ fluxos de aceite persistido.
   - [x] Controles existentes de play/pause/progresso/fullscreen/volume permanecem sem alteração.
   - [x] A prévia social mantém o controle próprio no canto inferior direito.
   - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, versionamento e smoke local executados antes da promoção.
+
+## [TASK-195 - Normalizacao de catalogos no downgrade para gratuito](TASK-195-normalizacao-downgrade-gratuito.md)
+
+- Pedido do usuario: ao fazer downgrade de Plano Profissional/cortesia para Gratuito, o perfil deve cair imediatamente para os limites do gratuito.
+- Decisao aplicada no backend: restauracao/criacao de assinatura gratuita normaliza os catalogos por soft-delete dos excedentes, preservando 3 especialidades, 1 servico e 1 abordagem pela ordem publica do catalogo.
+- Caminhos cobertos: cancelamento Mercado Pago, downgrade por inadimplencia, revogacao de cortesia sem outro entitlement profissional ativo e selecao/criacao de plano gratuito.
+- Sem schema/migration, env obrigatoria, package novo, mock, seed, reset, exclusao fisica ou limpeza de bucket. Rollback simples reverte o codigo; itens ja soft-deletados durante a versao nao sao reativados automaticamente.
+- Criterios de aceite: todos marcados em TASK-195-normalizacao-downgrade-gratuito.md.
+- ADR: `adrs/0524-normalizacao-catalogos-downgrade-gratuito.md`.

@@ -4,6 +4,7 @@ import type {
   psychologist_profile,
   subscription_plan,
 } from "@/interfaces/objects";
+import { normalizeFreePlanProfileCatalogLimits } from "@/modules/billing/free-subscription";
 import {
   activeFreeSubscriptionWhere,
   activeProfessionalEntitlementWhere,
@@ -110,7 +111,7 @@ export class SelectFreeRepository implements ISelectFreeRepository {
         },
       });
 
-      return tx.professional_subscription.create({
+      const created = await tx.professional_subscription.create({
         data: {
           psychologist_id: psychologistId,
           plan_id: planId,
@@ -128,6 +129,13 @@ export class SelectFreeRepository implements ISelectFreeRepository {
           plan: true,
         },
       });
+
+      await normalizeFreePlanProfileCatalogLimits({
+        psychologistId,
+        tx,
+      });
+
+      return created;
     });
   }
 }

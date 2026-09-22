@@ -561,3 +561,4 @@ Formato recomendado:
 - [ADR-0521 — Indicador de notificacoes visualizadas na abertura da central](0521-indicador-notificacoes-visualizadas.md)
 - [ADR-0522 — Modal de upgrade para upload de mídia nas comunidades](0522-modal-upgrade-upload-midia-comunidades.md)
 - [ADR-0523 — Navegacao ativa retorna ao topo antes do refresh](0523-navegacao-ativa-topo-antes-refresh.md)
+- [ADR-0524 — Normalizacao imediata de catalogos no downgrade para gratuito](0524-normalizacao-catalogos-downgrade-gratuito.md)
