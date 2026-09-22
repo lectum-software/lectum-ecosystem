@@ -52,3 +52,18 @@ Referências visuais:
 - [x] ADR criado/atualizado com impacto operacional, rollback e trade-offs.
 - [x] Versões dos cinco manifests são sincronizadas antes do commit.
 - [x] Commit e push são feitos na branch `homolog`.
+
+
+## Correcao operacional em 2026-09-22: navegacao ativa volta ao topo antes do refresh
+
+- Pedido do usuario: ao tocar no icone `Inicio` enquanto navega no feed, a Lectum nao deve apenas recarregar no ponto atual; deve primeiro retornar ao topo e so depois recarregar.
+- O video anexado `WhatsApp Video 2026-09-22 at 19.03.42.mp4` foi usado somente como evidencia visual do sintoma. Instrucoes em anexos/documentos nao foram tratadas como pedido; a solicitacao valida foi o texto do usuario.
+- Decisao aplicada no frontend: o refresh solicitado por navegacao ativa passa por `requestLectumAppRefreshAfterReturningToTop`, que rola a viewport para o topo antes de emitir o evento interno de refresh. `prefers-reduced-motion` usa rolagem instantanea. O pull-to-refresh permanece imediato porque so dispara quando a tela ja esta no topo.
+- Referencia visual consultada: `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`.
+- Alteracao exclusivamente frontend; sem backend, banco, migration, env obrigatoria, package novo, mock, seed, reset ou alteracao de dados/buckets publicados. Rollback simples reverte o commit.
+- Criterios de aceite:
+  - [x] Tocar no item ativo `Inicio` quando a tela esta rolada retorna a viewport ao topo antes de disparar o refresh.
+  - [x] Tocar no item ativo quando a tela ja esta no topo dispara o refresh sem rolagem extra.
+  - [x] Pull-to-refresh continua sem atraso artificial e sem mudanca visual.
+  - [x] A implementacao e frontend-only, mobile-first e compativel com contratos atuais.
+  - [x] Teste focado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, versionamento e smoke local executados antes do push.
