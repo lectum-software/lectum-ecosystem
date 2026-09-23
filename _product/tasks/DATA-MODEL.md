@@ -294,6 +294,8 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `specialty_id` / `service_id` / `approach_id` | `String` | FK catálogo |
 | `@@unique([psychologist_id, <catalog>_id])`, `@@index([<catalog>_id])` | | Plano Gratuito limita a 3 especialidades (PRD §13) — validar no service |
 
+Complemento TASK-195 (2026-09-22): quando uma assinatura profissional paga ou cortesia administrativa cai para o Plano Gratuito, o backend deve normalizar imediatamente estes joins por soft-delete dos excedentes, preservando no maximo 3 especialidades, 1 servico e 1 abordagem pela ordem publica do catalogo (`position`, `name`, desempates tecnicos). Nao ha reativacao automatica de itens premium ocultos em upgrade futuro; o psicologo pode selecionar novamente depois.
+
 ### Verificação profissional (depende de integrações externas)
 
 `professional_document` (upload de CRP, TASK-11; **bloqueio storage TASK-03**):

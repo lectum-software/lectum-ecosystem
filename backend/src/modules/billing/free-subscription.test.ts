@@ -14,7 +14,15 @@ type DelegateArgs = {
   data?: Record<string, unknown>;
   include?: unknown;
   orderBy?: unknown;
+  select?: unknown;
   where?: Record<string, unknown>;
+};
+
+type RelationRecord = {
+  deleted: boolean;
+  deletedAt?: Date | null;
+  id: string;
+  psychologist_id: string;
 };
 
 const baseDate = new Date("2026-08-15T12:00:00.000Z");
@@ -56,6 +64,13 @@ const subscription = ({
   source,
   status,
   updatedAt: baseDate,
+});
+
+const relation = (id: string, psychologistId = "psy-1"): RelationRecord => ({
+  deleted: false,
+  deletedAt: null,
+  id,
+  psychologist_id: psychologistId,
 });
 
 const planSlugMatches = (planSlug: string, requirement: unknown) => {
@@ -109,17 +124,54 @@ const sortByUpdatedAndCreatedDesc = (items: SubscriptionRecord[]) =>
   });
 
 const makeClient = ({
+  approaches = [],
   plans = [plan("gratuito"), plan("profissional")],
+  services = [],
+  specialties = [],
   subscriptions = [],
 }: {
+  approaches?: RelationRecord[];
   plans?: subscription_plan[];
+  services?: RelationRecord[];
+  specialties?: RelationRecord[];
   subscriptions?: SubscriptionRecord[];
 } = {}) => {
   const state = {
+    approaches,
     createdCount: 0,
     plans,
+    services,
+    specialties,
     subscriptions,
   };
+
+  const relationDelegate = (key: "approaches" | "services" | "specialties") => ({
+    findMany: async ({ where }: DelegateArgs) =>
+      state[key]
+        .filter((item) => !item.deleted)
+        .filter(
+          (item) =>
+            typeof where?.psychologist_id !== "string" ||
+            item.psychologist_id === where.psychologist_id,
+        )
+        .map(({ id }) => ({ id })),
+    updateMany: async ({ data, where }: DelegateArgs) => {
+      const ids = isRecord(where?.id) && Array.isArray(where.id.in) ? where.id.in : [];
+      let count = 0;
+
+      state[key] = state[key].map((item) => {
+        if (!ids.includes(item.id) || item.deleted) return item;
+        count += 1;
+        return {
+          ...item,
+          deleted: Boolean(data?.deleted),
+          deletedAt: data?.deletedAt instanceof Date ? data.deletedAt : null,
+        };
+      });
+
+      return { count };
+    },
+  });
 
   const client = {
     professional_subscription: {
@@ -171,6 +223,9 @@ const makeClient = ({
             (where?.deleted !== false || !item.deleted),
         ) ?? null,
     },
+    psychologist_approach: relationDelegate("approaches"),
+    psychologist_service: relationDelegate("services"),
+    psychologist_specialty: relationDelegate("specialties"),
   } as unknown as BillingFreeSubscriptionClient;
 
   return {
@@ -212,6 +267,58 @@ test("restoreFreePlanAfterProfessionalCancellation reativa plano gratuito anteri
   assert.equal(state.createdCount, 0);
 });
 
+test("restoreFreePlanAfterProfessionalCancellation normaliza catalogos excedentes do gratuito", async () => {
+  const freePlan = plan("gratuito");
+  const professionalPlan = plan("profissional");
+  const previousFree = subscription({
+    id: "free-previous",
+    plan: freePlan,
+    source: "free_signup",
+    status: "cancelada",
+  });
+  const cancelledProfessional = subscription({
+    id: "paid-cancelled",
+    plan: professionalPlan,
+    source: "mercadopago",
+    status: "cancelada",
+  });
+  const { client, state } = makeClient({
+    approaches: [relation("approach-1"), relation("approach-2")],
+    plans: [freePlan, professionalPlan],
+    services: [relation("service-1"), relation("service-2"), relation("service-3")],
+    specialties: [
+      relation("specialty-1"),
+      relation("specialty-2"),
+      relation("specialty-3"),
+      relation("specialty-4"),
+      relation("specialty-5"),
+    ],
+    subscriptions: [previousFree, cancelledProfessional],
+  });
+
+  await restoreFreePlanAfterProfessionalCancellation({
+    cancelledSubscriptionId: cancelledProfessional.id,
+    psychologistId: "psy-1",
+    tx: client,
+  });
+
+  assert.deepEqual(
+    state.specialties.filter((item) => !item.deleted).map((item) => item.id),
+    ["specialty-1", "specialty-2", "specialty-3"],
+  );
+  assert.deepEqual(
+    state.services.filter((item) => !item.deleted).map((item) => item.id),
+    ["service-1"],
+  );
+  assert.deepEqual(
+    state.approaches.filter((item) => !item.deleted).map((item) => item.id),
+    ["approach-1"],
+  );
+  assert.ok(state.specialties.find((item) => item.id === "specialty-4")?.deletedAt);
+  assert.ok(state.services.find((item) => item.id === "service-2")?.deletedAt);
+  assert.ok(state.approaches.find((item) => item.id === "approach-2")?.deletedAt);
+});
+
 test("restoreFreePlanAfterProfessionalCancellation cria plano gratuito quando nao havia anterior", async () => {
   const professionalPlan = plan("profissional");
   const cancelledProfessional = subscription({
@@ -251,6 +358,12 @@ test("restoreFreePlanAfterProfessionalCancellation preserva cortesia ativa ao ca
     status: "cancelada",
   });
   const { client, state } = makeClient({
+    specialties: [
+      relation("specialty-1"),
+      relation("specialty-2"),
+      relation("specialty-3"),
+      relation("specialty-4"),
+    ],
     subscriptions: [activeCourtesy, cancelledScheduledCharge],
   });
 
@@ -263,6 +376,7 @@ test("restoreFreePlanAfterProfessionalCancellation preserva cortesia ativa ao ca
   assert.equal(current?.id, activeCourtesy.id);
   assert.equal(current?.source, "admin_grant");
   assert.equal(state.createdCount, 0);
+  assert.equal(state.specialties.filter((item) => !item.deleted).length, 4);
 });
 
 test("restoreFreePlanAfterProfessionalCancellation reutiliza gratuito ativo sem duplicar", async () => {

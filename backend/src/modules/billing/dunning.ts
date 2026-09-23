@@ -2,6 +2,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import { resolve as translate } from "@/helpers/translate/resolve";
 import type { professional_subscription } from "@/interfaces/objects";
 import { isChannelAllowed } from "@/main/notification/preferences";
+import { restoreFreePlanAfterProfessionalCancellation } from "@/modules/billing/free-subscription";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 export const BILLING_DUNNING_MESSAGE_KEY = "billing_subscription_status";
@@ -35,6 +36,7 @@ type BillingDunningSubscription = Pick<
   | "billing_last_notice_key"
   | "current_period_end"
   | "id"
+  | "psychologist_id"
   | "source"
   | "status"
 >;
@@ -445,6 +447,16 @@ export const processBillingDunningQueue = async (now = new Date(), batchSize = 5
     });
 
     if (claimed.count === 0) continue;
+
+    if (stage === "downgraded" && subscription.psychologist_id) {
+      await prisma.$transaction(async (tx) => {
+        await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: subscription.id,
+          psychologistId: subscription.psychologist_id,
+          tx,
+        });
+      });
+    }
 
     processed++;
     await sendBillingDunningNotice({ stage, subscriptionId: subscription.id });
