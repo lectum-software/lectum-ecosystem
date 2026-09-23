@@ -9,6 +9,8 @@ import "../../../../../../scripts/register-source-modules.mjs";
 
 const profileForm = await import("./use-form.tsx");
 const { freeProfileSchema, getDefaultValues, toWhatsappPhoneE164 } = profileForm;
+const profileSupport = await import("./modules/profile-setup-support.ts");
+const { normalizeCatalogSelectionForPlanLimit } = profileSupport;
 
 const localForm = (values = {}) =>
   createFormControl({
@@ -204,4 +206,27 @@ test("campos de filtros do perfil abrem selecao em modal com busca e conclusao e
   assert.match(profileView, /valueKey="name"/u);
   assert.doesNotMatch(profileView, /limit=\{1\}/u);
   assert.doesNotMatch(profileView, /renderField\("language"\)/u);
+});
+
+test("selecoes de catalogo acima do limite usam normalizacao do backend apos downgrade", () => {
+  assert.deepEqual(
+    normalizeCatalogSelectionForPlanLimit({
+      current: ["a", "b", "c", "d"],
+      limit: 3,
+      server: ["b", "c", "d"],
+    }),
+    ["b", "c", "d"],
+  );
+  assert.deepEqual(
+    normalizeCatalogSelectionForPlanLimit({
+      current: ["a", "b", "c", "d"],
+      limit: 3,
+      server: ["a", "b", "c", "d"],
+    }),
+    ["a", "b", "c"],
+  );
+  assert.deepEqual(
+    normalizeCatalogSelectionForPlanLimit({ current: ["a", "b"], limit: 3, server: ["a"] }),
+    ["a", "b"],
+  );
 });

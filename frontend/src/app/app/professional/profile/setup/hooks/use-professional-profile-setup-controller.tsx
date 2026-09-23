@@ -46,6 +46,7 @@ import {
   toWhatsappPhoneE164,
   useFreeProfileForm,
 } from "../use-form";
+import { useCatalogPlanLimitNormalization } from "./use-catalog-plan-limit-normalization";
 import { useProfileVideoUpload } from "./use-profile-video-upload";
 export const useProfessionalProfileSetupController = () => {
   const router = useRouter();
@@ -291,6 +292,15 @@ export const useProfessionalProfileSetupController = () => {
     /^\+/,
     "https://wa.me/",
   );
+
+  useCatalogPlanLimitNormalization({
+    profile: profile.data,
+    selectedApproaches,
+    selectedServices,
+    selectedSpecialties,
+    setValue: form.hook.setValue,
+  });
+
   useEffect(() => {
     if (!addressState || !addressCity) return;
     if (!baseCityOptions.some((item) => item.value === addressCity)) {

@@ -187,6 +187,23 @@ export const createOrderedSpecialtyGroups = (profile?: FreeProfessionalProfile) 
     }));
 };
 
+export const normalizeCatalogSelectionForPlanLimit = ({
+  current,
+  limit,
+  server,
+}: {
+  current: string[];
+  limit?: number | null;
+  server?: string[] | null;
+}) => {
+  if (!limit || current.length <= limit) return current;
+
+  const normalizedServer = server?.filter((item, index, source) => source.indexOf(item) === index);
+  if (normalizedServer && normalizedServer.length <= limit) return normalizedServer;
+
+  return current.slice(0, limit);
+};
+
 export const toFreeProfessionalProfilePayload = (
   values: FreeProfileForm,
   profile: FreeProfessionalProfile | undefined,

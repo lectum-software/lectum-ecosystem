@@ -393,6 +393,7 @@ ou cortesia manual.
 | 193 | [TASK-193 - Hotfix de foco e audio no autoplay de videos](TASK-193-hotfix-playback-foco-audio-autoplay.md) | Completed | 192 |
 | 194 | [TASK-194 - Audio explicito persistido e suspensao de background](TASK-194-audio-explicito-suspensao-background.md) | Completed | 193 |
 | 195 | [TASK-195 - Normalizacao de catalogos no downgrade para gratuito](TASK-195-normalizacao-downgrade-gratuito.md) | Completed | 31, 31A, 31B, 32, 33 |
+| 196 | [TASK-196 - Podar selecoes do perfil apos downgrade para gratuito](TASK-196-poda-selecoes-perfil-downgrade.md) | Completed | 195 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -2332,3 +2333,9 @@ fluxos de aceite persistido.
 - Sem schema/migration, env obrigatoria, package novo, mock, seed, reset, exclusao fisica ou limpeza de bucket. Rollback simples reverte o codigo; itens ja soft-deletados durante a versao nao sao reativados automaticamente.
 - Criterios de aceite: todos marcados em TASK-195-normalizacao-downgrade-gratuito.md.
 - ADR: `adrs/0524-normalizacao-catalogos-downgrade-gratuito.md`.
+
+## [TASK-196 - Podar selecoes do perfil apos downgrade para gratuito](TASK-196-poda-selecoes-perfil-downgrade.md)
+
+- Complemento pos-feedback da TASK-195: quando a sessao da edicao de perfil ja esta aberta e o plano cai para gratuito, o frontend agora poda imediatamente especialidades, servicos e abordagens acima dos limites atuais, preferindo a selecao normalizada retornada pelo backend.
+- Sem backend, banco, migration, env nova, package novo, mock ou alteracao de contrato.
+- Criterios de aceite: todos marcados em TASK-196-poda-selecoes-perfil-downgrade.md.
