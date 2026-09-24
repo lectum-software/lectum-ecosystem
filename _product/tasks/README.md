@@ -1,3 +1,20 @@
+Correcao operacional em 24/09/2026: nome de ate 30 caracteres e margem real do selo no MP4 baixado. A previa ja estava correta; a causa era a estimativa de largura por quantidade de caracteres no FFmpeg. O anexo foi usado somente como evidencia visual. Builder/Quick Copy nao esta exposto pelas ferramentas deste cliente; consultado o inventario e a referencia local de video-resposta stories. ADR: `adrs/0528-metrica-real-nome-selo-video-social.md`.
+
+Criterios de aceite do MP4 social (substituem a regra de 18 caracteres do ajuste anterior):
+
+- [x] Nome normalizado preserva ate 30 caracteres e recebe `...` somente se exceder.
+- [x] MP4 usa largura real dos glifos da fonte ativa, com margem de 16px antes do selo em 1080px; sem clamp sobre o texto.
+- [x] Nomes excepcionalmente largos cabem na area segura, preservando limite e selo.
+- [x] Validacao de pixels do MP4 real, com nome do anexo, nomes longos, acentos, letras largas/estreitas e fallback sem asset.
+- [x] Builds de video/frontend e inspecao de frames reais do artefato em 1080px e 390px.
+- [ ] Smoke do servico de video publicado: pendente de acesso a rede privada; nao ha URL local configurada nem browser conectado para validacao autenticada.
+
+Impacto de deploy: video e constante correspondente no frontend; sem contrato, banco, env obrigatoria ou dependencia npm nova. Apps podem ser publicados separadamente. Medicao numerica em subprocesso FFmpeg por fonte ativa, sem log de nome/PII. Apenas novas geracoes sao corrigidas; arquivos antigos nao sao reescritos. Rollback por reversao revisada em homolog. Ferramentas portateis de QA e fonte Debian ficam apenas em .tmp ignorado.
+
+Validacoes: frontend/backend/admin passaram no baseline da raiz; a etapa video encontrou apenas formatacao de um teste, corrigida antes do commit. Reexecucao de `pnpm --dir video check`: 94 testes aprovados, zero falhas e zero skips, com FFmpeg real no PATH; `pnpm --dir video build`, `pnpm --dir frontend build`, encoding, ADRs, tasks, source-size e `git diff --check` aprovados. Versao preparada: 0.1.438, cinco manifests sincronizados. Smoke publico anterior ao push: frontend/admin/backend 0.1.437, health/ready HTTP 200.
+
+Limitacao de QA: a galeria de MP4s reais foi servida em localhost, mas Computer Use retornou nenhum browser disponivel. A inspeccao visual foi feita em frames decodificados dos proprios MP4s, inclusive a 390px, sem alegar validacao em browser. Exemplos Manrope Bold: nome do anexo mede 313px; nome longo truncado mede 578px; 30 letras largas medem 878px com fonte reduzida para 30px. Testes de pixels passaram em dez MP4s (cinco nomes, com e sem asset de selo). O helper drawtext existente foi reutilizado; a medicao foi isolada em social-share-name-metrics.ts para respeitar o limite arquitetural de tamanho de arquivo.
+
 Correcao operacional em 24/09/2026: ajuste defensivo no video de compartilhamento social para truncar o nome da psicologa antes do selo. As imagens anexadas de 23/09/2026 foram usadas apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada nos anexos do usuario e em `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`. Alteracao exclusivamente no servico `video/`, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0527-truncagem-nome-video-social.md`.
 
 Criterios de aceite do ajuste de truncagem no video social:

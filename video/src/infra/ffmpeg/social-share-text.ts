@@ -6,7 +6,7 @@ const normalizeText = (value: string | null | undefined, fallback: string, maxLe
   return (normalized || fallback).slice(0, maxLength);
 };
 
-export const SOCIAL_SHARE_PROFESSIONAL_TAG_NAME_MAX_LENGTH = 18;
+export const SOCIAL_SHARE_PROFESSIONAL_TAG_NAME_MAX_LENGTH = 30;
 
 const truncateWithEllipsis = (value: string, maxLength: number) => {
   if (value.length <= maxLength) return value;

@@ -5,7 +5,7 @@ import {
   VideoProcessingError,
 } from "../../domain/jobs/contracts.js";
 import { lectumLogoMarkDrawBoxes, roundedRectDrawBoxes } from "./drawbox-art.js";
-import { quoteDrawTextValue } from "./drawtext.js";
+import { drawText } from "./drawtext.js";
 import {
   type ManagedProcessDiagnosticCode,
   ManagedProcessError,
@@ -22,6 +22,7 @@ import {
   SOCIAL_SHARE_VERIFIED_BADGE_FILE_NAME,
 } from "./social-share-assets.js";
 import { SOCIAL_SHARE_ART_LAYOUT } from "./social-share-layout.js";
+import { measureSocialShareProfessionalName } from "./social-share-name-metrics.js";
 import {
   SOCIAL_OUTPUT_HEIGHT,
   SOCIAL_OUTPUT_WIDTH,
@@ -55,6 +56,7 @@ type SocialShareSource =
 type SocialShareFilterMode = "portable" | "standard";
 
 type SocialShareRenderOptions = {
+  professionalNameLayout: { width: number; fontSize: number };
   cardBackgroundFile?: string | null;
   filterMode?: SocialShareFilterMode;
   fontFile?: string | null;
@@ -83,34 +85,6 @@ const NON_RETRYABLE_RENDER_DIAGNOSTICS = new Set<ManagedProcessDiagnosticCode>([
   "process_permission_denied",
 ]);
 
-const drawText = ({
-  color,
-  fontFile,
-  fontSize,
-  shadow = false,
-  text,
-  x,
-  y,
-}: {
-  color: string;
-  fontFile?: string | null;
-  fontSize: number;
-  shadow?: boolean;
-  text: string;
-  x: string | number;
-  y: string | number;
-}) =>
-  `drawtext=${[
-    `text=${quoteDrawTextValue(text)}`,
-    ...(fontFile ? [`fontfile=${quoteDrawTextValue(fontFile)}`] : []),
-    "expansion=none",
-    `x=${x}`,
-    `y=${y}`,
-    `fontsize=${fontSize}`,
-    `fontcolor=${color}`,
-    ...(shadow ? ["shadowcolor=black@0.28", "shadowx=0", "shadowy=2"] : []),
-  ].join(":")}`;
-
 const filterChain = (inputLabel: string, filters: readonly string[], outputLabel: string) =>
   `${inputLabel}${filters.join(",")}${outputLabel}`;
 
@@ -128,7 +102,7 @@ export const sanitizeSocialShareMetadata = (
 export const buildSocialShareFilter = (
   metadata: SocialShareRenderMetadata,
   _maxFps: number,
-  options: SocialShareRenderOptions = {},
+  options: SocialShareRenderOptions,
 ) => {
   const filterMode = options.filterMode ?? "standard";
   const fontFile = options.fontFile === undefined ? SOCIAL_DRAW_TEXT_FONT_FILE : options.fontFile;
@@ -181,20 +155,15 @@ export const buildSocialShareFilter = (
     card.y + Math.round((card.headerHeight - card.logoHeight) / 2) + card.logoOffsetY;
   const labelTextX = labelLogoX + card.logoWidth + card.logoGap;
   const labelTextY = card.y + Math.round((card.headerHeight - card.headerFontSize) / 2) - 1;
-  const estimatedNameWidth = Math.round(
-    sanitized.professionalName.length * professional.nameFontSize * professional.nameWidthFactor,
-  );
+  const { width: nameWidth, fontSize: nameFontSize } = options.professionalNameLayout;
   const professionalGroupWidth =
-    estimatedNameWidth +
+    nameWidth +
     (sanitized.professionalVerified ? professional.checkGap + professional.badgeWidth : 0);
   const professionalTextX = Math.max(
     64,
     Math.round((SOCIAL_OUTPUT_WIDTH - professionalGroupWidth) / 2),
   );
-  const verifiedBadgeX = Math.min(
-    SOCIAL_OUTPUT_WIDTH - professional.badgeWidth - 64,
-    professionalTextX + estimatedNameWidth + professional.checkGap,
-  );
+  const verifiedBadgeX = professionalTextX + nameWidth + professional.checkGap;
   const verifiedBadgeY =
     professional.nameY + Math.round((professional.nameFontSize - professional.badgeHeight) / 2);
   const hasCardBackgroundAsset = Boolean(cardBackgroundFile);
@@ -251,7 +220,7 @@ export const buildSocialShareFilter = (
     drawText({
       color: "white",
       fontFile,
-      fontSize: professional.nameFontSize,
+      fontSize: nameFontSize,
       shadow: true,
       text: sanitized.professionalName,
       x: professionalTextX,
@@ -302,7 +271,7 @@ export const buildSocialShareFilter = (
   if (hasCardBackgroundAsset && cardBackgroundInputIndex !== null) {
     const cardOutputLabel = "[card0]";
     overlayStages.push(
-      `${currentLabel}[${cardBackgroundInputIndex}:v]overlay=x=${card.x}:y=${card.y}:format=auto${cardOutputLabel}`,
+      `${currentLabel}[${cardBackgroundInputIndex}:v]overlay=x=${card.x}:y=${card.y}:format=auto:shortest=1${cardOutputLabel}`,
     );
     currentLabel = cardOutputLabel;
   }
@@ -315,7 +284,7 @@ export const buildSocialShareFilter = (
     const logoOutputLabel = hasVerifiedBadgeAsset ? "[art1]" : "[v]";
     overlayStages.push(
       `[${logoInputIndex}:v]scale=${card.logoWidth}:${card.logoHeight}:flags=lanczos[lectum_logo]`,
-      `${currentLabel}[lectum_logo]overlay=x=${labelLogoX}:y=${labelLogoY}:format=auto${logoOutputLabel}`,
+      `${currentLabel}[lectum_logo]overlay=x=${labelLogoX}:y=${labelLogoY}:format=auto:shortest=1${logoOutputLabel}`,
     );
     currentLabel = logoOutputLabel;
   }
@@ -323,7 +292,7 @@ export const buildSocialShareFilter = (
   if (hasVerifiedBadgeAsset && verifiedBadgeInputIndex !== null) {
     overlayStages.push(
       `[${verifiedBadgeInputIndex}:v]scale=${professional.badgeWidth}:${professional.badgeHeight}:flags=lanczos[verified_badge]`,
-      `${currentLabel}[verified_badge]overlay=x=${verifiedBadgeX}:y=${verifiedBadgeY}:format=auto[v]`,
+      `${currentLabel}[verified_badge]overlay=x=${verifiedBadgeX}:y=${verifiedBadgeY}:format=auto:shortest=1[v]`,
     );
   }
 
@@ -337,7 +306,7 @@ export const buildSocialShareVideoArguments = (
     outputPath: string;
     source: SocialShareSource;
   },
-  options: SocialShareRenderOptions = {},
+  options: SocialShareRenderOptions,
 ) => {
   const sanitizedMetadata = sanitizeSocialShareMetadata(input.metadata);
   const filterMode = options.filterMode ?? "standard";
@@ -633,8 +602,14 @@ export const renderSocialShareVideo = async (input: {
       });
 
       try {
+        const professionalNameLayout = await measureSocialShareProfessionalName({
+          config: input.config,
+          metadata: input.metadata,
+          fontFile: variant.fontFile,
+          signal,
+        });
         await runManagedProcess({
-          args: buildSocialShareVideoArguments(input, variant),
+          args: buildSocialShareVideoArguments(input, { ...variant, professionalNameLayout }),
           command: input.config.ffmpegPath,
           maxStdoutBytes: 4_194_304,
           onStdout: progressParser,

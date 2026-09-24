@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
@@ -17,6 +17,7 @@ import {
   resolveSocialShareFontFile,
   resolveSocialShareRegularFontFile,
 } from "./social-share-assets.js";
+import { measureSocialShareProfessionalName } from "./social-share-name-metrics.js";
 
 const config = parseVideoServiceConfig({
   NODE_ENV: "test",
@@ -98,6 +99,90 @@ describe("social share local FFmpeg output", () => {
   after(async () => {
     if (directory) await rm(directory, { force: true, recursive: true });
   });
+
+  for (const [index, name] of [
+    "Rousel Cesconetto",
+    "Rousel Cesconetto fjfkfkgmqmqkqmfkfifngofkgo",
+    "W".repeat(30),
+    "i".repeat(30),
+    "João Márcia Gonçalves de Sá Silva",
+  ].entries()) {
+    it(`preserva margem real no MP4 decodificado: caso ${index}`, async (context) => {
+      if (unavailableReason) return context.skip(unavailableReason);
+      const fontFile =
+        (await resolveSocialShareFontFile()) ??
+        (await resolveSocialShareFontFile(["C:/Windows/Fonts/arialbd.ttf"]));
+      const inputMetadata = { ...metadata, professionalName: name };
+      const layout = await measureSocialShareProfessionalName({
+        config,
+        metadata: inputMetadata,
+        fontFile,
+      });
+      assert.ok(layout.width > 0 && layout.width <= 910);
+      for (const withBadgeAsset of [true, false]) {
+        const outputPath = join(directory, `name-${index}-${withBadgeAsset}.mp4`);
+        await runManagedProcess({
+          command: config.ffmpegPath,
+          timeoutMs: 60_000,
+          args: buildSocialShareVideoArguments(
+            {
+              config,
+              metadata: inputMetadata,
+              outputPath,
+              source: { inputPath: join(directory, "silent.mp4"), kind: "file" },
+            },
+            {
+              fontFile,
+              regularFontFile: fontFile,
+              professionalNameLayout: layout,
+              ...(withBadgeAsset ? {} : { verifiedBadgeFile: null, filterMode: "portable" }),
+            },
+          ),
+        });
+        const rgbPath = join(directory, `name-${index}-${withBadgeAsset}.rgb`);
+        await runManagedProcess({
+          command: config.ffmpegPath,
+          timeoutMs: 30_000,
+          args: [
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-i",
+            outputPath,
+            "-vf",
+            "crop=1080:40:0:1400",
+            "-frames:v",
+            "1",
+            "-pix_fmt",
+            "rgb24",
+            "-f",
+            "rawvideo",
+            rgbPath,
+          ],
+        });
+        const pixels = await readFile(rgbPath);
+        const nameX = Math.round((1080 - layout.width - 42) / 2);
+        const badgeX = nameX + layout.width + 16;
+        let lastNamePixel = -1;
+        let firstBadgePixel = 1080;
+        for (let y = 0; y < 40; y++) {
+          for (let x = 0; x < 1080; x++) {
+            const offset = (y * 1080 + x) * 3;
+            const r = pixels[offset] ?? 0;
+            const g = pixels[offset + 1] ?? 0;
+            const b = pixels[offset + 2] ?? 0;
+            if (x < badgeX && r > 180 && g > 180 && b > 180)
+              lastNamePixel = Math.max(lastNamePixel, x);
+            if (b > 160 && b > r + 60 && g > r + 30) firstBadgePixel = Math.min(firstBadgePixel, x);
+          }
+        }
+        assert.ok(lastNamePixel >= nameX, "nome visivel no MP4");
+        assert.ok(firstBadgePixel < 1080, "selo visivel no MP4");
+        assert.ok(firstBadgePixel - lastNamePixel >= 14, "margem preservada apos compressao H.264");
+      }
+    });
+  }
 
   for (const scenario of [
     {
@@ -190,6 +275,11 @@ describe("social share local FFmpeg output", () => {
       } else {
         await runManagedProcess({
           args: buildSocialShareVideoArguments(renderInput, {
+            professionalNameLayout: await measureSocialShareProfessionalName({
+              config: limitedConfig,
+              metadata,
+              fontFile: await resolveSocialShareFontFile(),
+            }),
             filterMode: scenario.mode,
             fontFile: await resolveSocialShareFontFile(),
             regularFontFile: await resolveSocialShareRegularFontFile(),

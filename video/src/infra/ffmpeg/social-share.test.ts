@@ -3,8 +3,8 @@ import { describe, it } from "node:test";
 import { parseVideoServiceConfig } from "../../config/env.js";
 import { quoteDrawTextValue } from "./drawtext.js";
 import {
-  buildSocialShareFilter,
-  buildSocialShareVideoArguments,
+  buildSocialShareVideoArguments as buildArguments,
+  buildSocialShareFilter as buildFilter,
   sanitizeSocialShareMetadata,
 } from "./social-share.js";
 import { resolveSocialShareAssetFile } from "./social-share-assets.js";
@@ -15,6 +15,18 @@ import {
   parseRemoteVideoSourceUrl,
   remoteVideoRequestHeaders,
 } from "./source-url.js";
+
+// Command serialization tests receive explicit geometry; local FFmpeg tests measure real glyphs.
+const buildSocialShareFilter = (
+  metadata: Parameters<typeof buildFilter>[0],
+  fps: number,
+  options: Partial<Parameters<typeof buildFilter>[2]> = {},
+) =>
+  buildFilter(metadata, fps, { professionalNameLayout: { width: 200, fontSize: 34 }, ...options });
+const buildSocialShareVideoArguments = (
+  input: Parameters<typeof buildArguments>[0],
+  options: Partial<Parameters<typeof buildArguments>[1]> = {},
+) => buildArguments(input, { professionalNameLayout: { width: 200, fontSize: 34 }, ...options });
 
 const config = parseVideoServiceConfig({
   NODE_ENV: "test",
@@ -32,6 +44,35 @@ const metadata = {
 };
 
 describe("FFmpeg social share command", () => {
+  for (const length of [18, 29, 30, 31, 90]) {
+    it(`aplica limite de 30 caracteres para nome com ${length} caracteres`, () => {
+      const name = "W".repeat(length);
+      const result = sanitizeSocialShareMetadata({ ...metadata, professionalName: name });
+      assert.equal(result.professionalName, length <= 30 ? name : `${"W".repeat(30)}...`);
+      assert.equal(sanitizeSocialShareMetadata(result).professionalName, result.professionalName);
+    });
+  }
+
+  it("posiciona selo usando largura medida, com margem fixa e sem clamp sobre o nome", () => {
+    for (const width of [120, 330, 900]) {
+      for (const verifiedBadgeFile of [null, "verified-badge.png"]) {
+        const filter = buildSocialShareFilter(metadata, 30, {
+          professionalNameLayout: { width, fontSize: 34 },
+          verifiedBadgeFile,
+        });
+        const nameX = Math.round((1080 - width - 16 - 26) / 2);
+        const badgeX = nameX + width + 16;
+        assert.ok(filter.includes(`:x=${nameX}:y=1400:fontsize=34`));
+        assert.ok(
+          filter.includes(
+            verifiedBadgeFile
+              ? `overlay=x=${badgeX}:y=1405`
+              : `:x=${badgeX + 5}:y=1408:fontsize=17`,
+          ),
+        );
+      }
+    }
+  });
   it("gera MP4 9:16 de alta qualidade sem shell, com arte Lectum e sem cortar o video", () => {
     const args = buildSocialShareVideoArguments({
       config,
@@ -55,10 +96,10 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /-loop 1 -i .*question-card-background\.png/);
     assert.match(command, /-loop 1 -i .*lectum-symbol-white\.png/);
     assert.match(command, /-loop 1 -i .*verified-badge\.png/);
-    assert.match(command, /\[v0\]\[1:v\]overlay=x=110:y=250:format=auto\[card0\]/);
+    assert.match(command, /\[v0\]\[1:v\]overlay=x=110:y=250:format=auto:shortest=1\[card0\]/);
     assert.match(command, /overlay=x=329:y=274:format=auto/);
     assert.match(command, /scale=26:24:flags=lanczos\[verified_badge\]/);
-    assert.match(command, /overlay=x=628:y=1405:format=auto/);
+    assert.match(command, /overlay=x=635:y=1405:format=auto/);
     assert.equal(command.includes("eq="), false);
     assert.equal(command.includes("fps="), false);
     assert.equal(command.includes("[v0],drawbox"), false);
@@ -70,7 +111,7 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /drawtext=text='Respondido na Lectum'/);
     assert.match(command, /drawtext=text='Respondido na Lectum':.*:x=371:y=274:fontsize=38/);
     assert.doesNotMatch(command, /drawtext=text='✓'/);
-    assert.match(command, /drawtext=text='Psicóloga':.*:x=427:y=1440:fontsize=21/);
+    assert.match(command, /drawtext=text='Psicóloga':.*:x=419:y=1440:fontsize=21/);
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/manrope\/Manrope-Bold\.ttf'/);
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/manrope\/Manrope-Medium\.ttf'/);
     assert.doesNotMatch(command, /drawtext=text='lectum'/);
@@ -219,7 +260,7 @@ describe("FFmpeg social share command", () => {
   });
 
   it("limita nome profissional longo antes do selo no overlay social", () => {
-    const longProfessionalName = "Rousel Cesconetto fjfkfkgmqmqkqmfkfifngofkgo";
+    const longProfessionalName = "Rousel Cesconetto fjfkfkgmqmqkfkfifngofkgo";
     const sanitized = sanitizeSocialShareMetadata({
       ...metadata,
       professionalName: longProfessionalName,
@@ -232,9 +273,12 @@ describe("FFmpeg social share command", () => {
       30,
     );
 
-    assert.equal(sanitized.professionalName, "Rousel Cesconetto...");
-    assert.match(filter, /drawtext=text='Rousel Cesconetto\.\.\.':.*:x=347:y=1400:fontsize=34/);
-    assert.match(filter, /overlay=x=708:y=1405:format=auto/);
+    assert.equal(sanitized.professionalName, "Rousel Cesconetto fjfkfkgmqmqk...");
+    assert.match(
+      filter,
+      /drawtext=text='Rousel Cesconetto fjfkfkgmqmqk\.\.\.':.*:x=419:y=1400:fontsize=34/,
+    );
+    assert.match(filter, /overlay=x=635:y=1405:format=auto/);
     assert.doesNotMatch(filter, /fjfkfkgmqmqkqmfkfifngofkgo/);
   });
 
@@ -278,7 +322,7 @@ describe("FFmpeg social share command", () => {
 
     for (const text of [
       "Pergunta, resposta; Lectum",
-      "Ana, Martins; Silv...",
+      "Ana, Martins; Silva",
       "Psicóloga, supervisora; clínica",
     ]) {
       assert.ok(filter.includes(`text=${quoteDrawTextValue(text)}`));

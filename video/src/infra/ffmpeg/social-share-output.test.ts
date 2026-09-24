@@ -46,6 +46,7 @@ describe("social share output limits", () => {
                 source: { inputPath: "/safe/inputs/source", kind: "file" },
               },
               {
+                professionalNameLayout: { width: 200, fontSize: 34 },
                 filterMode,
                 fontFile: null,
                 ...(withAssets
@@ -75,7 +76,10 @@ describe("social share output limits", () => {
             assert.equal(filter.includes("crop="), false);
             assert.equal(filter.includes("black@0.18"), false);
             if (withAssets && filterMode === "standard") {
-              assert.match(filter, /\[v0\]\[1:v\]overlay=x=110:y=250:format=auto\[card0\]/);
+              assert.match(
+                filter,
+                /\[v0\]\[1:v\]overlay=x=110:y=250:format=auto:shortest=1\[card0\]/,
+              );
               assert.doesNotMatch(filter, /drawbox=x=110:y=282:w=860:h=56/);
             } else {
               assert.match(filter, /drawbox=x=110:y=282:w=860:h=56/);
