@@ -1,3 +1,12 @@
+Correcao operacional em 24/09/2026: ajuste de margem entre nome da psicologa e selo de destaque/mentor nos cabecalhos de autoria do detalhe de comunidades. O video anexado de 23/09/2026 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Dentro do Post.jpg` e no componente existente. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0526-margem-selos-autoria-comunidades.md`.
+
+Criterios de aceite do ajuste de margem do selo:
+
+- [x] Nomes longos de psicologas no detalhe do post sao truncados antes de encostar no selo.
+- [x] O selo de destaque/mentor preserva a margem visual em posts, post original de thread e respostas.
+- [x] O menu de acoes de respostas nao reduz a area a ponto de sobrepor nome e selo.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
 Correcao operacional em 22/09/2026: ajuste do refresh por navegacao ativa no feed de Comunidades. Ao tocar no item ativo `Inicio`, a Lectum agora retorna a viewport ao topo e so depois emite o refresh; se ja estiver no topo, recarrega sem rolagem extra. Pull-to-refresh permanece inalterado. O video anexado de 22/09/2026 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Feed Comunidade.jpg`. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0523-navegacao-ativa-topo-antes-refresh.md`.
 
 Criterios de aceite do ajuste de navegacao ativa no feed:

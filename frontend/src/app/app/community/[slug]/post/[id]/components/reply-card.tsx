@@ -430,19 +430,19 @@ export const ReplyCard = ({
 
         <div className="min-w-0 rounded-[18px] px-0.5 py-0.5">
           <div className="flex items-start justify-between gap-2">
-            <div className="grid min-w-0 gap-0.5">
+            <div className="grid min-w-0 flex-1 gap-0.5">
               <div className="flex min-w-0 items-center gap-x-2">
                 <div className="flex min-w-0 items-center gap-1">
                   {isProfessional ? (
                     <Link
-                      className="truncate text-sm font-black leading-tight text-inherit no-underline hover:text-inherit hover:no-underline"
+                      className="min-w-0 truncate text-sm font-black leading-tight text-inherit no-underline hover:text-inherit hover:no-underline"
                       href={`/psicologos/${reply.author.id}`}
                       onClick={stopReplyTreeCollapsePropagation}
                     >
                       {authorDisplayName}
                     </Link>
                   ) : (
-                    <h3 className="truncate text-sm font-black leading-tight">
+                    <h3 className="min-w-0 truncate text-sm font-black leading-tight">
                       {authorDisplayName}
                     </h3>
                   )}
