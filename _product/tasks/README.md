@@ -1,3 +1,60 @@
+Ajuste operacional em 24/09/2026: na tela `Meus posts e respostas`, psicologos passam a abrir por padrao na aba `Respostas`, preservando `Posts` como padrao para pacientes e a troca manual entre abas. A imagem anexada de 23/09/2026 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente; referencia visual baseada no anexo e em `_product/proto/Meus Posts - Psicologo.jpg`. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0530-aba-respostas-default-psicologos.md`.
+
+Criterios de aceite do ajuste de aba padrao:
+
+- [x] Psicologos abrem `Meus posts e respostas` com a aba `Respostas` selecionada por padrao.
+- [x] Pacientes continuam abrindo `Meus posts e comentarios` com a aba `Posts` selecionada por padrao.
+- [x] A selecao manual de aba nao e sobrescrita por atualizacoes posteriores da sessao.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
+Impacto de deploy: somente frontend; apps podem ser publicados separadamente. Rollback por reversao revisada em homolog. Push em `homolog` dispara deploy automatico de homologacao. Validacoes locais: `pnpm --dir frontend check` aprovado (481 testes, skip preexistente de symlink Windows) e `pnpm --dir frontend build` aprovado. Browser local autenticado ficou pendente porque Computer Use retornou zero browsers conectados.
+Ajuste visual em 24/09/2026: aproximar selo do nome e aplicar ellipsis na previa social conforme MP4. Anexos de 23/09 usados apenas como evidencia visual. Builder/Quick Copy nao exposto neste cliente; referencia ativa: inventario e proto local de video-resposta stories. ADR: `adrs/0529-paridade-nome-previa-margem-social.md`.
+
+- [x] MP4 mantem medicao real do nome e margem reduzida de 16 para 10px em 1080px, sem sobreposicao.
+- [x] Previa usa helper existente de 30 caracteres com `...`, sem alterar nome original ou metadados de compartilhamento.
+- [x] Selo da previa nao encolhe; margem proporcional de 0.93cqw, mobile-first (~390px).
+- [x] Testes reais de pixels do MP4 e checks/builds frontend/video aprovados.
+- [ ] Browser local e smoke privado de video: pendentes de acesso (Computer Use sem browsers conectados).
+
+Deploy: frontend e video independentes, sem contrato, banco, migration, env ou package novo. Novas geracoes recebem ajuste; arquivos antigos nao sao modificados. Rollback por reversao revisada em homolog. Push dispara deploy somente de homologacao; nao promover producao sem smoke privado.
+
+Validacoes locais: checks/builds frontend e video aprovados; video com 94 testes e zero skips, incluindo MP4 real com limites minimo/maximo de distancia entre pixels. Frontend tem somente o skip preexistente de symlink sem permissao Windows. Paridade executada entre os helpers reais frontend/video em cinco casos, incluindo o nome longo do anexo e limites 30/31. Artefato real inspecionado em 390px com Manrope Bold Debian. Guards de encoding/ADRs/tasks/source-size e check:version aprovados; versao 0.1.439 preparada nos cinco manifests.
+
+Correcao operacional em 24/09/2026: nome de ate 30 caracteres e margem real do selo no MP4 baixado. A previa ja estava correta; a causa era a estimativa de largura por quantidade de caracteres no FFmpeg. O anexo foi usado somente como evidencia visual. Builder/Quick Copy nao esta exposto pelas ferramentas deste cliente; consultado o inventario e a referencia local de video-resposta stories. ADR: `adrs/0528-metrica-real-nome-selo-video-social.md`.
+
+Criterios de aceite do MP4 social (substituem a regra de 18 caracteres do ajuste anterior):
+
+- [x] Nome normalizado preserva ate 30 caracteres e recebe `...` somente se exceder.
+- [x] MP4 usa largura real dos glifos da fonte ativa, com margem de 16px antes do selo em 1080px; sem clamp sobre o texto.
+- [x] Nomes excepcionalmente largos cabem na area segura, preservando limite e selo.
+- [x] Validacao de pixels do MP4 real, com nome do anexo, nomes longos, acentos, letras largas/estreitas e fallback sem asset.
+- [x] Builds de video/frontend e inspecao de frames reais do artefato em 1080px e 390px.
+- [ ] Smoke do servico de video publicado: pendente de acesso a rede privada; nao ha URL local configurada nem browser conectado para validacao autenticada.
+
+Impacto de deploy: video e constante correspondente no frontend; sem contrato, banco, env obrigatoria ou dependencia npm nova. Apps podem ser publicados separadamente. Medicao numerica em subprocesso FFmpeg por fonte ativa, sem log de nome/PII. Apenas novas geracoes sao corrigidas; arquivos antigos nao sao reescritos. Rollback por reversao revisada em homolog. Ferramentas portateis de QA e fonte Debian ficam apenas em .tmp ignorado.
+
+Validacoes: frontend/backend/admin passaram no baseline da raiz; a etapa video encontrou apenas formatacao de um teste, corrigida antes do commit. Reexecucao de `pnpm --dir video check`: 94 testes aprovados, zero falhas e zero skips, com FFmpeg real no PATH; `pnpm --dir video build`, `pnpm --dir frontend build`, encoding, ADRs, tasks, source-size e `git diff --check` aprovados. Versao preparada: 0.1.438, cinco manifests sincronizados. Smoke publico anterior ao push: frontend/admin/backend 0.1.437, health/ready HTTP 200.
+
+Limitacao de QA: a galeria de MP4s reais foi servida em localhost, mas Computer Use retornou nenhum browser disponivel. A inspeccao visual foi feita em frames decodificados dos proprios MP4s, inclusive a 390px, sem alegar validacao em browser. Exemplos Manrope Bold: nome do anexo mede 313px; nome longo truncado mede 578px; 30 letras largas medem 878px com fonte reduzida para 30px. Testes de pixels passaram em dez MP4s (cinco nomes, com e sem asset de selo). O helper drawtext existente foi reutilizado; a medicao foi isolada em social-share-name-metrics.ts para respeitar o limite arquitetural de tamanho de arquivo.
+
+Correcao operacional em 24/09/2026: ajuste defensivo no video de compartilhamento social para truncar o nome da psicologa antes do selo. As imagens anexadas de 23/09/2026 foram usadas apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada nos anexos do usuario e em `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`. Alteracao exclusivamente no servico `video/`, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0527-truncagem-nome-video-social.md`.
+
+Criterios de aceite do ajuste de truncagem no video social:
+
+- [x] Nomes profissionais longos no overlay social sao limitados antes do selo.
+- [x] O nome excedente recebe `...` conforme regra de 18 caracteres visiveis.
+- [x] O selo usa a largura do nome ja sanitizado e preserva margem visual.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
+Correcao operacional em 24/09/2026: ajuste de margem entre nome da psicologa e selo de destaque/mentor nos cabecalhos de autoria do detalhe de comunidades. O video anexado de 23/09/2026 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Dentro do Post.jpg` e no componente existente. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0526-margem-selos-autoria-comunidades.md`.
+
+Criterios de aceite do ajuste de margem do selo:
+
+- [x] Nomes longos de psicologas no detalhe do post sao truncados antes de encostar no selo.
+- [x] O selo de destaque/mentor preserva a margem visual em posts, post original de thread e respostas.
+- [x] O menu de acoes de respostas nao reduz a area a ponto de sobrepor nome e selo.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
 Correcao operacional em 22/09/2026: ajuste do refresh por navegacao ativa no feed de Comunidades. Ao tocar no item ativo `Inicio`, a Lectum agora retorna a viewport ao topo e so depois emite o refresh; se ja estiver no topo, recarrega sem rolagem extra. Pull-to-refresh permanece inalterado. O video anexado de 22/09/2026 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Feed Comunidade.jpg`. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0523-navegacao-ativa-topo-antes-refresh.md`.
 
 Criterios de aceite do ajuste de navegacao ativa no feed:

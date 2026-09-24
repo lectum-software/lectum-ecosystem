@@ -214,13 +214,13 @@ export const PostHeader = ({
             <div className="flex min-w-0 items-center gap-1">
               {psychologistProfileHref ? (
                 <Link
-                  className="truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                  className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                   href={psychologistProfileHref}
                 >
                   {authorDisplayName}
                 </Link>
               ) : (
-                <h2 className="truncate text-sm font-black leading-tight text-foreground">
+                <h2 className="min-w-0 truncate text-sm font-black leading-tight text-foreground">
                   {authorDisplayName}
                 </h2>
               )}
@@ -424,13 +424,13 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
               <div className="flex min-w-0 items-center gap-1">
                 {psychologistProfileHref ? (
                   <Link
-                    className="truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                    className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={psychologistProfileHref}
                   >
                     {authorDisplayName}
                   </Link>
                 ) : (
-                  <h2 className="truncate text-sm font-black leading-tight text-foreground">
+                  <h2 className="min-w-0 truncate text-sm font-black leading-tight text-foreground">
                     {authorDisplayName}
                   </h2>
                 )}

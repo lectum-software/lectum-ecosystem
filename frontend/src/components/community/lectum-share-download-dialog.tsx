@@ -8,7 +8,10 @@ import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { playVideoWithSound } from "@/lib/video-playback";
-import type { LectumShareSocialTarget } from "@/utils/lectum-share-target";
+import {
+  type LectumShareSocialTarget,
+  truncateLectumShareProfessionalTagName,
+} from "@/utils/lectum-share-target";
 
 type LectumShareDownloadDialogProps = {
   disabled?: boolean;
@@ -124,12 +127,12 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
 
       <div className="absolute top-[69.35%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
         <div className="inline-grid max-w-full justify-items-start text-left">
-          <div className="flex max-w-full items-center justify-start gap-[0.62cqw]">
-            <span className="truncate text-[2.95cqw] font-bold leading-none tracking-[-0.02em]">
-              {target.professional.name}
+          <div className="flex max-w-full items-center justify-start gap-[0.93cqw]">
+            <span className="min-w-0 truncate text-[2.95cqw] font-bold leading-none tracking-[-0.02em]">
+              {truncateLectumShareProfessionalTagName(target.professional.name)}
             </span>
             {target.professional.verified ? (
-              <VerifiedBadgeIcon className="h-[2.05cqw] w-[2.22cqw] min-h-2 min-w-2 text-primary" />
+              <VerifiedBadgeIcon className="h-[2.05cqw] w-[2.22cqw] min-h-2 min-w-2 shrink-0 text-primary" />
             ) : null}
           </div>
           <div className="mt-[0.55cqw] max-w-full truncate text-[1.8cqw] font-medium leading-none text-primary-foreground/92">

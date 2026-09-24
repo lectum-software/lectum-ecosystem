@@ -97,7 +97,7 @@ const normalizeForComparison = (value?: string | null) =>
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 
-export const LECTUM_SHARE_PROFESSIONAL_TAG_NAME_MAX_LENGTH = 18;
+export const LECTUM_SHARE_PROFESSIONAL_TAG_NAME_MAX_LENGTH = 30;
 
 export const truncateLectumShareProfessionalTagName = (name: string) => {
   const normalized = name.replace(/\s+/g, " ").trim();

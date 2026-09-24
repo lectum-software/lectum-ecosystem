@@ -6,14 +6,32 @@ const normalizeText = (value: string | null | undefined, fallback: string, maxLe
   return (normalized || fallback).slice(0, maxLength);
 };
 
+export const SOCIAL_SHARE_PROFESSIONAL_TAG_NAME_MAX_LENGTH = 30;
+
+const truncateWithEllipsis = (value: string, maxLength: number) => {
+  if (value.length <= maxLength) return value;
+
+  return `${value.slice(0, maxLength).trimEnd()}...`;
+};
+
 export const normalizeCardLabel = (value: string | null | undefined) => {
   const normalized = normalizeText(value, "Respondido na Lectum", 80);
 
   return normalized === "Perguntaram na Lectum" ? "Respondido na Lectum" : normalized;
 };
 
-export const normalizeProfessionalName = (value: string | null | undefined) =>
-  normalizeText(value, "Profissional Lectum", 90);
+export const normalizeProfessionalName = (value: string | null | undefined) => {
+  const normalized = String(value ?? "")
+    .replace(/\s+/gu, " ")
+    .trim();
+
+  if (!normalized) return "Profissional Lectum";
+
+  return truncateWithEllipsis(
+    normalized.slice(0, 90),
+    SOCIAL_SHARE_PROFESSIONAL_TAG_NAME_MAX_LENGTH,
+  );
+};
 
 export const normalizeProfessionalRoleLabel = (value: string | null | undefined) =>
   normalizeText(value, "Psicólogo(a)", 48);

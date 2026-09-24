@@ -566,3 +566,10 @@ Formato recomendado:
 
 
 - [ADR-0525 — Poda client-side de catalogos apos downgrade](0525-poda-client-side-catalogos-downgrade.md)
+- [ADR-0526 — Margem defensiva entre nome e selos no detalhe comunitario](0526-margem-selos-autoria-comunidades.md)
+- [ADR-0527 — Truncagem do nome profissional no video social](0527-truncagem-nome-video-social.md)
+
+- [ADR-0528 — Metrica real do nome e margem do selo no MP4 social](0528-metrica-real-nome-selo-video-social.md)
+
+- [ADR-0529 — Paridade do nome na previa e margem compacta no video social](0529-paridade-nome-previa-margem-social.md)
+- [ADR-0530 — Aba Respostas como padrao para psicologos](0530-aba-respostas-default-psicologos.md)

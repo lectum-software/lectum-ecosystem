@@ -35,7 +35,10 @@ import {
 
 export const MyPostsLogic = () => {
   const sessionUser = useAppSelector((state) => state.user);
-  const [type, setType] = useState<UserPostsType>("posts");
+  const isPsychologist = sessionUser?.role === "psicologo";
+  const defaultType = isPsychologist ? "replies" : "posts";
+  const [selectedType, setSelectedType] = useState<UserPostsType | null>(null);
+  const type = selectedType ?? defaultType;
   const [shareFeedback, setShareFeedback] = useState<"interaction" | "post" | null>(null);
   const query = useMemo(() => ({ limit: PAGE_LIMIT, type }), [type]);
   const postsCountQueryParams = useMemo(() => ({ limit: 1, page: 1, type: "posts" as const }), []);
@@ -59,7 +62,6 @@ export const MyPostsLogic = () => {
   );
   const firstPage = postsQuery.data?.pages[0];
   const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
-  const isPsychologist = sessionUser?.role === "psicologo";
   const interactionCopy = getInteractionCopy(isPsychologist);
   const tabCounts = useMemo<FilterTabCounts>(
     () => ({
@@ -105,7 +107,7 @@ export const MyPostsLogic = () => {
   };
 
   const handleFilterChange = (value: UserPostsType) => {
-    setType(value);
+    setSelectedType(value);
   };
 
   const handlePostDeleted = () => {
