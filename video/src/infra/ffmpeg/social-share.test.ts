@@ -218,6 +218,26 @@ describe("FFmpeg social share command", () => {
     assert.doesNotThrow(() => buildSocialShareFilter(sanitized, 30));
   });
 
+  it("limita nome profissional longo antes do selo no overlay social", () => {
+    const longProfessionalName = "Rousel Cesconetto fjfkfkgmqmqkqmfkfifngofkgo";
+    const sanitized = sanitizeSocialShareMetadata({
+      ...metadata,
+      professionalName: longProfessionalName,
+    });
+    const filter = buildSocialShareFilter(
+      {
+        ...metadata,
+        professionalName: longProfessionalName,
+      },
+      30,
+    );
+
+    assert.equal(sanitized.professionalName, "Rousel Cesconetto...");
+    assert.match(filter, /drawtext=text='Rousel Cesconetto\.\.\.':.*:x=347:y=1400:fontsize=34/);
+    assert.match(filter, /overlay=x=708:y=1405:format=auto/);
+    assert.doesNotMatch(filter, /fjfkfkgmqmqkqmfkfifngofkgo/);
+  });
+
   it("compacta perguntas longas antes de vazar para fora da caixa", () => {
     const filter = buildSocialShareFilter(
       {
@@ -258,7 +278,7 @@ describe("FFmpeg social share command", () => {
 
     for (const text of [
       "Pergunta, resposta; Lectum",
-      "Ana, Martins; Silva",
+      "Ana, Martins; Silv...",
       "Psicóloga, supervisora; clínica",
     ]) {
       assert.ok(filter.includes(`text=${quoteDrawTextValue(text)}`));

@@ -567,3 +567,4 @@ Formato recomendado:
 
 - [ADR-0525 — Poda client-side de catalogos apos downgrade](0525-poda-client-side-catalogos-downgrade.md)
 - [ADR-0526 — Margem defensiva entre nome e selos no detalhe comunitario](0526-margem-selos-autoria-comunidades.md)
+- [ADR-0527 — Truncagem do nome profissional no video social](0527-truncagem-nome-video-social.md)

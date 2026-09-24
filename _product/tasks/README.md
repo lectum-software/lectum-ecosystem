@@ -1,3 +1,12 @@
+Correcao operacional em 24/09/2026: ajuste defensivo no video de compartilhamento social para truncar o nome da psicologa antes do selo. As imagens anexadas de 23/09/2026 foram usadas apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada nos anexos do usuario e em `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`. Alteracao exclusivamente no servico `video/`, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0527-truncagem-nome-video-social.md`.
+
+Criterios de aceite do ajuste de truncagem no video social:
+
+- [x] Nomes profissionais longos no overlay social sao limitados antes do selo.
+- [x] O nome excedente recebe `...` conforme regra de 18 caracteres visiveis.
+- [x] O selo usa a largura do nome ja sanitizado e preserva margem visual.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
 Correcao operacional em 24/09/2026: ajuste de margem entre nome da psicologa e selo de destaque/mentor nos cabecalhos de autoria do detalhe de comunidades. O video anexado de 23/09/2026 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou por cache local `ENOENT`; referencia visual baseada em `_product/proto/Dentro do Post.jpg` e no componente existente. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0526-margem-selos-autoria-comunidades.md`.
 
 Criterios de aceite do ajuste de margem do selo:
