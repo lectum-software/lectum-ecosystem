@@ -2,7 +2,7 @@ Ajuste operacional em 24/09/2026: versao do artefato no log JSON video_api_start
 
 - [x] Log de API pronta inclui version proveniente do package.json, sem env manual.
 - [x] Teste de serializacao real do logger e wiring de startup aprovado; check/build video aprovados.
-Promocao solicitada: publicar homolog, revisar PR para main e registrar smoke publico no PR. Check video: 95 testes aprovados, zero skips; build aprovado. Versao preparada: 0.1.441.
+Promocao solicitada: publicar homolog, revisar PR para main e registrar smoke publico no PR. Check video: 95 testes aprovados, zero skips; build aprovado. Versao preparada: 0.1.442. O primeiro pre-push bloqueou subprocesso de teste em src; teste movido para video/scripts e source-safety aprovado. Timeout isolado de teste backend reexecutado com sucesso; sem alterar runtime backend ou ignorar hooks.
 
 Impacto: somente log aditivo do video; sem banco, contrato HTTP, env, package, mock ou UI nova. API isolada e runtime combinado usam o mesmo startVideoApiRuntime. Rollback por reversao em homolog. O log aparece ao iniciar a nova instancia; a leitura remota do log privado depende de acesso operacional e nao sera alegada sem evidencia.
 
