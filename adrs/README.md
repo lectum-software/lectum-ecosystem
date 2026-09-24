@@ -572,3 +572,4 @@ Formato recomendado:
 - [ADR-0528 — Metrica real do nome e margem do selo no MP4 social](0528-metrica-real-nome-selo-video-social.md)
 
 - [ADR-0529 — Paridade do nome na previa e margem compacta no video social](0529-paridade-nome-previa-margem-social.md)
+- [ADR-0530 — Aba Respostas como padrao para psicologos](0530-aba-respostas-default-psicologos.md)

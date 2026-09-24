@@ -1,3 +1,13 @@
+Ajuste operacional em 24/09/2026: na tela `Meus posts e respostas`, psicologos passam a abrir por padrao na aba `Respostas`, preservando `Posts` como padrao para pacientes e a troca manual entre abas. A imagem anexada de 23/09/2026 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente; referencia visual baseada no anexo e em `_product/proto/Meus Posts - Psicologo.jpg`. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0530-aba-respostas-default-psicologos.md`.
+
+Criterios de aceite do ajuste de aba padrao:
+
+- [x] Psicologos abrem `Meus posts e respostas` com a aba `Respostas` selecionada por padrao.
+- [x] Pacientes continuam abrindo `Meus posts e comentarios` com a aba `Posts` selecionada por padrao.
+- [x] A selecao manual de aba nao e sobrescrita por atualizacoes posteriores da sessao.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
+Impacto de deploy: somente frontend; apps podem ser publicados separadamente. Rollback por reversao revisada em homolog. Push em `homolog` dispara deploy automatico de homologacao. Validacoes locais: `pnpm --dir frontend check` aprovado (481 testes, skip preexistente de symlink Windows) e `pnpm --dir frontend build` aprovado. Browser local autenticado ficou pendente porque Computer Use retornou zero browsers conectados.
 Ajuste visual em 24/09/2026: aproximar selo do nome e aplicar ellipsis na previa social conforme MP4. Anexos de 23/09 usados apenas como evidencia visual. Builder/Quick Copy nao exposto neste cliente; referencia ativa: inventario e proto local de video-resposta stories. ADR: `adrs/0529-paridade-nome-previa-margem-social.md`.
 
 - [x] MP4 mantem medicao real do nome e margem reduzida de 16 para 10px em 1080px, sem sobreposicao.
