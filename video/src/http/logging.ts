@@ -9,6 +9,7 @@ type SafeLogDetails = {
   stage?: string | undefined;
   status?: string | undefined;
   trace_id?: string | undefined;
+  version?: string | undefined;
   will_retry?: boolean | undefined;
 };
 
