@@ -1,3 +1,11 @@
+Ajuste operacional em 24/09/2026: versao do artefato no log JSON video_api_started, usando a mesma constante de /version. ADR: `adrs/0531-versao-log-inicializacao-api-video.md`.
+
+- [x] Log de API pronta inclui version proveniente do package.json, sem env manual.
+- [x] Teste de serializacao real do logger e wiring de startup aprovado; check/build video aprovados.
+Promocao solicitada: publicar homolog, revisar PR para main e registrar smoke publico no PR. Check video: 95 testes aprovados, zero skips; build aprovado. Versao preparada: 0.1.441.
+
+Impacto: somente log aditivo do video; sem banco, contrato HTTP, env, package, mock ou UI nova. API isolada e runtime combinado usam o mesmo startVideoApiRuntime. Rollback por reversao em homolog. O log aparece ao iniciar a nova instancia; a leitura remota do log privado depende de acesso operacional e nao sera alegada sem evidencia.
+
 Ajuste operacional em 24/09/2026: na tela `Meus posts e respostas`, psicologos passam a abrir por padrao na aba `Respostas`, preservando `Posts` como padrao para pacientes e a troca manual entre abas. A imagem anexada de 23/09/2026 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente; referencia visual baseada no anexo e em `_product/proto/Meus Posts - Psicologo.jpg`. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0530-aba-respostas-default-psicologos.md`.
 
 Criterios de aceite do ajuste de aba padrao:

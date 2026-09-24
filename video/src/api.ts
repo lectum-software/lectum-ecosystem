@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { pathToFileURL } from "node:url";
 import { createVideoApi } from "./app.js";
 import { parseVideoServiceConfig } from "./config/env.js";
+import { VIDEO_SERVICE_VERSION } from "./config/version.js";
 import { logError, logInfo } from "./http/logging.js";
 import { createRedisConnection, createVideoQueue } from "./infra/queue/client.js";
 import { ensureVideoStorage } from "./infra/storage/storage.js";
@@ -66,7 +67,11 @@ export const startVideoApiRuntime = async (
     server.once("error", onListenError);
     server.listen(config.port, config.host, () => {
       server.off("error", onListenError);
-      logInfo("video_api_started", { operation: "listen", status: "ready" });
+      logInfo("video_api_started", {
+        operation: "listen",
+        status: "ready",
+        version: VIDEO_SERVICE_VERSION,
+      });
       resolve();
     });
   });
