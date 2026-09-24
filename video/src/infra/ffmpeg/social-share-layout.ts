@@ -29,7 +29,7 @@ export const SOCIAL_SHARE_ART_LAYOUT = {
   professional: {
     badgeHeight: 24,
     badgeWidth: 26,
-    checkGap: 16,
+    checkGap: 10,
     checkMarkFontSize: 17,
     nameFontSize: 34,
     nameY: 1400,

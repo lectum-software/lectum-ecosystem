@@ -570,3 +570,5 @@ Formato recomendado:
 - [ADR-0527 — Truncagem do nome profissional no video social](0527-truncagem-nome-video-social.md)
 
 - [ADR-0528 — Metrica real do nome e margem do selo no MP4 social](0528-metrica-real-nome-selo-video-social.md)
+
+- [ADR-0529 — Paridade do nome na previa e margem compacta no video social](0529-paridade-nome-previa-margem-social.md)

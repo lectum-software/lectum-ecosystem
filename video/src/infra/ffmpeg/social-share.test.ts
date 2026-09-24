@@ -60,8 +60,8 @@ describe("FFmpeg social share command", () => {
           professionalNameLayout: { width, fontSize: 34 },
           verifiedBadgeFile,
         });
-        const nameX = Math.round((1080 - width - 16 - 26) / 2);
-        const badgeX = nameX + width + 16;
+        const nameX = Math.round((1080 - width - 10 - 26) / 2);
+        const badgeX = nameX + width + 10;
         assert.ok(filter.includes(`:x=${nameX}:y=1400:fontsize=34`));
         assert.ok(
           filter.includes(
@@ -99,7 +99,7 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /\[v0\]\[1:v\]overlay=x=110:y=250:format=auto:shortest=1\[card0\]/);
     assert.match(command, /overlay=x=329:y=274:format=auto/);
     assert.match(command, /scale=26:24:flags=lanczos\[verified_badge\]/);
-    assert.match(command, /overlay=x=635:y=1405:format=auto/);
+    assert.match(command, /overlay=x=632:y=1405:format=auto/);
     assert.equal(command.includes("eq="), false);
     assert.equal(command.includes("fps="), false);
     assert.equal(command.includes("[v0],drawbox"), false);
@@ -111,7 +111,7 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /drawtext=text='Respondido na Lectum'/);
     assert.match(command, /drawtext=text='Respondido na Lectum':.*:x=371:y=274:fontsize=38/);
     assert.doesNotMatch(command, /drawtext=text='✓'/);
-    assert.match(command, /drawtext=text='Psicóloga':.*:x=419:y=1440:fontsize=21/);
+    assert.match(command, /drawtext=text='Psicóloga':.*:x=422:y=1440:fontsize=21/);
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/manrope\/Manrope-Bold\.ttf'/);
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/manrope\/Manrope-Medium\.ttf'/);
     assert.doesNotMatch(command, /drawtext=text='lectum'/);
@@ -276,9 +276,9 @@ describe("FFmpeg social share command", () => {
     assert.equal(sanitized.professionalName, "Rousel Cesconetto fjfkfkgmqmqk...");
     assert.match(
       filter,
-      /drawtext=text='Rousel Cesconetto fjfkfkgmqmqk\.\.\.':.*:x=419:y=1400:fontsize=34/,
+      /drawtext=text='Rousel Cesconetto fjfkfkgmqmqk\.\.\.':.*:x=422:y=1400:fontsize=34/,
     );
-    assert.match(filter, /overlay=x=635:y=1405:format=auto/);
+    assert.match(filter, /overlay=x=632:y=1405:format=auto/);
     assert.doesNotMatch(filter, /fjfkfkgmqmqkqmfkfifngofkgo/);
   });
 

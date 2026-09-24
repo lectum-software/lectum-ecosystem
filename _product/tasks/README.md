@@ -1,3 +1,15 @@
+Ajuste visual em 24/09/2026: aproximar selo do nome e aplicar ellipsis na previa social conforme MP4. Anexos de 23/09 usados apenas como evidencia visual. Builder/Quick Copy nao exposto neste cliente; referencia ativa: inventario e proto local de video-resposta stories. ADR: `adrs/0529-paridade-nome-previa-margem-social.md`.
+
+- [x] MP4 mantem medicao real do nome e margem reduzida de 16 para 10px em 1080px, sem sobreposicao.
+- [x] Previa usa helper existente de 30 caracteres com `...`, sem alterar nome original ou metadados de compartilhamento.
+- [x] Selo da previa nao encolhe; margem proporcional de 0.93cqw, mobile-first (~390px).
+- [x] Testes reais de pixels do MP4 e checks/builds frontend/video aprovados.
+- [ ] Browser local e smoke privado de video: pendentes de acesso (Computer Use sem browsers conectados).
+
+Deploy: frontend e video independentes, sem contrato, banco, migration, env ou package novo. Novas geracoes recebem ajuste; arquivos antigos nao sao modificados. Rollback por reversao revisada em homolog. Push dispara deploy somente de homologacao; nao promover producao sem smoke privado.
+
+Validacoes locais: checks/builds frontend e video aprovados; video com 94 testes e zero skips, incluindo MP4 real com limites minimo/maximo de distancia entre pixels. Frontend tem somente o skip preexistente de symlink sem permissao Windows. Paridade executada entre os helpers reais frontend/video em cinco casos, incluindo o nome longo do anexo e limites 30/31. Artefato real inspecionado em 390px com Manrope Bold Debian. Guards de encoding/ADRs/tasks/source-size e check:version aprovados; versao 0.1.439 preparada nos cinco manifests.
+
 Correcao operacional em 24/09/2026: nome de ate 30 caracteres e margem real do selo no MP4 baixado. A previa ja estava correta; a causa era a estimativa de largura por quantidade de caracteres no FFmpeg. O anexo foi usado somente como evidencia visual. Builder/Quick Copy nao esta exposto pelas ferramentas deste cliente; consultado o inventario e a referencia local de video-resposta stories. ADR: `adrs/0528-metrica-real-nome-selo-video-social.md`.
 
 Criterios de aceite do MP4 social (substituem a regra de 18 caracteres do ajuste anterior):

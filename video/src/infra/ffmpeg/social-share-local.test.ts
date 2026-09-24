@@ -118,7 +118,7 @@ describe("social share local FFmpeg output", () => {
         metadata: inputMetadata,
         fontFile,
       });
-      assert.ok(layout.width > 0 && layout.width <= 910);
+      assert.ok(layout.width > 0 && layout.width <= 916);
       for (const withBadgeAsset of [true, false]) {
         const outputPath = join(directory, `name-${index}-${withBadgeAsset}.mp4`);
         await runManagedProcess({
@@ -162,8 +162,8 @@ describe("social share local FFmpeg output", () => {
           ],
         });
         const pixels = await readFile(rgbPath);
-        const nameX = Math.round((1080 - layout.width - 42) / 2);
-        const badgeX = nameX + layout.width + 16;
+        const nameX = Math.round((1080 - layout.width - 36) / 2);
+        const badgeX = nameX + layout.width + 10;
         let lastNamePixel = -1;
         let firstBadgePixel = 1080;
         for (let y = 0; y < 40; y++) {
@@ -177,9 +177,10 @@ describe("social share local FFmpeg output", () => {
             if (b > 160 && b > r + 60 && g > r + 30) firstBadgePixel = Math.min(firstBadgePixel, x);
           }
         }
+        assert.ok(firstBadgePixel - lastNamePixel <= 14, "selo proximo ao nome");
         assert.ok(lastNamePixel >= nameX, "nome visivel no MP4");
         assert.ok(firstBadgePixel < 1080, "selo visivel no MP4");
-        assert.ok(firstBadgePixel - lastNamePixel >= 14, "margem preservada apos compressao H.264");
+        assert.ok(firstBadgePixel - lastNamePixel >= 8, "margem preservada apos compressao H.264");
       }
     });
   }

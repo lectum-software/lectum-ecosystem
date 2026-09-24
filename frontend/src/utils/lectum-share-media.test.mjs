@@ -140,7 +140,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
     /sourceLines\.length > 2\s*\?\s*"text-\[4\.05cqw\] leading-\[1\.17\]"/,
   );
   assert.match(dialogSource, /top-\[69\.35%\]/);
-  assert.match(dialogSource, /gap-\[0\.62cqw\]/);
+  assert.match(dialogSource, /gap-\[0\.93cqw\]/);
   assert.match(dialogSource, /text-\[2\.95cqw\]/);
   assert.match(dialogSource, /mt-\[0\.55cqw\]/);
   assert.match(dialogSource, /text-\[1\.8cqw\]/);
@@ -173,4 +173,16 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.doesNotMatch(dialogSource, removedRuntimePattern);
   assert.doesNotMatch(wakeLockSource, removedRuntimePattern);
   assert.doesNotMatch(packageSource, removedRuntimePattern);
+});
+
+test("previa aplica a mesma truncagem explicita do nome no MP4", () => {
+  const dialog = readFileSync(
+    new URL("../components/community/lectum-share-download-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const target = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
+  assert.match(dialog, /\{truncateLectumShareProfessionalTagName\(target\.professional\.name\)\}/);
+  assert.doesNotMatch(dialog, /\{target\.professional\.name\}/);
+  assert.match(target, /LECTUM_SHARE_PROFESSIONAL_TAG_NAME_MAX_LENGTH = 30/);
+  assert.match(dialog, /min-h-2 min-w-2 shrink-0/);
 });
