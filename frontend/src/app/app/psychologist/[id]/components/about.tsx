@@ -284,7 +284,7 @@ export const AboutTab = ({
   );
   const modalityText = formatList([formatAttendanceLabel(profile)], "Modalidade não informada.");
   return (
-    <div className="grid gap-3.5 bg-surface-muted px-3 pt-3.5 pb-1 dark:bg-background sm:px-4 sm:pt-4">
+    <div className="grid gap-3.5 bg-background px-3 pt-3.5 pb-1 dark:bg-background sm:px-4 sm:pt-4">
       <ProfileSectionCard title="Sobre">
         {bioText ? <ExpandableAboutText text={bioText} /> : null}
         <PresentationVideo profile={profile} />

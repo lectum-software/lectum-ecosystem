@@ -274,7 +274,7 @@ export const ReviewsTab = ({
   summary: DirectoryReviewSummary;
 }) => {
   return (
-    <div className="grid gap-3.5 bg-surface-muted px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
+    <div className="grid gap-3.5 bg-background px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
       <ProfileTabHeaderCard
         count={summary.rating_count}
         countLabelPlural="avaliações"

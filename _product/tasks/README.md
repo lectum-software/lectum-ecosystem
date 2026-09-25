@@ -1,3 +1,14 @@
+Ajuste visual em 25/09/2026: removida a faixa cinza atras dos cards brancos no perfil profissional publico, a partir da secao `Sobre`. A evidencia visual foi o screenshot enviado pelo usuario em 25/09/2026; Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente, e a referencia ativa permanece `_product/proto/Perfil Profissional - Sobre.jpg`. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0532-fundo-uniforme-perfil-profissional.md`.
+
+Criterios de aceite do ajuste de fundo do perfil profissional:
+
+- [x] A area atras dos cards de `Sobre`, `Publicacoes` e `Avaliacoes` usa o mesmo fundo da pagina, sem faixa cinza divergente.
+- [x] Cards brancos, espacamentos, sombras e fundos internos sutis permanecem inalterados.
+- [x] Ajuste mobile-first preserva a largura e os paddings existentes do perfil profissional.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
+Impacto de deploy: somente frontend; apps podem ser publicados separadamente. Rollback por reversao revisada em homolog. Push em `homolog` dispara deploy automatico de homologacao. Validacoes locais: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `git diff --check` e `pnpm check:version` aprovados. Browser local via Edge headless abriu a rota, mas a inspecao visual completa ficou limitada pela pagina permanecer em carregamento de dados no ambiente local.
+
 Ajuste operacional em 24/09/2026: versao do artefato no log JSON video_api_started, usando a mesma constante de /version. ADR: `adrs/0531-versao-log-inicializacao-api-video.md`.
 
 - [x] Log de API pronta inclui version proveniente do package.json, sem env manual.
