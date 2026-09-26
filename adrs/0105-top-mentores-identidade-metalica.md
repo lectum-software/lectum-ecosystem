@@ -137,3 +137,42 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 ### Validacao
 
 - Validacoes de build/check e smoke ficam registradas no complemento correspondente da TASK-27.
+
+## Complemento 2026-09-26 - recorte inferior do podio
+
+- As elipses sobrepostas ao ranking encobriam medalhas e avatares. O cabecalho agora recorta seu proprio conteudo com `overflow: hidden` e raios inferiores elipticos de `50% / 36px`. O centro termina abaixo das laterais, como na referencia aprovada.
+- O fundo comunitario pertence somente ao cabecalho. A superficie cinza da pagina e da lista e continua; nao ha margens negativas nem camadas sobrepostas entre secoes.
+- Tracks internos com `minmax(0, 1fr)` permitem que os avatares respeitem as colunas responsivas. A proporcao lateral/central e 1:1.34.
+- A lista reserva menos largura para medalha e avatar e permite nomes em mais de uma linha.
+- Sem alteracoes em API, dados, elegibilidade, ordenacao ou analytics. A verificacao geometrica usa renderizacao isolada dos componentes; o smoke autenticado permanece separado.
+
+### Refinamento do cabecalho e das colunas
+
+- Consistencia com feed: usar background do PageShell (#f6f7f8 no tema claro), superficie branca, borda e sombra suave do CommunityPostCard, incluindo seu raio de 22px. Substituir somente os overrides do ranking; tokens globais e modo escuro permanecem compartilhados. O gradiente termina no background, nao em surface-muted.
+
+- O ranking passa a selecionar `psychologist_profile.gender` e responder `professional.type_label` via `authorTypeLabel`, ja usado nas comunidades. O frontend consome esse rotulo tambem no contexto de contato, sem inferir genero pelo nome, foto ou headline. Contrato aditivo, opcional no cliente para backend antigo, com fallback neutro Psicologo(a). Sem migracao de banco.
+
+- Pedido posterior substitui medalhas por numerais sem fundo na face das colunas. Remover fitas e suas regras CSS. Gradiente comunitario recebe etapas intermediarias e colunas desvanecem gradualmente a partir de 48%; frase passa a ter 12/20px de espaco superior/inferior no mobile. Preservar aros, nomes cadastrados e margens da lista.
+
+- Ajuste de proporcao solicitado: padding inferior do grupo foto/nome passa de 12px a 4px; cada coluna cresce 1rem em mobile e desktop. A animacao sobe a partir da posicao de repouso, preservando a folga minima acima do tampo.
+
+- Correcao subsequente: `professional.whatsapp_name` ja e derivado no CommunityMentorRepository de `professional_first_name` pelo helper canonico. Reutilizar este valor no podio sem uma nova regra de extracao de nome; quando ausente, manter displayName completo. Sem alterar API ou cadastro. Teste AST dedicado protege o acesso direto e fallback sem split.
+- Fitas ancoradas em 34px, junto a borda frontal do tampo de 36px, em vez do centro superior em 18px. Fade restrito aos ultimos 12px evita apagar medalhas laterais. Lista ganha margens externas de 16/24px e cantos inferiores arredondados.
+
+- Variante mais recente aprovada: remover os aneis concentricos e o recorte curvo. O cabecalho usa gradiente vertical da `visual_soft_color` ate `--lectum-surface-muted`; a base das colunas recebe mascara de transparencia apenas nos ultimos 28%, abaixo das medalhas.
+- A frase de reconhecimento fica centralizada entre podio e lista. O titulo Classificacao geral sai da apresentacao, mas a secao mantem nome acessivel. Lista usa superficie branca do tema e divisores discretos, sem cards dentro da secao arredondada. Aros, primeiros nomes, medalhas, ordenacao e contatos permanecem.
+
+- Variante subsequente aprovada: os aros metalicos permanecem nas fotos; apenas o primeiro token do nome profissional normalizado aparece no podio. Nome completo permanece no aria-label do link e na lista.
+- Foto e primeiro nome compartilham a animacao flutuante; medalha e duas fitas finas passam a ser filhas da coluna, fixas junto ao tampo. Remover movimento do link inteiro no hover e o arco acetinado sobre o avatar.
+- Colunas mais claras, com centro quase branco e laterais metalicas suaves. Sem alteracao da ordem, links ou dados do ranking.
+
+- Nova variante aprovada: substituir raios por tres aneis concentricos estaticos com intensidade decrescente (9%, 6%, 4%) da cor primaria da comunidade. A origem e ancorada a caixa do avatar vencedor, fora da animacao flutuante, e permanece recortada pelo cabecalho.
+- As medalhas passam a ser filhas do conjunto flutuante da foto; arco de fita e duas pontas curtas usam tons acetinados de ouro, prata e bronze. Colunas ficam sem numeracao propria. Elementos decorativos sao aria-hidden e nao capturam eventos; o link continua anunciando colocacao e nome.
+- Avatar comunitario reduzido para 56/64px e chamada superior para 18/20px em mobile/desktop.
+
+- Efeito radial solicitado em seguida: `repeating-conic-gradient` no background do cabecalho, com branco a 24% e sombra a 2% sobre o fundo comunitario existente. Sem elementos sobrepostos, animacao adicional ou alteracao na lista; o recorte inferior existente limita as faixas.
+
+- Remover o padding vertical do PageShell apenas nesta tela, inclusive nos breakpoints sm/lg, e manter a superficie cinza no wrapper. Isso elimina as faixas externas sem alterar outras paginas.
+- Trocar raios horizontais de 999px por 50% nas colunas: a normalizacao CSS dos raios anteriores reduzia tambem o raio vertical e deixava quinas visiveis atras do tampo eliptico. Usar raio vertical de 18px e tampo de 36px, sem sombra externa.
+- Substituir Voltar pelo avatar cadastrado da comunidade (`avatar_url`), com 64px no mobile, 72px no desktop e fallback de iniciais.
+- Posicoes na lista usam numeros neutros de 14px, sem medalhas preenchidas. Medalhas do podio permanecem.

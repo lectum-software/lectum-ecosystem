@@ -331,3 +331,51 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm version:bump` para `0.1.171`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-09-26 - curva conforme referencia aprovada
+
+### Refinamentos solicitados apos o reteste
+
+- [x] Unificar superficie com o feed: fundo bg-background, lista bg-surface com border-border, shadow-lectum-soft e raio de 22px do CommunityPostCard. Gradiente termina no mesmo fundo, sem alterar tokens globais.
+
+- [x] Incluir type_label derivado do genero cadastrado no perfil pelo helper canonico do backend; frontend nao infere mais profissao a partir do headline. Campo opcional no frontend para rollout compativel, com fallback Psicologo(a).
+
+- [x] Variante final: substituir medalhas/fitas por numeros diretamente nas colunas, suavizar fade de base e gradiente comunitario e reduzir distancias coluna/texto/lista.
+
+- [x] Reduzir espaco nome/tampo de 12px para 4px e aumentar cada coluna em 16px, mantendo diferencas entre colocacoes e a animacao existente.
+
+- [x] Fixar inicio das fitas na quina frontal do tampo (34px em tampo de 36px), preservando medalhas antes do fade final.
+- [x] Dar margens laterais de 16px/24px ao bloco branco da lista.
+- [x] Usar o primeiro nome configurado que a API ja fornece em whatsapp_name, sem split local; nome completo como fallback. Teste AST protege o acesso direto ao campo e seu fallback.
+
+- [x] Variante aprovada: substituir circulos e curva por gradiente da cor suave da comunidade ate cinza, com fade na base das colunas.
+- [x] Mover a frase de reconhecimento para abaixo do podio e remover o titulo visivel Classificacao geral.
+- [x] Apresentar a lista em uma secao branca continua com cantos superiores arredondados e linhas discretas, preservando links e contatos.
+
+- [x] Variante aprovada seguinte: manter aros metalicos, exibir primeiro nome sob a foto e pendurar medalhas nas colunas por duas fitas finas.
+- [x] Animar somente foto e primeiro nome; colunas, fitas e medalhas ficam fixas. Remover arco de fita do avatar.
+- [x] Clarear as colunas com tons metalicos suaves conforme referencia.
+
+- [x] Substituir raios por tres aneis concentricos suaves, ancorados ao avatar do primeiro lugar.
+- [x] Mover medalhas das colunas para o conjunto flutuante dos avatares, com fita acetinada no aro inferior e duas pontas curtas em ouro/prata/bronze.
+- [x] Reduzir avatar comunitario para 56px (64px no desktop) e chamada Top 5 para 18px (20px no desktop).
+
+- [x] Adicionar faixas radiais suaves sobre a cor cadastrada da comunidade, com origem atras do primeiro lugar e recorte na curva do cabecalho. A lista permanece sem o efeito.
+
+- [x] Remover faixas externas de padding superior/inferior da pagina.
+- [x] Corrigir normalizacao dos raios CSS das colunas e remover sombra externa.
+- [x] Remover o controle Voltar.
+- [x] Mostrar avatar da comunidade acima do titulo, com fallback de iniciais.
+- [x] Tornar as posicoes 1 a 5 da lista menores e sem fundo metalico.
+- [x] Conferir topo/fim da pagina e larguras 320/393 no harness visual, incluindo o wrapper PageShell.
+
+
+- [x] Remover elipses sobrepostas que escondiam as colunas e as medalhas.
+- [x] Aplicar recorte inferior com centro mais baixo e laterais mais altas no proprio cabecalho.
+- [x] Manter superficie cinza continua em toda a largura da classificacao.
+- [x] Ajustar proporcoes e limites responsivos dos avatares do podio.
+- [x] Preservar posicoes da lista e permitir quebra de nomes longos.
+- [x] Conferir componentes no navegador em larguras de 320 e 393 pixels.
+- [ ] Concluir smoke autenticado em homologacao com fotos e dados reais.
+
+Referencia: imagem aprovada de 26/09/2026 14:47:53 e screenshot de regressao enviados pelo usuario. Evidencia geometrica local: `../mentor-393.png`, renderizada a partir do TSX real com fixture isolada fora do repositorio, sem endpoints simulados ou dados permanentes. Build, TypeScript, Biome, source-safety e sincronizacao de versao verificados. A validacao com sessao real nao foi substituida pela fixture.

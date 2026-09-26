@@ -20,6 +20,7 @@ import {
   topMentorUserSelect,
 } from "../support/community-feed";
 import {
+  authorTypeLabel,
   buildProfessionalWhatsappUrl,
   buildUserProfessionalDisplayName,
   emptyTopMentorMetrics,
@@ -575,6 +576,7 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
         professional: {
           id: item.mentor.id,
           name: displayName,
+          type_label: authorTypeLabel("psicologo", profile?.gender),
           avatar: item.mentor.avatar,
           headline: profile?.headline ?? null,
           crp: normalizeStoredCrp(profile?.crp),

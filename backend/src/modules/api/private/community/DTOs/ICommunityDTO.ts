@@ -298,6 +298,7 @@ export type CommunityTopMentorDTO = {
   professional: {
     id: string;
     name: string;
+    type_label: string;
     avatar: string | null;
     headline: string | null;
     crp: string | null;
