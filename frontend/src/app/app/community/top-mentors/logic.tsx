@@ -1,11 +1,11 @@
 "use client";
 
-import { Medal } from "lucide-react";
+import { ArrowLeft, Medal, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { CSSProperties } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityTopMentor } from "@/api/generator/types/community";
@@ -24,6 +24,7 @@ import { PrivateTemplate } from "@/templates/private";
 import { getCommunityInitials } from "@/utils/community-display";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import { publicTopMentorsHref } from "@/utils/public-routes";
 import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 type ApiErrorData = {
@@ -406,6 +407,23 @@ export const CommunityTopMentorsLogic = () => {
   const mentors = (ranking.data?.data ?? []).slice(0, 5);
   const communityData = ranking.data?.community ?? null;
   const communityName = communityData?.name ?? "Comunidades Lectum";
+  const [shareFeedback, setShareFeedback] = useState("");
+  const shareRanking = async () => {
+    const url = new URL(publicTopMentorsHref(community), window.location.origin).toString();
+    setShareFeedback("");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `Top 5 Mentores em ${communityName}`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareFeedback("Link copiado.");
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        setShareFeedback("Não foi possível compartilhar. Tente novamente.");
+      }
+    }
+  };
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
   const pageStyle: CSSProperties & { "--top-mentor-backdrop": string } = {
     "--top-mentor-backdrop": communityData?.visual_soft_color ?? "var(--background)",
@@ -415,9 +433,34 @@ export const CommunityTopMentorsLogic = () => {
     <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-background px-0 py-0 sm:py-0 lg:pb-0">
       <section className="mx-auto grid min-h-screen w-full min-w-0 max-w-full content-start gap-0 bg-background sm:max-w-2xl lg:max-w-3xl">
         <header
-          className="top-mentor-ranking-header grid min-w-0 content-start px-4 pt-8"
+          className="top-mentor-ranking-header grid min-w-0 content-start px-4 pt-4"
           style={pageStyle}
         >
+          <nav aria-label="Ações do ranking" className="mb-4 flex items-center justify-between">
+            <Link
+              aria-label="Voltar para a comunidade"
+              title="Voltar para a comunidade"
+              href={community ? `/comunidades/${encodeURIComponent(community)}` : "/comunidades"}
+              className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <button
+              aria-label="Compartilhar Top Mentores"
+              title="Compartilhar Top Mentores"
+              className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
+              onClick={shareRanking}
+              type="button"
+            >
+              <Share2 className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </nav>
+          <p
+            role="status"
+            className={shareFeedback ? "mb-3 text-center text-sm text-muted" : "sr-only"}
+          >
+            {shareFeedback}
+          </p>
           <RankingHero
             communityAvatar={communityData?.avatar_url ?? null}
             communityName={communityName}

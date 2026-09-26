@@ -6,6 +6,7 @@ import {
   publicCommunityPostWhatsappShareHref,
   publicCommunityReplyWhatsappShareHref,
   publicPsychologistOpenGraphImageHref,
+  publicTopMentorsHref,
 } from "@/utils/public-routes";
 
 const COMMUNITY_ICON_MEDIA_PATH_PREFIX = "/community/icons/";
@@ -475,6 +476,32 @@ export const resolveCommunitySeoMetadata = async ({
     ogTitle: seo.og_title,
     title: seo.title,
   });
+};
+
+export const resolveTopMentorsSeoMetadata = async (community?: string): Promise<Metadata> => {
+  const seo = community ? await getPublicCommunitySeo({ slug: community }) : null;
+  const canonical = publicTopMentorsHref(seo?.slug ?? community);
+  const title = seo ? `Top 5 Mentores em ${seo.og_title}` : "Top Mentores | Lectum";
+  const description = "Profissionais que mais acolhem e contribuem com a comunidade.";
+  const image = seo?.og_image_url
+    ? publicCommunityOpenGraphImageHref(seo.slug, seo.updated_at)
+    : undefined;
+
+  return resolveSeoMetadata(
+    "top_mentors",
+    { canonical, description, title },
+    {
+      canonical,
+      description,
+      image,
+      imageHeight: image ? 1200 : undefined,
+      imageWidth: image ? 1200 : undefined,
+      ogDescription: description,
+      ogTitle: title,
+      openGraphUrl: canonical,
+      title,
+    },
+  );
 };
 
 export const resolvePsychologistSeoMetadata = async ({
