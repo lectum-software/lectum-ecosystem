@@ -6,6 +6,23 @@ const { publicCommunityOpenGraphImageHref, publicPsychologistOpenGraphImageHref 
   "../utils/public-routes.ts"
 );
 
+test("ranking share links preserve and encode the community", async () => {
+  const { publicTopMentorsHref } = await import("../utils/public-routes.ts");
+  assert.equal(publicTopMentorsHref(), "/comunidades/top-mentores");
+  const url = new URL(publicTopMentorsHref("luto & recomeço"), "https://lectum.com.br");
+  assert.equal(url.searchParams.get("community"), "luto & recomeço");
+  assert.equal([...url.searchParams].length, 1);
+});
+
+test("ranking metadata reuses the community avatar and keeps the ranking canonical", () => {
+  const source = readFileSync(new URL("./seo-metadata.ts", import.meta.url), "utf8");
+  const ranking = source.slice(source.indexOf("export const resolveTopMentorsSeoMetadata"));
+  assert.match(ranking, /getPublicCommunitySeo\(\{ slug: community \}\)/);
+  assert.match(ranking, /publicTopMentorsHref\(seo\?\.slug \?\? community\)/);
+  assert.match(ranking, /const image = seo\?\.og_image_url \?\? undefined/);
+  assert.match(ranking, /openGraphUrl: canonical/);
+});
+
 test("rotas de imagem Open Graph de entidades usam API publica quadrada e versionada", () => {
   assert.equal(
     publicPsychologistOpenGraphImageHref("psy/1", "2026-08-27T23:00:00.000Z"),

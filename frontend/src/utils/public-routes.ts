@@ -2,6 +2,11 @@ export const PUBLIC_PSYCHOLOGISTS_HREF = "/psicologos";
 export const PUBLIC_COMMUNITIES_HREF = "/comunidades";
 export const PUBLIC_TOP_MENTORS_HREF = "/comunidades/top-mentores";
 
+export const publicTopMentorsHref = (community?: string | null) =>
+  community
+    ? `${PUBLIC_TOP_MENTORS_HREF}?${new URLSearchParams({ community })}`
+    : PUBLIC_TOP_MENTORS_HREF;
+
 export const publicPsychologistHref = (id: string) => `${PUBLIC_PSYCHOLOGISTS_HREF}/${id}`;
 
 export const publicPsychologistContactHref = (id: string) =>
