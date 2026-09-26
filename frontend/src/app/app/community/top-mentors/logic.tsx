@@ -213,6 +213,7 @@ const PodiumMentor = ({
       aria-label={`${mentor.position}º lugar: ${displayName}`}
       className={cn(
         "group grid min-w-0 grid-cols-[minmax(0,1fr)] justify-items-center text-center transition hover:-translate-y-1",
+        isWinner && "top-mentor-winner",
         className,
       )}
       href={topMentorProfileUrl(mentor.professional.profile_url)}
@@ -221,10 +222,27 @@ const PodiumMentor = ({
         className={cn(
           "lectum-top-mentor-float relative z-10 grid min-w-0 grid-cols-[minmax(0,1fr)] overflow-visible place-items-center",
           "-mb-2 w-full",
+          tone.metal,
         )}
         style={{ animationDelay: delay }}
       >
         <Avatar mentor={mentor} ringed size={size} />
+        <span className="top-mentor-ribbon" aria-hidden="true" />
+        <span className="top-mentor-ribbon-tails" aria-hidden="true" />
+        <span
+          className="absolute left-1/2 top-[calc(100%+10px)] z-20 -translate-x-1/2"
+          aria-hidden="true"
+        >
+          <span
+            className={cn(
+              "top-mentor-position-medal grid place-items-center rounded-full border-2 border-media-foreground text-base font-black",
+              isWinner ? "h-12 w-12 text-xl" : "h-10 w-10",
+              tone.positionMedal,
+            )}
+          >
+            <span>{mentor.position}</span>
+          </span>
+        </span>
       </span>
       <span
         className={cn(
@@ -233,17 +251,7 @@ const PodiumMentor = ({
           columnClassName,
         )}
         aria-hidden="true"
-      >
-        <span
-          className={cn(
-            "top-mentor-position-medal grid place-items-center rounded-full border-2 border-media-foreground text-base font-black",
-            isWinner ? "h-12 w-12 text-xl" : "h-10 w-10",
-            tone.positionMedal,
-          )}
-        >
-          <span>{mentor.position}</span>
-        </span>
-      </span>
+      />
     </Link>
   );
 };
@@ -266,13 +274,13 @@ const RankingHero = ({
     <section className="relative box-border w-full min-w-0 max-w-full px-1 sm:px-6">
       <div className="relative z-10 grid w-full min-w-0 justify-items-center gap-7 overflow-visible text-center sm:gap-9">
         <div className="grid w-full justify-items-center gap-4">
-          <span className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-2 border-media-foreground bg-surface text-lg font-semibold text-muted sm:h-[72px] sm:w-[72px]">
+          <span className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border-2 border-media-foreground bg-surface text-base font-semibold text-muted sm:h-16 sm:w-16">
             {communityAvatarSrc ? (
               <Image
                 alt={`Avatar da comunidade ${communityName}`}
                 className="object-cover"
                 fill
-                sizes="(min-width: 640px) 72px, 64px"
+                sizes="(min-width: 640px) 64px, 56px"
                 src={communityAvatarSrc}
                 unoptimized={isPublicMediaUrl(communityAvatar)}
               />
@@ -284,7 +292,7 @@ const RankingHero = ({
             aria-label={`Top 5 mentores em ${communityName}`}
             className="grid w-full min-w-0 max-w-[24rem] gap-2 sm:max-w-2xl"
           >
-            <span className="text-xl font-medium leading-tight tracking-normal text-muted dark:text-muted sm:text-2xl">
+            <span className="text-lg font-medium leading-tight tracking-normal text-muted dark:text-muted sm:text-xl">
               Top 5 Mentores em
             </span>
             <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.08] tracking-normal text-foreground [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
@@ -410,7 +418,8 @@ export const CommunityTopMentorsLogic = () => {
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
   const pageStyle = {
     backgroundColor: communityData?.visual_soft_color ?? "var(--lectum-background)",
-  } satisfies CSSProperties;
+    "--top-mentor-accent": communityData?.visual_primary_color ?? "var(--lectum-primary)",
+  } satisfies CSSProperties & { "--top-mentor-accent": string };
 
   return (
     <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-surface-muted px-0 py-0 sm:py-0 lg:pb-0">

@@ -19,6 +19,8 @@ The source and the full-page browser capture were opened together. Comparison fo
 
 ## Remaining Verification
 
+Concentric rings and hanging medals follow-up: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-rings-medals.png`. Inspected full-page captures at 393px and 320px. Three diffuse rings replace rays and center on the winner's avatar box. Satin lower arcs and short ribbon tails connect each avatar to its medal without crossing the portrait area. Medals are children of the existing floating wrapper; columns contain no position badges. Community avatar and introductory title are smaller. The fixture exercises initials fallback; authenticated photo checks remain separate.
+
 Radial-background follow-up: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-rays.png`. Inspected the actual compiled CSS with local page components at desktop and mobile widths. Alternating low-contrast bands originate behind the winner, retain the community base color and stop at the existing header curve. No changes to avatars, content, layout or ranking surface. Authenticated-data limitations below still apply.
 
 Follow-up capture: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-refinements-393.png`. The isolated harness now includes the PageShell wrapper classes and their merged page overrides. Top and bottom spacing inspected at 393px; 320px rechecked. No exterior color bands or square column corners remain visible. Community avatar initials fallback occupies its fixed slot; Back is absent, and list positions are smaller neutral text. Actual community photo loading remains an authenticated-data verification gap.

@@ -336,6 +336,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Substituir raios por tres aneis concentricos suaves, ancorados ao avatar do primeiro lugar.
+- [x] Mover medalhas das colunas para o conjunto flutuante dos avatares, com fita acetinada no aro inferior e duas pontas curtas em ouro/prata/bronze.
+- [x] Reduzir avatar comunitario para 56px (64px no desktop) e chamada Top 5 para 18px (20px no desktop).
+
 - [x] Adicionar faixas radiais suaves sobre a cor cadastrada da comunidade, com origem atras do primeiro lugar e recorte na curva do cabecalho. A lista permanece sem o efeito.
 
 - [x] Remover faixas externas de padding superior/inferior da pagina.

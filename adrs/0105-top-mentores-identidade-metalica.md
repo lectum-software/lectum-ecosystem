@@ -148,6 +148,10 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Nova variante aprovada: substituir raios por tres aneis concentricos estaticos com intensidade decrescente (9%, 6%, 4%) da cor primaria da comunidade. A origem e ancorada a caixa do avatar vencedor, fora da animacao flutuante, e permanece recortada pelo cabecalho.
+- As medalhas passam a ser filhas do conjunto flutuante da foto; arco de fita e duas pontas curtas usam tons acetinados de ouro, prata e bronze. Colunas ficam sem numeracao propria. Elementos decorativos sao aria-hidden e nao capturam eventos; o link continua anunciando colocacao e nome.
+- Avatar comunitario reduzido para 56/64px e chamada superior para 18/20px em mobile/desktop.
+
 - Efeito radial solicitado em seguida: `repeating-conic-gradient` no background do cabecalho, com branco a 24% e sombra a 2% sobre o fundo comunitario existente. Sem elementos sobrepostos, animacao adicional ou alteracao na lista; o recorte inferior existente limita as faixas.
 
 - Remover o padding vertical do PageShell apenas nesta tela, inclusive nos breakpoints sm/lg, e manter a superficie cinza no wrapper. Isso elimina as faixas externas sem alterar outras paginas.

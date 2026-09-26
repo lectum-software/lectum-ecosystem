@@ -594,11 +594,76 @@ video::backdrop {
   /* Clip the column bases with the same downward arc as the community backdrop. */
   overflow: hidden;
   border-radius: 0 0 50% 50% / 0 0 36px 36px;
-  background-image: repeating-conic-gradient(
-    from -9deg at 50% calc(100% - 220px),
-    rgb(255 255 255 / 24%) 0deg 18deg,
-    rgb(15 23 42 / 2%) 18deg 36deg
+}
+
+.top-mentor-winner {
+  position: relative;
+}
+
+.top-mentor-winner::before {
+  content: "";
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  z-index: -1;
+  width: calc(100% + 400px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle at center,
+    transparent 88px,
+    color-mix(in srgb, var(--top-mentor-accent) 9%, transparent) 90px,
+    transparent 125px,
+    transparent 152px,
+    color-mix(in srgb, var(--top-mentor-accent) 6%, transparent) 154px,
+    transparent 193px,
+    transparent 222px,
+    color-mix(in srgb, var(--top-mentor-accent) 4%, transparent) 224px,
+    transparent 267px
   );
+}
+
+.top-mentor-ribbon {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  border: 5px solid var(--top-mentor-ribbon-color);
+  border-radius: 50%;
+  clip-path: inset(55% 0 0);
+  pointer-events: none;
+}
+
+.top-mentor-ribbon-tails {
+  position: absolute;
+  top: calc(100% - 7px);
+  left: 50%;
+  z-index: 12;
+  width: 24px;
+  height: 24px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.top-mentor-ribbon-tails::before,
+.top-mentor-ribbon-tails::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 7px;
+  height: 24px;
+  background: var(--top-mentor-ribbon-color);
+  box-shadow: inset 1px 0 rgb(255 255 255 / 35%);
+}
+
+.top-mentor-ribbon-tails::before {
+  left: 4px;
+  transform: rotate(-22deg);
+}
+
+.top-mentor-ribbon-tails::after {
+  right: 4px;
+  transform: rotate(22deg);
 }
 
 .top-mentor-ranking-panel {
@@ -606,18 +671,21 @@ video::backdrop {
 }
 
 .top-mentor-metal--gold {
+  --top-mentor-ribbon-color: #d3af58;
   --top-mentor-metal-gradient: linear-gradient(135deg, #ce953a 0%, #fefe7b 52%, #9c7924 100%);
   --top-mentor-metal-glow: rgb(206 149 58 / 28%);
   --top-mentor-metal-label: #5f3c07;
 }
 
 .top-mentor-metal--silver {
+  --top-mentor-ribbon-color: #afbac8;
   --top-mentor-metal-gradient: linear-gradient(135deg, #cbd5e1 0%, #f1f5f9 52%, #94a3b8 100%);
   --top-mentor-metal-glow: rgb(148 163 184 / 24%);
   --top-mentor-metal-label: #405168;
 }
 
 .top-mentor-metal--bronze {
+  --top-mentor-ribbon-color: #bf895b;
   --top-mentor-metal-gradient: linear-gradient(
     135deg,
     #a8703a 0%,
