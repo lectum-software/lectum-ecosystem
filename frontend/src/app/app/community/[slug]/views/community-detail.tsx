@@ -23,6 +23,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -68,6 +69,8 @@ export const CommunityDetailLogic = ({
 }: { slug: string } & CommunityRouteLogicProps) => {
   const router = useRouter();
   const conversion = useProgressiveConversion();
+  const currentUser = useAppSelector((state) => state.user);
+  const isPsychologistUser = currentUser?.role === "psicologo";
   const [sort, setSort] = useState<CommunityPostSort>("featured");
   const [sortPeriods, setSortPeriods] = useState<CommunityPostSelectedPeriods>({});
   const [communitySearchOpen, setCommunitySearchOpen] = useState(false);
@@ -327,6 +330,7 @@ export const CommunityDetailLogic = ({
 
             <div className="grid gap-3">
               <CommunityPostSortChips
+                showProfessionalOptions={isPsychologistUser}
                 onChange={setSort}
                 onPeriodChange={(value, period) => {
                   setSort(value);

@@ -201,7 +201,7 @@ export type CurrentVote = 1 | -1 | null;
 
 export type CommunitySortPeriodKey = keyof CommunityPostSortMetricsDTO["comments"];
 
-export type CommunityPostSortValue = "featured" | "new" | "commented" | "voted";
+export type CommunityPostSortValue = "opportunities" | "featured" | "new" | "commented" | "voted";
 
 export type GeneralFeedQueueItem = {
   communityHotScore: number;
@@ -295,7 +295,8 @@ export const incrementCommunitySortPeriodMetrics = (
 };
 
 export const normalizeCommunityPostSort = (value?: string | null): CommunityPostSortValue => {
-  if (value === "new" || value === "commented" || value === "voted") return value;
+  if (value === "opportunities" || value === "new" || value === "commented" || value === "voted")
+    return value;
 
   return "featured";
 };
@@ -359,6 +360,21 @@ export const sortCommunityPostResults = (
 
   if (sort === "new") {
     return sortedItems.sort(compareCommunityPostDates);
+  }
+
+  if (sort === "opportunities") {
+    return sortedItems.sort((a, b) => {
+      const aMetrics = communityPostMetrics(a.id, metricsByPostId);
+      const bMetrics = communityPostMetrics(b.id, metricsByPostId);
+      const professionalRepliesDiff =
+        aMetrics.psychologist_replies_count - bMetrics.psychologist_replies_count;
+      if (professionalRepliesDiff !== 0) return professionalRepliesDiff;
+
+      const totalRepliesDiff = a.replies_count - b.replies_count;
+      if (totalRepliesDiff !== 0) return totalRepliesDiff;
+
+      return compareCommunityPostDates(a, b);
+    });
   }
 
   if (sort === "commented" || sort === "voted") {

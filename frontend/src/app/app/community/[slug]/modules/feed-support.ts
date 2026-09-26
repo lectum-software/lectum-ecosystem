@@ -1,4 +1,4 @@
-import { ArrowUp, Clock, Flame, MessageCircle } from "lucide-react";
+import { ArrowUp, Clock, Flame, MessageCircle, Sparkles } from "lucide-react";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import type { VoteValue } from "@/components/community/vote-action-button";
@@ -14,6 +14,7 @@ export const FEED_VARIATION_WINDOW_SIZE = COMMUNITY_FEED_VARIATION_WINDOW_SIZE;
 export const FEED_VARIATION_MAX_ITEMS = PAGE_LIMIT;
 
 export const COMMUNITY_POST_SORTS = [
+  { icon: Sparkles, label: "Oportunidades", professionalOnly: true, value: "opportunities" },
   { icon: Flame, label: "Em destaque", value: "featured" },
   { icon: Clock, label: "Novos", value: "new" },
   { icon: MessageCircle, label: "Mais comentados", period: true, value: "commented" },
@@ -305,6 +306,21 @@ export const sortCommunityPosts = (
 
   if (sort === "new") {
     return items.sort(comparePostDates);
+  }
+
+  if (sort === "opportunities") {
+    return items.sort((a, b) => {
+      const aMetrics = communityPostSortMetrics(a);
+      const bMetrics = communityPostSortMetrics(b);
+      const professionalRepliesDiff =
+        aMetrics.psychologist_replies_count - bMetrics.psychologist_replies_count;
+      if (professionalRepliesDiff !== 0) return professionalRepliesDiff;
+
+      const totalRepliesDiff = a.replies_count - b.replies_count;
+      if (totalRepliesDiff !== 0) return totalRepliesDiff;
+
+      return comparePostDates(a, b);
+    });
   }
 
   if (sort === "commented") {

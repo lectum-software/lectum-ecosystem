@@ -511,11 +511,13 @@ export const CommunityPostSortChips = ({
   onChange,
   onPeriodChange,
   periods,
+  showProfessionalOptions = false,
   value,
 }: {
   onChange: (value: CommunityPostSort) => void;
   onPeriodChange: (sort: CommunityPostSortWithPeriod, period: CommunityPostSortPeriod) => void;
   periods: CommunityPostSelectedPeriods;
+  showProfessionalOptions?: boolean;
   value: CommunityPostSort;
 }) => (
   <nav
@@ -524,6 +526,10 @@ export const CommunityPostSortChips = ({
   >
     <div className="flex min-w-max items-center gap-1.5 py-1 pr-2">
       {COMMUNITY_POST_SORTS.map((item) => {
+        if ("professionalOnly" in item && item.professionalOnly && !showProfessionalOptions) {
+          return null;
+        }
+
         const Icon = item.icon;
         const active = value === item.value;
         const hasPeriod = "period" in item;
