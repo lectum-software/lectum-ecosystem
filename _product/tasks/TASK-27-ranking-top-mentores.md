@@ -336,6 +336,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Adicionar faixas radiais suaves sobre a cor cadastrada da comunidade, com origem atras do primeiro lugar e recorte na curva do cabecalho. A lista permanece sem o efeito.
+
 - [x] Remover faixas externas de padding superior/inferior da pagina.
 - [x] Corrigir normalizacao dos raios CSS das colunas e remover sombra externa.
 - [x] Remover o controle Voltar.

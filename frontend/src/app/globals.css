@@ -594,6 +594,11 @@ video::backdrop {
   /* Clip the column bases with the same downward arc as the community backdrop. */
   overflow: hidden;
   border-radius: 0 0 50% 50% / 0 0 36px 36px;
+  background-image: repeating-conic-gradient(
+    from -9deg at 50% calc(100% - 220px),
+    rgb(255 255 255 / 24%) 0deg 18deg,
+    rgb(15 23 42 / 2%) 18deg 36deg
+  );
 }
 
 .top-mentor-ranking-panel {

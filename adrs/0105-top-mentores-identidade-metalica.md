@@ -148,6 +148,8 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Efeito radial solicitado em seguida: `repeating-conic-gradient` no background do cabecalho, com branco a 24% e sombra a 2% sobre o fundo comunitario existente. Sem elementos sobrepostos, animacao adicional ou alteracao na lista; o recorte inferior existente limita as faixas.
+
 - Remover o padding vertical do PageShell apenas nesta tela, inclusive nos breakpoints sm/lg, e manter a superficie cinza no wrapper. Isso elimina as faixas externas sem alterar outras paginas.
 - Trocar raios horizontais de 999px por 50% nas colunas: a normalizacao CSS dos raios anteriores reduzia tambem o raio vertical e deixava quinas visiveis atras do tampo eliptico. Usar raio vertical de 18px e tampo de 36px, sem sombra externa.
 - Substituir Voltar pelo avatar cadastrado da comunidade (`avatar_url`), com 64px no mobile, 72px no desktop e fallback de iniciais.
