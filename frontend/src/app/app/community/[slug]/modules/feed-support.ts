@@ -12,6 +12,7 @@ export const PAGE_LIMIT = 12;
 
 export const FEED_VARIATION_WINDOW_SIZE = COMMUNITY_FEED_VARIATION_WINDOW_SIZE;
 export const FEED_VARIATION_MAX_ITEMS = PAGE_LIMIT;
+export const COMMUNITY_OPPORTUNITIES_WINDOW_DAYS = 90;
 
 export const COMMUNITY_POST_SORTS = [
   { icon: Sparkles, label: "Oportunidades", professionalOnly: true, value: "opportunities" },
@@ -231,6 +232,19 @@ export const varyCommunityFeedPosts = (posts: CommunityPost[], seed: number) =>
 export const comparePostDates = (a: CommunityPost, b: CommunityPost) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
+export const resolveCommunityOpportunitiesStartTime = () => {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - COMMUNITY_OPPORTUNITIES_WINDOW_DAYS);
+
+  return startDate.getTime();
+};
+
+export const isCommunityOpportunityPost = (post: CommunityPost, startTime: number) => {
+  const createdAt = new Date(post.created_at).getTime();
+
+  return post.author.role !== "psicologo" && !Number.isNaN(createdAt) && createdAt >= startTime;
+};
+
 export const fallbackCommunityPeriodMetrics = (
   value: number,
 ): Record<CommunityPostSortPeriod, number> => ({
@@ -309,18 +323,22 @@ export const sortCommunityPosts = (
   }
 
   if (sort === "opportunities") {
-    return items.sort((a, b) => {
-      const aMetrics = communityPostSortMetrics(a);
-      const bMetrics = communityPostSortMetrics(b);
-      const professionalRepliesDiff =
-        aMetrics.psychologist_replies_count - bMetrics.psychologist_replies_count;
-      if (professionalRepliesDiff !== 0) return professionalRepliesDiff;
+    const opportunityStartTime = resolveCommunityOpportunitiesStartTime();
 
-      const totalRepliesDiff = a.replies_count - b.replies_count;
-      if (totalRepliesDiff !== 0) return totalRepliesDiff;
+    return items
+      .filter((post) => isCommunityOpportunityPost(post, opportunityStartTime))
+      .sort((a, b) => {
+        const aMetrics = communityPostSortMetrics(a);
+        const bMetrics = communityPostSortMetrics(b);
+        const professionalRepliesDiff =
+          aMetrics.psychologist_replies_count - bMetrics.psychologist_replies_count;
+        if (professionalRepliesDiff !== 0) return professionalRepliesDiff;
 
-      return comparePostDates(a, b);
-    });
+        const totalRepliesDiff = a.replies_count - b.replies_count;
+        if (totalRepliesDiff !== 0) return totalRepliesDiff;
+
+        return comparePostDates(a, b);
+      });
   }
 
   if (sort === "commented") {

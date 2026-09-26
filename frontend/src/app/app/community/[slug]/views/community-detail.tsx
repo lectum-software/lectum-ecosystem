@@ -78,6 +78,7 @@ export const CommunityDetailLogic = ({
   const deferredCommunitySearch = useDeferredValue(communitySearch.trim());
   const communitySearchInputRef = useRef<HTMLInputElement>(null);
   const communitySearchReturnStateRef = useRef<{ scrollY: number } | null>(null);
+  const professionalDefaultSortAppliedRef = useRef(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
   const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
@@ -154,6 +155,19 @@ export const CommunityDetailLogic = ({
 
     communitySearchInputRef.current?.focus();
   }, [communitySearchOpen]);
+
+  useEffect(() => {
+    if (isPsychologistUser && !professionalDefaultSortAppliedRef.current) {
+      professionalDefaultSortAppliedRef.current = true;
+      setSort((current) => (current === "featured" ? "opportunities" : current));
+      return;
+    }
+
+    if (!isPsychologistUser && sort === "opportunities") {
+      professionalDefaultSortAppliedRef.current = false;
+      setSort("featured");
+    }
+  }, [isPsychologistUser, sort]);
 
   const openCommunitySearch = () => {
     communitySearchReturnStateRef.current = {

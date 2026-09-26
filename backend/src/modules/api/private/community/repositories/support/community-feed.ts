@@ -35,6 +35,8 @@ export const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
 
 export const COMMUNITY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 
+export const COMMUNITY_OPPORTUNITIES_WINDOW_DAYS = 90;
+
 export const communitySelect = {
   id: true,
   name: true,
@@ -307,6 +309,13 @@ export const normalizeCommunityPostSortPeriod = (value?: string | null): Communi
   return "week";
 };
 
+export const resolveCommunityOpportunitiesStartDate = () => {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - COMMUNITY_OPPORTUNITIES_WINDOW_DAYS);
+
+  return startDate;
+};
+
 export const compareCommunityPostDates = (a: PostResult, b: PostResult) => {
   const dateDiff = b.createdAt.getTime() - a.createdAt.getTime();
   if (dateDiff !== 0) return dateDiff;
@@ -356,7 +365,17 @@ export const sortCommunityPostResults = (
   period: CommunitySortPeriodKey,
   metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
 ) => {
-  const sortedItems = items.filter((item) => item.status !== "removido");
+  const opportunityStartTime =
+    sort === "opportunities" ? resolveCommunityOpportunitiesStartDate().getTime() : null;
+  const sortedItems = items.filter((item) => {
+    if (item.status === "removido") return false;
+
+    if (opportunityStartTime) {
+      return item.author.role !== "psicologo" && item.createdAt.getTime() >= opportunityStartTime;
+    }
+
+    return true;
+  });
 
   if (sort === "new") {
     return sortedItems.sort(compareCommunityPostDates);
