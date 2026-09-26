@@ -19,6 +19,8 @@ The source and the full-page browser capture were opened together. Comparison fo
 
 ## Remaining Verification
 
+Follow-up capture: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-refinements-393.png`. The isolated harness now includes the PageShell wrapper classes and their merged page overrides. Top and bottom spacing inspected at 393px; 320px rechecked. No exterior color bands or square column corners remain visible. Community avatar initials fallback occupies its fixed slot; Back is absent, and list positions are smaller neutral text. Actual community photo loading remains an authenticated-data verification gap.
+
 Authenticated browser is unavailable in this session. Local geometry is verified, but full visual fidelity and live profile/contact interactions cannot be declared passed from the fixture. No production data or API was mocked.
 
 final result: blocked

@@ -334,6 +334,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Complemento 2026-09-26 - curva conforme referencia aprovada
 
+### Refinamentos solicitados apos o reteste
+
+- [x] Remover faixas externas de padding superior/inferior da pagina.
+- [x] Corrigir normalizacao dos raios CSS das colunas e remover sombra externa.
+- [x] Remover o controle Voltar.
+- [x] Mostrar avatar da comunidade acima do titulo, com fallback de iniciais.
+- [x] Tornar as posicoes 1 a 5 da lista menores e sem fundo metalico.
+- [x] Conferir topo/fim da pagina e larguras 320/393 no harness visual, incluindo o wrapper PageShell.
+
+
 - [x] Remover elipses sobrepostas que escondiam as colunas e as medalhas.
 - [x] Aplicar recorte inferior com centro mais baixo e laterais mais altas no proprio cabecalho.
 - [x] Manter superficie cinza continua em toda a largura da classificacao.

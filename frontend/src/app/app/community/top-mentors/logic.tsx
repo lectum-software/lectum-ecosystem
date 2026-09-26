@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowLeft, Medal } from "lucide-react";
+import { Medal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { CSSProperties } from "react";
 import { useMemo } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
@@ -21,8 +21,8 @@ import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { getCommunityInitials } from "@/utils/community-display";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
@@ -249,30 +249,49 @@ const PodiumMentor = ({
 };
 
 const RankingHero = ({
+  communityAvatar,
   communityName,
   mentors,
 }: {
+  communityAvatar: string | null;
   communityName: string;
   mentors: CommunityTopMentor[];
 }) => {
   const first = mentors[0];
   const second = mentors[1];
   const third = mentors[2];
+  const communityAvatarSrc = resolvePublicMediaUrl(communityAvatar);
 
   return (
-    <section className="relative box-border w-full min-w-0 max-w-full px-1 pt-6 sm:px-6 sm:pt-8">
+    <section className="relative box-border w-full min-w-0 max-w-full px-1 sm:px-6">
       <div className="relative z-10 grid w-full min-w-0 justify-items-center gap-7 overflow-visible text-center sm:gap-9">
-        <h1
-          aria-label={`Top 5 mentores em ${communityName}`}
-          className="grid w-full min-w-0 max-w-[24rem] gap-2 sm:max-w-2xl"
-        >
-          <span className="text-xl font-medium leading-tight tracking-normal text-muted dark:text-muted sm:text-2xl">
-            Top 5 Mentores em
+        <div className="grid w-full justify-items-center gap-4">
+          <span className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-2 border-media-foreground bg-surface text-lg font-semibold text-muted sm:h-[72px] sm:w-[72px]">
+            {communityAvatarSrc ? (
+              <Image
+                alt={`Avatar da comunidade ${communityName}`}
+                className="object-cover"
+                fill
+                sizes="(min-width: 640px) 72px, 64px"
+                src={communityAvatarSrc}
+                unoptimized={isPublicMediaUrl(communityAvatar)}
+              />
+            ) : (
+              getCommunityInitials(communityName)
+            )}
           </span>
-          <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.08] tracking-normal text-foreground [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
-            {communityName}
-          </span>
-        </h1>
+          <h1
+            aria-label={`Top 5 mentores em ${communityName}`}
+            className="grid w-full min-w-0 max-w-[24rem] gap-2 sm:max-w-2xl"
+          >
+            <span className="text-xl font-medium leading-tight tracking-normal text-muted dark:text-muted sm:text-2xl">
+              Top 5 Mentores em
+            </span>
+            <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.08] tracking-normal text-foreground [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
+              {communityName}
+            </span>
+          </h1>
+        </div>
 
         {first ? (
           <div className="grid w-full max-w-[430px] grid-cols-[1fr_1.34fr_1fr] items-end justify-center gap-2 overflow-visible sm:gap-3">
@@ -318,7 +337,6 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   const professionalType = professionLabel(mentor);
   const canOpenWhatsApp = Boolean(mentor.professional.whatsapp_url);
   const displayName = getMentorProfessionalDisplayName(mentor);
-  const tone = rankTone(mentor.position);
   const whatsappName = getPsychologistWhatsappDisplayName({
     id: mentor.professional.id,
     name: displayName,
@@ -333,12 +351,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
         <span
-          className={cn(
-            "grid h-9 w-9 shrink-0 place-items-center rounded-full text-base font-bold",
-            isTopThree
-              ? cn("top-mentor-list-medal", tone.metal)
-              : "border border-border bg-muted/30 text-primary",
-          )}
+          className="grid h-7 w-5 shrink-0 place-items-center text-sm font-medium tabular-nums text-muted"
           aria-hidden="true"
         >
           <span>{mentor.position}</span>
@@ -387,7 +400,6 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
 };
 
 export const CommunityTopMentorsLogic = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const community = searchParams.get("community") || undefined;
   const query = useMemo(() => ({ community, limit: 5, period: "all" as const }), [community]);
@@ -401,23 +413,17 @@ export const CommunityTopMentorsLogic = () => {
   } satisfies CSSProperties;
 
   return (
-    <PrivateTemplate contentClassName="max-w-none overflow-x-hidden px-0">
+    <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-surface-muted px-0 py-0 sm:py-0 lg:pb-0">
       <section className="mx-auto grid min-h-screen w-full min-w-0 max-w-full content-start gap-0 bg-surface-muted pb-7 sm:max-w-2xl lg:max-w-3xl">
         <header
-          className="top-mentor-ranking-header grid min-w-0 content-start gap-4 px-4 pt-5"
+          className="top-mentor-ranking-header grid min-w-0 content-start px-4 pt-8"
           style={pageStyle}
         >
-          <Button
-            className="w-fit rounded-full"
-            onClick={() => navigateBackWithFallback(router)}
-            type="button"
-            variant="ghost"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar
-          </Button>
-
-          <RankingHero communityName={communityName} mentors={mentors} />
+          <RankingHero
+            communityAvatar={communityData?.avatar_url ?? null}
+            communityName={communityName}
+            mentors={mentors}
+          />
         </header>
 
         {ranking.isLoading || ranking.isPending ? (

@@ -145,3 +145,10 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 - Tracks internos com `minmax(0, 1fr)` permitem que os avatares respeitem as colunas responsivas. A proporcao lateral/central e 1:1.34.
 - A lista reserva menos largura para medalha e avatar e permite nomes em mais de uma linha.
 - Sem alteracoes em API, dados, elegibilidade, ordenacao ou analytics. A verificacao geometrica usa renderizacao isolada dos componentes; o smoke autenticado permanece separado.
+
+### Refinamento do cabecalho e das colunas
+
+- Remover o padding vertical do PageShell apenas nesta tela, inclusive nos breakpoints sm/lg, e manter a superficie cinza no wrapper. Isso elimina as faixas externas sem alterar outras paginas.
+- Trocar raios horizontais de 999px por 50% nas colunas: a normalizacao CSS dos raios anteriores reduzia tambem o raio vertical e deixava quinas visiveis atras do tampo eliptico. Usar raio vertical de 18px e tampo de 36px, sem sombra externa.
+- Substituir Voltar pelo avatar cadastrado da comunidade (`avatar_url`), com 64px no mobile, 72px no desktop e fallback de iniciais.
+- Posicoes na lista usam numeros neutros de 14px, sem medalhas preenchidas. Medalhas do podio permanecem.

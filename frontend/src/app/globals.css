@@ -524,13 +524,12 @@ video::backdrop {
 .top-mentor-podium-column {
   isolation: isolate;
   overflow: hidden;
-  border-radius: 999px 999px 0 0 / 34px 34px 0 0;
+  border-radius: 50% 50% 0 0 / 18px 18px 0 0;
   box-shadow:
     inset 0 1px 1px rgb(255 255 255 / 88%),
     inset 18px 0 24px rgb(255 255 255 / 22%),
     inset -20px 0 28px rgb(15 23 42 / 6%),
-    inset 0 -24px 34px rgb(15 23 42 / 7%),
-    0 22px 38px rgb(15 23 42 / 11%);
+    inset 0 -24px 34px rgb(15 23 42 / 7%);
 }
 
 .top-mentor-podium-column::before {
@@ -554,10 +553,10 @@ video::backdrop {
 .top-mentor-podium-column::after {
   content: "";
   position: absolute;
-  top: -0.15rem;
+  top: 0;
   right: 0;
   left: 0;
-  height: 2.35rem;
+  height: 36px;
   border-radius: 50%;
   background:
     radial-gradient(
