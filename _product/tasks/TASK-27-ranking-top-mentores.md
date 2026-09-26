@@ -336,6 +336,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Incluir type_label derivado do genero cadastrado no perfil pelo helper canonico do backend; frontend nao infere mais profissao a partir do headline. Campo opcional no frontend para rollout compativel, com fallback Psicologo(a).
+
+- [x] Variante final: substituir medalhas/fitas por numeros diretamente nas colunas, suavizar fade de base e gradiente comunitario e reduzir distancias coluna/texto/lista.
+
+- [x] Reduzir espaco nome/tampo de 12px para 4px e aumentar cada coluna em 16px, mantendo diferencas entre colocacoes e a animacao existente.
+
 - [x] Fixar inicio das fitas na quina frontal do tampo (34px em tampo de 36px), preservando medalhas antes do fade final.
 - [x] Dar margens laterais de 16px/24px ao bloco branco da lista.
 - [x] Usar o primeiro nome configurado que a API ja fornece em whatsapp_name, sem split local; nome completo como fallback. Teste AST protege o acesso direto ao campo e seu fallback.

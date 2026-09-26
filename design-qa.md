@@ -19,6 +19,8 @@ The source and the full-page browser capture were opened together. Comparison fo
 
 ## Remaining Verification
 
+Plain-number variant: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-plain-numbers.png`. Local captures at 393px and 320px show numerals directly on the columns, no ribbons or medal disks, taller columns (+16px), reduced name-to-cap padding (4px), softer lower fade and tighter sentence/list spacing. Profile names and list margins are preserved. Fixture has no type_label and therefore exercises the neutral rollout fallback. Backend now derives type_label from saved profile gender using the community helper; frontend no longer inspects headline. Real authenticated data remains outside this fixture's verification scope.
+
 Edge/name correction: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-edge-names.png`. Inspected 393px and 320px captures with compound first names in the isolated fixture. Ribbon tops now meet the front rim of the 36px cap at 34px; the last 12px of each column fade without obscuring medals. White list has 16px mobile side margins and rounded bottom corners. Names use the existing API field derived from professional_first_name, not local splitting. `node --test src/app/app/community/top-mentors/podium-name.test.mjs` passes both AST contracts for direct field rendering and full-name fallback. Build, Biome, scoped lint and source-safety pass. Real profile/photo verification remains subject to the authentication limitation below.
 
 Gradient variant follow-up: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-gradient.png`. Compared the latest reference and requested adaptation with local captures at 320, 393 and 1280 CSS pixels. Community pastel transitions to the muted neutral surface; concentric rings and the curved clipping edge are removed. Column transparency starts below the medals, with all ranks visible. The centered recognition sentence precedes a continuous white list section, with subtle row dividers and rounded upper corners. Visible classification heading removed; accessible section label retained. The isolated fixture checks geometry only, not real photo loading or authenticated profile/contact behavior.
@@ -34,5 +36,7 @@ Follow-up capture: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-
 Authenticated browser is unavailable in this session. Local geometry is verified, but full visual fidelity and live profile/contact interactions cannot be declared passed from the fixture. No production data or API was mocked.
 
 Gradient validation: frontend tests passed (one source-map symlink test skipped by Windows permissions), Biome and scoped page ESLint passed. Full frontend check is blocked by existing lint in community-detail.tsx (set-state-in-effect) and auth/redirect/logic.tsx (internal location navigation); those unrelated files were not modified.
+
+Latest validation: frontend and backend builds/typechecking passed; backend Biome/runtime dependencies, frontend Biome/scoped ESLint and source-safety passed. Three frontend AST contracts and four compiled backend ranking tests passed. The tsx runner failed locally in os.userInfo; tests were therefore executed against the real compiled backend output, without database calls. Prisma generation needed local cache write permission; no migration was run.
 
 final result: blocked

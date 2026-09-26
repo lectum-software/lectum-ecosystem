@@ -95,6 +95,7 @@ export const topMentorUserSelect = {
   psychologist_profile: {
     select: {
       headline: true,
+      gender: true,
       professional_first_name: true,
       professional_last_name: true,
       whatsapp: true,

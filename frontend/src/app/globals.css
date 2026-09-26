@@ -524,7 +524,7 @@ video::backdrop {
 .top-mentor-podium-column {
   isolation: isolate;
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 48%, rgb(0 0 0 / 65%) 72%, transparent 100%);
   border-radius: 50% 50% 0 0 / 18px 18px 0 0;
   box-shadow:
     inset 0 1px 1px rgb(255 255 255 / 88%),
@@ -597,47 +597,18 @@ video::backdrop {
     to bottom,
     var(--top-mentor-backdrop) 0%,
     var(--top-mentor-backdrop) 20%,
-    var(--lectum-surface-muted) 80%
+    color-mix(in srgb, var(--top-mentor-backdrop) 65%, var(--lectum-surface-muted)) 50%,
+    color-mix(in srgb, var(--top-mentor-backdrop) 20%, var(--lectum-surface-muted)) 75%,
+    var(--lectum-surface-muted) 95%
   );
 }
 
-.top-mentor-podium-column > .top-mentor-column-award {
+.top-mentor-podium-column > .top-mentor-column-number {
   position: absolute;
-  top: 34px;
+  top: 44px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
-}
-
-.top-mentor-ribbon-tails {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 28px;
-  height: 34px;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.top-mentor-ribbon-tails::before,
-.top-mentor-ribbon-tails::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  width: 6px;
-  height: 34px;
-  background: var(--top-mentor-ribbon-color);
-  box-shadow: inset 1px 0 rgb(255 255 255 / 35%);
-}
-
-.top-mentor-ribbon-tails::before {
-  left: 4px;
-  transform: rotate(-22deg);
-}
-
-.top-mentor-ribbon-tails::after {
-  right: 4px;
-  transform: rotate(22deg);
 }
 
 .top-mentor-ranking-panel {
@@ -646,21 +617,18 @@ video::backdrop {
 }
 
 .top-mentor-metal--gold {
-  --top-mentor-ribbon-color: #d3af58;
   --top-mentor-metal-gradient: linear-gradient(135deg, #ce953a 0%, #fefe7b 52%, #9c7924 100%);
   --top-mentor-metal-glow: rgb(206 149 58 / 28%);
   --top-mentor-metal-label: #5f3c07;
 }
 
 .top-mentor-metal--silver {
-  --top-mentor-ribbon-color: #afbac8;
   --top-mentor-metal-gradient: linear-gradient(135deg, #cbd5e1 0%, #f1f5f9 52%, #94a3b8 100%);
   --top-mentor-metal-glow: rgb(148 163 184 / 24%);
   --top-mentor-metal-label: #405168;
 }
 
 .top-mentor-metal--bronze {
-  --top-mentor-ribbon-color: #bf895b;
   --top-mentor-metal-gradient: linear-gradient(
     135deg,
     #a8703a 0%,

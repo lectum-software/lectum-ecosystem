@@ -10,6 +10,17 @@ process.env.JWT_SECRET_KEY ??= "lectum-test-jwt-secret-key-32-bytes";
 let compareProfessionalRepliesForHighlight: typeof CommunityRanking.compareProfessionalRepliesForHighlight;
 let isProfessionalReplyVideoHighlightCandidate: typeof CommunityRanking.isProfessionalReplyVideoHighlightCandidate;
 
+describe("mentor profession label from profile gender", () => {
+  it("uses the saved gender and keeps an inclusive fallback", async () => {
+    const { authorTypeLabel } = await import("./community-ranking");
+    assert.equal(authorTypeLabel("psicologo", "feminino"), "Psicóloga");
+    assert.equal(authorTypeLabel("psicologo", "masculino"), "Psicólogo");
+    for (const gender of [null, undefined, "", "outro", "prefiro-nao-informar"]) {
+      assert.equal(authorTypeLabel("psicologo", gender), "Psicólogo(a)");
+    }
+  });
+});
+
 const professionalReply = ({
   createdAt = new Date("2026-09-16T12:00:00.000Z"),
   downvotes = 0,

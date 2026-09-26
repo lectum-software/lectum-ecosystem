@@ -20,6 +20,15 @@ function visit(node) {
 }
 visit(tree);
 
+test("profession label uses the API gender-based label instead of headline text", () => {
+  const value = variables.find(
+    (node) => node.name.getText(tree) === "professionLabel",
+  )?.initializer;
+  assert.ok(value && ts.isArrowFunction(value) && ts.isBinaryExpression(value.body));
+  assert.equal(value.body.left.getText(tree), "mentor.professional.type_label");
+  assert.equal(value.body.right.text, "Psicólogo(a)");
+});
+
 test("podium consumes the configured name without splitting compound names", () => {
   const value = variables.find((node) => node.name.getText(tree) === "firstName")?.initializer;
   assert.ok(value && ts.isBinaryExpression(value));

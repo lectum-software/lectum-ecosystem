@@ -148,6 +148,12 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- O ranking passa a selecionar `psychologist_profile.gender` e responder `professional.type_label` via `authorTypeLabel`, ja usado nas comunidades. O frontend consome esse rotulo tambem no contexto de contato, sem inferir genero pelo nome, foto ou headline. Contrato aditivo, opcional no cliente para backend antigo, com fallback neutro Psicologo(a). Sem migracao de banco.
+
+- Pedido posterior substitui medalhas por numerais sem fundo na face das colunas. Remover fitas e suas regras CSS. Gradiente comunitario recebe etapas intermediarias e colunas desvanecem gradualmente a partir de 48%; frase passa a ter 12/20px de espaco superior/inferior no mobile. Preservar aros, nomes cadastrados e margens da lista.
+
+- Ajuste de proporcao solicitado: padding inferior do grupo foto/nome passa de 12px a 4px; cada coluna cresce 1rem em mobile e desktop. A animacao sobe a partir da posicao de repouso, preservando a folga minima acima do tampo.
+
 - Correcao subsequente: `professional.whatsapp_name` ja e derivado no CommunityMentorRepository de `professional_first_name` pelo helper canonico. Reutilizar este valor no podio sem uma nova regra de extracao de nome; quando ausente, manter displayName completo. Sem alterar API ou cadastro. Teste AST dedicado protege o acesso direto e fallback sem split.
 - Fitas ancoradas em 34px, junto a borda frontal do tampo de 36px, em vez do centro superior em 18px. Fade restrito aos ultimos 12px evita apagar medalhas laterais. Lista ganha margens externas de 16/24px e cantos inferiores arredondados.
 

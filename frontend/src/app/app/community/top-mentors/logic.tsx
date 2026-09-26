@@ -108,15 +108,8 @@ const rankTone = (position: number) => {
   };
 };
 
-const professionLabel = (mentor: CommunityTopMentor) => {
-  const headline = mentor.professional.headline ?? "";
-  const match = headline.match(/psic[oó]log[ao]/i);
-
-  if (!match) return "Psicólogo";
-
-  const normalized = match[0].toLowerCase();
-  return normalized.endsWith("a") ? "Psicóloga" : "Psicólogo";
-};
+const professionLabel = (mentor: CommunityTopMentor) =>
+  mentor.professional.type_label || "Psicólogo(a)";
 
 const topMentorProfileUrl = (profileUrl: string) => {
   const safeProfileUrl = normalizeSafeInternalRedirect(profileUrl, "/psicologos") || "/psicologos";
@@ -222,7 +215,7 @@ const PodiumMentor = ({
       <span
         className={cn(
           "lectum-top-mentor-float relative z-10 grid min-w-0 grid-cols-[minmax(0,1fr)] overflow-visible place-items-center",
-          "w-full gap-2 pb-3",
+          "w-full gap-2 pb-1",
         )}
         style={{ animationDelay: delay }}
       >
@@ -240,17 +233,14 @@ const PodiumMentor = ({
         )}
         aria-hidden="true"
       >
-        <span className="top-mentor-column-award">
-          <span className="top-mentor-ribbon-tails" />
-          <span
-            className={cn(
-              "top-mentor-position-medal mt-7 grid place-items-center rounded-full border-2 border-media-foreground text-base font-black",
-              isWinner ? "h-12 w-12 text-xl" : "h-10 w-10",
-              tone.positionMedal,
-            )}
-          >
-            <span>{mentor.position}</span>
-          </span>
+        <span
+          className={cn(
+            "top-mentor-column-number font-semibold leading-none tabular-nums",
+            isWinner ? "text-4xl" : "text-3xl",
+            tone.name,
+          )}
+        >
+          {mentor.position}
         </span>
       </span>
     </Link>
@@ -308,7 +298,7 @@ const RankingHero = ({
               {second ? (
                 <PodiumMentor
                   className="w-full"
-                  columnClassName="h-[7.4rem] sm:h-[8rem]"
+                  columnClassName="h-[8.4rem] sm:h-[9rem]"
                   mentor={second}
                   size={124}
                   delay="0.35s"
@@ -318,7 +308,7 @@ const RankingHero = ({
             <div className="flex min-w-0 justify-center overflow-visible">
               <PodiumMentor
                 className="w-full"
-                columnClassName="h-[10rem] sm:h-[10.8rem]"
+                columnClassName="h-[11rem] sm:h-[11.8rem]"
                 mentor={first}
                 size={166}
               />
@@ -327,7 +317,7 @@ const RankingHero = ({
               {third ? (
                 <PodiumMentor
                   className="w-full"
-                  columnClassName="h-[7.2rem] sm:h-[7.8rem]"
+                  columnClassName="h-[8.2rem] sm:h-[8.8rem]"
                   mentor={third}
                   size={124}
                   delay="0.7s"
@@ -434,7 +424,7 @@ export const CommunityTopMentorsLogic = () => {
             mentors={mentors}
           />
           {mentors.length > 0 ? (
-            <p className="mx-auto max-w-sm px-2 pt-5 pb-8 text-center text-sm font-medium leading-relaxed text-muted sm:pt-6 sm:pb-10">
+            <p className="mx-auto max-w-sm px-2 pt-3 pb-5 text-center text-sm font-medium leading-relaxed text-muted sm:pt-4 sm:pb-6">
               Profissionais que mais acolhem e contribuem com a comunidade.
             </p>
           ) : null}
