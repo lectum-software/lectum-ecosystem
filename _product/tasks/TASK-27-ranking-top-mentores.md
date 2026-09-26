@@ -336,6 +336,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Manter selo de verificado junto ao ultimo nome na lista, inclusive quando o nome quebra em linhas, sem alterar o nome cadastrado.
+
 - [x] Corrigir loop das setas: ranking retorna pelo historico quando veio da comunidade; acesso direto substitui a rota. Comunidade evita retornar ao ranking em historicos antigos e segue ao feed. Cobrir sequencia e aliases com testes.
 
 - [x] Usar branco (text-primary-foreground) nos icones voltar/compartilhar, como no cabecalho da comunidade, preservando fundo e comportamento.

@@ -338,6 +338,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   const professionalType = professionLabel(mentor);
   const canOpenWhatsApp = Boolean(mentor.professional.whatsapp_url);
   const displayName = getMentorProfessionalDisplayName(mentor);
+  const lastNameStart = displayName.lastIndexOf(" ") + 1;
   const whatsappName = getPsychologistWhatsappDisplayName({
     id: mentor.professional.id,
     name: displayName,
@@ -359,12 +360,16 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         </span>
         <Avatar mentor={mentor} ringed={isTopThree} ringVariant="list" size={50} />
         <span className="min-w-0 flex-1">
-          <span className="flex min-w-0 items-center gap-1.5">
-            <strong className="break-words text-base font-bold leading-snug tracking-normal text-foreground transition group-hover/profile:text-primary dark:text-foreground">
-              {displayName}
-            </strong>
-            <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
-          </span>
+          <strong className="block break-words text-base font-bold leading-snug tracking-normal text-foreground transition group-hover/profile:text-primary dark:text-foreground">
+            {displayName.slice(0, lastNameStart)}
+            <span className="inline-flex max-w-full items-baseline gap-1.5 align-baseline">
+              <span className="min-w-0 break-words">{displayName.slice(lastNameStart)}</span>
+              <VerifiedBadgeIcon
+                className="h-3 w-3 shrink-0 self-center"
+                aria-label="Perfil verificado"
+              />
+            </span>
+          </strong>
           <span className="mt-0.5 block truncate font-sans text-[0.82rem] font-semibold leading-5 tracking-[-0.01em] text-muted dark:text-muted">
             {professionalType}
           </span>
