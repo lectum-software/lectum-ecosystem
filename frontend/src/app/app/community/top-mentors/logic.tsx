@@ -228,7 +228,7 @@ const PodiumMentor = ({
       </span>
       <span
         className={cn(
-          "top-mentor-podium-column relative grid w-full place-items-center rounded-t-[1.45rem]",
+          "top-mentor-podium-column relative grid w-full place-items-center",
           tone.podiumColumn,
           columnClassName,
         )}
@@ -309,7 +309,6 @@ const RankingHero = ({
           </div>
         ) : null}
       </div>
-      <div className="top-mentor-hero-curve" aria-hidden="true" />
     </section>
   );
 };
@@ -319,6 +318,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   const professionalType = professionLabel(mentor);
   const canOpenWhatsApp = Boolean(mentor.professional.whatsapp_url);
   const displayName = getMentorProfessionalDisplayName(mentor);
+  const tone = rankTone(mentor.position);
   const whatsappName = getPsychologistWhatsappDisplayName({
     id: mentor.professional.id,
     name: displayName,
@@ -332,6 +332,17 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         className="group/profile flex min-w-0 flex-1 items-center gap-3"
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
+        <span
+          className={cn(
+            "grid h-12 w-12 shrink-0 place-items-center rounded-full text-lg font-black",
+            isTopThree
+              ? cn("top-mentor-list-medal", tone.metal)
+              : "border border-border bg-muted/30 text-primary",
+          )}
+          aria-hidden="true"
+        >
+          <span>{mentor.position}</span>
+        </span>
         <Avatar mentor={mentor} ringed={isTopThree} ringVariant="list" size={62} />
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-center gap-1.5">
@@ -437,7 +448,7 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {mentors.length > 0 ? (
-          <section className="mx-auto -mt-14 grid w-[calc(100%+2rem)] min-w-0 max-w-none gap-4 rounded-t-[2.5rem] bg-background px-4 pt-16 pb-7 dark:bg-background sm:w-full sm:max-w-[680px] sm:px-0">
+          <section className="top-mentor-ranking-panel -mx-4 -mt-16 grid min-w-0 gap-4 bg-background px-4 pt-20 pb-7 dark:bg-background sm:mx-auto sm:w-full sm:max-w-[680px] sm:px-0">
             <div className="grid min-w-0 gap-2">
               <h2 className="text-2xl font-black leading-tight tracking-[-0.035em] text-foreground dark:text-foreground">
                 Classificação geral
