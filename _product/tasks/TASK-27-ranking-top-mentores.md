@@ -336,6 +336,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Fixar inicio das fitas na quina frontal do tampo (34px em tampo de 36px), preservando medalhas antes do fade final.
+- [x] Dar margens laterais de 16px/24px ao bloco branco da lista.
+- [x] Usar o primeiro nome configurado que a API ja fornece em whatsapp_name, sem split local; nome completo como fallback. Teste AST protege o acesso direto ao campo e seu fallback.
+
 - [x] Variante aprovada: substituir circulos e curva por gradiente da cor suave da comunidade ate cinza, com fade na base das colunas.
 - [x] Mover a frase de reconhecimento para abaixo do podio e remover o titulo visivel Classificacao geral.
 - [x] Apresentar a lista em uma secao branca continua com cantos superiores arredondados e linhas discretas, preservando links e contatos.

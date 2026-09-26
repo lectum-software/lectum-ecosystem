@@ -148,6 +148,9 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Correcao subsequente: `professional.whatsapp_name` ja e derivado no CommunityMentorRepository de `professional_first_name` pelo helper canonico. Reutilizar este valor no podio sem uma nova regra de extracao de nome; quando ausente, manter displayName completo. Sem alterar API ou cadastro. Teste AST dedicado protege o acesso direto e fallback sem split.
+- Fitas ancoradas em 34px, junto a borda frontal do tampo de 36px, em vez do centro superior em 18px. Fade restrito aos ultimos 12px evita apagar medalhas laterais. Lista ganha margens externas de 16/24px e cantos inferiores arredondados.
+
 - Variante mais recente aprovada: remover os aneis concentricos e o recorte curvo. O cabecalho usa gradiente vertical da `visual_soft_color` ate `--lectum-surface-muted`; a base das colunas recebe mascara de transparencia apenas nos ultimos 28%, abaixo das medalhas.
 - A frase de reconhecimento fica centralizada entre podio e lista. O titulo Classificacao geral sai da apresentacao, mas a secao mantem nome acessivel. Lista usa superficie branca do tema e divisores discretos, sem cards dentro da secao arredondada. Aros, primeiros nomes, medalhas, ordenacao e contatos permanecem.
 

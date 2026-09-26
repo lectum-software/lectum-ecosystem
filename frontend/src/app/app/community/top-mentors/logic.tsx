@@ -207,7 +207,8 @@ const PodiumMentor = ({
   const tone = rankTone(mentor.position);
   const isWinner = mentor.position === 1;
   const displayName = getMentorProfessionalDisplayName(mentor);
-  const firstName = displayName.trim().split(/\s+/)[0];
+  // The API derives whatsapp_name from the configured professional_first_name.
+  const firstName = mentor.professional.whatsapp_name?.trim() || displayName;
 
   return (
     <Link
@@ -469,7 +470,7 @@ export const CommunityTopMentorsLogic = () => {
         {mentors.length > 0 ? (
           <section
             aria-label="Ranking de mentores"
-            className="top-mentor-ranking-panel grid min-w-0 px-5 pt-3 pb-7 sm:px-8 sm:pt-4"
+            className="top-mentor-ranking-panel mx-4 mb-6 grid min-w-0 px-4 pt-3 pb-7 sm:mx-6 sm:px-6 sm:pt-4"
           >
             <div className="grid min-w-0">
               {mentors.map((mentor) => (
