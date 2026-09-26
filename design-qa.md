@@ -19,6 +19,8 @@ The source and the full-page browser capture were opened together. Comparison fo
 
 ## Remaining Verification
 
+Gradient variant follow-up: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-gradient.png`. Compared the latest reference and requested adaptation with local captures at 320, 393 and 1280 CSS pixels. Community pastel transitions to the muted neutral surface; concentric rings and the curved clipping edge are removed. Column transparency starts below the medals, with all ranks visible. The centered recognition sentence precedes a continuous white list section, with subtle row dividers and rounded upper corners. Visible classification heading removed; accessible section label retained. The isolated fixture checks geometry only, not real photo loading or authenticated profile/contact behavior.
+
 Column-mounted medals follow-up: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-column-medals.png`. Inspected local fixture captures at 393px and 320px with compiled production CSS. First names sit below the preserved metallic avatar rings. Photo and name share the floating wrapper; ribbons and medals are fixed inside the columns. All three medals remain above the curved clipping boundary. Column fills are lighter. Full names remain in accessible link labels and the ranking list. Live authenticated photos and interactions are still not verified by this fixture.
 
 Concentric rings and hanging medals follow-up: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-rings-medals.png`. Inspected full-page captures at 393px and 320px. Three diffuse rings replace rays and center on the winner's avatar box. Satin lower arcs and short ribbon tails connect each avatar to its medal without crossing the portrait area. Medals are children of the existing floating wrapper; columns contain no position badges. Community avatar and introductory title are smaller. The fixture exercises initials fallback; authenticated photo checks remain separate.
@@ -28,5 +30,7 @@ Radial-background follow-up: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/wo
 Follow-up capture: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-refinements-393.png`. The isolated harness now includes the PageShell wrapper classes and their merged page overrides. Top and bottom spacing inspected at 393px; 320px rechecked. No exterior color bands or square column corners remain visible. Community avatar initials fallback occupies its fixed slot; Back is absent, and list positions are smaller neutral text. Actual community photo loading remains an authenticated-data verification gap.
 
 Authenticated browser is unavailable in this session. Local geometry is verified, but full visual fidelity and live profile/contact interactions cannot be declared passed from the fixture. No production data or API was mocked.
+
+Gradient validation: frontend tests passed (one source-map symlink test skipped by Windows permissions), Biome and scoped page ESLint passed. Full frontend check is blocked by existing lint in community-detail.tsx (set-state-in-effect) and auth/redirect/logic.tsx (internal location navigation); those unrelated files were not modified.
 
 final result: blocked

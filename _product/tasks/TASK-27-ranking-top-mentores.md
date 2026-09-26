@@ -336,6 +336,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Variante aprovada: substituir circulos e curva por gradiente da cor suave da comunidade ate cinza, com fade na base das colunas.
+- [x] Mover a frase de reconhecimento para abaixo do podio e remover o titulo visivel Classificacao geral.
+- [x] Apresentar a lista em uma secao branca continua com cantos superiores arredondados e linhas discretas, preservando links e contatos.
+
 - [x] Variante aprovada seguinte: manter aros metalicos, exibir primeiro nome sob a foto e pendurar medalhas nas colunas por duas fitas finas.
 - [x] Animar somente foto e primeiro nome; colunas, fitas e medalhas ficam fixas. Remover arco de fita do avatar.
 - [x] Clarear as colunas com tons metalicos suaves conforme referencia.

@@ -524,6 +524,7 @@ video::backdrop {
 .top-mentor-podium-column {
   isolation: isolate;
   overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
   border-radius: 50% 50% 0 0 / 18px 18px 0 0;
   box-shadow:
     inset 0 1px 1px rgb(255 255 255 / 88%),
@@ -591,36 +592,12 @@ video::backdrop {
 }
 
 .top-mentor-ranking-header {
-  /* Clip the column bases with the same downward arc as the community backdrop. */
   overflow: hidden;
-  border-radius: 0 0 50% 50% / 0 0 36px 36px;
-}
-
-.top-mentor-winner {
-  position: relative;
-}
-
-.top-mentor-winner::before {
-  content: "";
-  position: absolute;
-  top: -200px;
-  left: 50%;
-  z-index: -1;
-  width: calc(100% + 400px);
-  aspect-ratio: 1;
-  transform: translateX(-50%);
-  pointer-events: none;
-  background-image: radial-gradient(
-    circle at center,
-    transparent 88px,
-    color-mix(in srgb, var(--top-mentor-accent) 9%, transparent) 90px,
-    transparent 125px,
-    transparent 152px,
-    color-mix(in srgb, var(--top-mentor-accent) 6%, transparent) 154px,
-    transparent 193px,
-    transparent 222px,
-    color-mix(in srgb, var(--top-mentor-accent) 4%, transparent) 224px,
-    transparent 267px
+  background: linear-gradient(
+    to bottom,
+    var(--top-mentor-backdrop) 0%,
+    var(--top-mentor-backdrop) 20%,
+    var(--lectum-surface-muted) 80%
   );
 }
 
@@ -664,7 +641,8 @@ video::backdrop {
 }
 
 .top-mentor-ranking-panel {
-  background: var(--lectum-surface-muted);
+  border-radius: 24px 24px 0 0;
+  background: var(--lectum-surface);
 }
 
 .top-mentor-metal--gold {

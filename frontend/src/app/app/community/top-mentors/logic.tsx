@@ -214,7 +214,6 @@ const PodiumMentor = ({
       aria-label={`${mentor.position}º lugar: ${displayName}`}
       className={cn(
         "group grid min-w-0 grid-cols-[minmax(0,1fr)] justify-items-center text-center",
-        isWinner && "top-mentor-winner",
         className,
       )}
       href={topMentorProfileUrl(mentor.professional.profile_url)}
@@ -353,7 +352,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   });
 
   return (
-    <article className="flex w-full min-w-0 max-w-full items-center gap-2 overflow-visible rounded-[1.35rem] border border-border bg-surface px-3 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface">
+    <article className="flex w-full min-w-0 max-w-full items-center gap-2 border-b border-border/50 py-4 last:border-b-0">
       <Link
         aria-label={`Ver perfil de ${displayName}`}
         className="group/profile flex min-w-0 flex-1 items-center gap-2"
@@ -417,14 +416,13 @@ export const CommunityTopMentorsLogic = () => {
   const communityData = ranking.data?.community ?? null;
   const communityName = communityData?.name ?? "Comunidades Lectum";
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
-  const pageStyle = {
-    backgroundColor: communityData?.visual_soft_color ?? "var(--lectum-background)",
-    "--top-mentor-accent": communityData?.visual_primary_color ?? "var(--lectum-primary)",
-  } satisfies CSSProperties & { "--top-mentor-accent": string };
+  const pageStyle: CSSProperties & { "--top-mentor-backdrop": string } = {
+    "--top-mentor-backdrop": communityData?.visual_soft_color ?? "var(--lectum-background)",
+  };
 
   return (
     <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-surface-muted px-0 py-0 sm:py-0 lg:pb-0">
-      <section className="mx-auto grid min-h-screen w-full min-w-0 max-w-full content-start gap-0 bg-surface-muted pb-7 sm:max-w-2xl lg:max-w-3xl">
+      <section className="mx-auto grid min-h-screen w-full min-w-0 max-w-full content-start gap-0 bg-surface-muted sm:max-w-2xl lg:max-w-3xl">
         <header
           className="top-mentor-ranking-header grid min-w-0 content-start px-4 pt-8"
           style={pageStyle}
@@ -434,6 +432,11 @@ export const CommunityTopMentorsLogic = () => {
             communityName={communityName}
             mentors={mentors}
           />
+          {mentors.length > 0 ? (
+            <p className="mx-auto max-w-sm px-2 pt-5 pb-8 text-center text-sm font-medium leading-relaxed text-muted sm:pt-6 sm:pb-10">
+              Profissionais que mais acolhem e contribuem com a comunidade.
+            </p>
+          ) : null}
         </header>
 
         {ranking.isLoading || ranking.isPending ? (
@@ -464,17 +467,11 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {mentors.length > 0 ? (
-          <section className="top-mentor-ranking-panel grid min-w-0 gap-4 px-4 pt-8 pb-7 sm:px-8 sm:pt-10">
-            <div className="grid min-w-0 gap-2">
-              <h2 className="text-2xl font-black leading-tight tracking-[-0.035em] text-foreground dark:text-foreground">
-                Classificação geral
-              </h2>
-              <p className="max-w-2xl text-[0.95rem] font-medium leading-relaxed text-muted dark:text-muted">
-                Profissionais que mais acolhem e contribuem com a comunidade.
-              </p>
-            </div>
-
-            <div className="grid min-w-0 gap-3">
+          <section
+            aria-label="Ranking de mentores"
+            className="top-mentor-ranking-panel grid min-w-0 px-5 pt-3 pb-7 sm:px-8 sm:pt-4"
+          >
+            <div className="grid min-w-0">
               {mentors.map((mentor) => (
                 <RankingCard key={mentor.professional.id} mentor={mentor} />
               ))}

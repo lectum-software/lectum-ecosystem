@@ -148,6 +148,9 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Variante mais recente aprovada: remover os aneis concentricos e o recorte curvo. O cabecalho usa gradiente vertical da `visual_soft_color` ate `--lectum-surface-muted`; a base das colunas recebe mascara de transparencia apenas nos ultimos 28%, abaixo das medalhas.
+- A frase de reconhecimento fica centralizada entre podio e lista. O titulo Classificacao geral sai da apresentacao, mas a secao mantem nome acessivel. Lista usa superficie branca do tema e divisores discretos, sem cards dentro da secao arredondada. Aros, primeiros nomes, medalhas, ordenacao e contatos permanecem.
+
 - Variante subsequente aprovada: os aros metalicos permanecem nas fotos; apenas o primeiro token do nome profissional normalizado aparece no podio. Nome completo permanece no aria-label do link e na lista.
 - Foto e primeiro nome compartilham a animacao flutuante; medalha e duas fitas finas passam a ser filhas da coluna, fixas junto ao tampo. Remover movimento do link inteiro no hover e o arco acetinado sobre o avatar.
 - Colunas mais claras, com centro quase branco e laterais metalicas suaves. Sem alteracao da ordem, links ou dados do ranking.
