@@ -148,6 +148,8 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Selo na lista: nome completo permanece inalterado; apenas a ultima palavra e o selo formam uma unidade inline-flex que acompanha o fluxo do texto. Limite de largura e quebra interna permitem sobrenomes extensos sem invadir o WhatsApp.
+
 - Retorno sem ciclo: remover push implicito do link Voltar do ranking. Usar back com historico comunitario conhecido e replace no acesso direto. Guardar o retorno da comunidade contra entradas do ranking (aliases publicos/privados), sem modificar a politica global de historico usada por outras telas.
 
 - Paridade dos controles: icones voltar/compartilhar usam primary-foreground branco nos dois temas, igual ao CommunityHeader, sem modificar fundo circular ou interacoes.

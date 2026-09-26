@@ -40,3 +40,28 @@ test("podium consumes the configured name without splitting compound names", () 
 test("podium renders the configured name directly", () => {
   assert.ok(jsxExpressions.some((node) => node.expression?.getText(tree) === "firstName"));
 });
+
+test("list keeps the verified badge in the same inline group as the last name", () => {
+  const groups = [];
+  function collect(node) {
+    if (
+      ts.isJsxElement(node) &&
+      node.openingElement.getText(tree).includes("inline-flex max-w-full")
+    ) {
+      groups.push(node.getText(tree));
+    }
+    ts.forEachChild(node, collect);
+  }
+  collect(tree);
+  assert.ok(
+    groups.some(
+      (group) =>
+        group.includes("displayName.slice(lastNameStart)") && group.includes("<VerifiedBadgeIcon"),
+    ),
+  );
+  assert.ok(
+    jsxExpressions.some(
+      (node) => node.expression?.getText(tree) === "displayName.slice(0, lastNameStart)",
+    ),
+  );
+});
