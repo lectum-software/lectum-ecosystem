@@ -148,6 +148,8 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Retorno sem ciclo: remover push implicito do link Voltar do ranking. Usar back com historico comunitario conhecido e replace no acesso direto. Guardar o retorno da comunidade contra entradas do ranking (aliases publicos/privados), sem modificar a politica global de historico usada por outras telas.
+
 - Paridade dos controles: icones voltar/compartilhar usam primary-foreground branco nos dois temas, igual ao CommunityHeader, sem modificar fundo circular ou interacoes.
 
 - Validacao do compartilhamento: a rota de rasterizacao retornou imagem vazia em homolog protegido. No ranking, usar diretamente og_image_url do SEO publico (avatar cadastrado), resolvido pela allowlist existente, com dimensoes originais. Evita fetch do proprio deploy durante geracao de imagem e preserva a identidade solicitada.

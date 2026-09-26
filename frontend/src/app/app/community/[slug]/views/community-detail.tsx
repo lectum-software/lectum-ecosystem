@@ -28,11 +28,11 @@ import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { navigateBackFromCommunity } from "@/utils/community-ranking-navigation";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
 } from "@/utils/lectum-share-target";
-import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
   CommunityContextSearchHeader,
   CommunityDetailSkeleton,
@@ -319,7 +319,7 @@ export const CommunityDetailLogic = ({
                 community={community}
                 following={following}
                 membershipPending={membershipPending}
-                onBack={() => navigateBackWithFallback(router)}
+                onBack={() => navigateBackFromCommunity(router)}
                 onSearch={openCommunitySearch}
                 onShare={shareCommunity}
                 onToggleFollow={toggleFollow}

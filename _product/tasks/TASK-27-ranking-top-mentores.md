@@ -336,6 +336,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Corrigir loop das setas: ranking retorna pelo historico quando veio da comunidade; acesso direto substitui a rota. Comunidade evita retornar ao ranking em historicos antigos e segue ao feed. Cobrir sequencia e aliases com testes.
+
 - [x] Usar branco (text-primary-foreground) nos icones voltar/compartilhar, como no cabecalho da comunidade, preservando fundo e comportamento.
 
 - [x] Adicionar voltar para a comunidade e compartilhamento nativo com fallback para copiar link no topo do ranking. Metadata publica por comunidade usa o avatar quadrado existente e canonical do ranking com query preservada.
