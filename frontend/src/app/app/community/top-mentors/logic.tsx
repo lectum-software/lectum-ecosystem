@@ -4,6 +4,7 @@ import { ArrowLeft, Medal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { CSSProperties } from "react";
 import { useMemo } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
@@ -74,6 +75,7 @@ const rankTone = (position: number) => {
       metal: "top-mentor-metal--gold",
       name: "text-top-mentor-gold",
       positionMedal: "top-mentor-position-medal top-mentor-metal--gold",
+      podiumColumn: "top-mentor-podium-column--gold",
     };
   }
 
@@ -83,6 +85,7 @@ const rankTone = (position: number) => {
       metal: "top-mentor-metal--silver",
       name: "text-muted",
       positionMedal: "top-mentor-position-medal top-mentor-metal--silver",
+      podiumColumn: "top-mentor-podium-column--silver",
     };
   }
 
@@ -92,6 +95,7 @@ const rankTone = (position: number) => {
       metal: "top-mentor-metal--bronze",
       name: "text-top-mentor-bronze",
       positionMedal: "top-mentor-position-medal top-mentor-metal--bronze",
+      podiumColumn: "top-mentor-podium-column--bronze",
     };
   }
 
@@ -100,6 +104,7 @@ const rankTone = (position: number) => {
     metal: "",
     name: "text-foreground dark:text-foreground",
     positionMedal: "border border-border bg-background text-muted",
+    podiumColumn: "",
   };
 };
 
@@ -187,11 +192,13 @@ const Avatar = ({
 };
 
 const PodiumMentor = ({
+  columnClassName,
   className,
   delay = "0s",
   mentor,
   size,
 }: {
+  columnClassName?: string;
   className?: string;
   delay?: string;
   mentor: CommunityTopMentor;
@@ -203,35 +210,39 @@ const PodiumMentor = ({
 
   return (
     <Link
+      aria-label={`${mentor.position}º lugar: ${displayName}`}
       className={cn(
-        "group grid min-w-0 justify-items-center gap-2 text-center transition hover:-translate-y-1",
+        "group grid min-w-0 justify-items-center text-center transition hover:-translate-y-1",
         className,
       )}
       href={topMentorProfileUrl(mentor.professional.profile_url)}
     >
       <span
-        className="lectum-top-mentor-float relative grid overflow-visible place-items-center"
+        className={cn(
+          "lectum-top-mentor-float relative z-10 grid overflow-visible place-items-center",
+          isWinner ? "-mb-6" : "-mb-5",
+        )}
         style={{ animationDelay: delay }}
       >
         <Avatar mentor={mentor} ringed size={size} />
-        <span
-          className={cn(
-            "absolute grid place-items-center rounded-full border-2 border-media-foreground text-[0.68rem] font-black",
-            isWinner ? "-right-1 top-2 h-9 w-9" : "-right-2 -top-1 h-8 w-8",
-            tone.positionMedal,
-          )}
-        >
-          <span>{mentor.position}º</span>
-        </span>
       </span>
       <span
         className={cn(
-          "max-w-full truncate font-black tracking-[-0.02em] transition",
-          isWinner ? "text-lg" : "text-xs",
-          tone.name,
+          "top-mentor-podium-column relative grid w-full place-items-center rounded-t-[1.15rem]",
+          tone.podiumColumn,
+          columnClassName,
         )}
+        aria-hidden="true"
       >
-        {displayName}
+        <span
+          className={cn(
+            "top-mentor-position-medal grid place-items-center rounded-full border-2 border-media-foreground text-base font-black shadow-[0_10px_22px_rgb(15_23_42/14%)]",
+            isWinner ? "h-12 w-12 text-xl" : "h-10 w-10",
+            tone.positionMedal,
+          )}
+        >
+          <span>{mentor.position}</span>
+        </span>
       </span>
     </Link>
   );
@@ -249,14 +260,14 @@ const RankingHero = ({
   const third = mentors[2];
 
   return (
-    <section className="relative box-border w-full min-w-0 max-w-full overflow-visible px-1 pt-5 pb-8 sm:px-6 sm:pt-8">
-      <div className="relative grid w-full min-w-0 justify-items-center gap-8 overflow-visible text-center sm:gap-10">
+    <section className="relative box-border w-full min-w-0 max-w-full overflow-hidden px-1 pt-6 pb-24 sm:px-6 sm:pt-8 sm:pb-28">
+      <div className="relative z-10 grid w-full min-w-0 justify-items-center gap-8 overflow-visible text-center sm:gap-10">
         <h1
           aria-label={`Top 5 mentores em ${communityName}`}
           className="grid w-full min-w-0 max-w-[24rem] gap-2 sm:max-w-2xl"
         >
-          <span className="text-[0.72rem] font-black uppercase leading-none tracking-[0.22em] text-muted dark:text-muted">
-            Top 5 mentores em
+          <span className="text-xl font-medium leading-tight tracking-normal text-muted dark:text-muted sm:text-2xl">
+            Top 5 Mentores em
           </span>
           <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.02] tracking-[-0.045em] text-foreground [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
             {communityName}
@@ -268,7 +279,8 @@ const RankingHero = ({
             <div className="flex min-w-0 justify-center overflow-visible">
               {second ? (
                 <PodiumMentor
-                  className="mb-7 max-w-[6.4rem] sm:max-w-[7.5rem]"
+                  className="max-w-[6.4rem] sm:max-w-[7.5rem]"
+                  columnClassName="h-[6.8rem] sm:h-[7.4rem]"
                   mentor={second}
                   size={86}
                   delay="0.35s"
@@ -276,12 +288,18 @@ const RankingHero = ({
               ) : null}
             </div>
             <div className="flex min-w-0 justify-center overflow-visible">
-              <PodiumMentor className="max-w-[10rem] sm:max-w-[12rem]" mentor={first} size={144} />
+              <PodiumMentor
+                className="max-w-[10rem] sm:max-w-[12rem]"
+                columnClassName="h-[9.2rem] sm:h-[10.1rem]"
+                mentor={first}
+                size={144}
+              />
             </div>
             <div className="flex min-w-0 justify-center overflow-visible">
               {third ? (
                 <PodiumMentor
-                  className="mb-7 max-w-[6.4rem] sm:max-w-[7.5rem]"
+                  className="max-w-[6.4rem] sm:max-w-[7.5rem]"
+                  columnClassName="h-[6.6rem] sm:h-[7.2rem]"
                   mentor={third}
                   size={86}
                   delay="0.7s"
@@ -291,6 +309,7 @@ const RankingHero = ({
           </div>
         ) : null}
       </div>
+      <div className="top-mentor-hero-curve" aria-hidden="true" />
     </section>
   );
 };
@@ -363,13 +382,20 @@ export const CommunityTopMentorsLogic = () => {
   const query = useMemo(() => ({ community, limit: 5, period: "all" as const }), [community]);
   const ranking = useCommunityTopMentors(query);
   const mentors = (ranking.data?.data ?? []).slice(0, 5);
-  const communityName = ranking.data?.community?.name ?? "Comunidades Lectum";
+  const communityData = ranking.data?.community ?? null;
+  const communityName = communityData?.name ?? "Comunidades Lectum";
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
+  const pageStyle = {
+    backgroundColor: communityData?.visual_soft_color ?? "#fffaf0",
+  } satisfies CSSProperties;
 
   return (
-    <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-background px-0">
-      <section className="mx-auto grid w-full min-w-0 max-w-full gap-6 px-4 py-5 sm:max-w-2xl sm:px-0 lg:max-w-3xl">
-        <header className="grid min-w-0 gap-5">
+    <PrivateTemplate contentClassName="max-w-none overflow-x-hidden px-0">
+      <section
+        className="mx-auto grid min-h-screen w-full min-w-0 max-w-full gap-0 px-4 pt-5 pb-7 sm:max-w-2xl sm:px-0 lg:max-w-3xl"
+        style={pageStyle}
+      >
+        <header className="grid min-w-0 gap-4">
           <Button
             className="w-fit rounded-full"
             onClick={() => navigateBackWithFallback(router)}
@@ -411,9 +437,9 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {mentors.length > 0 ? (
-          <section className="mx-auto grid w-full min-w-0 max-w-[680px] gap-4">
+          <section className="mx-auto -mt-8 grid w-full min-w-0 max-w-[680px] gap-4 rounded-t-[2rem] bg-background px-0 pt-14 dark:bg-background">
             <div className="grid min-w-0 gap-1.5">
-              <h2 className="text-sm font-black uppercase tracking-[0.16em] text-foreground dark:text-foreground">
+              <h2 className="text-2xl font-black leading-tight tracking-[-0.035em] text-foreground dark:text-foreground">
                 Classificação geral
               </h2>
               <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted dark:text-muted">
