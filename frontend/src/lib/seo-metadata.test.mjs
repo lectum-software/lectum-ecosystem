@@ -19,7 +19,7 @@ test("ranking metadata reuses the community avatar and keeps the ranking canonic
   const ranking = source.slice(source.indexOf("export const resolveTopMentorsSeoMetadata"));
   assert.match(ranking, /getPublicCommunitySeo\(\{ slug: community \}\)/);
   assert.match(ranking, /publicTopMentorsHref\(seo\?\.slug \?\? community\)/);
-  assert.match(ranking, /publicCommunityOpenGraphImageHref\(seo.slug, seo.updated_at\)/);
+  assert.match(ranking, /const image = seo\?\.og_image_url \?\? undefined/);
   assert.match(ranking, /openGraphUrl: canonical/);
 });
 

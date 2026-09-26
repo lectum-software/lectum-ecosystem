@@ -483,9 +483,7 @@ export const resolveTopMentorsSeoMetadata = async (community?: string): Promise<
   const canonical = publicTopMentorsHref(seo?.slug ?? community);
   const title = seo ? `Top 5 Mentores em ${seo.og_title}` : "Top Mentores | Lectum";
   const description = "Profissionais que mais acolhem e contribuem com a comunidade.";
-  const image = seo?.og_image_url
-    ? publicCommunityOpenGraphImageHref(seo.slug, seo.updated_at)
-    : undefined;
+  const image = seo?.og_image_url ?? undefined;
 
   return resolveSeoMetadata(
     "top_mentors",
@@ -494,8 +492,8 @@ export const resolveTopMentorsSeoMetadata = async (community?: string): Promise<
       canonical,
       description,
       image,
-      imageHeight: image ? 1200 : undefined,
-      imageWidth: image ? 1200 : undefined,
+      imageHeight: image ? seo?.og_image_height : undefined,
+      imageWidth: image ? seo?.og_image_width : undefined,
       ogDescription: description,
       ogTitle: title,
       openGraphUrl: canonical,

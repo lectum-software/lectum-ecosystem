@@ -148,6 +148,8 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Validacao do compartilhamento: a rota de rasterizacao retornou imagem vazia em homolog protegido. No ranking, usar diretamente og_image_url do SEO publico (avatar cadastrado), resolvido pela allowlist existente, com dimensoes originais. Evita fetch do proprio deploy durante geracao de imagem e preserva a identidade solicitada.
+
 - Compartilhamento do ranking: reintroduzir voltar como link deterministico para a comunidade e compartilhar como Web Share API com fallback de clipboard. Metadata server-side consulta o SEO publico da comunidade e reutiliza sua imagem quadrada de avatar, sem alterar o canonical para a pagina da comunidade. A rota legada reutiliza a mesma metadata.
 
 - Consistencia com feed: usar background do PageShell (#f6f7f8 no tema claro), superficie branca, borda e sombra suave do CommunityPostCard, incluindo seu raio de 22px. Substituir somente os overrides do ranking; tokens globais e modo escuro permanecem compartilhados. O gradiente termina no background, nao em surface-muted.

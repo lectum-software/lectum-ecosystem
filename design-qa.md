@@ -19,6 +19,8 @@ The source and the full-page browser capture were opened together. Comparison fo
 
 ## Remaining Verification
 
+Deployed ranking metadata correctly preserved community canonical/title, but the existing square-image renderer returned a blank image on protected homolog. Ranking metadata now uses the actual community avatar URL directly with original dimensions; the existing shared renderer is unchanged.
+
 Ranking navigation/share follow-up: local production CSS fixture inspected at desktop and 393px. Back and share controls occupy opposite top corners without overlapping the community avatar. Build, Biome, scoped ESLint, eight focused tests, source-safety and version check pass. Server metadata fallback preserves the community query in canonical and og:url; live public homolog SEO returns the configured community avatar. Authenticated share-sheet interaction remains unverified; native Web Share requires a real device. Local server API override was blocked by execution policy, so community-specific deployed metadata must be checked after publishing.
 
 Feed surface parity: `C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-feed-surface.png`. Inspected local fixture at 393px and 320px using production CSS. Ranking now shares PageShell background and CommunityPostCard white surface, border, soft shadow and 22px radius. Community gradient ends at background instead of surface-muted. Side margins, podium and name wrapping remain intact. Build, Biome, scoped ESLint, three podium AST tests, version policy and source-safety passed. Authenticated-data verification remains outside the fixture scope.
