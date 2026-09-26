@@ -148,6 +148,10 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Variante subsequente aprovada: os aros metalicos permanecem nas fotos; apenas o primeiro token do nome profissional normalizado aparece no podio. Nome completo permanece no aria-label do link e na lista.
+- Foto e primeiro nome compartilham a animacao flutuante; medalha e duas fitas finas passam a ser filhas da coluna, fixas junto ao tampo. Remover movimento do link inteiro no hover e o arco acetinado sobre o avatar.
+- Colunas mais claras, com centro quase branco e laterais metalicas suaves. Sem alteracao da ordem, links ou dados do ranking.
+
 - Nova variante aprovada: substituir raios por tres aneis concentricos estaticos com intensidade decrescente (9%, 6%, 4%) da cor primaria da comunidade. A origem e ancorada a caixa do avatar vencedor, fora da animacao flutuante, e permanece recortada pelo cabecalho.
 - As medalhas passam a ser filhas do conjunto flutuante da foto; arco de fita e duas pontas curtas usam tons acetinados de ouro, prata e bronze. Colunas ficam sem numeracao propria. Elementos decorativos sao aria-hidden e nao capturam eventos; o link continua anunciando colocacao e nome.
 - Avatar comunitario reduzido para 56/64px e chamada superior para 18/20px em mobile/desktop.

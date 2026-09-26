@@ -579,15 +579,15 @@ video::backdrop {
 }
 
 .top-mentor-podium-column--gold {
-  background: linear-gradient(180deg, rgb(255 250 219 / 98%) 0%, rgb(249 222 105 / 82%) 100%);
+  background: linear-gradient(90deg, #faf0cf 0%, #fffef8 48%, #f6e7b7 100%);
 }
 
 .top-mentor-podium-column--silver {
-  background: linear-gradient(180deg, rgb(255 255 255 / 98%) 0%, rgb(221 229 240 / 84%) 100%);
+  background: linear-gradient(90deg, #e8edf2 0%, #ffffff 48%, #e0e6ed 100%);
 }
 
 .top-mentor-podium-column--bronze {
-  background: linear-gradient(180deg, rgb(255 242 226 / 98%) 0%, rgb(229 174 116 / 80%) 100%);
+  background: linear-gradient(90deg, #f2e4d6 0%, #fffdfa 48%, #ebd4bc 100%);
 }
 
 .top-mentor-ranking-header {
@@ -624,23 +624,20 @@ video::backdrop {
   );
 }
 
-.top-mentor-ribbon {
+.top-mentor-podium-column > .top-mentor-column-award {
   position: absolute;
-  inset: 0;
-  z-index: 11;
-  border: 5px solid var(--top-mentor-ribbon-color);
-  border-radius: 50%;
-  clip-path: inset(55% 0 0);
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
 .top-mentor-ribbon-tails {
   position: absolute;
-  top: calc(100% - 7px);
+  top: 0;
   left: 50%;
-  z-index: 12;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 34px;
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -650,8 +647,8 @@ video::backdrop {
   content: "";
   position: absolute;
   top: 0;
-  width: 7px;
-  height: 24px;
+  width: 6px;
+  height: 34px;
   background: var(--top-mentor-ribbon-color);
   box-shadow: inset 1px 0 rgb(255 255 255 / 35%);
 }

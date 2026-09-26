@@ -336,6 +336,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Variante aprovada seguinte: manter aros metalicos, exibir primeiro nome sob a foto e pendurar medalhas nas colunas por duas fitas finas.
+- [x] Animar somente foto e primeiro nome; colunas, fitas e medalhas ficam fixas. Remover arco de fita do avatar.
+- [x] Clarear as colunas com tons metalicos suaves conforme referencia.
+
 - [x] Substituir raios por tres aneis concentricos suaves, ancorados ao avatar do primeiro lugar.
 - [x] Mover medalhas das colunas para o conjunto flutuante dos avatares, com fita acetinada no aro inferior e duas pontas curtas em ouro/prata/bronze.
 - [x] Reduzir avatar comunitario para 56px (64px no desktop) e chamada Top 5 para 18px (20px no desktop).

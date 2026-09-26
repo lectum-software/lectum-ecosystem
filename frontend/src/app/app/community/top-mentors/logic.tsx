@@ -207,12 +207,13 @@ const PodiumMentor = ({
   const tone = rankTone(mentor.position);
   const isWinner = mentor.position === 1;
   const displayName = getMentorProfessionalDisplayName(mentor);
+  const firstName = displayName.trim().split(/\s+/)[0];
 
   return (
     <Link
       aria-label={`${mentor.position}º lugar: ${displayName}`}
       className={cn(
-        "group grid min-w-0 grid-cols-[minmax(0,1fr)] justify-items-center text-center transition hover:-translate-y-1",
+        "group grid min-w-0 grid-cols-[minmax(0,1fr)] justify-items-center text-center",
         isWinner && "top-mentor-winner",
         className,
       )}
@@ -221,21 +222,29 @@ const PodiumMentor = ({
       <span
         className={cn(
           "lectum-top-mentor-float relative z-10 grid min-w-0 grid-cols-[minmax(0,1fr)] overflow-visible place-items-center",
-          "-mb-2 w-full",
-          tone.metal,
+          "w-full gap-2 pb-3",
         )}
         style={{ animationDelay: delay }}
       >
         <Avatar mentor={mentor} ringed size={size} />
-        <span className="top-mentor-ribbon" aria-hidden="true" />
-        <span className="top-mentor-ribbon-tails" aria-hidden="true" />
-        <span
-          className="absolute left-1/2 top-[calc(100%+10px)] z-20 -translate-x-1/2"
-          aria-hidden="true"
-        >
+        <span className="min-h-5 max-w-full break-words text-sm font-medium leading-5 text-foreground [overflow-wrap:anywhere]">
+          {firstName}
+        </span>
+      </span>
+      <span
+        className={cn(
+          "top-mentor-podium-column relative grid w-full place-items-center",
+          tone.podiumColumn,
+          tone.metal,
+          columnClassName,
+        )}
+        aria-hidden="true"
+      >
+        <span className="top-mentor-column-award">
+          <span className="top-mentor-ribbon-tails" />
           <span
             className={cn(
-              "top-mentor-position-medal grid place-items-center rounded-full border-2 border-media-foreground text-base font-black",
+              "top-mentor-position-medal mt-7 grid place-items-center rounded-full border-2 border-media-foreground text-base font-black",
               isWinner ? "h-12 w-12 text-xl" : "h-10 w-10",
               tone.positionMedal,
             )}
@@ -244,14 +253,6 @@ const PodiumMentor = ({
           </span>
         </span>
       </span>
-      <span
-        className={cn(
-          "top-mentor-podium-column relative grid w-full place-items-center",
-          tone.podiumColumn,
-          columnClassName,
-        )}
-        aria-hidden="true"
-      />
     </Link>
   );
 };
