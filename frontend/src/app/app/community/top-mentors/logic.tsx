@@ -220,7 +220,7 @@ const PodiumMentor = ({
       <span
         className={cn(
           "lectum-top-mentor-float relative z-10 grid overflow-visible place-items-center",
-          isWinner ? "-mb-6" : "-mb-5",
+          isWinner ? "-mb-7" : "-mb-6",
         )}
         style={{ animationDelay: delay }}
       >
@@ -228,7 +228,7 @@ const PodiumMentor = ({
       </span>
       <span
         className={cn(
-          "top-mentor-podium-column relative grid w-full place-items-center rounded-t-[1.15rem]",
+          "top-mentor-podium-column relative grid w-full place-items-center rounded-t-[1.45rem]",
           tone.podiumColumn,
           columnClassName,
         )}
@@ -236,7 +236,7 @@ const PodiumMentor = ({
       >
         <span
           className={cn(
-            "top-mentor-position-medal grid place-items-center rounded-full border-2 border-media-foreground text-base font-black shadow-[0_10px_22px_rgb(15_23_42/14%)]",
+            "top-mentor-position-medal grid place-items-center rounded-full border-2 border-media-foreground text-base font-black",
             isWinner ? "h-12 w-12 text-xl" : "h-10 w-10",
             tone.positionMedal,
           )}
@@ -260,8 +260,8 @@ const RankingHero = ({
   const third = mentors[2];
 
   return (
-    <section className="relative box-border w-full min-w-0 max-w-full overflow-hidden px-1 pt-6 pb-24 sm:px-6 sm:pt-8 sm:pb-28">
-      <div className="relative z-10 grid w-full min-w-0 justify-items-center gap-8 overflow-visible text-center sm:gap-10">
+    <section className="relative box-border w-full min-w-0 max-w-full overflow-hidden px-1 pt-6 pb-16 sm:px-6 sm:pt-8 sm:pb-20">
+      <div className="relative z-10 grid w-full min-w-0 justify-items-center gap-7 overflow-visible text-center sm:gap-9">
         <h1
           aria-label={`Top 5 mentores em ${communityName}`}
           className="grid w-full min-w-0 max-w-[24rem] gap-2 sm:max-w-2xl"
@@ -275,33 +275,33 @@ const RankingHero = ({
         </h1>
 
         {first ? (
-          <div className="grid w-[340px] max-w-full grid-cols-[86px_144px_86px] items-end justify-center gap-3 overflow-visible sm:w-[420px] sm:grid-cols-[96px_156px_96px] sm:gap-9">
+          <div className="grid w-[354px] max-w-full grid-cols-[92px_154px_92px] items-end justify-center gap-2 overflow-visible sm:w-[430px] sm:grid-cols-[104px_166px_104px] sm:gap-8">
             <div className="flex min-w-0 justify-center overflow-visible">
               {second ? (
                 <PodiumMentor
-                  className="max-w-[6.4rem] sm:max-w-[7.5rem]"
-                  columnClassName="h-[6.8rem] sm:h-[7.4rem]"
+                  className="max-w-[6.8rem] sm:max-w-[7.7rem]"
+                  columnClassName="h-[7.4rem] sm:h-[8rem]"
                   mentor={second}
-                  size={86}
+                  size={92}
                   delay="0.35s"
                 />
               ) : null}
             </div>
             <div className="flex min-w-0 justify-center overflow-visible">
               <PodiumMentor
-                className="max-w-[10rem] sm:max-w-[12rem]"
-                columnClassName="h-[9.2rem] sm:h-[10.1rem]"
+                className="max-w-[10.6rem] sm:max-w-[12.4rem]"
+                columnClassName="h-[10rem] sm:h-[10.8rem]"
                 mentor={first}
-                size={144}
+                size={154}
               />
             </div>
             <div className="flex min-w-0 justify-center overflow-visible">
               {third ? (
                 <PodiumMentor
-                  className="max-w-[6.4rem] sm:max-w-[7.5rem]"
-                  columnClassName="h-[6.6rem] sm:h-[7.2rem]"
+                  className="max-w-[6.8rem] sm:max-w-[7.7rem]"
+                  columnClassName="h-[7.2rem] sm:h-[7.8rem]"
                   mentor={third}
-                  size={86}
+                  size={92}
                   delay="0.7s"
                 />
               ) : null}
@@ -386,7 +386,7 @@ export const CommunityTopMentorsLogic = () => {
   const communityName = communityData?.name ?? "Comunidades Lectum";
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
   const pageStyle = {
-    backgroundColor: communityData?.visual_soft_color ?? "#fffaf0",
+    backgroundColor: communityData?.visual_soft_color ?? "var(--lectum-background)",
   } satisfies CSSProperties;
 
   return (
@@ -437,12 +437,12 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {mentors.length > 0 ? (
-          <section className="mx-auto -mt-8 grid w-full min-w-0 max-w-[680px] gap-4 rounded-t-[2rem] bg-background px-0 pt-14 dark:bg-background">
-            <div className="grid min-w-0 gap-1.5">
+          <section className="mx-auto -mt-14 grid w-[calc(100%+2rem)] min-w-0 max-w-none gap-4 rounded-t-[2.5rem] bg-background px-4 pt-16 pb-7 dark:bg-background sm:w-full sm:max-w-[680px] sm:px-0">
+            <div className="grid min-w-0 gap-2">
               <h2 className="text-2xl font-black leading-tight tracking-[-0.035em] text-foreground dark:text-foreground">
                 Classificação geral
               </h2>
-              <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted dark:text-muted">
+              <p className="max-w-2xl text-[0.95rem] font-medium leading-relaxed text-muted dark:text-muted">
                 Profissionais que mais acolhem e contribuem com a comunidade.
               </p>
             </div>
