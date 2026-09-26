@@ -45,6 +45,9 @@ const {
 } = await import("./community-feed-scroll-memory.ts");
 const { recordAppNavigationPoint } = await import("./navigation-history.ts");
 const { navigateBackToPersistedOrigin } = await import("./persisted-origin-navigation.ts");
+const { navigateBackFromCommunity, navigateBackFromTopMentors } = await import(
+  "./community-ranking-navigation.ts"
+);
 const {
   getRememberedPsychologistsFeedHref,
   isPsychologistsFeedHref,
@@ -123,6 +126,56 @@ const createRouterSpy = () => {
     },
   };
 };
+
+test("ranking returns to community then feed without pushing a loop", async () => {
+  await withBrowserNavigation(() => {
+    window.history.length = 3;
+    recordAppNavigationPoint("/");
+    recordAppNavigationPoint("/comunidades/ansiedade");
+    window.location.pathname = "/comunidades/top-mentores";
+    recordAppNavigationPoint();
+    const { calls, router } = createRouterSpy();
+    navigateBackFromTopMentors(router, "ansiedade");
+    window.location.pathname = "/comunidades/ansiedade";
+    recordAppNavigationPoint();
+    navigateBackFromCommunity(router);
+    assert.deepEqual(calls, [["back"], ["back"]]);
+  });
+});
+
+test("shared ranking replaces itself and community exits to feed", async () => {
+  await withBrowserNavigation(() => {
+    window.location.pathname = "/comunidades/top-mentores";
+    recordAppNavigationPoint();
+    const { calls, router } = createRouterSpy();
+    navigateBackFromTopMentors(router, "ansiedade");
+    window.location.pathname = "/comunidades/ansiedade";
+    recordAppNavigationPoint();
+    navigateBackFromCommunity(router);
+    assert.deepEqual(calls, [
+      ["replace", "/comunidades/ansiedade", undefined],
+      ["replace", "/", undefined],
+    ]);
+  });
+});
+
+test("community avoids old ranking history for every route alias", async () => {
+  for (const path of [
+    "/comunidades/top-mentores",
+    "/community/top-mentors",
+    "/app/comunidades/top-mentores",
+    "/app/community/top-mentors",
+  ]) {
+    await withBrowserNavigation(() => {
+      recordAppNavigationPoint(path);
+      window.location.pathname = "/comunidades/ansiedade";
+      recordAppNavigationPoint();
+      const { calls, router } = createRouterSpy();
+      navigateBackFromCommunity(router);
+      assert.deepEqual(calls, [["replace", "/", undefined]]);
+    });
+  }
+});
 
 test("retorna perfil indisponivel para o feed comunitario persistido", async () => {
   const fixedNow = Date.parse("2026-08-29T12:00:00.000Z");

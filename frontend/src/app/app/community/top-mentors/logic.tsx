@@ -3,7 +3,7 @@
 import { ArrowLeft, Medal, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { getCommunityInitials } from "@/utils/community-display";
+import { navigateBackFromTopMentors } from "@/utils/community-ranking-navigation";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { publicTopMentorsHref } from "@/utils/public-routes";
@@ -400,6 +401,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
 };
 
 export const CommunityTopMentorsLogic = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const community = searchParams.get("community") || undefined;
   const query = useMemo(() => ({ community, limit: 5, period: "all" as const }), [community]);
@@ -437,14 +439,15 @@ export const CommunityTopMentorsLogic = () => {
           style={pageStyle}
         >
           <nav aria-label="Ações do ranking" className="mb-4 flex items-center justify-between">
-            <Link
+            <button
               aria-label="Voltar para a comunidade"
               title="Voltar para a comunidade"
-              href={community ? `/comunidades/${encodeURIComponent(community)}` : "/comunidades"}
+              onClick={() => navigateBackFromTopMentors(router, community)}
+              type="button"
               className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-primary-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
             >
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-            </Link>
+            </button>
             <button
               aria-label="Compartilhar Top Mentores"
               title="Compartilhar Top Mentores"
