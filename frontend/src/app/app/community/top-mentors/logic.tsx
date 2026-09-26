@@ -408,12 +408,12 @@ export const CommunityTopMentorsLogic = () => {
   const communityName = communityData?.name ?? "Comunidades Lectum";
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
   const pageStyle: CSSProperties & { "--top-mentor-backdrop": string } = {
-    "--top-mentor-backdrop": communityData?.visual_soft_color ?? "var(--lectum-background)",
+    "--top-mentor-backdrop": communityData?.visual_soft_color ?? "var(--background)",
   };
 
   return (
-    <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-surface-muted px-0 py-0 sm:py-0 lg:pb-0">
-      <section className="mx-auto grid min-h-screen w-full min-w-0 max-w-full content-start gap-0 bg-surface-muted sm:max-w-2xl lg:max-w-3xl">
+    <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-background px-0 py-0 sm:py-0 lg:pb-0">
+      <section className="mx-auto grid min-h-screen w-full min-w-0 max-w-full content-start gap-0 bg-background sm:max-w-2xl lg:max-w-3xl">
         <header
           className="top-mentor-ranking-header grid min-w-0 content-start px-4 pt-8"
           style={pageStyle}
@@ -460,7 +460,7 @@ export const CommunityTopMentorsLogic = () => {
         {mentors.length > 0 ? (
           <section
             aria-label="Ranking de mentores"
-            className="top-mentor-ranking-panel mx-4 mb-6 grid min-w-0 px-4 pt-3 pb-7 sm:mx-6 sm:px-6 sm:pt-4"
+            className="mx-4 mb-6 grid min-w-0 rounded-[22px] border border-border bg-surface px-4 pt-3 pb-7 shadow-lectum-soft sm:mx-6 sm:px-6 sm:pt-4"
           >
             <div className="grid min-w-0">
               {mentors.map((mentor) => (

@@ -148,6 +148,8 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Consistencia com feed: usar background do PageShell (#f6f7f8 no tema claro), superficie branca, borda e sombra suave do CommunityPostCard, incluindo seu raio de 22px. Substituir somente os overrides do ranking; tokens globais e modo escuro permanecem compartilhados. O gradiente termina no background, nao em surface-muted.
+
 - O ranking passa a selecionar `psychologist_profile.gender` e responder `professional.type_label` via `authorTypeLabel`, ja usado nas comunidades. O frontend consome esse rotulo tambem no contexto de contato, sem inferir genero pelo nome, foto ou headline. Contrato aditivo, opcional no cliente para backend antigo, com fallback neutro Psicologo(a). Sem migracao de banco.
 
 - Pedido posterior substitui medalhas por numerais sem fundo na face das colunas. Remover fitas e suas regras CSS. Gradiente comunitario recebe etapas intermediarias e colunas desvanecem gradualmente a partir de 48%; frase passa a ter 12/20px de espaco superior/inferior no mobile. Preservar aros, nomes cadastrados e margens da lista.

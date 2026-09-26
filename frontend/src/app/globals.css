@@ -597,9 +597,9 @@ video::backdrop {
     to bottom,
     var(--top-mentor-backdrop) 0%,
     var(--top-mentor-backdrop) 20%,
-    color-mix(in srgb, var(--top-mentor-backdrop) 65%, var(--lectum-surface-muted)) 50%,
-    color-mix(in srgb, var(--top-mentor-backdrop) 20%, var(--lectum-surface-muted)) 75%,
-    var(--lectum-surface-muted) 95%
+    color-mix(in srgb, var(--top-mentor-backdrop) 65%, var(--background)) 50%,
+    color-mix(in srgb, var(--top-mentor-backdrop) 20%, var(--background)) 75%,
+    var(--background) 95%
   );
 }
 
@@ -609,11 +609,6 @@ video::backdrop {
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
-}
-
-.top-mentor-ranking-panel {
-  border-radius: 24px;
-  background: var(--lectum-surface);
 }
 
 .top-mentor-metal--gold {

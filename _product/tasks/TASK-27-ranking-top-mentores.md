@@ -336,6 +336,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Unificar superficie com o feed: fundo bg-background, lista bg-surface com border-border, shadow-lectum-soft e raio de 22px do CommunityPostCard. Gradiente termina no mesmo fundo, sem alterar tokens globais.
+
 - [x] Incluir type_label derivado do genero cadastrado no perfil pelo helper canonico do backend; frontend nao infere mais profissao a partir do headline. Campo opcional no frontend para rollout compativel, com fallback Psicologo(a).
 
 - [x] Variante final: substituir medalhas/fitas por numeros diretamente nas colunas, suavizar fade de base e gradiente comunitario e reduzir distancias coluna/texto/lista.
