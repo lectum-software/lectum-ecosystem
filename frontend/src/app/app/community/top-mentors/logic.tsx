@@ -448,7 +448,7 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {mentors.length > 0 ? (
-          <section className="top-mentor-ranking-panel -mx-4 -mt-16 grid min-w-0 gap-4 bg-background px-4 pt-20 pb-7 dark:bg-background sm:mx-auto sm:w-full sm:max-w-[680px] sm:px-0">
+          <section className="top-mentor-ranking-panel -mx-4 -mt-16 grid min-w-0 gap-4 px-4 pt-20 pb-7 sm:mx-auto sm:w-full sm:max-w-[680px] sm:px-0">
             <div className="grid min-w-0 gap-2">
               <h2 className="text-2xl font-black leading-tight tracking-[-0.035em] text-foreground dark:text-foreground">
                 Classificação geral
