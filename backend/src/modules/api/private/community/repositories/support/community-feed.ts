@@ -35,6 +35,8 @@ export const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
 
 export const COMMUNITY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 
+export const COMMUNITY_OPPORTUNITIES_WINDOW_DAYS = 90;
+
 export const communitySelect = {
   id: true,
   name: true,
@@ -201,7 +203,7 @@ export type CurrentVote = 1 | -1 | null;
 
 export type CommunitySortPeriodKey = keyof CommunityPostSortMetricsDTO["comments"];
 
-export type CommunityPostSortValue = "featured" | "new" | "commented" | "voted";
+export type CommunityPostSortValue = "opportunities" | "featured" | "new" | "commented" | "voted";
 
 export type GeneralFeedQueueItem = {
   communityHotScore: number;
@@ -295,7 +297,8 @@ export const incrementCommunitySortPeriodMetrics = (
 };
 
 export const normalizeCommunityPostSort = (value?: string | null): CommunityPostSortValue => {
-  if (value === "new" || value === "commented" || value === "voted") return value;
+  if (value === "opportunities" || value === "new" || value === "commented" || value === "voted")
+    return value;
 
   return "featured";
 };
@@ -304,6 +307,13 @@ export const normalizeCommunityPostSortPeriod = (value?: string | null): Communi
   if (value === "month" || value === "year" || value === "all") return value;
 
   return "week";
+};
+
+export const resolveCommunityOpportunitiesStartDate = () => {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - COMMUNITY_OPPORTUNITIES_WINDOW_DAYS);
+
+  return startDate;
 };
 
 export const compareCommunityPostDates = (a: PostResult, b: PostResult) => {
@@ -355,10 +365,35 @@ export const sortCommunityPostResults = (
   period: CommunitySortPeriodKey,
   metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
 ) => {
-  const sortedItems = items.filter((item) => item.status !== "removido");
+  const opportunityStartTime =
+    sort === "opportunities" ? resolveCommunityOpportunitiesStartDate().getTime() : null;
+  const sortedItems = items.filter((item) => {
+    if (item.status === "removido") return false;
+
+    if (opportunityStartTime) {
+      return item.author.role !== "psicologo" && item.createdAt.getTime() >= opportunityStartTime;
+    }
+
+    return true;
+  });
 
   if (sort === "new") {
     return sortedItems.sort(compareCommunityPostDates);
+  }
+
+  if (sort === "opportunities") {
+    return sortedItems.sort((a, b) => {
+      const aMetrics = communityPostMetrics(a.id, metricsByPostId);
+      const bMetrics = communityPostMetrics(b.id, metricsByPostId);
+      const professionalRepliesDiff =
+        aMetrics.psychologist_replies_count - bMetrics.psychologist_replies_count;
+      if (professionalRepliesDiff !== 0) return professionalRepliesDiff;
+
+      const totalRepliesDiff = a.replies_count - b.replies_count;
+      if (totalRepliesDiff !== 0) return totalRepliesDiff;
+
+      return compareCommunityPostDates(a, b);
+    });
   }
 
   if (sort === "commented" || sort === "voted") {

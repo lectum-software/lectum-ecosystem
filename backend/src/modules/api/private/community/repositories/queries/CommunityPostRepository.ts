@@ -18,6 +18,7 @@ import {
   normalizeCommunityPostSortPeriod,
   normalizePagination,
   postSelect,
+  resolveCommunityOpportunitiesStartDate,
   sortCommunityPostResults,
 } from "../support/community-feed";
 import {
@@ -55,6 +56,18 @@ export class CommunityPostRepository extends CommunityRepositoryContext {
       deleted: false,
       status: "publicado",
       OR: postSearchWhere(search),
+      ...(sort === "opportunities"
+        ? {
+            author: {
+              role: {
+                not: "psicologo",
+              },
+            },
+            createdAt: {
+              gte: resolveCommunityOpportunitiesStartDate(),
+            },
+          }
+        : {}),
     };
 
     const [allItems, count] = await Promise.all([

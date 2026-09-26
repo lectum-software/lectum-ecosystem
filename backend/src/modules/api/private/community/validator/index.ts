@@ -133,7 +133,7 @@ export const postsSchema: IValidatorRequest = {
       key: "sort",
       coerse: "string",
       method: "enumeric",
-      values: ["featured", "new", "commented", "voted"],
+      values: ["opportunities", "featured", "new", "commented", "voted"],
       optional: true,
     },
     {

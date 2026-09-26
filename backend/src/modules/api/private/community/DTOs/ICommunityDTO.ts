@@ -12,7 +12,7 @@ export type CommunityPostListQuery = {
   page?: number;
   limit?: number;
   search?: string;
-  sort?: "featured" | "new" | "commented" | "voted";
+  sort?: "opportunities" | "featured" | "new" | "commented" | "voted";
   period?: "week" | "month" | "year" | "all";
 };
 
