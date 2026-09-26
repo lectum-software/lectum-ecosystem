@@ -1,19 +1,12 @@
 "use client";
 
-import {
-  Award,
-  BadgePercent,
-  CalendarCheck,
-  Check,
-  HandHeart,
-  type LucideIcon,
-  ShieldCheck,
-  Stethoscope,
-} from "lucide-react";
+import { Award, BadgePercent, CalendarCheck, Check, HandHeart, Stethoscope } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologistFilters,
 } from "@/api/generator/types/directory";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { CITY_OPTIONS_BY_STATE } from "../../professional/profile/setup/brazil-cities";
 import { STATE_OPTIONS } from "../../professional/profile/setup/options";
@@ -55,7 +48,7 @@ type FilterFeatureOption = {
   name: FilterFeatureKey;
   label: string;
   description: string;
-  icon: LucideIcon;
+  icon: ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?: number }>;
 };
 
 export const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
@@ -69,7 +62,7 @@ export const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
     name: "verified",
     label: "Somente verificados",
     description: "Psicólogos com registro verificado junto ao Conselho Federal de Psicologia",
-    icon: ShieldCheck,
+    icon: VerifiedBadgeIcon,
   },
   {
     name: "more_experienced",
