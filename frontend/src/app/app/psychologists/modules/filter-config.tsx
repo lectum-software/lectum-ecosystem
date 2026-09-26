@@ -2,12 +2,12 @@
 
 import {
   Award,
+  BadgeCheck,
   BadgePercent,
   CalendarCheck,
   Check,
   HandHeart,
   type LucideIcon,
-  ShieldCheck,
   Stethoscope,
 } from "lucide-react";
 import type {
@@ -69,7 +69,7 @@ export const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
     name: "verified",
     label: "Somente verificados",
     description: "Psicólogos com registro verificado junto ao Conselho Federal de Psicologia",
-    icon: ShieldCheck,
+    icon: BadgeCheck,
   },
   {
     name: "more_experienced",
