@@ -331,3 +331,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm version:bump` para `0.1.171`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-09-26 - curva conforme referencia aprovada
+
+- [x] Remover elipses sobrepostas que escondiam as colunas e as medalhas.
+- [x] Aplicar recorte inferior com centro mais baixo e laterais mais altas no proprio cabecalho.
+- [x] Manter superficie cinza continua em toda a largura da classificacao.
+- [x] Ajustar proporcoes e limites responsivos dos avatares do podio.
+- [x] Preservar posicoes da lista e permitir quebra de nomes longos.
+- [x] Conferir componentes no navegador em larguras de 320 e 393 pixels.
+- [ ] Concluir smoke autenticado em homologacao com fotos e dados reais.
+
+Referencia: imagem aprovada de 26/09/2026 14:47:53 e screenshot de regressao enviados pelo usuario. Evidencia geometrica local: `../mentor-393.png`, renderizada a partir do TSX real com fixture isolada fora do repositorio, sem endpoints simulados ou dados permanentes. Build, TypeScript, Biome, source-safety e sincronizacao de versao verificados. A validacao com sessao real nao foi substituida pela fixture.

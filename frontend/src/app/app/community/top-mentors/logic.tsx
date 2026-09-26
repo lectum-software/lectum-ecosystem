@@ -164,7 +164,7 @@ const Avatar = ({
           tone.metal,
           className,
         )}
-        style={{ height: size, width: size }}
+        style={{ aspectRatio: "1", maxWidth: "100%", width: size }}
       >
         <span
           className={cn(
@@ -212,15 +212,15 @@ const PodiumMentor = ({
     <Link
       aria-label={`${mentor.position}º lugar: ${displayName}`}
       className={cn(
-        "group grid min-w-0 justify-items-center text-center transition hover:-translate-y-1",
+        "group grid min-w-0 grid-cols-[minmax(0,1fr)] justify-items-center text-center transition hover:-translate-y-1",
         className,
       )}
       href={topMentorProfileUrl(mentor.professional.profile_url)}
     >
       <span
         className={cn(
-          "lectum-top-mentor-float relative z-10 grid overflow-visible place-items-center",
-          isWinner ? "-mb-7" : "-mb-6",
+          "lectum-top-mentor-float relative z-10 grid min-w-0 grid-cols-[minmax(0,1fr)] overflow-visible place-items-center",
+          "-mb-2 w-full",
         )}
         style={{ animationDelay: delay }}
       >
@@ -260,7 +260,7 @@ const RankingHero = ({
   const third = mentors[2];
 
   return (
-    <section className="relative box-border w-full min-w-0 max-w-full overflow-hidden px-1 pt-6 pb-16 sm:px-6 sm:pt-8 sm:pb-20">
+    <section className="relative box-border w-full min-w-0 max-w-full px-1 pt-6 sm:px-6 sm:pt-8">
       <div className="relative z-10 grid w-full min-w-0 justify-items-center gap-7 overflow-visible text-center sm:gap-9">
         <h1
           aria-label={`Top 5 mentores em ${communityName}`}
@@ -269,39 +269,39 @@ const RankingHero = ({
           <span className="text-xl font-medium leading-tight tracking-normal text-muted dark:text-muted sm:text-2xl">
             Top 5 Mentores em
           </span>
-          <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.02] tracking-[-0.045em] text-foreground [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
+          <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.08] tracking-normal text-foreground [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
             {communityName}
           </span>
         </h1>
 
         {first ? (
-          <div className="grid w-[354px] max-w-full grid-cols-[92px_154px_92px] items-end justify-center gap-2 overflow-visible sm:w-[430px] sm:grid-cols-[104px_166px_104px] sm:gap-8">
+          <div className="grid w-full max-w-[430px] grid-cols-[1fr_1.34fr_1fr] items-end justify-center gap-2 overflow-visible sm:gap-3">
             <div className="flex min-w-0 justify-center overflow-visible">
               {second ? (
                 <PodiumMentor
-                  className="max-w-[6.8rem] sm:max-w-[7.7rem]"
+                  className="w-full"
                   columnClassName="h-[7.4rem] sm:h-[8rem]"
                   mentor={second}
-                  size={92}
+                  size={124}
                   delay="0.35s"
                 />
               ) : null}
             </div>
             <div className="flex min-w-0 justify-center overflow-visible">
               <PodiumMentor
-                className="max-w-[10.6rem] sm:max-w-[12.4rem]"
+                className="w-full"
                 columnClassName="h-[10rem] sm:h-[10.8rem]"
                 mentor={first}
-                size={154}
+                size={166}
               />
             </div>
             <div className="flex min-w-0 justify-center overflow-visible">
               {third ? (
                 <PodiumMentor
-                  className="max-w-[6.8rem] sm:max-w-[7.7rem]"
+                  className="w-full"
                   columnClassName="h-[7.2rem] sm:h-[7.8rem]"
                   mentor={third}
-                  size={92}
+                  size={124}
                   delay="0.7s"
                 />
               ) : null}
@@ -326,15 +326,15 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   });
 
   return (
-    <article className="flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-border bg-surface px-3.5 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface">
+    <article className="flex w-full min-w-0 max-w-full items-center gap-2 overflow-visible rounded-[1.35rem] border border-border bg-surface px-3 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface">
       <Link
         aria-label={`Ver perfil de ${displayName}`}
-        className="group/profile flex min-w-0 flex-1 items-center gap-3"
+        className="group/profile flex min-w-0 flex-1 items-center gap-2"
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
         <span
           className={cn(
-            "grid h-12 w-12 shrink-0 place-items-center rounded-full text-lg font-black",
+            "grid h-9 w-9 shrink-0 place-items-center rounded-full text-base font-bold",
             isTopThree
               ? cn("top-mentor-list-medal", tone.metal)
               : "border border-border bg-muted/30 text-primary",
@@ -343,10 +343,10 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         >
           <span>{mentor.position}</span>
         </span>
-        <Avatar mentor={mentor} ringed={isTopThree} ringVariant="list" size={62} />
+        <Avatar mentor={mentor} ringed={isTopThree} ringVariant="list" size={50} />
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-center gap-1.5">
-            <strong className="truncate text-base font-black tracking-[-0.02em] text-foreground transition group-hover/profile:text-primary dark:text-foreground">
+            <strong className="break-words text-base font-bold leading-snug tracking-normal text-foreground transition group-hover/profile:text-primary dark:text-foreground">
               {displayName}
             </strong>
             <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
@@ -359,7 +359,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
       <PsychologistWhatsAppRedirectButton
         aria-label={`Fale com ${whatsappName || displayName} no WhatsApp`}
         className={cn(
-          "grid h-10 w-10 shrink-0 place-items-center rounded-full border transition focus:outline-none focus:ring-4 focus:ring-success/15",
+          "grid h-8 w-8 shrink-0 place-items-center rounded-full border transition focus:outline-none focus:ring-4 focus:ring-success/15",
           canOpenWhatsApp
             ? "border-transparent bg-transparent text-success hover:border-success/20 hover:bg-transparent"
             : "cursor-not-allowed border-transparent bg-transparent text-subtle",
@@ -402,11 +402,11 @@ export const CommunityTopMentorsLogic = () => {
 
   return (
     <PrivateTemplate contentClassName="max-w-none overflow-x-hidden px-0">
-      <section
-        className="mx-auto grid min-h-screen w-full min-w-0 max-w-full gap-0 px-4 pt-5 pb-7 sm:max-w-2xl sm:px-0 lg:max-w-3xl"
-        style={pageStyle}
-      >
-        <header className="grid min-w-0 gap-4">
+      <section className="mx-auto grid min-h-screen w-full min-w-0 max-w-full content-start gap-0 bg-surface-muted pb-7 sm:max-w-2xl lg:max-w-3xl">
+        <header
+          className="top-mentor-ranking-header grid min-w-0 content-start gap-4 px-4 pt-5"
+          style={pageStyle}
+        >
           <Button
             className="w-fit rounded-full"
             onClick={() => navigateBackWithFallback(router)}
@@ -448,7 +448,7 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {mentors.length > 0 ? (
-          <section className="top-mentor-ranking-panel -mx-4 -mt-20 grid min-w-0 gap-4 px-4 pt-24 pb-7 sm:mx-auto sm:w-full sm:max-w-[680px] sm:px-0">
+          <section className="top-mentor-ranking-panel grid min-w-0 gap-4 px-4 pt-8 pb-7 sm:px-8 sm:pt-10">
             <div className="grid min-w-0 gap-2">
               <h2 className="text-2xl font-black leading-tight tracking-[-0.035em] text-foreground dark:text-foreground">
                 Classificação geral

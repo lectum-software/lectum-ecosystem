@@ -137,3 +137,11 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 ### Validacao
 
 - Validacoes de build/check e smoke ficam registradas no complemento correspondente da TASK-27.
+
+## Complemento 2026-09-26 - recorte inferior do podio
+
+- As elipses sobrepostas ao ranking encobriam medalhas e avatares. O cabecalho agora recorta seu proprio conteudo com `overflow: hidden` e raios inferiores elipticos de `50% / 36px`. O centro termina abaixo das laterais, como na referencia aprovada.
+- O fundo comunitario pertence somente ao cabecalho. A superficie cinza da pagina e da lista e continua; nao ha margens negativas nem camadas sobrepostas entre secoes.
+- Tracks internos com `minmax(0, 1fr)` permitem que os avatares respeitem as colunas responsivas. A proporcao lateral/central e 1:1.34.
+- A lista reserva menos largura para medalha e avatar e permite nomes em mais de uma linha.
+- Sem alteracoes em API, dados, elegibilidade, ordenacao ou analytics. A verificacao geometrica usa renderizacao isolada dos componentes; o smoke autenticado permanece separado.

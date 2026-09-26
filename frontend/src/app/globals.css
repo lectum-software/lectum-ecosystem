@@ -591,55 +591,14 @@ video::backdrop {
   background: linear-gradient(180deg, rgb(255 242 226 / 98%) 0%, rgb(229 174 116 / 80%) 100%);
 }
 
-.top-mentor-hero-curve {
-  position: absolute;
-  right: -24%;
-  bottom: -4.15rem;
-  left: -24%;
-  height: 9.25rem;
-  border-radius: 0 0 50% 50% / 0 0 78% 78%;
-  background: var(--lectum-background);
-  pointer-events: none;
-  z-index: 0;
+.top-mentor-ranking-header {
+  /* Clip the column bases with the same downward arc as the community backdrop. */
+  overflow: hidden;
+  border-radius: 0 0 50% 50% / 0 0 36px 36px;
 }
 
 .top-mentor-ranking-panel {
-  position: relative;
-  isolation: isolate;
-  z-index: 20;
-}
-
-.top-mentor-ranking-panel::before {
-  content: "";
-  position: absolute;
-  top: -4.8rem;
-  right: -44%;
-  left: -44%;
-  height: 9.75rem;
-  border-radius: 50%;
   background: var(--lectum-surface-muted);
-  box-shadow:
-    0 -18px 36px rgb(15 23 42 / 4%),
-    inset 0 -20px 36px rgb(255 255 255 / 72%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.top-mentor-ranking-panel::after {
-  content: "";
-  position: absolute;
-  top: 3.65rem;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: var(--lectum-surface-muted);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.top-mentor-ranking-panel > * {
-  position: relative;
-  z-index: 1;
 }
 
 .top-mentor-metal--gold {

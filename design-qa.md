@@ -1,51 +1,24 @@
-# Design QA - Boas-vindas do paciente
+# Top mentors curve review - 2026-09-26
 
-final result: passed
+Source: C:/Users/tulio/Downloads/Imagem do ChatGPT 26 de set. de 2026, 14_47_53.png (851 x 1847).
+Implementation capture: C:/Users/tulio/Documents/Codex/2026-09-26/quero/work/mentor-393.png.
+Viewport checks: 393 x 852 and 320 x 852 in the in-app browser.
+State: local SSR of the actual page components with an isolated content fixture outside the repository. Avatar initials, navigation and contact wrappers substitute for authenticated integrations only in this review harness. Production page still uses its real API and components.
 
-## Escopo
+## Comparison
 
-- Tela validada: `/patient/welcome` em viewport mobile `390x844`.
-- Referências visuais: `tela 1.svg` e `tela 2.svg` fornecidas pelo produto em `C:\Users\tulio\Downloads`.
-- Implementação validada: fundos normalizados em `frontend/public/images/patient-welcome/` renderizados via `next/image`, com textos, CTA e cards como UI real por cima.
+The source and the full-page browser capture were opened together. Comparison focuses on the podium/list boundary and responsive geometry; fixture photos, icon wrappers and font loading are not production-fidelity evidence.
 
-## Evidências
+- Prior P1: convex list overlay covered column numbers. Fixed by removing both pseudo-elements and negative section margins. The community-colored header now clips its column bases with a downward bottom arc. All three medals remain visible in the new capture.
+- Prior P2: avatar intrinsic sizes exceeded narrower tracks. Fixed with zero-minimum grid tracks and constrained square avatars. Confirmed at 320 and 393 CSS pixels.
+- Layout: list surface spans the page width, heading follows the curve with 32px spacing, position badges remain visible, and names wrap.
+- Typography: lighter introductory title and stronger community name retained; negative community/name tracking removed. Font parity needs authenticated-page capture.
+- Colors: community backdrop is a solid API-provided color. The ranking surface uses the existing muted theme token. Metallic treatments retained.
+- Assets: real avatar loading and animation require authenticated smoke; initials in the harness do not verify photo quality.
+- Content: heading, description, positions, profile links and contact controls retained in application source.
 
-- Capturas locais finais:
-  - `%TEMP%\lectum-welcome-logo-cdp\welcome-step-1.png`
-  - `%TEMP%\lectum-welcome-logo-cdp\welcome-step-2.png`
-- Usuário temporário real criado via endpoint do backend para acessar o fluxo e removido do banco ao final da validação.
+## Remaining Verification
 
-## Resultado
+Authenticated browser is unavailable in this session. Local geometry is verified, but full visual fidelity and live profile/contact interactions cannot be declared passed from the fixture. No production data or API was mocked.
 
-- A ilustração do background agora usa os SVGs fornecidos pelo produto, preservando a composição do caminho/montanhas das referências.
-- A primeira tela usa o SVG oficial `Logo icon.svg` versionado no projeto, mantendo o tamanho visual do ícone atual.
-- A primeira tela mantém título, descrição e CTA em camadas acessíveis, com texto do botão proporcional ao componente.
-- A segunda tela mantém título e cards em camadas acessíveis sobre o background fornecido, sem o texto auxiliar removido por pedido de produto.
-- O badge da opção comunidade exibe `Espaço gratuito`.
-- Não houve alteração em backend, banco, contratos de API ou pacotes.
-
-## Observação
-
-Os arquivos SVG fornecidos contêm PNGs embutidos em base64 e máscaras. A escolha foi aceita para esta iteração porque a prioridade era fidelidade visual exata do background.
-
-## Atualizacao 2026-06-27 - responsividade
-
-- Validacao adicional em desktop `1920x879` e mobile `390x844` confirmou que o shell visual preserva a proporcao `390x844` em telas maiores e que as duas etapas cabem sem corte.
-- Capturas locais finais:
-  - `%TEMP%\lectum-welcome-responsive-cdp-3\desktop-step-1.png`
-  - `%TEMP%\lectum-welcome-responsive-cdp-3\desktop-step-2.png`
-  - `%TEMP%\lectum-welcome-responsive-cdp-3\mobile-step-1.png`
-  - `%TEMP%\lectum-welcome-responsive-cdp-3\mobile-step-2.png`
-- Usuario temporario real criado via endpoint do backend para acessar o fluxo e removido do banco ao final da validacao.
-
-## Atualizacao 2026-06-27 - desktop full screen
-
-- Validacao adicional em desktop `1920x879` confirmou que as telas de boas-vindas agora ocupam a tela inteira no eixo horizontal e vertical.
-- O mobile `390x844` continua usando os mesmos assets originais, sem troca de fonte visual.
-- Os backgrounds desktop foram derivados das camadas originais dos SVGs fornecidos pelo produto, com expansao horizontal da paisagem para evitar redesenho manual da ilustracao.
-- Capturas locais finais:
-  - `%TEMP%\lectum-welcome-fullscreen-cdp\desktop-step-1.png`
-  - `%TEMP%\lectum-welcome-fullscreen-cdp\desktop-step-2.png`
-  - `%TEMP%\lectum-welcome-fullscreen-cdp\mobile-step-1.png`
-  - `%TEMP%\lectum-welcome-fullscreen-cdp\mobile-step-2.png`
-- Usuario temporario real criado via endpoint do backend para acessar o fluxo e removido do banco ao final da validacao.
+final result: blocked
