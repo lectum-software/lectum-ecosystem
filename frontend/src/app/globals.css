@@ -612,11 +612,11 @@ video::backdrop {
 .top-mentor-ranking-panel::before {
   content: "";
   position: absolute;
-  top: -7.85rem;
-  right: -48%;
-  left: -48%;
-  height: 11.75rem;
-  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  top: -4.8rem;
+  right: -44%;
+  left: -44%;
+  height: 9.75rem;
+  border-radius: 50%;
   background: var(--lectum-surface-muted);
   box-shadow:
     0 -18px 36px rgb(15 23 42 / 4%),
@@ -628,7 +628,7 @@ video::backdrop {
 .top-mentor-ranking-panel::after {
   content: "";
   position: absolute;
-  top: 2.35rem;
+  top: 3.65rem;
   right: 0;
   bottom: 0;
   left: 0;
