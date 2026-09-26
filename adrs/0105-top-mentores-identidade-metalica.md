@@ -148,6 +148,8 @@ O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava
 
 ### Refinamento do cabecalho e das colunas
 
+- Paridade dos controles: icones voltar/compartilhar usam primary-foreground branco nos dois temas, igual ao CommunityHeader, sem modificar fundo circular ou interacoes.
+
 - Validacao do compartilhamento: a rota de rasterizacao retornou imagem vazia em homolog protegido. No ranking, usar diretamente og_image_url do SEO publico (avatar cadastrado), resolvido pela allowlist existente, com dimensoes originais. Evita fetch do proprio deploy durante geracao de imagem e preserva a identidade solicitada.
 
 - Compartilhamento do ranking: reintroduzir voltar como link deterministico para a comunidade e compartilhar como Web Share API com fallback de clipboard. Metadata server-side consulta o SEO publico da comunidade e reutiliza sua imagem quadrada de avatar, sem alterar o canonical para a pagina da comunidade. A rota legada reutiliza a mesma metadata.

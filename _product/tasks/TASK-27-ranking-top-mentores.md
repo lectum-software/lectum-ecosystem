@@ -336,6 +336,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ### Refinamentos solicitados apos o reteste
 
+- [x] Usar branco (text-primary-foreground) nos icones voltar/compartilhar, como no cabecalho da comunidade, preservando fundo e comportamento.
+
 - [x] Adicionar voltar para a comunidade e compartilhamento nativo com fallback para copiar link no topo do ranking. Metadata publica por comunidade usa o avatar quadrado existente e canonical do ranking com query preservada.
 
 - [x] Unificar superficie com o feed: fundo bg-background, lista bg-surface com border-border, shadow-lectum-soft e raio de 22px do CommunityPostCard. Gradiente termina no mesmo fundo, sem alterar tokens globais.

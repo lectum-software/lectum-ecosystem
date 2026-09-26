@@ -441,14 +441,14 @@ export const CommunityTopMentorsLogic = () => {
               aria-label="Voltar para a comunidade"
               title="Voltar para a comunidade"
               href={community ? `/comunidades/${encodeURIComponent(community)}` : "/comunidades"}
-              className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
+              className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-primary-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
             >
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
             <button
               aria-label="Compartilhar Top Mentores"
               title="Compartilhar Top Mentores"
-              className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
+              className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-primary-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={shareRanking}
               type="button"
             >
