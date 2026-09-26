@@ -606,20 +606,21 @@ video::backdrop {
 .top-mentor-ranking-panel {
   position: relative;
   isolation: isolate;
+  z-index: 20;
 }
 
 .top-mentor-ranking-panel::before {
   content: "";
   position: absolute;
-  top: -7.35rem;
-  right: -42%;
-  left: -42%;
-  height: 10.5rem;
+  top: -7.85rem;
+  right: -48%;
+  left: -48%;
+  height: 11.75rem;
   border-radius: 0 0 50% 50% / 0 0 100% 100%;
   background: var(--lectum-surface-muted);
   box-shadow:
-    0 -14px 32px rgb(15 23 42 / 4%),
-    inset 0 -18px 34px rgb(255 255 255 / 72%);
+    0 -18px 36px rgb(15 23 42 / 4%),
+    inset 0 -20px 36px rgb(255 255 255 / 72%);
   pointer-events: none;
   z-index: 0;
 }
@@ -627,7 +628,7 @@ video::backdrop {
 .top-mentor-ranking-panel::after {
   content: "";
   position: absolute;
-  top: 3rem;
+  top: 2.35rem;
   right: 0;
   bottom: 0;
   left: 0;
