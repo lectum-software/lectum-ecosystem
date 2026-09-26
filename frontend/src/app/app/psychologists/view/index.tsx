@@ -467,7 +467,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                             Limpar
                           </button>
 
-                          <p className="col-span-2 col-start-2 mt-1 max-w-[292px] text-[13px] leading-[17px] text-muted sm:max-w-none sm:text-sm sm:leading-5">
+                          <p className="col-start-2 mt-0.5 max-w-[252px] text-[13px] leading-4 text-muted sm:max-w-[360px] sm:text-sm sm:leading-[18px]">
                             Ajuste os critérios para encontrar o psicólogo ideal para você
                           </p>
                         </div>
