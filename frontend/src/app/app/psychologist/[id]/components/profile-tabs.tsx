@@ -14,13 +14,10 @@ export const ProfileTabs = ({
   publicationCount?: number;
   reviewCount: number;
 }) => (
-  <div
-    className="sticky top-0 z-20 bg-background px-3 pt-3.5 pb-1 sm:px-4"
-    data-profile-tabs="true"
-  >
+  <div className="sticky top-0 z-20 bg-background px-5 pt-3" data-profile-tabs="true">
     <div
       aria-label="Seções do perfil profissional"
-      className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.2fr)_minmax(0,1.2fr)] items-stretch gap-1 p-1"
+      className="grid grid-cols-[minmax(0,0.6fr)_minmax(0,1.3fr)_minmax(0,1.2fr)] items-center gap-1.5 py-1"
       role="tablist"
     >
       {tabs.map((tab, index) => {
@@ -32,7 +29,7 @@ export const ProfileTabs = ({
             aria-controls="profile-content"
             aria-selected={active}
             className={cn(
-              "inline-flex min-h-9 min-w-0 cursor-pointer flex-wrap items-center justify-center gap-x-1 gap-y-0.5 rounded-full border px-1.5 py-2 text-[12.8px] font-semibold tracking-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+              "inline-flex h-8 min-h-8 min-w-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-1.5 text-xs font-bold leading-none tracking-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
               active
                 ? "border-border/80 bg-surface text-foreground shadow-lectum-tab dark:border-border/70 dark:shadow-none"
                 : "border-transparent bg-transparent text-muted hover:text-foreground",
@@ -60,9 +57,12 @@ export const ProfileTabs = ({
             tabIndex={active ? 0 : -1}
             type="button"
           >
-            {tab.label}
+            <span className="whitespace-nowrap text-xs font-bold leading-none">{tab.label}</span>
             {tab.value !== "geral" ? (
-              <span className="min-w-0 break-all font-bold tabular-nums text-primary-strong">
+              <span
+                className="min-w-0 truncate text-xs font-bold leading-none tabular-nums text-primary-strong"
+                title={count?.toLocaleString("pt-BR")}
+              >
                 {count === undefined ? "…" : count.toLocaleString("pt-BR")}
               </span>
             ) : null}

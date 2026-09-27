@@ -2437,3 +2437,8 @@ Smoke local com Playwright e respostas reais de homolog encaminhadas para contor
 CORS de localhost: sem overflow em 320/390/1440 px; troca de abas, historico, reload
 em Publicacoes e teclado aprovados. Perfil consultado retornou 8 publicacoes e
 0 avaliacoes. Chamadas de analytics bloqueadas apenas no teste.
+
+Refinamento visual do mesmo menu: altura, fonte, peso e espacamento iguais aos
+chips da comunidade; apenas largura adaptavel. Sem quebra/rolagem em 320/390/1440px.
+Tipografia aplicada nos spans para preservar o tamanho contra o reset global.
+Smoke Playwright de dimensoes, contadores, historico e teclado aprovado.
