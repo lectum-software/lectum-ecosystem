@@ -45,3 +45,14 @@ o deep link da aba sem criar paginas intermediarias. A seta do cabecalho chama
 diretamente o retorno existente, com fallback para o diretorio/feed de psicologos.
 Nao ha retorno intermediario para Sobre. Esta decisao substitui a navegacao
 push entre abas descrita na implementacao inicial.
+
+## Capa padrao com ceu e nuvens
+
+Em 2026-09-27, substituir o degrade procedural pela imagem gerada e aprovada
+pelo usuario (2172x724, 3:1), versionada em public/images/psychologist-default-sky.png.
+Usar next/image com otimizacao responsiva, alt vazio por ser decorativa e
+object-cover centralizado dentro da altura existente de 132px. Telas mais largas
+recortam verticalmente a imagem, sem distorcao ou mudanca de layout.
+Preservar capas personalizadas; a nova imagem tambem cobre falha no carregamento
+delas. Remover somente efeitos e constante exclusivos da antiga capa padrao.
+Sem backend, env, banco, dependencia ou mudanca nas abas. Publicar em homolog.

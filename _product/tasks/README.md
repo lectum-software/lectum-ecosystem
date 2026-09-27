@@ -2450,3 +2450,19 @@ centralizada e preservando altura, tipografia, cores e espacamentos aprovados.
 
 - [x] A seta do perfil retorna a pagina de origem; trocas de aba substituem a URL
   atual sem criar entradas extras no historico e sem retorno intermediario a Sobre.
+
+## Capa padrao do perfil - 2026-09-27
+
+Referencia: imagem de ceu azul e nuvens gerada e aprovada pelo usuario em conversa.
+Builder/Quick Copy indisponivel; PROTO-INVENTORY consultado. Decisao no ADR 0533.
+
+- [x] Substituir o degrade padrao pela imagem aprovada, sem alterar altura ou abas.
+- [x] Preservar capas personalizadas e fallback para imagem indisponivel.
+- [x] Usar next/image responsivo e imagem decorativa com alt vazio.
+
+Biome e testes frontend aprovados; lint geral bloqueado por erros preexistentes
+em community-detail.tsx e auth/redirect/logic.tsx. Sem backend, banco ou env nova.
+
+Build e lint dos arquivos alterados aprovados. Smoke Playwright local em 390 e
+1440px com perfis reais: imagem carregada, altura de 132px, capa personalizada
+preservada e fallback por falha de rede aprovados. Capturas inspecionadas.

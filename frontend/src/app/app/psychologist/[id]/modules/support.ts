@@ -80,13 +80,6 @@ export const PROFILE_ABOUT_MORE_LABEL = "... ver mais";
 
 export const PROFILE_ABOUT_LESS_LABEL = "ver menos";
 
-export const PSYCHOLOGIST_DEFAULT_COVER_BACKGROUND = [
-  "radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--lectum-surface) 92%, transparent) 0%, color-mix(in srgb, var(--lectum-surface) 38%, transparent) 24%, transparent 48%)",
-  "radial-gradient(circle at 82% 20%, color-mix(in srgb, var(--lectum-primary) 34%, transparent) 0%, color-mix(in srgb, var(--lectum-primary) 8%, transparent) 28%, transparent 46%)",
-  "radial-gradient(circle at 58% 104%, color-mix(in srgb, var(--lectum-primary-hover) 28%, transparent) 0%, color-mix(in srgb, var(--lectum-primary-hover) 8%, transparent) 34%, transparent 58%)",
-  "linear-gradient(135deg, var(--lectum-surface-muted) 0%, var(--lectum-primary-soft) 44%, color-mix(in srgb, var(--lectum-primary) 42%, var(--lectum-primary-soft)) 100%)",
-].join(", ");
-
 export const modalityLabel: Record<string, string> = {
   online: "Online",
   presencial: "Presencial",
