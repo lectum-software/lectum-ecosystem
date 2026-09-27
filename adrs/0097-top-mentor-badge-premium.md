@@ -20,6 +20,16 @@ Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao. As refe
 
 ## Consequencias
 
+### Correcao 2026-09-27: roseta completa
+
+Os SVGs anteriores incorporavam PNGs com a base removida. Ajustes de tamanho e
+mascaras nao recuperavam os pixels perdidos. Substituir os tres arquivos por
+geometria vetorial fechada, com margem no viewBox, gradientes metalicos e numeral
+em path. Preservar transparencia e remover fitas e adornos internos. A recriacao
+preserva o estilo metalico, mas nao e uma copia pixel a pixel da referencia.
+Usar 12px na variante inline, como o verificado nas respostas, e versionar a URL
+do asset para evitar reutilizacao dos arquivos recortados em cache.
+
 - O selo fica mais consistente e premium em todas as superficies de posts/comentarios que exibem psicologos top mentors.
 - A logica de ranking, dados, rotas, ordenacao e permissoes permanece inalterada.
 - A animacao e leve, sem package novo, e respeita acessibilidade de movimento reduzido.
