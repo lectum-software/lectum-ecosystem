@@ -20,7 +20,7 @@ import {
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
-import { MentorBadge } from "@/components/community/mentor-badge";
+import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
@@ -228,18 +228,20 @@ export const PostHeader = ({
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
             </div>
-            <MentorBadge
-              badge={post.author.featured_badge ?? post.featured_badge}
-              href={psychologistProfileHref}
-            />
           </div>
           {psychologistProfileHref ? (
             <Link
               className="w-fit text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
               href={psychologistProfileHref}
             >
-              {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-              {formatPostTimeLabel(post.created_at, post.edited_at)}
+              <MentorAuthorMeta
+                badge={post.author.featured_badge ?? post.featured_badge}
+                typeLabel={post.author.type_label}
+                date={<>{formatPostTimeLabel(post.created_at, post.edited_at)}</>}
+              >
+                {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                {formatPostTimeLabel(post.created_at, post.edited_at)}
+              </MentorAuthorMeta>
             </Link>
           ) : (
             <p className="text-[11px] font-semibold leading-tight text-muted">
@@ -438,14 +440,16 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                   <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
                 ) : null}
               </div>
-              <MentorBadge
-                badge={post.author.featured_badge ?? post.featured_badge}
-                href={psychologistProfileHref}
-              />
             </div>
             <p className="text-[11px] font-semibold leading-tight text-muted">
-              {isPsychologistPost && post.author.type_label ? `${post.author.type_label} • ` : ""}
-              {formatPostTimeLabel(post.created_at, post.edited_at)}
+              <MentorAuthorMeta
+                badge={post.author.featured_badge ?? post.featured_badge}
+                typeLabel={post.author.type_label}
+                date={<>{formatPostTimeLabel(post.created_at, post.edited_at)}</>}
+              >
+                {isPsychologistPost && post.author.type_label ? `${post.author.type_label} • ` : ""}
+                {formatPostTimeLabel(post.created_at, post.edited_at)}
+              </MentorAuthorMeta>
             </p>
           </div>
         </div>

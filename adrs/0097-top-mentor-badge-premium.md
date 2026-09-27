@@ -20,6 +20,14 @@ Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao. As refe
 
 ## Consequencias
 
+### Atualizacao 2026-09-27: ranking textual no cabecalho
+
+Posts e respostas usam MentorAuthorMeta para apresentar profissao e ranking
+na segunda linha, com a data na terceira, somente para Top 1/2/3. Sem ranking,
+o conteudo anterior permanece em duas linhas. Remover medalhas junto ao nome
+em feed, comunidade, detalhe, perfil e salvos; preservar a medalha do avatar
+comunitario. O texto pode quebrar em telas estreitas e preserva indicacao de edicao.
+
 ### Correcao 2026-09-27: roseta completa
 
 Os SVGs anteriores incorporavam PNGs com a base removida. Ajustes de tamanho e

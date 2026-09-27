@@ -21,7 +21,7 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
-import { MentorBadge } from "@/components/community/mentor-badge";
+import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
@@ -29,7 +29,10 @@ import {
 import { useInteractionSnapshot } from "@/components/community/use-interaction-snapshot";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
-import { getCommunityInitials as getInitials } from "@/utils/community-display";
+import {
+  formatCommunityPostTime as formatMentorPostTime,
+  getCommunityInitials as getInitials,
+} from "@/utils/community-display";
 import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -106,18 +109,29 @@ export const SavedReplyAuthorHeader = ({
               />
             ) : null}
           </div>
-          <MentorBadge badge={author.featured_badge} href={profileHref} />
         </div>
         {profileHref ? (
           <Link
             className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
             href={profileHref}
           >
-            <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+            <MentorAuthorMeta
+              badge={author.featured_badge}
+              typeLabel={author.type_label}
+              date={<>{formatMentorPostTime(createdAt)}</>}
+            >
+              <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+            </MentorAuthorMeta>
           </Link>
         ) : (
           <p className="text-[11px] font-semibold text-muted">
-            <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+            <MentorAuthorMeta
+              badge={author.featured_badge}
+              typeLabel={author.type_label}
+              date={<>{formatMentorPostTime(createdAt)}</>}
+            >
+              <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+            </MentorAuthorMeta>
           </p>
         )}
       </div>
