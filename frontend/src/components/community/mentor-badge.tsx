@@ -25,20 +25,22 @@ const resolveMentorBadgeTone = (rank: MentorBadgeRank): MentorBadgeTone => {
 };
 
 const medalDimensions: Record<MentorBadgeTone, { height: number; width: number }> = {
-  bronze: { height: 255, width: 174 },
-  gold: { height: 255, width: 172 },
-  silver: { height: 255, width: 174 },
+  bronze: { height: 176, width: 176 },
+  gold: { height: 176, width: 176 },
+  silver: { height: 176, width: 176 },
 };
 
 export const MentorBadge = ({
   badge,
   className,
   onClick,
+  size = "inline",
 }: {
   badge?: string | null;
   className?: string;
   href?: string;
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  size?: "avatar" | "inline";
 }) => {
   const containerRef = useRef<HTMLSpanElement>(null);
   const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -46,6 +48,7 @@ export const MentorBadge = ({
   const tone = resolveMentorBadgeTone(rank);
   const tooltip = `Top ${rank} mentor nesta comunidade`;
   const dimensions = medalDimensions[tone];
+  const avatarSize = size === "avatar" || className?.includes("text-[8.5px]");
 
   useEffect(() => {
     if (!tooltipOpen) return;
@@ -73,13 +76,20 @@ export const MentorBadge = ({
 
   return (
     <span
-      className={cn("relative inline-flex shrink-0 items-center justify-center", className)}
+      className={cn(
+        "relative inline-flex shrink-0 items-center justify-center",
+        !avatarSize && "-ml-0.5",
+        className,
+      )}
       ref={containerRef}
     >
       <button
         aria-expanded={tooltipOpen}
         aria-label={tooltip}
-        className="pointer-events-auto inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition hover:brightness-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
+        className={cn(
+          "pointer-events-auto inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full transition hover:brightness-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]",
+          avatarSize ? "h-8 w-8" : "h-[22px] w-[22px]",
+        )}
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -92,7 +102,7 @@ export const MentorBadge = ({
         <Image
           alt=""
           aria-hidden="true"
-          className="h-[26px] w-auto select-none object-contain sm:h-7"
+          className={cn("select-none object-contain", avatarSize ? "h-7 w-7" : "h-[21px] w-[21px]")}
           height={dimensions.height}
           src={`/images/community/top-mentor/${tone}.svg`}
           unoptimized
