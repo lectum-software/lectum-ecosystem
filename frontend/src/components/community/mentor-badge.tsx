@@ -25,9 +25,9 @@ const resolveMentorBadgeTone = (rank: MentorBadgeRank): MentorBadgeTone => {
 };
 
 const medalDimensions: Record<MentorBadgeTone, { height: number; width: number }> = {
-  bronze: { height: 176, width: 176 },
-  gold: { height: 176, width: 176 },
-  silver: { height: 176, width: 176 },
+  bronze: { height: 208, width: 208 },
+  gold: { height: 208, width: 208 },
+  silver: { height: 208, width: 208 },
 };
 
 export const MentorBadge = ({
@@ -88,7 +88,7 @@ export const MentorBadge = ({
         aria-label={tooltip}
         className={cn(
           "pointer-events-auto inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full transition hover:brightness-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]",
-          avatarSize ? "h-8 w-8" : "h-[22px] w-[22px]",
+          avatarSize ? "h-8 w-8" : "h-4 w-4",
         )}
         onClick={(event) => {
           event.preventDefault();
@@ -102,7 +102,7 @@ export const MentorBadge = ({
         <Image
           alt=""
           aria-hidden="true"
-          className={cn("select-none object-contain", avatarSize ? "h-7 w-7" : "h-[21px] w-[21px]")}
+          className={cn("select-none object-contain", avatarSize ? "h-7 w-7" : "h-3 w-3")}
           height={dimensions.height}
           src={`/images/community/top-mentor/${tone}.svg`}
           unoptimized

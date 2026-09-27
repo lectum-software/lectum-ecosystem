@@ -571,6 +571,7 @@ export const CommunityPostCard = ({
           />
         )}
         <ProfessionalReplyPreview
+          featuredBadgeFallback={post.featured_badge}
           overlayAction={highlightedReplyOverlayAction}
           postHref={postHref}
           presentation={isFeedPresentation ? "feed" : "default"}

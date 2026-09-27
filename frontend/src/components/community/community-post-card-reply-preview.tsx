@@ -24,6 +24,7 @@ import {
 import { AuthorAvatar } from "./community-post-card-author";
 
 export const ProfessionalReplyPreview = ({
+  featuredBadgeFallback,
   postHref,
   overlayAction,
   presentation = "default",
@@ -31,6 +32,7 @@ export const ProfessionalReplyPreview = ({
   reply,
   showWhatsappCta = true,
 }: {
+  featuredBadgeFallback?: string | null;
   overlayAction?: CommunityMediaOverlayAction;
   postHref?: string;
   presentation?: "default" | "feed";
@@ -53,6 +55,7 @@ export const ProfessionalReplyPreview = ({
   const isFeedPresentation = presentation === "feed";
   const profileHref = `/psicologos/${reply.author.id}`;
   const authorDisplayName = getCommunityAuthorDisplayName(reply.author);
+  const featuredBadge = reply.author.featured_badge ?? featuredBadgeFallback;
   const whatsappCta =
     showWhatsappCta && reply.author.whatsapp_url ? (
       <CommunityWhatsAppCta
@@ -108,7 +111,7 @@ export const ProfessionalReplyPreview = ({
                     />
                   ) : null}
                 </span>
-                <MentorBadge badge={reply.author.featured_badge} href={profileHref} />
+                <MentorBadge badge={featuredBadge} href={profileHref} />
               </div>
               <Link
                 className="min-w-0 cursor-pointer truncate text-[11px] font-medium leading-[1.15] text-muted no-underline transition hover:text-muted hover:no-underline"
@@ -192,7 +195,7 @@ export const ProfessionalReplyPreview = ({
               ) : null}
             </span>
             <MentorBadge
-              badge={reply.author.featured_badge}
+              badge={featuredBadge}
               className={profilePublicationMode ? "max-w-[124px]" : undefined}
               href={profileHref}
             />

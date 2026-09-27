@@ -202,7 +202,7 @@ export const ProfessionalReplyPreview = ({
           />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <AuthorIdentityLine
-              badge={reply.author.featured_badge}
+              badge={reply.author.featured_badge ?? post.featured_badge}
               href={profileHref}
               name={getCommunityAuthorDisplayName(reply.author)}
               onClick={handleProfileNavigationClick}
