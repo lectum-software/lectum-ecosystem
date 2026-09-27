@@ -214,6 +214,8 @@ export const ProfessionalReplyPreview = ({
               onClick={handleProfileNavigationClick}
             >
               <MentorAuthorMeta
+                authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
+                community={post.community}
                 badge={reply.author.featured_badge ?? post.featured_badge}
                 typeLabel={reply.author.type_label}
                 date={formatPostTimeLabel(reply.created_at, reply.edited_at)}
@@ -540,6 +542,8 @@ export const PostCard = ({
               onClick={handleProfileNavigationCapture}
             >
               <MentorAuthorMeta
+                authorId={post.author.role === "psicologo" ? post.author.id : undefined}
+                community={post.community}
                 badge={post.author.featured_badge ?? post.featured_badge}
                 typeLabel={post.author.type_label}
                 date={formatPostTimeLabel(post.created_at, post.edited_at)}

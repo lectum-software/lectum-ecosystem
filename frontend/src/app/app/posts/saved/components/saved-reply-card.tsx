@@ -77,10 +77,12 @@ export const SavedReplyAuthorAvatar = ({
 };
 
 export const SavedReplyAuthorHeader = ({
+  community,
   author,
   createdAt,
 }: {
   author: CommunityAuthor;
+  community: { slug: string; name: string; category: string | null };
   createdAt: string;
 }) => {
   const isPsychologist = author.role === "psicologo";
@@ -116,6 +118,8 @@ export const SavedReplyAuthorHeader = ({
             href={profileHref}
           >
             <MentorAuthorMeta
+              authorId={author.role === "psicologo" ? author.id : undefined}
+              community={community}
               badge={author.featured_badge}
               typeLabel={author.type_label}
               date={<>{formatMentorPostTime(createdAt)}</>}
@@ -126,6 +130,8 @@ export const SavedReplyAuthorHeader = ({
         ) : (
           <p className="text-[11px] font-semibold text-muted">
             <MentorAuthorMeta
+              authorId={author.role === "psicologo" ? author.id : undefined}
+              community={community}
               badge={author.featured_badge}
               typeLabel={author.type_label}
               date={<>{formatMentorPostTime(createdAt)}</>}
@@ -311,7 +317,11 @@ export const SavedReplyCard = ({
       <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
 
       <div className="mb-3">
-        <SavedReplyAuthorHeader author={reply.author} createdAt={reply.created_at} />
+        <SavedReplyAuthorHeader
+          community={item.post.community}
+          author={reply.author}
+          createdAt={reply.created_at}
+        />
       </div>
 
       <div className="grid gap-2">

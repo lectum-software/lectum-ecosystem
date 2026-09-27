@@ -490,6 +490,8 @@ export const CommunityPostCard = ({
                 href={psychologistProfileHref}
               >
                 <MentorAuthorMeta
+                  authorId={displayAuthor.role === "psicologo" ? displayAuthor.id : undefined}
+                  community={post.community}
                   badge={displayFeaturedBadge}
                   typeLabel={displayAuthor.type_label}
                   date={
@@ -577,7 +579,7 @@ export const CommunityPostCard = ({
           />
         )}
         <ProfessionalReplyPreview
-          featuredBadgeFallback={post.featured_badge}
+          community={post.community}
           overlayAction={highlightedReplyOverlayAction}
           postHref={postHref}
           presentation={isFeedPresentation ? "feed" : "default"}

@@ -235,6 +235,8 @@ export const PostHeader = ({
               href={psychologistProfileHref}
             >
               <MentorAuthorMeta
+                authorId={post.author.role === "psicologo" ? post.author.id : undefined}
+                community={post.community}
                 badge={post.author.featured_badge ?? post.featured_badge}
                 typeLabel={post.author.type_label}
                 date={<>{formatPostTimeLabel(post.created_at, post.edited_at)}</>}
@@ -443,6 +445,8 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
             </div>
             <p className="text-[11px] font-semibold leading-tight text-muted">
               <MentorAuthorMeta
+                authorId={post.author.role === "psicologo" ? post.author.id : undefined}
+                community={post.community}
                 badge={post.author.featured_badge ?? post.featured_badge}
                 typeLabel={post.author.type_label}
                 date={<>{formatPostTimeLabel(post.created_at, post.edited_at)}</>}

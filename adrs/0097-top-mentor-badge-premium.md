@@ -20,6 +20,20 @@ Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao. As refe
 
 ## Consequencias
 
+### Ranking consistente no feed e tema da comunidade
+
+O featured_badge legado de feed/detalhe usa votos isolados, portanto nao identifica
+o Top 1/2/3 comunitario. Os cabecalhos consultam o endpoint existente top-mentors,
+com periodo all, slug da comunidade e identidade do autor. TanStack Query compartilha
+a consulta entre os cards da mesma comunidade por 60 segundos. Nunca herdar a
+colocacao do autor do post para a resposta; autores fora do Top 3 mantem duas linhas.
+Enquanto a consulta nao estiver disponivel, nao inventar ranking a partir dos votos.
+
+Usar category cadastrada como tema curto, com nome completo como fallback. O title
+informa a comunidade completa. Essa escolha evita deduzir temas cortando nomes.
+Sem alteracao de API ou banco. Testes cobrem identidade da resposta, comunidade
+sem ranking, carregamento e limite de tres posicoes.
+
 ### Atualizacao 2026-09-27: ranking textual no cabecalho
 
 Posts e respostas usam MentorAuthorMeta para apresentar profissao e ranking

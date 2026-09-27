@@ -464,6 +464,7 @@ export const ReplyCard = ({
                   onClick={stopReplyTreeCollapsePropagation}
                 >
                   <MentorAuthorMeta
+                    authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
                     badge={reply.author.featured_badge}
                     typeLabel={reply.author.type_label}
                     date={
@@ -484,6 +485,7 @@ export const ReplyCard = ({
               ) : (
                 <p className="text-[11px] font-semibold leading-tight text-muted">
                   <MentorAuthorMeta
+                    authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
                     badge={reply.author.featured_badge}
                     typeLabel={reply.author.type_label}
                     date={

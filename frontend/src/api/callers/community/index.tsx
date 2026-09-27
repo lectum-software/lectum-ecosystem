@@ -67,9 +67,14 @@ export const useInfiniteCommunityFeedPosts = (query: CommunityFeedQuery = {}, en
   });
 };
 
-export const useCommunityTopMentors = (query: CommunityTopMentorsQuery = {}, enabled = true) => {
+export const useCommunityTopMentors = (
+  query: CommunityTopMentorsQuery = {},
+  enabled = true,
+  staleTime = 0,
+) => {
   return useQuery({
     queryKey: keys.community.topMentors(query),
+    staleTime,
     queryFn: () => api.getCommunityTopMentors(query),
     enabled,
     refetchOnWindowFocus: false,
