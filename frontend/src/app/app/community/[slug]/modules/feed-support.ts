@@ -58,8 +58,8 @@ export const communityPostSortChipClassName = (active: boolean) =>
     "group inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
     active
-      ? "border-primary bg-primary text-primary-foreground hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-primary-foreground"
-      : "border-border bg-surface text-muted hover:border-border hover:bg-surface-muted hover:text-foreground dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
+      ? "border-border/80 bg-surface text-foreground shadow-[0_1px_3px_rgba(15,23,42,0.08)] hover:bg-surface dark:border-border/70 dark:bg-surface dark:text-foreground dark:shadow-none"
+      : "border-transparent bg-transparent text-muted hover:border-transparent hover:bg-transparent hover:text-foreground dark:border-transparent dark:bg-transparent dark:text-muted dark:hover:bg-transparent dark:hover:text-foreground",
   );
 
 export const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
