@@ -455,6 +455,21 @@ video::backdrop {
   animation: lectum-top-mentor-float 5.8s ease-in-out infinite;
 }
 
+.top-mentor-medal-reflection {
+  overflow: hidden;
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+
+.top-mentor-medal-reflection > span {
+  position: absolute;
+  inset: -42%;
+  background: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 72%) 49%, transparent 62%);
+  opacity: 0.45;
+  transform: translateX(-140%) rotate(10deg);
+  animation: top-mentor-metal-shine 7s ease-in-out infinite;
+}
+
 .top-mentor-metal-ring {
   --top-mentor-metal-gradient: linear-gradient(135deg, #ce953a 0%, #fefe7b 52%, #9c7924 100%);
   --top-mentor-metal-glow: rgb(206 149 58 / 24%);
@@ -599,7 +614,7 @@ video::backdrop {
   );
 }
 
-.top-mentor-podium-column > .top-mentor-column-number {
+.top-mentor-podium-column > .top-mentor-column-name {
   position: absolute;
   top: 44px;
   left: 50%;
@@ -669,6 +684,7 @@ video::backdrop {
 
 @media (prefers-reduced-motion: reduce) {
   .lectum-top-mentor-float,
+  .top-mentor-medal-reflection > span,
   .top-mentor-metal-ring::after,
   .top-mentor-position-medal::after,
   .top-mentor-list-medal::after {
