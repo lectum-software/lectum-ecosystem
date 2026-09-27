@@ -22,7 +22,6 @@ import { formatPublicationMetric, getInitials, resolveErrorMessage } from "../mo
 import {
   InfiniteProfileListLoader,
   ProfileSectionCard,
-  ProfileTabHeaderCard,
   PublicationCountChip,
   ViewAllChipButton,
 } from "./shared";
@@ -235,12 +234,10 @@ export const PostsTab = ({
   isFetching,
   isFetchingNextPage,
   isLoading,
-  onBackToOverview,
   onLoadMore,
   onShare,
   posts,
   summary,
-  total,
 }: {
   canInteract: boolean;
   error: unknown;
@@ -249,23 +246,13 @@ export const PostsTab = ({
   isFetching: boolean;
   isFetchingNextPage: boolean;
   isLoading: boolean;
-  onBackToOverview: () => void;
   onLoadMore: () => void;
   onShare: (post: PostListPost) => void;
   posts: DirectoryPsychologistProfilePost[];
   summary: DirectoryPsychologistParticipationSummary;
-  total: number;
 }) => {
   return (
     <div className="grid gap-3.5 bg-background px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
-      <ProfileTabHeaderCard
-        count={total}
-        countLabelPlural="publicações"
-        countLabelSingular="publicação"
-        onBack={onBackToOverview}
-        title="Publicações"
-      />
-
       <PublicationsActivitySummary summary={summary} />
 
       {isError ? (

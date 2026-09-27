@@ -7,6 +7,7 @@
   --background: #f6f7f8;
   --foreground: #0f172a;
   --lectum-primary: #308ce8;
+  --lectum-primary-strong: #1e3a8a;
   --lectum-primary-foreground: #ffffff;
   --lectum-primary-hover: #247bd1;
   --lectum-primary-soft: #eaf5ff;
@@ -50,12 +51,14 @@
   --lectum-mobile-bottom-nav-aware-padding: calc(var(--lectum-mobile-bottom-nav-height) + 1rem);
   --lectum-shadow: 0 16px 40px rgb(15 23 42 / 8%);
   --lectum-shadow-soft: 0 8px 20px rgb(15 23 42 / 6%);
+  --lectum-shadow-tab: 0 1px 3px rgb(15 23 42 / 8%);
 }
 
 .dark {
   --background: #0b1120;
   --foreground: #e2e8f0;
   --lectum-primary: #4aa0f0;
+  --lectum-primary-strong: #93c5fd;
   --lectum-primary-foreground: #ffffff;
   --lectum-primary-hover: #6cb4f5;
   --lectum-primary-soft: #16243a;
@@ -187,6 +190,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--lectum-primary);
+  --color-primary-strong: var(--lectum-primary-strong);
   --color-primary-foreground: var(--lectum-primary-foreground);
   --color-primary-hover: var(--lectum-primary-hover);
   --color-primary-soft: var(--lectum-primary-soft);
@@ -213,6 +217,7 @@
   --color-whatsapp: var(--lectum-whatsapp);
   --shadow-lectum: var(--lectum-shadow);
   --shadow-lectum-soft: var(--lectum-shadow-soft);
+  --shadow-lectum-tab: var(--lectum-shadow-tab);
   --font-sans: var(--font-manrope);
   --font-mono: var(--font-manrope);
 }

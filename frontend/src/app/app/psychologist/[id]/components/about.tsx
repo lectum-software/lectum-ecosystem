@@ -9,13 +9,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { type MouseEvent as ReactMouseEvent, useLayoutEffect, useRef, useState } from "react";
-import type {
-  DirectoryPsychologistProfile,
-  DirectoryPsychologistProfilePost,
-  DirectoryPsychologistProfileReview,
-  DirectoryReviewSummary,
-} from "@/api/generator/types/directory";
-import type { PostListPost } from "@/api/generator/types/posts";
+import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
 import { cn } from "@/lib/utils";
 
 import {
@@ -24,15 +18,11 @@ import {
   PROFILE_ABOUT_LESS_LABEL,
   PROFILE_ABOUT_MAX_LINES,
   PROFILE_ABOUT_MORE_LABEL,
-  type ProfileTab,
-  type ProfileTabNavigationOptions,
   translateLanguage,
   translateTargetAudience,
 } from "../modules/support";
 import { PresentationVideo } from "./presentation-video";
-import { PostsPreviewSection } from "./publications";
 
-import { ReviewsPreviewSection } from "./reviews";
 import { ProfileChipList, ProfileInfoCard, ProfileSectionCard } from "./shared";
 
 export const AboutContactInfoBlock = () => (
@@ -236,35 +226,7 @@ export const FormationSection = ({ profile }: { profile: DirectoryPsychologistPr
   );
 };
 
-export const AboutTab = ({
-  canReviewProfile,
-  canInteractPosts,
-  onTabChange,
-  onSharePost,
-  postsPreview,
-  profile,
-  reviewsPreview,
-}: {
-  canReviewProfile: boolean;
-  canInteractPosts: boolean;
-  onTabChange: (tab: ProfileTab, options?: ProfileTabNavigationOptions) => void;
-  onSharePost: (post: PostListPost) => void;
-  postsPreview: {
-    isError: boolean;
-    isLoading: boolean;
-    highlightedPublication?: DirectoryPsychologistProfilePost | null;
-    posts: DirectoryPsychologistProfilePost[];
-    total: number;
-  };
-  profile: DirectoryPsychologistProfile;
-  reviewsPreview: {
-    isError: boolean;
-    isLoading: boolean;
-    highlightedReview?: DirectoryPsychologistProfileReview | null;
-    reviews: DirectoryPsychologistProfileReview[];
-    summary: DirectoryReviewSummary;
-  };
-}) => {
+export const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const bioText = profile.bio?.trim() ?? "";
   const serviceText = formatList(
     profile.services.map((item) => item.name),
@@ -298,18 +260,6 @@ export const AboutTab = ({
         />
       </ProfileSectionCard>
 
-      <ReviewsPreviewSection
-        canReviewProfile={canReviewProfile}
-        highlightedReview={reviewsPreview.highlightedReview}
-        isVerifiedSubscriber={profile.verified}
-        isError={reviewsPreview.isError}
-        isLoading={reviewsPreview.isLoading}
-        onViewAll={() => onTabChange("avaliacoes", { scrollToContentTop: true })}
-        psychologistId={profile.id}
-        reviews={reviewsPreview.reviews}
-        summary={reviewsPreview.summary}
-      />
-
       <ProfileSectionCard title="Atendimento" className="mb-0">
         <div className="mt-3 grid gap-2.5">
           <ProfileInfoCard compact icon={MapPin} label="Modalidade" value={modalityText} />
@@ -326,17 +276,6 @@ export const AboutTab = ({
       </ProfileSectionCard>
 
       <FormationSection profile={profile} />
-
-      <PostsPreviewSection
-        canInteract={canInteractPosts}
-        highlightedPublication={postsPreview.highlightedPublication}
-        isError={postsPreview.isError}
-        isLoading={postsPreview.isLoading}
-        onShare={onSharePost}
-        onViewAll={() => onTabChange("publicacoes", { scrollToContentTop: true })}
-        posts={postsPreview.posts}
-        total={postsPreview.total}
-      />
     </div>
   );
 };

@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Heart, PencilLine, Share2, Star } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
@@ -16,11 +16,7 @@ import {
   getInitials,
   getPsychologistDisplayName,
   getPsychologistTitle,
-  type ProfileTab,
-  type ProfileTabNavigationOptions,
   PSYCHOLOGIST_DEFAULT_COVER_BACKGROUND,
-  scrollProfileContentIntoView,
-  tabs,
 } from "../modules/support";
 
 import { ExpandableAboutText } from "./about";
@@ -268,114 +264,5 @@ export const ProfileHero = ({
         </div>
       </div>
     </header>
-  );
-};
-
-export const ProfileMobileStickyHeader = ({
-  activeTab,
-  onTabChange,
-  profile,
-}: {
-  activeTab: ProfileTab;
-  onTabChange: (tab: ProfileTab, options?: ProfileTabNavigationOptions) => void;
-  profile: DirectoryPsychologistProfile;
-}) => {
-  const stickyName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let animationFrame = 0;
-
-    const updateVisibility = () => {
-      window.cancelAnimationFrame(animationFrame);
-      animationFrame = window.requestAnimationFrame(() => {
-        if (window.innerWidth >= 1024) {
-          setVisible(false);
-          return;
-        }
-
-        const presentationVideo = document.querySelector<HTMLElement>(
-          '[data-presentation-video="true"]',
-        );
-        const profileHero = document.querySelector<HTMLElement>('[data-profile-hero="true"]');
-        const thresholdNode = presentationVideo || profileHero;
-        const thresholdBottom = thresholdNode?.getBoundingClientRect().bottom ?? 0;
-        const nextVisible = thresholdBottom <= 84;
-
-        setVisible((current) => (current === nextVisible ? current : nextVisible));
-      });
-    };
-
-    updateVisibility();
-    window.addEventListener("scroll", updateVisibility, { passive: true });
-    window.addEventListener("resize", updateVisibility);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener("scroll", updateVisibility);
-      window.removeEventListener("resize", updateVisibility);
-    };
-  }, []);
-
-  const handleTabChange = (tab: ProfileTab) => {
-    onTabChange(tab);
-    window.requestAnimationFrame(scrollProfileContentIntoView);
-  };
-
-  return (
-    <div
-      aria-hidden={!visible}
-      className={cn(
-        "fixed inset-x-0 top-0 z-30 border-border border-b bg-surface/92 shadow-lectum-soft backdrop-blur-xl transition-[transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-surface/82 dark:border-border dark:bg-background/86 lg:hidden",
-        visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0",
-      )}
-      data-profile-mobile-sticky-header="true"
-    >
-      <div
-        className="mx-auto w-full max-w-[430px] px-3 pb-2"
-        style={{ paddingTop: "calc(0.45rem + env(safe-area-inset-top))" }}
-      >
-        <div className="flex min-w-0 items-center justify-center gap-1.5 px-2 pb-1">
-          <span className="min-w-0 truncate text-[13.5px] font-extrabold leading-[1.25] tracking-[-0.02em] text-foreground dark:text-foreground">
-            {stickyName}
-          </span>
-          {profile.verified ? (
-            <VerifiedBadgeIcon
-              aria-label="Perfil verificado"
-              className="h-[14px] w-[14px] shrink-0"
-            />
-          ) : null}
-        </div>
-
-        <nav
-          aria-label="Seções do perfil profissional"
-          className="grid grid-cols-3 gap-1 rounded-full border border-border bg-surface/72 p-1 shadow-lectum-soft"
-        >
-          {tabs.map((tab) => {
-            const active = tab.value === activeTab;
-
-            return (
-              <button
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "inline-flex h-8 items-center justify-center rounded-full px-2 text-[12.8px] font-semibold tracking-[-0.015em] transition",
-                  active
-                    ? "bg-foreground text-primary-foreground shadow-lectum-soft"
-                    : "text-muted hover:bg-surface-muted hover:text-foreground",
-                )}
-                key={tab.value}
-                onClick={() => handleTabChange(tab.value)}
-                tabIndex={visible ? undefined : -1}
-                type="button"
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-    </div>
   );
 };
