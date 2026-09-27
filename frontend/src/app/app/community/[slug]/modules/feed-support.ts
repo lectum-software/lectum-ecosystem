@@ -58,7 +58,7 @@ export const communityPostSortChipClassName = (active: boolean) =>
     "group inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
     active
-      ? "border-border/80 bg-surface text-foreground shadow-[0_1px_3px_rgba(15,23,42,0.08)] hover:bg-surface dark:border-border/70 dark:bg-surface dark:text-foreground dark:shadow-none"
+      ? "border-border/80 bg-surface text-foreground shadow-lectum-tab hover:bg-surface dark:border-border/70 dark:bg-surface dark:text-foreground dark:shadow-none"
       : "border-transparent bg-transparent text-muted hover:border-transparent hover:bg-transparent hover:text-foreground dark:border-transparent dark:bg-transparent dark:text-muted dark:hover:bg-transparent dark:hover:text-foreground",
   );
 

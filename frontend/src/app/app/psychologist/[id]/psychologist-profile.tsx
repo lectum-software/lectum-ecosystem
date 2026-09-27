@@ -4,9 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useImportantActionTracking } from "@/api/callers/analytics";
 import {
   useDirectoryPsychologist,
-  useDirectoryPsychologistPosts,
   useDirectoryPsychologistProfileView,
-  useDirectoryPsychologistReviews,
   useInfiniteDirectoryPsychologistPosts,
   useInfiniteDirectoryPsychologistReviews,
 } from "@/api/callers/directory";
@@ -32,7 +30,8 @@ import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { navigateBackToPersistedOrigin } from "@/utils/persisted-origin-navigation";
 import { getRememberedPsychologistsFeedHref } from "@/utils/psychologists-feed-return-memory";
 import { AboutTab } from "./components/about";
-import { ProfileHero, ProfileMobileStickyHeader } from "./components/hero";
+import { ProfileHero } from "./components/hero";
+import { ProfileTabs } from "./components/profile-tabs";
 import { PostsTab } from "./components/publications";
 import { ReviewsTab } from "./components/reviews";
 import { InactivePublicProfileState } from "./components/shared";
@@ -73,7 +72,6 @@ export const PsychologistProfileLogic = () => {
 
   const urlParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const activeTab = useMemo(() => normalizeTab(urlParams.get("tab")), [urlParams]);
-  const previewListQuery = useMemo(() => ({ page: 1, limit: PAGE_LIMIT }), []);
   const infiniteListQuery = useMemo(() => ({ limit: PAGE_LIMIT }), []);
 
   const profileQuery = useDirectoryPsychologist(id);
@@ -87,20 +85,10 @@ export const PsychologistProfileLogic = () => {
   });
   const profile = profileQuery.data;
   const loadedProfileId = profile?.id;
-  const postsPreview = useDirectoryPsychologistPosts(
-    id,
-    previewListQuery,
-    activeTab === "geral" && Boolean(profile),
-  );
-  const reviewsPreview = useDirectoryPsychologistReviews(
-    id,
-    previewListQuery,
-    activeTab === "geral" && Boolean(profile),
-  );
   const publications = useInfiniteDirectoryPsychologistPosts(
     id,
     infiniteListQuery,
-    activeTab === "publicacoes" && Boolean(profile),
+    Boolean(profile),
   );
   const profileReviews = useInfiniteDirectoryPsychologistReviews(
     id,
@@ -206,7 +194,7 @@ export const PsychologistProfileLogic = () => {
   }, [activeTab, id, loadedProfileId, trackProfileTabOpen]);
 
   const navigateWithParams = useCallback(
-    (mutate: (next: URLSearchParams) => void, historyMode: ProfileTabHistoryMode = "push") => {
+    (mutate: (next: URLSearchParams) => void, historyMode: ProfileTabHistoryMode = "replace") => {
       const next = new URLSearchParams(searchParamsString);
       mutate(next);
       const queryString = next.toString();
@@ -247,7 +235,7 @@ export const PsychologistProfileLogic = () => {
         else next.set("tab", tab);
         next.delete("postsPage");
         next.delete("reviewsPage");
-      }, options?.history ?? "push");
+      }, options?.history ?? "replace");
     },
     [activeTab, navigateWithParams],
   );
@@ -364,11 +352,6 @@ export const PsychologistProfileLogic = () => {
   };
 
   const goBack = () => {
-    if (activeTab !== "geral") {
-      setActiveTab("geral", { history: "replace" });
-      return;
-    }
-
     navigateBackWithFallback(router, getRememberedPsychologistsFeedHref(id) ?? "/psicologos");
   };
 
@@ -429,7 +412,7 @@ export const PsychologistProfileLogic = () => {
       showNavigation
       showMobileNavigation={false}
     >
-      <div className="-mx-5 overflow-x-hidden bg-background">
+      <div className="-mx-5 overflow-x-clip bg-background">
         <section className="mx-auto grid w-screen max-w-[430px] bg-background sm:max-w-[430px] lg:max-w-[760px]">
           <div className="grid gap-0 pb-[calc(var(--lectum-mobile-nav-aware-fab-bottom)+4rem)] lg:pb-10">
             {shareFeedback ? (
@@ -480,36 +463,26 @@ export const PsychologistProfileLogic = () => {
                   profile={profile}
                 />
 
-                <ProfileMobileStickyHeader
+                <ProfileTabs
                   activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                  profile={profile}
+                  onTabChange={(tab) =>
+                    setActiveTab(tab, {
+                      scrollToContentTop:
+                        (document.querySelector("[data-profile-hero]")?.getBoundingClientRect()
+                          .bottom ?? 0) < 0,
+                    })
+                  }
+                  publicationCount={firstPublicationPage?.count}
+                  reviewCount={firstReviewPage?.summary.rating_count ?? profile.rating_count}
                 />
 
-                <div className="grid gap-0" id="profile-content">
-                  {activeTab === "geral" ? (
-                    <AboutTab
-                      canReviewProfile={canReviewProfile}
-                      canInteractPosts={canInteractWithPosts}
-                      onTabChange={setActiveTab}
-                      onSharePost={sharePost}
-                      postsPreview={{
-                        isError: postsPreview.isError,
-                        isLoading: postsPreview.isLoading,
-                        highlightedPublication: postsPreview.data?.highlighted_publication ?? null,
-                        posts: postsPreview.data?.data ?? [],
-                        total: postsPreview.data?.count ?? 0,
-                      }}
-                      profile={profile}
-                      reviewsPreview={{
-                        isError: reviewsPreview.isError,
-                        isLoading: reviewsPreview.isLoading,
-                        highlightedReview: reviewsPreview.data?.highlighted_review ?? null,
-                        reviews: reviewsPreview.data?.data ?? [],
-                        summary: reviewsPreview.data?.summary ?? emptySummary,
-                      }}
-                    />
-                  ) : null}
+                <div
+                  className="grid gap-0"
+                  id="profile-content"
+                  role="tabpanel"
+                  aria-labelledby={`profile-tab-${activeTab}`}
+                >
+                  {activeTab === "geral" ? <AboutTab profile={profile} /> : null}
                   {activeTab === "publicacoes" ? (
                     <PostsTab
                       canInteract={canInteractWithPosts}
@@ -519,12 +492,10 @@ export const PsychologistProfileLogic = () => {
                       isFetching={publications.isFetching}
                       isFetchingNextPage={publications.isFetchingNextPage}
                       isLoading={publications.isLoading}
-                      onBackToOverview={() => setActiveTab("geral", { history: "replace" })}
                       onLoadMore={loadMorePublications}
                       onShare={sharePost}
                       posts={publicationItems}
                       summary={firstPublicationPage?.summary ?? EMPTY_PUBLICATIONS_SUMMARY}
-                      total={firstPublicationPage?.count ?? 0}
                     />
                   ) : null}
                   {activeTab === "avaliacoes" ? (
@@ -536,7 +507,6 @@ export const PsychologistProfileLogic = () => {
                       isFetching={profileReviews.isFetching}
                       isFetchingNextPage={profileReviews.isFetchingNextPage}
                       isLoading={profileReviews.isLoading}
-                      onBackToOverview={() => setActiveTab("geral", { history: "replace" })}
                       onLoadMore={loadMoreReviews}
                       profileId={profile.id}
                       reviews={reviewItems}

@@ -20,7 +20,6 @@ import {
 import {
   InfiniteProfileListLoader,
   ProfileSectionCard,
-  ProfileTabHeaderCard,
   SectionChipLink,
   StarRating,
   ViewAllChipButton,
@@ -144,6 +143,11 @@ export const ReviewSummaryCard = ({
         <p className="text-[13px] leading-[1.6] text-muted">
           Este profissional ainda não possui avaliações.
         </p>
+        {canReviewProfile ? (
+          <Button asChild className="mt-3 rounded-full" variant="outline">
+            <Link href={`/app/avaliacoes/nova?psychologist_id=${psychologistId}`}>Avaliar</Link>
+          </Button>
+        ) : null}
       </article>
     );
   }
@@ -254,7 +258,6 @@ export const ReviewsTab = ({
   isFetching,
   isFetchingNextPage,
   isLoading,
-  onBackToOverview,
   onLoadMore,
   profileId,
   reviews,
@@ -267,7 +270,6 @@ export const ReviewsTab = ({
   isFetching: boolean;
   isFetchingNextPage: boolean;
   isLoading: boolean;
-  onBackToOverview: () => void;
   onLoadMore: () => void;
   profileId: string;
   reviews: DirectoryPsychologistProfileReview[];
@@ -275,13 +277,6 @@ export const ReviewsTab = ({
 }) => {
   return (
     <div className="grid gap-3.5 bg-background px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
-      <ProfileTabHeaderCard
-        count={summary.rating_count}
-        countLabelPlural="avaliações"
-        countLabelSingular="avaliação"
-        onBack={onBackToOverview}
-        title="Avaliações"
-      />
       <ReviewSummaryCard
         canReviewProfile={canReviewProfile}
         psychologistId={profileId}

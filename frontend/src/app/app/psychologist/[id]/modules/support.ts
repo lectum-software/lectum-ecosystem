@@ -57,7 +57,7 @@ export const getDisplayMode = (): DisplayMode => {
 export const currentAnalyticsPath = getCurrentAnalyticsPath;
 
 export const tabs: Array<{ label: string; value: ProfileTab }> = [
-  { label: "Geral", value: "geral" },
+  { label: "Sobre", value: "geral" },
   { label: "Publicações", value: "publicacoes" },
   { label: "Avaliações", value: "avaliacoes" },
 ];
@@ -184,7 +184,8 @@ export const scrollProfileContentIntoView = () => {
 
   if (!contentNode) return;
 
-  const headerOffset = window.innerWidth < 1024 ? 88 : 0;
+  const headerOffset =
+    document.querySelector("[data-profile-tabs]")?.getBoundingClientRect().height ?? 0;
   const top = Math.max(0, contentNode.getBoundingClientRect().top + window.scrollY - headerOffset);
 
   window.scrollTo({ behavior: "smooth", top });

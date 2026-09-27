@@ -2415,3 +2415,38 @@ fluxos de aceite persistido.
 - Complemento pos-feedback da TASK-195: quando a sessao da edicao de perfil ja esta aberta e o plano cai para gratuito, o frontend agora poda imediatamente especialidades, servicos e abordagens acima dos limites atuais, preferindo a selecao normalizada retornada pelo backend.
 - Sem backend, banco, migration, env nova, package novo, mock ou alteracao de contrato.
 - Criterios de aceite: todos marcados em TASK-196-poda-selecoes-perfil-downgrade.md.
+
+## Ajuste de perfil - 2026-09-27
+
+Abas Sobre, Publicacoes e Avaliacoes logo abaixo do cabecalho, conforme pedido e
+imagens do usuario. ADR: [0533](../../adrs/0533-abas-visiveis-perfil-profissional.md).
+Builder/Quick Copy indisponivel; referencia visual nos anexos e PROTO-INVENTORY.
+
+- [x] Tres abas sem icones, em colunas que cabem na tela sem rolagem horizontal.
+- [x] Aba ativa branca com borda/sombra discreta; inativas transparentes e sem borda.
+- [x] Contadores reais de publicacoes/avaliacoes em azul escuro, sem fundo.
+- [x] Sobre como padrao; links antigos, historico, teclado e paginacao preservados.
+- [x] Conteudo muda abaixo do menu e o contato continua disponivel.
+- [x] Previews duplicados e cabecalhos de subpagina removidos das abas.
+
+Validacao: tipos e lint dos arquivos alterados, Biome e testes frontend aprovados;
+build Next concluido. Check completo bloqueado pelo lint preexistente em
+community-detail.tsx e auth/redirect/logic.tsx. Sem backend, banco ou env nova.
+Sombra da comunidade convertida em token com os mesmos valores visuais.
+Smoke local com Playwright e respostas reais de homolog encaminhadas para contornar
+CORS de localhost: sem overflow em 320/390/1440 px; troca de abas, historico, reload
+em Publicacoes e teclado aprovados. Perfil consultado retornou 8 publicacoes e
+0 avaliacoes. Chamadas de analytics bloqueadas apenas no teste.
+
+Refinamento visual do mesmo menu: altura, fonte, peso e espacamento iguais aos
+chips da comunidade; apenas largura adaptavel. Sem quebra/rolagem em 320/390/1440px.
+Tipografia aplicada nos spans para preservar o tamanho contra o reset global.
+Smoke Playwright de dimensoes, contadores, historico e teclado aprovado.
+
+Ajuste de alinhamento: tres colunas iguais (grid-cols-3), mantendo Publicacoes
+centralizada e preservando altura, tipografia, cores e espacamentos aprovados.
+
+- [x] Titulo da apresentacao alterado para `Olá!`, mantendo `Sobre` na aba e o estilo existente.
+
+- [x] A seta do perfil retorna a pagina de origem; trocas de aba substituem a URL
+  atual sem criar entradas extras no historico e sem retorno intermediario a Sobre.
