@@ -179,7 +179,7 @@ const Avatar = ({
         "relative grid shrink-0 place-items-center overflow-hidden rounded-full border-4 border-media-foreground bg-primary-soft text-sm font-black text-primary shadow-[var(--lectum-shadow-soft)]",
         className,
       )}
-      style={{ height: size, width: size }}
+      style={{ aspectRatio: "1", maxWidth: "100%", width: size }}
     >
       {avatarContent}
     </span>
@@ -200,7 +200,6 @@ const PodiumMentor = ({
   size: number;
 }) => {
   const tone = rankTone(mentor.position);
-  const isWinner = mentor.position === 1;
   const displayName = getMentorProfessionalDisplayName(mentor);
   // The API derives whatsapp_name from the configured professional_first_name.
   const firstName = mentor.professional.whatsapp_name?.trim() || displayName;
@@ -221,7 +220,18 @@ const PodiumMentor = ({
         )}
         style={{ animationDelay: delay }}
       >
-        <Avatar mentor={mentor} ringed size={size} />
+        <span className="relative block" style={{ maxWidth: "100%", width: size }}>
+          <Avatar mentor={mentor} className="border-2 border-border shadow-none" size={size} />
+          <Image
+            alt=""
+            aria-hidden="true"
+            className="absolute -bottom-[2%] -right-[3%] h-auto w-[30%] object-contain"
+            height={120}
+            src={`/images/community/top-mentor/${mentor.position === 1 ? "gold" : mentor.position === 2 ? "silver" : "bronze"}.svg?v=ribbons-2`}
+            unoptimized
+            width={100}
+          />
+        </span>
         <span className="min-h-5 max-w-full break-words text-sm font-medium leading-5 text-foreground [overflow-wrap:anywhere]">
           {firstName}
         </span>
@@ -234,17 +244,7 @@ const PodiumMentor = ({
           columnClassName,
         )}
         aria-hidden="true"
-      >
-        <span
-          className={cn(
-            "top-mentor-column-number font-semibold leading-none tabular-nums",
-            isWinner ? "text-4xl" : "text-3xl",
-            tone.name,
-          )}
-        >
-          {mentor.position}
-        </span>
-      </span>
+      />
     </Link>
   );
 };
@@ -334,7 +334,6 @@ const RankingHero = ({
 };
 
 const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
-  const isTopThree = mentor.position <= 3;
   const professionalType = professionLabel(mentor);
   const canOpenWhatsApp = Boolean(mentor.professional.whatsapp_url);
   const displayName = getMentorProfessionalDisplayName(mentor);
@@ -353,21 +352,10 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
         <span
-          className="grid h-9 w-7 shrink-0 place-items-center text-sm font-medium tabular-nums text-muted"
+          className="grid h-7 w-5 shrink-0 place-items-center text-sm font-medium tabular-nums text-muted"
           aria-hidden="true"
         >
-          {isTopThree ? (
-            <Image
-              alt=""
-              className="h-8 w-[26px] object-contain"
-              height={120}
-              src={`/images/community/top-mentor/${mentor.position === 1 ? "gold" : mentor.position === 2 ? "silver" : "bronze"}.svg?v=ribbons-2`}
-              unoptimized
-              width={100}
-            />
-          ) : (
-            <span>{mentor.position}</span>
-          )}
+          <span>{mentor.position}</span>
         </span>
         <Avatar mentor={mentor} className="border-2 border-border shadow-none" size={50} />
         <span className="min-w-0 flex-1">
