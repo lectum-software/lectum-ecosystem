@@ -348,17 +348,28 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   return (
     <article className="flex w-full min-w-0 max-w-full items-center gap-2 border-b border-border/50 py-4 last:border-b-0">
       <Link
-        aria-label={`Ver perfil de ${displayName}`}
+        aria-label={`${mentor.position}º lugar: ver perfil de ${displayName}`}
         className="group/profile flex min-w-0 flex-1 items-center gap-2"
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
         <span
-          className="grid h-7 w-5 shrink-0 place-items-center text-sm font-medium tabular-nums text-muted"
+          className="grid h-9 w-7 shrink-0 place-items-center text-sm font-medium tabular-nums text-muted"
           aria-hidden="true"
         >
-          <span>{mentor.position}</span>
+          {isTopThree ? (
+            <Image
+              alt=""
+              className="h-8 w-[26px] object-contain"
+              height={120}
+              src={`/images/community/top-mentor/${mentor.position === 1 ? "gold" : mentor.position === 2 ? "silver" : "bronze"}.svg?v=ribbons-2`}
+              unoptimized
+              width={100}
+            />
+          ) : (
+            <span>{mentor.position}</span>
+          )}
         </span>
-        <Avatar mentor={mentor} ringed={isTopThree} ringVariant="list" size={50} />
+        <Avatar mentor={mentor} className="border-2 border-border shadow-none" size={50} />
         <span className="min-w-0 flex-1">
           <strong className="block break-words text-base font-bold leading-snug tracking-normal text-foreground transition group-hover/profile:text-primary dark:text-foreground">
             {displayName.slice(0, lastNameStart)}
