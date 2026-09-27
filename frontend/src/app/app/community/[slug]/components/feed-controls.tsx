@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
-import { MentorBadge } from "@/components/community/mentor-badge";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -98,13 +97,11 @@ export const AuthorAvatar = ({
 };
 
 export const AuthorIdentityLine = ({
-  badge,
   href,
   name,
   onClick,
   verified,
 }: {
-  badge?: string | null;
   href?: string;
   name: string;
   onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
@@ -128,7 +125,6 @@ export const AuthorIdentityLine = ({
       {verified ? (
         <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
       ) : null}
-      <MentorBadge badge={badge} href={href} onClick={onClick} />
     </div>
   );
 };

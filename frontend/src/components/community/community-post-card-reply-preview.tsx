@@ -13,7 +13,7 @@ import {
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
-import { MentorBadge } from "@/components/community/mentor-badge";
+import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import {
@@ -24,6 +24,7 @@ import {
 import { AuthorAvatar } from "./community-post-card-author";
 
 export const ProfessionalReplyPreview = ({
+  community,
   postHref,
   overlayAction,
   presentation = "default",
@@ -31,6 +32,7 @@ export const ProfessionalReplyPreview = ({
   reply,
   showWhatsappCta = true,
 }: {
+  community: { slug: string; name: string; category: string | null };
   overlayAction?: CommunityMediaOverlayAction;
   postHref?: string;
   presentation?: "default" | "feed";
@@ -53,6 +55,7 @@ export const ProfessionalReplyPreview = ({
   const isFeedPresentation = presentation === "feed";
   const profileHref = `/psicologos/${reply.author.id}`;
   const authorDisplayName = getCommunityAuthorDisplayName(reply.author);
+  const featuredBadge = reply.author.featured_badge;
   const whatsappCta =
     showWhatsappCta && reply.author.whatsapp_url ? (
       <CommunityWhatsAppCta
@@ -108,14 +111,21 @@ export const ProfessionalReplyPreview = ({
                     />
                   ) : null}
                 </span>
-                <MentorBadge badge={reply.author.featured_badge} href={profileHref} />
               </div>
               <Link
-                className="min-w-0 cursor-pointer truncate text-[11px] font-medium leading-[1.15] text-muted no-underline transition hover:text-muted hover:no-underline"
+                className="min-w-0 cursor-pointer text-[11px] font-medium leading-[1.15] text-muted no-underline transition hover:text-muted hover:no-underline"
                 href={profileHref}
               >
-                {reply.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-                {formatPostTimeLabel(reply.created_at, reply.edited_at)}
+                <MentorAuthorMeta
+                  authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
+                  community={community}
+                  badge={featuredBadge}
+                  typeLabel={reply.author.type_label}
+                  date={<>{formatPostTimeLabel(reply.created_at, reply.edited_at)}</>}
+                >
+                  {reply.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                  {formatPostTimeLabel(reply.created_at, reply.edited_at)}
+                </MentorAuthorMeta>
               </Link>
             </div>
           </div>
@@ -191,17 +201,20 @@ export const ProfessionalReplyPreview = ({
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
             </span>
-            <MentorBadge
-              badge={reply.author.featured_badge}
-              className={profilePublicationMode ? "max-w-[124px]" : undefined}
-              href={profileHref}
-            />
           </div>
           <Link
             className="w-fit text-[11px] font-medium leading-[1.15] text-muted no-underline transition hover:text-muted hover:no-underline"
             href={profileHref}
           >
-            {reply.author.type_label} • {formatPostTimeLabel(reply.created_at, reply.edited_at)}
+            <MentorAuthorMeta
+              authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
+              community={community}
+              badge={featuredBadge}
+              typeLabel={reply.author.type_label}
+              date={<>{formatPostTimeLabel(reply.created_at, reply.edited_at)}</>}
+            >
+              {reply.author.type_label} • {formatPostTimeLabel(reply.created_at, reply.edited_at)}
+            </MentorAuthorMeta>
           </Link>
         </div>
       </div>

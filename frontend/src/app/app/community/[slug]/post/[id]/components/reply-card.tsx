@@ -20,7 +20,7 @@ import {
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
-import { MentorBadge } from "@/components/community/mentor-badge";
+import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import {
   canShowSocialVideoPreviewAction,
@@ -32,7 +32,10 @@ import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
-import { getCommunityAuthorDisplayName } from "@/utils/community-display";
+import {
+  formatCommunityPostTime as formatMentorPostTime,
+  getCommunityAuthorDisplayName,
+} from "@/utils/community-display";
 import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import {
   countReplyTreeDescendants,
@@ -453,11 +456,6 @@ export const ReplyCard = ({
                     />
                   ) : null}
                 </div>
-                <MentorBadge
-                  badge={reply.author.featured_badge}
-                  href={psychologistProfileHref ?? undefined}
-                  onClick={psychologistProfileHref ? stopReplyTreeCollapsePropagation : undefined}
-                />
               </div>
               {psychologistProfileHref ? (
                 <Link
@@ -465,21 +463,45 @@ export const ReplyCard = ({
                   href={psychologistProfileHref}
                   onClick={stopReplyTreeCollapsePropagation}
                 >
-                  {formatReplyAuthorMeta(
-                    reply.author,
-                    reply.created_at,
-                    reply.edited_at,
-                    reply.is_post_author,
-                  )}
+                  <MentorAuthorMeta
+                    authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
+                    badge={reply.author.featured_badge}
+                    typeLabel={reply.author.type_label}
+                    date={
+                      <>
+                        {reply.is_post_author ? "Autor • " : ""}
+                        {formatMentorPostTime(reply.created_at, reply.edited_at)}
+                      </>
+                    }
+                  >
+                    {formatReplyAuthorMeta(
+                      reply.author,
+                      reply.created_at,
+                      reply.edited_at,
+                      reply.is_post_author,
+                    )}
+                  </MentorAuthorMeta>
                 </Link>
               ) : (
                 <p className="text-[11px] font-semibold leading-tight text-muted">
-                  {formatReplyAuthorMeta(
-                    reply.author,
-                    reply.created_at,
-                    reply.edited_at,
-                    reply.is_post_author,
-                  )}
+                  <MentorAuthorMeta
+                    authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
+                    badge={reply.author.featured_badge}
+                    typeLabel={reply.author.type_label}
+                    date={
+                      <>
+                        {reply.is_post_author ? "Autor • " : ""}
+                        {formatMentorPostTime(reply.created_at, reply.edited_at)}
+                      </>
+                    }
+                  >
+                    {formatReplyAuthorMeta(
+                      reply.author,
+                      reply.created_at,
+                      reply.edited_at,
+                      reply.is_post_author,
+                    )}
+                  </MentorAuthorMeta>
                 </p>
               )}
             </div>

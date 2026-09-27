@@ -1,59 +1,129 @@
 "use client";
 
-import Link from "next/link";
+import Image from "next/image";
 import type { MouseEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type MentorBadgeTone = "gold" | "silver" | "bronze";
+type MentorBadgeRank = 1 | 2 | 3;
 
-const resolveMentorBadgeTone = (badge: string): MentorBadgeTone => {
+const resolveMentorBadgeRank = (badge: string): MentorBadgeRank => {
   const normalized = badge.toUpperCase();
 
-  if (normalized.includes("#2")) return "silver";
-  if (normalized.includes("#3")) return "bronze";
+  if (normalized.includes("#2")) return 2;
+  if (normalized.includes("#3")) return 3;
+
+  return 1;
+};
+
+const resolveMentorBadgeTone = (rank: MentorBadgeRank): MentorBadgeTone => {
+  if (rank === 2) return "silver";
+  if (rank === 3) return "bronze";
 
   return "gold";
+};
+
+const medalDimensions: Record<MentorBadgeTone, { height: number; width: number }> = {
+  bronze: { height: 120, width: 100 },
+  gold: { height: 120, width: 100 },
+  silver: { height: 120, width: 100 },
 };
 
 export const MentorBadge = ({
   badge,
   className,
-  href,
   onClick,
+  size = "inline",
 }: {
   badge?: string | null;
   className?: string;
   href?: string;
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  size?: "avatar" | "inline";
 }) => {
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const rank = resolveMentorBadgeRank(badge ?? "");
+  const tone = resolveMentorBadgeTone(rank);
+  const tooltip = `Top ${rank} mentor nesta comunidade`;
+  const dimensions = medalDimensions[tone];
+  const avatarSize = size === "avatar";
+
+  useEffect(() => {
+    if (!tooltipOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setTooltipOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setTooltipOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [tooltipOpen]);
+
   if (!badge) return null;
 
-  const tone = resolveMentorBadgeTone(badge);
-
-  const badgeNode = (
+  return (
     <span
       className={cn(
-        "top-mentor-badge shrink-0",
-        tone === "gold" && "top-mentor-badge--gold",
-        tone === "silver" && "top-mentor-badge--silver",
-        tone === "bronze" && "top-mentor-badge--bronze",
+        "relative inline-flex shrink-0 items-center justify-center",
+        !avatarSize && "-ml-0.5",
         className,
       )}
+      ref={containerRef}
     >
-      <span className="relative z-10">{badge}</span>
+      <button
+        aria-expanded={tooltipOpen}
+        aria-label={tooltip}
+        className={cn(
+          "pointer-events-auto inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full transition hover:brightness-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]",
+          avatarSize ? "h-[38px] w-8" : "h-[17px] w-3.5",
+        )}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onClick?.(event as unknown as MouseEvent<HTMLAnchorElement>);
+          setTooltipOpen((current) => !current);
+        }}
+        title={tooltip}
+        type="button"
+      >
+        <Image
+          alt=""
+          aria-hidden="true"
+          className={cn(
+            "select-none object-contain",
+            avatarSize ? "h-[34px] w-7" : "h-[17px] w-3.5",
+          )}
+          height={dimensions.height}
+          src={`/images/community/top-mentor/${tone}.svg?v=ribbons-2`}
+          unoptimized
+          width={dimensions.width}
+        />
+      </button>
+      {tooltipOpen ? (
+        <span
+          className="absolute bottom-[calc(100%+0.35rem)] left-1/2 z-30 w-max max-w-[min(13rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-center text-[11px] font-bold leading-snug text-foreground shadow-lectum-soft"
+          role="tooltip"
+        >
+          {tooltip}
+          <span
+            className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-surface"
+            aria-hidden="true"
+          />
+        </span>
+      ) : null}
     </span>
-  );
-
-  if (!href) return badgeNode;
-
-  return (
-    <Link
-      aria-label={`Abrir perfil do ${badge}`}
-      className="pointer-events-auto inline-flex shrink-0 cursor-pointer rounded-full no-underline transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
-      href={href}
-      onClick={onClick}
-    >
-      {badgeNode}
-    </Link>
   );
 };

@@ -20,7 +20,7 @@ import {
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
-import { MentorBadge } from "@/components/community/mentor-badge";
+import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import {
@@ -483,26 +483,34 @@ export const CommunityPostCard = ({
                   <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
                 ) : null}
               </div>
-              <MentorBadge
-                badge={displayFeaturedBadge}
-                className={profilePublicationMode ? "max-w-[124px]" : undefined}
-                href={psychologistProfileHref}
-              />
             </div>
             {psychologistProfileHref ? (
               <Link
                 className="w-fit text-[11px] font-medium leading-[1.15] text-muted no-underline transition hover:text-muted hover:no-underline"
                 href={psychologistProfileHref}
               >
-                {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
-                {displayRelativeTime}
-                {displayWasEdited ? (
-                  <>
-                    {" "}
-                    <span aria-hidden="true">&bull;</span>{" "}
-                    <span className="font-extrabold text-muted">editado</span>
-                  </>
-                ) : null}
+                <MentorAuthorMeta
+                  authorId={displayAuthor.role === "psicologo" ? displayAuthor.id : undefined}
+                  community={post.community}
+                  badge={displayFeaturedBadge}
+                  typeLabel={displayAuthor.type_label}
+                  date={
+                    <>
+                      {displayRelativeTime}
+                      {displayWasEdited ? " • editado" : ""}
+                    </>
+                  }
+                >
+                  {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                  {displayRelativeTime}
+                  {displayWasEdited ? (
+                    <>
+                      {" "}
+                      <span aria-hidden="true">&bull;</span>{" "}
+                      <span className="font-extrabold text-muted">editado</span>
+                    </>
+                  ) : null}
+                </MentorAuthorMeta>
               </Link>
             ) : (
               <p className="text-[11px] font-medium leading-[1.15] text-muted">
@@ -571,6 +579,7 @@ export const CommunityPostCard = ({
           />
         )}
         <ProfessionalReplyPreview
+          community={post.community}
           overlayAction={highlightedReplyOverlayAction}
           postHref={postHref}
           presentation={isFeedPresentation ? "feed" : "default"}

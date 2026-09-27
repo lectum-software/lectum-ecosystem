@@ -25,6 +25,7 @@ import {
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
+import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import {
@@ -202,21 +203,28 @@ export const ProfessionalReplyPreview = ({
           />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <AuthorIdentityLine
-              badge={reply.author.featured_badge}
               href={profileHref}
               name={getCommunityAuthorDisplayName(reply.author)}
               onClick={handleProfileNavigationClick}
               verified={reply.author.verified}
             />
             <Link
-              className="pointer-events-auto min-w-0 cursor-pointer truncate text-[11px] font-semibold leading-tight text-muted"
+              className="pointer-events-auto min-w-0 cursor-pointer text-[11px] font-semibold leading-tight text-muted"
               href={profileHref}
               onClick={handleProfileNavigationClick}
             >
-              {reply.author.type_label} <span aria-hidden="true">•</span>{" "}
-              <time dateTime={reply.created_at}>
-                {formatPostTimeLabel(reply.created_at, reply.edited_at)}
-              </time>
+              <MentorAuthorMeta
+                authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
+                community={post.community}
+                badge={reply.author.featured_badge ?? post.featured_badge}
+                typeLabel={reply.author.type_label}
+                date={formatPostTimeLabel(reply.created_at, reply.edited_at)}
+              >
+                {reply.author.type_label} <span aria-hidden="true">•</span>{" "}
+                <time dateTime={reply.created_at}>
+                  {formatPostTimeLabel(reply.created_at, reply.edited_at)}
+                </time>
+              </MentorAuthorMeta>
             </Link>
           </div>
         </div>
@@ -522,7 +530,6 @@ export const PostCard = ({
         />
         <div className="grid min-w-0 flex-1 gap-0.5">
           <AuthorIdentityLine
-            badge={post.author.featured_badge ?? post.featured_badge}
             href={psychologistProfileHref}
             name={getCommunityAuthorDisplayName(post.author)}
             onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
@@ -534,8 +541,16 @@ export const PostCard = ({
               href={psychologistProfileHref}
               onClick={handleProfileNavigationCapture}
             >
-              {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-              {formatPostTimeLabel(post.created_at, post.edited_at)}
+              <MentorAuthorMeta
+                authorId={post.author.role === "psicologo" ? post.author.id : undefined}
+                community={post.community}
+                badge={post.author.featured_badge ?? post.featured_badge}
+                typeLabel={post.author.type_label}
+                date={formatPostTimeLabel(post.created_at, post.edited_at)}
+              >
+                {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                {formatPostTimeLabel(post.created_at, post.edited_at)}
+              </MentorAuthorMeta>
             </Link>
           ) : (
             <p className="text-[11px] font-semibold leading-tight text-muted">

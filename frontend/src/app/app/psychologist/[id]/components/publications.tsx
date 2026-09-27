@@ -94,17 +94,14 @@ export const PublicationTopMentorCommunity = ({
     data-top-mentor-community="true"
     href={`/comunidades/${community.slug}`}
   >
-    <span className="relative flex w-full justify-center pb-4">
+    <span className="relative flex h-[72px] w-[72px] shrink-0 justify-center">
       <PublicationCommunityAvatar community={community} />
-      <span className="absolute -bottom-0.5 left-1/2 flex min-w-[124px] -translate-x-1/2 justify-center">
-        <MentorBadge
-          badge={community.badge}
-          className="min-w-[124px] justify-center whitespace-nowrap px-2.5 py-1 text-[8.5px]"
-        />
+      <span className="absolute -bottom-1 -right-2 flex">
+        <MentorBadge badge={community.badge} size="avatar" />
       </span>
     </span>
     <span
-      className="mt-1.5 line-clamp-2 w-full max-w-[124px] text-center text-[12.5px] font-extrabold leading-[1.18] tracking-[-0.02em] text-muted transition group-hover:text-foreground sm:max-w-[132px]"
+      className="mt-2 line-clamp-2 w-full max-w-[124px] text-center text-[12.5px] font-extrabold leading-[1.18] text-muted transition group-hover:text-foreground sm:max-w-[132px]"
       data-top-mentor-name="true"
     >
       {community.name}

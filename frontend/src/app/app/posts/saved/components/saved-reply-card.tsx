@@ -21,7 +21,7 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
-import { MentorBadge } from "@/components/community/mentor-badge";
+import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
@@ -29,7 +29,10 @@ import {
 import { useInteractionSnapshot } from "@/components/community/use-interaction-snapshot";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
-import { getCommunityInitials as getInitials } from "@/utils/community-display";
+import {
+  formatCommunityPostTime as formatMentorPostTime,
+  getCommunityInitials as getInitials,
+} from "@/utils/community-display";
 import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -74,10 +77,12 @@ export const SavedReplyAuthorAvatar = ({
 };
 
 export const SavedReplyAuthorHeader = ({
+  community,
   author,
   createdAt,
 }: {
   author: CommunityAuthor;
+  community: { slug: string; name: string; category: string | null };
   createdAt: string;
 }) => {
   const isPsychologist = author.role === "psicologo";
@@ -106,18 +111,33 @@ export const SavedReplyAuthorHeader = ({
               />
             ) : null}
           </div>
-          <MentorBadge badge={author.featured_badge} href={profileHref} />
         </div>
         {profileHref ? (
           <Link
             className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
             href={profileHref}
           >
-            <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+            <MentorAuthorMeta
+              authorId={author.role === "psicologo" ? author.id : undefined}
+              community={community}
+              badge={author.featured_badge}
+              typeLabel={author.type_label}
+              date={<>{formatMentorPostTime(createdAt)}</>}
+            >
+              <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+            </MentorAuthorMeta>
           </Link>
         ) : (
           <p className="text-[11px] font-semibold text-muted">
-            <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+            <MentorAuthorMeta
+              authorId={author.role === "psicologo" ? author.id : undefined}
+              community={community}
+              badge={author.featured_badge}
+              typeLabel={author.type_label}
+              date={<>{formatMentorPostTime(createdAt)}</>}
+            >
+              <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+            </MentorAuthorMeta>
           </p>
         )}
       </div>
@@ -297,7 +317,11 @@ export const SavedReplyCard = ({
       <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
 
       <div className="mb-3">
-        <SavedReplyAuthorHeader author={reply.author} createdAt={reply.created_at} />
+        <SavedReplyAuthorHeader
+          community={item.post.community}
+          author={reply.author}
+          createdAt={reply.created_at}
+        />
       </div>
 
       <div className="grid gap-2">

@@ -179,7 +179,7 @@ const Avatar = ({
         "relative grid shrink-0 place-items-center overflow-hidden rounded-full border-4 border-media-foreground bg-primary-soft text-sm font-black text-primary shadow-[var(--lectum-shadow-soft)]",
         className,
       )}
-      style={{ height: size, width: size }}
+      style={{ aspectRatio: "1", maxWidth: "100%", width: size }}
     >
       {avatarContent}
     </span>
@@ -200,10 +200,14 @@ const PodiumMentor = ({
   size: number;
 }) => {
   const tone = rankTone(mentor.position);
-  const isWinner = mentor.position === 1;
   const displayName = getMentorProfessionalDisplayName(mentor);
   // The API derives whatsapp_name from the configured professional_first_name.
   const firstName = mentor.professional.whatsapp_name?.trim() || displayName;
+  const medalSrc = `/images/community/top-mentor/${mentor.position === 1 ? "gold" : mentor.position === 2 ? "silver" : "bronze"}.svg?v=ribbons-2`;
+  const shineSeed = Array.from(mentor.professional.id).reduce(
+    (seed, character) => (seed * 31 + character.charCodeAt(0)) % 997,
+    mentor.position,
+  );
 
   return (
     <Link
@@ -217,13 +221,39 @@ const PodiumMentor = ({
       <span
         className={cn(
           "lectum-top-mentor-float relative z-10 grid min-w-0 grid-cols-[minmax(0,1fr)] overflow-visible place-items-center",
-          "w-full gap-2 pb-1",
+          "w-full pb-1",
         )}
         style={{ animationDelay: delay }}
       >
-        <Avatar mentor={mentor} ringed size={size} />
-        <span className="min-h-5 max-w-full break-words text-sm font-medium leading-5 text-foreground [overflow-wrap:anywhere]">
-          {firstName}
+        <span className="relative block" style={{ maxWidth: "100%", width: size }}>
+          <Avatar
+            mentor={mentor}
+            className="border-2 border-border shadow-[0_5px_14px_rgb(15_23_42_/_12%)]"
+            size={size}
+          />
+          <span className="absolute -bottom-[2%] -right-[3%] w-[30%]">
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="h-auto w-full object-contain"
+              height={120}
+              src={medalSrc}
+              unoptimized
+              width={100}
+            />
+            <span
+              aria-hidden="true"
+              className="top-mentor-medal-reflection pointer-events-none absolute inset-0"
+              style={{ maskImage: `url("${medalSrc}")` }}
+            >
+              <span
+                style={{
+                  animationDuration: `${6.1 + (shineSeed % 37) / 10}s`,
+                  animationDelay: `-${(shineSeed % 59) / 10}s`,
+                }}
+              />
+            </span>
+          </span>
         </span>
       </span>
       <span
@@ -237,12 +267,11 @@ const PodiumMentor = ({
       >
         <span
           className={cn(
-            "top-mentor-column-number font-semibold leading-none tabular-nums",
-            isWinner ? "text-4xl" : "text-3xl",
+            "top-mentor-column-name w-full break-words px-2 text-base font-semibold leading-tight [overflow-wrap:anywhere]",
             tone.name,
           )}
         >
-          {mentor.position}
+          {firstName}
         </span>
       </span>
     </Link>
@@ -295,7 +324,7 @@ const RankingHero = ({
         </div>
 
         {first ? (
-          <div className="grid w-full max-w-[430px] grid-cols-[1fr_1.34fr_1fr] items-end justify-center gap-2 overflow-visible sm:gap-3">
+          <div className="mt-5 grid w-full max-w-[430px] grid-cols-[1fr_1.34fr_1fr] items-end justify-center gap-2 overflow-visible sm:mt-7 sm:gap-3">
             <div className="flex min-w-0 justify-center overflow-visible">
               {second ? (
                 <PodiumMentor
@@ -334,7 +363,6 @@ const RankingHero = ({
 };
 
 const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
-  const isTopThree = mentor.position <= 3;
   const professionalType = professionLabel(mentor);
   const canOpenWhatsApp = Boolean(mentor.professional.whatsapp_url);
   const displayName = getMentorProfessionalDisplayName(mentor);
@@ -348,7 +376,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   return (
     <article className="flex w-full min-w-0 max-w-full items-center gap-2 border-b border-border/50 py-4 last:border-b-0">
       <Link
-        aria-label={`Ver perfil de ${displayName}`}
+        aria-label={`${mentor.position}º lugar: ver perfil de ${displayName}`}
         className="group/profile flex min-w-0 flex-1 items-center gap-2"
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
@@ -358,7 +386,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         >
           <span>{mentor.position}</span>
         </span>
-        <Avatar mentor={mentor} ringed={isTopThree} ringVariant="list" size={50} />
+        <Avatar mentor={mentor} className="border-2 border-border shadow-none" size={50} />
         <span className="min-w-0 flex-1">
           <strong className="block break-words text-base font-bold leading-snug tracking-normal text-foreground transition group-hover/profile:text-primary dark:text-foreground">
             {displayName.slice(0, lastNameStart)}

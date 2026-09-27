@@ -20,6 +20,38 @@ Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao. As refe
 
 ## Consequencias
 
+### Ranking consistente no feed e tema da comunidade
+
+O featured_badge legado de feed/detalhe usa votos isolados, portanto nao identifica
+o Top 1/2/3 comunitario. Os cabecalhos consultam o endpoint existente top-mentors,
+com periodo all, slug da comunidade e identidade do autor. TanStack Query compartilha
+a consulta entre os cards da mesma comunidade por 60 segundos. Nunca herdar a
+colocacao do autor do post para a resposta; autores fora do Top 3 mantem duas linhas.
+Enquanto a consulta nao estiver disponivel, nao inventar ranking a partir dos votos.
+
+Usar category cadastrada como tema curto, com nome completo como fallback. O title
+informa a comunidade completa. Essa escolha evita deduzir temas cortando nomes.
+Sem alteracao de API ou banco. Testes cobrem identidade da resposta, comunidade
+sem ranking, carregamento e limite de tres posicoes.
+
+### Atualizacao 2026-09-27: ranking textual no cabecalho
+
+Posts e respostas usam MentorAuthorMeta para apresentar profissao e ranking
+na segunda linha, com a data na terceira, somente para Top 1/2/3. Sem ranking,
+o conteudo anterior permanece em duas linhas. Remover medalhas junto ao nome
+em feed, comunidade, detalhe, perfil e salvos; preservar a medalha do avatar
+comunitario. O texto pode quebrar em telas estreitas e preserva indicacao de edicao.
+
+### Correcao 2026-09-27: roseta completa
+
+Os SVGs anteriores incorporavam PNGs com a base removida. Ajustes de tamanho e
+mascaras nao recuperavam os pixels perdidos. Substituir os tres arquivos por
+geometria vetorial fechada, com margem no viewBox, gradientes metalicos e numeral
+em path. Preservar transparencia e remover fitas e adornos internos. A recriacao
+preserva o estilo metalico, mas nao e uma copia pixel a pixel da referencia.
+Usar 12px na variante inline, como o verificado nas respostas, e versionar a URL
+do asset para evitar reutilizacao dos arquivos recortados em cache.
+
 - O selo fica mais consistente e premium em todas as superficies de posts/comentarios que exibem psicologos top mentors.
 - A logica de ranking, dados, rotas, ordenacao e permissoes permanece inalterada.
 - A animacao e leve, sem package novo, e respeita acessibilidade de movimento reduzido.
