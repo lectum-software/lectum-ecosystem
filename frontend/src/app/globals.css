@@ -104,15 +104,6 @@
   );
 }
 
-.psychologist-default-cover-overlay {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--foreground) 14%, transparent) 0%,
-    color-mix(in srgb, var(--foreground) 2%, transparent) 42%,
-    color-mix(in srgb, var(--lectum-media-foreground) 12%, transparent) 100%
-  );
-}
-
 .psychologist-cover-overlay {
   background: linear-gradient(
     to top,

@@ -16,7 +16,6 @@ import {
   getInitials,
   getPsychologistDisplayName,
   getPsychologistTitle,
-  PSYCHOLOGIST_DEFAULT_COVER_BACKGROUND,
 } from "../modules/support";
 
 import { ExpandableAboutText } from "./about";
@@ -58,23 +57,16 @@ export const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistPr
   if (!coverImageSrc || coverImageFailed) {
     return (
       <div
-        className="relative h-[132px] overflow-hidden"
+        className="relative h-[132px] overflow-hidden bg-primary-soft"
         data-profile-default-cover="psychologist"
-        style={{ background: PSYCHOLOGIST_DEFAULT_COVER_BACKGROUND }}
       >
-        <span
-          aria-hidden="true"
-          className="-top-16 -left-10 absolute h-36 w-36 rounded-full bg-surface/55 blur-3xl"
+        <Image
+          alt=""
+          className="object-cover object-center"
+          fill
+          sizes="(min-width: 768px) 760px, 100vw"
+          src="/images/psychologist-default-sky.png"
         />
-        <span
-          aria-hidden="true"
-          className="-right-12 absolute top-4 h-32 w-32 rounded-full bg-primary/18 blur-3xl"
-        />
-        <span
-          aria-hidden="true"
-          className="absolute right-1/4 -bottom-16 h-28 w-48 rounded-full bg-primary/14 blur-3xl"
-        />
-        <div className="psychologist-default-cover-overlay absolute inset-0" />
       </div>
     );
   }
