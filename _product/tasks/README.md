@@ -2445,3 +2445,5 @@ Smoke Playwright de dimensoes, contadores, historico e teclado aprovado.
 
 Ajuste de alinhamento: tres colunas iguais (grid-cols-3), mantendo Publicacoes
 centralizada e preservando altura, tipografia, cores e espacamentos aprovados.
+
+- [x] Titulo da apresentacao alterado para `Olá!`, mantendo `Sobre` na aba e o estilo existente.
