@@ -34,3 +34,6 @@ spans internos, como na comunidade, pois o reset global de button herda a fonte.
 Apenas as larguras das tres colunas se adaptam; sem quebra de linha nem rolagem.
 Playwright confirmou altura de 30px e fonte 11.25px no mobile (raiz de 15px), e
 32px/12px no desktop, peso 700, sem overflow em 320/390/1440px.
+
+Refinamento de alinhamento: usar tres colunas de mesma largura para manter
+Publicacoes no centro do menu, sem alterar as demais dimensoes aprovadas.

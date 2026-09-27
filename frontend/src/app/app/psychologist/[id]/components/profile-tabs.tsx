@@ -17,7 +17,7 @@ export const ProfileTabs = ({
   <div className="sticky top-0 z-20 bg-background px-5 pt-3" data-profile-tabs="true">
     <div
       aria-label="Seções do perfil profissional"
-      className="grid grid-cols-[minmax(0,0.6fr)_minmax(0,1.3fr)_minmax(0,1.2fr)] items-center gap-1.5 py-1"
+      className="grid grid-cols-3 items-center gap-1.5 py-1"
       role="tablist"
     >
       {tabs.map((tab, index) => {

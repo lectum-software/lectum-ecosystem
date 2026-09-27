@@ -2442,3 +2442,6 @@ Refinamento visual do mesmo menu: altura, fonte, peso e espacamento iguais aos
 chips da comunidade; apenas largura adaptavel. Sem quebra/rolagem em 320/390/1440px.
 Tipografia aplicada nos spans para preservar o tamanho contra o reset global.
 Smoke Playwright de dimensoes, contadores, historico e teclado aprovado.
+
+Ajuste de alinhamento: tres colunas iguais (grid-cols-3), mantendo Publicacoes
+centralizada e preservando altura, tipografia, cores e espacamentos aprovados.
