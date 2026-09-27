@@ -37,3 +37,11 @@ Playwright confirmou altura de 30px e fonte 11.25px no mobile (raiz de 15px), e
 
 Refinamento de alinhamento: usar tres colunas de mesma largura para manter
 Publicacoes no centro do menu, sem alterar as demais dimensoes aprovadas.
+
+## Retorno a pagina de origem
+
+Trocar abas substitui a entrada atual no historico (router.replace), preservando
+o deep link da aba sem criar paginas intermediarias. A seta do cabecalho chama
+diretamente o retorno existente, com fallback para o diretorio/feed de psicologos.
+Nao ha retorno intermediario para Sobre. Esta decisao substitui a navegacao
+push entre abas descrita na implementacao inicial.

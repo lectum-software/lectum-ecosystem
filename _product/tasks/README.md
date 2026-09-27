@@ -2447,3 +2447,6 @@ Ajuste de alinhamento: tres colunas iguais (grid-cols-3), mantendo Publicacoes
 centralizada e preservando altura, tipografia, cores e espacamentos aprovados.
 
 - [x] Titulo da apresentacao alterado para `Olá!`, mantendo `Sobre` na aba e o estilo existente.
+
+- [x] A seta do perfil retorna a pagina de origem; trocas de aba substituem a URL
+  atual sem criar entradas extras no historico e sem retorno intermediario a Sobre.

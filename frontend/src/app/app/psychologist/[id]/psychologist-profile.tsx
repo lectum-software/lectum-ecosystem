@@ -194,7 +194,7 @@ export const PsychologistProfileLogic = () => {
   }, [activeTab, id, loadedProfileId, trackProfileTabOpen]);
 
   const navigateWithParams = useCallback(
-    (mutate: (next: URLSearchParams) => void, historyMode: ProfileTabHistoryMode = "push") => {
+    (mutate: (next: URLSearchParams) => void, historyMode: ProfileTabHistoryMode = "replace") => {
       const next = new URLSearchParams(searchParamsString);
       mutate(next);
       const queryString = next.toString();
@@ -235,7 +235,7 @@ export const PsychologistProfileLogic = () => {
         else next.set("tab", tab);
         next.delete("postsPage");
         next.delete("reviewsPage");
-      }, options?.history ?? "push");
+      }, options?.history ?? "replace");
     },
     [activeTab, navigateWithParams],
   );
@@ -352,11 +352,6 @@ export const PsychologistProfileLogic = () => {
   };
 
   const goBack = () => {
-    if (activeTab !== "geral") {
-      setActiveTab("geral", { history: "replace" });
-      return;
-    }
-
     navigateBackWithFallback(router, getRememberedPsychologistsFeedHref(id) ?? "/psicologos");
   };
 
