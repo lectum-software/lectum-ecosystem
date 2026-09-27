@@ -88,7 +88,7 @@ export const MentorBadge = ({
         aria-label={tooltip}
         className={cn(
           "pointer-events-auto inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full transition hover:brightness-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]",
-          avatarSize ? "h-8 w-8" : "h-4 w-4",
+          avatarSize ? "h-8 w-8" : "h-5 w-5",
         )}
         onClick={(event) => {
           event.preventDefault();
@@ -102,7 +102,7 @@ export const MentorBadge = ({
         <Image
           alt=""
           aria-hidden="true"
-          className={cn("select-none object-contain", avatarSize ? "h-7 w-7" : "h-3 w-3")}
+          className={cn("select-none object-contain", avatarSize ? "h-7 w-7" : "h-5 w-5")}
           height={dimensions.height}
           src={`/images/community/top-mentor/${tone}.svg`}
           unoptimized
