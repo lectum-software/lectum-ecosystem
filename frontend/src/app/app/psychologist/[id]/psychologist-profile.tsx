@@ -333,15 +333,15 @@ export const PsychologistProfileLogic = () => {
     if (typeof window === "undefined") return;
 
     const relativeUrl = profilePublicationHref(post);
-    const socialTarget =
-      createLectumSharePostMediaTarget(post, { relativeUrl }) ??
-      createLectumShareTargetFromHighlightedReply(post);
+    const replyId = getProfilePublicationReplyId(post);
+    const socialTarget = replyId
+      ? createLectumShareTargetFromHighlightedReply(post)
+      : createLectumSharePostMediaTarget(post, { relativeUrl });
     if (socialTarget) {
       await shareLectumTarget(socialTarget);
       return;
     }
 
-    const replyId = getProfilePublicationReplyId(post);
     await shareLectumTarget(
       createLectumShareLinkTarget(post, {
         relativeUrl,

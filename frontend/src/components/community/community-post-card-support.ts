@@ -1,5 +1,20 @@
 import type { MouseEventHandler, ReactNode } from "react";
-import type { PostListPost } from "@/api/generator/types/posts";
+import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
+
+export const publicationInteractionData = (
+  post: PostListPost,
+  reply?: PostProfessionalReply | null,
+) => {
+  const target = reply ?? post;
+  return {
+    currentVote: target.current_user_vote ?? null,
+    downvotes: target.downvotes_count ?? 0,
+    upvotes: target.upvotes_count,
+    saved: target.saved,
+    saves: target.saves_count ?? 0,
+    comments: target.replies_count ?? 0,
+  };
+};
 
 export type CommunityPostCardProps = {
   actionBarShowUpvoteText?: boolean;

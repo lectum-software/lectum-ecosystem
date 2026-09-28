@@ -277,7 +277,7 @@ export const CommunityActionBar = ({
               label={voteLabel}
               size={size}
             >
-              Útil
+              {showUpvoteText ? "Útil" : null}
             </PostActionMetric>
           )}
           <span className={separatorClassName(size, votePresentation)} aria-hidden="true" />

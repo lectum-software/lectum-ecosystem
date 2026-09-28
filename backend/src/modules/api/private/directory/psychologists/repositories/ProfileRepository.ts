@@ -396,7 +396,7 @@ export class ProfileRepository implements IProfileRepository {
       ),
     );
     const authId = data.auth?.id;
-    const [votes, saves, replySaves] = authId
+    const [votes, saves, replySaves, replyVotes] = authId
       ? await Promise.all([
           postIds.length
             ? prisma.post_vote.findMany({
@@ -435,8 +435,17 @@ export class ProfileRepository implements IProfileRepository {
                 },
               })
             : Promise.resolve([]),
+          replyIds.length
+            ? prisma.post_vote.findMany({
+                where: { deleted: false, reply_id: { in: replyIds }, user_id: authId },
+                select: { reply_id: true, value: true },
+              })
+            : Promise.resolve([]),
         ])
-      : [[], [], []];
+      : [[], [], [], []];
+    const voteByReplyId = new Map(
+      replyVotes.map((vote) => [vote.reply_id, normalizeVoteValue(vote.value)]),
+    );
     const voteByPostId = new Map(
       votes.map((vote) => [vote.post_id, normalizeVoteValue(vote.value)]),
     );
@@ -468,18 +477,28 @@ export class ProfileRepository implements IProfileRepository {
         };
       }
 
+      const response = toPostResponse(
+        item.reply.post,
+        voteByPostId.get(item.reply.post.id) ?? null,
+        savedPostIds.has(item.reply.post.id),
+        savedReplyIds,
+        item.reply,
+        mutedPostIds.has(item.reply.post.id),
+        postsWithPsychologistReplies.has(item.reply.post.id),
+        data.p.id,
+        mentorBadgeByCommunityId,
+      );
       return {
-        ...toPostResponse(
-          item.reply.post,
-          voteByPostId.get(item.reply.post.id) ?? null,
-          savedPostIds.has(item.reply.post.id),
-          savedReplyIds,
-          item.reply,
-          mutedPostIds.has(item.reply.post.id),
-          postsWithPsychologistReplies.has(item.reply.post.id),
-          data.p.id,
-          mentorBadgeByCommunityId,
-        ),
+        ...response,
+        highlighted_professional_reply: response.highlighted_professional_reply
+          ? {
+              ...response.highlighted_professional_reply,
+              downvotes_count: item.reply.downvotes_count,
+              replies_count: replyChildrenCountById.get(item.reply.id) ?? 0,
+              saves_count: replySavesCountById.get(item.reply.id) ?? 0,
+              current_user_vote: voteByReplyId.get(item.reply.id) ?? null,
+            }
+          : null,
         contribution_type: "reply",
       };
     };

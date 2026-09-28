@@ -56,3 +56,14 @@ recortam verticalmente a imagem, sem distorcao ou mudanca de layout.
 Preservar capas personalizadas; a nova imagem tambem cobre falha no carregamento
 delas. Remover somente efeitos e constante exclusivos da antiga capa padrao.
 Sem backend, env, banco, dependencia ou mudanca nas abas. Publicar em homolog.
+
+## Controles de respostas nas publicacoes
+
+Em 2026-09-27, corrigir os cards de contribution_type reply para usar o ID,
+voto, salvamento e contadores da resposta, nunca os do post pai. O backend
+acrescenta campos opcionais ao preview usando os agregados existentes e uma
+consulta em lote dos votos do usuario. Sem migracao ou variaveis novas.
+Comentarios abrem a thread da resposta; compartilhamento prioriza a midia
+da resposta mesmo quando o post pai possui midia. Intencoes de visitantes
+preservam replyId. Posts originais mantem seus controles anteriores.
+Durante rollout, campos ausentes usam zero/null, nunca metricas do post pai.
