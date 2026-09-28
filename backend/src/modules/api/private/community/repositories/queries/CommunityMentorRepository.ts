@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { getCommunityMentorWhatsappClickCounts } from "@/utils/community-mentor-ranking";
+import { compareCommunityMentorIdentity } from "@/utils/community-mentor-tiebreak";
 import { getProfessionalWhatsappDisplayName } from "@/utils/professional-name";
 import { normalizeStoredCrp } from "@/utils/professional-registry";
 import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
@@ -551,12 +552,7 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
         const removedPostDiff = a.metrics.removed_posts - b.metrics.removed_posts;
         if (removedPostDiff !== 0) return removedPostDiff;
 
-        const aName = buildUserProfessionalDisplayName(a.mentor);
-        const bName = buildUserProfessionalDisplayName(b.mentor);
-        const nameDiff = aName.localeCompare(bName, "pt-BR");
-        if (nameDiff !== 0) return nameDiff;
-
-        return a.mentor.id.localeCompare(b.mentor.id);
+        return compareCommunityMentorIdentity(a.mentor, b.mentor);
       })
       .slice(0, limit);
 

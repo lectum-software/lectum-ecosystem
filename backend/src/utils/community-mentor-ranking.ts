@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { compareCommunityMentorIdentity } from "./community-mentor-tiebreak";
 import {
   COMMUNITY_MENTOR_WHATSAPP_POST_TARGET_TYPES,
   COMMUNITY_MENTOR_WHATSAPP_REPLY_TARGET_TYPES,
@@ -151,6 +152,18 @@ export const getCommunityMentorRankingSignals = async (
   const emptyRanking = new Map<string, CommunityMentorRankingSignal>();
 
   if (!communityId || uniqueMentorIds.length === 0) return emptyRanking;
+
+  const mentors = await prisma.user.findMany({
+    where: { id: { in: uniqueMentorIds } },
+    select: {
+      id: true,
+      name: true,
+      psychologist_profile: {
+        select: { professional_first_name: true, professional_last_name: true },
+      },
+    },
+  });
+  const mentorById = new Map(mentors.map((mentor) => [mentor.id, mentor]));
 
   const publishedPostFilter: Prisma.community_postWhereInput = {
     community_id: communityId,
@@ -576,7 +589,10 @@ export const getCommunityMentorRankingSignals = async (
       const removedPostDiff = a.metrics.removed_posts - b.metrics.removed_posts;
       if (removedPostDiff !== 0) return removedPostDiff;
 
-      return a.mentorId.localeCompare(b.mentorId);
+      return compareCommunityMentorIdentity(
+        mentorById.get(a.mentorId) ?? { id: a.mentorId },
+        mentorById.get(b.mentorId) ?? { id: b.mentorId },
+      );
     });
 
   return new Map(

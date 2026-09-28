@@ -67,3 +67,12 @@ Comentarios abrem a thread da resposta; compartilhamento prioriza a midia
 da resposta mesmo quando o post pai possui midia. Intencoes de visitantes
 preservam replyId. Posts originais mantem seus controles anteriores.
 Durante rollout, campos ausentes usam zero/null, nunca metricas do post pai.
+
+## Desempate das medalhas por comunidade
+
+Em 2026-09-27, alinhar o desempate final dos sinais usados no perfil ao ranking
+publico: depois de pontos e criterios de atividade, comparar o nome profissional
+em pt-BR e somente depois o ID. Compartilhar esse comparador entre as consultas.
+Os sinais carregam os nomes em uma consulta em lote; nao alterar pontuacoes,
+elegibilidade ou dados persistidos. A quarta posicao continua sem medalha.
+Sem migracao ou variaveis novas. Validar o empate na fronteira do terceiro lugar.
