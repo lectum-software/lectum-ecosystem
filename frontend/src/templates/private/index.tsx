@@ -59,6 +59,7 @@ export const PrivateTemplate = ({
   navigationDimmed = false,
   navigationHidden = false,
   navigationTheme = "default",
+  restrictedAreaBackLink,
   showHeader = true,
   showMobileNavigation = true,
   showNavigation,
@@ -491,6 +492,7 @@ export const PrivateTemplate = ({
           style={pageShellStyle}
         >
           <RestrictedAreaState
+            backLink={restrictedAreaBackLink}
             copy={visibleCopy}
             onLogin={() => navigateToAuth("/auth/login")}
             onRetry={() => void hidrate.refetch()}

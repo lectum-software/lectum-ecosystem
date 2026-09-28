@@ -20,7 +20,12 @@ const PUBLIC_ROUTES = [
 const AUTH_REQUIRED_ROUTES = ["/auth/verify-email"];
 const AUTH_RESULT_ROUTES = ["/auth/redirect", "/auth/error", "/auth/admin-view-as"];
 const PRIVATE_PREFIXES = [DASHBOARD_PATH, APP_PATH, "/patient", "/paciente"];
-const INLINE_AUTH_PROMPT_ROUTES = ["/app/favoritos", "/app/notificacoes", "/app/perfil"];
+const INLINE_AUTH_PROMPT_ROUTES = [
+  "/app/favoritos",
+  "/app/notificacoes",
+  "/app/perfil",
+  "/app/avaliacoes/nova",
+];
 const PUBLIC_APP_EXACT_ROUTES = [
   "/app/psicologos",
   "/app/psychologists",
