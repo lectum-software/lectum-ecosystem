@@ -168,9 +168,18 @@ export type DirectoryPsychologistTopMentorCommunity = {
   score: number;
 };
 
+export type DirectoryPsychologistParticipationCommunity = Omit<
+  DirectoryPsychologistTopMentorCommunity,
+  "badge" | "position"
+> & {
+  position: number | null;
+  badge: string | null;
+};
+
 export type DirectoryPsychologistParticipationSummary = {
   posts_count: number;
   replies_count: number;
+  participation_communities: DirectoryPsychologistParticipationCommunity[];
   top_mentor_communities: DirectoryPsychologistTopMentorCommunity[];
 };
 
