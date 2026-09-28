@@ -11,14 +11,15 @@ Builder nao foi utilizado; reutilizamos o componente e os tokens atuais, mobile-
 ## Decisao
 Permitir o shell de /app/avaliacoes/nova sem sessao no proxy, mantendo o formulario
 protegido pelo PrivateTemplate e as autorizacoes da API inalteradas. Mostrar o
-convite Avalie seu psicologo, criar conta, fazer login e voltar ao perfil selecionado.
+convite Avalie seu psicologo, criar conta e fazer login. Por refinamento solicitado
+em 2026-09-28, nao exibir o link Voltar ao perfil nessa tela.
 Nao consultar elegibilidade sem presenca de sessao. Preservar psychologist_id/id
 na URL de retorno apos login/cadastro usando o fluxo compartilhado ja existente.
 O alias legado /app/reviews/new continua redirecionando para a rota canonica.
 
 ## Aceite
 - [x] Visitante visualiza explicacao, cadastro e login em vez de redirecionamento automatico.
-- [x] Link Voltar ao perfil usa o profissional selecionado.
+- [x] Convite exibe apenas Criar conta e Fazer login, sem Voltar ao perfil.
 - [x] Login/cadastro preservam o destino da avaliacao.
 - [x] Formulario e envio continuam autenticados; leitura publica permanece inalterada.
 

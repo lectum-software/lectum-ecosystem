@@ -66,7 +66,7 @@ test("avaliacao solicita autenticacao contextual e preserva o profissional", () 
     logic,
     /useReviewEligibility\(psychologistId, hasToken && Boolean\(psychologistId\)\)/,
   );
-  assert.match(logic, /href: `\/psicologos\/\$\{encodeURIComponent\(psychologistId\)\}`/);
+  assert.doesNotMatch(logic, /restrictedAreaBackLink|Voltar ao perfil/);
 });
 
 test("convite de autenticacao preserva comunidade, filtros e fragmento ate o destino final", () => {

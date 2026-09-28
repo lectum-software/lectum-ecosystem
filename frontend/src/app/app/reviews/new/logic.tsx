@@ -130,12 +130,7 @@ export const ReviewsNewLogic = () => {
   }
 
   return (
-    <PrivateTemplate
-      restrictedAreaBackLink={{
-        href: `/psicologos/${encodeURIComponent(psychologistId)}`,
-        label: "Voltar ao perfil",
-      }}
-    >
+    <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-2xl">
         <header className="flex items-center justify-between px-1 pb-1">
           <Button asChild variant="ghost" className="h-10 w-10 px-0">
