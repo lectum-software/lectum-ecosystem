@@ -19,7 +19,7 @@ export const InactivePublicProfileState = ({
   const hasPendingFields = pendingFields.length > 0;
 
   return (
-    <div className="grid min-h-[calc(100vh-160px)] place-items-center bg-surface-muted px-3 py-8 dark:bg-background">
+    <div className="grid min-h-[calc(100vh-160px)] place-items-center bg-background px-3 py-8 dark:bg-background">
       <article className="w-full max-w-[430px] rounded-[30px] border border-border bg-surface p-5 text-center shadow-lectum-soft dark:border-border dark:bg-surface sm:p-6">
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-danger/10 text-danger shadow-lectum-soft">
           <TriangleAlert className="h-7 w-7" aria-hidden="true" />
