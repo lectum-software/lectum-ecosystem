@@ -332,12 +332,7 @@ export const ProfileLogic = () => {
 
         <Section rows={accountRows} title="Conta" />
 
-        <Button
-          className="w-full"
-          onClick={() => out("/auth/login")}
-          type="button"
-          variant="outline"
-        >
+        <Button className="w-full" onClick={() => out()} type="button" variant="outline">
           <LogOut className="h-4 w-4" aria-hidden="true" />
           Sair da conta
         </Button>

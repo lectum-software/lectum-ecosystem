@@ -60,13 +60,13 @@ export const signOut = async (callback?: boolean, redirect?: string) => {
   const currentPath = window.location.pathname;
 
   if (redirect) {
-    window.location.href = normalizeSafeInternalRedirect(redirect, "/auth/login") || "/auth/login";
+    window.location.href = normalizeSafeInternalRedirect(redirect, "/") || "/";
     return;
   }
 
   window.location.href = callback
     ? `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`
-    : "/auth/login";
+    : "/";
 };
 
 export const useSignOut = (callback?: boolean) => {
