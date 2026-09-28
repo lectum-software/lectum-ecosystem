@@ -2466,3 +2466,15 @@ em community-detail.tsx e auth/redirect/logic.tsx. Sem backend, banco ou env nov
 Build e lint dos arquivos alterados aprovados. Smoke Playwright local em 390 e
 1440px com perfis reais: imagem carregada, altura de 132px, capa personalizada
 preservada e fallback por falha de rede aprovados. Capturas inspecionadas.
+Ajuste de 28/09/2026: link de avaliacoes na aba do proprio perfil. ADR-0537.
+
+- [x] Reutilizar o bloco do painel com todos os textos originais.
+- [x] Exibir antes das avaliacoes somente para o psicologo autenticado dono do perfil.
+- [x] Manter link desfocado, copia bloqueada e convite de upgrade para plano gratuito.
+- [x] Preservar a aba publica dos visitantes e bloquear copia enquanto acesso nao confirmado.
+
+Validacao: build frontend, testes frontend, lint dos arquivos alterados, Biome
+direcionado, ADRs e tasks aprovados. Componentes reais renderizados em 390/1440px,
+com/sem bloqueio, sem overflow; capturas inspecionadas. Preview do perfil completo
+nao carregou os dados locais, portanto QA autenticada real permanece pendente.
+Check global bloqueado por formatacao preexistente em mentor-author-ranking.test.mjs.

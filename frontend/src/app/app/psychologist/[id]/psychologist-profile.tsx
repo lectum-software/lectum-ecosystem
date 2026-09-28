@@ -500,6 +500,7 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                   {activeTab === "avaliacoes" ? (
                     <ReviewsTab
+                      showOwnReviewsLink={conversion.isAuthenticated && canEditProfile}
                       canReviewProfile={canReviewProfile}
                       error={profileReviews.error}
                       hasNextPage={Boolean(profileReviews.hasNextPage)}
