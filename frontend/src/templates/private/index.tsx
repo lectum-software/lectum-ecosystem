@@ -20,6 +20,7 @@ import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
 import * as userActions from "@/store/modules/user/actions";
 import { requestLectumAppRefreshAfterReturningToTop } from "@/utils/app-refresh";
+import { buildAuthRouteWithRedirect } from "@/utils/auth-redirect";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
 import { getPsychologistPaidOnboardingRequirementPath } from "@/utils/psychologist-onboarding";
 
@@ -132,9 +133,6 @@ export const PrivateTemplate = ({
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError);
   const restrictedAreaCopy =
     RESTRICTED_AREA_COPY_BY_PATH.get(normalizedPathname) ?? DEFAULT_RESTRICTED_AREA_COPY;
-  const restrictedAreaReturnTo = normalizedPathname;
-  const restrictedAreaSignupHref = `/auth/profile-selection?redirectTo=${encodeURIComponent(restrictedAreaReturnTo)}`;
-  const restrictedAreaLoginHref = `/auth/login?redirectTo=${encodeURIComponent(restrictedAreaReturnTo)}`;
   const shouldRequirePasswordReset = Boolean(sessionUser?.need_reset);
   const isNeedResetPath = isPathOrDescendant(normalizedPathname, NEED_RESET_PATH);
   const shouldRedirectToNeedReset =
@@ -145,12 +143,14 @@ export const PrivateTemplate = ({
     !isNeedResetPath;
 
   const navigateToAuth = (href: string) => {
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const authHref = buildAuthRouteWithRedirect(href, returnTo);
     if (hasToken || shouldShowSessionError) {
-      void out(href);
+      void out(authHref);
       return;
     }
 
-    window.location.href = href;
+    window.location.href = authHref;
   };
 
   useEffect(() => {
@@ -492,9 +492,9 @@ export const PrivateTemplate = ({
         >
           <RestrictedAreaState
             copy={visibleCopy}
-            onLogin={() => navigateToAuth(restrictedAreaLoginHref)}
+            onLogin={() => navigateToAuth("/auth/login")}
             onRetry={() => void hidrate.refetch()}
-            onSignup={() => navigateToAuth(restrictedAreaSignupHref)}
+            onSignup={() => navigateToAuth("/auth/profile-selection")}
             sessionUnavailable={shouldShowSessionError}
           />
         </PageShell>

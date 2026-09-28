@@ -27,5 +27,10 @@ Google, erro, verificacao e redefinicao nao sao bloqueados por esse guard.
 - [x] Login/cadastro restaurado verifica sessao antes de permitir nova entrada.
 
 ## Validacao
+O convite do template privado deve capturar pathname, query e fragmento no clique,
+antes de abrir login/cadastro. Preservar apenas pathname eliminava community do
+ranking e abria o fallback generico Comunidades Lectum apos login Google. A
+regressao de auth-redirect verifica essa passagem para ambos os caminhos.
+
 Regressoes em auth-navigation.test.mjs, auth-redirect.test.mjs e testes do hook
 de presenca de sessao. OAuth real depende de validacao com conta autorizada.
