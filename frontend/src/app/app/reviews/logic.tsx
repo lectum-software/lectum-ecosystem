@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePatientReviews } from "@/api/callers/reviews";
 import type { PatientReview } from "@/api/generator/types/reviews";
+import { DeleteReviewButton } from "@/components/reviews/delete-review-button";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -64,7 +65,7 @@ const ReviewPsychologistAvatar = ({ review }: { review: PatientReview }) => {
   );
 };
 
-const ReviewCard = ({ review }: { review: PatientReview }) => (
+const ReviewCard = ({ review, onDeleted }: { review: PatientReview; onDeleted: () => void }) => (
   <article className="grid gap-4 rounded-[24px] border border-border bg-surface p-4 shadow-lectum-soft sm:p-5">
     <div className="flex items-start gap-3">
       <ReviewPsychologistAvatar review={review} />
@@ -110,6 +111,7 @@ const ReviewCard = ({ review }: { review: PatientReview }) => (
       <time className="text-xs font-semibold text-subtle" dateTime={review.created_at}>
         {formatDate(review.created_at)}
       </time>
+      <DeleteReviewButton reviewId={review.id} onDeleted={onDeleted} />
     </div>
 
     {review.response ? (
@@ -177,7 +179,7 @@ export const ReviewsLogic = () => {
 
           <div className="grid gap-4">
             {data?.data.map((review) => (
-              <ReviewCard key={review.id} review={review} />
+              <ReviewCard key={review.id} review={review} onDeleted={() => setPage(1)} />
             ))}
           </div>
 

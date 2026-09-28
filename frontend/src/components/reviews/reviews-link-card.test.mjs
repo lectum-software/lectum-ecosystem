@@ -14,6 +14,30 @@ registerHooks({
 const { ReviewsLinkCard, PremiumReviewsState } = await import("./reviews-link-card.tsx");
 const link = "https://lectum.test/app/avaliacoes/nova?psychologist_id=owner";
 
+test("exclusao do autor exige confirmacao e invalida os dados relacionados", () => {
+  const button = readFileSync(new URL("./delete-review-button.tsx", import.meta.url), "utf8");
+  const callers = readFileSync(
+    new URL("../../api/callers/reviews/index.tsx", import.meta.url),
+    "utf8",
+  );
+  const req = readFileSync(new URL("../../api/req/reviews/index.ts", import.meta.url), "utf8");
+  assert.ok(button.includes("<Modal"));
+  assert.ok(button.includes("initialFocusRef={cancelRef}"));
+  assert.ok(button.includes("returnFocusRef={triggerRef}"));
+  assert.ok(button.includes("if (!deletion.isPending) deletion.mutate(reviewId)"));
+  assert.ok(button.includes("deletion.isError"));
+  assert.ok(req.includes('method: "DELETE"'));
+  for (const key of [
+    "patient.reviewsRoot",
+    "patient.reviewEligibility",
+    "directory.psychologistRoot",
+    "directory.psychologistsRoot",
+    "psychologistReviews.root",
+  ]) {
+    assert.ok(callers.slice(callers.indexOf("export const useDeletePatientReview")).includes(key));
+  }
+});
+
 test("bloco preserva textos, link e copia para plano liberado", () => {
   const html = renderToStaticMarkup(createElement(ReviewsLinkCard, { link, locked: false }));
   assert.match(html, /Link da minha página de avaliações/);

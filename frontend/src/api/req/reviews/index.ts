@@ -25,3 +25,12 @@ export const createPatientReview = async (body: CreatePatientReviewPayload) => {
   const handle = callEndpoint({ route: "/api/private/user/reviews", method: "POST", body });
   return handleReq<CreatePatientReviewResponse>({ ...handle, showSuccess: true });
 };
+
+export const deletePatientReview = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/user/reviews/:id",
+    method: "DELETE",
+    params: { id },
+  });
+  return handleReq<CreatePatientReviewResponse>(handle);
+};

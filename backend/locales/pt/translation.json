@@ -276,6 +276,7 @@
     "unfollow_success": "psicólogo removido de seguindo",
     "contact_success": "Intenção de contato registrada. Abrindo WhatsApp.",
     "review_success": "Avaliação enviada com sucesso.",
+    "review_deleted": "Avaliação excluída com sucesso.",
     "professional_review_response_saved": "Resposta da avaliação salva com sucesso.",
     "cfp_search_success": "Registro profissional encontrado com sucesso.",
     "cfp_search_empty": "Nenhum registro profissional foi encontrado para os dados informados.",

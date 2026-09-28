@@ -1,10 +1,19 @@
 import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  destroy as destroyService,
   eligibility as eligibilityService,
   index as indexService,
   store as storeService,
 } from "./services";
+
+export const destroy = async (req: Request, res: Response) => {
+  try {
+    return send(res, await destroyService(req as unknown as Parameters<typeof destroyService>[0]));
+  } catch (err) {
+    return error500(res, "patient_review_delete", err);
+  }
+};
 
 export const index = async (req: Request, res: Response) => {
   try {
