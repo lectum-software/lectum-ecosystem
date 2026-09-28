@@ -137,6 +137,10 @@ export type CommunityAuthorDTO = {
 };
 
 export type CommunityProfessionalReplyDTO = {
+  downvotes_count?: number;
+  replies_count?: number;
+  saves_count?: number;
+  current_user_vote?: 1 | -1 | null;
   id: string;
   title: string | null;
   content: string;

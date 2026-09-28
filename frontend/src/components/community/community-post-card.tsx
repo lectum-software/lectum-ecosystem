@@ -10,7 +10,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useSavePost, useVotePost } from "@/api/callers/posts";
+import { useSavePost, useSaveReply, useVotePost } from "@/api/callers/posts";
 import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
@@ -49,6 +49,7 @@ import {
   type PostWithOptionalSortMetrics,
   type ProfileContributionPost,
   postDetailHref,
+  publicationInteractionData,
 } from "./community-post-card-support";
 
 export const CommunityPostCard = ({
@@ -157,7 +158,11 @@ export const CommunityPostCard = ({
       />
     ) : null;
   const voteMutation = useVotePost(post.id);
-  const saveMutation = useSavePost(post.id);
+  const savePostMutation = useSavePost(post.id);
+  const saveReplyMutation = useSaveReply(post.id, primaryReply?.id ?? "");
+  const saveMutation = primaryReply ? saveReplyMutation : savePostMutation;
+  const interactionId = `${currentUser?.id ?? "guest"}:${post.id}:${primaryReply?.id ?? "post"}`;
+  const interactionData = publicationInteractionData(post, primaryReply);
   const conversion = useProgressiveConversion();
   const [contentExpanded, setContentExpanded] = useState(false);
   const [voteOverride, setVoteOverride] = useState<{
@@ -172,19 +177,19 @@ export const CommunityPostCard = ({
     saves: number;
   } | null>(null);
   const voteSnapshot =
-    voteOverride?.postId === post.id
+    voteOverride?.postId === interactionId
       ? voteOverride
       : {
-          currentVote: post.current_user_vote,
-          downvotes: post.downvotes_count,
-          upvotes: post.upvotes_count,
+          currentVote: interactionData.currentVote,
+          downvotes: interactionData.downvotes,
+          upvotes: interactionData.upvotes,
         };
   const saveSnapshot =
-    saveOverride?.postId === post.id
+    saveOverride?.postId === interactionId
       ? saveOverride
       : {
-          saved: post.saved,
-          saves: post.saves_count,
+          saved: interactionData.saved,
+          saves: interactionData.saves,
         };
   const handleVote = (value: 1 | -1) => {
     if (!conversion.isAuthenticated) {
@@ -192,9 +197,10 @@ export const CommunityPostCard = ({
         intent: {
           payload: {
             postId: post.id,
+            ...(primaryReply ? { replyId: primaryReply.id } : {}),
             value,
           },
-          type: "vote_post",
+          type: primaryReply ? "vote_reply" : "vote_post",
         },
       });
       return;
@@ -207,24 +213,24 @@ export const CommunityPostCard = ({
     const optimisticSnapshot = {
       currentVote: nextVote,
       downvotes: Math.max(0, voteSnapshot.downvotes + downDelta),
-      postId: post.id,
+      postId: interactionId,
       upvotes: Math.max(0, voteSnapshot.upvotes + upDelta),
     };
 
     setVoteOverride(optimisticSnapshot);
     voteMutation.mutate(
-      { value },
+      { value, ...(primaryReply ? { replyId: primaryReply.id } : {}) },
       {
         onError: () => {
           setVoteOverride(previousOverride);
         },
         onSuccess: (data) => {
-          if (data.target_type !== "post") return;
+          if (data.target_type !== (primaryReply ? "reply" : "post")) return;
 
           setVoteOverride({
             currentVote: data.value,
             downvotes: Math.max(0, data.downvotes_count ?? optimisticSnapshot.downvotes),
-            postId: post.id,
+            postId: interactionId,
             upvotes: data.upvotes_count,
           });
         },
@@ -238,8 +244,9 @@ export const CommunityPostCard = ({
         intent: {
           payload: {
             postId: post.id,
+            ...(primaryReply ? { replyId: primaryReply.id } : {}),
           },
-          type: "save_post",
+          type: primaryReply ? "save_reply" : "save_post",
         },
       });
       return;
@@ -248,7 +255,7 @@ export const CommunityPostCard = ({
     const previousOverride = saveOverride;
     const nextSaved = !saveSnapshot.saved;
     const optimisticSnapshot = {
-      postId: post.id,
+      postId: interactionId,
       saved: nextSaved,
       saves: Math.max(0, saveSnapshot.saves + (nextSaved ? 1 : -1)),
     };
@@ -260,26 +267,37 @@ export const CommunityPostCard = ({
       },
       onSuccess: (data) => {
         setSaveOverride({
-          postId: post.id,
+          postId: interactionId,
           saved: data.saved,
           saves: data.saves_count ?? optimisticSnapshot.saves,
         });
       },
     });
-  }, [conversion, post.id, saveMutation, saveOverride, saveSnapshot.saved, saveSnapshot.saves]);
+  }, [
+    conversion,
+    post.id,
+    primaryReply,
+    interactionId,
+    saveMutation,
+    saveOverride,
+    saveSnapshot.saved,
+    saveSnapshot.saves,
+  ]);
 
   useEffect(() => {
     if (!conversion.isAuthenticated || saveSnapshot.saved) return;
 
     const intent = conversion.consumePendingIntent(
       (candidate) =>
-        candidate.type === "save_post" && String(candidate.payload?.postId ?? "") === post.id,
+        candidate.type === (primaryReply ? "save_reply" : "save_post") &&
+        String(candidate.payload?.postId ?? "") === post.id &&
+        (!primaryReply || String(candidate.payload?.replyId ?? "") === primaryReply.id),
     );
 
     if (!intent) return;
 
     window.setTimeout(handleToggleSave, 0);
-  }, [conversion, handleToggleSave, post.id, saveSnapshot.saved]);
+  }, [conversion, handleToggleSave, post.id, primaryReply, saveSnapshot.saved]);
 
   const saveAction = saveActionOverride ?? {
     active: saveSnapshot.saved,
@@ -596,9 +614,15 @@ export const CommunityPostCard = ({
           isFeedPresentation ? "border-border dark:border-border" : "border-border",
         )}
         comments={{
-          count: post.replies_count,
-          href: postHref,
-          label: isFeedPresentation ? "Comentar no post" : "Comentários",
+          count: interactionData.comments,
+          href: primaryReply
+            ? `/comunidades/${post.community.slug}/publicacao/${post.id}/resposta/${primaryReply.id}`
+            : postHref,
+          label: primaryReply
+            ? "Comentários da resposta"
+            : isFeedPresentation
+              ? "Comentar no post"
+              : "Comentários",
         }}
         currentVote={voteSnapshot.currentVote}
         disabled={voteMutation.isPending}
@@ -616,16 +640,18 @@ export const CommunityPostCard = ({
         }}
         share={{
           count: shareCount,
-          label: isFeedPresentation
-            ? `Compartilhar post: ${post.title}`
-            : displayTitle
-              ? `Compartilhar ${displayTitle}`
-              : "Compartilhar publicação",
+          label: primaryReply
+            ? "Compartilhar resposta"
+            : isFeedPresentation
+              ? `Compartilhar post: ${post.title}`
+              : displayTitle
+                ? `Compartilhar ${displayTitle}`
+                : "Compartilhar publicação",
           onClick: () => onShare(post),
         }}
         showUpvoteText={actionBarShowUpvoteText}
         upvotesCount={voteSnapshot.upvotes}
-        voteLabel={actionBarVoteLabel}
+        voteLabel={primaryReply ? "Marcar resposta como útil" : actionBarVoteLabel}
         votePresentation={actionBarVotePresentation}
       />
       {lectumDownloadDialog}

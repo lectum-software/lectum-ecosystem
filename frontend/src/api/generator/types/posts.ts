@@ -55,6 +55,10 @@ export type UserPostsQuery = {
 };
 
 export type PostProfessionalReply = {
+  downvotes_count?: number;
+  replies_count?: number;
+  saves_count?: number;
+  current_user_vote?: 1 | -1 | null;
   id: string;
   title: string | null;
   content: string;
