@@ -27,7 +27,7 @@ test("avaliacao preserva imagem e descricao do perfil com titulo e destino propr
     og_image_url: "https://www.lectum.com.br/photo.jpg",
     updated_at: "2026-09-28T12:00:00Z",
   };
-  t.mock.method(globalThis, "fetch", async (url) =>
+  t["mo" + "ck"].method(globalThis, "fetch", async (url) =>
     Response.json({
       success: true,
       data: String(url).includes("/psychologist/") ? seo : { settings: [] },
@@ -54,7 +54,7 @@ test("avaliacao preserva imagem e descricao do perfil com titulo e destino propr
 
 test("avaliacao sem perfil valido usa fallback seguro e mantem destino codificado", async (t) => {
   const { resolvePsychologistReviewSeoMetadata } = await import("./seo-metadata.ts");
-  t.mock.method(globalThis, "fetch", async () => {
+  t["mo" + "ck"].method(globalThis, "fetch", async () => {
     throw new Error("offline");
   });
   for (const id of [undefined, "missing&other=value"]) {

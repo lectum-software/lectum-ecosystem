@@ -14,12 +14,18 @@ test("uses the reply author's community position, not the post author's", () => 
 test("does not transfer ranking between communities or invent a loading rank", () => {
   assert.equal(mentorPositionForAuthor(undefined, "reply-author"), undefined);
   assert.equal(mentorPositionForAuthor([], "reply-author"), undefined);
-  assert.equal(mentorPositionForAuthor([{ position: 1, professional: { id: "other" } }], "reply-author"), undefined);
+  assert.equal(
+    mentorPositionForAuthor([{ position: 1, professional: { id: "other" } }], "reply-author"),
+    undefined,
+  );
 });
 
 test("only top three positions receive a label", () => {
   for (const position of [0, 1, 2, 3, 4, 5, 1.5]) {
     const ranking = [{ position, professional: { id: "author" } }];
-    assert.equal(mentorPositionForAuthor(ranking, "author"), [1, 2, 3].includes(position) ? position : undefined);
+    assert.equal(
+      mentorPositionForAuthor(ranking, "author"),
+      [1, 2, 3].includes(position) ? position : undefined,
+    );
   }
 });

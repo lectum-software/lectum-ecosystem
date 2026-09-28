@@ -121,7 +121,7 @@ export const ProfessionalReplyPreview = ({
                   community={community}
                   badge={featuredBadge}
                   typeLabel={reply.author.type_label}
-                  date={<>{formatPostTimeLabel(reply.created_at, reply.edited_at)}</>}
+                  date={formatPostTimeLabel(reply.created_at, reply.edited_at)}
                 >
                   {reply.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
                   {formatPostTimeLabel(reply.created_at, reply.edited_at)}
@@ -211,7 +211,7 @@ export const ProfessionalReplyPreview = ({
               community={community}
               badge={featuredBadge}
               typeLabel={reply.author.type_label}
-              date={<>{formatPostTimeLabel(reply.created_at, reply.edited_at)}</>}
+              date={formatPostTimeLabel(reply.created_at, reply.edited_at)}
             >
               {reply.author.type_label} • {formatPostTimeLabel(reply.created_at, reply.edited_at)}
             </MentorAuthorMeta>

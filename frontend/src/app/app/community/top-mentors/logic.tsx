@@ -228,7 +228,7 @@ const PodiumMentor = ({
         <span className="relative block" style={{ maxWidth: "100%", width: size }}>
           <Avatar
             mentor={mentor}
-            className="border-2 border-border shadow-[0_5px_14px_rgb(15_23_42_/_12%)]"
+            className="border-2 border-border shadow-lectum-soft"
             size={size}
           />
           <span className="absolute -bottom-[2%] -right-[3%] w-[30%]">

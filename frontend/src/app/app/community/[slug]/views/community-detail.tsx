@@ -159,13 +159,20 @@ export const CommunityDetailLogic = ({
   useEffect(() => {
     if (isPsychologistUser && !professionalDefaultSortAppliedRef.current) {
       professionalDefaultSortAppliedRef.current = true;
-      setSort((current) => (current === "featured" ? "opportunities" : current));
-      return;
+      const timeout = window.setTimeout(() => {
+        setSort((current) => (current === "featured" ? "opportunities" : current));
+      }, 0);
+
+      return () => window.clearTimeout(timeout);
     }
 
     if (!isPsychologistUser && sort === "opportunities") {
       professionalDefaultSortAppliedRef.current = false;
-      setSort("featured");
+      const timeout = window.setTimeout(() => {
+        setSort("featured");
+      }, 0);
+
+      return () => window.clearTimeout(timeout);
     }
   }, [isPsychologistUser, sort]);
 

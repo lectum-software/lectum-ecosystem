@@ -34,10 +34,12 @@ adminApi.interceptors.response.use(
       clearAdminSession();
       if (!window.location.pathname.startsWith("/login")) {
         const callbackUrl = `${window.location.pathname}${window.location.search}`;
+        const loginUrl = new URL("/login", window.location.origin);
+        loginUrl.searchParams.set("callbackUrl", callbackUrl);
         // A sessão rejeitada exige descartar todo o estado/cache administrativo em memória.
         // Este interceptor não é navegação comum nem executa dentro de um componente React.
         // Reload completo intencional para descartar integralmente o estado administrativo rejeitado.
-        window.location.assign(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        window.location.assign(loginUrl);
       }
     }
 
