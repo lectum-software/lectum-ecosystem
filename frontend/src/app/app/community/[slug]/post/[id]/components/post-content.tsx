@@ -239,7 +239,7 @@ export const PostHeader = ({
                 community={post.community}
                 badge={post.author.featured_badge ?? post.featured_badge}
                 typeLabel={post.author.type_label}
-                date={<>{formatPostTimeLabel(post.created_at, post.edited_at)}</>}
+                date={formatPostTimeLabel(post.created_at, post.edited_at)}
               >
                 {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
                 {formatPostTimeLabel(post.created_at, post.edited_at)}
@@ -449,7 +449,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                 community={post.community}
                 badge={post.author.featured_badge ?? post.featured_badge}
                 typeLabel={post.author.type_label}
-                date={<>{formatPostTimeLabel(post.created_at, post.edited_at)}</>}
+                date={formatPostTimeLabel(post.created_at, post.edited_at)}
               >
                 {isPsychologistPost && post.author.type_label ? `${post.author.type_label} • ` : ""}
                 {formatPostTimeLabel(post.created_at, post.edited_at)}

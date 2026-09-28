@@ -122,7 +122,7 @@ export const SavedReplyAuthorHeader = ({
               community={community}
               badge={author.featured_badge}
               typeLabel={author.type_label}
-              date={<>{formatMentorPostTime(createdAt)}</>}
+              date={formatMentorPostTime(createdAt)}
             >
               <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
             </MentorAuthorMeta>
@@ -134,7 +134,7 @@ export const SavedReplyAuthorHeader = ({
               community={community}
               badge={author.featured_badge}
               typeLabel={author.type_label}
-              date={<>{formatMentorPostTime(createdAt)}</>}
+              date={formatMentorPostTime(createdAt)}
             >
               <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
             </MentorAuthorMeta>

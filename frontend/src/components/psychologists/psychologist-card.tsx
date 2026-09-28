@@ -37,7 +37,7 @@ export function PsychologistCard({
   psychologist,
 }: PsychologistCardProps) {
   const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
-  const videoSrc = psychologist.verified ? resolvePublicMediaUrl(psychologist.video_url) : null;
+  const videoSrc = resolvePublicMediaUrl(psychologist.video_url);
   const mediaIsPublic = isPublicMediaUrl(avatarSrc);
   const tags = buildBenefitTags(psychologist);
   const displayName = getPsychologistDisplayName(psychologist);

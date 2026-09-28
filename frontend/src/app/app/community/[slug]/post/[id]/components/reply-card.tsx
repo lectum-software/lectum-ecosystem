@@ -467,12 +467,7 @@ export const ReplyCard = ({
                     authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
                     badge={reply.author.featured_badge}
                     typeLabel={reply.author.type_label}
-                    date={
-                      <>
-                        {reply.is_post_author ? "Autor • " : ""}
-                        {formatMentorPostTime(reply.created_at, reply.edited_at)}
-                      </>
-                    }
+                    date={`${reply.is_post_author ? "Autor • " : ""}${formatMentorPostTime(reply.created_at, reply.edited_at)}`}
                   >
                     {formatReplyAuthorMeta(
                       reply.author,
@@ -488,12 +483,7 @@ export const ReplyCard = ({
                     authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
                     badge={reply.author.featured_badge}
                     typeLabel={reply.author.type_label}
-                    date={
-                      <>
-                        {reply.is_post_author ? "Autor • " : ""}
-                        {formatMentorPostTime(reply.created_at, reply.edited_at)}
-                      </>
-                    }
+                    date={`${reply.is_post_author ? "Autor • " : ""}${formatMentorPostTime(reply.created_at, reply.edited_at)}`}
                   >
                     {formatReplyAuthorMeta(
                       reply.author,

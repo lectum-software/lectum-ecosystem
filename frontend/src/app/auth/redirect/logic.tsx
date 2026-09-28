@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
@@ -14,6 +14,7 @@ const DEFAULT_AUTHENTICATED_REDIRECT = "/psicologos";
 const DELETE_ACCOUNT_REDIRECT = "/app/configuracoes/conta?deleteReauth=ok";
 
 export const RedirectLogic = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const intent = searchParams.get("intent");
   const fallbackRedirect = useMemo(() => {
@@ -36,7 +37,7 @@ export const RedirectLogic = () => {
           toast.error(message);
           // Falha de sessão exige descartar também os caches em memória antes da revogação.
           // Reload completo intencional para descartar caches de sessao em memoria.
-          window.location.href = `/auth/error?error=${encodeURIComponent(message)}&clearSession=1`;
+          router.replace(`/auth/error?error=${encodeURIComponent(message)}&clearSession=1`);
         },
       },
     },
