@@ -529,6 +529,36 @@ export const resolvePsychologistSeoMetadata = async ({
   });
 };
 
+export const resolvePsychologistReviewSeoMetadata = async (id?: string): Promise<Metadata> => {
+  const seo = id ? await getPublicPsychologistSeo({ id }) : null;
+  const canonical = id
+    ? `/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(id)}`
+    : "/app/avaliacoes/nova";
+  const title = seo ? `Avalie ${seo.name}` : "Avalie seu psicólogo | Lectum";
+  const description =
+    seo?.description ?? "Compartilhe sua experiência com seu psicólogo na Lectum.";
+  const squareImage =
+    seo?.og_image_url && id ? publicPsychologistOpenGraphImageHref(id, seo.updated_at) : null;
+
+  return resolveSeoMetadata(
+    "psychologist_profile",
+    { canonical, description, title },
+    {
+      canonical,
+      openGraphUrl: canonical,
+      title,
+      ogTitle: title,
+      description,
+      ogDescription: seo?.og_description ?? description,
+      image: squareImage ?? seo?.og_image_url,
+      imageHeight: squareImage ? 1200 : seo?.og_image_height,
+      imageWidth: squareImage ? 1200 : seo?.og_image_width,
+      robotsIndex: false,
+      robotsFollow: false,
+    },
+  );
+};
+
 export const resolveCommunityPostSeoMetadata = async ({
   canonicalOverride,
   fallback,

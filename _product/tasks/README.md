@@ -2478,3 +2478,18 @@ direcionado, ADRs e tasks aprovados. Componentes reais renderizados em 390/1440p
 com/sem bloqueio, sem overflow; capturas inspecionadas. Preview do perfil completo
 nao carregou os dados locais, portanto QA autenticada real permanece pendente.
 Check global bloqueado por formatacao preexistente em mentor-author-ranking.test.mjs.
+
+Ajuste de 28/09/2026: Open Graph do link de avaliacao. ADR-0538.
+
+- [x] Gerar metadata no servidor para o profissional indicado pela query.
+- [x] Reutilizar foto versionada e descricao do perfil sem alterar a imagem.
+- [x] Usar titulo Avalie seguido do nome do profissional em OG e Twitter.
+- [x] Preservar destino de avaliacao, noindex e autenticacao para envio.
+- [x] Cobrir fallback sem perfil/API e codificacao do identificador em testes.
+
+Validacao: build Next 16.3.3, suite frontend, lint/Biome direcionados aprovados.
+Smoke local com dados publicos reais de homolog e user-agent de crawler: HTTP 200
+sem login, titulo Avalie + nome, paridade de imagem/descricao, destino correto e
+imagem HTTP 200 confirmados. Primeira consulta do perfil caiu no fallback durante
+compilacao local; repeticao apos compilacao concluida passou.
+Check geral segue bloqueado pela formatacao preexistente em mentor-author-ranking.test.mjs.

@@ -1,3 +1,4 @@
+import "../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -5,6 +6,66 @@ import { test } from "node:test";
 const { publicCommunityOpenGraphImageHref, publicPsychologistOpenGraphImageHref } = await import(
   "../utils/public-routes.ts"
 );
+
+test("avaliacao preserva imagem e descricao do perfil com titulo e destino proprios", async (t) => {
+  const previousApi = process.env.NEXT_PUBLIC_API_URL;
+  process.env.NEXT_PUBLIC_API_URL = "https://api.lectum.com.br";
+  t.after(() => {
+    if (previousApi === undefined) delete process.env.NEXT_PUBLIC_API_URL;
+    else process.env.NEXT_PUBLIC_API_URL = previousApi;
+  });
+  const { resolvePsychologistReviewSeoMetadata, resolvePsychologistSeoMetadata } = await import(
+    "./seo-metadata.ts"
+  );
+  const seo = {
+    name: "Nome do Profissional",
+    title: "Nome do Profissional | Lectum",
+    og_title: "Nome do Profissional",
+    description: "Descricao publica do perfil.",
+    og_description: "Descricao publica compartilhada.",
+    canonical_url: "https://www.lectum.com.br/psicologos/psy-1",
+    og_image_url: "https://www.lectum.com.br/photo.jpg",
+    updated_at: "2026-09-28T12:00:00Z",
+  };
+  t.mock.method(globalThis, "fetch", async (url) =>
+    Response.json({
+      success: true,
+      data: String(url).includes("/psychologist/") ? seo : { settings: [] },
+    }),
+  );
+  const profile = await resolvePsychologistSeoMetadata({
+    id: "psy-1",
+    fallback: { title: "Perfil", description: "Perfil" },
+  });
+  const review = await resolvePsychologistReviewSeoMetadata("psy-1");
+  assert.deepEqual(review.title, { absolute: "Avalie Nome do Profissional" });
+  assert.equal(review.openGraph.title, "Avalie Nome do Profissional");
+  assert.equal(review.twitter.title, review.openGraph.title);
+  assert.equal(review.openGraph.images[0].url, profile.openGraph.images[0].url);
+  assert.equal(review.openGraph.images[0].width, 1200);
+  assert.deepEqual(review.twitter.images, profile.twitter.images);
+  assert.equal(review.description, profile.description);
+  assert.equal(review.openGraph.description, profile.openGraph.description);
+  assert.equal(new URL(review.openGraph.url).pathname, "/app/avaliacoes/nova");
+  assert.equal(new URL(review.openGraph.url).searchParams.get("psychologist_id"), "psy-1");
+  assert.equal(review.alternates.canonical, review.openGraph.url);
+  assert.equal(review.robots.index, false);
+});
+
+test("avaliacao sem perfil valido usa fallback seguro e mantem destino codificado", async (t) => {
+  const { resolvePsychologistReviewSeoMetadata } = await import("./seo-metadata.ts");
+  t.mock.method(globalThis, "fetch", async () => {
+    throw new Error("offline");
+  });
+  for (const id of [undefined, "missing&other=value"]) {
+    const metadata = await resolvePsychologistReviewSeoMetadata(id);
+    assert.equal(metadata.openGraph.title, "Avalie seu psicólogo | Lectum");
+    const url = new URL(metadata.openGraph.url);
+    assert.equal(url.searchParams.get("psychologist_id"), id ?? null);
+    assert.equal(url.searchParams.has("other"), false);
+    assert.equal(metadata.robots.index, false);
+  }
+});
 
 test("ranking share links preserve and encode the community", async () => {
   const { publicTopMentorsHref } = await import("../utils/public-routes.ts");
