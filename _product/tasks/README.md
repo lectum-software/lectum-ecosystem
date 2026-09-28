@@ -2493,3 +2493,24 @@ sem login, titulo Avalie + nome, paridade de imagem/descricao, destino correto e
 imagem HTTP 200 confirmados. Primeira consulta do perfil caiu no fallback durante
 compilacao local; repeticao apos compilacao concluida passou.
 Check geral segue bloqueado pela formatacao preexistente em mentor-author-ranking.test.mjs.
+
+Ajuste de 28/09/2026: exclusao de avaliacao pelo proprio autor. ADR-0539.
+
+- [x] Autoria verificada no backend com filtro da sessao, sem permissao ao avaliado.
+- [x] Exclusao logica e recalculo de nota/contagem em transacao Serializable.
+- [x] Acao em Avaliacoes feitas com confirmacao, estado pendente e erro recuperavel.
+- [x] Invalidar caches relacionados e retornar a primeira pagina apos exclusao.
+- [x] Disponibilizar Avaliacoes feitas tambem a autores com papel psicologo.
+- [x] Testes de seguranca/autoria, media, exclusao repetida e falha no recalculo.
+
+Deploy: contrato aditivo, sem migration/env/dependencia nova. Rollback de codigo
+nao restaura avaliacoes excluidas. Nenhuma exclusao de dados reais no smoke.
+
+Validacao: builds frontend/backend e tipos aprovados; suite frontend aprovada
+(um skip preexistente de symlink Windows). Backend: 835/836 na suite completa,
+unico erro por disco cheio; repeticao isolada passou apos liberar cache webpack.
+Oito testes novos de autoria/recalculo passaram. Componente real da confirmacao
+validado em navegador isolado 390/1440px: cancelar, Escape, foco e ausencia de
+overflow; nenhum DELETE enviado. QA com exclusao autenticada real nao executada.
+Check global frontend segue bloqueado pela formatacao preexistente de
+mentor-author-ranking.test.mjs; lint e Biome dos arquivos alterados aprovados.

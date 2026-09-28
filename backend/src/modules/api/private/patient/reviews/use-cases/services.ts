@@ -1,12 +1,20 @@
 import { error, msg } from "@/helpers/translate";
 import { notifyNewProfessionalReview } from "@/main/notification/domain-events";
 import type {
+  IReviewDeleteDTO,
   IReviewEligibilityDTO,
   IReviewIndexDTO,
   IReviewStoreDTO,
   ReviewEligibilityResponse,
 } from "../DTOs/IReviewDTO";
 import { ReviewRepository } from "../repositories/ReviewRepository";
+
+export const destroy = async (data: IReviewDeleteDTO) => {
+  const repository = new ReviewRepository();
+  const result = await repository.remove(data.auth.id!, data.p.id);
+  if (!result) return { status: 404, ...error("not_found", {}) };
+  return { status: 200, ...msg("review_deleted", {}), data: result };
+};
 
 const eligibilityError = (result: ReviewEligibilityResponse) => {
   if (result.reason === "not_found")

@@ -14,6 +14,7 @@ import type {
   PatientReviewsResponse,
   ReviewEligibilityResponse,
 } from "../DTOs/IReviewDTO";
+import { deleteOwnReview } from "./delete-own-review";
 import type { IReviewRepository } from "./interfaces/IReviewRepository";
 
 const DEFAULT_LIMIT = 20;
@@ -26,6 +27,10 @@ const normalizePagination = (query: IReviewIndexDTO["q"] = {}) => {
 };
 
 export class ReviewRepository implements IReviewRepository {
+  async remove(authorId: string, reviewId: string): Promise<CreateReviewResponse | null> {
+    return withSerializableTransaction((tx) => deleteOwnReview(tx, authorId, reviewId));
+  }
+
   async index(data: IReviewIndexDTO): Promise<PatientReviewsResponse> {
     const pagination = normalizePagination(data.q);
     const where: Prisma.professional_reviewWhereInput = {

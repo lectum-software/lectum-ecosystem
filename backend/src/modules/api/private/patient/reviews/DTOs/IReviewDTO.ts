@@ -57,3 +57,8 @@ export interface IReviewStoreDTO {
   b: { psychologist_id: string; rating: number; comment: string };
   auth: user;
 }
+
+export interface IReviewDeleteDTO {
+  p: { id: string };
+  auth: user;
+}

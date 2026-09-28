@@ -17,6 +17,27 @@ export const usePatientReviews = (query: PatientReviewsQuery = {}) =>
     retry: false,
   });
 
+export const useDeletePatientReview = (onSuccess: () => void) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.deletePatientReview,
+    onSuccess: async (data) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: keys.patient.reviewsRoot() }),
+        queryClient.invalidateQueries({
+          queryKey: keys.patient.reviewEligibility(data.psychologist_id),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: keys.directory.psychologistRoot(data.psychologist_id),
+        }),
+        queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() }),
+        queryClient.invalidateQueries({ queryKey: keys.psychologistReviews.root() }),
+      ]);
+      onSuccess();
+    },
+  });
+};
+
 export const useReviewEligibility = (id: string, enabled = true) =>
   useQuery({
     queryKey: keys.patient.reviewEligibility(id),
