@@ -71,6 +71,7 @@ export const PROFILE_SUBTLE_SURFACE =
 export const EMPTY_PUBLICATIONS_SUMMARY: DirectoryPsychologistParticipationSummary = {
   posts_count: 0,
   replies_count: 0,
+  participation_communities: [],
   top_mentor_communities: [],
 };
 

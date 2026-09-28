@@ -40,7 +40,11 @@ import {
   toReviewResponse,
   trimToNull,
 } from "./support/profile-base";
-import { getProfileTopMentorCommunities, publishedProfileWhere } from "./support/profile-query";
+import {
+  getProfileParticipationCommunities,
+  getProfileTopMentorCommunities,
+  publishedProfileWhere,
+} from "./support/profile-query";
 
 import { selectHighlightedPublication, toPostResponse } from "./support/profile-response";
 
@@ -502,6 +506,12 @@ export class ProfileRepository implements IProfileRepository {
         contribution_type: "reply",
       };
     };
+    const participationCommunities = await getProfileParticipationCommunities({
+      posts,
+      psychologistId: data.p.id,
+      replies,
+      topMentorCommunities,
+    });
 
     return {
       data: mergedItems.map((item) => toDirectoryPublication(item)),
@@ -511,6 +521,7 @@ export class ProfileRepository implements IProfileRepository {
       summary: {
         posts_count: postsCount,
         replies_count: repliesCount,
+        participation_communities: participationCommunities,
         top_mentor_communities: topMentorCommunities.slice(0, 3),
       },
       highlighted_publication: highlightedPublication

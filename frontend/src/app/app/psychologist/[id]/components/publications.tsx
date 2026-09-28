@@ -4,13 +4,12 @@ import { CornerUpLeft, FileText, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type {
+  DirectoryPsychologistParticipationCommunity,
   DirectoryPsychologistParticipationSummary,
   DirectoryPsychologistProfilePost,
-  DirectoryPsychologistTopMentorCommunity,
 } from "@/api/generator/types/directory";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
-import { MentorBadge } from "@/components/community/mentor-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -48,7 +47,7 @@ export const ProfileCommunityPostCard = ({
 export const PublicationCommunityAvatar = ({
   community,
 }: {
-  community: DirectoryPsychologistTopMentorCommunity;
+  community: DirectoryPsychologistParticipationCommunity;
 }) => {
   const avatarSrc = resolvePublicMediaUrl(community.avatar_url);
   const avatarIsPublicMedia = isPublicMediaUrl(community.avatar_url);
@@ -84,26 +83,18 @@ export const PublicationCommunityAvatar = ({
   );
 };
 
-export const PublicationTopMentorCommunity = ({
+export const PublicationParticipationCommunity = ({
   community,
 }: {
-  community: DirectoryPsychologistTopMentorCommunity;
+  community: DirectoryPsychologistParticipationCommunity;
 }) => (
   <Link
-    className="group flex w-[132px] min-w-[132px] snap-start flex-col items-center rounded-[18px] px-1 py-1.5 text-center no-underline transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:w-[140px] sm:min-w-[140px]"
-    data-top-mentor-community="true"
+    className="group flex w-[104px] min-w-[104px] snap-start flex-col items-center rounded-[16px] px-1 py-1.5 text-center no-underline transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:w-[112px] sm:min-w-[112px]"
+    data-participation-community="true"
     href={`/comunidades/${community.slug}`}
   >
-    <span className="relative flex h-[72px] w-[72px] shrink-0 justify-center">
-      <PublicationCommunityAvatar community={community} />
-      <span className="absolute -bottom-1 -right-2 flex">
-        <MentorBadge badge={community.badge} size="avatar" />
-      </span>
-    </span>
-    <span
-      className="mt-2 line-clamp-2 w-full max-w-[124px] text-center text-[12.5px] font-extrabold leading-[1.18] text-muted transition group-hover:text-foreground sm:max-w-[132px]"
-      data-top-mentor-name="true"
-    >
+    <PublicationCommunityAvatar community={community} />
+    <span className="mt-2 line-clamp-2 w-full max-w-[98px] text-center text-[12px] font-extrabold leading-[1.18] text-muted transition group-hover:text-foreground sm:max-w-[106px]">
       {community.name}
     </span>
   </Link>
@@ -132,37 +123,38 @@ export const PublicationsActivitySummary = ({
 }: {
   summary: DirectoryPsychologistParticipationSummary;
 }) => {
-  const topCommunities = summary.top_mentor_communities.slice(0, 3);
-  const hasTopCommunities = topCommunities.length > 0;
-  const hasMetrics = summary.posts_count > 0 || summary.replies_count > 0;
-
-  if (!hasTopCommunities && !hasMetrics) return null;
+  const participationCommunities: DirectoryPsychologistParticipationCommunity[] =
+    summary.participation_communities ?? summary.top_mentor_communities ?? [];
+  const hasParticipationCommunities = participationCommunities.length > 0;
 
   return (
     <section
       className="overflow-hidden rounded-[24px] border border-border bg-surface/95 px-3 py-4 sm:px-5"
       data-publications-summary="true"
     >
-      {hasTopCommunities ? (
-        <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-center sm:gap-4">
-          {topCommunities.map((community) => (
-            <PublicationTopMentorCommunity community={community} key={community.id} />
-          ))}
+      {hasParticipationCommunities ? (
+        <div className="grid gap-2.5">
+          <p className="px-1 text-[13px] font-extrabold leading-none text-foreground">
+            Participa em:
+          </p>
+          <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-center sm:gap-4">
+            {participationCommunities.map((community) => (
+              <PublicationParticipationCommunity community={community} key={community.id} />
+            ))}
+          </div>
         </div>
       ) : null}
 
-      {hasMetrics ? (
-        <div
-          className={cn(
-            "flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5",
-            hasTopCommunities && "mt-3.5 border-border border-t pt-3.5",
-          )}
-        >
-          <PublicationMetric icon={FileText} label="Posts" value={summary.posts_count} />
-          <span className="hidden h-5 w-px bg-surface-muted sm:block" aria-hidden="true" />
-          <PublicationMetric icon={CornerUpLeft} label="Respostas" value={summary.replies_count} />
-        </div>
-      ) : null}
+      <div
+        className={cn(
+          "flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5",
+          hasParticipationCommunities && "mt-3.5 border-border border-t pt-3.5",
+        )}
+      >
+        <PublicationMetric icon={FileText} label="Posts" value={summary.posts_count} />
+        <span className="hidden h-5 w-px bg-surface-muted sm:block" aria-hidden="true" />
+        <PublicationMetric icon={CornerUpLeft} label="Respostas" value={summary.replies_count} />
+      </div>
     </section>
   );
 };
