@@ -34,7 +34,7 @@ export const navigateBackFromTopMentors = (router: Router, community?: string) =
 
 export const navigateBackFromCommunity = (router: Router) => {
   const previous = getPreviousAppNavigationHref();
-  if (previous && rankingPath.test(previous)) {
+  if (!previous || rankingPath.test(previous) || previous.startsWith("/auth/")) {
     router.replace(DEFAULT_COMMUNITY_FEED_HREF);
     return;
   }

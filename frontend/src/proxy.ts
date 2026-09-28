@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { isAuthEntryPath } from "@/utils/auth-entry";
 import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 const AUTH_PREFIX = "/auth";
@@ -211,6 +212,11 @@ export function proxy(req: NextRequest) {
   }
 
   if (token && isAuthRoute && !isAuthRequiredRoute) {
+    if (isAuthEntryPath(pathname)) {
+      const returnTo = resolveSafeReturnTo(req);
+      const target = returnTo && !returnTo.startsWith("/auth/") ? returnTo : "/";
+      return NextResponse.redirect(new URL(target, req.url));
+    }
     return NextResponse.redirect(new URL(DEFAULT_AUTHENTICATED_PATH, req.url));
   }
 

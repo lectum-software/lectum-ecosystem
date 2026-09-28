@@ -19,10 +19,12 @@ export const subscribeAuthToken = (onStoreChange: () => void) => {
     };
     const interval = window.setInterval(notify, 1000);
     window.addEventListener("focus", notify);
+    window.addEventListener("pageshow", notify);
     window.addEventListener("storage", notify);
     stopListening = () => {
       window.clearInterval(interval);
       window.removeEventListener("focus", notify);
+      window.removeEventListener("pageshow", notify);
       window.removeEventListener("storage", notify);
     };
   }

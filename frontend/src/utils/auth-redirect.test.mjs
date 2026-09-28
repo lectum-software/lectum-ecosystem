@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -42,6 +42,31 @@ const { buildAuthRouteWithRedirect, getUserHomePath, resolveAuthRedirect, resolv
   await import("./auth-redirect.ts");
 const { getPsychologistPaidOnboardingRequirementPath, getPsychologistRegistrationRequirementPath } =
   await import("./psychologist-onboarding.ts");
+
+test("convite de autenticacao preserva comunidade, filtros e fragmento ate o destino final", () => {
+  const target = "/comunidades/top-mentores?community=ansiedade-em-equilibrio&period=all#ranking";
+  for (const entry of ["/auth/login", "/auth/profile-selection"]) {
+    const url = new URL(buildAuthRouteWithRedirect(entry, target), "https://lectum.test");
+    const returnTo = resolveAuthReturnTo(url.searchParams.get("redirectTo"), null);
+    assert.equal(returnTo, target);
+    const signup = new URL(buildAuthRouteWithRedirect("/auth/register/patient", returnTo), url);
+    assert.equal(
+      resolveAuthRedirect(
+        { confirmed: true, role: "paciente" },
+        signup.searchParams.get("redirectTo"),
+        "/",
+      ),
+      target,
+    );
+  }
+  const source = readFileSync(new URL("../templates/private/index.tsx", import.meta.url), "utf8");
+  assert.match(
+    source,
+    /window\.location\.pathname\}\$\{window\.location\.search\}\$\{window\.location\.hash/,
+  );
+  assert.match(source, /buildAuthRouteWithRedirect\(href, returnTo\)/);
+  assert.doesNotMatch(source, /restrictedAreaReturnTo = normalizedPathname/);
+});
 
 test("nao usa mais boas-vindas como gate automatico para paciente", () => {
   const patientWithoutOnboarding = {

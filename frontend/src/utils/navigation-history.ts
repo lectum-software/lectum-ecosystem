@@ -13,6 +13,17 @@ type BrowserHistoryState = {
 
 const APP_NAVIGATION_HISTORY_KEY = "lectum.appNavigationHistory";
 const APP_NAVIGATION_HISTORY_LIMIT = 25;
+const AUTH_NAVIGATION_BOUNDARY_KEY = "lectum.authNavigationBoundary";
+
+export const resetNavigationAfterAuthentication = () => {
+  writeAppNavigationHistory([]);
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(AUTH_NAVIGATION_BOUNDARY_KEY, "1");
+  } catch {
+    // Storage can be unavailable in private browsing.
+  }
+};
 
 const getCurrentAppHref = () => {
   if (typeof window === "undefined") return null;
@@ -72,7 +83,8 @@ const hasSameOriginReferrer = () => {
   if (typeof window === "undefined" || !document.referrer) return false;
 
   try {
-    return new URL(document.referrer).origin === window.location.origin;
+    const referrer = new URL(document.referrer);
+    return referrer.origin === window.location.origin && !referrer.pathname.startsWith("/auth/");
   } catch {
     return false;
   }
@@ -81,7 +93,14 @@ const hasSameOriginReferrer = () => {
 export const canNavigateBackInApp = () => {
   if (typeof window === "undefined" || window.history.length <= 1) return false;
 
-  if (getPreviousAppHref()) return true;
+  const previous = getPreviousAppHref();
+  if (previous) return !previous.startsWith("/auth/");
+
+  try {
+    if (window.sessionStorage.getItem(AUTH_NAVIGATION_BOUNDARY_KEY)) return false;
+  } catch {
+    return false;
+  }
 
   const state = window.history.state as BrowserHistoryState | null;
 
