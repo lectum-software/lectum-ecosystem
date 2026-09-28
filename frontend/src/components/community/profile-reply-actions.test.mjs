@@ -65,3 +65,20 @@ test("reply mutation, guest intent and thread navigation retain the reply identi
   assert.match(source, /primaryReply \? "save_reply" : "save_post"/);
   assert.match(source, /\/resposta\/\$\{primaryReply.id\}/);
 });
+
+test("profile replies use the compact inline reply toolbar while original posts retain their layout", () => {
+  const source = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
+  assert.match(source, /primaryReply\s*\? "mt-2 sm:mt-3"/);
+  assert.match(source, /secondaryActionsPlacement=\{primaryReply \? "inline" : "trailing"\}/);
+  assert.match(source, /votePresentation=\{primaryReply \? "inline" : actionBarVotePresentation\}/);
+  assert.match(source, /showUpvoteText=\{primaryReply \? false : actionBarShowUpvoteText\}/);
+  assert.match(source, /size=\{primaryReply \? "xs" : "sm"\}/);
+  for (const counter of ["interactionData.comments", "saveAction.count", "shareCount"]) {
+    assert.ok(source.includes(`count: primaryReply ? undefined : ${counter}`));
+  }
+});
+
+test("read-only vote controls also respect the hidden upvote label", () => {
+  const source = readFileSync(new URL("./community-action-bar.tsx", import.meta.url), "utf8");
+  assert.ok(source.includes('{showUpvoteText ? "Útil" : null}'));
+});

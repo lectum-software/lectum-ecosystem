@@ -609,12 +609,16 @@ export const CommunityPostCard = ({
       </div>
 
       <CommunityActionBar
-        className={cn(
-          "mt-4 border-t pt-3",
-          isFeedPresentation ? "border-border dark:border-border" : "border-border",
-        )}
+        className={
+          primaryReply
+            ? "mt-2 sm:mt-3"
+            : cn(
+                "mt-4 border-t pt-3",
+                isFeedPresentation ? "border-border dark:border-border" : "border-border",
+              )
+        }
         comments={{
-          count: interactionData.comments,
+          count: primaryReply ? undefined : interactionData.comments,
           href: primaryReply
             ? `/comunidades/${post.community.slug}/publicacao/${post.id}/resposta/${primaryReply.id}`
             : postHref,
@@ -627,19 +631,22 @@ export const CommunityPostCard = ({
         currentVote={voteSnapshot.currentVote}
         disabled={voteMutation.isPending}
         downvotesCount={
-          shouldShowProfessionalEngagementCounters ? voteSnapshot.downvotes : undefined
+          !primaryReply && shouldShowProfessionalEngagementCounters
+            ? voteSnapshot.downvotes
+            : undefined
         }
         endSlot={footerExtra}
         onVote={interactiveActions ? handleVote : undefined}
         save={{
           active: saveAction.active,
-          count: saveAction.count,
+          count: primaryReply ? undefined : saveAction.count,
           disabled: saveAction.disabled,
           label: saveAction.label,
           onClick: saveAction.onClick,
         }}
+        secondaryActionsPlacement={primaryReply ? "inline" : "trailing"}
         share={{
-          count: shareCount,
+          count: primaryReply ? undefined : shareCount,
           label: primaryReply
             ? "Compartilhar resposta"
             : isFeedPresentation
@@ -649,10 +656,11 @@ export const CommunityPostCard = ({
                 : "Compartilhar publicação",
           onClick: () => onShare(post),
         }}
-        showUpvoteText={actionBarShowUpvoteText}
+        showUpvoteText={primaryReply ? false : actionBarShowUpvoteText}
+        size={primaryReply ? "xs" : "sm"}
         upvotesCount={voteSnapshot.upvotes}
         voteLabel={primaryReply ? "Marcar resposta como útil" : actionBarVoteLabel}
-        votePresentation={actionBarVotePresentation}
+        votePresentation={primaryReply ? "inline" : actionBarVotePresentation}
       />
       {lectumDownloadDialog}
     </article>
