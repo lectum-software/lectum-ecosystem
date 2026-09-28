@@ -9,13 +9,13 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-
 import {
   formatDate,
   formatRatingNumber,
   PROFILE_CARD_SURFACE,
   resolveErrorMessage,
 } from "../modules/support";
+import { OwnReviewsLink } from "./own-reviews-link";
 
 import {
   InfiniteProfileListLoader,
@@ -251,6 +251,7 @@ export const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileRev
 };
 
 export const ReviewsTab = ({
+  showOwnReviewsLink = false,
   canReviewProfile,
   error,
   hasNextPage,
@@ -263,6 +264,7 @@ export const ReviewsTab = ({
   reviews,
   summary,
 }: {
+  showOwnReviewsLink?: boolean;
   canReviewProfile: boolean;
   error: unknown;
   hasNextPage: boolean;
@@ -276,7 +278,8 @@ export const ReviewsTab = ({
   summary: DirectoryReviewSummary;
 }) => {
   return (
-    <div className="grid gap-3.5 bg-background px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3.5 bg-background px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
+      {showOwnReviewsLink ? <OwnReviewsLink profileId={profileId} /> : null}
       <ReviewSummaryCard
         canReviewProfile={canReviewProfile}
         psychologistId={profileId}

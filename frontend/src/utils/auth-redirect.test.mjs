@@ -43,6 +43,32 @@ const { buildAuthRouteWithRedirect, getUserHomePath, resolveAuthRedirect, resolv
 const { getPsychologistPaidOnboardingRequirementPath, getPsychologistRegistrationRequirementPath } =
   await import("./psychologist-onboarding.ts");
 
+test("avaliacao solicita autenticacao contextual e preserva o profissional", () => {
+  const target = "/app/avaliacoes/nova?psychologist_id=professional-123";
+  for (const entry of ["/auth/login", "/auth/profile-selection"]) {
+    const url = new URL(buildAuthRouteWithRedirect(entry, target), "https://lectum.test");
+    assert.equal(
+      resolveAuthRedirect(
+        { confirmed: true, role: "paciente" },
+        url.searchParams.get("redirectTo"),
+        "/",
+      ),
+      target,
+    );
+  }
+  const proxy = readFileSync(new URL("../proxy.ts", import.meta.url), "utf8");
+  assert.match(
+    proxy,
+    /const INLINE_AUTH_PROMPT_ROUTES = \[[\s\S]*?"\/app\/avaliacoes\/nova"[\s\S]*?\];/,
+  );
+  const logic = readFileSync(new URL("../app/app/reviews/new/logic.tsx", import.meta.url), "utf8");
+  assert.match(
+    logic,
+    /useReviewEligibility\(psychologistId, hasToken && Boolean\(psychologistId\)\)/,
+  );
+  assert.doesNotMatch(logic, /restrictedAreaBackLink|Voltar ao perfil/);
+});
+
 test("convite de autenticacao preserva comunidade, filtros e fragmento ate o destino final", () => {
   const target = "/comunidades/top-mentores?community=ansiedade-em-equilibrio&period=all#ranking";
   for (const entry of ["/auth/login", "/auth/profile-selection"]) {

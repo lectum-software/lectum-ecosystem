@@ -26,6 +26,7 @@ export type PrivateTemplateProps = PropsWithChildren<{
   navigationDimmed?: boolean;
   navigationHidden?: boolean;
   navigationTheme?: "default" | "solidWhite";
+  restrictedAreaBackLink?: { href: string; label: string };
   showHeader?: boolean;
   showMobileNavigation?: boolean;
   showNavigation?: boolean;
@@ -65,6 +66,14 @@ export const COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY = {
 };
 
 export const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_AREA_COPY>([
+  [
+    "/app/avaliacoes/nova",
+    {
+      title: "Avalie seu psicólogo",
+      description:
+        "Compartilhe sua experiência com este profissional. Crie uma conta gratuita ou faça login para enviar sua avaliação.",
+    },
+  ],
   ["/app/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
   ["/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
   [

@@ -1,7 +1,9 @@
-import { LogIn, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
+import { ArrowLeft, LogIn, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/registry/new-york-v4/ui/button";
 
 type RestrictedAreaStateProps = {
+  backLink?: { href: string; label: string };
   copy: {
     description: string;
     title: string;
@@ -13,6 +15,7 @@ type RestrictedAreaStateProps = {
 };
 
 export const RestrictedAreaState = ({
+  backLink,
   copy,
   onLogin,
   onRetry,
@@ -73,6 +76,15 @@ export const RestrictedAreaState = ({
             <span>{sessionUnavailable ? "Entrar novamente" : "Fazer login"}</span>
           </Button>
         </div>
+        {backLink ? (
+          <Link
+            className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+            href={backLink.href}
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            {backLink.label}
+          </Link>
+        ) : null}
       </div>
     </div>
   </section>

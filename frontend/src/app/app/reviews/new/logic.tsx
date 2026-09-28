@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -67,7 +68,8 @@ export const ReviewsNewLogic = () => {
   const searchParams = useSearchParams();
   const [showValidationMessages, setShowValidationMessages] = useState(false);
   const psychologistId = searchParams.get("psychologist_id") || searchParams.get("id") || "";
-  const eligibility = useReviewEligibility(psychologistId, Boolean(psychologistId));
+  const hasToken = useAuthTokenPresence();
+  const eligibility = useReviewEligibility(psychologistId, hasToken && Boolean(psychologistId));
   const form = useReviewForm(psychologistId);
   const { Form, formProps, hook } = form;
   const mutation = useCreatePatientReview({

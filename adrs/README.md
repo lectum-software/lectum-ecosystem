@@ -579,3 +579,6 @@ Formato recomendado:
 - [ADR-0533 — Abas visiveis no perfil profissional](0533-abas-visiveis-perfil-profissional.md)
 - [ADR-0534 — Logout retorna ao feed publico](0534-logout-retorna-feed-publico.md)
 - [ADR-0535 — Retorno apos autenticacao](0535-retorno-apos-autenticacao.md)
+- [ADR-0536 — Avaliacao com convite contextual de autenticacao](0536-avaliacao-convite-autenticacao.md)
+- [ADR-0537 — Link de avaliacoes no proprio perfil](0537-link-avaliacoes-proprio-perfil.md)
+- [ADR-0538 — Open Graph do link de avaliacao](0538-open-graph-link-avaliacao.md)
