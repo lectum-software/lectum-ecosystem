@@ -35,6 +35,29 @@ test("assinatura no servidor é inerte e seu cleanup pode ser repetido", () => {
   assert.equal(notifications, 0);
 });
 
+test("restaurar pelo historico notifica a presenca de sessao e remove listeners", () => {
+  const previousWindow = globalThis.window;
+  const events = new EventTarget();
+  let notifications = 0;
+  globalThis.window = {
+    addEventListener: events.addEventListener.bind(events),
+    removeEventListener: events.removeEventListener.bind(events),
+    setInterval: () => 1,
+    clearInterval: () => {},
+  };
+  const cleanup = subscribeAuthToken(() => notifications++);
+  try {
+    events.dispatchEvent(new Event("pageshow"));
+    assert.equal(notifications, 1);
+    cleanup();
+    events.dispatchEvent(new Event("pageshow"));
+    assert.equal(notifications, 1);
+  } finally {
+    cleanup();
+    globalThis.window = previousWindow;
+  }
+});
+
 test("React SSR real renderiza o hook pelo snapshot ausente", () => {
   assert.equal(renderToString(createElement(Presence)), absentMarkup);
 });

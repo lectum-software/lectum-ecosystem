@@ -7,6 +7,7 @@ import { useAppDispatch } from "@/hooks/redux";
 import * as userActions from "@/store/modules/user/actions";
 import { resolveAuthRedirect } from "@/utils/auth-redirect";
 import { rememberCreatePostAuthReturnTarget } from "@/utils/community-post-auth-return";
+import { resetNavigationAfterAuthentication } from "@/utils/navigation-history";
 
 type RedirectTarget = string | null | ((data: user) => string | null);
 type UserSetOptions = {
@@ -41,6 +42,7 @@ export const useUserSet = (
       });
 
       if (target) {
+        resetNavigationAfterAuthentication();
         rememberCreatePostAuthReturnTarget(target);
         if (options.reloadAfterSet) {
           // Uma mudança de confirmação invalida também redirects e hidratações em memória.

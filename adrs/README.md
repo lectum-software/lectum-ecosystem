@@ -578,3 +578,4 @@ Formato recomendado:
 - [ADR-0532 — Fundo uniforme no conteudo do perfil profissional](0532-fundo-uniforme-perfil-profissional.md)
 - [ADR-0533 — Abas visiveis no perfil profissional](0533-abas-visiveis-perfil-profissional.md)
 - [ADR-0534 — Logout retorna ao feed publico](0534-logout-retorna-feed-publico.md)
+- [ADR-0535 — Retorno apos autenticacao](0535-retorno-apos-autenticacao.md)
