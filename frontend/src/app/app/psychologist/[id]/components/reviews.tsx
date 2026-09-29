@@ -252,6 +252,7 @@ export const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileRev
 
 export const ReviewsTab = ({
   showOwnReviewsLink = false,
+  showOwnPremiumReviewsPreview = false,
   canReviewProfile,
   error,
   hasNextPage,
@@ -265,6 +266,7 @@ export const ReviewsTab = ({
   summary,
 }: {
   showOwnReviewsLink?: boolean;
+  showOwnPremiumReviewsPreview?: boolean;
   canReviewProfile: boolean;
   error: unknown;
   hasNextPage: boolean;
@@ -280,42 +282,46 @@ export const ReviewsTab = ({
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3.5 bg-background px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
       {showOwnReviewsLink ? <OwnReviewsLink profileId={profileId} /> : null}
-      <ReviewSummaryCard
-        canReviewProfile={canReviewProfile}
-        psychologistId={profileId}
-        summary={summary}
-      />
+      {showOwnPremiumReviewsPreview ? null : (
+        <>
+          <ReviewSummaryCard
+            canReviewProfile={canReviewProfile}
+            psychologistId={profileId}
+            summary={summary}
+          />
 
-      {isError ? (
-        <InlineAlert title="Não foi possível carregar avaliações" variant="error">
-          {resolveErrorMessage(error, "Não foi possível carregar as avaliações deste perfil.")}
-        </InlineAlert>
-      ) : null}
+          {isError ? (
+            <InlineAlert title="Não foi possível carregar avaliações" variant="error">
+              {resolveErrorMessage(error, "Não foi possível carregar as avaliações deste perfil.")}
+            </InlineAlert>
+          ) : null}
 
-      {isLoading ? (
-        <div className="box-border grid min-h-[30vh] place-items-center rounded-[22px] border border-border bg-surface">
-          <LoadingState label="Carregando avaliações" />
-        </div>
-      ) : null}
+          {isLoading ? (
+            <div className="box-border grid min-h-[30vh] place-items-center rounded-[22px] border border-border bg-surface">
+              <LoadingState label="Carregando avaliações" />
+            </div>
+          ) : null}
 
-      {!isLoading && !isError && reviews.length > 0 ? (
-        <div className="grid gap-3.5">
-          {reviews.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
-        </div>
-      ) : null}
+          {!isLoading && !isError && reviews.length > 0 ? (
+            <div className="grid gap-3.5">
+              {reviews.map((review) => (
+                <ReviewCard key={review.id} review={review} />
+              ))}
+            </div>
+          ) : null}
 
-      {isFetching && !isFetchingNextPage && !isLoading ? (
-        <LoadingState label="Atualizando avaliações" />
-      ) : null}
+          {isFetching && !isFetchingNextPage && !isLoading ? (
+            <LoadingState label="Atualizando avaliações" />
+          ) : null}
 
-      <InfiniteProfileListLoader
-        hasNextPage={hasNextPage}
-        isLoading={isFetchingNextPage}
-        label="Carregando mais avaliações"
-        onLoadMore={onLoadMore}
-      />
+          <InfiniteProfileListLoader
+            hasNextPage={hasNextPage}
+            isLoading={isFetchingNextPage}
+            label="Carregando mais avaliações"
+            onLoadMore={onLoadMore}
+          />
+        </>
+      )}
     </div>
   );
 };

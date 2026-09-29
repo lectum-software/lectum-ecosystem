@@ -34,6 +34,7 @@ export type DirectoryPsychologist = {
   languages: string[];
   rating_avg: number;
   rating_count: number;
+  reviews_publicly_visible: boolean;
   verified: boolean;
   available_today: boolean;
   formation_years: number | null;

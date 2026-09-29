@@ -75,9 +75,18 @@ test("perfil exige autenticacao e propriedade; bloco precede resumo e consulta a
   );
   assert.ok(profile.includes("showOwnReviewsLink={conversion.isAuthenticated && canEditProfile}"));
   assert.ok(profile.includes('currentUser?.role === "psicologo" && isViewingOwnProfile'));
+  assert.ok(profile.includes("profile?.reviews_publicly_visible === false"));
+  assert.ok(
+    profile.includes(
+      'activeTab === "avaliacoes" && Boolean(profile) && !showOwnPremiumReviewsPreview',
+    ),
+  );
+  assert.ok(profile.includes("showOwnPremiumReviewsPreview={showOwnPremiumReviewsPreview}"));
   const body = tab.slice(tab.indexOf("export const ReviewsTab"));
   assert.ok(body.includes("showOwnReviewsLink = false"));
+  assert.ok(body.includes("showOwnPremiumReviewsPreview = false"));
   assert.ok(body.indexOf("<OwnReviewsLink") < body.indexOf("<ReviewSummaryCard"));
+  assert.ok(body.includes("showOwnPremiumReviewsPreview ? null :"));
   assert.ok(owner.includes('reviews.data?.access.mode !== "full"'));
   assert.ok(owner.includes("reviews.data?.access.can_receive_reviews !== true"));
   assert.ok(owner.includes("reviews.isError ||"));

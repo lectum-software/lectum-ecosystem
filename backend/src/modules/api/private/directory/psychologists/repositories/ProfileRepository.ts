@@ -233,6 +233,8 @@ export class ProfileRepository implements IProfileRepository {
       subscription: profile.subscriptions[0] ?? null,
       hasProfessionalEntitlement: profile.subscriptions.length > 0,
     });
+    const reviewsPubliclyVisible = profile.subscriptions.length > 0;
+    const canExposeReviewMetrics = reviewsPubliclyVisible || viewerId === item.id;
 
     return {
       id: item.id,
@@ -257,8 +259,9 @@ export class ProfileRepository implements IProfileRepository {
         institution: trimToNull(profile.academic_institution),
         graduation_year: trimToNull(profile.academic_graduation_year),
       }),
-      rating_avg: profile.rating_avg,
-      rating_count: profile.rating_count,
+      rating_avg: canExposeReviewMetrics ? profile.rating_avg : 0,
+      rating_count: canExposeReviewMetrics ? profile.rating_count : 0,
+      reviews_publicly_visible: reviewsPubliclyVisible,
       verified: isProfessionalVerified(profile),
       available_today: hasAvailableToday(profile.available_days),
       formation_years: crpExperienceYears(profile.crp_registration_date),
@@ -532,6 +535,43 @@ export class ProfileRepository implements IProfileRepository {
 
   async reviews(data: IProfileListDTO): Promise<DirectoryPsychologistReviewsResponse> {
     const pagination = normalizePagination(data.q);
+    const hasReviewVisibility = await prisma.psychologist_profile.findFirst({
+      where: {
+        user_id: data.p.id,
+        deleted: false,
+        published: true,
+        video_url: {
+          not: null,
+        },
+        NOT: [
+          {
+            video_url: "",
+          },
+        ],
+        subscriptions: {
+          some: activeProfessionalEntitlementWhere(),
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!hasReviewVisibility) {
+      return {
+        data: [],
+        summary: {
+          rating_avg: 0,
+          rating_count: 0,
+          distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        },
+        highlighted_review: null,
+        page: pagination.page,
+        pages: 0,
+        count: 0,
+      };
+    }
+
     const where: Prisma.professional_reviewWhereInput = {
       psychologist_id: data.p.id,
       deleted: false,
