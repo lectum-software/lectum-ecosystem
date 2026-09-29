@@ -301,3 +301,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Script local de validacao estatica confirmou os novos textos e a ausencia de `Servicos profissionais ilimitados` no bloco do Plano Gratuito.
 - Browser local: tentativa de subir `next start` em background para smoke local foi bloqueada pela politica do shell; sem sessao autenticada real disponivel neste ambiente, a validacao visual autenticada ficou coberta por build e inspecao estatica da lista renderizada.
 - ADR atualizado: `adrs/0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md`.
+
+## Ajuste complementar em 2026-09-29 - benefícios de vídeo personalizado nos planos
+
+- Pedido direto de produto: no Plano Profissional, remover `Respostas destacadas nas comunidades`, trocar `Respostas com mídia nas comunidades` por `Respostas com vídeo nas postagens` e adicionar `Vídeo personalizado para Instagram e redes sociais` logo após esse benefício.
+- A tela de escolha de planos e a tela `Minha assinatura` foram alinhadas para comunicar o benefício como exclusivo do psicólogo assinante, preservando a regra já existente de vídeo apenas para assinantes.
+- Impacto de deploy: alteração apenas de copy/UI no frontend; sem migrations, sem novas variáveis de ambiente, sem alteração de contrato e com rollback por revert do commit.
+- Validação executada: `pnpm --dir frontend exec biome check src/app/app/professional/billing/plans/logic.tsx src/app/app/professional/billing/subscription/logic.tsx` passou. `pnpm --dir frontend check` foi tentado e permanece bloqueado por lint/formatação preexistentes em `post-content.tsx`, `saved-reply-card.tsx`, `community-post-card-reply-preview.tsx` e `mentor-author-ranking.test.mjs`, sem relação com esta alteração de copy.

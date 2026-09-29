@@ -60,8 +60,8 @@ const professionalBenefitGroups: BenefitGroup[] = [
     title: "Mais visibilidade",
     items: [
       "Prioridade na busca de pacientes",
-      "Respostas destacadas nas comunidades",
-      "Respostas com mídia nas comunidades",
+      "Respostas com vídeo nas postagens",
+      "Vídeo personalizado para Instagram e redes sociais",
       "Elegível ao Top Mentor",
     ],
   },

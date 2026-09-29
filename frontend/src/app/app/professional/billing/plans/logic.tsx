@@ -80,11 +80,11 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: false,
-        label: "Respostas destacadas nas comunidades",
+        label: "Respostas com vídeo nas postagens",
       },
       {
         included: false,
-        label: "Respostas com mídia nas comunidades",
+        label: "Vídeo personalizado para Instagram e redes sociais",
       },
       {
         included: false,
@@ -113,11 +113,11 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "Respostas destacadas nas comunidades",
+        label: "Respostas com vídeo nas postagens",
       },
       {
         included: true,
-        label: "Respostas com mídia nas comunidades",
+        label: "Vídeo personalizado para Instagram e redes sociais",
       },
       {
         included: true,
