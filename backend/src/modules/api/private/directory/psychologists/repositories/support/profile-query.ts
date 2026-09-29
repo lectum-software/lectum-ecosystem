@@ -307,10 +307,9 @@ export const getProfileParticipationCommunities = async ({
   const topMentorCommunityById = new Map(
     topMentorCommunities.map((community) => [community.id, community]),
   );
-  const communityRankingById = await getProfileCommunityRankingById(
-    psychologistId,
-    [...participationByCommunityId.keys()],
-  );
+  const communityRankingById = await getProfileCommunityRankingById(psychologistId, [
+    ...participationByCommunityId.keys(),
+  ]);
 
   return [...participationByCommunityId.values()]
     .map((item) => {

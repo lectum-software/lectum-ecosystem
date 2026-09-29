@@ -11,7 +11,7 @@ import type {
   PsychologistReview,
   PsychologistReviewSummary,
 } from "@/api/generator/types/psychologist-reviews";
-import { PremiumReviewsState, ReviewsLinkCard } from "@/components/reviews/reviews-link-card";
+import { ReviewsLinkCard } from "@/components/reviews/reviews-link-card";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -105,9 +105,11 @@ const RatingSummary = ({ summary }: { summary?: PsychologistReviewSummary }) => 
 };
 
 const ReviewResponseForm = ({
+  canRespond,
   defaultOpen,
   review,
 }: {
+  canRespond: boolean;
   defaultOpen: boolean;
   review: PsychologistReview;
 }) => {
@@ -124,7 +126,7 @@ const ReviewResponseForm = ({
     },
   });
 
-  if (review.response && !isEditing) {
+  if (review.response && (!isEditing || !canRespond)) {
     return (
       <div className="mt-2 rounded-[var(--lectum-control-radius)] border-l-[4px] border-primary bg-primary-soft px-4 py-3.5">
         <p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-primary">
@@ -132,16 +134,20 @@ const ReviewResponseForm = ({
           Sua resposta
         </p>
         <p className="mt-3 text-sm leading-6 text-muted">“{review.response}”</p>
-        <button
-          className="mt-3 text-sm font-bold text-primary hover:text-primary-hover"
-          onClick={() => setIsEditing(true)}
-          type="button"
-        >
-          Editar resposta
-        </button>
+        {canRespond ? (
+          <button
+            className="mt-3 text-sm font-bold text-primary hover:text-primary-hover"
+            onClick={() => setIsEditing(true)}
+            type="button"
+          >
+            Editar resposta
+          </button>
+        ) : null}
       </div>
     );
   }
+
+  if (!canRespond) return null;
 
   if (!isEditing) {
     return (
@@ -180,9 +186,11 @@ const ReviewResponseForm = ({
 };
 
 const ReviewCard = ({
+  canRespond,
   defaultOpenResponse,
   review,
 }: {
+  canRespond: boolean;
   defaultOpenResponse: boolean;
   review: PsychologistReview;
 }) => (
@@ -208,7 +216,11 @@ const ReviewCard = ({
     )}
 
     <div className="mt-5">
-      <ReviewResponseForm defaultOpen={defaultOpenResponse} review={review} />
+      <ReviewResponseForm
+        canRespond={canRespond}
+        defaultOpen={defaultOpenResponse}
+        review={review}
+      />
     </div>
   </article>
 );
@@ -225,8 +237,9 @@ export const ProfessionalReviewsLogic = () => {
   const shouldShowError = Boolean(errorMessage && !isProfessionalPlanError);
   const isReviewsPreview = data?.access.mode === "preview" || isProfessionalPlanError;
   const canReceiveReviews = !isReviewsPreview && (data?.access.can_receive_reviews ?? true);
-  const displayItems = canReceiveReviews ? items : [];
+  const displayItems = items;
   const firstUnansweredId = displayItems.find((review) => !review.response)?.id;
+  const hasReceivedReviews = summaryTotal(data?.summary) > 0 || displayItems.length > 0;
   const reviewLink =
     typeof window === "undefined"
       ? "lectum.com.br/app/avaliacoes/nova"
@@ -249,16 +262,17 @@ export const ProfessionalReviewsLogic = () => {
           </InlineAlert>
         ) : null}
 
-        {!shouldShowError && canReceiveReviews ? <RatingSummary summary={data?.summary} /> : null}
+        {!shouldShowError ? <RatingSummary summary={data?.summary} /> : null}
 
-        {!reviews.isLoading && !shouldShowError && !canReceiveReviews ? (
-          <PremiumReviewsState />
+        {!reviews.isLoading && !shouldShowError && isReviewsPreview && hasReceivedReviews ? (
+          <InlineAlert title="Avaliações ocultas no perfil público" variant="warning">
+            Suas avaliações continuam salvas aqui, mas não estão visíveis para pacientes no seu
+            perfil público. Para torná-las públicas novamente, faça o upgrade para o Plano
+            Profissional.
+          </InlineAlert>
         ) : null}
 
-        {!reviews.isLoading &&
-        !shouldShowError &&
-        canReceiveReviews &&
-        displayItems.length === 0 ? (
+        {!reviews.isLoading && !shouldShowError && displayItems.length === 0 ? (
           <EmptyState
             className="rounded-[var(--lectum-card-radius)] bg-surface"
             icon={UserRound}
@@ -278,6 +292,7 @@ export const ProfessionalReviewsLogic = () => {
 
             {displayItems.map((review) => (
               <ReviewCard
+                canRespond={canReceiveReviews}
                 defaultOpenResponse={review.id === firstUnansweredId}
                 key={review.id}
                 review={review}

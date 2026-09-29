@@ -252,7 +252,7 @@ export const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileRev
 
 export const ReviewsTab = ({
   showOwnReviewsLink = false,
-  showOwnPremiumReviewsPreview = false,
+  showPublicReviewsUnavailable = false,
   canReviewProfile,
   error,
   hasNextPage,
@@ -266,7 +266,7 @@ export const ReviewsTab = ({
   summary,
 }: {
   showOwnReviewsLink?: boolean;
-  showOwnPremiumReviewsPreview?: boolean;
+  showPublicReviewsUnavailable?: boolean;
   canReviewProfile: boolean;
   error: unknown;
   hasNextPage: boolean;
@@ -282,7 +282,17 @@ export const ReviewsTab = ({
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3.5 bg-background px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
       {showOwnReviewsLink ? <OwnReviewsLink profileId={profileId} /> : null}
-      {showOwnPremiumReviewsPreview ? null : (
+      {showPublicReviewsUnavailable ? (
+        <ReviewSummaryCard
+          canReviewProfile={false}
+          psychologistId={profileId}
+          summary={{
+            rating_avg: 0,
+            rating_count: 0,
+            distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+          }}
+        />
+      ) : (
         <>
           <ReviewSummaryCard
             canReviewProfile={canReviewProfile}

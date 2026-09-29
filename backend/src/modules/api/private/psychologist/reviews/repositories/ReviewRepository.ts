@@ -157,7 +157,10 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
     return Boolean(profile);
   }
 
-  async index(data: IPsychologistReviewIndexDTO): Promise<PsychologistReviewsResponse> {
+  async index(
+    data: IPsychologistReviewIndexDTO,
+    options: { canReceiveReviews?: boolean } = {},
+  ): Promise<PsychologistReviewsResponse> {
     const pagination = normalizePagination(data.q);
     const periodStart = resolvePeriodStart(data.q.period);
     const where: Prisma.professional_reviewWhereInput = {
@@ -196,8 +199,8 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
 
     return {
       access: {
-        can_receive_reviews: true,
-        mode: "full",
+        can_receive_reviews: options.canReceiveReviews ?? true,
+        mode: options.canReceiveReviews === false ? "preview" : "full",
       },
       data: items.map(toReviewItem),
       summary: {
