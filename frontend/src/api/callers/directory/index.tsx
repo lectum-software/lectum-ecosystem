@@ -28,6 +28,23 @@ export const useDirectoryPsychologists = (
   });
 };
 
+export const useInfiniteDirectoryPsychologists = (
+  query: DirectoryPsychologistsQuery = {},
+  enabled = true,
+) => {
+  return useInfiniteQuery({
+    queryKey: keys.directory.psychologists({ ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) =>
+      api.getDirectoryPsychologists({ ...query, page: pageParam as number }),
+    initialPageParam: query.page ?? 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.pages ? lastPage.page + 1 : undefined,
+    enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
 export const useDirectoryPsychologist = (id: string) => {
   return useQuery({
     queryKey: keys.directory.psychologist(id),

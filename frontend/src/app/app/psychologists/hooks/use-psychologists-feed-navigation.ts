@@ -69,7 +69,7 @@ export const usePsychologistsFeedNavigation = ({
     videoPlaybackRate,
   } = setup;
 
-  const { psychologists, shouldShowVideo } = directory;
+  const { canLoopPsychologistsFeed, psychologists, shouldShowVideo } = directory;
 
   const { markSwipeHintSeen, registerSwipeHintInteraction } = onboarding;
 
@@ -80,6 +80,7 @@ export const usePsychologistsFeedNavigation = ({
   const extendFeedLoopThroughIndex = useCallback(
     (index: number) => {
       const nextCycleCount = getPsychologistsFeedCycleCountForIndex({
+        canLoop: canLoopPsychologistsFeed,
         currentCycleCount: feedLoopCycleCount,
         index,
         psychologistsCount: psychologists.length,
@@ -91,7 +92,7 @@ export const usePsychologistsFeedNavigation = ({
 
       return nextCycleCount;
     },
-    [feedLoopCycleCount, psychologists.length, setFeedLoopCycleCount],
+    [canLoopPsychologistsFeed, feedLoopCycleCount, psychologists.length, setFeedLoopCycleCount],
   );
 
   const scrollFeedContainerToIndex = useCallback(
@@ -127,6 +128,7 @@ export const usePsychologistsFeedNavigation = ({
     const renderedSlideCount = getPsychologistsFeedSlideCount(
       psychologists.length,
       feedLoopCycleCount,
+      canLoopPsychologistsFeed,
     );
     const restoreIndex = resolvePsychologistsFeedReturnIndex(
       snapshot,
@@ -157,6 +159,7 @@ export const usePsychologistsFeedNavigation = ({
 
     return restoreStyles;
   }, [
+    canLoopPsychologistsFeed,
     feedContainerRef,
     feedLoopCycleCount,
     isSearchFocused,
@@ -283,6 +286,7 @@ export const usePsychologistsFeedNavigation = ({
         slideIndex,
         psychologists.length,
         feedLoopCycleCount,
+        canLoopPsychologistsFeed,
       );
 
       extendFeedLoopThroughIndex(nextIndex);
@@ -299,6 +303,7 @@ export const usePsychologistsFeedNavigation = ({
       isSearchFocused,
       markSwipeHintSeen,
       psychologists.length,
+      canLoopPsychologistsFeed,
       setActivePsychologistIndex,
     ],
   );
@@ -312,6 +317,7 @@ export const usePsychologistsFeedNavigation = ({
         index,
         psychologists.length,
         targetCycleCount,
+        canLoopPsychologistsFeed,
       );
 
       if (nextIndex !== activePsychologistIndex) {
@@ -333,6 +339,7 @@ export const usePsychologistsFeedNavigation = ({
     },
     [
       activePsychologistIndex,
+      canLoopPsychologistsFeed,
       extendFeedLoopThroughIndex,
       feedLoopCycleCount,
       markSwipeHintSeen,
