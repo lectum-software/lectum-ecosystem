@@ -7,6 +7,9 @@ import type {
 
 export interface IPsychologistReviewRepository {
   hasProfessionalEntitlement(userId: string): Promise<boolean>;
-  index(data: IPsychologistReviewIndexDTO): Promise<PsychologistReviewsResponse>;
+  index(
+    data: IPsychologistReviewIndexDTO,
+    options?: { canReceiveReviews?: boolean },
+  ): Promise<PsychologistReviewsResponse>;
   respond(data: IPsychologistReviewRespondDTO): Promise<PsychologistReviewResponseResult | null>;
 }

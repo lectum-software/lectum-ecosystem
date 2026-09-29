@@ -88,11 +88,7 @@ export const PsychologistProfileLogic = () => {
   const isViewingLoadedOwnProfile = Boolean(
     currentUser?.id && profile?.id && currentUser.id === profile.id,
   );
-  const showOwnPremiumReviewsPreview = Boolean(
-    currentUser?.role === "psicologo" &&
-      isViewingLoadedOwnProfile &&
-      profile?.reviews_publicly_visible === false,
-  );
+  const shouldHidePublicReviews = profile?.reviews_publicly_visible === false;
   const publications = useInfiniteDirectoryPsychologistPosts(
     id,
     infiniteListQuery,
@@ -101,7 +97,7 @@ export const PsychologistProfileLogic = () => {
   const profileReviews = useInfiniteDirectoryPsychologistReviews(
     id,
     infiniteListQuery,
-    activeTab === "avaliacoes" && Boolean(profile) && !showOwnPremiumReviewsPreview,
+    activeTab === "avaliacoes" && Boolean(profile) && !shouldHidePublicReviews,
   );
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
   const publicationItems = useMemo(
@@ -479,7 +475,11 @@ export const PsychologistProfileLogic = () => {
                     })
                   }
                   publicationCount={firstPublicationPage?.count}
-                  reviewCount={firstReviewPage?.summary.rating_count ?? profile.rating_count}
+                  reviewCount={
+                    shouldHidePublicReviews
+                      ? 0
+                      : (firstReviewPage?.summary.rating_count ?? profile.rating_count)
+                  }
                 />
 
                 <div
@@ -506,8 +506,10 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                   {activeTab === "avaliacoes" ? (
                     <ReviewsTab
-                      showOwnReviewsLink={conversion.isAuthenticated && canEditProfile}
-                      showOwnPremiumReviewsPreview={showOwnPremiumReviewsPreview}
+                      showOwnReviewsLink={
+                        conversion.isAuthenticated && canEditProfile && !shouldHidePublicReviews
+                      }
+                      showPublicReviewsUnavailable={shouldHidePublicReviews}
                       canReviewProfile={canReviewProfile}
                       error={profileReviews.error}
                       hasNextPage={Boolean(profileReviews.hasNextPage)}

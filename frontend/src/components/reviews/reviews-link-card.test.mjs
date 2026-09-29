@@ -60,7 +60,7 @@ test("plano gratuito borra link e desabilita copia mantendo o convite existente"
   assert.match(upgrade, /href="\/app\/profissional\/assinatura"/);
 });
 
-test("perfil exige autenticacao e propriedade; bloco precede resumo e consulta acesso fechado por padrao", () => {
+test("perfil publico gratuito mostra avaliações vazias e nao busca depoimentos privados", () => {
   const profile = readFileSync(
     new URL("../../app/app/psychologist/[id]/psychologist-profile.tsx", import.meta.url),
     "utf8",
@@ -73,21 +73,41 @@ test("perfil exige autenticacao e propriedade; bloco precede resumo e consulta a
     new URL("../../app/app/psychologist/[id]/components/own-reviews-link.tsx", import.meta.url),
     "utf8",
   );
-  assert.ok(profile.includes("showOwnReviewsLink={conversion.isAuthenticated && canEditProfile}"));
-  assert.ok(profile.includes('currentUser?.role === "psicologo" && isViewingOwnProfile'));
-  assert.ok(profile.includes("profile?.reviews_publicly_visible === false"));
   assert.ok(
-    profile.includes(
-      'activeTab === "avaliacoes" && Boolean(profile) && !showOwnPremiumReviewsPreview',
-    ),
+    profile.includes("const shouldHidePublicReviews = profile?.reviews_publicly_visible === false"),
   );
-  assert.ok(profile.includes("showOwnPremiumReviewsPreview={showOwnPremiumReviewsPreview}"));
+  assert.ok(
+    profile.includes('activeTab === "avaliacoes" && Boolean(profile) && !shouldHidePublicReviews'),
+  );
+  assert.ok(profile.includes("showPublicReviewsUnavailable={shouldHidePublicReviews}"));
+  assert.ok(profile.includes("shouldHidePublicReviews\n                      ? 0"));
   const body = tab.slice(tab.indexOf("export const ReviewsTab"));
   assert.ok(body.includes("showOwnReviewsLink = false"));
-  assert.ok(body.includes("showOwnPremiumReviewsPreview = false"));
+  assert.ok(body.includes("showPublicReviewsUnavailable = false"));
   assert.ok(body.indexOf("<OwnReviewsLink") < body.indexOf("<ReviewSummaryCard"));
-  assert.ok(body.includes("showOwnPremiumReviewsPreview ? null :"));
+  assert.ok(body.includes("showPublicReviewsUnavailable ? ("));
+  assert.ok(body.includes("rating_count: 0"));
   assert.ok(owner.includes('reviews.data?.access.mode !== "full"'));
   assert.ok(owner.includes("reviews.data?.access.can_receive_reviews !== true"));
   assert.ok(owner.includes("reviews.isError ||"));
+});
+
+test("minhas avaliações em preview mantém resumo e depoimentos com aviso de upgrade", () => {
+  const ownerReviews = readFileSync(
+    new URL("../../app/app/professional/reviews/logic.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(ownerReviews.includes("const displayItems = items;"));
+  assert.ok(
+    ownerReviews.includes(
+      "const hasReceivedReviews = summaryTotal(data?.summary) > 0 || displayItems.length > 0;",
+    ),
+  );
+  assert.ok(ownerReviews.includes("<RatingSummary summary={data?.summary} />"));
+  assert.ok(ownerReviews.includes('title="Avaliações ocultas no perfil público"'));
+  assert.ok(ownerReviews.includes("não estão visíveis para pacientes"));
+  assert.ok(ownerReviews.includes('href="/app/profissional/assinatura"'));
+  assert.ok(ownerReviews.includes(">Fazer upgrade</Link>"));
+  assert.ok(ownerReviews.includes("canRespond={canReceiveReviews}"));
+  assert.ok(ownerReviews.includes("if (!canRespond) return null;"));
 });
