@@ -52,6 +52,7 @@ test("controle real é botão não submit, PT-BR, altura mobile e desabilitado s
   assert.match(html, /type="button"/);
   assert.match(html, /disabled=""/);
   assert.match(html, /Escolher vídeo pelos arquivos/);
+  assert.match(html, /Não conseguimos ler este vídeo pela galeria/);
   assert.match(html, /Seu texto será mantido/);
   assert.match(html, /min-h-11/);
   assert.doesNotMatch(html, /<input/);

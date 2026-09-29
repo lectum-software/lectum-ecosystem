@@ -21,7 +21,7 @@ export class VideoPreparationFailure extends Error {
       code === "storage_full"
         ? "Não há espaço disponível para preparar o vídeo. Libere espaço no aparelho e tente novamente."
         : code === "read_failed"
-          ? "Não foi possível ler o vídeo selecionado. Selecione-o novamente e tente enviar."
+          ? "Não conseguimos ler este vídeo pela galeria. Abra pelos arquivos para enviar."
           : "Não foi possível preparar o vídeo neste navegador. Tente novamente.",
     );
     this.name = "VideoPreparationFailure";

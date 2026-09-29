@@ -68,7 +68,7 @@ export class VideoUploadFailure extends Error {
   ) {
     super(
       transport?.source === "failed"
-        ? "Não foi possível ler o vídeo selecionado. Selecione-o novamente e tente enviar."
+        ? "Não conseguimos ler este vídeo pela galeria. Abra pelos arquivos para enviar."
         : reason === "processing_timeout"
           ? "O vídeo ainda está sendo processado. Tente novamente em instantes."
           : reason === "processing"

@@ -40,6 +40,7 @@ import {
   resolveApiError,
   submitProfileSetupForm,
 } from "../modules/profile-setup-support";
+import { openProfileVideoInput } from "../modules/profile-video-file-picker";
 import {
   type AcademicFormationForm,
   type FreeProfileForm,
@@ -542,7 +543,7 @@ export const useProfessionalProfileSetupController = () => {
     persistProfileVideoTipSeen();
     setShowProfileVideoTip(false);
     setVideoActionsOpen(false);
-    videoInputRef.current?.click();
+    openProfileVideoInput(videoInputRef.current);
   };
 
   const openVideoCoverFilePicker = () => {
@@ -584,7 +585,7 @@ export const useProfessionalProfileSetupController = () => {
     hasShownProfileVideoTipThisVisitRef.current = true;
     persistProfileVideoTipSeen();
     setShowProfileVideoTip(false);
-    videoInputRef.current?.click();
+    openProfileVideoInput(videoInputRef.current);
   };
 
   const submit = form.hook.handleSubmit(
@@ -669,6 +670,7 @@ export const useProfessionalProfileSetupController = () => {
     setCoverImageActionsOpen,
     setFailedCoverImageUrl,
     setShowProfileVideoTip,
+    setVideoActionsOpen,
     setVideoRemovalConfirmOpen,
     showInactiveProfileBanner,
     showHiddenProfileBanner,
@@ -692,7 +694,6 @@ export const useProfessionalProfileSetupController = () => {
     whatsappUrl,
   };
 };
-
 export type ProfessionalProfileSetupController = ReturnType<
   typeof useProfessionalProfileSetupController
 >;

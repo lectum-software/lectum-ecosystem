@@ -98,7 +98,7 @@ describe("leitura real por partes sem alterar os bytes", () => {
       source: "failed",
       sourceFailure: "unreadable",
     });
-    assert.match(failure.message, /ler o vídeo selecionado/);
+    assert.match(failure.message, /ler este vídeo pela galeria/);
     assert.equal(failure.reason, "transport");
     assert.equal(failure.cause, undefined);
     assert.equal(tusRequestMethod(null), "unknown");

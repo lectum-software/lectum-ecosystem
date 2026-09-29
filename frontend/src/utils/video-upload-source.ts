@@ -10,7 +10,7 @@ export class VideoSourceFailure extends Error {
   readonly code: VideoSourceFailureCode;
 
   constructor(code: VideoSourceFailureCode) {
-    super("Não foi possível ler o vídeo selecionado. Selecione-o novamente e tente enviar.");
+    super("Não conseguimos ler este vídeo pela galeria. Abra pelos arquivos para enviar.");
     this.name = "VideoSourceFailure";
     this.code = code;
   }

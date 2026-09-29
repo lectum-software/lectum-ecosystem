@@ -8,6 +8,7 @@ import { prepareUpload } from "@/utils/media-preparation";
 import { resolveMediaUploadError } from "@/utils/media-upload-error";
 import { isAllowedProfileVideo } from "@/utils/profile-video-upload";
 import { isMediaUploadCanceled, throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
+import { isVideoSourceReadFailure } from "@/utils/video-upload-diagnostics";
 
 export type ProfileVideoUploadPhase = "preparing" | "uploading";
 
@@ -24,6 +25,7 @@ export const useProfileVideoUpload = ({
   const mountedRef = useRef(true);
   const [videoUploadPhase, setVideoUploadPhase] = useState<ProfileVideoUploadPhase | null>(null);
   const [videoUploadProgress, setVideoUploadProgress] = useState<number | null>(null);
+  const [videoNeedsReadableFile, setVideoNeedsReadableFile] = useState(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -69,6 +71,7 @@ export const useProfileVideoUpload = ({
       } catch (error) {
         if (isMediaUploadCanceled(error)) return;
         if (!uploadStarted) {
+          if (isVideoSourceReadFailure(error)) setVideoNeedsReadableFile(true);
           toast.error(resolveMediaUploadError(error));
         }
         // Erros após o início do transporte usam a mensagem pública centralizada da mutation.
@@ -91,6 +94,7 @@ export const useProfileVideoUpload = ({
 
       if (!file || activeControllerRef.current) return;
       onFileSelected();
+      setVideoNeedsReadableFile(false);
 
       if (!isAllowedProfileVideo(file)) {
         toast.error("Envie um vídeo MP4, MOV ou WebM.");
@@ -116,5 +120,7 @@ export const useProfileVideoUpload = ({
     videoUploadBusy: videoUploadPhase !== null,
     videoUploadPhase,
     videoUploadProgress,
+    videoNeedsReadableFile,
+    setVideoNeedsReadableFile,
   };
 };

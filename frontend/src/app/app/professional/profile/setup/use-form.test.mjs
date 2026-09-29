@@ -185,6 +185,39 @@ test("pickers mantêm os mesmos inputs/handlers, ocultos como nos controles de m
   ]);
 });
 
+test("vídeo de apresentação oferece recuperação por arquivos após falha de leitura da galeria", () => {
+  const view = readFileSync(
+    new URL("views/professional-profile-setup.tsx", import.meta.url),
+    "utf8",
+  );
+  const controller = readFileSync(
+    new URL("hooks/use-professional-profile-setup-controller.tsx", import.meta.url),
+    "utf8",
+  );
+  const recovery = readFileSync(
+    new URL("components/profile-video-read-recovery.tsx", import.meta.url),
+    "utf8",
+  );
+  const picker = readFileSync(
+    new URL("modules/profile-video-file-picker.ts", import.meta.url),
+    "utf8",
+  );
+  const uploadHook = readFileSync(
+    new URL("hooks/use-profile-video-upload.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(uploadHook, /isVideoSourceReadFailure\(error\)/u);
+  assert.match(uploadHook, /setVideoNeedsReadableFile\(true\)/u);
+  assert.match(view, /<ProfileVideoReadRecovery/u);
+  assert.match(recovery, /<VideoFileReadRecovery/u);
+  assert.match(recovery, /fileInputRef=\{fileInputRef\}/u);
+  assert.match(picker, /const PROFILE_VIDEO_ACCEPT = "video\/mp4,video\/webm,video\/quicktime"/u);
+  assert.match(picker, /input\.accept = PROFILE_VIDEO_ACCEPT/u);
+  assert.match(picker, /input\.value = "";\s*input\.click\(\)/u);
+  assert.match(controller, /openProfileVideoInput\(videoInputRef\.current\)/u);
+});
+
 test("campos de filtros do perfil abrem selecao em modal com busca e conclusao explicita", () => {
   const catalogFields = readFileSync(
     new URL("components/catalog-fields.tsx", import.meta.url),
