@@ -17,7 +17,8 @@ export function VideoFileReadRecovery({
   return (
     <div className="grid min-w-0 gap-2">
       <p className="text-xs leading-5 text-muted">
-        Escolha o vídeo pelo seletor de arquivos do aparelho. Seu texto será mantido.
+        Não conseguimos ler este vídeo pela galeria. Abra pelos arquivos e selecione o vídeo por lá.
+        Seu texto será mantido.
       </p>
       <Button
         className="h-auto min-h-11 w-full whitespace-normal px-3 py-2"

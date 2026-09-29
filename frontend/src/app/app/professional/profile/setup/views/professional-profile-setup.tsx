@@ -36,6 +36,7 @@ import {
   SectionCard,
   VideoRemovalConfirmationModal,
 } from "../components/profile-setup-shell";
+import { ProfileVideoReadRecovery } from "../components/profile-video-read-recovery";
 import { ProfileVideoUploadProgress } from "../components/profile-video-upload-progress";
 import { useProfessionalProfileSetupController } from "../hooks/use-professional-profile-setup-controller";
 import {
@@ -90,6 +91,8 @@ export const ProfessionalProfileSetupLogic = () => {
     setArrayValue,
     setCatalogValue,
     setShowProfileVideoTip,
+    setVideoActionsOpen,
+    setVideoNeedsReadableFile,
     specialtyIdsError,
     setVideoRemovalConfirmOpen,
     showHiddenProfileBanner,
@@ -103,6 +106,7 @@ export const ProfessionalProfileSetupLogic = () => {
     videoCoverInputRef,
     videoCoverSrc,
     videoInputRef,
+    videoNeedsReadableFile,
     videoRemovalConfirmOpen,
     videoSrc,
     videoUploadLimitMb,
@@ -147,16 +151,11 @@ export const ProfessionalProfileSetupLogic = () => {
           rightActionLabel="Visualizar perfil público"
           title="Editar perfil"
         />
-
         {showHiddenProfileBanner ? <ProfileHiddenBanner /> : null}
         {showInactiveProfileBanner ? <ProfileInactiveBanner /> : null}
-
         <ProfileImagesPreview controller={controller} />
-
         <AvatarEditor controller={controller} />
-
         {profile.isLoading ? <LoadingState label="Carregando perfil profissional" /> : null}
-
         {profile.isError ? (
           <InlineAlert title="Não foi possível carregar o perfil" variant="error">
             {resolveApiError(profile.error)}
@@ -203,7 +202,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 </div>
               </div>
             </SectionCard>
-
             <SectionCard icon={BookOpen} title="Apresentação">
               <div className="grid gap-4">
                 {renderField("headline")}
@@ -224,7 +222,6 @@ export const ProfessionalProfileSetupLogic = () => {
                           </p>
                         </div>
                       </div>
-
                       <div className="relative shrink-0">
                         <button
                           aria-expanded={videoActionsOpen}
@@ -240,7 +237,6 @@ export const ProfessionalProfileSetupLogic = () => {
                         >
                           <PencilLine className="h-4 w-4" aria-hidden="true" />
                         </button>
-
                         {videoActionsOpen ? (
                           <div
                             className="absolute right-0 top-11 z-20 w-64 overflow-hidden rounded-2xl border border-border bg-surface text-left shadow-[var(--lectum-shadow-soft)]"
@@ -290,14 +286,12 @@ export const ProfessionalProfileSetupLogic = () => {
                         ) : null}
                       </div>
                     </div>
-
                     <p className="mt-3 w-full text-xs leading-5 text-muted">
                       {videoUploadLimitMb
                         ? `Envie um vídeo vertical de até ${videoUploadLimitMb}MB. `
                         : "Envie um vídeo vertical. "}
                       Ele é obrigatório para publicar o perfil e aparecer na área pública da Lectum.
                     </p>
-
                     {videoUploadPhase ? (
                       <ProfileVideoUploadProgress
                         onCancel={cancelVideoUpload}
@@ -305,7 +299,17 @@ export const ProfessionalProfileSetupLogic = () => {
                         progress={videoUploadProgress}
                       />
                     ) : null}
-
+                    {videoNeedsReadableFile ? (
+                      <ProfileVideoReadRecovery
+                        disabled={videoUploadBusy}
+                        fileInputRef={videoInputRef}
+                        onCloseGuidance={() => {
+                          setShowProfileVideoTip(false);
+                          setVideoActionsOpen(false);
+                        }}
+                        onDiscard={() => setVideoNeedsReadableFile(false)}
+                      />
+                    ) : null}
                     {videoSrc ? (
                       <VerticalVideoPlayer
                         className="mt-4 w-full rounded-2xl md:mx-auto md:max-w-[390px] md:rounded-[22px] lg:max-w-[300px]"
@@ -342,7 +346,6 @@ export const ProfessionalProfileSetupLogic = () => {
                         </span>
                       </button>
                     )}
-
                     <input
                       accept="video/mp4,video/webm,video/quicktime"
                       className="hidden"
@@ -382,7 +385,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 )}
               </div>
             </SectionCard>
-
             <SectionCard icon={Filter} title="Filtros">
               <div className="grid gap-6">
                 <CatalogTagField
@@ -509,7 +511,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 </div>
               </div>
             </SectionCard>
-
             <SectionCard icon={GraduationCap} title="Formação Acadêmica">
               <div className="grid gap-4">
                 {academicFormations.fields.map((field, index) => (
@@ -566,7 +567,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 </button>
               </div>
             </SectionCard>
-
             <SectionCard icon={MapPin} title="Atendimento">
               <div className="grid gap-5">
                 {renderField("modality")}
@@ -580,7 +580,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 />
               </div>
             </SectionCard>
-
             <SectionCard icon={MapPin} title="Endereço Profissional">
               <div className="grid gap-4">
                 {renderField("address_street")}
@@ -616,7 +615,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 </p>
               </div>
             </SectionCard>
-
             <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
               <div
                 className={cn(
@@ -674,7 +672,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 </button>
               </div>
             </section>
-
             <div className="sticky bottom-4 z-10 rounded-full bg-surface/90 p-2 shadow-[var(--lectum-shadow-soft)] backdrop-blur">
               <Button
                 className="h-14 w-full rounded-full text-base"
