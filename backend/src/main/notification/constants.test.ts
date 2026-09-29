@@ -43,4 +43,16 @@ describe("notification push messages", () => {
     assert.equal(content.title, "Aviso final de cobrança");
     assert.equal(content.body.includes("Gratuito"), true);
   });
+
+  it("resolve conteudo de podio top mentor com comunidade", () => {
+    const content = messages.top_mentor_podium({
+      community_name: "Ansiedade em Equilíbrio",
+    });
+
+    assert.equal(content.title, "Você entrou no Top Mentores");
+    assert.equal(
+      content.body,
+      "Seu apoio se destacou na comunidade Ansiedade em Equilíbrio. Veja sua posição no ranking.",
+    );
+  });
 });

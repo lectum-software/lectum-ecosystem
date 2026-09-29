@@ -168,7 +168,7 @@ test("mutação pendente desabilita switches e seletor para preservar a edição
       }),
     );
     const switches = [...html.matchAll(/<button\b[^>]*role="switch"[^>]*>/g)];
-    assert.equal(switches.length, 4);
+    assert.equal(switches.length, 5);
     for (const [control] of switches) assert.match(control, /disabled=""/);
     const select = html.match(/<button\b[^>]*role="combobox"[^>]*>/)?.[0];
     assert.match(select ?? "missing", /disabled=""/);

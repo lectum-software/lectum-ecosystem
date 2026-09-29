@@ -542,6 +542,10 @@
       "title": "Conteúdo salvo",
       "body": "Seu conteúdo foi salvo por um novo usuário. Clique para ver."
     },
+    "top_mentor_podium": {
+      "title": "Você entrou no Top Mentores",
+      "body": "Seu apoio se destacou na comunidade {{community_name}}. Veja sua posição no ranking."
+    },
     "billing_subscription_status": {
       "payment_failed": {
         "title": "Pagamento da assinatura pendente",

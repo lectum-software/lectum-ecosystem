@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { notifyCommunityTopMentorPodium } from "@/main/notification/community-top-mentors";
 import { getCommunityMentorWhatsappClickCounts } from "@/utils/community-mentor-ranking";
 import { compareCommunityMentorIdentity } from "@/utils/community-mentor-tiebreak";
 import { getProfessionalWhatsappDisplayName } from "@/utils/professional-name";
@@ -617,6 +618,12 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
           removed_posts_penalty: item.metrics.removed_posts_penalty,
         },
       };
+    });
+
+    await notifyCommunityTopMentorPodium({
+      community: community ? toCommunityResponse(community) : null,
+      items,
+      periodKey: period.key,
     });
 
     return {
