@@ -437,6 +437,7 @@ export const ProfessionalProfileSetupLogic = () => {
                   title="Serviços"
                 />
                 <CatalogTagField
+                  description="Selecione os públicos que você atende."
                   error={targetAudienceError}
                   items={orderedTargetAudienceOptions}
                   name="target_audience"
