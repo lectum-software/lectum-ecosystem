@@ -135,7 +135,7 @@ export const PublicationsActivitySummary = ({
       {hasParticipationCommunities ? (
         <div className="grid gap-2.5">
           <p className="px-1 text-[13px] font-extrabold leading-none text-foreground">
-            Participa em:
+            Publica em:
           </p>
           <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-center sm:gap-4">
             {participationCommunities.map((community) => (
