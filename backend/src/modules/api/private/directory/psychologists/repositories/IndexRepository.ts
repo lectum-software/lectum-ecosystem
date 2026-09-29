@@ -449,6 +449,7 @@ export class IndexRepository implements IIndexRepository {
           subscription: item.subscriptions[0] ?? null,
           hasProfessionalEntitlement: item.subscriptions.length > 0,
         });
+        const reviewsPubliclyVisible = item.subscriptions.length > 0;
 
         return {
           id: item.user.id,
@@ -463,8 +464,9 @@ export class IndexRepository implements IIndexRepository {
           gender: item.gender,
           modality: item.modality,
           languages: normalizeLanguages(item.languages),
-          rating_avg: item.rating_avg,
-          rating_count: item.rating_count,
+          rating_avg: reviewsPubliclyVisible ? item.rating_avg : 0,
+          rating_count: reviewsPubliclyVisible ? item.rating_count : 0,
+          reviews_publicly_visible: reviewsPubliclyVisible,
           verified: isVerifiedProfessionalEntitlement(item),
           available_today: hasAvailableToday(item.available_days),
           formation_years: crpExperienceYears(item.crp_registration_date),

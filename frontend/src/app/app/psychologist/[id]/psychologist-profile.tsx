@@ -85,6 +85,14 @@ export const PsychologistProfileLogic = () => {
   });
   const profile = profileQuery.data;
   const loadedProfileId = profile?.id;
+  const isViewingLoadedOwnProfile = Boolean(
+    currentUser?.id && profile?.id && currentUser.id === profile.id,
+  );
+  const showOwnPremiumReviewsPreview = Boolean(
+    currentUser?.role === "psicologo" &&
+      isViewingLoadedOwnProfile &&
+      profile?.reviews_publicly_visible === false,
+  );
   const publications = useInfiniteDirectoryPsychologistPosts(
     id,
     infiniteListQuery,
@@ -93,7 +101,7 @@ export const PsychologistProfileLogic = () => {
   const profileReviews = useInfiniteDirectoryPsychologistReviews(
     id,
     infiniteListQuery,
-    activeTab === "avaliacoes" && Boolean(profile),
+    activeTab === "avaliacoes" && Boolean(profile) && !showOwnPremiumReviewsPreview,
   );
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
   const publicationItems = useMemo(
@@ -384,9 +392,7 @@ export const PsychologistProfileLogic = () => {
     profileQuery.isError && !showInactiveOwnProfileState
       ? resolveErrorMessage(profileQuery.error, "Não foi possível carregar o perfil profissional.")
       : null;
-  const isViewingOwnProfile = Boolean(
-    currentUser?.id && profile?.id && currentUser.id === profile.id,
-  );
+  const isViewingOwnProfile = isViewingLoadedOwnProfile;
   const canEditProfile = currentUser?.role === "psicologo" && isViewingOwnProfile;
   const canInteractWithPosts = Boolean(currentUser?.id);
   const canReviewProfile = !isViewingOwnProfile;
@@ -501,6 +507,7 @@ export const PsychologistProfileLogic = () => {
                   {activeTab === "avaliacoes" ? (
                     <ReviewsTab
                       showOwnReviewsLink={conversion.isAuthenticated && canEditProfile}
+                      showOwnPremiumReviewsPreview={showOwnPremiumReviewsPreview}
                       canReviewProfile={canReviewProfile}
                       error={profileReviews.error}
                       hasNextPage={Boolean(profileReviews.hasNextPage)}
