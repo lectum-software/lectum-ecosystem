@@ -10,6 +10,7 @@ import type {
 } from "@/api/generator/types/directory";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { MentorBadge } from "@/components/community/mentor-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -93,7 +94,14 @@ export const PublicationParticipationCommunity = ({
     data-participation-community="true"
     href={`/comunidades/${community.slug}`}
   >
-    <PublicationCommunityAvatar community={community} />
+    <span className="relative flex h-[72px] w-[72px] shrink-0 justify-center">
+      <PublicationCommunityAvatar community={community} />
+      {community.badge ? (
+        <span className="absolute -bottom-1 -right-2 flex">
+          <MentorBadge badge={community.badge} size="avatar" />
+        </span>
+      ) : null}
+    </span>
     <span className="mt-2 line-clamp-2 w-full max-w-[98px] text-center text-[12px] font-extrabold leading-[1.18] text-muted transition group-hover:text-foreground sm:max-w-[106px]">
       {community.name}
     </span>
@@ -134,7 +142,7 @@ export const PublicationsActivitySummary = ({
     >
       {hasParticipationCommunities ? (
         <div className="grid gap-2.5">
-          <p className="px-1 text-[13px] font-extrabold leading-none text-foreground">
+          <p className="px-1 text-[13px] font-extrabold leading-none text-muted">
             Publica em:
           </p>
           <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-center sm:gap-4">
