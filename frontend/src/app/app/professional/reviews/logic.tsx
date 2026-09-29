@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageSquareReply, RefreshCcw, Star, UserRound } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   usePsychologistReviews,
@@ -266,9 +267,16 @@ export const ProfessionalReviewsLogic = () => {
 
         {!reviews.isLoading && !shouldShowError && isReviewsPreview && hasReceivedReviews ? (
           <InlineAlert title="Avaliações ocultas no perfil público" variant="warning">
-            Suas avaliações continuam salvas aqui, mas não estão visíveis para pacientes no seu
-            perfil público. Para torná-las públicas novamente, faça o upgrade para o Plano
-            Profissional.
+            <div className="grid gap-3">
+              <p>
+                Suas avaliações continuam salvas aqui, mas não estão visíveis para pacientes no seu
+                perfil público. Para torná-las públicas novamente, faça o upgrade para o Plano
+                Profissional.
+              </p>
+              <Button asChild className="h-10 w-full rounded-full sm:w-fit sm:px-5">
+                <Link href="/app/profissional/assinatura">Fazer upgrade</Link>
+              </Button>
+            </div>
           </InlineAlert>
         ) : null}
 

@@ -106,6 +106,8 @@ test("minhas avaliações em preview mantém resumo e depoimentos com aviso de u
   assert.ok(ownerReviews.includes("<RatingSummary summary={data?.summary} />"));
   assert.ok(ownerReviews.includes('title="Avaliações ocultas no perfil público"'));
   assert.ok(ownerReviews.includes("não estão visíveis para pacientes"));
+  assert.ok(ownerReviews.includes('href="/app/profissional/assinatura"'));
+  assert.ok(ownerReviews.includes(">Fazer upgrade</Link>"));
   assert.ok(ownerReviews.includes("canRespond={canReceiveReviews}"));
   assert.ok(ownerReviews.includes("if (!canRespond) return null;"));
 });
