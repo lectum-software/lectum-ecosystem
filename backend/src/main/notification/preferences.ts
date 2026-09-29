@@ -11,6 +11,7 @@ export const NOTIFICATION_MESSAGE_KEYS = [
   "downvote",
   "compartilhamento",
   "salvamento",
+  "top_mentor_podium",
   "billing_subscription_status",
   "admin_campaign",
 ] as const;

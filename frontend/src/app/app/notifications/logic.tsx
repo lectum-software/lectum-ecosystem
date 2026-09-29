@@ -110,6 +110,12 @@ const LABELS: Record<string, NotificationView> = {
     icon: Bookmark,
     tone: NOTIFICATION_ICON_TONE,
   },
+  top_mentor_podium: {
+    title: "Você entrou no Top Mentores",
+    description: "Veja sua posição no ranking da comunidade.",
+    icon: Star,
+    tone: NOTIFICATION_ICON_TONE,
+  },
   billing_subscription_status: {
     title: "Atualização da sua assinatura",
     description: "Acompanhe a regularização do pagamento.",
@@ -148,10 +154,31 @@ const getStringProp = (value: unknown, key: string) => {
   return typeof prop === "string" ? prop : undefined;
 };
 
+const getNumberProp = (value: unknown, key: string) => {
+  if (!isRecord(value)) return undefined;
+
+  const prop = value[key];
+  return typeof prop === "number" && Number.isFinite(prop) ? prop : undefined;
+};
+
 const getDisplayStringProp = (value: unknown, key: string) => {
   const prop = getStringProp(value, key)?.trim().replace(/\s+/g, " ");
 
   return prop ? prop.slice(0, 80) : undefined;
+};
+
+const topMentorPositionLabel = (position?: number) => {
+  if (position === 1) return "1º lugar";
+  if (position === 2) return "2º lugar";
+  if (position === 3) return "3º lugar";
+  return "Top Mentores";
+};
+
+const topMentorMedalSrc = (position?: number) => {
+  if (position === 1) return "/images/community/top-mentor/gold.svg?v=ribbons-2";
+  if (position === 2) return "/images/community/top-mentor/silver.svg?v=ribbons-2";
+  if (position === 3) return "/images/community/top-mentor/bronze.svg?v=ribbons-2";
+  return null;
 };
 
 const getInitials = (name?: string | null) => {
@@ -228,6 +255,15 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
     );
   }
 
+  if (item.message_key === "top_mentor_podium") {
+    const communityName = getDisplayStringProp(item.message_props, "community_name");
+    const position = getNumberProp(item.message_props, "position");
+
+    return communityName
+      ? `Você chegou ao ${topMentorPositionLabel(position)} em ${communityName}.`
+      : "Você entrou no Top Mentores.";
+  }
+
   return view.title;
 };
 
@@ -268,18 +304,27 @@ const groupNotifications = (items: NotificationItem[]) => {
 
 type NotificationVisualProps = {
   actor?: NotificationActor | null;
+  item: NotificationItem;
   view: NotificationView;
 };
 
-const NotificationVisual = ({ actor, view }: NotificationVisualProps) => {
+const NotificationVisual = ({ actor, item, view }: NotificationVisualProps) => {
   const Icon = view.icon;
+  const medalSrc =
+    item.message_key === "top_mentor_podium"
+      ? topMentorMedalSrc(getNumberProp(item.message_props, "position"))
+      : null;
 
   if (!actor) {
     return (
       <span
         className={cn("mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl", view.tone)}
       >
-        <Icon className="h-5 w-5" aria-hidden={true} />
+        {medalSrc ? (
+          <Image alt="" height={34} src={medalSrc} width={28} />
+        ) : (
+          <Icon className="h-5 w-5" aria-hidden={true} />
+        )}
       </span>
     );
   }
@@ -421,7 +466,7 @@ export const NotificationsLogic = () => {
     };
     const content = (
       <>
-        <NotificationVisual actor={item.actor} view={view} />
+        <NotificationVisual actor={item.actor} item={item} view={view} />
 
         <span className="min-w-0 flex-1 border-b border-border/70 pb-4">
           <span className="flex items-start justify-between gap-3">

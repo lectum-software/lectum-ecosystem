@@ -91,6 +91,12 @@ export const messages = {
       body: resolve("notification.salvamento.body", data),
     };
   },
+  top_mentor_podium: (data: Record<string, unknown>) => {
+    return {
+      title: resolve("notification.top_mentor_podium.title", data),
+      body: resolve("notification.top_mentor_podium.body", data),
+    };
+  },
   billing_subscription_status: (data: Record<string, unknown>) => {
     const stage = resolveBillingNoticeStage(data);
 

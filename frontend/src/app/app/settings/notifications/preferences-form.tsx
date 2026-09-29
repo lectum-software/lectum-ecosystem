@@ -7,6 +7,7 @@ import {
   CreditCard,
   Eye,
   Heart,
+  Medal,
   MessageSquare,
   Newspaper,
   Share2,
@@ -38,6 +39,7 @@ type NotificationCategory = {
     | "upvote"
     | "compartilhamento"
     | "salvamento"
+    | "top_mentor_podium"
     | "billing_subscription_status";
   label: string;
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
@@ -98,6 +100,11 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
         key: "compartilhamento",
         label: "Novos compartilhamentos",
         icon: Share2,
+      },
+      {
+        key: "top_mentor_podium",
+        label: "Top Mentores",
+        icon: Medal,
       },
     ],
   },
@@ -194,6 +201,7 @@ export const notificationSettingsSchema = z.object({
   upvote__enabled: z.boolean(),
   compartilhamento__enabled: z.boolean(),
   salvamento__enabled: z.boolean(),
+  top_mentor_podium__enabled: z.boolean(),
   billing_subscription_status__enabled: z.boolean(),
   novo_post__post_author_scope: z.enum([
     "patients_only",
