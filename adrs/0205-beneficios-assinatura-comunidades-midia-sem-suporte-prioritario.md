@@ -95,3 +95,29 @@ com midia` e `Estatisticas de perfil`.
 - `pnpm check:version`
 - Script local de validacao estatica confirmou os novos textos e a ausencia de `Servicos profissionais ilimitados` no bloco do Plano Gratuito.
 - Browser local: tentativa de subir `next start` em background para smoke local foi bloqueada pela politica do shell; sem sessao autenticada real disponivel neste ambiente, a validacao visual autenticada ficou coberta por build e inspecao estatica da lista renderizada.
+
+## Atualizacao em 2026-09-29: copy comercial e popover do video social
+
+### Contexto
+
+O produto refinou a linguagem dos beneficios dos planos para ficar mais clara para psicologos que ainda nao conhecem a Lectum. O beneficio de video personalizado para redes sociais precisava deixar explicito que nao se trata do video de apresentacao do perfil, mas da arte gerada automaticamente a partir de respostas em video nas comunidades.
+
+### Decisao
+
+- Plano Gratuito passa a listar somente beneficios incluidos: perfil profissional, WhatsApp para contatos, respostas por texto nas comunidades, ate 3 especialidades e 1 servico profissional.
+- Plano Profissional passa a listar: perfil com selo de verificado, WhatsApp, avaliacoes de pacientes, prioridade na busca por psicologos, respostas com video/imagem/texto, transformacao das respostas em video em conteudos para redes sociais, Top Mentor, ate 10 especialidades, todos os servicos e estatisticas com cliques gerados para WhatsApp.
+- O beneficio de redes sociais recebe um popover explicativo com imagem de exemplo fornecida pelo produto, renderizada via `next/image` como asset estatico do frontend.
+- Nao alterar entitlement, regra de upload/video, checkout, gateway, API, schema Prisma, env ou pacote.
+
+### Consequencias
+
+- A proposta de valor fica mais comercial e menos tecnica, com melhor separacao entre plano gratuito e profissional.
+- O popover reduz ambiguidade do beneficio de video social sem criar uma nova funcionalidade.
+- O rollout e somente frontend, sem ordem especial entre apps e reversivel por revert do commit.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/plans/logic.tsx src/app/app/professional/billing/subscription/logic.tsx`
+- `pnpm --dir frontend exec tsc --noEmit --pretty false`
+- `pnpm --dir frontend build`
+- `pnpm --dir frontend check`

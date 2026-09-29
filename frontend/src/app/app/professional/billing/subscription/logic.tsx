@@ -53,25 +53,29 @@ const professionalBenefitGroups: BenefitGroup[] = [
   {
     icon: ShieldCheck,
     title: "Mais credibilidade",
-    items: ["Perfil profissional verificado", "Receba avaliações e depoimentos"],
+    items: [
+      "Crie seu perfil profissional com selo de verificado",
+      "Receba avaliações e depoimentos de pacientes",
+    ],
   },
   {
     icon: Search,
     title: "Mais visibilidade",
     items: [
-      "Prioridade na busca de pacientes",
-      "Respostas com vídeo nas postagens",
-      "Vídeo personalizado para Instagram e redes sociais",
-      "Elegível ao Top Mentor",
+      "Cadastre seu WhatsApp para receber contatos",
+      "Tenha prioridade na busca por psicólogos",
+      "Responda postagens das comunidades com vídeo, imagem e texto",
+      "Transforme suas respostas em vídeo em conteúdos para redes sociais",
+      "Possibilidade de aparecer como Top Mentor nas comunidades",
     ],
   },
   {
     icon: BarChart3,
     title: "Mais recursos para seu perfil",
     items: [
-      "Até 10 especialidades",
-      "Serviços profissionais ilimitados",
-      "Analytics do seu perfil",
+      "Cadastre até 10 especialidades",
+      "Cadastre todos os serviços que você oferece",
+      "Estatísticas do seu perfil, como cliques gerados para WhatsApp",
     ],
   },
 ];

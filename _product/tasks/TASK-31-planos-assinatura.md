@@ -308,3 +308,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A tela de escolha de planos e a tela `Minha assinatura` foram alinhadas para comunicar o benefício como exclusivo do psicólogo assinante, preservando a regra já existente de vídeo apenas para assinantes.
 - Impacto de deploy: alteração apenas de copy/UI no frontend; sem migrations, sem novas variáveis de ambiente, sem alteração de contrato e com rollback por revert do commit.
 - Validação executada: `pnpm --dir frontend exec biome check src/app/app/professional/billing/plans/logic.tsx src/app/app/professional/billing/subscription/logic.tsx` passou. `pnpm --dir frontend check` foi tentado e permanece bloqueado por lint/formatação preexistentes em `post-content.tsx`, `saved-reply-card.tsx`, `community-post-card-reply-preview.tsx` e `mentor-author-ranking.test.mjs`, sem relação com esta alteração de copy.
+
+## Ajuste complementar em 2026-09-29 - beneficios comerciais e popover do video social
+
+- Pedido direto de produto: refinar os beneficios dos planos com textos mais orientados a psicologos leigos e remover comparacao negativa no Plano Gratuito.
+- Plano Gratuito agora lista apenas beneficios incluidos: perfil profissional, WhatsApp para contatos, respostas por texto nas comunidades, ate 3 especialidades e 1 servico profissional.
+- Plano Profissional agora destaca selo de verificado, WhatsApp, avaliacoes de pacientes, prioridade na busca por psicologos, respostas com video/imagem/texto, transformacao das respostas em video para redes sociais, Top Mentor, ate 10 especialidades, todos os servicos e estatisticas com cliques para WhatsApp.
+- O beneficio de redes sociais ganhou popover explicativo com a imagem de exemplo fornecida pelo produto, salva como asset estatico do frontend, usando `next/image`.
+- Escopo restrito a copy/UI no frontend; nenhuma funcionalidade, entitlement, regra de video, checkout, API, schema Prisma, env ou package foi alterado.
+- Impacto de deploy: compativel com versoes diferentes de frontend/backend, sem ordem especial, sem backfill e rollback por reversao do commit.
+- Validacao executada: `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/plans/logic.tsx src/app/app/professional/billing/subscription/logic.tsx`, `pnpm --dir frontend exec tsc --noEmit --pretty false`, `pnpm --dir frontend build` e `pnpm --dir frontend check` passaram localmente.
+- ADR atualizado: `adrs/0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md`.
