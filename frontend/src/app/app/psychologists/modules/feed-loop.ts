@@ -12,7 +12,9 @@ export type PsychologistFeedSlide = {
 export const getPsychologistsFeedLoopCycleCount = (
   psychologistsCount: number,
   loopCycleCount: number,
+  canLoop = true,
 ) => {
+  if (!canLoop) return psychologistsCount > 0 ? 1 : 0;
   if (psychologistsCount <= 1) return 1;
 
   return Math.max(PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES, Math.ceil(loopCycleCount));
@@ -22,11 +24,14 @@ export const getPsychologistsFeedCycleCountForIndex = ({
   currentCycleCount,
   index,
   psychologistsCount,
+  canLoop = true,
 }: {
   currentCycleCount: number;
   index: number;
   psychologistsCount: number;
+  canLoop?: boolean;
 }) => {
+  if (!canLoop) return psychologistsCount > 0 ? 1 : 0;
   if (psychologistsCount <= 1) return 1;
 
   const targetCycle = Math.floor(Math.max(0, index) / psychologistsCount);
@@ -40,8 +45,10 @@ export const getPsychologistsFeedCycleCountForIndex = ({
 export const getPsychologistsFeedSlideCount = (
   psychologistsCount: number,
   loopCycleCount = PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES,
+  canLoop = true,
 ) => {
   if (psychologistsCount <= 1) return Math.max(0, psychologistsCount);
+  if (!canLoop) return psychologistsCount;
 
   return (
     psychologistsCount * getPsychologistsFeedLoopCycleCount(psychologistsCount, loopCycleCount)
@@ -59,8 +66,9 @@ export const clampPsychologistFeedSlideIndex = (
   index: number,
   psychologistsCount: number,
   loopCycleCount = PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES,
+  canLoop = true,
 ) => {
-  const slideCount = getPsychologistsFeedSlideCount(psychologistsCount, loopCycleCount);
+  const slideCount = getPsychologistsFeedSlideCount(psychologistsCount, loopCycleCount, canLoop);
   if (slideCount <= 0) return 0;
 
   return Math.max(0, Math.min(slideCount - 1, index));
@@ -69,8 +77,9 @@ export const clampPsychologistFeedSlideIndex = (
 export const buildPsychologistsFeedSlides = (
   psychologists: DirectoryPsychologist[],
   loopCycleCount = PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES,
+  canLoop = true,
 ): PsychologistFeedSlide[] => {
-  if (psychologists.length <= 1) {
+  if (psychologists.length <= 1 || !canLoop) {
     return psychologists.map((psychologist, index) => ({
       index,
       psychologist,

@@ -13,8 +13,12 @@ export const PsychologistsFeed = ({ model }: { model: PsychologistsViewModel }) 
 
   const { handleFeedScroll } = model.feed;
 
-  const { psychologists } = model.directory;
-  const slides = buildPsychologistsFeedSlides(psychologists, feedLoopCycleCount);
+  const { canLoopPsychologistsFeed, psychologists } = model.directory;
+  const slides = buildPsychologistsFeedSlides(
+    psychologists,
+    feedLoopCycleCount,
+    canLoopPsychologistsFeed,
+  );
 
   return (
     <div

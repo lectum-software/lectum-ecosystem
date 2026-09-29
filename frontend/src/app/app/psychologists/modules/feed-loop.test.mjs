@@ -63,6 +63,27 @@ test("resolve o proximo video do ultimo psicologo como o primeiro abaixo dele", 
   );
 });
 
+test("mantem lista linear enquanto ainda existem paginas para carregar", () => {
+  const slides = buildPsychologistsFeedSlides(psychologists, 3, false);
+
+  assert.equal(getPsychologistsFeedLoopCycleCount(psychologists.length, 3, false), 1);
+  assert.equal(getPsychologistsFeedSlideCount(psychologists.length, 3, false), 3);
+  assert.equal(
+    getPsychologistsFeedCycleCountForIndex({
+      canLoop: false,
+      currentCycleCount: 3,
+      index: 3,
+      psychologistsCount: psychologists.length,
+    }),
+    1,
+  );
+  assert.equal(clampPsychologistFeedSlideIndex(8, psychologists.length, 3, false), 2);
+  assert.deepEqual(
+    slides.map((slide) => slide.psychologist.id),
+    ["psi-a", "psi-b", "psi-c"],
+  );
+});
+
 test("expande ciclos para manter uma nova volta abaixo do indice alvo", () => {
   assert.equal(
     getPsychologistsFeedCycleCountForIndex({

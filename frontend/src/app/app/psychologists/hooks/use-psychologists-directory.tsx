@@ -5,6 +5,7 @@ import {
   useDirectoryPsychologistSearchImpression,
   useDirectoryPsychologists,
   useDirectoryPsychologistVideoWatch,
+  useInfiniteDirectoryPsychologists,
 } from "@/api/callers/directory";
 import type {
   DirectoryPsychologist,
@@ -21,11 +22,7 @@ import {
   buildBenefitChips,
   buildDirectoryFilterSearchTrackingItems,
 } from "../modules/filter-config";
-import {
-  FILTER_DIALOG_CLOSE_DELAY_MS,
-  MOBILE_BOTTOM_NAV_OFFSET,
-  PAGE_LIMIT,
-} from "../modules/onboarding";
+import { FILTER_DIALOG_CLOSE_DELAY_MS, MOBILE_BOTTOM_NAV_OFFSET } from "../modules/onboarding";
 import { filterPsychologistsByName, normalizeFormValues, toQuery } from "../modules/profile-format";
 import { PsychologistFilterSearchSuggestions } from "../modules/search-suggestions";
 import { resolveDirectoryErrorMessage } from "../modules/viewport";
@@ -75,7 +72,13 @@ export const usePsychologistsDirectory = () => {
     [currentPage, isFiltersOpen, liveFilterValues],
   );
 
-  const directory = useDirectoryPsychologists(query);
+  const directory = useInfiniteDirectoryPsychologists(query);
+  const {
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isDirectoryLoading,
+  } = directory;
 
   const deferredSearchDraft = useDeferredValue(searchDraft);
 
@@ -115,9 +118,33 @@ export const usePsychologistsDirectory = () => {
     shouldFetchFilterSuggestions,
   );
 
-  const response = directory.data;
+  const response = useMemo(() => {
+    const pages = directory.data?.pages;
+    const firstPage = pages?.[0];
+    if (!firstPage) return undefined;
+
+    const seenIds = new Set<string>();
+    const data = pages.flatMap((page) =>
+      page.data.filter((psychologist) => {
+        if (seenIds.has(psychologist.id)) return false;
+        seenIds.add(psychologist.id);
+        return true;
+      }),
+    );
+    const lastPage = pages[pages.length - 1] ?? firstPage;
+
+    return {
+      ...lastPage,
+      data,
+      filters: firstPage.filters,
+    };
+  }, [directory.data]);
 
   const psychologists = useMemo(() => response?.data ?? [], [response?.data]);
+
+  const hasMorePsychologistPages = Boolean(hasNextPage);
+
+  const canLoopPsychologistsFeed = !hasMorePsychologistPages && !isFetchingNextPage;
 
   const featuredPsychologistListIndex = getPsychologistFeedRealIndex(
     activePsychologistIndex,
@@ -141,7 +168,7 @@ export const usePsychologistsDirectory = () => {
   const featuredPsychologistId = featuredPsychologist?.id;
 
   const featuredPsychologistExplorePosition = featuredPsychologistId
-    ? ((query.page ?? 1) - 1) * (query.limit ?? PAGE_LIMIT) + featuredPsychologistListIndex + 1
+    ? featuredPsychologistListIndex + 1
     : null;
 
   const activeVideoResetKey = featuredPsychologistId
@@ -335,7 +362,25 @@ export const usePsychologistsDirectory = () => {
     [filterValues, response?.filters],
   );
 
-  const showInitialLoading = directory.isLoading && !response;
+  const showInitialLoading = isDirectoryLoading && !response;
+
+  useEffect(() => {
+    if (showInitialLoading || isFetchingNextPage || !hasNextPage || psychologists.length === 0) {
+      return;
+    }
+
+    const remainingItems = psychologists.length - featuredPsychologistListIndex - 1;
+    if (remainingItems > 5) return;
+
+    void fetchNextPage();
+  }, [
+    fetchNextPage,
+    featuredPsychologistListIndex,
+    hasNextPage,
+    isFetchingNextPage,
+    psychologists.length,
+    showInitialLoading,
+  ]);
 
   useEffect(() => {
     if (
@@ -392,6 +437,7 @@ export const usePsychologistsDirectory = () => {
     activeVideoResetKey,
     activeVideoSource,
     canSwipeBetweenPsychologists,
+    canLoopPsychologistsFeed,
     closeFilterDialogWithMotion,
     errorMessage,
     featuredBenefitChipsCount,
