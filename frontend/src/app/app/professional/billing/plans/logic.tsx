@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowRight, BadgeCheck, Banknote, CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { ArrowRight, BadgeCheck, Banknote, CheckCircle2, Info, Loader2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import { getSafeApiErrorMessage } from "@/api/errors";
@@ -19,8 +21,27 @@ import {
 } from "@/utils/psychologist-onboarding";
 
 type FeatureRow = {
+  description?: string;
   included: boolean;
   label: string;
+  previewImage?: {
+    alt: string;
+    height: number;
+    src: string;
+    width: number;
+  };
+};
+
+const socialVideoBenefit: Pick<FeatureRow, "description" | "label" | "previewImage"> = {
+  label: "Transforme suas respostas em vídeo em conteúdos para redes sociais",
+  description:
+    "Ao responder postagens das comunidades com vídeo, a Lectum gera automaticamente uma versão personalizada com arte em formato de caixinha de pergunta e sua identificação profissional, pronta para publicar no Instagram, TikTok e demais redes sociais. Disponível de forma ilimitada para suas respostas em vídeo.",
+  previewImage: {
+    alt: "Exemplo de vídeo-resposta da Lectum com caixinha de pergunta e identificação profissional.",
+    height: 899,
+    src: "/images/billing/social-video-example.png",
+    width: 494,
+  },
 };
 
 const planTones: Record<string, { eyebrow: string; popular?: boolean }> = {
@@ -52,47 +73,23 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
     return [
       {
         included: true,
-        label: "Crie seu perfil e apareça para pacientes interessados",
+        label: "Crie seu perfil profissional",
       },
       {
         included: true,
-        label: "Botão de conversão para seu WhatsApp",
+        label: "Cadastre seu WhatsApp para receber contatos",
       },
       {
         included: true,
-        label: "Até 3 especialidades",
+        label: "Responda postagens das comunidades por texto",
       },
       {
         included: true,
-        label: "Até 1 serviço profissional",
+        label: "Cadastre até 3 especialidades",
       },
       {
-        included: false,
-        label: "Perfil profissional verificado",
-      },
-      {
-        included: false,
-        label: "Receba avaliações e depoimentos",
-      },
-      {
-        included: false,
-        label: "Prioridade na busca de pacientes",
-      },
-      {
-        included: false,
-        label: "Respostas destacadas nas comunidades",
-      },
-      {
-        included: false,
-        label: "Respostas com mídia nas comunidades",
-      },
-      {
-        included: false,
-        label: "Elegível ao Top Mentor",
-      },
-      {
-        included: false,
-        label: "Analytics do seu perfil",
+        included: true,
+        label: "Cadastre 1 serviço profissional",
       },
     ];
   }
@@ -101,44 +98,102 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
     return [
       {
         included: true,
-        label: "Perfil profissional verificado",
+        label: "Crie seu perfil profissional com selo de verificado",
       },
       {
         included: true,
-        label: "Receba avaliações e depoimentos",
+        label: "Cadastre seu WhatsApp para receber contatos",
       },
       {
         included: true,
-        label: "Prioridade na busca de pacientes",
+        label: "Receba avaliações e depoimentos de pacientes",
       },
       {
         included: true,
-        label: "Respostas destacadas nas comunidades",
+        label: "Tenha prioridade na busca por psicólogos",
       },
       {
         included: true,
-        label: "Respostas com mídia nas comunidades",
+        label: "Responda postagens das comunidades com vídeo, imagem e texto",
       },
       {
         included: true,
-        label: "Elegível ao Top Mentor",
+        ...socialVideoBenefit,
       },
       {
         included: true,
-        label: "Até 10 especialidades",
+        label: "Possibilidade de aparecer como Top Mentor nas comunidades",
       },
       {
         included: true,
-        label: "Serviços profissionais ilimitados",
+        label: "Cadastre até 10 especialidades",
       },
       {
         included: true,
-        label: "Analytics do seu perfil",
+        label: "Cadastre todos os serviços que você oferece",
+      },
+      {
+        included: true,
+        label:
+          "Acesse estatísticas completas, como visualizações do seu perfil e cliques para o WhatsApp",
       },
     ];
   }
 
   return [];
+};
+
+const FeatureWithInfo = ({ feature }: { feature: FeatureRow }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const popoverId = useId();
+
+  if (!feature.description) return <span>{feature.label}</span>;
+
+  return (
+    <span className="block min-w-0">
+      <span>
+        {feature.label}
+        <button
+          aria-controls={popoverId}
+          aria-expanded={isOpen}
+          aria-label={`Entenda o benefício: ${feature.label}`}
+          className="ml-1.5 inline-grid h-5 w-5 translate-y-1 place-items-center rounded-full border border-primary/30 bg-primary-soft text-primary transition hover:border-primary/50 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+          onClick={() => setIsOpen((current) => !current)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setIsOpen(false);
+            }
+          }}
+          type="button"
+        >
+          <Info className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      </span>
+
+      {isOpen ? (
+        <section
+          aria-label="Explicação do benefício de vídeo para redes sociais"
+          className="mt-3 grid w-full gap-3 rounded-2xl border border-border bg-surface-muted p-3 text-left shadow-[var(--lectum-shadow-soft)]"
+          id={popoverId}
+        >
+          <span className="text-sm font-extrabold leading-5 text-foreground">
+            Conteúdo pronto para redes sociais
+          </span>
+          <span className="text-xs leading-5 text-muted">{feature.description}</span>
+          {feature.previewImage ? (
+            <Image
+              alt={feature.previewImage.alt}
+              className="max-h-[360px] w-full rounded-xl border border-border object-cover object-top shadow-[var(--lectum-shadow-soft)]"
+              height={feature.previewImage.height}
+              sizes="(max-width: 767px) 280px, 320px"
+              src={feature.previewImage.src}
+              width={feature.previewImage.width}
+            />
+          ) : null}
+        </section>
+      ) : null}
+    </span>
+  );
 };
 
 const PlanCard = ({
@@ -195,18 +250,10 @@ const PlanCard = ({
 
       <ul className="mt-8 grid gap-4">
         {features.map((feature) => {
-          const Icon = feature.included ? CheckCircle2 : XCircle;
-
           return (
             <li className="flex gap-3 text-sm leading-6 text-muted" key={feature.label}>
-              <Icon
-                className={cn(
-                  "mt-0.5 h-5 w-5 shrink-0",
-                  feature.included ? "text-primary" : "text-danger",
-                )}
-                aria-hidden
-              />
-              <span>{feature.label}</span>
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
+              <FeatureWithInfo feature={feature} />
             </li>
           );
         })}
