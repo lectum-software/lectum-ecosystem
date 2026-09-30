@@ -1,3 +1,14 @@
+Ajuste visual em 30/09/2026: centralizacao vertical do texto da pergunta na caixinha branca do MP4 social de video-resposta. A captura anexada foi usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente; referencia ativa baseada no anexo e em `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`. Alteracao exclusivamente no renderer FFmpeg do `video/`, sem mudar upload, filas, contrato HTTP, backend, frontend, admin, banco, env, package novo ou mocks. ADR: `adrs/0540-centralizacao-texto-caixinha-social.md`.
+
+Criterios de aceite do ajuste de centralizacao da caixinha social:
+
+- [x] Perguntas em tres linhas ficam centralizadas pela altura visual do bloco de texto dentro da area branca.
+- [x] O ajuste remove o offset minimo fixo que deixava a margem superior maior que a inferior no exemplo reportado.
+- [x] O cabecalho azul, largura do card, quebra de linhas, nome/selo profissional e audio/render social permanecem inalterados.
+- [x] Nenhum mock, package novo, env nova, backend, frontend, admin ou migration foi usado.
+
+Impacto de deploy: somente `video/`; novas geracoes de MP4 social recebem a centralizacao, arquivos ja gerados/cacheados nao sao reescritos. Rollback por reversao revisada em `homolog`. Push em `homolog` dispara deploy automatico de homologacao. Validacoes locais: teste direcionado do filtergraph social, `pnpm --dir video check`, `pnpm --dir video build`, guards de encoding/ADRs/tasks e versionamento.
+
 Ajuste visual em 25/09/2026: removida a faixa cinza atras dos cards brancos no perfil profissional publico, a partir da secao `Sobre`. A evidencia visual foi o screenshot enviado pelo usuario em 25/09/2026; Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente, e a referencia ativa permanece `_product/proto/Perfil Profissional - Sobre.jpg`. Alteracao exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudanca de contrato. ADR: `adrs/0532-fundo-uniforme-perfil-profissional.md`.
 
 Criterios de aceite do ajuste de fundo do perfil profissional:

@@ -2,7 +2,6 @@ export const SOCIAL_SHARE_ART_LAYOUT = {
   card: {
     bodyHeight: 266,
     bodyLineHeight: 60,
-    bodyTextTopMinOffset: 64,
     cornerRadius: 32,
     headerFontSize: 38,
     headerHeight: 88,
