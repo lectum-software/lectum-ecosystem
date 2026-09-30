@@ -297,6 +297,20 @@ describe("FFmpeg social share command", () => {
     assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=50/);
     assert.doesNotMatch(filter, /drawtext=text='trouxer a sensacao de falta de ar\?'/);
   });
+  it("centraliza verticalmente perguntas em tres linhas na caixinha branca", () => {
+    const filter = buildSocialShareFilter(
+      {
+        ...metadata,
+        sourceText: "Ainda existe amor, mas não sabemos mais como nos conectar. O que fazer?",
+      },
+      30,
+      { filterMode: "portable", fontFile: null, logoFile: null, verifiedBadgeFile: null },
+    );
+
+    assert.match(filter, /drawtext=text='Ainda existe amor, mas não':.*:y=389:fontsize=44/);
+    assert.match(filter, /drawtext=text='sabemos mais como nos':.*:y=449:fontsize=44/);
+    assert.match(filter, /drawtext=text='conectar\. O que fazer\?':.*:y=509:fontsize=44/);
+  });
 
   it("normaliza o rótulo legado de pergunta para resposta", () => {
     const sanitized = sanitizeSocialShareMetadata({

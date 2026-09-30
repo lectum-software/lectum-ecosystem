@@ -583,3 +583,4 @@ Formato recomendado:
 - [ADR-0537 — Link de avaliacoes no proprio perfil](0537-link-avaliacoes-proprio-perfil.md)
 - [ADR-0538 — Open Graph do link de avaliacao](0538-open-graph-link-avaliacao.md)
 - [ADR-0539 — Exclusao de avaliacao pelo autor](0539-author-review-deletion.md)
+- [ADR-0540 — Centralizacao vertical do texto na caixinha social](0540-centralizacao-texto-caixinha-social.md)

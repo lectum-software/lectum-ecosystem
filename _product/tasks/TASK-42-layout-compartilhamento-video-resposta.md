@@ -2908,3 +2908,43 @@ O usuario anexou um print mobile do feed de Comunidades mostrando uma resposta p
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin/video `/version`.
+
+## Ajuste 2026-09-30 - centralizacao vertical da pergunta na caixinha social
+
+### Contexto
+
+O usuario anexou captura de um MP4 social gerado em que a margem superior do texto da pergunta dentro da area branca da caixinha parecia levemente maior que a margem inferior. A imagem foi usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta disponivel como ferramenta callable nesta sessao; foi usada a evidencia visual anexada e a referencia registrada em PROTO-INVENTORY para TASK-42.
+
+### Decisao
+
+- Centralizar verticalmente o texto da pergunta pela altura visual do bloco renderizado: `fontSize + (linhas - 1) * lineHeight`.
+- Remover o offset minimo fixo da area branca, que impedia a centralizacao optica em perguntas de tres linhas.
+- Manter inalterados cabecalho azul, dimensoes do card, regra de quebra em ate tres linhas, truncagem, identificacao profissional, audio, upload, filas, endpoints e cache.
+
+### Escopo e seguranca de deploy
+
+- Alteracao exclusiva no renderer FFmpeg do `video/`; backend, frontend e admin acompanham apenas versionamento se necessario.
+- Sem schema Prisma, migration, `db:migrate`, backfill, seed, reset, `db push`, limpeza de buckets/dados, env obrigatoria, package novo, provider ou persistencia nova.
+- Compatibilidade de rollout: contratos HTTP e jobs existentes continuam iguais; somente novas geracoes de MP4 social recebem a correcao. Artefatos antigos/cacheados nao sao reescritos.
+- Rollback simples por reversao do calculo de `y` no renderer.
+
+### Criterios de aceite do ajuste
+
+- [x] Perguntas em tres linhas ficam centralizadas pela altura visual dentro da area branca da caixinha.
+- [x] O exemplo "Ainda existe amor..." usa linhas em `y=389`, `y=449` e `y=509`, deixando margens opticas equivalentes.
+- [x] Perguntas longas continuam compactando para fonte menor antes de vazar da caixa.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria, provider, upload, fila ou contrato HTTP foi alterado; `db:migrate` nao se aplica.
+- [x] ADR criado em `adrs/0540-centralizacao-texto-caixinha-social.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES e PROTO-INVENTORY consultados conforme aplicavel.
+- [x] Imagem anexada usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- [x] `pnpm --dir video exec biome check --write src/infra/ffmpeg/social-share.ts src/infra/ffmpeg/social-share.test.ts src/infra/ffmpeg/social-share-layout.ts`.
+- [x] `pnpm --dir video exec tsx --test src/infra/ffmpeg/social-share.test.ts`.
+- [x] `pnpm --dir video check`.
+- [x] `pnpm --dir video build`.
+- [x] `pnpm version:bump` para `0.1.517` e `pnpm check:version`.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final quando o deploy ficar disponivel.

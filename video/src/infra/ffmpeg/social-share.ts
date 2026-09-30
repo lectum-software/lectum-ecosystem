@@ -129,18 +129,17 @@ export const buildSocialShareFilter = (
   const sanitized = sanitizeSocialShareMetadata(metadata);
   const { card, colors, professional } = SOCIAL_SHARE_ART_LAYOUT;
   const sourceLines = wrapText(sanitized.sourceText, card.sourceMaxLineLength, 3);
+  const sourceFontSize = sourceLines.length > 2 ? card.sourceFontSizeCompact : card.sourceFontSize;
+  const sourceTextVisualHeight = sourceFontSize + (sourceLines.length - 1) * card.bodyLineHeight;
   const sourceTextTop =
     card.y +
     card.headerHeight +
-    Math.max(
-      card.bodyTextTopMinOffset,
-      Math.round((card.bodyHeight - sourceLines.length * card.bodyLineHeight) / 2),
-    );
+    Math.max(0, Math.round((card.bodyHeight - sourceTextVisualHeight) / 2));
   const sourceTextFilters = sourceLines.map((line, index) =>
     drawText({
       color: colors.sourceText,
       fontFile,
-      fontSize: sourceLines.length > 2 ? card.sourceFontSizeCompact : card.sourceFontSize,
+      fontSize: sourceFontSize,
       text: line,
       x: "(w-text_w)/2",
       y: sourceTextTop + index * card.bodyLineHeight,
