@@ -134,7 +134,8 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "Estatísticas do seu perfil, como cliques gerados para WhatsApp",
+        label:
+          "Acesse estatísticas completas, como visualizações do seu perfil e cliques para o WhatsApp",
       },
     ];
   }
@@ -142,35 +143,38 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
   return [];
 };
 
-const FeatureInfoPopover = ({ feature }: { feature: FeatureRow }) => {
+const FeatureWithInfo = ({ feature }: { feature: FeatureRow }) => {
   const [isOpen, setIsOpen] = useState(false);
   const popoverId = useId();
 
-  if (!feature.description) return null;
+  if (!feature.description) return <span>{feature.label}</span>;
 
   return (
-    <span className="relative inline-flex align-middle">
-      <button
-        aria-controls={popoverId}
-        aria-expanded={isOpen}
-        aria-label={`Entenda o benefício: ${feature.label}`}
-        className="ml-1.5 inline-grid h-5 w-5 place-items-center rounded-full border border-primary/30 bg-primary-soft text-primary transition hover:border-primary/50 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
-        onClick={() => setIsOpen((current) => !current)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            setIsOpen(false);
-          }
-        }}
-        type="button"
-      >
-        <Info className="h-3.5 w-3.5" aria-hidden />
-      </button>
+    <span className="block min-w-0">
+      <span>
+        {feature.label}
+        <button
+          aria-controls={popoverId}
+          aria-expanded={isOpen}
+          aria-label={`Entenda o benefício: ${feature.label}`}
+          className="ml-1.5 inline-grid h-5 w-5 translate-y-1 place-items-center rounded-full border border-primary/30 bg-primary-soft text-primary transition hover:border-primary/50 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+          onClick={() => setIsOpen((current) => !current)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setIsOpen(false);
+            }
+          }}
+          type="button"
+        >
+          <Info className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      </span>
 
       {isOpen ? (
-        <span
-          className="absolute left-1/2 top-7 z-30 grid w-[min(20rem,calc(100vw-3rem))] -translate-x-1/2 gap-3 rounded-2xl border border-border bg-surface p-3 text-left shadow-[var(--lectum-shadow)] md:w-80"
+        <section
+          aria-label="Explicação do benefício de vídeo para redes sociais"
+          className="mt-3 grid w-full gap-3 rounded-2xl border border-border bg-surface-muted p-3 text-left shadow-[var(--lectum-shadow-soft)]"
           id={popoverId}
-          role="dialog"
         >
           <span className="text-sm font-extrabold leading-5 text-foreground">
             Conteúdo pronto para redes sociais
@@ -179,14 +183,14 @@ const FeatureInfoPopover = ({ feature }: { feature: FeatureRow }) => {
           {feature.previewImage ? (
             <Image
               alt={feature.previewImage.alt}
-              className="w-full rounded-xl border border-border object-cover shadow-[var(--lectum-shadow-soft)]"
+              className="max-h-[360px] w-full rounded-xl border border-border object-cover object-top shadow-[var(--lectum-shadow-soft)]"
               height={feature.previewImage.height}
-              sizes="(max-width: 767px) 320px, 288px"
+              sizes="(max-width: 767px) 280px, 320px"
               src={feature.previewImage.src}
               width={feature.previewImage.width}
             />
           ) : null}
-        </span>
+        </section>
       ) : null}
     </span>
   );
@@ -249,10 +253,7 @@ const PlanCard = ({
           return (
             <li className="flex gap-3 text-sm leading-6 text-muted" key={feature.label}>
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
-              <span>
-                {feature.label}
-                <FeatureInfoPopover feature={feature} />
-              </span>
+              <FeatureWithInfo feature={feature} />
             </li>
           );
         })}

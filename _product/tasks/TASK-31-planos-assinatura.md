@@ -313,9 +313,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - Pedido direto de produto: refinar os beneficios dos planos com textos mais orientados a psicologos leigos e remover comparacao negativa no Plano Gratuito.
 - Plano Gratuito agora lista apenas beneficios incluidos: perfil profissional, WhatsApp para contatos, respostas por texto nas comunidades, ate 3 especialidades e 1 servico profissional.
-- Plano Profissional agora destaca selo de verificado, WhatsApp, avaliacoes de pacientes, prioridade na busca por psicologos, respostas com video/imagem/texto, transformacao das respostas em video para redes sociais, Top Mentor, ate 10 especialidades, todos os servicos e estatisticas com cliques para WhatsApp.
+- Plano Profissional agora destaca selo de verificado, WhatsApp, avaliacoes de pacientes, prioridade na busca por psicologos, respostas com video/imagem/texto, transformacao das respostas em video para redes sociais, Top Mentor, ate 10 especialidades, todos os servicos e estatisticas completas, incluindo visualizacoes do perfil e cliques para WhatsApp.
 - O beneficio de redes sociais ganhou popover explicativo com a imagem de exemplo fornecida pelo produto, salva como asset estatico do frontend, usando `next/image`.
 - Escopo restrito a copy/UI no frontend; nenhuma funcionalidade, entitlement, regra de video, checkout, API, schema Prisma, env ou package foi alterado.
 - Impacto de deploy: compativel com versoes diferentes de frontend/backend, sem ordem especial, sem backfill e rollback por reversao do commit.
 - Validacao executada: `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/plans/logic.tsx src/app/app/professional/billing/subscription/logic.tsx`, `pnpm --dir frontend exec tsc --noEmit --pretty false`, `pnpm --dir frontend build` e `pnpm --dir frontend check` passaram localmente.
 - ADR atualizado: `adrs/0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md`.
+
+## Ajuste complementar em 2026-09-29 - posicionamento mobile do popover de video social
+
+- Pedido direto de produto: corrigir o posicionamento do popover do beneficio de video social, que abria deslocado no viewport mobile.
+- O popover deixou de usar posicionamento absoluto sobre o card e passou a abrir como painel expansivel dentro da propria linha do beneficio, contido na largura do card e com imagem limitada em altura.
+- Escopo restrito a UI frontend; sem alteracao funcional, API, entitlement, schema, env ou package.

@@ -105,7 +105,7 @@ O produto refinou a linguagem dos beneficios dos planos para ficar mais clara pa
 ### Decisao
 
 - Plano Gratuito passa a listar somente beneficios incluidos: perfil profissional, WhatsApp para contatos, respostas por texto nas comunidades, ate 3 especialidades e 1 servico profissional.
-- Plano Profissional passa a listar: perfil com selo de verificado, WhatsApp, avaliacoes de pacientes, prioridade na busca por psicologos, respostas com video/imagem/texto, transformacao das respostas em video em conteudos para redes sociais, Top Mentor, ate 10 especialidades, todos os servicos e estatisticas com cliques gerados para WhatsApp.
+- Plano Profissional passa a listar: perfil com selo de verificado, WhatsApp, avaliacoes de pacientes, prioridade na busca por psicologos, respostas com video/imagem/texto, transformacao das respostas em video em conteudos para redes sociais, Top Mentor, ate 10 especialidades, todos os servicos e estatisticas completas, incluindo visualizacoes do perfil e cliques para WhatsApp.
 - O beneficio de redes sociais recebe um popover explicativo com imagem de exemplo fornecida pelo produto, renderizada via `next/image` como asset estatico do frontend.
 - Nao alterar entitlement, regra de upload/video, checkout, gateway, API, schema Prisma, env ou pacote.
 
@@ -121,3 +121,20 @@ O produto refinou a linguagem dos beneficios dos planos para ficar mais clara pa
 - `pnpm --dir frontend exec tsc --noEmit --pretty false`
 - `pnpm --dir frontend build`
 - `pnpm --dir frontend check`
+
+## Atualizacao em 2026-09-29: posicionamento mobile do popover
+
+### Contexto
+
+A validacao em homologacao mostrou que o popover do beneficio de video social ficava deslocado no viewport mobile, por usar posicionamento absoluto a partir do icone inline.
+
+### Decisao
+
+- Substituir o popover flutuante por um painel expansivel inline, renderizado dentro da propria linha do beneficio no card do plano profissional.
+- Manter o texto e a imagem de exemplo ja aprovados, limitando a altura da imagem para evitar que o painel ocupe a tela inteira.
+- Nao alterar regra de plano, entitlement, upload de video, API, schema, env ou pacote.
+
+### Consequencias
+
+- O conteudo explicativo permanece acessivel e fica contido no card em mobile e desktop.
+- A interacao deixa de depender de calculo de bordas/viewport e reduz risco de sobreposicao com DevTools ou bordas da tela.

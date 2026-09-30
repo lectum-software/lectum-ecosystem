@@ -75,7 +75,7 @@ const professionalBenefitGroups: BenefitGroup[] = [
     items: [
       "Cadastre até 10 especialidades",
       "Cadastre todos os serviços que você oferece",
-      "Estatísticas do seu perfil, como cliques gerados para WhatsApp",
+      "Acesse estatísticas completas, como visualizações do seu perfil e cliques para o WhatsApp",
     ],
   },
 ];
