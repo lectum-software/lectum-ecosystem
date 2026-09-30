@@ -90,7 +90,7 @@ export const PublicationParticipationCommunity = ({
   community: DirectoryPsychologistParticipationCommunity;
 }) => (
   <Link
-    className="group flex w-[104px] min-w-[104px] snap-start flex-col items-center rounded-[16px] px-1 py-1.5 text-center no-underline transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:w-[112px] sm:min-w-[112px]"
+    className="group flex w-[156px] min-w-[156px] snap-start flex-col items-center rounded-[16px] px-1 py-1.5 text-center no-underline transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:w-[164px] sm:min-w-[164px]"
     data-participation-community="true"
     href={`/comunidades/${community.slug}`}
   >
@@ -102,7 +102,7 @@ export const PublicationParticipationCommunity = ({
         </span>
       ) : null}
     </span>
-    <span className="mt-2 line-clamp-2 w-full max-w-[98px] text-center text-[12px] font-extrabold leading-[1.18] text-muted transition group-hover:text-foreground sm:max-w-[106px]">
+    <span className="mt-2 line-clamp-2 w-full max-w-[150px] text-center text-[12px] font-extrabold leading-[1.18] text-muted transition group-hover:text-foreground sm:max-w-[158px]">
       {community.name}
     </span>
   </Link>
