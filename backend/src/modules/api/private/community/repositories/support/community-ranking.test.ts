@@ -8,7 +8,10 @@ process.env.DATABASE_URL ??= "postgresql://lectum:lectum@localhost:5432/lectum_t
 process.env.JWT_SECRET_KEY ??= "lectum-test-jwt-secret-key-32-bytes";
 
 let compareProfessionalRepliesForHighlight: typeof CommunityRanking.compareProfessionalRepliesForHighlight;
+let emptyTopMentorMetrics: typeof CommunityRanking.emptyTopMentorMetrics;
 let isProfessionalReplyVideoHighlightCandidate: typeof CommunityRanking.isProfessionalReplyVideoHighlightCandidate;
+let topMentorScore: typeof CommunityRanking.topMentorScore;
+let topMentorsFormula: typeof CommunityRanking.topMentorsFormula;
 
 describe("mentor profession label from profile gender", () => {
   it("uses the saved gender and keeps an inclusive fallback", async () => {
@@ -72,7 +75,10 @@ describe("community highlighted professional reply ranking", () => {
     const module = await import("./community-ranking");
 
     compareProfessionalRepliesForHighlight = module.compareProfessionalRepliesForHighlight;
+    emptyTopMentorMetrics = module.emptyTopMentorMetrics;
     isProfessionalReplyVideoHighlightCandidate = module.isProfessionalReplyVideoHighlightCandidate;
+    topMentorScore = module.topMentorScore;
+    topMentorsFormula = module.topMentorsFormula;
   });
 
   it("prioriza video mesmo quando uma resposta de texto tem mais votos", () => {
@@ -119,5 +125,60 @@ describe("community highlighted professional reply ranking", () => {
       isProfessionalReplyVideoHighlightCandidate(professionalReply({ id: "texto", upvotes: 1 })),
       false,
     );
+  });
+});
+
+describe("community top mentor score", () => {
+  before(async () => {
+    const module = await import("./community-ranking");
+
+    emptyTopMentorMetrics = module.emptyTopMentorMetrics;
+    topMentorScore = module.topMentorScore;
+    topMentorsFormula = module.topMentorsFormula;
+  });
+
+  it("prioriza cobertura real de posts de pacientes sobre sinais invisiveis fracos", () => {
+    const coverage = { ...emptyTopMentorMetrics(), reply_coverage_count: 1 };
+    const invisibleSignals = { ...emptyTopMentorMetrics(), community_whatsapp_clicks: 3 };
+
+    assert.ok(topMentorScore(coverage) > topMentorScore(invisibleSignals));
+  });
+
+  it("desempata positivamente quem responde mais vezes na mesma cobertura", () => {
+    const oneReply = {
+      ...emptyTopMentorMetrics(),
+      replies_published: 1,
+      reply_coverage_count: 1,
+    };
+    const twoReplies = {
+      ...emptyTopMentorMetrics(),
+      replies_published: 2,
+      reply_coverage_count: 1,
+    };
+
+    assert.equal(topMentorScore(twoReplies) - topMentorScore(oneReply), 3);
+  });
+
+  it("aplica bonus especifico para video-respostas dentro da comunidade", () => {
+    const textReply = {
+      ...emptyTopMentorMetrics(),
+      replies_published: 1,
+      reply_coverage_count: 1,
+    };
+    const videoReply = {
+      ...textReply,
+      video_replies_published: 1,
+    };
+
+    assert.equal(topMentorScore(videoReply) - topMentorScore(textReply), 4);
+  });
+
+  it("expoe a formula vigente para auditoria do ranking", () => {
+    const formula = topMentorsFormula();
+
+    assert.equal(formula.upvote_weight, 4);
+    assert.equal(formula.reply_weight, 3);
+    assert.equal(formula.reply_coverage_weight, 10);
+    assert.equal(formula.video_reply_weight, 4);
   });
 });

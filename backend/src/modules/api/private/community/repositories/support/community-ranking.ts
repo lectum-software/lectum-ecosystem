@@ -29,10 +29,12 @@ import {
   TOP_MENTOR_DOWNVOTE_WEIGHT,
   TOP_MENTOR_POST_WEIGHT,
   TOP_MENTOR_REMOVED_POST_PENALTY_STEP,
+  TOP_MENTOR_REPLY_COVERAGE_WEIGHT,
   TOP_MENTOR_REPLY_WEIGHT,
   TOP_MENTOR_SAVE_WEIGHT,
   TOP_MENTOR_SHARE_WEIGHT,
   TOP_MENTOR_UPVOTE_WEIGHT,
+  TOP_MENTOR_VIDEO_REPLY_WEIGHT,
 } from "./community-feed";
 
 export const toCommunityResponse = (item: {
@@ -482,6 +484,7 @@ export type TopMentorMutableMetrics = {
   posts_published: number;
   reply_coverage_count: number;
   replies_published: number;
+  video_replies_published: number;
   active_days: number;
   removed_posts: number;
   removed_posts_penalty: number;
@@ -497,6 +500,7 @@ export const emptyTopMentorMetrics = (): TopMentorMutableMetrics => ({
   posts_published: 0,
   reply_coverage_count: 0,
   replies_published: 0,
+  video_replies_published: 0,
   active_days: 0,
   removed_posts: 0,
   removed_posts_penalty: 0,
@@ -514,7 +518,9 @@ export const topMentorScore = (metrics: TopMentorMutableMetrics) => {
     metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT +
     metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT +
     metrics.posts_published * TOP_MENTOR_POST_WEIGHT +
-    metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.reply_coverage_count * TOP_MENTOR_REPLY_COVERAGE_WEIGHT +
+    metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.video_replies_published * TOP_MENTOR_VIDEO_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
   const penaltyPoints =
     metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
@@ -533,6 +539,7 @@ export const hasTopMentorRankingSignal = (metrics: TopMentorMutableMetrics) => {
     metrics.posts_published > 0 ||
     metrics.reply_coverage_count > 0 ||
     metrics.replies_published > 0 ||
+    metrics.video_replies_published > 0 ||
     metrics.active_days > 0 ||
     metrics.removed_posts > 0
   );
@@ -547,15 +554,18 @@ export const topMentorsFormula = () => ({
   community_whatsapp_weight: TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
   post_weight: TOP_MENTOR_POST_WEIGHT,
   reply_weight: TOP_MENTOR_REPLY_WEIGHT,
-  reply_coverage_weight: TOP_MENTOR_REPLY_WEIGHT,
+  reply_coverage_weight: TOP_MENTOR_REPLY_COVERAGE_WEIGHT,
+  video_reply_weight: TOP_MENTOR_VIDEO_REPLY_WEIGHT,
   active_day_weight: TOP_MENTOR_ACTIVE_DAY_WEIGHT,
   removed_post_penalty_step: TOP_MENTOR_REMOVED_POST_PENALTY_STEP,
   description:
-    "score = (upvotes × 2) - (downvotes × 3) + (comentários recebidos × 5) + (compartilhamentos × 8) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 6) + (posts publicados × 1) + (cobertura de respostas × 3) + (dias ativos × 1) - penalidade progressiva por posts removidos",
+    "score = (cobertura de respostas × 10) + (respostas publicadas × 3) + (vídeo-respostas × 4) + (upvotes × 4) - (downvotes × 3) + (comentários recebidos × 3) + (compartilhamentos × 3) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 3) + (posts publicados × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
   notes: [
     "Cobertura de respostas conta no máximo 1 ponto de cobertura por post de paciente respondido pelo psicólogo no período.",
+    "Respostas publicadas também pontuam para reconhecer contribuições adicionais no mesmo post.",
+    "Vídeo-respostas recebem bônus por exigirem maior esforço e serem diferencial da experiência profissional.",
     "Upvotes, downvotes, salvamentos e compartilhamentos feitos pelo próprio psicólogo no próprio conteúdo não entram no score.",
-    "Compartilhamentos consideram posts e respostas compartilhados; cliques no WhatsApp só entram quando a comunidade de origem pode ser identificada.",
+    "Compartilhamentos consideram posts e respostas compartilhados; cliques no WhatsApp só entram quando a comunidade de origem pode ser identificada e funcionam como bônus, não como base do ranking.",
   ],
 });
 

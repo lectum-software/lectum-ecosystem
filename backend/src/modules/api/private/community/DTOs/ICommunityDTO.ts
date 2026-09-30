@@ -275,6 +275,7 @@ export type CommunityTopMentorMetricsDTO = {
   posts_published: number;
   reply_coverage_count: number;
   replies_published: number;
+  video_replies_published: number;
   active_days: number;
   removed_posts: number;
   removed_posts_penalty: number;
@@ -291,6 +292,7 @@ export type CommunityTopMentorBreakdownDTO = {
   posts_points: number;
   reply_coverage_points: number;
   replies_points: number;
+  video_replies_points: number;
   active_days_points: number;
   removed_posts_penalty: number;
 };
@@ -329,6 +331,7 @@ export type CommunityTopMentorsResponse = {
     community_whatsapp_weight: number;
     reply_coverage_weight: number;
     reply_weight: number;
+    video_reply_weight: number;
     post_weight: number;
     active_day_weight: number;
     removed_post_penalty_step: number;

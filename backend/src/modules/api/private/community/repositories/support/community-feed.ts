@@ -13,21 +13,25 @@ export const DEFAULT_TOP_MENTORS_LIMIT = 5;
 
 export const MAX_TOP_MENTORS_LIMIT = 10;
 
-export const TOP_MENTOR_UPVOTE_WEIGHT = 2;
+export const TOP_MENTOR_UPVOTE_WEIGHT = 4;
 
 export const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
 
-export const TOP_MENTOR_COMMENT_WEIGHT = 5;
+export const TOP_MENTOR_COMMENT_WEIGHT = 3;
 
-export const TOP_MENTOR_SHARE_WEIGHT = 8;
+export const TOP_MENTOR_SHARE_WEIGHT = 3;
 
 export const TOP_MENTOR_SAVE_WEIGHT = 2;
 
-export const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 6;
+export const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 3;
 
 export const TOP_MENTOR_POST_WEIGHT = 1;
 
 export const TOP_MENTOR_REPLY_WEIGHT = 3;
+
+export const TOP_MENTOR_REPLY_COVERAGE_WEIGHT = 10;
+
+export const TOP_MENTOR_VIDEO_REPLY_WEIGHT = 4;
 
 export const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 

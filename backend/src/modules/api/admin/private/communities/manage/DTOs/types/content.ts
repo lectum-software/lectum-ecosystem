@@ -179,6 +179,7 @@ export type AdminCommunityRankingItemDTO = {
     removed_posts: number;
     removed_posts_penalty: number;
     replies_published: number;
+    video_replies_published: number;
     saves_received: number;
     shares_received: number;
     upvotes_received: number;
@@ -196,6 +197,7 @@ export type AdminCommunityRankingItemDTO = {
     reply_coverage_points: number;
     removed_posts_penalty: number;
     replies_points: number;
+    video_replies_points: number;
     saves_points: number;
     shares_points: number;
     upvotes_points: number;
