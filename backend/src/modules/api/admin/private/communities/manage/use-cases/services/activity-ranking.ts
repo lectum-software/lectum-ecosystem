@@ -208,30 +208,34 @@ export const compareRanking = (
   const scoreDiff = right.score - left.score;
   if (scoreDiff !== 0) return scoreDiff;
 
+  const coverageDiff = right.metrics.reply_coverage_count - left.metrics.reply_coverage_count;
+  if (coverageDiff !== 0) return coverageDiff;
+
+  const videoReplyDiff =
+    right.metrics.video_replies_published - left.metrics.video_replies_published;
+  if (videoReplyDiff !== 0) return videoReplyDiff;
+
+  const replyDiff = right.metrics.replies_published - left.metrics.replies_published;
+  if (replyDiff !== 0) return replyDiff;
+
+  const upvoteDiff = right.metrics.upvotes_received - left.metrics.upvotes_received;
+  if (upvoteDiff !== 0) return upvoteDiff;
+
   const commentDiff = right.metrics.comments_received - left.metrics.comments_received;
   if (commentDiff !== 0) return commentDiff;
 
   const shareDiff = right.metrics.shares_received - left.metrics.shares_received;
   if (shareDiff !== 0) return shareDiff;
 
+  const saveDiff = right.metrics.saves_received - left.metrics.saves_received;
+  if (saveDiff !== 0) return saveDiff;
+
   const whatsappDiff =
     right.metrics.community_whatsapp_clicks - left.metrics.community_whatsapp_clicks;
   if (whatsappDiff !== 0) return whatsappDiff;
 
-  const coverageDiff = right.metrics.reply_coverage_count - left.metrics.reply_coverage_count;
-  if (coverageDiff !== 0) return coverageDiff;
-
-  const saveDiff = right.metrics.saves_received - left.metrics.saves_received;
-  if (saveDiff !== 0) return saveDiff;
-
-  const upvoteDiff = right.metrics.upvotes_received - left.metrics.upvotes_received;
-  if (upvoteDiff !== 0) return upvoteDiff;
-
   const activeDayDiff = right.metrics.active_days - left.metrics.active_days;
   if (activeDayDiff !== 0) return activeDayDiff;
-
-  const replyDiff = right.metrics.replies_published - left.metrics.replies_published;
-  if (replyDiff !== 0) return replyDiff;
 
   const postDiff = right.metrics.posts_published - left.metrics.posts_published;
   if (postDiff !== 0) return postDiff;
@@ -267,6 +271,7 @@ export const rankMembers = (
         removed_posts: 0,
         removed_posts_penalty: 0,
         replies_published: 0,
+        video_replies_published: 0,
         saves_received: 0,
         shares_received: 0,
         upvotes_received: 0,

@@ -14,10 +14,12 @@ import {
   TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
   TOP_MENTOR_DOWNVOTE_WEIGHT,
   TOP_MENTOR_POST_WEIGHT,
+  TOP_MENTOR_REPLY_COVERAGE_WEIGHT,
   TOP_MENTOR_REPLY_WEIGHT,
   TOP_MENTOR_SAVE_WEIGHT,
   TOP_MENTOR_SHARE_WEIGHT,
   TOP_MENTOR_UPVOTE_WEIGHT,
+  TOP_MENTOR_VIDEO_REPLY_WEIGHT,
   type TopMentorUserResult,
   topMentorUserSelect,
 } from "../support/community-feed";
@@ -109,6 +111,7 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
     const [
       postParticipation,
       replyParticipation,
+      videoReplyParticipation,
       replyCoverage,
       postVotes,
       replyVotes,
@@ -143,6 +146,34 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
             in: eligibleMentorIds,
           },
           createdAt: createdAtWindow,
+          post: {
+            ...publishedPostFilter,
+            author: {
+              role: "paciente",
+            },
+          },
+        },
+        _count: {
+          author_id: true,
+        },
+      }),
+      prisma.post_reply.groupBy({
+        by: ["author_id"],
+        where: {
+          deleted: false,
+          author_id: {
+            in: eligibleMentorIds,
+          },
+          createdAt: createdAtWindow,
+          media_type: "video",
+          media_url: {
+            not: null,
+          },
+          NOT: [
+            {
+              media_url: "",
+            },
+          ],
           post: {
             ...publishedPostFilter,
             author: {
@@ -424,6 +455,10 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
       getMetrics(item.author_id).replies_published = item._count.author_id;
     }
 
+    for (const item of videoReplyParticipation) {
+      getMetrics(item.author_id).video_replies_published = item._count.author_id;
+    }
+
     for (const item of replyCoverage) {
       getMetrics(item.author_id).reply_coverage_count += 1;
     }
@@ -519,30 +554,34 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
         const scoreDiff = b.score - a.score;
         if (scoreDiff !== 0) return scoreDiff;
 
+        const coverageDiff = b.metrics.reply_coverage_count - a.metrics.reply_coverage_count;
+        if (coverageDiff !== 0) return coverageDiff;
+
+        const videoReplyDiff =
+          b.metrics.video_replies_published - a.metrics.video_replies_published;
+        if (videoReplyDiff !== 0) return videoReplyDiff;
+
+        const replyDiff = b.metrics.replies_published - a.metrics.replies_published;
+        if (replyDiff !== 0) return replyDiff;
+
+        const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
+        if (upvoteDiff !== 0) return upvoteDiff;
+
         const commentDiff = b.metrics.comments_received - a.metrics.comments_received;
         if (commentDiff !== 0) return commentDiff;
 
         const shareDiff = b.metrics.shares_received - a.metrics.shares_received;
         if (shareDiff !== 0) return shareDiff;
 
+        const saveDiff = b.metrics.saves_received - a.metrics.saves_received;
+        if (saveDiff !== 0) return saveDiff;
+
         const whatsappDiff =
           b.metrics.community_whatsapp_clicks - a.metrics.community_whatsapp_clicks;
         if (whatsappDiff !== 0) return whatsappDiff;
 
-        const coverageDiff = b.metrics.reply_coverage_count - a.metrics.reply_coverage_count;
-        if (coverageDiff !== 0) return coverageDiff;
-
-        const saveDiff = b.metrics.saves_received - a.metrics.saves_received;
-        if (saveDiff !== 0) return saveDiff;
-
-        const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
-        if (upvoteDiff !== 0) return upvoteDiff;
-
         const activeDayDiff = b.metrics.active_days - a.metrics.active_days;
         if (activeDayDiff !== 0) return activeDayDiff;
-
-        const replyDiff = b.metrics.replies_published - a.metrics.replies_published;
-        if (replyDiff !== 0) return replyDiff;
 
         const postDiff = b.metrics.posts_published - a.metrics.posts_published;
         if (postDiff !== 0) return postDiff;
@@ -598,6 +637,7 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
           posts_published: item.metrics.posts_published,
           reply_coverage_count: item.metrics.reply_coverage_count,
           replies_published: item.metrics.replies_published,
+          video_replies_published: item.metrics.video_replies_published,
           active_days: item.metrics.active_days,
           removed_posts: item.metrics.removed_posts,
           removed_posts_penalty: item.metrics.removed_posts_penalty,
@@ -612,8 +652,11 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
           community_whatsapp_points:
             item.metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
           posts_points: item.metrics.posts_published * TOP_MENTOR_POST_WEIGHT,
-          replies_points: item.metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT,
-          reply_coverage_points: item.metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT,
+          replies_points: item.metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT,
+          reply_coverage_points:
+            item.metrics.reply_coverage_count * TOP_MENTOR_REPLY_COVERAGE_WEIGHT,
+          video_replies_points:
+            item.metrics.video_replies_published * TOP_MENTOR_VIDEO_REPLY_WEIGHT,
           active_days_points: item.metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT,
           removed_posts_penalty: item.metrics.removed_posts_penalty,
         },

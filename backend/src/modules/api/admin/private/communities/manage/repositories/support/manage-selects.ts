@@ -1,21 +1,25 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 
-export const TOP_MENTOR_UPVOTE_WEIGHT = 2;
+export const TOP_MENTOR_UPVOTE_WEIGHT = 4;
 
 export const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
 
-export const TOP_MENTOR_COMMENT_WEIGHT = 5;
+export const TOP_MENTOR_COMMENT_WEIGHT = 3;
 
-export const TOP_MENTOR_SHARE_WEIGHT = 8;
+export const TOP_MENTOR_SHARE_WEIGHT = 3;
 
 export const TOP_MENTOR_SAVE_WEIGHT = 2;
 
-export const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 6;
+export const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 3;
 
 export const TOP_MENTOR_POST_WEIGHT = 1;
 
 export const TOP_MENTOR_REPLY_WEIGHT = 3;
+
+export const TOP_MENTOR_REPLY_COVERAGE_WEIGHT = 10;
+
+export const TOP_MENTOR_VIDEO_REPLY_WEIGHT = 4;
 
 export const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 
@@ -537,6 +541,7 @@ export type AdminCommunityMentorMetrics = {
   removed_posts: number;
   removed_posts_penalty: number;
   replies_published: number;
+  video_replies_published: number;
   saves_received: number;
   shares_received: number;
   upvotes_received: number;
@@ -547,22 +552,24 @@ export const adminCommunityMentorFormula = () => ({
   comment_weight: TOP_MENTOR_COMMENT_WEIGHT,
   community_whatsapp_weight: TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
   description:
-    "score = (upvotes × 2) - (downvotes × 3) + (comentários recebidos × 5) + (compartilhamentos × 8) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 6) + (posts publicados × 1) + (cobertura de respostas × 3) + (dias ativos × 1) - penalidade progressiva por posts removidos",
+    "score = (cobertura de respostas × 10) + (respostas publicadas × 3) + (vídeo-respostas × 4) + (upvotes × 4) - (downvotes × 3) + (comentários recebidos × 3) + (compartilhamentos × 3) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 3) + (posts publicados × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
   downvote_weight: TOP_MENTOR_DOWNVOTE_WEIGHT,
   notes: [
     "A lista administrativa inclui todos os psicólogos participantes da comunidade, inclusive com score zero.",
     "A indicação de subida/queda compara a posição atual com o período anterior equivalente de 30 dias.",
     "Cobertura de respostas conta no máximo 1 ponto de cobertura por post de paciente respondido pelo psicólogo no período.",
+    "Respostas publicadas e vídeo-respostas também pontuam para reconhecer contribuição visível recente.",
     "Upvotes, downvotes, salvamentos e compartilhamentos feitos pelo próprio psicólogo no próprio conteúdo não entram no score.",
-    "Cliques de WhatsApp permanecem zerados enquanto a origem por comunidade não puder ser identificada.",
+    "Cliques de WhatsApp entram somente quando a origem por comunidade puder ser identificada e funcionam como bônus.",
   ],
   post_weight: TOP_MENTOR_POST_WEIGHT,
   removed_post_penalty_step: TOP_MENTOR_REMOVED_POST_PENALTY_STEP,
   reply_weight: TOP_MENTOR_REPLY_WEIGHT,
-  reply_coverage_weight: TOP_MENTOR_REPLY_WEIGHT,
+  reply_coverage_weight: TOP_MENTOR_REPLY_COVERAGE_WEIGHT,
   save_weight: TOP_MENTOR_SAVE_WEIGHT,
   share_weight: TOP_MENTOR_SHARE_WEIGHT,
   upvote_weight: TOP_MENTOR_UPVOTE_WEIGHT,
+  video_reply_weight: TOP_MENTOR_VIDEO_REPLY_WEIGHT,
 });
 
 export const emptyAdminCommunityMentorMetrics = (): AdminCommunityMentorMetrics => ({
@@ -575,6 +582,7 @@ export const emptyAdminCommunityMentorMetrics = (): AdminCommunityMentorMetrics 
   removed_posts: 0,
   removed_posts_penalty: 0,
   replies_published: 0,
+  video_replies_published: 0,
   saves_received: 0,
   shares_received: 0,
   upvotes_received: 0,
@@ -591,7 +599,9 @@ export const adminCommunityMentorScore = (metrics: AdminCommunityMentorMetrics) 
     metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT +
     metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT +
     metrics.posts_published * TOP_MENTOR_POST_WEIGHT +
-    metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.reply_coverage_count * TOP_MENTOR_REPLY_COVERAGE_WEIGHT +
+    metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.video_replies_published * TOP_MENTOR_VIDEO_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
   const penaltyPoints =
     metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
@@ -607,8 +617,9 @@ export const adminCommunityMentorScoreBreakdown = (metrics: AdminCommunityMentor
   downvotes_penalty: metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT,
   posts_points: metrics.posts_published * TOP_MENTOR_POST_WEIGHT,
   removed_posts_penalty: metrics.removed_posts_penalty,
-  replies_points: metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT,
-  reply_coverage_points: metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT,
+  replies_points: metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT,
+  reply_coverage_points: metrics.reply_coverage_count * TOP_MENTOR_REPLY_COVERAGE_WEIGHT,
+  video_replies_points: metrics.video_replies_published * TOP_MENTOR_VIDEO_REPLY_WEIGHT,
   saves_points: metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT,
   shares_points: metrics.shares_received * TOP_MENTOR_SHARE_WEIGHT,
   upvotes_points: metrics.upvotes_received * TOP_MENTOR_UPVOTE_WEIGHT,

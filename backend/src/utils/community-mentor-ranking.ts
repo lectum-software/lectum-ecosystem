@@ -62,14 +62,16 @@ export const getCommunityMentorWhatsappClickCounts = async (
   return countCommunityMentorWhatsappClicks(posts, replies, groups);
 };
 
-const TOP_MENTOR_UPVOTE_WEIGHT = 2;
+const TOP_MENTOR_UPVOTE_WEIGHT = 4;
 const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
-const TOP_MENTOR_COMMENT_WEIGHT = 5;
-const TOP_MENTOR_SHARE_WEIGHT = 8;
+const TOP_MENTOR_COMMENT_WEIGHT = 3;
+const TOP_MENTOR_SHARE_WEIGHT = 3;
 const TOP_MENTOR_SAVE_WEIGHT = 2;
-const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 6;
+const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 3;
 const TOP_MENTOR_POST_WEIGHT = 1;
 const TOP_MENTOR_REPLY_WEIGHT = 3;
+const TOP_MENTOR_REPLY_COVERAGE_WEIGHT = 10;
+const TOP_MENTOR_VIDEO_REPLY_WEIGHT = 4;
 const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
 
@@ -83,6 +85,7 @@ type TopMentorMutableMetrics = {
   removed_posts: number;
   removed_posts_penalty: number;
   replies_published: number;
+  video_replies_published: number;
   saves_received: number;
   shares_received: number;
   upvotes_received: number;
@@ -103,6 +106,7 @@ const emptyTopMentorMetrics = (): TopMentorMutableMetrics => ({
   removed_posts: 0,
   removed_posts_penalty: 0,
   replies_published: 0,
+  video_replies_published: 0,
   saves_received: 0,
   shares_received: 0,
   upvotes_received: 0,
@@ -120,7 +124,9 @@ const topMentorScore = (metrics: TopMentorMutableMetrics) => {
     metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT +
     metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT +
     metrics.posts_published * TOP_MENTOR_POST_WEIGHT +
-    metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.reply_coverage_count * TOP_MENTOR_REPLY_COVERAGE_WEIGHT +
+    metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.video_replies_published * TOP_MENTOR_VIDEO_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
   const penaltyPoints =
     metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
@@ -139,6 +145,7 @@ const hasTopMentorRankingSignal = (metrics: TopMentorMutableMetrics) => {
     metrics.posts_published > 0 ||
     metrics.reply_coverage_count > 0 ||
     metrics.replies_published > 0 ||
+    metrics.video_replies_published > 0 ||
     metrics.active_days > 0 ||
     metrics.removed_posts > 0
   );
@@ -174,6 +181,7 @@ export const getCommunityMentorRankingSignals = async (
   const [
     postParticipation,
     replyParticipation,
+    videoReplyParticipation,
     replyCoverage,
     postVotes,
     replyVotes,
@@ -206,6 +214,33 @@ export const getCommunityMentorRankingSignals = async (
         author_id: {
           in: uniqueMentorIds,
         },
+        post: {
+          ...publishedPostFilter,
+          author: {
+            role: "paciente",
+          },
+        },
+      },
+      _count: {
+        author_id: true,
+      },
+    }),
+    prisma.post_reply.groupBy({
+      by: ["author_id"],
+      where: {
+        deleted: false,
+        author_id: {
+          in: uniqueMentorIds,
+        },
+        media_type: "video",
+        media_url: {
+          not: null,
+        },
+        NOT: [
+          {
+            media_url: "",
+          },
+        ],
         post: {
           ...publishedPostFilter,
           author: {
@@ -472,6 +507,10 @@ export const getCommunityMentorRankingSignals = async (
     getMetrics(item.author_id).replies_published = item._count.author_id;
   }
 
+  for (const item of videoReplyParticipation) {
+    getMetrics(item.author_id).video_replies_published = item._count.author_id;
+  }
+
   for (const item of replyCoverage) {
     getMetrics(item.author_id).reply_coverage_count += 1;
   }
@@ -555,30 +594,33 @@ export const getCommunityMentorRankingSignals = async (
       const scoreDiff = b.score - a.score;
       if (scoreDiff !== 0) return scoreDiff;
 
+      const coverageDiff = b.metrics.reply_coverage_count - a.metrics.reply_coverage_count;
+      if (coverageDiff !== 0) return coverageDiff;
+
+      const videoReplyDiff = b.metrics.video_replies_published - a.metrics.video_replies_published;
+      if (videoReplyDiff !== 0) return videoReplyDiff;
+
+      const replyDiff = b.metrics.replies_published - a.metrics.replies_published;
+      if (replyDiff !== 0) return replyDiff;
+
+      const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
+      if (upvoteDiff !== 0) return upvoteDiff;
+
       const commentDiff = b.metrics.comments_received - a.metrics.comments_received;
       if (commentDiff !== 0) return commentDiff;
 
       const shareDiff = b.metrics.shares_received - a.metrics.shares_received;
       if (shareDiff !== 0) return shareDiff;
 
+      const saveDiff = b.metrics.saves_received - a.metrics.saves_received;
+      if (saveDiff !== 0) return saveDiff;
+
       const whatsappDiff =
         b.metrics.community_whatsapp_clicks - a.metrics.community_whatsapp_clicks;
       if (whatsappDiff !== 0) return whatsappDiff;
 
-      const coverageDiff = b.metrics.reply_coverage_count - a.metrics.reply_coverage_count;
-      if (coverageDiff !== 0) return coverageDiff;
-
-      const saveDiff = b.metrics.saves_received - a.metrics.saves_received;
-      if (saveDiff !== 0) return saveDiff;
-
-      const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
-      if (upvoteDiff !== 0) return upvoteDiff;
-
       const activeDayDiff = b.metrics.active_days - a.metrics.active_days;
       if (activeDayDiff !== 0) return activeDayDiff;
-
-      const replyDiff = b.metrics.replies_published - a.metrics.replies_published;
-      if (replyDiff !== 0) return replyDiff;
 
       const postDiff = b.metrics.posts_published - a.metrics.posts_published;
       if (postDiff !== 0) return postDiff;

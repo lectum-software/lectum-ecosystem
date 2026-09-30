@@ -30,6 +30,7 @@ export class AdminCommunityManageMentorRepository {
     const [
       postParticipation,
       replyParticipation,
+      videoReplyParticipation,
       replyCoverage,
       postVotes,
       replyVotes,
@@ -67,6 +68,34 @@ export class AdminCommunityManageMentorRepository {
           },
           createdAt: createdAtWindow,
           deleted: false,
+          post: {
+            ...publishedPostFilter,
+            author: {
+              role: "paciente",
+            },
+          },
+        },
+      }),
+      prisma.post_reply.groupBy({
+        _count: {
+          author_id: true,
+        },
+        by: ["author_id"],
+        where: {
+          author_id: {
+            in: mentorIds,
+          },
+          createdAt: createdAtWindow,
+          deleted: false,
+          media_type: "video",
+          media_url: {
+            not: null,
+          },
+          NOT: [
+            {
+              media_url: "",
+            },
+          ],
           post: {
             ...publishedPostFilter,
             author: {
@@ -335,6 +364,8 @@ export class AdminCommunityManageMentorRepository {
       metrics(item.author_id).posts_published = item._count.author_id;
     for (const item of replyParticipation)
       metrics(item.author_id).replies_published = item._count.author_id;
+    for (const item of videoReplyParticipation)
+      metrics(item.author_id).video_replies_published = item._count.author_id;
     for (const item of replyCoverage) metrics(item.author_id).reply_coverage_count += 1;
 
     for (const vote of postVotes) {

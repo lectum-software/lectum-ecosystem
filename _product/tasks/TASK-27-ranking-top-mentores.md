@@ -387,3 +387,55 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [ ] Concluir smoke autenticado em homologacao com fotos e dados reais.
 
 Referencia: imagem aprovada de 26/09/2026 14:47:53 e screenshot de regressao enviados pelo usuario. Evidencia geometrica local: `../mentor-393.png`, renderizada a partir do TSX real com fixture isolada fora do repositorio, sem endpoints simulados ou dados permanentes. Build, TypeScript, Biome, source-safety e sincronizacao de versao verificados. A validacao com sessao real nao foi substituida pela fixture.
+
+## Complemento 2026-09-30 - recalibragem por cobertura e video-respostas
+
+- Pedido do usuario: o ranking real da comunidade de Relacionamentos colocava psicologos com uma unica video-resposta acima de profissionais com maior cobertura/quantidade de respostas, o que parecia injusto enquanto a plataforma ainda tem baixo volume de sinais invisiveis.
+- Decisao: manter o ranking derivado, sem mocks, sem schema novo e sem snapshot, mas recalibrar a formula para priorizar contribuicao visivel recente em posts de pacientes.
+- Formula vigente documentada em ADR-0070 e `DATA-MODEL.md`:
+  - upvote recebido `x4`;
+  - downvote recebido `-3`;
+  - comentario recebido `x3`;
+  - compartilhamento recebido `x3`;
+  - salvamento recebido `x2`;
+  - WhatsApp originado da comunidade `x3`;
+  - post publicado `x1`;
+  - resposta publicada `x3`;
+  - cobertura de resposta `x10`;
+  - video-resposta `x4`;
+  - dia ativo `x1`;
+  - menos penalidade progressiva por posts removidos.
+- `reply_coverage_count` continua contando no maximo uma cobertura por post de paciente respondido pelo psicologo no periodo.
+- `replies_published` passa a pontuar diretamente para desempatar/contemplar volume real mesmo quando duas respostas cobrem o mesmo post.
+- `video_replies_published` foi adicionado como metrica derivada para respostas com `media_type="video"` e URL de midia valida em posts de pacientes.
+- Os sinais invisiveis (`shares_received` e `community_whatsapp_clicks`) seguem no ranking, mas com peso menor para atuar como bonus e nao como fator dominante em base pequena.
+- Desempates agora priorizam, apos o score, maior cobertura, mais video-respostas e mais respostas publicadas antes de sinais passivos.
+- Escopo: backend e documentacao; sem frontend, admin, video, Prisma schema, migration, env obrigatoria nova, package novo, seed, limpeza, reset ou alteracao de funcionalidade de video.
+- Impacto de deploy: aditivo no DTO por incluir `video_replies_published`, `video_replies_points` e `video_reply_weight`; frontends antigos ignoram campos extras. Rollback por reversao revisada em `homolog`.
+- ADR atualizado: `adrs/0070-ranking-top-mentores.md`.
+
+### Critérios específicos deste complemento
+
+- [x] Cobertura de posts de pacientes tem peso maior que sinais invisiveis fracos.
+- [x] Quantidade de respostas pontua independentemente da cobertura.
+- [x] Video-respostas reais recebem bonus proprio sem alterar o pipeline de video.
+- [x] Desempates priorizam cobertura, video-respostas e respostas publicadas.
+- [x] `DATA-MODEL.md` e ADR-0070 registram a formula vigente.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validações deste complemento
+
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/community/repositories/support/community-feed.ts src/modules/api/private/community/repositories/support/community-ranking.ts src/modules/api/private/community/repositories/queries/CommunityMentorRepository.ts src/utils/community-mentor-ranking.ts src/modules/api/private/community/DTOs/ICommunityDTO.ts`
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/community/repositories/support/community-ranking.test.ts`
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/admin/private/communities/manage/repositories/support/manage-selects.ts src/modules/api/admin/private/communities/manage/repositories/queries/AdminCommunityManageMentorRepository.ts src/modules/api/admin/private/communities/manage/use-cases/services/activity-ranking.ts src/modules/api/admin/private/communities/manage/DTOs/types/content.ts`
+- [x] `pnpm --dir frontend exec biome check --write src/api/generator/types/community.ts`
+- [x] `pnpm --dir admin exec biome check --write src/api/req/communities/types/ranking-reports.ts`
+- [x] `pnpm --dir backend exec tsx --test src/modules/api/private/community/repositories/support/community-ranking.test.ts`
+- [x] `pnpm --dir backend typecheck`
+- [x] `pnpm --dir backend check` com `DATABASE_URL` e `JWT_SECRET_KEY` locais definidos para a suite que importa environment; tentativa anterior sem essas envs reproduziu falha de ambiente em `src/main/notification/community-top-mentors.test.ts`, e os testes isolados afetados passaram.
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir admin check`
+- [x] `pnpm version:bump` para `0.1.516`
+- [x] `pnpm check:version`
+- [x] Commit proprio criado e push em `homolog` executado.
