@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.518",
+  "version": "0.1.519",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit --pretty false",
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:signout && pnpm test:auth-navigation"
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:profile-reply-actions && pnpm test:signout && pnpm test:auth-navigation"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",

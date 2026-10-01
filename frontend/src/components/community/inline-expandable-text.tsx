@@ -138,7 +138,12 @@ export const InlineExpandableText = ({
           {href || !onToggle ? (
             <span className={toggleClassName}>{toggleLabel}</span>
           ) : (
-            <button className={toggleClassName} onClick={onToggle} type="button">
+            <button
+              aria-expanded={expanded}
+              className={toggleClassName}
+              onClick={onToggle}
+              type="button"
+            >
               {toggleLabel}
             </button>
           )}

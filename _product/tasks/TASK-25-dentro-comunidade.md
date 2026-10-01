@@ -1,5 +1,24 @@
 # TASK-25: Dentro da comunidade
 
+## Complemento 2026-09-30 - pergunta contextual no perfil
+
+Referencia: screenshot do usuario `WhatsApp Image 2026-09-30 at 21.16.10.jpeg`.
+Builder/Quick Copy nao esta disponivel como ferramenta nesta sessao; usamos a
+referencia enviada e os componentes existentes do feed, mobile-first.
+
+- [x] Titulo completo e descricao com a mesma previa de duas linhas do feed acima da resposta.
+- [x] Sem nome, avatar ou outros dados do paciente no trecho contextual.
+- [x] `ver mais` / `ver menos` expande e recolhe no proprio perfil.
+- [x] Titulo e corpo do card de resposta nao abrem a tela do post.
+- [x] Reutilizar dados existentes, sem mudancas de API ou banco.
+- [x] Testes focados de renderizacao e contrato.
+- [x] `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check:version`.
+- Browser local tentou carregar o perfil real, mas a API retornou falha de conexao
+  para essa origem. Conferencia visual/interativa sera concluida no deploy de
+  homologacao, sem mocks e sem promover automaticamente para producao.
+
+Decisao: `adrs/0541-pergunta-contextual-no-perfil.md`.
+
 ## Metadata
 
 | Campo | Valor |

@@ -23,6 +23,7 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
+import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
@@ -537,6 +538,10 @@ export const CommunityPostCard = ({
             )}
           </div>
         </div>
+      ) : null}
+
+      {primaryReply ? (
+        <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
       ) : null}
 
       <div className="grid gap-2">
