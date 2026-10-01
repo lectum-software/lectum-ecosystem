@@ -486,6 +486,7 @@ ou cortesia manual.
 | 197 | [TASK-197 - Conteudo global dos psicologos no Admin](TASK-197-admin-conteudo-global-psicologos.md) | Completed | 71, 75 |
 | 198 | [TASK-198 - Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md) | In Progress | 181, 182 |
 | 199 | [TASK-199 - Playback de respostas em posts de membros excluidos](TASK-199-playback-respostas-autor-post-excluido.md) | Completed | 167 |
+| 200 | [TASK-200 - Audio da comunidade apos fallback mudo](TASK-200-audio-comunidade-fallback-mudo.md) | Completed | 194 |
 
 ## Ordem operacional recomendada sem bloqueios
 
