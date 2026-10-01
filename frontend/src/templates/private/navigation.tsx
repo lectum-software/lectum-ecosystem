@@ -12,7 +12,6 @@ import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
 export type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
-  autoHideNavigation?: boolean;
   bottomNavigationCenterAction?: {
     ariaLabel: string;
     href: string;
@@ -291,7 +290,7 @@ export const isDesktopActivePath = (pathname: string, item: NavigationItem) => {
 
 export const MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH = new Map<string, string>([
   ["/psicologos", "/psicologos"],
-  ["/app/favoritos", "/app/favoritos"],
+  ["/app/favoritos", "/app/perfil"],
   [DEFAULT_COMMUNITY_FEED_HREF, DEFAULT_COMMUNITY_FEED_HREF],
   ["/app/notificacoes", "/app/notificacoes"],
   ["/app/perfil", "/app/perfil"],

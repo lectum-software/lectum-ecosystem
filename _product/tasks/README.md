@@ -487,6 +487,7 @@ ou cortesia manual.
 | 198 | [TASK-198 - Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md) | In Progress | 181, 182 |
 | 199 | [TASK-199 - Playback de respostas em posts de membros excluidos](TASK-199-playback-respostas-autor-post-excluido.md) | Completed | 167 |
 | 200 | [TASK-200 - Audio da comunidade apos fallback mudo](TASK-200-audio-comunidade-fallback-mudo.md) | Completed | 194 |
+| 201 | [TASK-201 - Publicar no centro da navegacao e dica compartilhada](TASK-201-navegacao-publicar-dica-compartilhada.md) | Completed | 200 |
 
 ## Ordem operacional recomendada sem bloqueios
 
