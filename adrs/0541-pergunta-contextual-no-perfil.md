@@ -47,6 +47,16 @@ o paciente e sem navegar para o post ao expandir a pergunta.
 
 ### Posicao e proporcoes ao ampliar
 
+- Refinamento 2026-10-01 posterior: ancorar ao topo do player, independentemente
+  do formato da gravacao. Substitui o referencial object-contain descrito abaixo.
+  Usar quadro virtual 9:16 limitado pelas dimensoes do player, centralizado apenas
+  horizontalmente, com top zero. Fonte, padding e recuos usam esse mesmo quadro.
+  Isso aproveita a faixa preta superior de videos quadrados/horizontais em telas
+  verticais e nao muda o enquadramento ou corta a gravacao. Em telas sem faixa
+  superior a pergunta continua sobreposta; nao ha deteccao de rosto ou de barras
+  pretas gravadas dentro do arquivo. Titulos extensos mantem rolagem acessivel.
+  ResizeObserver acompanha somente o player; metadados e trocas de resolucao nao
+  mudam a arte. Nao altera os demais players nem exportacoes sociais.
 - Aproximar a caixinha do topo: margem de 4% da area visivel do video (antes 13%).
 - Refinamento 2026-10-01: topo e duas laterais usam `4cqh` do mesmo container,
   garantindo a mesma distancia em pixels, e nao percentuais de eixos diferentes.

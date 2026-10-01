@@ -2,40 +2,27 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
-export const getContainedQuestionFrame = (
-  width: number,
-  height: number,
-  videoWidth = 9,
-  videoHeight = 16,
-) => {
-  const ratio = videoWidth > 0 && videoHeight > 0 ? videoWidth / videoHeight : 9 / 16;
-  const contentWidth = Math.min(width, height * ratio);
-  const contentHeight = contentWidth / ratio;
+export const getProfileQuestionFrame = (width: number, height: number) => {
+  const contentWidth = Math.min(width, (height * 9) / 16);
   return {
-    height: contentHeight,
+    height: (contentWidth * 16) / 9,
     left: (width - contentWidth) / 2,
-    top: (height - contentHeight) / 2,
+    top: 0,
     width: contentWidth,
   };
 };
 
 export const ProfileReplyVideoQuestion = ({ title }: { title: string }) => {
   const planeRef = useRef<HTMLDivElement>(null);
-  const [frame, setFrame] = useState<ReturnType<typeof getContainedQuestionFrame> | null>(null);
+  const [frame, setFrame] = useState<ReturnType<typeof getProfileQuestionFrame> | null>(null);
 
   useLayoutEffect(() => {
     const player = planeRef.current?.parentElement;
-    const video = player?.querySelector("video");
-    if (!player || !video) return;
+    if (!player) return;
 
-    // Match object-contain, including the letterboxing used by the expanded player.
+    // Keep the approved portrait layout anchored to the player, not the footage.
     const measure = () => {
-      const next = getContainedQuestionFrame(
-        player.clientWidth,
-        player.clientHeight,
-        video.videoWidth,
-        video.videoHeight,
-      );
+      const next = getProfileQuestionFrame(player.clientWidth, player.clientHeight);
       setFrame((current) =>
         current &&
         Object.keys(next).every(
@@ -47,13 +34,9 @@ export const ProfileReplyVideoQuestion = ({ title }: { title: string }) => {
     };
     const observer = new ResizeObserver(measure);
     observer.observe(player);
-    video.addEventListener("loadedmetadata", measure);
-    video.addEventListener("resize", measure);
     measure();
     return () => {
       observer.disconnect();
-      video.removeEventListener("loadedmetadata", measure);
-      video.removeEventListener("resize", measure);
     };
   }, []);
 

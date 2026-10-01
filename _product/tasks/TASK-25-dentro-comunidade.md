@@ -1,5 +1,15 @@
 # TASK-25: Dentro da comunidade
 
+## Refinamento 2026-10-01 - pergunta ancorada ao player
+
+- [x] Posicao e dimensoes da pergunta independem do formato intrinseco do video.
+- [x] Referencial 9:16 limitado ao player, centralizado horizontalmente e preso ao topo.
+- [x] Preservar fonte, recuos iguais, padding simetrico e escala ao ampliar/girar.
+- [x] Observar apenas o tamanho do player, sem reposicionar ao carregar metadados.
+- [x] Testar quadro mobile, ampliado e desktop, incluindo faixas de videos quadrados/horizontais.
+- Escopo: somente caixinha no perfil; nao altera object-fit, midia ou demais paginas.
+- Referencia: capturas do usuario em 2026-10-01; Builder indisponivel nesta sessao.
+
 ## Refinamento 2026-10-01 - largura da pergunta com recuos iguais
 
 - [x] Ampliar largura com o mesmo recuo em pixels no topo e nas duas laterais.

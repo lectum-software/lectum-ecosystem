@@ -13,23 +13,44 @@ registerHooks({
   },
 });
 const { ProfileReplyQuestion } = await import("./profile-reply-question.tsx");
-const { ProfileReplyVideoQuestion, getContainedQuestionFrame } = await import(
+const { ProfileReplyVideoQuestion, getProfileQuestionFrame } = await import(
   "./profile-reply-video-question.tsx"
 );
 
-test("question uses the contained video plane for inline, fullscreen and rotated layouts", () => {
-  assert.deepEqual(getContainedQuestionFrame(320, 640, 1080, 1920), {
+test("question stays at the player top with a proportional portrait frame in all layouts", () => {
+  assert.deepEqual(getProfileQuestionFrame(320, 640), {
     width: 320,
     height: (320 * 16) / 9,
     left: 0,
-    top: (640 - (320 * 16) / 9) / 2,
+    top: 0,
   });
-  const expanded = getContainedQuestionFrame(393, 852, 1080, 1920);
+  const expanded = getProfileQuestionFrame(393, 852);
   assert.equal(expanded.width, 393);
+  assert.equal(expanded.top, 0);
   assert.equal(expanded.height / expanded.width, 16 / 9);
-  const landscape = getContainedQuestionFrame(1280, 720, 1080, 1920);
+  const landscape = getProfileQuestionFrame(1280, 720);
   assert.deepEqual(landscape, { width: 405, height: 720, left: 437.5, top: 0 });
-  assert.deepEqual(getContainedQuestionFrame(320, 640, 0, 0), getContainedQuestionFrame(320, 640));
+  assert.deepEqual(getProfileQuestionFrame(0, 0), { width: 0, height: 0, left: 0, top: 0 });
+});
+
+test("portrait, square and landscape footage cannot move or resize the question", () => {
+  const source = readFileSync(
+    new URL("./profile-reply-video-question.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /getProfileQuestionFrame\(player.clientWidth, player.clientHeight\)/);
+  assert.match(source, /observer.observe\(player\)/);
+  assert.doesNotMatch(source, /videoWidth|videoHeight|loadedmetadata|querySelector\("video"\)/);
+  const frame = getProfileQuestionFrame(338, (338 * 16) / 9);
+  const topInset = frame.height * 0.04;
+  // The question starts in the upper letterbox instead of following the footage.
+  for (const [videoWidth, videoHeight] of [
+    [1080, 1080],
+    [1920, 1080],
+  ]) {
+    const imageTop = (frame.height - (frame.width * videoHeight) / videoWidth) / 2;
+    assert.ok(topInset < imageTop);
+  }
 });
 
 test("question position, typography, padding and radius scale together with the video", () => {
