@@ -1,5 +1,13 @@
 # TASK-25: Dentro da comunidade
 
+## Refinamento 2026-10-01 - largura da pergunta com recuos iguais
+
+- [x] Ampliar largura com o mesmo recuo em pixels no topo e nas duas laterais.
+- [x] Usar `4cqh` do video visivel nos tres recuos, inclusive ao ampliar.
+- [x] Manter fonte, padding, raio, titulo e comportamento existentes.
+- [x] Teste de regressao exige os recuos iguais e remove a largura fixa anterior.
+- Escopo: somente caixinha de respostas em video no perfil; ADR-0541.
+
 ## Refinamento 2026-09-30 - caixinha proxima do topo e ampliacao proporcional
 
 - [x] Margem superior de 4% da imagem visivel, sem contar faixas pretas.

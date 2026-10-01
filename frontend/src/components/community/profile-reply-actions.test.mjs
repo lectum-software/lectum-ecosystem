@@ -36,7 +36,9 @@ test("question position, typography, padding and radius scale together with the 
   const html = renderToStaticMarkup(
     createElement(ProfileReplyVideoQuestion, { title: "Question" }),
   );
-  assert.match(html, /top-\[4%\]/);
+  assert.match(html, /top-\[4cqh\]/);
+  assert.match(html, /inset-x-\[4cqh\]/);
+  assert.doesNotMatch(html, /left-\[10.2%\]|w-\[79.7%\]/);
   assert.match(html, /container-type:size/);
   for (const token of ["text-[5cqw]", "text-[4.375cqw]", "p-[5cqw]", "rounded-[3.75cqw]"]) {
     assert.ok(html.includes(token));

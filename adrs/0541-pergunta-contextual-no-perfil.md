@@ -33,7 +33,8 @@ o paciente e sem navegar para o post ao expandir a pergunta.
   caixinha sobreposta: faixa azul `Pergunta`, corpo branco e titulo centralizado.
 - Referencias existentes: `LectumSharePreviewArt` em
   `lectum-share-download-dialog.tsx` e `SOCIAL_SHARE_ART_LAYOUT` no servico video.
-  Preservar largura de 79,7%; adaptar tipografia para leitura web.
+  A largura inicial de 79,7% foi substituida por recuos iguais ao topo; manter a
+  tipografia proporcional ao video, sem aumentar a fonte ao alargar a caixa.
 - Nao renderizar logo, assinatura inferior, descricao ou botao de contexto na arte.
   O cabecalho normal do profissional fora do player permanece.
 - Slot opcional `overlay` dentro de `VerticalVideoPlayerShell` acompanha a
@@ -47,6 +48,9 @@ o paciente e sem navegar para o post ao expandir a pergunta.
 ### Posicao e proporcoes ao ampliar
 
 - Aproximar a caixinha do topo: margem de 4% da area visivel do video (antes 13%).
+- Refinamento 2026-10-01: topo e duas laterais usam `4cqh` do mesmo container,
+  garantindo a mesma distancia em pixels, e nao percentuais de eixos diferentes.
+  A largura passa a ocupar o espaco entre os recuos; fonte/padding nao mudam.
 - Medir a area `object-contain` usando dimensoes intrinsecas e ResizeObserver;
   excluir faixas pretas do referencial, inclusive no portal ampliado e ao girar.
 - Tamanho do texto, padding e raio usam unidades do container do video, nao da

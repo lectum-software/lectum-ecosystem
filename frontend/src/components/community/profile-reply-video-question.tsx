@@ -65,7 +65,7 @@ export const ProfileReplyVideoQuestion = ({ title }: { title: string }) => {
       style={{ ...(frame ?? { inset: 0 }), containerType: "size" }}
     >
       <div
-        className="pointer-events-auto absolute top-[4%] left-[10.2%] flex max-h-[32%] w-[79.7%] flex-col overflow-hidden rounded-[3.75cqw] text-center"
+        className="pointer-events-auto absolute inset-x-[4cqh] top-[4cqh] flex max-h-[32%] flex-col overflow-hidden rounded-[3.75cqw] text-center"
         data-profile-video-question
       >
         <div className="shrink-0 bg-primary px-[3.75cqw] py-[1.875cqw] text-[4.375cqw] font-bold leading-[1.428571] text-primary-foreground">
