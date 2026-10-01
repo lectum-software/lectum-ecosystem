@@ -4,15 +4,11 @@ import { ArrowRight, Check, ChevronDown, Compass, Search, Settings, UserX } from
 import Image from "next/image";
 import Link from "next/link";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
+import type { Community, CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Input } from "@/registry/new-york-v4/ui/input";
-import {
-  COMMUNITY_EXPLORE_HREF,
-  COMMUNITY_FEED_CHIPS,
-  getCommunityFeedChip,
-} from "@/utils/community";
+import { COMMUNITY_EXPLORE_HREF, getCommunityFeedChip } from "@/utils/community";
 import {
   getCommunityAuthorDisplayName,
   getCommunityInitials as getInitials,
@@ -229,13 +225,15 @@ export const FeedSearchMenu = ({
   );
 };
 
-export type FeedCommunityChip = (typeof COMMUNITY_FEED_CHIPS)[number];
+export type FeedCommunityOption = Pick<Community, "avatar_url" | "name" | "slug"> & {
+  iconUrl?: string;
+};
 
 export const FeedCommunitySelectorAvatar = ({
   community,
   variant = "button",
 }: {
-  community: FeedCommunityChip | null;
+  community: FeedCommunityOption | null;
   variant?: "button" | "menu";
 }) => {
   const sizeClassName = variant === "button" ? "h-7 w-7 rounded-[10px]" : "h-6 w-6 rounded-[9px]";
@@ -255,7 +253,7 @@ export const FeedCommunitySelectorAvatar = ({
     );
   }
 
-  const avatarSrc = resolvePublicMediaUrl(community.iconUrl);
+  const avatarSrc = resolvePublicMediaUrl(community.avatar_url ?? community.iconUrl ?? null);
 
   return (
     <span
@@ -272,7 +270,7 @@ export const FeedCommunitySelectorAvatar = ({
           fill
           sizes={variant === "button" ? "28px" : "24px"}
           src={avatarSrc}
-          unoptimized={isPublicMediaUrl(community.iconUrl)}
+          unoptimized={isPublicMediaUrl(community.avatar_url ?? community.iconUrl ?? null)}
         />
       ) : (
         getInitials(community.name)
@@ -283,14 +281,27 @@ export const FeedCommunitySelectorAvatar = ({
 
 export const FeedCommunitySelect = ({
   activeSlug,
+  communities,
   onOpenChange,
   open,
 }: {
   activeSlug: string | null;
+  communities: Community[];
   onOpenChange: (value: boolean) => void;
   open: boolean;
 }) => {
-  const activeCommunity = getCommunityFeedChip(activeSlug);
+  const communityOptions: FeedCommunityOption[] = communities.map((community) => {
+    const metadata = getCommunityFeedChip(community.slug);
+
+    return {
+      avatar_url: community.avatar_url,
+      iconUrl: metadata?.iconUrl,
+      name: community.name,
+      slug: community.slug,
+    };
+  });
+  const activeCommunity =
+    communityOptions.find((community) => community.slug === activeSlug) ?? null;
 
   return (
     <div className="relative min-w-0 flex-1">
@@ -339,7 +350,7 @@ export const FeedCommunitySelect = ({
 
           <div className="my-1 h-px bg-border" />
 
-          {COMMUNITY_FEED_CHIPS.map((item) => {
+          {communityOptions.map((item) => {
             const isActive = item.slug === activeSlug;
 
             return (

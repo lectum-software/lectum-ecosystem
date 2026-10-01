@@ -12,7 +12,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useInfiniteCommunityFeedPosts } from "@/api/callers/community";
+import { useCommunities, useInfiniteCommunityFeedPosts } from "@/api/callers/community";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -27,7 +27,6 @@ import {
   COMMUNITY_CREATE_POST_HREF,
   COMMUNITY_EXPLORE_HREF,
   COMMUNITY_FEED_SLUG,
-  getCommunityFeedChip,
 } from "@/utils/community";
 import {
   createLectumShareLinkTarget,
@@ -56,10 +55,9 @@ export const CommunityFeedLogic = ({
   const searchParams = useSearchParams();
   const conversion = useProgressiveConversion();
   const routeSlug = typeof params.slug === "string" ? params.slug : COMMUNITY_FEED_SLUG;
-  const communityFromQuery = getCommunityFeedChip(searchParams.get("community"));
-  const communityFromLegacySlug =
-    routeSlug !== COMMUNITY_FEED_SLUG ? getCommunityFeedChip(routeSlug) : null;
-  const selectedCommunitySlug = communityFromQuery?.slug ?? communityFromLegacySlug?.slug ?? null;
+  const queryCommunitySlug = searchParams.get("community")?.trim() || null;
+  const selectedCommunitySlug =
+    queryCommunitySlug ?? (routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : null);
   const [scope, setScope] = useState<CommunityFeedScope>("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -83,6 +81,7 @@ export const CommunityFeedLogic = ({
     }),
     [deferredSearch, scope, selectedCommunitySlug],
   );
+  const communitiesQuery = useCommunities({ limit: 50, page: 1 });
   const feed = useInfiniteCommunityFeedPosts(query);
   const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
@@ -228,6 +227,7 @@ export const CommunityFeedLogic = ({
 
             <FeedCommunitySelect
               activeSlug={selectedCommunitySlug}
+              communities={communitiesQuery.data?.data ?? []}
               onOpenChange={handleCommunityMenuOpenChange}
               open={communityMenuOpen}
             />

@@ -341,6 +341,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, dados de comunidade, filtros, posts, votos ou membership.
 - Fonte visual/auditavel: screenshot do usuario e referencia local `_product/proto/Dentro da Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
+
+## Complemento 2026-09-30 - nome administrativo da comunidade
+
+- [x] Exploracao e seletor do feed usam `community.name` da API, preservando a grafia cadastrada pelo administrador.
+- [x] Metadados locais deixam de definir nomes alternativos de comunidades.
+- [x] Perfil publico reserva mais largura para o nome no mobile, evitando cortar o final de Relacionamentos.
+- [x] Migration corrige somente as duas grafias legadas de Relacionamentos com proposito; outros nomes administrativos sao preservados.
+- [x] `pnpm --dir frontend check` e `pnpm check:version` passaram.
+- `pnpm --dir backend db:migrate` foi tentado, mas este checkout nao possui `DATABASE_URL` de desenvolvimento. A aplicacao da migration sera validada no deploy de homologacao antes da promocao.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/utils/media.ts`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, HTTP local `200` em `/app/community/ansiedade-em-equilibrio` e HTTP local `200 image/png` para `http://127.0.0.1:3001/community/icons/ansiedade.png`.
 
 ## Complemento 2026-06-26 - faixa superior suave nas comunidades
