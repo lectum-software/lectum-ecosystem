@@ -24,6 +24,10 @@ emails nem dados privados. Formularios seguem RHF/Zod/controllers e URL state.
 Estilo neutro inspirado na captura Facebook e aplicado somente nesta rota, com
 fonte de sistema, cinza #f0f2f5 e branco. Nao muda o design system global.
 
+Refinamento visual de 01/10: titulo/contexto da pergunta acima da midia; texto
+do autor e comunidade na coluna lateral. A ordem semantica acompanha a visual
+nos dois breakpoints, sem mudar componentes compartilhados de outras paginas.
+
 ## Consequencias
 
 Sem schema/env/pacote novo. Offset tem custo crescente em paginas profundas;

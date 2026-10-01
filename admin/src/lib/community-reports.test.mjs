@@ -229,6 +229,45 @@ const populatedContent = {
   ],
 };
 
+const { ContentRow } = loadSource("../app/(admin)/comunidades/conteudo/content-row.tsx");
+
+test("global content puts question above media and reply text beside its community", () => {
+  const client = new QueryClient();
+  try {
+    for (const type of ["reply", "post"]) {
+      for (const excerpt of ["Psychologist reply text", ""]) {
+        const item = {
+          ...populatedContent.data[0],
+          author: { ...populatedContent.data[0].author, role: "psicologo" },
+          community: { id: "local-community", slug: "local-community", name: "Community name" },
+          excerpt,
+          parent_post_title: "Original question title",
+          media: { media_type: "video", media_url: "/public/files/local-test.mp4" },
+          type,
+        };
+        const html = renderToStaticMarkup(
+          createElement(QueryClientProvider, { client }, createElement(ContentRow, { item })),
+        );
+        const heading = html.indexOf("<h3");
+        const media = html.indexOf('aria-label="Miniplayer de vídeo publicado"');
+        const community = html.indexOf("Community name");
+        assert.ok(heading >= 0 && media > heading && community > media);
+        if (type === "reply") {
+          assert.ok(html.indexOf("Em resposta a") < heading);
+          assert.match(html, /Original question title<\/h3>/);
+        } else {
+          assert.doesNotMatch(html, /Em resposta a/);
+          assert.match(html, /Discardable content title<\/h3>/);
+        }
+        if (excerpt) assert.ok(html.indexOf(excerpt) > media && html.indexOf(excerpt) < community);
+        assert.match(html, /grid-cols-\[88px_minmax\(0,1fr\)\]/);
+      }
+    }
+  } finally {
+    client.clear();
+  }
+});
+
 const renderContentState = (status, data, type = "all") => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, retryOnMount: false, staleTime: Infinity } },

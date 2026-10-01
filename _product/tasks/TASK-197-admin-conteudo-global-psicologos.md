@@ -24,6 +24,13 @@ PROTO consultado; capturas fornecidas e componentes do Admin sao as referencias.
 
 ## Deploy e rollback
 
+Refinamento 01/10/2026: contexto "Em resposta a" e titulo ficam acima da midia;
+texto do psicologo e comunidade ficam ao lado dela, inclusive no mobile.
+Cabecalho simplificado: removido "Comunidades" acima do titulo "Conteudo".
+Sem mudanca em players, metricas, acoes ou contratos. Teste de renderizacao cobre
+posts/respostas e presenca/ausencia de texto.
+Check Admin 0.1.530 aprovado; 17 testes do arquivo de reports/conteudo passaram.
+
 Somente homolog nesta task. Contrato aditivo com autenticacao admin existente.
 Sem migration, dependencia ou variavel nova. Nenhuma escrita de dados no novo GET.
 Rollback: reverter codigo da task; nenhum dado requer restauracao.

@@ -73,8 +73,7 @@ export function GlobalContentClient() {
     <div className={`${styles.content} admin-content-library`}>
       <header className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-muted">Comunidades</p>
-          <h1 className="mt-1 text-2xl font-bold">Conteúdo</h1>
+          <h1 className="text-2xl font-bold">Conteúdo</h1>
           <p className="mt-1 text-sm text-muted">Posts e respostas dos psicólogos</p>
         </div>
         <button

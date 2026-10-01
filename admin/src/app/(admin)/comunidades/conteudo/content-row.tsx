@@ -38,12 +38,16 @@ export function ContentRow({ item }: { item: AdminGlobalContentItem }) {
           ) : null}
         </div>
       </div>
-      <Link
-        className="mt-3 inline-block max-w-full break-words text-sm font-semibold text-primary hover:underline"
-        href={`/comunidades/${encodeURIComponent(item.community.slug)}?tab=conteudo`}
-      >
-        {item.community.name}
-      </Link>
+      <div className="mt-3 min-w-0 break-words">
+        {!isPost && item.parent_post_title ? (
+          <p className="mb-1 text-xs text-muted">Em resposta a</p>
+        ) : null}
+        <h3 className="text-base font-semibold leading-snug">
+          {isPost
+            ? item.title || "Post sem título"
+            : item.parent_post_title || item.title || "Resposta"}
+        </h3>
+      </div>
       <div className="mt-3 grid min-w-0 gap-4 sm:grid-cols-[1fr_auto]">
         <div
           className={`grid min-w-0 gap-4 ${item.media ? "grid-cols-[88px_minmax(0,1fr)] sm:grid-cols-[112px_minmax(0,1fr)]" : ""}`}
@@ -54,17 +58,15 @@ export function ContentRow({ item }: { item: AdminGlobalContentItem }) {
             </div>
           ) : null}
           <div className="min-w-0 break-words">
-            {!isPost && item.parent_post_title ? (
-              <p className="mb-1 text-xs text-muted">Em resposta a</p>
-            ) : null}
-            <h3 className="text-base font-semibold leading-snug">
-              {isPost
-                ? item.title || "Post sem título"
-                : item.parent_post_title || item.title || "Resposta"}
-            </h3>
             {item.excerpt ? (
-              <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted">{item.excerpt}</p>
+              <p className="line-clamp-3 text-sm leading-6 text-muted">{item.excerpt}</p>
             ) : null}
+            <Link
+              className={`${item.excerpt ? "mt-3 " : ""}inline-block max-w-full break-words text-sm font-semibold text-primary hover:underline`}
+              href={`/comunidades/${encodeURIComponent(item.community.slug)}?tab=conteudo`}
+            >
+              {item.community.name}
+            </Link>
           </div>
         </div>
         <div className="flex flex-wrap items-start justify-end gap-2 sm:w-32">
