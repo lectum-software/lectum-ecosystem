@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, ImageDown, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   type ContentVideoDownloadTarget,
@@ -67,7 +67,7 @@ export const ContentVideoDownloadActions = ({
           {artPending ? (
             <Loader2 aria-hidden className={cn(iconClass, "animate-spin")} />
           ) : (
-            <ImageDown aria-hidden className={iconClass} />
+            <Download aria-hidden className={iconClass} />
           )}
           <span>{compact ? "Com arte" : "Baixar com arte"}</span>
         </button>

@@ -1,0 +1,75 @@
+# TASK-197 - Conteudo global dos psicologos no Admin
+
+## Escopo
+
+Pedido de 01/10/2026: Comunidades > Conteudo agrega posts e respostas de todos os
+psicologos em todas as comunidades. Refina a exclusao de lista global da TASK-71.
+Inspiracao visual: captura do registro de atividades Facebook enviada pelo usuario,
+com fundo cinza, superficies brancas, texto escuro, agrupamento cronologico e acoes
+compactas. Sidebar e identidade Lectum preservadas; estilo limitado a nova pagina.
+Builder/Quick Copy nao esta disponivel como ferramenta nesta sessao. Inventario
+PROTO consultado; capturas fornecidas e componentes do Admin sao as referencias.
+
+## Criterios de aceite
+
+- [x] Subaba Conteudo em Comunidades, com rota estatica propria.
+- [x] Consulta real exclusiva para autores psicologos, posts e respostas juntos.
+- [x] Filtros por texto, nome do psicologo, comunidade, tipo e periodo; ordenacao.
+- [x] Paginacao no banco antes de carregar midias e metricas; desempate estavel.
+- [x] Nomes das comunidades provenientes do cadastro administrativo.
+- [x] Visualizacao, metricas e downloads reutilizam os contratos existentes.
+- [x] Estados loading, vazio e erro; filtros e pagina preservados na URL.
+- [x] Mobile-first implementado: campos em coluna e progressao para desktop.
+- [x] Checks/builds, testes focados, verificacao visual e smoke homolog registrados.
+
+## Deploy e rollback
+
+Refinamento 01/10/2026: contexto "Em resposta a" e titulo ficam acima da midia;
+texto do psicologo e comunidade ficam ao lado dela, inclusive no mobile.
+Cabecalho simplificado: removido "Comunidades" acima do titulo "Conteudo".
+Sem mudanca em players, metricas, acoes ou contratos. Teste de renderizacao cobre
+posts/respostas e presenca/ausencia de texto.
+Check Admin 0.1.530 aprovado; 17 testes do arquivo de reports/conteudo passaram.
+Refinamento seguinte: botao Com arte usa o mesmo icone Download de Original no
+componente compartilhado. Texto, cores, handlers e indicador de progresso intactos.
+Regressao de renderizacao verifica ambos os icones Download.
+Filtro Status: Publicados como padrao, Removidos como opcao explicita. Aplicado
+no SQL antes de contagem/paginacao, inclui respostas cujo post foi removido.
+Limpar retorna a Publicados; status preservado na URL e chave do cache.
+Versao 0.1.531: builds Admin/backend e typecheck backend aprovados; sete testes
+da consulta/validator no artefato compilado e 17 testes focados Admin passaram.
+Filtro aplicado antes de contagem e paginacao, sem migration ou escrita de dados.
+Busca por texto/nome automatica com debounce compartilhado de 350ms, termos
+combinados e retorno a pagina 1. Formulario nao remonta a cada termo aplicado;
+os filtros nao textuais mantem aplicacao explicita. Limpar/Aplicar cancelam
+rascunhos pendentes por remontagem intencional; historico usa politica existente.
+Check Admin 0.1.532 aprovado, incluindo politica compartilhada de debounce;
+19 testes focados de reports/conteudo passaram, cobrindo termos combinados,
+normalizacao, limpar e preservacao de rascunho quando a URL confirma busca anterior.
+
+Somente homolog nesta task. Contrato aditivo com autenticacao admin existente.
+Sem migration, dependencia ou variavel nova. Nenhuma escrita de dados no novo GET.
+Rollback: reverter codigo da task; nenhum dado requer restauracao.
+ADR-0542 documenta paginacao e reuso.
+
+## Validacao
+
+Admin check e build completos aprovados (um skip preexistente de symlink Windows). Backend:
+Biome, runtime-deps, typecheck e build aprovados. Cinco testes novos aprovados no
+artefato compilado, incluindo validator HTTP real. Executor tsx local falha antes
+dos testes com uv_os_get_passwd/ENOMEM; suite completa nao considerada aprovada.
+Banco local nao configurado: Prisma generate/typecheck usa URL local apenas para
+compilacao e nao efetua conexao ou alteracao de dados. Source-size e cycles OK.
+Validacao autenticada em homologacao: consulta com dados reais de varias
+comunidades, posts e respostas, filtro de posts e paginacao. Layout inspecionado
+em 390px e 1440px, sem overflow horizontal. Admin e API publicados em 0.1.528;
+API /ping, /health e /ready com HTTP 200. Campos opcionais vazios encontrados no
+smoke inicial foram corrigidos no cliente em 0.1.529, com dois testes de regressao
+para parametros iniciais e filtros/datas. Os 16 testes do arquivo passaram;
+typecheck e build Admin 0.1.529 aprovados. Evidencias finais e smoke pos-correcao
+ficam no relatorio outputs/admin-conteudo/design-qa.md da sessao.
+Player e downloads reaproveitados: carregamento de algumas midias mostrou
+intermitencia no navegador de homologacao; nao considerado validacao completa
+de todos os arquivos ou exportacoes.
+Inicializacao local via Start-Process foi bloqueada pela politica de execucao;
+nao foi contornada. Homologacao sera a proxima superficie de validacao autenticada.

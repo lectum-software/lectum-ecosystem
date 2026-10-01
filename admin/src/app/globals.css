@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+.admin-content-library {
+  --admin-background: #f0f2f5;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #e4e6eb;
+  --admin-foreground: #1c1e21;
+  --admin-muted: #606770;
+  --admin-border: #dfe1e5;
+}
+
 :root {
   --admin-background: #f7f9ff;
   --admin-foreground: #06104a;

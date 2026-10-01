@@ -49,7 +49,77 @@ const { renderToStaticMarkup } = require("react-dom/server");
 const { QueryClient, QueryClientProvider } = require("@tanstack/react-query");
 const loadSource = (relativePath) => require(fileURLToPath(new URL(relativePath, import.meta.url)));
 const { adminCommunitiesKeys } = loadSource("../api/cache/keys.ts");
-const { cleanReportsParams } = loadSource("../api/req/communities/params.ts");
+const { cleanReportsParams, cleanGlobalContentParams } = loadSource(
+  "../api/req/communities/params.ts",
+);
+const { contentFiltersSchema, defaultFilters } = loadSource(
+  "../app/(admin)/comunidades/conteudo/filters.tsx",
+);
+const { encodeContentSearch } = loadSource(
+  "../app/(admin)/comunidades/conteudo/use-content-search.ts",
+);
+const { createSearchState, reduceSearchState } = loadSource("../hooks/use-debounced-search.ts");
+
+test("content live search combines fields, trims terms and supports clearing", () => {
+  assert.deepEqual(JSON.parse(encodeContentSearch({ q: " titulo ", psychologist: " Ana " })), {
+    q: "titulo",
+    psychologist: "Ana",
+  });
+  assert.deepEqual(JSON.parse(encodeContentSearch({ q: " " })), { q: "", psychologist: "" });
+  const first = encodeContentSearch({ q: "ansiedade", psychologist: "Ana" });
+  const latest = encodeContentSearch({ q: "ansiedade noturna", psychologist: "Ana Rubia" });
+  let state = createSearchState(encodeContentSearch({}));
+  state = reduceSearchState(state, { type: "edit", value: first });
+  state = reduceSearchState(state, { type: "request", value: first });
+  state = reduceSearchState(state, { type: "edit", value: latest });
+  state = reduceSearchState(state, { type: "url", value: first });
+  assert.equal(state.draft, latest);
+  const cleared = reduceSearchState(state, { type: "url", value: encodeContentSearch({}) });
+  assert.deepEqual(JSON.parse(cleared.draft), { q: "", psychologist: "" });
+});
+
+test("automatic search keeps the form mounted and applies only search terms", () => {
+  const source = readFileSync(
+    new URL("../app/(admin)/comunidades/conteudo/client.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /key=\{JSON.stringify\(filters\)\}/);
+  assert.match(source, /onSearch=\{\(search\) => update\(\{ \.\.\.filters, \.\.\.search \}\)\}/);
+  assert.match(source, /setSearchReset\(\(value\) => value \+ 1\)/);
+});
+
+test("global content omits empty optional fields on the initial request", () => {
+  assert.deepEqual(cleanGlobalContentParams({ ...defaultFilters, page: 1, limit: 20 }), {
+    type: "all",
+    period: "all",
+    sort: "recent",
+    status: "published",
+    page: 1,
+    limit: 20,
+  });
+});
+
+test("global content keeps selected filters and custom dates", () => {
+  const input = {
+    q: "ansiedade",
+    psychologist: "Ana",
+    community: "community-test",
+    type: "replies",
+    period: "custom",
+    from: "2026-09-01",
+    to: "2026-10-01",
+    sort: "oldest",
+    status: "removed",
+    page: 2,
+    limit: 8,
+  };
+  assert.deepEqual(cleanGlobalContentParams(input), input);
+  assert.equal(contentFiltersSchema.safeParse(input).success, true);
+  assert.equal(contentFiltersSchema.safeParse({ ...input, to: "" }).success, false);
+  assert.equal(contentFiltersSchema.safeParse({ ...input, to: "2026-08-01" }).success, false);
+  assert.equal(defaultFilters.status, "published");
+  assert.equal(contentFiltersSchema.safeParse({ ...input, status: "all" }).success, false);
+});
 const { ReportsTab } = loadSource("../app/(admin)/comunidades/[slug]/views/reports-tab.tsx");
 const { ContentTab } = loadSource("../app/(admin)/comunidades/[slug]/views/content-tab.tsx");
 const { contentTypeOptions } = loadSource(
@@ -194,6 +264,47 @@ const populatedContent = {
     },
   ],
 };
+
+const { ContentRow } = loadSource("../app/(admin)/comunidades/conteudo/content-row.tsx");
+
+test("global content puts question above media and reply text beside its community", () => {
+  const client = new QueryClient();
+  try {
+    for (const type of ["reply", "post"]) {
+      for (const excerpt of ["Psychologist reply text", ""]) {
+        const item = {
+          ...populatedContent.data[0],
+          author: { ...populatedContent.data[0].author, role: "psicologo" },
+          community: { id: "local-community", slug: "local-community", name: "Community name" },
+          excerpt,
+          parent_post_title: "Original question title",
+          media: { media_type: "video", media_url: "/public/files/local-test.mp4" },
+          type,
+        };
+        const html = renderToStaticMarkup(
+          createElement(QueryClientProvider, { client }, createElement(ContentRow, { item })),
+        );
+        const heading = html.indexOf("<h3");
+        const media = html.indexOf('aria-label="Miniplayer de vídeo publicado"');
+        const community = html.indexOf("Community name");
+        assert.ok(heading >= 0 && media > heading && community > media);
+        if (type === "reply") {
+          assert.ok(html.indexOf("Em resposta a") < heading);
+          assert.match(html, /Original question title<\/h3>/);
+        } else {
+          assert.doesNotMatch(html, /Em resposta a/);
+          assert.match(html, /Discardable content title<\/h3>/);
+        }
+        if (excerpt) assert.ok(html.indexOf(excerpt) > media && html.indexOf(excerpt) < community);
+        assert.match(html, /grid-cols-\[88px_minmax\(0,1fr\)\]/);
+        assert.equal((html.match(/lucide-download/g) ?? []).length, 2);
+        assert.doesNotMatch(html, /lucide-image-down/);
+      }
+    }
+  } finally {
+    client.clear();
+  }
+});
 
 const renderContentState = (status, data, type = "all") => {
   const client = new QueryClient({

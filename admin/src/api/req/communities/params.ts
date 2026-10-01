@@ -1,7 +1,13 @@
+import type { AdminGlobalContentQuery } from "./global-content";
 import type { AdminCommunityContentDetailQuery } from "./types/content";
 import type { CommunitiesDashboardQuery } from "./types/dashboard";
 import type { AdminCommunityReportsQuery } from "./types/ranking-reports";
 import type { AdminCommunityStatisticsQuery } from "./types/statistics";
+
+export const cleanGlobalContentParams = (input: AdminGlobalContentQuery) =>
+  Object.fromEntries(
+    Object.entries(input).filter(([, value]) => value !== undefined && value !== ""),
+  );
 
 export const cleanParams = (input: CommunitiesDashboardQuery) => ({
   ...(input.from ? { from: input.from } : {}),

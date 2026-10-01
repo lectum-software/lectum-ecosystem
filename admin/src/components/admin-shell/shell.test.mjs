@@ -11,6 +11,11 @@ const lifecycle = readFileSync(
 );
 const shellBody = shell.slice(shell.indexOf("export const AdminShell"));
 
+test("Comunidades inclui a subaba global Conteúdo", () => {
+  const nav = readFileSync(new URL("./nav.ts", import.meta.url), "utf8");
+  assert.match(nav, /label: "Conteúdo", href: "\/comunidades\/conteudo"/);
+});
+
 test("menu usa o lifecycle existente, sem lock ou Escape paralelo", () => {
   assert.match(
     shell,
