@@ -27,7 +27,22 @@ o paciente e sem navegar para o post ao expandir a pergunta.
   bloco vazio nem acumula margem inferior no cabecalho. Havendo texto, manter
   8 px entre autor/texto e 12 px entre texto/midia. Posts proprios nao mudam.
 
-## Consequencias
+## Refinamento 2026-09-30 - pergunta sobreposta no video
+
+- Para respostas em video no perfil, substituir titulo/descricao externos pela
+  caixinha sobreposta: faixa azul `Pergunta`, corpo branco e titulo centralizado.
+- Referencias existentes: `LectumSharePreviewArt` em
+  `lectum-share-download-dialog.tsx` e `SOCIAL_SHARE_ART_LAYOUT` no servico video.
+  Preservar largura de 79,7% e topo de 13%; adaptar tipografia para leitura web.
+- Nao renderizar logo, assinatura inferior, descricao ou botao de contexto na arte.
+  O cabecalho normal do profissional fora do player permanece.
+- Slot opcional `overlay` dentro de `VerticalVideoPlayerShell` acompanha a
+  ampliacao por portal, sem alterar midia, exportacao social ou outros players.
+- Titulo integral com quebra de palavras e rolagem acessivel quando muito longo;
+  altura limitada para nao cobrir o play central. Respostas sem video preservam
+  contexto textual anterior. Feed e pagina da comunidade nao recebem o overlay.
+
+## Consequencias do refinamento
 
 O visitante entende a pergunta sem sair do perfil ou perder o acesso ao contato.
 Nao ha novas chamadas, contratos, dependencias, variaveis ou migracoes. O feed e

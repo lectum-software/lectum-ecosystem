@@ -24,6 +24,7 @@ import { useVideoPlaybackContinuity } from "./vertical-video-player-playback-con
 import { VerticalVideoPlayerShell } from "./vertical-video-player-shell";
 import { useVerticalVideoStream, VerticalVideoStreamStatus } from "./vertical-video-player-stream";
 import {
+  type BlobBackedVideoRequest,
   clampNumber,
   fetchBoundedVideoBlob,
   fitClassName,
@@ -32,11 +33,6 @@ import {
   type VerticalVideoPlayerProps,
   waitForVideoEvent,
 } from "./vertical-video-player-support";
-
-type BlobBackedVideoRequest = {
-  controller: AbortController;
-  promise: Promise<boolean>;
-} & { source: string };
 
 export const VerticalVideoPlayer = ({
   className,
@@ -48,6 +44,7 @@ export const VerticalVideoPlayer = ({
   onContentClick,
   onSoundEnabledChange,
   onVideoElementReady,
+  overlay,
   persistentControlsLayout = "stacked",
   persistentControlsVisibility = "auto",
   poster,
@@ -587,6 +584,7 @@ export const VerticalVideoPlayer = ({
       >
         Seu navegador não suporta a reprodução de vídeo.
       </video>
+      {overlay}
       <VerticalVideoStreamStatus
         adaptivePlaybackFailed={adaptivePlaybackFailed}
         error={playback.error}

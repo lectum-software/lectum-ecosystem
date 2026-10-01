@@ -1,5 +1,16 @@
 # TASK-25: Dentro da comunidade
 
+## Refinamento 2026-09-30 - caixinha de pergunta sobre o video no perfil
+
+- [x] Localizar arte em `LectumSharePreviewArt` e `SOCIAL_SHARE_ART_LAYOUT`.
+- [x] Aplicar faixa azul `Pergunta` e titulo sobreposto somente nas respostas em video do perfil.
+- [x] Sem logo, assinatura inferior, descricao ou botao de contexto na arte.
+- [x] Preservar identificacao externa, controles, CTA, feed e exportacao social.
+- [x] Slot no player acompanha ampliacao; titulo longo admite rolagem por teclado.
+- Fonte visual: `image (22).png` enviada pelo usuario; Builder nao exposto nesta sessao.
+- Validacao automatizada: frontend check e build; smoke visual em homologacao apos deploy.
+- Decisao: `adrs/0541-pergunta-contextual-no-perfil.md`.
+
 ## Refinamento 2026-09-30 - espacamento da resposta no perfil
 
 - [x] Reutilizar os 12 px (`mt-3`) de `ProfessionalReplyPreview`/`ReplyCard` antes da midia.

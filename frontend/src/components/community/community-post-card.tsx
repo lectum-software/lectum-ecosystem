@@ -23,7 +23,10 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
-import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
+import {
+  ProfileReplyQuestion,
+  ProfileReplyVideoQuestion,
+} from "@/components/community/profile-reply-question";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
@@ -104,6 +107,9 @@ export const CommunityPostCard = ({
     primaryReply?.media_type ?? singlePostMediaItem?.media_type ?? post.media_type;
   const displayMediaUrl =
     primaryReply?.media_url ?? singlePostMediaItem?.media_url ?? post.media_url;
+  const showProfileVideoQuestion = Boolean(
+    primaryReply && displayMediaType === "video" && displayMediaUrl,
+  );
   const displayThumbnailUrl =
     primaryReply?.thumbnail_url ?? singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const displayMediaAnalyticsTarget =
@@ -471,7 +477,7 @@ export const CommunityPostCard = ({
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
-      {primaryReply ? (
+      {primaryReply && !showProfileVideoQuestion ? (
         <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
       ) : null}
 
@@ -614,6 +620,11 @@ export const CommunityPostCard = ({
             overlayAction={displayMediaOverlayAction}
             thumbnailUrl={displayThumbnailUrl}
             variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
+            videoOverlay={
+              showProfileVideoQuestion ? (
+                <ProfileReplyVideoQuestion title={post.title} />
+              ) : undefined
+            }
           />
         )}
         <ProfessionalReplyPreview

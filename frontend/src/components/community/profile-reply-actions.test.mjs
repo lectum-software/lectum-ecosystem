@@ -12,7 +12,34 @@ registerHooks({
     return nextResolve(specifier === "next/link" ? "next/link.js" : specifier, context);
   },
 });
-const { ProfileReplyQuestion } = await import("./profile-reply-question.tsx");
+const { ProfileReplyQuestion, ProfileReplyVideoQuestion } = await import(
+  "./profile-reply-question.tsx"
+);
+
+test("profile video art has only the question label and full title, without branding or context", () => {
+  const title = "Como a gente se prepara pra perder alguem?";
+  const html = renderToStaticMarkup(createElement(ProfileReplyVideoQuestion, { title }));
+  assert.ok(html.includes(title));
+  assert.match(html, />Pergunta<\/div>/);
+  assert.match(html, /data-profile-video-question/);
+  assert.doesNotMatch(html, /<img|<svg|<a\b|<button|Lectum|Ver contexto|ver mais|line-clamp/);
+  assert.match(html, /overflow-y-auto/);
+});
+
+test("profile question overlay stays inside the player shell and is opt-in for reply videos", () => {
+  const source = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
+  assert.match(source, /primaryReply && displayMediaType === "video" && displayMediaUrl/);
+  assert.match(
+    source,
+    /showProfileVideoQuestion \?\s*\(?\s*<ProfileReplyVideoQuestion title=\{post.title\}/,
+  );
+  assert.doesNotMatch(source, /ProfileReplyQuestionContext|Ver contexto da pergunta/);
+  const media = readFileSync(new URL("./community-media-frame.tsx", import.meta.url), "utf8");
+  assert.match(media, /overlay=\{videoOverlay\}/);
+  const player = readFileSync(new URL("../ui/vertical-video-player.tsx", import.meta.url), "utf8");
+  assert.ok(player.indexOf("<VerticalVideoPlayerShell") < player.indexOf("{overlay}"));
+  assert.ok(player.indexOf("{overlay}") < player.indexOf("</VerticalVideoPlayerShell>"));
+});
 
 test("profile question renders the complete title and description without author or navigation", () => {
   const title =
@@ -40,7 +67,10 @@ test("profile question accepts an empty description without an empty preview", (
 
 test("only profile replies show the question above the reply and do not open the post on card click", () => {
   const source = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
-  assert.match(source, /primaryReply \?\s*\(?\s*<ProfileReplyQuestion/);
+  assert.match(
+    source,
+    /primaryReply && !showProfileVideoQuestion \?\s*\(?\s*<ProfileReplyQuestion/,
+  );
   assert.ok(source.indexOf("{communityContextLabel}") < source.indexOf("<ProfileReplyQuestion"));
   assert.ok(source.indexOf("<ProfileReplyQuestion") < source.indexOf("<AuthorAvatar"));
   assert.ok(source.indexOf("<AuthorAvatar") < source.indexOf("<CommunityMediaBlock"));
