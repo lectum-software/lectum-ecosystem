@@ -41,6 +41,9 @@ test("profile question accepts an empty description without an empty preview", (
 test("only profile replies show the question above the reply and do not open the post on card click", () => {
   const source = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
   assert.match(source, /primaryReply \?\s*\(?\s*<ProfileReplyQuestion/);
+  assert.ok(source.indexOf("{communityContextLabel}") < source.indexOf("<ProfileReplyQuestion"));
+  assert.ok(source.indexOf("<ProfileReplyQuestion") < source.indexOf("<AuthorAvatar"));
+  assert.ok(source.indexOf("<AuthorAvatar") < source.indexOf("<CommunityMediaBlock"));
   assert.ok(source.indexOf("<ProfileReplyQuestion") < source.indexOf("<CommunityMediaBlock"));
   const profile = readFileSync(
     new URL("../../app/app/psychologist/[id]/components/publications.tsx", import.meta.url),

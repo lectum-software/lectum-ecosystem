@@ -470,6 +470,10 @@ export const CommunityPostCard = ({
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
+      {primaryReply ? (
+        <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
+      ) : null}
+
       {showAuthorHeader ? (
         <div className="mb-3 flex items-start gap-3">
           <AuthorAvatar
@@ -538,10 +542,6 @@ export const CommunityPostCard = ({
             )}
           </div>
         </div>
-      ) : null}
-
-      {primaryReply ? (
-        <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
       ) : null}
 
       <div className="grid gap-2">

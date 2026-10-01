@@ -132,7 +132,7 @@ export const PostHeader = ({
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <header className="grid gap-4 px-5 pt-4 pb-3">
+    <header className="grid gap-4 px-5 pt-4 pb-0">
       <div className="-mx-5 flex items-center justify-between gap-3 border-border border-b px-5 pb-3 dark:border-border">
         <Button
           aria-label="Voltar"
@@ -299,7 +299,7 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
   });
 
   return (
-    <div className="grid gap-3 px-5 py-4">
+    <div className="grid gap-3 px-5 pt-3 pb-4">
       <h2 className="text-[1.45rem] font-black leading-[1.16] tracking-[-0.03em] text-foreground dark:text-foreground">
         {post.title}
       </h2>
