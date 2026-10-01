@@ -55,6 +55,38 @@ const { cleanReportsParams, cleanGlobalContentParams } = loadSource(
 const { contentFiltersSchema, defaultFilters } = loadSource(
   "../app/(admin)/comunidades/conteudo/filters.tsx",
 );
+const { encodeContentSearch } = loadSource(
+  "../app/(admin)/comunidades/conteudo/use-content-search.ts",
+);
+const { createSearchState, reduceSearchState } = loadSource("../hooks/use-debounced-search.ts");
+
+test("content live search combines fields, trims terms and supports clearing", () => {
+  assert.deepEqual(JSON.parse(encodeContentSearch({ q: " titulo ", psychologist: " Ana " })), {
+    q: "titulo",
+    psychologist: "Ana",
+  });
+  assert.deepEqual(JSON.parse(encodeContentSearch({ q: " " })), { q: "", psychologist: "" });
+  const first = encodeContentSearch({ q: "ansiedade", psychologist: "Ana" });
+  const latest = encodeContentSearch({ q: "ansiedade noturna", psychologist: "Ana Rubia" });
+  let state = createSearchState(encodeContentSearch({}));
+  state = reduceSearchState(state, { type: "edit", value: first });
+  state = reduceSearchState(state, { type: "request", value: first });
+  state = reduceSearchState(state, { type: "edit", value: latest });
+  state = reduceSearchState(state, { type: "url", value: first });
+  assert.equal(state.draft, latest);
+  const cleared = reduceSearchState(state, { type: "url", value: encodeContentSearch({}) });
+  assert.deepEqual(JSON.parse(cleared.draft), { q: "", psychologist: "" });
+});
+
+test("automatic search keeps the form mounted and applies only search terms", () => {
+  const source = readFileSync(
+    new URL("../app/(admin)/comunidades/conteudo/client.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /key=\{JSON.stringify\(filters\)\}/);
+  assert.match(source, /onSearch=\{\(search\) => update\(\{ \.\.\.filters, \.\.\.search \}\)\}/);
+  assert.match(source, /setSearchReset\(\(value\) => value \+ 1\)/);
+});
 
 test("global content omits empty optional fields on the initial request", () => {
   assert.deepEqual(cleanGlobalContentParams({ ...defaultFilters, page: 1, limit: 20 }), {

@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { ContentCommunity } from "@/api/req/communities/global-content";
 import { InputController, SelectController } from "@/components/controllers";
 import { Form, useFormList } from "@/hooks/form";
+import { type ContentSearch, useContentSearch } from "./use-content-search";
 
 export const contentFiltersSchema = z
   .object({
@@ -43,12 +44,15 @@ export function ContentFiltersForm({
   initial,
   communities,
   onApply,
+  onSearch,
 }: {
   initial: ContentFilters;
   communities: ContentCommunity[];
   onApply: (filters: ContentFilters) => void;
+  onSearch: (search: ContentSearch) => void;
 }) {
   const form = useFormList({ defaultValues: initial, fields: [], schema: contentFiltersSchema });
+  useContentSearch(form, initial, onSearch);
   const period = form.watch("period");
   const communityOptions = [
     { value: "", label: "Todas as comunidades" },

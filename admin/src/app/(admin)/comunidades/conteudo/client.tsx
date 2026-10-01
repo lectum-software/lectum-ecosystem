@@ -2,6 +2,7 @@
 
 import { FileText, RefreshCw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useAdminGlobalContent } from "@/api/callers/communities/global-content";
 import type {
   AdminGlobalContentItem,
@@ -29,6 +30,7 @@ export function GlobalContentClient() {
   const params = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const [searchReset, setSearchReset] = useState(0);
   const parsed = contentFiltersSchema.safeParse(
     Object.fromEntries(
       Object.entries(defaultFilters).map(([key, value]) => [key, params.get(key) ?? value]),
@@ -90,8 +92,21 @@ export function GlobalContentClient() {
       <ContentFiltersForm
         communities={data?.communities ?? []}
         initial={filters}
-        key={JSON.stringify(filters)}
-        onApply={(next) => update(next)}
+        key={JSON.stringify([
+          filters.community,
+          filters.type,
+          filters.period,
+          filters.sort,
+          filters.status,
+          filters.from,
+          filters.to,
+          searchReset,
+        ])}
+        onApply={(next) => {
+          setSearchReset((value) => value + 1);
+          update(next);
+        }}
+        onSearch={(search) => update({ ...filters, ...search })}
       />
       <section aria-busy={result.isFetching} aria-label="Conteúdo dos psicólogos" className="pt-5">
         <p aria-live="polite" className="mb-4 text-sm text-muted">

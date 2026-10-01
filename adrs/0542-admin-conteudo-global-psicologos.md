@@ -33,6 +33,12 @@ Refinamento visual de 01/10: titulo/contexto da pergunta acima da midia; texto
 do autor e comunidade na coluna lateral. A ordem semantica acompanha a visual
 nos dois breakpoints, sem mudar componentes compartilhados de outras paginas.
 
+Busca textual usa useDebouncedSearch existente (350ms), serializando titulo/texto
+e nome em um unico rascunho para evitar que duas requisicoes se sobrescrevam.
+O formulario RHF permanece montado durante a busca automatica para preservar
+foco, cursor e edicoes posteriores ao envio. Outros filtros continuam explicitos;
+Aplicar/Limpar remontam a busca para cancelar qualquer debounce pendente.
+
 ## Consequencias
 
 Sem schema/env/pacote novo. Offset tem custo crescente em paginas profundas;

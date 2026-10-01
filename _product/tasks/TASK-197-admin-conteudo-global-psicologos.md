@@ -39,6 +39,13 @@ Limpar retorna a Publicados; status preservado na URL e chave do cache.
 Versao 0.1.531: builds Admin/backend e typecheck backend aprovados; sete testes
 da consulta/validator no artefato compilado e 17 testes focados Admin passaram.
 Filtro aplicado antes de contagem e paginacao, sem migration ou escrita de dados.
+Busca por texto/nome automatica com debounce compartilhado de 350ms, termos
+combinados e retorno a pagina 1. Formulario nao remonta a cada termo aplicado;
+os filtros nao textuais mantem aplicacao explicita. Limpar/Aplicar cancelam
+rascunhos pendentes por remontagem intencional; historico usa politica existente.
+Check Admin 0.1.532 aprovado, incluindo politica compartilhada de debounce;
+19 testes focados de reports/conteudo passaram, cobrindo termos combinados,
+normalizacao, limpar e preservacao de rascunho quando a URL confirma busca anterior.
 
 Somente homolog nesta task. Contrato aditivo com autenticacao admin existente.
 Sem migration, dependencia ou variavel nova. Nenhuma escrita de dados no novo GET.
