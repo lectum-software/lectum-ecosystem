@@ -19,6 +19,9 @@ o paciente e sem navegar para o post ao expandir a pergunta.
 - Desabilitar a navegacao pelo corpo dos cards de resposta no perfil. Acoes
   explicitas existentes, como comentarios e compartilhamento, permanecem intactas.
 - Preservar o cabecalho do psicologo, midia, CTA e estado independente da resposta.
+- Refinamento de autoria: a pergunta aparece logo apos o contexto `Respondido em`,
+  antes da identificacao do psicologo. Nome/avatar ficam junto da resposta para
+  nao atribuir o relato original ao profissional. Sem rotulos ou cards adicionais.
 
 ## Consequencias
 

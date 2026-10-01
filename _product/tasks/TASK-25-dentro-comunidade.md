@@ -1,5 +1,17 @@
 # TASK-25: Dentro da comunidade
 
+## Refinamento 2026-09-30 - ordem da pergunta e autoria no perfil
+
+- [x] Ordem das respostas: comunidade, titulo/descricao, identificacao do psicologo, resposta.
+- [x] Preservar titulo integral, expansao local, ausencia de dados do paciente e CTA.
+- [x] Teste de regressao exige a pergunta antes do avatar do profissional e da midia.
+- Referencia: screenshot `codex-clipboard-82d761bc-7be7-4742-8b2e-0c95416f1762.png`
+  e ordem explicitamente aprovada pelo usuario. Sem novos elementos visuais.
+- Escopo somente frontend; feed, posts proprios, API e banco permanecem intactos.
+- ADR atualizado: `adrs/0541-pergunta-contextual-no-perfil.md`.
+- Validacao: frontend `check` e `build`, nove testes de respostas, `check:version`
+  e `git diff --check` aprovados. Conferencia visual prevista no smoke de homologacao.
+
 ## Complemento 2026-09-30 - pergunta contextual no perfil
 
 Referencia: screenshot do usuario `WhatsApp Image 2026-09-30 at 21.16.10.jpeg`.
