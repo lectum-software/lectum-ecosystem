@@ -113,3 +113,31 @@ test("feed and community share the original copy, onboarding history and context
   assert.match(hook, /document.visibilityState !== "visible"/);
   assert.match(hook, /hasToken && currentUser\?\.role === "psicologo"/);
 });
+
+test("default publish action opens the existing composer over the current page without navigating", () => {
+  const template = readSource("../templates/private/index.tsx");
+  const handler = template.slice(
+    template.indexOf("const handleCreatePostClick ="),
+    template.indexOf("const bottomNavigationMarkup ="),
+  );
+  assert.match(handler, /centerAction\.onClick\(event\);\s+return;/);
+  assert.match(handler, /event\.preventDefault\(\);\s+if \(!conversion\.isAuthenticated\)/);
+  assert.match(handler, /type: "create_post"[\s\S]*return;\s+}\s+setCreatePostModalOpen\(true\)/);
+  assert.doesNotMatch(handler, /router\.(push|replace)|window\.location/);
+  assert.match(
+    template,
+    /const \[createPostModalOpen, setCreatePostModalOpen\] = useState\(false\)/,
+  );
+  assert.match(
+    template,
+    /createPostModalOpen \? \(\s+<CreateCommunityPostLogic\s+asModalSlot\s+onCloseComplete=\{\(\) => setCreatePostModalOpen\(false\)\}/,
+  );
+  const controller = readSource(
+    "../app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts",
+  );
+  assert.match(controller, /if \(onCloseComplete\) \{\s+onCloseComplete\(\);\s+return;/);
+  const composer = readSource(
+    "../app/app/community/[slug]/post/new/views/create-community-post.tsx",
+  );
+  assert.match(composer, /useModalMediaSuspension\(asModalSlot\)/);
+});

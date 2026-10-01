@@ -1,10 +1,11 @@
 "use client";
 
 import { ChevronLeft, Plus } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
 import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
@@ -51,6 +52,14 @@ import {
   writeDesktopSidebarPreference,
 } from "./sidebar-preference";
 
+const CreateCommunityPostLogic = dynamic(
+  () =>
+    import("@/app/app/community/[slug]/post/new/logic").then(
+      (module) => module.CreateCommunityPostLogic,
+    ),
+  { ssr: false },
+);
+
 export const PrivateTemplate = ({
   allowAnonymous = false,
   bottomNavigationCenterAction,
@@ -73,6 +82,7 @@ export const PrivateTemplate = ({
   const { out } = useSignOut();
   const hasToken = useAuthTokenPresence();
   const conversion = useProgressiveConversion();
+  const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
 
   const { hidrate } = useAuth({ enableHidrate: hasToken });
   const { hasUnread: hasUnreadNotifications } = useUnreadNotificationStatus(hasToken);
@@ -205,12 +215,14 @@ export const PrivateTemplate = ({
       centerAction.onClick(event);
       return;
     }
+    event.preventDefault();
     if (!conversion.isAuthenticated) {
-      event.preventDefault();
       conversion.requestConversion("trigger_comentar", {
         intent: { returnTo: centerAction.href, type: "create_post" },
       });
+      return;
     }
+    setCreatePostModalOpen(true);
   };
 
   const bottomNavigationMarkup = shouldRenderMobileNavigation ? (
@@ -501,6 +513,12 @@ export const PrivateTemplate = ({
         {children}
       </PageShell>
       {navigationMarkup}
+      {createPostModalOpen ? (
+        <CreateCommunityPostLogic
+          asModalSlot
+          onCloseComplete={() => setCreatePostModalOpen(false)}
+        />
+      ) : null}
       {sessionUser?.id && !sessionUser.need_reset && canPromptLegalOnPath(normalizedPathname) ? (
         <LegalAcceptanceRequest key={sessionUser.id} userId={sessionUser.id} />
       ) : null}

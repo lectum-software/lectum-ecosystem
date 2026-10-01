@@ -29,7 +29,10 @@ export const createConversionPromptOpener =
   (trigger: ConversionTrigger, intent?: ConversionIntent) => {
     // Timer callbacks can outlive the anonymous render that queued them.
     if (isAuthenticatedRef.current) return false;
-    if (isConversionPromptSuppressedPath(pathnameRef.current)) return false;
+    const isExplicitPostCreation = trigger === "trigger_comentar" && intent?.type === "create_post";
+    if (isConversionPromptSuppressedPath(pathnameRef.current) && !isExplicitPostCreation) {
+      return false;
+    }
 
     recordConversionAnalytics(trigger, pathnameRef.current);
 

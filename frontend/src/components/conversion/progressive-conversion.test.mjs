@@ -146,6 +146,30 @@ test("control: new anonymous actions are still gated after authentication become
   assert.equal(state.prompts.length, 1);
 });
 
+for (const path of ["/app/perfil", "/app/favoritos", "/app/notificacoes"]) {
+  test(`explicit publish click opens over ${path} without enabling passive prompts`, () => {
+    const state = openerState(false);
+    state.pathnameRef.current = path;
+    const intent = {
+      ...makeIntent("create_post"),
+      returnTo: "/app/comunidades/feed/publicacao/nova",
+      trigger: "trigger_comentar",
+    };
+    state.open("trigger_scroll", intent);
+    state.open("trigger_comentar", makeIntent("comment_post"));
+    assert.equal(state.prompts.length, 0);
+    state.open("trigger_comentar", intent);
+    assert.deepEqual(state.prompts, [{ trigger: "trigger_comentar", intent }]);
+    assert.equal(state.pathnameRef.current, path);
+    const html = renderToStaticMarkup(modal(state.prompts[0], false));
+    assert.match(html, /Crie sua conta para publicar/);
+    assert.match(html, /Continuar explorando/);
+    state.authenticationRef.current = true;
+    state.open("trigger_comentar", intent);
+    assert.equal(state.prompts.length, 1);
+  });
+}
+
 // Controlled React render-phase transitions run the real state hook, without effect
 // emulation or hook replacement. This verifies state/render, NOT ReactDOM hydration effects.
 function AuthenticationTransition({ logout = false, intent }) {
