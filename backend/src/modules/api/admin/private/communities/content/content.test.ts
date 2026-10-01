@@ -9,6 +9,21 @@ import { listValidator } from "./validator";
 
 const range = { start: null, end: null };
 
+test("published is the default and excludes deleted replies and removed or blocked parent posts", () => {
+  const query = globalContentSql({}, range);
+  assert.equal(query.text, globalContentSql({ status: "published" }, range).text);
+  assert.match(query.text, /x.deleted = false AND x.status = 'publicado'/);
+  assert.match(query.text, /x.deleted = false AND p.deleted = false AND p.status = 'publicado'/);
+  assert.doesNotMatch(query.text, /deleted = true/);
+});
+
+test("removed includes soft deletes and replies whose parent post was removed", () => {
+  const query = globalContentSql({ status: "removed" }, range);
+  assert.match(query.text, /\(x.deleted = true OR x.status = 'removido'\)/);
+  assert.match(query.text, /\(x.deleted = true OR p.deleted = true OR p.status = 'removido'\)/);
+  assert.doesNotMatch(query.text, /status = 'publicado'/);
+});
+
 test("global content restricts both union arms to psychologists and existing communities", () => {
   const query = globalContentSql({}, range);
   assert.equal(query.text.match(/u.role = 'psicologo'/g)?.length, 2);
@@ -65,12 +80,13 @@ test("HTTP validator accepts supported filters and rejects invalid or unbounded 
   const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   try {
     const valid = await fetch(
-      `${url}/?type=replies&sort=oldest&period=30d&page=2&limit=8&psychologist=Nome`,
+      `${url}/?type=replies&sort=oldest&status=removed&period=30d&page=2&limit=8&psychologist=Nome`,
     );
     assert.equal(valid.status, 200);
     assert.deepEqual(await valid.json(), {
       type: "replies",
       sort: "oldest",
+      status: "removed",
       period: "30d",
       page: 2,
       limit: 8,
@@ -79,6 +95,8 @@ test("HTTP validator accepts supported filters and rejects invalid or unbounded 
     for (const query of [
       "type=patients",
       "sort=unsafe",
+      "status=all",
+      "status=blocked",
       "period=forever",
       "page=0",
       "page=1.5",

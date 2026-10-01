@@ -36,6 +36,7 @@ export const listSchema: IValidatorRequest = {
     })),
     { key: "type", method: "enumeric", values: ["all", "posts", "replies"], optional: true },
     { key: "sort", method: "enumeric", values: ["recent", "oldest"], optional: true },
+    { key: "status", method: "enumeric", values: ["published", "removed"], optional: true },
     {
       key: "period",
       method: "enumeric",

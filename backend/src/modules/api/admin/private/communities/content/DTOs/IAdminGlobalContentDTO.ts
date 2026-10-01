@@ -9,6 +9,7 @@ export type AdminGlobalContentQuery = Pick<
   psychologist?: string;
   type?: "all" | "posts" | "replies";
   sort?: "recent" | "oldest";
+  status?: "published" | "removed";
 };
 
 export interface IAdminGlobalContentDTO extends Request {

@@ -30,6 +30,15 @@ Cabecalho simplificado: removido "Comunidades" acima do titulo "Conteudo".
 Sem mudanca em players, metricas, acoes ou contratos. Teste de renderizacao cobre
 posts/respostas e presenca/ausencia de texto.
 Check Admin 0.1.530 aprovado; 17 testes do arquivo de reports/conteudo passaram.
+Refinamento seguinte: botao Com arte usa o mesmo icone Download de Original no
+componente compartilhado. Texto, cores, handlers e indicador de progresso intactos.
+Regressao de renderizacao verifica ambos os icones Download.
+Filtro Status: Publicados como padrao, Removidos como opcao explicita. Aplicado
+no SQL antes de contagem/paginacao, inclui respostas cujo post foi removido.
+Limpar retorna a Publicados; status preservado na URL e chave do cache.
+Versao 0.1.531: builds Admin/backend e typecheck backend aprovados; sete testes
+da consulta/validator no artefato compilado e 17 testes focados Admin passaram.
+Filtro aplicado antes de contagem e paginacao, sem migration ou escrita de dados.
 
 Somente homolog nesta task. Contrato aditivo com autenticacao admin existente.
 Sem migration, dependencia ou variavel nova. Nenhuma escrita de dados no novo GET.

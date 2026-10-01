@@ -14,6 +14,7 @@ export const contentFiltersSchema = z
     type: z.enum(["all", "posts", "replies"]),
     period: z.enum(["all", "today", "7d", "30d", "90d", "custom"]),
     sort: z.enum(["recent", "oldest"]),
+    status: z.enum(["published", "removed"]),
     from: z.string(),
     to: z.string(),
   })
@@ -33,6 +34,7 @@ export const defaultFilters: ContentFilters = {
   type: "all",
   period: "all",
   sort: "recent",
+  status: "published",
   from: "",
   to: "",
 };
@@ -57,7 +59,7 @@ export function ContentFiltersForm({
 
   return (
     <Form className="border-b border-border py-5" form={form} onSubmit={onApply}>
-      <div className="grid min-w-0 gap-x-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid min-w-0 gap-x-4 sm:grid-cols-2 xl:grid-cols-4">
         <InputController
           label="Buscar conteúdo"
           name="q"
@@ -73,6 +75,14 @@ export function ContentFiltersForm({
           maxLength={120}
         />
         <SelectController label="Comunidade" name="community" options={communityOptions} />
+        <SelectController
+          label="Status"
+          name="status"
+          options={[
+            { value: "published", label: "Publicados" },
+            { value: "removed", label: "Removidos" },
+          ]}
+        />
         <SelectController
           label="Tipo de conteúdo"
           name="type"

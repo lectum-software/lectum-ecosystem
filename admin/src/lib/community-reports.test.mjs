@@ -61,6 +61,7 @@ test("global content omits empty optional fields on the initial request", () => 
     type: "all",
     period: "all",
     sort: "recent",
+    status: "published",
     page: 1,
     limit: 20,
   });
@@ -76,6 +77,7 @@ test("global content keeps selected filters and custom dates", () => {
     from: "2026-09-01",
     to: "2026-10-01",
     sort: "oldest",
+    status: "removed",
     page: 2,
     limit: 8,
   };
@@ -83,6 +85,8 @@ test("global content keeps selected filters and custom dates", () => {
   assert.equal(contentFiltersSchema.safeParse(input).success, true);
   assert.equal(contentFiltersSchema.safeParse({ ...input, to: "" }).success, false);
   assert.equal(contentFiltersSchema.safeParse({ ...input, to: "2026-08-01" }).success, false);
+  assert.equal(defaultFilters.status, "published");
+  assert.equal(contentFiltersSchema.safeParse({ ...input, status: "all" }).success, false);
 });
 const { ReportsTab } = loadSource("../app/(admin)/comunidades/[slug]/views/reports-tab.tsx");
 const { ContentTab } = loadSource("../app/(admin)/comunidades/[slug]/views/content-tab.tsx");
@@ -261,6 +265,8 @@ test("global content puts question above media and reply text beside its communi
         }
         if (excerpt) assert.ok(html.indexOf(excerpt) > media && html.indexOf(excerpt) < community);
         assert.match(html, /grid-cols-\[88px_minmax\(0,1fr\)\]/);
+        assert.equal((html.match(/lucide-download/g) ?? []).length, 2);
+        assert.doesNotMatch(html, /lucide-image-down/);
       }
     }
   } finally {

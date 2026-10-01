@@ -12,6 +12,7 @@ export type AdminGlobalContentQuery = Pick<
   psychologist?: string;
   type?: "all" | "posts" | "replies";
   sort?: "recent" | "oldest";
+  status?: "published" | "removed";
 };
 export type ContentCommunity = { id: string; name: string; slug: string };
 export type AdminGlobalContentItem = AdminCommunityContentItem & { community: ContentCommunity };

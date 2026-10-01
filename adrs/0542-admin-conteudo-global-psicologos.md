@@ -14,7 +14,12 @@ texto, nome profissional, comunidade e data sao aplicados no banco. Contagem e
 pagina compartilham snapshot RepeatableRead; ordenacao por data/id/tipo. Somente
 os IDs da pagina sao hidratados e enriquecidos com metricas. Isso evita carregar
 todo o acervo ou chamar um endpoint por comunidade. O historico administrativo
-inclui removidos/bloqueados, identificados pelos mapeadores existentes.
+permite consultar removidos por filtro explicito; a listagem inicial mostra
+somente publicados. Bloqueados nao entram em nenhum desses dois filtros.
+O status e aplicado no SQL antes de contar/paginar: posts publicados exigem
+deleted=false e status=publicado; respostas tambem exigem post de origem ativo.
+Removidos incluem soft delete e status=removido do post, inclusive para suas
+respostas, seguindo o mapeamento administrativo existente. Nao ha exclusao real.
 
 Reutilizamos mapeadores de autor/conteudo, nomes cadastrados, players, analytics e
 downloads original/com arte. Nao adicionamos acoes em massa, exclusao ou alteracao
