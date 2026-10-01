@@ -39,7 +39,7 @@ export const ProfileCommunityPostCard = ({
     desktopPlainLinks
     interactiveActions={canInteract}
     onShare={onShare}
-    openPostOnCardClick
+    openPostOnCardClick={post.contribution_type !== "reply"}
     post={post}
     profilePublicationMode
   />
