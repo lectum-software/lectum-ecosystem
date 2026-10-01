@@ -22,6 +22,10 @@ o paciente e sem navegar para o post ao expandir a pergunta.
 - Refinamento de autoria: a pergunta aparece logo apos o contexto `Respondido em`,
   antes da identificacao do psicologo. Nome/avatar ficam junto da resposta para
   nao atribuir o relato original ao profissional. Sem rotulos ou cards adicionais.
+- Espacamento: respostas do perfil usam `mt-3` antes da midia, como
+  `ProfessionalReplyPreview` e `ReplyCard`. Resposta sem texto nao renderiza um
+  bloco vazio nem acumula margem inferior no cabecalho. Havendo texto, manter
+  8 px entre autor/texto e 12 px entre texto/midia. Posts proprios nao mudam.
 
 ## Consequencias
 

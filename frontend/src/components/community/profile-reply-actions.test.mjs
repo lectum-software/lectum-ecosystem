@@ -127,6 +127,23 @@ test("profile replies use the compact inline reply toolbar while original posts 
   }
 });
 
+test("profile reply media uses community spacing without an empty text block", () => {
+  const source = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
+  assert.ok(
+    source.includes("const showDisplayText = !primaryReply || Boolean(displayContent.trim())"),
+  );
+  assert.match(source, /\{showDisplayText \? \(/);
+  assert.ok(source.includes('primaryReply ? (showDisplayText ? "mb-2" : "mb-0") : "mb-3"'));
+  assert.ok(source.includes('primaryReply ? "mt-3" : "mt-4"'));
+  for (const path of [
+    "./community-post-card-reply-preview.tsx",
+    "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx",
+  ]) {
+    const reference = readFileSync(new URL(path, import.meta.url), "utf8");
+    assert.match(reference, /<CommunityMediaBlock[\s\S]*?className="mt-3"/);
+  }
+});
+
 test("read-only vote controls also respect the hidden upvote label", () => {
   const source = readFileSync(new URL("./community-action-bar.tsx", import.meta.url), "utf8");
   assert.ok(source.includes('{showUpvoteText ? "Útil" : null}'));

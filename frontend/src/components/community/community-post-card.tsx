@@ -95,6 +95,7 @@ export const CommunityPostCard = ({
   const displayWasEdited = Boolean(displayEditedAt);
   const displayTitle = primaryReply ? null : post.title;
   const displayContent = primaryReply?.content ?? post.content;
+  const showDisplayText = !primaryReply || Boolean(displayContent.trim());
   const postImageMediaItems = primaryReply
     ? []
     : (post.media_items ?? []).filter((item) => item.media_type === "image");
@@ -475,7 +476,12 @@ export const CommunityPostCard = ({
       ) : null}
 
       {showAuthorHeader ? (
-        <div className="mb-3 flex items-start gap-3">
+        <div
+          className={cn(
+            "flex items-start gap-3",
+            primaryReply ? (showDisplayText ? "mb-2" : "mb-0") : "mb-3",
+          )}
+        >
           <AuthorAvatar
             anonymous={isAnonymousPatient}
             avatar={displayAuthor.avatar}
@@ -544,45 +550,54 @@ export const CommunityPostCard = ({
         </div>
       ) : null}
 
-      <div className="grid gap-2">
-        {displayTitle ? (
-          <Link
-            className={cn(
-              "cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground no-underline transition hover:text-foreground hover:no-underline",
-              isFeedPresentation && "text-foreground dark:text-foreground",
-              profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
-              desktopPlainLinks && "md:no-underline md:hover:text-foreground md:hover:no-underline",
-            )}
-            href={postHref}
-          >
-            {displayTitle}
-          </Link>
-        ) : null}
-        {profilePublicationMode ? (
-          <InlineExpandableText
-            className="text-sm leading-6 text-muted"
-            expanded={contentExpanded}
-            onToggle={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setContentExpanded((current) => !current);
-            }}
-            text={displayContent}
-          />
-        ) : (
-          <InlineExpandableText
-            className={cn(
-              "text-sm leading-6",
-              isFeedPresentation ? "text-muted dark:text-muted" : "text-muted",
-            )}
-            expanded={false}
-            href={postHref}
-            text={displayContent}
-          />
-        )}
-      </div>
+      {showDisplayText ? (
+        <div className="grid gap-2">
+          {displayTitle ? (
+            <Link
+              className={cn(
+                "cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground no-underline transition hover:text-foreground hover:no-underline",
+                isFeedPresentation && "text-foreground dark:text-foreground",
+                profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
+                desktopPlainLinks &&
+                  "md:no-underline md:hover:text-foreground md:hover:no-underline",
+              )}
+              href={postHref}
+            >
+              {displayTitle}
+            </Link>
+          ) : null}
+          {profilePublicationMode ? (
+            <InlineExpandableText
+              className="text-sm leading-6 text-muted"
+              expanded={contentExpanded}
+              onToggle={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setContentExpanded((current) => !current);
+              }}
+              text={displayContent}
+            />
+          ) : (
+            <InlineExpandableText
+              className={cn(
+                "text-sm leading-6",
+                isFeedPresentation ? "text-muted dark:text-muted" : "text-muted",
+              )}
+              expanded={false}
+              href={postHref}
+              text={displayContent}
+            />
+          )}
+        </div>
+      ) : null}
 
-      <div className={cn("mt-4 grid", isFeedPresentation ? "gap-3" : "gap-4")}>
+      <div
+        className={cn(
+          "grid",
+          primaryReply ? "mt-3" : "mt-4",
+          isFeedPresentation ? "gap-3" : "gap-4",
+        )}
+      >
         {shouldShowPostCarousel ? (
           <PostMediaCarousel
             alt={displayTitle ?? "Mídia da publicação"}

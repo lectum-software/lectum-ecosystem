@@ -1,5 +1,16 @@
 # TASK-25: Dentro da comunidade
 
+## Refinamento 2026-09-30 - espacamento da resposta no perfil
+
+- [x] Reutilizar os 12 px (`mt-3`) de `ProfessionalReplyPreview`/`ReplyCard` antes da midia.
+- [x] Omitir bloco textual vazio e margem inferior extra do autor em respostas so com midia.
+- [x] Preservar 8 px entre autor/texto e 12 px entre texto/midia em respostas com texto.
+- [x] Preservar ordem pergunta/autor/resposta e expansao local; nao modificar posts proprios.
+- [x] Teste de regressao compara as classes com as referencias reais do feed/comunidade.
+- ADR: `adrs/0541-pergunta-contextual-no-perfil.md`. Sem API, banco ou dependencia nova.
+- Validacao: frontend check/build, dez testes de respostas, check:version e diff
+  sem erros. Referencia medida no browser: 12 px mais borda da midia na comunidade.
+
 ## Refinamento 2026-09-30 - ordem da pergunta e autoria no perfil
 
 - [x] Ordem das respostas: comunidade, titulo/descricao, identificacao do psicologo, resposta.
