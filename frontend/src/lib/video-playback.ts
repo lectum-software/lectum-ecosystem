@@ -50,7 +50,10 @@ export const pauseAllVideosForInactiveDocument = () => {
   }
 };
 
-export const playVideoWithActiveDocument = async (video: HTMLVideoElement | null) => {
+export const playVideoWithActiveDocument = async (
+  video: HTMLVideoElement | null,
+  options: { onAutoplayBlocked?: () => void } = {},
+) => {
   if (!video || !documentHasUserAttention()) return false;
 
   try {
@@ -60,7 +63,10 @@ export const playVideoWithActiveDocument = async (video: HTMLVideoElement | null
       return false;
     }
     return true;
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === "NotAllowedError") {
+      options.onAutoplayBlocked?.();
+    }
     return false;
   }
 };

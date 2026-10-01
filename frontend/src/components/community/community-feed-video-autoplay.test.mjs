@@ -185,3 +185,216 @@ test("feed de psicologos separa volume explicito de tap e protege retomadas", ()
   assert.match(stream, /autoStartLoad: false/);
   assert.match(stream, /player.stopLoad\(\)/);
 });
+
+test("comunidade nao reativa som depois do fallback mudo", async (t) => {
+  const {
+    registerCommunityFeedVideoAutoplay,
+    setCommunityFeedVideoSoundEnabled,
+    subscribeCommunityFeedVideoSoundPreference,
+  } = await import("./community-feed-video-autoplay.ts");
+  const { getVideoSoundEnabled } = await import("../../lib/video-sound-preference.ts");
+  const storage = new Map([["lectum:video-sound:explicit:v1", "enabled"]]);
+  const frames = new Map();
+  let frameId = 0;
+  let observer;
+  const videos = new Set();
+  class TestVideo extends EventTarget {
+    muted = true;
+    volume = 1;
+    paused = true;
+    ended = false;
+    attempts = [];
+    nextPlay = null;
+    attributes = new Map();
+    async play() {
+      this.attempts.push(this.muted);
+      const next = this.nextPlay;
+      this.nextPlay = null;
+      if (next) await next();
+      this.paused = false;
+      this.dispatchEvent(new Event("play"));
+      this.dispatchEvent(new Event("playing"));
+    }
+    pause() {
+      this.paused = true;
+      this.dispatchEvent(new Event("pause"));
+    }
+    getAttribute(name) {
+      return this.attributes.get(name) ?? null;
+    }
+    setAttribute(name, value) {
+      this.attributes.set(name, value);
+    }
+    removeAttribute(name) {
+      this.attributes.delete(name);
+    }
+  }
+  const targetDocument = Object.assign(new EventTarget(), {
+    visibilityState: "visible",
+    hasFocus: () => true,
+    documentElement: { getAttribute: () => null },
+    querySelectorAll: () => [...videos],
+  });
+  const targetWindow = Object.assign(new EventTarget(), {
+    innerHeight: 844,
+    setTimeout,
+    requestAnimationFrame: (callback) => {
+      frames.set(++frameId, callback);
+      return frameId;
+    },
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, value),
+    },
+  });
+  const browserGlobals = {
+    window: targetWindow,
+    document: targetDocument,
+    HTMLVideoElement: TestVideo,
+    IntersectionObserver: class {
+      constructor(callback) {
+        observer = callback;
+      }
+      observe() {}
+      unobserve() {}
+    },
+  };
+  const originalGlobals = new Map();
+  for (const [name, value] of Object.entries(browserGlobals)) {
+    originalGlobals.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
+    Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
+  }
+  const cleanups = [];
+  const addVideo = (id) => {
+    const video = new TestVideo();
+    videos.add(video);
+    cleanups.push(registerCommunityFeedVideoAutoplay(id, video));
+    return video;
+  };
+  const flush = async () => {
+    const pending = [...frames.values()];
+    frames.clear();
+    for (const callback of pending) callback();
+    await new Promise(setImmediate);
+  };
+  const show = async (selected) => {
+    observer(
+      [...videos].map((video) => ({
+        target: video,
+        boundingClientRect: { top: 100, height: 600 },
+        intersectionRatio: video === selected ? 1 : 0,
+        isIntersecting: video === selected,
+      })),
+    );
+    await flush();
+  };
+  t.after(() => {
+    for (const cleanup of cleanups.reverse()) cleanup();
+    for (const [name, descriptor] of originalGlobals) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  });
+
+  const first = addVideo("blocked");
+  const second = addVideo("next");
+  const notifications = [];
+  cleanups.push(
+    subscribeCommunityFeedVideoSoundPreference((enabled) => notifications.push(enabled)),
+  );
+  first.nextPlay = () => Promise.reject(new DOMException("Autoplay denied", "NotAllowedError"));
+  await show(first);
+  assert.deepEqual(first.attempts, [false, true], "stored opt-in falls back to muted playback");
+  assert.equal(first.paused, false);
+  assert.equal(getVideoSoundEnabled(), false, "fallback must suspend sound for the document");
+  assert.equal(notifications.at(-1), false, "mounted players receive effective mute state");
+  assert.equal(
+    storage.get("lectum:video-sound:explicit:v1"),
+    "enabled",
+    "keep saved explicit choice",
+  );
+
+  first.dispatchEvent(new Event("canplay"));
+  await flush();
+  assert.equal(first.muted, true, "canplay cannot restore the rejected sound preference");
+  await show(second);
+  assert.equal(second.muted, true, "scrolling to another video is not audio consent");
+  const third = addVideo("late-mount");
+  assert.equal(third.muted, true, "newly mounted videos inherit effective mute state");
+
+  setCommunityFeedVideoSoundEnabled(true);
+  assert.equal(getVideoSoundEnabled(), true);
+  assert.equal(second.muted, false, "explicit volume action re-enables audio");
+  await show(third);
+  assert.equal(third.muted, false, "explicit opt-in still carries to the next video");
+  setCommunityFeedVideoSoundEnabled(false);
+  assert.equal(third.muted, true);
+  assert.equal(second.muted, true, "muting also reaches inactive registered videos");
+
+  third.muted = false;
+  third.dispatchEvent(new Event("volumechange"));
+  assert.equal(third.muted, true, "an old snapshot must not override explicit mute");
+  await third.play();
+  assert.equal(third.muted, true);
+
+  setCommunityFeedVideoSoundEnabled(true);
+  const interrupted = addVideo("interrupted");
+  interrupted.nextPlay = () => Promise.reject(new DOMException("Interrupted", "AbortError"));
+  await show(interrupted);
+  assert.equal(getVideoSoundEnabled(), true, "a source change is not an autoplay policy denial");
+  assert.deepEqual(
+    interrupted.attempts,
+    [false],
+    "do not retry unrelated failures as muted autoplay",
+  );
+
+  const outdated = addVideo("outdated");
+  let rejectOutdated;
+  outdated.nextPlay = () =>
+    new Promise((_, reject) => {
+      rejectOutdated = reject;
+    });
+  await show(outdated);
+  await show(second);
+  rejectOutdated(new DOMException("Late denial", "NotAllowedError"));
+  await flush();
+  assert.equal(getVideoSoundEnabled(), true, "an offscreen request cannot mute the current video");
+  assert.deepEqual(outdated.attempts, [false], "an offscreen request cannot retry playback");
+
+  const pending = addVideo("new-explicit-choice");
+  let rejectPending;
+  pending.nextPlay = () =>
+    new Promise((_, reject) => {
+      rejectPending = reject;
+    });
+  await show(pending);
+  setCommunityFeedVideoSoundEnabled(false);
+  setCommunityFeedVideoSoundEnabled(true);
+  rejectPending(new DOMException("Late denial", "NotAllowedError"));
+  await flush();
+  assert.equal(
+    getVideoSoundEnabled(),
+    true,
+    "a stale rejection cannot undo a newer explicit choice",
+  );
+
+  const detached = addVideo("unmounted");
+  let rejectDetached;
+  detached.nextPlay = () =>
+    new Promise((_, reject) => {
+      rejectDetached = reject;
+    });
+  await show(detached);
+  cleanups.pop()();
+  rejectDetached(new DOMException("Late denial", "NotAllowedError"));
+  await flush();
+  assert.equal(getVideoSoundEnabled(), true);
+  assert.deepEqual(detached.attempts, [false], "unmounted videos cannot retry playback");
+  setCommunityFeedVideoSoundEnabled(false);
+  const muted = addVideo("explicitly-muted");
+  await show(muted);
+  muted.dispatchEvent(new Event("canplay"));
+  await flush();
+  assert.equal(muted.muted, true);
+  assert.equal(storage.get("lectum:video-sound:explicit:v1"), "muted");
+});

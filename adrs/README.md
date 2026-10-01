@@ -588,3 +588,4 @@ Formato recomendado:
 - [ADR-0542 — Conteudo global dos psicologos no Admin](0542-admin-conteudo-global-psicologos.md)
 - [ADR-0543 — Reconciliação manual e não destrutiva de uploads Stream](0543-reconciliacao-manual-uploads-stream.md)
 - [ADR-0544 — Playback de respostas apos exclusao do autor da pergunta](0544-playback-respostas-autor-post-excluido.md)
+- [ADR-0545 — Suspensao de som apos fallback de autoplay](0545-audio-comunidade-fallback-mudo.md)
