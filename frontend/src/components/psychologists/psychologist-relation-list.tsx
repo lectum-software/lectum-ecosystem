@@ -195,7 +195,7 @@ const FavoritePageHeader = () => (
   <header className="relative overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
     <Link
       aria-label="Voltar ao perfil"
-      className="absolute left-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-foreground/10 text-muted transition hover:bg-foreground/15 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="absolute left-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary transition hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       href="/app/perfil"
       title="Voltar ao perfil"
     >

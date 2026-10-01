@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, ChevronLeft, CornerUpLeft, FileText } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CornerUpLeft, FileText } from "lucide-react";
 import Link from "next/link";
 import { Fragment } from "react";
 import type { UserPostsType } from "@/api/generator/types/posts";
@@ -88,13 +88,14 @@ export const FilterTabs = ({
 
 export const MyPostsHeader = ({ interactionCopy }: { interactionCopy: InteractionCopy }) => (
   <header className="rounded-[26px] border border-border bg-surface px-4 py-3.5 shadow-lectum-soft dark:border-border dark:bg-surface sm:px-5 sm:py-4">
-    <div className="grid min-h-9 grid-cols-[36px_1fr_36px] items-center gap-2">
+    <div className="grid min-h-10 grid-cols-[40px_1fr_40px] items-center gap-2">
       <Link
         aria-label="Voltar para perfil"
-        className="inline-flex h-9 w-9 items-center justify-center justify-self-start rounded-full border border-border bg-surface text-muted shadow-lectum-soft transition hover:-translate-x-0.5 hover:border-border hover:bg-surface-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 dark:border-border dark:bg-surface dark:text-foreground"
+        className="grid h-10 w-10 place-items-center justify-self-start rounded-full bg-primary-soft text-primary transition hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         href="/app/perfil"
+        title="Voltar para perfil"
       >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        <ArrowLeft className="h-5 w-5" aria-hidden="true" />
       </Link>
       <h1 className="min-w-0 truncate text-center text-[16px] font-extrabold leading-tight tracking-[-0.025em] text-foreground dark:text-foreground sm:text-[17px]">
         {interactionCopy.screenTitle}

@@ -102,6 +102,42 @@ test("favorites opts out of the bottom bar and adds only an icon back to profile
   assert.doesNotMatch(header, /router\.back|history\.back|AppPageHeader|SecondaryPageHeader/);
 });
 
+test("favorites and my posts reuse the blue saved-page back-arrow appearance", () => {
+  const sources = [
+    readSource("../components/ui/app-page-header.tsx"),
+    readSource("../components/psychologists/psychologist-relation-list.tsx").split(
+      "const FavoritePageHeader =",
+    )[1],
+    readSource("../app/app/posts/mine/components/header.tsx").split(
+      "export const MyPostsHeader =",
+    )[1],
+  ];
+  for (const source of sources) {
+    const backLink = source.match(/<Link\b[\s\S]*?<\/Link>/)?.[0] ?? "";
+    const classes = new Set(backLink.match(/className="([^"]+)"/)?.[1].split(/\s+/));
+    for (const token of [
+      "grid",
+      "h-10",
+      "w-10",
+      "place-items-center",
+      "rounded-full",
+      "bg-primary-soft",
+      "text-primary",
+      "transition",
+      "hover:bg-primary-soft/80",
+    ]) {
+      assert.ok(classes.has(token), `Back arrow must retain ${token}`);
+    }
+    assert.match(backLink, /<ArrowLeft className="h-5 w-5"/);
+    assert.doesNotMatch(
+      backLink,
+      /ChevronLeft|bg-foreground\/10|border-border|bg-surface|text-muted/,
+    );
+  }
+  assert.match(sources[2], /href="\/app\/perfil"/);
+  assert.match(sources[2], /\{interactionCopy.screenTitle\}/);
+});
+
 test("mobile create action replaces favorites without changing the desktop sidebar or immersive exception", () => {
   const template = readSource("../templates/private/index.tsx");
   assert.match(template, /if \(index === 2\)/);
