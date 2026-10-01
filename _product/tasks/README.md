@@ -481,7 +481,7 @@ ou cortesia manual.
 | 194 | [TASK-194 - Audio explicito persistido e suspensao de background](TASK-194-audio-explicito-suspensao-background.md) | Completed | 193 |
 | 195 | [TASK-195 - Normalizacao de catalogos no downgrade para gratuito](TASK-195-normalizacao-downgrade-gratuito.md) | Completed | 31, 31A, 31B, 32, 33 |
 | 196 | [TASK-196 - Podar selecoes do perfil apos downgrade para gratuito](TASK-196-poda-selecoes-perfil-downgrade.md) | Completed | 195 |
-| 197 | [TASK-197 - Conteudo global dos psicologos no Admin](TASK-197-admin-conteudo-global-psicologos.md) | In Progress | 71, 75 |
+| 197 | [TASK-197 - Conteudo global dos psicologos no Admin](TASK-197-admin-conteudo-global-psicologos.md) | Completed | 71, 75 |
 
 ## Ordem operacional recomendada sem bloqueios
 

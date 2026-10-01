@@ -20,7 +20,7 @@ PROTO consultado; capturas fornecidas e componentes do Admin sao as referencias.
 - [x] Visualizacao, metricas e downloads reutilizam os contratos existentes.
 - [x] Estados loading, vazio e erro; filtros e pagina preservados na URL.
 - [x] Mobile-first implementado: campos em coluna e progressao para desktop.
-- [ ] Checks/builds, testes focados, verificacao visual e smoke homolog registrados.
+- [x] Checks/builds, testes focados, verificacao visual e smoke homolog registrados.
 
 ## Deploy e rollback
 
@@ -37,6 +37,16 @@ artefato compilado, incluindo validator HTTP real. Executor tsx local falha ante
 dos testes com uv_os_get_passwd/ENOMEM; suite completa nao considerada aprovada.
 Banco local nao configurado: Prisma generate/typecheck usa URL local apenas para
 compilacao e nao efetua conexao ou alteracao de dados. Source-size e cycles OK.
-Validacao visual/autenticada pendente de login do usuario em homologacao.
+Validacao autenticada em homologacao: consulta com dados reais de varias
+comunidades, posts e respostas, filtro de posts e paginacao. Layout inspecionado
+em 390px e 1440px, sem overflow horizontal. Admin e API publicados em 0.1.528;
+API /ping, /health e /ready com HTTP 200. Campos opcionais vazios encontrados no
+smoke inicial foram corrigidos no cliente em 0.1.529, com dois testes de regressao
+para parametros iniciais e filtros/datas. Os 16 testes do arquivo passaram;
+typecheck e build Admin 0.1.529 aprovados. Evidencias finais e smoke pos-correcao
+ficam no relatorio outputs/admin-conteudo/design-qa.md da sessao.
+Player e downloads reaproveitados: carregamento de algumas midias mostrou
+intermitencia no navegador de homologacao; nao considerado validacao completa
+de todos os arquivos ou exportacoes.
 Inicializacao local via Start-Process foi bloqueada pela politica de execucao;
 nao foi contornada. Homologacao sera a proxima superficie de validacao autenticada.

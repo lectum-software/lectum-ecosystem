@@ -49,7 +49,41 @@ const { renderToStaticMarkup } = require("react-dom/server");
 const { QueryClient, QueryClientProvider } = require("@tanstack/react-query");
 const loadSource = (relativePath) => require(fileURLToPath(new URL(relativePath, import.meta.url)));
 const { adminCommunitiesKeys } = loadSource("../api/cache/keys.ts");
-const { cleanReportsParams } = loadSource("../api/req/communities/params.ts");
+const { cleanReportsParams, cleanGlobalContentParams } = loadSource(
+  "../api/req/communities/params.ts",
+);
+const { contentFiltersSchema, defaultFilters } = loadSource(
+  "../app/(admin)/comunidades/conteudo/filters.tsx",
+);
+
+test("global content omits empty optional fields on the initial request", () => {
+  assert.deepEqual(cleanGlobalContentParams({ ...defaultFilters, page: 1, limit: 20 }), {
+    type: "all",
+    period: "all",
+    sort: "recent",
+    page: 1,
+    limit: 20,
+  });
+});
+
+test("global content keeps selected filters and custom dates", () => {
+  const input = {
+    q: "ansiedade",
+    psychologist: "Ana",
+    community: "community-test",
+    type: "replies",
+    period: "custom",
+    from: "2026-09-01",
+    to: "2026-10-01",
+    sort: "oldest",
+    page: 2,
+    limit: 8,
+  };
+  assert.deepEqual(cleanGlobalContentParams(input), input);
+  assert.equal(contentFiltersSchema.safeParse(input).success, true);
+  assert.equal(contentFiltersSchema.safeParse({ ...input, to: "" }).success, false);
+  assert.equal(contentFiltersSchema.safeParse({ ...input, to: "2026-08-01" }).success, false);
+});
 const { ReportsTab } = loadSource("../app/(admin)/comunidades/[slug]/views/reports-tab.tsx");
 const { ContentTab } = loadSource("../app/(admin)/comunidades/[slug]/views/content-tab.tsx");
 const { contentTypeOptions } = loadSource(
