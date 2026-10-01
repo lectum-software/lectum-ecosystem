@@ -1,4 +1,4 @@
-# 0541 - Pergunta contextual nas respostas do perfil
+# ADR-0541 - Pergunta contextual nas respostas do perfil
 
 ## Status
 
@@ -22,8 +22,41 @@ o paciente e sem navegar para o post ao expandir a pergunta.
 - Refinamento de autoria: a pergunta aparece logo apos o contexto `Respondido em`,
   antes da identificacao do psicologo. Nome/avatar ficam junto da resposta para
   nao atribuir o relato original ao profissional. Sem rotulos ou cards adicionais.
+- Espacamento: respostas do perfil usam `mt-3` antes da midia, como
+  `ProfessionalReplyPreview` e `ReplyCard`. Resposta sem texto nao renderiza um
+  bloco vazio nem acumula margem inferior no cabecalho. Havendo texto, manter
+  8 px entre autor/texto e 12 px entre texto/midia. Posts proprios nao mudam.
 
-## Consequencias
+## Refinamento 2026-09-30 - pergunta sobreposta no video
+
+- Para respostas em video no perfil, substituir titulo/descricao externos pela
+  caixinha sobreposta: faixa azul `Pergunta`, corpo branco e titulo centralizado.
+- Referencias existentes: `LectumSharePreviewArt` em
+  `lectum-share-download-dialog.tsx` e `SOCIAL_SHARE_ART_LAYOUT` no servico video.
+  A largura inicial de 79,7% foi substituida por recuos iguais ao topo; manter a
+  tipografia proporcional ao video, sem aumentar a fonte ao alargar a caixa.
+- Nao renderizar logo, assinatura inferior, descricao ou botao de contexto na arte.
+  O cabecalho normal do profissional fora do player permanece.
+- Slot opcional `overlay` dentro de `VerticalVideoPlayerShell` acompanha a
+  ampliacao por portal, sem alterar midia, exportacao social ou outros players.
+- Titulo integral com quebra de palavras e rolagem acessivel quando muito longo;
+  altura limitada para nao cobrir o play central. Respostas sem video preservam
+  contexto textual anterior. Feed e pagina da comunidade nao recebem o overlay.
+
+## Consequencias do refinamento
+
+### Posicao e proporcoes ao ampliar
+
+- Aproximar a caixinha do topo: margem de 4% da area visivel do video (antes 13%).
+- Refinamento 2026-10-01: topo e duas laterais usam `4cqh` do mesmo container,
+  garantindo a mesma distancia em pixels, e nao percentuais de eixos diferentes.
+  A largura passa a ocupar o espaco entre os recuos; fonte/padding nao mudam.
+- Medir a area `object-contain` usando dimensoes intrinsecas e ResizeObserver;
+  excluir faixas pretas do referencial, inclusive no portal ampliado e ao girar.
+- Tamanho do texto, padding e raio usam unidades do container do video, nao da
+  viewport. Assim a caixinha cresce por igual, preservando quebras de linha.
+- O observador e os listeners sao removidos ao desmontar. Sem alteracao de
+  controles, enquadramento da midia, outros players ou exportacao social.
 
 O visitante entende a pergunta sem sair do perfil ou perder o acesso ao contato.
 Nao ha novas chamadas, contratos, dependencias, variaveis ou migracoes. O feed e

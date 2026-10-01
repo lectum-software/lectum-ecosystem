@@ -1,5 +1,49 @@
 # TASK-25: Dentro da comunidade
 
+## Refinamento 2026-10-01 - largura da pergunta com recuos iguais
+
+- [x] Ampliar largura com o mesmo recuo em pixels no topo e nas duas laterais.
+- [x] Usar `4cqh` do video visivel nos tres recuos, inclusive ao ampliar.
+- [x] Manter fonte, padding, raio, titulo e comportamento existentes.
+- [x] Teste de regressao exige os recuos iguais e remove a largura fixa anterior.
+- Escopo: somente caixinha de respostas em video no perfil; ADR-0541.
+
+## Refinamento 2026-09-30 - caixinha proxima do topo e ampliacao proporcional
+
+- [x] Margem superior de 4% da imagem visivel, sem contar faixas pretas.
+- [x] Texto, largura, padding e raio proporcionais ao video nos dois modos.
+- [x] Recalcular area ao carregar metadados, redimensionar ou ampliar/recolher.
+- [x] Testes cobrem geometria vertical, horizontal, metadados ausentes e unidades relativas.
+- [x] Preservar rotulo Pergunta, titulo e ausencia de descricao/logo/assinatura.
+- Referencias: duas capturas do usuario em 2026-09-30; ADR-0541.
+- Validacao automatizada: frontend check/build, 14 testes do perfil, source-size,
+  check:adrs, check:tasks, check:version e diff passaram. Browser local abriu a
+  aplicacao, mas a API ficou indisponivel; smoke visual usa dados reais em homologacao.
+
+## Refinamento 2026-09-30 - caixinha de pergunta sobre o video no perfil
+
+- [x] Localizar arte em `LectumSharePreviewArt` e `SOCIAL_SHARE_ART_LAYOUT`.
+- [x] Aplicar faixa azul `Pergunta` e titulo sobreposto somente nas respostas em video do perfil.
+- [x] Sem logo, assinatura inferior, descricao ou botao de contexto na arte.
+- [x] Preservar identificacao externa, controles, CTA, feed e exportacao social.
+- [x] Slot no player acompanha ampliacao; titulo longo admite rolagem por teclado.
+- Fonte visual: `image (22).png` enviada pelo usuario; Builder nao exposto nesta sessao.
+- Validacao: frontend check/build, 12 testes de perfil, typecheck e source-size passaram.
+- Smoke de homologacao (b4fc2352): 390x844 e 1280x720, titulo legivel, sem overflow;
+  reproducao e ampliacao/retorno preservam a arte. API local indisponivel, sem mocks.
+- Decisao: `adrs/0541-pergunta-contextual-no-perfil.md`.
+
+## Refinamento 2026-09-30 - espacamento da resposta no perfil
+
+- [x] Reutilizar os 12 px (`mt-3`) de `ProfessionalReplyPreview`/`ReplyCard` antes da midia.
+- [x] Omitir bloco textual vazio e margem inferior extra do autor em respostas so com midia.
+- [x] Preservar 8 px entre autor/texto e 12 px entre texto/midia em respostas com texto.
+- [x] Preservar ordem pergunta/autor/resposta e expansao local; nao modificar posts proprios.
+- [x] Teste de regressao compara as classes com as referencias reais do feed/comunidade.
+- ADR: `adrs/0541-pergunta-contextual-no-perfil.md`. Sem API, banco ou dependencia nova.
+- Validacao: frontend check/build, dez testes de respostas, check:version e diff
+  sem erros. Referencia medida no browser: 12 px mais borda da midia na comunidade.
+
 ## Refinamento 2026-09-30 - ordem da pergunta e autoria no perfil
 
 - [x] Ordem das respostas: comunidade, titulo/descricao, identificacao do psicologo, resposta.

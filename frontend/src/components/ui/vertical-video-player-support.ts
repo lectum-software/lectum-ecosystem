@@ -1,4 +1,10 @@
-import type { CSSProperties, VideoHTMLAttributes } from "react";
+import type { CSSProperties, ReactNode, VideoHTMLAttributes } from "react";
+
+export type BlobBackedVideoRequest = {
+  controller: AbortController;
+  promise: Promise<boolean>;
+  source: string;
+};
 
 export type VideoFit = "contain" | "cover";
 
@@ -28,6 +34,7 @@ export type VerticalVideoPlayerProps = {
   onContentClick?: () => void;
   onSoundEnabledChange?: (soundEnabled: boolean) => void;
   onVideoElementReady?: (video: HTMLVideoElement | null) => void;
+  overlay?: ReactNode;
   persistentControlsLayout?: PersistentControlsLayout;
   persistentControlsVisibility?: PersistentControlsVisibility;
   poster?: string | null;

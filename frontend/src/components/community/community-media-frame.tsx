@@ -248,6 +248,7 @@ type CommunityMediaBlockProps = {
   thumbnailUrl?: string | null;
   variant?: CommunityMediaFrameVariant;
   videoClassName?: string;
+  videoOverlay?: ReactNode;
   viewportClassName?: string;
 };
 
@@ -266,6 +267,7 @@ export const CommunityMediaBlock = ({
   sizes,
   variant = "post",
   videoClassName,
+  videoOverlay,
   viewportClassName,
 }: CommunityMediaBlockProps) => {
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
@@ -414,6 +416,7 @@ export const CommunityMediaBlock = ({
               communityAutoplayEnabled ? handleCommunitySoundEnabledChange : undefined
             }
             onVideoElementReady={handleVideoReady}
+            overlay={videoOverlay}
             persistentControlsLayout="media"
             poster={resolvedPosterUrl}
             src={resolvedUrl}
