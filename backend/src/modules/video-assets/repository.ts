@@ -354,7 +354,7 @@ export class VideoAssetRepository {
           deleted: false,
           id: asset.context_id,
           status: "publicado",
-          author: { active: true, deleted: false },
+          // Published discussions survive deletion of the question author's account.
           community: { active: true, deleted: false },
         },
       },

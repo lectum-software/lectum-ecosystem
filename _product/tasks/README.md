@@ -1,3 +1,5 @@
+Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
+
 Ajuste visual em 30/09/2026: centralizacao vertical do texto da pergunta na caixinha branca do MP4 social de video-resposta. A captura anexada foi usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente; referencia ativa baseada no anexo e em `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`. Alteracao exclusivamente no renderer FFmpeg do `video/`, sem mudar upload, filas, contrato HTTP, backend, frontend, admin, banco, env, package novo ou mocks. ADR: `adrs/0540-centralizacao-texto-caixinha-social.md`.
 
 Criterios de aceite do ajuste de centralizacao da caixinha social:
@@ -205,7 +207,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 198 tasks: `TASK-00` a `TASK-191`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 205 tasks: `TASK-00` a `TASK-198`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -482,6 +484,8 @@ ou cortesia manual.
 | 195 | [TASK-195 - Normalizacao de catalogos no downgrade para gratuito](TASK-195-normalizacao-downgrade-gratuito.md) | Completed | 31, 31A, 31B, 32, 33 |
 | 196 | [TASK-196 - Podar selecoes do perfil apos downgrade para gratuito](TASK-196-poda-selecoes-perfil-downgrade.md) | Completed | 195 |
 | 197 | [TASK-197 - Conteudo global dos psicologos no Admin](TASK-197-admin-conteudo-global-psicologos.md) | Completed | 71, 75 |
+| 198 | [TASK-198 - Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md) | In Progress | 181, 182 |
+| 199 | [TASK-199 - Playback de respostas em posts de membros excluidos](TASK-199-playback-respostas-autor-post-excluido.md) | Completed | 167 |
 
 ## Ordem operacional recomendada sem bloqueios
 
