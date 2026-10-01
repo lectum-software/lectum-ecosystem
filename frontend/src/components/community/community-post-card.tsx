@@ -23,10 +23,8 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
-import {
-  ProfileReplyQuestion,
-  ProfileReplyVideoQuestion,
-} from "@/components/community/profile-reply-question";
+import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
+import { ProfileReplyVideoQuestion } from "@/components/community/profile-reply-video-question";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,

@@ -12,9 +12,37 @@ registerHooks({
     return nextResolve(specifier === "next/link" ? "next/link.js" : specifier, context);
   },
 });
-const { ProfileReplyQuestion, ProfileReplyVideoQuestion } = await import(
-  "./profile-reply-question.tsx"
+const { ProfileReplyQuestion } = await import("./profile-reply-question.tsx");
+const { ProfileReplyVideoQuestion, getContainedQuestionFrame } = await import(
+  "./profile-reply-video-question.tsx"
 );
+
+test("question uses the contained video plane for inline, fullscreen and rotated layouts", () => {
+  assert.deepEqual(getContainedQuestionFrame(320, 640, 1080, 1920), {
+    width: 320,
+    height: (320 * 16) / 9,
+    left: 0,
+    top: (640 - (320 * 16) / 9) / 2,
+  });
+  const expanded = getContainedQuestionFrame(393, 852, 1080, 1920);
+  assert.equal(expanded.width, 393);
+  assert.equal(expanded.height / expanded.width, 16 / 9);
+  const landscape = getContainedQuestionFrame(1280, 720, 1080, 1920);
+  assert.deepEqual(landscape, { width: 405, height: 720, left: 437.5, top: 0 });
+  assert.deepEqual(getContainedQuestionFrame(320, 640, 0, 0), getContainedQuestionFrame(320, 640));
+});
+
+test("question position, typography, padding and radius scale together with the video", () => {
+  const html = renderToStaticMarkup(
+    createElement(ProfileReplyVideoQuestion, { title: "Question" }),
+  );
+  assert.match(html, /top-\[4%\]/);
+  assert.match(html, /container-type:size/);
+  for (const token of ["text-[5cqw]", "text-[4.375cqw]", "p-[5cqw]", "rounded-[3.75cqw]"]) {
+    assert.ok(html.includes(token));
+  }
+  assert.doesNotMatch(html, /top-\[13%\]|text-base|text-sm/);
+});
 
 test("profile video art has only the question label and full title, without branding or context", () => {
   const title = "Como a gente se prepara pra perder alguem?";
