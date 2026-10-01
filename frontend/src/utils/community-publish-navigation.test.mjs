@@ -60,7 +60,7 @@ test("publication tip persists across surfaces, reloads and login without mixing
   }
 });
 
-test("mobile navigation remains available on feed, community and favorites with profile selected", () => {
+test("mobile route eligibility preserves profile grouping for favorites", () => {
   for (const path of [
     "/",
     "/comunidades/ansiedade-em-equilibrio",
@@ -76,6 +76,66 @@ test("mobile navigation remains available on feed, community and favorites with 
       ["/", "/psicologos", "/app/favoritos", "/app/notificacoes", "/app/perfil"],
     );
   }
+});
+
+test("favorites opts out of the bottom bar and adds only an icon back to profile above the existing title", () => {
+  const source = readSource("../components/psychologists/psychologist-relation-list.tsx");
+  assert.match(source, /showMobileNavigation=\{false\}/);
+  assert.match(
+    source,
+    /restrictedAreaBackLink=\{\{ href: "\/app\/perfil", label: "Voltar ao perfil" \}\}/,
+  );
+  const header = source.slice(
+    source.indexOf("const FavoritePageHeader ="),
+    source.indexOf("const FavoriteFilterChips ="),
+  );
+  assert.match(header, /aria-label="Voltar ao perfil"/);
+  assert.match(header, /absolute left-4 top-4[\s\S]*rounded-full/);
+  assert.match(header, /href="\/app\/perfil"/);
+  assert.match(header, /<ArrowLeft className="h-5 w-5" aria-hidden="true" \/>/);
+  assert.match(
+    header,
+    /<h1 className="text-2xl font-bold leading-7 text-foreground">Favoritos<\/h1>/,
+  );
+  assert.equal((header.match(/<h1\b/g) ?? []).length, 1);
+  assert.match(header, /\{FAVORITES_HEADER_DESCRIPTION\}/);
+  assert.doesNotMatch(header, /router\.back|history\.back|AppPageHeader|SecondaryPageHeader/);
+});
+
+test("favorites and my posts reuse the blue saved-page back-arrow appearance", () => {
+  const sources = [
+    readSource("../components/ui/app-page-header.tsx"),
+    readSource("../components/psychologists/psychologist-relation-list.tsx").split(
+      "const FavoritePageHeader =",
+    )[1],
+    readSource("../app/app/posts/mine/components/header.tsx").split(
+      "export const MyPostsHeader =",
+    )[1],
+  ];
+  for (const source of sources) {
+    const backLink = source.match(/<Link\b[\s\S]*?<\/Link>/)?.[0] ?? "";
+    const classes = new Set(backLink.match(/className="([^"]+)"/)?.[1].split(/\s+/));
+    for (const token of [
+      "grid",
+      "h-10",
+      "w-10",
+      "place-items-center",
+      "rounded-full",
+      "bg-primary-soft",
+      "text-primary",
+      "transition",
+      "hover:bg-primary-soft/80",
+    ]) {
+      assert.ok(classes.has(token), `Back arrow must retain ${token}`);
+    }
+    assert.match(backLink, /<ArrowLeft className="h-5 w-5"/);
+    assert.doesNotMatch(
+      backLink,
+      /ChevronLeft|bg-foreground\/10|border-border|bg-surface|text-muted/,
+    );
+  }
+  assert.match(sources[2], /href="\/app\/perfil"/);
+  assert.match(sources[2], /\{interactionCopy.screenTitle\}/);
 });
 
 test("mobile create action replaces favorites without changing the desktop sidebar or immersive exception", () => {

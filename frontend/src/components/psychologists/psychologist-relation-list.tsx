@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueries } from "@tanstack/react-query";
-import { Heart, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Heart, Loader2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -192,7 +192,15 @@ const getFavoriteBio = (psychologist: PatientRelationPsychologist) => {
 };
 
 const FavoritePageHeader = () => (
-  <header className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+  <header className="relative overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+    <Link
+      aria-label="Voltar ao perfil"
+      className="absolute left-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary transition hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      href="/app/perfil"
+      title="Voltar ao perfil"
+    >
+      <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+    </Link>
     <div className="grid justify-items-center bg-surface px-6 py-8 text-center dark:bg-surface">
       <span className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-media-foreground bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)] dark:border-surface dark:bg-primary/15">
         <Heart className="h-11 w-11" aria-hidden="true" strokeWidth={1.85} />
@@ -531,7 +539,10 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
         : null;
 
   return (
-    <PrivateTemplate>
+    <PrivateTemplate
+      restrictedAreaBackLink={{ href: "/app/perfil", label: "Voltar ao perfil" }}
+      showMobileNavigation={false}
+    >
       <section className="mx-auto grid min-w-0 w-full max-w-[430px] gap-5 overflow-hidden md:max-w-3xl">
         <FavoritePageHeader />
 
