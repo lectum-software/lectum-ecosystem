@@ -290,7 +290,17 @@ export const CommunityDetailLogic = ({
   return (
     <PrivateTemplate
       allowAnonymous
-      autoHideNavigation
+      bottomNavigationCenterAction={
+        community
+          ? {
+              ariaLabel: "Criar publicação nesta comunidade",
+              href: communityCreatePostHref(community.slug),
+              onClick: (event) =>
+                handleCreatePostClick(event, communityCreatePostHref(community.slug)),
+              scroll: false,
+            }
+          : undefined
+      }
       contentClassName="lectum-mobile-main-scrollbar-hidden !pt-0 bg-background sm:!pt-0"
       navigationTheme="solidWhite"
       showHeader
@@ -453,11 +463,11 @@ export const CommunityDetailLogic = ({
         </Link>
       ) : null}
 
-      {community && !suppressPublishOnboarding ? (
+      {community && !suppressPublishOnboarding && !createPostModalOpen ? (
         <CommunityPublishOnboarding
           createPostHref={communityCreatePostHref(community.slug)}
           onCreatePostClick={handleCreatePostClick}
-          variant="floating"
+          variant="bottomNavigation"
         />
       ) : null}
 

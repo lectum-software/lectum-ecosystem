@@ -203,7 +203,12 @@ export const CommunityFeedLogic = ({
   return (
     <PrivateTemplate
       allowAnonymous
-      autoHideNavigation
+      bottomNavigationCenterAction={{
+        ariaLabel: "Criar publicação na comunidade",
+        href: createPostHref,
+        onClick: (event) => handleCreatePostClick(event, createPostHref),
+        scroll: false,
+      }}
       contentClassName="lectum-mobile-main-scrollbar-hidden bg-background"
       navigationTheme="solidWhite"
       showHeader
@@ -325,11 +330,14 @@ export const CommunityFeedLogic = ({
         <span className="sr-only">Criar publicação</span>
       </Link>
 
-      {!suppressPublishOnboarding ? (
+      {!suppressPublishOnboarding &&
+      !isInitialFeedLoading &&
+      !errorMessage &&
+      !createPostModalOpen ? (
         <CommunityPublishOnboarding
           createPostHref={createPostHref}
           onCreatePostClick={handleCreatePostClick}
-          variant="floating"
+          variant="bottomNavigation"
         />
       ) : null}
 

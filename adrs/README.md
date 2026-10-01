@@ -589,3 +589,5 @@ Formato recomendado:
 - [ADR-0543 — Reconciliação manual e não destrutiva de uploads Stream](0543-reconciliacao-manual-uploads-stream.md)
 - [ADR-0544 — Playback de respostas apos exclusao do autor da pergunta](0544-playback-respostas-autor-post-excluido.md)
 - [ADR-0545 — Suspensao de som apos fallback de autoplay](0545-audio-comunidade-fallback-mudo.md)
+- [ADR-0546 — Publicar na navegacao mobile e dica compartilhada](0546-publicar-nav-mobile-dica-compartilhada.md)
+- [ADR-0547 — Criacao de post sobre a aba atual](0547-criar-post-sobre-aba-atual.md)

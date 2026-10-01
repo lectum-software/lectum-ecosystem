@@ -1,13 +1,15 @@
 "use client";
 
 import { ChevronLeft, Plus } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
 import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
+import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LegalAcceptanceRequest } from "@/components/legal/acceptance-request";
 import { canPromptLegalOnPath } from "@/components/legal/policy";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -21,6 +23,8 @@ import { cn } from "@/lib/utils";
 import * as userActions from "@/store/modules/user/actions";
 import { requestLectumAppRefreshAfterReturningToTop } from "@/utils/app-refresh";
 import { buildAuthRouteWithRedirect } from "@/utils/auth-redirect";
+import { COMMUNITY_CREATE_POST_HREF } from "@/utils/community";
+import { markCommunityPublishTipSeen } from "@/utils/community-publish-tip";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
 import { getPsychologistPaidOnboardingRequirementPath } from "@/utils/psychologist-onboarding";
 
@@ -48,9 +52,16 @@ import {
   writeDesktopSidebarPreference,
 } from "./sidebar-preference";
 
+const CreateCommunityPostLogic = dynamic(
+  () =>
+    import("@/app/app/community/[slug]/post/new/logic").then(
+      (module) => module.CreateCommunityPostLogic,
+    ),
+  { ssr: false },
+);
+
 export const PrivateTemplate = ({
   allowAnonymous = false,
-  autoHideNavigation = false,
   bottomNavigationCenterAction,
   children,
   contentClassName,
@@ -70,6 +81,8 @@ export const PrivateTemplate = ({
   const storedUser = useAppSelector((state) => state.user);
   const { out } = useSignOut();
   const hasToken = useAuthTokenPresence();
+  const conversion = useProgressiveConversion();
+  const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
 
   const { hidrate } = useAuth({ enableHidrate: hasToken });
   const { hasUnread: hasUnreadNotifications } = useUnreadNotificationStatus(hasToken);
@@ -90,8 +103,6 @@ export const PrivateTemplate = ({
     showMobileNavigation &&
     shouldShowMobileNavigationForPath(navigationContextPathname);
   const shouldRenderDesktopSidebar = shouldShowNavigation && desktopNavigation === "sidebar";
-  const shouldAutoHideNavigation = shouldShowNavigation && autoHideNavigation;
-  const [isNavigationVisible, setIsNavigationVisible] = useState(true);
   const isMainDesktopNavigationRoute = isPrimaryDesktopNavigationPath(navigationContextPathname);
   const desktopSidebarRouteDefaultCollapsed =
     desktopSidebarDefaultCollapsed ?? !isMainDesktopNavigationRoute;
@@ -103,11 +114,13 @@ export const PrivateTemplate = ({
   const isDesktopSidebarCollapsed =
     storedDesktopSidebarPreference ?? desktopSidebarRouteDefaultCollapsed;
   const isNavigationRenderedVisible = !navigationHidden;
-  const isMobileNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
+  const isMobileNavigationRenderedVisible = !navigationHidden;
   const mobileNavigationActiveHref = getMobileNavigationActiveHref(navigationContextPathname);
-  const lastScrollY = useRef(0);
-  const scrollAnimationFrameRef = useRef<number | null>(null);
-  const ticking = useRef(false);
+  const centerAction = bottomNavigationCenterAction ?? {
+    ariaLabel: "Criar publicação",
+    href: COMMUNITY_CREATE_POST_HREF,
+    scroll: false,
+  };
   const navigationAwarePageShellClassName = cn(
     shouldRenderMobileNavigation
       ? "pb-[var(--lectum-mobile-bottom-nav-aware-padding)] sm:pb-[calc(var(--lectum-mobile-bottom-nav-height)_+_1.25rem)]"
@@ -180,53 +193,6 @@ export const PrivateTemplate = ({
     router.replace(`${NEED_RESET_PATH}${redirectTo}`);
   }, [normalizedPathname, router, shouldRedirectToNeedReset]);
 
-  useEffect(() => {
-    if (!shouldAutoHideNavigation) return;
-
-    const onScroll = () => {
-      if (ticking.current) return;
-
-      ticking.current = true;
-
-      scrollAnimationFrameRef.current = requestAnimationFrame(() => {
-        const currentY = window.scrollY;
-
-        if (currentY <= 12) {
-          setIsNavigationVisible(true);
-          lastScrollY.current = currentY;
-          ticking.current = false;
-          scrollAnimationFrameRef.current = null;
-
-          return;
-        }
-
-        const delta = currentY - lastScrollY.current;
-
-        if (delta > 8) {
-          setIsNavigationVisible(false);
-        } else if (delta < -8) {
-          setIsNavigationVisible(true);
-        }
-
-        lastScrollY.current = currentY;
-        ticking.current = false;
-        scrollAnimationFrameRef.current = null;
-      });
-    };
-
-    lastScrollY.current = window.scrollY;
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (scrollAnimationFrameRef.current !== null) {
-        cancelAnimationFrame(scrollAnimationFrameRef.current);
-        scrollAnimationFrameRef.current = null;
-      }
-      ticking.current = false;
-    };
-  }, [shouldAutoHideNavigation]);
-
   const toggleDesktopSidebar = () => {
     const nextValue = !isDesktopSidebarCollapsed;
 
@@ -243,9 +209,26 @@ export const PrivateTemplate = ({
     void requestLectumAppRefreshAfterReturningToTop("navigation");
   };
 
+  const handleCreatePostClick = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    markCommunityPublishTipSeen(sessionUser?.id);
+    if (centerAction.onClick) {
+      centerAction.onClick(event);
+      return;
+    }
+    event.preventDefault();
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_comentar", {
+        intent: { returnTo: centerAction.href, type: "create_post" },
+      });
+      return;
+    }
+    setCreatePostModalOpen(true);
+  };
+
   const bottomNavigationMarkup = shouldRenderMobileNavigation ? (
     <nav
       aria-label="Navegação principal"
+      inert={!isMobileNavigationRenderedVisible}
       className={cn(
         "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] lg:hidden",
         navigationDimmed ? "opacity-55 brightness-90 saturate-75" : "opacity-100",
@@ -267,21 +250,21 @@ export const PrivateTemplate = ({
           const shouldShowUnreadIndicator =
             hasUnreadNotifications && item.href === NOTIFICATIONS_HREF;
 
-          if (bottomNavigationCenterAction && index === 2) {
+          // Favorites remain in the desktop sidebar; mobile prioritizes publishing.
+          if (index === 2) {
             return (
               <li className="relative flex min-h-16 items-center justify-center" key="create-post">
                 <Link
-                  aria-label={bottomNavigationCenterAction.ariaLabel}
-                  className="absolute -top-3 grid h-14 w-14 place-items-center rounded-full border-[5px] border-media-foreground bg-primary text-primary-foreground shadow-lectum-soft transition hover:-translate-y-px hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-surface dark:shadow-lectum-soft"
-                  href={bottomNavigationCenterAction.href}
-                  onClick={bottomNavigationCenterAction.onClick}
-                  scroll={bottomNavigationCenterAction.scroll}
-                  title={
-                    bottomNavigationCenterAction.title ?? bottomNavigationCenterAction.ariaLabel
-                  }
+                  aria-label={centerAction.ariaLabel}
+                  className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  data-community-create-post="mobile-navigation"
+                  href={centerAction.href}
+                  onClick={handleCreatePostClick}
+                  scroll={centerAction.scroll}
+                  title={centerAction.title ?? centerAction.ariaLabel}
                 >
-                  <Plus className="h-8 w-8 stroke-[2.2]" aria-hidden="true" />
-                  <span className="sr-only">{bottomNavigationCenterAction.ariaLabel}</span>
+                  <Plus className="h-7 w-7 stroke-[2.2]" aria-hidden="true" />
+                  <span className="sr-only">{centerAction.ariaLabel}</span>
                 </Link>
               </li>
             );
@@ -299,7 +282,12 @@ export const PrivateTemplate = ({
                   isActive ? "text-primary" : "text-muted hover:text-primary",
                 )}
                 href={item.href}
-                onClick={(event) => handleNavigationItemClick(event, isActive)}
+                onClick={(event) =>
+                  handleNavigationItemClick(
+                    event,
+                    isActive && navigationContextPathname === item.href,
+                  )
+                }
               >
                 <span className="relative inline-grid h-5 w-5 place-items-center">
                   <Icon className="h-5 w-5" aria-hidden={true} />
@@ -530,6 +518,12 @@ export const PrivateTemplate = ({
         {children}
       </PageShell>
       {navigationMarkup}
+      {createPostModalOpen ? (
+        <CreateCommunityPostLogic
+          asModalSlot
+          onCloseComplete={() => setCreatePostModalOpen(false)}
+        />
+      ) : null}
       {sessionUser?.id && !sessionUser.need_reset && canPromptLegalOnPath(normalizedPathname) ? (
         <LegalAcceptanceRequest key={sessionUser.id} userId={sessionUser.id} />
       ) : null}
