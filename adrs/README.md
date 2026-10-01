@@ -584,3 +584,4 @@ Formato recomendado:
 - [ADR-0538 — Open Graph do link de avaliacao](0538-open-graph-link-avaliacao.md)
 - [ADR-0539 — Exclusao de avaliacao pelo autor](0539-author-review-deletion.md)
 - [ADR-0540 — Centralizacao vertical do texto na caixinha social](0540-centralizacao-texto-caixinha-social.md)
+- [ADR-0541 — Pergunta contextual nas respostas do perfil](0541-pergunta-contextual-no-perfil.md)

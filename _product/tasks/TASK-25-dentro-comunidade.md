@@ -8,7 +8,9 @@
 - [x] Preservar identificacao externa, controles, CTA, feed e exportacao social.
 - [x] Slot no player acompanha ampliacao; titulo longo admite rolagem por teclado.
 - Fonte visual: `image (22).png` enviada pelo usuario; Builder nao exposto nesta sessao.
-- Validacao automatizada: frontend check e build; smoke visual em homologacao apos deploy.
+- Validacao: frontend check/build, 12 testes de perfil, typecheck e source-size passaram.
+- Smoke de homologacao (b4fc2352): 390x844 e 1280x720, titulo legivel, sem overflow;
+  reproducao e ampliacao/retorno preservam a arte. API local indisponivel, sem mocks.
 - Decisao: `adrs/0541-pergunta-contextual-no-perfil.md`.
 
 ## Refinamento 2026-09-30 - espacamento da resposta no perfil
