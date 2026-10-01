@@ -485,6 +485,7 @@ ou cortesia manual.
 | 196 | [TASK-196 - Podar selecoes do perfil apos downgrade para gratuito](TASK-196-poda-selecoes-perfil-downgrade.md) | Completed | 195 |
 | 197 | [TASK-197 - Conteudo global dos psicologos no Admin](TASK-197-admin-conteudo-global-psicologos.md) | Completed | 71, 75 |
 | 198 | [TASK-198 - Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md) | In Progress | 181, 182 |
+| 199 | [TASK-199 - Playback de respostas em posts de membros excluidos](TASK-199-playback-respostas-autor-post-excluido.md) | Completed | 167 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -1,6 +1,6 @@
 {
   "name": "lectum-ecosystem",
-  "version": "0.1.533",
+  "version": "0.1.534",
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
