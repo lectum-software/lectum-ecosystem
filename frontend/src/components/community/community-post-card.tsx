@@ -612,6 +612,7 @@ export const CommunityPostCard = ({
           <CommunityMediaBlock
             alt={displayTitle ?? "Mídia da publicação"}
             analyticsTarget={displayMediaAnalyticsTarget}
+            enableCommunityAutoplay={profilePublicationMode}
             footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}

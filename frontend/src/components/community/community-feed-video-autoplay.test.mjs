@@ -156,6 +156,29 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.doesNotMatch(psychologistCardVideoSource, /globalSoundEnabled/);
 });
 
+test("publicacoes do perfil usam o mesmo autoplay e volume da comunidade para posts e respostas", () => {
+  const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
+  const publications = read("../../app/app/psychologist/[id]/components/publications.tsx");
+  const card = read("./community-post-card.tsx");
+  const media = read("./community-media-frame.tsx");
+
+  assert.match(publications, /<CommunityPostCard[\s\S]*?profilePublicationMode\s*\/>/);
+  assert.match(card, /profilePublicationMode = false/);
+  assert.match(
+    card,
+    /primaryReply\?\.media_url \?\? singlePostMediaItem\?\.media_url \?\? post.media_url/,
+  );
+  assert.match(
+    card,
+    /<CommunityMediaBlock[\s\S]*?enableCommunityAutoplay=\{profilePublicationMode\}[\s\S]*?mediaUrl=\{displayMediaUrl\}/,
+  );
+  assert.match(media, /useCommunityVideoAutoplay\(communityAutoplayEnabled\)/);
+  assert.match(media, /communityAutoplayEnabled \? handleCommunitySoundEnabledChange : undefined/);
+  assert.match(media, /muted: !communitySoundEnabled/);
+  assert.doesNotMatch(publications, /autoPlay|localStorage|\.play\(/);
+  assert.doesNotMatch(card, /autoPlay|localStorage|\.play\(/);
+});
+
 test("feed de psicologos separa volume explicito de tap e protege retomadas", () => {
   const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
   const base = "../../app/app/psychologists/";
