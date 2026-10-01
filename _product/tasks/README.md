@@ -489,6 +489,7 @@ ou cortesia manual.
 | 200 | [TASK-200 - Audio da comunidade apos fallback mudo](TASK-200-audio-comunidade-fallback-mudo.md) | Completed | 194 |
 | 201 | [TASK-201 - Publicar no centro da navegacao e dica compartilhada](TASK-201-navegacao-publicar-dica-compartilhada.md) | Completed | 200 |
 | 202 | [TASK-202 - Criar post sobre a aba atual](TASK-202-criar-post-sobre-aba-atual.md) | Completed | 201 |
+| 203 | [TASK-203 - Retorno pela navegacao mobile](TASK-203-retorno-navegacao-mobile.md) | Completed | 202 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -282,7 +282,12 @@ export const PrivateTemplate = ({
                   isActive ? "text-primary" : "text-muted hover:text-primary",
                 )}
                 href={item.href}
-                onClick={(event) => handleNavigationItemClick(event, isActive)}
+                onClick={(event) =>
+                  handleNavigationItemClick(
+                    event,
+                    isActive && navigationContextPathname === item.href,
+                  )
+                }
               >
                 <span className="relative inline-grid h-5 w-5 place-items-center">
                   <Icon className="h-5 w-5" aria-hidden={true} />

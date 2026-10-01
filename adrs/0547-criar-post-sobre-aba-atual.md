@@ -38,3 +38,11 @@ distinguir teste anonimo de teste autenticado real, sem falsear sessao.
 Rollout primeiro em homolog. Rollback por reversao revisada, sem operacao de
 dados. Nenhuma promocao para main sem pedido explicito.
 
+## Revisao de promocao - TASK-203
+
+Ao destacar Perfil em Favoritos, a barra confundia secao ativa com rota atual
+e cancelava a navegacao ao Perfil. O refresh mobile exige tambem igualdade
+entre navigationContextPathname e item.href. O destaque da secao permanece,
+assim como o refresh ao tocar na propria rota e a sidebar desktop. A mesma
+regra preserva o retorno dos perfis publicos para a lista de Psicologos.
+

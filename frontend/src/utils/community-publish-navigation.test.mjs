@@ -91,6 +91,20 @@ test("mobile create action replaces favorites without changing the desktop sideb
   assert.match(psychologists, /navigationHidden=\{metrics.isDesktopLayout \? false : isUiHidden\}/);
 });
 
+test("a highlighted parent tab still navigates from favorites and psychologist profiles", () => {
+  const template = readSource("../templates/private/index.tsx");
+  const mobileNavigation = template.slice(
+    template.indexOf("const bottomNavigationMarkup ="),
+    template.indexOf("const desktopSidebarMarkup ="),
+  );
+  assert.match(
+    mobileNavigation,
+    /handleNavigationItemClick\(\s*event,\s*isActive && navigationContextPathname === item\.href,?\s*\)/,
+  );
+  assert.equal(getMobileNavigationActiveHref("/app/favoritos"), "/app/perfil");
+  assert.equal(getMobileNavigationActiveHref("/psicologos/profissional"), "/psicologos");
+});
+
 test("feed and community share the original copy, onboarding history and contextual create handler", () => {
   const base = "../app/app/community/[slug]/";
   for (const view of ["community-feed", "community-detail"]) {
