@@ -42,6 +42,7 @@ export const adminNavItems = [
     children: [
       { label: "Visão geral", href: "/comunidades" },
       { label: "Lista de Comunidades", href: "/comunidades/lista" },
+      { label: "Conteúdo", href: "/comunidades/conteudo" },
     ],
   },
   {

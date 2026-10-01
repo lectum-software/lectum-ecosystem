@@ -8,6 +8,7 @@ import type {
   AdminCommunityStatisticsQuery,
   CommunitiesDashboardQuery,
 } from "@/api/req/communities";
+import type { AdminGlobalContentQuery } from "@/api/req/communities/global-content";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { FinanceDashboardQuery, FinanceListQuery } from "@/api/req/finance";
 import type {
@@ -322,6 +323,8 @@ export const adminVideoAssetsKeys = {
 
 export const adminCommunitiesKeys = {
   all: ["admin", "communities"] as const,
+  globalContent: (input: AdminGlobalContentQuery) =>
+    [...adminCommunitiesKeys.all, "global-content", input] as const,
   activities: (id: string, input: AdminCommunityActivitiesQuery) =>
     [...adminCommunitiesKeys.all, "activities", id, normalizeCommunityActivities(input)] as const,
   content: (id: string, input: AdminCommunityContentQuery) =>
