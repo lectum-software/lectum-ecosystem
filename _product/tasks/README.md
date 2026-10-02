@@ -1,6 +1,6 @@
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
-Ajuste de frontend em 02/10/2026: [TASK-212 — Remover faixa vazia da modal de criar post](TASK-212-remover-faixa-vazia-modal-criar-post.md). O rodapé da modal passa a sobrepor a área de edição e deixa de reservar uma faixa branca vazia antes dos botões, mantendo escrita rolável com ou sem mídia. Sem backend, banco, env ou contrato de API.
+Ajuste de frontend em 02/10/2026: [TASK-212 — Remover faixa vazia da modal de criar post](TASK-212-remover-faixa-vazia-modal-criar-post.md). A descrição sem mídia cresce com o texto, sem altura cheia forçada nem teto de altura; a rolagem fica no formulário até o rodapé, com teclado aberto ou fechado. O rodapé permanece no fluxo normal e o comportamento com mídia é preservado. Sem backend, banco, env ou contrato de API.
 
 Ajuste de frontend em 02/10/2026: [TASK-211 — Menu desktop de criar post e perfil do psicólogo](TASK-211-menu-desktop-criar-post-perfil-psicologo.md). Remove "Avaliações feitas" do perfil do psicólogo e troca o espaço de Favoritos no menu lateral desktop pela ação "Criar post", reutilizando a mesma modal/fluxo de conversão do botão central mobile. Sem backend, banco, env ou contrato de API.
 
