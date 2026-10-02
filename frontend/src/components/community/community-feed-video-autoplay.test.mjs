@@ -375,6 +375,51 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   assert.equal(second.muted, false, "explicit volume action re-enables audio");
   await show(third);
   assert.equal(third.muted, false, "explicit opt-in still carries to the next video");
+
+  const policyBlocked = addVideo("blocked-after-explicit-opt-in");
+  policyBlocked.nextPlay = () =>
+    Promise.reject(new DOMException("Autoplay denied", "NotAllowedError"));
+  await show(policyBlocked);
+  assert.equal(getVideoSoundEnabled(), true, "a per-video denial cannot undo explicit opt-in");
+  assert.equal(notifications.at(-1), true, "other players keep the enabled sound preference");
+  assert.equal(policyBlocked.muted, false, "do not silently switch the blocked video to mute");
+  assert.equal(policyBlocked.paused, true, "a blocked video waits for manual playback");
+  assert.deepEqual(policyBlocked.attempts, [false]);
+  policyBlocked.dispatchEvent(new Event("canplay"));
+  await show(policyBlocked);
+  assert.deepEqual(policyBlocked.attempts, [false], "do not loop on a browser policy denial");
+  await show(second);
+  assert.equal(second.muted, false, "the next video still plays with sound");
+  assert.equal(second.paused, false);
+  const afterBlock = addVideo("mounted-after-policy-denial");
+  await show(afterBlock);
+  assert.equal(afterBlock.muted, false, "new players inherit the explicit choice, not the denial");
+  afterBlock.muted = true;
+  afterBlock.volume = 0;
+  afterBlock.dispatchEvent(new Event("volumechange"));
+  assert.equal(afterBlock.muted, false, "a stale muted snapshot cannot override opt-in");
+  assert.equal(afterBlock.volume, 1);
+  await show(policyBlocked);
+  await policyBlocked.play();
+  assert.equal(policyBlocked.paused, false, "manual play remains available after denial");
+  assert.equal(policyBlocked.muted, false);
+
+  const retryAfterChoice = addVideo("retry-after-new-volume-choice");
+  retryAfterChoice.nextPlay = () =>
+    Promise.reject(new DOMException("Autoplay denied", "NotAllowedError"));
+  await show(retryAfterChoice);
+  assert.deepEqual(retryAfterChoice.attempts, [false]);
+  setCommunityFeedVideoSoundEnabled(false);
+  setCommunityFeedVideoSoundEnabled(true);
+  await show(retryAfterChoice);
+  assert.deepEqual(retryAfterChoice.attempts, [false, false]);
+  assert.equal(retryAfterChoice.paused, false, "a new explicit choice permits a new attempt");
+  for (const event of ["playing", "loadedmetadata"]) {
+    retryAfterChoice.muted = true;
+    retryAfterChoice.dispatchEvent(new Event(event));
+    assert.equal(retryAfterChoice.muted, false, `${event} cannot restore an old mute state`);
+  }
+
   setCommunityFeedVideoSoundEnabled(false);
   assert.equal(third.muted, true);
   assert.equal(second.muted, true, "muting also reaches inactive registered videos");

@@ -39,3 +39,23 @@ desmontagem e acao explicita posterior. Validacao fisica iOS/Android pendente.
 
 Publicar frontend em homolog, validar com midia real e promover apenas apos pedido
 explicito. Rollback de codigo restaura comportamento anterior sem migracao de dados.
+
+## Complemento 2026-10-02 - 0.1.552
+
+O bloqueio global acima aplica-se a uma escolha recuperada do storage, antes de
+uma ativacao explicita nesta navegacao. Depois de uma acao de volume atual, uma
+negacao NotAllowedError por elemento nao representa revogacao pelo usuario.
+Preservar a escolha habilitada e manter o elemento recusado pausado e nao mutado,
+com os controles existentes de play. Registrar a revisao bloqueada por elemento
+para nao repetir autoplay em cada canplay/scroll; play manual ou nova escolha
+liberam novas tentativas. Nao reproduzir videos escondidos para obter permissao.
+
+Aplicar a preferencia efetiva nos eventos de volume/metadados/reproducao nos dois
+sentidos, evitando restauracao tardia de snapshots mudos depois do opt-in. Nao
+transformar esses eventos em escolha do usuario. Preservar guards de visibilidade,
+modal, tentativa atual e rejeicoes obsoletas. Rollback por reversao deste ajuste.
+
+Referencia primaria: https://webkit.org/blog/6784/new-video-policies-for-ios/
+e https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/ (02/10/2026).
+Permissao de autoplay nao e garantida por uma preferencia da aplicacao; quando
+negada, manter play manual em vez de silenciar toda a pagina.
