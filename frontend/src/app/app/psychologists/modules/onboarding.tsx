@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { type CSSProperties, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { hasVisibleModalLayer } from "@/components/onboarding/modal-layer";
 import { cn } from "@/lib/utils";
 
 export type NavigatorWithStandalone = Navigator & { standalone?: boolean };
@@ -182,6 +183,11 @@ export const PsychologistsCoachMark = ({
     let timeout: number | null = null;
 
     const updatePosition = () => {
+      if (hasVisibleModalLayer()) {
+        setPosition(null);
+        return;
+      }
+
       const target = findCoachTarget(tip);
 
       setPosition(target ? getCoachMarkPosition(tip, target) : null);

@@ -5,6 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { hasVisibleModalLayer } from "./modal-layer";
 
 type CoachMarkPlacement = "auto" | "bottom" | "top";
 
@@ -112,6 +113,11 @@ export const ActionableCoachMark = ({
     let timeout: number | null = null;
 
     const updatePosition = () => {
+      if (hasVisibleModalLayer()) {
+        setPosition(null);
+        return;
+      }
+
       const target = findTarget(targetSelector);
       setPosition(target ? getPosition(target, placement) : null);
     };

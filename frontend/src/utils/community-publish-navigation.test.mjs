@@ -231,3 +231,21 @@ test("default publish action opens the existing composer over the current page w
   );
   assert.match(composer, /useModalMediaSuspension\(asModalSlot, overlayRef\)/);
 });
+
+test("coach marks do not render above open modals", () => {
+  const modalLayer = readSource("../components/onboarding/modal-layer.ts");
+  assert.match(modalLayer, /\[aria-modal="true"\]/);
+  assert.match(modalLayer, /data-create-post-sheet-state="open"/);
+  assert.match(modalLayer, /getBoundingClientRect\(\)/);
+
+  const actionableCoachMark = readSource("../components/onboarding/actionable-coach-mark.tsx");
+  assert.match(actionableCoachMark, /import \{ hasVisibleModalLayer \} from "\.\/modal-layer"/);
+  assert.match(actionableCoachMark, /if \(hasVisibleModalLayer\(\)\) \{\s*setPosition\(null\)/);
+
+  const psychologistsOnboarding = readSource("../app/app/psychologists/modules/onboarding.tsx");
+  assert.match(
+    psychologistsOnboarding,
+    /import \{ hasVisibleModalLayer \} from "@\/components\/onboarding\/modal-layer"/,
+  );
+  assert.match(psychologistsOnboarding, /if \(hasVisibleModalLayer\(\)\) \{\s*setPosition\(null\)/);
+});
