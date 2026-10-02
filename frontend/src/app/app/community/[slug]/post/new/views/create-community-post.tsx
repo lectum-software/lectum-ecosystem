@@ -196,6 +196,11 @@ export const CreateCommunityPostLogic = ({
           control={hook.control}
           key={`create-post-${String(field.name)}`}
           {...field}
+          className={cn(field.className, !hasSelectedMedia && "h-auto min-h-0 flex-none")}
+          inputClassName={cn(
+            field.inputClassName,
+            !hasSelectedMedia && "h-auto min-h-28 max-h-[min(42dvh,22rem)] flex-none",
+          )}
           onChangeCallback={(value) => {
             field.onChangeCallback?.(value);
             if (String(value ?? "").trim().length >= 10) {
@@ -499,17 +504,15 @@ export const CreateCommunityPostLogic = ({
           <div
             className={cn(
               "flex min-h-0 flex-1 flex-col px-5 pt-4 pb-4",
-              hasSelectedMedia
-                ? "overflow-x-hidden overflow-y-auto overscroll-contain"
-                : "overflow-hidden",
+              "overflow-x-hidden overflow-y-auto overscroll-contain",
             )}
-            data-create-post-editor-scroll={hasSelectedMedia ? "media" : "locked"}
+            data-create-post-editor-scroll={hasSelectedMedia ? "media" : "content"}
             onPointerDown={preserveBlankTapFocus}
           >
             <div
               className={cn(
                 "flex min-h-0 flex-col gap-3",
-                hasSelectedMedia ? "min-h-full flex-none" : "flex-1",
+                hasSelectedMedia ? "min-h-full flex-none" : "flex-none",
               )}
             >
               <div className="flex items-start justify-between gap-3">
