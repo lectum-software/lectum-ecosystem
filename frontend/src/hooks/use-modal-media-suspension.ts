@@ -1,9 +1,15 @@
 "use client";
 
-import { useLayoutEffect } from "react";
+import { type RefObject, useLayoutEffect } from "react";
+import {
+  isVideoBlockedByModal,
+  MODAL_MEDIA_SUSPENSION_ATTRIBUTE,
+  registerModalMediaRoot,
+} from "@/lib/modal-media-scope";
+import { pauseVideoForFocusGuard } from "@/lib/video-playback";
 
 export const MODAL_MEDIA_SUSPENSION_EVENT = "lectum:modal-media-suspension-change";
-export const MODAL_MEDIA_SUSPENSION_ATTRIBUTE = "data-lectum-modal-media-suspended";
+export { MODAL_MEDIA_SUSPENSION_ATTRIBUTE } from "@/lib/modal-media-scope";
 
 type ModalMediaSuspensionListener = (suspended: boolean) => void;
 type ModalMediaSuspensionRelease = () => void;
@@ -74,21 +80,49 @@ export const subscribeModalMediaSuspension = (
   };
 };
 
-export const useModalMediaSuspension = (open: boolean) => {
+const pauseBackgroundVideos = (targetDocument: Document) => {
+  for (const video of targetDocument.querySelectorAll<HTMLVideoElement>("video")) {
+    if (isVideoBlockedByModal(video)) pauseVideoForFocusGuard(video);
+  }
+};
+
+export const acquireModalMediaSuspension = (targetDocument: Document, root: HTMLElement | null) => {
+  const releaseRoot = registerModalMediaRoot(targetDocument, root);
+  let acquire = suspensions.get(targetDocument);
+  if (!acquire) {
+    const preventBackgroundPlayback = (event: Event) => {
+      const video = event.target as HTMLVideoElement | null;
+      if (video?.nodeName === "VIDEO" && isVideoBlockedByModal(video)) {
+        pauseVideoForFocusGuard(video);
+      }
+    };
+    acquire = createModalMediaSuspension((suspended) => {
+      for (const event of ["play", "playing"]) {
+        if (suspended) targetDocument.addEventListener(event, preventBackgroundPlayback, true);
+        else targetDocument.removeEventListener(event, preventBackgroundPlayback, true);
+      }
+      emitModalMediaSuspensionState(targetDocument, suspended);
+    });
+    suspensions.set(targetDocument, acquire);
+  }
+
+  const release = acquire();
+  pauseBackgroundVideos(targetDocument);
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    releaseRoot();
+    release();
+    pauseBackgroundVideos(targetDocument);
+  };
+};
+
+export const useModalMediaSuspension = (open: boolean, rootRef: RefObject<HTMLElement | null>) => {
   useLayoutEffect(() => {
     if (!open) return;
-
-    const targetDocument = getCurrentDocument();
+    const targetDocument = rootRef.current?.ownerDocument ?? getCurrentDocument();
     if (!targetDocument) return;
-
-    let acquire = suspensions.get(targetDocument);
-    if (!acquire) {
-      acquire = createModalMediaSuspension((suspended) =>
-        emitModalMediaSuspensionState(targetDocument, suspended),
-      );
-      suspensions.set(targetDocument, acquire);
-    }
-
-    return acquire();
-  }, [open]);
+    return acquireModalMediaSuspension(targetDocument, rootRef.current);
+  }, [open, rootRef]);
 };

@@ -25,7 +25,7 @@ export const Modal = ({
   const sessionRef = useRef<ModalSession | null>(null);
   const closeRequestedRef = useRef(false);
   useModalScrollLock(open);
-  useModalMediaSuspension(open);
+  useModalMediaSuspension(open, dialogRef);
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;

@@ -494,6 +494,7 @@ ou cortesia manual.
 | 205 | [TASK-205 - Setas do Perfil no padrao de Salvos](TASK-205-setas-perfil-padrao-salvos.md) | Completed | 204 |
 | 206 | [TASK-206 - Autoplay nas publicacoes do perfil](TASK-206-autoplay-publicacoes-perfil.md) | Completed | 205 |
 | 207 | [TASK-207 - Autoplay na apresentacao do perfil](TASK-207-autoplay-apresentacao-perfil.md) | Completed | 206 |
+| 208 | [TASK-208 - Pausa de videos ao abrir modal](TASK-208-pausa-videos-modal.md) | Completed | 207 |
 
 ## Ordem operacional recomendada sem bloqueios
 

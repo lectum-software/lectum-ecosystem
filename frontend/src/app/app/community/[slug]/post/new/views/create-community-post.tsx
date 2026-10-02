@@ -84,7 +84,7 @@ export const CreateCommunityPostLogic = ({
     videoUploadProgress,
   } = controller;
   const [mediaUpgradeModalOpen, setMediaUpgradeModalOpen] = useState(false);
-  useModalMediaSuspension(asModalSlot);
+  useModalMediaSuspension(asModalSlot, overlayRef);
 
   const hasSelectedMedia = selectedMediaItems.length > 0;
   const preserveBlankTapFocus = hasSelectedMedia ? undefined : preserveEditorFocusFromBlankTap;
