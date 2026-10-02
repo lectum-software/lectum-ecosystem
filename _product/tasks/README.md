@@ -1,5 +1,7 @@
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
+Ajuste em 02/10/2026: [TASK-213 - Pergunta completa na arte social](TASK-213-pergunta-completa-arte-social.md). O corpo branco cresce para mostrar todas as linhas, sem reticencias. Demais medidas e elementos preservados; somente novos renders do servico video. ADR-0553.
+
 Ajuste de frontend em 02/10/2026: [TASK-212 — Remover faixa vazia da modal de criar post](TASK-212-remover-faixa-vazia-modal-criar-post.md). A descrição sem mídia cresce com o texto, sem altura cheia forçada nem teto de altura; a rolagem fica no formulário até o rodapé, com teclado aberto ou fechado. O rodapé permanece no fluxo normal e o comportamento com mídia é preservado. Sem backend, banco, env ou contrato de API.
 
 Ajuste de frontend em 02/10/2026: [TASK-211 — Menu desktop de criar post e perfil do psicólogo](TASK-211-menu-desktop-criar-post-perfil-psicologo.md). Remove "Avaliações feitas" do perfil do psicólogo e troca o espaço de Favoritos no menu lateral desktop pela ação "Criar post", reutilizando a mesma modal/fluxo de conversão do botão central mobile. Sem backend, banco, env ou contrato de API.
@@ -501,6 +503,9 @@ ou cortesia manual.
 | 208 | [TASK-208 - Pausa de videos ao abrir modal](TASK-208-pausa-videos-modal.md) | Completed | 207 |
 | 209 | [TASK-209 - Rotulo Minhas publicacoes no perfil](TASK-209-rotulo-minhas-publicacoes.md) | Completed | 208 |
 | 210 | [TASK-210 - Dicas nao sobrepoem modais](TASK-210-dicas-nao-sobrepoem-modal.md) | Completed | 208 |
+| 211 | [TASK-211 - Menu desktop de criar post e perfil do psicologo](TASK-211-menu-desktop-criar-post-perfil-psicologo.md) | Completed | 210 |
+| 212 | [TASK-212 - Remover faixa vazia da modal de criar post](TASK-212-remover-faixa-vazia-modal-criar-post.md) | Completed | 211 |
+| 213 | [TASK-213 - Pergunta completa na arte social](TASK-213-pergunta-completa-arte-social.md) | Completed | 42 |
 
 ## Ordem operacional recomendada sem bloqueios
 

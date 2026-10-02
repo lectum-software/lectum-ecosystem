@@ -128,13 +128,13 @@ export const buildSocialShareFilter = (
       : options.verifiedBadgeFile;
   const sanitized = sanitizeSocialShareMetadata(metadata);
   const { card, colors, professional } = SOCIAL_SHARE_ART_LAYOUT;
-  const sourceLines = wrapText(sanitized.sourceText, card.sourceMaxLineLength, 3);
+  const sourceLines = wrapText(sanitized.sourceText, card.sourceMaxLineLength);
+  const extraBodyHeight = Math.max(0, sourceLines.length - 3) * card.bodyLineHeight;
+  const bodyHeight = card.bodyHeight + extraBodyHeight;
   const sourceFontSize = sourceLines.length > 2 ? card.sourceFontSizeCompact : card.sourceFontSize;
   const sourceTextVisualHeight = sourceFontSize + (sourceLines.length - 1) * card.bodyLineHeight;
   const sourceTextTop =
-    card.y +
-    card.headerHeight +
-    Math.max(0, Math.round((card.bodyHeight - sourceTextVisualHeight) / 2));
+    card.y + card.headerHeight + Math.max(0, Math.round((bodyHeight - sourceTextVisualHeight) / 2));
   const sourceTextFilters = sourceLines.map((line, index) =>
     drawText({
       color: colors.sourceText,
@@ -189,7 +189,7 @@ export const buildSocialShareFilter = (
           ...roundedRectDrawBoxes({
             color: colors.surface,
             corners: "bottom",
-            height: card.bodyHeight,
+            height: bodyHeight,
             radius: card.cornerRadius,
             sliceHeight: 1,
             width: card.width,
@@ -269,8 +269,20 @@ export const buildSocialShareFilter = (
 
   if (hasCardBackgroundAsset && cardBackgroundInputIndex !== null) {
     const cardOutputLabel = "[card0]";
+    let backgroundLabel = `[${cardBackgroundInputIndex}:v]`;
+    if (extraBodyHeight > 0) {
+      // Extend only a flat white strip; keep the header and corner pixels unchanged.
+      overlayStages.push(
+        `${backgroundLabel}split=3[card_top_src][card_fill_src][card_bottom_src]`,
+        `[card_top_src]crop=iw:ih-${card.cornerRadius}:0:0[card_top]`,
+        `[card_fill_src]crop=iw:2:0:${card.headerHeight},scale=iw:${extraBodyHeight}:flags=neighbor[card_fill]`,
+        `[card_bottom_src]crop=iw:${card.cornerRadius}:0:ih-${card.cornerRadius}[card_bottom]`,
+        "[card_top][card_fill][card_bottom]vstack=inputs=3[card_expanded]",
+      );
+      backgroundLabel = "[card_expanded]";
+    }
     overlayStages.push(
-      `${currentLabel}[${cardBackgroundInputIndex}:v]overlay=x=${card.x}:y=${card.y}:format=auto:shortest=1${cardOutputLabel}`,
+      `${currentLabel}${backgroundLabel}overlay=x=${card.x}:y=${card.y}:format=auto:shortest=1${cardOutputLabel}`,
     );
     currentLabel = cardOutputLabel;
   }

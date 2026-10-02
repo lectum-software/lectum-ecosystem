@@ -596,3 +596,4 @@ Formato recomendado:
 - [ADR-0550 — Autoplay compartilhado nas publicacoes do perfil](0550-autoplay-publicacoes-perfil.md)
 - [ADR-0551 — Autoplay compartilhado na apresentacao do perfil](0551-autoplay-apresentacao-perfil.md)
 - [ADR-0552 — Suspensao de videos de fundo por escopo de modal](0552-pausa-videos-modal.md)
+- [ADR-0553 — Pergunta completa na arte social](0553-pergunta-completa-arte-social.md)
