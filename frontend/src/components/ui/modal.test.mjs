@@ -8,6 +8,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 const { Modal } = await import("./modal.tsx");
 const { createModalMediaSuspension } = await import("../../hooks/use-modal-media-suspension.ts");
+const { acquireModalMediaSuspension, isModalMediaSuspended } = await import(
+  "../../hooks/use-modal-media-suspension.ts"
+);
+const { isVideoBlockedByModal } = await import("../../lib/modal-media-scope.ts");
+const { playVideoWithActiveDocument } = await import("../../lib/video-playback.ts");
 const { createModalScrollLock } = await import("../../hooks/use-modal-scroll-lock.ts");
 const { PostReportModal } = await import(
   "../../app/app/community/[slug]/post/[id]/components/post-report-modal.tsx"
@@ -207,4 +212,156 @@ test("ownership puro de suspensao de midia: primeira modal pausa e ultima libera
   assert.deepEqual(states, [true]);
   releaseB();
   assert.deepEqual(states, [true, false]);
+});
+
+// Isolated DOM/media adapters exercise real suspension code; browser smoke covers native media.
+const mediaDocument = (t) => {
+  const target = new EventTarget();
+  const attributes = new Map();
+  const videos = [];
+  target.visibilityState = "visible";
+  target.hasFocus = () => true;
+  target.documentElement = {
+    getAttribute: (key) => attributes.get(key) ?? null,
+    setAttribute: (key, value) => attributes.set(key, value),
+    removeAttribute: (key) => attributes.delete(key),
+  };
+  target.querySelectorAll = () => videos;
+  for (const [key, value] of Object.entries({
+    document: target,
+    window: { setTimeout: () => 0 },
+  })) {
+    const previous = Object.getOwnPropertyDescriptor(globalThis, key);
+    Object.defineProperty(globalThis, key, { configurable: true, value });
+    t.after(() => {
+      if (previous) Object.defineProperty(globalThis, key, previous);
+      else delete globalThis[key];
+    });
+  }
+  const video = (options = {}) => {
+    const attrs = new Map();
+    const media = {
+      nodeName: "VIDEO",
+      ownerDocument: target,
+      paused: false,
+      ended: false,
+      muted: true,
+      volume: 0.4,
+      currentTime: 12,
+      pauses: 0,
+      plays: 0,
+      getAttribute: (key) => attrs.get(key) ?? null,
+      setAttribute: (key, value) => attrs.set(key, value),
+      removeAttribute: (key) => attrs.delete(key),
+      pause() {
+        this.paused = true;
+        this.pauses++;
+      },
+      async play() {
+        this.plays++;
+        this.paused = false;
+      },
+      ...options,
+    };
+    videos.push(media);
+    return media;
+  };
+  const emit = (type, media) => {
+    const event = new Event(type);
+    Object.defineProperty(event, "target", { value: media });
+    target.dispatchEvent(event);
+  };
+  return { target, video, emit, root: (...members) => ({ contains: (v) => members.includes(v) }) };
+};
+
+test("modal pausa qualquer video de fundo sem alterar audio/tempo; preview continua permitido", async (t) => {
+  const { target, video, root } = mediaDocument(t);
+  const background = video({ muted: false });
+  const manuallyPaused = video({ paused: true });
+  const preview = video();
+  const release = acquireModalMediaSuspension(target, root(preview));
+  assert.equal(background.paused, true);
+  assert.equal(background.pauses, 1);
+  assert.equal(manuallyPaused.pauses, 0);
+  assert.equal(preview.paused, false);
+  assert.equal(await playVideoWithActiveDocument(background), false);
+  assert.equal(background.plays, 0);
+  assert.equal(await playVideoWithActiveDocument(preview), true);
+  release();
+  assert.equal(isModalMediaSuspended(target), false);
+  assert.equal(background.paused, true);
+  assert.equal(background.currentTime, 12);
+  assert.equal(background.muted, false);
+  assert.equal(background.volume, 0.4);
+  assert.equal(manuallyPaused.paused, true);
+});
+
+test("captura play/playing tardios inclusive de videos novos e limpa listeners ao fechar", (t) => {
+  const { target, video, root, emit } = mediaDocument(t);
+  const release = acquireModalMediaSuspension(target, root());
+  const lateVideo = video();
+  emit("play", lateVideo);
+  assert.equal(lateVideo.paused, true);
+  lateVideo.paused = false;
+  emit("playing", lateVideo);
+  assert.equal(lateVideo.paused, true);
+  release();
+  lateVideo.paused = false;
+  emit("play", lateVideo);
+  emit("playing", lateVideo);
+  assert.equal(lateVideo.paused, false);
+});
+
+test("modal aberta durante promessa de play impede retomada ao resolver", async (t) => {
+  const { target, video, root } = mediaDocument(t);
+  let finishPlay;
+  const background = video({
+    paused: true,
+    play: () =>
+      new Promise((resolve) => {
+        finishPlay = resolve;
+      }),
+  });
+  const pending = playVideoWithActiveDocument(background);
+  const release = acquireModalMediaSuspension(target, root());
+  background.paused = false;
+  finishPlay();
+  assert.equal(await pending, false);
+  assert.equal(background.paused, true);
+  release();
+});
+
+test("modal aninhada bloqueia preview anterior e cleanup fora de ordem nao libera o fundo", (t) => {
+  const { target, video, root } = mediaDocument(t);
+  const background = video();
+  const previewA = video();
+  const releaseA = acquireModalMediaSuspension(target, root(previewA));
+  const previewB = video();
+  const releaseB = acquireModalMediaSuspension(target, root(previewB));
+  assert.equal(previewA.paused, true);
+  assert.equal(isVideoBlockedByModal(previewA), true);
+  assert.equal(isVideoBlockedByModal(previewB), false);
+  releaseA();
+  releaseA();
+  assert.equal(isModalMediaSuspended(target), true);
+  assert.equal(isVideoBlockedByModal(background), true);
+  releaseB();
+  assert.equal(isModalMediaSuspended(target), false);
+  const releaseReopened = acquireModalMediaSuspension(target, root(previewA));
+  releaseB();
+  assert.equal(isVideoBlockedByModal(previewB), true);
+  assert.equal(isVideoBlockedByModal(previewA), false);
+  releaseReopened();
+});
+
+test("fechar modal filha libera apenas o preview da modal pai ainda aberta", (t) => {
+  const { target, video, root } = mediaDocument(t);
+  const preview = video();
+  const background = video();
+  const releaseParent = acquireModalMediaSuspension(target, root(preview));
+  const releaseChild = acquireModalMediaSuspension(target, root());
+  releaseChild();
+  assert.equal(isVideoBlockedByModal(preview), false);
+  assert.equal(isVideoBlockedByModal(background), true);
+  releaseParent();
 });

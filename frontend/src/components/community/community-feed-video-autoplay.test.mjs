@@ -120,8 +120,8 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.match(postContentSource, /<CommunityMediaBlock[\s\S]*?enableCommunityAutoplay/);
   assert.match(replyCardSource, /enableCommunityAutoplay=\{enableCommunityAutoplay\}/);
   assert.match(modalMediaSuspensionSource, /lectum:modal-media-suspension-change/);
-  assert.match(modalSource, /useModalMediaSuspension\(open\)/);
-  assert.match(createPostSource, /useModalMediaSuspension\(asModalSlot\)/);
+  assert.match(modalSource, /useModalMediaSuspension\(open, dialogRef\)/);
+  assert.match(createPostSource, /useModalMediaSuspension\(asModalSlot, overlayRef\)/);
   assert.match(autoplaySource, /subscribeModalMediaSuspension/);
   assert.match(autoplaySource, /pauseAllAutoplayItems\(\)/);
   assert.match(autoplaySource, /isCommunityAutoplayContextActive/);
@@ -221,7 +221,10 @@ test("feed de psicologos separa volume explicito de tap e protege retomadas", ()
   assert.match(preference, /lectum:video-sound:explicit:v1/);
   assert.match(preference, /localStorage.setItem/);
   const playback = read("../../lib/video-playback.ts");
-  assert.match(playback, /await video.play\(\);\s*if \(!documentHasUserAttention\(\)\)/);
+  assert.match(
+    playback,
+    /await video.play\(\);\s*if \(!documentHasUserAttention\(\) \|\| isVideoBlockedByModal\(video\)\)/,
+  );
   assert.match(playback, /video.addEventListener\("playing", enforce\)/);
   const attention = read("../analytics/attention.ts");
   assert.match(attention, /window.addEventListener\("blur", suspend\)/);

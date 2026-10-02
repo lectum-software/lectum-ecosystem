@@ -4,6 +4,7 @@ import {
   documentHasUserAttention,
   subscribeDocumentAttention,
 } from "@/components/analytics/attention";
+import { isVideoBlockedByModal } from "@/lib/modal-media-scope";
 
 export const VIDEO_PAUSED_BY_FOCUS_GUARD_ATTRIBUTE = "data-lectum-paused-by-focus-guard";
 
@@ -54,11 +55,11 @@ export const playVideoWithActiveDocument = async (
   video: HTMLVideoElement | null,
   options: { onAutoplayBlocked?: () => void } = {},
 ) => {
-  if (!video || !documentHasUserAttention()) return false;
+  if (!video || !documentHasUserAttention() || isVideoBlockedByModal(video)) return false;
 
   try {
     await video.play();
-    if (!documentHasUserAttention()) {
+    if (!documentHasUserAttention() || isVideoBlockedByModal(video)) {
       pauseVideoForFocusGuard(video);
       return false;
     }
