@@ -496,6 +496,7 @@ ou cortesia manual.
 | 207 | [TASK-207 - Autoplay na apresentacao do perfil](TASK-207-autoplay-apresentacao-perfil.md) | Completed | 206 |
 | 208 | [TASK-208 - Pausa de videos ao abrir modal](TASK-208-pausa-videos-modal.md) | Completed | 207 |
 | 209 | [TASK-209 - Rotulo Minhas publicacoes no perfil](TASK-209-rotulo-minhas-publicacoes.md) | Completed | 208 |
+| 210 | [TASK-210 - Dicas nao sobrepoem modais](TASK-210-dicas-nao-sobrepoem-modal.md) | Completed | 208 |
 
 ## Ordem operacional recomendada sem bloqueios
 
