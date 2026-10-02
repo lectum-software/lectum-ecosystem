@@ -62,3 +62,29 @@ test("topo do detalhe do post mantem botao de seguir junto ao nome da comunidade
   assert.doesNotMatch(postContentSource, /className="block min-w-0 flex-1 cursor-pointer truncate/);
   assert.doesNotMatch(postContentSource, /flex-wrap items-center gap-x-1 gap-y-2/);
 });
+
+test("modal de criar post nao estica descricao sem midia", () => {
+  const createPostSource = readSource(
+    "../app/app/community/[slug]/post/new/views/create-community-post.tsx",
+  );
+
+  assert.match(
+    createPostSource,
+    /className=\{cn\(field\.className, !hasSelectedMedia && "h-auto min-h-0 flex-none"\)\}/,
+  );
+  assert.match(
+    createPostSource,
+    /!hasSelectedMedia && "h-auto min-h-28 max-h-\[min\(42dvh,22rem\)\] flex-none"/,
+  );
+  assert.match(
+    createPostSource,
+    /data-create-post-editor-scroll=\{hasSelectedMedia \? "media" : "content"\}/,
+  );
+  assert.match(createPostSource, /hasSelectedMedia \? "min-h-full flex-none" : "flex-none"/);
+  assert.match(createPostSource, /<footer className="relative shrink-0/);
+  assert.doesNotMatch(
+    createPostSource,
+    /data-create-post-editor-scroll=\{hasSelectedMedia \? "media" : "locked"\}/,
+  );
+  assert.doesNotMatch(createPostSource, /<footer className="absolute inset-x-0 bottom-0/);
+});
