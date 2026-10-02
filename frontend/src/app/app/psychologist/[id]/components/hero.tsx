@@ -111,6 +111,7 @@ export const ProfileHero = ({
 }) => {
   const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
   const shortBio = profile.headline?.trim() ?? "";
+  const lastNameStart = displayName.lastIndexOf(" ") + 1;
   const benefitTags = buildBenefitTags(profile);
   const formattedCrp = formatCrpLabel(profile.crp);
   const experienceLabel =
@@ -191,11 +192,18 @@ export const ProfileHero = ({
         </div>
 
         <div className="mt-4 grid gap-2">
-          <h1 className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-[1.55rem] font-black leading-tight tracking-[-0.03em] text-foreground dark:text-foreground">
-            <span className="break-words">{displayName}</span>
+          <h1 className="min-w-0 break-words text-[1.55rem] font-black leading-tight tracking-normal text-foreground dark:text-foreground">
             {profile.verified ? (
-              <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-[18px] w-[18px]" />
-            ) : null}
+              <>
+                {displayName.slice(0, lastNameStart)}
+                <span className="inline-flex max-w-full items-center gap-1.5 align-bottom">
+                  <span className="min-w-0 break-words">{displayName.slice(lastNameStart)}</span>
+                  <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-[18px] w-[18px]" />
+                </span>
+              </>
+            ) : (
+              displayName
+            )}
           </h1>
 
           <div className="grid gap-1">

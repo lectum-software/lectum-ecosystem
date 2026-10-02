@@ -975,3 +975,28 @@ Validacoes executadas:
 - Versao sincronizada para `0.1.307` com `pnpm version:bump`.
 - `pnpm check:version` executado com sucesso.
 - `pnpm check` executado com sucesso apos as validacoes focadas e builds.
+
+## Complemento 2026-10-02 - selo do nome (0.1.555)
+
+- [x] Preservar o nome completo e manter o selo junto a ultima palavra.
+- [x] Nao alterar as regras de verificacao nem os demais elementos do perfil.
+- [x] Cobrir renderizacao real com nomes longos, curtos, compostos e sem selo.
+- [x] Validar geometria e screenshots mobile-first/desktop com CSS e fonte reais.
+- [x] Executar check/build de frontend; producao fora do escopo desta alteracao.
+
+Decisao registrada no complemento da ADR-0032. Validacao visual baseada na
+captura do usuario e no componente real, sem mock de API ou dados persistidos.
+
+Validacoes locais: `pnpm --dir frontend check` e `pnpm --dir frontend build`
+aprovados. Quatro testes novos de SSR incluidos no check. Chrome/Playwright com
+CSS compilado, Manrope e componente real: 24 combinacoes de nomes e larguras
+(320, 360, 390, 430, 768 e 1440px), sem overflow ou selo isolado; mais seis
+casos sem verificacao. Capturas mobile/desktop inspecionadas visualmente.
+Artefatos locais: `outputs/check-profile-badge-0555.mjs` e
+`outputs/profile-badge-0555-{390,1440}.png`, no workspace externo ao repositorio.
+
+`pnpm check:version` aprovado em 0.1.555. `pnpm check` aprovou os guards da
+raiz e repetiu o frontend completo, mas parou em `backend prisma generate`
+por ausencia local de `DATABASE_URL`; nao houve mudanca funcional no backend.
+O push de homologacao inicia deploy automatico; o resultado desse deploy sera
+registrado no relato de entrega, sem promover para producao nesta solicitacao.
