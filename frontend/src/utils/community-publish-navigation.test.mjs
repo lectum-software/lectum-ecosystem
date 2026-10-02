@@ -146,9 +146,18 @@ test("mobile create action replaces favorites without changing the desktop sideb
   assert.doesNotMatch(template, /autoHideNavigation|setIsNavigationVisible|-top-3/);
   assert.match(template, /intent: \{ returnTo: centerAction.href, type: "create_post" \}/);
   const profile = readSource("../app/app/profile/logic.tsx");
-  assert.match(profile, /Meus posts e respostas[\s\S]*label: "Favoritos"[\s\S]*label: "Salvos"/);
+  assert.match(profile, /Minhas publicações[\s\S]*label: "Favoritos"[\s\S]*label: "Salvos"/);
   const psychologists = readSource("../app/app/psychologists/view/index.tsx");
   assert.match(psychologists, /navigationHidden=\{metrics.isDesktopLayout \? false : isUiHidden\}/);
+});
+
+test("both profile roles share the publications menu label and its original destination", () => {
+  const profile = readSource("../app/app/profile/logic.tsx");
+  assert.match(
+    profile,
+    /const communityRows: ProfileRow\[\] = \[\s*\{\s*href: "\/app\/publicacoes\/minhas",\s*icon: MessagesSquare,\s*label: "Minhas publicações",\s*\}/,
+  );
+  assert.doesNotMatch(profile, /Meus posts? e (respostas|comentários)/);
 });
 
 test("a highlighted parent tab still navigates from favorites and psychologist profiles", () => {
