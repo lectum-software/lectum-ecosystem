@@ -6,6 +6,7 @@ import type {
   DirectoryPsychologistVideoWatchPayload,
 } from "@/api/generator/types/directory";
 import { documentHasUserAttention } from "@/components/analytics/attention";
+import { useCommunityVideoAutoplay } from "@/components/community/community-feed-video-autoplay";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { useAppSelector } from "@/hooks/redux";
 import { resolvePublicMediaUrl } from "@/utils/media";
@@ -42,6 +43,11 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
   const sessionKeyRef = useRef<string | null>(null);
   const watchedSecondsRef = useRef<Set<number>>(new Set());
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
+  const {
+    handleVideoElementReady: handleAutoplayVideoReady,
+    onSoundEnabledChange,
+    soundEnabled,
+  } = useCommunityVideoAutoplay(Boolean(videoSrc));
   const videoCoverSrc = resolvePublicMediaUrl(profile.video_cover_url);
   const [generatedPoster, setGeneratedPoster] = useState<{ src: string; url: string } | null>(null);
   const shouldTrack = Boolean(videoSrc && currentUser?.id !== profile.id);
@@ -347,6 +353,14 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
     [flushVideoAnalytics, primePreviewFrame, resetPreviewFrameBeforePlayback, shouldTrack],
   );
 
+  const handlePlayerReady = useCallback(
+    (video: HTMLVideoElement | null) => {
+      handleVideoReady(video);
+      handleAutoplayVideoReady(video);
+    },
+    [handleAutoplayVideoReady, handleVideoReady],
+  );
+
   if (!videoSrc) return null;
 
   return (
@@ -358,10 +372,19 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
         >
           <VerticalVideoPlayer
             className="rounded-[18px] border-0"
-            onVideoElementReady={handleVideoReady}
+            controlsVariant="persistent"
+            fullscreenVariant="content"
+            mutedControlVisibility="when-hidden"
+            onSoundEnabledChange={onSoundEnabledChange}
+            onVideoElementReady={handlePlayerReady}
+            persistentControlsLayout="media"
             poster={posterSrc}
             src={videoSrc}
             title={`Vídeo de apresentação de ${displayName}`}
+            videoProps={{
+              "data-lectum-community-video-autoplay": "true",
+              muted: !soundEnabled,
+            }}
           />
         </article>
       </div>

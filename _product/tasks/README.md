@@ -493,6 +493,7 @@ ou cortesia manual.
 | 204 | [TASK-204 - Favoritos com retorno discreto ao Perfil](TASK-204-favoritos-retorno-discreto.md) | Completed | 203 |
 | 205 | [TASK-205 - Setas do Perfil no padrao de Salvos](TASK-205-setas-perfil-padrao-salvos.md) | Completed | 204 |
 | 206 | [TASK-206 - Autoplay nas publicacoes do perfil](TASK-206-autoplay-publicacoes-perfil.md) | Completed | 205 |
+| 207 | [TASK-207 - Autoplay na apresentacao do perfil](TASK-207-autoplay-apresentacao-perfil.md) | Completed | 206 |
 
 ## Ordem operacional recomendada sem bloqueios
 
