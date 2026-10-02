@@ -42,7 +42,7 @@ export const normalizeSocialShareSourceText = (value: string | null | undefined)
 export const normalizeOptionalResponseText = (value: string | null | undefined) =>
   value ? normalizeText(value, "", 180) : null;
 
-export const wrapText = (value: string, maxLineLength: number, maxLines: number) => {
+export const wrapText = (value: string, maxLineLength: number) => {
   const words = value.split(/\s+/u).filter(Boolean);
   const lines: string[] = [];
   let current = "";
@@ -55,20 +55,15 @@ export const wrapText = (value: string, maxLineLength: number, maxLines: number)
     }
 
     if (current) lines.push(current);
-    current = word.slice(0, maxLineLength);
-    if (lines.length === maxLines) break;
+    const characters = Array.from(word);
+    while (characters.length > maxLineLength) {
+      lines.push(characters.splice(0, maxLineLength).join(""));
+    }
+    current = characters.join("");
   }
 
-  if (current && lines.length < maxLines) lines.push(current);
+  if (current) lines.push(current);
   if (lines.length === 0) lines.push("Conteúdo na Lectum");
 
-  const visible = lines.slice(0, maxLines);
-  if (visible.length === maxLines && words.join(" ").length > visible.join(" ").length) {
-    const lastLine = visible[maxLines - 1];
-    if (lastLine) {
-      visible[maxLines - 1] = `${lastLine.replace(/[.?!,\s]+$/u, "")}…`;
-    }
-  }
-
-  return visible;
+  return lines;
 };
