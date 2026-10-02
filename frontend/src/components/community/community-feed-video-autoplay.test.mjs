@@ -218,8 +218,7 @@ test("feed de psicologos separa volume explicito de tap e protege retomadas", ()
   assert.match(read(`${base}view/components/slide.tsx`), /autoPlay: false/);
   const preference = read("../../lib/video-sound-preference.ts");
   assert.match(preference, /let soundEnabled = false/);
-  assert.match(preference, /lectum:video-sound:explicit:v1/);
-  assert.match(preference, /localStorage.setItem/);
+  assert.doesNotMatch(preference, /localStorage|sessionStorage/);
   const playback = read("../../lib/video-playback.ts");
   assert.match(
     playback,
@@ -350,16 +349,15 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   cleanups.push(
     subscribeCommunityFeedVideoSoundPreference((enabled) => notifications.push(enabled)),
   );
-  first.nextPlay = () => Promise.reject(new DOMException("Autoplay denied", "NotAllowedError"));
   await show(first);
-  assert.deepEqual(first.attempts, [false, true], "stored opt-in falls back to muted playback");
+  assert.deepEqual(first.attempts, [true], "ignore stored opt-in and start autoplay muted");
   assert.equal(first.paused, false);
-  assert.equal(getVideoSoundEnabled(), false, "fallback must suspend sound for the document");
+  assert.equal(getVideoSoundEnabled(), false, "every document starts without audio consent");
   assert.equal(notifications.at(-1), false, "mounted players receive effective mute state");
   assert.equal(
     storage.get("lectum:video-sound:explicit:v1"),
     "enabled",
-    "keep saved explicit choice",
+    "legacy storage is ignored without modifying it",
   );
 
   first.dispatchEvent(new Event("canplay"));
@@ -517,5 +515,20 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   muted.dispatchEvent(new Event("canplay"));
   await flush();
   assert.equal(muted.muted, true);
-  assert.equal(storage.get("lectum:video-sound:explicit:v1"), "muted");
+  assert.equal(storage.get("lectum:video-sound:explicit:v1"), "enabled");
+  setCommunityFeedVideoSoundEnabled(true);
+  const freshDocument = await import("../../lib/video-sound-preference.ts?document=new");
+  assert.equal(freshDocument.getVideoSoundEnabled(), false, "another document starts muted");
+  assert.equal(getVideoSoundEnabled(), true, "a new document does not change the current choice");
+  const freshNotifications = [];
+  const unsubscribeFresh = freshDocument.subscribeVideoSoundPreference((enabled) =>
+    freshNotifications.push(enabled),
+  );
+  freshDocument.setVideoSoundEnabledByUser(true);
+  assert.equal(freshDocument.getVideoSoundEnabled(), true);
+  freshDocument.setVideoSoundEnabledByUser(false);
+  assert.deepEqual(freshNotifications, [false, true, false]);
+  assert.equal(getVideoSoundEnabled(), true, "mute in another document stays isolated");
+  unsubscribeFresh();
+  setCommunityFeedVideoSoundEnabled(false);
 });

@@ -97,3 +97,27 @@ mute local ao retornar por scroll, audio nos demais e mute explicito global.
 O check raiz passou pelos guards e frontend; backend interrompido por ausencia
 local de DATABASE_URL. iPhone fisico nao testado; nao alegar reproducao nativa
 da politica do Safari. Harness e resultados de QA em outputs fora do repositorio.
+
+## Complemento 0.1.554 - todo novo acesso inicia mudo
+
+A persistencia do opt-in ainda iniciava autoplay audivel quando o navegador
+permitia. O usuario esclareceu que o inicio deve ser sempre mudo. Substituir a
+recuperacao e gravacao da preferencia por estado apenas em memoria do documento.
+
+- [x] Primeiro acesso, recarga e nova aba iniciam mudos mesmo com opt-in legado salvo.
+- [x] Ativacao explicita compartilha audio entre os players da navegacao atual.
+- [x] Nova aba nao altera a escolha feita na aba anterior.
+- [x] Manter autoplay prioritario e fallback mudo local da 0.1.553.
+- [x] Remover suspensao global obsoleta da preferencia persistida.
+
+Chaves antigas sao ignoradas, sem limpar outros dados do navegador. Sem alteracao
+de layout, API, banco, env ou dependencia. Homolog primeiro; producao somente
+apos novo pedido. Rollback restaura a persistencia antiga e seu risco de audio inicial.
+
+Validacao 0.1.554: regressao reproduzida antes e sete testes focados aprovados
+depois. Check completo e build frontend aprovados (aviso nao fatal de falta de
+espaco ao gravar cache webpack). Midia real em Chromium 390x844/1440x900 confirmou
+inicio mudo com opt-in legado, recarga muda, nova aba muda, isolamento entre abas,
+compartilhamento no documento e fallback local preservado. Check raiz passou
+guards/frontend, mas backend parou por DATABASE_URL local ausente. Sem teste em
+iPhone fisico. Harness check-audio-autoplay-0554.cjs em outputs fora do repositorio.
