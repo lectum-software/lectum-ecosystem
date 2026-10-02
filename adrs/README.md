@@ -593,3 +593,4 @@ Formato recomendado:
 - [ADR-0547 — Criacao de post sobre a aba atual](0547-criar-post-sobre-aba-atual.md)
 - [ADR-0548 — Favoritos como tela secundaria do Perfil](0548-favoritos-tela-secundaria.md)
 - [ADR-0549 — Setas secundarias no padrao de Salvos](0549-setas-perfil-padrao-salvos.md)
+- [ADR-0550 — Autoplay compartilhado nas publicacoes do perfil](0550-autoplay-publicacoes-perfil.md)
