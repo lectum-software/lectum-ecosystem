@@ -6,6 +6,39 @@ import {
   resolveLectumFileShareData,
   resolveLectumLinkShareData,
 } from "./lectum-share-media/native-share.ts";
+import { getPreviewSourceBodyHeight, wrapPreviewSourceText } from "./lectum-share-preview-text.ts";
+
+test("previa preserva a pergunta completa e cresce somente depois de tres linhas", () => {
+  const question =
+    "Como lidar com a ansiedade quando ela atrapalha o trabalho, os relacionamentos e os momentos de descanso?";
+  const lines = wrapPreviewSourceText(question, 30);
+  assert.deepEqual(lines, [
+    "Como lidar com a ansiedade",
+    "quando ela atrapalha o",
+    "trabalho, os relacionamentos e",
+    "os momentos de descanso?",
+  ]);
+  assert.equal(lines.join(" "), question);
+  assert.equal(getPreviewSourceBodyHeight(lines.length), "16.975cqh");
+  for (const lineCount of [1, 2, 3]) {
+    assert.equal(getPreviewSourceBodyHeight(lineCount), "13.85cqh");
+  }
+});
+
+test("previa preserva palavras longas, acentos e todo o limite de texto social", () => {
+  const longWord = "a".repeat(65);
+  assert.deepEqual(wrapPreviewSourceText(longWord, 30), ["a".repeat(30), "a".repeat(30), "aaaaa"]);
+  const question = "Como lidar com a ansiedade? ".repeat(7).trim().slice(0, 180);
+  const lines = wrapPreviewSourceText(question, 30);
+  assert.equal(lines.join(" "), question);
+  assert.ok(lines.length > 3);
+  assert.ok(lines.every((line) => line.length <= 30));
+  assert.equal(
+    wrapPreviewSourceText("  Como\n lidar com emo\u00e7\u00f5es?  ", 30).join(" "),
+    "Como lidar com emo\u00e7\u00f5es?",
+  );
+  assert.deepEqual(wrapPreviewSourceText(" \n ", 30), ["Conte\u00fado na Lectum"]);
+});
 
 test("compartilhamento de link usa payload nativo somente quando suportado", () => {
   const shareData = {
@@ -131,7 +164,8 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.doesNotMatch(dialogSource, /w-\[79\.7%\][^"]*drop-shadow-lg/);
   assert.match(dialogSource, /bg-primary/);
   assert.match(dialogSource, /h-\[4\.6cqh\]/);
-  assert.match(dialogSource, /h-\[13\.85cqh\]/);
+  assert.match(dialogSource, /height: getPreviewSourceBodyHeight\(sourceLines\.length\)/);
+  assert.doesNotMatch(dialogSource, /line-clamp-3/);
   assert.match(dialogSource, /px-\[6\.6cqw\]/);
   assert.match(dialogSource, /font-bold/);
   assert.match(dialogSource, /text-\[4\.65cqw\]/);
@@ -152,7 +186,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
     /const downloadButtonLabel = preparing \? "Preparando\.\.\." : "Baixar v\\u00eddeo"/,
   );
   assert.match(dialogSource, /disabled=\{!open\}/);
-  assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 30, 3\)/);
+  assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 30\)/);
   assert.match(dialogSource, /target\.cardLabel/);
   assert.match(dialogSource, /target\.sourceText/);
   assert.match(dialogSource, /poster=\{target\.posterUrl \?\? undefined\}/);
