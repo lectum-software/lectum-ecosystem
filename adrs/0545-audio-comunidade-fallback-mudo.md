@@ -79,3 +79,16 @@ Nao ha garantia de autoplay contra uma recusa total do navegador. Sem mudanca de
 layout, API, banco, env ou dependencia. Rollout em homolog antes de nova autorizacao
 de producao. Validar fontes reais com midia real e negacao controlada, deixando
 explicita a ausencia de aparelho iOS fisico.
+
+## Complemento 2026-10-02 - 0.1.554
+
+O usuario exige inicio mudo em cada acesso, inclusive quando uma escolha antiga
+de audio foi persistida. Nao ler nem gravar a preferencia em storage; compartilhar
+apenas o estado em memoria do modulo client durante o documento atual. Navegacao
+client-side preserva a escolha; recarga ou nova aba iniciam false. Chaves legadas
+ficam ignoradas e nenhuma limpeza de dados de terceiros e realizada.
+
+Remover a suspensao global usada exclusivamente para opt-in recuperado, que deixa
+de existir. Manter revisoes de escolha, listeners, controles explicitos e fallback
+mudo por elemento da 0.1.553. Erro de autoplay nao representa acao de volume.
+Sem mudanca visual ou de contrato externo; rollout primeiro em homolog.

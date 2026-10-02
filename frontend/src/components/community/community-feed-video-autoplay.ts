@@ -20,7 +20,6 @@ import {
   getVideoSoundPreferenceRevision,
   setVideoSoundEnabledByUser,
   subscribeVideoSoundPreference,
-  suspendVideoSoundForDocument,
 } from "@/lib/video-sound-preference";
 
 const MIN_AUTOPLAY_INTERSECTION_RATIO = 0.58;
@@ -109,7 +108,6 @@ const playAutoplayItem = async (item: FeedVideoAutoplayItem) => {
           item.blockedPlaybackRevision = revision;
           return;
         }
-        suspendVideoSoundForDocument(revision);
         mutedFallbackRevision = getVideoSoundPreferenceRevision();
         // Prefer muted autoplay locally without revoking an explicit sound choice.
         item.blockedSoundRevision = mutedFallbackRevision;
