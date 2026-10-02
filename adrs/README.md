@@ -594,3 +594,4 @@ Formato recomendado:
 - [ADR-0548 — Favoritos como tela secundaria do Perfil](0548-favoritos-tela-secundaria.md)
 - [ADR-0549 — Setas secundarias no padrao de Salvos](0549-setas-perfil-padrao-salvos.md)
 - [ADR-0550 — Autoplay compartilhado nas publicacoes do perfil](0550-autoplay-publicacoes-perfil.md)
+- [ADR-0551 — Autoplay compartilhado na apresentacao do perfil](0551-autoplay-apresentacao-perfil.md)

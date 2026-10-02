@@ -179,6 +179,28 @@ test("publicacoes do perfil usam o mesmo autoplay e volume da comunidade para po
   assert.doesNotMatch(card, /autoPlay|localStorage|\.play\(/);
 });
 
+test("apresentacao do perfil compartilha autoplay e audio sem perder analytics", () => {
+  const source = readFileSync(
+    new URL("../../app/app/psychologist/[id]/components/presentation-video.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /useCommunityVideoAutoplay\(Boolean\(videoSrc\)\)/);
+  assert.match(source, /handleVideoReady\(video\);\s*handleAutoplayVideoReady\(video\);/);
+  assert.match(source, /onVideoElementReady=\{handlePlayerReady\}/);
+  assert.match(source, /onSoundEnabledChange=\{onSoundEnabledChange\}/);
+  assert.match(source, /muted: !soundEnabled/);
+  assert.match(source, /"data-lectum-community-video-autoplay": "true"/);
+  assert.match(source, /controlsVariant="persistent"/);
+  assert.match(source, /mutedControlVisibility="when-hidden"/);
+  assert.match(source, /persistentControlsLayout="media"/);
+  assert.match(source, /fullscreenVariant="content"/);
+  assert.match(source, /cleanupTrackingRef\.current\?\.\(\);/);
+  assert.match(source, /trackVideoWatch\(body\)/);
+  assert.match(source, /resetPreviewFrameBeforePlayback\(video\)/);
+  assert.doesNotMatch(source, /autoPlay|localStorage|\.play\(/);
+});
+
 test("feed de psicologos separa volume explicito de tap e protege retomadas", () => {
   const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
   const base = "../../app/app/psychologists/";
