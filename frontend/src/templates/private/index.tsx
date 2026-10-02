@@ -250,7 +250,7 @@ export const PrivateTemplate = ({
           const shouldShowUnreadIndicator =
             hasUnreadNotifications && item.href === NOTIFICATIONS_HREF;
 
-          // Favorites remain in the desktop sidebar; mobile prioritizes publishing.
+          // Favorites remain in the profile area; mobile prioritizes publishing.
           if (index === 2) {
             return (
               <li className="relative flex min-h-16 items-center justify-center" key="create-post">
@@ -379,11 +379,40 @@ export const PrivateTemplate = ({
       </div>
 
       <nav className="flex flex-1 flex-col gap-1" aria-label="Menu lateral">
-        {navigation.map((item) => {
+        {navigation.map((item, index) => {
           const Icon = item.icon;
           const isActive = isDesktopActivePath(navigationContextPathname, item);
           const shouldShowUnreadIndicator =
             hasUnreadNotifications && item.href === NOTIFICATIONS_HREF;
+
+          if (index === 2) {
+            return (
+              <Link
+                aria-label={centerAction.ariaLabel}
+                className={cn(
+                  "flex min-h-12 items-center rounded-2xl border border-primary/45 bg-surface text-[15px] font-bold text-primary transition hover:border-primary hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+                  isDesktopSidebarCollapsed ? "justify-center px-0" : "gap-3 px-3",
+                )}
+                data-community-create-post="desktop-sidebar"
+                href={centerAction.href}
+                key="desktop-create-post"
+                onClick={handleCreatePostClick}
+                scroll={centerAction.scroll}
+                title={
+                  isDesktopSidebarCollapsed
+                    ? (centerAction.title ?? centerAction.ariaLabel)
+                    : undefined
+                }
+              >
+                <span className="relative inline-grid h-5 w-5 shrink-0 place-items-center">
+                  <Plus className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className={cn("truncate", isDesktopSidebarCollapsed ? "sr-only" : undefined)}>
+                  Criar post
+                </span>
+              </Link>
+            );
+          }
 
           return (
             <Link

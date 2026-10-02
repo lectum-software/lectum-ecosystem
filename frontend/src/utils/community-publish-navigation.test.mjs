@@ -138,10 +138,13 @@ test("favorites and my posts reuse the blue saved-page back-arrow appearance", (
   assert.match(sources[2], /\{interactionCopy.screenTitle\}/);
 });
 
-test("mobile create action replaces favorites without changing the desktop sidebar or immersive exception", () => {
+test("create action replaces favorites in the mobile center and desktop sidebar", () => {
   const template = readSource("../templates/private/index.tsx");
   assert.match(template, /if \(index === 2\)/);
   assert.match(template, /data-community-create-post="mobile-navigation"/);
+  assert.match(template, /data-community-create-post="desktop-sidebar"/);
+  assert.match(template, /Criar post/);
+  assert.match(template, /border-primary\/45/);
   assert.match(template, /const isMobileNavigationRenderedVisible = !navigationHidden/);
   assert.doesNotMatch(template, /autoHideNavigation|setIsNavigationVisible|-top-3/);
   assert.match(template, /intent: \{ returnTo: centerAction.href, type: "create_post" \}/);
@@ -158,6 +161,17 @@ test("both profile roles share the publications menu label and its original dest
     /const communityRows: ProfileRow\[\] = \[\s*\{\s*href: "\/app\/publicacoes\/minhas",\s*icon: MessagesSquare,\s*label: "Minhas publicações",\s*\}/,
   );
   assert.doesNotMatch(profile, /Meus posts? e (respostas|comentários)/);
+});
+
+test("psychologist profile menu omits reviews made while patient keeps reviews entry", () => {
+  const profile = readSource("../app/app/profile/logic.tsx");
+  const accountRows = profile.slice(
+    profile.indexOf("const accountRows: ProfileRow[] ="),
+    profile.indexOf("const communityRows: ProfileRow[] ="),
+  );
+  assert.doesNotMatch(accountRows, /Avaliações feitas/);
+  assert.match(accountRows, /label: "Minhas Avaliações"/);
+  assert.match(accountRows, /label: "Avaliações"/);
 });
 
 test("both profile roles share the publications page header", () => {
