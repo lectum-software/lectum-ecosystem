@@ -1,5 +1,18 @@
 # ADR-0032: Refinamento mobile-first do perfil profissional público
 
+## Complemento 2026-10-02 - selo junto ao nome (0.1.555)
+
+O cabecalho deixa de tratar o nome inteiro e o selo como itens flex independentes.
+O nome segue o fluxo textual, e a ultima palavra compartilha um grupo inline-flex
+com o selo existente. Assim nomes longos podem quebrar sem deixar o selo sozinho
+na linha seguinte. O grupo limita sua largura ao container e permite quebrar uma
+palavra excepcionalmente longa, evitando overflow em telas estreitas.
+
+Escopo exclusivo do titulo no perfil publico: sem truncamento, mudanca de selo,
+API, banco, dependencias ou regras de verificacao. Perfis nao verificados continuam
+exibindo somente o nome. Referencia visual: captura enviada pelo usuario; sem
+reconstrucao de tela ou nova fonte de design. Reversao somente de frontend.
+
 ## Status
 
 Accepted
