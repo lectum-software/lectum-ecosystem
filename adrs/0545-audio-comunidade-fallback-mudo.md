@@ -59,3 +59,23 @@ Referencia primaria: https://webkit.org/blog/6784/new-video-policies-for-ios/
 e https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/ (02/10/2026).
 Permissao de autoplay nao e garantida por uma preferencia da aplicacao; quando
 negada, manter play manual em vez de silenciar toda a pagina.
+
+## Complemento 2026-10-02 - 0.1.553
+
+O usuario escolheu priorizar autoplay. Esta decisao substitui a pausa local da
+0.1.552 por fallback mudo no elemento recusado, sem revogar o opt-in atual dos
+demais elementos. Manter a suspensao inicial da preferencia recuperada do storage
+quando nao houve nova acao de volume neste documento.
+
+Separar revisao de audio recusado por elemento da revisao de autoplay totalmente
+recusado. A primeira impoe mute apenas local nos eventos e no retorno por scroll;
+a segunda impede loops quando ate o play mudo e negado. Nova escolha explicita
+invalida ambas. Play manual pode recuperar reproducao, mas nao e opt-in de audio.
+Uma negacao audivel atual gera no maximo uma tentativa muda; erros nao relacionados,
+modal, falta de atencao, desmontagem e troca de video nao autorizam essa tentativa.
+
+O controle existente reflete o mute efetivo, permitindo ativar som por toque.
+Nao ha garantia de autoplay contra uma recusa total do navegador. Sem mudanca de
+layout, API, banco, env ou dependencia. Rollout em homolog antes de nova autorizacao
+de producao. Validar fontes reais com midia real e negacao controlada, deixando
+explicita a ausencia de aparelho iOS fisico.

@@ -73,3 +73,27 @@ nao comprova a politica nativa do Safari; falta validacao em iPhone fisico.
 Check raiz passou pelos guards e frontend, mas parou no typecheck do backend
 porque DATABASE_URL nao esta configurada no ambiente local. Sem alteracao de
 codigo backend nem uso do banco de producao para contornar essa limitacao.
+
+## Complemento 0.1.553 - prioridade explicita ao autoplay
+
+O usuario priorizou autoplay sobre audio quando o navegador nao permite ambos.
+Substituir a espera por play manual da 0.1.552 por uma tentativa muda local,
+preservando a escolha compartilhada de audio apos opt-in nesta navegacao.
+
+- [x] Negacao audivel atual tenta autoplay mudo no mesmo video.
+- [x] Fallback local nao silencia os demais videos nem regrava a preferencia.
+- [x] Eventos de playback/metadados/volume e retorno por scroll preservam mute local.
+- [x] Nova acao explicita de volume remove o fallback; play sozinho nao o remove.
+- [x] Negacao tambem no mudo preserva play manual e nao cria loop de tentativas.
+- [x] Rejeicoes obsoletas, mute explicito e fallback inicial continuam protegidos.
+
+Sem mudanca visual, dependencia, API, banco ou env. Homolog primeiro. Producao
+somente mediante novo pedido; rollback restaura o comportamento de 0.1.552.
+
+Validacao 0.1.553: sete testes focados, check completo do frontend e build
+aprovados. Smoke local com fontes reais e MP4 com audio em Chromium (390x844 e
+1440x900) confirmou fallback mudo automatico apos negacao audivel controlada,
+mute local ao retornar por scroll, audio nos demais e mute explicito global.
+O check raiz passou pelos guards e frontend; backend interrompido por ausencia
+local de DATABASE_URL. iPhone fisico nao testado; nao alegar reproducao nativa
+da politica do Safari. Harness e resultados de QA em outputs fora do repositorio.

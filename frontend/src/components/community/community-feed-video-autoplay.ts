@@ -30,6 +30,7 @@ const INTERSECTION_THRESHOLDS = [0, 0.2, 0.35, 0.5, 0.58, 0.7, 0.85, 1];
 type SoundPreferenceListener = (soundEnabled: boolean) => void;
 
 type FeedVideoAutoplayItem = {
+  blockedPlaybackRevision: number | null;
   blockedSoundRevision: number | null;
   distanceToViewportCenter: number;
   id: string;
@@ -65,7 +66,8 @@ const observedVideoIds = new WeakMap<HTMLVideoElement, string>();
 export const getCommunityFeedVideoSoundEnabled = getVideoSoundEnabled;
 
 const applySoundPreferenceToVideo = (item: FeedVideoAutoplayItem) => {
-  const soundEnabled = getVideoSoundEnabled();
+  const soundEnabled =
+    getVideoSoundEnabled() && item.blockedSoundRevision !== getVideoSoundPreferenceRevision();
   const { video } = item;
 
   video.muted = !soundEnabled;
@@ -86,9 +88,9 @@ const playAutoplayItem = async (item: FeedVideoAutoplayItem) => {
   if (!isCommunityAutoplayContextActive()) return;
 
   applySoundPreferenceToVideo(item);
-  const soundEnabled = getVideoSoundEnabled();
+  const soundEnabled = !item.video.muted;
   const revision = getVideoSoundPreferenceRevision();
-  if (soundEnabled && item.blockedSoundRevision === revision) return;
+  if (item.blockedPlaybackRevision === revision) return;
   const attempt = ++item.playAttempt;
   const isCurrentAttempt = () =>
     autoplayItems.get(item.id) === item &&
@@ -96,27 +98,40 @@ const playAutoplayItem = async (item: FeedVideoAutoplayItem) => {
     item.playAttempt === attempt &&
     !item.pausedByUser &&
     isCommunityAutoplayContextActive();
-  let autoplayBlocked = false;
+  let mutedFallbackRevision: number | null = null;
 
   if (
     await playVideoWithActiveDocument(item.video, {
       onAutoplayBlocked: () => {
-        if (!soundEnabled || !isCurrentAttempt()) return;
+        if (!isCurrentAttempt()) return;
         if (revision !== getVideoSoundPreferenceRevision()) return;
-        autoplayBlocked = suspendVideoSoundForDocument(revision);
-        if (!autoplayBlocked) {
-          // A per-element browser denial must not mute the user's other videos.
-          item.blockedSoundRevision = revision;
+        if (!soundEnabled) {
+          item.blockedPlaybackRevision = revision;
+          return;
         }
+        suspendVideoSoundForDocument(revision);
+        mutedFallbackRevision = getVideoSoundPreferenceRevision();
+        // Prefer muted autoplay locally without revoking an explicit sound choice.
+        item.blockedSoundRevision = mutedFallbackRevision;
       },
     })
   ) {
     return;
   }
 
-  if (autoplayBlocked && !getVideoSoundEnabled() && isCurrentAttempt()) {
-    item.video.muted = true;
-    await playVideoWithActiveDocument(item.video);
+  if (
+    mutedFallbackRevision !== null &&
+    mutedFallbackRevision === getVideoSoundPreferenceRevision() &&
+    isCurrentAttempt()
+  ) {
+    applySoundPreferenceToVideo(item);
+    await playVideoWithActiveDocument(item.video, {
+      onAutoplayBlocked: () => {
+        if (isCurrentAttempt() && mutedFallbackRevision === getVideoSoundPreferenceRevision()) {
+          item.blockedPlaybackRevision = mutedFallbackRevision;
+        }
+      },
+    });
   }
 };
 
@@ -372,6 +387,7 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
   ensureModalMediaSuspensionListener();
 
   const item: FeedVideoAutoplayItem = {
+    blockedPlaybackRevision: null,
     blockedSoundRevision: null,
     distanceToViewportCenter: Number.MAX_SAFE_INTEGER,
     id,
@@ -411,7 +427,7 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
     }
 
     item.pausedByUser = false;
-    item.blockedSoundRevision = null;
+    item.blockedPlaybackRevision = null;
 
     if (activeVideoId !== id) {
       activeVideoId = id;

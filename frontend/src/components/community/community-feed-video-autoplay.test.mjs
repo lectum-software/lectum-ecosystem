@@ -382,12 +382,17 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   await show(policyBlocked);
   assert.equal(getVideoSoundEnabled(), true, "a per-video denial cannot undo explicit opt-in");
   assert.equal(notifications.at(-1), true, "other players keep the enabled sound preference");
-  assert.equal(policyBlocked.muted, false, "do not silently switch the blocked video to mute");
-  assert.equal(policyBlocked.paused, true, "a blocked video waits for manual playback");
-  assert.deepEqual(policyBlocked.attempts, [false]);
+  assert.equal(policyBlocked.muted, true, "prefer local muted autoplay after audible denial");
+  assert.equal(policyBlocked.paused, false, "audible denial must not require manual play");
+  assert.deepEqual(policyBlocked.attempts, [false, true]);
   policyBlocked.dispatchEvent(new Event("canplay"));
   await show(policyBlocked);
-  assert.deepEqual(policyBlocked.attempts, [false], "do not loop on a browser policy denial");
+  assert.deepEqual(policyBlocked.attempts, [false, true], "do not retry audible autoplay");
+  for (const event of ["volumechange", "loadedmetadata", "playing"]) {
+    policyBlocked.muted = false;
+    policyBlocked.dispatchEvent(new Event(event));
+    assert.equal(policyBlocked.muted, true, `${event} must preserve local fallback`);
+  }
   await show(second);
   assert.equal(second.muted, false, "the next video still plays with sound");
   assert.equal(second.paused, false);
@@ -400,25 +405,48 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   assert.equal(afterBlock.muted, false, "a stale muted snapshot cannot override opt-in");
   assert.equal(afterBlock.volume, 1);
   await show(policyBlocked);
+  assert.equal(policyBlocked.paused, false, "returning to a fallback video autoplays muted");
+  assert.equal(policyBlocked.muted, true);
+  assert.deepEqual(policyBlocked.attempts, [false, true, true]);
   await policyBlocked.play();
   assert.equal(policyBlocked.paused, false, "manual play remains available after denial");
-  assert.equal(policyBlocked.muted, false);
+  assert.equal(policyBlocked.muted, true, "play alone is not a new volume action");
+  setCommunityFeedVideoSoundEnabled(true);
+  assert.equal(policyBlocked.muted, false, "a fresh volume action clears the local fallback");
 
   const retryAfterChoice = addVideo("retry-after-new-volume-choice");
   retryAfterChoice.nextPlay = () =>
     Promise.reject(new DOMException("Autoplay denied", "NotAllowedError"));
   await show(retryAfterChoice);
-  assert.deepEqual(retryAfterChoice.attempts, [false]);
+  assert.deepEqual(retryAfterChoice.attempts, [false, true]);
   setCommunityFeedVideoSoundEnabled(false);
   setCommunityFeedVideoSoundEnabled(true);
   await show(retryAfterChoice);
-  assert.deepEqual(retryAfterChoice.attempts, [false, false]);
+  assert.deepEqual(retryAfterChoice.attempts, [false, true]);
   assert.equal(retryAfterChoice.paused, false, "a new explicit choice permits a new attempt");
   for (const event of ["playing", "loadedmetadata"]) {
     retryAfterChoice.muted = true;
     retryAfterChoice.dispatchEvent(new Event(event));
     assert.equal(retryAfterChoice.muted, false, `${event} cannot restore an old mute state`);
   }
+
+  const fullyBlocked = addVideo("browser-denies-muted-too");
+  fullyBlocked.nextPlay = () => {
+    fullyBlocked.nextPlay = () =>
+      Promise.reject(new DOMException("Muted autoplay denied", "NotAllowedError"));
+    return Promise.reject(new DOMException("Audible autoplay denied", "NotAllowedError"));
+  };
+  await show(fullyBlocked);
+  assert.deepEqual(fullyBlocked.attempts, [false, true]);
+  assert.equal(fullyBlocked.paused, true, "respect denial of muted autoplay too");
+  assert.equal(fullyBlocked.muted, true);
+  assert.equal(getVideoSoundEnabled(), true);
+  fullyBlocked.dispatchEvent(new Event("canplay"));
+  await show(fullyBlocked);
+  assert.deepEqual(fullyBlocked.attempts, [false, true], "no autoplay rejection loop");
+  await fullyBlocked.play();
+  assert.equal(fullyBlocked.paused, false, "manual play can recover a fully denied video");
+  assert.equal(fullyBlocked.muted, true);
 
   setCommunityFeedVideoSoundEnabled(false);
   assert.equal(third.muted, true);
