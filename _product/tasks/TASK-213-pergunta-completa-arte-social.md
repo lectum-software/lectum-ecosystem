@@ -38,3 +38,30 @@ Somente comportamento do servico video. Sem banco, API, env ou dependencia nova.
 Novas geracoes recebem o ajuste; arquivos ja baixados nao sao reescritos.
 Push em homolog dispara o deploy de homologacao. Producao exige promocao posterior.
 Decisao registrada em ADR-0553.
+
+## Complemento - previa completa (0.1.551)
+
+A previa HTML ainda tinha um limite independente de tres linhas. Removemos tanto
+as reticencias na quebra de texto quanto o line-clamp. Palavras longas sao
+divididas sem perda, seguindo o render do video. A altura base continua 13.85cqh,
+com mais 3.125cqh por linha adicional (60px em 1920px), mantendo centralizacao,
+tipografia, posicao, largura, cabecalho, cantos e identificacao profissional.
+
+- [x] Pergunta completa na previa, inclusive o exemplo de quatro linhas enviado.
+- [x] Perguntas curtas mantem a altura anterior.
+- [x] Testes de texto longo, palavras extensas, acentos e fallback adicionados.
+
+Mudanca somente no frontend; sem API, banco, env ou dependencia nova. Rollback
+por reversao deste complemento em homolog. Producao depende de promocao propria.
+
+Validacao: check completo do frontend e build aprovados; sete testes direcionados
+passaram. Componente real isolado com CSS compilado validado em Chromium nas
+larguras 320/390/1440, com textos curto, longo, 180 caracteres e palavra extensa:
+sem corte/reticencias, centralizacao com erro inferior a 1px, cabecalho/largura/
+identificacao inalterados e sem sobreposicao. Nao houve geracao de video remoto
+nem alteracao de dados de usuario. O primeiro build falhou por ENOSPC; apenas
+arquivos descartaveis do cache webpack local foram removidos antes da repeticao.
+Smoke local Next: `/version` confirmou 0.1.551 e `/psicologos` abriu com HTTP 200
+em navegador mobile. `pnpm check` passou pelas verificacoes gerais e frontend,
+mas parou no typecheck do backend por `DATABASE_URL` local ausente; nao houve
+uso de banco remoto nem alteracao de configuracao para contornar a limitacao.

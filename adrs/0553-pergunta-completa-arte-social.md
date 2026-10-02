@@ -33,3 +33,12 @@ reversao do codigo em homolog. Sem alteracao de banco, API, env, fila ou pacotes
 ## Task relacionada
 
 TASK-213 - Pergunta completa na arte social.
+
+## Complemento 0.1.551 - previa
+
+A previa e composta em HTML sobre a midia original, sem antecipar um job de
+exportacao. Ela passa a preservar todas as linhas com a mesma quebra do renderer
+e remove o line-clamp de tres linhas. O corpo mantem 13.85cqh ate tres linhas e
+cresce 3.125cqh por linha extra (equivalente a 60px / 1920px). O restante dos
+estilos e comportamento da modal permanece intacto. Testes do helper e do
+contrato do componente evitam reintroduzir corte ou altura fixa.

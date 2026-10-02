@@ -9,6 +9,10 @@ import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { playVideoWithSound } from "@/lib/video-playback";
 import {
+  getPreviewSourceBodyHeight,
+  wrapPreviewSourceText,
+} from "@/utils/lectum-share-preview-text";
+import {
   type LectumShareSocialTarget,
   truncateLectumShareProfessionalTagName,
 } from "@/utils/lectum-share-target";
@@ -51,40 +55,9 @@ const applyPreviewMutedState = (video: HTMLVideoElement, muted: boolean) => {
   }
 };
 
-const wrapPreviewSourceText = (value: string, maxLineLength: number, maxLines: number) => {
-  const words = value.replace(/\s+/gu, " ").trim().split(/\s+/u).filter(Boolean);
-  const lines: string[] = [];
-  let current = "";
-
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length <= maxLineLength) {
-      current = candidate;
-      continue;
-    }
-
-    if (current) lines.push(current);
-    current = word.slice(0, maxLineLength);
-    if (lines.length === maxLines) break;
-  }
-
-  if (current && lines.length < maxLines) lines.push(current);
-  if (lines.length === 0) lines.push("Conteúdo na Lectum");
-
-  const visible = lines.slice(0, maxLines);
-  if (visible.length === maxLines && words.join(" ").length > visible.join(" ").length) {
-    const lastLine = visible[maxLines - 1];
-    if (lastLine) {
-      visible[maxLines - 1] = `${lastLine.replace(/[.?!,\s]+$/u, "")}…`;
-    }
-  }
-
-  return visible;
-};
-
 const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
   const sourceText = target.sourceText.trim() || "Conteúdo na Lectum";
-  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 30, 3), [sourceText]);
+  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 30), [sourceText]);
 
   return (
     <div
@@ -110,10 +83,13 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
             <span className="min-w-0 truncate tracking-[-0.015em]">{target.cardLabel}</span>
           </span>
         </div>
-        <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.6cqw]">
+        <div
+          className="grid min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.6cqw]"
+          style={{ height: getPreviewSourceBodyHeight(sourceLines.length) }}
+        >
           <p
             className={cn(
-              "line-clamp-3 whitespace-pre-line font-bold tracking-[-0.025em] text-media-background",
+              "whitespace-pre-line font-bold tracking-[-0.025em] text-media-background",
               sourceLines.length > 2
                 ? "text-[4.05cqw] leading-[1.17]"
                 : "text-[4.65cqw] leading-[1.24]",
