@@ -160,6 +160,13 @@ test("both profile roles share the publications menu label and its original dest
   assert.doesNotMatch(profile, /Meus posts? e (respostas|comentários)/);
 });
 
+test("both profile roles share the publications page header", () => {
+  const support = readSource("../app/app/posts/mine/modules/support.ts");
+  const screenTitles = [...support.matchAll(/screenTitle: "([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(screenTitles, ["Minhas publicações", "Minhas publicações"]);
+  assert.doesNotMatch(support, /screenTitle: "Meus posts? e (respostas|comentários)"/);
+});
+
 test("a highlighted parent tab still navigates from favorites and psychologist profiles", () => {
   const template = readSource("../templates/private/index.tsx");
   const mobileNavigation = template.slice(

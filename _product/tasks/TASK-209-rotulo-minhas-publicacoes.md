@@ -6,7 +6,9 @@ Dependencia: TASK-208 (Completed). Status: Completed.
 
 Substituir os rotulos de posts/respostas/comentarios do menu do perfil por
 "Minhas publicacoes", tanto para pacientes quanto para psicologos. Preservar
-icone, ordem, destino e titulos da tela de destino. Apenas copy no frontend.
+icone, ordem e destino. Ajuste pos-feedback em 02/10/2026: substituir tambem
+o cabecalho interno da tela `/app/publicacoes/minhas` por "Minhas publicacoes"
+para pacientes e psicologos. Apenas copy no frontend.
 
 Referencia: captura WhatsApp Image 2026-10-02 at 07.54.48.jpeg enviada pelo
 usuario. Arquitetura, inventario, packages e guia local de navegacao do Next
@@ -16,6 +18,7 @@ Manter o layout mobile-first existente (~390px).
 ## Criterios de aceite
 
 - [x] Mesmo rotulo no menu para ambos os papeis.
+- [x] Mesmo cabecalho dentro da tela para ambos os papeis.
 - [x] Link /app/publicacoes/minhas, icone e ordem preservados.
 - [x] Teste de regressao e frontend check/build aprovados.
 
