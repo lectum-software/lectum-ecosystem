@@ -262,7 +262,6 @@ export const ProfileLogic = () => {
       ? [
           { href: "/app/profissional/estatisticas", icon: BarChart3, label: "Meus Analytics" },
           { href: "/app/profissional/avaliacoes", icon: Star, label: "Minhas Avaliações" },
-          { href: "/app/avaliacoes", icon: Star, label: "Avaliações feitas" },
           {
             href: "/app/profissional/assinatura",
             icon: BadgeCheck,
