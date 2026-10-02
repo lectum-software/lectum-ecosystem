@@ -30,6 +30,7 @@ const INTERSECTION_THRESHOLDS = [0, 0.2, 0.35, 0.5, 0.58, 0.7, 0.85, 1];
 type SoundPreferenceListener = (soundEnabled: boolean) => void;
 
 type FeedVideoAutoplayItem = {
+  blockedSoundRevision: number | null;
   distanceToViewportCenter: number;
   id: string;
   intersectionRatio: number;
@@ -87,6 +88,7 @@ const playAutoplayItem = async (item: FeedVideoAutoplayItem) => {
   applySoundPreferenceToVideo(item);
   const soundEnabled = getVideoSoundEnabled();
   const revision = getVideoSoundPreferenceRevision();
+  if (soundEnabled && item.blockedSoundRevision === revision) return;
   const attempt = ++item.playAttempt;
   const isCurrentAttempt = () =>
     autoplayItems.get(item.id) === item &&
@@ -101,8 +103,11 @@ const playAutoplayItem = async (item: FeedVideoAutoplayItem) => {
       onAutoplayBlocked: () => {
         if (!soundEnabled || !isCurrentAttempt()) return;
         if (revision !== getVideoSoundPreferenceRevision()) return;
-        autoplayBlocked = true;
-        suspendVideoSoundForDocument(revision);
+        autoplayBlocked = suspendVideoSoundForDocument(revision);
+        if (!autoplayBlocked) {
+          // A per-element browser denial must not mute the user's other videos.
+          item.blockedSoundRevision = revision;
+        }
       },
     })
   ) {
@@ -367,6 +372,7 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
   ensureModalMediaSuspensionListener();
 
   const item: FeedVideoAutoplayItem = {
+    blockedSoundRevision: null,
     distanceToViewportCenter: Number.MAX_SAFE_INTEGER,
     id,
     intersectionRatio: 0,
@@ -394,11 +400,9 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
     scheduleAutoplayEvaluation();
   }
 
-  const enforceMutedPreference = () => {
-    if (!getVideoSoundEnabled() && !video.muted) video.muted = true;
-  };
+  const enforceSoundPreference = () => applySoundPreferenceToVideo(item);
   const handlePlay = () => {
-    enforceMutedPreference();
+    enforceSoundPreference();
     if (!isCommunityAutoplayContextActive()) {
       item.pausedByUser = false;
       if (activeVideoId === id) activeVideoId = null;
@@ -407,6 +411,7 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
     }
 
     item.pausedByUser = false;
+    item.blockedSoundRevision = null;
 
     if (activeVideoId !== id) {
       activeVideoId = id;
@@ -447,18 +452,18 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
   video.addEventListener("ended", handleEnded);
   video.addEventListener("pause", handlePause);
   video.addEventListener("play", handlePlay);
-  video.addEventListener("playing", enforceMutedPreference);
-  video.addEventListener("volumechange", enforceMutedPreference);
-  video.addEventListener("loadedmetadata", enforceMutedPreference);
+  video.addEventListener("playing", enforceSoundPreference);
+  video.addEventListener("volumechange", enforceSoundPreference);
+  video.addEventListener("loadedmetadata", enforceSoundPreference);
 
   return () => {
     video.removeEventListener("canplay", handleCanPlay);
     video.removeEventListener("ended", handleEnded);
     video.removeEventListener("pause", handlePause);
     video.removeEventListener("play", handlePlay);
-    video.removeEventListener("playing", enforceMutedPreference);
-    video.removeEventListener("volumechange", enforceMutedPreference);
-    video.removeEventListener("loadedmetadata", enforceMutedPreference);
+    video.removeEventListener("playing", enforceSoundPreference);
+    video.removeEventListener("volumechange", enforceSoundPreference);
+    video.removeEventListener("loadedmetadata", enforceSoundPreference);
     observer?.unobserve(video);
     observedVideoIds.delete(video);
 
