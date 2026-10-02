@@ -74,7 +74,7 @@ test("modal de criar post nao estica descricao sem midia", () => {
   );
   assert.match(
     createPostSource,
-    /!hasSelectedMedia && "h-auto min-h-28 max-h-\[min\(42dvh,22rem\)\] flex-none"/,
+    /!hasSelectedMedia && "h-auto min-h-28 max-h-none flex-none overflow-visible"/,
   );
   assert.match(
     createPostSource,

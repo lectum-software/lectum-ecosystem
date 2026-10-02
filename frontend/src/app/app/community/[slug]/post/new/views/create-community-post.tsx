@@ -199,7 +199,7 @@ export const CreateCommunityPostLogic = ({
           className={cn(field.className, !hasSelectedMedia && "h-auto min-h-0 flex-none")}
           inputClassName={cn(
             field.inputClassName,
-            !hasSelectedMedia && "h-auto min-h-28 max-h-[min(42dvh,22rem)] flex-none",
+            !hasSelectedMedia && "h-auto min-h-28 max-h-none flex-none overflow-visible",
           )}
           onChangeCallback={(value) => {
             field.onChangeCallback?.(value);
