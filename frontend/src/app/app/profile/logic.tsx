@@ -283,7 +283,7 @@ export const ProfileLogic = () => {
     {
       href: "/app/publicacoes/minhas",
       icon: MessagesSquare,
-      label: isPsychologist ? "Meus posts e respostas" : "Meus posts e comentários",
+      label: "Minhas publicações",
     },
     { href: "/app/favoritos", icon: Heart, label: "Favoritos" },
     { href: "/app/publicacoes/salvas", icon: Bookmark, label: "Salvos" },
