@@ -1,5 +1,22 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-04 - contorno da resposta e circulo preto (0.1.564)
+
+Referencia: capturas e pedido do usuario; Builder indisponivel nesta execucao.
+
+- [x] Recuperar margem lateral visivel e cantos arredondados no fundo da resposta.
+- [x] Preservar alinhamento de autor/video, proporcao 9:16 e controles sem divisoria.
+- [x] Circulo final de Ver mais respostas preto com Plus branco nos dois temas.
+
+Reutiliza tokens preto/branco existentes, sem alterar dados, player ou elegibilidade.
+Escopo restrito a homologacao; ADR-0196 atualizado.
+
+Validacao: build e check completo do frontend aprovados, incluindo 20 testes
+focados. Baseline da raiz limitado por DATABASE_URL local ausente no Prisma.
+Chrome com API real: feed/comunidade em 320/390/1440px, sem overflow, margem
+visivel, cantos arredondados, alinhamento e 9:16 preservados; Plus preto/branco
+nos temas claro/escuro. Navegacao de Ver mais respostas aprovada.
+
 ## Ajuste 2026-10-04 - resposta profissional alinhada (0.1.563)
 
 Referencia: duas capturas e seis ajustes explicitos do usuario, sem retomar arvore.

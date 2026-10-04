@@ -187,12 +187,12 @@ export const ProfessionalReplyPreview = ({
 
   return (
     <div
-      className="relative -mx-4 grid min-w-0 cursor-pointer bg-surface-muted px-4 py-3 dark:bg-primary/5"
+      className="relative -mx-2 grid min-w-0 cursor-pointer rounded-2xl bg-surface-muted px-2 py-3 ring-1 ring-border ring-inset dark:bg-primary/5"
       data-feed-professional-reply
     >
       <Link
         aria-label={`Abrir post ${post.title}`}
-        className="absolute inset-0 z-0 cursor-pointer"
+        className="absolute inset-0 z-0 cursor-pointer rounded-2xl"
         href={postHref}
       />
       <div className="pointer-events-none relative z-10 min-w-0">

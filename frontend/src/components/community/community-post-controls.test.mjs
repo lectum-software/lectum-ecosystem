@@ -65,7 +65,7 @@ test("more replies stays hidden without another professional response, regardles
   }
 });
 
-test("more replies renders up to two distinct authors followed by a blue plus", () => {
+test("more replies renders up to two distinct authors followed by a black plus circle", () => {
   const author = (id) => ({ id, name: `Psi ${id}`, avatar: null });
   const post = {
     author: { role: "paciente" },
@@ -87,7 +87,7 @@ test("more replies renders up to two distinct authors followed by a blue plus", 
   assert.match(html, /Ver mais respostas/);
   assert.match(html, /text-muted/);
   assert.match(html, /font-\[family-name:system-ui,sans-serif\].*font-semibold/);
-  assert.match(html, /bg-primary text-primary-foreground/);
+  assert.match(html, /bg-media-background text-media-foreground/);
   assert.match(html, /lucide-plus/);
   assert.equal((html.match(/text-\[10px\]/g) ?? []).length, 2);
   assert.ok(html.indexOf("lucide-plus") > html.lastIndexOf("text-[10px]"));
@@ -163,7 +163,12 @@ test("professional reply removes indentation, labels the author and preserves vi
     source.indexOf("export const ProfessionalReplyPreview"),
     source.indexOf("export const PostCard ="),
   );
-  assert.match(preview, /-mx-4.*bg-surface-muted px-4 py-3/);
+  assert.match(
+    preview,
+    /-mx-2.*rounded-2xl bg-surface-muted px-2 py-3 ring-1 ring-border ring-inset/,
+  );
+  assert.doesNotMatch(preview, /-mx-4/);
+  assert.match(preview, /absolute inset-0 z-0 cursor-pointer rounded-2xl/);
   assert.match(preview, /text-primary[\s\S]*RESPOSTA PROFISSIONAL/);
   assert.ok(preview.indexOf("RESPOSTA PROFISSIONAL") < preview.indexOf("<AuthorAvatar"));
   assert.match(preview, /gap-3" data-feed-reply-author/);

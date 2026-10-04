@@ -40,7 +40,7 @@ export const MoreProfessionalReplies = ({ href, post }: { href: string; post: Co
             </span>
           );
         })}
-        <span className="relative grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground ring-2 ring-surface">
+        <span className="relative grid h-7 w-7 shrink-0 place-items-center rounded-full bg-media-background text-media-foreground ring-2 ring-surface">
           <Plus aria-hidden="true" className="h-4 w-4" />
         </span>
       </span>

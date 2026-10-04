@@ -4,6 +4,15 @@
 
 Accepted
 
+## Ajuste 2026-10-04 - resposta contida e Plus preto (0.1.564)
+
+O usuario pediu que o fundo da resposta volte a parecer contido dentro do post.
+A margem negativa diminui de 1rem para 0.5rem, compensada pelo padding de 0.5rem,
+mantendo as coordenadas do autor e a largura do video. Cantos de 1rem e contorno
+interno usam os padroes existentes; o link de abertura acompanha os cantos.
+O circulo final usa media-background/media-foreground (preto/branco invariantes
+nos temas), sem novo token global. Demais decisoes de 0.1.563 permanecem intactas.
+
 ## Ajuste 2026-10-04 - resposta alinhada sem arvore (0.1.563)
 
 Novo pedido explicito apos a reversao: remover divisoria dos controles e tornar
