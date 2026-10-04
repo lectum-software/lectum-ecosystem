@@ -12,7 +12,6 @@ import {
 } from "react";
 import type { PostDetail } from "@/api/generator/types/posts";
 import { PostActionButton } from "@/components/community/post-action-button";
-import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -26,7 +25,6 @@ import { getRememberedCommunityFeedHref } from "../../../hooks/use-community-fee
 import { PostBody, PostHeader, PostVoteBar } from "../components/post-content";
 import { RepliesList } from "../components/replies-list";
 import { PostReportModal, ReplyComposer } from "../components/reply-composer";
-import { PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR } from "../modules/reply-support";
 import { toPostReportPayload } from "../use-form";
 import { usePostDetailController } from "./post-detail-controller";
 
@@ -237,12 +235,9 @@ export const PostDetailLogic = ({
     setReportError,
     setReportTarget,
     setReplyError,
-    setShowPsychologistReplyTip,
     shareFeedback,
     sharePost,
     shareReply,
-    shouldExposePsychologistReplyTipTarget,
-    showPsychologistReplyTip,
     submitReply,
     uploadReplyMediaMutation,
     visibleInlineReplyTargets,
@@ -312,20 +307,6 @@ export const PostDetailLogic = ({
       navigationTheme="solidWhite"
       showHeader
     >
-      {showPsychologistReplyTip ? (
-        <ActionableCoachMark
-          onDismiss={() => setShowPsychologistReplyTip(false)}
-          placement="bottom"
-          targetSelector={PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR}
-          title="Responda dúvidas da comunidade"
-        >
-          <p>
-            Responder pacientes é o principal foco dos psicólogos na Lectum. Cada resposta mostra
-            sua forma de cuidado, cria confiança e aumenta a chance de um contato qualificado.
-          </p>
-        </ActionableCoachMark>
-      ) : null}
-
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-6 text-foreground dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
         {postQuery.isLoading || postQuery.isPending ? (
           <div className="grid min-h-[70vh] place-items-center px-5">
@@ -375,9 +356,6 @@ export const PostDetailLogic = ({
                 currentVote={post.current_user_vote}
                 disabled={voteMutation.isPending || saveMutation.isPending}
                 onFocusCommentComposer={focusMainComposer}
-                replyTipTarget={
-                  shouldExposePsychologistReplyTipTarget ? "community-reply" : undefined
-                }
                 onShare={sharePost}
                 onToggleSave={handleTogglePostSave}
                 onVote={handleVotePost}

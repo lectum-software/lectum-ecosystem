@@ -291,3 +291,30 @@ Criterios complementares:
 - [x] `/app/perfil/editar` nao renderiza `AccountDeleteSection` nem o CTA `Excluir minha conta`.
 - [x] A acao de exclusao permanece em `/app/configuracoes/conta`.
 - [x] A edicao de perfil pessoal continua separada de configuracoes sensiveis de conta.
+
+## Complemento 2026-10-04 - dica de resposta no inicio do feed (0.1.556)
+
+Referencia: captura enviada pelo usuario e fluxo existente. Builder/Quick Copy
+nao esta disponivel como ferramenta callable; preservado o coach mark existente,
+com alvo retangular limitado ao autor, titulo e descricao do post.
+
+- [x] Orientar somente psicologos autenticados com dica ainda pendente.
+- [x] Priorizar primeiro post de paciente publicado e nao silenciado no inicio
+  da listagem, sem alterar a ordem relativa dos demais nem duplicar posts.
+- [x] Compartilhar conclusao entre feed e comunidade usando a flag de conta existente.
+- [x] Concluir ao abrir o post-alvo ou dispensar; nao concluir ao apenas aparecer.
+- [x] Remover a dica interna do detalhe sem adicionar segunda dica no comentario.
+- [x] Aguardar modal/outra dica e alvo visivel; preservar clique normal para abrir o post.
+- [x] Validar mobile/desktop, checks e build, registrar limites de smoke autenticado.
+
+Validacao: `frontend check`, `frontend build` e os quatro testes de `test:reply-tip`
+passaram. Playwright sobre o componente real isolado em 320/390/1440 px verificou
+alvo, geometria, modal, fila de dicas, rolagem, clique, fechamento e isolamento
+por conta. Isso nao substitui o smoke autenticado de cadastro/feed.
+`pnpm check` passou pelos guards e frontend e parou no Prisma do backend por
+`DATABASE_URL` ausente localmente. A pagina local abriu sem erro JavaScript,
+mas a API do feed ficou indisponivel; nenhuma resposta foi simulada.
+O navegador conectado falhou ao inicializar. O fluxo real com psicologo novo
+permanece pendente de verificacao em homologacao; producao nao promovida.
+
+Sem backend, migration, env ou dependencia nova. ADR-0109 registra rollout e rollback.

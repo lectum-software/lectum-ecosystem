@@ -1,5 +1,34 @@
 # ADR-0109 - Dicas de onboarding persistidas por usuário
 
+## Complemento 2026-10-04 - orientar a abertura do post no inicio do feed
+
+A dica de resposta do psicologo deixa o detalhe do post e passa a orientar a
+abertura da conversa pelo bloco de autor, titulo e descricao no feed e na
+comunidade. Reutiliza `has_seen_psychologist_reply_tip`, sem reiniciar historicos
+ja concluidos e sem nova migration, API, variavel ou dependencia.
+
+Enquanto a orientacao estiver pendente para a conta autenticada de psicologo,
+o primeiro post de paciente publicado e nao silenciado entre os itens carregados
+e priorizado no inicio da lista. A ordem restante e preservada, e essa selecao
+permanece durante a visita apos dispensar a dica, evitando saltos sob o toque.
+Sem post elegivel, nao ha alvo artificial nem gravacao de conclusao.
+
+O alvo exclui comunidade, seguir, midia, respostas e barra de acoes. A navegacao
+original do card/link continua responsavel por abrir o post. Abrir o post-alvo ou
+fechar a dica conclui a orientacao; apenas renderizar, rolar ou abrir uma modal
+nao a consome. O backend continua fonte compartilhada entre dispositivos;
+conclusao local escopada ao usuario evita repeticao entre rotas/reloads e permite
+reconciliar uma conclusao ainda nao sincronizada.
+
+O coach mark reutilizado ganha destaque retangular opt-in, espera por outros
+coach marks e visibilidade completa do alvo. Observadores de DOM e tamanho
+mantem a posicao atualizada e retiram a dica imediatamente quando uma modal abre,
+sem depender de uma rolagem posterior. Nao ha segunda dica dentro do post.
+
+Risco: priorizacao temporaria apenas para usuarios com orientacao pendente.
+Rollback: reverter o frontend; flags de conclusao existentes continuam validas.
+Nao ha acao manual de infraestrutura nem alteracao de dados de publicacoes.
+
 ## Status
 
 Accepted

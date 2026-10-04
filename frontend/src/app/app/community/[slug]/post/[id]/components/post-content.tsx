@@ -501,7 +501,6 @@ export const PostVoteBar = ({
   currentVote,
   disabled,
   onFocusCommentComposer,
-  replyTipTarget,
   onShare,
   onToggleSave,
   onVote,
@@ -510,7 +509,6 @@ export const PostVoteBar = ({
   currentVote: 1 | -1 | null;
   disabled?: boolean;
   onFocusCommentComposer: () => void;
-  replyTipTarget?: string;
   onShare: () => void;
   onToggleSave: () => void;
   onVote: (value: 1 | -1) => void;
@@ -522,7 +520,6 @@ export const PostVoteBar = ({
       count: post.replies_count,
       label: "Comentar no post",
       onClick: onFocusCommentComposer,
-      tipTarget: replyTipTarget,
     }}
     currentVote={currentVote}
     disabled={disabled}
