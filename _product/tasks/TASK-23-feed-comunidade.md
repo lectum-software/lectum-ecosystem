@@ -1,5 +1,23 @@
 # TASK-23: Feed de comunidade
 
+## Reversao 2026-10-04 - restaurar layout anterior (0.1.562)
+
+Usuario rejeitou o experimento apos a publicacao e pediu retorno ao layout anterior.
+
+- [x] Restaurar os seis arquivos visuais/testes exatamente ao estado 0.1.558.
+- [x] Remover arvore do feed, recuperar painel da resposta e divisoria dos controles.
+- [x] Recuperar posicionamento anterior e fundo neutro dos votos.
+- [x] Preservar Ver mais respostas, avatares, autoplay e demais funcionalidades de 0.1.558.
+- [x] Manter historico e publicar reversao aditiva, sem reset, banco ou migracoes.
+
+Referencia: estado Git de producao antes do PR #76 e imagens fornecidas pelo usuario.
+Builder indisponivel; esta reversao nao introduz novo desenho. ADR-0196 atualizado.
+
+Validacao: diff de frontend/src contra 0.1.558 vazio; 17 testes focados, check
+completo do frontend e build aprovados. Chrome local a 390px com dados reais de
+homologacao validou feed/comunidade e navegacao de Ver mais respostas. Baseline da
+raiz parou no Prisma por DATABASE_URL local ausente, sem mudanca de backend.
+
 ## Complemento 2026-10-04 - votos acompanham a superficie (0.1.561)
 
 Esclarecimento do usuario: o fundo do controle deve ter a mesma aparencia da area

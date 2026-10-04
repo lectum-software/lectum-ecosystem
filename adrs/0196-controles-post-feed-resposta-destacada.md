@@ -4,6 +4,15 @@
 
 Accepted
 
+## Reversao 2026-10-04 - layout anterior aprovado (0.1.562)
+
+A pedido explicito do usuario, o experimento 0.1.559-0.1.561 foi revertido.
+Os arquivos do card, feed, barra de acoes e testes retornam exatamente a 0.1.558,
+removendo os dois componentes extraidos exclusivamente para a arvore.
+Preservam-se controles acima da resposta e Ver mais respostas com avatares.
+As decisoes experimentais abaixo ficam registradas como historico, nao como
+layout ativo. Versao avanca para 0.1.562, sem apagar commits ou alterar dados.
+
 ## Complemento 2026-10-04 - votos sem preenchimento proprio (0.1.561)
 
 O usuario esclareceu que deseja a mesma aparencia do fundo ao redor, e nao branco
