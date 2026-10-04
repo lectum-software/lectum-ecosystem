@@ -38,7 +38,9 @@ import {
   COMMUNITY_FLOATING_CREATE_POST_CLASSNAME,
   CommunityPublishOnboarding,
 } from "../components/publish-onboarding";
+import { PsychologistReplyOnboarding } from "../components/reply-onboarding";
 import { useCommunityFeedScrollRestoration } from "../hooks/use-community-feed-scroll-restoration";
+import { usePsychologistReplyTip } from "../hooks/use-psychologist-reply-tip";
 import {
   flattenCommunityPostPages,
   PAGE_LIMIT,
@@ -93,15 +95,18 @@ export const CommunityFeedLogic = ({
     () => flattenCommunityPostPages(feed.data?.pages),
     [feed.data?.pages],
   );
-  const posts = useMemo(
+  const variedPosts = useMemo(
     () => varyCommunityFeedPosts(loadedPosts, feedPresentationSeed),
     [feedPresentationSeed, loadedPosts],
   );
+  const replyTip = usePsychologistReplyTip(variedPosts, JSON.stringify(query));
+  const posts = replyTip.posts;
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
   const firstFeedPage = feed.data?.pages[0];
   const hasNoFollowedCommunities =
     scope === "following" && (firstFeedPage?.following_count ?? 0) === 0;
-  const isInitialFeedLoading = (feed.isLoading || feed.isPending) && posts.length === 0;
+  const isInitialFeedLoading =
+    ((feed.isLoading || feed.isPending) && posts.length === 0) || replyTip.isPreparing;
   const {
     fetchNextPage: fetchNextFeedPage,
     hasNextPage: hasNextFeedPage,
@@ -295,10 +300,16 @@ export const CommunityFeedLogic = ({
           />
         ) : null}
 
-        {posts.length > 0 ? (
+        {!isInitialFeedLoading && posts.length > 0 ? (
           <div className="grid gap-4">
             {posts.map((post) => (
-              <PostCard key={post.id} onShare={sharePost} post={post} />
+              <PostCard
+                key={post.id}
+                onShare={sharePost}
+                post={post}
+                replyTipTarget={post.id === replyTip.targetPostId}
+                onOpen={post.id === replyTip.targetPostId ? replyTip.dismiss : undefined}
+              />
             ))}
           </div>
         ) : null}
@@ -314,6 +325,14 @@ export const CommunityFeedLogic = ({
           onLoadMore={loadMoreFeedPosts}
         />
       </section>
+
+      {replyTip.targetPostId &&
+      !suppressPublishOnboarding &&
+      !isInitialFeedLoading &&
+      !errorMessage &&
+      !createPostModalOpen ? (
+        <PsychologistReplyOnboarding onDismiss={replyTip.dismiss} />
+      ) : null}
 
       <Link
         aria-label="Criar publicação na comunidade"

@@ -257,12 +257,16 @@ export const ProfessionalReplyPreview = ({
 };
 
 export const PostCard = ({
+  onOpen,
   onShare,
   post,
+  replyTipTarget = false,
   showCommunityHeader = true,
 }: {
+  onOpen?: () => void;
   onShare: (post: CommunityPost) => void;
   post: CommunityPost;
+  replyTipTarget?: boolean;
   showCommunityHeader?: boolean;
 }) => {
   const router = useRouter();
@@ -311,7 +315,8 @@ export const PostCard = ({
     ) : null;
   const rememberPostNavigation = useCallback(() => {
     rememberCommunityFeedScrollPosition(post.id);
-  }, [post.id]);
+    onOpen?.();
+  }, [onOpen, post.id]);
   const postSocialTarget = canShowSocialVideoPreviewAction({
     author: post.author,
     currentUser,
@@ -521,63 +526,65 @@ export const PostCard = ({
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
-      <div className="mb-3 flex items-start gap-3">
-        <AuthorAvatar
-          anonymous={isAnonymousPatient}
-          author={post.author}
-          href={psychologistProfileHref}
-          onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
-        />
-        <div className="grid min-w-0 flex-1 gap-0.5">
-          <AuthorIdentityLine
+      <div data-psychologist-tip-target={replyTipTarget ? "community-reply-post" : undefined}>
+        <div className="mb-3 flex items-start gap-3">
+          <AuthorAvatar
+            anonymous={isAnonymousPatient}
+            author={post.author}
             href={psychologistProfileHref}
-            name={getCommunityAuthorDisplayName(post.author)}
             onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
-            verified={post.author.verified}
           />
-          {psychologistProfileHref ? (
-            <Link
-              className="w-fit cursor-pointer text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
+          <div className="grid min-w-0 flex-1 gap-0.5">
+            <AuthorIdentityLine
               href={psychologistProfileHref}
-              onClick={handleProfileNavigationCapture}
-            >
-              <MentorAuthorMeta
-                authorId={post.author.role === "psicologo" ? post.author.id : undefined}
-                community={post.community}
-                badge={post.author.featured_badge ?? post.featured_badge}
-                typeLabel={post.author.type_label}
-                date={formatPostTimeLabel(post.created_at, post.edited_at)}
+              name={getCommunityAuthorDisplayName(post.author)}
+              onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
+              verified={post.author.verified}
+            />
+            {psychologistProfileHref ? (
+              <Link
+                className="w-fit cursor-pointer text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
+                href={psychologistProfileHref}
+                onClick={handleProfileNavigationCapture}
               >
-                {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                <MentorAuthorMeta
+                  authorId={post.author.role === "psicologo" ? post.author.id : undefined}
+                  community={post.community}
+                  badge={post.author.featured_badge ?? post.featured_badge}
+                  typeLabel={post.author.type_label}
+                  date={formatPostTimeLabel(post.created_at, post.edited_at)}
+                >
+                  {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                  {formatPostTimeLabel(post.created_at, post.edited_at)}
+                </MentorAuthorMeta>
+              </Link>
+            ) : (
+              <p className="text-[11px] font-semibold leading-tight text-muted">
                 {formatPostTimeLabel(post.created_at, post.edited_at)}
-              </MentorAuthorMeta>
-            </Link>
-          ) : (
-            <p className="text-[11px] font-semibold leading-tight text-muted">
-              {formatPostTimeLabel(post.created_at, post.edited_at)}
-            </p>
-          )}
-        </div>
-        {!showCommunityHeader && post.muted_by_current_user ? (
-          <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
-            <PostMutedBadge />
+              </p>
+            )}
           </div>
-        ) : null}
-      </div>
+          {!showCommunityHeader && post.muted_by_current_user ? (
+            <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
+              <PostMutedBadge />
+            </div>
+          ) : null}
+        </div>
 
-      <div className="grid gap-2">
-        <Link
-          className="cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground dark:text-foreground"
-          href={postDetailHref}
-        >
-          {post.title}
-        </Link>
-        <InlineExpandableText
-          className="text-sm leading-6 text-muted dark:text-muted"
-          expanded={false}
-          href={postDetailHref}
-          text={post.content}
-        />
+        <div className="grid gap-2">
+          <Link
+            className="cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground dark:text-foreground"
+            href={postDetailHref}
+          >
+            {post.title}
+          </Link>
+          <InlineExpandableText
+            className="text-sm leading-6 text-muted dark:text-muted"
+            expanded={false}
+            href={postDetailHref}
+            text={post.content}
+          />
+        </div>
       </div>
 
       <div className="mt-4 grid gap-3">

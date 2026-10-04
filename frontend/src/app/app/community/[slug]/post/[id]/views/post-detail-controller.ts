@@ -2,7 +2,6 @@
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAccount } from "@/api/callers/account";
 import {
   useCreatePostReply,
   useDeleteReply,
@@ -37,7 +36,6 @@ import {
   findReplyInTree,
   mergeUniqueReplies,
   POST_REPLY_COMPOSER_INPUT_SELECTOR,
-  PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR,
   REPLIES_LIMIT,
   type ReplyTarget,
   type ReplyTargetMap,
@@ -65,11 +63,6 @@ export const usePostDetailController = ({
   const isMobile = useIsPostDetailMobile();
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
-  const isPsychologistUser = currentUser?.role === "psicologo";
-  const accountTips = useAccount({
-    enableSecurity: false,
-    enableTips: isPsychologistUser,
-  });
   const conversion = useProgressiveConversion();
   const [loadedReplyPages, setLoadedReplyPages] = useState(() => createReplyPageRange(1));
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
@@ -86,10 +79,7 @@ export const usePostDetailController = ({
   const composerRef = useRef<HTMLElement | null>(null);
   const inlineReplyFormRef = useRef<HTMLElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
-  const hasShownPsychologistReplyTipThisVisitRef = useRef(false);
-  const hasPersistedPsychologistReplyTipSeenRef = useRef(false);
   const loadMoreRepliesRef = useRef<HTMLDivElement | null>(null);
-  const [showPsychologistReplyTip, setShowPsychologistReplyTip] = useState(false);
   const mediaPermission = useReplyMediaPermission();
   const postQuery = usePostDetail(postId);
   const replyPageQueries = usePostRepliesPages(
@@ -157,14 +147,6 @@ export const usePostDetailController = ({
   const hasDesktopReplyTargets = !isMobile && Object.keys(desktopReplyTargets).length > 0;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
-  const isPatientAuthoredPost = post?.author.role === "paciente";
-  const canShowPsychologistReplyTip =
-    isPsychologistUser &&
-    Boolean(isPatientAuthoredPost) &&
-    accountTips.onboardingTips.isSuccess &&
-    !accountTips.onboardingTips.data?.has_seen_psychologist_reply_tip;
-  const shouldExposePsychologistReplyTipTarget =
-    canShowPsychologistReplyTip || showPsychologistReplyTip;
   const resetReplyFocusHighlight = useReplyFocusHighlight(
     activeFocusReplyId,
     isRepliesFetching || Boolean(focusLookupReplyId),
@@ -240,46 +222,6 @@ export const usePostDetailController = ({
     return () => observer.disconnect();
   }, [canLoadMoreReplies, requestNextRepliesPage]);
 
-  const persistPsychologistReplyTipSeen = useCallback(() => {
-    if (
-      !accountTips.userId ||
-      hasPersistedPsychologistReplyTipSeenRef.current ||
-      accountTips.onboardingTips.data?.has_seen_psychologist_reply_tip ||
-      accountTips.updateOnboardingTips.isPending
-    ) {
-      return;
-    }
-
-    hasPersistedPsychologistReplyTipSeenRef.current = true;
-    accountTips.updateOnboardingTips.mutate(
-      {
-        has_seen_psychologist_reply_tip: true,
-      },
-      {
-        onError: () => {
-          hasPersistedPsychologistReplyTipSeenRef.current = false;
-        },
-      },
-    );
-  }, [
-    accountTips.onboardingTips.data?.has_seen_psychologist_reply_tip,
-    accountTips.updateOnboardingTips,
-    accountTips.userId,
-  ]);
-
-  useEffect(() => {
-    hasShownPsychologistReplyTipThisVisitRef.current = false;
-    hasPersistedPsychologistReplyTipSeenRef.current = false;
-
-    const frame = window.requestAnimationFrame(() => setShowPsychologistReplyTip(false));
-
-    if (!accountTips.userId) {
-      return () => window.cancelAnimationFrame(frame);
-    }
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [accountTips.userId]);
-
   const sharePost = async () => {
     if (!post || typeof window === "undefined") return;
 
@@ -349,11 +291,6 @@ export const usePostDetailController = ({
 
   const focusMainComposer = useCallback(() => {
     setReplyError(null);
-    if (isPsychologistUser && isPatientAuthoredPost) {
-      hasShownPsychologistReplyTipThisVisitRef.current = true;
-      persistPsychologistReplyTipSeen();
-      setShowPsychologistReplyTip(false);
-    }
     if (!conversion.isAuthenticated) {
       conversion.requestConversion("trigger_comentar", {
         intent: {
@@ -372,14 +309,7 @@ export const usePostDetailController = ({
     window.setTimeout(() => {
       focusComposerTextarea({ scrollDesktop: true });
     }, 0);
-  }, [
-    conversion,
-    focusComposerTextarea,
-    isPatientAuthoredPost,
-    isPsychologistUser,
-    persistPsychologistReplyTipSeen,
-    postId,
-  ]);
+  }, [conversion, focusComposerTextarea, postId]);
 
   const requestReplyComposerFocus = useCallback(
     (replyId: string) => {
@@ -510,23 +440,6 @@ export const usePostDetailController = ({
 
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [desktopReplyTargets, isMobile, requestCloseDesktopReplyTarget]);
-
-  useEffect(() => {
-    if (!canShowPsychologistReplyTip) return;
-    if (hasShownPsychologistReplyTipThisVisitRef.current) return;
-    if (!post) return;
-
-    const timeout = window.setTimeout(() => {
-      if (hasShownPsychologistReplyTipThisVisitRef.current) return;
-      if (!document.querySelector(PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR)) return;
-
-      hasShownPsychologistReplyTipThisVisitRef.current = true;
-      setShowPsychologistReplyTip(true);
-      persistPsychologistReplyTipSeen();
-    }, 700);
-
-    return () => window.clearTimeout(timeout);
-  }, [canShowPsychologistReplyTip, persistPsychologistReplyTipSeen, post]);
 
   const handleTogglePostSave = () => {
     if (!post) return;
@@ -660,12 +573,9 @@ export const usePostDetailController = ({
     setReportError,
     setReportTarget,
     setReplyError,
-    setShowPsychologistReplyTip,
     shareFeedback,
     sharePost,
     shareReply,
-    shouldExposePsychologistReplyTipTarget,
-    showPsychologistReplyTip,
     submitReply,
     uploadReplyMediaMutation,
     visibleInlineReplyTargets,

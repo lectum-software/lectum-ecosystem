@@ -45,7 +45,9 @@ import {
   COMMUNITY_FLOATING_CREATE_POST_CLASSNAME,
   CommunityPublishOnboarding,
 } from "../components/publish-onboarding";
+import { PsychologistReplyOnboarding } from "../components/reply-onboarding";
 import { useCommunityFeedScrollRestoration } from "../hooks/use-community-feed-scroll-restoration";
+import { usePsychologistReplyTip } from "../hooks/use-psychologist-reply-tip";
 import {
   type CommunityPostSelectedPeriods,
   type CommunityPostSort,
@@ -109,17 +111,19 @@ export const CommunityDetailLogic = ({
     () => flattenCommunityPostPages(postsQuery.data?.pages),
     [postsQuery.data?.pages],
   );
-  const posts = useMemo(
+  const sortedPosts = useMemo(
     () => sortCommunityPosts(loadedPosts, sort, sortPeriods),
     [loadedPosts, sort, sortPeriods],
   );
+  const replyTip = usePsychologistReplyTip(sortedPosts, JSON.stringify([slug, postsQueryParams]));
+  const posts = replyTip.posts;
   const detailError = detail.isError ? resolveCommunityDetailError(detail.error) : null;
   const postsError = postsQuery.isError ? resolveFeedError(postsQuery.error) : null;
   const membershipPending = followMutation.isPending || unfollowMutation.isPending;
   const following = followingOverride ?? Boolean(community?.following);
   const hasCommunitySearchTerm = communitySearchOpen && deferredCommunitySearch.length > 0;
   const isInitialPostsLoading =
-    (postsQuery.isLoading || postsQuery.isPending) && posts.length === 0;
+    ((postsQuery.isLoading || postsQuery.isPending) && posts.length === 0) || replyTip.isPreparing;
   const {
     fetchNextPage: fetchNextCommunityPostsPage,
     hasNextPage: hasNextCommunityPostsPage,
@@ -419,13 +423,15 @@ export const CommunityDetailLogic = ({
               />
             ) : null}
 
-            {posts.length > 0 ? (
+            {!isInitialPostsLoading && posts.length > 0 ? (
               <div className="grid gap-4">
                 {posts.map((post) => (
                   <PostCard
                     key={post.id}
                     onShare={sharePost}
                     post={post}
+                    replyTipTarget={post.id === replyTip.targetPostId}
+                    onOpen={post.id === replyTip.targetPostId ? replyTip.dismiss : undefined}
                     showCommunityHeader={false}
                   />
                 ))}
@@ -445,6 +451,14 @@ export const CommunityDetailLogic = ({
           </>
         ) : null}
       </section>
+
+      {replyTip.targetPostId &&
+      !suppressPublishOnboarding &&
+      !isInitialPostsLoading &&
+      !postsError &&
+      !createPostModalOpen ? (
+        <PsychologistReplyOnboarding onDismiss={replyTip.dismiss} />
+      ) : null}
 
       {community ? (
         <Link

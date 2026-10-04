@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { hasVisibleModalLayer } from "./modal-layer";
@@ -19,10 +19,13 @@ type CoachMarkPosition = {
 export type ActionableCoachMarkProps = {
   children: ReactNode;
   className?: string;
+  highlightShape?: "pill" | "area";
   onDismiss: () => void;
   placement?: CoachMarkPlacement;
+  requireFullyVisibleTarget?: boolean;
   targetSelector: string;
   title: string;
+  waitForOtherTips?: boolean;
 };
 
 const clampNumber = (value: number, min: number, max: number) =>
@@ -100,17 +103,22 @@ const getPosition = (target: HTMLElement, placement: CoachMarkPlacement): CoachM
 export const ActionableCoachMark = ({
   children,
   className,
+  highlightShape = "pill",
   onDismiss,
   placement = "auto",
+  requireFullyVisibleTarget = false,
   targetSelector,
   title,
+  waitForOtherTips = false,
 }: ActionableCoachMarkProps) => {
   const [position, setPosition] = useState<CoachMarkPosition | null>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
 
-    let timeout: number | null = null;
+    let frame = 0;
+    let observedTarget: HTMLElement | null = null;
 
     const updatePosition = () => {
       if (hasVisibleModalLayer()) {
@@ -119,26 +127,72 @@ export const ActionableCoachMark = ({
       }
 
       const target = findTarget(targetSelector);
-      setPosition(target ? getPosition(target, placement) : null);
+      if (target !== observedTarget) {
+        targetObserver.disconnect();
+        if (target) targetObserver.observe(target);
+        observedTarget = target;
+      }
+      const rect = target?.getBoundingClientRect();
+      const anotherTip =
+        waitForOtherTips &&
+        Array.from(
+          document.querySelectorAll(
+            "[data-actionable-coach-mark], [data-psychologists-coach-mark], [data-community-publish-onboarding]",
+          ),
+        ).some((element) => element !== layerRef.current);
+      const fullyVisible =
+        !requireFullyVisibleTarget ||
+        (rect && rect.top >= 16 && rect.bottom <= window.innerHeight - 88);
+      const next =
+        target && fullyVisible && !anotherTip && document.visibilityState === "visible"
+          ? getPosition(target, placement)
+          : null;
+      if (next && highlightShape === "area") next.ringStyle.borderRadius = "16px";
+      setPosition((current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next));
     };
+
+    const schedulePosition = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updatePosition);
+    };
+    const targetObserver = new ResizeObserver(schedulePosition);
+    const observer = new MutationObserver((records) => {
+      if (records.every((record) => layerRef.current?.contains(record.target))) return;
+      schedulePosition();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["aria-modal", "class", "style", "hidden", "open"],
+    });
 
     updatePosition();
-    timeout = window.setTimeout(updatePosition, 120);
+    const timeout = window.setTimeout(updatePosition, 120);
 
-    window.addEventListener("resize", updatePosition);
-    document.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", schedulePosition);
+    document.addEventListener("scroll", schedulePosition, true);
+    document.addEventListener("visibilitychange", schedulePosition);
 
     return () => {
-      if (timeout) window.clearTimeout(timeout);
-      window.removeEventListener("resize", updatePosition);
-      document.removeEventListener("scroll", updatePosition, true);
+      window.clearTimeout(timeout);
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      targetObserver.disconnect();
+      window.removeEventListener("resize", schedulePosition);
+      document.removeEventListener("scroll", schedulePosition, true);
+      document.removeEventListener("visibilitychange", schedulePosition);
     };
-  }, [placement, targetSelector]);
+  }, [highlightShape, placement, requireFullyVisibleTarget, targetSelector, waitForOtherTips]);
 
   if (!position || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="pointer-events-none fixed inset-0 z-[135]" data-actionable-coach-mark>
+    <div
+      className="pointer-events-none fixed inset-0 z-[135]"
+      data-actionable-coach-mark
+      ref={layerRef}
+    >
       <span
         aria-hidden="true"
         className="fixed border-2 border-primary/70 shadow-lectum-soft ring-4 ring-primary/25 ring-offset-2 ring-offset-background/80 motion-safe:animate-pulse"

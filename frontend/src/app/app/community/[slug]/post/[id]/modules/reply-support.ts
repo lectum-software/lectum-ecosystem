@@ -82,9 +82,6 @@ export const POST_REPLY_CANCEL_DRAG_THRESHOLD = 56;
 export const POST_REPLY_COMPOSER_INPUT_SELECTOR =
   "textarea, [role='textbox'][contenteditable='true'], [role='textbox'][contenteditable='plaintext-only']";
 
-export const PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR =
-  '[data-psychologist-tip-target="community-reply"]';
-
 export const FOCUSED_REPLY_HIGHLIGHT_CLASSES = ["lectum-reply-focus-pulse"] as const;
 
 export const FOCUSED_REPLY_HIGHLIGHT_DURATION_MS = 3200;
