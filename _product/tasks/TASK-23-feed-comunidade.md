@@ -1,5 +1,24 @@
 # TASK-23: Feed de comunidade
 
+## Complemento 2026-10-04 - fundo branco dos votos (0.1.560)
+
+Referencia: captura do feed enviada pelo usuario; Builder Quick Copy indisponivel.
+
+- [x] Trocar apenas o fundo neutro do grupo upvote/downvote para a superficie branca.
+- [x] Preservar borda, dimensoes, estados selecionados, hover, handlers e modo escuro.
+- [x] Manter a apresentacao inline sem fundo e compartilhar o padrao entre os cards.
+
+Frontend-only: bg-surface no grupo de CommunityActionBar, sem API, dados,
+dependencias ou envs novas. Teste SSR cobre os tres tamanhos e estados de voto.
+Publicacao somente em homologacao; producao continua dependendo de aprovacao.
+ADR-0196 atualizado.
+
+Validacao: 20 testes focados passaram e o frontend build foi aprovado. O componente
+real renderizado em Chrome (393 e 1440px) manteve fundo rgb(255,255,255) no claro,
+override original no escuro, borda de 1px e os estados aria-pressed dos dois votos.
+Frontend check completo e guards da raiz aprovados. A checagem global parou no
+Prisma por falta de DATABASE_URL local; nenhum codigo de backend foi alterado.
+
 ## Complemento 2026-10-04 - experimento visual de arvore (0.1.559)
 
 Pedido: experimentar o alinhamento do exemplo enviado pelo usuario, com curva

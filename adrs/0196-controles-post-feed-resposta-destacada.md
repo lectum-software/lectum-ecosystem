@@ -4,6 +4,15 @@
 
 Accepted
 
+## Complemento 2026-10-04 - grupo de votos branco (0.1.560)
+
+O fundo neutro do grupo upvote/downvote usa bg-surface (branco no tema claro),
+em vez de bg-surface-muted. Mantem borda, dimensoes, hover, cores de selecao,
+callbacks e override do tema escuro. A apresentacao inline continua transparente.
+Usa-se o token existente no componente compartilhado para evitar divergencia
+visual entre cards. Sem nova API de componente ou alteracao de backend.
+Reversao consiste em restaurar o token anterior, sem afetar o layout de arvore.
+
 ## Complemento 2026-10-04 - experimento de arvore no feed (0.1.559)
 
 Experimento visual autorizado somente em homologacao, preservando a producao em

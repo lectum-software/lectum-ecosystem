@@ -30,9 +30,34 @@ registerHooks({
   },
 });
 const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
+const { CommunityActionBar } = await import("./community-action-bar.tsx");
 const { FeedThreadRoot, FeedThreadReply } = await import(
   "../../app/app/community/[slug]/components/post-card-thread.tsx"
 );
+
+test("vote clusters use the white surface while preserving selection and dark mode", () => {
+  for (const size of ["xs", "sm", "md"]) {
+    for (const currentVote of [null, 1, -1]) {
+      const html = renderToStaticMarkup(
+        createElement(CommunityActionBar, {
+          currentVote,
+          onVote: () => {},
+          size,
+          upvotesCount: 0,
+        }),
+      );
+      assert.match(html, /border-border bg-surface p-px dark:border-border dark:bg-surface-muted/);
+      assert.doesNotMatch(html, /border-border bg-surface-muted p-px/);
+      assert.equal((html.match(/aria-pressed="true"/g) ?? []).length, currentVote === null ? 0 : 1);
+      if (currentVote === 1) assert.match(html, /bg-success\/10 text-success/);
+      if (currentVote === -1) assert.match(html, /bg-danger\/10 text-danger/);
+    }
+  }
+  const inline = renderToStaticMarkup(
+    createElement(CommunityActionBar, { upvotesCount: 0, votePresentation: "inline" }),
+  );
+  assert.doesNotMatch(inline, /bg-surface p-px/);
+});
 
 test("more replies stays hidden without another professional response, regardless of patient comment count", () => {
   const post = {
