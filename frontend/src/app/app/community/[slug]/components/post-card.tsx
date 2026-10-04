@@ -122,6 +122,7 @@ export const ProfessionalReplyMedia = ({
   return (
     <CommunityMediaBlock
       alt="Mídia da resposta profissional"
+      className={reply.media_type === "video" ? "md:max-w-[300px]" : undefined}
       analyticsTarget={
         reply.media_type === "video" ? { targetId: reply.id, targetType: "reply" } : undefined
       }
@@ -185,22 +186,24 @@ export const ProfessionalReplyPreview = ({
   ) : null;
 
   return (
-    <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-border bg-surface-muted p-3 dark:border-primary/20 dark:bg-primary/5">
+    <div
+      className="relative -mx-4 grid min-w-0 cursor-pointer bg-surface-muted px-4 py-3 dark:bg-primary/5"
+      data-feed-professional-reply
+    >
       <Link
         aria-label={`Abrir post ${post.title}`}
-        className="absolute inset-0 z-0 cursor-pointer rounded-2xl"
+        className="absolute inset-0 z-0 cursor-pointer"
         href={postHref}
       />
-      <div className="pointer-events-none flex justify-center pt-1" aria-hidden="true">
-        <span className="h-full min-h-24 w-px rounded-full bg-surface-muted dark:bg-primary/25" />
-      </div>
       <div className="pointer-events-none relative z-10 min-w-0">
-        <div className="flex min-w-0 items-start gap-2.5">
+        <p className="mb-3 text-[11px] font-semibold tracking-normal text-primary">
+          RESPOSTA PROFISSIONAL
+        </p>
+        <div className="flex min-w-0 items-start gap-3" data-feed-reply-author>
           <AuthorAvatar
             author={reply.author}
             href={profileHref}
             onClick={handleProfileNavigationClick}
-            size="lg"
           />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <AuthorIdentityLine
@@ -496,7 +499,7 @@ export const PostCard = ({
 
   return (
     <article
-      className="cursor-pointer overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-lectum-soft transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
+      className="min-w-0 cursor-pointer overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-lectum-soft transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
       data-community-feed-post-id={post.id}
       onClick={handleCardClick}
       onClickCapture={handlePostNavigationCapture}
@@ -528,7 +531,7 @@ export const PostCard = ({
       ) : null}
 
       <div data-psychologist-tip-target={replyTipTarget ? "community-reply-post" : undefined}>
-        <div className="mb-3 flex items-start gap-3">
+        <div className="mb-3 flex items-start gap-3" data-feed-post-author>
           <AuthorAvatar
             anonymous={isAnonymousPatient}
             author={post.author}
@@ -589,7 +592,7 @@ export const PostCard = ({
       </div>
 
       <CommunityActionBar
-        className="mt-4 border-border border-t pt-3 dark:border-border"
+        className="mt-4 max-[380px]:flex-wrap max-[380px]:gap-y-1.5 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-none"
         comments={{
           count: post.replies_count,
           href: postDetailHref,

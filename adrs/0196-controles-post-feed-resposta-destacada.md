@@ -4,6 +4,22 @@
 
 Accepted
 
+## Ajuste 2026-10-04 - resposta alinhada sem arvore (0.1.563)
+
+Novo pedido explicito apos a reversao: remover divisoria dos controles e tornar
+grupo de votos transparente. O preview profissional perde a coluna decorativa e
+o recuo, mas conserva o fundo suave como faixa. Foto de 36px e gap de 12px iguais
+ao autor do post alinham avatar e nome, com RESPOSTA PROFISSIONAL em azul acima.
+O player existente continua variant reply, portanto 9:16, fit contain e mesmos
+autoplay/volume. Largura mobile preenche a area util e limite desktop sobe a 300px.
+
+MoreProfessionalReplies conserva elegibilidade e destino; limita autores reais
+distintos a dois e acrescenta Plus Lucide em circulo azul no fim. Com apenas um
+outro autor mostra uma foto e Plus, sem inventar ou repetir pessoas. Fonte system-ui
+semibold fica restrita ao link. Sem nova fonte remota ou alteracao de API.
+O grid do feed e a quebra dos controles em ate 380px evitam os problemas de largura
+da versao restaurada. Nenhuma arvore de comentarios foi reintroduzida.
+
 ## Reversao 2026-10-04 - layout anterior aprovado (0.1.562)
 
 A pedido explicito do usuario, o experimento 0.1.559-0.1.561 foi revertido.

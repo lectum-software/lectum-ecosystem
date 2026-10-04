@@ -1,5 +1,31 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-04 - resposta profissional alinhada (0.1.563)
+
+Referencia: duas capturas e seis ajustes explicitos do usuario, sem retomar arvore.
+Builder indisponivel; preservar os demais controles, navegacao, autoplay e volume.
+
+- [x] Remover divisoria entre descricao e controles do post.
+- [x] Grupo de votos transparente, mantendo borda e feedback de selecao.
+- [x] Alinhar foto/nome da resposta com foto/nome do paciente, retirando recuo.
+- [x] Manter fundo suave em faixa, video 9:16 com maior largura e limite desktop de 300px.
+- [x] Adicionar RESPOSTA PROFISSIONAL em azul antes da identificacao do psicologo.
+- [x] Ver mais respostas semibold com fonte system-ui restrita ao link.
+- [x] Mostrar ate duas fotos reais distintas e circulo azul com Plus por ultimo.
+- [x] Manter CTA oculto quando nao houver outra resposta profissional; nao duplicar autor quando houver so um.
+- [x] Evitar overflow/controles sobrepostos em 320px com grid de uma coluna e quebra responsiva.
+
+Frontend-only, sem API, dados, dependencias ou envs. Publicar apenas homologacao.
+ADR-0196 atualizado; testes SSR e de composicao cobrem os seis criterios.
+
+Validacao visual: feed e comunidade com dados reais de homologacao em Chrome a
+320/390/1440px, sem overflow/sobreposicao. Posicoes de avatar/nome coincidem, video
+preserva 9:16, link tem font-weight 600 e system-ui, dois autores disponiveis mais
+Plus por ultimo. Navegacao do CTA aprovada; autoplay mudo observado; tema escuro
+conferido a 390px. Build otimizado final aprovado, com preview local encerrado.
+Check completo do frontend aprovado apos regenerar os tipos temporarios de Next;
+baseline da raiz parou apenas no Prisma por DATABASE_URL local ausente.
+
 ## Reversao 2026-10-04 - restaurar layout anterior (0.1.562)
 
 Usuario rejeitou o experimento apos a publicacao e pediu retorno ao layout anterior.
