@@ -446,7 +446,7 @@ export const PostCard = ({
         </div>
 
         <CommunityActionBar
-          className="mt-3 pl-12 max-[380px]:flex-wrap max-[380px]:gap-y-1.5 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-none"
+          className="mt-3 pl-12 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-wrap max-[380px]:[&>div:first-child]:gap-y-1.5"
           comments={{
             count: post.replies_count,
             href: postDetailHref,
@@ -455,6 +455,7 @@ export const PostCard = ({
           currentVote={voteSnapshot.currentVote}
           disabled={voteMutation.isPending}
           onVote={handleVote}
+          secondaryActionsPlacement="inline"
           save={{
             active: saveSnapshot.saved,
             count: saveSnapshot.saves,

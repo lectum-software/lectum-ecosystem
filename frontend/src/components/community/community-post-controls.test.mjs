@@ -35,7 +35,7 @@ const { FeedThreadRoot, FeedThreadReply } = await import(
   "../../app/app/community/[slug]/components/post-card-thread.tsx"
 );
 
-test("vote clusters use the white surface while preserving selection and dark mode", () => {
+test("vote clusters reveal the surrounding surface while preserving selection", () => {
   for (const size of ["xs", "sm", "md"]) {
     for (const currentVote of [null, 1, -1]) {
       const html = renderToStaticMarkup(
@@ -46,8 +46,8 @@ test("vote clusters use the white surface while preserving selection and dark mo
           upvotesCount: 0,
         }),
       );
-      assert.match(html, /border-border bg-surface p-px dark:border-border dark:bg-surface-muted/);
-      assert.doesNotMatch(html, /border-border bg-surface-muted p-px/);
+      assert.match(html, /border-border bg-transparent p-px dark:border-border/);
+      assert.doesNotMatch(html, /bg-surface(?:-muted)? p-px|dark:bg-surface/);
       assert.equal((html.match(/aria-pressed="true"/g) ?? []).length, currentVote === null ? 0 : 1);
       if (currentVote === 1) assert.match(html, /bg-success\/10 text-success/);
       if (currentVote === -1) assert.match(html, /bg-danger\/10 text-danger/);
@@ -137,8 +137,8 @@ test("feed keeps one aligned post action bar before media/reply, without the div
   assert.equal(card.match(/<CommunityActionBar\b/g)?.length, 1);
   const bar = card.slice(actions, media);
   assert.match(bar, /className="mt-3 pl-12 /);
-  assert.match(bar, /max-\[380px\]:flex-wrap/);
-  assert.match(bar, /max-\[380px\]:\[&>div:first-child\]:flex-none/);
+  assert.match(bar, /max-\[380px\]:\[&>div:first-child\]:flex-wrap/);
+  assert.match(bar, /secondaryActionsPlacement="inline"/);
   const feedView = readFileSync(
     new URL("../../app/app/community/[slug]/views/community-feed.tsx", import.meta.url),
     "utf8",

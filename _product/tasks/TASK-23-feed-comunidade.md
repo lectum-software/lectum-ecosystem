@@ -1,5 +1,27 @@
 # TASK-23: Feed de comunidade
 
+## Complemento 2026-10-04 - votos acompanham a superficie (0.1.561)
+
+Esclarecimento do usuario: o fundo do controle deve ter a mesma aparencia da area
+em que esta inserido, nao um branco fixo. Substitui o ajuste 0.1.560 por transparencia.
+
+- [x] Grupo de votos sem preenchimento proprio em ambos os temas.
+- [x] Preservar borda, tamanhos, hover, feedback selecionado e logica dos votos.
+- [x] Mesma regra de fundo para os componentes compartilhados.
+- [x] Agrupar salvar e compartilhar ao lado de comentar no feed/comunidade, usando secondaryActionsPlacement inline existente.
+- [x] Preservar quebra responsiva dos controles em telas estreitas, sem alterar handlers.
+
+Frontend-only, sem API, dados, dependencias ou envs. Somente homologacao.
+Teste SSR atualizado para impedir a reintroducao de um fundo fixo claro/escuro.
+ADR-0196 atualizado.
+
+Validacao: 20 testes focados e build otimizado do frontend aprovados. Componente
+real em Chrome validado a 320/393/1440px nos temas claro/escuro: fundo transparente,
+borda e estados preservados, salvar/compartilhar junto de comentar e nenhuma
+sobreposicao ou overflow. Em 320px os controles quebram linha com espacamento.
+Check completo do frontend aprovado dentro de pnpm check. Baseline da raiz parou
+no Prisma do backend por DATABASE_URL local ausente; nenhum codigo backend mudou.
+
 ## Complemento 2026-10-04 - fundo branco dos votos (0.1.560)
 
 Referencia: captura do feed enviada pelo usuario; Builder Quick Copy indisponivel.

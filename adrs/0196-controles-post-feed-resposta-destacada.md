@@ -4,6 +4,19 @@
 
 Accepted
 
+## Complemento 2026-10-04 - votos sem preenchimento proprio (0.1.561)
+
+O usuario esclareceu que deseja a mesma aparencia do fundo ao redor, e nao branco
+fixo. O grupo usa bg-transparent e nao tem override de fundo no tema escuro.
+Assim acompanha tambem a superficie do card durante hover. Esta decisao substitui
+o token opaco de 0.1.560. Borda, dimensoes, preenchimento de selecao, hover dos
+botoes e callbacks permanecem intactos. Nenhuma alteracao de backend.
+
+No PostCard do feed/comunidade, salvar e compartilhar passam ao mesmo grupo de
+comentar usando secondaryActionsPlacement="inline", ja suportado pelo componente.
+Em telas ate 380px, o grupo pode quebrar linha para evitar sobreposicao. Os demais
+usos da barra mantem seu posicionamento atual.
+
 ## Complemento 2026-10-04 - grupo de votos branco (0.1.560)
 
 O fundo neutro do grupo upvote/downvote usa bg-surface (branco no tema claro),
