@@ -1,5 +1,41 @@
 # TASK-23: Feed de comunidade
 
+## Complemento 2026-10-04 - experimento visual de arvore (0.1.559)
+
+Pedido: experimentar o alinhamento do exemplo enviado pelo usuario, com curva
+entre os avatares e sem fundo destacado da resposta nem divisoria dos controles.
+Referencia: capturas do usuario e arvore existente no detalhe do post; Builder
+Quick Copy indisponivel neste ambiente. Mobile-first, validacao em 390px e desktop.
+
+- [x] Alinhar nome, titulo, descricao e controles; reservar a coluna do avatar.
+- [x] Reutilizar a curva, cor e espessura da arvore existente sem mudar o detalhe.
+- [x] Exibir a conexao apenas quando houver resposta destacada de psicologo.
+- [x] Remover fundo/borda da resposta e a linha acima dos controles do post.
+- [x] Preservar largura da midia sem segundo recuo, player, CTA e outras respostas.
+- [x] Preservar handlers, entidades-alvo e memoria de scroll.
+- [x] Isolar o ajuste em homologacao; producao depende de aprovacao posterior.
+- [x] Testes focados de estrutura/contratos e frontend check aprovados.
+- [x] Build e verificacao visual mobile/desktop com dados reais.
+
+Sem mudancas de API, dados, dependencias ou envs de deploy. ADR-0196 atualizado.
+Baseline para comparacao/reversao: homolog 292a3f49, versao 0.1.558. Reverter
+somente o commit deste experimento, sem remover funcionalidades anteriores.
+
+Em ate 380px, os grupos de acoes podem ocupar duas linhas sem reduzir os alvos
+de toque. A coluna do feed usa minmax(0,1fr) para nao transbordar no viewport de
+320px. Os demais tamanhos mantem a barra em uma linha.
+
+`pnpm check` passou pelos guards e frontend, mas parou na geracao Prisma pela
+ausencia local de DATABASE_URL; nao houve alteracao de backend ou banco.
+
+Validacao: frontend check e build aprovados; 26 testes focados de controles,
+arvore e autoplay passaram, com lint dos arquivos alterados. Browser Chrome real
+em 320/390/1440px confirmou alinhamento, conexao, ausencia de fundo/divisoria,
+controles sem sobreposicao e video com autoplay mudo. Comunidade tambem conferida
+em 390px. A aplicacao local recebeu respostas reais da API de homologacao por
+proxy temporario somente GET, sem fixtures, respostas substituidas ou gravacoes.
+O frontend publicado de homologacao exige login Vercel para acesso automatizado.
+
 ## Complemento 2026-10-04 - outras respostas profissionais (0.1.558)
 
 Referencia: imagens e orientacao do usuario; pequeno grupo de avatares e texto

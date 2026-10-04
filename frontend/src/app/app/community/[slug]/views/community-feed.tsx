@@ -218,7 +218,7 @@ export const CommunityFeedLogic = ({
       navigationTheme="solidWhite"
       showHeader
     >
-      <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-[760px]">
+      <section className="mx-auto grid w-full max-w-[430px] grid-cols-1 gap-4 sm:max-w-2xl lg:max-w-[760px]">
         <header
           className={cn(
             "sticky top-0 z-30 -mx-5 px-5 py-2.5 transition-[transform,opacity] duration-300 ease-out",

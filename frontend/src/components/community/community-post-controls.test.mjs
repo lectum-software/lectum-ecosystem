@@ -30,6 +30,9 @@ registerHooks({
   },
 });
 const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
+const { FeedThreadRoot, FeedThreadReply } = await import(
+  "../../app/app/community/[slug]/components/post-card-thread.tsx"
+);
 
 test("more replies stays hidden without another professional response, regardless of patient comment count", () => {
   const post = {
@@ -92,7 +95,7 @@ test("more replies renders one discreet link with at most three distinct avatars
   );
 });
 
-test("feed keeps one post action bar after description and before media/reply, with its existing divider", () => {
+test("feed keeps one aligned post action bar before media/reply, without the divider", () => {
   const source = readFileSync(
     new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
     "utf8",
@@ -108,12 +111,62 @@ test("feed keeps one post action bar after description and before media/reply, w
   assert.match(card.slice(moreReplies), /href=\{postDetailHref\} post=\{post\}/);
   assert.equal(card.match(/<CommunityActionBar\b/g)?.length, 1);
   const bar = card.slice(actions, media);
-  assert.match(bar, /className="mt-4 border-border border-t pt-3 dark:border-border"/);
+  assert.match(bar, /className="mt-3 pl-12 /);
+  assert.match(bar, /max-\[380px\]:flex-wrap/);
+  assert.match(bar, /max-\[380px\]:\[&>div:first-child\]:flex-none/);
+  const feedView = readFileSync(
+    new URL("../../app/app/community/[slug]/views/community-feed.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(feedView, /max-w-\[430px\] grid-cols-1/);
+  assert.doesNotMatch(bar, /border-t/);
+  assert.match(card, /<FeedThreadRoot connected=\{hasHighlightedReply\}>/);
+  assert.match(card, /hasHighlightedReply \? \(\s*<FeedThreadReply>/);
+  assert.match(card, /className="pl-12"\s+data-psychologist-tip-target/);
   assert.match(bar, /count: post.replies_count/);
   assert.match(bar, /href: postDetailHref/);
   assert.match(bar, /onVote=\{handleVote\}/);
   assert.match(bar, /onClick: handleToggleSave/);
   assert.match(bar, /onClick: \(\) => onShare\(post\)/);
+});
+
+test("feed thread uses the existing reply-tree curve and connects only highlighted replies", () => {
+  const root = createElement(FeedThreadRoot, { connected: true }, createElement("p", null, "Post"));
+  const reply = createElement(FeedThreadReply, null, createElement("p", null, "Resposta"));
+  const html = renderToStaticMarkup(createElement("article", null, root, reply));
+  assert.match(html, /data-feed-thread-stem/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.match(html, /top-11 bottom-0 left-\[1.125rem\]/);
+  assert.match(html, /stroke-width="1.5"/);
+  assert.match(html, /vector-effect="non-scaling-stroke"/);
+  const curve = 'd="M0 0 V10 C0 14.4 3.6 18 8 18 H22"';
+  assert.ok(html.includes(curve));
+  const existingTree = readFileSync(
+    new URL("../../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(existingTree.includes(curve));
+  const disconnected = renderToStaticMarkup(
+    createElement(FeedThreadRoot, { connected: false }, "Post"),
+  );
+  assert.doesNotMatch(disconnected, /data-feed-thread-stem|svg|pb-4/);
+});
+
+test("feed highlight loses its panel and keeps video width, actions and autoplay", () => {
+  const source = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/components/post-card-reply-preview.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /bg-surface-muted|bg-primary|border-border|grid-cols-\[18px/);
+  assert.match(source, /className="mt-2 pl-12"/);
+  assert.match(source, /className="pointer-events-auto mt-3"/);
+  assert.match(source, /enableFeedAutoplay=\{enableFeedAutoplay\}/);
+  assert.match(source, /footer=\{replyWhatsappCta\}/);
+  assert.match(source, /overlayAction=\{overlayAction\}/);
+  assert.match(source, /rememberCommunityFeedScrollPosition\(post.id\)/);
 });
 
 // Real component, RHF/schema and handlers. SSR does not execute browser Tab/Space/Enter

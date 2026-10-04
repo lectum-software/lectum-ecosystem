@@ -4,6 +4,31 @@
 
 Accepted
 
+## Complemento 2026-10-04 - experimento de arvore no feed (0.1.559)
+
+Experimento visual autorizado somente em homologacao, preservando a producao em
+0.1.558 ate nova aprovacao. O PostCard usado pelo feed geral e pela comunidade
+alinha nome, titulo, descricao e controles na mesma coluna, com avatar no recuo
+esquerdo. Quando existe resposta profissional destacada, uma haste e a mesma
+curva/cor/espessura da arvore do detalhe ligam os avatares. Sem resposta, nao ha linha.
+
+Retiram-se apenas a divisoria acima dos controles e o painel colorido/borda da
+resposta. A divisoria do cabecalho da comunidade permanece. Texto da resposta
+acompanha seu autor, mas a midia nao recebe um segundo recuo, preservando largura
+no mobile. Player, autoplay, volume, CTA WhatsApp, navegacao, contadores e resumo
+de outras respostas continuam usando os componentes/contratos existentes.
+Em viewports de ate 380px, os grupos de acoes podem ocupar duas linhas, sem
+reduzir alvos de toque nem sobrepor os botoes; o alinhamento inicial e preservado.
+
+ProfessionalReplyPreview e sua midia foram extraidos do PostCard para manter o
+arquivo de composicao abaixo do limite. FeedThreadRoot/FeedThreadReply isolam
+somente a geometria decorativa, sem estado ou nova regra de dominio. O detalhe,
+salvos, minhas publicacoes e perfil profissional nao mudam nesta experiencia.
+
+Sem backend, migration, dependencia ou configuracao de deploy nova. Um commit
+isolado em homolog permite reverter exclusivamente este layout e suas extracoes,
+preservando as funcionalidades de 0.1.558. Nao promover automaticamente para main.
+
 ## Complemento 2026-10-04 - acesso discreto a outras respostas
 
 Abaixo da resposta destacada, o PostCard exibe um unico link cinza com ate tres
