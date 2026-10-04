@@ -83,7 +83,7 @@ const voteClusterClassName = (size: CommunityActionSize, presentation: VotePrese
   }
 
   return cn(
-    "inline-flex shrink-0 items-center overflow-visible rounded-full border border-border bg-surface-muted p-px dark:border-border dark:bg-surface-muted",
+    "inline-flex shrink-0 items-center overflow-visible rounded-full border border-border bg-transparent p-px dark:border-border",
     size === "xs" ? "min-h-8" : size === "md" ? "min-h-10" : "min-h-9",
   );
 };

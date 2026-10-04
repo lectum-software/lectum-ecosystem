@@ -30,6 +30,21 @@ registerHooks({
   },
 });
 const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
+const { CommunityActionBar } = await import("./community-action-bar.tsx");
+
+test("vote cluster has no independent fill and keeps selection feedback", () => {
+  for (const size of ["xs", "sm", "md"]) {
+    for (const currentVote of [null, 1, -1]) {
+      const html = renderToStaticMarkup(
+        createElement(CommunityActionBar, { size, currentVote, upvotesCount: 0, onVote: () => {} }),
+      );
+      assert.match(html, /border-border bg-transparent p-px dark:border-border/);
+      assert.doesNotMatch(html, /dark:bg-surface/);
+      if (currentVote === 1) assert.match(html, /bg-success\/10/);
+      if (currentVote === -1) assert.match(html, /bg-danger\/10/);
+    }
+  }
+});
 
 test("more replies stays hidden without another professional response, regardless of patient comment count", () => {
   const post = {
@@ -50,7 +65,7 @@ test("more replies stays hidden without another professional response, regardles
   }
 });
 
-test("more replies renders one discreet link with at most three distinct avatars", () => {
+test("more replies renders up to two distinct authors followed by a black plus circle", () => {
   const author = (id) => ({ id, name: `Psi ${id}`, avatar: null });
   const post = {
     author: { role: "paciente" },
@@ -71,7 +86,12 @@ test("more replies renders one discreet link with at most three distinct avatars
   assert.match(html, /href="\/app\/posts\/post"/);
   assert.match(html, /Ver mais respostas/);
   assert.match(html, /text-muted/);
-  assert.doesNotMatch(html, /text-primary|border-t/);
+  assert.match(html, /font-\[family-name:system-ui,sans-serif\].*font-semibold/);
+  assert.match(html, /bg-media-background text-media-foreground/);
+  assert.match(html, /lucide-plus/);
+  assert.equal((html.match(/text-\[10px\]/g) ?? []).length, 2);
+  assert.ok(html.indexOf("lucide-plus") > html.lastIndexOf("text-[10px]"));
+  assert.doesNotMatch(html, /text-primary(?:\s|")|border-t/);
   assert.equal(
     renderToStaticMarkup(
       createElement(MoreProfessionalReplies, {
@@ -92,7 +112,23 @@ test("more replies renders one discreet link with at most three distinct avatars
   );
 });
 
-test("feed keeps one post action bar after description and before media/reply, with its existing divider", () => {
+test("a single other professional shows one real avatar and plus, without duplication", () => {
+  const html = renderToStaticMarkup(
+    createElement(MoreProfessionalReplies, {
+      href: "/post",
+      post: {
+        author: { role: "paciente" },
+        highlighted_professional_reply: { id: "highlight" },
+        other_professional_reply_authors: [{ id: "one", name: "Ana Lima", avatar: null }],
+      },
+    }),
+  );
+  assert.equal((html.match(/h-7 w-7/g) ?? []).length, 2);
+  assert.equal((html.match(/lucide-plus/g) ?? []).length, 1);
+  assert.match(html, /AL/);
+});
+
+test("feed keeps one post action bar after description and before media/reply, without a divider", () => {
   const source = readFileSync(
     new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
     "utf8",
@@ -108,12 +144,42 @@ test("feed keeps one post action bar after description and before media/reply, w
   assert.match(card.slice(moreReplies), /href=\{postDetailHref\} post=\{post\}/);
   assert.equal(card.match(/<CommunityActionBar\b/g)?.length, 1);
   const bar = card.slice(actions, media);
-  assert.match(bar, /className="mt-4 border-border border-t pt-3 dark:border-border"/);
+  assert.match(bar, /className="mt-4 /);
+  assert.doesNotMatch(bar, /border-t|pt-3/);
+  assert.match(bar, /max-\[380px\]:flex-wrap/);
   assert.match(bar, /count: post.replies_count/);
   assert.match(bar, /href: postDetailHref/);
   assert.match(bar, /onVote=\{handleVote\}/);
   assert.match(bar, /onClick: handleToggleSave/);
   assert.match(bar, /onClick: \(\) => onShare\(post\)/);
+});
+
+test("professional reply removes indentation, labels the author and preserves video behavior", () => {
+  const source = readFileSync(
+    new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
+    "utf8",
+  );
+  const preview = source.slice(
+    source.indexOf("export const ProfessionalReplyPreview"),
+    source.indexOf("export const PostCard ="),
+  );
+  assert.match(
+    preview,
+    /-mx-2.*rounded-2xl bg-surface-muted px-2 py-3 ring-1 ring-border ring-inset/,
+  );
+  assert.doesNotMatch(preview, /-mx-4/);
+  assert.match(preview, /absolute inset-0 z-0 cursor-pointer rounded-2xl/);
+  assert.match(preview, /text-primary[\s\S]*RESPOSTA PROFISSIONAL/);
+  assert.ok(preview.indexOf("RESPOSTA PROFISSIONAL") < preview.indexOf("<AuthorAvatar"));
+  assert.match(preview, /gap-3" data-feed-reply-author/);
+  assert.doesNotMatch(preview, /grid-cols-\[18px|size="lg"|data-feed-thread/);
+  assert.match(preview, /enableFeedAutoplay=\{enableFeedAutoplay\}/);
+  const media = source.slice(
+    source.indexOf("export const ProfessionalReplyMedia"),
+    source.indexOf("export const ProfessionalReplyPreview"),
+  );
+  assert.match(media, /md:max-w-\[300px\]/);
+  assert.match(media, /variant="reply"/);
 });
 
 // Real component, RHF/schema and handlers. SSR does not execute browser Tab/Space/Enter
