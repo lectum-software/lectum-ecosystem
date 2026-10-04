@@ -26,6 +26,7 @@ import {
 } from "@/components/community/community-whatsapp-cta";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
+import { MoreProfessionalReplies } from "@/components/community/more-professional-replies";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import {
@@ -623,6 +624,7 @@ export const PostCard = ({
           overlayAction={highlightedReplyOverlayAction}
           post={post}
         />
+        <MoreProfessionalReplies href={postDetailHref} post={post} />
         {hasPostMedia ? null : authorWhatsappCta}
       </div>
       {lectumDownloadDialog}

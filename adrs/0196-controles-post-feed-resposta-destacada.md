@@ -4,6 +4,25 @@
 
 Accepted
 
+## Complemento 2026-10-04 - acesso discreto a outras respostas
+
+Abaixo da resposta destacada, o PostCard exibe um unico link cinza com ate tres
+avatares sobrepostos: "Ver mais respostas". Sem nova divisoria, fundo ou controles
+de resposta. O link abre o post pela navegacao existente, com memoria de scroll.
+
+Feed geral e comunidade recebem `other_professional_reply_authors`, campo aditivo
+opcional com ID, nome publico e avatar. Uma consulta em lote por pagina seleciona
+respostas diretas de psicologos nao excluidos, excluindo respostas removidas e o
+ID da resposta destacada; deduplica autores e limita o payload a tres por post.
+Nao exige midia ou selo, pois respostas de texto tambem sao respostas profissionais.
+Comentarios de pacientes e comentarios aninhados nao acionam o link. Outra resposta
+do autor destacado e elegivel, mas seu avatar aparece uma unica vez.
+
+Frontend oculta o link quando o campo nao existe ou esta vazio. Nao infere outras
+respostas a partir de replies_count. Isso permite rollout independente de frontend
+e backend. Sem migration, dependencias, envs novas ou alteracao do ranking. Rollback:
+reverter a UI; o campo extra da API permanece inofensivo para clientes anteriores.
+
 ## Complemento 2026-10-04 - barra logo abaixo da descricao
 
 No PostCard compartilhado, a barra unica do post passa a vir imediatamente depois
