@@ -10,6 +10,7 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useState,
 } from "react";
 import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { CommunityPost } from "@/api/generator/types/community";
@@ -58,8 +59,6 @@ import {
   type VoteSnapshot,
 } from "../modules/feed-support";
 import { AuthorAvatar, AuthorIdentityLine } from "./feed-controls";
-import { ProfessionalReplyPreview } from "./post-card-reply-preview";
-import { FeedThreadReply, FeedThreadRoot } from "./post-card-thread";
 
 export const PostMedia = ({
   enableFeedAutoplay = false,
@@ -107,6 +106,157 @@ export const PostMedia = ({
   );
 };
 
+export const ProfessionalReplyMedia = ({
+  enableFeedAutoplay = false,
+  footer,
+  overlayAction,
+  reply,
+}: {
+  enableFeedAutoplay?: boolean;
+  footer?: ReactNode;
+  overlayAction?: CommunityMediaOverlayAction;
+  reply: NonNullable<CommunityPost["highlighted_professional_reply"]>;
+}) => {
+  if (!reply.media_url) return null;
+
+  return (
+    <CommunityMediaBlock
+      alt="Mídia da resposta profissional"
+      analyticsTarget={
+        reply.media_type === "video" ? { targetId: reply.id, targetType: "reply" } : undefined
+      }
+      enableFeedAutoplay={enableFeedAutoplay}
+      footer={footer}
+      mediaType={reply.media_type}
+      mediaUrl={reply.media_url}
+      overlayAction={overlayAction}
+      roundedClassName="rounded-[18px]"
+      thumbnailUrl={reply.thumbnail_url}
+      variant="reply"
+    />
+  );
+};
+
+export const ProfessionalReplyPreview = ({
+  enableFeedAutoplay = false,
+  overlayAction,
+  post,
+}: {
+  enableFeedAutoplay?: boolean;
+  overlayAction?: CommunityMediaOverlayAction;
+  post: CommunityPost;
+}) => {
+  const reply = post.highlighted_professional_reply;
+  const [replyExpanded, setReplyExpanded] = useState(false);
+  const postHref = communityPostDetailHref(post);
+  const isPatientAuthoredPost = post.author.role === "paciente";
+
+  if (!reply || !isPatientAuthoredPost) return null;
+
+  const profileHref = `/psicologos/${reply.author.id}`;
+  const handleProfileNavigationClick = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation();
+
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    rememberCommunityFeedScrollPosition(post.id);
+  };
+  const replyWhatsappCta = reply.author.whatsapp_url ? (
+    <CommunityWhatsAppCta
+      attached={Boolean(reply.media_url)}
+      psychologist={toCommunityWhatsAppIdentity(reply.author)}
+      stopPropagation
+      trackingContext={{
+        pageKind: "community_post",
+        path: postHref,
+        targetId: reply.id,
+        targetType: "post_reply",
+      }}
+    />
+  ) : null;
+
+  return (
+    <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-border bg-surface-muted p-3 dark:border-primary/20 dark:bg-primary/5">
+      <Link
+        aria-label={`Abrir post ${post.title}`}
+        className="absolute inset-0 z-0 cursor-pointer rounded-2xl"
+        href={postHref}
+      />
+      <div className="pointer-events-none flex justify-center pt-1" aria-hidden="true">
+        <span className="h-full min-h-24 w-px rounded-full bg-surface-muted dark:bg-primary/25" />
+      </div>
+      <div className="pointer-events-none relative z-10 min-w-0">
+        <div className="flex min-w-0 items-start gap-2.5">
+          <AuthorAvatar
+            author={reply.author}
+            href={profileHref}
+            onClick={handleProfileNavigationClick}
+            size="lg"
+          />
+          <div className="grid min-w-0 flex-1 gap-0.5">
+            <AuthorIdentityLine
+              href={profileHref}
+              name={getCommunityAuthorDisplayName(reply.author)}
+              onClick={handleProfileNavigationClick}
+              verified={reply.author.verified}
+            />
+            <Link
+              className="pointer-events-auto min-w-0 cursor-pointer text-[11px] font-semibold leading-tight text-muted"
+              href={profileHref}
+              onClick={handleProfileNavigationClick}
+            >
+              <MentorAuthorMeta
+                authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
+                community={post.community}
+                badge={reply.author.featured_badge ?? post.featured_badge}
+                typeLabel={reply.author.type_label}
+                date={formatPostTimeLabel(reply.created_at, reply.edited_at)}
+              >
+                {reply.author.type_label} <span aria-hidden="true">•</span>{" "}
+                <time dateTime={reply.created_at}>
+                  {formatPostTimeLabel(reply.created_at, reply.edited_at)}
+                </time>
+              </MentorAuthorMeta>
+            </Link>
+          </div>
+        </div>
+        <div className="mt-2">
+          <InlineExpandableText
+            className="text-sm leading-6 text-muted dark:text-muted"
+            expanded={replyExpanded}
+            onToggle={(event) => {
+              event.stopPropagation();
+              setReplyExpanded((current) => !current);
+            }}
+            text={reply.content}
+          />
+        </div>
+        {reply.media_url ? (
+          <div className="pointer-events-auto mt-3">
+            <ProfessionalReplyMedia
+              enableFeedAutoplay={enableFeedAutoplay}
+              footer={replyWhatsappCta}
+              overlayAction={overlayAction}
+              reply={reply}
+            />
+          </div>
+        ) : replyWhatsappCta ? (
+          <div className="pointer-events-auto mt-3">{replyWhatsappCta}</div>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
 export const PostCard = ({
   onOpen,
   onShare,
@@ -148,7 +298,6 @@ export const PostCard = ({
   const conversion = useProgressiveConversion();
   const postDetailHref = communityPostDetailHref(post);
   const highlightedReply = post.highlighted_professional_reply;
-  const hasHighlightedReply = post.author.role === "paciente" && Boolean(highlightedReply);
   const hasPostMedia = Boolean(post.media_url || (post.media_items ?? []).length > 0);
   const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
   const authorWhatsappCta =
@@ -347,7 +496,7 @@ export const PostCard = ({
 
   return (
     <article
-      className="min-w-0 cursor-pointer overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-lectum-soft transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
+      className="cursor-pointer overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-lectum-soft transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
       data-community-feed-post-id={post.id}
       onClick={handleCardClick}
       onClickCapture={handlePostNavigationCapture}
@@ -378,122 +527,106 @@ export const PostCard = ({
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
-      <FeedThreadRoot connected={hasHighlightedReply}>
-        <div
-          className="pl-12"
-          data-psychologist-tip-target={replyTipTarget ? "community-reply-post" : undefined}
-        >
-          <div className="relative mb-3 flex min-h-9 items-start gap-3">
-            <div className="absolute top-0 -left-12" data-feed-post-avatar>
-              <AuthorAvatar
-                anonymous={isAnonymousPatient}
-                author={post.author}
-                href={psychologistProfileHref}
-                onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
-              />
-            </div>
-            <div className="grid min-w-0 flex-1 gap-0.5">
-              <AuthorIdentityLine
-                href={psychologistProfileHref}
-                name={getCommunityAuthorDisplayName(post.author)}
-                onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
-                verified={post.author.verified}
-              />
-              {psychologistProfileHref ? (
-                <Link
-                  className="w-fit cursor-pointer text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
-                  href={psychologistProfileHref}
-                  onClick={handleProfileNavigationCapture}
-                >
-                  <MentorAuthorMeta
-                    authorId={post.author.role === "psicologo" ? post.author.id : undefined}
-                    community={post.community}
-                    badge={post.author.featured_badge ?? post.featured_badge}
-                    typeLabel={post.author.type_label}
-                    date={formatPostTimeLabel(post.created_at, post.edited_at)}
-                  >
-                    {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-                    {formatPostTimeLabel(post.created_at, post.edited_at)}
-                  </MentorAuthorMeta>
-                </Link>
-              ) : (
-                <p className="text-[11px] font-semibold leading-tight text-muted">
-                  {formatPostTimeLabel(post.created_at, post.edited_at)}
-                </p>
-              )}
-            </div>
-            {!showCommunityHeader && post.muted_by_current_user ? (
-              <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
-                <PostMutedBadge />
-              </div>
-            ) : null}
-          </div>
-
-          <div className="grid min-w-0 gap-2" data-feed-post-description>
-            <Link
-              className="cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground dark:text-foreground"
-              href={postDetailHref}
-            >
-              {post.title}
-            </Link>
-            <InlineExpandableText
-              className="text-sm leading-6 text-muted dark:text-muted"
-              expanded={false}
-              href={postDetailHref}
-              text={post.content}
+      <div data-psychologist-tip-target={replyTipTarget ? "community-reply-post" : undefined}>
+        <div className="mb-3 flex items-start gap-3">
+          <AuthorAvatar
+            anonymous={isAnonymousPatient}
+            author={post.author}
+            href={psychologistProfileHref}
+            onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
+          />
+          <div className="grid min-w-0 flex-1 gap-0.5">
+            <AuthorIdentityLine
+              href={psychologistProfileHref}
+              name={getCommunityAuthorDisplayName(post.author)}
+              onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
+              verified={post.author.verified}
             />
+            {psychologistProfileHref ? (
+              <Link
+                className="w-fit cursor-pointer text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
+                href={psychologistProfileHref}
+                onClick={handleProfileNavigationCapture}
+              >
+                <MentorAuthorMeta
+                  authorId={post.author.role === "psicologo" ? post.author.id : undefined}
+                  community={post.community}
+                  badge={post.author.featured_badge ?? post.featured_badge}
+                  typeLabel={post.author.type_label}
+                  date={formatPostTimeLabel(post.created_at, post.edited_at)}
+                >
+                  {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                  {formatPostTimeLabel(post.created_at, post.edited_at)}
+                </MentorAuthorMeta>
+              </Link>
+            ) : (
+              <p className="text-[11px] font-semibold leading-tight text-muted">
+                {formatPostTimeLabel(post.created_at, post.edited_at)}
+              </p>
+            )}
           </div>
+          {!showCommunityHeader && post.muted_by_current_user ? (
+            <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
+              <PostMutedBadge />
+            </div>
+          ) : null}
         </div>
 
-        <CommunityActionBar
-          className="mt-3 pl-12 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-wrap max-[380px]:[&>div:first-child]:gap-y-1.5"
-          comments={{
-            count: post.replies_count,
-            href: postDetailHref,
-            label: "Comentar no post",
-          }}
-          currentVote={voteSnapshot.currentVote}
-          disabled={voteMutation.isPending}
-          onVote={handleVote}
-          secondaryActionsPlacement="inline"
-          save={{
-            active: saveSnapshot.saved,
-            count: saveSnapshot.saves,
-            disabled: saveMutation.isPending,
-            label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar post",
-            onClick: handleToggleSave,
-          }}
-          share={{
-            label: `Compartilhar post: ${post.title}`,
-            onClick: () => onShare(post),
-          }}
-          upvotesCount={voteSnapshot.upvotes}
-        />
-
-        {hasPostMedia ? (
-          <div className="mt-3 pl-12">
-            <PostMedia
-              enableFeedAutoplay
-              footer={hasPostMedia ? authorWhatsappCta : undefined}
-              overlayAction={postOverlayAction}
-              post={post}
-            />
-          </div>
-        ) : null}
-        {!hasPostMedia && authorWhatsappCta ? (
-          <div className="mt-3 pl-12">{authorWhatsappCta}</div>
-        ) : null}
-      </FeedThreadRoot>
-      {hasHighlightedReply ? (
-        <FeedThreadReply>
-          <ProfessionalReplyPreview
-            enableFeedAutoplay
-            overlayAction={highlightedReplyOverlayAction}
-            post={post}
+        <div className="grid gap-2">
+          <Link
+            className="cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground dark:text-foreground"
+            href={postDetailHref}
+          >
+            {post.title}
+          </Link>
+          <InlineExpandableText
+            className="text-sm leading-6 text-muted dark:text-muted"
+            expanded={false}
+            href={postDetailHref}
+            text={post.content}
           />
-          <MoreProfessionalReplies href={postDetailHref} post={post} />
-        </FeedThreadReply>
-      ) : null}
+        </div>
+      </div>
+
+      <CommunityActionBar
+        className="mt-4 border-border border-t pt-3 dark:border-border"
+        comments={{
+          count: post.replies_count,
+          href: postDetailHref,
+          label: "Comentar no post",
+        }}
+        currentVote={voteSnapshot.currentVote}
+        disabled={voteMutation.isPending}
+        onVote={handleVote}
+        save={{
+          active: saveSnapshot.saved,
+          count: saveSnapshot.saves,
+          disabled: saveMutation.isPending,
+          label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar post",
+          onClick: handleToggleSave,
+        }}
+        share={{
+          label: `Compartilhar post: ${post.title}`,
+          onClick: () => onShare(post),
+        }}
+        upvotesCount={voteSnapshot.upvotes}
+      />
+
+      <div className="mt-4 grid gap-3">
+        <PostMedia
+          enableFeedAutoplay
+          footer={hasPostMedia ? authorWhatsappCta : undefined}
+          overlayAction={postOverlayAction}
+          post={post}
+        />
+        <ProfessionalReplyPreview
+          enableFeedAutoplay
+          overlayAction={highlightedReplyOverlayAction}
+          post={post}
+        />
+        <MoreProfessionalReplies href={postDetailHref} post={post} />
+        {hasPostMedia ? null : authorWhatsappCta}
+      </div>
       {lectumDownloadDialog}
     </article>
   );
