@@ -4,6 +4,17 @@
 
 Accepted
 
+## Complemento 2026-10-04 - barra logo abaixo da descricao
+
+No PostCard compartilhado, a barra unica do post passa a vir imediatamente depois
+do bloco autor/titulo/descricao e antes do bloco de midia/resposta destacada.
+Somente a ordem JSX muda: a linha fina, espacamentos, cores, destaque da resposta,
+handlers e entidades-alvo permanecem iguais. Nao se adicionam divisorias ou acoes.
+O detalhe do post e os controles proprios de respostas nao sao alterados.
+Motivo: impedir que a proximidade com o video sugira que a barra pertence a resposta.
+Alteracao somente de frontend, sem API, dados, dependencias ou configuracao nova.
+Rollback por reversao da ordem no frontend.
+
 ## Task relacionada
 
 Complemento da TASK-42, com impacto nos cards da TASK-23/TASK-25/TASK-28.

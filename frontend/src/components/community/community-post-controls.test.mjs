@@ -1,5 +1,6 @@
 import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -12,6 +13,27 @@ const { createCommunityPostSchema, toCreateCommunityPostPayload } = await import
   "../../app/app/community/[slug]/post/new/use-form.tsx"
 );
 const { getReplyOwnerActionCopy } = await import("./reply-owner-action-copy.ts");
+
+test("feed keeps one post action bar after description and before media/reply, with its existing divider", () => {
+  const source = readFileSync(
+    new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
+    "utf8",
+  );
+  const card = source.slice(source.indexOf("export const PostCard ="));
+  const description = card.indexOf("<InlineExpandableText");
+  const actions = card.indexOf("<CommunityActionBar");
+  const media = card.indexOf("<PostMedia");
+  const reply = card.indexOf("<ProfessionalReplyPreview");
+  assert.ok(description >= 0 && description < actions && actions < media && media < reply);
+  assert.equal(card.match(/<CommunityActionBar\b/g)?.length, 1);
+  const bar = card.slice(actions, media);
+  assert.match(bar, /className="mt-4 border-border border-t pt-3 dark:border-border"/);
+  assert.match(bar, /count: post.replies_count/);
+  assert.match(bar, /href: postDetailHref/);
+  assert.match(bar, /onVote=\{handleVote\}/);
+  assert.match(bar, /onClick: handleToggleSave/);
+  assert.match(bar, /onClick: \(\) => onShare\(post\)/);
+});
 
 // Real component, RHF/schema and handlers. SSR does not execute browser Tab/Space/Enter
 // or reproduce the mobile keyboard. Handler inputs below only classify click.detail.
