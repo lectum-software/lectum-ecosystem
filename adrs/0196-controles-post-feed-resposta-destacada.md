@@ -4,6 +4,53 @@
 
 Accepted
 
+## Complemento 2026-10-04 - votos sem preenchimento proprio (0.1.561)
+
+O usuario esclareceu que deseja a mesma aparencia do fundo ao redor, e nao branco
+fixo. O grupo usa bg-transparent e nao tem override de fundo no tema escuro.
+Assim acompanha tambem a superficie do card durante hover. Esta decisao substitui
+o token opaco de 0.1.560. Borda, dimensoes, preenchimento de selecao, hover dos
+botoes e callbacks permanecem intactos. Nenhuma alteracao de backend.
+
+No PostCard do feed/comunidade, salvar e compartilhar passam ao mesmo grupo de
+comentar usando secondaryActionsPlacement="inline", ja suportado pelo componente.
+Em telas ate 380px, o grupo pode quebrar linha para evitar sobreposicao. Os demais
+usos da barra mantem seu posicionamento atual.
+
+## Complemento 2026-10-04 - grupo de votos branco (0.1.560)
+
+O fundo neutro do grupo upvote/downvote usa bg-surface (branco no tema claro),
+em vez de bg-surface-muted. Mantem borda, dimensoes, hover, cores de selecao,
+callbacks e override do tema escuro. A apresentacao inline continua transparente.
+Usa-se o token existente no componente compartilhado para evitar divergencia
+visual entre cards. Sem nova API de componente ou alteracao de backend.
+Reversao consiste em restaurar o token anterior, sem afetar o layout de arvore.
+
+## Complemento 2026-10-04 - experimento de arvore no feed (0.1.559)
+
+Experimento visual autorizado somente em homologacao, preservando a producao em
+0.1.558 ate nova aprovacao. O PostCard usado pelo feed geral e pela comunidade
+alinha nome, titulo, descricao e controles na mesma coluna, com avatar no recuo
+esquerdo. Quando existe resposta profissional destacada, uma haste e a mesma
+curva/cor/espessura da arvore do detalhe ligam os avatares. Sem resposta, nao ha linha.
+
+Retiram-se apenas a divisoria acima dos controles e o painel colorido/borda da
+resposta. A divisoria do cabecalho da comunidade permanece. Texto da resposta
+acompanha seu autor, mas a midia nao recebe um segundo recuo, preservando largura
+no mobile. Player, autoplay, volume, CTA WhatsApp, navegacao, contadores e resumo
+de outras respostas continuam usando os componentes/contratos existentes.
+Em viewports de ate 380px, os grupos de acoes podem ocupar duas linhas, sem
+reduzir alvos de toque nem sobrepor os botoes; o alinhamento inicial e preservado.
+
+ProfessionalReplyPreview e sua midia foram extraidos do PostCard para manter o
+arquivo de composicao abaixo do limite. FeedThreadRoot/FeedThreadReply isolam
+somente a geometria decorativa, sem estado ou nova regra de dominio. O detalhe,
+salvos, minhas publicacoes e perfil profissional nao mudam nesta experiencia.
+
+Sem backend, migration, dependencia ou configuracao de deploy nova. Um commit
+isolado em homolog permite reverter exclusivamente este layout e suas extracoes,
+preservando as funcionalidades de 0.1.558. Nao promover automaticamente para main.
+
 ## Complemento 2026-10-04 - acesso discreto a outras respostas
 
 Abaixo da resposta destacada, o PostCard exibe um unico link cinza com ate tres
