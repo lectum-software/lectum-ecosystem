@@ -205,6 +205,7 @@ export type CommunityPostDTO = {
   community: CommunityDTO;
   author: CommunityAuthorDTO;
   highlighted_professional_reply: CommunityProfessionalReplyDTO | null;
+  other_professional_reply_authors?: Pick<CommunityAuthorDTO, "id" | "name" | "avatar">[];
   sort_metrics?: CommunityPostSortMetricsDTO;
 };
 

@@ -145,6 +145,7 @@ export type CommunityPost = {
   community: Community;
   author: CommunityAuthor;
   highlighted_professional_reply: CommunityProfessionalReply | null;
+  other_professional_reply_authors?: Pick<CommunityAuthor, "id" | "name" | "avatar">[];
   sort_metrics?: CommunityPostSortMetrics;
 };
 

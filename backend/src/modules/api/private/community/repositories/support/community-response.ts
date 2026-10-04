@@ -226,6 +226,7 @@ export const toPostResponse = (
   highlightedProfessionalReply?: ProfessionalReplyResult | null,
   mutedByCurrentUser = false,
   hasPsychologistReply = false,
+  otherProfessionalReplyAuthors: CommunityPostDTO["other_professional_reply_authors"] = [],
 ): CommunityPostDTO => {
   const responseCommunity = {
     ...toCommunityResponse(item.community),
@@ -272,6 +273,7 @@ export const toPostResponse = (
     community: responseCommunity,
     author,
     highlighted_professional_reply: highlightedReply,
+    other_professional_reply_authors: highlightedReply ? otherProfessionalReplyAuthors : [],
     ...(sortMetrics ? { sort_metrics: sortMetrics } : {}),
   };
 };

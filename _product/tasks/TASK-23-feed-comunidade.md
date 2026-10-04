@@ -1,5 +1,31 @@
 # TASK-23: Feed de comunidade
 
+## Complemento 2026-10-04 - outras respostas profissionais (0.1.558)
+
+Referencia: imagens e orientacao do usuario; pequeno grupo de avatares e texto
+discreto abaixo da resposta destacada, sem nova divisoria. Mobile-first (390px).
+
+- [x] Mostrar "Ver mais respostas" em cinza, junto a ate tres avatares sobrepostos.
+- [x] Abrir o post com um unico link, preservando a memoria de scroll do card.
+- [x] Excluir a resposta destacada, comentarios de pacientes e respostas removidas.
+- [x] Deduplicar autores por ID; outra resposta do mesmo psicologo continua elegivel.
+- [x] Ocultar o conjunto se nao houver outra resposta profissional ao post.
+- [x] Contrato aditivo opcional e consulta em lote para feed geral/comunidade.
+- [ ] Smoke integrado de homologacao apos deploy.
+
+O resumo considera respostas diretas ao post (nao comentarios aninhados), com
+autor psicologo nao excluido, independentemente de midia/verificacao. Retorna
+somente ID, nome publico e avatar de ate tres autores. Backend antigo resulta
+em ausencia do link, nunca em uso do contador geral de comentarios.
+Sem migrations, dependencias ou variaveis novas. ADR-0196 atualizado.
+
+Validacao: frontend check/build aprovados; 17 testes focados de UI/contratos e
+13 testes compilados de backend (selecao de autores e ranking/destaque) aprovados.
+Backend Biome, runtime-deps, TypeScript e compilacao com tsc/tsc-alias aprovados.
+Check completo da raiz/backend limitado pela ausencia local de DATABASE_URL na
+geracao Prisma; executor tsx tambem falha em uv_os_get_passwd neste Windows.
+Homologacao frontend redireciona para login da Vercel, impedindo smoke publico.
+
 ## Complemento 2026-10-04 - controles antes da resposta (0.1.557)
 
 Pedido: somente mover os controles do post para imediatamente abaixo da descricao,

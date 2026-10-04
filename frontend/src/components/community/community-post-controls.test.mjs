@@ -1,6 +1,7 @@
 import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { registerHooks } from "node:module";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -13,6 +14,83 @@ const { createCommunityPostSchema, toCreateCommunityPostPayload } = await import
   "../../app/app/community/[slug]/post/new/use-form.tsx"
 );
 const { getReplyOwnerActionCopy } = await import("./reply-owner-action-copy.ts");
+const nextImageUrl = import.meta.resolve("next/image.js");
+const nextImageBridge = `data:text/javascript,${encodeURIComponent(
+  `import Image from ${JSON.stringify(nextImageUrl)}; export default Image.default ?? Image;`,
+)}`;
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    const target =
+      specifier === "next/image"
+        ? nextImageBridge
+        : specifier === "next/link"
+          ? "next/link.js"
+          : specifier;
+    return nextResolve(target, context);
+  },
+});
+const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
+
+test("more replies stays hidden without another professional response, regardless of patient comment count", () => {
+  const post = {
+    author: { role: "paciente" },
+    highlighted_professional_reply: { id: "highlight" },
+    replies_count: 50,
+  };
+  for (const authors of [undefined, []]) {
+    assert.equal(
+      renderToStaticMarkup(
+        createElement(MoreProfessionalReplies, {
+          href: "/app/posts/post",
+          post: { ...post, other_professional_reply_authors: authors },
+        }),
+      ),
+      "",
+    );
+  }
+});
+
+test("more replies renders one discreet link with at most three distinct avatars", () => {
+  const author = (id) => ({ id, name: `Psi ${id}`, avatar: null });
+  const post = {
+    author: { role: "paciente" },
+    highlighted_professional_reply: { id: "highlight" },
+    other_professional_reply_authors: [
+      author("1"),
+      author("1"),
+      author("2"),
+      author("3"),
+      author("4"),
+    ],
+  };
+  const html = renderToStaticMarkup(
+    createElement(MoreProfessionalReplies, { href: "/app/posts/post", post }),
+  );
+  assert.equal((html.match(/<a /g) ?? []).length, 1);
+  assert.equal((html.match(/h-7 w-7/g) ?? []).length, 3);
+  assert.match(html, /href="\/app\/posts\/post"/);
+  assert.match(html, /Ver mais respostas/);
+  assert.match(html, /text-muted/);
+  assert.doesNotMatch(html, /text-primary|border-t/);
+  assert.equal(
+    renderToStaticMarkup(
+      createElement(MoreProfessionalReplies, {
+        href: "/post",
+        post: { ...post, highlighted_professional_reply: null },
+      }),
+    ),
+    "",
+  );
+  assert.equal(
+    renderToStaticMarkup(
+      createElement(MoreProfessionalReplies, {
+        href: "/post",
+        post: { ...post, author: { role: "psicologo" } },
+      }),
+    ),
+    "",
+  );
+});
 
 test("feed keeps one post action bar after description and before media/reply, with its existing divider", () => {
   const source = readFileSync(
@@ -24,7 +102,10 @@ test("feed keeps one post action bar after description and before media/reply, w
   const actions = card.indexOf("<CommunityActionBar");
   const media = card.indexOf("<PostMedia");
   const reply = card.indexOf("<ProfessionalReplyPreview");
+  const moreReplies = card.indexOf("<MoreProfessionalReplies");
   assert.ok(description >= 0 && description < actions && actions < media && media < reply);
+  assert.ok(moreReplies > reply);
+  assert.match(card.slice(moreReplies), /href=\{postDetailHref\} post=\{post\}/);
   assert.equal(card.match(/<CommunityActionBar\b/g)?.length, 1);
   const bar = card.slice(actions, media);
   assert.match(bar, /className="mt-4 border-border border-t pt-3 dark:border-border"/);

@@ -29,6 +29,7 @@ import {
   toCommunityResponse,
 } from "../support/community-ranking";
 import { postSearchWhere, toPostResponse } from "../support/community-response";
+import { getOtherProfessionalReplyAuthors } from "../support/other-professional-replies";
 
 import { CommunityRepositoryContext } from "./CommunityRepositoryContext";
 
@@ -377,6 +378,7 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
       followedCommunityIds,
       mutedPostIds,
       postsWithPsychologistReplies,
+      otherReplyAuthors,
     ] = await Promise.all([
       getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
       getSavedPostIds(data.auth?.id ?? undefined, postIds),
@@ -384,6 +386,7 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
       getFollowedCommunityIds(data.auth?.id ?? undefined, communityIds),
       getMutedPostIds(data.auth?.id ?? undefined, postIds),
       getPostIdsWithPsychologistReplies(postIds),
+      getOtherProfessionalReplyAuthors(prisma, highlightedRepliesByPostId),
     ]);
 
     return {
@@ -398,6 +401,7 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
           highlightedRepliesByPostId.get(item.id) ?? null,
           mutedPostIds.has(item.id),
           postsWithPsychologistReplies.has(item.id),
+          otherReplyAuthors.get(item.id),
         ),
       ),
       page: pagination.page,
