@@ -587,21 +587,6 @@ export const PostCard = ({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3">
-        <PostMedia
-          enableFeedAutoplay
-          footer={hasPostMedia ? authorWhatsappCta : undefined}
-          overlayAction={postOverlayAction}
-          post={post}
-        />
-        <ProfessionalReplyPreview
-          enableFeedAutoplay
-          overlayAction={highlightedReplyOverlayAction}
-          post={post}
-        />
-        {hasPostMedia ? null : authorWhatsappCta}
-      </div>
-
       <CommunityActionBar
         className="mt-4 border-border border-t pt-3 dark:border-border"
         comments={{
@@ -625,6 +610,21 @@ export const PostCard = ({
         }}
         upvotesCount={voteSnapshot.upvotes}
       />
+
+      <div className="mt-4 grid gap-3">
+        <PostMedia
+          enableFeedAutoplay
+          footer={hasPostMedia ? authorWhatsappCta : undefined}
+          overlayAction={postOverlayAction}
+          post={post}
+        />
+        <ProfessionalReplyPreview
+          enableFeedAutoplay
+          overlayAction={highlightedReplyOverlayAction}
+          post={post}
+        />
+        {hasPostMedia ? null : authorWhatsappCta}
+      </div>
       {lectumDownloadDialog}
     </article>
   );

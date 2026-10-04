@@ -1,5 +1,27 @@
 # TASK-23: Feed de comunidade
 
+## Complemento 2026-10-04 - controles antes da resposta (0.1.557)
+
+Pedido: somente mover os controles do post para imediatamente abaixo da descricao,
+antes do video/resposta destacada, preservando a linha fina e o fundo existente.
+Referencia: captura e orientacao explicita do usuario; Builder/Quick Copy indisponivel.
+
+- [x] Realocar a unica CommunityActionBar no PostCard compartilhado.
+- [x] Manter divisoria, estilos, contadores, handlers e entidades-alvo sem alteracoes.
+- [x] Nao modificar controles do detalhe nem o player/CTA da resposta.
+- [x] Validar teste de ordem/contratos e frontend check/build.
+- [ ] Conferir visualmente os cards mobile/desktop com API acessivel no navegador.
+
+Validacao: 15 testes focados passaram, incluindo barra unica, ordem apos descricao
+e antes de midia/resposta, divisoria original e callbacks do post preservados.
+`frontend check` e `frontend build` passaram. `pnpm check` passou pelos guards e
+frontend, parando no Prisma do backend por falta de DATABASE_URL local.
+Browser local iniciado com a API publica de homologacao configurada: requisicoes
+do navegador a API retornaram net::ERR_FAILED, impedindo validar cards reais.
+Nenhum endpoint simulado ou alteracao de seguranca do navegador foi usado.
+
+Frontend-only, sem migration, contrato, env nova ou dependencia. ADR-0196 atualizado.
+
 ## Metadata
 
 | Campo | Valor |
