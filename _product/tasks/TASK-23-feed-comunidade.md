@@ -1,5 +1,23 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - estados persistentes de relacionamento (0.1.573)
+
+- [x] Favoritar vira coracao preenchido vermelho quando ativo em posts, respostas,
+  comentarios e previas, permitindo desfavoritar e preservando o espaco do controle.
+- [x] Remover a regra de ocultar favoritos existentes; manter exclusao de pacientes,
+  proprio autor e estado autenticado ainda desconhecido.
+- [x] Manter Seguindo no cabecalho da comunidade, sem reintroduzir Seguir nos posts.
+- [x] Padronizar cabecalhos de comunidade e perfil profissional: altura h-10,
+  largura 108px, fonte 13px/600, raio 6px e fundo transparente.
+- [x] Perfil usa Favoritar inativo e coracao vermelho ativo, distinto do selo azul.
+
+Referencia: pedido e confirmacoes em conversa. Builder nao disponivel; mantidos
+os componentes e layout existentes. Sem novos endpoints, dados, packages ou envs.
+Validacao: testes reais dos componentes nos estados ativo/inativo/pendente,
+check/build frontend e smoke mobile/desktop registrado em outputs.
+Risco: mudanca visual de acoes existentes; rollback por reversao do frontend.
+Acao manual de deploy: nenhuma. Producao nao faz parte desta alteracao.
+
 ## Ajuste 2026-10-05 - cantos discretos em Favoritar (0.1.572)
 
 - [x] Trocar formato de pilula por raio de 6px no Favoritar compartilhado.

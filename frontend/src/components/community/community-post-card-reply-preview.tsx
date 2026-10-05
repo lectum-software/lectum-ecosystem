@@ -112,7 +112,7 @@ export const ProfessionalReplyPreview = ({
                     />
                   ) : null}
                   <span className="flex h-0 shrink-0 items-center pl-1">
-                    <FeedFavoriteButton author={reply.author} hideFavorited={false} />
+                    <FeedFavoriteButton author={reply.author} />
                   </span>
                 </span>
               </div>
@@ -205,7 +205,7 @@ export const ProfessionalReplyPreview = ({
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
               <span className="flex h-0 shrink-0 items-center pl-1">
-                <FeedFavoriteButton author={reply.author} hideFavorited={false} />
+                <FeedFavoriteButton author={reply.author} />
               </span>
             </span>
           </div>

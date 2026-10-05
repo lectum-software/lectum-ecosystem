@@ -511,7 +511,7 @@ export const CommunityPostCard = ({
                 ) : null}
                 {isPsychologistPost ? (
                   <span className="flex h-0 shrink-0 items-center pl-1">
-                    <FeedFavoriteButton author={displayAuthor} hideFavorited={false} />
+                    <FeedFavoriteButton author={displayAuthor} />
                   </span>
                 ) : null}
               </div>

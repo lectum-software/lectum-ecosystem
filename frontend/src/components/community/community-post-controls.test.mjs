@@ -74,7 +74,7 @@ const renderRelations = ({ userId, authenticated = Boolean(userId), ids, childre
   return html;
 };
 
-test("feed favorite is text-only, hides known favorites/self and waits for authenticated state", () => {
+test("inactive feed favorite is text-only, hides self and waits for authenticated state", () => {
   const children = createElement(FeedFavoriteButton, {
     author: { id: "psi", name: "Ana Lima", role: "psicologo" },
   });
@@ -82,6 +82,7 @@ test("feed favorite is text-only, hides known favorites/self and waits for authe
     const html = renderRelations({ ...state, children });
     assert.match(html, />Favoritar<\/button>/);
     assert.match(html, /h-5/);
+    assert.match(html, /w-\[66px\]/);
     assert.match(html, /style="font-size:11px;font-weight:600"/);
     assert.match(html, /bg-transparent/);
     assert.match(html, /rounded-\[6px\]/);
@@ -89,38 +90,38 @@ test("feed favorite is text-only, hides known favorites/self and waits for authe
     assert.doesNotMatch(html, /bg-surface|hover:bg-/);
     assert.doesNotMatch(html, /<svg|heart|Seguindo/);
   }
-  for (const state of [
-    { userId: "viewer", ids: ["psi"] },
-    { userId: "psi", ids: [] },
-    { userId: "viewer" },
-    { authenticated: true },
-  ])
+  for (const state of [{ userId: "psi", ids: [] }, { userId: "viewer" }, { authenticated: true }])
     assert.equal(renderRelations({ ...state, children }), "");
 });
 
-test("profile and saved favorite opt-in remains available to unfavorite and excludes patients and self", () => {
+test("known favorites remain as a filled red heart, with the same slot, and can be unfavorited", () => {
   const author = { id: "psi", name: "Ana Lima", role: "psicologo" };
-  const children = createElement(FeedFavoriteButton, { author, hideFavorited: false });
+  const children = createElement(FeedFavoriteButton, { author });
   const inactive = renderRelations({ userId: "viewer", ids: [], children });
   assert.match(inactive, /aria-pressed="false"/);
   assert.match(inactive, />Favoritar<\/button>/);
   const active = renderRelations({ userId: "viewer", ids: ["psi"], children });
   assert.match(active, /aria-pressed="true"/);
   assert.match(active, /aria-label="Remover Ana Lima dos favoritos"/);
-  assert.match(active, />Favoritado<\/button>/);
+  assert.match(active, /lucide-heart/);
+  assert.match(active, /fill-current/);
+  assert.match(active, /text-danger/);
+  assert.match(active, /border-transparent/);
+  assert.match(active, /w-\[66px\]/);
+  assert.match(active, /title="Remover Ana Lima dos favoritos"/);
+  assert.doesNotMatch(active, />Favoritado|>Favoritar</);
   assert.equal(renderRelations({ userId: "psi", ids: [], children }), "");
   assert.equal(
     renderRelations({
       children: createElement(FeedFavoriteButton, {
         author: { ...author, role: "paciente" },
-        hideFavorited: false,
       }),
     }),
     "",
   );
 });
 
-test("post headers and comments hide existing relationships while publication previews retain toggles", () => {
+test("all post headers and comments share the persistent favorite toggle", () => {
   const detail = readFileSync(
     new URL(
       "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
@@ -144,15 +145,13 @@ test("post headers and comments hide existing relationships while publication pr
   assert.doesNotMatch(replies, /hideFavorited=\{false\}/);
   for (const file of ["./community-post-card.tsx", "./community-post-card-reply-preview.tsx"]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.match(
-      source,
-      /FeedFavoriteButton author=\{(?:reply.author|displayAuthor)\} hideFavorited=\{false\}/,
-    );
+    assert.match(source, /FeedFavoriteButton author=\{(?:reply.author|displayAuthor)\}/);
     assert.match(source, /flex h-0 shrink-0 items-center pl-1/);
   }
   const favorite = readFileSync(new URL("./feed-favorite-button.tsx", import.meta.url), "utf8");
   assert.match(favorite, /favorited \? unfavoritePsychologist : favoritePsychologist/);
   assert.match(favorite, /pending \|\| favorited\) return/);
+  assert.doesNotMatch(favorite, /hideFavorited/);
 });
 
 test("author action stays beside the badge without automatic right alignment", () => {
@@ -179,7 +178,7 @@ test("follow-only feed hides followed communities without changing ordinary unfo
   assert.match(render({ initialFollowing: true }), />Seguindo<\/button>/);
 });
 
-test("community header hides its follow action only after following", () => {
+test("community header keeps a pressed Seguindo control after following", () => {
   const render = (following) =>
     renderToStaticMarkup(
       createElement(CommunityHeader, {
@@ -193,7 +192,11 @@ test("community header hides its follow action only after following", () => {
       }),
     );
   assert.match(render(false), />Seguir<\/button>/);
-  assert.doesNotMatch(render(true), /Seguir|Seguindo/);
+  assert.match(render(true), />Seguindo<\/button>/);
+  assert.match(render(true), /aria-pressed="true"/);
+  assert.match(render(true), /title="Deixar de seguir comunidade"/);
+  assert.match(render(true), /rounded-\[6px\]/);
+  assert.match(render(true), /style="font-size:13px;font-weight:600"/);
   assert.match(render(true), /Compartilhar comunidade/);
 });
 

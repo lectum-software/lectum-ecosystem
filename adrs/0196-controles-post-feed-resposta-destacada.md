@@ -4,6 +4,25 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - feedback persistente e cabecalhos padronizados (0.1.573)
+
+Substituir ocultacao de favoritos por alternancia Favoritar/coracao preenchido
+vermelho, com aria-pressed e nome acessivel para desfavoritar. Vermelho diferencia
+favorito do selo azul e acompanha a identidade dos favoritos na busca. O slot
+compacto permanece com largura fixa, evitando deslocar a identificacao ao mudar
+de estado. Remover hideFavorited de todos os callsites; mutations, cache por conta,
+conversao de visitante e bloqueio concorrente permanecem inalterados.
+
+O cabecalho da comunidade sempre exibe Seguir/Seguindo, permitindo desfazer a
+acao no mesmo local. Posts continuam sem Seguir. O perfil profissional adota
+Favoritar/coracao; ambos os cabecalhos usam RelationshipButton para compartilhar
+dimensoes fixas, fonte, foco, raio 6px e fundo transparente. A variante compacta
+serve os autores de posts, sem ampliar a altura da linha. Controles da busca e
+da lista de comunidades seguidas nao mudam.
+
+Sem backend, schema, package ou env novos. Rollback visual por reversao do
+frontend, sem afetar relacionamentos persistidos. Publicar apenas em homolog.
+
 ## Ajuste 2026-10-05 - formato do Favoritar (0.1.572)
 
 Usar rounded-[6px] no FeedFavoriteButton compartilhado para diferenciar a acao
