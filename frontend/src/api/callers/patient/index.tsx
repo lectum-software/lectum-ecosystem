@@ -10,13 +10,11 @@ import type {
   PatientRelationQuery,
   patient_profile,
 } from "@/api/generator/types";
-import type {
-  DirectoryPsychologistProfile,
-  DirectoryPsychologistsResponse,
-} from "@/api/generator/types/directory";
+import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
 import * as api from "@/api/req/patient";
 import { useAppSelector } from "@/hooks/redux";
 import { prepareUpload } from "@/utils/media-preparation";
+import { type RelationPatch, updateDirectoryRelation } from "./directory-relation-cache";
 import { updateFavoriteIds } from "./favorite-ids";
 
 export interface UsePatientProps {
@@ -65,9 +63,6 @@ export interface UsePatientProps {
   };
 }
 
-type RelationPatch = Partial<
-  Pick<DirectoryPsychologistsResponse["data"][number], "favorited" | "followed">
->;
 type QuerySnapshot = ReturnType<ReturnType<typeof useQueryClient>["getQueriesData"]>;
 
 type MutationSnapshot = {
@@ -76,26 +71,6 @@ type MutationSnapshot = {
   directoryProfiles: QuerySnapshot;
   favorites: QuerySnapshot;
   follows: QuerySnapshot;
-};
-
-const updateDirectoryRelation = (
-  queryClient: ReturnType<typeof useQueryClient>,
-  psychologistId: string,
-  patch: RelationPatch,
-) => {
-  queryClient.setQueriesData<DirectoryPsychologistsResponse>(
-    { queryKey: keys.directory.psychologistsRoot() },
-    (old) => {
-      if (!old) return old;
-
-      return {
-        ...old,
-        data: old.data.map((psychologist) =>
-          psychologist.id === psychologistId ? { ...psychologist, ...patch } : psychologist,
-        ),
-      };
-    },
-  );
 };
 
 const updateRelationLists = (

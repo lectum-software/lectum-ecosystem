@@ -4,6 +4,13 @@
 
 Accepted
 
+## Atualizacao 2026-10-05 - cache paginado do Explorar (0.1.577)
+
+- O Explorar armazena `InfiniteData`, enquanto a busca comum armazena uma resposta simples sob a mesma raiz de cache. A atualizacao otimista assumia `old.data` em ambos e podia interromper `onMutate` antes de enviar o favorito.
+- O helper compartilhado diferencia os formatos, atualiza todas as paginas e preserva parametros, metadados, filtros e outros profissionais. Snapshot e rollback existentes permanecem inalterados.
+- Testes com QueryClient real cobrem marcar/desmarcar favoritos e follows legados, paginas posteriores, consultas filtradas e cache vazio, sem substituir a API.
+- Nenhuma mudanca de layout, player, autenticacao, endpoint ou schema.
+
 ## Task relacionada
 
 TASK-14: Favoritos e seguindo. A primeira versão deste ADR registrou o recorte de favorito direto no card da descoberta; esta atualização conclui a task com favoritos e seguindo completos.
