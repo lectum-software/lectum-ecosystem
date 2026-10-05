@@ -205,7 +205,7 @@ test("follow-only feed hides followed communities without changing ordinary unfo
   assert.match(render({ initialFollowing: true }), />Seguindo<\/button>/);
 });
 
-test("community header keeps a pressed Seguindo control after following", () => {
+test("community header changes Seguir into a persistent accessible circular check", () => {
   const render = (following) =>
     renderToStaticMarkup(
       createElement(CommunityHeader, {
@@ -218,11 +218,16 @@ test("community header keeps a pressed Seguindo control after following", () => 
         onToggleFollow() {},
       }),
     );
-  assert.match(render(false), />Seguir<\/button>/);
-  assert.match(render(true), />Seguindo<\/button>/);
+  assert.match(render(false), />Seguir<\/span>/);
+  assert.match(render(false), /aria-label="Seguir comunidade"/);
+  assert.match(render(false), /lucide-plus[^>]*scale-100 opacity-100/);
+  assert.match(render(true), /lucide-check[^>]*scale-100 opacity-100/);
   assert.match(render(true), /aria-pressed="true"/);
-  assert.match(render(true), /title="Deixar de seguir comunidade"/);
-  assert.match(render(true), /rounded-\[6px\]/);
+  assert.match(render(true), /aria-label="Seguindo comunidade. Deixar de seguir"/);
+  assert.match(render(true), /w-10 gap-0 border-primary\/25 bg-primary-soft text-primary/);
+  assert.match(render(true), /group-hover:opacity-100 group-focus-within:opacity-100/);
+  assert.match(render(true), /w-0 opacity-0/);
+  assert.match(render(true), /rounded-full/);
   assert.match(render(true), /style="font-size:13px;font-weight:600"/);
   assert.match(render(true), /Compartilhar comunidade/);
 });

@@ -1,5 +1,19 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - seguir com check no cabecalho (0.1.576)
+
+- [x] Padronizar altura, fonte, borda, sombra e cantos com o favorito do perfil.
+- [x] Exibir Plus + Seguir inativo e somente Check azul em circulo quando seguido.
+- [x] Manter o controle ativo, com indicacao Seguindo comunidade em hover/foco.
+- [x] Preservar aria-pressed, nome acessivel, unfollow, bloqueio pendente e movimento reduzido.
+- [x] Restringir o visual ao cabecalho; nao alterar controles compactos nem posts.
+
+Referencia: capturas e proposta aprovadas em conversa; Builder indisponivel.
+Validacao: 38 testes focados, check frontend e build aprovados. Check geral para
+no backend por DATABASE_URL local ausente. Smoke local tentou dados reais, mas
+a comunidade retornou indisponivel; concluir a conferencia visual em homologacao.
+Sem mudancas de API, dados ou favoritos. Publicacao somente em homologacao.
+
 ## Ajuste 2026-10-05 - cor de producao e rotulo no perfil (0.1.575)
 
 - [x] Reutilizar a paleta de favorito de producao (vermelho, fundo e contorno).

@@ -4,6 +4,17 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - seguir da comunidade em circulo (0.1.576)
+
+O cabecalho da comunidade adota a mesma geometria do favorito do perfil:
+altura h-10, cantos completos, borda discreta e sombra leve. Inativo mostra
+Plus + Seguir em 112px; ativo contrai para w-10 com Check azul, sem rotulo
+visivel permanente. O coracao permanece exclusivo dos favoritos.
+Nome acessivel informa estado e acao de deixar de seguir; hover/foco exibe
+Seguindo comunidade. Largura, rotulo e icones transicionam em 200ms, respeitando
+movimento reduzido. Pendente preserva dimensoes e exibe loader desabilitado.
+A variante compacta e as mutations existentes nao mudam. Publicar em homolog.
+
 ## Ajuste 2026-10-05 - favorito de producao e rotulo no perfil (0.1.575)
 
 Por nova referencia do usuario, os tokens de favorito passam a referenciar as

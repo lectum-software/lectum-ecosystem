@@ -78,9 +78,10 @@ test("profile shows outline plus Favoritar until selected, then the production c
     assert.match(favorite, /lucide-heart/);
     assert.match(favorite, /stroke-width="2"/);
     assert.match(favorite, /motion-reduce:transition-none/);
-    assert.match(follow, /h-10 w-\[108px\]/);
-    assert.match(follow, /rounded-\[6px\]/);
-    assert.match(follow, /bg-transparent/);
+    assert.match(follow, /h-10/);
+    assert.match(follow, /rounded-full/);
+    assert.match(follow, /shadow-sm/);
+    assert.match(follow, /motion-reduce:transition-none/);
     assert.match(follow, /style="font-size:13px;font-weight:600"/);
     for (const html of [favorite, follow])
       assert.match(html, new RegExp(`aria-pressed="${active}"`));
@@ -90,14 +91,18 @@ test("profile shows outline plus Favoritar until selected, then the production c
       assert.match(favorite, /lucide-heart/);
       assert.match(favorite, /fill-current/);
       assert.match(favorite, /text-favorite/);
-      assert.match(follow, />Seguindo<\/button>/);
+      assert.match(follow, /w-10 gap-0 border-primary\/25 bg-primary-soft text-primary/);
+      assert.match(follow, /lucide-check[^>]*scale-100 opacity-100/);
+      assert.match(follow, /w-0 opacity-0/);
     } else {
       assert.match(favorite, /w-\[112px\] gap-2/);
       assert.match(favorite, /w-\[56px\] opacity-100/);
       assert.match(favorite, /style="font-size:13px;font-weight:600">Favoritar<\/span>/);
       assert.match(favorite, /fill-none/);
       assert.match(favorite, /border-border bg-surface/);
-      assert.match(follow, />Seguir<\/button>/);
+      assert.match(follow, /w-\[112px\] gap-2 border-border bg-surface/);
+      assert.match(follow, /lucide-plus[^>]*scale-100 opacity-100/);
+      assert.match(follow, />Seguir<\/span>/);
     }
   }
 });
@@ -124,4 +129,20 @@ test("pending and own-profile favorite states remain disabled", () => {
   assert.match(following, /disabled=""/);
   assert.match(following, /aria-busy="true"/);
   assert.match(following, /Seguindo/);
+});
+
+test("community hero keeps both pending states stable and blocks repeated requests", () => {
+  for (const following of [false, true]) {
+    const html = renderToStaticMarkup(
+      createElement(CommunityFollowButton, { following, size: "hero", pending: true }),
+    );
+    assert.match(html, /disabled=""/);
+    assert.match(html, /aria-busy="true"/);
+    assert.match(html, /type="button"/);
+    assert.match(html, /lucide-loader/);
+    assert.match(html, /motion-reduce:animate-none/);
+    assert.match(html, /lucide-check[^>]*opacity-0/);
+    assert.match(html, /lucide-plus[^>]*opacity-0/);
+    assert.match(html, following ? /w-10 gap-0/ : /w-\[112px\] gap-2/);
+  }
 });
