@@ -173,17 +173,27 @@ export const ProfileHero = ({
             aria-label={favoriteButtonLabel}
             aria-pressed={displayedFavorited}
             className={cn(
-              "mt-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border text-muted shadow-sm transition-colors duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+              "mt-10 inline-flex h-10 shrink-0 items-center justify-center rounded-full border text-muted shadow-sm transition-[width,gap,background-color,border-color] duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
               displayedFavorited
-                ? "border-favorite-border bg-favorite-soft"
-                : "border-border bg-surface hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface-muted",
+                ? "w-10 gap-0 border-favorite-border bg-favorite-soft"
+                : "w-[112px] gap-2 border-border bg-surface hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface-muted",
             )}
             disabled={favoritePending || !canFavorite}
             onClick={onToggleFavorite}
             title={favoriteButtonLabel}
             type="button"
           >
-            <FavoriteHeart active={displayedFavorited} />
+            <FavoriteHeart active={displayedFavorited} className="shrink-0" />
+            <span
+              aria-hidden="true"
+              className={cn(
+                "overflow-hidden whitespace-nowrap transition-[width,opacity] duration-200 motion-reduce:transition-none",
+                displayedFavorited ? "w-0 opacity-0" : "w-[56px] opacity-100",
+              )}
+              style={{ fontSize: 13, fontWeight: 600 }}
+            >
+              Favoritar
+            </span>
           </button>
         </div>
 

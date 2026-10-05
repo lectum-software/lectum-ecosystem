@@ -97,7 +97,7 @@ test("inactive feed favorite is text-only, hides self and waits for authenticate
     assert.equal(renderRelations({ ...state, children }), "");
 });
 
-test("known favorites retain a muted production heart and can be unfavorited", () => {
+test("known favorites retain the production heart and can be unfavorited", () => {
   const author = { id: "psi", name: "Ana Lima", role: "psicologo" };
   const children = createElement(FeedFavoriteButton, { author });
   const inactive = renderRelations({ userId: "viewer", ids: [], children });
@@ -143,10 +143,9 @@ test("favorite transitions compact the slot beside the badge and respect reduced
     css,
     /@media \(prefers-reduced-motion: reduce\) \{\s*\.favorite-toggle,[\s\S]*?transition: none;/,
   );
-  const favoriteColor = css.match(/--lectum-favorite: ([^;]+);/)?.[1];
-  const dangerColor = css.match(/--lectum-danger: ([^;]+);/)?.[1];
-  assert.ok(favoriteColor && dangerColor);
-  assert.notEqual(favoriteColor, dangerColor);
+  for (const suffix of ["", "-soft", "-border"]) {
+    assert.ok(css.includes(`--lectum-favorite${suffix}: var(--lectum-danger${suffix});`));
+  }
 });
 
 test("all post headers and comments share the persistent favorite toggle", () => {

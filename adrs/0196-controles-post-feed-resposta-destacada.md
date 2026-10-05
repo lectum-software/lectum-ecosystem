@@ -4,6 +4,17 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - favorito de producao e rotulo no perfil (0.1.575)
+
+Por nova referencia do usuario, os tokens de favorito passam a referenciar as
+cores originais de producao (danger, danger-soft, danger-border), preservando
+a semantica separada sem duplicar valores. O tema escuro acompanha os tokens.
+No perfil, o controle inativo acomoda coracao contornado e Favoritar em 112px;
+ativo retorna ao circulo h-10/w-10, somente com coracao preenchido. Altura e
+posicao permanecem, largura e rotulo transicionam com suporte a movimento reduzido.
+Feed/respostas conservam proximidade do selo e animacao de 0.1.574. Nenhuma
+mudanca em mutations, cache, contratos ou comunidade. Somente homologacao.
+
 ## Ajuste 2026-10-05 - proximidade e transicao do favorito (0.1.574)
 
 O slot fixo anterior centralizava o coracao longe do selo. O controle compacto

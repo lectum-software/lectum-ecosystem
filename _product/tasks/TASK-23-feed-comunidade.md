@@ -1,5 +1,16 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - cor de producao e rotulo no perfil (0.1.575)
+
+- [x] Reutilizar a paleta de favorito de producao (vermelho, fundo e contorno).
+- [x] Perfil nao favoritado: coracao contornado acompanhado de Favoritar.
+- [x] Perfil favoritado: somente coracao preenchido no botao circular original.
+- [x] Preservar altura, transicao suave, movimento reduzido e logica de favoritos.
+
+Referencia: captura de producao enviada pelo usuario; Builder indisponivel.
+Validacao: testes de estados, check/build frontend e smoke local/homologacao.
+Sem alteracao de dados, APIs, comunidade ou player. Publicacao apenas em homolog.
+
 ## Ajuste 2026-10-05 - acabamento dos favoritos (0.1.574)
 
 - [x] Aproximar o coracao do selo, com slot ativo de 24px em vez de 66px.

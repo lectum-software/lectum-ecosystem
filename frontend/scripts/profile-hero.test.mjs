@@ -57,7 +57,7 @@ test("unverified profiles retain their full name without a badge", () => {
   assert.ok(!html.includes('aria-label="Perfil verificado"'));
 });
 
-test("profile preserves the production circle and heart while community retains Seguindo", () => {
+test("profile shows outline plus Favoritar until selected, then the production circle", () => {
   for (const active of [false, true]) {
     const favorite = renderToStaticMarkup(
       createElement(ProfileHero, {
@@ -73,7 +73,7 @@ test("profile preserves the production circle and heart while community retains 
     const follow = renderToStaticMarkup(
       createElement(CommunityFollowButton, { following: active, size: "hero" }),
     );
-    assert.match(favorite, /h-10 w-10/);
+    assert.match(favorite, /h-10/);
     assert.match(favorite, /rounded-full/);
     assert.match(favorite, /lucide-heart/);
     assert.match(favorite, /stroke-width="2"/);
@@ -85,11 +85,16 @@ test("profile preserves the production circle and heart while community retains 
     for (const html of [favorite, follow])
       assert.match(html, new RegExp(`aria-pressed="${active}"`));
     if (active) {
+      assert.match(favorite, /w-10 gap-0 border-favorite-border bg-favorite-soft/);
+      assert.match(favorite, /w-0 opacity-0/);
       assert.match(favorite, /lucide-heart/);
       assert.match(favorite, /fill-current/);
       assert.match(favorite, /text-favorite/);
       assert.match(follow, />Seguindo<\/button>/);
     } else {
+      assert.match(favorite, /w-\[112px\] gap-2/);
+      assert.match(favorite, /w-\[56px\] opacity-100/);
+      assert.match(favorite, /style="font-size:13px;font-weight:600">Favoritar<\/span>/);
       assert.match(favorite, /fill-none/);
       assert.match(favorite, /border-border bg-surface/);
       assert.match(follow, />Seguir<\/button>/);

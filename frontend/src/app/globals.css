@@ -20,9 +20,9 @@
   --lectum-danger: #dc2626;
   --lectum-danger-border: #fecaca;
   --lectum-danger-soft: #fef2f2;
-  --lectum-favorite: #b65c68;
-  --lectum-favorite-soft: #fbf3f4;
-  --lectum-favorite-border: #ead0d5;
+  --lectum-favorite: var(--lectum-danger);
+  --lectum-favorite-soft: var(--lectum-danger-soft);
+  --lectum-favorite-border: var(--lectum-danger-border);
   --lectum-success: #16a34a;
   --lectum-success-border: #bbf7d0;
   --lectum-success-soft: #e8f8ef;
@@ -74,9 +74,6 @@
   --lectum-danger: #f87171;
   --lectum-danger-border: #7f1d1d;
   --lectum-danger-soft: #2f151b;
-  --lectum-favorite: #d18a94;
-  --lectum-favorite-soft: #302129;
-  --lectum-favorite-border: #694650;
   --lectum-success: #4ade80;
   --lectum-success-border: #166534;
   --lectum-success-soft: #102a1b;
