@@ -1,6 +1,5 @@
 "use client";
 
-import { FileText } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -24,6 +23,7 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { MoreProfessionalReplies } from "@/components/community/more-professional-replies";
@@ -207,6 +207,7 @@ export const ProfessionalReplyPreview = ({
           />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <AuthorIdentityLine
+              action={<FeedFavoriteButton author={reply.author} />}
               href={profileHref}
               name={getCommunityAuthorDisplayName(reply.author)}
               onClick={handleProfileNavigationClick}
@@ -507,7 +508,6 @@ export const PostCard = ({
     >
       {showCommunityHeader ? (
         <div className="mb-3 flex min-w-0 items-center gap-1 text-[11px] font-semibold text-subtle">
-          <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="shrink-0">Postado em</span>
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
             <Link
@@ -517,7 +517,8 @@ export const PostCard = ({
               {post.community.name}
             </Link>
             <CommunityFollowToggle
-              className="shrink-0"
+              className="h-5 shrink-0 px-2 text-[11px] tracking-normal"
+              hideFollowing
               initialFollowing={Boolean(post.community.following)}
               slug={post.community.slug}
             />
@@ -540,6 +541,7 @@ export const PostCard = ({
           />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <AuthorIdentityLine
+              action={isPsychologistPost ? <FeedFavoriteButton author={post.author} /> : undefined}
               href={psychologistProfileHref}
               name={getCommunityAuthorDisplayName(post.author)}
               onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
@@ -603,7 +605,6 @@ export const PostCard = ({
         onVote={handleVote}
         save={{
           active: saveSnapshot.saved,
-          count: saveSnapshot.saves,
           disabled: saveMutation.isPending,
           label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar post",
           onClick: handleToggleSave,

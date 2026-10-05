@@ -4,6 +4,29 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - controles de relacionamento no feed (0.1.565)
+
+O card deixa de mostrar o icone decorativo de post e o contador de salvos, sem
+alterar endpoints ou os contadores de outras superficies. Favoritar textual
+entra na linha do nome com slot h-0 centralizado, preservando altura e metadados;
+botao e Seguir usam h-5. Nome segue truncavel e selo nao encolhe.
+
+Favoritos sao lidos pela API existente, percorrendo todas as paginas de 50 itens,
+em cache de IDs separado das listas completas e isolado pelo usuario. Cards
+compartilham a consulta e aguardam carregamento para evitar mostrar Favoritar
+para quem ja e favorito. A mutation existente atualiza esse cache no sucesso,
+usa o usuario capturado no inicio e invalida para reconciliar com o servidor.
+Estado pendente e compartilhado por psicologo. Sem remocao otimista que exija
+restaurar listas completas em erros. Apos login a intencao pendente e retomada.
+
+CommunityFollowToggle usa o snapshot de interacao ja existente para receber
+mudancas da consulta e isolar usuario/comunidade; hideFollowing e opt-in do card.
+O cabecalho da pagina da comunidade tambem oculta Seguir quando following=true.
+A ocultacao fica restrita ao feed e a comunidade: Favoritos, Comunidades seguidas
+e perfil do psicologo preservam os controles para desfazer as acoes. Sem mudancas
+de banco, contratos, autoplay/volume ou de layout da resposta profissional.
+Rollback por reversao desses componentes/hooks; nenhum procedimento de dados.
+
 ## Ajuste 2026-10-04 - resposta contida e Plus preto (0.1.564)
 
 O usuario pediu que o fundo da resposta volte a parecer contido dentro do post.

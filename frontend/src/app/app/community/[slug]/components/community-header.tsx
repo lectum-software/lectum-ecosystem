@@ -243,13 +243,15 @@ export const CommunityHeader = ({
       <div className="relative px-5">
         <div className="-mt-8 flex items-end justify-between gap-4">
           <CommunityLogo community={community} palette={palette} />
-          <CommunityFollowButton
-            disabled={membershipPending}
-            following={following}
-            onClick={onToggleFollow}
-            pending={membershipPending}
-            size="hero"
-          />
+          {!following ? (
+            <CommunityFollowButton
+              disabled={membershipPending}
+              following={following}
+              onClick={onToggleFollow}
+              pending={membershipPending}
+              size="hero"
+            />
+          ) : null}
         </div>
 
         <div className="mt-4 grid gap-2">

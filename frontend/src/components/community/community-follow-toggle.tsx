@@ -1,14 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useFollowCommunity, useUnfollowCommunity } from "@/api/callers/community";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { useAppSelector } from "@/hooks/redux";
+import { useInteractionSnapshot } from "./use-interaction-snapshot";
 
 type CommunityFollowToggleProps = {
   className?: string;
   followVariant?: "primary" | "secondary";
   initialFollowing?: boolean;
+  hideFollowing?: boolean;
   size?: "compact" | "hero";
   slug: string;
 };
@@ -17,10 +20,15 @@ export const CommunityFollowToggle = ({
   className,
   followVariant,
   initialFollowing = false,
+  hideFollowing = false,
   size,
   slug,
 }: CommunityFollowToggleProps) => {
-  const [following, setFollowing] = useState(initialFollowing);
+  const viewerId = useAppSelector((state) => state.user?.id);
+  const { snapshot, begin } = useInteractionSnapshot(`${viewerId ?? "guest"}:${slug}`, {
+    following: initialFollowing,
+  });
+  const { following } = snapshot;
   const followMutation = useFollowCommunity();
   const unfollowMutation = useUnfollowCommunity();
   const conversion = useProgressiveConversion();
@@ -43,18 +51,18 @@ export const CommunityFollowToggle = ({
 
     const previousFollowing = following;
     const nextFollowing = !previousFollowing;
-    setFollowing(nextFollowing);
+    const interaction = begin({ following: nextFollowing });
 
     const mutation = previousFollowing ? unfollowMutation : followMutation;
     mutation.mutate(slug, {
       onError: () => {
-        setFollowing(previousFollowing);
+        interaction.onError();
       },
       onSuccess: (data) => {
-        setFollowing(data.following);
+        interaction.onSuccess({ following: data.following });
       },
     });
-  }, [conversion, followMutation, following, pending, slug, unfollowMutation]);
+  }, [begin, conversion, followMutation, following, pending, slug, unfollowMutation]);
 
   useEffect(() => {
     if (!conversion.isAuthenticated || following || pending) return;
@@ -69,6 +77,8 @@ export const CommunityFollowToggle = ({
 
     window.setTimeout(handleToggle, 0);
   }, [conversion, following, handleToggle, pending, slug]);
+
+  if (hideFollowing && following) return null;
 
   return (
     <CommunityFollowButton

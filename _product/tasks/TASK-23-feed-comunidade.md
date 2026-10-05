@@ -1,5 +1,27 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - acoes compactas e favoritos no feed (0.1.565)
+
+Referencia: captura e cinco requisitos do usuario; Builder indisponivel.
+
+- [x] Retirar FileText da linha Postado em no card do feed.
+- [x] Salvar mantem icone/acao/acessibilidade, sem contador no card.
+- [x] Favoritar textual ao lado do nome do psicologo (autor ou resposta destacada).
+- [x] Favoritar e Seguir com altura h-5, sem aumentar a linha de identificacao.
+- [x] Ocultar Seguir quando seguindo e Favoritar quando ja favorito ou proprio perfil.
+- [x] Reutilizar conversao/login e APIs existentes; favoritos compartilhados por usuario.
+- [x] Consultar todas as paginas de favoritos (limite real 50), sem uma consulta por card.
+- [x] Atualizar cache apos sucesso; erros nao escondem definitivamente a acao.
+
+Escopo: frontend, feed geral e comunidade (cards e cabecalho). Ocultacao restrita
+a essas telas. Favoritos, Comunidades seguidas e perfil do psicologo preservam
+controles para desfazer as acoes. Sem backend, migration ou nova dependencia.
+Validacao: 26 testes focados, build e typecheck aprovados. Navegador local com
+API real: botoes com alturas iguais, sem overflow na largura disponivel de 508px,
+icone decorativo/contador ausentes; Favoritar anonimo abre conversao sem navegar
+ao post e pausa os videos. Controle de viewport do navegador indisponivel nesta
+execucao. Baseline da raiz limitado por DATABASE_URL local ausente no Prisma.
+
 ## Ajuste 2026-10-04 - contorno da resposta e circulo preto (0.1.564)
 
 Referencia: capturas e pedido do usuario; Builder indisponivel nesta execucao.

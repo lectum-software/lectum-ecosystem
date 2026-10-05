@@ -3,9 +3,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import test from "node:test";
+import { configureStore } from "@reduxjs/toolkit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Controller, useForm } from "react-hook-form";
+import { Provider } from "react-redux";
 
 const { AnonymousPostSwitch } = await import(
   "../../app/app/community/[slug]/post/new/views/anonymous-post-switch.tsx"
@@ -23,14 +26,177 @@ registerHooks({
     const target =
       specifier === "next/image"
         ? nextImageBridge
-        : specifier === "next/link"
-          ? "next/link.js"
+        : ["next/link", "next/navigation"].includes(specifier)
+          ? `${specifier}.js`
           : specifier;
     return nextResolve(target, context);
   },
 });
 const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
 const { CommunityActionBar } = await import("./community-action-bar.tsx");
+const { FeedFavoriteButton } = await import("./feed-favorite-button.tsx");
+const { CommunityFollowToggle } = await import("./community-follow-toggle.tsx");
+const { CommunityHeader } = await import(
+  "../../app/app/community/[slug]/components/community-header.tsx"
+);
+const { default: rootReducer } = await import("../../store/modules/rootReducers.ts");
+const { default: keys } = await import("../../api/cache/keys.ts");
+const { loadFavoriteIds, updateFavoriteIds } = await import(
+  "../../api/callers/patient/favorite-ids.ts"
+);
+const { ProgressiveConversionContext, noopContext } = await import(
+  "../conversion/progressive-conversion-state.ts"
+);
+
+const renderRelations = ({ userId, authenticated = Boolean(userId), ids, children }) => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  if (ids) client.setQueryData(keys.patient.favoriteIds(userId), ids);
+  const store = configureStore({
+    reducer: rootReducer,
+    preloadedState: { user: userId ? { id: userId } : null },
+  });
+  const html = renderToStaticMarkup(
+    createElement(
+      Provider,
+      { store },
+      createElement(
+        QueryClientProvider,
+        { client },
+        createElement(
+          ProgressiveConversionContext.Provider,
+          { value: { ...noopContext, isAuthenticated: authenticated } },
+          children,
+        ),
+      ),
+    ),
+  );
+  client.clear();
+  return html;
+};
+
+test("feed favorite is text-only, hides known favorites/self and waits for authenticated state", () => {
+  const children = createElement(FeedFavoriteButton, {
+    author: { id: "psi", name: "Ana Lima", role: "psicologo" },
+  });
+  for (const state of [{}, { userId: "viewer", ids: [] }]) {
+    const html = renderRelations({ ...state, children });
+    assert.match(html, />Favoritar<\/button>/);
+    assert.match(html, /h-5/);
+    assert.doesNotMatch(html, /<svg|heart|Seguindo/);
+  }
+  for (const state of [
+    { userId: "viewer", ids: ["psi"] },
+    { userId: "psi", ids: [] },
+    { userId: "viewer" },
+    { authenticated: true },
+  ])
+    assert.equal(renderRelations({ ...state, children }), "");
+});
+
+test("follow-only feed hides followed communities without changing ordinary unfollow controls", () => {
+  const render = (props) =>
+    renderRelations({
+      children: createElement(CommunityFollowToggle, { slug: "community", ...props }),
+    });
+  assert.equal(render({ initialFollowing: true, hideFollowing: true }), "");
+  assert.match(render({ initialFollowing: false, hideFollowing: true }), />Seguir<\/button>/);
+  assert.match(render({ initialFollowing: true }), />Seguindo<\/button>/);
+});
+
+test("community header hides its follow action only after following", () => {
+  const render = (following) =>
+    renderToStaticMarkup(
+      createElement(CommunityHeader, {
+        community: { name: "Comunidade", slug: "community", members_count: 1, posts_count: 1 },
+        following,
+        membershipPending: false,
+        onBack() {},
+        onSearch() {},
+        onShare() {},
+        onToggleFollow() {},
+      }),
+    );
+  assert.match(render(false), />Seguir<\/button>/);
+  assert.doesNotMatch(render(true), /Seguir|Seguindo/);
+  assert.match(render(true), /Compartilhar comunidade/);
+});
+
+test("favorite IDs read every real pagination page, deduplicate and honor cancellation", async () => {
+  const calls = [];
+  const signal = new AbortController().signal;
+  const ids = await loadFavoriteIds(async ({ page, limit }) => {
+    calls.push({ page, limit });
+    return {
+      page,
+      pages: 2,
+      count: 3,
+      data:
+        page === 1
+          ? [{ id: "a", favorited: true }]
+          : [
+              { id: "a", favorited: true },
+              { id: "b", favorited: true },
+            ],
+    };
+  }, signal);
+  assert.deepEqual(ids, ["a", "b"]);
+  assert.deepEqual(calls, [
+    { page: 1, limit: 50 },
+    { page: 2, limit: 50 },
+  ]);
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(
+    () =>
+      loadFavoriteIds(() => {
+        throw Error("must not request");
+      }, controller.signal),
+    { name: "AbortError" },
+  );
+  await assert.rejects(
+    () =>
+      loadFavoriteIds(async ({ page }) => {
+        if (page === 2) throw Error("page unavailable");
+        return { page, pages: 2, count: 2, data: [{ id: "a", favorited: true }] };
+      }, signal),
+    /page unavailable/,
+  );
+});
+
+test("favorite changes use the originating account and do not manufacture a partial ID list", () => {
+  const client = new QueryClient();
+  client.setQueryData(keys.patient.favoriteIds("a"), []);
+  client.setQueryData(keys.patient.favoriteIds("b"), ["existing"]);
+  updateFavoriteIds(client, "a", "psi", true);
+  updateFavoriteIds(client, "a", "psi", true);
+  assert.deepEqual(client.getQueryData(keys.patient.favoriteIds("a")), ["psi"]);
+  assert.deepEqual(client.getQueryData(keys.patient.favoriteIds("b")), ["existing"]);
+  updateFavoriteIds(client, "a", "psi", false);
+  assert.deepEqual(client.getQueryData(keys.patient.favoriteIds("a")), []);
+  updateFavoriteIds(client, "new", "psi", true);
+  assert.equal(client.getQueryData(keys.patient.favoriteIds("new")), undefined);
+  client.clear();
+});
+
+test("feed hides saved count and decorative post icon, keeping compact favorite/follow controls", () => {
+  const source = readFileSync(
+    new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /FileText|count: saveSnapshot.saves/);
+  assert.match(source, /hideFollowing/);
+  assert.match(source, /className="h-5 shrink-0 px-2/);
+  assert.match(source, /FeedFavoriteButton author=\{reply.author\}/);
+  assert.match(source, /isPsychologistPost \? <FeedFavoriteButton author=\{post.author\}/);
+  const html = renderToStaticMarkup(
+    createElement(CommunityActionBar, {
+      upvotesCount: 1,
+      save: { label: "Salvar post", active: false, onClick: () => {} },
+    }),
+  );
+  assert.match(html, /aria-label="Salvar post"/);
+  assert.doesNotMatch(html, />0</);
+});
 
 test("vote cluster has no independent fill and keeps selection feedback", () => {
   for (const size of ["xs", "sm", "md"]) {
