@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowLeft, Heart, PencilLine, Share2, Star } from "lucide-react";
+import { ArrowLeft, PencilLine, Share2, Star } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
-import { RelationshipButton } from "@/components/ui/relationship-button";
+import { FavoriteHeart } from "@/components/ui/favorite-heart";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { cn } from "@/lib/utils";
 import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -167,22 +168,23 @@ export const ProfileHero = ({
         <div className="-mt-8 flex items-start justify-between gap-4">
           <ProfileAvatar profile={profile} />
 
-          <RelationshipButton
+          <button
             aria-busy={favoritePending}
             aria-label={favoriteButtonLabel}
             aria-pressed={displayedFavorited}
-            className={`mt-10 ${displayedFavorited ? "border-transparent text-danger" : ""}`}
+            className={cn(
+              "mt-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border text-muted shadow-sm transition-colors duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+              displayedFavorited
+                ? "border-favorite-border bg-favorite-soft"
+                : "border-border bg-surface hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface-muted",
+            )}
             disabled={favoritePending || !canFavorite}
             onClick={onToggleFavorite}
-            title={!canFavorite || displayedFavorited ? favoriteButtonLabel : undefined}
+            title={favoriteButtonLabel}
             type="button"
           >
-            {displayedFavorited ? (
-              <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
-            ) : (
-              "Favoritar"
-            )}
-          </RelationshipButton>
+            <FavoriteHeart active={displayedFavorited} />
+          </button>
         </div>
 
         <div className="mt-4 grid gap-2">

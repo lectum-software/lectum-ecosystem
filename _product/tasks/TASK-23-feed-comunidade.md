@@ -1,5 +1,20 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - acabamento dos favoritos (0.1.574)
+
+- [x] Aproximar o coracao do selo, com slot ativo de 24px em vez de 66px.
+- [x] Fazer transicao suave de largura, opacidade e escala ao favoritar, sem
+  animacao para usuarios com movimento reduzido.
+- [x] Reutilizar Heart/Lucide de producao, com traco 2, em feed, respostas,
+  perfil, busca e lista de favoritos; vermelho discreto exclusivo de favoritos.
+- [x] Restaurar o botao circular do perfil conforme referencia de producao,
+  com coracao contornado inativo e preenchido ativo.
+- [x] Preservar Seguindo na comunidade, conversao, cache e bloqueio pendente.
+
+Referencia: capturas fornecidas e componente de producao. Builder indisponivel.
+Validacao: testes de componentes, check/build e smoke local/homologacao.
+Sem alteracoes de backend, dados, packages ou envs. Apenas homologacao.
+
 ## Ajuste 2026-10-05 - estados persistentes de relacionamento (0.1.573)
 
 - [x] Favoritar vira coracao preenchido vermelho quando ativo em posts, respostas,

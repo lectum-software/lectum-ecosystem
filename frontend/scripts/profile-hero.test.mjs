@@ -57,7 +57,7 @@ test("unverified profiles retain their full name without a badge", () => {
   assert.ok(!html.includes('aria-label="Perfil verificado"'));
 });
 
-test("profile favorite and community follow share stable hero dimensions and typography", () => {
+test("profile preserves the production circle and heart while community retains Seguindo", () => {
   for (const active of [false, true]) {
     const favorite = renderToStaticMarkup(
       createElement(ProfileHero, {
@@ -73,21 +73,25 @@ test("profile favorite and community follow share stable hero dimensions and typ
     const follow = renderToStaticMarkup(
       createElement(CommunityFollowButton, { following: active, size: "hero" }),
     );
-    for (const html of [favorite, follow]) {
-      assert.match(html, /h-10 w-\[108px\]/);
-      assert.match(html, /rounded-\[6px\]/);
-      assert.match(html, /bg-transparent/);
-      assert.match(html, /style="font-size:13px;font-weight:600"/);
+    assert.match(favorite, /h-10 w-10/);
+    assert.match(favorite, /rounded-full/);
+    assert.match(favorite, /lucide-heart/);
+    assert.match(favorite, /stroke-width="2"/);
+    assert.match(favorite, /motion-reduce:transition-none/);
+    assert.match(follow, /h-10 w-\[108px\]/);
+    assert.match(follow, /rounded-\[6px\]/);
+    assert.match(follow, /bg-transparent/);
+    assert.match(follow, /style="font-size:13px;font-weight:600"/);
+    for (const html of [favorite, follow])
       assert.match(html, new RegExp(`aria-pressed="${active}"`));
-    }
     if (active) {
       assert.match(favorite, /lucide-heart/);
       assert.match(favorite, /fill-current/);
-      assert.match(favorite, /text-danger/);
+      assert.match(favorite, /text-favorite/);
       assert.match(follow, />Seguindo<\/button>/);
     } else {
-      assert.match(favorite, />Favoritar<\/button>/);
-      assert.doesNotMatch(favorite, /lucide-heart/);
+      assert.match(favorite, /fill-none/);
+      assert.match(favorite, /border-border bg-surface/);
       assert.match(follow, />Seguir<\/button>/);
     }
   }

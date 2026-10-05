@@ -80,7 +80,7 @@ test("inactive feed favorite is text-only, hides self and waits for authenticate
   });
   for (const state of [{}, { userId: "viewer", ids: [] }]) {
     const html = renderRelations({ ...state, children });
-    assert.match(html, />Favoritar<\/button>/);
+    assert.match(html, /favorite-toggle-label">Favoritar<\/span>/);
     assert.match(html, /h-5/);
     assert.match(html, /w-\[66px\]/);
     assert.match(html, /style="font-size:11px;font-weight:600"/);
@@ -88,28 +88,31 @@ test("inactive feed favorite is text-only, hides self and waits for authenticate
     assert.match(html, /rounded-\[6px\]/);
     assert.doesNotMatch(html, /rounded-full/);
     assert.doesNotMatch(html, /bg-surface|hover:bg-/);
-    assert.doesNotMatch(html, /<svg|heart|Seguindo/);
+    assert.match(html, /aria-pressed="false"/);
+    assert.match(html, /aria-label="Favoritar Ana Lima"/);
+    assert.match(html, /aria-hidden="true" class="favorite-toggle-heart"/);
+    assert.doesNotMatch(html, /Seguindo/);
   }
   for (const state of [{ userId: "psi", ids: [] }, { userId: "viewer" }, { authenticated: true }])
     assert.equal(renderRelations({ ...state, children }), "");
 });
 
-test("known favorites remain as a filled red heart, with the same slot, and can be unfavorited", () => {
+test("known favorites retain a muted production heart and can be unfavorited", () => {
   const author = { id: "psi", name: "Ana Lima", role: "psicologo" };
   const children = createElement(FeedFavoriteButton, { author });
   const inactive = renderRelations({ userId: "viewer", ids: [], children });
   assert.match(inactive, /aria-pressed="false"/);
-  assert.match(inactive, />Favoritar<\/button>/);
+  assert.match(inactive, /favorite-toggle-label">Favoritar<\/span>/);
   const active = renderRelations({ userId: "viewer", ids: ["psi"], children });
   assert.match(active, /aria-pressed="true"/);
   assert.match(active, /aria-label="Remover Ana Lima dos favoritos"/);
   assert.match(active, /lucide-heart/);
   assert.match(active, /fill-current/);
-  assert.match(active, /text-danger/);
-  assert.match(active, /border-transparent/);
-  assert.match(active, /w-\[66px\]/);
+  assert.match(active, /text-favorite/);
+  assert.match(active, /stroke-width="2"/);
+  assert.match(active, /favorite-toggle pointer-events-auto/);
   assert.match(active, /title="Remover Ana Lima dos favoritos"/);
-  assert.doesNotMatch(active, />Favoritado|>Favoritar</);
+  assert.doesNotMatch(active, />Favoritado|text-danger/);
   assert.equal(renderRelations({ userId: "psi", ids: [], children }), "");
   assert.equal(
     renderRelations({
@@ -119,6 +122,31 @@ test("known favorites remain as a filled red heart, with the same slot, and can 
     }),
     "",
   );
+});
+
+test("favorite transitions compact the slot beside the badge and respect reduced motion", () => {
+  const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
+  assert.match(
+    css,
+    /\.favorite-toggle\[aria-pressed="true"\] \{\s*width: 24px;\s*border-color: transparent;/,
+  );
+  assert.match(css, /\.favorite-toggle-heart \{[^}]*left: 2px;[^}]*opacity: 0;/);
+  assert.match(
+    css,
+    /\.favorite-toggle\[aria-pressed="true"\] \.favorite-toggle-label \{\s*opacity: 0;/,
+  );
+  assert.match(
+    css,
+    /\.favorite-toggle\[aria-pressed="true"\] \.favorite-toggle-heart \{\s*opacity: 1;/,
+  );
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion: reduce\) \{\s*\.favorite-toggle,[\s\S]*?transition: none;/,
+  );
+  const favoriteColor = css.match(/--lectum-favorite: ([^;]+);/)?.[1];
+  const dangerColor = css.match(/--lectum-danger: ([^;]+);/)?.[1];
+  assert.ok(favoriteColor && dangerColor);
+  assert.notEqual(favoriteColor, dangerColor);
 });
 
 test("all post headers and comments share the persistent favorite toggle", () => {

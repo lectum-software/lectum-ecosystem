@@ -4,6 +4,24 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - proximidade e transicao do favorito (0.1.574)
+
+O slot fixo anterior centralizava o coracao longe do selo. O controle compacto
+agora transiciona entre 66px (texto) e 24px (icone), com o coracao alinhado a
+esquerda e altura inalterada. Duas camadas decorativas persistentes permitem
+crossfade sem anunciar texto duplicado; aria-label e aria-pressed mantem a acao.
+CSS respeita prefers-reduced-motion. O estado continua dependendo da mutation
+real confirmada, sem sucesso visual antecipado nem mudanca de cache/conversao.
+
+FavoriteHeart reutiliza Heart/Lucide com o mesmo desenho e traco de producao.
+Tokens favorite separados de danger permitem vermelho menos saturado, incluindo
+tema escuro, sem alterar alertas ou exclusoes. Perfil recupera o botao circular
+da referencia, substituindo a padronizacao textual de 0.1.573 somente no perfil.
+Comunidade conserva Seguir/Seguindo. Busca e lista reutilizam desenho/cor, sem
+alterar suas dimensoes ou comportamento de relacionamento.
+
+Sem contrato, schema ou dependencia novos. Rollback somente visual. Homologacao.
+
 ## Ajuste 2026-10-05 - feedback persistente e cabecalhos padronizados (0.1.573)
 
 Substituir ocultacao de favoritos por alternancia Favoritar/coracao preenchido

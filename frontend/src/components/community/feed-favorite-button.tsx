@@ -1,7 +1,6 @@
 "use client";
 
 import { useIsMutating, useQuery } from "@tanstack/react-query";
-import { Heart } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import keys from "@/api/cache/keys";
 import { usePatient } from "@/api/callers/patient";
@@ -9,6 +8,7 @@ import { loadFavoriteIds } from "@/api/callers/patient/favorite-ids";
 import type { CommunityAuthor } from "@/api/generator/types/community";
 import { getFavoritePsychologists } from "@/api/req/patient";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { FavoriteHeart } from "@/components/ui/favorite-heart";
 import { RelationshipButton } from "@/components/ui/relationship-button";
 import { useAppSelector } from "@/hooks/redux";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
@@ -73,7 +73,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
       aria-busy={pending}
       aria-label={favorited ? `Remover ${name} dos favoritos` : `Favoritar ${name}`}
       aria-pressed={favorited}
-      className={`pointer-events-auto ${favorited ? "border-transparent text-danger" : ""}`}
+      className="favorite-toggle pointer-events-auto"
       disabled={pending}
       size="compact"
       title={favorited ? `Remover ${name} dos favoritos` : undefined}
@@ -83,7 +83,12 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
       }}
       type="button"
     >
-      {favorited ? <Heart aria-hidden="true" className="h-4 w-4 fill-current" /> : "Favoritar"}
+      <span aria-hidden="true" className="favorite-toggle-label">
+        Favoritar
+      </span>
+      <span aria-hidden="true" className="favorite-toggle-heart">
+        <FavoriteHeart active className="h-4 w-4" />
+      </span>
     </RelationshipButton>
   );
 };
