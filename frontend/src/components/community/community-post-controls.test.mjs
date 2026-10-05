@@ -74,13 +74,20 @@ const renderRelations = ({ userId, authenticated = Boolean(userId), ids, childre
   return html;
 };
 
-test("inactive feed favorite uses plus and text without a border, keeping its compact width", () => {
+test("inactive feed favorite uses a plus inheriting the label color without a border", () => {
   const children = createElement(FeedFavoriteButton, {
     author: { id: "psi", name: "Ana Lima", role: "psicologo" },
   });
   for (const state of [{}, { userId: "viewer", ids: [] }]) {
     const html = renderRelations({ ...state, children });
-    assert.match(html, /favorite-toggle-label gap-1">.*lucide-plus.*<\/svg>Favoritar<\/span>/);
+    const label = html.match(/favorite-toggle-label gap-1">(.*?)<\/span>/)?.[1];
+    assert.ok(label);
+    assert.match(label, /lucide-plus/);
+    assert.match(label, /fill="none"/);
+    assert.match(label, /stroke="currentColor"/);
+    assert.doesNotMatch(label, /text-favorite|fill-current|text-danger|lucide-heart/);
+    assert.match(label, /<\/svg>Favoritar$/);
+    assert.match(html, /text-primary/);
     assert.match(html, /h-3 w-3 shrink-0/);
     assert.match(html, /border-0/);
     assert.doesNotMatch(html, /(?:^|\s)border(?:\s|$)/);
@@ -329,6 +336,27 @@ test("feed hides saved count and decorative post icon, keeping favorite but no f
   );
   assert.match(html, /aria-label="Salvar post"/);
   assert.doesNotMatch(html, />0</);
+});
+
+test("post detail matches feed vertical spacing and keeps saving without a counter", () => {
+  const source = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const header = source.split("export const PostHeader")[1].split("export const PostBody")[0];
+  const body = source
+    .split("export const PostBody")[1]
+    .split("export const ThreadOriginalPostCard")[0];
+  const actions = source.split("export const PostVoteBar")[1];
+  assert.match(header, /<header className="grid gap-3 px-5 pt-4 pb-0">/);
+  assert.match(header, /h-px w-full bg-surface-muted dark:bg-border\/70/);
+  assert.match(body, /grid gap-2 px-5 pt-3 pb-4/);
+  assert.doesNotMatch(actions, /count: post.saves_count/);
+  assert.match(actions, /active: post.saved/);
+  assert.match(actions, /onClick: onToggleSave/);
 });
 
 test("post surfaces preserve community navigation without follow actions", () => {

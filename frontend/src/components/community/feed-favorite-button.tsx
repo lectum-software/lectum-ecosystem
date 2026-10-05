@@ -85,7 +85,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
       type="button"
     >
       <span aria-hidden="true" className="favorite-toggle-label gap-1">
-        <Plus className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <Plus className="h-3 w-3 shrink-0" />
         Favoritar
       </span>
       <span aria-hidden="true" className="favorite-toggle-heart">

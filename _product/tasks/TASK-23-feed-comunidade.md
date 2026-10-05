@@ -1,5 +1,32 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Retorno ao Plus Favoritar (0.1.581)
+
+- [x] Restaurar Plus no rotulo inativo do favorito de posts e respostas, a pedido do usuario.
+- [x] Manter fonte de 11px, slot de 66px, alinhamento a direita e fundo transparente.
+- [x] Preservar coracao vermelho ativo e transicao, sem alterar perfil ou comunidade.
+- [x] Atualizar regressao para Plus no estado inicial e coracao no estado favoritado.
+- Referencia: reversao pontual solicitada pelo usuario; sem geracao Builder.
+- Validacao: check completo do frontend e build aprovados. Check geral bloqueado no backend por DATABASE_URL local ausente. Build local abriu, mas sem conexao com a API; concluir smoke com dados reais em homologacao. Producao permanece 0.1.578.
+
+## Ajuste 2026-10-05 - Espacamento do detalhe e salvos sem contador (0.1.580)
+
+- [x] Remover apenas o contador de salvos do post aberto, preservando icone, estado e acao.
+- [x] Igualar separacao comunidade/autor ao feed: 12px, divisoria discreta de 1px e 12px.
+- [x] Manter 12px entre autor e titulo e usar 8px entre titulo e descricao, como no feed.
+- [x] Preservar navegacao, margens externas do detalhe, tipografia, expansao do texto e discussoes.
+- Referencia: comparacao das duas imagens enviadas pelo usuario; ajuste pontual no componente existente.
+- Validacao: check completo do frontend e build aprovados, incluindo regressao de espacamento e preservacao da acao de salvar. Check geral bloqueado no backend por DATABASE_URL local ausente. Build local abriu, mas sem conexao com a API; concluir smoke visual e salvar/remover com dados reais em homologacao. Producao permanece 0.1.578.
+
+## Ajuste 2026-10-05 - Favoritar com coracao contornado azul (0.1.579)
+
+- [x] Substituir Plus por FavoriteHeart inativo no controle compacto de posts e respostas.
+- [x] Usar contorno currentColor, sem preenchimento, herdando o mesmo azul do texto Favoritar.
+- [x] Preservar slot de 66px a direita, dimensoes, animacao e coracao vermelho ativo.
+- [x] Cobrir renderizacao do contorno, heranca de cor e ausencia de Plus no rotulo.
+- Referencia: pedido e imagem do usuario; ajuste pontual no componente existente, sem geracao Builder.
+- Validacao: 31 testes focados, check completo do frontend e build aprovados. Check geral parou na configuracao local do backend por DATABASE_URL ausente. Browser local abriu o build, mas o feed nao conectou ao servico local; concluir smoke com dados reais em homologacao. Producao permanece 0.1.578.
+
 ## Ajuste 2026-10-05 - Plus Favoritar sem borda (0.1.578)
 
 - [x] Testar Plus + Favoritar azul e sem borda/fundo a direita, nos posts e respostas que compartilham o controle compacto, conforme confirmacao do usuario.

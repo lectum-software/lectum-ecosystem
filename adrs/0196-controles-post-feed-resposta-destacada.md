@@ -4,6 +4,29 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - restaurar Plus no estado inativo (0.1.581)
+
+Por escolha do usuario, reverter apenas o icone inativo de FavoriteHeart para
+Plus no FeedFavoriteButton. A ampliacao de fonte foi cancelada antes de commit
+e nao integra esta versao. Preservar fonte, geometria, estado ativo e mutacoes.
+Manter os ajustes de espacamento e salvos do detalhe entregues na versao 0.1.580.
+
+## Ajuste 2026-10-05 - detalhe com ritmo vertical do feed (0.1.580)
+
+PostHeader usa gap de 12px e a mesma divisoria discreta entre comunidade e autor
+do feed, totalizando 25px entre as duas linhas. PostBody conserva 12px apos o
+autor e adota 8px entre titulo e descricao. Preservar margens laterais e tipografia
+da pagina de detalhe, sem alterar o compositor ou os cards de discussao.
+PostVoteBar deixa de fornecer save.count; bookmark continua interativo e acessivel.
+Nao modificar contratos, persistencia nem contadores de outros tipos de interacao.
+
+## Ajuste 2026-10-05 - coracao contornado no rotulo Favoritar (0.1.579)
+
+Reutilizar FavoriteHeart sem active no rotulo compacto, substituindo apenas o Plus.
+O contorno herda currentColor do texto azul e permanece sem preenchimento.
+Manter alinhamento a direita, slot de 66px, transicao e coracao vermelho ativo.
+Nenhuma alteracao em mutacoes, perfil, comunidade, player ou contratos.
+
 ## Ajuste 2026-10-05 - acao compacta Plus Favoritar (0.1.578)
 
 - Adicionar o icone Plus da biblioteca existente e retirar apenas a borda no FeedFavoriteButton compartilhado por posts/respostas.

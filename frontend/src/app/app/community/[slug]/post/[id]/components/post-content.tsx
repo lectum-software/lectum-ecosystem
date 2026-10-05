@@ -132,8 +132,8 @@ export const PostHeader = ({
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <header className="grid gap-4 px-5 pt-4 pb-0">
-      <div className="-mx-5 flex items-center justify-between gap-3 border-border border-b px-5 pb-3 dark:border-border">
+    <header className="grid gap-3 px-5 pt-4 pb-0">
+      <div className="-mx-5 mb-1 flex items-center justify-between gap-3 border-border border-b px-5 pb-3 dark:border-border">
         <Button
           aria-label="Voltar"
           className="h-10 w-10 rounded-full p-0"
@@ -196,6 +196,8 @@ export const PostHeader = ({
         </div>
         {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
       </div>
+
+      <div className="h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
 
       <div className="flex items-start gap-3">
         <AuthorAvatar
@@ -298,7 +300,7 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
   });
 
   return (
-    <div className="grid gap-3 px-5 pt-3 pb-4">
+    <div className="grid gap-2 px-5 pt-3 pb-4">
       <h2 className="text-[1.45rem] font-black leading-[1.16] tracking-[-0.03em] text-foreground dark:text-foreground">
         {post.title}
       </h2>
@@ -530,7 +532,6 @@ export const PostVoteBar = ({
     onVote={onVote}
     save={{
       active: post.saved,
-      count: post.saves_count,
       disabled,
       label: post.saved ? "Remover dos salvos" : "Salvar post",
       onClick: onToggleSave,
