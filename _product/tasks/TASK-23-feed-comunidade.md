@@ -1,5 +1,14 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Retorno ao Plus Favoritar (0.1.581)
+
+- [x] Restaurar Plus no rotulo inativo do favorito de posts e respostas, a pedido do usuario.
+- [x] Manter fonte de 11px, slot de 66px, alinhamento a direita e fundo transparente.
+- [x] Preservar coracao vermelho ativo e transicao, sem alterar perfil ou comunidade.
+- [x] Atualizar regressao para Plus no estado inicial e coracao no estado favoritado.
+- Referencia: reversao pontual solicitada pelo usuario; sem geracao Builder.
+- Validacao: check completo do frontend e build aprovados. Check geral bloqueado no backend por DATABASE_URL local ausente. Build local abriu, mas sem conexao com a API; concluir smoke com dados reais em homologacao. Producao permanece 0.1.578.
+
 ## Ajuste 2026-10-05 - Espacamento do detalhe e salvos sem contador (0.1.580)
 
 - [x] Remover apenas o contador de salvos do post aberto, preservando icone, estado e acao.

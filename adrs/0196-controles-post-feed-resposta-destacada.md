@@ -4,6 +4,13 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - restaurar Plus no estado inativo (0.1.581)
+
+Por escolha do usuario, reverter apenas o icone inativo de FavoriteHeart para
+Plus no FeedFavoriteButton. A ampliacao de fonte foi cancelada antes de commit
+e nao integra esta versao. Preservar fonte, geometria, estado ativo e mutacoes.
+Manter os ajustes de espacamento e salvos do detalhe entregues na versao 0.1.580.
+
 ## Ajuste 2026-10-05 - detalhe com ritmo vertical do feed (0.1.580)
 
 PostHeader usa gap de 12px e a mesma divisoria discreta entre comunidade e autor
