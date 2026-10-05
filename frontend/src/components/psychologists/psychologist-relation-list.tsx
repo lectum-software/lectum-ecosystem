@@ -17,6 +17,7 @@ import {
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FavoriteHeart } from "@/components/ui/favorite-heart";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -353,7 +354,7 @@ const FavoritePsychologistCard = ({
         <button
           aria-label={`Remover ${displayName} dos favoritos`}
           aria-pressed="true"
-          className="absolute top-2 right-2 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface/90 text-danger shadow-lectum-soft backdrop-blur transition hover:scale-105 hover:bg-surface hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-border/20 disabled:pointer-events-none disabled:opacity-60 sm:h-9 sm:w-9"
+          className="absolute top-2 right-2 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface/90 text-favorite shadow-lectum-soft backdrop-blur transition hover:scale-105 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-favorite-border/20 motion-reduce:transform-none motion-reduce:transition-none disabled:pointer-events-none disabled:opacity-60 sm:h-9 sm:w-9"
           disabled={favoritePending}
           onClick={handleFavoriteClick}
           type="button"
@@ -361,7 +362,7 @@ const FavoritePsychologistCard = ({
           {favoritePending ? (
             <Loader2 className="h-4 w-4 animate-spin sm:h-[18px] sm:w-[18px]" aria-hidden="true" />
           ) : (
-            <Heart className="h-[18px] w-[18px] fill-current sm:h-5 sm:w-5" aria-hidden="true" />
+            <FavoriteHeart active className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
           )}
         </button>
       </div>

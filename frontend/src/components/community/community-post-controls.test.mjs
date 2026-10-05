@@ -3,9 +3,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import test from "node:test";
+import { configureStore } from "@reduxjs/toolkit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Controller, useForm } from "react-hook-form";
+import { Provider } from "react-redux";
 
 const { AnonymousPostSwitch } = await import(
   "../../app/app/community/[slug]/post/new/views/anonymous-post-switch.tsx"
@@ -23,14 +26,312 @@ registerHooks({
     const target =
       specifier === "next/image"
         ? nextImageBridge
-        : specifier === "next/link"
-          ? "next/link.js"
+        : ["next/link", "next/navigation"].includes(specifier)
+          ? `${specifier}.js`
           : specifier;
     return nextResolve(target, context);
   },
 });
 const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
 const { CommunityActionBar } = await import("./community-action-bar.tsx");
+const { FeedFavoriteButton } = await import("./feed-favorite-button.tsx");
+const { CommunityFollowToggle } = await import("./community-follow-toggle.tsx");
+const { CommunityHeader } = await import(
+  "../../app/app/community/[slug]/components/community-header.tsx"
+);
+const { default: rootReducer } = await import("../../store/modules/rootReducers.ts");
+const { default: keys } = await import("../../api/cache/keys.ts");
+const { loadFavoriteIds, updateFavoriteIds } = await import(
+  "../../api/callers/patient/favorite-ids.ts"
+);
+const { ProgressiveConversionContext, noopContext } = await import(
+  "../conversion/progressive-conversion-state.ts"
+);
+
+const renderRelations = ({ userId, authenticated = Boolean(userId), ids, children }) => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  if (ids) client.setQueryData(keys.patient.favoriteIds(userId), ids);
+  const store = configureStore({
+    reducer: rootReducer,
+    preloadedState: { user: userId ? { id: userId } : null },
+  });
+  const html = renderToStaticMarkup(
+    createElement(
+      Provider,
+      { store },
+      createElement(
+        QueryClientProvider,
+        { client },
+        createElement(
+          ProgressiveConversionContext.Provider,
+          { value: { ...noopContext, isAuthenticated: authenticated } },
+          children,
+        ),
+      ),
+    ),
+  );
+  client.clear();
+  return html;
+};
+
+test("inactive feed favorite is text-only, hides self and waits for authenticated state", () => {
+  const children = createElement(FeedFavoriteButton, {
+    author: { id: "psi", name: "Ana Lima", role: "psicologo" },
+  });
+  for (const state of [{}, { userId: "viewer", ids: [] }]) {
+    const html = renderRelations({ ...state, children });
+    assert.match(html, /favorite-toggle-label">Favoritar<\/span>/);
+    assert.match(html, /h-5/);
+    assert.match(html, /w-\[66px\]/);
+    assert.match(html, /style="font-size:11px;font-weight:600"/);
+    assert.match(html, /bg-transparent/);
+    assert.match(html, /rounded-\[6px\]/);
+    assert.doesNotMatch(html, /rounded-full/);
+    assert.doesNotMatch(html, /bg-surface|hover:bg-/);
+    assert.match(html, /aria-pressed="false"/);
+    assert.match(html, /aria-label="Favoritar Ana Lima"/);
+    assert.match(html, /aria-hidden="true" class="favorite-toggle-heart"/);
+    assert.doesNotMatch(html, /Seguindo/);
+  }
+  for (const state of [{ userId: "psi", ids: [] }, { userId: "viewer" }, { authenticated: true }])
+    assert.equal(renderRelations({ ...state, children }), "");
+});
+
+test("known favorites retain the production heart and can be unfavorited", () => {
+  const author = { id: "psi", name: "Ana Lima", role: "psicologo" };
+  const children = createElement(FeedFavoriteButton, { author });
+  const inactive = renderRelations({ userId: "viewer", ids: [], children });
+  assert.match(inactive, /aria-pressed="false"/);
+  assert.match(inactive, /favorite-toggle-label">Favoritar<\/span>/);
+  const active = renderRelations({ userId: "viewer", ids: ["psi"], children });
+  assert.match(active, /aria-pressed="true"/);
+  assert.match(active, /aria-label="Remover Ana Lima dos favoritos"/);
+  assert.match(active, /lucide-heart/);
+  assert.match(active, /fill-current/);
+  assert.match(active, /text-favorite/);
+  assert.match(active, /stroke-width="2"/);
+  assert.match(active, /favorite-toggle pointer-events-auto/);
+  assert.match(active, /title="Remover Ana Lima dos favoritos"/);
+  assert.doesNotMatch(active, />Favoritado|text-danger/);
+  assert.equal(renderRelations({ userId: "psi", ids: [], children }), "");
+  assert.equal(
+    renderRelations({
+      children: createElement(FeedFavoriteButton, {
+        author: { ...author, role: "paciente" },
+      }),
+    }),
+    "",
+  );
+});
+
+test("favorite transitions compact the slot beside the badge and respect reduced motion", () => {
+  const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
+  assert.match(
+    css,
+    /\.favorite-toggle\[aria-pressed="true"\] \{\s*width: 24px;\s*border-color: transparent;/,
+  );
+  assert.match(css, /\.favorite-toggle-heart \{[^}]*left: 2px;[^}]*opacity: 0;/);
+  assert.match(
+    css,
+    /\.favorite-toggle\[aria-pressed="true"\] \.favorite-toggle-label \{\s*opacity: 0;/,
+  );
+  assert.match(
+    css,
+    /\.favorite-toggle\[aria-pressed="true"\] \.favorite-toggle-heart \{\s*opacity: 1;/,
+  );
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion: reduce\) \{\s*\.favorite-toggle,[\s\S]*?transition: none;/,
+  );
+  for (const suffix of ["", "-soft", "-border"]) {
+    assert.ok(css.includes(`--lectum-favorite${suffix}: var(--lectum-danger${suffix});`));
+  }
+});
+
+test("all post headers and comments share the persistent favorite toggle", () => {
+  const detail = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const header = detail.slice(
+    detail.indexOf("export const PostHeader"),
+    detail.indexOf("export const PostBody"),
+  );
+  assert.doesNotMatch(header, /<FileText/);
+  assert.doesNotMatch(header, /CommunityFollowToggle|CommunityFollowButton/);
+  assert.doesNotMatch(detail, /hideFavorited=\{false\}/);
+  assert.equal((detail.match(/<FeedFavoriteButton author=\{post.author\} \/>/g) ?? []).length, 2);
+  const replies = readFileSync(
+    new URL("../../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(replies, /<FeedFavoriteButton author=\{reply.author\} \/>/);
+  assert.doesNotMatch(replies, /hideFavorited=\{false\}/);
+  for (const file of ["./community-post-card.tsx", "./community-post-card-reply-preview.tsx"]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.match(source, /FeedFavoriteButton author=\{(?:reply.author|displayAuthor)\}/);
+    assert.match(source, /flex h-0 shrink-0 items-center pl-1/);
+  }
+  const favorite = readFileSync(new URL("./feed-favorite-button.tsx", import.meta.url), "utf8");
+  assert.match(favorite, /favorited \? unfavoritePsychologist : favoritePsychologist/);
+  assert.match(favorite, /pending \|\| favorited\) return/);
+  assert.doesNotMatch(favorite, /hideFavorited/);
+});
+
+test("author action stays beside the badge without automatic right alignment", () => {
+  const source = readFileSync(
+    new URL("../../app/app/community/[slug]/components/feed-controls.tsx", import.meta.url),
+    "utf8",
+  );
+  const identity = source.slice(
+    source.indexOf("export const AuthorIdentityLine"),
+    source.indexOf("export const FilterMenu"),
+  );
+  assert.doesNotMatch(identity, /ml-auto|justify-between/);
+  assert.match(identity, /flex h-0 shrink-0 items-center pl-1/);
+  assert.ok(identity.indexOf("VerifiedBadgeIcon") < identity.indexOf("{action}</span>"));
+});
+
+test("follow-only feed hides followed communities without changing ordinary unfollow controls", () => {
+  const render = (props) =>
+    renderRelations({
+      children: createElement(CommunityFollowToggle, { slug: "community", ...props }),
+    });
+  assert.equal(render({ initialFollowing: true, hideFollowing: true }), "");
+  assert.match(render({ initialFollowing: false, hideFollowing: true }), />Seguir<\/button>/);
+  assert.match(render({ initialFollowing: true }), />Seguindo<\/button>/);
+});
+
+test("community header changes Seguir into a persistent accessible circular check", () => {
+  const render = (following) =>
+    renderToStaticMarkup(
+      createElement(CommunityHeader, {
+        community: { name: "Comunidade", slug: "community", members_count: 1, posts_count: 1 },
+        following,
+        membershipPending: false,
+        onBack() {},
+        onSearch() {},
+        onShare() {},
+        onToggleFollow() {},
+      }),
+    );
+  assert.match(render(false), />Seguir<\/span>/);
+  assert.match(render(false), /aria-label="Seguir comunidade"/);
+  assert.match(render(false), /lucide-plus[^>]*scale-100 opacity-100/);
+  assert.match(render(true), /lucide-check[^>]*scale-100 opacity-100/);
+  assert.match(render(true), /aria-pressed="true"/);
+  assert.match(render(true), /aria-label="Seguindo comunidade. Deixar de seguir"/);
+  assert.match(render(true), /w-10 gap-0 border-primary\/25 bg-primary-soft text-primary/);
+  assert.match(render(true), /group-hover:opacity-100 group-focus-within:opacity-100/);
+  assert.match(render(true), /w-0 opacity-0/);
+  assert.match(render(true), /rounded-full/);
+  assert.match(render(true), /style="font-size:13px;font-weight:600"/);
+  assert.match(render(true), /Compartilhar comunidade/);
+});
+
+test("favorite IDs read every real pagination page, deduplicate and honor cancellation", async () => {
+  const calls = [];
+  const signal = new AbortController().signal;
+  const ids = await loadFavoriteIds(async ({ page, limit }) => {
+    calls.push({ page, limit });
+    return {
+      page,
+      pages: 2,
+      count: 3,
+      data:
+        page === 1
+          ? [{ id: "a", favorited: true }]
+          : [
+              { id: "a", favorited: true },
+              { id: "b", favorited: true },
+            ],
+    };
+  }, signal);
+  assert.deepEqual(ids, ["a", "b"]);
+  assert.deepEqual(calls, [
+    { page: 1, limit: 50 },
+    { page: 2, limit: 50 },
+  ]);
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(
+    () =>
+      loadFavoriteIds(() => {
+        throw Error("must not request");
+      }, controller.signal),
+    { name: "AbortError" },
+  );
+  await assert.rejects(
+    () =>
+      loadFavoriteIds(async ({ page }) => {
+        if (page === 2) throw Error("page unavailable");
+        return { page, pages: 2, count: 2, data: [{ id: "a", favorited: true }] };
+      }, signal),
+    /page unavailable/,
+  );
+});
+
+test("favorite changes use the originating account and do not manufacture a partial ID list", () => {
+  const caller = readFileSync(
+    new URL("../../api/callers/patient/index.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.equal(
+    (caller.match(/mutationKey: keys.patient.favoriteMutation\(viewerId \?\? "guest"\)/g) ?? [])
+      .length,
+    2,
+  );
+  const client = new QueryClient();
+  client.setQueryData(keys.patient.favoriteIds("a"), []);
+  client.setQueryData(keys.patient.favoriteIds("b"), ["existing"]);
+  updateFavoriteIds(client, "a", "psi", true);
+  updateFavoriteIds(client, "a", "psi", true);
+  assert.deepEqual(client.getQueryData(keys.patient.favoriteIds("a")), ["psi"]);
+  assert.deepEqual(client.getQueryData(keys.patient.favoriteIds("b")), ["existing"]);
+  updateFavoriteIds(client, "a", "psi", false);
+  assert.deepEqual(client.getQueryData(keys.patient.favoriteIds("a")), []);
+  updateFavoriteIds(client, "new", "psi", true);
+  assert.equal(client.getQueryData(keys.patient.favoriteIds("new")), undefined);
+  client.clear();
+});
+
+test("feed hides saved count and decorative post icon, keeping favorite but no follow control", () => {
+  const source = readFileSync(
+    new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /FileText|count: saveSnapshot.saves/);
+  assert.doesNotMatch(source, /CommunityFollowToggle|CommunityFollowButton/);
+  assert.match(source, /FeedFavoriteButton author=\{reply.author\}/);
+  assert.match(source, /isPsychologistPost \? <FeedFavoriteButton author=\{post.author\}/);
+  const html = renderToStaticMarkup(
+    createElement(CommunityActionBar, {
+      upvotesCount: 1,
+      save: { label: "Salvar post", active: false, onClick: () => {} },
+    }),
+  );
+  assert.match(html, /aria-label="Salvar post"/);
+  assert.doesNotMatch(html, />0</);
+});
+
+test("post surfaces preserve community navigation without follow actions", () => {
+  for (const file of [
+    "../../app/app/community/[slug]/components/post-card.tsx",
+    "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+    "./community-post-card.tsx",
+  ]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /CommunityFollowToggle|CommunityFollowButton/);
+    assert.match(
+      source,
+      /href=\{(?:communityDetailHref\(post.community.slug\)|`\/comunidades\/\$\{post.community.slug\}`)\}/,
+    );
+    assert.match(source, /FeedFavoriteButton/);
+  }
+});
 
 test("vote cluster has no independent fill and keeps selection feedback", () => {
   for (const size of ["xs", "sm", "md"]) {

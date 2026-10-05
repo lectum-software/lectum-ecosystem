@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, Heart, PencilLine, Share2, Star } from "lucide-react";
+import { ArrowLeft, PencilLine, Share2, Star } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
+import { FavoriteHeart } from "@/components/ui/favorite-heart";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { formatCrpLabel } from "@/utils/crp";
@@ -168,26 +169,31 @@ export const ProfileHero = ({
           <ProfileAvatar profile={profile} />
 
           <button
+            aria-busy={favoritePending}
             aria-label={favoriteButtonLabel}
             aria-pressed={displayedFavorited}
             className={cn(
-              "mt-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border text-muted shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+              "mt-10 inline-flex h-10 shrink-0 items-center justify-center rounded-full border text-muted shadow-sm transition-[width,gap,background-color,border-color] duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
               displayedFavorited
-                ? "border-danger-border bg-danger-soft text-danger"
-                : "border-border bg-surface text-muted hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface-muted",
+                ? "w-10 gap-0 border-favorite-border bg-favorite-soft"
+                : "w-[112px] gap-2 border-border bg-surface hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface-muted",
             )}
             disabled={favoritePending || !canFavorite}
             onClick={onToggleFavorite}
-            title={!canFavorite ? favoriteButtonLabel : undefined}
+            title={favoriteButtonLabel}
             type="button"
           >
-            <Heart
-              className={cn(
-                "h-5 w-5",
-                displayedFavorited ? "fill-danger text-danger" : "fill-none",
-              )}
+            <FavoriteHeart active={displayedFavorited} className="shrink-0" />
+            <span
               aria-hidden="true"
-            />
+              className={cn(
+                "overflow-hidden whitespace-nowrap transition-[width,opacity] duration-200 motion-reduce:transition-none",
+                displayedFavorited ? "w-0 opacity-0" : "w-[56px] opacity-100",
+              )}
+              style={{ fontSize: 13, fontWeight: 600 }}
+            >
+              Favoritar
+            </span>
           </button>
         </div>
 

@@ -20,6 +20,9 @@
   --lectum-danger: #dc2626;
   --lectum-danger-border: #fecaca;
   --lectum-danger-soft: #fef2f2;
+  --lectum-favorite: var(--lectum-danger);
+  --lectum-favorite-soft: var(--lectum-danger-soft);
+  --lectum-favorite-border: var(--lectum-danger-border);
   --lectum-success: #16a34a;
   --lectum-success-border: #bbf7d0;
   --lectum-success-soft: #e8f8ef;
@@ -79,6 +82,63 @@
   --lectum-warning-soft: #33250d;
   --lectum-shadow: 0 16px 40px rgb(0 0 0 / 45%);
   --lectum-shadow-soft: 0 8px 20px rgb(0 0 0 / 35%);
+}
+
+.favorite-toggle {
+  position: relative;
+  width: 66px;
+  padding-inline: 0;
+  transition:
+    width 260ms ease,
+    border-color 180ms ease;
+}
+
+.favorite-toggle[aria-pressed="true"] {
+  width: 24px;
+  border-color: transparent;
+}
+
+.favorite-toggle-label,
+.favorite-toggle-heart {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.favorite-toggle-label {
+  inset: 0;
+  white-space: nowrap;
+  transition: opacity 120ms ease;
+}
+
+.favorite-toggle-heart {
+  inset-block: 0;
+  left: 2px;
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    opacity 180ms ease,
+    transform 240ms ease;
+}
+
+.favorite-toggle[aria-pressed="true"] .favorite-toggle-label {
+  opacity: 0;
+}
+
+.favorite-toggle[aria-pressed="true"] .favorite-toggle-heart {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .favorite-toggle,
+  .favorite-toggle-label,
+  .favorite-toggle-heart {
+    transition: none;
+  }
 }
 
 .share-instagram-gradient {
@@ -194,6 +254,9 @@
   --color-danger: var(--lectum-danger);
   --color-danger-border: var(--lectum-danger-border);
   --color-danger-soft: var(--lectum-danger-soft);
+  --color-favorite: var(--lectum-favorite);
+  --color-favorite-soft: var(--lectum-favorite-soft);
+  --color-favorite-border: var(--lectum-favorite-border);
   --color-success: var(--lectum-success);
   --color-success-border: var(--lectum-success-border);
   --color-success-soft: var(--lectum-success-soft);

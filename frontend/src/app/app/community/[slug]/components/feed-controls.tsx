@@ -3,7 +3,7 @@
 import { ArrowRight, Check, ChevronDown, Compass, Search, Settings, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import type { Community, CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
@@ -93,11 +93,13 @@ export const AuthorAvatar = ({
 };
 
 export const AuthorIdentityLine = ({
+  action,
   href,
   name,
   onClick,
   verified,
 }: {
+  action?: ReactNode;
   href?: string;
   name: string;
   onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
@@ -121,6 +123,7 @@ export const AuthorIdentityLine = ({
       {verified ? (
         <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
       ) : null}
+      {action ? <span className="flex h-0 shrink-0 items-center pl-1">{action}</span> : null}
     </div>
   );
 };

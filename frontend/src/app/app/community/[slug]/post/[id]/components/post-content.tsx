@@ -13,12 +13,12 @@ import {
 } from "react";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
-import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
@@ -185,7 +185,6 @@ export const PostHeader = ({
       </div>
 
       <div className="flex min-w-0 items-center gap-1 text-[11px] font-semibold text-muted">
-        <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Postado em</span>
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <Link
@@ -194,11 +193,6 @@ export const PostHeader = ({
           >
             {post.community.name}
           </Link>
-          <CommunityFollowToggle
-            className="shrink-0"
-            initialFollowing={Boolean(post.community.following)}
-            slug={post.community.slug}
-          />
         </div>
         {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
       </div>
@@ -226,6 +220,11 @@ export const PostHeader = ({
               )}
               {post.author.verified ? (
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
+              ) : null}
+              {isPsychologistPost ? (
+                <span className="flex h-0 shrink-0 items-center pl-1">
+                  <FeedFavoriteButton author={post.author} />
+                </span>
               ) : null}
             </div>
           </div>
@@ -440,6 +439,11 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                 )}
                 {post.author.verified ? (
                   <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
+                ) : null}
+                {isPsychologistPost ? (
+                  <span className="flex h-0 shrink-0 items-center pl-1">
+                    <FeedFavoriteButton author={post.author} />
+                  </span>
                 ) : null}
               </div>
             </div>

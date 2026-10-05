@@ -1,5 +1,12 @@
 # TASK-14: Favoritos e seguindo
 
+## Correcao 2026-10-05 (0.1.577)
+
+- Corrigida a atualizacao otimista dos favoritos no Explorar: o cache infinito agora tem cada pagina atualizada sem assumir o formato da busca simples.
+- Preservados layout, endpoints reais, rollback e comportamento dos demais favoritos.
+- Adicionados testes de regressao com QueryClient real para ambos os formatos, marcar/desmarcar, pagina posterior e cache vazio, incluidos no check do frontend.
+- Validacao local: check completo do frontend aprovado, incluindo os tres novos testes. Check geral bloqueado no Prisma por DATABASE_URL ausente. Build compilou, mas falhou depois por falta de memoria; nova tentativa interrompida por pressao de memoria no host. Smoke local autenticado indisponivel; validar build e fluxo real no deploy de homologacao.
+
 ## Metadata
 
 | Campo | Valor |

@@ -1,5 +1,157 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - seguir com check no cabecalho (0.1.576)
+
+- [x] Padronizar altura, fonte, borda, sombra e cantos com o favorito do perfil.
+- [x] Exibir Plus + Seguir inativo e somente Check azul em circulo quando seguido.
+- [x] Manter o controle ativo, com indicacao Seguindo comunidade em hover/foco.
+- [x] Preservar aria-pressed, nome acessivel, unfollow, bloqueio pendente e movimento reduzido.
+- [x] Restringir o visual ao cabecalho; nao alterar controles compactos nem posts.
+
+Referencia: capturas e proposta aprovadas em conversa; Builder indisponivel.
+Validacao: 38 testes focados, check frontend e build aprovados. Check geral para
+no backend por DATABASE_URL local ausente. Smoke local tentou dados reais, mas
+a comunidade retornou indisponivel; concluir a conferencia visual em homologacao.
+Sem mudancas de API, dados ou favoritos. Publicacao somente em homologacao.
+
+## Ajuste 2026-10-05 - cor de producao e rotulo no perfil (0.1.575)
+
+- [x] Reutilizar a paleta de favorito de producao (vermelho, fundo e contorno).
+- [x] Perfil nao favoritado: coracao contornado acompanhado de Favoritar.
+- [x] Perfil favoritado: somente coracao preenchido no botao circular original.
+- [x] Preservar altura, transicao suave, movimento reduzido e logica de favoritos.
+
+Referencia: captura de producao enviada pelo usuario; Builder indisponivel.
+Validacao: testes de estados, check/build frontend e smoke local/homologacao.
+Sem alteracao de dados, APIs, comunidade ou player. Publicacao apenas em homolog.
+
+## Ajuste 2026-10-05 - acabamento dos favoritos (0.1.574)
+
+- [x] Aproximar o coracao do selo, com slot ativo de 24px em vez de 66px.
+- [x] Fazer transicao suave de largura, opacidade e escala ao favoritar, sem
+  animacao para usuarios com movimento reduzido.
+- [x] Reutilizar Heart/Lucide de producao, com traco 2, em feed, respostas,
+  perfil, busca e lista de favoritos; vermelho discreto exclusivo de favoritos.
+- [x] Restaurar o botao circular do perfil conforme referencia de producao,
+  com coracao contornado inativo e preenchido ativo.
+- [x] Preservar Seguindo na comunidade, conversao, cache e bloqueio pendente.
+
+Referencia: capturas fornecidas e componente de producao. Builder indisponivel.
+Validacao: testes de componentes, check/build e smoke local/homologacao.
+Sem alteracoes de backend, dados, packages ou envs. Apenas homologacao.
+
+## Ajuste 2026-10-05 - estados persistentes de relacionamento (0.1.573)
+
+- [x] Favoritar vira coracao preenchido vermelho quando ativo em posts, respostas,
+  comentarios e previas, permitindo desfavoritar e preservando o espaco do controle.
+- [x] Remover a regra de ocultar favoritos existentes; manter exclusao de pacientes,
+  proprio autor e estado autenticado ainda desconhecido.
+- [x] Manter Seguindo no cabecalho da comunidade, sem reintroduzir Seguir nos posts.
+- [x] Padronizar cabecalhos de comunidade e perfil profissional: altura h-10,
+  largura 108px, fonte 13px/600, raio 6px e fundo transparente.
+- [x] Perfil usa Favoritar inativo e coracao vermelho ativo, distinto do selo azul.
+
+Referencia: pedido e confirmacoes em conversa. Builder nao disponivel; mantidos
+os componentes e layout existentes. Sem novos endpoints, dados, packages ou envs.
+Validacao: testes reais dos componentes nos estados ativo/inativo/pendente,
+check/build frontend e smoke mobile/desktop registrado em outputs.
+Risco: mudanca visual de acoes existentes; rollback por reversao do frontend.
+Acao manual de deploy: nenhuma. Producao nao faz parte desta alteracao.
+
+## Ajuste 2026-10-05 - cantos discretos em Favoritar (0.1.572)
+
+- [x] Trocar formato de pilula por raio de 6px no Favoritar compartilhado.
+- [x] Preservar altura, fonte 11px/600, contorno azul, fundo transparente e foco.
+- [x] Aplicar a mesma identidade em posts, respostas/comentarios e previas.
+
+Referencia: exemplo enviado pelo usuario e proposta de 6px aprovada em conversa.
+Validacao: teste de regressao do controle, check/build e smoke visual.
+
+## Ajuste 2026-10-05 - seguir comunidade fora dos posts (0.1.571)
+
+- [x] Remover Seguir dos cards do feed/comunidade, detalhe e cards compartilhados.
+- [x] Manter Postado em com nome da comunidade clicavel.
+- [x] Preservar Favoritar e manter Seguir no cabecalho da comunidade.
+- [x] Nao alterar gestao de comunidades seguidas, dados de relacionamento ou player.
+
+Referencia: capturas do usuario e proposta aprovada em conversa. Builder nao
+disponivel nesta sessao; nenhuma reconstrucao de layout necessaria.
+Validacao: testes de regressao, check/build frontend e smoke local/homologacao.
+
+## Ajuste 2026-10-05 - ocultar relacionamentos existentes no detalhe (0.1.570)
+
+- [x] Ocultar Seguir no detalhe quando a comunidade ja estiver seguida.
+- [x] Ocultar Favoritar no post, post original da thread, respostas e comentarios
+  quando o profissional ja estiver favoritado.
+- [x] Reutilizar os controles e caches existentes, preservando o layout e os
+  controles de gerenciamento em perfil/salvos.
+
+Este pedido substitui a excecao do detalhe registrada em 0.1.569.
+Validacao: testes dos controles, check/build frontend e smoke local/homologacao.
+
+## Ajuste 2026-10-05 - identidade e favoritos dentro do post (0.1.569)
+
+Referencia: captura e pedidos do usuario para posts, respostas e comentarios.
+
+- [x] Remover o icone de Postado em no detalhe e nos cards de publicacoes.
+- [x] Igualar Seguir do detalhe ao controle compacto do feed.
+- [x] Adicionar Favoritar ao lado do selo em posts profissionais, respostas,
+  comentarios encadeados, post original da thread e previas de publicacoes.
+- [x] Preservar fundo transparente, 11px/600 e altura da identificacao.
+- [x] Fora do feed/listagem da comunidade, manter Favoritado visivel e permitir desfavoritar.
+- [x] Nao oferecer favorito para pacientes nem para o proprio autor.
+
+Validacao: 29 testes focados; check/build e smoke mobile/desktop registrados
+em outputs/feed-relations-0569-smoke.md. Sem alteracoes de banco ou player.
+
+## Ajuste 2026-10-05 - fundo transparente de Favoritar (0.1.568)
+
+- [x] Favoritar no card do feed sem preenchimento, inclusive no hover.
+- [x] Preservar contorno, foco acessivel, semibold, tamanho e alinhamento.
+
+Escopo: apenas FeedFavoriteButton compartilhado pelo feed e posts da comunidade.
+
+## Ajuste 2026-10-05 - peso de Favoritar (0.1.567)
+
+- [x] Igualar Favoritar ao peso computado 600 (semibold) de Seguir.
+- [x] Preservar fonte de 11px, altura, alinhamento junto ao selo e regras de ocultacao.
+
+Referencia: comparacao no browser de homologacao; Favoritar herdava peso 400.
+Validacao: testes de controles, check/build frontend e smoke visual mobile/desktop.
+
+## Ajuste 2026-10-05 - Favoritar junto ao selo (0.1.566)
+
+Referencia: captura do usuario; manter os demais controles e regras de 0.1.565.
+
+- [x] Favoritar imediatamente depois do selo, sem margem automatica a direita.
+- [x] Texto de Favoritar em 11px, igual ao Seguir do feed, apesar do reset global.
+- [x] Preservar altura da identificacao, truncamento do nome e regras de ocultacao.
+
+Escopo: dois estilos locais, sem mudar o reset global, dados, player ou backend.
+Validacao focada e visual registrada em outputs/feed-relations-0566-smoke.md.
+
+## Ajuste 2026-10-05 - acoes compactas e favoritos no feed (0.1.565)
+
+Referencia: captura e cinco requisitos do usuario; Builder indisponivel.
+
+- [x] Retirar FileText da linha Postado em no card do feed.
+- [x] Salvar mantem icone/acao/acessibilidade, sem contador no card.
+- [x] Favoritar textual ao lado do nome do psicologo (autor ou resposta destacada).
+- [x] Favoritar e Seguir com altura h-5, sem aumentar a linha de identificacao.
+- [x] Ocultar Seguir quando seguindo e Favoritar quando ja favorito ou proprio perfil.
+- [x] Reutilizar conversao/login e APIs existentes; favoritos compartilhados por usuario.
+- [x] Consultar todas as paginas de favoritos (limite real 50), sem uma consulta por card.
+- [x] Atualizar cache apos sucesso; erros nao escondem definitivamente a acao.
+
+Escopo: frontend, feed geral e comunidade (cards e cabecalho). Ocultacao restrita
+a essas telas. Favoritos, Comunidades seguidas e perfil do psicologo preservam
+controles para desfazer as acoes. Sem backend, migration ou nova dependencia.
+Validacao: 26 testes focados, build e typecheck aprovados. Navegador local com
+API real: botoes com alturas iguais, sem overflow na largura disponivel de 508px,
+icone decorativo/contador ausentes; Favoritar anonimo abre conversao sem navegar
+ao post e pausa os videos. Controle de viewport do navegador indisponivel nesta
+execucao. Baseline da raiz limitado por DATABASE_URL local ausente no Prisma.
+
 ## Ajuste 2026-10-04 - contorno da resposta e circulo preto (0.1.564)
 
 Referencia: capturas e pedido do usuario; Builder indisponivel nesta execucao.

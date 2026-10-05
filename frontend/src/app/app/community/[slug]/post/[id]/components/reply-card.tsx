@@ -19,6 +19,7 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
@@ -454,6 +455,11 @@ export const ReplyCard = ({
                       className="h-3 w-3 shrink-0"
                       aria-label="Perfil verificado"
                     />
+                  ) : null}
+                  {isProfessional ? (
+                    <span className="flex h-0 shrink-0 items-center pl-1">
+                      <FeedFavoriteButton author={reply.author} />
+                    </span>
                   ) : null}
                 </div>
               </div>

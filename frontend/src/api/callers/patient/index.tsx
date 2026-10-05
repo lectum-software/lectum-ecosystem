@@ -10,12 +10,12 @@ import type {
   PatientRelationQuery,
   patient_profile,
 } from "@/api/generator/types";
-import type {
-  DirectoryPsychologistProfile,
-  DirectoryPsychologistsResponse,
-} from "@/api/generator/types/directory";
+import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
 import * as api from "@/api/req/patient";
+import { useAppSelector } from "@/hooks/redux";
 import { prepareUpload } from "@/utils/media-preparation";
+import { type RelationPatch, updateDirectoryRelation } from "./directory-relation-cache";
+import { updateFavoriteIds } from "./favorite-ids";
 
 export interface UsePatientProps {
   enableProfile?: boolean;
@@ -63,36 +63,14 @@ export interface UsePatientProps {
   };
 }
 
-type RelationPatch = Partial<
-  Pick<DirectoryPsychologistsResponse["data"][number], "favorited" | "followed">
->;
 type QuerySnapshot = ReturnType<ReturnType<typeof useQueryClient>["getQueriesData"]>;
 
 type MutationSnapshot = {
+  viewerId?: string;
   directory: QuerySnapshot;
   directoryProfiles: QuerySnapshot;
   favorites: QuerySnapshot;
   follows: QuerySnapshot;
-};
-
-const updateDirectoryRelation = (
-  queryClient: ReturnType<typeof useQueryClient>,
-  psychologistId: string,
-  patch: RelationPatch,
-) => {
-  queryClient.setQueriesData<DirectoryPsychologistsResponse>(
-    { queryKey: keys.directory.psychologistsRoot() },
-    (old) => {
-      if (!old) return old;
-
-      return {
-        ...old,
-        data: old.data.map((psychologist) =>
-          psychologist.id === psychologistId ? { ...psychologist, ...patch } : psychologist,
-        ),
-      };
-    },
-  );
 };
 
 const updateRelationLists = (
@@ -177,6 +155,7 @@ const invalidateRelationQueries = (queryClient: ReturnType<typeof useQueryClient
     predicate: (query) => query.queryKey[0] === "directory_psychologist",
   });
   queryClient.invalidateQueries({ queryKey: keys.patient.favoritesRoot() });
+  queryClient.invalidateQueries({ queryKey: keys.patient.favoriteIdsRoot() });
   queryClient.invalidateQueries({ queryKey: keys.patient.followsRoot() });
 };
 
@@ -189,6 +168,7 @@ export const usePatient = ({
   followsQuery = {},
 }: UsePatientProps = {}) => {
   const queryClient = useQueryClient();
+  const viewerId = useAppSelector((state) => state.user?.id);
   const profileKey = keys.patient.profile();
   const favoritesKey = keys.patient.favorites(favoritesQuery);
   const followsKey = keys.patient.follows(followsQuery);
@@ -263,9 +243,11 @@ export const usePatient = ({
   });
 
   const favoritePsychologist = useMutation({
+    mutationKey: keys.patient.favoriteMutation(viewerId ?? "guest"),
     mutationFn: (id: string) => api.favoritePsychologist(id),
     onMutate: async (id) => {
       await Promise.all([
+        queryClient.cancelQueries({ queryKey: keys.patient.favoriteIdsRoot() }),
         queryClient.cancelQueries({ queryKey: keys.directory.psychologistsRoot() }),
         queryClient.cancelQueries({ queryKey: keys.patient.favoritesRoot() }),
         queryClient.cancelQueries({ queryKey: keys.patient.followsRoot() }),
@@ -274,9 +256,10 @@ export const usePatient = ({
       updateDirectoryRelation(queryClient, id, { favorited: true });
       updateDirectoryProfileRelation(queryClient, id, { favorited: true });
       updateRelationLists(queryClient, id, { favorited: true });
-      return snapshot;
+      return { ...snapshot, viewerId };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, _id, snapshot) => {
+      updateFavoriteIds(queryClient, snapshot?.viewerId, data.psychologist_id, data.favorited);
       callbacks?.favoritePsychologist?.onSuccess?.(data);
     },
     onError: (error, _id, snapshot) => {
@@ -287,9 +270,11 @@ export const usePatient = ({
   });
 
   const unfavoritePsychologist = useMutation({
+    mutationKey: keys.patient.favoriteMutation(viewerId ?? "guest"),
     mutationFn: (id: string) => api.unfavoritePsychologist(id),
     onMutate: async (id) => {
       await Promise.all([
+        queryClient.cancelQueries({ queryKey: keys.patient.favoriteIdsRoot() }),
         queryClient.cancelQueries({ queryKey: keys.directory.psychologistsRoot() }),
         queryClient.cancelQueries({ queryKey: keys.patient.favoritesRoot() }),
         queryClient.cancelQueries({ queryKey: keys.patient.followsRoot() }),
@@ -299,9 +284,10 @@ export const usePatient = ({
       updateDirectoryProfileRelation(queryClient, id, { favorited: false });
       updateRelationLists(queryClient, id, { favorited: false });
       removeFromRelationList(queryClient, keys.patient.favoritesRoot(), id);
-      return snapshot;
+      return { ...snapshot, viewerId };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, _id, snapshot) => {
+      updateFavoriteIds(queryClient, snapshot?.viewerId, data.psychologist_id, data.favorited);
       callbacks?.unfavoritePsychologist?.onSuccess?.(data);
     },
     onError: (error, _id, snapshot) => {

@@ -4,6 +4,152 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - seguir da comunidade em circulo (0.1.576)
+
+O cabecalho da comunidade adota a mesma geometria do favorito do perfil:
+altura h-10, cantos completos, borda discreta e sombra leve. Inativo mostra
+Plus + Seguir em 112px; ativo contrai para w-10 com Check azul, sem rotulo
+visivel permanente. O coracao permanece exclusivo dos favoritos.
+Nome acessivel informa estado e acao de deixar de seguir; hover/foco exibe
+Seguindo comunidade. Largura, rotulo e icones transicionam em 200ms, respeitando
+movimento reduzido. Pendente preserva dimensoes e exibe loader desabilitado.
+A variante compacta e as mutations existentes nao mudam. Publicar em homolog.
+
+## Ajuste 2026-10-05 - favorito de producao e rotulo no perfil (0.1.575)
+
+Por nova referencia do usuario, os tokens de favorito passam a referenciar as
+cores originais de producao (danger, danger-soft, danger-border), preservando
+a semantica separada sem duplicar valores. O tema escuro acompanha os tokens.
+No perfil, o controle inativo acomoda coracao contornado e Favoritar em 112px;
+ativo retorna ao circulo h-10/w-10, somente com coracao preenchido. Altura e
+posicao permanecem, largura e rotulo transicionam com suporte a movimento reduzido.
+Feed/respostas conservam proximidade do selo e animacao de 0.1.574. Nenhuma
+mudanca em mutations, cache, contratos ou comunidade. Somente homologacao.
+
+## Ajuste 2026-10-05 - proximidade e transicao do favorito (0.1.574)
+
+O slot fixo anterior centralizava o coracao longe do selo. O controle compacto
+agora transiciona entre 66px (texto) e 24px (icone), com o coracao alinhado a
+esquerda e altura inalterada. Duas camadas decorativas persistentes permitem
+crossfade sem anunciar texto duplicado; aria-label e aria-pressed mantem a acao.
+CSS respeita prefers-reduced-motion. O estado continua dependendo da mutation
+real confirmada, sem sucesso visual antecipado nem mudanca de cache/conversao.
+
+FavoriteHeart reutiliza Heart/Lucide com o mesmo desenho e traco de producao.
+Tokens favorite separados de danger permitem vermelho menos saturado, incluindo
+tema escuro, sem alterar alertas ou exclusoes. Perfil recupera o botao circular
+da referencia, substituindo a padronizacao textual de 0.1.573 somente no perfil.
+Comunidade conserva Seguir/Seguindo. Busca e lista reutilizam desenho/cor, sem
+alterar suas dimensoes ou comportamento de relacionamento.
+
+Sem contrato, schema ou dependencia novos. Rollback somente visual. Homologacao.
+
+## Ajuste 2026-10-05 - feedback persistente e cabecalhos padronizados (0.1.573)
+
+Substituir ocultacao de favoritos por alternancia Favoritar/coracao preenchido
+vermelho, com aria-pressed e nome acessivel para desfavoritar. Vermelho diferencia
+favorito do selo azul e acompanha a identidade dos favoritos na busca. O slot
+compacto permanece com largura fixa, evitando deslocar a identificacao ao mudar
+de estado. Remover hideFavorited de todos os callsites; mutations, cache por conta,
+conversao de visitante e bloqueio concorrente permanecem inalterados.
+
+O cabecalho da comunidade sempre exibe Seguir/Seguindo, permitindo desfazer a
+acao no mesmo local. Posts continuam sem Seguir. O perfil profissional adota
+Favoritar/coracao; ambos os cabecalhos usam RelationshipButton para compartilhar
+dimensoes fixas, fonte, foco, raio 6px e fundo transparente. A variante compacta
+serve os autores de posts, sem ampliar a altura da linha. Controles da busca e
+da lista de comunidades seguidas nao mudam.
+
+Sem backend, schema, package ou env novos. Rollback visual por reversao do
+frontend, sem afetar relacionamentos persistidos. Publicar apenas em homolog.
+
+## Ajuste 2026-10-05 - formato do Favoritar (0.1.572)
+
+Usar rounded-[6px] no FeedFavoriteButton compartilhado para diferenciar a acao
+de uma etiqueta, sem aumentar a linha de identificacao. Somente o raio muda;
+nao alterar tipografia, dimensoes, estados, conversao ou mutations.
+
+## Ajuste 2026-10-05 - concentrar Seguir no cabecalho da comunidade (0.1.571)
+
+Posts deixam de apresentar o controle de seguir, independentemente do estado
+do relacionamento. Remover somente os callsites dos tres componentes de post;
+preservar os links de comunidade e Favoritar nos autores profissionais.
+O cabecalho da comunidade continua oferecendo Seguir, sem repeti-lo nos posts.
+Nao alterar mutations, conversao, gerenciamento de comunidades ou estilos globais.
+Trade-off aprovado: um passo adicional para seguir em troca de menos acoes
+concorrentes durante a leitura. Substitui as regras anteriores de Seguir nos posts.
+
+## Ajuste 2026-10-05 - relacionamentos ocultos dentro do post (0.1.570)
+
+O detalhe passa hideFollowing ao controle de comunidade e utiliza o padrao
+hideFavorited=true em seus autores profissionais, incluindo a arvore recursiva
+de respostas/comentarios e o post original da thread. Isso substitui a decisao
+anterior de manter os estados ativos visiveis no detalhe, conforme novo pedido.
+Nao alterar defaults globais nem controles de perfil/salvos. Mutations, cache,
+conversao de visitantes e tratamento de falhas permanecem compartilhados.
+
+## Ajuste 2026-10-05 - favoritos em todas as publicacoes profissionais (0.1.569)
+
+Reutilizar FeedFavoriteButton com hideFavorited=true por padrao preserva o
+feed existente. Detalhe, comentarios, thread e cards de perfil/salvos optam
+por false: Favoritado permanece acessivel para desfavoritar usando as
+mutations e o cache de IDs existentes. Intencao de conversao pendente nunca
+deve desfavoritar um profissional ja favoritado.
+
+Favoritar e desfavoritar compartilham a mutation key por conta. Assim os
+controles do mesmo profissional bloqueiam cliques concorrentes nas duas direcoes.
+
+O papel do autor e validado no controle; paciente e proprio autor nao recebem
+o botao. Slots junto ao selo preservam a altura e o nome truncavel. Remover
+overflow-hidden apenas dos wrappers de identificacao evita cortar o foco e
+o contorno. Seguir no detalhe conserva sua alternancia, apenas mais compacto.
+
+## Ajuste 2026-10-05 - fundo de Favoritar (0.1.568)
+
+Usar bg-transparent e retirar o preenchimento de hover no FeedFavoriteButton.
+O controle acompanha a superficie do card sem um fundo branco proprio.
+Contorno, foco visivel, fonte e regras de relacionamento permanecem intactos.
+
+## Ajuste 2026-10-05 - peso de Favoritar (0.1.567)
+
+A comparacao de estilos computados confirmou Seguir com peso 600 e Favoritar
+com 400. O reset global de button tambem sobrescreve o peso da utility.
+Definir fontWeight: 600 junto ao fontSize local e alinhar a utility a semibold
+mantem os dois controles equivalentes sem alterar a cascata global.
+
+## Ajuste 2026-10-05 - posicao e fonte de Favoritar (0.1.566)
+
+Retirar ml-auto do slot de acao coloca Favoritar junto ao selo, mantendo h-0
+e shrink-0 para preservar a altura da linha e o nome truncavel. O reset global
+nao estratificado `button { font: inherit }` prevalecia sobre a utility de 11px:
+Favoritar herdava 15px, enquanto Seguir herdava 11px do cabecalho do post.
+Definir fontSize: 11 no proprio botao segue o precedente dos controles do perfil
+e corrige apenas esta acao, sem alterar a cascata tipografica de todo o produto.
+Regras de seguir/favoritar e demais superficies permanecem inalteradas.
+
+## Ajuste 2026-10-05 - controles de relacionamento no feed (0.1.565)
+
+O card deixa de mostrar o icone decorativo de post e o contador de salvos, sem
+alterar endpoints ou os contadores de outras superficies. Favoritar textual
+entra na linha do nome com slot h-0 centralizado, preservando altura e metadados;
+botao e Seguir usam h-5. Nome segue truncavel e selo nao encolhe.
+
+Favoritos sao lidos pela API existente, percorrendo todas as paginas de 50 itens,
+em cache de IDs separado das listas completas e isolado pelo usuario. Cards
+compartilham a consulta e aguardam carregamento para evitar mostrar Favoritar
+para quem ja e favorito. A mutation existente atualiza esse cache no sucesso,
+usa o usuario capturado no inicio e invalida para reconciliar com o servidor.
+Estado pendente e compartilhado por psicologo. Sem remocao otimista que exija
+restaurar listas completas em erros. Apos login a intencao pendente e retomada.
+
+CommunityFollowToggle usa o snapshot de interacao ja existente para receber
+mudancas da consulta e isolar usuario/comunidade; hideFollowing e opt-in do card.
+O cabecalho da pagina da comunidade tambem oculta Seguir quando following=true.
+A ocultacao fica restrita ao feed e a comunidade: Favoritos, Comunidades seguidas
+e perfil do psicologo preservam os controles para desfazer as acoes. Sem mudancas
+de banco, contratos, autoplay/volume ou de layout da resposta profissional.
+Rollback por reversao desses componentes/hooks; nenhum procedimento de dados.
+
 ## Ajuste 2026-10-04 - resposta contida e Plus preto (0.1.564)
 
 O usuario pediu que o fundo da resposta volte a parecer contido dentro do post.

@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Reply } from "lucide-react";
+import { Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -13,12 +13,12 @@ import {
 import { useSavePost, useSaveReply, useVotePost } from "@/api/callers/posts";
 import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
-import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
@@ -129,7 +129,6 @@ export const CommunityPostCard = ({
   const focusedReplyId =
     profilePublicationMode && isReplyContribution ? (primaryReply?.id ?? undefined) : undefined;
   const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
-  const CommunityContextIcon = isReplyContribution ? Reply : FileText;
   const usesMutedCommunityContext = communityContextTone === "muted";
   const hasSecondaryHeaderActions = Boolean(post.muted_by_current_user || statusBadge);
   const shouldCompactProfileReplyMedia =
@@ -419,10 +418,12 @@ export const CommunityPostCard = ({
               isFeedPresentation ? "gap-1.5" : "gap-1",
             )}
           >
-            <CommunityContextIcon
-              className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
-              aria-hidden="true"
-            />
+            {isReplyContribution ? (
+              <Reply
+                className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
+                aria-hidden="true"
+              />
+            ) : null}
             <span className="shrink-0">{communityContextLabel}</span>
             <Link
               className={cn(
@@ -444,13 +445,6 @@ export const CommunityPostCard = ({
             >
               {post.community.name}
             </Link>
-            {isFeedPresentation ? (
-              <CommunityFollowToggle
-                className="shrink-0"
-                initialFollowing={Boolean(post.community.following)}
-                slug={post.community.slug}
-              />
-            ) : null}
             {!isFeedPresentation && communityHeaderIncludesTime ? (
               <>
                 <span className="shrink-0 text-muted" aria-hidden="true">
@@ -496,7 +490,7 @@ export const CommunityPostCard = ({
             <div
               className={cn(
                 "flex min-w-0 items-center gap-x-2 gap-y-1",
-                profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
+                profilePublicationMode ? "flex-nowrap" : "flex-wrap",
               )}
             >
               <div className="flex min-w-0 items-center gap-1">
@@ -514,6 +508,11 @@ export const CommunityPostCard = ({
                 )}
                 {displayAuthor.verified ? (
                   <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
+                ) : null}
+                {isPsychologistPost ? (
+                  <span className="flex h-0 shrink-0 items-center pl-1">
+                    <FeedFavoriteButton author={displayAuthor} />
+                  </span>
                 ) : null}
               </div>
             </div>

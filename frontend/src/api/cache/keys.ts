@@ -23,6 +23,9 @@ const keys = {
   patient: {
     profile: () => ["patient_profile"],
     favoritesRoot: () => ["patient_favorites"],
+    favoriteIdsRoot: () => ["patient_favorite_ids"],
+    favoriteIds: (userId: string) => ["patient_favorite_ids", userId],
+    favoriteMutation: (userId: string) => ["patient_favorite", userId],
     favorites: (filters?: unknown) => ["patient_favorites", filters],
     followsRoot: () => ["patient_follows"],
     follows: (filters?: unknown) => ["patient_follows", filters],

@@ -1,7 +1,8 @@
 "use client";
 
-import { Heart, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { type CSSProperties, type MouseEvent, type Ref, useEffect, useState } from "react";
+import { FavoriteHeart } from "@/components/ui/favorite-heart";
 import { cn } from "@/lib/utils";
 
 import { getPsychologistDisplayName, type PsychologistCardItem } from "./psychologist-card-support";
@@ -80,9 +81,9 @@ export const FavoriteButton = ({
       aria-pressed={psychologist.favorited}
       className={cn(
         "grid place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60",
-        "duration-300",
+        "duration-300 motion-reduce:transform-none motion-reduce:transition-none",
         isAnimating ? "scale-110" : "scale-100",
-        isFavorited ? "bg-danger-soft text-danger" : "bg-primary-foreground/94 text-muted",
+        isFavorited ? "bg-favorite-soft text-favorite" : "bg-primary-foreground/94 text-muted",
         className,
       )}
       disabled={favoritePending || !canFavorite}
@@ -97,12 +98,11 @@ export const FavoriteButton = ({
       title={!canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined}
       type="button"
     >
-      <Heart
-        aria-hidden="true"
+      <FavoriteHeart
+        active={isFavorited}
         className={cn(
-          "h-[22px] w-[22px] transition-transform duration-300",
+          "h-[22px] w-[22px] transition-transform duration-300 motion-reduce:transform-none",
           isAnimating ? "scale-125" : "scale-100",
-          isFavorited ? "fill-danger stroke-danger" : "fill-none stroke-muted",
         )}
       />
     </button>
