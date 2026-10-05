@@ -44,6 +44,17 @@ export const useCommunities = (query: CommunityListQuery = {}, enabled = true) =
   });
 };
 
+export const useCommunityRecommendationCandidates = (viewerId: string, enabled: boolean) => {
+  return useQuery({
+    queryKey: [...keys.community.root(), "recommendations", viewerId],
+    queryFn: () => api.getCommunities({ limit: 50, page: 1 }),
+    enabled,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
 export const useCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = true) => {
   return useQuery({
     queryKey: keys.community.feed(query),

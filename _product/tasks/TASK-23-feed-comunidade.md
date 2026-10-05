@@ -1,5 +1,17 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Descoberta de comunidades no feed (0.1.582)
+
+- [x] Adicionar carrosseis no Inicio apos o quarto post e a cada doze posts seguintes, em lotes de seis comunidades sem repeticao.
+- [x] Exibir Explore outras comunidades no final da paginacao completa da comunidade, nunca em busca, oportunidades, carregamento inicial ou erro.
+- [x] Reutilizar imagens, categoria, nome e contagem de posts do Explorar em cards compactos; Ver todas abre o catalogo.
+- [x] Separar link da comunidade e acao + Seguir, mantendo card e dimensoes ao mudar para Seguindo.
+- [x] Excluir comunidade atual e as ja seguidas na selecao inicial; priorizar categoria relacionada e atividade entre ate 50 candidatas reais.
+- [x] Preservar selecao durante refetch de vinculos, com escopo por usuario e comunidade, sem alterar perfil ou favoritos.
+- Referencia: imagens fornecidas e pagina Explorar existente; inventario consultado, sem geracao Builder para esta adaptacao.
+- Validacao: oito testes novos de selecao, esgotamento, frequencia, estabilidade e renderizacao aprovados; check completo do frontend e build aprovados. Check geral bloqueado no backend por DATABASE_URL local ausente. Browser local abriu sem conexao com a API; smoke visual com dados reais previsto no deploy de homologacao.
+- Deploy: somente homologacao; sem alteracao de backend, banco ou configuracao. Producao permanece 0.1.581.
+
 ## Ajuste 2026-10-05 - Retorno ao Plus Favoritar (0.1.581)
 
 - [x] Restaurar Plus no rotulo inativo do favorito de posts e respostas, a pedido do usuario.

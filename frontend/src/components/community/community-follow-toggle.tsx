@@ -12,12 +12,14 @@ type CommunityFollowToggleProps = {
   followVariant?: "primary" | "secondary";
   initialFollowing?: boolean;
   hideFollowing?: boolean;
-  size?: "compact" | "hero";
+  size?: "compact" | "hero" | "recommendation";
+  communityName?: string;
   slug: string;
 };
 
 export const CommunityFollowToggle = ({
   className,
+  communityName,
   followVariant,
   initialFollowing = false,
   hideFollowing = false,
@@ -82,6 +84,9 @@ export const CommunityFollowToggle = ({
 
   return (
     <CommunityFollowButton
+      aria-label={
+        communityName ? `${following ? "Deixar de seguir" : "Seguir"} ${communityName}` : undefined
+      }
       className={className}
       followVariant={followVariant}
       following={following}

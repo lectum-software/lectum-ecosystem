@@ -4,6 +4,29 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - Descoberta contextual de comunidades (0.1.582)
+
+Adicionar um componente horizontal compartilhado fora dos cards de posts, no
+Inicio (apos 4 posts, intervalo de 12, lotes distintos de 6) e ao esgotar a
+paginacao da comunidade. Feed curto esgotado recebe o primeiro lote apos o ultimo
+post. Busca, filtro de comunidade no Inicio, oportunidades e erros nao sinalizam
+fim de todos os posts. Refetch em segundo plano conserva cards ja carregados.
+
+Usar o adaptador e imagens do Explorar, com cards compactos e link separado da
+mutacao. O botao usa a mutacao e conversao anonima existentes, com + Seguir,
+loading e Seguindo sem alterar largura. Congelar apenas os slugs sugeridos por
+visita/usuario para seguir nao remover nem reordenar cards; dados e vinculos
+continuam atualizados. Consulta limitada a 50 candidatas com cache por usuario,
+invalidado pelas mesmas mutacoes de comunidade; excluir seguidas e comunidade
+atual na selecao, ordenar por categoria atual e atividade. Sem inferencia de
+condicoes de saude, novo endpoint, dependencia ou persistencia.
+
+Rolagem nativa com snap, setas acessiveis e movimento reduzido; nomes longos
+limitados a tres linhas com nome completo acessivel no link. Sem bloco vazio
+quando nao ha sugestoes. Risco: frequencia e conversao devem ser avaliadas em
+homologacao. Rollback: reverter apenas componentes e insercoes deste ajuste.
+Nenhuma migracao, variavel nova ou acao manual de infraestrutura.
+
 ## Ajuste 2026-10-05 - restaurar Plus no estado inativo (0.1.581)
 
 Por escolha do usuario, reverter apenas o icone inativo de FavoriteHeart para

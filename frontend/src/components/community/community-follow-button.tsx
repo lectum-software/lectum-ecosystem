@@ -8,7 +8,7 @@ type CommunityFollowButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
   followVariant?: "primary" | "secondary";
   following: boolean;
   pending?: boolean;
-  size?: "compact" | "hero";
+  size?: "compact" | "hero" | "recommendation";
 };
 
 export const CommunityFollowButton = ({
@@ -20,6 +20,30 @@ export const CommunityFollowButton = ({
   size = "compact",
   ...props
 }: CommunityFollowButtonProps) => {
+  if (size === "recommendation") {
+    return (
+      <button
+        {...props}
+        type="button"
+        aria-pressed={following}
+        aria-busy={pending}
+        disabled={disabled || pending}
+        className={cn(
+          "inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-3 text-[13px] font-semibold text-primary transition-colors hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none",
+          className,
+        )}
+      >
+        {pending ? (
+          <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+        ) : following ? (
+          <Check className="h-4 w-4" aria-hidden="true" />
+        ) : (
+          <Plus className="h-4 w-4" aria-hidden="true" />
+        )}
+        {following ? "Seguindo" : "Seguir"}
+      </button>
+    );
+  }
   if (size === "hero") {
     return (
       <span className="group relative inline-flex shrink-0">
