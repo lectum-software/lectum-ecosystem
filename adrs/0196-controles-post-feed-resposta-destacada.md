@@ -4,6 +4,12 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - formato do Favoritar (0.1.572)
+
+Usar rounded-[6px] no FeedFavoriteButton compartilhado para diferenciar a acao
+de uma etiqueta, sem aumentar a linha de identificacao. Somente o raio muda;
+nao alterar tipografia, dimensoes, estados, conversao ou mutations.
+
 ## Ajuste 2026-10-05 - concentrar Seguir no cabecalho da comunidade (0.1.571)
 
 Posts deixam de apresentar o controle de seguir, independentemente do estado

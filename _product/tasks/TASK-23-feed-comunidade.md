@@ -1,5 +1,14 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - cantos discretos em Favoritar (0.1.572)
+
+- [x] Trocar formato de pilula por raio de 6px no Favoritar compartilhado.
+- [x] Preservar altura, fonte 11px/600, contorno azul, fundo transparente e foco.
+- [x] Aplicar a mesma identidade em posts, respostas/comentarios e previas.
+
+Referencia: exemplo enviado pelo usuario e proposta de 6px aprovada em conversa.
+Validacao: teste de regressao do controle, check/build e smoke visual.
+
 ## Ajuste 2026-10-05 - seguir comunidade fora dos posts (0.1.571)
 
 - [x] Remover Seguir dos cards do feed/comunidade, detalhe e cards compartilhados.
