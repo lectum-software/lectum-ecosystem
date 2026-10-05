@@ -1,5 +1,13 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - peso de Favoritar (0.1.567)
+
+- [x] Igualar Favoritar ao peso computado 600 (semibold) de Seguir.
+- [x] Preservar fonte de 11px, altura, alinhamento junto ao selo e regras de ocultacao.
+
+Referencia: comparacao no browser de homologacao; Favoritar herdava peso 400.
+Validacao: testes de controles, check/build frontend e smoke visual mobile/desktop.
+
 ## Ajuste 2026-10-05 - Favoritar junto ao selo (0.1.566)
 
 Referencia: captura do usuario; manter os demais controles e regras de 0.1.565.

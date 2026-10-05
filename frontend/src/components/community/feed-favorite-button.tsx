@@ -58,9 +58,9 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
     <button
       aria-busy={pending}
       aria-label={`Favoritar ${name}`}
-      className="pointer-events-auto inline-flex h-5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-primary/45 bg-surface px-2 text-[11px] font-extrabold leading-none tracking-normal text-primary hover:bg-primary-soft/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-wait disabled:opacity-70"
+      className="pointer-events-auto inline-flex h-5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-primary/45 bg-surface px-2 text-[11px] font-semibold leading-none tracking-normal text-primary hover:bg-primary-soft/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-wait disabled:opacity-70"
       disabled={pending}
-      style={{ fontSize: 11 }}
+      style={{ fontSize: 11, fontWeight: 600 }}
       onClick={(event) => {
         event.stopPropagation();
         favorite();

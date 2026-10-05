@@ -82,7 +82,7 @@ test("feed favorite is text-only, hides known favorites/self and waits for authe
     const html = renderRelations({ ...state, children });
     assert.match(html, />Favoritar<\/button>/);
     assert.match(html, /h-5/);
-    assert.match(html, /style="font-size:11px"/);
+    assert.match(html, /style="font-size:11px;font-weight:600"/);
     assert.doesNotMatch(html, /<svg|heart|Seguindo/);
   }
   for (const state of [

@@ -4,6 +4,13 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - peso de Favoritar (0.1.567)
+
+A comparacao de estilos computados confirmou Seguir com peso 600 e Favoritar
+com 400. O reset global de button tambem sobrescreve o peso da utility.
+Definir fontWeight: 600 junto ao fontSize local e alinhar a utility a semibold
+mantem os dois controles equivalentes sem alterar a cascata global.
+
 ## Ajuste 2026-10-05 - posicao e fonte de Favoritar (0.1.566)
 
 Retirar ml-auto do slot de acao coloca Favoritar junto ao selo, mantendo h-0
