@@ -4,6 +4,16 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - concentrar Seguir no cabecalho da comunidade (0.1.571)
+
+Posts deixam de apresentar o controle de seguir, independentemente do estado
+do relacionamento. Remover somente os callsites dos tres componentes de post;
+preservar os links de comunidade e Favoritar nos autores profissionais.
+O cabecalho da comunidade continua oferecendo Seguir, sem repeti-lo nos posts.
+Nao alterar mutations, conversao, gerenciamento de comunidades ou estilos globais.
+Trade-off aprovado: um passo adicional para seguir em troca de menos acoes
+concorrentes durante a leitura. Substitui as regras anteriores de Seguir nos posts.
+
 ## Ajuste 2026-10-05 - relacionamentos ocultos dentro do post (0.1.570)
 
 O detalhe passa hideFollowing ao controle de comunidade e utiliza o padrao

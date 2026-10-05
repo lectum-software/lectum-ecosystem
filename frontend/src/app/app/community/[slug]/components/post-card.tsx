@@ -14,7 +14,6 @@ import {
 import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { CommunityPost } from "@/api/generator/types/community";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
-import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import {
   CommunityMediaBlock,
   type CommunityMediaOverlayAction,
@@ -516,12 +515,6 @@ export const PostCard = ({
             >
               {post.community.name}
             </Link>
-            <CommunityFollowToggle
-              className="h-5 shrink-0 px-2 text-[11px] tracking-normal"
-              hideFollowing
-              initialFollowing={Boolean(post.community.following)}
-              slug={post.community.slug}
-            />
           </div>
           {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
         </div>

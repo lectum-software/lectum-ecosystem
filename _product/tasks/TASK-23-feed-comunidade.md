@@ -1,5 +1,16 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - seguir comunidade fora dos posts (0.1.571)
+
+- [x] Remover Seguir dos cards do feed/comunidade, detalhe e cards compartilhados.
+- [x] Manter Postado em com nome da comunidade clicavel.
+- [x] Preservar Favoritar e manter Seguir no cabecalho da comunidade.
+- [x] Nao alterar gestao de comunidades seguidas, dados de relacionamento ou player.
+
+Referencia: capturas do usuario e proposta aprovada em conversa. Builder nao
+disponivel nesta sessao; nenhuma reconstrucao de layout necessaria.
+Validacao: testes de regressao, check/build frontend e smoke local/homologacao.
+
 ## Ajuste 2026-10-05 - ocultar relacionamentos existentes no detalhe (0.1.570)
 
 - [x] Ocultar Seguir no detalhe quando a comunidade ja estiver seguida.

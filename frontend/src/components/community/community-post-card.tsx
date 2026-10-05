@@ -13,7 +13,6 @@ import {
 import { useSavePost, useSaveReply, useVotePost } from "@/api/callers/posts";
 import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
-import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
@@ -446,13 +445,6 @@ export const CommunityPostCard = ({
             >
               {post.community.name}
             </Link>
-            {isFeedPresentation ? (
-              <CommunityFollowToggle
-                className="shrink-0"
-                initialFollowing={Boolean(post.community.following)}
-                slug={post.community.slug}
-              />
-            ) : null}
             {!isFeedPresentation && communityHeaderIncludesTime ? (
               <>
                 <span className="shrink-0 text-muted" aria-hidden="true">

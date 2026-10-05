@@ -13,7 +13,6 @@ import {
 } from "react";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
-import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
@@ -194,12 +193,6 @@ export const PostHeader = ({
           >
             {post.community.name}
           </Link>
-          <CommunityFollowToggle
-            className="h-5 shrink-0 px-2"
-            hideFollowing
-            initialFollowing={Boolean(post.community.following)}
-            slug={post.community.slug}
-          />
         </div>
         {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
       </div>

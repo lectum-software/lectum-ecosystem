@@ -131,8 +131,7 @@ test("post headers and comments hide existing relationships while publication pr
     detail.indexOf("export const PostBody"),
   );
   assert.doesNotMatch(header, /<FileText/);
-  assert.match(header, /className="h-5 shrink-0 px-2"/);
-  assert.match(header, /<CommunityFollowToggle\s+className="h-5 shrink-0 px-2"\s+hideFollowing/);
+  assert.doesNotMatch(header, /CommunityFollowToggle|CommunityFollowButton/);
   assert.doesNotMatch(detail, /hideFavorited=\{false\}/);
   assert.equal((detail.match(/<FeedFavoriteButton author=\{post.author\} \/>/g) ?? []).length, 2);
   const replies = readFileSync(
@@ -262,14 +261,13 @@ test("favorite changes use the originating account and do not manufacture a part
   client.clear();
 });
 
-test("feed hides saved count and decorative post icon, keeping compact favorite/follow controls", () => {
+test("feed hides saved count and decorative post icon, keeping favorite but no follow control", () => {
   const source = readFileSync(
     new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
     "utf8",
   );
   assert.doesNotMatch(source, /FileText|count: saveSnapshot.saves/);
-  assert.match(source, /hideFollowing/);
-  assert.match(source, /className="h-5 shrink-0 px-2/);
+  assert.doesNotMatch(source, /CommunityFollowToggle|CommunityFollowButton/);
   assert.match(source, /FeedFavoriteButton author=\{reply.author\}/);
   assert.match(source, /isPsychologistPost \? <FeedFavoriteButton author=\{post.author\}/);
   const html = renderToStaticMarkup(
@@ -280,6 +278,22 @@ test("feed hides saved count and decorative post icon, keeping compact favorite/
   );
   assert.match(html, /aria-label="Salvar post"/);
   assert.doesNotMatch(html, />0</);
+});
+
+test("post surfaces preserve community navigation without follow actions", () => {
+  for (const file of [
+    "../../app/app/community/[slug]/components/post-card.tsx",
+    "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+    "./community-post-card.tsx",
+  ]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /CommunityFollowToggle|CommunityFollowButton/);
+    assert.match(
+      source,
+      /href=\{(?:communityDetailHref\(post.community.slug\)|`\/comunidades\/\$\{post.community.slug\}`)\}/,
+    );
+    assert.match(source, /FeedFavoriteButton/);
+  }
 });
 
 test("vote cluster has no independent fill and keeps selection feedback", () => {
