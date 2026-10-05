@@ -1,5 +1,16 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Favoritar junto ao selo (0.1.566)
+
+Referencia: captura do usuario; manter os demais controles e regras de 0.1.565.
+
+- [x] Favoritar imediatamente depois do selo, sem margem automatica a direita.
+- [x] Texto de Favoritar em 11px, igual ao Seguir do feed, apesar do reset global.
+- [x] Preservar altura da identificacao, truncamento do nome e regras de ocultacao.
+
+Escopo: dois estilos locais, sem mudar o reset global, dados, player ou backend.
+Validacao focada e visual registrada em outputs/feed-relations-0566-smoke.md.
+
 ## Ajuste 2026-10-05 - acoes compactas e favoritos no feed (0.1.565)
 
 Referencia: captura e cinco requisitos do usuario; Builder indisponivel.

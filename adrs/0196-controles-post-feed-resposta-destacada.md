@@ -4,6 +4,16 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - posicao e fonte de Favoritar (0.1.566)
+
+Retirar ml-auto do slot de acao coloca Favoritar junto ao selo, mantendo h-0
+e shrink-0 para preservar a altura da linha e o nome truncavel. O reset global
+nao estratificado `button { font: inherit }` prevalecia sobre a utility de 11px:
+Favoritar herdava 15px, enquanto Seguir herdava 11px do cabecalho do post.
+Definir fontSize: 11 no proprio botao segue o precedente dos controles do perfil
+e corrige apenas esta acao, sem alterar a cascata tipografica de todo o produto.
+Regras de seguir/favoritar e demais superficies permanecem inalteradas.
+
 ## Ajuste 2026-10-05 - controles de relacionamento no feed (0.1.565)
 
 O card deixa de mostrar o icone decorativo de post e o contador de salvos, sem

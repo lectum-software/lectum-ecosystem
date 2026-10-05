@@ -82,6 +82,7 @@ test("feed favorite is text-only, hides known favorites/self and waits for authe
     const html = renderRelations({ ...state, children });
     assert.match(html, />Favoritar<\/button>/);
     assert.match(html, /h-5/);
+    assert.match(html, /style="font-size:11px"/);
     assert.doesNotMatch(html, /<svg|heart|Seguindo/);
   }
   for (const state of [
@@ -91,6 +92,20 @@ test("feed favorite is text-only, hides known favorites/self and waits for authe
     { authenticated: true },
   ])
     assert.equal(renderRelations({ ...state, children }), "");
+});
+
+test("author action stays beside the badge without automatic right alignment", () => {
+  const source = readFileSync(
+    new URL("../../app/app/community/[slug]/components/feed-controls.tsx", import.meta.url),
+    "utf8",
+  );
+  const identity = source.slice(
+    source.indexOf("export const AuthorIdentityLine"),
+    source.indexOf("export const FilterMenu"),
+  );
+  assert.doesNotMatch(identity, /ml-auto|justify-between/);
+  assert.match(identity, /flex h-0 shrink-0 items-center pl-1/);
+  assert.ok(identity.indexOf("VerifiedBadgeIcon") < identity.indexOf("{action}</span>"));
 });
 
 test("follow-only feed hides followed communities without changing ordinary unfollow controls", () => {
