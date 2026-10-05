@@ -436,7 +436,7 @@ export const ReplyCard = ({
           <div className="flex items-start justify-between gap-2">
             <div className="grid min-w-0 flex-1 gap-0.5">
               <div className="flex min-w-0 items-center gap-x-2">
-                <div className="flex min-w-0 items-center gap-1">
+                <div className="flex min-w-0 flex-1 items-center gap-1">
                   {isProfessional ? (
                     <Link
                       className="min-w-0 truncate text-sm font-black leading-tight text-inherit no-underline hover:text-inherit hover:no-underline"
@@ -457,7 +457,7 @@ export const ReplyCard = ({
                     />
                   ) : null}
                   {isProfessional ? (
-                    <span className="flex h-0 shrink-0 items-center pl-1">
+                    <span className="ml-auto flex h-0 w-[66px] shrink-0 items-center justify-end">
                       <FeedFavoriteButton author={reply.author} />
                     </span>
                   ) : null}

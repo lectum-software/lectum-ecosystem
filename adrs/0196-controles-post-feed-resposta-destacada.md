@@ -4,6 +4,13 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - acao compacta Plus Favoritar (0.1.578)
+
+- Adicionar o icone Plus da biblioteca existente e retirar apenas a borda no FeedFavoriteButton compartilhado por posts/respostas.
+- Manter o slot de 66px: Plus de 12px e gap de 4px aproveitam o espaco interno. Por confirmacao do usuario, alinhar o slot a direita, com largura fixa mesmo no estado ativo; nome e selo ficam juntos a esquerda, com truncamento do nome quando necessario.
+- Manter nome acessivel Favoritar, estado pressionado e transicao para coracao; o Plus e decorativo.
+- Perfil do psicologo e cabecalho de comunidade permanecem intactos. Publicar em homologacao para avaliacao; producao somente mediante nova solicitacao.
+
 ## Ajuste 2026-10-05 - seguir da comunidade em circulo (0.1.576)
 
 O cabecalho da comunidade adota a mesma geometria do favorito do perfil:

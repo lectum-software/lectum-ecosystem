@@ -1,6 +1,7 @@
 "use client";
 
 import { useIsMutating, useQuery } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import keys from "@/api/cache/keys";
 import { usePatient } from "@/api/callers/patient";
@@ -73,7 +74,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
       aria-busy={pending}
       aria-label={favorited ? `Remover ${name} dos favoritos` : `Favoritar ${name}`}
       aria-pressed={favorited}
-      className="favorite-toggle pointer-events-auto"
+      className="favorite-toggle pointer-events-auto border-0"
       disabled={pending}
       size="compact"
       title={favorited ? `Remover ${name} dos favoritos` : undefined}
@@ -83,7 +84,8 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
       }}
       type="button"
     >
-      <span aria-hidden="true" className="favorite-toggle-label">
+      <span aria-hidden="true" className="favorite-toggle-label gap-1">
+        <Plus className="h-3 w-3 shrink-0" aria-hidden="true" />
         Favoritar
       </span>
       <span aria-hidden="true" className="favorite-toggle-heart">

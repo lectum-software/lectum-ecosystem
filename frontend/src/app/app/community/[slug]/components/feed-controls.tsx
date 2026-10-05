@@ -123,7 +123,11 @@ export const AuthorIdentityLine = ({
       {verified ? (
         <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
       ) : null}
-      {action ? <span className="flex h-0 shrink-0 items-center pl-1">{action}</span> : null}
+      {action ? (
+        <span className="ml-auto flex h-0 w-[66px] shrink-0 items-center justify-end">
+          {action}
+        </span>
+      ) : null}
     </div>
   );
 };

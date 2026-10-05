@@ -74,13 +74,16 @@ const renderRelations = ({ userId, authenticated = Boolean(userId), ids, childre
   return html;
 };
 
-test("inactive feed favorite is text-only, hides self and waits for authenticated state", () => {
+test("inactive feed favorite uses plus and text without a border, keeping its compact width", () => {
   const children = createElement(FeedFavoriteButton, {
     author: { id: "psi", name: "Ana Lima", role: "psicologo" },
   });
   for (const state of [{}, { userId: "viewer", ids: [] }]) {
     const html = renderRelations({ ...state, children });
-    assert.match(html, /favorite-toggle-label">Favoritar<\/span>/);
+    assert.match(html, /favorite-toggle-label gap-1">.*lucide-plus.*<\/svg>Favoritar<\/span>/);
+    assert.match(html, /h-3 w-3 shrink-0/);
+    assert.match(html, /border-0/);
+    assert.doesNotMatch(html, /(?:^|\s)border(?:\s|$)/);
     assert.match(html, /h-5/);
     assert.match(html, /w-\[66px\]/);
     assert.match(html, /style="font-size:11px;font-weight:600"/);
@@ -102,7 +105,7 @@ test("known favorites retain the production heart and can be unfavorited", () =>
   const children = createElement(FeedFavoriteButton, { author });
   const inactive = renderRelations({ userId: "viewer", ids: [], children });
   assert.match(inactive, /aria-pressed="false"/);
-  assert.match(inactive, /favorite-toggle-label">Favoritar<\/span>/);
+  assert.match(inactive, /favorite-toggle-label gap-1">.*lucide-plus.*<\/svg>Favoritar<\/span>/);
   const active = renderRelations({ userId: "viewer", ids: ["psi"], children });
   assert.match(active, /aria-pressed="true"/);
   assert.match(active, /aria-label="Remover Ana Lima dos favoritos"/);
@@ -173,7 +176,7 @@ test("all post headers and comments share the persistent favorite toggle", () =>
   for (const file of ["./community-post-card.tsx", "./community-post-card-reply-preview.tsx"]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     assert.match(source, /FeedFavoriteButton author=\{(?:reply.author|displayAuthor)\}/);
-    assert.match(source, /flex h-0 shrink-0 items-center pl-1/);
+    assert.match(source, /ml-auto flex h-0 w-\[66px\] shrink-0 items-center justify-end/);
   }
   const favorite = readFileSync(new URL("./feed-favorite-button.tsx", import.meta.url), "utf8");
   assert.match(favorite, /favorited \? unfavoritePsychologist : favoritePsychologist/);
@@ -181,7 +184,7 @@ test("all post headers and comments share the persistent favorite toggle", () =>
   assert.doesNotMatch(favorite, /hideFavorited/);
 });
 
-test("author action stays beside the badge without automatic right alignment", () => {
+test("author action reserves a fixed slot on the right and preserves name truncation", () => {
   const source = readFileSync(
     new URL("../../app/app/community/[slug]/components/feed-controls.tsx", import.meta.url),
     "utf8",
@@ -190,9 +193,20 @@ test("author action stays beside the badge without automatic right alignment", (
     source.indexOf("export const AuthorIdentityLine"),
     source.indexOf("export const FilterMenu"),
   );
-  assert.doesNotMatch(identity, /ml-auto|justify-between/);
-  assert.match(identity, /flex h-0 shrink-0 items-center pl-1/);
-  assert.ok(identity.indexOf("VerifiedBadgeIcon") < identity.indexOf("{action}</span>"));
+  assert.match(identity, /ml-auto flex h-0 w-\[66px\] shrink-0 items-center justify-end/);
+  assert.match(identity, /min-w-0 truncate/);
+  assert.ok(identity.indexOf("VerifiedBadgeIcon") < identity.indexOf("{action}"));
+  for (const path of [
+    "./community-post-card.tsx",
+    "./community-post-card-reply-preview.tsx",
+    "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+    "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx",
+  ]) {
+    const header = readFileSync(new URL(path, import.meta.url), "utf8");
+    assert.match(header, /ml-auto flex h-0 w-\[66px\] shrink-0 items-center justify-end/);
+    assert.match(header, /min-w-0 flex-1 items-center gap-1/);
+    assert.doesNotMatch(header, /flex h-0 shrink-0 items-center pl-1/);
+  }
 });
 
 test("follow-only feed hides followed communities without changing ordinary unfollow controls", () => {

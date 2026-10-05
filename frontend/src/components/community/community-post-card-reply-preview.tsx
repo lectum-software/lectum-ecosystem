@@ -98,7 +98,7 @@ export const ProfessionalReplyPreview = ({
             />
             <div className="grid min-w-0 flex-1 gap-0.5">
               <div className="flex min-w-0 items-center gap-x-2 gap-y-1">
-                <span className="inline-flex min-w-0 items-center gap-1">
+                <span className="inline-flex min-w-0 flex-1 items-center gap-1">
                   <Link
                     className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={profileHref}
@@ -111,7 +111,7 @@ export const ProfessionalReplyPreview = ({
                       aria-label="Perfil verificado"
                     />
                   ) : null}
-                  <span className="flex h-0 shrink-0 items-center pl-1">
+                  <span className="ml-auto flex h-0 w-[66px] shrink-0 items-center justify-end">
                     <FeedFavoriteButton author={reply.author} />
                   </span>
                 </span>
@@ -194,7 +194,7 @@ export const ProfessionalReplyPreview = ({
               profilePublicationMode ? "flex-nowrap" : "flex-wrap",
             )}
           >
-            <span className="inline-flex min-w-0 items-center gap-1">
+            <span className="inline-flex min-w-0 flex-1 items-center gap-1">
               <Link
                 className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                 href={profileHref}
@@ -204,7 +204,7 @@ export const ProfessionalReplyPreview = ({
               {reply.author.verified ? (
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
-              <span className="flex h-0 shrink-0 items-center pl-1">
+              <span className="ml-auto flex h-0 w-[66px] shrink-0 items-center justify-end">
                 <FeedFavoriteButton author={reply.author} />
               </span>
             </span>

@@ -1,5 +1,15 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Plus Favoritar sem borda (0.1.578)
+
+- [x] Testar Plus + Favoritar azul e sem borda/fundo a direita, nos posts e respostas que compartilham o controle compacto, conforme confirmacao do usuario.
+- [x] Reservar 66px para a acao, mantendo nome/selo juntos e reticencias para nomes longos, sem mudar o espaco ao favoritar.
+- [x] Preservar largura de 66px, altura e fonte atuais, sem alterar perfil, comunidade ou player.
+- [x] Preservar coracao ativo, animacao, acessibilidade e mutacoes reais.
+- [x] Atualizar teste de renderizacao para icone Plus, ausencia de borda e dimensoes compactas.
+- Referencia: imagens e pedido do usuario nesta conversa; sem geracao Builder para este ajuste pontual.
+- Validacao: check completo do frontend e build aprovados; 31 testes focados aprovados. Check geral bloqueado no backend por DATABASE_URL local ausente. Browser local abriu, mas a API do feed ficou indisponivel; concluir smoke visual no deploy real de homologacao.
+
 ## Ajuste 2026-10-05 - seguir com check no cabecalho (0.1.576)
 
 - [x] Padronizar altura, fonte, borda, sombra e cantos com o favorito do perfil.
