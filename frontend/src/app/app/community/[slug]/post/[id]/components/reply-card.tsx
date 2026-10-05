@@ -458,7 +458,7 @@ export const ReplyCard = ({
                   ) : null}
                   {isProfessional ? (
                     <span className="flex h-0 shrink-0 items-center pl-1">
-                      <FeedFavoriteButton author={reply.author} hideFavorited={false} />
+                      <FeedFavoriteButton author={reply.author} />
                     </span>
                   ) : null}
                 </div>

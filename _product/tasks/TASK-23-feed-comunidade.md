@@ -1,5 +1,16 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - ocultar relacionamentos existentes no detalhe (0.1.570)
+
+- [x] Ocultar Seguir no detalhe quando a comunidade ja estiver seguida.
+- [x] Ocultar Favoritar no post, post original da thread, respostas e comentarios
+  quando o profissional ja estiver favoritado.
+- [x] Reutilizar os controles e caches existentes, preservando o layout e os
+  controles de gerenciamento em perfil/salvos.
+
+Este pedido substitui a excecao do detalhe registrada em 0.1.569.
+Validacao: testes dos controles, check/build frontend e smoke local/homologacao.
+
 ## Ajuste 2026-10-05 - identidade e favoritos dentro do post (0.1.569)
 
 Referencia: captura e pedidos do usuario para posts, respostas e comentarios.

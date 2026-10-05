@@ -4,6 +4,15 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - relacionamentos ocultos dentro do post (0.1.570)
+
+O detalhe passa hideFollowing ao controle de comunidade e utiliza o padrao
+hideFavorited=true em seus autores profissionais, incluindo a arvore recursiva
+de respostas/comentarios e o post original da thread. Isso substitui a decisao
+anterior de manter os estados ativos visiveis no detalhe, conforme novo pedido.
+Nao alterar defaults globais nem controles de perfil/salvos. Mutations, cache,
+conversao de visitantes e tratamento de falhas permanecem compartilhados.
+
 ## Ajuste 2026-10-05 - favoritos em todas as publicacoes profissionais (0.1.569)
 
 Reutilizar FeedFavoriteButton com hideFavorited=true por padrao preserva o

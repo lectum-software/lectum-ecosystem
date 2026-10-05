@@ -196,6 +196,7 @@ export const PostHeader = ({
           </Link>
           <CommunityFollowToggle
             className="h-5 shrink-0 px-2"
+            hideFollowing
             initialFollowing={Boolean(post.community.following)}
             slug={post.community.slug}
           />
@@ -229,7 +230,7 @@ export const PostHeader = ({
               ) : null}
               {isPsychologistPost ? (
                 <span className="flex h-0 shrink-0 items-center pl-1">
-                  <FeedFavoriteButton author={post.author} hideFavorited={false} />
+                  <FeedFavoriteButton author={post.author} />
                 </span>
               ) : null}
             </div>
@@ -448,7 +449,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                 ) : null}
                 {isPsychologistPost ? (
                   <span className="flex h-0 shrink-0 items-center pl-1">
-                    <FeedFavoriteButton author={post.author} hideFavorited={false} />
+                    <FeedFavoriteButton author={post.author} />
                   </span>
                 ) : null}
               </div>

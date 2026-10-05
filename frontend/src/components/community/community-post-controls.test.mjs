@@ -96,7 +96,7 @@ test("feed favorite is text-only, hides known favorites/self and waits for authe
     assert.equal(renderRelations({ ...state, children }), "");
 });
 
-test("post detail favorite remains available to unfavorite and excludes patients and self", () => {
+test("profile and saved favorite opt-in remains available to unfavorite and excludes patients and self", () => {
   const author = { id: "psi", name: "Ana Lima", role: "psicologo" };
   const children = createElement(FeedFavoriteButton, { author, hideFavorited: false });
   const inactive = renderRelations({ userId: "viewer", ids: [], children });
@@ -118,7 +118,7 @@ test("post detail favorite remains available to unfavorite and excludes patients
   );
 });
 
-test("post headers, comments and publication previews expose professional favorite controls", () => {
+test("post headers and comments hide existing relationships while publication previews retain toggles", () => {
   const detail = readFileSync(
     new URL(
       "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
@@ -132,16 +132,16 @@ test("post headers, comments and publication previews expose professional favori
   );
   assert.doesNotMatch(header, /<FileText/);
   assert.match(header, /className="h-5 shrink-0 px-2"/);
-  assert.equal(
-    (detail.match(/FeedFavoriteButton author=\{post.author\} hideFavorited=\{false\}/g) ?? [])
-      .length,
-    2,
+  assert.match(header, /<CommunityFollowToggle\s+className="h-5 shrink-0 px-2"\s+hideFollowing/);
+  assert.doesNotMatch(detail, /hideFavorited=\{false\}/);
+  assert.equal((detail.match(/<FeedFavoriteButton author=\{post.author\} \/>/g) ?? []).length, 2);
+  const replies = readFileSync(
+    new URL("../../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
+    "utf8",
   );
-  for (const file of [
-    "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx",
-    "./community-post-card.tsx",
-    "./community-post-card-reply-preview.tsx",
-  ]) {
+  assert.match(replies, /<FeedFavoriteButton author=\{reply.author\} \/>/);
+  assert.doesNotMatch(replies, /hideFavorited=\{false\}/);
+  for (const file of ["./community-post-card.tsx", "./community-post-card-reply-preview.tsx"]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     assert.match(
       source,
