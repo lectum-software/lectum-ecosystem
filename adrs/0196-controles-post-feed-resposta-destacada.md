@@ -4,6 +4,15 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - detalhe com ritmo vertical do feed (0.1.580)
+
+PostHeader usa gap de 12px e a mesma divisoria discreta entre comunidade e autor
+do feed, totalizando 25px entre as duas linhas. PostBody conserva 12px apos o
+autor e adota 8px entre titulo e descricao. Preservar margens laterais e tipografia
+da pagina de detalhe, sem alterar o compositor ou os cards de discussao.
+PostVoteBar deixa de fornecer save.count; bookmark continua interativo e acessivel.
+Nao modificar contratos, persistencia nem contadores de outros tipos de interacao.
+
 ## Ajuste 2026-10-05 - coracao contornado no rotulo Favoritar (0.1.579)
 
 Reutilizar FavoriteHeart sem active no rotulo compacto, substituindo apenas o Plus.

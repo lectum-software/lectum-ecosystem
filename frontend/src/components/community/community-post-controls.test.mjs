@@ -341,6 +341,27 @@ test("feed hides saved count and decorative post icon, keeping favorite but no f
   assert.doesNotMatch(html, />0</);
 });
 
+test("post detail matches feed vertical spacing and keeps saving without a counter", () => {
+  const source = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const header = source.split("export const PostHeader")[1].split("export const PostBody")[0];
+  const body = source
+    .split("export const PostBody")[1]
+    .split("export const ThreadOriginalPostCard")[0];
+  const actions = source.split("export const PostVoteBar")[1];
+  assert.match(header, /<header className="grid gap-3 px-5 pt-4 pb-0">/);
+  assert.match(header, /h-px w-full bg-surface-muted dark:bg-border\/70/);
+  assert.match(body, /grid gap-2 px-5 pt-3 pb-4/);
+  assert.doesNotMatch(actions, /count: post.saves_count/);
+  assert.match(actions, /active: post.saved/);
+  assert.match(actions, /onClick: onToggleSave/);
+});
+
 test("post surfaces preserve community navigation without follow actions", () => {
   for (const file of [
     "../../app/app/community/[slug]/components/post-card.tsx",

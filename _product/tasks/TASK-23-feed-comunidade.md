@@ -1,5 +1,14 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Espacamento do detalhe e salvos sem contador (0.1.580)
+
+- [x] Remover apenas o contador de salvos do post aberto, preservando icone, estado e acao.
+- [x] Igualar separacao comunidade/autor ao feed: 12px, divisoria discreta de 1px e 12px.
+- [x] Manter 12px entre autor e titulo e usar 8px entre titulo e descricao, como no feed.
+- [x] Preservar navegacao, margens externas do detalhe, tipografia, expansao do texto e discussoes.
+- Referencia: comparacao das duas imagens enviadas pelo usuario; ajuste pontual no componente existente.
+- Validacao: check completo do frontend e build aprovados, incluindo regressao de espacamento e preservacao da acao de salvar. Check geral bloqueado no backend por DATABASE_URL local ausente. Build local abriu, mas sem conexao com a API; concluir smoke visual e salvar/remover com dados reais em homologacao. Producao permanece 0.1.578.
+
 ## Ajuste 2026-10-05 - Favoritar com coracao contornado azul (0.1.579)
 
 - [x] Substituir Plus por FavoriteHeart inativo no controle compacto de posts e respostas.
