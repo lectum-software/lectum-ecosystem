@@ -74,13 +74,20 @@ const renderRelations = ({ userId, authenticated = Boolean(userId), ids, childre
   return html;
 };
 
-test("inactive feed favorite uses plus and text without a border, keeping its compact width", () => {
+test("inactive feed favorite uses an outlined heart inheriting the label color without a border", () => {
   const children = createElement(FeedFavoriteButton, {
     author: { id: "psi", name: "Ana Lima", role: "psicologo" },
   });
   for (const state of [{}, { userId: "viewer", ids: [] }]) {
     const html = renderRelations({ ...state, children });
-    assert.match(html, /favorite-toggle-label gap-1">.*lucide-plus.*<\/svg>Favoritar<\/span>/);
+    const label = html.match(/favorite-toggle-label gap-1">(.*?)<\/span>/)?.[1];
+    assert.ok(label);
+    assert.match(label, /lucide-heart/);
+    assert.match(label, /fill-none/);
+    assert.match(label, /stroke="currentColor"/);
+    assert.doesNotMatch(label, /text-favorite|fill-current|text-danger|lucide-plus/);
+    assert.match(label, /<\/svg>Favoritar$/);
+    assert.match(html, /text-primary/);
     assert.match(html, /h-3 w-3 shrink-0/);
     assert.match(html, /border-0/);
     assert.doesNotMatch(html, /(?:^|\s)border(?:\s|$)/);
@@ -105,7 +112,10 @@ test("known favorites retain the production heart and can be unfavorited", () =>
   const children = createElement(FeedFavoriteButton, { author });
   const inactive = renderRelations({ userId: "viewer", ids: [], children });
   assert.match(inactive, /aria-pressed="false"/);
-  assert.match(inactive, /favorite-toggle-label gap-1">.*lucide-plus.*<\/svg>Favoritar<\/span>/);
+  assert.match(
+    inactive,
+    /favorite-toggle-label gap-1">.*lucide-heart.*fill-none.*<\/svg>Favoritar<\/span>/,
+  );
   const active = renderRelations({ userId: "viewer", ids: ["psi"], children });
   assert.match(active, /aria-pressed="true"/);
   assert.match(active, /aria-label="Remover Ana Lima dos favoritos"/);

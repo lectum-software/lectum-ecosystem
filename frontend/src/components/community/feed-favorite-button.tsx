@@ -1,7 +1,6 @@
 "use client";
 
 import { useIsMutating, useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import keys from "@/api/cache/keys";
 import { usePatient } from "@/api/callers/patient";
@@ -85,7 +84,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
       type="button"
     >
       <span aria-hidden="true" className="favorite-toggle-label gap-1">
-        <Plus className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <FavoriteHeart className="h-3 w-3 shrink-0" />
         Favoritar
       </span>
       <span aria-hidden="true" className="favorite-toggle-heart">

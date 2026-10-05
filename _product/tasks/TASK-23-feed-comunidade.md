@@ -1,5 +1,14 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Favoritar com coracao contornado azul (0.1.579)
+
+- [x] Substituir Plus por FavoriteHeart inativo no controle compacto de posts e respostas.
+- [x] Usar contorno currentColor, sem preenchimento, herdando o mesmo azul do texto Favoritar.
+- [x] Preservar slot de 66px a direita, dimensoes, animacao e coracao vermelho ativo.
+- [x] Cobrir renderizacao do contorno, heranca de cor e ausencia de Plus no rotulo.
+- Referencia: pedido e imagem do usuario; ajuste pontual no componente existente, sem geracao Builder.
+- Validacao: 31 testes focados, check completo do frontend e build aprovados. Check geral parou na configuracao local do backend por DATABASE_URL ausente. Browser local abriu o build, mas o feed nao conectou ao servico local; concluir smoke com dados reais em homologacao. Producao permanece 0.1.578.
+
 ## Ajuste 2026-10-05 - Plus Favoritar sem borda (0.1.578)
 
 - [x] Testar Plus + Favoritar azul e sem borda/fundo a direita, nos posts e respostas que compartilham o controle compacto, conforme confirmacao do usuario.

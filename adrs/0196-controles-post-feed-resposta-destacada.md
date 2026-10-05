@@ -4,6 +4,13 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - coracao contornado no rotulo Favoritar (0.1.579)
+
+Reutilizar FavoriteHeart sem active no rotulo compacto, substituindo apenas o Plus.
+O contorno herda currentColor do texto azul e permanece sem preenchimento.
+Manter alinhamento a direita, slot de 66px, transicao e coracao vermelho ativo.
+Nenhuma alteracao em mutacoes, perfil, comunidade, player ou contratos.
+
 ## Ajuste 2026-10-05 - acao compacta Plus Favoritar (0.1.578)
 
 - Adicionar o icone Plus da biblioteca existente e retirar apenas a borda no FeedFavoriteButton compartilhado por posts/respostas.
