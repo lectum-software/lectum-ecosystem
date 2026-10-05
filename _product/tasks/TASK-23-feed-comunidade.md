@@ -1,5 +1,16 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Carrosseis compactos com avatar quadrado (0.1.583)
+
+- [x] Remover setas inferiores e ocultar scrollbar, preservando rolagem horizontal nativa e foco de teclado.
+- [x] Reduzir cards a 160x216px em mobile e desktop, em vez de 216x266px/232x282px.
+- [x] Usar avatar real da comunidade em quadrado de 64px, com fallback de iniciais, fundo de superficie e nome centralizado.
+- [x] Remover capa, overlay e etiqueta de categoria; manter contagem real de posts e botao + Seguir compacto, com estado Seguindo sem mudar tamanho.
+- [x] Aplicar no Inicio e fim das comunidades via componente compartilhado, sem alterar selecao ou frequencia.
+- Referencia: pedido e imagem do usuario, com composicao inspirada no carrossel do Instagram e avatar do cabecalho de comunidade existente.
+- Validacao: oito testes de regressao, check completo do frontend e build aprovados. Check geral bloqueado no backend por DATABASE_URL local ausente. Browser local abriu sem conexao com a API; smoke visual com dados reais previsto no deploy de homologacao, com artefatos externos desta versao.
+- Deploy somente homologacao; sem backend, banco, dependencia ou variavel nova. Producao permanece 0.1.581.
+
 ## Ajuste 2026-10-05 - Descoberta de comunidades no feed (0.1.582)
 
 - [x] Adicionar carrosseis no Inicio apos o quarto post e a cada doze posts seguintes, em lotes de seis comunidades sem repeticao.

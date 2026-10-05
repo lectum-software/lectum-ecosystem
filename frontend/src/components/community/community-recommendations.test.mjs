@@ -143,10 +143,10 @@ test("recommendation follow button has stable dimensions and accessible pending/
   assert.match(render({ following: true }), /aria-pressed="true"/);
   assert.match(render({ pending: true }), /aria-busy="true"/);
   assert.match(render({ pending: true }), /disabled=""/);
-  for (const following of [false, true]) assert.match(render({ following }), /h-10 w-full/);
+  for (const following of [false, true]) assert.match(render({ following }), /h-8 w-full/);
 });
 
-test("carousel renders real Explore assets, community links and separate follow buttons", () => {
+test("compact carousel uses community avatars, no cover or arrow controls, and independent follow", () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   const store = configureStore({ reducer: rootReducer });
   const html = renderToStaticMarkup(
@@ -160,7 +160,13 @@ test("carousel renders real Explore assets, community links and separate follow 
           ProgressiveConversionContext.Provider,
           { value: noopContext },
           createElement(CommunityRecommendationsCarousel, {
-            communities: [community("ansiedade-em-equilibrio", { posts_count: 1 })],
+            communities: [
+              community("ansiedade-em-equilibrio", {
+                posts_count: 1,
+                avatar_url: "/community/icons/tdah.png",
+              }),
+              community("sem-avatar"),
+            ],
           }),
         ),
       ),
@@ -170,7 +176,15 @@ test("carousel renders real Explore assets, community links and separate follow 
   assert.match(html, /Comunidades para você/);
   assert.match(html, /href="\/comunidades"/);
   assert.match(html, /href="\/comunidades\/ansiedade-em-equilibrio"/);
-  assert.match(html, /ansiedade.png/);
+  assert.match(html, /tdah.png/);
+  assert.doesNotMatch(html, /ansiedade.png|community-card-overlay|lucide-chevron/);
+  assert.match(html, /Avatar da comunidade Comunidade ansiedade-em-equilibrio/);
+  assert.match(html, /h-\[64px\] w-\[64px\]/);
+  assert.match(html, /h-\[216px\] w-\[160px\]/);
+  assert.match(html, /\[scrollbar-width:none\]/);
+  assert.match(html, /\[&amp;::-webkit-scrollbar\]:hidden/);
+  assert.match(html, /tabindex="0"/);
+  assert.match(html, />CS<\/span>/);
   assert.match(html, /1 post/);
   assert.match(html, /Seguir Comunidade ansiedade-em-equilibrio/);
   assert.doesNotMatch(html, /<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<button\b/);

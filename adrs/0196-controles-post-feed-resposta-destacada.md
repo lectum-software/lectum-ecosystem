@@ -4,6 +4,22 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - Cards de descoberta com avatar (0.1.583)
+
+Por revisao visual do usuario, substituir capas dos cards de recomendacao por
+avatar cadastrado quadrado de 64px sobre superficie neutra. Usar os resolvers de
+midia e iniciais ja existentes, sem escolher imagem tematica por slug. Nome
+centralizado com tres linhas reservadas, contagem e botao de 32px; card fixo em
+160x216px nos dois contextos. O botao azul muda para Seguindo neutro mantendo
+geometria e mutacoes. Perfil e cabecalho das comunidades ficam inalterados.
+
+Retirar setas e scrollbar visual. Preservar overflow nativo, snap, toque,
+trackpad e foco de teclado no viewport rolavel, com indicador de foco visivel.
+Nao adicionar motor de carrossel, observer ou dependencia. Continuar expondo
+parte do proximo card para indicar mais conteudo. Manter selecao, posicoes,
+exclusoes e persistencia do card apos seguir. Rollback por reversao deste
+ajuste visual; nenhum risco de contrato, migracao ou configuracao de deploy.
+
 ## Ajuste 2026-10-05 - Descoberta contextual de comunidades (0.1.582)
 
 Adicionar um componente horizontal compartilhado fora dos cards de posts, no

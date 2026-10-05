@@ -1,12 +1,12 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId } from "react";
 import type { Community } from "@/api/generator/types/community";
-import { buildCommunityExploreCard } from "@/app/app/community/explore-content";
 import { COMMUNITY_EXPLORE_HREF } from "@/utils/community";
+import { getCommunityInitials } from "@/utils/community-display";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { CommunityFollowToggle } from "./community-follow-toggle";
 
 export const CommunityRecommendationsCarousel = ({
@@ -17,35 +17,6 @@ export const CommunityRecommendationsCarousel = ({
   title?: string;
 }) => {
   const id = useId();
-  const track = useRef<HTMLUListElement>(null);
-  const [edges, setEdges] = useState({ previous: false, next: false });
-
-  useEffect(() => {
-    const node = track.current;
-    if (!node || communities.length === 0) return;
-    const update = () =>
-      setEdges({
-        previous: node.scrollLeft > 2,
-        next: node.scrollLeft + node.clientWidth < node.scrollWidth - 2,
-      });
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(node);
-    node.addEventListener("scroll", update, { passive: true });
-    return () => {
-      observer.disconnect();
-      node.removeEventListener("scroll", update);
-    };
-  }, [communities.length]);
-
-  const scroll = (direction: number) => {
-    const node = track.current;
-    if (!node) return;
-    node.scrollBy({
-      left: direction * node.clientWidth * 0.8,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    });
-  };
 
   if (communities.length === 0) return null;
 
@@ -62,74 +33,63 @@ export const CommunityRecommendationsCarousel = ({
           Ver todas
         </Link>
       </div>
-      <ul
-        ref={track}
-        aria-label={title}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2"
+      <section
+        aria-label={`${title}: carrossel`}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users need focus to scroll this region without visible arrows.
+        tabIndex={0}
+        className="snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
-        {communities.map((community, index) => {
-          const card = buildCommunityExploreCard(community, index);
-          return (
-            <li
-              key={community.slug}
-              className="relative isolate flex h-[266px] w-[216px] max-w-[85%] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] border border-border bg-foreground text-media-foreground sm:h-[282px] sm:w-[232px]"
-            >
-              <Image alt="" src={card.imageUrl} fill sizes="232px" className="-z-20 object-cover" />
-              <div aria-hidden="true" className="community-card-overlay absolute inset-0 -z-10" />
-              <Link
-                href={`/comunidades/${community.slug}`}
-                className="flex min-h-0 flex-1 flex-col justify-between gap-3 p-4 pb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-                aria-label={`Explorar ${community.name}`}
+        <ul className="flex gap-3">
+          {communities.map((community) => {
+            const avatar = resolvePublicMediaUrl(community.avatar_url);
+            const postsCount = community.posts_count ?? 0;
+            return (
+              <li
+                key={community.slug}
+                className="flex h-[216px] w-[160px] max-w-[85%] shrink-0 snap-start flex-col gap-2 rounded-lg border border-border bg-surface p-3"
               >
-                <span className="w-fit max-w-full truncate rounded-full border border-media-foreground/25 bg-media-background/20 px-2.5 py-1 text-[10px] font-semibold uppercase">
-                  {card.category ?? "Comunidade"}
-                </span>
-                <div className="grid gap-2">
-                  <h3 className="line-clamp-3 text-lg font-bold leading-tight [overflow-wrap:anywhere]">
-                    {card.name}
-                  </h3>
-                  <p className="text-xs font-medium text-media-foreground/85">
-                    {card.postsCount.toLocaleString("pt-BR")}{" "}
-                    {card.postsCount === 1 ? "post" : "posts"}
+                <Link
+                  href={`/comunidades/${community.slug}`}
+                  className="flex min-h-0 flex-1 flex-col items-center gap-2 rounded-md text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label={`Explorar ${community.name}`}
+                >
+                  <span className="relative grid h-[64px] w-[64px] shrink-0 place-items-center overflow-hidden rounded-lg bg-primary-soft text-lg font-semibold text-primary">
+                    {avatar ? (
+                      <Image
+                        alt={`Avatar da comunidade ${community.name}`}
+                        src={avatar}
+                        fill
+                        sizes="64px"
+                        unoptimized={isPublicMediaUrl(community.avatar_url)}
+                        className="object-cover"
+                        draggable={false}
+                      />
+                    ) : (
+                      getCommunityInitials(community.name)
+                    )}
+                  </span>
+                  <div className="grid h-[54px] w-full shrink-0 place-items-center">
+                    <h3 className="line-clamp-3 text-[13px] font-semibold leading-[18px] text-foreground [overflow-wrap:anywhere]">
+                      {community.name}
+                    </h3>
+                  </div>
+                  <p className="text-[11px] leading-4 text-muted">
+                    {postsCount.toLocaleString("pt-BR")} {postsCount === 1 ? "post" : "posts"}
                   </p>
+                </Link>
+                <div className="shrink-0">
+                  <CommunityFollowToggle
+                    communityName={community.name}
+                    slug={community.slug}
+                    initialFollowing={community.following}
+                    size="recommendation"
+                  />
                 </div>
-              </Link>
-              <div className="px-4 pb-4">
-                <CommunityFollowToggle
-                  communityName={community.name}
-                  slug={community.slug}
-                  initialFollowing={community.following}
-                  size="recommendation"
-                />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      {edges.previous || edges.next ? (
-        <div className="mt-1 flex justify-end gap-1">
-          <button
-            type="button"
-            aria-label="Comunidades anteriores"
-            title="Comunidades anteriores"
-            disabled={!edges.previous}
-            onClick={() => scroll(-1)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-surface disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label="Próximas comunidades"
-            title="Próximas comunidades"
-            disabled={!edges.next}
-            onClick={() => scroll(1)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-surface disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
-      ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     </section>
   );
 };
