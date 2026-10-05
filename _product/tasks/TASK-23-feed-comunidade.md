@@ -1,5 +1,20 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - identidade e favoritos dentro do post (0.1.569)
+
+Referencia: captura e pedidos do usuario para posts, respostas e comentarios.
+
+- [x] Remover o icone de Postado em no detalhe e nos cards de publicacoes.
+- [x] Igualar Seguir do detalhe ao controle compacto do feed.
+- [x] Adicionar Favoritar ao lado do selo em posts profissionais, respostas,
+  comentarios encadeados, post original da thread e previas de publicacoes.
+- [x] Preservar fundo transparente, 11px/600 e altura da identificacao.
+- [x] Fora do feed/listagem da comunidade, manter Favoritado visivel e permitir desfavoritar.
+- [x] Nao oferecer favorito para pacientes nem para o proprio autor.
+
+Validacao: 29 testes focados; check/build e smoke mobile/desktop registrados
+em outputs/feed-relations-0569-smoke.md. Sem alteracoes de banco ou player.
+
 ## Ajuste 2026-10-05 - fundo transparente de Favoritar (0.1.568)
 
 - [x] Favoritar no card do feed sem preenchimento, inclusive no hover.

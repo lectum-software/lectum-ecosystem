@@ -4,6 +4,22 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - favoritos em todas as publicacoes profissionais (0.1.569)
+
+Reutilizar FeedFavoriteButton com hideFavorited=true por padrao preserva o
+feed existente. Detalhe, comentarios, thread e cards de perfil/salvos optam
+por false: Favoritado permanece acessivel para desfavoritar usando as
+mutations e o cache de IDs existentes. Intencao de conversao pendente nunca
+deve desfavoritar um profissional ja favoritado.
+
+Favoritar e desfavoritar compartilham a mutation key por conta. Assim os
+controles do mesmo profissional bloqueiam cliques concorrentes nas duas direcoes.
+
+O papel do autor e validado no controle; paciente e proprio autor nao recebem
+o botao. Slots junto ao selo preservam a altura e o nome truncavel. Remover
+overflow-hidden apenas dos wrappers de identificacao evita cortar o foco e
+o contorno. Seguir no detalhe conserva sua alternancia, apenas mais compacto.
+
 ## Ajuste 2026-10-05 - fundo de Favoritar (0.1.568)
 
 Usar bg-transparent e retirar o preenchimento de hover no FeedFavoriteButton.

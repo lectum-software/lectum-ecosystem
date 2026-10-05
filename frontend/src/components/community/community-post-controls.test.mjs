@@ -96,6 +96,64 @@ test("feed favorite is text-only, hides known favorites/self and waits for authe
     assert.equal(renderRelations({ ...state, children }), "");
 });
 
+test("post detail favorite remains available to unfavorite and excludes patients and self", () => {
+  const author = { id: "psi", name: "Ana Lima", role: "psicologo" };
+  const children = createElement(FeedFavoriteButton, { author, hideFavorited: false });
+  const inactive = renderRelations({ userId: "viewer", ids: [], children });
+  assert.match(inactive, /aria-pressed="false"/);
+  assert.match(inactive, />Favoritar<\/button>/);
+  const active = renderRelations({ userId: "viewer", ids: ["psi"], children });
+  assert.match(active, /aria-pressed="true"/);
+  assert.match(active, /aria-label="Remover Ana Lima dos favoritos"/);
+  assert.match(active, />Favoritado<\/button>/);
+  assert.equal(renderRelations({ userId: "psi", ids: [], children }), "");
+  assert.equal(
+    renderRelations({
+      children: createElement(FeedFavoriteButton, {
+        author: { ...author, role: "paciente" },
+        hideFavorited: false,
+      }),
+    }),
+    "",
+  );
+});
+
+test("post headers, comments and publication previews expose professional favorite controls", () => {
+  const detail = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const header = detail.slice(
+    detail.indexOf("export const PostHeader"),
+    detail.indexOf("export const PostBody"),
+  );
+  assert.doesNotMatch(header, /<FileText/);
+  assert.match(header, /className="h-5 shrink-0 px-2"/);
+  assert.equal(
+    (detail.match(/FeedFavoriteButton author=\{post.author\} hideFavorited=\{false\}/g) ?? [])
+      .length,
+    2,
+  );
+  for (const file of [
+    "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx",
+    "./community-post-card.tsx",
+    "./community-post-card-reply-preview.tsx",
+  ]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.match(
+      source,
+      /FeedFavoriteButton author=\{(?:reply.author|displayAuthor)\} hideFavorited=\{false\}/,
+    );
+    assert.match(source, /flex h-0 shrink-0 items-center pl-1/);
+  }
+  const favorite = readFileSync(new URL("./feed-favorite-button.tsx", import.meta.url), "utf8");
+  assert.match(favorite, /favorited \? unfavoritePsychologist : favoritePsychologist/);
+  assert.match(favorite, /pending \|\| favorited\) return/);
+});
+
 test("author action stays beside the badge without automatic right alignment", () => {
   const source = readFileSync(
     new URL("../../app/app/community/[slug]/components/feed-controls.tsx", import.meta.url),
@@ -181,6 +239,15 @@ test("favorite IDs read every real pagination page, deduplicate and honor cancel
 });
 
 test("favorite changes use the originating account and do not manufacture a partial ID list", () => {
+  const caller = readFileSync(
+    new URL("../../api/callers/patient/index.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.equal(
+    (caller.match(/mutationKey: keys.patient.favoriteMutation\(viewerId \?\? "guest"\)/g) ?? [])
+      .length,
+    2,
+  );
   const client = new QueryClient();
   client.setQueryData(keys.patient.favoriteIds("a"), []);
   client.setQueryData(keys.patient.favoriteIds("b"), ["existing"]);

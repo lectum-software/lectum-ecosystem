@@ -58,7 +58,7 @@ test("topo do detalhe do post mantem botao de seguir junto ao nome da comunidade
     postContentSource,
     /<div className="flex min-w-0 flex-1 items-center gap-1\.5">\s*<Link\s*className="block min-w-0 max-w-full shrink truncate/s,
   );
-  assert.match(postContentSource, /<CommunityFollowToggle\s*className="shrink-0"/);
+  assert.match(postContentSource, /<CommunityFollowToggle\s*className="h-5 shrink-0 px-2"/);
   assert.doesNotMatch(postContentSource, /className="block min-w-0 flex-1 cursor-pointer truncate/);
   assert.doesNotMatch(postContentSource, /flex-wrap items-center gap-x-1 gap-y-2/);
 });

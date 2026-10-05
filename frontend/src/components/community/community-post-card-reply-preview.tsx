@@ -12,6 +12,7 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -110,6 +111,9 @@ export const ProfessionalReplyPreview = ({
                       aria-label="Perfil verificado"
                     />
                   ) : null}
+                  <span className="flex h-0 shrink-0 items-center pl-1">
+                    <FeedFavoriteButton author={reply.author} hideFavorited={false} />
+                  </span>
                 </span>
               </div>
               <Link
@@ -183,11 +187,11 @@ export const ProfessionalReplyPreview = ({
           name={authorDisplayName}
           size="lg"
         />
-        <div className="grid min-w-0 gap-0.5">
+        <div className="grid min-w-0 flex-1 gap-0.5">
           <div
             className={cn(
               "flex min-w-0 items-center gap-x-2 gap-y-1",
-              profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
+              profilePublicationMode ? "flex-nowrap" : "flex-wrap",
             )}
           >
             <span className="inline-flex min-w-0 items-center gap-1">
@@ -200,6 +204,9 @@ export const ProfessionalReplyPreview = ({
               {reply.author.verified ? (
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
+              <span className="flex h-0 shrink-0 items-center pl-1">
+                <FeedFavoriteButton author={reply.author} hideFavorited={false} />
+              </span>
             </span>
           </div>
           <Link

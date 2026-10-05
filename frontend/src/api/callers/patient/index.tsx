@@ -295,6 +295,7 @@ export const usePatient = ({
   });
 
   const unfavoritePsychologist = useMutation({
+    mutationKey: keys.patient.favoriteMutation(viewerId ?? "guest"),
     mutationFn: (id: string) => api.unfavoritePsychologist(id),
     onMutate: async (id) => {
       await Promise.all([
