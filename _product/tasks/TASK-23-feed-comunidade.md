@@ -1,5 +1,12 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - fundo transparente de Favoritar (0.1.568)
+
+- [x] Favoritar no card do feed sem preenchimento, inclusive no hover.
+- [x] Preservar contorno, foco acessivel, semibold, tamanho e alinhamento.
+
+Escopo: apenas FeedFavoriteButton compartilhado pelo feed e posts da comunidade.
+
 ## Ajuste 2026-10-05 - peso de Favoritar (0.1.567)
 
 - [x] Igualar Favoritar ao peso computado 600 (semibold) de Seguir.

@@ -4,6 +4,12 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - fundo de Favoritar (0.1.568)
+
+Usar bg-transparent e retirar o preenchimento de hover no FeedFavoriteButton.
+O controle acompanha a superficie do card sem um fundo branco proprio.
+Contorno, foco visivel, fonte e regras de relacionamento permanecem intactos.
+
 ## Ajuste 2026-10-05 - peso de Favoritar (0.1.567)
 
 A comparacao de estilos computados confirmou Seguir com peso 600 e Favoritar
