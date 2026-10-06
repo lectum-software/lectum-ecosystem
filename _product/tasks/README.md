@@ -518,6 +518,7 @@ ou cortesia manual.
 | 221 | [TASK-221 - Barra fixa de favorito no perfil](TASK-221-barra-fixa-favoritar-perfil.md) | In Progress | 220 |
 | 222 | [TASK-222 - Header solido no Inicio](TASK-222-header-solido-inicio.md) | In Progress | 221 |
 | 223 | [TASK-223 - Espaco de favorito no proprio post](TASK-223-espaco-favorito-proprio-post.md) | In Progress | 222 |
+| 224 | [TASK-224 - Recuperacao do rodape no PWA](TASK-224-rodape-pwa-viewport.md) | In Progress | 223 |
 
 ## Ordem operacional recomendada sem bloqueios
 

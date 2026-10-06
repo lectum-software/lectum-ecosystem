@@ -333,6 +333,12 @@ body.lectum-pull-to-refresh-enabled {
   overscroll-behavior-y: contain;
 }
 
+@media (max-width: 639px) {
+  [data-fixed-bottom-recovery] {
+    bottom: calc(0px - var(--lectum-fixed-bottom-correction, 0px));
+  }
+}
+
 button,
 input,
 textarea,
