@@ -598,3 +598,4 @@ Formato recomendado:
 - [ADR-0552 — Suspensao de videos de fundo por escopo de modal](0552-pausa-videos-modal.md)
 - [ADR-0553 — Pergunta completa na arte social](0553-pergunta-completa-arte-social.md)
 - [ADR-0554 — Listas continuas no frontend](0554-listas-continuas-frontend.md)
+- [ADR-0555 — Favoritar junto ao selo](0555-favoritar-junto-ao-selo.md)

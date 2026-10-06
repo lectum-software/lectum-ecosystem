@@ -111,7 +111,7 @@ export const ProfessionalReplyPreview = ({
                       aria-label="Perfil verificado"
                     />
                   ) : null}
-                  <span className="ml-auto flex h-0 w-[66px] shrink-0 items-center justify-end">
+                  <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
                     <FeedFavoriteButton author={reply.author} />
                   </span>
                 </span>
@@ -176,7 +176,7 @@ export const ProfessionalReplyPreview = ({
       ref={setReplyAttentionElement}
     >
       {!profilePublicationMode ? (
-        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-primary">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-normal text-foreground/70">
           Resposta profissional em destaque
         </p>
       ) : null}
@@ -204,7 +204,7 @@ export const ProfessionalReplyPreview = ({
               {reply.author.verified ? (
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
-              <span className="ml-auto flex h-0 w-[66px] shrink-0 items-center justify-end">
+              <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
                 <FeedFavoriteButton author={reply.author} />
               </span>
             </span>

@@ -224,7 +224,7 @@ export const PostHeader = ({
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
               {isPsychologistPost ? (
-                <span className="ml-auto flex h-0 w-[66px] shrink-0 items-center justify-end">
+                <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
                   <FeedFavoriteButton author={post.author} />
                 </span>
               ) : null}
@@ -443,7 +443,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                   <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
                 ) : null}
                 {isPsychologistPost ? (
-                  <span className="ml-auto flex h-0 w-[66px] shrink-0 items-center justify-end">
+                  <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
                     <FeedFavoriteButton author={post.author} />
                   </span>
                 ) : null}

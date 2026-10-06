@@ -507,6 +507,7 @@ ou cortesia manual.
 | 212 | [TASK-212 - Remover faixa vazia da modal de criar post](TASK-212-remover-faixa-vazia-modal-criar-post.md) | Completed | 211 |
 | 213 | [TASK-213 - Pergunta completa na arte social](TASK-213-pergunta-completa-arte-social.md) | Completed | 42 |
 | 214 | [TASK-214 - Listas continuas no frontend](TASK-214-listas-continuas-frontend.md) | Completed | 213 |
+| 215 | [TASK-215 - Favoritar junto ao selo](TASK-215-favoritar-junto-ao-selo.md) | Completed | 214 |
 
 ## Ordem operacional recomendada sem bloqueios
 
