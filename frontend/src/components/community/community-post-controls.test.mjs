@@ -183,7 +183,7 @@ test("all post headers and comments share the persistent favorite toggle", () =>
   for (const file of ["./community-post-card.tsx", "./community-post-card-reply-preview.tsx"]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     assert.match(source, /FeedFavoriteButton author=\{(?:reply.author|displayAuthor)\}/);
-    assert.match(source, /ml-auto flex h-0 w-\[66px\] shrink-0 items-center justify-end/);
+    assert.match(source, /ml-1 flex h-0 w-\[66px\] shrink-0 items-center justify-start/);
   }
   const favorite = readFileSync(new URL("./feed-favorite-button.tsx", import.meta.url), "utf8");
   assert.match(favorite, /favorited \? unfavoritePsychologist : favoritePsychologist/);
@@ -191,7 +191,7 @@ test("all post headers and comments share the persistent favorite toggle", () =>
   assert.doesNotMatch(favorite, /hideFavorited/);
 });
 
-test("author action reserves a fixed slot on the right and preserves name truncation", () => {
+test("author action stays beside the badge with a fixed slot and preserves name truncation", () => {
   const source = readFileSync(
     new URL("../../app/app/community/[slug]/components/feed-controls.tsx", import.meta.url),
     "utf8",
@@ -200,7 +200,8 @@ test("author action reserves a fixed slot on the right and preserves name trunca
     source.indexOf("export const AuthorIdentityLine"),
     source.indexOf("export const FilterMenu"),
   );
-  assert.match(identity, /ml-auto flex h-0 w-\[66px\] shrink-0 items-center justify-end/);
+  assert.match(identity, /ml-1 flex h-0 w-\[66px\] shrink-0 items-center justify-start/);
+  assert.doesNotMatch(identity, /ml-auto|justify-end/);
   assert.match(identity, /min-w-0 truncate/);
   assert.ok(identity.indexOf("VerifiedBadgeIcon") < identity.indexOf("{action}"));
   for (const path of [
@@ -210,9 +211,28 @@ test("author action reserves a fixed slot on the right and preserves name trunca
     "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx",
   ]) {
     const header = readFileSync(new URL(path, import.meta.url), "utf8");
-    assert.match(header, /ml-auto flex h-0 w-\[66px\] shrink-0 items-center justify-end/);
+    assert.match(header, /ml-1 flex h-0 w-\[66px\] shrink-0 items-center justify-start/);
+    assert.doesNotMatch(header, /ml-auto flex h-0 w-\[66px\]/);
     assert.match(header, /min-w-0 flex-1 items-center gap-1/);
     assert.doesNotMatch(header, /flex h-0 shrink-0 items-center pl-1/);
+  }
+});
+
+test("professional reply labels match local author metadata without uppercase or effects", () => {
+  for (const [file, weight] of [
+    ["../../app/app/community/[slug]/components/post-card.tsx", "font-semibold"],
+    ["./community-post-card-reply-preview.tsx", "font-medium"],
+  ]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    const label = source.match(/<p className="([^"]+)">\s*Resposta profissional\s*<\/p>/)?.[1];
+    assert.ok(label);
+    assert.ok(label.includes(`text-[11px] ${weight}`));
+    assert.match(label, /text-muted/);
+    assert.match(label, /mb-3/);
+    const metadata = source.match(/<Link\s+className="([^"]+)"[^>]*>\s*<MentorAuthorMeta/)[1];
+    assert.ok(metadata.includes(`text-[11px] ${weight}`));
+    assert.match(metadata, /text-muted/);
+    assert.doesNotMatch(label, /uppercase|text-primary|animate-|gradient|tracking-\[/);
   }
 });
 
@@ -512,8 +532,8 @@ test("professional reply removes indentation, labels the author and preserves vi
   );
   assert.doesNotMatch(preview, /-mx-4/);
   assert.match(preview, /absolute inset-0 z-0 cursor-pointer rounded-2xl/);
-  assert.match(preview, /text-primary[\s\S]*RESPOSTA PROFISSIONAL/);
-  assert.ok(preview.indexOf("RESPOSTA PROFISSIONAL") < preview.indexOf("<AuthorAvatar"));
+  assert.match(preview, /font-semibold tracking-normal text-muted">\s*Resposta profissional/);
+  assert.ok(preview.indexOf("Resposta profissional") < preview.indexOf("<AuthorAvatar"));
   assert.match(preview, /gap-3" data-feed-reply-author/);
   assert.doesNotMatch(preview, /grid-cols-\[18px|size="lg"|data-feed-thread/);
   assert.match(preview, /enableFeedAutoplay=\{enableFeedAutoplay\}/);
