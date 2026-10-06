@@ -4,6 +4,21 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - Acabamento Lectum nas recomendacoes (0.1.584)
+
+Alinhar o componente compartilhado de recomendacoes aos elementos existentes
+da Lectum: cards com raio 22px e shadow-lectum-soft; avatar quadrado com a
+geometria e moldura de CommunityLogo (76px, borda branca 4px, raio 18px e
+tratamento dark). Manter imagem real e fallback de iniciais, sem capa decorativa.
+O botao preserva a variante azul, usando capsula, sombra e tipografia 13px/600
+do Seguir do cabecalho; label em span evita o reset global de fontes de button.
+
+Largura permanece 160px; altura cresce apenas 16px, para 232px, acomodando
+moldura e nomes com ate tres linhas. Padding do viewport evita cortar sombras.
+Nao alterar mutacoes, selecao, frequencia, dados nem botoes fora desta variante.
+Sem nova abstracao, dependencia, contrato ou configuracao. Rollback visual
+por reversao deste commit, sem afetar vinculos persistidos.
+
 ## Ajuste 2026-10-05 - Cards de descoberta com avatar (0.1.583)
 
 Por revisao visual do usuario, substituir capas dos cards de recomendacao por

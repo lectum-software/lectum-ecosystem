@@ -144,6 +144,9 @@ test("recommendation follow button has stable dimensions and accessible pending/
   assert.match(render({ pending: true }), /aria-busy="true"/);
   assert.match(render({ pending: true }), /disabled=""/);
   for (const following of [false, true]) assert.match(render({ following }), /h-8 w-full/);
+  assert.match(render({}), /rounded-full/);
+  assert.match(render({}), /font-size:13px;font-weight:600/);
+  assert.match(render({}), /border-primary bg-primary text-primary-foreground/);
 });
 
 test("compact carousel uses community avatars, no cover or arrow controls, and independent follow", () => {
@@ -179,8 +182,11 @@ test("compact carousel uses community avatars, no cover or arrow controls, and i
   assert.match(html, /tdah.png/);
   assert.doesNotMatch(html, /ansiedade.png|community-card-overlay|lucide-chevron/);
   assert.match(html, /Avatar da comunidade Comunidade ansiedade-em-equilibrio/);
-  assert.match(html, /h-\[64px\] w-\[64px\]/);
-  assert.match(html, /h-\[216px\] w-\[160px\]/);
+  assert.match(html, /h-\[76px\] w-\[76px\]/);
+  assert.match(html, /rounded-\[18px\] border-\[4px\] border-media-foreground/);
+  assert.match(html, /h-\[232px\] w-\[160px\]/);
+  assert.match(html, /rounded-\[22px\]/);
+  assert.match(html, /shadow-lectum-soft/);
   assert.match(html, /\[scrollbar-width:none\]/);
   assert.match(html, /\[&amp;::-webkit-scrollbar\]:hidden/);
   assert.match(html, /tabindex="0"/);

@@ -37,7 +37,7 @@ export const CommunityRecommendationsCarousel = ({
         aria-label={`${title}: carrossel`}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users need focus to scroll this region without visible arrows.
         tabIndex={0}
-        className="snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="-mx-1 snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-[22px] px-1 pb-5 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <ul className="flex gap-3">
           {communities.map((community) => {
@@ -46,20 +46,20 @@ export const CommunityRecommendationsCarousel = ({
             return (
               <li
                 key={community.slug}
-                className="flex h-[216px] w-[160px] max-w-[85%] shrink-0 snap-start flex-col gap-2 rounded-lg border border-border bg-surface p-3"
+                className="flex h-[232px] w-[160px] max-w-[85%] shrink-0 snap-start scroll-mx-1 flex-col gap-2 rounded-[22px] border border-border bg-surface p-3 shadow-lectum-soft"
               >
                 <Link
                   href={`/comunidades/${community.slug}`}
-                  className="flex min-h-0 flex-1 flex-col items-center gap-2 rounded-md text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="flex min-h-0 flex-1 flex-col items-center gap-2 rounded-[18px] text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   aria-label={`Explorar ${community.name}`}
                 >
-                  <span className="relative grid h-[64px] w-[64px] shrink-0 place-items-center overflow-hidden rounded-lg bg-primary-soft text-lg font-semibold text-primary">
+                  <span className="relative grid h-[76px] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-media-foreground bg-primary-soft text-lg font-semibold text-primary shadow-lectum-soft dark:border-background">
                     {avatar ? (
                       <Image
                         alt={`Avatar da comunidade ${community.name}`}
                         src={avatar}
                         fill
-                        sizes="64px"
+                        sizes="76px"
                         unoptimized={isPublicMediaUrl(community.avatar_url)}
                         className="object-cover"
                         draggable={false}
@@ -69,7 +69,7 @@ export const CommunityRecommendationsCarousel = ({
                     )}
                   </span>
                   <div className="grid h-[54px] w-full shrink-0 place-items-center">
-                    <h3 className="line-clamp-3 text-[13px] font-semibold leading-[18px] text-foreground [overflow-wrap:anywhere]">
+                    <h3 className="line-clamp-3 text-[14px] font-semibold leading-[18px] text-foreground [overflow-wrap:anywhere]">
                       {community.name}
                     </h3>
                   </div>

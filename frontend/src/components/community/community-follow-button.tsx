@@ -29,7 +29,7 @@ export const CommunityFollowButton = ({
         aria-busy={pending}
         disabled={disabled || pending}
         className={cn(
-          "inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-md border px-3 text-[12px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none",
+          "inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-full border px-3 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none",
           following
             ? "border-border bg-surface-muted text-muted hover:bg-surface-muted"
             : "border-primary bg-primary text-primary-foreground hover:bg-primary-hover",
@@ -43,7 +43,7 @@ export const CommunityFollowButton = ({
         ) : (
           <Plus className="h-4 w-4" aria-hidden="true" />
         )}
-        {following ? "Seguindo" : "Seguir"}
+        <span style={{ fontSize: 13, fontWeight: 600 }}>{following ? "Seguindo" : "Seguir"}</span>
       </button>
     );
   }

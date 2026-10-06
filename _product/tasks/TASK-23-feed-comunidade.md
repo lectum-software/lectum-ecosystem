@@ -1,5 +1,16 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Identidade Lectum no carrossel (0.1.584)
+
+- [x] Aplicar cantos de 22px e sombra suave dos posts aos cards de recomendacao.
+- [x] Reproduzir a moldura do avatar da comunidade: 76px, borda de 4px, cantos de 18px e sombra Lectum, com variante escura existente.
+- [x] Usar botao Seguir azul em capsula, sombra e texto 13px semibold como o cabecalho da comunidade.
+- [x] Preservar largura de 160px, expandindo somente a altura para 232px para acomodar moldura e nome de ate tres linhas sem sobreposicao.
+- [x] Manter Inicio e final das comunidades, rolagem nativa sem setas/scrollbar e regras de selecao/vinculo inalteradas.
+- Referencia: capturas do usuario e estilos existentes de CommunityLogo, CommunityHeader e cards do feed; inventario consultado, sem nova geracao Builder.
+- Validacao: testes, check/build e smoke registrados nos artefatos externos community-lectum-carousel-0584.
+- Publicacao somente em homologacao. Producao permanece 0.1.581.
+
 ## Ajuste 2026-10-05 - Carrosseis compactos com avatar quadrado (0.1.583)
 
 - [x] Remover setas inferiores e ocultar scrollbar, preservando rolagem horizontal nativa e foco de teclado.
