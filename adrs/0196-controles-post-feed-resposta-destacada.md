@@ -4,6 +4,18 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - Pista de rolagem responsiva (0.1.585)
+
+Substituir largura fixa dos cards por calc((100% - 28px) / N - 12px), onde
+N depende do container nomeado recommendations, nao do viewport: 1 inicialmente,
+2/3/4/5/6 a partir de 320/480/640/800/960px. Gap fixo de 12px e padding lateral
+de 4px resultam em aproximadamente 32px do proximo card visivel. Scroll padding
+de 4px mantem a mesma geometria apos snap, sem ResizeObserver ou estado JS.
+Preservar altura e identidade Lectum. A faixa so indica continuidade enquanto
+ha itens adicionais; no fim da lista nao se inventa card nem espaco suplementar.
+Teste de fronteiras percorre containers de 240 a 1200px, acompanhado de validacao
+real do CSS compilado nos dois contextos. Sem backend, contrato ou dependencia.
+
 ## Ajuste 2026-10-05 - Acabamento Lectum nas recomendacoes (0.1.584)
 
 Alinhar o componente compartilhado de recomendacoes aos elementos existentes

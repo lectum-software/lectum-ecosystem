@@ -1,5 +1,16 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Proximo card parcialmente visivel (0.1.585)
+
+- [x] Dimensionar cards pela largura do proprio carrossel, usando container queries e CSS calc.
+- [x] Reservar 28px de conteudo mais 4px da margem visivel para indicar o proximo card, quando houver mais itens.
+- [x] Adaptar quantidade de cards inteiros de um a seis, mantendo largura minima de 134px nos containers suportados e altura de 232px.
+- [x] Manter a mesma margem ao encaixar a rolagem, sem setas nem scrollbar; sem pista falsa quando todos os itens cabem ou no final.
+- [x] Preservar moldura, botoes, sombras, dados e regras dos dois carrosseis.
+- Referencia: pedido do usuario sobre a faixa do proximo card; inventario visual consultado. Alteracao responsiva do componente existente.
+- Validacao: nove testes de regressao, verificacao matematica entre 240 e 1200px e smoke responsivo registrados em community-carousel-peek-0585.
+- Publicacao somente em homologacao; producao permanece 0.1.581.
+
 ## Ajuste 2026-10-05 - Identidade Lectum no carrossel (0.1.584)
 
 - [x] Aplicar cantos de 22px e sombra suave dos posts aos cards de recomendacao.

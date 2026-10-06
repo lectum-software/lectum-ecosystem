@@ -184,7 +184,11 @@ test("compact carousel uses community avatars, no cover or arrow controls, and i
   assert.match(html, /Avatar da comunidade Comunidade ansiedade-em-equilibrio/);
   assert.match(html, /h-\[76px\] w-\[76px\]/);
   assert.match(html, /rounded-\[18px\] border-\[4px\] border-media-foreground/);
-  assert.match(html, /h-\[232px\] w-\[160px\]/);
+  assert.match(html, /h-\[232px\]/);
+  assert.ok(html.includes("w-[calc((100%_-_28px)/var(--visible-cards)_-_12px)]"));
+  assert.match(html, /@container\/recommendations/);
+  assert.match(html, /gap-\[12px\]/);
+  assert.match(html, /scroll-px-\[4px\]/);
   assert.match(html, /rounded-\[22px\]/);
   assert.match(html, /shadow-lectum-soft/);
   assert.match(html, /\[scrollbar-width:none\]/);
@@ -195,6 +199,30 @@ test("compact carousel uses community avatars, no cover or arrow controls, and i
   assert.match(html, /Seguir Comunidade ansiedade-em-equilibrio/);
   assert.doesNotMatch(html, /<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<button\b/);
   assert.match(html, /snap-x snap-mandatory/);
+});
+
+test("responsive card widths reserve the next card across container sizes", () => {
+  const source = readFileSync(
+    new URL("./community-recommendations-carousel.tsx", import.meta.url),
+    "utf8",
+  );
+  const breakpoints = [
+    ...source.matchAll(/@min-\[(\d+)px\]\/recommendations:\[--visible-cards:(\d+)\]/g),
+  ].map(([, width, count]) => [Number(width), Number(count)]);
+  assert.deepEqual(breakpoints, [
+    [320, 2],
+    [480, 3],
+    [640, 4],
+    [800, 5],
+    [960, 6],
+  ]);
+  for (let width = 240; width <= 1200; width++) {
+    const count = breakpoints.filter(([min]) => width >= min).at(-1)?.[1] ?? 1;
+    const cardWidth = (width - 28) / count - 12;
+    const peek = width + 4 - count * (cardWidth + 12);
+    assert.ok(cardWidth >= 134, `readable card at ${width}px`);
+    assert.ok(Math.abs(peek - 32) < 0.01, `next-card hint at ${width}px`);
+  }
 });
 
 test("integration keeps home shelves outside posts and community shelf after the loader", () => {
