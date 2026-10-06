@@ -69,10 +69,10 @@ export const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScop
 
 export const feedHeaderControlClassName = (active: boolean) =>
   cn(
-    "group inline-flex h-11 w-11 items-center justify-center rounded-[18px] border shadow-lectum-soft transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.98]",
+    "group inline-flex h-11 w-11 items-center justify-center rounded-[18px] border shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.98]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     active
-      ? "border-primary/45 bg-primary-soft text-primary shadow-lectum-soft"
+      ? "border-primary/45 bg-primary-soft text-primary"
       : "border-border bg-background text-muted hover:border-primary/35 hover:bg-primary-soft/60 hover:text-primary",
   );
 

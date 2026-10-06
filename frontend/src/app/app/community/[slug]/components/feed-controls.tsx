@@ -324,10 +324,10 @@ export const FeedCommunitySelect = ({
         aria-label="Selecionar comunidade"
         aria-haspopup="listbox"
         className={cn(
-          "group flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-[18px] border bg-background px-3 text-left text-[0.95rem] font-semibold leading-none tracking-[-0.025em] shadow-lectum-soft transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.99]",
+          "group flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-[18px] border bg-background px-3 text-left text-[0.95rem] font-semibold leading-none tracking-normal shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           open
-            ? "border-primary/45 bg-primary-soft text-primary shadow-lectum-soft"
+            ? "border-primary/45 bg-primary-soft text-primary"
             : "border-border text-foreground hover:border-primary/35 hover:bg-primary-soft/60 hover:text-primary",
         )}
         onClick={() => onOpenChange(!open)}

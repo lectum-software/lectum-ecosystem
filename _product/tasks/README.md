@@ -516,6 +516,7 @@ ou cortesia manual.
 | 219 | [TASK-219 - Tema nas respostas das publicacoes do perfil](TASK-219-tema-respostas-publicacoes-perfil.md) | In Progress | 218 |
 | 220 | [TASK-220 - Comunidades sugeridas sem contagem](TASK-220-comunidades-sugeridas-sem-contagem.md) | In Progress | 219 |
 | 221 | [TASK-221 - Barra fixa de favorito no perfil](TASK-221-barra-fixa-favoritar-perfil.md) | In Progress | 220 |
+| 222 | [TASK-222 - Header solido no Inicio](TASK-222-header-solido-inicio.md) | In Progress | 221 |
 
 ## Ordem operacional recomendada sem bloqueios
 
