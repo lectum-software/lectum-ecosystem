@@ -40,6 +40,7 @@ import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-
 import {
   formatCommunityPostTime as formatPostTimeLabel,
   getCommunityAuthorDisplayName,
+  getOriginalPostAuthorDisplayName,
 } from "@/utils/community-display";
 import {
   createLectumSharePostVideoDownloadTarget,
@@ -50,7 +51,6 @@ import {
   rememberCommunityFeedScrollPosition,
 } from "../hooks/use-community-feed-scroll-restoration";
 import {
-  communityDetailHref,
   communityPostDetailHref,
   isPostCardInteractiveTarget,
   resolveVoteSnapshot,
@@ -505,25 +505,6 @@ export const PostCard = ({
       onClickCapture={handlePostNavigationCapture}
       onKeyDown={handleCardKeyDown}
     >
-      {showCommunityHeader ? (
-        <div className="mb-3 flex min-w-0 items-center gap-1 text-[11px] font-semibold text-subtle">
-          <span className="shrink-0">Postado em</span>
-          <div className="flex min-w-0 flex-1 items-center gap-1.5">
-            <Link
-              className="block min-w-0 cursor-pointer truncate font-black text-muted"
-              href={communityDetailHref(post.community.slug)}
-            >
-              {post.community.name}
-            </Link>
-          </div>
-          {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
-        </div>
-      ) : null}
-
-      {showCommunityHeader ? (
-        <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
-      ) : null}
-
       <div data-psychologist-tip-target={replyTipTarget ? "community-reply-post" : undefined}>
         <div className="mb-3 flex items-start gap-3" data-feed-post-author>
           <AuthorAvatar
@@ -535,8 +516,9 @@ export const PostCard = ({
           <div className="grid min-w-0 flex-1 gap-0.5">
             <AuthorIdentityLine
               action={isPsychologistPost ? <FeedFavoriteButton author={post.author} /> : undefined}
+              community={showCommunityHeader ? post.community : undefined}
               href={psychologistProfileHref}
-              name={getCommunityAuthorDisplayName(post.author)}
+              name={getOriginalPostAuthorDisplayName(post.author, isAnonymousPatient)}
               onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
               verified={post.author.verified}
             />
@@ -563,7 +545,7 @@ export const PostCard = ({
               </p>
             )}
           </div>
-          {!showCommunityHeader && post.muted_by_current_user ? (
+          {post.muted_by_current_user ? (
             <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
               <PostMutedBadge />
             </div>

@@ -21,6 +21,7 @@ import {
 import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
+import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
@@ -38,6 +39,7 @@ import {
   formatCommunityPostTime as formatPostTimeLabel,
   formatCommunityRelativeTime as formatRelativeTime,
   getCommunityAuthorDisplayName,
+  getOriginalPostAuthorDisplayName,
 } from "@/utils/community-display";
 import {
   createLectumSharePostVideoDownloadTarget,
@@ -88,7 +90,6 @@ export const CommunityPostCard = ({
       ? post.highlighted_professional_reply
       : null;
   const displayAuthor = primaryReply?.author ?? post.author;
-  const displayAuthorName = getCommunityAuthorDisplayName(displayAuthor);
   const displayCreatedAt = primaryReply?.created_at ?? post.created_at;
   const displayEditedAt = primaryReply ? primaryReply.edited_at : post.edited_at;
   const displayTimeLabel = formatPostTimeLabel(displayCreatedAt, displayEditedAt);
@@ -130,11 +131,18 @@ export const CommunityPostCard = ({
     profilePublicationMode && isReplyContribution ? (primaryReply?.id ?? undefined) : undefined;
   const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
   const usesMutedCommunityContext = communityContextTone === "muted";
-  const hasSecondaryHeaderActions = Boolean(post.muted_by_current_user || statusBadge);
+  const hasSecondaryHeaderActions = Boolean(
+    post.muted_by_current_user || statusBadge || headerExtra,
+  );
   const shouldCompactProfileReplyMedia =
     profilePublicationMode && isReplyContribution && Boolean(primaryReply);
   const isPsychologistPost = displayAuthor.role === "psicologo";
   const isAnonymousPatient = !primaryReply && !isPsychologistPost && post.anonymous;
+  const displayAuthorName = isReplyContribution
+    ? getCommunityAuthorDisplayName(displayAuthor)
+    : getOriginalPostAuthorDisplayName(displayAuthor, isAnonymousPatient);
+  const hasOriginalCommunityIdentity =
+    showCommunityHeader && showAuthorHeader && !isReplyContribution && !primaryReply;
   const psychologistProfileHref = isPsychologistPost
     ? `/psicologos/${displayAuthor.id}`
     : undefined;
@@ -405,7 +413,7 @@ export const CommunityPostCard = ({
       ref={setAttentionElement}
       tabIndex={openPostOnCardClick ? -1 : undefined}
     >
-      {showCommunityHeader ? (
+      {showCommunityHeader && !hasOriginalCommunityIdentity ? (
         <div
           className={cn(
             "mb-3 flex min-w-0 items-center text-[11px] font-semibold",
@@ -462,10 +470,11 @@ export const CommunityPostCard = ({
         <div className="mb-3 flex items-center justify-end gap-2">
           {post.muted_by_current_user ? <PostMutedBadge /> : null}
           {statusBadge}
+          {headerExtra}
         </div>
       ) : null}
 
-      {showCommunityHeader && showAuthorHeader ? (
+      {showCommunityHeader && showAuthorHeader && !hasOriginalCommunityIdentity ? (
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
@@ -496,13 +505,21 @@ export const CommunityPostCard = ({
               <div className="flex min-w-0 flex-1 items-center gap-1">
                 {psychologistProfileHref ? (
                   <Link
-                    className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                    className={cn(
+                      "truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline",
+                      hasOriginalCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
+                    )}
                     href={psychologistProfileHref}
                   >
                     {displayAuthorName}
                   </Link>
                 ) : (
-                  <h2 className="min-w-0 truncate text-sm font-black leading-tight text-foreground">
+                  <h2
+                    className={cn(
+                      "truncate text-sm font-black leading-tight text-foreground",
+                      hasOriginalCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
+                    )}
+                  >
                     {displayAuthorName}
                   </h2>
                 )}
@@ -513,6 +530,12 @@ export const CommunityPostCard = ({
                   <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
                     <FeedFavoriteButton author={displayAuthor} />
                   </span>
+                ) : null}
+                {hasOriginalCommunityIdentity ? (
+                  <OriginalPostCommunityLink
+                    community={post.community}
+                    withAction={Boolean(psychologistProfileHref)}
+                  />
                 ) : null}
               </div>
             </div>

@@ -43,3 +43,16 @@ export const getCommunityAuthorDisplayName = (author: CommunityAuthorIdentity) =
   author.role === "psicologo"
     ? normalizeProfessionalDisplayName(author.name) || author.name
     : author.name;
+
+export const getOriginalPostAuthorDisplayName = (
+  author: CommunityAuthorIdentity,
+  anonymous?: boolean,
+) => {
+  const name = getCommunityAuthorDisplayName(author);
+  return anonymous && author.role !== "psicologo"
+    ? name.replace(/^Membro (Anônimo #\d+)$/, "$1")
+    : name;
+};
+
+export const getCommunityTopicName = (community: { category?: string | null; name: string }) =>
+  community.category?.trim() || community.name;

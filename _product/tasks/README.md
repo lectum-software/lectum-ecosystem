@@ -509,6 +509,7 @@ ou cortesia manual.
 | 214 | [TASK-214 - Listas continuas no frontend](TASK-214-listas-continuas-frontend.md) | Completed | 213 |
 | 215 | [TASK-215 - Favoritar junto ao selo](TASK-215-favoritar-junto-ao-selo.md) | Completed | 214 |
 | 216 | [TASK-216 - Rotulo profissional secundario](TASK-216-rotulo-profissional-secundario.md) | Completed | 215 |
+| 217 | [TASK-217 - Tema na identidade do post](TASK-217-tema-na-identidade-do-post.md) | In Progress | 216 |
 
 ## Ordem operacional recomendada sem bloqueios
 

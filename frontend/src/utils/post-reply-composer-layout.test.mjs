@@ -50,16 +50,14 @@ test("topo do detalhe mantem link da comunidade sem botao de seguir", () => {
     "../app/app/community/[slug]/post/[id]/components/post-content.tsx",
   );
 
-  assert.match(
-    postContentSource,
-    /<div className="flex min-w-0 items-center gap-1 text-\[11px\] font-semibold text-muted">/,
+  assert.match(postContentSource, /OriginalPostCommunityLink\s+community=\{post.community\}/);
+  const communityLinkSource = readSource(
+    "../components/community/original-post-community-link.tsx",
   );
-  assert.match(
-    postContentSource,
-    /<div className="flex min-w-0 flex-1 items-center gap-1\.5">\s*<Link\s*className="block min-w-0 max-w-full shrink truncate/s,
-  );
+  assert.match(communityLinkSource, /min-w-0 shrink-0/);
+  assert.match(communityLinkSource, /max-w-\[min\(48%,calc\(100%-124px\)\)\]/);
   assert.doesNotMatch(postContentSource, /CommunityFollowToggle|CommunityFollowButton/);
-  assert.match(postContentSource, /href=\{`\/comunidades\/\$\{post.community.slug\}`\}/);
+  assert.match(communityLinkSource, /href=\{`\/comunidades\/\$\{community.slug\}`\}/);
   assert.doesNotMatch(postContentSource, /className="block min-w-0 flex-1 cursor-pointer truncate/);
   assert.doesNotMatch(postContentSource, /flex-wrap items-center gap-x-1 gap-y-2/);
 });

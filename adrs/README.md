@@ -600,3 +600,4 @@ Formato recomendado:
 - [ADR-0554 — Listas continuas no frontend](0554-listas-continuas-frontend.md)
 - [ADR-0555 — Favoritar junto ao selo](0555-favoritar-junto-ao-selo.md)
 - [ADR-0556 — Rotulo profissional secundario](0556-rotulo-profissional-secundario.md)
+- [ADR-0557 — Tema na identidade do post](0557-tema-na-identidade-do-post.md)

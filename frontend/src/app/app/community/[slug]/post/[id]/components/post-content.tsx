@@ -21,6 +21,7 @@ import {
 import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
+import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
@@ -37,6 +38,7 @@ import {
   formatCommunityPostTime as formatPostTimeLabel,
   getCommunityAuthorDisplayName,
   getCommunityInitials as getInitials,
+  getOriginalPostAuthorDisplayName,
 } from "@/utils/community-display";
 import { createLectumSharePostVideoDownloadTarget } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -125,7 +127,7 @@ export const PostHeader = ({
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
-  const authorDisplayName = getCommunityAuthorDisplayName(post.author);
+  const authorDisplayName = getOriginalPostAuthorDisplayName(post.author, isAnonymousPatient);
   const currentUserId = useAppSelector((state) => state.user?.id);
   const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -184,21 +186,6 @@ export const PostHeader = ({
         )}
       </div>
 
-      <div className="flex min-w-0 items-center gap-1 text-[11px] font-semibold text-muted">
-        <span className="shrink-0">Postado em</span>
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          <Link
-            className="block min-w-0 max-w-full shrink truncate font-bold text-muted no-underline hover:text-muted hover:no-underline dark:text-muted dark:hover:text-muted"
-            href={`/comunidades/${post.community.slug}`}
-          >
-            {post.community.name}
-          </Link>
-        </div>
-        {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
-      </div>
-
-      <div className="h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
-
       <div className="flex items-start gap-3">
         <AuthorAvatar
           anonymous={isAnonymousPatient}
@@ -210,13 +197,13 @@ export const PostHeader = ({
             <div className="flex min-w-0 flex-1 items-center gap-1">
               {psychologistProfileHref ? (
                 <Link
-                  className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                  className="min-w-[4ch] truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                   href={psychologistProfileHref}
                 >
                   {authorDisplayName}
                 </Link>
               ) : (
-                <h2 className="min-w-0 truncate text-sm font-black leading-tight text-foreground">
+                <h2 className="min-w-[4ch] truncate text-sm font-black leading-tight text-foreground">
                   {authorDisplayName}
                 </h2>
               )}
@@ -228,6 +215,10 @@ export const PostHeader = ({
                   <FeedFavoriteButton author={post.author} />
                 </span>
               ) : null}
+              <OriginalPostCommunityLink
+                community={post.community}
+                withAction={Boolean(psychologistProfileHref)}
+              />
             </div>
           </div>
           {psychologistProfileHref ? (
@@ -253,6 +244,7 @@ export const PostHeader = ({
           )}
         </div>
       </div>
+      {post.muted_by_current_user ? <PostMutedBadge className="w-fit" /> : null}
     </header>
   );
 };
@@ -349,7 +341,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
-  const authorDisplayName = getCommunityAuthorDisplayName(post.author);
+  const authorDisplayName = getOriginalPostAuthorDisplayName(post.author, isAnonymousPatient);
   const postHref = `/comunidades/${post.community.slug}/publicacao/${post.id}`;
   const postImageMediaItems = (post.media_items ?? []).filter(
     (item) => item.media_type === "image",
@@ -407,13 +399,6 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
       <div className="flex min-w-0 items-center gap-1.5 border-border border-b px-4 py-3 text-[11px] font-semibold text-muted dark:border-border">
         <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Post original</span>
-        <span aria-hidden="true">•</span>
-        <Link
-          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-bold text-muted no-underline hover:text-muted hover:no-underline dark:text-muted dark:hover:text-muted"
-          href={`/comunidades/${post.community.slug}`}
-        >
-          {post.community.name}
-        </Link>
       </div>
 
       <div className="grid gap-3 p-4">
@@ -429,13 +414,13 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
               <div className="flex min-w-0 flex-1 items-center gap-1">
                 {psychologistProfileHref ? (
                   <Link
-                    className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                    className="min-w-[4ch] truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={psychologistProfileHref}
                   >
                     {authorDisplayName}
                   </Link>
                 ) : (
-                  <h2 className="min-w-0 truncate text-sm font-black leading-tight text-foreground">
+                  <h2 className="min-w-[4ch] truncate text-sm font-black leading-tight text-foreground">
                     {authorDisplayName}
                   </h2>
                 )}
@@ -447,6 +432,10 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                     <FeedFavoriteButton author={post.author} />
                   </span>
                 ) : null}
+                <OriginalPostCommunityLink
+                  community={post.community}
+                  withAction={Boolean(psychologistProfileHref)}
+                />
               </div>
             </div>
             <p className="text-[11px] font-semibold leading-tight text-muted">
