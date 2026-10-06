@@ -234,8 +234,9 @@ export const CommunityFeedLogic = ({
     >
       <section className="mx-auto grid w-full max-w-[430px] grid-cols-1 gap-4 sm:max-w-2xl lg:max-w-[760px]">
         <header
+          data-home-feed-header
           className={cn(
-            "sticky top-0 z-30 -mx-5 px-5 py-2.5 transition-[transform,opacity] duration-300 ease-out",
+            "sticky top-0 z-30 -mx-5 border-b border-border bg-background px-5 py-2.5 transition-[transform,opacity] duration-300 ease-out",
             headerHidden
               ? "pointer-events-none -translate-y-[calc(100%+8px)] opacity-0"
               : "translate-y-0 opacity-100",

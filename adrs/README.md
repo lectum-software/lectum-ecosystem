@@ -605,3 +605,4 @@ Formato recomendado:
 - [ADR-0559 — Tema nas respostas das publicacoes do perfil](0559-tema-respostas-publicacoes-perfil.md)
 - [ADR-0560 — Comunidades sugeridas sem contagem](0560-comunidades-sugeridas-sem-contagem.md)
 - [ADR-0561 — Barra fixa de favorito no perfil](0561-barra-fixa-favoritar-perfil.md)
+- [ADR-0562 — Header solido no Inicio](0562-header-solido-inicio.md)
