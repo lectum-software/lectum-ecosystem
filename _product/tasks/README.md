@@ -1,5 +1,7 @@
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
+Ajuste de 06/10/2026: [TASK-219 - Tema nas respostas das publicacoes do perfil](TASK-219-tema-respostas-publicacoes-perfil.md). Chevron e tema somente nas respostas da aba Publicacoes, reutilizando o cabecalho de posts. ADR-0559.
+
 Ajuste em 02/10/2026: [TASK-213 - Pergunta completa na arte social](TASK-213-pergunta-completa-arte-social.md). O corpo branco cresce para mostrar todas as linhas, sem reticencias. Demais medidas e elementos preservados; somente novos renders do servico video. ADR-0553.
 
 Ajuste de frontend em 02/10/2026: [TASK-212 — Remover faixa vazia da modal de criar post](TASK-212-remover-faixa-vazia-modal-criar-post.md). A descrição sem mídia cresce com o texto, sem altura cheia forçada nem teto de altura; a rolagem fica no formulário até o rodapé, com teclado aberto ou fechado. O rodapé permanece no fluxo normal e o comportamento com mídia é preservado. Sem backend, banco, env ou contrato de API.
@@ -511,6 +513,7 @@ ou cortesia manual.
 | 216 | [TASK-216 - Rotulo profissional secundario](TASK-216-rotulo-profissional-secundario.md) | Completed | 215 |
 | 217 | [TASK-217 - Tema na identidade do post](TASK-217-tema-na-identidade-do-post.md) | Completed | 216 |
 | 218 | [TASK-218 - Chevron junto ao coracao](TASK-218-chevron-junto-ao-coracao.md) | In Progress | 217 |
+| 219 | [TASK-219 - Tema nas respostas das publicacoes do perfil](TASK-219-tema-respostas-publicacoes-perfil.md) | In Progress | 218 |
 
 ## Ordem operacional recomendada sem bloqueios
 

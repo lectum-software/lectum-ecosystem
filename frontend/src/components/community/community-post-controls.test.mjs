@@ -34,6 +34,10 @@ registerHooks({
 });
 const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
 const { CommunityActionBar } = await import("./community-action-bar.tsx");
+const { CommunityPostCard } = await import("./community-post-card.tsx");
+const { AppRouterContext } = await import(
+  "next/dist/shared/lib/app-router-context.shared-runtime.js"
+);
 const { OriginalPostCommunityLink } = await import("./original-post-community-link.tsx");
 const { AuthorIdentityLine } = await import(
   "../../app/app/community/[slug]/components/feed-controls.tsx"
@@ -341,7 +345,7 @@ test("anonymous abbreviation is presentation-only and restricted to original ano
   );
 });
 
-test("topic integration never adds a chevron to professional replies or comments", () => {
+test("topic integration never adds a chevron to feed replies or post comments", () => {
   for (const file of [
     "./community-post-card-reply-preview.tsx",
     "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx",
@@ -363,7 +367,81 @@ test("topic integration never adds a chevron to professional replies or comments
   const shared = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
   assert.match(
     shared,
-    /showCommunityHeader && showAuthorHeader && !isReplyContribution && !primaryReply/,
+    /showCommunityHeader &&\s*showAuthorHeader &&\s*\(\(!isReplyContribution && !primaryReply\) \|\|\s*\(profilePublicationMode && Boolean\(primaryReply\) && isPsychologistPost\)\)/,
+  );
+});
+
+test("only profile publication replies replace their context line with the inline community topic", () => {
+  const author = {
+    id: "psi",
+    name: "Professional with a long name",
+    role: "psicologo",
+    verified: true,
+    type_label: "Psicologa",
+  };
+  const reply = {
+    id: "reply",
+    author,
+    content: "Professional answer",
+    created_at: "2026-10-01T12:00:00Z",
+    upvotes_count: 0,
+  };
+  const post = {
+    id: "post",
+    author,
+    title: "Question",
+    content: "Original post",
+    created_at: reply.created_at,
+    contribution_type: "reply",
+    highlighted_professional_reply: reply,
+    upvotes_count: 0,
+    community: {
+      slug: "ansiedade-em-equilibrio",
+      name: "Ansiedade em Equilibrio",
+      category: "Ansiedade",
+    },
+  };
+  const render = (props = {}, ids = []) =>
+    renderRelations({
+      userId: "viewer",
+      ids,
+      children: createElement(
+        AppRouterContext.Provider,
+        { value: {} },
+        createElement(CommunityPostCard, { post, onShare() {}, showWhatsappCta: false, ...props }),
+      ),
+    });
+  for (const ids of [[], [author.id]]) {
+    const html = render({ profilePublicationMode: true }, ids);
+    assert.match(html, /data-original-post-community/);
+    assert.match(html, /lucide-chevron-right/);
+    assert.match(html, /href="\/comunidades\/ansiedade-em-equilibrio"/);
+    assert.match(html, />Ansiedade<\/span>/);
+    assert.doesNotMatch(html, /Respondido em/);
+    assert.match(html, /Perfil verificado/);
+    assert.match(html, new RegExp(`aria-pressed="${Boolean(ids.length)}"`));
+    assert.match(html, /Professional answer/);
+    assert.match(
+      html,
+      /href="\/comunidades\/ansiedade-em-equilibrio\/publicacao\/post\/resposta\/reply"/,
+    );
+  }
+  assert.doesNotMatch(render(), /data-original-post-community/);
+  assert.match(render(), /Respondido em/);
+  assert.doesNotMatch(
+    render({ profilePublicationMode: true, showCommunityHeader: false }),
+    /data-original-post-community|Respondido em/,
+  );
+  assert.doesNotMatch(
+    render({
+      profilePublicationMode: true,
+      post: { ...post, highlighted_professional_reply: null },
+    }),
+    /data-original-post-community/,
+  );
+  assert.match(
+    render({ profilePublicationMode: true, post: { ...post, contribution_type: "post" } }),
+    /data-original-post-community/,
   );
 });
 
