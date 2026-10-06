@@ -195,8 +195,8 @@ export const ProfessionalReplyPreview = ({
         href={postHref}
       />
       <div className="pointer-events-none relative z-10 min-w-0">
-        <p className="mb-3 text-[11px] font-semibold tracking-normal text-foreground/70">
-          RESPOSTA PROFISSIONAL
+        <p className="mb-3 text-[11px] font-semibold tracking-normal text-muted">
+          Resposta profissional
         </p>
         <div className="flex min-w-0 items-start gap-3" data-feed-reply-author>
           <AuthorAvatar

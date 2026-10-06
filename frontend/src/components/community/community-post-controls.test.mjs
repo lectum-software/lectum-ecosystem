@@ -218,17 +218,21 @@ test("author action stays beside the badge with a fixed slot and preserves name 
   }
 });
 
-test("professional reply labels use static graphite semibold in both card variants", () => {
-  for (const file of [
-    "../../app/app/community/[slug]/components/post-card.tsx",
-    "./community-post-card-reply-preview.tsx",
+test("professional reply labels match local author metadata without uppercase or effects", () => {
+  for (const [file, weight] of [
+    ["../../app/app/community/[slug]/components/post-card.tsx", "font-semibold"],
+    ["./community-post-card-reply-preview.tsx", "font-medium"],
   ]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
-    const label = source.match(/<p className="([^"]+)">\s*Resposta profissional/i)?.[1];
+    const label = source.match(/<p className="([^"]+)">\s*Resposta profissional\s*<\/p>/)?.[1];
     assert.ok(label);
-    assert.match(label, /font-semibold/);
-    assert.match(label, /text-foreground\/70/);
-    assert.doesNotMatch(label, /text-primary|animate-|gradient|tracking-\[/);
+    assert.ok(label.includes(`text-[11px] ${weight}`));
+    assert.match(label, /text-muted/);
+    assert.match(label, /mb-3/);
+    const metadata = source.match(/<Link\s+className="([^"]+)"[^>]*>\s*<MentorAuthorMeta/)[1];
+    assert.ok(metadata.includes(`text-[11px] ${weight}`));
+    assert.match(metadata, /text-muted/);
+    assert.doesNotMatch(label, /uppercase|text-primary|animate-|gradient|tracking-\[/);
   }
 });
 
@@ -528,11 +532,8 @@ test("professional reply removes indentation, labels the author and preserves vi
   );
   assert.doesNotMatch(preview, /-mx-4/);
   assert.match(preview, /absolute inset-0 z-0 cursor-pointer rounded-2xl/);
-  assert.match(
-    preview,
-    /font-semibold tracking-normal text-foreground\/70">\s*RESPOSTA PROFISSIONAL/,
-  );
-  assert.ok(preview.indexOf("RESPOSTA PROFISSIONAL") < preview.indexOf("<AuthorAvatar"));
+  assert.match(preview, /font-semibold tracking-normal text-muted">\s*Resposta profissional/);
+  assert.ok(preview.indexOf("Resposta profissional") < preview.indexOf("<AuthorAvatar"));
   assert.match(preview, /gap-3" data-feed-reply-author/);
   assert.doesNotMatch(preview, /grid-cols-\[18px|size="lg"|data-feed-thread/);
   assert.match(preview, /enableFeedAutoplay=\{enableFeedAutoplay\}/);

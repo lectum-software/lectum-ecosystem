@@ -599,3 +599,4 @@ Formato recomendado:
 - [ADR-0553 — Pergunta completa na arte social](0553-pergunta-completa-arte-social.md)
 - [ADR-0554 — Listas continuas no frontend](0554-listas-continuas-frontend.md)
 - [ADR-0555 — Favoritar junto ao selo](0555-favoritar-junto-ao-selo.md)
+- [ADR-0556 — Rotulo profissional secundario](0556-rotulo-profissional-secundario.md)

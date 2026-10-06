@@ -176,8 +176,8 @@ export const ProfessionalReplyPreview = ({
       ref={setReplyAttentionElement}
     >
       {!profilePublicationMode ? (
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-normal text-foreground/70">
-          Resposta profissional em destaque
+        <p className="mb-3 text-[11px] font-medium tracking-normal text-muted">
+          Resposta profissional
         </p>
       ) : null}
       <div className="mb-2 flex items-center gap-2">
