@@ -4,18 +4,24 @@ import { ChevronRight, Compass, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useCommunities, useFollowCommunity } from "@/api/callers/community";
+import {
+  useCommunities,
+  useFollowCommunity,
+  useInfiniteCommunities,
+} from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { Community } from "@/api/generator/types/community";
 import { buildCommunityExploreCard } from "@/app/app/community/explore-content";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { flattenListPages } from "@/utils/infinite-list";
 
 const FOLLOWING_LIMIT = 24;
 const RECOMMENDED_LIMIT = 12;
@@ -245,15 +251,15 @@ const RecommendedCard = ({
 
 export const FollowingCommunitiesLogic = () => {
   const [pendingSlug, setPendingSlug] = useState<string | null>(null);
-  const followingQuery = useCommunities({ limit: FOLLOWING_LIMIT, page: 1, scope: "following" });
+  const followingQuery = useInfiniteCommunities({ limit: FOLLOWING_LIMIT, scope: "following" });
   const recommendedQuery = useCommunities({ limit: RECOMMENDED_LIMIT, page: 1 });
   const followMutation = useFollowCommunity({
     onSuccess: () => setPendingSlug(null),
     onError: () => setPendingSlug(null),
   });
   const followingCommunities = useMemo(
-    () => followingQuery.data?.data ?? [],
-    [followingQuery.data?.data],
+    () => flattenListPages(followingQuery.data?.pages),
+    [followingQuery.data?.pages],
   );
   const allRecommendedCommunities = useMemo(
     () => recommendedQuery.data?.data ?? [],
@@ -266,12 +272,16 @@ export const FollowingCommunitiesLogic = () => {
   const recommendedCommunities = allRecommendedCommunities.filter(
     (community) => !community.following && !followedIds.has(community.id),
   );
-  const featuredCommunity = [...followingCommunities].sort(
+  const featuredCommunity = [...(followingQuery.data?.pages[0]?.data ?? [])].sort(
     (a, b) => (b.new_posts_count ?? 0) - (a.new_posts_count ?? 0),
   )[0];
-  const followingCount = followingQuery.data?.following_count ?? followingCommunities.length;
-  const newPostsToday = followingQuery.data?.new_posts_today_count ?? 0;
-  const errorMessage = followingQuery.isError ? resolveCommunityError(followingQuery.error) : null;
+  const followingCount =
+    followingQuery.data?.pages[0]?.following_count ?? followingCommunities.length;
+  const newPostsToday = followingQuery.data?.pages[0]?.new_posts_today_count ?? 0;
+  const errorMessage =
+    followingQuery.isError && !followingQuery.data
+      ? resolveCommunityError(followingQuery.error)
+      : null;
   const recommendedError = recommendedQuery.isError
     ? "Não foi possível carregar recomendações agora."
     : null;
@@ -308,6 +318,9 @@ export const FollowingCommunitiesLogic = () => {
           {errorMessage ? (
             <InlineAlert title="Não foi possível carregar" variant="error">
               {errorMessage}
+              <Button onClick={() => followingQuery.refetch()} type="button" variant="outline">
+                Tentar novamente
+              </Button>
             </InlineAlert>
           ) : null}
 
@@ -344,6 +357,18 @@ export const FollowingCommunitiesLogic = () => {
                     title="Você ainda não segue comunidades"
                   />
                 )}
+                <InfiniteListLoader
+                  hasNextPage={followingQuery.hasNextPage}
+                  isFetching={followingQuery.isFetching && !isInitialLoading}
+                  isError={followingQuery.isError}
+                  label="Carregando comunidades seguidas"
+                  onLoadMore={followingQuery.fetchNextPage}
+                  onRetry={
+                    followingQuery.isFetchNextPageError
+                      ? followingQuery.fetchNextPage
+                      : followingQuery.refetch
+                  }
+                />
               </section>
 
               <section className="grid gap-5">

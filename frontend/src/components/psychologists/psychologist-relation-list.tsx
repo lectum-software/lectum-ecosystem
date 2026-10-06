@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type MouseEvent, useMemo, useState } from "react";
 import keys from "@/api/cache/keys";
-import { usePatient } from "@/api/callers/patient";
+import { useInfiniteFavoritePsychologists, usePatient } from "@/api/callers/patient";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/generator/types";
 import { getFavoritePsychologists } from "@/api/req/patient";
@@ -18,6 +18,7 @@ import {
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FavoriteHeart } from "@/components/ui/favorite-heart";
+import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -25,6 +26,7 @@ import { getToken } from "@/hooks/cookies/token";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { flattenListPages } from "@/utils/infinite-list";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
@@ -141,12 +143,6 @@ const config = {
     icon: Heart,
   },
 } satisfies Record<RelationMode, Record<string, unknown>>;
-
-const getPageFromParams = (params: URLSearchParams) => {
-  const parsed = Number(params.get("page") || "1");
-
-  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
-};
 
 const resolveRelationErrorMessage = (error: unknown) => {
   const rawMessage = getSafeApiErrorMessage(error, "");
@@ -444,15 +440,13 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
 
     return Boolean(getToken());
   });
-  const currentPage = useMemo(() => getPageFromParams(searchParams), [searchParams]);
   const activeFavoriteFilter = useMemo(() => getActiveFavoriteFilter(searchParams), [searchParams]);
   const query = useMemo<PatientRelationQuery>(
     () => ({
-      page: currentPage,
       limit: PAGE_LIMIT,
       ...favoriteFilterQuery(activeFavoriteFilter),
     }),
-    [activeFavoriteFilter, currentPage],
+    [activeFavoriteFilter],
   );
   const favoriteFilterCountQueries = useQueries({
     queries: FAVORITE_FILTER_CHIPS.map((chip) => {
@@ -482,18 +476,17 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     );
   }, [favoriteFilterCountQueries]);
   const copy = config[mode];
-  const { favoritePsychologist, favorites, unfavoritePsychologist } = usePatient({
-    enableFavorites: hasAuthToken,
+  const { favoritePsychologist, unfavoritePsychologist } = usePatient({
+    enableFavorites: false,
     enableFollows: false,
     enableProfile: false,
-    favoritesQuery: query,
   });
 
-  const activeQuery = favorites;
+  const activeQuery = useInfiniteFavoritePsychologists(query, hasAuthToken);
   const response = activeQuery.data;
-  const psychologists: PatientRelationPsychologist[] = response?.data ?? [];
-  const pages = response?.pages ?? 0;
-  const errorMessage = activeQuery.isError ? resolveRelationErrorMessage(activeQuery.error) : null;
+  const psychologists = useMemo(() => flattenListPages(response?.pages), [response?.pages]);
+  const errorMessage =
+    activeQuery.isError && !response ? resolveRelationErrorMessage(activeQuery.error) : null;
   const showInitialLoading = activeQuery.isLoading && !response;
   const Icon = copy.icon as typeof Heart;
 
@@ -507,16 +500,6 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     if (filter !== "all") {
       next.set(filter, "true");
     }
-
-    router.replace(`/app/favoritos${next.toString() ? `?${next}` : ""}`, {
-      scroll: false,
-    });
-  };
-
-  const goToPage = (page: number) => {
-    const next = new URLSearchParams(searchParams.toString());
-    if (page > 1) next.set("page", String(page));
-    else next.delete("page");
 
     router.replace(`/app/favoritos${next.toString() ? `?${next}` : ""}`, {
       scroll: false,
@@ -605,34 +588,16 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
           </div>
         ) : null}
 
-        {pages > 1 ? (
-          <nav
-            aria-label={`Paginação de ${copy.title as string}`}
-            className="flex w-full items-center justify-between gap-2 rounded-[24px] border border-border bg-surface p-3 shadow-[var(--lectum-shadow-soft)]"
-          >
-            <Button
-              disabled={currentPage <= 1 || activeQuery.isFetching}
-              onClick={() => goToPage(currentPage - 1)}
-              type="button"
-              variant="outline"
-            >
-              Anterior
-            </Button>
-
-            <span className="shrink-0 text-sm font-semibold text-muted">
-              Página {currentPage} de {pages}
-            </span>
-
-            <Button
-              disabled={currentPage >= pages || activeQuery.isFetching}
-              onClick={() => goToPage(currentPage + 1)}
-              type="button"
-              variant="outline"
-            >
-              Próxima
-            </Button>
-          </nav>
-        ) : null}
+        <InfiniteListLoader
+          hasNextPage={activeQuery.hasNextPage}
+          isFetching={activeQuery.isFetching && !showInitialLoading}
+          isError={activeQuery.isError}
+          label="Carregando favoritos"
+          onLoadMore={activeQuery.fetchNextPage}
+          onRetry={
+            activeQuery.isFetchNextPageError ? activeQuery.fetchNextPage : activeQuery.refetch
+          }
+        />
       </section>
     </PrivateTemplate>
   );

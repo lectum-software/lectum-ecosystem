@@ -15,6 +15,7 @@ import type {
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import * as api from "@/api/req/community";
+import { nextListPage } from "@/utils/infinite-list";
 import {
   type MediaPreparationPurpose,
   type MediaUploadProgress,
@@ -54,6 +55,16 @@ export const useCommunityRecommendationCandidates = (viewerId: string, enabled: 
     retry: false,
   });
 };
+
+export const useInfiniteCommunities = (query: Omit<CommunityListQuery, "page"> = {}) =>
+  useInfiniteQuery({
+    queryKey: keys.community.list({ ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) => api.getCommunities({ ...query, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: nextListPage,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
 export const useCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = true) => {
   return useQuery({

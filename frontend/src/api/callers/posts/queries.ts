@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQueries, useQuery, type useQueryClient } from "@ta
 import keys from "@/api/cache/keys";
 import type { PostRepliesQuery, UserPostsQuery } from "@/api/generator/types/posts";
 import * as api from "@/api/req/posts";
+import { nextListPage } from "@/utils/infinite-list";
 
 export const invalidateDirectoryPsychologistQueries = (
   queryClient: ReturnType<typeof useQueryClient>,
@@ -53,6 +54,16 @@ export const useSavedPosts = (query: UserPostsQuery = {}, enabled = true) => {
     retry: false,
   });
 };
+
+export const useInfiniteSavedPosts = (query: Omit<UserPostsQuery, "page"> = {}) =>
+  useInfiniteQuery({
+    queryKey: keys.posts.saved({ ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) => api.getSavedPosts({ ...query, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: nextListPage,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
 export const usePostReplies = (id: string, query: PostRepliesQuery = {}, enabled = true) => {
   return useQuery({

@@ -1,21 +1,36 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   PatientPrivateProfile,
   PatientProfileAvatarRemoval,
   PatientProfileAvatarUpload,
-  PatientRelationListResponse,
   PatientRelationQuery,
   patient_profile,
 } from "@/api/generator/types";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
 import * as api from "@/api/req/patient";
 import { useAppSelector } from "@/hooks/redux";
+import { nextListPage } from "@/utils/infinite-list";
 import { prepareUpload } from "@/utils/media-preparation";
 import { type RelationPatch, updateDirectoryRelation } from "./directory-relation-cache";
 import { updateFavoriteIds } from "./favorite-ids";
+import { mapRelationPages, type RelationListCache } from "./relation-list-cache";
+
+export const useInfiniteFavoritePsychologists = (
+  query: Omit<PatientRelationQuery, "page">,
+  enabled: boolean,
+) =>
+  useInfiniteQuery({
+    queryKey: keys.patient.favorites({ ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) => api.getFavoritePsychologists({ ...query, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: nextListPage,
+    enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
 export interface UsePatientProps {
   enableProfile?: boolean;
@@ -79,16 +94,14 @@ const updateRelationLists = (
   patch: RelationPatch,
 ) => {
   for (const queryKey of [keys.patient.favoritesRoot(), keys.patient.followsRoot()]) {
-    queryClient.setQueriesData<PatientRelationListResponse>({ queryKey }, (old) => {
-      if (!old) return old;
-
-      return {
+    queryClient.setQueriesData<RelationListCache>({ queryKey }, (cached) =>
+      mapRelationPages(cached, (old) => ({
         ...old,
         data: old.data.map((psychologist) =>
           psychologist.id === psychologistId ? { ...psychologist, ...patch } : psychologist,
         ),
-      };
-    });
+      })),
+    );
   }
 };
 
@@ -108,20 +121,20 @@ const removeFromRelationList = (
   queryKey: string[],
   psychologistId: string,
 ) => {
-  queryClient.setQueriesData<PatientRelationListResponse>({ queryKey }, (old) => {
-    if (!old) return old;
+  queryClient.setQueriesData<RelationListCache>({ queryKey }, (cached) =>
+    mapRelationPages(cached, (old) => {
+      const data = old.data.filter((psychologist) => psychologist.id !== psychologistId);
+      const removed = data.length !== old.data.length;
+      const count = removed ? Math.max(0, old.count - 1) : old.count;
 
-    const data = old.data.filter((psychologist) => psychologist.id !== psychologistId);
-    const removed = data.length !== old.data.length;
-    const count = removed ? Math.max(0, old.count - 1) : old.count;
-
-    return {
-      ...old,
-      data,
-      count,
-      pages: count === 0 ? 0 : old.pages,
-    };
-  });
+      return {
+        ...old,
+        data,
+        count,
+        pages: count === 0 ? 0 : old.pages,
+      };
+    }),
+  );
 };
 
 const getSnapshot = (queryClient: ReturnType<typeof useQueryClient>): MutationSnapshot => ({

@@ -4,7 +4,7 @@ import { MessageSquareReply, RefreshCcw, Star, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  usePsychologistReviews,
+  useInfinitePsychologistReviews,
   useRespondPsychologistReview,
 } from "@/api/callers/psychologist-reviews";
 import { getSafeApiErrorMessage } from "@/api/errors";
@@ -15,16 +15,17 @@ import type {
 import { ReviewsLinkCard } from "@/components/reviews/reviews-link-card";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { flattenListPages } from "@/utils/infinite-list";
 import { useReviewResponseForm } from "./use-form";
 
 const INITIAL_LIMIT = 10;
-const LOAD_STEP = 10;
 const STAR_KEYS = [1, 2, 3, 4, 5] as const;
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -227,13 +228,11 @@ const ReviewCard = ({
 );
 
 export const ProfessionalReviewsLogic = () => {
-  const [limit, setLimit] = useState(INITIAL_LIMIT);
   const user = useAppSelector((state) => state.user);
-  const query = useMemo(() => ({ page: 1, limit, period: "all" as const }), [limit]);
-  const reviews = usePsychologistReviews(query);
-  const data = reviews.data;
-  const items = data?.data ?? [];
-  const errorMessage = reviews.isError ? resolveApiError(reviews.error) : null;
+  const reviews = useInfinitePsychologistReviews({ limit: INITIAL_LIMIT, period: "all" });
+  const data = reviews.data?.pages[0];
+  const items = useMemo(() => flattenListPages(reviews.data?.pages), [reviews.data?.pages]);
+  const errorMessage = reviews.isError && !data ? resolveApiError(reviews.error) : null;
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
   const shouldShowError = Boolean(errorMessage && !isProfessionalPlanError);
   const isReviewsPreview = data?.access.mode === "preview" || isProfessionalPlanError;
@@ -253,9 +252,7 @@ export const ProfessionalReviewsLogic = () => {
 
         {!shouldShowError ? <ReviewsLinkCard link={reviewLink} locked={isReviewsPreview} /> : null}
 
-        {reviews.isLoading && limit === INITIAL_LIMIT ? (
-          <LoadingState label="Carregando avaliações" />
-        ) : null}
+        {reviews.isLoading ? <LoadingState label="Carregando avaliações" /> : null}
 
         {shouldShowError ? (
           <InlineAlert title="Erro ao consultar avaliações" variant="error">
@@ -309,20 +306,14 @@ export const ProfessionalReviewsLogic = () => {
           </section>
         ) : null}
 
-        {canReceiveReviews && (data?.count || 0) > displayItems.length ? (
-          <button
-            className="h-12 rounded-[var(--lectum-card-radius)] border border-dashed border-primary/30 bg-surface text-sm font-extrabold text-primary transition hover:bg-primary-soft disabled:opacity-60"
-            disabled={reviews.isFetching}
-            onClick={() => setLimit((current) => current + LOAD_STEP)}
-            type="button"
-          >
-            {reviews.isFetching ? "Carregando..." : "Carregar avaliações anteriores"}
-          </button>
-        ) : null}
-
-        {reviews.isFetching && limit > INITIAL_LIMIT ? (
-          <LoadingState label="Atualizando avaliações" />
-        ) : null}
+        <InfiniteListLoader
+          hasNextPage={reviews.hasNextPage}
+          isFetching={reviews.isFetching && !reviews.isLoading}
+          isError={reviews.isError && !isProfessionalPlanError}
+          label="Carregando avaliações"
+          onLoadMore={reviews.fetchNextPage}
+          onRetry={reviews.isFetchNextPageError ? reviews.fetchNextPage : reviews.refetch}
+        />
 
         {!shouldShowError && displayItems.length > 0 ? (
           <button

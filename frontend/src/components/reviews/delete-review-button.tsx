@@ -13,7 +13,7 @@ export const DeleteReviewButton = ({
   onDeleted,
 }: {
   reviewId: string;
-  onDeleted: () => void;
+  onDeleted?: () => void;
 }) => {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -21,7 +21,7 @@ export const DeleteReviewButton = ({
   const deletion = useDeletePatientReview(() => {
     setOpen(false);
     toast.success("Avalia\u00e7\u00e3o exclu\u00edda.");
-    onDeleted();
+    onDeleted?.();
   });
   const close = () => {
     if (!deletion.isPending) setOpen(false);
