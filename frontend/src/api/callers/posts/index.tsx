@@ -11,6 +11,7 @@ export {
 } from "./post-mutations";
 export {
   useInfiniteMyPosts,
+  useInfiniteSavedPosts,
   useMyPosts,
   usePostDetail,
   usePostReplies,

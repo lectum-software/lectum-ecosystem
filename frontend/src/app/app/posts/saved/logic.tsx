@@ -3,33 +3,36 @@
 import { Bookmark } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useSavedPosts, useUnsavePostFromList, useUnsaveReplyFromList } from "@/api/callers/posts";
+import {
+  useInfiniteSavedPosts,
+  useUnsavePostFromList,
+  useUnsaveReplyFromList,
+} from "@/api/callers/posts";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { flattenListPages } from "@/utils/infinite-list";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
   createLectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
-import { Pagination } from "./components/pagination";
 
 import { SavedReplyCard } from "./components/saved-reply-card";
 import { PAGE_LIMIT, resolvePostsError, savedReplyHref } from "./modules/support";
 
 export const SavedPostsLogic = () => {
-  const [page, setPage] = useState(1);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [removedFeedback, setRemovedFeedback] = useState<string | null>(null);
-  const query = useMemo(() => ({ page, limit: PAGE_LIMIT }), [page]);
-  const postsQuery = useSavedPosts(query);
+  const postsQuery = useInfiniteSavedPosts({ limit: PAGE_LIMIT });
   const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.postId);
@@ -48,8 +51,9 @@ export const SavedPostsLogic = () => {
       window.setTimeout(() => setRemovedFeedback(null), 2400);
     },
   });
-  const items = useMemo(() => postsQuery.data?.data ?? [], [postsQuery.data?.data]);
-  const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
+  const items = useMemo(() => flattenListPages(postsQuery.data?.pages), [postsQuery.data?.pages]);
+  const errorMessage =
+    postsQuery.isError && !postsQuery.data ? resolvePostsError(postsQuery.error) : null;
 
   const sharePost = async (post: PostListPost, replyId?: string) => {
     if (typeof window === "undefined") return;
@@ -173,15 +177,15 @@ export const SavedPostsLogic = () => {
             </div>
           ) : null}
 
-          {postsQuery.isFetching && !postsQuery.isLoading ? (
-            <LoadingState label="Atualizando salvos" />
-          ) : null}
-
-          <Pagination
-            currentPage={page}
-            disabled={postsQuery.isFetching}
-            onPageChange={setPage}
-            pages={postsQuery.data?.pages ?? 0}
+          <InfiniteListLoader
+            hasNextPage={postsQuery.hasNextPage}
+            isFetching={postsQuery.isFetching && !postsQuery.isLoading}
+            isError={postsQuery.isError}
+            label="Carregando itens salvos"
+            onLoadMore={postsQuery.fetchNextPage}
+            onRetry={
+              postsQuery.isFetchNextPageError ? postsQuery.fetchNextPage : postsQuery.refetch
+            }
           />
         </div>
       </section>

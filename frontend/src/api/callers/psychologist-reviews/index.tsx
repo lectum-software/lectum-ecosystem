@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   PsychologistReviewsQuery,
@@ -8,6 +8,19 @@ import type {
   RespondPsychologistReviewResponse,
 } from "@/api/generator/types/psychologist-reviews";
 import * as api from "@/api/req/psychologist-reviews";
+import { nextListPage } from "@/utils/infinite-list";
+
+export const useInfinitePsychologistReviews = (
+  query: Omit<PsychologistReviewsQuery, "page"> = {},
+) =>
+  useInfiniteQuery({
+    queryKey: keys.psychologistReviews.list({ ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) => api.getPsychologistReviews({ ...query, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: nextListPage,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
 export const usePsychologistReviews = (query: PsychologistReviewsQuery = {}) =>
   useQuery({

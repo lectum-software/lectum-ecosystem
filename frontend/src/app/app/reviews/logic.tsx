@@ -3,18 +3,20 @@
 import { ArrowUpRight, MessageSquareReply, Star, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { usePatientReviews } from "@/api/callers/reviews";
+import { useMemo } from "react";
+import { useInfinitePatientReviews } from "@/api/callers/reviews";
 import type { PatientReview } from "@/api/generator/types/reviews";
 import { DeleteReviewButton } from "@/components/reviews/delete-review-button";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { formatCrpLabel } from "@/utils/crp";
+import { flattenListPages } from "@/utils/infinite-list";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const LIMIT = 10;
@@ -65,7 +67,7 @@ const ReviewPsychologistAvatar = ({ review }: { review: PatientReview }) => {
   );
 };
 
-const ReviewCard = ({ review, onDeleted }: { review: PatientReview; onDeleted: () => void }) => (
+const ReviewCard = ({ review }: { review: PatientReview }) => (
   <article className="grid gap-4 rounded-[24px] border border-border bg-surface p-4 shadow-lectum-soft sm:p-5">
     <div className="flex items-start gap-3">
       <ReviewPsychologistAvatar review={review} />
@@ -111,7 +113,7 @@ const ReviewCard = ({ review, onDeleted }: { review: PatientReview; onDeleted: (
       <time className="text-xs font-semibold text-subtle" dateTime={review.created_at}>
         {formatDate(review.created_at)}
       </time>
-      <DeleteReviewButton reviewId={review.id} onDeleted={onDeleted} />
+      <DeleteReviewButton reviewId={review.id} />
     </div>
 
     {review.response ? (
@@ -132,10 +134,8 @@ const ReviewCard = ({ review, onDeleted }: { review: PatientReview; onDeleted: (
 );
 
 export const ReviewsLogic = () => {
-  const [page, setPage] = useState(1);
-  const query = useMemo(() => ({ page, limit: LIMIT }), [page]);
-  const reviews = usePatientReviews(query);
-  const data = reviews.data;
+  const reviews = useInfinitePatientReviews({ limit: LIMIT });
+  const items = useMemo(() => flattenListPages(reviews.data?.pages), [reviews.data?.pages]);
 
   return (
     <PrivateTemplate
@@ -157,13 +157,13 @@ export const ReviewsLogic = () => {
               <LoadingState label="Carregando avaliações" />
             </div>
           ) : null}
-          {reviews.isError ? (
+          {reviews.isError && !reviews.data ? (
             <InlineAlert title="Não foi possível carregar" variant="error">
               Não foi possível conectar ao serviço agora. Tente novamente em instantes.
             </InlineAlert>
           ) : null}
 
-          {!reviews.isLoading && !reviews.isError && (data?.data.length || 0) === 0 ? (
+          {!reviews.isLoading && !reviews.isError && items.length === 0 ? (
             <EmptyState
               icon={UserRound}
               title="Nenhuma avaliação feita"
@@ -178,21 +178,19 @@ export const ReviewsLogic = () => {
           ) : null}
 
           <div className="grid gap-4">
-            {data?.data.map((review) => (
-              <ReviewCard key={review.id} review={review} onDeleted={() => setPage(1)} />
+            {items.map((review) => (
+              <ReviewCard key={review.id} review={review} />
             ))}
           </div>
 
-          {(data?.pages || 0) > 1 ? (
-            <Button
-              disabled={reviews.isFetching || page >= (data?.pages || 1)}
-              onClick={() => setPage((current) => current + 1)}
-              type="button"
-              variant="outline"
-            >
-              Carregar mais avaliações
-            </Button>
-          ) : null}
+          <InfiniteListLoader
+            hasNextPage={reviews.hasNextPage}
+            isFetching={reviews.isFetching && !reviews.isLoading}
+            isError={reviews.isError}
+            label="Carregando avaliações"
+            onLoadMore={reviews.fetchNextPage}
+            onRetry={reviews.isFetchNextPageError ? reviews.fetchNextPage : reviews.refetch}
+          />
         </div>
       </section>
     </PrivateTemplate>

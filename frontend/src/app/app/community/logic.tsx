@@ -3,7 +3,6 @@
 import {
   ArrowLeft,
   ArrowRight,
-  ChevronLeft,
   ChevronRight,
   Compass,
   Flame,
@@ -14,15 +13,18 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { useCommunities } from "@/api/callers/community";
+import { useInfiniteCommunities } from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
 import { PrivateTemplate } from "@/templates/private";
+import { flattenListPages } from "@/utils/infinite-list";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { buildCommunityExploreCard, type CommunityExploreCard } from "./explore-content";
 
@@ -121,7 +123,13 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
   );
 };
 
-const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExploreCard[] }) => {
+const PopularCommunitiesCarousel = ({
+  communities,
+  loader,
+}: {
+  communities: CommunityExploreCard[];
+  loader: ReactNode;
+}) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [canScrollNext, setCanScrollNext] = useState(false);
 
@@ -134,7 +142,7 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
 
   useEffect(() => {
     const node = scrollRef.current;
-    if (!node) return;
+    if (!node || communities.length === 0) return;
     const frame = window.requestAnimationFrame(updateScrollState);
 
     node.addEventListener("scroll", updateScrollState, { passive: true });
@@ -145,7 +153,7 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
       node.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
     };
-  }, [updateScrollState]);
+  }, [updateScrollState, communities.length]);
 
   const scrollNext = () => {
     const node = scrollRef.current;
@@ -167,6 +175,7 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
           {communities.map((community) => (
             <CommunityCard community={community} key={community.communityId} />
           ))}
+          <div className="min-w-10 shrink-0 self-center lg:col-span-full">{loader}</div>
         </div>
       </div>
 
@@ -190,49 +199,6 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
   );
 };
 
-const Pagination = ({
-  currentPage,
-  disabled,
-  onPageChange,
-  pages,
-}: {
-  currentPage: number;
-  disabled?: boolean;
-  onPageChange: (page: number) => void;
-  pages: number;
-}) => {
-  if (pages <= 1) return null;
-
-  return (
-    <nav
-      aria-label="Paginação de comunidades"
-      className="flex items-center justify-between gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3"
-    >
-      <Button
-        disabled={currentPage <= 1 || disabled}
-        onClick={() => onPageChange(currentPage - 1)}
-        type="button"
-        variant="outline"
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-        Anterior
-      </Button>
-      <span className="text-sm font-bold text-muted">
-        {currentPage} de {pages}
-      </span>
-      <Button
-        disabled={currentPage >= pages || disabled}
-        onClick={() => onPageChange(currentPage + 1)}
-        type="button"
-        variant="outline"
-      >
-        Próxima
-        <ChevronRight className="h-4 w-4" aria-hidden="true" />
-      </Button>
-    </nav>
-  );
-};
-
 export const CommunityLogic = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -241,37 +207,46 @@ export const CommunityLogic = () => {
 
     return new URLSearchParams(window.location.search).get("category") ?? "";
   });
-  const [page, setPage] = useState(1);
   const deferredSearch = useDeferredValue(search.trim());
   const query = useMemo(
     () => ({
-      page,
       limit: PAGE_LIMIT,
       search: deferredSearch || undefined,
       category: category || undefined,
     }),
-    [category, deferredSearch, page],
+    [category, deferredSearch],
   );
-  const communities = useCommunities(query);
-  const items = useMemo(() => communities.data?.data ?? [], [communities.data?.data]);
+  const communities = useInfiniteCommunities(query);
+  const items = useMemo(() => flattenListPages(communities.data?.pages), [communities.data?.pages]);
   const exploreCards = useMemo(
     () => items.map((community, index) => buildCommunityExploreCard(community, index)),
     [items],
   );
   const featured =
     !category && !deferredSearch
-      ? (exploreCards.find((community) => community.isFeatured) ?? exploreCards[0] ?? null)
+      ? (exploreCards.slice(0, PAGE_LIMIT).find((community) => community.isFeatured) ??
+        exploreCards[0] ??
+        null)
       : null;
   const visibleCards = featured
     ? exploreCards.filter((community) => community.communityId !== featured.communityId)
     : exploreCards;
-  const popularCards = visibleCards.filter((community) => community.isPopular);
-  const carouselCards = popularCards.length > 0 ? popularCards : visibleCards;
-  const errorMessage = communities.isError ? resolveCommunityError(communities.error) : null;
+  const carouselCards = visibleCards;
+  const errorMessage =
+    communities.isError && !communities.data ? resolveCommunityError(communities.error) : null;
+  const loader = (
+    <InfiniteListLoader
+      hasNextPage={communities.hasNextPage}
+      isFetching={communities.isFetching && !communities.isLoading}
+      isError={communities.isError}
+      label="Carregando comunidades"
+      onLoadMore={communities.fetchNextPage}
+      onRetry={communities.isFetchNextPageError ? communities.fetchNextPage : communities.refetch}
+    />
+  );
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
-    setPage(1);
   };
 
   return (
@@ -370,7 +345,8 @@ export const CommunityLogic = () => {
             </div>
             <PopularCommunitiesCarousel
               communities={carouselCards}
-              key={carouselCards.map((community) => community.communityId).join("|")}
+              key={`${category}:${deferredSearch}`}
+              loader={loader}
             />
           </section>
         ) : null}
@@ -393,12 +369,7 @@ export const CommunityLogic = () => {
           </Button>
         </section>
 
-        <Pagination
-          currentPage={page}
-          disabled={communities.isFetching}
-          onPageChange={setPage}
-          pages={communities.data?.pages ?? 0}
-        />
+        {carouselCards.length === 0 ? loader : null}
       </section>
     </PrivateTemplate>
   );

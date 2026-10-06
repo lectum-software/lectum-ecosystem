@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   CreatePatientReviewPayload,
@@ -8,6 +8,17 @@ import type {
   PatientReviewsQuery,
 } from "@/api/generator/types/reviews";
 import * as api from "@/api/req/reviews";
+import { nextListPage } from "@/utils/infinite-list";
+
+export const useInfinitePatientReviews = (query: Omit<PatientReviewsQuery, "page"> = {}) =>
+  useInfiniteQuery({
+    queryKey: keys.patient.reviews({ ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) => api.getPatientReviews({ ...query, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: nextListPage,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
 export const usePatientReviews = (query: PatientReviewsQuery = {}) =>
   useQuery({

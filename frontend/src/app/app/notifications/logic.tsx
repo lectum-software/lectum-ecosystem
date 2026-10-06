@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNotification } from "@/api/callers/notification";
 import type { notification as ApiNotification } from "@/api/generator/types";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -527,7 +528,7 @@ export const NotificationsLogic = () => {
 
         {index.isLoading ? (
           <LoadingState className="py-10" />
-        ) : index.isError ? (
+        ) : index.isError && !index.data ? (
           <EmptyState
             description="Não foi possível carregar suas notificações agora. Tente novamente em instantes."
             icon={Bell}
@@ -567,18 +568,14 @@ export const NotificationsLogic = () => {
           </div>
         )}
 
-        {index.hasNextPage ? (
-          <div className="mt-5 grid">
-            <Button
-              disabled={index.isFetchingNextPage}
-              onClick={() => index.fetchNextPage()}
-              type="button"
-              variant="outline"
-            >
-              {index.isFetchingNextPage ? "Carregando..." : "Carregar mais"}
-            </Button>
-          </div>
-        ) : null}
+        <InfiniteListLoader
+          hasNextPage={index.hasNextPage}
+          isFetching={index.isFetching && !index.isLoading}
+          isError={index.isError}
+          label="Carregando notificações"
+          onLoadMore={index.fetchNextPage}
+          onRetry={index.isFetchNextPageError ? index.fetchNextPage : index.refetch}
+        />
       </section>
     </PrivateTemplate>
   );
