@@ -179,7 +179,7 @@ export const scrollProfileContentIntoView = () => {
   if (!contentNode) return;
 
   const headerOffset =
-    document.querySelector("[data-profile-tabs]")?.getBoundingClientRect().height ?? 0;
+    document.querySelector("[data-profile-sticky-bar]")?.getBoundingClientRect().height ?? 0;
   const top = Math.max(0, contentNode.getBoundingClientRect().top + window.scrollY - headerOffset);
 
   window.scrollTo({ behavior: "smooth", top });

@@ -14,7 +14,7 @@ export const ProfileTabs = ({
   publicationCount?: number;
   reviewCount: number;
 }) => (
-  <div className="sticky top-0 z-20 bg-background px-5 pt-3" data-profile-tabs="true">
+  <div className="bg-background px-5 pt-3" data-profile-tabs="true">
     <div
       aria-label="Seções do perfil profissional"
       className="grid grid-cols-3 items-center gap-1.5 py-1"

@@ -30,7 +30,7 @@ import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { navigateBackToPersistedOrigin } from "@/utils/persisted-origin-navigation";
 import { getRememberedPsychologistsFeedHref } from "@/utils/psychologists-feed-return-memory";
 import { AboutTab } from "./components/about";
-import { ProfileHero } from "./components/hero";
+import { ProfileHeader } from "./components/profile-header";
 import { ProfileTabs } from "./components/profile-tabs";
 import { PostsTab } from "./components/publications";
 import { ReviewsTab } from "./components/reviews";
@@ -453,7 +453,8 @@ export const PsychologistProfileLogic = () => {
             !profileErrorMessage &&
             profile ? (
               <>
-                <ProfileHero
+                <ProfileHeader
+                  key={profile.id}
                   canFavorite={canFavoriteProfile}
                   canEditProfile={canEditProfile}
                   favoriteDisabledReason={favoriteDisabledReason}
