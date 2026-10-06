@@ -1,5 +1,6 @@
 import "./register-source-modules.mjs";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import test from "node:test";
 import { createElement } from "react";
@@ -20,6 +21,12 @@ registerHooks({
   },
 });
 const { ProfileHero } = await import("../src/app/app/psychologist/[id]/components/hero.tsx");
+const { ProfileHeader, ProfileStickyBar } = await import(
+  "../src/app/app/psychologist/[id]/components/profile-header.tsx"
+);
+const { ProfileTabs } = await import(
+  "../src/app/app/psychologist/[id]/components/profile-tabs.tsx"
+);
 const { CommunityFollowButton } = await import(
   "../src/components/community/community-follow-button.tsx"
 );
@@ -145,4 +152,74 @@ test("community hero keeps both pending states stable and blocks repeated reques
     assert.match(html, /lucide-plus[^>]*opacity-0/);
     assert.match(html, following ? /w-10 gap-0/ : /w-\[112px\] gap-2/);
   }
+});
+
+test("sticky profile action preserves hero appearance, state and accessible name", () => {
+  for (const favorited of [false, true]) {
+    const props = {
+      canFavorite: true,
+      favoritePending: false,
+      profile: { name: "Amanda Miranda Gomes de Azevedo", verified: true, favorited },
+    };
+    const sticky = renderToStaticMarkup(
+      createElement(ProfileStickyBar, { ...props, visible: true }),
+    );
+    const hero = renderToStaticMarkup(createElement(ProfileHero, props));
+    const action = /<button[^>]*aria-busy=.*?<\/button>/s;
+    assert.equal(sticky.match(action)?.[0], hero.match(action)?.[0]);
+    assert.match(sticky, /aria-hidden="false"/);
+    assert.doesNotMatch(sticky, /inert=""/);
+    assert.match(sticky, /truncate text-sm font-bold/);
+    assert.match(sticky, /Perfil verificado/);
+    assert.match(sticky, /h-4 w-4 shrink-0/);
+    assert.match(sticky, /h-9 w-9 rounded-full/);
+  }
+});
+
+test("hidden sticky action cannot receive focus and own profile omits it", () => {
+  const props = {
+    canFavorite: true,
+    favoritePending: true,
+    profile: { name: "Ana Lima", verified: false, favorited: false },
+  };
+  const hidden = renderToStaticMarkup(
+    createElement(ProfileStickyBar, { ...props, visible: false }),
+  );
+  assert.match(hidden, /aria-hidden="true" inert=""/);
+  assert.match(hidden, /invisible/);
+  assert.match(hidden, /aria-busy="true"/);
+  assert.match(hidden, /disabled=""/);
+  const own = renderToStaticMarkup(
+    createElement(ProfileStickyBar, { ...props, canFavorite: false, visible: true }),
+  );
+  assert.doesNotMatch(own, /<button|Perfil verificado/);
+  assert.match(own, /Ana Lima/);
+});
+
+test("profile header starts hidden, observes original action and cleans up", () => {
+  const html = renderToStaticMarkup(
+    createElement(ProfileHeader, {
+      canFavorite: true,
+      favoritePending: false,
+      profile: { name: "Ana Lima", favorited: false },
+    }),
+  );
+  assert.match(html, /data-profile-favorite-anchor/);
+  assert.match(html, /aria-hidden="true" inert=""/);
+  const source = readFileSync(
+    new URL("../src/app/app/psychologist/[id]/components/profile-header.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /anchor.getBoundingClientRect\(\).bottom <= 0/);
+  assert.match(source, /observer.observe\(anchor\)/);
+  assert.match(source, /observer.disconnect\(\)/);
+});
+
+test("profile tabs keep navigation but no longer stick on scroll", () => {
+  const html = renderToStaticMarkup(
+    createElement(ProfileTabs, { activeTab: "publicacoes", publicationCount: 3, reviewCount: 0 }),
+  );
+  assert.match(html, /role="tablist"/);
+  assert.match(html, /aria-selected="true"[^>]*id="profile-tab-publicacoes"/);
+  assert.doesNotMatch(html, /sticky|top-0/);
 });

@@ -515,6 +515,7 @@ ou cortesia manual.
 | 218 | [TASK-218 - Chevron junto ao coracao](TASK-218-chevron-junto-ao-coracao.md) | In Progress | 217 |
 | 219 | [TASK-219 - Tema nas respostas das publicacoes do perfil](TASK-219-tema-respostas-publicacoes-perfil.md) | In Progress | 218 |
 | 220 | [TASK-220 - Comunidades sugeridas sem contagem](TASK-220-comunidades-sugeridas-sem-contagem.md) | In Progress | 219 |
+| 221 | [TASK-221 - Barra fixa de favorito no perfil](TASK-221-barra-fixa-favoritar-perfil.md) | In Progress | 220 |
 
 ## Ordem operacional recomendada sem bloqueios
 

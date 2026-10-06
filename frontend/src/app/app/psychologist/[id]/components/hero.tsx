@@ -2,9 +2,8 @@
 
 import { ArrowLeft, PencilLine, Share2, Star } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { type Ref, useState } from "react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
-import { FavoriteHeart } from "@/components/ui/favorite-heart";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { formatCrpLabel } from "@/utils/crp";
@@ -20,15 +19,27 @@ import {
 } from "../modules/support";
 
 import { ExpandableAboutText } from "./about";
+import { ProfileFavoriteButton } from "./profile-favorite-button";
 
-export const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+export const ProfileAvatar = ({
+  profile,
+  compact = false,
+}: {
+  profile: DirectoryPsychologistProfile;
+  compact?: boolean;
+}) => {
   const avatarSrc = resolvePublicMediaUrl(profile.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(profile.avatar);
   const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
 
   return (
     <div
-      className="relative grid h-[76px] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-media-foreground bg-surface-muted text-2xl font-extrabold text-primary shadow-lectum-soft dark:border-background"
+      className={cn(
+        "relative grid shrink-0 place-items-center overflow-hidden border-media-foreground bg-surface-muted font-extrabold text-primary shadow-lectum-soft dark:border-background",
+        compact
+          ? "h-9 w-9 rounded-full border-2 text-xs"
+          : "h-[76px] w-[76px] rounded-[18px] border-[4px] text-2xl",
+      )}
       data-profile-avatar="true"
     >
       {avatarSrc ? (
@@ -37,7 +48,7 @@ export const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfi
           className="object-cover"
           fill
           priority
-          sizes="76px"
+          sizes={compact ? "36px" : "76px"}
           src={avatarSrc}
           unoptimized={avatarIsPublicMedia}
         />
@@ -94,6 +105,7 @@ export const ProfileHero = ({
   canEditProfile,
   favoriteDisabledReason,
   favoritePending,
+  favoriteAnchorRef,
   onBack,
   onEditProfile,
   onShareProfile,
@@ -104,6 +116,7 @@ export const ProfileHero = ({
   canEditProfile: boolean;
   favoriteDisabledReason?: string | null;
   favoritePending: boolean;
+  favoriteAnchorRef?: Ref<HTMLDivElement>;
   onBack: () => void;
   onEditProfile: () => void;
   onShareProfile: () => void;
@@ -117,10 +130,6 @@ export const ProfileHero = ({
   const formattedCrp = formatCrpLabel(profile.crp);
   const experienceLabel =
     profile.show_experience_tag !== false ? formatExperienceLabel(profile.formation_years) : null;
-  const displayedFavorited = canFavorite && profile.favorited;
-  const favoriteButtonLabel =
-    favoriteDisabledReason ??
-    (displayedFavorited ? `Remover ${displayName} dos favoritos` : `Favoritar ${displayName}`);
 
   return (
     <header
@@ -168,33 +177,15 @@ export const ProfileHero = ({
         <div className="-mt-8 flex items-start justify-between gap-4">
           <ProfileAvatar profile={profile} />
 
-          <button
-            aria-busy={favoritePending}
-            aria-label={favoriteButtonLabel}
-            aria-pressed={displayedFavorited}
-            className={cn(
-              "mt-10 inline-flex h-10 shrink-0 items-center justify-center rounded-full border text-muted shadow-sm transition-[width,gap,background-color,border-color] duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-              displayedFavorited
-                ? "w-10 gap-0 border-favorite-border bg-favorite-soft"
-                : "w-[112px] gap-2 border-border bg-surface hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface-muted",
-            )}
-            disabled={favoritePending || !canFavorite}
-            onClick={onToggleFavorite}
-            title={favoriteButtonLabel}
-            type="button"
-          >
-            <FavoriteHeart active={displayedFavorited} className="shrink-0" />
-            <span
-              aria-hidden="true"
-              className={cn(
-                "overflow-hidden whitespace-nowrap transition-[width,opacity] duration-200 motion-reduce:transition-none",
-                displayedFavorited ? "w-0 opacity-0" : "w-[56px] opacity-100",
-              )}
-              style={{ fontSize: 13, fontWeight: 600 }}
-            >
-              Favoritar
-            </span>
-          </button>
+          <div className="mt-10 shrink-0" ref={favoriteAnchorRef} data-profile-favorite-anchor>
+            <ProfileFavoriteButton
+              canFavorite={canFavorite}
+              favoriteDisabledReason={favoriteDisabledReason}
+              favoritePending={favoritePending}
+              onToggleFavorite={onToggleFavorite}
+              profile={profile}
+            />
+          </div>
         </div>
 
         <div className="mt-4 grid gap-2">
