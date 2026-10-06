@@ -135,7 +135,7 @@ export const CommunityDetailLogic = ({
     loading: isInitialPostsLoading || postsQuery.isFetchingNextPage,
     error: postsQuery.isError || detail.isError,
     hasNextPage: postsQuery.hasNextPage,
-    searching: communitySearchOpen || sort === "opportunities",
+    searching: communitySearchOpen,
   });
   const recommendations = useCommunityRecommendations(showRecommendations, community);
   const {
@@ -465,7 +465,6 @@ export const CommunityDetailLogic = ({
             {showRecommendations ? (
               <CommunityRecommendationsCarousel
                 communities={recommendations.slice(0, COMMUNITIES_PER_CAROUSEL)}
-                title="Explore outras comunidades"
               />
             ) : null}
           </>

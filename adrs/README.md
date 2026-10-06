@@ -603,3 +603,4 @@ Formato recomendado:
 - [ADR-0557 — Tema na identidade do post](0557-tema-na-identidade-do-post.md)
 - [ADR-0558 — Chevron junto ao coracao](0558-chevron-junto-ao-coracao.md)
 - [ADR-0559 — Tema nas respostas das publicacoes do perfil](0559-tema-respostas-publicacoes-perfil.md)
+- [ADR-0560 — Comunidades sugeridas sem contagem](0560-comunidades-sugeridas-sem-contagem.md)

@@ -176,7 +176,8 @@ test("compact carousel uses community avatars, no cover or arrow controls, and i
     ),
   );
   client.clear();
-  assert.match(html, /Comunidades para você/);
+  assert.match(html, /Comunidades sugeridas/);
+  assert.match(html, /aria-label="Comunidades sugeridas: carrossel"/);
   assert.match(html, /href="\/comunidades"/);
   assert.match(html, /href="\/comunidades\/ansiedade-em-equilibrio"/);
   assert.match(html, /tdah.png/);
@@ -184,7 +185,7 @@ test("compact carousel uses community avatars, no cover or arrow controls, and i
   assert.match(html, /Avatar da comunidade Comunidade ansiedade-em-equilibrio/);
   assert.match(html, /h-\[76px\] w-\[76px\]/);
   assert.match(html, /rounded-\[18px\] border-\[4px\] border-media-foreground/);
-  assert.match(html, /h-\[232px\]/);
+  assert.match(html, /h-\[208px\]/);
   assert.ok(html.includes("w-[calc((100%_-_28px)/var(--visible-cards)_-_12px)]"));
   assert.match(html, /@container\/recommendations/);
   assert.match(html, /gap-\[12px\]/);
@@ -195,7 +196,7 @@ test("compact carousel uses community avatars, no cover or arrow controls, and i
   assert.match(html, /\[&amp;::-webkit-scrollbar\]:hidden/);
   assert.match(html, /tabindex="0"/);
   assert.match(html, />CS<\/span>/);
-  assert.match(html, /1 post/);
+  assert.doesNotMatch(html, /\b\d+ posts?\b|Comunidades para você/);
   assert.match(html, /Seguir Comunidade ansiedade-em-equilibrio/);
   assert.doesNotMatch(html, /<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<button\b/);
   assert.match(html, /snap-x snap-mandatory/);
@@ -240,5 +241,10 @@ test("integration keeps home shelves outside posts and community shelf after the
   assert.ok(
     detail.indexOf("<CommunityRecommendationsCarousel") > detail.indexOf("<InfinitePostLoader"),
   );
-  assert.match(detail, /searching: communitySearchOpen/);
+  assert.match(detail, /searching: communitySearchOpen,/);
+  assert.doesNotMatch(detail, /searching:.*opportunities/);
+  assert.doesNotMatch(detail, /title="Explore outras comunidades"/);
+  assert.match(detail, /\{showRecommendations \? \(\s*<CommunityRecommendationsCarousel/);
+  assert.match(detail, /hasNextPage: postsQuery.hasNextPage/);
+  assert.match(detail, /useCommunityRecommendations\(showRecommendations, community\)/);
 });
