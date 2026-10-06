@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.594",
+  "version": "0.1.595",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -14,6 +14,7 @@
     "test:community-recommendations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-recommendations.test.mjs",
     "test:profile-hero": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/profile-hero.test.mjs",
     "test:feed-header": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/feed-header.test.mjs",
+    "test:favorite-slot": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/empty-favorite-slot.test.mjs",
     "test:reply-tip": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/psychologist-reply-tip.test.mjs",
     "test:signout": "node --experimental-strip-types --test src/hooks/cookies/signout/signout.test.mjs",
     "test:auth-navigation": "node --experimental-strip-types --test src/utils/auth-navigation.test.mjs src/utils/community-publish-navigation.test.mjs",
@@ -21,7 +22,7 @@
     "typecheck": "tsc --noEmit --pretty false",
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:profile-reply-actions && pnpm test:profile-hero && pnpm test:feed-header && pnpm test:reply-tip && pnpm test:signout && pnpm test:auth-navigation && pnpm test:directory-relations && pnpm test:community-recommendations && pnpm test:infinite-lists"
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:profile-reply-actions && pnpm test:profile-hero && pnpm test:feed-header && pnpm test:favorite-slot && pnpm test:reply-tip && pnpm test:signout && pnpm test:auth-navigation && pnpm test:directory-relations && pnpm test:community-recommendations && pnpm test:infinite-lists"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",
