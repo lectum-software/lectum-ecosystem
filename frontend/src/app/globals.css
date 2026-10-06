@@ -98,6 +98,23 @@
   border-color: transparent;
 }
 
+/* Only original posts reclaim the label space before their community link. */
+span:has(> .favorite-toggle):has(+ [data-original-post-community]) {
+  transition: width 260ms ease;
+}
+
+span:has(> .favorite-toggle[aria-pressed="true"]):has(+ [data-original-post-community]) {
+  width: 24px;
+}
+
+span:has(> .favorite-toggle) + [data-original-post-community] {
+  transition: max-width 260ms ease;
+}
+
+span:has(> .favorite-toggle[aria-pressed="true"]) + [data-original-post-community] {
+  max-width: min(48%, calc(100% - 82px));
+}
+
 .favorite-toggle-label,
 .favorite-toggle-heart {
   position: absolute;
@@ -136,7 +153,9 @@
 @media (prefers-reduced-motion: reduce) {
   .favorite-toggle,
   .favorite-toggle-label,
-  .favorite-toggle-heart {
+  .favorite-toggle-heart,
+  span:has(> .favorite-toggle):has(+ [data-original-post-community]),
+  span:has(> .favorite-toggle) + [data-original-post-community] {
     transition: none;
   }
 }

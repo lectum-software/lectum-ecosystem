@@ -20,7 +20,7 @@ consultados; Builder/Quick Copy indisponivel. Usar componentes e tokens locais.
 - [x] Respostas e contribuicoes de resposta preservam seu cabecalho sem chevron.
 - [x] Abreviacao anonima restrita a apresentacao do post original.
 - [x] Testes direcionados, check frontend e build aprovados.
-- [ ] Smoke mobile-first local e verificacao de homologacao registrados.
+- [x] Smoke mobile-first local e verificacao de homologacao registrados.
 
 ## Deploy
 
@@ -41,3 +41,8 @@ do backend local. Navegador conectado falhou ao iniciar (kernel assets,
 os error 3), inclusive apos reset; verificacao visual com dados reais em
 homologacao permanece pendente. Nao tratar o teste isolado como smoke E2E.
 Deploy e verificacoes HTTP serao registrados em outputs apos o push.
+
+Pendencia encerrada: usuario confirmou smoke visual em homologacao antes do
+PR #85. Producao 0.1.589 validada com dados reais em 320/390/1440px por navegador
+alternativo, incluindo respostas carregadas. Evidencias em
+outputs/original-post-topic-0589-production-* e comentario de validacao no PR.

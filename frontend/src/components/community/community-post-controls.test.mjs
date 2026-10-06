@@ -164,6 +164,47 @@ test("favorite transitions compact the slot beside the badge and respect reduced
   }
 });
 
+test("original post community follows the compact favorite slot without changing replies", () => {
+  const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
+  const slot =
+    'span:has(> .favorite-toggle[aria-pressed="true"]):has(+ [data-original-post-community])';
+  assert.ok(css.includes(`${slot} {\n  width: 24px;`));
+  assert.match(
+    css,
+    /span:has\(> \.favorite-toggle\) \+ \[data-original-post-community\] \{\s*transition: max-width 260ms ease;/,
+  );
+  assert.match(css, /max-width: min\(48%, calc\(100% - 82px\)\);/);
+  const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.match(
+    reduced,
+    /span:has\(> \.favorite-toggle\):has\(\+ \[data-original-post-community\]\)/,
+  );
+  assert.match(
+    reduced,
+    /span:has\(> \.favorite-toggle\) \+ \[data-original-post-community\] \{\s*transition: none;/,
+  );
+  const author = { id: "psi", name: "Camilla Sousa", role: "psicologo", verified: true };
+  for (const active of [false, true]) {
+    for (const original of [false, true]) {
+      const html = renderRelations({
+        userId: "viewer",
+        ids: active ? [author.id] : [],
+        children: createElement(AuthorIdentityLine, {
+          name: author.name,
+          verified: true,
+          action: createElement(FeedFavoriteButton, { author }),
+          community: original
+            ? { name: "Ansiedade em equilibrio", category: "Ansiedade", slug: "ansiedade" }
+            : undefined,
+        }),
+      });
+      assert.ok(html.includes(`aria-pressed="${active}"`));
+      assert.equal(html.includes("data-original-post-community"), original);
+      assert.match(html, /w-\[66px\] shrink-0/);
+    }
+  }
+});
+
 test("all post headers and comments share the persistent favorite toggle", () => {
   const detail = readFileSync(
     new URL(
