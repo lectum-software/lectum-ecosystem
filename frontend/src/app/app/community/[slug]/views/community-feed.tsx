@@ -4,6 +4,7 @@ import { CalendarDays, Plus } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
+  Fragment,
   type MouseEvent as ReactMouseEvent,
   useCallback,
   useDeferredValue,
@@ -14,6 +15,12 @@ import {
 } from "react";
 import { useCommunities, useInfiniteCommunityFeedPosts } from "@/api/callers/community";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
+import {
+  COMMUNITIES_PER_CAROUSEL,
+  communityCarouselOffset,
+} from "@/components/community/community-recommendations";
+import { CommunityRecommendationsCarousel } from "@/components/community/community-recommendations-carousel";
+import { useCommunityRecommendations } from "@/components/community/use-community-recommendations";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -107,6 +114,13 @@ export const CommunityFeedLogic = ({
     scope === "following" && (firstFeedPage?.following_count ?? 0) === 0;
   const isInitialFeedLoading =
     ((feed.isLoading || feed.isPending) && posts.length === 0) || replyTip.isPreparing;
+  const showRecommendations =
+    feed.isSuccess &&
+    !isInitialFeedLoading &&
+    !search.trim() &&
+    !deferredSearch &&
+    !selectedCommunitySlug;
+  const recommendations = useCommunityRecommendations(showRecommendations);
   const {
     fetchNextPage: fetchNextFeedPage,
     hasNextPage: hasNextFeedPage,
@@ -302,15 +316,28 @@ export const CommunityFeedLogic = ({
 
         {!isInitialFeedLoading && posts.length > 0 ? (
           <div className="grid gap-4">
-            {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                onShare={sharePost}
-                post={post}
-                replyTipTarget={post.id === replyTip.targetPostId}
-                onOpen={post.id === replyTip.targetPostId ? replyTip.dismiss : undefined}
-              />
-            ))}
+            {posts.map((post, index) => {
+              const offset = communityCarouselOffset(
+                index,
+                posts.length,
+                feed.hasNextPage === false,
+              );
+              return (
+                <Fragment key={post.id}>
+                  <PostCard
+                    onShare={sharePost}
+                    post={post}
+                    replyTipTarget={post.id === replyTip.targetPostId}
+                    onOpen={post.id === replyTip.targetPostId ? replyTip.dismiss : undefined}
+                  />
+                  {showRecommendations && offset !== null ? (
+                    <CommunityRecommendationsCarousel
+                      communities={recommendations.slice(offset, offset + COMMUNITIES_PER_CAROUSEL)}
+                    />
+                  ) : null}
+                </Fragment>
+              );
+            })}
           </div>
         ) : null}
 

@@ -1,5 +1,50 @@
 # TASK-23: Feed de comunidade
 
+## Ajuste 2026-10-05 - Proximo card parcialmente visivel (0.1.585)
+
+- [x] Dimensionar cards pela largura do proprio carrossel, usando container queries e CSS calc.
+- [x] Reservar 28px de conteudo mais 4px da margem visivel para indicar o proximo card, quando houver mais itens.
+- [x] Adaptar quantidade de cards inteiros de um a seis, mantendo largura minima de 134px nos containers suportados e altura de 232px.
+- [x] Manter a mesma margem ao encaixar a rolagem, sem setas nem scrollbar; sem pista falsa quando todos os itens cabem ou no final.
+- [x] Preservar moldura, botoes, sombras, dados e regras dos dois carrosseis.
+- Referencia: pedido do usuario sobre a faixa do proximo card; inventario visual consultado. Alteracao responsiva do componente existente.
+- Validacao: nove testes de regressao, verificacao matematica entre 240 e 1200px e smoke responsivo registrados em community-carousel-peek-0585.
+- Publicacao somente em homologacao; producao permanece 0.1.581.
+
+## Ajuste 2026-10-05 - Identidade Lectum no carrossel (0.1.584)
+
+- [x] Aplicar cantos de 22px e sombra suave dos posts aos cards de recomendacao.
+- [x] Reproduzir a moldura do avatar da comunidade: 76px, borda de 4px, cantos de 18px e sombra Lectum, com variante escura existente.
+- [x] Usar botao Seguir azul em capsula, sombra e texto 13px semibold como o cabecalho da comunidade.
+- [x] Preservar largura de 160px, expandindo somente a altura para 232px para acomodar moldura e nome de ate tres linhas sem sobreposicao.
+- [x] Manter Inicio e final das comunidades, rolagem nativa sem setas/scrollbar e regras de selecao/vinculo inalteradas.
+- Referencia: capturas do usuario e estilos existentes de CommunityLogo, CommunityHeader e cards do feed; inventario consultado, sem nova geracao Builder.
+- Validacao: testes, check/build e smoke registrados nos artefatos externos community-lectum-carousel-0584.
+- Publicacao somente em homologacao. Producao permanece 0.1.581.
+
+## Ajuste 2026-10-05 - Carrosseis compactos com avatar quadrado (0.1.583)
+
+- [x] Remover setas inferiores e ocultar scrollbar, preservando rolagem horizontal nativa e foco de teclado.
+- [x] Reduzir cards a 160x216px em mobile e desktop, em vez de 216x266px/232x282px.
+- [x] Usar avatar real da comunidade em quadrado de 64px, com fallback de iniciais, fundo de superficie e nome centralizado.
+- [x] Remover capa, overlay e etiqueta de categoria; manter contagem real de posts e botao + Seguir compacto, com estado Seguindo sem mudar tamanho.
+- [x] Aplicar no Inicio e fim das comunidades via componente compartilhado, sem alterar selecao ou frequencia.
+- Referencia: pedido e imagem do usuario, com composicao inspirada no carrossel do Instagram e avatar do cabecalho de comunidade existente.
+- Validacao: oito testes de regressao, check completo do frontend e build aprovados. Check geral bloqueado no backend por DATABASE_URL local ausente. Browser local abriu sem conexao com a API; smoke visual com dados reais previsto no deploy de homologacao, com artefatos externos desta versao.
+- Deploy somente homologacao; sem backend, banco, dependencia ou variavel nova. Producao permanece 0.1.581.
+
+## Ajuste 2026-10-05 - Descoberta de comunidades no feed (0.1.582)
+
+- [x] Adicionar carrosseis no Inicio apos o quarto post e a cada doze posts seguintes, em lotes de seis comunidades sem repeticao.
+- [x] Exibir Explore outras comunidades no final da paginacao completa da comunidade, nunca em busca, oportunidades, carregamento inicial ou erro.
+- [x] Reutilizar imagens, categoria, nome e contagem de posts do Explorar em cards compactos; Ver todas abre o catalogo.
+- [x] Separar link da comunidade e acao + Seguir, mantendo card e dimensoes ao mudar para Seguindo.
+- [x] Excluir comunidade atual e as ja seguidas na selecao inicial; priorizar categoria relacionada e atividade entre ate 50 candidatas reais.
+- [x] Preservar selecao durante refetch de vinculos, com escopo por usuario e comunidade, sem alterar perfil ou favoritos.
+- Referencia: imagens fornecidas e pagina Explorar existente; inventario consultado, sem geracao Builder para esta adaptacao.
+- Validacao: oito testes novos de selecao, esgotamento, frequencia, estabilidade e renderizacao aprovados; check completo do frontend e build aprovados. Check geral bloqueado no backend por DATABASE_URL local ausente. Browser local abriu sem conexao com a API; smoke visual com dados reais previsto no deploy de homologacao.
+- Deploy: somente homologacao; sem alteracao de backend, banco ou configuracao. Producao permanece 0.1.581.
+
 ## Ajuste 2026-10-05 - Retorno ao Plus Favoritar (0.1.581)
 
 - [x] Restaurar Plus no rotulo inativo do favorito de posts e respostas, a pedido do usuario.

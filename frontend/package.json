@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.581",
+  "version": "0.1.585",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -10,6 +10,7 @@
     "lint": "eslint --max-warnings=0",
     "test:profile-reply-actions": "node --experimental-strip-types --test src/components/community/profile-reply-actions.test.mjs",
     "test:directory-relations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/api/callers/patient/directory-relation-cache.test.mjs",
+    "test:community-recommendations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-recommendations.test.mjs",
     "test:profile-hero": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/profile-hero.test.mjs",
     "test:reply-tip": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/psychologist-reply-tip.test.mjs",
     "test:signout": "node --experimental-strip-types --test src/hooks/cookies/signout/signout.test.mjs",
@@ -18,7 +19,7 @@
     "typecheck": "tsc --noEmit --pretty false",
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:profile-reply-actions && pnpm test:profile-hero && pnpm test:reply-tip && pnpm test:signout && pnpm test:auth-navigation && pnpm test:directory-relations"
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:profile-reply-actions && pnpm test:profile-hero && pnpm test:reply-tip && pnpm test:signout && pnpm test:auth-navigation && pnpm test:directory-relations && pnpm test:community-recommendations"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",

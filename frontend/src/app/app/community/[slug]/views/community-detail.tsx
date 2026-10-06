@@ -19,6 +19,12 @@ import {
   useUnfollowCommunity,
 } from "@/api/callers/community";
 import type { CommunityPost } from "@/api/generator/types/community";
+import {
+  COMMUNITIES_PER_CAROUSEL,
+  isCommunityFeedExhausted,
+} from "@/components/community/community-recommendations";
+import { CommunityRecommendationsCarousel } from "@/components/community/community-recommendations-carousel";
+import { useCommunityRecommendations } from "@/components/community/use-community-recommendations";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -124,6 +130,14 @@ export const CommunityDetailLogic = ({
   const hasCommunitySearchTerm = communitySearchOpen && deferredCommunitySearch.length > 0;
   const isInitialPostsLoading =
     ((postsQuery.isLoading || postsQuery.isPending) && posts.length === 0) || replyTip.isPreparing;
+  const showRecommendations = isCommunityFeedExhausted({
+    success: postsQuery.isSuccess && detail.isSuccess,
+    loading: isInitialPostsLoading || postsQuery.isFetchingNextPage,
+    error: postsQuery.isError || detail.isError,
+    hasNextPage: postsQuery.hasNextPage,
+    searching: communitySearchOpen || sort === "opportunities",
+  });
+  const recommendations = useCommunityRecommendations(showRecommendations, community);
   const {
     fetchNextPage: fetchNextCommunityPostsPage,
     hasNextPage: hasNextCommunityPostsPage,
@@ -448,6 +462,12 @@ export const CommunityDetailLogic = ({
               label="Carregando mais posts"
               onLoadMore={loadMoreCommunityPosts}
             />
+            {showRecommendations ? (
+              <CommunityRecommendationsCarousel
+                communities={recommendations.slice(0, COMMUNITIES_PER_CAROUSEL)}
+                title="Explore outras comunidades"
+              />
+            ) : null}
           </>
         ) : null}
       </section>

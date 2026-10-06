@@ -4,6 +4,72 @@
 
 Accepted
 
+## Ajuste 2026-10-05 - Pista de rolagem responsiva (0.1.585)
+
+Substituir largura fixa dos cards por calc((100% - 28px) / N - 12px), onde
+N depende do container nomeado recommendations, nao do viewport: 1 inicialmente,
+2/3/4/5/6 a partir de 320/480/640/800/960px. Gap fixo de 12px e padding lateral
+de 4px resultam em aproximadamente 32px do proximo card visivel. Scroll padding
+de 4px mantem a mesma geometria apos snap, sem ResizeObserver ou estado JS.
+Preservar altura e identidade Lectum. A faixa so indica continuidade enquanto
+ha itens adicionais; no fim da lista nao se inventa card nem espaco suplementar.
+Teste de fronteiras percorre containers de 240 a 1200px, acompanhado de validacao
+real do CSS compilado nos dois contextos. Sem backend, contrato ou dependencia.
+
+## Ajuste 2026-10-05 - Acabamento Lectum nas recomendacoes (0.1.584)
+
+Alinhar o componente compartilhado de recomendacoes aos elementos existentes
+da Lectum: cards com raio 22px e shadow-lectum-soft; avatar quadrado com a
+geometria e moldura de CommunityLogo (76px, borda branca 4px, raio 18px e
+tratamento dark). Manter imagem real e fallback de iniciais, sem capa decorativa.
+O botao preserva a variante azul, usando capsula, sombra e tipografia 13px/600
+do Seguir do cabecalho; label em span evita o reset global de fontes de button.
+
+Largura permanece 160px; altura cresce apenas 16px, para 232px, acomodando
+moldura e nomes com ate tres linhas. Padding do viewport evita cortar sombras.
+Nao alterar mutacoes, selecao, frequencia, dados nem botoes fora desta variante.
+Sem nova abstracao, dependencia, contrato ou configuracao. Rollback visual
+por reversao deste commit, sem afetar vinculos persistidos.
+
+## Ajuste 2026-10-05 - Cards de descoberta com avatar (0.1.583)
+
+Por revisao visual do usuario, substituir capas dos cards de recomendacao por
+avatar cadastrado quadrado de 64px sobre superficie neutra. Usar os resolvers de
+midia e iniciais ja existentes, sem escolher imagem tematica por slug. Nome
+centralizado com tres linhas reservadas, contagem e botao de 32px; card fixo em
+160x216px nos dois contextos. O botao azul muda para Seguindo neutro mantendo
+geometria e mutacoes. Perfil e cabecalho das comunidades ficam inalterados.
+
+Retirar setas e scrollbar visual. Preservar overflow nativo, snap, toque,
+trackpad e foco de teclado no viewport rolavel, com indicador de foco visivel.
+Nao adicionar motor de carrossel, observer ou dependencia. Continuar expondo
+parte do proximo card para indicar mais conteudo. Manter selecao, posicoes,
+exclusoes e persistencia do card apos seguir. Rollback por reversao deste
+ajuste visual; nenhum risco de contrato, migracao ou configuracao de deploy.
+
+## Ajuste 2026-10-05 - Descoberta contextual de comunidades (0.1.582)
+
+Adicionar um componente horizontal compartilhado fora dos cards de posts, no
+Inicio (apos 4 posts, intervalo de 12, lotes distintos de 6) e ao esgotar a
+paginacao da comunidade. Feed curto esgotado recebe o primeiro lote apos o ultimo
+post. Busca, filtro de comunidade no Inicio, oportunidades e erros nao sinalizam
+fim de todos os posts. Refetch em segundo plano conserva cards ja carregados.
+
+Usar o adaptador e imagens do Explorar, com cards compactos e link separado da
+mutacao. O botao usa a mutacao e conversao anonima existentes, com + Seguir,
+loading e Seguindo sem alterar largura. Congelar apenas os slugs sugeridos por
+visita/usuario para seguir nao remover nem reordenar cards; dados e vinculos
+continuam atualizados. Consulta limitada a 50 candidatas com cache por usuario,
+invalidado pelas mesmas mutacoes de comunidade; excluir seguidas e comunidade
+atual na selecao, ordenar por categoria atual e atividade. Sem inferencia de
+condicoes de saude, novo endpoint, dependencia ou persistencia.
+
+Rolagem nativa com snap, setas acessiveis e movimento reduzido; nomes longos
+limitados a tres linhas com nome completo acessivel no link. Sem bloco vazio
+quando nao ha sugestoes. Risco: frequencia e conversao devem ser avaliadas em
+homologacao. Rollback: reverter apenas componentes e insercoes deste ajuste.
+Nenhuma migracao, variavel nova ou acao manual de infraestrutura.
+
 ## Ajuste 2026-10-05 - restaurar Plus no estado inativo (0.1.581)
 
 Por escolha do usuario, reverter apenas o icone inativo de FavoriteHeart para
