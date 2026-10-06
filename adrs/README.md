@@ -602,3 +602,4 @@ Formato recomendado:
 - [ADR-0556 — Rotulo profissional secundario](0556-rotulo-profissional-secundario.md)
 - [ADR-0557 — Tema na identidade do post](0557-tema-na-identidade-do-post.md)
 - [ADR-0558 — Chevron junto ao coracao](0558-chevron-junto-ao-coracao.md)
+- [ADR-0559 — Tema nas respostas das publicacoes do perfil](0559-tema-respostas-publicacoes-perfil.md)

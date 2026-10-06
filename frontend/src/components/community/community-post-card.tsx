@@ -141,8 +141,11 @@ export const CommunityPostCard = ({
   const displayAuthorName = isReplyContribution
     ? getCommunityAuthorDisplayName(displayAuthor)
     : getOriginalPostAuthorDisplayName(displayAuthor, isAnonymousPatient);
-  const hasOriginalCommunityIdentity =
-    showCommunityHeader && showAuthorHeader && !isReplyContribution && !primaryReply;
+  const hasCommunityIdentity =
+    showCommunityHeader &&
+    showAuthorHeader &&
+    ((!isReplyContribution && !primaryReply) ||
+      (profilePublicationMode && Boolean(primaryReply) && isPsychologistPost));
   const psychologistProfileHref = isPsychologistPost
     ? `/psicologos/${displayAuthor.id}`
     : undefined;
@@ -413,7 +416,7 @@ export const CommunityPostCard = ({
       ref={setAttentionElement}
       tabIndex={openPostOnCardClick ? -1 : undefined}
     >
-      {showCommunityHeader && !hasOriginalCommunityIdentity ? (
+      {showCommunityHeader && !hasCommunityIdentity ? (
         <div
           className={cn(
             "mb-3 flex min-w-0 items-center text-[11px] font-semibold",
@@ -474,7 +477,7 @@ export const CommunityPostCard = ({
         </div>
       ) : null}
 
-      {showCommunityHeader && showAuthorHeader && !hasOriginalCommunityIdentity ? (
+      {showCommunityHeader && showAuthorHeader && !hasCommunityIdentity ? (
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
@@ -507,7 +510,7 @@ export const CommunityPostCard = ({
                   <Link
                     className={cn(
                       "truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline",
-                      hasOriginalCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
+                      hasCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
                     )}
                     href={psychologistProfileHref}
                   >
@@ -517,7 +520,7 @@ export const CommunityPostCard = ({
                   <h2
                     className={cn(
                       "truncate text-sm font-black leading-tight text-foreground",
-                      hasOriginalCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
+                      hasCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
                     )}
                   >
                     {displayAuthorName}
@@ -531,7 +534,7 @@ export const CommunityPostCard = ({
                     <FeedFavoriteButton author={displayAuthor} />
                   </span>
                 ) : null}
-                {hasOriginalCommunityIdentity ? (
+                {hasCommunityIdentity ? (
                   <OriginalPostCommunityLink
                     community={post.community}
                     withAction={Boolean(psychologistProfileHref)}
