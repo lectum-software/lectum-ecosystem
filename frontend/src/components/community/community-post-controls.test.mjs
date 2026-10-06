@@ -34,6 +34,12 @@ registerHooks({
 });
 const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
 const { CommunityActionBar } = await import("./community-action-bar.tsx");
+const { OriginalPostCommunityLink } = await import("./original-post-community-link.tsx");
+const { AuthorIdentityLine } = await import(
+  "../../app/app/community/[slug]/components/feed-controls.tsx"
+);
+const { getOriginalPostAuthorDisplayName, getCommunityAuthorDisplayName, getCommunityTopicName } =
+  await import("../../utils/community-display.ts");
 const { FeedFavoriteButton } = await import("./feed-favorite-button.tsx");
 const { CommunityFollowToggle } = await import("./community-follow-toggle.tsx");
 const { CommunityHeader } = await import(
@@ -202,7 +208,8 @@ test("author action stays beside the badge with a fixed slot and preserves name 
   );
   assert.match(identity, /ml-1 flex h-0 w-\[66px\] shrink-0 items-center justify-start/);
   assert.doesNotMatch(identity, /ml-auto|justify-end/);
-  assert.match(identity, /min-w-0 truncate/);
+  assert.match(identity, /truncate text-sm/);
+  assert.match(identity, /community \? "min-w-\[4ch\]" : "min-w-0"/);
   assert.ok(identity.indexOf("VerifiedBadgeIcon") < identity.indexOf("{action}"));
   for (const path of [
     "./community-post-card.tsx",
@@ -234,6 +241,89 @@ test("professional reply labels match local author metadata without uppercase or
     assert.match(metadata, /text-muted/);
     assert.doesNotMatch(label, /uppercase|text-primary|animate-|gradient|tracking-\[/);
   }
+});
+
+test("original post identity shows a linked topic and preserves verification and favorite slot", () => {
+  const community = {
+    name: "Relacionamentos com propósito",
+    slug: "relacionamentos",
+    category: "Relacionamentos",
+  };
+  const html = renderToStaticMarkup(
+    createElement(AuthorIdentityLine, {
+      name: "Nome profissional muito longo para uma linha",
+      verified: true,
+      community,
+      action: createElement("button", { type: "button" }, "Favoritar"),
+    }),
+  );
+  assert.match(html, /min-w-\[4ch\]/);
+  assert.match(html, /truncate text-sm/);
+  assert.match(html, /aria-label="Perfil verificado"/);
+  assert.match(html, /data-original-post-community/);
+  assert.match(html, /href="\/comunidades\/relacionamentos"/);
+  assert.match(html, /aria-label="Abrir comunidade Relacionamentos com propósito"/);
+  assert.match(html, /lucide-chevron-right/);
+  assert.match(html, />Relacionamentos<\/span>/);
+  assert.ok(html.indexOf("Perfil verificado") < html.indexOf("Favoritar"));
+  assert.ok(html.indexOf("Favoritar") < html.indexOf("data-original-post-community"));
+  assert.doesNotMatch(html, /Postado em|flex-wrap/);
+  const reply = renderToStaticMarkup(
+    createElement(AuthorIdentityLine, { name: "Psicóloga", verified: true }),
+  );
+  assert.doesNotMatch(reply, /data-original-post-community|lucide-chevron-right/);
+});
+
+test("topic falls back to full community name without changing destination", () => {
+  for (const category of [null, undefined, "", "  "]) {
+    const community = { category, name: "Comunidade sem tema", slug: "sem-tema" };
+    assert.equal(getCommunityTopicName(community), community.name);
+    const html = renderToStaticMarkup(createElement(OriginalPostCommunityLink, { community }));
+    assert.match(html, />Comunidade sem tema<\/span>/);
+    assert.match(html, /href="\/comunidades\/sem-tema"/);
+  }
+  assert.equal(getCommunityTopicName({ category: "  TDAH  ", name: "Nome completo" }), "TDAH");
+});
+
+test("anonymous abbreviation is presentation-only and restricted to original anonymous posts", () => {
+  const identifier = "0042";
+  const shortName = `Anônimo #${identifier}`;
+  const author = { name: `Membro ${shortName}`, role: "paciente" };
+  assert.equal(getOriginalPostAuthorDisplayName(author, true), shortName);
+  assert.equal(getOriginalPostAuthorDisplayName(author, false), author.name);
+  assert.equal(getCommunityAuthorDisplayName(author), author.name);
+  assert.equal(author.name, `Membro ${shortName}`);
+  assert.equal(getOriginalPostAuthorDisplayName({ name: shortName }, true), shortName);
+  assert.equal(
+    getOriginalPostAuthorDisplayName({ name: "Maria", role: "paciente" }, true),
+    "Maria",
+  );
+});
+
+test("topic integration never adds a chevron to professional replies or comments", () => {
+  for (const file of [
+    "./community-post-card-reply-preview.tsx",
+    "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx",
+  ]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /OriginalPostCommunityLink|getOriginalPostAuthorDisplayName/);
+  }
+  const feed = readFileSync(
+    new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
+    "utf8",
+  );
+  const reply = feed.slice(
+    feed.indexOf("export const ProfessionalReplyPreview"),
+    feed.indexOf("export const PostCard"),
+  );
+  assert.doesNotMatch(reply, /community=\{showCommunityHeader/);
+  assert.match(feed, /community=\{showCommunityHeader \? post.community : undefined\}/);
+  assert.doesNotMatch(feed, /Postado em/);
+  const shared = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
+  assert.match(
+    shared,
+    /showCommunityHeader && showAuthorHeader && !isReplyContribution && !primaryReply/,
+  );
 });
 
 test("follow-only feed hides followed communities without changing ordinary unfollow controls", () => {
@@ -372,7 +462,8 @@ test("post detail matches feed vertical spacing and keeps saving without a count
     .split("export const ThreadOriginalPostCard")[0];
   const actions = source.split("export const PostVoteBar")[1];
   assert.match(header, /<header className="grid gap-3 px-5 pt-4 pb-0">/);
-  assert.match(header, /h-px w-full bg-surface-muted dark:bg-border\/70/);
+  assert.doesNotMatch(header, /Postado em|h-px w-full bg-surface-muted/);
+  assert.match(header, /OriginalPostCommunityLink\s+community=\{post.community\}/);
   assert.match(body, /grid gap-2 px-5 pt-3 pb-4/);
   assert.doesNotMatch(actions, /count: post.saves_count/);
   assert.match(actions, /active: post.saved/);
@@ -389,7 +480,7 @@ test("post surfaces preserve community navigation without follow actions", () =>
     assert.doesNotMatch(source, /CommunityFollowToggle|CommunityFollowButton/);
     assert.match(
       source,
-      /href=\{(?:communityDetailHref\(post.community.slug\)|`\/comunidades\/\$\{post.community.slug\}`)\}/,
+      /community=\{(?:post.community|showCommunityHeader \? post.community : undefined)\}/,
     );
     assert.match(source, /FeedFavoriteButton/);
   }

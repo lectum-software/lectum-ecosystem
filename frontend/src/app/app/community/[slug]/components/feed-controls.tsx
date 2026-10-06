@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import type { Community, CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
+import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -94,18 +95,23 @@ export const AuthorAvatar = ({
 
 export const AuthorIdentityLine = ({
   action,
+  community,
   href,
   name,
   onClick,
   verified,
 }: {
   action?: ReactNode;
+  community?: Community;
   href?: string;
   name: string;
   onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
   verified?: boolean;
 }) => {
-  const nameClassName = "min-w-0 truncate text-sm font-black leading-tight text-foreground";
+  const nameClassName = cn(
+    "truncate text-sm font-black leading-tight text-foreground",
+    community ? "min-w-[4ch]" : "min-w-0",
+  );
 
   return (
     <div className="flex min-w-0 max-w-full items-center gap-1">
@@ -125,6 +131,9 @@ export const AuthorIdentityLine = ({
       ) : null}
       {action ? (
         <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">{action}</span>
+      ) : null}
+      {community ? (
+        <OriginalPostCommunityLink community={community} withAction={Boolean(action)} />
       ) : null}
     </div>
   );
