@@ -496,6 +496,24 @@ export const PostCard = ({
     rememberPostNavigation();
     router.push(postDetailHref);
   };
+  const mediaBeforeActions = isPsychologistPost && hasPostMedia;
+  const mediaContent = (
+    <div className="mt-4 grid gap-3">
+      <PostMedia
+        enableFeedAutoplay
+        footer={hasPostMedia ? authorWhatsappCta : undefined}
+        overlayAction={postOverlayAction}
+        post={post}
+      />
+      <ProfessionalReplyPreview
+        enableFeedAutoplay
+        overlayAction={highlightedReplyOverlayAction}
+        post={post}
+      />
+      <MoreProfessionalReplies href={postDetailHref} post={post} />
+      {hasPostMedia ? null : authorWhatsappCta}
+    </div>
+  );
 
   return (
     <article
@@ -568,6 +586,7 @@ export const PostCard = ({
         </div>
       </div>
 
+      {mediaBeforeActions ? mediaContent : null}
       <CommunityActionBar
         className="mt-4 max-[380px]:flex-wrap max-[380px]:gap-y-1.5 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-none"
         comments={{
@@ -591,21 +610,7 @@ export const PostCard = ({
         upvotesCount={voteSnapshot.upvotes}
       />
 
-      <div className="mt-4 grid gap-3">
-        <PostMedia
-          enableFeedAutoplay
-          footer={hasPostMedia ? authorWhatsappCta : undefined}
-          overlayAction={postOverlayAction}
-          post={post}
-        />
-        <ProfessionalReplyPreview
-          enableFeedAutoplay
-          overlayAction={highlightedReplyOverlayAction}
-          post={post}
-        />
-        <MoreProfessionalReplies href={postDetailHref} post={post} />
-        {hasPostMedia ? null : authorWhatsappCta}
-      </div>
+      {mediaBeforeActions ? null : mediaContent}
       {lectumDownloadDialog}
     </article>
   );

@@ -3,9 +3,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import test from "node:test";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime.js";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Controller, useForm } from "react-hook-form";
+import { Provider } from "react-redux";
 
 const { AnonymousPostSwitch } = await import(
   "../../app/app/community/[slug]/post/new/views/anonymous-post-switch.tsx"
@@ -31,6 +34,89 @@ registerHooks({
 });
 const { MoreProfessionalReplies } = await import("./more-professional-replies.tsx");
 const { CommunityActionBar } = await import("./community-action-bar.tsx");
+const { PostCard } = await import("../../app/app/community/[slug]/components/post-card.tsx");
+const { ProgressiveConversionProvider } = await import(
+  "../conversion/progressive-conversion-provider.tsx"
+);
+const { store } = await import("../../store/index.ts");
+
+test("feed coloca controles apos a midia somente em posts de psicologos com anexos", () => {
+  const client = new QueryClient();
+  const router = { push() {}, replace() {}, prefetch() {} };
+  const renderPost = (role, media) =>
+    renderToStaticMarkup(
+      createElement(
+        AppRouterContext.Provider,
+        { value: router },
+        createElement(
+          Provider,
+          { store },
+          createElement(
+            QueryClientProvider,
+            { client },
+            createElement(
+              ProgressiveConversionProvider,
+              { isAuthenticated: false, pathname: "/" },
+              createElement(PostCard, {
+                onShare() {},
+                post: {
+                  id: "post-order-test",
+                  title: "Post com midia",
+                  content: "Texto da publicacao",
+                  created_at: "2026-10-07T12:00:00Z",
+                  author: {
+                    id: "author-test",
+                    role,
+                    name: "Autor",
+                    type_label: role === "psicologo" ? "Psicologo" : "Usuario",
+                  },
+                  community: { id: "community-test", slug: "ansiedade", name: "Ansiedade" },
+                  upvotes_count: 1,
+                  downvotes_count: 0,
+                  replies_count: 0,
+                  saves_count: 0,
+                  saved: false,
+                  current_user_vote: null,
+                  ...media,
+                },
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+  try {
+    for (const role of ["psicologo", "paciente"]) {
+      for (const media of [
+        { media_type: "video", media_url: "/public/files/order.mp4" },
+        { media_type: "image", media_url: "/public/files/order.jpg" },
+        { media_items: [{ id: "one", media_type: "image", media_url: "/public/files/one.jpg" }] },
+        {
+          media_items: [
+            { id: "one", media_type: "image", media_url: "/public/files/one.jpg" },
+            { id: "two", media_type: "image", media_url: "/public/files/two.jpg" },
+          ],
+        },
+      ]) {
+        const html = renderPost(role, media);
+        const mediaIndex = html.indexOf('<div class="mt-4 grid gap-3">');
+        const actionsIndex = html.indexOf('aria-label="Salvar post"');
+        assert.ok(mediaIndex >= 0 && actionsIndex >= 0);
+        assert.equal(mediaIndex < actionsIndex, role === "psicologo");
+        assert.equal((html.match(/aria-label="Salvar post"/g) ?? []).length, 1);
+        assert.match(html, /Comentar no post/);
+        assert.match(html, /Compartilhar post: Post com midia/);
+      }
+      const noMedia = renderPost(role, {});
+      assert.ok(
+        noMedia.indexOf('aria-label="Salvar post"') <
+          noMedia.indexOf('<div class="mt-4 grid gap-3">'),
+      );
+    }
+  } finally {
+    client.clear();
+  }
+});
 
 test("feed hides saved count and decorative post icon, keeping favorite but no follow control", () => {
   const source = readFileSync(
@@ -185,7 +271,7 @@ test("a single other professional shows one real avatar and plus, without duplic
   assert.match(html, /AL/);
 });
 
-test("feed keeps one post action bar after description and before media/reply, without a divider", () => {
+test("feed keeps one action bar and its handlers, changing media order only for psychologist posts", () => {
   const source = readFileSync(
     new URL("../../app/app/community/[slug]/components/post-card.tsx", import.meta.url),
     "utf8",
@@ -196,11 +282,14 @@ test("feed keeps one post action bar after description and before media/reply, w
   const media = card.indexOf("<PostMedia");
   const reply = card.indexOf("<ProfessionalReplyPreview");
   const moreReplies = card.indexOf("<MoreProfessionalReplies");
-  assert.ok(description >= 0 && description < actions && actions < media && media < reply);
+  assert.ok(description >= 0 && description < actions && media < reply);
+  assert.match(card, /mediaBeforeActions = isPsychologistPost && hasPostMedia/);
+  assert.ok(card.indexOf("{mediaBeforeActions ? mediaContent : null}") < actions);
+  assert.ok(card.indexOf("{mediaBeforeActions ? null : mediaContent}") > actions);
   assert.ok(moreReplies > reply);
   assert.match(card.slice(moreReplies), /href=\{postDetailHref\} post=\{post\}/);
   assert.equal(card.match(/<CommunityActionBar\b/g)?.length, 1);
-  const bar = card.slice(actions, media);
+  const bar = card.slice(actions, card.indexOf("{mediaBeforeActions ? null : mediaContent}"));
   assert.match(bar, /className="mt-4 /);
   assert.doesNotMatch(bar, /border-t|pt-3/);
   assert.match(bar, /max-\[380px\]:flex-wrap/);
