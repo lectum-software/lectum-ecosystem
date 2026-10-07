@@ -616,3 +616,4 @@ Formato recomendado:
 - [ADR-0570 — Navegacao desktop nos carrosseis horizontais](0570-desktop-carousel-arrows.md)
 - [ADR-0571 — Paridade entre criacao e edicao de posts](0571-post-edit-parity.md)
 - [ADR-0572 — Promocao local sem builds intermediarios](0572-local-release.md)
+- [ADR-0573 — Cards respeitam dialogs nativos](0573-post-edit-card-navigation.md)

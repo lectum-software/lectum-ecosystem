@@ -81,6 +81,7 @@ export const isPostCardInteractiveTarget = (target: EventTarget | null) => {
         "select",
         "video",
         "audio",
+        "dialog",
         "[role='button']",
         "[role='menu']",
         "[role='menuitem']",
