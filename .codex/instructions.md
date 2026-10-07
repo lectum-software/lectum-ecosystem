@@ -12,10 +12,10 @@
 
 - Desde **2026-08-07**, Lectum está publicado e os ambientes podem conter dados reais.
 - Desde **2026-09-17**, produção está ativa com deploys reais; merge revisado de `homolog` para `main` altera o ambiente produtivo e exige validação posterior.
-- `homolog` publica automaticamente em homologação; `main` publica automaticamente em produção.
+- Desde 2026-10-06, validar no localhost e publicar somente após autorização, por PR para produção. Seguir `_product/tasks/LOCAL-TO-PRODUCTION.md`; homologação remota não é mais gate obrigatório.
 - Antes de editar, confirme a branch. Se for `main`, pare e oriente o usuário a usar `homolog`.
-- Nunca faça commit/push direto em `main`. Promova somente por merge revisado após validar homologação.
-- Push em `homolog` inicia deploy: avise o usuário e execute smoke test antes de recomendar promoção.
+- Nunca faça commit/push direto em `main`. Promova por merge revisado após checks/builds, smoke local e aprovação visual quando aplicável.
+- Não fazer push automático por task. Manter commits locais até autorização de publicação e confirmação de que os autodeploys externos de homologação foram desativados. Não alegar desativação de provedor por editar documentação.
 - Se o usuário pedir explicitamente para colocar em produção, crie/reutilize via `gh` um PR `homolog` → `main`, aguarde checks, faça o merge sem excluir `homolog` e valide produção; não peça que o usuário faça o merge salvo bloqueio real de acesso.
 - Nunca resete ou destrua dados, seeds ou buckets em ambiente publicado.
 - Banco: expandir, fazer backfill retomável e só depois contrair; não tornar coluna obrigatória sem compatibilidade com dados existentes; não editar migration aplicada.
@@ -45,6 +45,6 @@
 - Para qualquer alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`, execute `pnpm --dir backend db:migrate` durante a task.
 - Se `prisma migrate dev` falhar por conflito com dados/estado do banco de desenvolvimento, pergunte ao usuário antes de resetar o banco ou rodar comando destrutivo.
 - Para o admin, execute `pnpm --dir admin check` e `pnpm --dir admin build` quando houver alteração de UI/rota.
-- Commit e push de tasks ocorrem em `homolog`; nunca deixe uma automação publicar `main` sem validação prévia do ambiente de homologação.
+- Commits locais de tasks ocorrem em `homolog`; publicação exige validação local e autorização. Não usar builds na VPS para contornar falta de disco local. Não desligar ambientes nem excluir dados para desativar autodeploy.
 - Antes de cada novo commit do agente, execute uma vez `pnpm version:bump`, inclua os cinco manifests sincronizados e rode `pnpm check:version`. Não repita o bump ao apenas tentar novamente um commit que falhou.
 - A versão publicada é verificada em backend `/ping` e frontend/admin/video `/version`; mantenha `/version` público, sem cache, noindex e fora da navegação/sitemap.

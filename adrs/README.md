@@ -608,3 +608,4 @@ Formato recomendado:
 - [ADR-0562 — Header solido no Inicio](0562-header-solido-inicio.md)
 - [ADR-0563 — Slot vazio de favorito antes da comunidade](0563-slot-vazio-favorito-comunidade.md)
 - [ADR-0564 — Recuperacao geometrica do rodape no PWA](0564-recuperacao-rodape-pwa.md)
+- [ADR-0565 — Validacao local e publicacao direta por PR](0565-validacao-local-producao.md)

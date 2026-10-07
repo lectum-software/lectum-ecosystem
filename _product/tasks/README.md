@@ -220,13 +220,13 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 ## Gate obrigatório de publicação
 
 1. Confirmar `git branch --show-current` antes de editar. O desenvolvimento acontece em `homolog`; se estiver em `main`, parar e orientar a troca de branch.
-2. Lembrar que push em `homolog` publica homologação e push/merge em `main` publica produção.
-3. Nunca commitar ou fazer push direto em `main`. Produção só recebe merge revisado depois de checks, builds e smoke test do deploy em homologação.
+2. Desde 2026-10-06, seguir `LOCAL-TO-PRODUCTION.md`: validar em localhost e manter commits locais ate publicacao autorizada. Confirmar autodeploys externos de homologacao desativados antes de qualquer push.
+3. Nunca commitar ou fazer push direto em `main`. Producao recebe merge revisado depois de checks, builds, smoke local e aprovacao visual quando aplicavel; homologacao remota nao e mais gate obrigatorio.
 4. Tratar dados, pagamentos, uploads, notificações e integrações dos ambientes publicados como persistentes. Reset, seed destrutivo, `db push`, exclusão em massa e limpeza de bucket são proibidos nesses ambientes.
 5. Toda mudança de banco deve descrever compatibilidade com dados existentes, ordem expandir → backfill retomável → contrair e rollback. Migration aplicada é imutável.
 6. Toda env nova obrigatória deve gerar um **ALERTA DE DEPLOY** com chave, aplicação, ordem de cadastro em homologação/produção e impacto se ausente, sem mostrar o valor. Preferir implantação em duas etapas com fallback seguro.
 7. Contratos de API devem continuar funcionando durante o período em que frontend, backend e admin estiverem em versões diferentes.
-8. Depois do deploy em homologação, validar os fluxos afetados e, para backend, `/health` e `/ready`. Só então recomendar promoção para `main`.
+8. Validar os fluxos afetados no localhost, incluindo `/health` e `/ready` do backend quando aplicavel; apos publicacao, repetir smoke em producao. Nao usar deploy remoto para compensar build local ausente, nem escrever em dependencias produtivas durante testes locais.
 9. Quando o usuário pedir explicitamente produção, o agente cria/reutiliza PR `homolog` → `main` com `gh`, aguarda checks, faz merge sem excluir `homolog` e valida produção. Nunca delegar push direto ou commit em `main`.
 
 ## Inventário visual ativo
@@ -519,6 +519,7 @@ ou cortesia manual.
 | 222 | [TASK-222 - Header solido no Inicio](TASK-222-header-solido-inicio.md) | In Progress | 221 |
 | 223 | [TASK-223 - Espaco de favorito no proprio post](TASK-223-espaco-favorito-proprio-post.md) | In Progress | 222 |
 | 224 | [TASK-224 - Recuperacao do rodape no PWA](TASK-224-rodape-pwa-viewport.md) | In Progress | 223 |
+| 225 | [TASK-225 - Validacao local antes de producao](TASK-225-validacao-local-producao.md) | In Progress | 224 |
 
 ## Ordem operacional recomendada sem bloqueios
 

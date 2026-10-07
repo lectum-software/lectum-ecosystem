@@ -23,7 +23,7 @@ Instructions:
 17. Before the new commit, run `pnpm version:bump` exactly once, stage all five package manifests (root, backend, frontend, admin and video), and run `pnpm check:version`. Do not bump again when retrying the same failed commit.
 18. Commit with a conventional commit message.
 19. Record data/env/rollout/rollback impact. A mandatory new env requires a deploy alert without its value.
-20. Confirm `homolog`, warn that push auto-deploys homologation, and run `git push`. Never push directly to `main`.
-21. If the user explicitly asks to put the validated code in production, create/reuse a `homolog` → `main` PR with `gh`, wait for required checks, merge without deleting `homolog`, and run production smoke tests. Report a real access/check blocker instead of pushing `main` directly.
+20. Keep commits local until release authorization. Follow `_product/tasks/LOCAL-TO-PRODUCTION.md`; verify external homologation auto-deploy is disabled before any push. Never push directly to `main`.
+21. If the user explicitly asks for production, confirm local checks/builds/flows and approval, publish validated commits, create/reuse `homolog` → `main` with `gh`, wait for required checks, merge without deleting `homolog`, and run production smoke tests. Do not bypass checks or use remote builds to replace missing local validation.
 
 Return the task ID, changed files, ADRs, validations, commit hash, push status and any real blockers.

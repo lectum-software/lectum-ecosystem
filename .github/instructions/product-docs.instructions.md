@@ -15,6 +15,6 @@ applyTo: "_product/**/*.md,adrs/**/*.md,.codex/**/*.md,AGENTS.md,.github/**/*.md
 - For any task that changes Prisma schema/migrations, include `pnpm --dir backend db:migrate` in validation and a reset warning that requires user confirmation.
 - Record important decisions in `adrs/`.
 - Since environments are live, every task must state data compatibility, deploy order, rollback and env impact. Mandatory envs require an explicit deploy alert without values.
-- Never instruct direct push to `main`; validate the automatic `homolog` deploy before reviewed promotion.
+- Never instruct direct push to `main`. Validate locally before reviewed promotion; follow `LOCAL-TO-PRODUCTION.md` and verify homologation auto-deploy is disabled before publishing commits.
 - Reference `_product/tasks/ARCHITECTURE.md` when describing implementation rules.
 - Reference `_product/tasks/PACKAGES.md` when describing dependencies.
