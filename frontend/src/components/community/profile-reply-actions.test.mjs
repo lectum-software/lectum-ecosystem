@@ -7,6 +7,19 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { publicationInteractionData } from "./community-post-card-support.ts";
 
+test("publication card guards include native dialogs, not only explicit ARIA roles", () => {
+  for (const file of [
+    "./community-post-card-support.ts",
+    "../../app/app/posts/mine/modules/support.ts",
+    "../../app/app/posts/saved/modules/support.ts",
+  ]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.match(source, /targetElement\.closest\([\s\S]*"dialog"/, file);
+    assert.match(source, /"\[role='dialog'\]"/, file);
+    assert.match(source, /"\[aria-modal='true'\]"/, file);
+  }
+});
+
 registerHooks({
   resolve(specifier, context, nextResolve) {
     return nextResolve(specifier === "next/link" ? "next/link.js" : specifier, context);

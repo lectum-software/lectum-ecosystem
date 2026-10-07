@@ -527,6 +527,7 @@ ou cortesia manual.
 | 230 | [TASK-230 - Setas nos carrosseis desktop](TASK-230-desktop-carousel-arrows.md) | In Progress | 229 |
 | 231 | [TASK-231 - Edicao de post alinhada a criacao](TASK-231-post-edit-parity.md) | In Progress | 230 |
 | 232 | [TASK-232 - Publicacao do lote local](TASK-232-local-release.md) | In Progress | 231 |
+| 233 | [TASK-233 - Edicao sem navegar pelo card](TASK-233-post-edit-card-navigation.md) | Done | 232 |
 
 ## Ordem operacional recomendada sem bloqueios
 
