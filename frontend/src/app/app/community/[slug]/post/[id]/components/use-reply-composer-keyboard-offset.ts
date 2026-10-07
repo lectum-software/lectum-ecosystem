@@ -1,10 +1,9 @@
 "use client";
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { getReplyKeyboardOffset, isKeyboardInput } from "@/utils/fixed-bottom-viewport";
 import { POST_DETAIL_MOBILE_QUERY } from "../modules/reply-support";
 
-const POST_REPLY_KEYBOARD_OFFSET_THRESHOLD_PX = 24;
-const POST_REPLY_KEYBOARD_CLEARANCE_PX = 8;
 const POST_REPLY_KEYBOARD_SETTLE_DELAYS_MS = [80, 240] as const;
 
 export const useReplyComposerKeyboardOffset = ({
@@ -39,22 +38,20 @@ export const useReplyComposerKeyboardOffset = ({
         return;
       }
 
-      const viewportKeyboardOffset = viewport
-        ? Math.max(0, Math.round(window.innerHeight - viewport.height - viewport.offsetTop))
-        : 0;
       const composerRect = composerRef.current?.getBoundingClientRect();
-      const measuredComposerOverlap =
-        viewport && composerRect
-          ? Math.max(
-              0,
-              keyboardOffsetRef.current + Math.ceil(composerRect.bottom - viewport.height),
-            )
-          : 0;
-      const nextKeyboardOffset = Math.max(viewportKeyboardOffset, measuredComposerOverlap);
-
       setKeyboardOffsetSafely(
-        nextKeyboardOffset > POST_REPLY_KEYBOARD_OFFSET_THRESHOLD_PX
-          ? nextKeyboardOffset + POST_REPLY_KEYBOARD_CLEARANCE_PX
+        viewport && composerRect
+          ? getReplyKeyboardOffset({
+              focused:
+                Boolean(composerRef.current?.contains(document.activeElement)) &&
+                isKeyboardInput(document.activeElement),
+              layoutHeight: window.innerHeight,
+              viewportHeight: viewport.height,
+              viewportTop: viewport.offsetTop,
+              scale: viewport.scale,
+              composerBottom: composerRect.bottom,
+              currentOffset: keyboardOffsetRef.current,
+            })
           : 0,
       );
     };
@@ -72,6 +69,8 @@ export const useReplyComposerKeyboardOffset = ({
 
     const scheduleSettledKeyboardOffsetUpdate = () => {
       scheduleKeyboardOffsetUpdate();
+      for (const timer of settleTimers) window.clearTimeout(timer);
+      settleTimers.clear();
 
       for (const delay of POST_REPLY_KEYBOARD_SETTLE_DELAYS_MS) {
         const timer = window.setTimeout(() => {
@@ -87,6 +86,9 @@ export const useReplyComposerKeyboardOffset = ({
     viewport?.addEventListener("scroll", scheduleSettledKeyboardOffsetUpdate);
     window.addEventListener("orientationchange", scheduleSettledKeyboardOffsetUpdate);
     window.addEventListener("resize", scheduleSettledKeyboardOffsetUpdate);
+    document.addEventListener("focusin", scheduleSettledKeyboardOffsetUpdate);
+    document.addEventListener("focusout", scheduleSettledKeyboardOffsetUpdate);
+    window.addEventListener("pageshow", scheduleSettledKeyboardOffsetUpdate);
 
     return () => {
       if (animationFrame !== null) {
@@ -101,6 +103,9 @@ export const useReplyComposerKeyboardOffset = ({
       viewport?.removeEventListener("scroll", scheduleSettledKeyboardOffsetUpdate);
       window.removeEventListener("orientationchange", scheduleSettledKeyboardOffsetUpdate);
       window.removeEventListener("resize", scheduleSettledKeyboardOffsetUpdate);
+      document.removeEventListener("focusin", scheduleSettledKeyboardOffsetUpdate);
+      document.removeEventListener("focusout", scheduleSettledKeyboardOffsetUpdate);
+      window.removeEventListener("pageshow", scheduleSettledKeyboardOffsetUpdate);
     };
   }, [composerActive, composerRef, isInline, setKeyboardOffsetSafely]);
 

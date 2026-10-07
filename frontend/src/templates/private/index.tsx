@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
 import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
@@ -19,6 +19,7 @@ import { useSignOut } from "@/hooks/cookies/signout";
 import { NotificationManager } from "@/hooks/notification";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
+import { usePwaBottomRecovery } from "@/hooks/use-pwa-bottom-recovery";
 import { cn } from "@/lib/utils";
 import * as userActions from "@/store/modules/user/actions";
 import { requestLectumAppRefreshAfterReturningToTop } from "@/utils/app-refresh";
@@ -83,6 +84,7 @@ export const PrivateTemplate = ({
   const hasToken = useAuthTokenPresence();
   const conversion = useProgressiveConversion();
   const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
+  const bottomNavigationRef = useRef<HTMLElement | null>(null);
 
   const { hidrate } = useAuth({ enableHidrate: hasToken });
   const { hasUnread: hasUnreadNotifications } = useUnreadNotificationStatus(hasToken);
@@ -115,6 +117,10 @@ export const PrivateTemplate = ({
     storedDesktopSidebarPreference ?? desktopSidebarRouteDefaultCollapsed;
   const isNavigationRenderedVisible = !navigationHidden;
   const isMobileNavigationRenderedVisible = !navigationHidden;
+  usePwaBottomRecovery(
+    bottomNavigationRef,
+    shouldRenderMobileNavigation && isMobileNavigationRenderedVisible && !navigationDimmed,
+  );
   const mobileNavigationActiveHref = getMobileNavigationActiveHref(navigationContextPathname);
   const centerAction = bottomNavigationCenterAction ?? {
     ariaLabel: "Criar publicação",
@@ -228,6 +234,8 @@ export const PrivateTemplate = ({
   const bottomNavigationMarkup = shouldRenderMobileNavigation ? (
     <nav
       aria-label="Navegação principal"
+      data-fixed-bottom-recovery
+      ref={bottomNavigationRef}
       inert={!isMobileNavigationRenderedVisible}
       className={cn(
         "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] lg:hidden",

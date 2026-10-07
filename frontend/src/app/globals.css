@@ -99,6 +99,14 @@
 }
 
 /* Only original posts reclaim the label space before their community link. */
+span:empty:has(+ [data-original-post-community]) {
+  display: none;
+}
+
+span:empty + [data-original-post-community] {
+  max-width: 48%;
+}
+
 span:has(> .favorite-toggle):has(+ [data-original-post-community]) {
   transition: width 260ms ease;
 }
@@ -323,6 +331,12 @@ body {
 html.lectum-pull-to-refresh-enabled,
 body.lectum-pull-to-refresh-enabled {
   overscroll-behavior-y: contain;
+}
+
+@media (max-width: 639px) {
+  [data-fixed-bottom-recovery] {
+    bottom: calc(0px - var(--lectum-fixed-bottom-correction, 0px));
+  }
 }
 
 button,

@@ -606,3 +606,5 @@ Formato recomendado:
 - [ADR-0560 — Comunidades sugeridas sem contagem](0560-comunidades-sugeridas-sem-contagem.md)
 - [ADR-0561 — Barra fixa de favorito no perfil](0561-barra-fixa-favoritar-perfil.md)
 - [ADR-0562 — Header solido no Inicio](0562-header-solido-inicio.md)
+- [ADR-0563 — Slot vazio de favorito antes da comunidade](0563-slot-vazio-favorito-comunidade.md)
+- [ADR-0564 — Recuperacao geometrica do rodape no PWA](0564-recuperacao-rodape-pwa.md)

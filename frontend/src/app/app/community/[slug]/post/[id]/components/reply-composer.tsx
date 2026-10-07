@@ -30,6 +30,7 @@ import {
   type CommunityVideoUploadOperation,
   useCommunityVideoUpload,
 } from "@/hooks/use-community-video-upload";
+import { usePwaBottomRecovery } from "@/hooks/use-pwa-bottom-recovery";
 import { useVideoSourcePreparation } from "@/hooks/use-video-source-preparation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -131,6 +132,10 @@ export const ReplyComposer = ({
     !selectedMedia && (mediaPickerActive || mediaPermission.showControl);
   const shouldShowGuidance = composerActive || hasDraft || Boolean(selectedMedia);
   const shouldUseKeyboardSafeArea = composerActive && keyboardOffset > 0;
+  usePwaBottomRecovery(
+    composerFormNodeRef,
+    !isInline && !shouldUseKeyboardSafeArea && !draggingToCancel && dragOffset === 0,
+  );
   const autoFocusTargetId = replyTarget?.id ?? "main";
   const replyContextLabel = replyTarget?.name
     ? `Respondendo ${replyTarget.name}`
@@ -576,6 +581,7 @@ export const ReplyComposer = ({
         onPointerMove={handleCancelPointerMove}
         onPointerUp={handleCancelPointerEnd}
         onTouchStartCapture={markComposerInternalPointer}
+        data-fixed-bottom-recovery={isInline ? undefined : true}
         ref={assignComposerFormRef}
         style={composerStyle}
       >
