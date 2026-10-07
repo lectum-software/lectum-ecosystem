@@ -6,6 +6,7 @@ import { type ChangeEvent, type RefObject, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { resolvePublicMediaKind } from "@/utils/media-preparation";
+import { PostEditVideoPreview } from "./post-edit-video-preview";
 
 export const REPLY_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
@@ -259,7 +260,7 @@ export function ReplyMediaAttachmentControl({
   } | null>(null);
 
   useEffect(() => {
-    if (!currentOrientationProbeSrc || !currentOrientationProbeType || removeCurrent) {
+    if (!currentOrientationProbeSrc || currentOrientationProbeType !== "image" || removeCurrent) {
       return;
     }
 
@@ -313,6 +314,20 @@ export function ReplyMediaAttachmentControl({
       : null;
   const isEditor = variant === "editor";
   const editorPreview = editorPreviewClassNames(activeMedia?.orientation);
+
+  const updateVideoOrientation = (
+    orientation: "landscape" | "portrait",
+    dimensions?: { width: number; height: number },
+  ) => {
+    if (selectedMedia || !currentSrc || currentType !== "video" || removeCurrent) return;
+    setCurrentMediaOrientation({
+      src: currentSrc,
+      type: "video",
+      value: dimensions
+        ? mediaOrientationFromDimensions(dimensions.width, dimensions.height)
+        : orientation,
+    });
+  };
 
   const openFileDialog = () => {
     if (disabled || selectedMedia) return;
@@ -368,12 +383,9 @@ export function ReplyMediaAttachmentControl({
                 unoptimized={activeMedia.unoptimized}
               />
             ) : (
-              <video
-                aria-label={activeMedia.alt}
-                className="h-full w-full object-cover"
-                muted
-                playsInline
-                preload="metadata"
+              <PostEditVideoPreview
+                key={activeMedia.src}
+                onOrientation={updateVideoOrientation}
                 src={activeMedia.src}
               />
             )}
@@ -485,12 +497,9 @@ export function ReplyMediaAttachmentControl({
                 unoptimized={activeMedia.unoptimized}
               />
             ) : (
-              <video
-                aria-label={activeMedia.alt}
-                className="h-full w-full object-cover"
-                muted
-                playsInline
-                preload="metadata"
+              <PostEditVideoPreview
+                key={activeMedia.src}
+                onOrientation={updateVideoOrientation}
                 src={activeMedia.src}
               />
             )}

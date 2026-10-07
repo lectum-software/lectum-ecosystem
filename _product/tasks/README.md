@@ -529,6 +529,7 @@ ou cortesia manual.
 | 232 | [TASK-232 - Publicacao do lote local](TASK-232-local-release.md) | In Progress | 231 |
 | 233 | [TASK-233 - Edicao sem navegar pelo card](TASK-233-post-edit-card-navigation.md) | Done | 232 |
 | 234 | [TASK-234 - Comunidade sem faixa acima da capa](TASK-234-community-header-top.md) | Done | 233 |
+| 235 | [TASK-235 - Miniatura de video na edicao de comentario](TASK-235-reply-video-preview.md) | Done | 234 |
 
 ## Ordem operacional recomendada sem bloqueios
 
