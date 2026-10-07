@@ -521,6 +521,7 @@ ou cortesia manual.
 | 224 | [TASK-224 - Recuperacao do rodape no PWA](TASK-224-rodape-pwa-viewport.md) | In Progress | 223 |
 | 225 | [TASK-225 - Validacao local antes de producao](TASK-225-validacao-local-producao.md) | In Progress | 224 |
 | 226 | [TASK-226 - Troca unica da sessao Google no localhost](TASK-226-google-exchange-local.md) | Done | 225 |
+| 227 | [TASK-227 - Header compacto na comunidade](TASK-227-header-comunidade-ao-rolar.md) | Done | 226 |
 
 ## Ordem operacional recomendada sem bloqueios
 

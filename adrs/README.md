@@ -610,3 +610,4 @@ Formato recomendado:
 - [ADR-0564 — Recuperacao geometrica do rodape no PWA](0564-recuperacao-rodape-pwa.md)
 - [ADR-0565 — Validacao local e publicacao direta por PR](0565-validacao-local-producao.md)
 - [ADR-0566 — Troca unica do callback Google por montagem](0566-google-exchange-local.md)
+- [ADR-0567 — Header compacto na comunidade](0567-community-scroll-header.md)

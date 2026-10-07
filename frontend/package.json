@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.598",
+  "version": "0.1.599",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -12,7 +12,7 @@
     "test:directory-relations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/api/callers/patient/directory-relation-cache.test.mjs",
     "test:infinite-lists": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/infinite-list.test.mjs",
     "test:community-recommendations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-recommendations.test.mjs",
-    "test:profile-hero": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/profile-hero.test.mjs",
+    "test:profile-hero": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/profile-hero.test.mjs scripts/community-scroll-header.test.mjs",
     "test:feed-header": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/feed-header.test.mjs",
     "test:favorite-slot": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/empty-favorite-slot.test.mjs",
     "test:fixed-bottom": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/fixed-bottom-viewport.test.mjs",
