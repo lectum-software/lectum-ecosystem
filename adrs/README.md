@@ -613,3 +613,4 @@ Formato recomendado:
 - [ADR-0567 — Header compacto na comunidade](0567-community-scroll-header.md)
 - [ADR-0568 — Consulta publica de perfis no localhost](0568-local-public-profile-preview.md)
 - [ADR-0569 — Header da comunidade por direcao de rolagem](0569-community-header-scroll-direction.md)
+- [ADR-0570 — Navegacao desktop nos carrosseis horizontais](0570-desktop-carousel-arrows.md)

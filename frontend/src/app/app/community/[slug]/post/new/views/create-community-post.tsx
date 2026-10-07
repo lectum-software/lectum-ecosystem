@@ -15,6 +15,7 @@ import { CommunityDeleteConfirmationModal } from "@/components/community/communi
 import { CommunityMediaUpgradeModal } from "@/components/community/community-media-upgrade-modal";
 import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import { components } from "@/components/controllers";
+import { HorizontalScrollControls } from "@/components/ui/horizontal-scroll-controls";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { cn } from "@/lib/utils";
@@ -282,96 +283,98 @@ export const CreateCommunityPostLogic = ({
     if (!mediaPermission.canAttach || selectedMediaItems.length === 0) return null;
 
     return (
-      <ul
-        aria-label="Mídias anexadas"
-        data-create-post-editor-ignore="true"
-        className="mt-2 flex max-h-28 shrink-0 gap-2 overflow-x-auto overflow-y-hidden pb-1"
-      >
-        {selectedMediaItems.map((mediaItem, index) => {
-          const isLandscapePreview = mediaItem.orientation === "landscape";
-          const videoPreviewImageSrc = mediaItem.type === "video" ? mediaItem.thumbnailUrl : null;
-          const shouldRenderImagePreview =
-            mediaItem.type === "image" || Boolean(videoPreviewImageSrc);
-          const frameClassName = isLandscapePreview
-            ? "h-20 w-32 sm:h-[5.5rem] sm:w-[9.75rem]"
-            : mediaItem.orientation === "portrait"
-              ? "h-24 w-[4.4rem] sm:h-28 sm:w-20"
-              : "h-20 w-20 sm:h-[5.5rem] sm:w-[5.5rem]";
+      <HorizontalScrollControls label="Mídias anexadas" className="shrink-0">
+        <ul
+          aria-label="Mídias anexadas"
+          data-create-post-editor-ignore="true"
+          className="mt-2 flex max-h-28 shrink-0 gap-2 overflow-x-auto overflow-y-hidden pb-1"
+        >
+          {selectedMediaItems.map((mediaItem, index) => {
+            const isLandscapePreview = mediaItem.orientation === "landscape";
+            const videoPreviewImageSrc = mediaItem.type === "video" ? mediaItem.thumbnailUrl : null;
+            const shouldRenderImagePreview =
+              mediaItem.type === "image" || Boolean(videoPreviewImageSrc);
+            const frameClassName = isLandscapePreview
+              ? "h-20 w-32 sm:h-[5.5rem] sm:w-[9.75rem]"
+              : mediaItem.orientation === "portrait"
+                ? "h-24 w-[4.4rem] sm:h-28 sm:w-20"
+                : "h-20 w-20 sm:h-[5.5rem] sm:w-[5.5rem]";
 
-          return (
-            <li
-              className={cn(
-                "relative shrink-0 overflow-hidden rounded-[1.05rem] border border-border bg-surface-muted shadow-none",
-                frameClassName,
-              )}
-              key={mediaItem.id}
-            >
-              {shouldRenderImagePreview ? (
-                <Image
-                  alt={
-                    mediaItem.type === "video"
-                      ? `Miniatura do vídeo anexado ${index + 1}`
-                      : `Miniatura da imagem anexada ${index + 1}`
-                  }
-                  className="object-cover"
-                  fill
-                  onLoad={(event) => {
-                    const { naturalHeight, naturalWidth } = event.currentTarget;
-                    updateSelectedMediaOrientation(
-                      mediaItem.id,
-                      naturalWidth && naturalHeight && naturalWidth / naturalHeight >= 1.12
-                        ? "landscape"
-                        : "portrait",
-                    );
-                  }}
-                  sizes="160px"
-                  src={videoPreviewImageSrc ?? mediaItem.previewUrl}
-                  unoptimized
-                />
-              ) : (
-                <video
-                  aria-label="Miniatura do vídeo selecionado"
-                  className="h-full w-full object-cover"
-                  muted
-                  onLoadedMetadata={(event) => {
-                    const { videoHeight, videoWidth } = event.currentTarget;
-                    updateSelectedMediaOrientation(
-                      mediaItem.id,
-                      videoWidth && videoHeight && videoWidth / videoHeight >= 1.12
-                        ? "landscape"
-                        : "portrait",
-                    );
-                  }}
-                  playsInline
-                  preload="metadata"
-                  src={mediaItem.previewUrl}
-                />
-              )}
-              {mediaItem.isPreparingPreview ? (
-                <span className="absolute inset-0 grid place-items-center bg-foreground/20 text-surface">
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  <span className="sr-only">Preparando miniatura do vídeo</span>
-                </span>
-              ) : null}
-
-              <button
-                aria-label={`Remover mídia anexada ${index + 1}`}
-                className="absolute top-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full bg-surface/92 text-muted shadow-none ring-1 ring-border/70 transition hover:bg-surface hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
-                disabled={isSubmitting}
-                onClick={() => {
-                  removeSelectedMediaAt(index);
-                  focusLastEditor();
-                }}
-                onMouseDown={(event) => event.preventDefault()}
-                tabIndex={-1}
-                type="button"
+            return (
+              <li
+                className={cn(
+                  "relative shrink-0 overflow-hidden rounded-[1.05rem] border border-border bg-surface-muted shadow-none",
+                  frameClassName,
+                )}
+                key={mediaItem.id}
               >
-                <X className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+                {shouldRenderImagePreview ? (
+                  <Image
+                    alt={
+                      mediaItem.type === "video"
+                        ? `Miniatura do vídeo anexado ${index + 1}`
+                        : `Miniatura da imagem anexada ${index + 1}`
+                    }
+                    className="object-cover"
+                    fill
+                    onLoad={(event) => {
+                      const { naturalHeight, naturalWidth } = event.currentTarget;
+                      updateSelectedMediaOrientation(
+                        mediaItem.id,
+                        naturalWidth && naturalHeight && naturalWidth / naturalHeight >= 1.12
+                          ? "landscape"
+                          : "portrait",
+                      );
+                    }}
+                    sizes="160px"
+                    src={videoPreviewImageSrc ?? mediaItem.previewUrl}
+                    unoptimized
+                  />
+                ) : (
+                  <video
+                    aria-label="Miniatura do vídeo selecionado"
+                    className="h-full w-full object-cover"
+                    muted
+                    onLoadedMetadata={(event) => {
+                      const { videoHeight, videoWidth } = event.currentTarget;
+                      updateSelectedMediaOrientation(
+                        mediaItem.id,
+                        videoWidth && videoHeight && videoWidth / videoHeight >= 1.12
+                          ? "landscape"
+                          : "portrait",
+                      );
+                    }}
+                    playsInline
+                    preload="metadata"
+                    src={mediaItem.previewUrl}
+                  />
+                )}
+                {mediaItem.isPreparingPreview ? (
+                  <span className="absolute inset-0 grid place-items-center bg-foreground/20 text-surface">
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    <span className="sr-only">Preparando miniatura do vídeo</span>
+                  </span>
+                ) : null}
+
+                <button
+                  aria-label={`Remover mídia anexada ${index + 1}`}
+                  className="absolute top-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full bg-surface/92 text-muted shadow-none ring-1 ring-border/70 transition hover:bg-surface hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    removeSelectedMediaAt(index);
+                    focusLastEditor();
+                  }}
+                  onMouseDown={(event) => event.preventDefault()}
+                  tabIndex={-1}
+                  type="button"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </HorizontalScrollControls>
     );
   };
 
