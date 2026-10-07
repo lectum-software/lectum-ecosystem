@@ -612,3 +612,4 @@ Formato recomendado:
 - [ADR-0566 — Troca unica do callback Google por montagem](0566-google-exchange-local.md)
 - [ADR-0567 — Header compacto na comunidade](0567-community-scroll-header.md)
 - [ADR-0568 — Consulta publica de perfis no localhost](0568-local-public-profile-preview.md)
+- [ADR-0569 — Header da comunidade por direcao de rolagem](0569-community-header-scroll-direction.md)

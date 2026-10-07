@@ -71,7 +71,7 @@ for (const following of [false, true]) {
   }
 }
 
-test("observer hands off after the original action exits and disconnects on unmount", () => {
+test("direction listeners and anchor observer are cleaned up on unmount", () => {
   const source = readFileSync(
     new URL(
       "../src/app/app/community/[slug]/components/community-scroll-header.tsx",
@@ -82,6 +82,44 @@ test("observer hands off after the original action exits and disconnects on unmo
   assert.match(source, /anchor\.getBoundingClientRect\(\)\.bottom <= 0/);
   assert.match(source, /observer\.observe\(anchor\)/);
   assert.match(source, /observer\.disconnect\(\)/);
+  assert.match(source, /removeEventListener\("scroll", onScroll\)/);
+  assert.match(source, /removeEventListener\("resize", reset\)/);
+  assert.match(source, /cancelAnimationFrame\(frame\)/);
   assert.match(source, /<CommunityHeader \{\.\.\.props\} followAnchorRef=\{anchorRef\}/);
   assert.match(source, /onClick=\{onToggleFollow\}/);
+});
+
+const { updateCommunityHeaderScroll: step } = await import(
+  "../src/app/app/community/[slug]/modules/header-scroll.ts"
+);
+
+test("community bar appears only on upward scroll and hides on downward scroll", () => {
+  let state = { position: 0, visible: false };
+  state = step(state, 500, 2000, true);
+  assert.equal(state.visible, false);
+  state = step(state, 492, 2000, true);
+  assert.equal(state.visible, true);
+  state = step(state, 450, 2000, true);
+  assert.equal(state.visible, true);
+  state = step(state, 458, 2000, true);
+  assert.equal(state.visible, false);
+});
+
+test("slow scrolling accumulates while tiny reversals do not flicker", () => {
+  let state = { position: 500, visible: false };
+  for (const y of [499, 498, 497, 498, 496, 495, 494, 493]) {
+    state = step(state, y, 2000, true);
+    assert.equal(state.visible, false);
+  }
+  state = step(state, 492, 2000, true);
+  assert.equal(state.visible, true);
+  assert.equal(step(state, 495, 2000, true).visible, true);
+});
+
+test("original header, restored position and overscroll never reveal a duplicate bar", () => {
+  assert.equal(step({ position: 500, visible: false }, 500, 2000, true).visible, false);
+  assert.equal(step({ position: 500, visible: true }, 400, 2000, false).visible, false);
+  assert.equal(step({ position: 8, visible: true }, -30, 2000, true).visible, false);
+  const bottom = step({ position: 2000, visible: false }, 2050, 2000, true);
+  assert.equal(step(bottom, 2000, 2000, true).visible, false);
 });

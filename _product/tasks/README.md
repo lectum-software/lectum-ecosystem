@@ -523,6 +523,7 @@ ou cortesia manual.
 | 226 | [TASK-226 - Troca unica da sessao Google no localhost](TASK-226-google-exchange-local.md) | Done | 225 |
 | 227 | [TASK-227 - Header compacto na comunidade](TASK-227-header-comunidade-ao-rolar.md) | Done | 226 |
 | 228 | [TASK-228 - Perfis publicos no ambiente local](TASK-228-local-public-profile-preview.md) | Done | 227 |
+| 229 | [TASK-229 - Header da comunidade somente ao subir](TASK-229-community-header-scroll-direction.md) | Done | 228 |
 
 ## Ordem operacional recomendada sem bloqueios
 

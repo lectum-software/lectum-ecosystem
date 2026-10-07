@@ -3,6 +3,7 @@
 import { type ComponentProps, useEffect, useRef, useState } from "react";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { cn } from "@/lib/utils";
+import { updateCommunityHeaderScroll } from "../modules/header-scroll";
 import { useCommunityVisualPalette } from "../modules/palette";
 import { CommunityHeader, CommunityLogo } from "./community-header";
 
@@ -59,12 +60,47 @@ export const CommunityScrollHeader = (props: CommunityHeaderProps) => {
     const anchor = anchorRef.current;
     if (!anchor) return;
 
-    // Match the profile: hand off the action only after its original row leaves the top.
-    const update = () => setVisible(anchor.getBoundingClientRect().bottom <= 0);
-    update();
-    const observer = new IntersectionObserver(update, { threshold: 0 });
+    let state = { position: window.scrollY, visible: false };
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      state = updateCommunityHeaderScroll(
+        state,
+        window.scrollY,
+        document.documentElement.scrollHeight - window.innerHeight,
+        anchor.getBoundingClientRect().bottom <= 0,
+      );
+      setVisible(state.visible);
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    const reset = () => {
+      state = updateCommunityHeaderScroll(
+        state,
+        window.scrollY,
+        document.documentElement.scrollHeight - window.innerHeight,
+        false,
+      );
+      setVisible(false);
+    };
+    reset();
+    // Layout changes may hide the bar, but must never reveal it without scrolling up.
+    const observer = new IntersectionObserver(
+      () => {
+        if (anchor.getBoundingClientRect().bottom > 0) reset();
+      },
+      { threshold: 0 },
+    );
     observer.observe(anchor);
-    return () => observer.disconnect();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", reset);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", reset);
+      window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   return (
