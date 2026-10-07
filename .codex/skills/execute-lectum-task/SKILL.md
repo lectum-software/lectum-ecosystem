@@ -1,6 +1,6 @@
 ---
 name: execute-lectum-task
-description: Execute uma task de produto Lectum de ponta a ponta, com Builder/proto, sem mocks, ADR, validação, commit e push.
+description: Execute uma task de produto Lectum com Builder/proto, sem mocks, ADR, validacao local e commit; publique apenas com autorizacao.
 ---
 
 # Execute Lectum Task
@@ -40,13 +40,14 @@ Use esta skill quando o usuário pedir para executar a próxima task, uma task e
 15. Marcar critérios de aceite concluídos no arquivo da task, trocando `[ ]` por `[x]`.
 16. Antes do novo commit, executar uma única vez `pnpm version:bump`, preparar os cinco `package.json` sincronizados e validar `pnpm check:version`. Se a tentativa desse mesmo commit falhar, corrigir e tentar novamente sem outro bump.
 17. Fazer commit com mensagem convencional e escopo da task.
-18. Confirmar novamente que a branch é `homolog`, avisar que o push inicia deploy automático e executar `git push`. Se falhar por credenciais, rede ou permissão, registrar o bloqueio explicitamente. Após o deploy, validar smoke, versões publicadas e `/health`/`/ready` quando aplicável.
+18. Seguir `_product/tasks/LOCAL-TO-PRODUCTION.md`. Manter commits locais até autorização de publicação; não fazer push por task. Antes de qualquer push, confirmar que autodeploys externos de homologação foram desativados. Documentação não desativa provedores. Não usar deploy remoto para substituir validação local ausente.
 
 ## Promoção explícita para produção
 
-Quando o usuário disser para colocar a versão homologada em produção:
+Quando o usuário disser para colocar a versão validada localmente em produção:
 
-1. Não alterar código nem criar commit direto em `main`; confirmar branch `homolog`, árvore limpa, checks e smoke de homologação.
+1. Não criar commit direto em `main`; confirmar branch `homolog`, escopo dos commits, checks/builds, smoke local, aprovação visual e saúde de produção. Preservar alterações locais não relacionadas.
+   Confirmar autodeploys de homologação desativados antes de publicar commits locais; não parar serviços/bancos. Homologação remota não é mais gate obrigatório.
 2. Validar `gh auth status` e procurar PR aberto `homolog` → `main`; reutilizá-lo ou criar um novo.
 3. Aguardar checks obrigatórios do PR e interromper/reportar se algum falhar.
 4. Fazer merge pelo PR sem usar `--delete-branch`; `homolog` é permanente.
@@ -61,7 +62,7 @@ Quando o usuário disser para colocar a versão homologada em produção:
 - Não rodar Builder CLI a partir da raiz para gerar UI; use `frontend/` ou `--cwd frontend`.
 - Não aceitar Builder output como implementação final sem revisão arquitetural.
 - Não deixar task como concluída se existir erro de TypeScript, warning do Biome ou build quebrado.
-- Não avançar para outra task sem finalizar validação, commit e push da atual.
+- Não marcar uma task como validada sem checks locais e commit; push é adiado até publicação autorizada, conforme ADR-0565.
 - Não usar `sample/` como fonte ativa, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Não marcar critério `[x]` por intenção; marcar apenas com evidência executada.
 - Não resetar, semear destrutivamente, limpar bucket ou alterar dados em massa em homologação/produção.
@@ -81,5 +82,5 @@ Ao final, responder ao usuário com:
 - hash do commit;
 - status do push;
 - pendências reais, se houver.
-- alertas de deploy, rollback e resultado do smoke de homologação.
+- alertas de deploy, rollback e resultado do smoke local.
 - versão publicada de cada aplicação alterada e, quando solicitado, PR/merge e smoke de produção.

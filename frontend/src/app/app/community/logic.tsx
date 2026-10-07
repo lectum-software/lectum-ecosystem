@@ -3,7 +3,6 @@
 import {
   ArrowLeft,
   ArrowRight,
-  ChevronRight,
   Compass,
   Flame,
   PlusCircle,
@@ -14,10 +13,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useInfiniteCommunities } from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import { EmptyState } from "@/components/ui/empty-state";
+import { HorizontalScrollControls } from "@/components/ui/horizontal-scroll-controls";
 import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -130,47 +130,9 @@ const PopularCommunitiesCarousel = ({
   communities: CommunityExploreCard[];
   loader: ReactNode;
 }) => {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollNext, setCanScrollNext] = useState(false);
-
-  const updateScrollState = useCallback(() => {
-    const node = scrollRef.current;
-    if (!node) return;
-
-    setCanScrollNext(node.scrollLeft + node.clientWidth < node.scrollWidth - 8);
-  }, []);
-
-  useEffect(() => {
-    const node = scrollRef.current;
-    if (!node || communities.length === 0) return;
-    const frame = window.requestAnimationFrame(updateScrollState);
-
-    node.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      node.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-    };
-  }, [updateScrollState, communities.length]);
-
-  const scrollNext = () => {
-    const node = scrollRef.current;
-    if (!node) return;
-
-    node.scrollBy({
-      behavior: "smooth",
-      left: Math.min(360, node.clientWidth * 0.72),
-    });
-  };
-
   return (
-    <div className="relative min-w-0 max-w-full overflow-hidden">
-      <div
-        className="max-w-full overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] lg:overflow-visible [&::-webkit-scrollbar]:hidden"
-        ref={scrollRef}
-      >
+    <HorizontalScrollControls label="Comunidades populares">
+      <div className="max-w-full overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] lg:overflow-visible [&::-webkit-scrollbar]:hidden">
         <div className="flex w-max max-w-none snap-x snap-mandatory gap-3.5 sm:gap-4 lg:grid lg:w-full lg:grid-cols-4">
           {communities.map((community) => (
             <CommunityCard community={community} key={community.communityId} />
@@ -178,24 +140,7 @@ const PopularCommunitiesCarousel = ({
           <div className="min-w-10 shrink-0 self-center lg:col-span-full">{loader}</div>
         </div>
       </div>
-
-      {canScrollNext ? (
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-24 items-center justify-end pr-1 lg:flex">
-          <button
-            aria-label="Ver mais comunidades populares"
-            className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full border border-border bg-surface/92 text-primary backdrop-blur transition hover:border-primary/35 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              scrollNext();
-            }}
-            type="button"
-          >
-            <ChevronRight className="h-[18px] w-[18px]" aria-hidden="true" />
-          </button>
-        </div>
-      ) : null}
-    </div>
+    </HorizontalScrollControls>
   );
 };
 

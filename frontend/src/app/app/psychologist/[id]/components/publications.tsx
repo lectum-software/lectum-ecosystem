@@ -12,6 +12,7 @@ import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { HorizontalScrollControls } from "@/components/ui/horizontal-scroll-controls";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
@@ -28,10 +29,12 @@ import {
 
 export const ProfileCommunityPostCard = ({
   canInteract,
+  readOnly = false,
   onShare,
   post,
 }: {
   canInteract: boolean;
+  readOnly?: boolean;
   onShare: (post: PostListPost) => void;
   post: DirectoryPsychologistProfilePost;
 }) => (
@@ -39,7 +42,8 @@ export const ProfileCommunityPostCard = ({
     desktopPlainLinks
     interactiveActions={canInteract}
     onShare={onShare}
-    openPostOnCardClick={post.contribution_type !== "reply"}
+    openPostOnCardClick={!readOnly && post.contribution_type !== "reply"}
+    showWhatsappCta={!readOnly}
     post={post}
     profilePublicationMode
   />
@@ -143,11 +147,13 @@ export const PublicationsActivitySummary = ({
       {hasParticipationCommunities ? (
         <div className="grid gap-2.5">
           <p className="px-1 text-[13px] font-extrabold leading-none text-muted">Publica em:</p>
-          <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-center sm:gap-4">
-            {participationCommunities.map((community) => (
-              <PublicationParticipationCommunity community={community} key={community.id} />
-            ))}
-          </div>
+          <HorizontalScrollControls label="Comunidades em que publica">
+            <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-center-safe sm:gap-4">
+              {participationCommunities.map((community) => (
+                <PublicationParticipationCommunity community={community} key={community.id} />
+              ))}
+            </div>
+          </HorizontalScrollControls>
         </div>
       ) : null}
 
@@ -223,6 +229,7 @@ export const PostsPreviewSection = ({
 
 export const PostsTab = ({
   canInteract,
+  readOnly = false,
   error,
   hasNextPage,
   isError,
@@ -235,6 +242,7 @@ export const PostsTab = ({
   summary,
 }: {
   canInteract: boolean;
+  readOnly?: boolean;
   error: unknown;
   hasNextPage: boolean;
   isError: boolean;
@@ -275,6 +283,7 @@ export const PostsTab = ({
           {posts.map((post) => (
             <ProfileCommunityPostCard
               canInteract={canInteract}
+              readOnly={readOnly}
               key={`${post.contribution_type}-${post.id}-${post.highlighted_professional_reply?.id ?? "post"}`}
               onShare={onShare}
               post={post}

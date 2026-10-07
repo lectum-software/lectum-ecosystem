@@ -149,7 +149,7 @@ test("recommendation follow button has stable dimensions and accessible pending/
   assert.match(render({}), /border-primary bg-primary text-primary-foreground/);
 });
 
-test("compact carousel uses community avatars, no cover or arrow controls, and independent follow", () => {
+test("compact carousel uses avatars, measured desktop controls and independent follow", () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   const store = configureStore({ reducer: rootReducer });
   const html = renderToStaticMarkup(
@@ -177,6 +177,7 @@ test("compact carousel uses community avatars, no cover or arrow controls, and i
   );
   client.clear();
   assert.match(html, /Comunidades sugeridas/);
+  assert.match(html, /data-horizontal-carousel="Comunidades sugeridas"/);
   assert.match(html, /aria-label="Comunidades sugeridas: carrossel"/);
   assert.match(html, /href="\/comunidades"/);
   assert.match(html, /href="\/comunidades\/ansiedade-em-equilibrio"/);
@@ -200,6 +201,35 @@ test("compact carousel uses community avatars, no cover or arrow controls, and i
   assert.match(html, /Seguir Comunidade ansiedade-em-equilibrio/);
   assert.doesNotMatch(html, /<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<button\b/);
   assert.match(html, /snap-x snap-mandatory/);
+});
+
+test("desktop arrow visibility follows actual overflow, fractional edges and resize", async () => {
+  const { horizontalScrollEdges: edges } = await import("../../utils/horizontal-scroll.ts");
+  assert.deepEqual(edges(0, 600, 600), { left: false, right: false });
+  assert.deepEqual(edges(0, 600, 1500), { left: false, right: true });
+  assert.deepEqual(edges(300, 600, 1500), { left: true, right: true });
+  assert.deepEqual(edges(899.5, 600, 1500), { left: true, right: false });
+  assert.deepEqual(edges(930, 600, 1500), { left: true, right: false });
+  assert.deepEqual(edges(-20, 600, 1500), { left: false, right: true });
+  assert.deepEqual(edges(300, 1600, 1500), { left: false, right: false });
+  assert.deepEqual(edges(0, 0, 1500), { left: false, right: false });
+});
+
+test("shared controls preserve touch, keyboard labels, reduced motion and observer cleanup", () => {
+  const source = readFileSync(
+    new URL("../ui/horizontal-scroll-controls.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /hidden h-6 w-6/);
+  assert.match(source, /lg:grid/);
+  assert.match(source, /aria-label=\{title\}/);
+  assert.match(source, /title=\{title\}/);
+  assert.match(source, /prefers-reduced-motion: reduce/);
+  assert.match(source, /resize\.disconnect\(\)/);
+  assert.match(source, /mutation\.disconnect\(\)/);
+  assert.match(source, /removeEventListener\("scroll", schedule\)/);
+  assert.match(source, /cancelAnimationFrame\(frame\)/);
+  assert.doesNotMatch(source, /addEventListener\("(?:wheel|touchmove)"/);
 });
 
 test("responsive card widths reserve the next card across container sizes", () => {

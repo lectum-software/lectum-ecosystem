@@ -195,10 +195,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   );
   const focusLastEditor = useCallback(() => {
     window.setTimeout(() => {
-      const target = document.getElementById(lastFocusedEditorIdRef.current) as
-        | HTMLInputElement
-        | HTMLTextAreaElement
-        | null;
+      const target = document.getElementById(lastFocusedEditorIdRef.current);
       target?.focus({ preventScroll: true });
     }, 0);
   }, []);
@@ -258,23 +255,10 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     const focusTimer = window.setTimeout(() => {
       document.getElementById("edit-post-title")?.focus({ preventScroll: true });
     }, 180);
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousDocumentOverflow = document.documentElement.style.overflow;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") handleClose();
-    };
-
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       window.clearTimeout(focusTimer);
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousDocumentOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleClose, open]);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -598,6 +582,15 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
           control={hook.control}
           key={`edit-post-${String(field.name)}`}
           {...field}
+          className={cn(
+            field.className,
+            editableMediaItems.length === 0 && "h-auto min-h-0 flex-none",
+          )}
+          inputClassName={cn(
+            field.inputClassName,
+            editableMediaItems.length === 0 &&
+              "h-auto min-h-28 max-h-none flex-none overflow-visible",
+          )}
           onChangeCallback={(value) => {
             field.onChangeCallback?.(value);
             if (String(value ?? "").trim().length >= 10) {
@@ -615,76 +608,74 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   if (!open) return null;
 
   return (
-    <>
-      <CommunityMediaUpgradeModal
-        onClose={() => setMediaUpgradeModalOpen(false)}
-        open={mediaUpgradeModalOpen}
-      />
-      <PostEditModalView
-        communityFields={formProps.fields
-          .filter((field) => field.name === "community_slug")
-          .map(renderFormField)}
-        contentFields={formProps.fields
-          .filter((field) => field.name === "content")
-          .map(renderFormField)}
-        footerControls={
-          canShowMediaControls ? (
-            <PostEditMediaButton
-              canManageMedia={canManageMedia}
-              fileInputRef={fileInputRef}
-              isSubmitting={isSubmitting}
-              isUploading={isUploadingMedia}
-              mediaPermissionReason={mediaPermission.reason}
-              onFocusEditor={focusLastEditor}
-              onMediaChange={handleMediaChange}
-              onPermissionDenied={() => setMediaUpgradeModalOpen(true)}
-            />
-          ) : (
-            <PostEditAnonymousControls control={hook.control} />
-          )
-        }
-        isGuidanceOpen={isGuidanceOpen}
-        isSubmitting={isSubmitting || isPreparingVideo}
-        mediaPreview={
-          <PostEditMediaPreview
+    <PostEditModalView
+      hasMedia={editableMediaItems.length > 0}
+      overlay={
+        mediaUpgradeModalOpen ? (
+          <CommunityMediaUpgradeModal onClose={() => setMediaUpgradeModalOpen(false)} open />
+        ) : null
+      }
+      communityFields={formProps.fields
+        .filter((field) => field.name === "community_slug")
+        .map(renderFormField)}
+      contentFields={formProps.fields
+        .filter((field) => field.name === "content")
+        .map(renderFormField)}
+      footerControls={
+        canShowMediaControls ? (
+          <PostEditMediaButton
             canManageMedia={canManageMedia}
-            disabled={isSubmitting}
-            items={editableMediaItems}
+            fileInputRef={fileInputRef}
+            isSubmitting={isSubmitting}
+            isUploading={isUploadingMedia}
+            mediaPermissionReason={mediaPermission.reason}
             onFocusEditor={focusLastEditor}
-            onRemoveSelected={removeSelectedMediaAt}
-            onRemoveStored={removeStoredMedia}
-            onUpdateSelectedOrientation={updateSelectedMediaOrientation}
-            onUpdateStoredOrientation={updateStoredMediaOrientation}
+            onMediaChange={handleMediaChange}
+            onPermissionDenied={() => setMediaUpgradeModalOpen(true)}
           />
+        ) : (
+          <PostEditAnonymousControls control={hook.control} />
+        )
+      }
+      isGuidanceOpen={isGuidanceOpen}
+      isSubmitting={isSubmitting || isPreparingVideo}
+      mediaPreview={
+        <PostEditMediaPreview
+          canManageMedia={canManageMedia}
+          disabled={isSubmitting}
+          items={editableMediaItems}
+          onFocusEditor={focusLastEditor}
+          onRemoveSelected={removeSelectedMediaAt}
+          onRemoveStored={removeStoredMedia}
+          onUpdateSelectedOrientation={updateSelectedMediaOrientation}
+          onUpdateStoredOrientation={updateStoredMediaOrientation}
+        />
+      }
+      onClose={handleClose}
+      onFocusCapture={(event) => {
+        const target = event.target as HTMLElement;
+        if (EDITOR_FIELD_IDS.has(target.id)) {
+          lastFocusedEditorIdRef.current = target.id;
         }
-        onClose={handleClose}
-        onFocusCapture={(event) => {
-          const target = event.target as HTMLElement;
-          if (EDITOR_FIELD_IDS.has(target.id)) {
-            lastFocusedEditorIdRef.current = target.id;
-          }
-        }}
-        onPointerDown={preserveEditorFocusFromBlankTap}
-        onSubmit={handleSubmit}
-        onToggleGuidance={() => {
-          setIsGuidanceOpen((current) => !current);
-          focusLastEditor();
-        }}
-        titleFields={formProps.fields
-          .filter((field) => field.name === "title")
-          .map(renderFormField)}
-        uploadStatus={
-          mediaProgress ? (
-            <CommunityVideoUploadProgress
-              onCancel={() => {
-                if (preparingVideoRef.current) clearSelectedMedia();
-                else cancelActiveVideoUpload();
-              }}
-              progress={mediaProgress}
-            />
-          ) : null
-        }
-      />
-    </>
+      }}
+      onPointerDown={preserveEditorFocusFromBlankTap}
+      onSubmit={handleSubmit}
+      onToggleGuidance={() => {
+        setIsGuidanceOpen((current) => !current);
+        focusLastEditor();
+      }}
+      titleFields={formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
+      uploadStatus={
+        mediaProgress ? (
+          <CommunityVideoUploadProgress
+            onCancel={() => {
+              if (preparingVideoRef.current) clearSelectedMedia();
+              else cancelActiveVideoUpload();
+            }}
+            progress={mediaProgress}
+          />
+        ) : null
+      }
+    />
   );
 }

@@ -14,4 +14,4 @@ applyTo: "admin/**"
 - Validate loading, empty, forbidden, expired-session and retry states with real API contracts; do not add fake dashboard data.
 - Use safe internal redirects and the configured public frontend URL for cross-application links.
 - Run `pnpm --dir admin check` and `pnpm --dir admin build` for UI/route changes.
-- Publish first through `homolog`; never push directly to `main`.
+- Validate on localhost before authorized release through `homolog` -> `main`; follow `LOCAL-TO-PRODUCTION.md`, never auto-push per task or push directly to `main`.

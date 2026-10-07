@@ -1,4 +1,4 @@
-import type { MouseEventHandler, ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, MouseEventHandler, ReactNode } from "react";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 
 export const publicationInteractionData = (
@@ -95,3 +95,27 @@ export const isPostCardInteractiveTarget = (target: EventTarget | null) => {
     ),
   );
 };
+
+export const createPostCardNavigation = (enabled: boolean, navigate: () => void) => ({
+  handleCardClick(event: MouseEvent<HTMLElement>) {
+    if (
+      !enabled ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      isPostCardInteractiveTarget(event.target)
+    ) {
+      return;
+    }
+    navigate();
+  },
+  handleCardKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!enabled || event.defaultPrevented || isPostCardInteractiveTarget(event.target)) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    navigate();
+  },
+});

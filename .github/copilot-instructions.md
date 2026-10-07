@@ -5,9 +5,9 @@ Use [AGENTS.md](../AGENTS.md) as the canonical workspace instruction file.
 Hard rules:
 
 - Since 2026-08-07, homologation and production are live and may contain real data.
-- `homolog` auto-deploys homologation; `main` auto-deploys production. Work and push only on `homolog`; if currently on `main`, stop and tell the user to switch branches.
-- Never push directly to `main`. Promote only through a reviewed merge after homologation smoke tests.
-- When the user explicitly asks to put the current homologated code in production, use `gh` to create or reuse a `homolog` → `main` PR, wait for required checks, merge it without deleting `homolog`, and run production smoke tests. Do not delegate the merge unless access is genuinely blocked.
+- Since 2026-10-06, validate on localhost, then release through a reviewed PR to production. Follow `_product/tasks/LOCAL-TO-PRODUCTION.md`; remote homologation is no longer a mandatory gate.
+- Work and commit on `homolog`, but keep commits local until a release is authorized. Before any push, verify external homologation auto-deploy triggers are disabled; documentation alone does not disable providers. Never push directly to `main`.
+- With explicit production authorization, verify local checks/builds/flows and production health, publish the validated commits, use `gh` to create/reuse `homolog` → `main`, wait for required checks, merge without deleting `homolog`, and run production smoke tests. Do not bypass required checks or use remote deployment to compensate for missing local validation.
 - Never reset, destructively seed, bulk-delete, or clean storage in a published environment.
 - Evolve databases with expand/backfill/contract; never make a field required without existing-data compatibility and never edit an applied migration.
 - A new mandatory env requires an explicit **DEPLOY ALERT** naming the key, affected app, provisioning order, and failure impact, without exposing its value. Prefer a safe optional/default first deploy.

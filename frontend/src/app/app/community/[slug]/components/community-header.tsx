@@ -51,9 +51,11 @@ import {
 
 export const CommunityLogo = ({
   community,
+  compact = false,
   palette,
 }: {
   community: CommunityDetail;
+  compact?: boolean;
   palette: CommunityVisualPalette;
 }) => {
   const avatarSrc = resolvePublicMediaUrl(community.avatar_url);
@@ -61,7 +63,12 @@ export const CommunityLogo = ({
 
   return (
     <span
-      className="relative grid h-[76px] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-media-foreground text-center text-lg font-black leading-none shadow-lectum-soft dark:border-background"
+      className={cn(
+        "relative grid shrink-0 place-items-center overflow-hidden text-center font-black leading-none",
+        compact
+          ? "h-9 w-9 rounded-lg text-xs"
+          : "h-[76px] w-[76px] rounded-[18px] border-[4px] border-media-foreground text-lg shadow-lectum-soft dark:border-background",
+      )}
       style={{
         background: `linear-gradient(135deg, ${palette.softColor} 0%, ${palette.gradientColor} 100%)`,
         color: palette.textColor,
@@ -72,7 +79,7 @@ export const CommunityLogo = ({
           alt={`Avatar da comunidade ${community.name}`}
           className="object-cover"
           fill
-          sizes="76px"
+          sizes={compact ? "36px" : "76px"}
           src={avatarSrc}
           unoptimized={avatarIsPublicMedia}
         />
@@ -167,6 +174,7 @@ export const CommunityRulesCard = ({ rules }: { rules: CommunityDetail["rules"] 
 
 export const CommunityHeader = ({
   community,
+  followAnchorRef,
   following,
   membershipPending,
   onBack,
@@ -175,6 +183,7 @@ export const CommunityHeader = ({
   onToggleFollow,
 }: {
   community: CommunityDetail;
+  followAnchorRef?: RefObject<HTMLDivElement | null>;
   following: boolean;
   membershipPending: boolean;
   onBack: () => void;
@@ -241,7 +250,7 @@ export const CommunityHeader = ({
       </div>
 
       <div className="relative px-5">
-        <div className="-mt-8 flex items-end justify-between gap-4">
+        <div className="-mt-8 flex items-end justify-between gap-4" ref={followAnchorRef}>
           <CommunityLogo community={community} palette={palette} />
           <CommunityFollowButton
             disabled={membershipPending}

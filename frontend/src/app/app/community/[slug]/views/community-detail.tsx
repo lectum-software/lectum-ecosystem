@@ -42,10 +42,10 @@ import {
 import {
   CommunityContextSearchHeader,
   CommunityDetailSkeleton,
-  CommunityHeader,
   CommunityPostSortChips,
   CommunityRulesCard,
 } from "../components/community-header";
+import { CommunityScrollHeader } from "../components/community-scroll-header";
 import { InfinitePostLoader, PostCard } from "../components/post-card";
 import {
   COMMUNITY_FLOATING_CREATE_POST_CLASSNAME,
@@ -350,7 +350,8 @@ export const CommunityDetailLogic = ({
                 search={communitySearch}
               />
             ) : (
-              <CommunityHeader
+              <CommunityScrollHeader
+                key={`header-${community.slug}`}
                 community={community}
                 following={following}
                 membershipPending={membershipPending}

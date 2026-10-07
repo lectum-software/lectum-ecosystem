@@ -1,9 +1,8 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import type { ChangeEventHandler, RefObject } from "react";
 import { type Control, Controller } from "react-hook-form";
-import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { cn } from "@/lib/utils";
 import type { PostEditForm } from "./post-edit-modal-support";
 
@@ -79,9 +78,9 @@ export const PostEditMediaButton = ({
     <button
       aria-label="Adicionar mídia ao post"
       className={cn(
-        "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
+        "grid h-11 w-11 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.96]",
         canManageMedia
-          ? "border-border bg-surface-muted text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
+          ? "border-primary bg-primary text-primary-foreground shadow-lectum-soft hover:border-primary-hover hover:bg-primary-hover"
           : "cursor-pointer border-border bg-surface-muted text-subtle hover:border-border hover:bg-surface-muted hover:text-subtle",
       )}
       disabled={isSubmitting}
@@ -101,11 +100,11 @@ export const PostEditMediaButton = ({
       type="button"
     >
       {isUploading ? (
-        <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
+        <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
       ) : (
-        <AnimatedImagesIcon aria-hidden="true" className="h-5 w-5" />
+        <Camera aria-hidden="true" className="h-4 w-4" />
       )}
-      <span className="hidden sm:inline">Mídia</span>
+      <span className="sr-only">Adicionar mídia</span>
     </button>
   </div>
 );

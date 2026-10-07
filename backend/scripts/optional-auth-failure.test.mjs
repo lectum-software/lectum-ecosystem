@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { once } from "node:events";
 import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -10,17 +12,29 @@ import { fileURLToPath } from "node:url";
 const backendRoot = fileURLToPath(new URL("../", import.meta.url));
 const require = createRequire(new URL("../package.json", import.meta.url));
 
-test("autenticação opcional distingue visitante de falha real do banco", () => {
+test("autenticação opcional distingue visitante de falha real do banco", async () => {
   const isolatedDirectory = mkdtempSync(path.join(tmpdir(), "lectum-auth-failure-"));
   try {
     cpSync(path.join(backendRoot, "locales"), path.join(isolatedDirectory, "locales"), {
       recursive: true,
     });
     // Processo sem .env/credenciais do workspace. Prisma aponta exclusivamente
-    // para um socket inexistente dentro deste diretório descartável: nenhuma
+    // para um socket inexistente (ou porta loopback fechada no Windows): nenhuma
     // autenticação, resposta do banco ou implementação Passport é substituída.
     const databaseUrl = new URL("postgresql://audit:audit@localhost/audit");
-    databaseUrl.searchParams.set("host", path.join(isolatedDirectory, "missing-postgres"));
+    if (process.platform === "win32") {
+      // pg trata caminhos Windows como host DNS, nao como Unix socket.
+      const reservation = createServer();
+      reservation.listen(0, "127.0.0.1");
+      await once(reservation, "listening");
+      databaseUrl.hostname = "127.0.0.1";
+      databaseUrl.port = String(reservation.address().port);
+      await new Promise((resolve, reject) =>
+        reservation.close((error) => (error ? reject(error) : resolve())),
+      );
+    } else {
+      databaseUrl.searchParams.set("host", path.join(isolatedDirectory, "missing-postgres"));
+    }
     const script = `
       const assert = require('node:assert/strict');
       const { once } = require('node:events');
@@ -88,7 +102,7 @@ test("autenticação opcional distingue visitante de falha real do banco", () =>
     assert.equal(
       result.status,
       0,
-      `Middleware deve responder sem falha: ${observedStatuses.join(", ")}`,
+      `Middleware deve responder sem falha: ${result.error?.code ?? "exit"}; ${observedStatuses.join(", ")}`,
     );
     assert.match(result.stdout, /OPTIONAL_AUTH_FAILURE_OK/);
     assert.doesNotMatch(

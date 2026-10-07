@@ -2,7 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
 import { getSafeApiErrorMessage } from "@/api/errors";
@@ -44,8 +44,12 @@ export const RedirectLogic = () => {
   });
 
   const { mutate } = googleMe;
+  const exchangeStarted = useRef(false);
 
   useEffect(() => {
+    // The exchange cookie is single-use; Strict Mode replays effects in development.
+    if (exchangeStarted.current) return;
+    exchangeStarted.current = true;
     mutate();
   }, [mutate]);
 

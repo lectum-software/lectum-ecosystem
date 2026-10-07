@@ -13,13 +13,14 @@ Desde **2026-08-07**, `frontend/`, `backend/` e `admin/` possuem homologação e
 
 ### Branches e rollout
 
-- `homolog` dispara automaticamente o ambiente de homologação.
+- Desde 2026-10-06, o fluxo padrão é localhost → PR revisado → produção, conforme ADR-0565 e `LOCAL-TO-PRODUCTION.md`. Homologação remota é opcional, não gate obrigatório.
+- `homolog` permanece como branch de trabalho. Gatilhos externos antigos devem ser desativados e verificados antes de qualquer novo push; editar este documento não altera provedores.
 - `main` dispara automaticamente produção.
-- Toda mudança nasce e é publicada primeiro em `homolog`. Se o trabalho estiver em `main`, interromper antes de editar/commitar e orientar o usuário a trocar de branch.
-- Push direto em `main` é proibido. A promoção ocorre por merge revisado após checks, builds e smoke test de homologação.
-- O desenvolvedor não técnico permanece em `homolog`. Uma solicitação explícita para colocar em produção é executada pelo agente como PR `homolog` → `main` via `gh`, espera dos checks, merge sem excluir `homolog` e smoke de produção; não há commit/push direto em `main` nem etapa manual delegada ao usuário salvo bloqueio real de acesso.
+- Toda mudança nasce e é validada localmente em `homolog`, sem push automático por ajuste. Se o trabalho estiver em `main`, interromper antes de editar/commitar e orientar a troca de branch.
+- Push direto em `main` é proibido. A promoção ocorre por merge revisado após checks, builds, smoke local e aprovação visual quando aplicável. Falta de disco local não autoriza substituir a validação por build em homologação.
+- Com autorização explícita de produção, o agente confirma que push/PR não dispara homologação, publica os commits locais, cria/reutiliza PR `homolog` → `main` via `gh`, aguarda checks obrigatórios, faz merge sem excluir `homolog` e valida produção. Nunca ignorar checks ou dependências reais indisponíveis.
 - Backend, frontend, admin e video podem permanecer temporariamente em versões diferentes. Contratos novos devem ser aditivos, consumidores devem tolerar campos ausentes e remoções só podem ocorrer depois que nenhum consumidor antigo depender delas.
-- Um push em `homolog` já é uma operação de deploy e deve ser comunicado como tal.
+- A desativação de autodeploy não para containers, bancos ou filas. Não desligar homologação nem remover recursos compartilhados sem autorização separada. Builds produtivos também podem pressionar a VPS; evitar concorrência e planejar rollback.
 
 ### Versão dos artefatos
 
@@ -63,7 +64,7 @@ Regras:
 - Não retornar nem exibir stack trace, SQL, nomes internos, mensagens cruas de provider, URLs internas, token, segredo ou PII.
 - Logs devem usar contexto mínimo, identificadores de correlação e dados sanitizados.
 - Jobs, campanhas e migrações de dados que possam produzir efeitos reais começam desabilitados e exigem ativação explícita depois de inspecionar registros pendentes. Exceções de startup só são permitidas com inventário prévio, ADR, lock/idempotência, skip seguro por ambiente e opção de pausa documentada.
-- Para mudança backend, validar `/health` (processo) e `/ready` (dependências) após deploy em homologação.
+- Para mudança backend, validar `/health` (processo) e `/ready` (dependências) localmente e após deploy em produção. O ambiente local não pode escrever em banco, filas ou provedores produtivos.
 - Toda task deve declarar riscos de deploy, rollback e ações manuais; “nenhum” também deve ser registrado quando confirmado.
 
 ### Observabilidade de aplicações

@@ -130,7 +130,8 @@ test("only profile replies show the question above the reply and do not open the
     new URL("../../app/app/psychologist/[id]/components/publications.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(profile, /openPostOnCardClick=\{post.contribution_type !== "reply"\}/);
+  assert.match(profile, /openPostOnCardClick=\{!readOnly && post.contribution_type !== "reply"\}/);
+  assert.match(profile, /showWhatsappCta=\{!readOnly\}/);
 });
 
 const post = {

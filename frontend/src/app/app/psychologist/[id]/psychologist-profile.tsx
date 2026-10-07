@@ -84,6 +84,7 @@ export const PsychologistProfileLogic = () => {
     },
   });
   const profile = profileQuery.data;
+  const isReadOnly = profile?.read_only === true;
   const loadedProfileId = profile?.id;
   const isViewingLoadedOwnProfile = Boolean(
     currentUser?.id && profile?.id && currentUser.id === profile.id,
@@ -143,16 +144,16 @@ export const PsychologistProfileLogic = () => {
   }, [fetchNextReviewsPage, hasNextReviewsPage, isFetchingNextReviewsPage, isFetchingReviews]);
 
   useEffect(() => {
-    if (!loadedProfileId || loadedProfileId !== id) return;
+    if (isReadOnly || !loadedProfileId || loadedProfileId !== id) return;
     if (trackedProfileViewRef.current === loadedProfileId) return;
 
     trackedProfileViewRef.current = loadedProfileId;
     trackProfileView();
-  }, [id, loadedProfileId, trackProfileView]);
+  }, [id, isReadOnly, loadedProfileId, trackProfileView]);
 
   const trackProfileTabOpen = useCallback(
     (tab: Extract<ProfileTab, "avaliacoes" | "publicacoes">) => {
-      if (!loadedProfileId || loadedProfileId !== id) return;
+      if (isReadOnly || !loadedProfileId || loadedProfileId !== id) return;
       if (currentUser?.id === loadedProfileId) return;
 
       const analyticsIdentity = getOrCreateAnalyticsIdentity();
@@ -179,7 +180,7 @@ export const PsychologistProfileLogic = () => {
           // O rastreamento não deve bloquear a navegação entre abas do perfil.
         });
     },
-    [currentUser?.id, id, importantActionTracking, loadedProfileId],
+    [currentUser?.id, id, importantActionTracking, isReadOnly, loadedProfileId],
   );
 
   useEffect(() => {
@@ -275,7 +276,7 @@ export const PsychologistProfileLogic = () => {
   }, [activeTab, pendingScrollTab, profileReviews.isLoading, publications.isLoading]);
 
   const toggleFavorite = () => {
-    if (!profile) return;
+    if (!profile || isReadOnly) return;
     if (currentUser?.id && currentUser.id === profile.id) return;
 
     if (!conversion.isAuthenticated) {
@@ -299,7 +300,7 @@ export const PsychologistProfileLogic = () => {
   };
 
   useEffect(() => {
-    if (!conversion.isAuthenticated || !profile) return;
+    if (!conversion.isAuthenticated || !profile || isReadOnly) return;
 
     const intent = conversion.consumePendingIntent(
       (candidate) =>
@@ -312,7 +313,7 @@ export const PsychologistProfileLogic = () => {
     if (currentUser?.id && currentUser.id === profile.id) return;
 
     favoritePsychologist.mutate(profile.id);
-  }, [conversion, currentUser?.id, favoritePsychologist, profile]);
+  }, [conversion, currentUser?.id, favoritePsychologist, isReadOnly, profile]);
 
   const shareProfile = async () => {
     if (typeof window === "undefined") return;
@@ -389,12 +390,14 @@ export const PsychologistProfileLogic = () => {
       ? resolveErrorMessage(profileQuery.error, "Não foi possível carregar o perfil profissional.")
       : null;
   const isViewingOwnProfile = isViewingLoadedOwnProfile;
-  const canEditProfile = currentUser?.role === "psicologo" && isViewingOwnProfile;
-  const canInteractWithPosts = Boolean(currentUser?.id);
-  const canReviewProfile = !isViewingOwnProfile;
-  const favoriteDisabledReason = isViewingOwnProfile
-    ? "Você não pode favoritar o próprio perfil"
-    : null;
+  const canEditProfile = !isReadOnly && currentUser?.role === "psicologo" && isViewingOwnProfile;
+  const canInteractWithPosts = !isReadOnly && Boolean(currentUser?.id);
+  const canReviewProfile = !isReadOnly && !isViewingOwnProfile;
+  const favoriteDisabledReason = isReadOnly
+    ? "Perfil público somente leitura"
+    : isViewingOwnProfile
+      ? "Você não pode favoritar o próprio perfil"
+      : null;
   const canFavoriteProfile = !favoriteDisabledReason;
 
   const emptySummary = useMemo<DirectoryReviewSummary>(
@@ -453,6 +456,11 @@ export const PsychologistProfileLogic = () => {
             !profileErrorMessage &&
             profile ? (
               <>
+                {isReadOnly ? (
+                  <p className="px-4 py-2 text-center text-xs text-muted" role="status">
+                    Prévia pública · somente leitura
+                  </p>
+                ) : null}
                 <ProfileHeader
                   key={profile.id}
                   canFavorite={canFavoriteProfile}
@@ -492,6 +500,7 @@ export const PsychologistProfileLogic = () => {
                   {activeTab === "geral" ? <AboutTab profile={profile} /> : null}
                   {activeTab === "publicacoes" ? (
                     <PostsTab
+                      readOnly={isReadOnly}
                       canInteract={canInteractWithPosts}
                       error={publications.error}
                       hasNextPage={Boolean(publications.hasNextPage)}
@@ -526,7 +535,9 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                 </div>
 
-                <WhatsAppCta profile={profile} trafficOrigin={urlParams.get("traffic_origin")} />
+                {!isReadOnly ? (
+                  <WhatsAppCta profile={profile} trafficOrigin={urlParams.get("traffic_origin")} />
+                ) : null}
               </>
             ) : null}
           </div>

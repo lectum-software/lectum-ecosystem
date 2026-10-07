@@ -251,7 +251,11 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
               aria-busy={desktopActionIsFavoritePending}
               aria-pressed={desktopActionIsFavorited}
               className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted transition hover:scale-105 hover:bg-surface-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100 disabled:hover:bg-surface disabled:active:scale-100"
-              disabled={isDesktopActionRailHidden || desktopActionIsOwnProfile}
+              disabled={
+                isDesktopActionRailHidden ||
+                desktopActionIsOwnProfile ||
+                desktopActionPsychologist.read_only
+              }
               onClick={(event) => {
                 event.stopPropagation();
                 toggleFavorite(desktopActionPsychologist);

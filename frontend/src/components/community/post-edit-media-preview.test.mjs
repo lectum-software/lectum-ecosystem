@@ -4,6 +4,7 @@ import { registerHooks } from "node:module";
 import test from "node:test";
 import { Children, createElement, isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { useForm } from "react-hook-form";
 
 // Native Node ESM needs Next's .js entry and CJS default interop, unlike the bundler.
 // This bridge exports the installed next/image itself; it does not replace Image.
@@ -18,6 +19,12 @@ registerHooks({
 });
 
 const { PostEditMediaPreview } = await import("./post-edit-media-preview.tsx");
+const { PostEditModalView } = await import("./post-edit-modal-view.tsx");
+const { PostEditMediaButton } = await import("./post-edit-modal-controls.tsx");
+const { buildFields, postEditSchema, resolveEditableMediaPreviewUrls } = await import(
+  "./post-edit-modal-support.ts"
+);
+const { ContenteditableController } = await import("../controllers/contenteditable/index.tsx");
 
 // Real component, React markup and handlers; no modules or APIs are replaced.
 // SSR verifies native button semantics, not actual browser Tab/Enter/Space or uploads.
@@ -136,4 +143,121 @@ test("sem permissão de gerenciar não renderiza ação; sem itens mantém previ
   const empty = previewProps({ items: [] });
   assert.equal(PostEditMediaPreview(empty), null);
   assert.equal(renderToStaticMarkup(createElement(PostEditMediaPreview, empty)), "");
+});
+
+test("video persistido usa miniatura salva sem carregar o arquivo de video no SSR", () => {
+  const item = media("stored", { type: "video", src: "/video.mp4", thumbnailUrl: "/poster.jpg" });
+  const urls = resolveEditableMediaPreviewUrls(item);
+  assert.ok(urls.imagePreviewSrc.endsWith("/poster.jpg"));
+  const html = renderToStaticMarkup(
+    createElement(PostEditMediaPreview, previewProps({ items: [item] })),
+  );
+  assert.match(html, /alt="Miniatura do vídeo anexado"/);
+  assert.match(html, /src="[^"]*\/poster.jpg"/);
+  assert.doesNotMatch(html, /<video/);
+});
+
+test("video novo sem poster mantém preview mudo sem autoplay e sem controles de reprodução", () => {
+  const html = renderToStaticMarkup(
+    createElement(
+      PostEditMediaPreview,
+      previewProps({ items: [media("selected", { type: "video", src: "blob:local-video" })] }),
+    ),
+  );
+  assert.match(html, /<video/);
+  assert.match(html, /muted=""/);
+  assert.match(html, /playsInline=""/i);
+  assert.match(html, /src="blob:local-video"/);
+  assert.doesNotMatch(html, /autoPlay|controls=/i);
+});
+
+const editFields = buildFields({
+  communityName: "Comunidade",
+  communitySlug: "comunidade",
+  isPsychologist: true,
+});
+function EditFields() {
+  const { control } = useForm({
+    defaultValues: { title: "Titulo existente", content: "Conteudo existente para editar." },
+  });
+  return editFields
+    .filter((field) => ["title", "content"].includes(field.name))
+    .map((field) =>
+      createElement(ContenteditableController, { ...field, control, key: field.name }),
+    );
+}
+
+test("edicao usa controllers da criacao com rotulos acessiveis e visualmente ocultos", () => {
+  for (const field of editFields.filter((field) => ["title", "content"].includes(field.name))) {
+    assert.equal(field.field, "contenteditable");
+    assert.match(field.className, /\[&>span:first-child\]:sr-only/);
+  }
+  const html = renderToStaticMarkup(createElement(EditFields));
+  assert.equal((html.match(/role="textbox"/g) ?? []).length, 2);
+  assert.match(html, /aria-label="Título do post"/);
+  assert.match(html, /aria-label="Conteúdo do post"/);
+  assert.doesNotMatch(html, /<textarea|<label/);
+  assert.equal(editFields.find((field) => field.name === "community_slug").disabled, true);
+  assert.equal(
+    postEditSchema.safeParse({ community_slug: "comunidade", title: "ok", content: "curto" })
+      .success,
+    false,
+  );
+});
+
+const viewProps = (overrides = {}) => ({
+  communityFields: null,
+  contentFields: null,
+  footerControls: null,
+  hasMedia: false,
+  isGuidanceOpen: false,
+  isSubmitting: false,
+  mediaPreview: null,
+  onClose() {},
+  onFocusCapture() {},
+  onPointerDown() {},
+  onSubmit() {},
+  onToggleGuidance() {},
+  titleFields: null,
+  uploadStatus: null,
+  ...overrides,
+});
+
+test("edicao usa dialog nativo, scroll interno e footer no fluxo com Salvar", () => {
+  const html = renderToStaticMarkup(createElement(PostEditModalView, viewProps()));
+  assert.match(html, /^<dialog/);
+  assert.match(html, /aria-labelledby="edit-post-title-heading"/);
+  assert.match(html, /Editar Post/);
+  assert.match(html, /data-edit-post-editor-scroll="content"/);
+  assert.match(html, /<footer class="relative shrink-0/);
+  assert.match(html, /type="submit">Salvar/);
+  assert.doesNotMatch(html, /z-\[70\]|Adicionar comentário/);
+  const overlay = renderToStaticMarkup(
+    createElement(
+      PostEditModalView,
+      viewProps({ hasMedia: true, overlay: createElement("aside", null, "Aviso") }),
+    ),
+  );
+  assert.match(overlay, /<section[^>]*inert=""/);
+  assert.match(overlay, /<aside>Aviso<\/aside><\/dialog>/);
+});
+
+test("botao de midia da edicao conserva camera circular, permissoes e input multiplo", () => {
+  const props = {
+    canManageMedia: true,
+    fileInputRef: { current: null },
+    isSubmitting: false,
+    isUploading: false,
+    onFocusEditor() {},
+    onMediaChange() {},
+  };
+  const html = renderToStaticMarkup(createElement(PostEditMediaButton, props));
+  assert.match(html, /h-11 w-11/);
+  assert.match(html, /border-primary bg-primary text-primary-foreground/);
+  assert.match(html, /lucide-camera/);
+  assert.match(html, /multiple=""/);
+  const disabled = renderToStaticMarkup(
+    createElement(PostEditMediaButton, { ...props, isSubmitting: true }),
+  );
+  assert.match(disabled, /<button[^>]*disabled=""/);
 });

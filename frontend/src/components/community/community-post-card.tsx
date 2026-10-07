@@ -3,13 +3,7 @@
 import { Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  type KeyboardEvent as ReactKeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSavePost, useSaveReply, useVotePost } from "@/api/callers/posts";
 import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
@@ -49,7 +43,7 @@ import { AuthorAvatar } from "./community-post-card-author";
 import { ProfessionalReplyPreview } from "./community-post-card-reply-preview";
 import {
   type CommunityPostCardProps,
-  isPostCardInteractiveTarget,
+  createPostCardNavigation,
   type PostWithOptionalSortMetrics,
   type ProfileContributionPost,
   postDetailHref,
@@ -368,35 +362,9 @@ export const CommunityPostCard = ({
     target: highlightedReplySocialTarget,
   });
   const isFeedPresentation = presentation === "feed";
-  const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
-    if (
-      !openPostOnCardClick ||
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey ||
-      isPostCardInteractiveTarget(event.target)
-    ) {
-      return;
-    }
-
-    router.push(postHref);
-  };
-  const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (
-      !openPostOnCardClick ||
-      event.defaultPrevented ||
-      isPostCardInteractiveTarget(event.target)
-    ) {
-      return;
-    }
-    if (event.key !== "Enter" && event.key !== " ") return;
-
-    event.preventDefault();
-    router.push(postHref);
-  };
+  const { handleCardClick, handleCardKeyDown } = createPostCardNavigation(openPostOnCardClick, () =>
+    router.push(postHref),
+  );
 
   return (
     <article

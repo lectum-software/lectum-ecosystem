@@ -15,6 +15,7 @@ import { buildCommunityExploreCard } from "@/app/app/community/explore-content";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { HorizontalScrollControls } from "@/components/ui/horizontal-scroll-controls";
 import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -394,20 +395,22 @@ export const FollowingCommunitiesLogic = () => {
                 ) : null}
 
                 {recommendedCommunities.length > 0 ? (
-                  <div className="-mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
-                    <div className="flex min-w-max gap-4">
-                      {recommendedCommunities.map((community, index) => (
-                        <RecommendedCard
-                          community={community}
-                          disabled={followMutation.isPending}
-                          imageIndex={index}
-                          isPending={pendingSlug === community.slug && followMutation.isPending}
-                          key={community.id}
-                          onFollow={handleFollow}
-                        />
-                      ))}
+                  <HorizontalScrollControls label="Comunidades recomendadas">
+                    <div className="-mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
+                      <div className="flex min-w-max gap-4">
+                        {recommendedCommunities.map((community, index) => (
+                          <RecommendedCard
+                            community={community}
+                            disabled={followMutation.isPending}
+                            imageIndex={index}
+                            isPending={pendingSlug === community.slug && followMutation.isPending}
+                            key={community.id}
+                            onFollow={handleFollow}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  </HorizontalScrollControls>
                 ) : null}
               </section>
             </>

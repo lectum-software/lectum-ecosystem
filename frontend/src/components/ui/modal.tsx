@@ -3,11 +3,15 @@
 import { type ReactNode, type RefObject, useLayoutEffect, useRef } from "react";
 import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { useModalScrollLock } from "@/hooks/use-modal-scroll-lock";
+import { cn } from "@/lib/utils";
 
 type ModalSession = { href: string; returnTarget: HTMLElement | null };
 
 export const Modal = ({
   children,
+  className,
+  dismissOnBackdrop = true,
+  dismissible = true,
   initialFocusRef,
   labelledBy,
   onClose,
@@ -15,6 +19,9 @@ export const Modal = ({
   returnFocusRef,
 }: {
   children: ReactNode;
+  className?: string;
+  dismissOnBackdrop?: boolean;
+  dismissible?: boolean;
   initialFocusRef: RefObject<HTMLElement | null>;
   labelledBy: string;
   onClose: () => void;
@@ -64,7 +71,7 @@ export const Modal = ({
   }, [initialFocusRef, open, returnFocusRef]);
 
   const requestClose = () => {
-    if (!open || closeRequestedRef.current) return;
+    if (!open || !dismissible || closeRequestedRef.current) return;
     closeRequestedRef.current = true;
     onClose();
   };
@@ -72,7 +79,10 @@ export const Modal = ({
   return (
     <dialog
       aria-labelledby={labelledBy}
-      className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto overscroll-contain border-0 bg-transparent px-4 py-6 text-foreground backdrop:bg-foreground/55 backdrop:backdrop-blur-md open:grid open:place-items-center"
+      className={cn(
+        "fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto overscroll-contain border-0 bg-transparent px-4 py-6 text-foreground backdrop:bg-foreground/55 backdrop:backdrop-blur-md open:grid open:place-items-center",
+        className,
+      )}
       onCancel={(event) => {
         if (event.target !== event.currentTarget || event.defaultPrevented) return;
         // Native select consumes its own Escape; no global keydown competes with it.
@@ -84,7 +94,7 @@ export const Modal = ({
         if (!event.currentTarget.open) requestClose();
       }}
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) requestClose();
+        if (dismissOnBackdrop && event.target === event.currentTarget) requestClose();
       }}
       ref={dialogRef}
     >
