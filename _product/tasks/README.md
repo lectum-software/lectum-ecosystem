@@ -526,6 +526,7 @@ ou cortesia manual.
 | 229 | [TASK-229 - Header da comunidade somente ao subir](TASK-229-community-header-scroll-direction.md) | Done | 228 |
 | 230 | [TASK-230 - Setas nos carrosseis desktop](TASK-230-desktop-carousel-arrows.md) | In Progress | 229 |
 | 231 | [TASK-231 - Edicao de post alinhada a criacao](TASK-231-post-edit-parity.md) | In Progress | 230 |
+| 232 | [TASK-232 - Publicacao do lote local](TASK-232-local-release.md) | In Progress | 231 |
 
 ## Ordem operacional recomendada sem bloqueios
 

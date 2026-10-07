@@ -615,3 +615,4 @@ Formato recomendado:
 - [ADR-0569 — Header da comunidade por direcao de rolagem](0569-community-header-scroll-direction.md)
 - [ADR-0570 — Navegacao desktop nos carrosseis horizontais](0570-desktop-carousel-arrows.md)
 - [ADR-0571 — Paridade entre criacao e edicao de posts](0571-post-edit-parity.md)
+- [ADR-0572 — Promocao local sem builds intermediarios](0572-local-release.md)

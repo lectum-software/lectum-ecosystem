@@ -28,7 +28,7 @@ ADR-0570. Nenhum pacote, banco ou contrato novo.
 - [x] Scroll por toque e controles de seguir/remover midia preservados.
 - [x] Inicio da lista Publica em acessivel mesmo quando nao cabe centralizada.
 - [x] Check frontend e smoke local desktop/mobile aprovados.
-- [ ] Build de producao validado apos liberar espaco.
+- [x] Build de producao validado apos liberar espaco (lote 0.1.604, TASK-232).
 
 ## Validacao
 
