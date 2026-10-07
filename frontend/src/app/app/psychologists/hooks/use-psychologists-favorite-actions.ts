@@ -27,7 +27,7 @@ export const usePsychologistsFavoriteActions = ({
 
   const toggleFavorite = useCallback(
     (psychologist: DirectoryPsychologist) => {
-      if (isMobileSearchFocusMode) return;
+      if (isMobileSearchFocusMode || psychologist.read_only) return;
 
       const psychologistId = psychologist.id;
 

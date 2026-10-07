@@ -28,10 +28,12 @@ import {
 
 export const ProfileCommunityPostCard = ({
   canInteract,
+  readOnly = false,
   onShare,
   post,
 }: {
   canInteract: boolean;
+  readOnly?: boolean;
   onShare: (post: PostListPost) => void;
   post: DirectoryPsychologistProfilePost;
 }) => (
@@ -39,7 +41,8 @@ export const ProfileCommunityPostCard = ({
     desktopPlainLinks
     interactiveActions={canInteract}
     onShare={onShare}
-    openPostOnCardClick={post.contribution_type !== "reply"}
+    openPostOnCardClick={!readOnly && post.contribution_type !== "reply"}
+    showWhatsappCta={!readOnly}
     post={post}
     profilePublicationMode
   />
@@ -223,6 +226,7 @@ export const PostsPreviewSection = ({
 
 export const PostsTab = ({
   canInteract,
+  readOnly = false,
   error,
   hasNextPage,
   isError,
@@ -235,6 +239,7 @@ export const PostsTab = ({
   summary,
 }: {
   canInteract: boolean;
+  readOnly?: boolean;
   error: unknown;
   hasNextPage: boolean;
   isError: boolean;
@@ -275,6 +280,7 @@ export const PostsTab = ({
           {posts.map((post) => (
             <ProfileCommunityPostCard
               canInteract={canInteract}
+              readOnly={readOnly}
               key={`${post.contribution_type}-${post.id}-${post.highlighted_professional_reply?.id ?? "post"}`}
               onShare={onShare}
               post={post}

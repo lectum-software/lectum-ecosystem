@@ -37,6 +37,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
   const ready = !conversion.isAuthenticated || (Boolean(viewerId) && favorites.isSuccess);
 
   const favorite = useCallback(() => {
+    if (author.read_only) return;
     if (ownProfile || pending || !ready) return;
     if (!conversion.isAuthenticated) {
       conversion.requestConversion("trigger_favorito", {
@@ -47,6 +48,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
     const mutation = favorited ? unfavoritePsychologist : favoritePsychologist;
     mutation.mutate(id);
   }, [
+    author.read_only,
     conversion,
     favoritePsychologist,
     favorited,
@@ -75,7 +77,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
       aria-label={favorited ? `Remover ${name} dos favoritos` : `Favoritar ${name}`}
       aria-pressed={favorited}
       className="favorite-toggle pointer-events-auto border-0"
-      disabled={pending}
+      disabled={pending || author.read_only}
       size="compact"
       title={favorited ? `Remover ${name} dos favoritos` : undefined}
       onClick={(event) => {

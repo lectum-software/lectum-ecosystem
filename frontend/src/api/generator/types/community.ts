@@ -67,6 +67,7 @@ export type CommunityRule = {
 };
 
 export type CommunityAuthor = {
+  read_only?: boolean;
   id: string;
   name: string;
   avatar: string | null;

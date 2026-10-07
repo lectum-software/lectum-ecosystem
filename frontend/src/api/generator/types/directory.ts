@@ -24,6 +24,7 @@ export type DirectoryAcademicFormation = {
 };
 
 export type DirectoryPsychologist = {
+  read_only?: boolean;
   id: string;
   name: string;
   whatsapp_name: string | null;

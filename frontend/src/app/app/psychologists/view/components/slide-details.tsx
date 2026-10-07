@@ -281,7 +281,7 @@ export const PsychologistSlideDetails = ({
                 "relative z-50 grid place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent disabled:active:scale-100",
                 slideIsFavorited ? "text-danger" : "text-primary-foreground",
               )}
-              disabled={slideFavoriteDisabled}
+              disabled={slideFavoriteDisabled || psychologist.read_only}
               onClick={(event) => {
                 event.stopPropagation();
                 toggleFavorite(psychologist);

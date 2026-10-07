@@ -35,14 +35,14 @@ const { ProgressiveConversionContext, noopContext } = await import(
   "../conversion/progressive-conversion-state.ts"
 );
 
-const renderIdentity = ({ viewerId, ids, community = true }) => {
+const renderIdentity = ({ viewerId, ids, community = true, readOnly = false }) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   if (ids) client.setQueryData(keys.patient.favoriteIds(viewerId), ids);
   const store = configureStore({
     reducer: rootReducer,
     preloadedState: { user: viewerId ? { id: viewerId } : null },
   });
-  const author = { id: "psi", name: "Ana Lima", role: "psicologo" };
+  const author = { id: "psi", name: "Ana Lima", role: "psicologo", read_only: readOnly };
   const html = renderToStaticMarkup(
     createElement(
       Provider,
@@ -86,6 +86,14 @@ test("other profiles retain the label or heart; unresolved favorites have no but
   assert.match(renderIdentity({ viewerId: "viewer", ids: [] }), /aria-pressed="false"/);
   assert.match(renderIdentity({ viewerId: "viewer", ids: ["psi"] }), /aria-pressed="true"/);
   assert.doesNotMatch(renderIdentity({ viewerId: "viewer" }), /favorite-toggle/);
+});
+
+test("public preview cannot favorite, while normal profiles keep the action", () => {
+  for (const viewerId of [undefined, "viewer"]) {
+    const html = renderIdentity({ viewerId, ids: [], readOnly: true });
+    assert.match(html, /<button[^>]*disabled=""/);
+    assert.doesNotMatch(renderIdentity({ viewerId, ids: [] }), /<button[^>]*disabled=""/);
+  }
 });
 
 test("empty-slot CSS only collapses slots next to a community and restores its width", () => {
