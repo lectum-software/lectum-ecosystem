@@ -24,7 +24,7 @@ export const CommunityStickyBar = ({
   const palette = useCommunityVisualPalette(community);
 
   return (
-    <div className="pointer-events-none sticky top-0 z-30 -mx-5 -mb-4 h-0 min-w-0 self-start">
+    <div className="pointer-events-none sticky top-0 z-30 col-start-1 row-start-1 -mx-5 h-0 min-w-0 self-start">
       <div
         aria-hidden={!visible}
         inert={!visible}

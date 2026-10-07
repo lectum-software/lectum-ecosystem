@@ -205,7 +205,7 @@ export const CommunityHeader = ({
 
   return (
     <header
-      className="-mx-5 overflow-hidden rounded-b-[28px] bg-surface pb-5 shadow-lectum-soft dark:bg-surface"
+      className="col-start-1 row-start-1 -mx-5 overflow-hidden rounded-b-[28px] bg-surface pb-5 shadow-lectum-soft dark:bg-surface"
       style={communityPaletteStyle}
     >
       <div

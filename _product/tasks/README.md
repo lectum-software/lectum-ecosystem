@@ -528,6 +528,7 @@ ou cortesia manual.
 | 231 | [TASK-231 - Edicao de post alinhada a criacao](TASK-231-post-edit-parity.md) | In Progress | 230 |
 | 232 | [TASK-232 - Publicacao do lote local](TASK-232-local-release.md) | In Progress | 231 |
 | 233 | [TASK-233 - Edicao sem navegar pelo card](TASK-233-post-edit-card-navigation.md) | Done | 232 |
+| 234 | [TASK-234 - Comunidade sem faixa acima da capa](TASK-234-community-header-top.md) | Done | 233 |
 
 ## Ordem operacional recomendada sem bloqueios
 
