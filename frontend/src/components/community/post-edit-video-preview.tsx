@@ -9,7 +9,10 @@ import { isVideoAssetReference } from "@/utils/video-stream";
 type VideoPreviewProps = {
   src: string;
   poster?: string | null;
-  onOrientation: (orientation: "landscape" | "portrait") => void;
+  onOrientation: (
+    orientation: "landscape" | "portrait",
+    dimensions?: { width: number; height: number },
+  ) => void;
 };
 
 function VideoFrame({ src, adaptive, onOrientation }: VideoPreviewProps & { adaptive: boolean }) {
@@ -39,7 +42,10 @@ function VideoFrame({ src, adaptive, onOrientation }: VideoPreviewProps & { adap
       onError={() => setFailed(true)}
       onLoadedMetadata={(event) => {
         const video = event.currentTarget;
-        onOrientation(video.videoWidth / video.videoHeight >= 1.12 ? "landscape" : "portrait");
+        onOrientation(video.videoWidth / video.videoHeight >= 1.12 ? "landscape" : "portrait", {
+          width: video.videoWidth,
+          height: video.videoHeight,
+        });
         // iOS does not reliably paint a frame with metadata alone.
         if (Number.isFinite(video.duration) && video.duration > 0)
           video.currentTime = Math.min(0.1, video.duration / 2);
@@ -66,7 +72,10 @@ function VideoThumbnail({
       onError={() => setFailedPoster(poster)}
       onLoad={(event) => {
         const { naturalWidth, naturalHeight } = event.currentTarget;
-        onOrientation(naturalWidth / naturalHeight >= 1.12 ? "landscape" : "portrait");
+        onOrientation(naturalWidth / naturalHeight >= 1.12 ? "landscape" : "portrait", {
+          width: naturalWidth,
+          height: naturalHeight,
+        });
       }}
     />
   ) : (

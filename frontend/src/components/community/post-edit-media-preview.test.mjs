@@ -2,9 +2,11 @@ import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { registerHooks } from "node:module";
 import test from "node:test";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Children, createElement, isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useForm } from "react-hook-form";
+import { Provider } from "react-redux";
 
 // Native Node ESM needs Next's .js entry and CJS default interop, unlike the bundler.
 // This bridge exports the installed next/image itself; it does not replace Image.
@@ -25,6 +27,101 @@ const { buildFields, postEditSchema, resolveEditableMediaPreviewUrls } = await i
   "./post-edit-modal-support.ts"
 );
 const { ContenteditableController } = await import("../controllers/contenteditable/index.tsx");
+const { ReplyMediaAttachmentControl } = await import("./reply-media-attachment-control.tsx");
+const { store } = await import("../../store/index.ts");
+const { default: keys } = await import("../../api/cache/keys.ts");
+
+const renderReplyMedia = (overrides = {}, playback = null) => {
+  const client = new QueryClient();
+  if (playback) client.setQueryData(keys.videoAssets.playback("reply-video", null), playback);
+  try {
+    return renderToStaticMarkup(
+      createElement(
+        Provider,
+        { store },
+        createElement(
+          QueryClientProvider,
+          { client },
+          createElement(ReplyMediaAttachmentControl, {
+            currentMedia: {
+              mediaType: "video",
+              mediaUrl: "/api/public/video-assets/reply-video/playback",
+              thumbnailUrl: "/old-social-frame.jpg",
+            },
+            fileInputRef: { current: null },
+            mediaPermission: { canAttach: true, reason: "" },
+            onMediaChange: () => {},
+            onRemoveSelected: () => {},
+            selectedMedia: null,
+            variant: "editor",
+            ...overrides,
+          }),
+        ),
+      ),
+    );
+  } finally {
+    client.clear();
+  }
+};
+
+test("comentario usa poster fresco do playback, nunca o endpoint JSON como video", () => {
+  const html = renderReplyMedia(
+    {},
+    {
+      expires_at: new Date(Date.now() + 3600000).toISOString(),
+      thumbnail_url: "https://media.example.com/fresh.jpg",
+      hls_url: "https://media.example.com/video.m3u8",
+    },
+  );
+  assert.match(html, /fresh\.jpg/);
+  assert.doesNotMatch(html, /<video|old-social-frame|src="[^"]*\/playback/);
+});
+
+test("comentario sem playback valido mostra fallback, nao poster social ou vencido", () => {
+  for (const playback of [
+    null,
+    { expires_at: "2000-01-01T00:00:00Z", thumbnail_url: "https://media.example.com/expired.jpg" },
+  ]) {
+    const html = renderReplyMedia({}, playback);
+    assert.match(html, /Miniatura de vídeo indisponível/);
+    assert.doesNotMatch(html, /<video|old-social-frame|expired\.jpg/);
+  }
+});
+
+test("comentario legado usa video mudo inline sem autoplay nem poster social antigo", () => {
+  const html = renderReplyMedia({
+    currentMedia: {
+      mediaType: "video",
+      mediaUrl: "/public/files/original.mp4",
+      thumbnailUrl: "/old-social-frame.jpg",
+    },
+  });
+  assert.match(
+    html,
+    /<video[^>]*muted=""[^>]*playsInline=""[^>]*src="[^"]*\/public\/files\/original.mp4"/,
+  );
+  assert.doesNotMatch(html, /autoPlay|old-social-frame/);
+});
+
+test("comentario preserva miniatura selecionada, imagem existente e estado de remocao", () => {
+  const selected = renderReplyMedia({
+    selectedMedia: {
+      type: "video",
+      previewUrl: "blob:local-video",
+      thumbnailUrl: "data:image/jpeg;base64,YQ==",
+      orientation: "portrait",
+    },
+  });
+  assert.match(selected, /data:image\/jpeg;base64,YQ==/);
+  assert.doesNotMatch(selected, /<video/);
+  const image = renderReplyMedia({
+    currentMedia: { mediaType: "image", mediaUrl: "/public/files/image.jpg" },
+  });
+  assert.match(image, /Imagem atual anexada/);
+  const removed = renderReplyMedia({ removeCurrent: true });
+  assert.match(removed, /Desfazer/);
+  assert.doesNotMatch(removed, /<video|<img/);
+});
 
 // Real component, React markup and handlers; no modules or APIs are replaced.
 // SSR verifies native button semantics, not actual browser Tab/Enter/Space or uploads.

@@ -43,7 +43,9 @@ const props = {
 test("hidden community bar is inert and does not add height or a second grid gap", () => {
   const html = renderToStaticMarkup(createElement(CommunityScrollHeader, props));
   assert.match(html, /aria-hidden="true" inert="" data-community-sticky-bar/);
-  assert.match(html, /sticky top-0[^"]*-mb-4 h-0/);
+  assert.match(html, /sticky top-0[^"]*col-start-1 row-start-1[^"]*h-0/);
+  assert.match(html, /<header class="col-start-1 row-start-1 /);
+  assert.doesNotMatch(html, /-mb-4/);
   assert.match(html, /<h1[^>]*>Relacionamentos e desenvolvimento pessoal<\/h1>/);
 });
 

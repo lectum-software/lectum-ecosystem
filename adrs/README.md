@@ -617,3 +617,5 @@ Formato recomendado:
 - [ADR-0571 — Paridade entre criacao e edicao de posts](0571-post-edit-parity.md)
 - [ADR-0572 — Promocao local sem builds intermediarios](0572-local-release.md)
 - [ADR-0573 — Cards respeitam dialogs nativos](0573-post-edit-card-navigation.md)
+- [ADR-0574 — Capa e sticky da comunidade na mesma celula](0574-community-header-grid-overlap.md)
+- [ADR-0575 — Previa de video na edicao de comentarios](0575-reply-video-preview.md)
