@@ -609,3 +609,4 @@ Formato recomendado:
 - [ADR-0563 — Slot vazio de favorito antes da comunidade](0563-slot-vazio-favorito-comunidade.md)
 - [ADR-0564 — Recuperacao geometrica do rodape no PWA](0564-recuperacao-rodape-pwa.md)
 - [ADR-0565 — Validacao local e publicacao direta por PR](0565-validacao-local-producao.md)
+- [ADR-0566 — Troca unica do callback Google por montagem](0566-google-exchange-local.md)

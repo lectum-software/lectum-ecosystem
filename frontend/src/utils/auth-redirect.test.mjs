@@ -43,6 +43,16 @@ const { buildAuthRouteWithRedirect, getUserHomePath, resolveAuthRedirect, resolv
 const { getPsychologistPaidOnboardingRequirementPath, getPsychologistRegistrationRequirementPath } =
   await import("./psychologist-onboarding.ts");
 
+test("Google callback starts its single-use exchange only once per mount", () => {
+  const source = readFileSync(new URL("../app/auth/redirect/logic.tsx", import.meta.url), "utf8");
+  assert.match(source, /const exchangeStarted = useRef\(false\)/);
+  assert.match(
+    source,
+    /useEffect\(\(\) => \{\s*\/\/[^\n]*\n\s*if \(exchangeStarted\.current\) return;\s*exchangeStarted\.current = true;\s*mutate\(\);\s*\}, \[mutate\]\)/,
+  );
+  assert.doesNotMatch(source, /exchangeStarted\.current = false/);
+});
+
 test("avaliacao solicita autenticacao contextual e preserva o profissional", () => {
   const target = "/app/avaliacoes/nova?psychologist_id=professional-123";
   for (const entry of ["/auth/login", "/auth/profile-selection"]) {
