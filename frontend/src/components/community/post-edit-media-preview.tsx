@@ -7,6 +7,7 @@ import {
   resolveEditableMediaPreviewUrls,
   type SelectedPostMedia,
 } from "./post-edit-modal-support";
+import { PostEditVideoPreview } from "./post-edit-video-preview";
 
 type PostEditMediaPreviewProps = {
   canManageMedia: boolean;
@@ -86,21 +87,10 @@ export function PostEditMediaPreview({
                   unoptimized
                 />
               ) : (
-                <video
-                  aria-label="Miniatura do vídeo anexado"
-                  className="h-full w-full object-cover"
-                  muted
-                  onLoadedMetadata={(event) => {
-                    const { videoHeight, videoWidth } = event.currentTarget;
-                    updateOrientation(
-                      videoWidth && videoHeight && videoWidth / videoHeight >= 1.12
-                        ? "landscape"
-                        : "portrait",
-                    );
-                  }}
-                  playsInline
-                  preload="metadata"
+                <PostEditVideoPreview
                   src={mediaSrc}
+                  poster={imagePreviewSrc}
+                  onOrientation={updateOrientation}
                 />
               )}
 

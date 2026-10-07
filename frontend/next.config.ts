@@ -136,6 +136,12 @@ process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",")
   });
 
 const nextConfig: NextConfig = {
+  webpack(config, { dev }) {
+    if (dev && process.env.LECTUM_LOW_DISK_MODE === "1") {
+      config.cache = false;
+    }
+    return config;
+  },
   env: {
     LECTUM_APP_VERSION: packageMetadata.version,
   },

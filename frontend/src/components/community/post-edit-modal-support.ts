@@ -74,16 +74,14 @@ export const resolveEditableMediaPreviewUrls = (mediaItem: EditablePostMediaPrev
     mediaItem.source === "stored"
       ? (resolvePublicMediaUrl(mediaItem.src) ?? mediaItem.src)
       : mediaItem.src;
-  // Videos editados usam a propria midia no preview, nunca thumbnail_url com moldura social.
-  const thumbnailSrc =
-    mediaItem.type === "image" && mediaItem.thumbnailUrl
-      ? mediaItem.source === "stored"
-        ? (resolvePublicMediaUrl(mediaItem.thumbnailUrl) ?? mediaItem.thumbnailUrl)
-        : mediaItem.thumbnailUrl
-      : null;
+  const thumbnailSrc = mediaItem.thumbnailUrl
+    ? mediaItem.source === "stored"
+      ? (resolvePublicMediaUrl(mediaItem.thumbnailUrl) ?? mediaItem.thumbnailUrl)
+      : mediaItem.thumbnailUrl
+    : null;
 
   return {
-    imagePreviewSrc: mediaItem.type === "image" ? (thumbnailSrc ?? mediaSrc) : null,
+    imagePreviewSrc: mediaItem.type === "image" ? (thumbnailSrc ?? mediaSrc) : thumbnailSrc,
     mediaSrc,
     shouldRenderImagePreview: mediaItem.type === "image",
   };
@@ -134,7 +132,7 @@ export const buildFields = ({
     },
     {
       name: "title",
-      field: "textarea",
+      field: "contenteditable",
       id: "edit-post-title",
       label: "Título do post",
       placeholder: isPsychologist
@@ -142,7 +140,6 @@ export const buildFields = ({
         : "Título (Diga o assunto ou faça uma pergunta)",
       required: true,
       max: 100,
-      autoFocus: true,
       rows: 1,
       autoGrow: true,
       className:
@@ -152,7 +149,7 @@ export const buildFields = ({
     },
     {
       name: "content",
-      field: "textarea",
+      field: "contenteditable",
       id: "edit-post-content",
       label: "Conteúdo do post",
       placeholder: isPsychologist ? psychologistContentPlaceholder : contentGuidancePlaceholder,

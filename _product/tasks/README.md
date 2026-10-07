@@ -525,6 +525,7 @@ ou cortesia manual.
 | 228 | [TASK-228 - Perfis publicos no ambiente local](TASK-228-local-public-profile-preview.md) | Done | 227 |
 | 229 | [TASK-229 - Header da comunidade somente ao subir](TASK-229-community-header-scroll-direction.md) | Done | 228 |
 | 230 | [TASK-230 - Setas nos carrosseis desktop](TASK-230-desktop-carousel-arrows.md) | In Progress | 229 |
+| 231 | [TASK-231 - Edicao de post alinhada a criacao](TASK-231-post-edit-parity.md) | In Progress | 230 |
 
 ## Ordem operacional recomendada sem bloqueios
 

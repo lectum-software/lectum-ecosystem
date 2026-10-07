@@ -20,6 +20,7 @@ import {
 import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
 import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
+import { useEditorKeyboardOffset } from "@/hooks/use-editor-keyboard-offset";
 import { useVideoSourcePreparation } from "@/hooks/use-video-source-preparation";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import * as createPostAuthReturn from "@/utils/community-post-auth-return";
@@ -46,7 +47,6 @@ import {
   resolveCreatePostCloseFallbackHref,
   resolveCreatePostDefaultSlug,
   resolveCreatePostError,
-  resolveKeyboardViewportOffset,
   type SelectedPostMedia,
   SHEET_CLOSE_DELAY_MS,
   scheduleCorrectedCreatePostErrorClear,
@@ -70,7 +70,7 @@ export const useCreateCommunityPostController = ({
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [hasSheetOpened, setHasSheetOpened] = useState(false);
-  const [keyboardViewportOffset, setKeyboardViewportOffset] = useState(0);
+  const keyboardViewportOffset = useEditorKeyboardOffset();
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
   const closeTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -349,38 +349,6 @@ export const useCreateCommunityPostController = ({
     onCancel: focusLastEditor,
     onClose: performClose,
   });
-
-  useEffect(() => {
-    const visualViewport = window.visualViewport;
-
-    if (!visualViewport) return;
-
-    let frame: number | null = null;
-    const updateKeyboardOffset = () => {
-      if (frame !== null) {
-        window.cancelAnimationFrame(frame);
-      }
-
-      frame = window.requestAnimationFrame(() => {
-        frame = null;
-        setKeyboardViewportOffset(resolveKeyboardViewportOffset());
-      });
-    };
-
-    updateKeyboardOffset();
-    visualViewport.addEventListener("resize", updateKeyboardOffset);
-    visualViewport.addEventListener("scroll", updateKeyboardOffset);
-    window.addEventListener("orientationchange", updateKeyboardOffset);
-
-    return () => {
-      if (frame !== null) {
-        window.cancelAnimationFrame(frame);
-      }
-      visualViewport.removeEventListener("resize", updateKeyboardOffset);
-      visualViewport.removeEventListener("scroll", updateKeyboardOffset);
-      window.removeEventListener("orientationchange", updateKeyboardOffset);
-    };
-  }, []);
 
   useEffect(() => {
     let openFrame: number | null = null;

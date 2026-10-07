@@ -263,15 +263,6 @@ export const prepareSelectedVideoPreview = ({
 export const createSelectedMediaId = () =>
   globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-export const resolveKeyboardViewportOffset = () => {
-  if (typeof window === "undefined" || !window.visualViewport) return 0;
-
-  const viewport = window.visualViewport;
-  const overlap = window.innerHeight - viewport.height - viewport.offsetTop;
-
-  return Math.max(0, Math.round(overlap));
-};
-
 const shouldDeferInitialEditorFocus = () => {
   if (typeof window === "undefined") return false;
 
