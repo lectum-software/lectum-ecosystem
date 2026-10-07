@@ -530,6 +530,7 @@ ou cortesia manual.
 | 233 | [TASK-233 - Edicao sem navegar pelo card](TASK-233-post-edit-card-navigation.md) | Done | 232 |
 | 234 | [TASK-234 - Comunidade sem faixa acima da capa](TASK-234-community-header-top.md) | Done | 233 |
 | 235 | [TASK-235 - Miniatura de video na edicao de comentario](TASK-235-reply-video-preview.md) | Done | 234 |
+| 236 | [TASK-236 - Controles abaixo da midia no post de psicologo](TASK-236-feed-media-actions.md) | Done | 235 |
 
 ## Ordem operacional recomendada sem bloqueios
 
