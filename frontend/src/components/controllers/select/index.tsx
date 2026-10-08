@@ -9,7 +9,7 @@ import type { ControllerFieldProps } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 
 const dropdownContentClassName =
-  "absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]";
+  "absolute left-0 right-0 top-[calc(100%+6px)] z-[80] isolate overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]";
 
 export function SelectController<FormType extends FieldValues>({
   name,
@@ -165,7 +165,7 @@ export function SelectController<FormType extends FieldValues>({
                 ) : null}
                 <button
                   className={cn(
-                    "flex w-full items-center rounded-xl px-3 py-2 text-left text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50",
+                    "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50",
                     String(field.value) === optionValue && "bg-primary-soft text-primary",
                     selectOptionClassName,
                     String(field.value) === optionValue && selectOptionSelectedClassName,
@@ -182,7 +182,14 @@ export function SelectController<FormType extends FieldValues>({
                   role="option"
                   type="button"
                 >
-                  {option.label}
+                  {option.indicatorColor ? (
+                    <span
+                      aria-hidden="true"
+                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background"
+                      style={{ backgroundColor: option.indicatorColor }}
+                    />
+                  ) : null}
+                  <span className="min-w-0 truncate">{option.label}</span>
                 </button>
               </div>
             );
@@ -259,6 +266,13 @@ export function SelectController<FormType extends FieldValues>({
                   tabIndex={tabIndex}
                   type="button"
                 >
+                  {selectedOption?.indicatorColor ? (
+                    <span
+                      aria-hidden="true"
+                      className="mr-2.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background"
+                      style={{ backgroundColor: selectedOption.indicatorColor }}
+                    />
+                  ) : null}
                   <span
                     className={cn(
                       "block min-w-0 flex-1 truncate",
@@ -284,7 +298,7 @@ export function SelectController<FormType extends FieldValues>({
                     id={listboxId}
                     role="listbox"
                   >
-                    <div className="sticky top-0 z-10 bg-surface p-1">
+                    <div className="sticky top-0 z-20 -mx-1.5 -mt-1.5 mb-1 border-border/70 border-b bg-surface p-2 shadow-[0_8px_18px_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
                       <div className="relative">
                         <Search
                           aria-hidden="true"
@@ -421,6 +435,13 @@ export function SelectController<FormType extends FieldValues>({
                   tabIndex={tabIndex}
                   type="button"
                 >
+                  {selectedOption?.indicatorColor ? (
+                    <span
+                      aria-hidden="true"
+                      className="mr-2.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background"
+                      style={{ backgroundColor: selectedOption.indicatorColor }}
+                    />
+                  ) : null}
                   <span
                     className={cn(
                       "block min-w-0 flex-1 truncate",

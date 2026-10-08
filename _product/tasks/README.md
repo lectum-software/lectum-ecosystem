@@ -1,3 +1,14 @@
+Ajuste visual em 08/10/2026: texto de orientação "Não sabe onde postar? Publique aqui.", correção de empilhamento da busca sticky em dropdowns pesquisáveis e pontos coloridos do seletor de comunidades na criação de post. Builder/Quick Copy não foi acionado por não haver ferramenta direta neste cliente; referência ativa consultada em `_product/tasks/PROTO-INVENTORY.md` (`Criar Nova Postagem - Pacientes/Psicólogo` e filtros de psicólogos). Alteração exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudança de contrato. ADR: `adrs/0541-ajustes-dropdown-criar-post-comunidades.md`.
+
+Critérios de aceite do ajuste de criação de post/dropdowns:
+
+- [x] A criação de post exibe a microcópia "Não sabe onde postar? Publique aqui." próxima ao seletor de comunidade.
+- [x] Dropdowns pesquisáveis mantêm o campo de busca acima da lista, sem opções aparecendo por trás da busca, inclusive nos filtros de psicólogos.
+- [x] O seletor de comunidade exibe pontos com as cores válidas (`visual_primary_color`) recebidas da API, sem inventar cor quando o valor vier ausente/inválido.
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+
+Impacto de deploy: somente frontend; apps podem ser publicados separadamente. Rollback por reversão revisada em `homolog`. Push em `homolog` dispara deploy automático de homologação. Validações locais: `pnpm --dir frontend check` e `pnpm --dir frontend build` aprovados. Browser local ficou limitado porque Computer Use não retornou browsers conectados.
+
 Ajuste visual em 30/09/2026: centralizacao vertical do texto da pergunta na caixinha branca do MP4 social de video-resposta. A captura anexada foi usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente; referencia ativa baseada no anexo e em `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`. Alteracao exclusivamente no renderer FFmpeg do `video/`, sem mudar upload, filas, contrato HTTP, backend, frontend, admin, banco, env, package novo ou mocks. ADR: `adrs/0540-centralizacao-texto-caixinha-social.md`.
 
 Criterios de aceite do ajuste de centralizacao da caixinha social:

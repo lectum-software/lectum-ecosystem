@@ -512,10 +512,14 @@ export const CreateCommunityPostLogic = ({
                 hasSelectedMedia ? "min-h-full flex-none" : "flex-1",
               )}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-col items-start gap-1.5">
                 {formProps.fields
                   .filter((field) => field.name === "community_slug")
                   .map(renderFormField)}
+                <p className="max-w-full text-[0.8rem] font-semibold leading-5 text-muted">
+                  Não sabe onde postar?{" "}
+                  <span className="font-extrabold text-primary">Publique aqui.</span>
+                </p>
               </div>
 
               <div className="flex min-h-0 flex-1 flex-col gap-0">

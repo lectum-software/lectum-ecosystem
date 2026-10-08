@@ -25,6 +25,7 @@ export type FieldOption = {
   key?: string;
   disabled?: boolean;
   group?: string;
+  indicatorColor?: string | null;
 };
 
 export type Field<FormType extends FieldValues> = {
