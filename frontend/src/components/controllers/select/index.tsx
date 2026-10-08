@@ -187,16 +187,6 @@ export function SelectController<FormType extends FieldValues>({
                   role="option"
                   type="button"
                 >
-                  {option.indicatorColor ? (
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background",
-                        option.description && "mt-1.5 self-start",
-                      )}
-                      style={{ backgroundColor: option.indicatorColor }}
-                    />
-                  ) : null}
                   <span className="min-w-0">
                     <span className="block truncate">{option.label}</span>
                     {option.description ? (
@@ -281,13 +271,6 @@ export function SelectController<FormType extends FieldValues>({
                   tabIndex={tabIndex}
                   type="button"
                 >
-                  {selectedOption?.indicatorColor ? (
-                    <span
-                      aria-hidden="true"
-                      className="mr-2.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background"
-                      style={{ backgroundColor: selectedOption.indicatorColor }}
-                    />
-                  ) : null}
                   <span
                     className={cn(
                       "block min-w-0 flex-1 truncate",
@@ -460,13 +443,6 @@ export function SelectController<FormType extends FieldValues>({
                   tabIndex={tabIndex}
                   type="button"
                 >
-                  {selectedOption?.indicatorColor ? (
-                    <span
-                      aria-hidden="true"
-                      className="mr-2.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background"
-                      style={{ backgroundColor: selectedOption.indicatorColor }}
-                    />
-                  ) : null}
                   <span
                     className={cn(
                       "block min-w-0 flex-1 truncate",

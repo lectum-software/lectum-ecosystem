@@ -15,7 +15,7 @@ const { resolveCommunityOptions } = await import(
   "../../app/app/community/[slug]/post/new/modules/create-post-support.ts"
 );
 
-test("comunidade geral fica por último com descrição, preservando catálogo e cores", () => {
+test("comunidade geral fica por último com descrição, preservando o catálogo", () => {
   const communities = [
     { name: "Saúde Mental em Geral", slug: "saude-mental-em-geral", visual_primary_color: null },
     { name: "TDAH: Encontrando seu Ritmo", slug: "tdah", visual_primary_color: null },
@@ -33,10 +33,8 @@ test("comunidade geral fica por último com descrição, preservando catálogo e
   );
   assert.equal(options.at(-1).description, "Não sabe onde postar? Publique aqui.");
   assert.equal(options.at(-1).separatorBefore, true);
-  assert.equal(options.at(-1).indicatorColor, null);
   assert.equal(options[0].separatorBefore, false);
   assert.equal(options[0].description, undefined);
-  assert.equal(options[1].indicatorColor, null);
   assert.deepEqual(communities, original);
   assert.deepEqual(resolveCommunityOptions([]), []);
   assert.equal(resolveCommunityOptions(communities.slice(1)).length, 2);
@@ -46,18 +44,20 @@ test("comunidade geral fica por último com descrição, preservando catálogo e
   );
 });
 
-test("comunidade geral usa a mesma regra de cor das demais, sem fallback", () => {
-  const css = readFileSync(new URL("app/globals.css", sourceRoot), "utf8");
-  const color = css.match(/--lectum-primary:\s*([^;]+);/)?.[1];
-  assert.ok(color);
+test("seletor não exibe indicadores coloridos, mesmo quando a API informa uma cor", () => {
+  const select = readFileSync(
+    new URL("components/controllers/select/index.tsx", sourceRoot),
+    "utf8",
+  );
+  assert.doesNotMatch(select, /indicatorColor|backgroundColor/);
   for (const slug of ["saude-mental-em-geral", "tdah"]) {
-    const community = { name: slug, slug, visual_primary_color: color };
-    assert.equal(resolveCommunityOptions([community])[0].indicatorColor, color.toUpperCase());
-    for (const value of [null, "", "invalid"]) {
-      assert.equal(
-        resolveCommunityOptions([{ ...community, visual_primary_color: value }])[0].indicatorColor,
-        null,
-      );
+    for (const color of ["#41BDA4", "#FF0000", null, "", "invalid"]) {
+      const community = { name: slug, slug, visual_primary_color: color };
+      const [option] = resolveCommunityOptions([community]);
+      assert.equal(Object.hasOwn(option, "indicatorColor"), false);
+      assert.equal(option.label, community.name);
+      assert.equal(option.value, slug);
+      assert.equal(community.visual_primary_color, color);
     }
   }
 });

@@ -8,18 +8,19 @@ Ajuste de frontend em 02/10/2026: [TASK-212 — Remover faixa vazia da modal de 
 
 Ajuste de frontend em 02/10/2026: [TASK-211 — Menu desktop de criar post e perfil do psicólogo](TASK-211-menu-desktop-criar-post-perfil-psicologo.md). Remove "Avaliações feitas" do perfil do psicólogo e troca o espaço de Favoritos no menu lateral desktop pela ação "Criar post", reutilizando a mesma modal/fluxo de conversão do botão central mobile. Sem backend, banco, env ou contrato de API.
 
-Ajuste visual em 08/10/2026: texto de orientação "Não sabe onde postar? Publique aqui.", correção de empilhamento da busca sticky em dropdowns pesquisáveis e pontos coloridos do seletor de comunidades na criação de post. Builder/Quick Copy não foi acionado por não haver ferramenta direta neste cliente; referência ativa consultada em `_product/tasks/PROTO-INVENTORY.md` (`Criar Nova Postagem - Pacientes/Psicólogo` e filtros de psicólogos). Alteração exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudança de contrato. ADR: `adrs/0578-ajustes-dropdown-criar-post-comunidades.md`.
+Ajuste visual em 08/10/2026: texto de orientação "Não sabe onde postar? Publique aqui.", correção de empilhamento da busca sticky em dropdowns pesquisáveis e refinamento do seletor de comunidades na criação de post. Após revisão visual de homologação, o usuário pediu a remoção dos pontos coloridos. Builder/Quick Copy não foi acionado por não haver ferramenta direta neste cliente; referência ativa consultada em `_product/tasks/PROTO-INVENTORY.md` (`Criar Nova Postagem - Pacientes/Psicólogo` e filtros de psicólogos). Alteração exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudança de contrato. ADR: `adrs/0578-ajustes-dropdown-criar-post-comunidades.md`.
 
 Critérios de aceite do ajuste de criação de post/dropdowns:
 
 - [x] Integração preserva a base remota atual e valida o controller real no browser em 390px/1440px com catálogo local real; sem fallback de cor, mocks ou escrita no banco. Promoção autorizada pelo usuário: deploys manuais preservando a configuração original de autodeploy (qualquer suspensão temporária deve ser restaurada); resultados remotos serão registrados no PR.
 
 - [x] Saúde Mental em Geral é sempre a última opção dentro da rolagem; a descrição "Não sabe onde postar? Publique aqui." aparece abaixo do título, na mesma opção, sem texto solto no formulário (testes de regressão e catálogo real local).
-- [ ] Validação visual autenticada deste refinamento em mobile (~390px) e desktop: browser automatizado local redireciona para login; sessão do usuário não está conectada ao Computer Use.
+- [x] Revisão sem pontos em 0.1.611: check/build e Chromium local do componente real em 390px/1440px aprovados; zero indicadores, descrição/separador/ordem/rolagem preservados, catálogo real e sem escrita no banco.
+- [ ] Aprovação visual autenticada da revisão sem pontos em homologação, mobile (~390px) e desktop: depende de evidência do usuário; Computer Use bloqueado pela verificação segura de URL.
 - [x] Dropdowns pesquisáveis mantêm o campo de busca acima da lista, sem opções aparecendo por trás da busca, inclusive nos filtros de psicólogos.
-- [x] O seletor de comunidade exibe pontos com as cores válidas (`visual_primary_color`) recebidas da API, sem inventar cor quando o valor vier ausente/inválido.
+- [x] Revisão solicitada após homologação: remover os pontos coloridos das opções e do valor selecionado, inclusive quando a API informa cor válida; preservar as cores cadastradas e o catálogo (20 testes focais aprovados).
 - [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
-- [x] Refinamento solicitado: linha discreta antes de Saúde Mental em Geral; ponto alinhado ao título usando exclusivamente a mesma regra de `visual_primary_color` das demais comunidades. Sem fallback por comunidade/ambiente, sem alterar o banco. Check/build, 20 testes focais e verificação com catálogo real aprovados; validação visual autenticada continua pendente no critério acima.
+- [x] Refinamento preservado: linha discreta antes de Saúde Mental em Geral e descrição abaixo do título, dentro da rolagem. A decisão anterior de exibir pontos foi substituída pelo pedido de remoção; sem alterar banco ou paleta das comunidades. Validação visual autenticada da nova revisão permanece pendente.
 
 Impacto de deploy: somente frontend; apps podem ser publicados separadamente. Rollback por reversão revisada em `homolog`. Push em `homolog` dispara deploy automático de homologação. Validações locais: `pnpm --dir frontend check` e `pnpm --dir frontend build` aprovados. Browser local ficou limitado porque Computer Use não retornou browsers conectados.
 
