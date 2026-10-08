@@ -150,14 +150,19 @@ export function SelectController<FormType extends FieldValues>({
             return <div className="px-3 py-3 text-sm text-muted">{emptySearchLabel}</div>;
           }
 
-          return filteredOptions.map((option) => {
+          return filteredOptions.map((option, index) => {
             const optionValue = String(option.value);
             const optionGroup = option.group || "";
             const shouldShowGroup = optionGroup && optionGroup !== currentGroup;
             currentGroup = optionGroup || currentGroup;
 
             return (
-              <div key={`${option.label}-${optionValue}`}>
+              <div
+                className={cn(
+                  option.separatorBefore && index > 0 && "mt-1 border-t border-border pt-1",
+                )}
+                key={`${option.label}-${optionValue}`}
+              >
                 {shouldShowGroup ? (
                   <div className="px-3 pt-3 pb-1 text-[11px] font-extrabold tracking-[0.08em] text-muted uppercase">
                     {optionGroup}
@@ -172,6 +177,10 @@ export function SelectController<FormType extends FieldValues>({
                   )}
                   disabled={option.disabled}
                   aria-selected={String(field.value) === optionValue}
+                  aria-label={option.description ? option.label : undefined}
+                  aria-describedby={
+                    option.description ? `${inputId}-option-${index}-description` : undefined
+                  }
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     field.onChange(option.value);
@@ -182,7 +191,19 @@ export function SelectController<FormType extends FieldValues>({
                   role="option"
                   type="button"
                 >
-                  {option.label}
+                  {option.description ? (
+                    <span className="block min-w-0">
+                      <span className="block">{option.label}</span>
+                      <span
+                        className="mt-1 block text-xs font-normal leading-relaxed text-muted"
+                        id={`${inputId}-option-${index}-description`}
+                      >
+                        {option.description}
+                      </span>
+                    </span>
+                  ) : (
+                    option.label
+                  )}
                 </button>
               </div>
             );

@@ -1,6 +1,7 @@
 import type { UseFormReturn } from "react-hook-form";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityPostMediaUploadResponse } from "@/api/generator/types/community";
+import type { FieldOption } from "@/hooks/form";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
@@ -185,8 +186,21 @@ export const communityNameCollator = new Intl.Collator("pt-BR", {
 
 export const resolveCommunityOptions = (communities: Array<{ name: string; slug: string }>) =>
   communities
-    .map((community) => ({ label: community.name, value: community.slug }))
-    .sort((a, b) => communityNameCollator.compare(a.label, b.label));
+    .map((community): FieldOption & { value: string } => ({
+      label: community.name,
+      value: community.slug,
+      ...(community.slug === "saude-mental-em-geral"
+        ? {
+            description: "Não encontrou uma comunidade específica? Publique aqui.",
+            separatorBefore: true,
+          }
+        : {}),
+    }))
+    .sort(
+      (a, b) =>
+        Number(a.value === "saude-mental-em-geral") - Number(b.value === "saude-mental-em-geral") ||
+        communityNameCollator.compare(a.label, b.label),
+    );
 
 export const SHEET_CLOSE_DELAY_MS = 360;
 export const SHEET_ENTER_ANIMATION_MS = 340;

@@ -532,6 +532,7 @@ ou cortesia manual.
 | 235 | [TASK-235 - Miniatura de video na edicao de comentario](TASK-235-reply-video-preview.md) | Done | 234 |
 | 236 | [TASK-236 - Controles abaixo da midia no post de psicologo](TASK-236-feed-media-actions.md) | Done | 235 |
 | 237 | [TASK-237 - Avatar e cor na criacao de comunidade](TASK-237-community-create-avatar.md) | Done | 236 |
+| 238 | [TASK-238 - Comunidade geral na selecao de post](TASK-238-post-community-fallback.md) | Done | 237 |
 
 ## Ordem operacional recomendada sem bloqueios
 

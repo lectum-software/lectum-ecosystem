@@ -55,6 +55,7 @@ const buildFields = ({
       searchable: true,
       searchMode: "dropdown",
       searchPlaceholder: "Buscar comunidade",
+      selectContentClassName: "right-auto w-[min(20rem,calc(100vw-2.5rem))]",
       emptySearchLabel: "Nenhuma comunidade encontrada",
       required: true,
       inputClassName:

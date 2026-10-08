@@ -25,6 +25,8 @@ export type FieldOption = {
   key?: string;
   disabled?: boolean;
   group?: string;
+  description?: string;
+  separatorBefore?: boolean;
 };
 
 export type Field<FormType extends FieldValues> = {
