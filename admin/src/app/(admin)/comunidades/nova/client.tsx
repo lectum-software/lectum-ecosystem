@@ -4,16 +4,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2, MessageCircleMore, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useMemo } from "react";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { type ReactNode, useRef, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useAdminCommunityCreate } from "@/api/callers/communities";
+import {
+  useAdminCommunityCreate,
+  useAdminCommunityCreationAvatarUpload,
+} from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
-import type { AdminCommunityCreateInput } from "@/api/req/communities";
+import type { AdminCommunityCreateInput, AdminCommunityIdentity } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
-import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/community-visual";
 import { cn } from "@/lib/utils";
+import { useAvatarDraft } from "./use-avatar-draft";
+import { CommunityCreateVisualIdentity } from "./visual-identity";
 
 const hexColor = /^#[0-9A-Fa-f]{6}$/;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -74,27 +78,43 @@ const FieldHint = ({ children }: { children: ReactNode }) => (
 export const AdminCommunityCreateClient = () => {
   const router = useRouter();
   const createMutation = useAdminCommunityCreate();
+  const avatarMutation = useAdminCommunityCreationAvatarUpload();
+  const createdRef = useRef<AdminCommunityIdentity | null>(null);
+  const [created, setCreated] = useState<AdminCommunityIdentity | null>(null);
+  const submittingRef = useRef(false);
   const form = useForm<CommunityCreateFormValues>({
     defaultValues,
     mode: "onSubmit",
     resolver: zodResolver(communityCreateSchema),
   });
-  const selectedPrimaryColor = useWatch({
-    control: form.control,
-    name: "visual_primary_color",
-  });
-  const selectedPalette = useMemo(
-    () => deriveCommunityVisualPalette(selectedPrimaryColor),
-    [selectedPrimaryColor],
+  const avatar = useAvatarDraft((color) =>
+    form.setValue("visual_primary_color", color, {
+      shouldDirty: true,
+      shouldValidate: true,
+    }),
   );
+  const isSaving = form.formState.isSubmitting;
+  const locked = isSaving || Boolean(created);
 
   const onSubmit = async (values: CommunityCreateFormValues) => {
+    if (submittingRef.current || avatar.analyzing) return;
+    submittingRef.current = true;
     try {
-      const community = await createMutation.mutateAsync(toPayload(values));
+      // A failed avatar upload resumes the same community, never a second create.
+      const community = createdRef.current ?? (await createMutation.mutateAsync(toPayload(values)));
+      createdRef.current = community;
+      setCreated(community);
+      if (avatar.file) await avatarMutation.mutateAsync({ id: community.id, file: avatar.file });
       toast.success("Comunidade criada com sucesso.");
       router.push(`/comunidades/${community.slug}?tab=dados`);
     } catch (error) {
-      toast.error(resolveApiError(error));
+      toast.error(
+        createdRef.current
+          ? "Comunidade criada, mas o avatar não foi enviado. Tente enviar novamente."
+          : resolveApiError(error),
+      );
+    } finally {
+      submittingRef.current = false;
     }
   };
 
@@ -127,10 +147,6 @@ export const AdminCommunityCreateClient = () => {
         <div className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-xl font-bold text-foreground">Dados da comunidade</h2>
-            <p className="mt-1 text-sm font-medium leading-6 text-muted">
-              A comunidade é criada ativa no modelo atual; avatar, regras e ajustes avançados podem
-              ser editados no detalhe após salvar.
-            </p>
           </div>
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
             <MessageCircleMore aria-hidden className="h-5 w-5" />
@@ -138,17 +154,23 @@ export const AdminCommunityCreateClient = () => {
         </div>
 
         <FormProvider {...form}>
-          <form className="mt-6 grid gap-5" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            className="mt-6 grid gap-5"
+            noValidate
+            onSubmit={(event) => {
+              void form.handleSubmit(onSubmit)(event);
+            }}
+          >
             <div className="grid gap-4 lg:grid-cols-2">
               <InputController<CommunityCreateFormValues>
-                disabled={createMutation.isPending}
+                disabled={locked}
                 label="Nome da comunidade"
                 name="name"
                 placeholder="Ansiedade em Equilíbrio"
                 required
               />
               <InputController<CommunityCreateFormValues>
-                disabled={createMutation.isPending}
+                disabled={locked}
                 label="Slug público"
                 name="slug"
                 placeholder="ansiedade-em-equilibrio"
@@ -159,87 +181,56 @@ export const AdminCommunityCreateClient = () => {
             </FieldHint>
 
             <InputController<CommunityCreateFormValues>
-              disabled={createMutation.isPending}
+              disabled={locked}
               label="Categoria"
               name="category"
               placeholder="Ansiedade"
             />
             <TextareaController<CommunityCreateFormValues>
-              disabled={createMutation.isPending}
+              disabled={locked}
               label="Descrição"
               name="description"
               placeholder="Descreva o objetivo da comunidade"
               rows={4}
             />
 
-            <div className="rounded-[1.5rem] border border-border bg-surface-muted/50 p-4">
-              <h3 className="text-sm font-bold text-foreground">Identidade visual opcional</h3>
-              <p className="mt-1 text-xs font-medium leading-5 text-muted">
-                Informe apenas a cor principal. A Lectum gera automaticamente o header suave, textos
-                e tons de apoio a partir dessa cor.
-              </p>
-              <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.75fr)]">
-                <div>
-                  <InputController<CommunityCreateFormValues>
-                    disabled={createMutation.isPending}
-                    label="Cor da comunidade"
-                    name="visual_primary_color"
-                    placeholder="#FF8A2A"
-                  />
-                  <p className="-mt-4 text-xs font-medium leading-5 text-muted">
-                    Deixe em branco para usar o azul padrão até o avatar definir a identidade
-                    visual.
-                  </p>
-                </div>
-                <div
-                  className="overflow-hidden rounded-[1.35rem] border border-border shadow-control"
-                  style={{
-                    background: communityHeaderBackground(selectedPrimaryColor),
-                  }}
+            <CommunityCreateVisualIdentity avatar={avatar} disabled={locked} />
+
+            {created && !isSaving ? (
+              <div
+                role="alert"
+                className="rounded-control border border-border p-4 text-sm text-foreground"
+              >
+                A comunidade já foi criada. Falta enviar o avatar.
+                <Link
+                  className="ml-2 text-primary underline"
+                  href={`/comunidades/${created.slug}?tab=dados`}
                 >
-                  <div className="flex min-h-24 items-end gap-3 p-4">
-                    <span
-                      className="grid h-14 w-14 place-items-center rounded-[1.1rem] text-xs font-black text-primary-foreground ring-4 ring-primary-foreground/80"
-                      style={{
-                        background: selectedPalette.primaryColor,
-                      }}
-                    >
-                      CO
-                    </span>
-                    <div>
-                      <p
-                        className="text-sm font-black"
-                        style={{
-                          color: selectedPalette.textColor,
-                        }}
-                      >
-                        Previa do header
-                      </p>
-                      <p className="text-xs font-bold text-muted">tom suave derivado da cor</p>
-                    </div>
-                  </div>
-                </div>
+                  Abrir comunidade
+                </Link>
               </div>
-            </div>
+            ) : null}
 
             <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
-              <Link
-                className="inline-flex h-11 items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-bold text-foreground transition hover:border-primary hover:text-primary"
-                href="/comunidades/lista"
-              >
-                Cancelar
-              </Link>
+              {!created ? (
+                <Link
+                  className="inline-flex h-11 items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-bold text-foreground transition hover:border-primary hover:text-primary"
+                  href="/comunidades/lista"
+                >
+                  Cancelar
+                </Link>
+              ) : null}
               <button
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-bold text-primary-foreground shadow-control transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={createMutation.isPending}
+                disabled={isSaving || avatar.analyzing}
                 type="submit"
               >
-                {createMutation.isPending ? (
+                {isSaving ? (
                   <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
                 ) : (
                   <Save aria-hidden className="h-4 w-4" />
                 )}
-                Criar comunidade
+                {created ? "Reenviar avatar" : "Criar comunidade"}
               </button>
             </div>
           </form>

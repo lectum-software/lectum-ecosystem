@@ -1,6 +1,6 @@
 {
   "name": "admin",
-  "version": "0.1.608",
+  "version": "0.1.609",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack --port 3002",
@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit --pretty false",
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test"
+    "test:community-create": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/community-avatar-color.test.mjs",
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:community-create"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",

@@ -183,6 +183,17 @@ export const useAdminCommunityAvatarUpload = (id: string) => {
   });
 };
 
+export const useAdminCommunityCreationAvatarUpload = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, file }: { id: string; file: File }) => {
+      const prepared = await prepareImageUpload(file, { purpose: "community-avatar" });
+      return uploadAdminCommunityAvatar(id, prepared.file);
+    },
+    onSuccess: (result) => invalidateCommunity(queryClient, result.community.id),
+  });
+};
+
 export const useAdminCommunityCreateRule = (id: string) => {
   const queryClient = useQueryClient();
 
