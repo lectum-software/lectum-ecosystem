@@ -100,6 +100,49 @@ function CodeField({ value }) {
   return createElement(OtpController, { control, name: "code", label: "Código", length: 6 });
 }
 
+function SearchField() {
+  const { control } = useForm({ defaultValues: { search: "Pesquisa" } });
+  return createElement(InputController, {
+    control,
+    name: "search",
+    label: "Pesquisa",
+    leadingIcon: "search",
+    max: 120,
+    showCounter: true,
+    after: createElement("div", { role: "listbox" }, "Sugestões"),
+  });
+}
+
+test("lupa fica ancorada apenas ao input, sem contador ou sugestões no bloco relativo", () => {
+  const html = renderToStaticMarkup(createElement(SearchField));
+  const control = html.match(/<div class="relative">([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(control);
+  assert.match(control, /<input[^>]*id="search"/);
+  const icon = control.match(/<svg[^>]*>/)?.[0];
+  assert.ok(icon);
+  assert.match(icon, /aria-hidden="true"/);
+  assert.match(icon, /pointer-events-none/);
+  assert.doesNotMatch(control, /listbox|Sugestões|8\/120/);
+  assert.match(html, /<\/svg><\/div><span[^>]*>8\/120<\/span><div role="listbox">/);
+  assert.match(html, /for="search"/);
+  assert.match(html, /id="search-error" role="alert"/);
+});
+
+test("botão de senha não é deslocado pelo contador ou conteúdo complementar", () => {
+  const html = renderToStaticMarkup(
+    createElement(PasswordField, {
+      max: 120,
+      showCounter: true,
+      after: createElement("div", null, "Ajuda complementar"),
+    }),
+  );
+  const control = html.match(/<div class="relative">([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(control);
+  assert.match(control, /aria-label="Mostrar senha"/);
+  assert.doesNotMatch(control, /Ajuda complementar|0\/120/);
+  assert.match(html, /<\/button><\/div><span[^>]*>0\/120<\/span>/);
+});
+
 test("rótulo de senha não inclui botão, descrição nem mensagem de erro", () => {
   const html = renderToStaticMarkup(createElement(PasswordField, { description: "Descrição" }));
   const labels = [...html.matchAll(/<label\b[^>]*>(.*?)<\/label>/g)];
