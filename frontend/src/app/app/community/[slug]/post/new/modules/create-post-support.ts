@@ -1,6 +1,6 @@
 import type { UseFormReturn } from "react-hook-form";
 import { getSafeApiErrorMessage } from "@/api/errors";
-import type { CommunityPostMediaUploadResponse } from "@/api/generator/types/community";
+import type { Community, CommunityPostMediaUploadResponse } from "@/api/generator/types/community";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
@@ -183,10 +183,31 @@ export const communityNameCollator = new Intl.Collator("pt-BR", {
   sensitivity: "base",
 });
 
-export const resolveCommunityOptions = (communities: Array<{ name: string; slug: string }>) =>
+const normalizeCommunityOptionColor = (color?: string | null) => {
+  const normalized = color?.trim();
+
+  return normalized && /^#[0-9A-Fa-f]{6}$/.test(normalized) ? normalized.toUpperCase() : null;
+};
+
+export const resolveCommunityOptions = (
+  communities: Array<Pick<Community, "name" | "slug" | "visual_primary_color">>,
+) =>
   communities
-    .map((community) => ({ label: community.name, value: community.slug }))
-    .sort((a, b) => communityNameCollator.compare(a.label, b.label));
+    .map((community) => ({
+      separatorBefore: community.slug === "saude-mental-em-geral",
+      description:
+        community.slug === "saude-mental-em-geral"
+          ? "Não sabe onde postar? Publique aqui."
+          : undefined,
+      indicatorColor: normalizeCommunityOptionColor(community.visual_primary_color),
+      label: community.name,
+      value: community.slug,
+    }))
+    .sort(
+      (a, b) =>
+        Number(a.value === "saude-mental-em-geral") - Number(b.value === "saude-mental-em-geral") ||
+        communityNameCollator.compare(a.label, b.label),
+    );
 
 export const SHEET_CLOSE_DELAY_MS = 360;
 export const SHEET_ENTER_ANIMATION_MS = 340;

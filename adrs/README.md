@@ -621,3 +621,5 @@ Formato recomendado:
 - [ADR-0575 — Previa de video na edicao de comentarios](0575-reply-video-preview.md)
 - [ADR-0576 — Midia antes dos controles no post profissional do feed](0576-feed-media-actions.md)
 - [ADR-0577 — Avatar e sugestao de cor na criacao](0577-community-create-avatar.md)
+
+- [ADR-0578 — Ajustes visuais em dropdowns e criação de post comunitário](0578-ajustes-dropdown-criar-post-comunidades.md)

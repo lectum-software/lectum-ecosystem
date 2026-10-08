@@ -21,10 +21,13 @@ export type FieldType =
 
 export type FieldOption = {
   label: string;
+  description?: string;
+  separatorBefore?: boolean;
   value: string | number | boolean;
   key?: string;
   disabled?: boolean;
   group?: string;
+  indicatorColor?: string | null;
 };
 
 export type Field<FormType extends FieldValues> = {
