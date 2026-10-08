@@ -11,6 +11,9 @@ const { InputController } = await import("./input/index.tsx");
 const { OtpController } = await import("./otp/index.tsx");
 const { Container } = await import("./container.tsx");
 const { SelectController } = await import("./select/index.tsx");
+const { FALLBACK_COMMUNITY_PALETTE } = await import(
+  "../../app/app/community/[slug]/modules/palette.ts"
+);
 const { resolveCommunityOptions } = await import(
   "../../app/app/community/[slug]/post/new/modules/create-post-support.ts"
 );
@@ -51,7 +54,7 @@ test("seletor não exibe indicadores coloridos, mesmo quando a API informa uma c
   );
   assert.doesNotMatch(select, /indicatorColor|backgroundColor/);
   for (const slug of ["saude-mental-em-geral", "tdah"]) {
-    for (const color of ["#41BDA4", "#FF0000", null, "", "invalid"]) {
+    for (const color of [...Object.values(FALLBACK_COMMUNITY_PALETTE), null, "", "invalid"]) {
       const community = { name: slug, slug, visual_primary_color: color };
       const [option] = resolveCommunityOptions([community]);
       assert.equal(Object.hasOwn(option, "indicatorColor"), false);

@@ -71,3 +71,9 @@ Em 08/10/2026, o usuário rejeitou os pontos coloridos na captura mobile de homo
 - Testes de regressão verificam ausência de indicador mesmo com cor válida recebida da API, preservação do catálogo, ordenação, descrição e separador. Os 20 testes focais passaram.
 - Check completo do frontend e build aprovados em 0.1.611. Chromium local em 390px/1440px com SelectController, CSS compilado e sete comunidades reais da API local: zero indicadores nas opções e no selecionado, última opção/descrição/separador de 1px na rolagem, busca sem sobreposição e sem overflow horizontal; seleção e fechamento aprovados. Sem mocks ou escrita no banco. A inspeção isolada do componente não substitui validação autenticada da modal; evidência remota depende do usuário, sem contornar o bloqueio de URL do Computer Use.
 - Publicar a nova revisão somente em homologação para nova revisão visual; invalidar a candidatura produtiva de d040d7a9 no PR #97. Preservar toda a configuração original de autodeploy e os arquivos locais não relacionados do workspace original.
+
+## Compatibilidade dos testes com o guard de tokens
+
+- O pre-push de 0.1.611 bloqueou cores literais no teste de regressão, apesar dos checks das aplicações aprovados. Substituídas pelos valores da fonte central FALLBACK_COMMUNITY_PALETTE, somente no teste, sem alterar o guard nem criar exceções.
+- Os 20 testes focais e check:source-safety passaram após a correção. O frontend de produto é idêntico ao validado visualmente em 0.1.611; o novo commit recebe o bump obrigatório 0.1.612 e será novamente validado antes do push/deploy.
+- Build frontend 0.1.612 aprovado; guards de source-safety, encoding, ADRs, tasks, source-size, ciclos e segredos aprovados. Sem alteração de código runtime em relação a 0.1.611.
