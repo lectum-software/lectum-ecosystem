@@ -11,6 +11,52 @@ const { InputController } = await import("./input/index.tsx");
 const { OtpController } = await import("./otp/index.tsx");
 const { Container } = await import("./container.tsx");
 const { SelectController } = await import("./select/index.tsx");
+const { resolveCommunityOptions } = await import(
+  "../../app/app/community/[slug]/post/new/modules/create-post-support.ts"
+);
+
+test("comunidade geral fica por último com descrição, preservando catálogo e cores", () => {
+  const communities = [
+    { name: "Saúde Mental em Geral", slug: "saude-mental-em-geral", visual_primary_color: null },
+    { name: "TDAH: Encontrando seu Ritmo", slug: "tdah", visual_primary_color: null },
+    {
+      name: "Ansiedade em Equilíbrio",
+      slug: "ansiedade-em-equilibrio",
+      visual_primary_color: null,
+    },
+  ];
+  const original = structuredClone(communities);
+  const options = resolveCommunityOptions(communities);
+  assert.deepEqual(
+    options.map((option) => option.value),
+    ["ansiedade-em-equilibrio", "tdah", "saude-mental-em-geral"],
+  );
+  assert.equal(options.at(-1).description, "Não sabe onde postar? Publique aqui.");
+  assert.equal(options[0].description, undefined);
+  assert.equal(options[1].indicatorColor, null);
+  assert.deepEqual(communities, original);
+  assert.deepEqual(resolveCommunityOptions([]), []);
+  assert.equal(resolveCommunityOptions(communities.slice(1)).length, 2);
+  assert.equal(
+    resolveCommunityOptions([{ ...communities[0], name: "Geral" }])[0].description,
+    "Não sabe onde postar? Publique aqui.",
+  );
+});
+
+test("descrição fica na opção rolável, não no formulário ou no valor selecionado", () => {
+  const select = readFileSync(
+    new URL("components/controllers/select/index.tsx", sourceRoot),
+    "utf8",
+  );
+  const view = readFileSync(
+    new URL("app/app/community/[slug]/post/new/views/create-community-post.tsx", sourceRoot),
+    "utf8",
+  );
+  assert.match(select, /max-h-56 overflow-y-auto p-1\.5[\s\S]*?\{renderFilteredOptions\(\)\}/);
+  assert.match(select, /\{option\.label\}[\s\S]*?\{option\.description\}[\s\S]*?<\/button>/);
+  assert.doesNotMatch(select, /selectedOption\??\.description/);
+  assert.doesNotMatch(view, /Não sabe onde postar|Publique aqui/);
+});
 
 function PasswordField(props) {
   const { control } = useForm({ defaultValues: { password: "" } });

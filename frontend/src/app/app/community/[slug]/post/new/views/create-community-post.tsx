@@ -516,10 +516,6 @@ export const CreateCommunityPostLogic = ({
                 {formProps.fields
                   .filter((field) => field.name === "community_slug")
                   .map(renderFormField)}
-                <p className="max-w-full text-[0.8rem] font-semibold leading-5 text-muted">
-                  Não sabe onde postar?{" "}
-                  <span className="font-extrabold text-primary">Publique aqui.</span>
-                </p>
               </div>
 
               <div className="flex min-h-0 flex-1 flex-col gap-0">

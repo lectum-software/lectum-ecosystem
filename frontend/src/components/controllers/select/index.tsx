@@ -9,7 +9,7 @@ import type { ControllerFieldProps } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 
 const dropdownContentClassName =
-  "absolute left-0 right-0 top-[calc(100%+6px)] z-[80] isolate overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]";
+  "absolute left-0 right-0 top-[calc(100%+6px)] z-[80] isolate rounded-2xl border border-border bg-surface p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]";
 
 export function SelectController<FormType extends FieldValues>({
   name,
@@ -189,7 +189,14 @@ export function SelectController<FormType extends FieldValues>({
                       style={{ backgroundColor: option.indicatorColor }}
                     />
                   ) : null}
-                  <span className="min-w-0 truncate">{option.label}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate">{option.label}</span>
+                    {option.description ? (
+                      <span className="mt-1 block text-xs leading-5 text-muted">
+                        {option.description}
+                      </span>
+                    ) : null}
+                  </span>
                 </button>
               </div>
             );
@@ -294,11 +301,15 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(dropdownContentClassName, "max-h-72", selectContentClassName)}
+                    className={cn(
+                      dropdownContentClassName,
+                      "overflow-hidden p-0",
+                      selectContentClassName,
+                    )}
                     id={listboxId}
                     role="listbox"
                   >
-                    <div className="sticky top-0 z-20 -mx-1.5 -mt-1.5 mb-1 border-border/70 border-b bg-surface p-2 shadow-[0_8px_18px_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+                    <div className="relative z-20 border-border/70 border-b bg-surface p-2 shadow-lectum-soft">
                       <div className="relative">
                         <Search
                           aria-hidden="true"
@@ -315,8 +326,10 @@ export function SelectController<FormType extends FieldValues>({
                       </div>
                     </div>
 
-                    {hideEmptyOption ? null : emptyOption}
-                    {renderFilteredOptions()}
+                    <div className="max-h-56 overflow-y-auto p-1.5">
+                      {hideEmptyOption ? null : emptyOption}
+                      {renderFilteredOptions()}
+                    </div>
                   </div>
                 ) : null}
               </fieldset>
@@ -394,7 +407,11 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(dropdownContentClassName, "max-h-64", selectContentClassName)}
+                    className={cn(
+                      dropdownContentClassName,
+                      "max-h-64 overflow-y-auto",
+                      selectContentClassName,
+                    )}
                     id={listboxId}
                     role="listbox"
                   >
@@ -463,7 +480,11 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(dropdownContentClassName, "max-h-64", selectContentClassName)}
+                    className={cn(
+                      dropdownContentClassName,
+                      "max-h-64 overflow-y-auto",
+                      selectContentClassName,
+                    )}
                     id={listboxId}
                     role="listbox"
                   >

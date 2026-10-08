@@ -194,11 +194,19 @@ export const resolveCommunityOptions = (
 ) =>
   communities
     .map((community) => ({
+      description:
+        community.slug === "saude-mental-em-geral"
+          ? "Não sabe onde postar? Publique aqui."
+          : undefined,
       indicatorColor: normalizeCommunityOptionColor(community.visual_primary_color),
       label: community.name,
       value: community.slug,
     }))
-    .sort((a, b) => communityNameCollator.compare(a.label, b.label));
+    .sort(
+      (a, b) =>
+        Number(a.value === "saude-mental-em-geral") - Number(b.value === "saude-mental-em-geral") ||
+        communityNameCollator.compare(a.label, b.label),
+    );
 
 export const SHEET_CLOSE_DELAY_MS = 360;
 export const SHEET_ENTER_ANIMATION_MS = 340;

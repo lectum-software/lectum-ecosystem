@@ -30,3 +30,15 @@ Os dropdowns pesquisáveis usavam busca `sticky` dentro do próprio painel, mas 
 - `pnpm --dir frontend build`
 
 Validação visual em browser local ficou limitada porque o cliente não expôs browsers conectados via Computer Use nesta execução.
+
+## Correção de posicionamento em 2026-10-08
+
+- Substituir a decisão de microcópia no topo do formulário: a orientação pertence à opção real `saude-mental-em-geral`, identificada pelo slug da API local, não pelo título editável.
+- Ordenar essa comunidade por último, preservando ordem alfabética das demais. Não criar comunidade artificial se ela não estiver no catálogo.
+- Usar descrição opcional em `FieldOption` no controller existente. Título e descrição compõem a mesma opção clicável, dentro da rolagem normal, sem rodapé fixo/sticky. A busca continua filtrando por título/grupo e preserva a ordem dos resultados.
+- Preservar cores e tamanhos atuais dos indicadores neste ajuste de posicionamento.
+- Referência mobile-first (~390px): inventário, `_product/proto/Criar Nova Postagem - Psicólogo.jpg` e esclarecimento explícito do usuário. Builder/Quick Copy não está exposto neste cliente.
+- Sem dependências, env, contratos, backend ou banco novos; compatível com rollout independente. Rollback por reversão do ajuste frontend. Sem push/deploy nesta execução, conforme pedido.
+- Validação deste complemento: `pnpm --dir frontend check` aprovado (545 testes aprovados, um skip preexistente de symlink no Windows); 19 testes focais dos controllers aprovados. Verificação adicional com as sete comunidades reais da API local confirmou ordem, descrição exclusiva e ausência de itens artificiais. Guards de encoding, ADRs, tasks, source-safety, source-size e versão aprovados.
+- Browser local: a navegação real à criação de post redirecionou para login. Sem browser autenticado conectado ao Computer Use, validação visual mobile/desktop permanece pendente; nenhum guard foi contornado e nenhum mock substituiu a API.
+- `pnpm --dir frontend build` aprovado. Alterações mantidas locais, sem push/deploy e sem escrita no banco.

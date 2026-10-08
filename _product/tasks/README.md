@@ -2,7 +2,8 @@ Ajuste visual em 08/10/2026: texto de orientação "Não sabe onde postar? Publi
 
 Critérios de aceite do ajuste de criação de post/dropdowns:
 
-- [x] A criação de post exibe a microcópia "Não sabe onde postar? Publique aqui." próxima ao seletor de comunidade.
+- [x] Saúde Mental em Geral é sempre a última opção dentro da rolagem; a descrição "Não sabe onde postar? Publique aqui." aparece abaixo do título, na mesma opção, sem texto solto no formulário (testes de regressão e catálogo real local).
+- [ ] Validação visual autenticada deste refinamento em mobile (~390px) e desktop: browser automatizado local redireciona para login; sessão do usuário não está conectada ao Computer Use.
 - [x] Dropdowns pesquisáveis mantêm o campo de busca acima da lista, sem opções aparecendo por trás da busca, inclusive nos filtros de psicólogos.
 - [x] O seletor de comunidade exibe pontos com as cores válidas (`visual_primary_color`) recebidas da API, sem inventar cor quando o valor vier ausente/inválido.
 - [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
