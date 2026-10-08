@@ -194,6 +194,7 @@ export const resolveCommunityOptions = (
 ) =>
   communities
     .map((community) => ({
+      separatorBefore: community.slug === "saude-mental-em-geral",
       description:
         community.slug === "saude-mental-em-geral"
           ? "Não sabe onde postar? Publique aqui."

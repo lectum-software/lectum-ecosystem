@@ -42,3 +42,12 @@ Validação visual em browser local ficou limitada porque o cliente não expôs 
 - Validação deste complemento: `pnpm --dir frontend check` aprovado (545 testes aprovados, um skip preexistente de symlink no Windows); 19 testes focais dos controllers aprovados. Verificação adicional com as sete comunidades reais da API local confirmou ordem, descrição exclusiva e ausência de itens artificiais. Guards de encoding, ADRs, tasks, source-safety, source-size e versão aprovados.
 - Browser local: a navegação real à criação de post redirecionou para login. Sem browser autenticado conectado ao Computer Use, validação visual mobile/desktop permanece pendente; nenhum guard foi contornado e nenhum mock substituiu a API.
 - `pnpm --dir frontend build` aprovado. Alterações mantidas locais, sem push/deploy e sem escrita no banco.
+
+## Refinamento de separador e cor — regra uniforme confirmada
+
+- Adicionar `separatorBefore` opcional ao controller existente: borda discreta usando `border-border/60`, dentro da área rolável. Não renderizar separador quando a opção for o primeiro/único resultado da busca.
+- A API local retorna todos os campos de paleta vazios para `saude-mental-em-geral`. Após indicar o verde na captura, o usuário esclareceu que a cor deve seguir exatamente a regra das demais comunidades. Removido o fallback específico experimental e seu token, sem persistir nenhuma alteração no banco.
+- Todas as opções usam somente `visual_primary_color` hexadecimal válido, sem exceção por slug/ambiente. Valor ausente/inválido não mostra ponto. A captura não autoriza duplicar configuração produtiva no frontend.
+- Indicadores de opções com descrição ficam alinhados ao título, não ao centro do bloco inteiro. Separador, título e descrição continuam dentro da rolagem; fonte mobile-first e limitações de Builder/browser permanecem as do complemento anterior.
+- `pnpm --dir frontend check` e `pnpm --dir frontend build` aprovados na versão final sem fallback; 546 testes aprovados e um skip preexistente de symlink no Windows. Os 20 testes focais passaram. Verificação com as sete comunidades reais locais confirmou ordem, separador e regra uniforme de cor. Guards de source-safety, encoding, ADRs, tasks, source-size e versão aprovados.
+- Validação visual autenticada permanece pendente: Computer Use sem browsers conectados e navegador automatizado sem sessão. Nenhum push/deploy, alteração de banco, dependência ou env. Versão dos manifests locais: 0.1.520.

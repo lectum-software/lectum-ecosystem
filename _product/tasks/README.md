@@ -7,6 +7,7 @@ Critérios de aceite do ajuste de criação de post/dropdowns:
 - [x] Dropdowns pesquisáveis mantêm o campo de busca acima da lista, sem opções aparecendo por trás da busca, inclusive nos filtros de psicólogos.
 - [x] O seletor de comunidade exibe pontos com as cores válidas (`visual_primary_color`) recebidas da API, sem inventar cor quando o valor vier ausente/inválido.
 - [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+- [x] Refinamento solicitado: linha discreta antes de Saúde Mental em Geral; ponto alinhado ao título usando exclusivamente a mesma regra de `visual_primary_color` das demais comunidades. Sem fallback por comunidade/ambiente, sem alterar o banco. Check/build, 20 testes focais e verificação com catálogo real aprovados; validação visual autenticada continua pendente no critério acima.
 
 Impacto de deploy: somente frontend; apps podem ser publicados separadamente. Rollback por reversão revisada em `homolog`. Push em `homolog` dispara deploy automático de homologação. Validações locais: `pnpm --dir frontend check` e `pnpm --dir frontend build` aprovados. Browser local ficou limitado porque Computer Use não retornou browsers conectados.
 

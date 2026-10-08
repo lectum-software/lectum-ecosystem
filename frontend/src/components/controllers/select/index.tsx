@@ -150,14 +150,19 @@ export function SelectController<FormType extends FieldValues>({
             return <div className="px-3 py-3 text-sm text-muted">{emptySearchLabel}</div>;
           }
 
-          return filteredOptions.map((option) => {
+          return filteredOptions.map((option, index) => {
             const optionValue = String(option.value);
             const optionGroup = option.group || "";
             const shouldShowGroup = optionGroup && optionGroup !== currentGroup;
             currentGroup = optionGroup || currentGroup;
 
             return (
-              <div key={`${option.label}-${optionValue}`}>
+              <div
+                className={cn(
+                  option.separatorBefore && index > 0 && "mt-1.5 border-t border-border/60 pt-1.5",
+                )}
+                key={`${option.label}-${optionValue}`}
+              >
                 {shouldShowGroup ? (
                   <div className="px-3 pt-3 pb-1 text-[11px] font-extrabold tracking-[0.08em] text-muted uppercase">
                     {optionGroup}
@@ -185,7 +190,10 @@ export function SelectController<FormType extends FieldValues>({
                   {option.indicatorColor ? (
                     <span
                       aria-hidden="true"
-                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background"
+                      className={cn(
+                        "h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background",
+                        option.description && "mt-1.5 self-start",
+                      )}
                       style={{ backgroundColor: option.indicatorColor }}
                     />
                   ) : null}

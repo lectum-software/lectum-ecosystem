@@ -32,6 +32,9 @@ test("comunidade geral fica por último com descrição, preservando catálogo e
     ["ansiedade-em-equilibrio", "tdah", "saude-mental-em-geral"],
   );
   assert.equal(options.at(-1).description, "Não sabe onde postar? Publique aqui.");
+  assert.equal(options.at(-1).separatorBefore, true);
+  assert.equal(options.at(-1).indicatorColor, null);
+  assert.equal(options[0].separatorBefore, false);
   assert.equal(options[0].description, undefined);
   assert.equal(options[1].indicatorColor, null);
   assert.deepEqual(communities, original);
@@ -41,6 +44,22 @@ test("comunidade geral fica por último com descrição, preservando catálogo e
     resolveCommunityOptions([{ ...communities[0], name: "Geral" }])[0].description,
     "Não sabe onde postar? Publique aqui.",
   );
+});
+
+test("comunidade geral usa a mesma regra de cor das demais, sem fallback", () => {
+  const css = readFileSync(new URL("app/globals.css", sourceRoot), "utf8");
+  const color = css.match(/--lectum-primary:\s*([^;]+);/)?.[1];
+  assert.ok(color);
+  for (const slug of ["saude-mental-em-geral", "tdah"]) {
+    const community = { name: slug, slug, visual_primary_color: color };
+    assert.equal(resolveCommunityOptions([community])[0].indicatorColor, color.toUpperCase());
+    for (const value of [null, "", "invalid"]) {
+      assert.equal(
+        resolveCommunityOptions([{ ...community, visual_primary_color: value }])[0].indicatorColor,
+        null,
+      );
+    }
+  }
 });
 
 test("descrição fica na opção rolável, não no formulário ou no valor selecionado", () => {
@@ -56,6 +75,10 @@ test("descrição fica na opção rolável, não no formulário ou no valor sele
   assert.match(select, /\{option\.label\}[\s\S]*?\{option\.description\}[\s\S]*?<\/button>/);
   assert.doesNotMatch(select, /selectedOption\??\.description/);
   assert.doesNotMatch(view, /Não sabe onde postar|Publique aqui/);
+  assert.match(
+    select,
+    /option.separatorBefore && index > 0 && "mt-1.5 border-t border-border\/60 pt-1.5"/,
+  );
 });
 
 function PasswordField(props) {
