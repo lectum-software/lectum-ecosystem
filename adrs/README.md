@@ -624,3 +624,4 @@ Formato recomendado:
 
 - [ADR-0578 — Ajustes visuais em dropdowns e criação de post comunitário](0578-ajustes-dropdown-criar-post-comunidades.md)
 - [ADR-0579 — Icones ancorados somente ao controle de entrada](0579-input-icon-containing-block.md)
+- [ADR-0580 — Ordem global de publicacoes por votos e comentarios](0580-profile-publication-order.md)

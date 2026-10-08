@@ -46,7 +46,11 @@ import {
   publishedProfileWhere,
 } from "./support/profile-query";
 
-import { selectHighlightedPublication, toPostResponse } from "./support/profile-response";
+import {
+  compareProfilePublicationOrder,
+  selectHighlightedPublication,
+  toPostResponse,
+} from "./support/profile-response";
 
 export class ProfileRepository implements IProfileRepository {
   async hasPublishedProfile(psychologistId: string): Promise<boolean> {
@@ -371,18 +375,24 @@ export class ProfileRepository implements IProfileRepository {
       replySavesCountById,
     );
     const mergedItems = [
-      ...posts.map((post) => ({ createdAt: post.createdAt, kind: "post" as const, post })),
-      ...replies.map((reply) => ({ createdAt: reply.createdAt, kind: "reply" as const, reply })),
+      ...posts.map((post) => ({
+        id: post.id,
+        createdAt: post.createdAt,
+        upvotes: post.upvotes_count,
+        comments: post.replies_count,
+        kind: "post" as const,
+        post,
+      })),
+      ...replies.map((reply) => ({
+        id: reply.id,
+        createdAt: reply.createdAt,
+        upvotes: reply.upvotes_count,
+        comments: replyChildrenCountById.get(reply.id) ?? 0,
+        kind: "reply" as const,
+        reply,
+      })),
     ]
-      .sort((a, b) => {
-        const byDate = b.createdAt.getTime() - a.createdAt.getTime();
-        if (byDate !== 0) return byDate;
-
-        const aId = a.kind === "post" ? a.post.id : a.reply.id;
-        const bId = b.kind === "post" ? b.post.id : b.reply.id;
-
-        return bId.localeCompare(aId);
-      })
+      .sort(compareProfilePublicationOrder)
       .slice(pagination.skip, pagination.skip + pagination.limit);
     const postIds = Array.from(
       new Set(

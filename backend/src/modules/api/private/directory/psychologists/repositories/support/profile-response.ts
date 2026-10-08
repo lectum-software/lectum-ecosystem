@@ -339,6 +339,22 @@ export const replyEngagementScore = (
     saves: replySavesCountById.get(reply.id) ?? 0,
   });
 
+export const compareProfilePublicationOrder = (
+  a: { upvotes: number; comments: number; createdAt: Date; id: string },
+  b: { upvotes: number; comments: number; createdAt: Date; id: string },
+) => {
+  const byVotes = b.upvotes - a.upvotes;
+  if (byVotes !== 0) return byVotes;
+
+  const byComments = b.comments - a.comments;
+  if (byComments !== 0) return byComments;
+
+  const byDate = b.createdAt.getTime() - a.createdAt.getTime();
+  if (byDate !== 0) return byDate;
+
+  return b.id.localeCompare(a.id);
+};
+
 export const compareProfilePublicationCandidates = (
   a: ProfilePublicationCandidate,
   b: ProfilePublicationCandidate,

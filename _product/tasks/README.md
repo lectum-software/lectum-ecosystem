@@ -549,6 +549,7 @@ ou cortesia manual.
 | 236 | [TASK-236 - Controles abaixo da midia no post de psicologo](TASK-236-feed-media-actions.md) | Done | 235 |
 | 237 | [TASK-237 - Avatar e cor na criacao de comunidade](TASK-237-community-create-avatar.md) | Done | 236 |
 | 238 | [TASK-238 - Lupa alinhada na pesquisa de psicologos](TASK-238-search-icon-alignment.md) | Done | 237 |
+| 239 | [TASK-239 - Publicacoes do perfil por votos e comentarios](TASK-239-profile-publication-order.md) | Done | 238 |
 
 ## Ordem operacional recomendada sem bloqueios
 
