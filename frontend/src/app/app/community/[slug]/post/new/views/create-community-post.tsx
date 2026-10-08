@@ -518,7 +518,7 @@ export const CreateCommunityPostLogic = ({
                 hasSelectedMedia ? "min-h-full flex-none" : "flex-none",
               )}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-col items-start gap-1.5">
                 {formProps.fields
                   .filter((field) => field.name === "community_slug")
                   .map(renderFormField)}

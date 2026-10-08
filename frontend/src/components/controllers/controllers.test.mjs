@@ -11,6 +11,78 @@ const { InputController } = await import("./input/index.tsx");
 const { OtpController } = await import("./otp/index.tsx");
 const { Container } = await import("./container.tsx");
 const { SelectController } = await import("./select/index.tsx");
+const { FALLBACK_COMMUNITY_PALETTE } = await import(
+  "../../app/app/community/[slug]/modules/palette.ts"
+);
+const { resolveCommunityOptions } = await import(
+  "../../app/app/community/[slug]/post/new/modules/create-post-support.ts"
+);
+
+test("comunidade geral fica por último com descrição, preservando o catálogo", () => {
+  const communities = [
+    { name: "Saúde Mental em Geral", slug: "saude-mental-em-geral", visual_primary_color: null },
+    { name: "TDAH: Encontrando seu Ritmo", slug: "tdah", visual_primary_color: null },
+    {
+      name: "Ansiedade em Equilíbrio",
+      slug: "ansiedade-em-equilibrio",
+      visual_primary_color: null,
+    },
+  ];
+  const original = structuredClone(communities);
+  const options = resolveCommunityOptions(communities);
+  assert.deepEqual(
+    options.map((option) => option.value),
+    ["ansiedade-em-equilibrio", "tdah", "saude-mental-em-geral"],
+  );
+  assert.equal(options.at(-1).description, "Não sabe onde postar? Publique aqui.");
+  assert.equal(options.at(-1).separatorBefore, true);
+  assert.equal(options[0].separatorBefore, false);
+  assert.equal(options[0].description, undefined);
+  assert.deepEqual(communities, original);
+  assert.deepEqual(resolveCommunityOptions([]), []);
+  assert.equal(resolveCommunityOptions(communities.slice(1)).length, 2);
+  assert.equal(
+    resolveCommunityOptions([{ ...communities[0], name: "Geral" }])[0].description,
+    "Não sabe onde postar? Publique aqui.",
+  );
+});
+
+test("seletor não exibe indicadores coloridos, mesmo quando a API informa uma cor", () => {
+  const select = readFileSync(
+    new URL("components/controllers/select/index.tsx", sourceRoot),
+    "utf8",
+  );
+  assert.doesNotMatch(select, /indicatorColor|backgroundColor/);
+  for (const slug of ["saude-mental-em-geral", "tdah"]) {
+    for (const color of [...Object.values(FALLBACK_COMMUNITY_PALETTE), null, "", "invalid"]) {
+      const community = { name: slug, slug, visual_primary_color: color };
+      const [option] = resolveCommunityOptions([community]);
+      assert.equal(Object.hasOwn(option, "indicatorColor"), false);
+      assert.equal(option.label, community.name);
+      assert.equal(option.value, slug);
+      assert.equal(community.visual_primary_color, color);
+    }
+  }
+});
+
+test("descrição fica na opção rolável, não no formulário ou no valor selecionado", () => {
+  const select = readFileSync(
+    new URL("components/controllers/select/index.tsx", sourceRoot),
+    "utf8",
+  );
+  const view = readFileSync(
+    new URL("app/app/community/[slug]/post/new/views/create-community-post.tsx", sourceRoot),
+    "utf8",
+  );
+  assert.match(select, /max-h-56 overflow-y-auto p-1\.5[\s\S]*?\{renderFilteredOptions\(\)\}/);
+  assert.match(select, /\{option\.label\}[\s\S]*?\{option\.description\}[\s\S]*?<\/button>/);
+  assert.doesNotMatch(select, /selectedOption\??\.description/);
+  assert.doesNotMatch(view, /Não sabe onde postar|Publique aqui/);
+  assert.match(
+    select,
+    /option.separatorBefore && index > 0 && "mt-1.5 border-t border-border\/60 pt-1.5"/,
+  );
+});
 
 function PasswordField(props) {
   const { control } = useForm({ defaultValues: { password: "" } });
@@ -27,6 +99,49 @@ function CodeField({ value }) {
   const { control } = useForm({ defaultValues: { code: value } });
   return createElement(OtpController, { control, name: "code", label: "Código", length: 6 });
 }
+
+function SearchField() {
+  const { control } = useForm({ defaultValues: { search: "Pesquisa" } });
+  return createElement(InputController, {
+    control,
+    name: "search",
+    label: "Pesquisa",
+    leadingIcon: "search",
+    max: 120,
+    showCounter: true,
+    after: createElement("div", { role: "listbox" }, "Sugestões"),
+  });
+}
+
+test("lupa fica ancorada apenas ao input, sem contador ou sugestões no bloco relativo", () => {
+  const html = renderToStaticMarkup(createElement(SearchField));
+  const control = html.match(/<div class="relative">([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(control);
+  assert.match(control, /<input[^>]*id="search"/);
+  const icon = control.match(/<svg[^>]*>/)?.[0];
+  assert.ok(icon);
+  assert.match(icon, /aria-hidden="true"/);
+  assert.match(icon, /pointer-events-none/);
+  assert.doesNotMatch(control, /listbox|Sugestões|8\/120/);
+  assert.match(html, /<\/svg><\/div><span[^>]*>8\/120<\/span><div role="listbox">/);
+  assert.match(html, /for="search"/);
+  assert.match(html, /id="search-error" role="alert"/);
+});
+
+test("botão de senha não é deslocado pelo contador ou conteúdo complementar", () => {
+  const html = renderToStaticMarkup(
+    createElement(PasswordField, {
+      max: 120,
+      showCounter: true,
+      after: createElement("div", null, "Ajuda complementar"),
+    }),
+  );
+  const control = html.match(/<div class="relative">([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(control);
+  assert.match(control, /aria-label="Mostrar senha"/);
+  assert.doesNotMatch(control, /Ajuda complementar|0\/120/);
+  assert.match(html, /<\/button><\/div><span[^>]*>0\/120<\/span>/);
+});
 
 test("rótulo de senha não inclui botão, descrição nem mensagem de erro", () => {
   const html = renderToStaticMarkup(createElement(PasswordField, { description: "Descrição" }));

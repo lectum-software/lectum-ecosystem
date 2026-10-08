@@ -21,6 +21,8 @@ export type FieldType =
 
 export type FieldOption = {
   label: string;
+  description?: string;
+  separatorBefore?: boolean;
   value: string | number | boolean;
   key?: string;
   disabled?: boolean;

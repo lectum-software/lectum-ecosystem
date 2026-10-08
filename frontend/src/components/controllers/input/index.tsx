@@ -56,52 +56,72 @@ export function InputController<FormType extends FieldValues>({
             required={required}
             tooltip={tooltip}
           >
-            <span className="relative block">
-              <Input
-                aria-describedby={describedBy({ id: inputId, description, error })}
-                aria-invalid={Boolean(error)}
-                autoComplete={autoComplete}
-                autoFocus={autoFocus}
-                className={cn(
-                  error && "border-danger focus:border-danger focus:ring-danger/10",
-                  type === "password" && "pr-11",
-                  leadingIcon === "search" && "pl-11",
-                  inputClassName,
-                )}
-                disabled={disabled}
-                id={inputId}
-                max={max}
-                maxLength={typeof max === "number" && inputType !== "number" ? max : undefined}
-                min={min}
-                name={field.name}
-                onBlur={field.onBlur}
-                onChange={(event) => {
-                  const nextValue =
-                    type === "number"
-                      ? event.target.value
-                        ? Number(event.target.value)
-                        : null
-                      : event.target.value;
+            <div>
+              <div className="relative">
+                <Input
+                  aria-describedby={describedBy({ id: inputId, description, error })}
+                  aria-invalid={Boolean(error)}
+                  autoComplete={autoComplete}
+                  autoFocus={autoFocus}
+                  className={cn(
+                    error && "border-danger focus:border-danger focus:ring-danger/10",
+                    type === "password" && "pr-11",
+                    leadingIcon === "search" && "pl-11",
+                    inputClassName,
+                  )}
+                  disabled={disabled}
+                  id={inputId}
+                  max={max}
+                  maxLength={typeof max === "number" && inputType !== "number" ? max : undefined}
+                  min={min}
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  onChange={(event) => {
+                    const nextValue =
+                      type === "number"
+                        ? event.target.value
+                          ? Number(event.target.value)
+                          : null
+                        : event.target.value;
 
-                  field.onChange(nextValue);
-                  onChangeCallback?.(nextValue);
-                }}
-                placeholder={placeholder}
-                readOnly={readOnly}
-                ref={field.ref}
-                required={false}
-                step={step}
-                tabIndex={tabIndex}
-                type={inputType}
-                value={field.value ?? ""}
-              />
-
-              {leadingIcon === "search" ? (
-                <Search
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+                    field.onChange(nextValue);
+                    onChangeCallback?.(nextValue);
+                  }}
+                  placeholder={placeholder}
+                  readOnly={readOnly}
+                  ref={field.ref}
+                  required={false}
+                  step={step}
+                  tabIndex={tabIndex}
+                  type={inputType}
+                  value={field.value ?? ""}
                 />
-              ) : null}
+
+                {leadingIcon === "search" ? (
+                  <Search
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+                  />
+                ) : null}
+
+                {type === "password" ? (
+                  <button
+                    aria-controls={inputId}
+                    aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+                    className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={disabled || readOnly}
+                    onClick={() => setVisible((current) => !current)}
+                    tabIndex={tabIndex}
+                    type="button"
+                  >
+                    {visible ? (
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                ) : null}
+              </div>
 
               {showCounter && typeof max === "number" ? (
                 <span className="mt-1 block pr-1 text-right text-xs font-medium text-muted">
@@ -109,26 +129,8 @@ export function InputController<FormType extends FieldValues>({
                 </span>
               ) : null}
 
-              {type === "password" ? (
-                <button
-                  aria-controls={inputId}
-                  aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
-                  className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={disabled || readOnly}
-                  onClick={() => setVisible((current) => !current)}
-                  tabIndex={tabIndex}
-                  type="button"
-                >
-                  {visible ? (
-                    <EyeOff className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <Eye className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </button>
-              ) : null}
-
               {after}
-            </span>
+            </div>
           </Container>
         );
       }}
