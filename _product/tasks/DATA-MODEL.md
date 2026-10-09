@@ -673,6 +673,14 @@ Contratos derivados:
 
 Complemento 2026-07-12: `community_member.createdAt` é o marco histórico fixo **Membro desde**. O vínculo nasce quando o usuário segue/entra na comunidade ou quando faz a primeira participação real nela por post/resposta sem vínculo anterior. Interações posteriores não recalculam essa data. Se uma base legada tiver post/resposta anterior ao vínculo, o backfill e a leitura administrativa devem preservar a menor data real de participação.
 
+Complemento vigente em 2026-10-09 (TASK-23 / ADR-0581): o feed geral exige ao menos uma
+resposta direta em vídeo de psicólogo verificado, não excluída e com mídia disponível
+(Stream ready do autor/contexto; legado com referência pública válida). Filtrar antes
+de contar e paginar; texto e vídeo próprio do post não habilitam. Comunidades continuam
+exibindo posts sem respostas/vídeo. Destaque usa atividade profissional por resposta com
+meia-vida de 14 dias, bônus por profissional distinto e engajamento complementar limitado;
+não renova histórico por edição ou nova resposta. Contratos e schema permanecem iguais.
+
 `community_post` (TASK-23/24/26/28; PRD §9, fluxograma 19.5):
 
 | Campo | Tipo | Notas |

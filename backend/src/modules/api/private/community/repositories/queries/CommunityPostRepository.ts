@@ -21,6 +21,7 @@ import {
   resolveCommunityOpportunitiesStartDate,
   sortCommunityPostResults,
 } from "../support/community-feed";
+import { loadAvailableProfessionalReplies } from "../support/community-feed-media";
 import {
   getCommunityPostSortMetrics,
   getFollowedCommunityIds,
@@ -79,9 +80,10 @@ export class CommunityPostRepository extends CommunityRepositoryContext {
       }),
       prisma.community_post.count({ where }),
     ]);
-    const allPostIds = allItems.map((item) => item.id);
+    const availableItems = await loadAvailableProfessionalReplies(allItems);
+    const allPostIds = availableItems.map((item) => item.id);
     const sortMetricsByPostId = await getCommunityPostSortMetrics(allPostIds);
-    const items = sortCommunityPostResults(allItems, sort, period, sortMetricsByPostId).slice(
+    const items = sortCommunityPostResults(availableItems, sort, period, sortMetricsByPostId).slice(
       pagination.skip,
       pagination.skip + pagination.limit,
     );

@@ -5,6 +5,8 @@ import {
 } from "@/utils/subscription-entitlement";
 import type { CommunityPostSortMetricsDTO } from "../../DTOs/ICommunityDTO";
 
+import { featuredPostScore } from "./community-featured";
+
 export const DEFAULT_LIMIT = 20;
 
 export const MAX_LIMIT = 50;
@@ -158,6 +160,8 @@ export const postSelect = {
       deleted: false,
       parent_reply_id: null,
       author: {
+        active: true,
+        deleted: false,
         role: "psicologo",
         psychologist_profile: {
           is: {
@@ -214,7 +218,6 @@ export type GeneralFeedQueueItem = {
   communityHotScore: number;
   communityId: string;
   communitySizeWeight: number;
-  freshnessWeight: number;
   post: PostResult;
 };
 
@@ -350,18 +353,7 @@ export const communityPostFeaturedScore = (
   metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
   now: number,
 ) => {
-  const metrics = communityPostMetrics(post.id, metricsByPostId);
-  const hoursSincePublication = Math.max(0, (now - post.createdAt.getTime()) / 3_600_000);
-  const highlightScore =
-    metrics.upvotes.all * 3 +
-    metrics.comments.all * 5 +
-    metrics.psychologist_replies_count * 15 +
-    metrics.top_mentor_replies_count * 25 +
-    metrics.shares_count * 4 -
-    metrics.penalty -
-    post.downvotes_count * COMMUNITY_DOWNVOTE_RANKING_WEIGHT;
-
-  return highlightScore / (hoursSincePublication + 2) ** 0.5;
+  return featuredPostScore(post, communityPostMetrics(post.id, metricsByPostId), now);
 };
 
 export const sortCommunityPostResults = (
@@ -437,42 +429,6 @@ export const clamp = (min: number, max: number, value: number) => {
   return Math.min(max, Math.max(min, value));
 };
 
-export const generalFeedFreshnessWeight = (hoursSincePublication: number) => {
-  if (hoursSincePublication <= 24) return 1.3;
-  if (hoursSincePublication <= 72) return 1.1;
-  if (hoursSincePublication <= GENERAL_FEED_RECENT_WINDOW_HOURS) return 1;
-
-  return 0.8;
-};
-
-export const generalFeedPostHotScore = (
-  post: PostResult,
-  metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
-) => {
-  const metrics = communityPostMetrics(post.id, metricsByPostId);
-  const downvotePenalty = post.downvotes_count * COMMUNITY_DOWNVOTE_RANKING_WEIGHT;
-
-  return (
-    metrics.upvotes.all * 3 +
-    metrics.comments.all * 5 +
-    metrics.psychologist_replies_count * 25 +
-    metrics.top_mentor_replies_count * 40 +
-    metrics.shares_count * 4 -
-    metrics.penalty -
-    downvotePenalty
-  );
-};
-
-export const generalFeedCommunityHotScore = (
-  post: PostResult,
-  metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
-  now: number,
-) => {
-  const hoursSincePublication = Math.max(0, (now - post.createdAt.getTime()) / 3_600_000);
-
-  return generalFeedPostHotScore(post, metricsByPostId) / (hoursSincePublication + 2) ** 0.5;
-};
-
 export const generalFeedDiversityWeight = (
   communityId: string,
   recentCommunityHistory: string[],
@@ -492,7 +448,6 @@ export const generalFeedCandidateScore = (
 ) => {
   return (
     item.communityHotScore *
-    item.freshnessWeight *
     item.communitySizeWeight *
     generalFeedDiversityWeight(item.communityId, recentCommunityHistory)
   );
@@ -542,14 +497,12 @@ export const sortGeneralFeedPostResults = (
 
   for (const post of items.filter((item) => item.status !== "removido")) {
     const communityId = post.community.id;
-    const hoursSincePublication = Math.max(0, (now - post.createdAt.getTime()) / 3_600_000);
     const queue = queuesByCommunityId.get(communityId) ?? [];
 
     queue.push({
-      communityHotScore: generalFeedCommunityHotScore(post, metricsByPostId, now),
+      communityHotScore: communityPostFeaturedScore(post, metricsByPostId, now),
       communityId,
       communitySizeWeight: communitySizeWeights.get(communityId) ?? 1,
-      freshnessWeight: generalFeedFreshnessWeight(hoursSincePublication),
       post,
     });
     queuesByCommunityId.set(communityId, queue);

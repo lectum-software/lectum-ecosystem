@@ -122,7 +122,7 @@ export const CommunityDetailLogic = ({
     [loadedPosts, sort, sortPeriods],
   );
   const replyTip = usePsychologistReplyTip(sortedPosts, JSON.stringify([slug, postsQueryParams]));
-  const posts = replyTip.posts;
+  const posts = sort === "featured" ? sortedPosts : replyTip.posts;
   const detailError = detail.isError ? resolveCommunityDetailError(detail.error) : null;
   const postsError = postsQuery.isError ? resolveFeedError(postsQuery.error) : null;
   const membershipPending = followMutation.isPending || unfollowMutation.isPending;
