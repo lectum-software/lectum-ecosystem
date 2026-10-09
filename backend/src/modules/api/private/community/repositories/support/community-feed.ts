@@ -67,6 +67,7 @@ export const communityRuleSelect = {
 } satisfies Prisma.community_ruleSelect;
 
 export const professionalProfileSelect = {
+  deleted: true,
   professional_first_name: true,
   professional_last_name: true,
   gender: true,
@@ -84,6 +85,7 @@ export const professionalProfileSelect = {
 } satisfies Prisma.psychologist_profileSelect;
 
 export const authorSelect = {
+  active: true,
   id: true,
   deleted: true,
   name: true,
@@ -490,8 +492,9 @@ export const buildGeneralFeedCommunitySizeWeights = (items: PostResult[], now: n
 export const sortGeneralFeedPostResults = (
   items: PostResult[],
   metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
+  now = Date.now(),
+  variationWeight: (id: string) => number = () => 1,
 ) => {
-  const now = Date.now();
   const communitySizeWeights = buildGeneralFeedCommunitySizeWeights(items, now);
   const queuesByCommunityId = new Map<string, GeneralFeedQueueItem[]>();
 
@@ -500,7 +503,8 @@ export const sortGeneralFeedPostResults = (
     const queue = queuesByCommunityId.get(communityId) ?? [];
 
     queue.push({
-      communityHotScore: communityPostFeaturedScore(post, metricsByPostId, now),
+      communityHotScore:
+        communityPostFeaturedScore(post, metricsByPostId, now) * variationWeight(post.id),
       communityId,
       communitySizeWeight: communitySizeWeights.get(communityId) ?? 1,
       post,

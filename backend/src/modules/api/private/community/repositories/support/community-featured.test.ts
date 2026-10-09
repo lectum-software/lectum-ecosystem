@@ -18,6 +18,14 @@ import {
   readyFeedVideoAssetWhere,
   withAvailableProfessionalReplies,
 } from "./community-feed-eligibility";
+import {
+  hasAvailableOriginalVideo,
+  interleaveFeedGroups,
+  isMixedFeedEligible,
+  originalProfessionalScore,
+  sortMixedFeedPosts,
+} from "./community-feed-mix";
+import { feedVariationWeight } from "./community-feed-variation";
 
 const now = Date.now();
 const daysAgo = (days: number) => new Date(now - days * 86_400_000);
@@ -36,11 +44,13 @@ const reply = (id: string, days = 7): ProfessionalReplyResult => ({
   downvotes_count: 0,
   author: {
     id: `professional-${id}`,
+    active: true,
     deleted: false,
     name: "Profissional",
     avatar: null,
     role: "psicologo",
     psychologist_profile: {
+      deleted: false,
       cfp_verified_at: daysAgo(400),
       crp_status: "aprovado",
       crp: null,
@@ -255,4 +265,166 @@ describe("elegibilidade do feed antes da paginação", () => {
     );
     assert.equal(original.replies.length, 1);
   });
+});
+
+const original = (id: string, days = 7): PostResult => ({
+  ...post(id, 0, days),
+  author: reply(id).author,
+});
+describe("feed misto profissional 4:1", () => {
+  it("admite texto profissional verificado sem respostas, mas nao paciente sem video", () => {
+    assert.equal(isMixedFeedEligible(original("pro")), true);
+    assert.equal(isMixedFeedEligible(post("patient")), false);
+    assert.equal(isMixedFeedEligible(post("answered", 1)), true);
+    const invalid = original("invalid");
+    invalid.author.active = false;
+    assert.equal(isMixedFeedEligible(invalid), false);
+    invalid.author.active = true;
+    invalid.author.deleted = true;
+    assert.equal(isMixedFeedEligible(invalid), false);
+    invalid.author.deleted = false;
+    if (invalid.author.psychologist_profile) invalid.author.psychologist_profile.deleted = true;
+    assert.equal(isMixedFeedEligible(invalid), false);
+    invalid.author.psychologist_profile = null;
+    assert.equal(isMixedFeedEligible(invalid), false);
+    const removed = original("removed");
+    removed.status = "removido";
+    assert.equal(isMixedFeedEligible(removed), false);
+  });
+  it("intercala globalmente e completa filas curtas ou vazias", () => {
+    assert.deepEqual(
+      interleaveFeedGroups([1, 2, 3, 4, 5, 6, 7, 8, 9], ["a", "b", "c"] as (number | string)[]),
+      [1, 2, 3, 4, "a", 5, 6, 7, 8, "b", 9, "c"],
+    );
+    assert.deepEqual(interleaveFeedGroups([1], [2, 3, 4]), [1, 2, 3, 4]);
+    assert.deepEqual(interleaveFeedGroups([], [2, 3]), [2, 3]);
+    assert.deepEqual(interleaveFeedGroups([1, 2], []), [1, 2]);
+    assert.deepEqual(interleaveFeedGroups([], []), []);
+  });
+  it("bonus de video e unico e moderado, texto util/recente supera video antigo", () => {
+    const metrics = emptyCommunityPostSortMetrics();
+    const item = original("pro");
+    const base = originalProfessionalScore(item, metrics, false, now);
+    assert.equal(originalProfessionalScore(item, metrics, true, now), base * 1.15);
+    assert.ok(
+      originalProfessionalScore(original("recent", 1), metrics, false, now) >
+        originalProfessionalScore(original("old", 365), metrics, true, now),
+    );
+    const useful = emptyCommunityPostSortMetrics();
+    useful.upvotes.all = 5;
+    assert.ok(
+      originalProfessionalScore(item, useful, false, now) >
+        originalProfessionalScore(item, metrics, true, now),
+    );
+    useful.penalty = 999;
+    assert.equal(originalProfessionalScore(item, useful, true, now), 0);
+  });
+  it("valida video proprio Stream por owner/slug de comunidade e respeita carrossel", () => {
+    const item = original("post-id");
+    item.media_type = "video";
+    item.media_url = "/api/private/video-assets/asset_original/playback";
+    const assets = new Map([
+      [
+        "asset_original",
+        { id: "asset_original", owner_id: item.author.id, context_id: item.community.slug },
+      ],
+    ]);
+    assert.equal(hasAvailableOriginalVideo(item, assets), true);
+    assert.equal(hasAvailableOriginalVideo(item, new Map()), false);
+    assets.get("asset_original")!.owner_id = "another";
+    assert.equal(hasAvailableOriginalVideo(item, assets), false);
+    assets.get("asset_original")!.owner_id = item.author.id;
+    assets.get("asset_original")!.context_id = "another";
+    assert.equal(hasAvailableOriginalVideo(item, assets), false);
+    item.media_url = "/public/files/posts/media/video.mp4";
+    assert.equal(hasAvailableOriginalVideo(item, new Map()), true);
+    item.media_items = [
+      {
+        id: "image",
+        media_type: "image",
+        media_url: "/public/files/posts/media/image.jpg",
+        thumbnail_url: null,
+        position: 0,
+      },
+    ];
+    assert.equal(hasAvailableOriginalVideo(item, new Map()), false);
+    item.media_items.push({
+      id: "video",
+      media_type: "video",
+      media_url: "/public/files/posts/media/video.mp4",
+      thumbnail_url: null,
+      position: 1,
+    });
+    assert.equal(hasAvailableOriginalVideo(item, new Map()), true);
+    item.media_items[1].media_url = "https://untrusted.example/video.mp4";
+    assert.equal(hasAvailableOriginalVideo(item, new Map()), false);
+  });
+  it("profissional respondido ocupa uma unica fila e paginacao nao reinicia ciclo", () => {
+    const patients = Array.from({ length: 13 }, (_, i) => post(`patient-${i}`, 1));
+    const pros = Array.from({ length: 4 }, (_, i) => original(`pro-${i}`));
+    pros[0].replies = [reply("answer")];
+    const input = [...pros, ...patients, pros[0], post("excluded")];
+    const result = sortMixedFeedPosts(input, new Map(), new Set(), now);
+    assert.equal(result.length, 17);
+    assert.equal(new Set(result.map((p) => p.id)).size, 17);
+    assert.deepEqual(
+      result.slice(0, 15).map((p) => p.author.role),
+      Array.from({ length: 3 }, () => [
+        "paciente",
+        "paciente",
+        "paciente",
+        "paciente",
+        "psicologo",
+      ]).flat(),
+    );
+    const pages = [result.slice(0, 12), result.slice(12, 24)];
+    assert.deepEqual(
+      pages.flat().map((p) => p.id),
+      result.map((p) => p.id),
+    );
+    assert.deepEqual(
+      sortMixedFeedPosts([...input].reverse(), new Map(), new Set(), now).map((p) => p.id),
+      result.map((p) => p.id),
+    );
+  });
+});
+
+it("variacao e determinista, limitada a 5%, preserva 4:1 e altera empates", () => {
+  const items = [
+    ...Array.from({ length: 16 }, (_, i) => post(String(i), 1)),
+    ...Array.from({ length: 5 }, (_, i) => original(String(i + 20))),
+  ];
+  const run = (seed: number) => sortMixedFeedPosts(items, new Map(), new Set(), now, seed);
+  assert.deepEqual(run(17), run(17));
+  assert.notDeepEqual(
+    run(17).map((p) => p.id),
+    run(71).map((p) => p.id),
+  );
+  for (const seed of [17, 71]) {
+    const result = run(seed);
+    assert.equal(new Set(result.map((p) => p.id)).size, items.length);
+    assert.deepEqual(
+      result.slice(0, 20).map((p) => p.author.role),
+      Array.from({ length: 4 }, () => [
+        "paciente",
+        "paciente",
+        "paciente",
+        "paciente",
+        "psicologo",
+      ]).flat(),
+    );
+    for (const item of items) {
+      const w = feedVariationWeight(item.id, seed);
+      assert.ok(w >= 0.95 && w <= 1.05);
+    }
+  }
+  assert.equal(feedVariationWeight("id", 0), 1);
+  assert.equal(feedVariationWeight("id", Number.NaN), 1);
+  const dominant = original("dominant", 1);
+  const old = original("old", 365);
+  for (let seed = 1; seed <= 100; seed++)
+    assert.equal(
+      sortMixedFeedPosts([old, dominant], new Map(), new Set([old.id]), now, seed)[0].id,
+      dominant.id,
+    );
 });

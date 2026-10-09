@@ -82,6 +82,15 @@ export const suggestionSchema: IValidatorRequest = {
 
 export const feedSchema: IValidatorRequest = {
   query: [
+    {
+      key: "seed",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      max: 2147483647,
+      optional: true,
+    },
     ...paginationQuery,
     {
       key: "search",

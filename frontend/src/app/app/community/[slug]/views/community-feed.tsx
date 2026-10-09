@@ -25,6 +25,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useFeedVariationSeed } from "@/hooks/use-feed-variation-seed";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -74,17 +75,19 @@ export const CommunityFeedLogic = ({
   const createPostHref = selectedCommunitySlug
     ? `${COMMUNITY_CREATE_POST_HREF}?community=${encodeURIComponent(selectedCommunitySlug)}`
     : COMMUNITY_CREATE_POST_HREF;
+  const variationSeed = useFeedVariationSeed();
   const query = useMemo(
     () => ({
       limit: PAGE_LIMIT,
+      seed: variationSeed || undefined,
       scope,
       ...(deferredSearch ? { search: deferredSearch } : {}),
       ...(selectedCommunitySlug ? { community: selectedCommunitySlug } : {}),
     }),
-    [deferredSearch, scope, selectedCommunitySlug],
+    [deferredSearch, scope, selectedCommunitySlug, variationSeed],
   );
   const communitiesQuery = useCommunities({ limit: 50, page: 1 });
-  const feed = useInfiniteCommunityFeedPosts(query);
+  const feed = useInfiniteCommunityFeedPosts(query, variationSeed > 0);
   const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.replyId ?? target.postId);
