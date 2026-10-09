@@ -1102,7 +1102,7 @@ Escopo backend/frontend, sem mudanca de layout; commit local em homolog, sem pus
 
 - [x] Variacao backend de ate 5% por seed, preservando 4:1 e relevancia; mesma seed durante paginacao e retorno, nova no refresh. Contrato opcional compativel.
 
-- [ ] Validacao visual local: browser bloqueado pelo sandbox do ambiente; nao alegar validacao visual.
-- [ ] Publicacao e smoke remoto: aguardam autorizacao; sem push/deploy.
+- [x] Validacao visual local: feed real carregado em dev, desktop confirmado pelo usuario e mobile 390px sem overflow. Original profissional sem respostas visivel.
+- [ ] Publicacao e smoke remoto: autorizados pelo usuario; promover somente apos gates e verificar versoes.
 
 Evidencias: ADR-0582, builds backend/frontend 0.1.616, checks por app aprovados, backend 892 testes, 16 focais, smoke HTTP local e integracao real somente leitura. Base local limitada a um original profissional elegivel; nenhum mock/seed criado.

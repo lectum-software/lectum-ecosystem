@@ -79,3 +79,11 @@ existente; community_reply permanece vinculado ao ID do post. Sem migrar dados.
   desabilitados para smoke; sem migration, reset, upload, envio ou operacao produtiva.
 - Bump executado uma vez: 0.1.615 -> 0.1.616 nos cinco manifests; check:version aprovado.
 - Publicacao nao autorizada nesta etapa. Commit em homolog, sem push/deploy.
+
+## Complemento de validacao e autorizacao
+
+- Usuario autorizou producao e confirmou visual desktop com captura do feed local.
+- Causa do erro local: next start em production recusa origem API localhost; porta 3334 tambem precisava de origem local exata. Corrigido apenas no processo de desenvolvimento, sem alterar seguranca/codigo/configuracao de producao.
+- Browser integrado local em next dev: original profissional sem respostas carregado; mobile 390px sem overflow e desktop preservado. Sem escrita de post/voto/upload.
+- Midia do registro local aponta para arquivo de teste preexistente em localhost:3000/local-test-media; porta indisponivel. Nao e erro do ranking nem dependencia produtiva; nao houve criacao de mock ou alteracao desse registro. Reproducao desse arquivo nao validada.
+- Evidencias finais de deploy, gates, SHA e smoke serao anexadas ao PR desta publicacao. Rollback pelos artefatos anteriores, sem migracao/dados.
