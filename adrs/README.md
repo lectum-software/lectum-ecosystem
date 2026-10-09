@@ -622,3 +622,4 @@ Formato recomendado:
 - [ADR-0576 — Midia antes dos controles no post profissional do feed](0576-feed-media-actions.md)
 - [ADR-0577 — Avatar e sugestao de cor na criacao](0577-community-create-avatar.md)
 - [ADR-0578 — Comunidade geral como ultima opcao](0578-post-community-fallback.md)
+- [ADR-0579 — Comunidades seguidas na familia visual da Lectum](0579-comunidades-seguidas-familia-visual.md)
