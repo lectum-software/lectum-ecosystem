@@ -627,3 +627,5 @@ Formato recomendado:
 - [ADR-0580 — Ordem global de publicacoes por votos e comentarios](0580-profile-publication-order.md)
 
 - [ADR-0581 — Feed com acolhimento profissional recente em video](0581-feed-acolhimento-profissional-recente.md)
+
+- [ADR-0582 — Feed misto com publicacoes profissionais](0582-feed-misto-publicacoes-profissionais.md)

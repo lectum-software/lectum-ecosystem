@@ -4,8 +4,8 @@ import { prisma } from "../src/external/prisma/client.ts";
 import { CommunityCoreRepository } from "../src/modules/api/private/community/repositories/queries/CommunityCoreRepository.ts";
 import { CommunityPostRepository } from "../src/modules/api/private/community/repositories/queries/CommunityPostRepository.ts";
 import { postSelect } from "../src/modules/api/private/community/repositories/support/community-feed.ts";
-import { hasFeedVideoReply } from "../src/modules/api/private/community/repositories/support/community-feed-eligibility.ts";
 import { loadAvailableProfessionalReplies } from "../src/modules/api/private/community/repositories/support/community-feed-media.ts";
+import { isMixedFeedEligible } from "../src/modules/api/private/community/repositories/support/community-feed-mix.ts";
 
 let stage = "development_environment";
 try {
@@ -22,7 +22,7 @@ try {
   stage = "require_persisted_posts";
   assert.ok(storedPosts.length > 0, "Development database has no posts for integration");
   const available = await loadAvailableProfessionalReplies(storedPosts);
-  const eligible = available.filter(hasFeedVideoReply);
+  const eligible = available.filter(isMixedFeedEligible);
   stage = "feed_repository";
   const response = await feed.feed({ q: { limit: 50 } });
   assert.equal(response.count, eligible.length);
@@ -34,6 +34,10 @@ try {
       assert.ok(!ids.has(item.id));
       ids.add(item.id);
       assert.ok(eligible.some((post) => post.id === item.id));
+      if (item.author.role === "psicologo") {
+        assert.equal(item.author.verified, true);
+        continue;
+      }
       assert.equal(item.highlighted_professional_reply?.media_type, "video");
       assert.equal(item.highlighted_professional_reply?.parent_reply_id, null);
       assert.equal(item.highlighted_professional_reply?.author.verified, true);
@@ -62,8 +66,9 @@ try {
       result: "passed",
       writes: 0,
       persistedPosts: storedPosts.length,
-      eligibleVideoPosts: eligible.length,
-      positiveVideoCoverage: eligible.length > 0,
+      eligiblePosts: eligible.length,
+      originalProfessionalPosts: eligible.filter((post) => post.author.role === "psicologo").length,
+      positiveVideoCoverage: eligible.some((post) => post.author.role === "paciente"),
       excludedFromFeed: storedPosts.length - eligible.length,
       pagesChecked: response.pages,
       communityFiltersChecked: 5,

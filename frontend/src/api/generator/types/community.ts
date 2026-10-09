@@ -17,6 +17,7 @@ export type CommunityPostsQuery = {
 export type CommunityFeedScope = "all" | "following";
 
 export type CommunityFeedQuery = {
+  seed?: number;
   page?: number;
   limit?: number;
   search?: string;

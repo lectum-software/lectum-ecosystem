@@ -1087,3 +1087,22 @@ Frontend buildado respondeu HTTP 200 em /comunidades e /app/community/feed; /ver
 0.1.615, no-store e noindex. Nao equivale a validacao visual: browser indisponivel neste cliente.
 Versao incrementada uma vez para 0.1.615 nos cinco manifests. Detalhes e limitacoes: ADR-0581.
 Publicacao adiada conforme fluxo atualizado LOCAL-TO-PRODUCTION/ADR-0572; nenhum main/deploy.
+
+## Complemento 2026-10-09 - Feed misto 4:1 (ADR-0582)
+
+- [x] Posts originais de psicologos ativos/verificados entram sem exigir resposta.
+- [x] Pacientes continuam exigindo video-resposta profissional valido.
+- [x] Ciclo global 4:1, sem duplicacao, com preenchimento da fila restante e paginacao correta.
+- [x] Profissionais ordenados por recencia/engajamento, bonus unico de 15% por video disponivel.
+- [x] Video Stream considera ready/purpose/owner/context; carrossel e legado preservados.
+- [x] Filtros do feed e ordenacoes internas das comunidades preservados.
+- [x] Testes/check/build/Prisma e leitura real registrados; sem mock/seed/migration/env/package.
+
+Escopo backend/frontend, sem mudanca de layout; commit local em homolog, sem push/deploy.
+
+- [x] Variacao backend de ate 5% por seed, preservando 4:1 e relevancia; mesma seed durante paginacao e retorno, nova no refresh. Contrato opcional compativel.
+
+- [x] Validacao visual local: feed real carregado em dev, desktop confirmado pelo usuario e mobile 390px sem overflow. Original profissional sem respostas visivel.
+- [ ] Publicacao e smoke remoto: autorizados pelo usuario; promover somente apos gates e verificar versoes.
+
+Evidencias: ADR-0582, builds backend/frontend 0.1.616, checks por app aprovados, backend 892 testes, 16 focais, smoke HTTP local e integracao real somente leitura. Base local limitada a um original profissional elegivel; nenhum mock/seed criado.

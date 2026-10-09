@@ -1308,3 +1308,14 @@ existente; cascade das evidências não transforma seus logs antigos em consenti
 - Baseline e triggers transacionais não alteram assinatura, pagamento ou entitlement. Antes da cobertura, o plano é desconhecido, não gratuito/pago presumido.
 - Atualizações relevantes e exclusões geram novas observações; IDs de gateway, documentos pessoais e notas não são copiados para a história.
 - A cobertura de classificação não corta os eventos de Analytics já coletados. A leitura paga pode apresentar eventos anteriores ao upgrade, sem fabricar eventos ausentes.
+
+### TASK-23 - Feed misto e variacao (ADR-0582, 2026-10-09)
+
+Sem alteracao de schema. Elegibilidade do feed passa a aceitar posts originais de
+psicologos ativos/verificados sem resposta; pacientes continuam exigindo video-resposta
+profissional. Quota global 4:1 antes de paginar, completando com a fila remanescente.
+CommunityFeedQuery aceita seed opcional, inteiro positivo ate 2147483647; clientes antigos
+continuam suportados. Ranking e variacao limitada permanecem exclusivos do backend.
+Campos internos active/deleted do autor/perfil sao usados na selecao, sem novo campo de
+resposta publica. Ordenacoes internas das comunidades nao mudam. Midia pronta consultada
+em lotes no banco, sem requisicoes individuais ao provider.

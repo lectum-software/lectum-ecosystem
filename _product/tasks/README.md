@@ -1,6 +1,6 @@
-Refinamento local em 2026-10-09: TASK-23 - feed com video-resposta e destaque por acolhimento
-recente, compartilhado com TASK-25. Checks/builds aprovados em 0.1.615; validacao visual e
-integracao positiva com videos reais pendentes. Especificacao e evidencias: ADR-0581.
+Implementado localmente: complemento TASK-23, feed misto 4:1, bonus de video e variacao backend de ate 5%. ADR-0582, candidata de publicacao; checks/builds/smoke HTTP aprovados. Browser local validado em dev no desktop e mobile 390px; publicacao autorizada, ainda pendente.
+
+Refinamento anterior TASK-23/25 (ADR-0581): publicado e validado em producao 0.1.615 via PR #98. Complemento local atual: ADR-0582.
 
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
