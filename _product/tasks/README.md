@@ -1,3 +1,7 @@
+Refinamento local em 2026-10-09: TASK-23 - feed com video-resposta e destaque por acolhimento
+recente, compartilhado com TASK-25. Checks/builds aprovados em 0.1.615; validacao visual e
+integracao positiva com videos reais pendentes. Especificacao e evidencias: ADR-0581.
+
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
 Ajuste de 06/10/2026: [TASK-219 - Tema nas respostas das publicacoes do perfil](TASK-219-tema-respostas-publicacoes-perfil.md). Chevron e tema somente nas respostas da aba Publicacoes, reutilizando o cabecalho de posts. ADR-0559.

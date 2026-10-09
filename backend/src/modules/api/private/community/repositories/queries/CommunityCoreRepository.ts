@@ -17,6 +17,8 @@ import {
   postSelect,
   sortGeneralFeedPostResults,
 } from "../support/community-feed";
+import { hasFeedVideoReply } from "../support/community-feed-eligibility";
+import { loadAvailableProfessionalReplies } from "../support/community-feed-media";
 import {
   getCommunityPostSortMetrics,
   getFollowedCommunityIds,
@@ -344,7 +346,7 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
       },
     };
 
-    const [allItems, count, followingCount] = await Promise.all([
+    const [allItems, followingCount] = await Promise.all([
       prisma.community_post.findMany({
         where,
         orderBy: [
@@ -356,14 +358,17 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
         ],
         select: postSelect,
       }),
-      prisma.community_post.count({ where }),
       scope === "following" && followerUserId
         ? prisma.community_member.count({ where: followedMembershipWhere })
         : Promise.resolve(0),
     ]);
-    const allPostIds = allItems.map((item) => item.id);
+    const eligibleItems = (await loadAvailableProfessionalReplies(allItems)).filter(
+      hasFeedVideoReply,
+    );
+    const count = eligibleItems.length;
+    const allPostIds = eligibleItems.map((item) => item.id);
     const sortMetricsByPostId = await getCommunityPostSortMetrics(allPostIds);
-    const items = sortGeneralFeedPostResults(allItems, sortMetricsByPostId).slice(
+    const items = sortGeneralFeedPostResults(eligibleItems, sortMetricsByPostId).slice(
       pagination.skip,
       pagination.skip + pagination.limit,
     );
