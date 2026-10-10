@@ -9,7 +9,7 @@ import {
   useUnsaveReplyFromList,
 } from "@/api/callers/posts";
 import type { PostListPost } from "@/api/generator/types/posts";
-import { CommunityPostCard } from "@/components/community/community-post-card";
+import { PostCard } from "@/app/app/community/[slug]/components/post-card";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
@@ -157,16 +157,12 @@ export const SavedPostsLogic = () => {
                     removePending={unsaveReplyMutation.isPending}
                   />
                 ) : (
-                  <CommunityPostCard
+                  <PostCard
                     key={item.id}
-                    interactiveActions
                     onShare={sharePost}
-                    openPostOnCardClick
                     post={item.post}
-                    presentation="feed"
                     saveActionOverride={{
                       active: true,
-                      count: item.post.saves_count,
                       disabled: unsavePostMutation.isPending,
                       label: "Remover dos salvos",
                       onClick: () => unsavePostMutation.mutate(item.post.id),

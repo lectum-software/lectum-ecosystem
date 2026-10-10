@@ -514,3 +514,50 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check` executado antes do amend final; uma nova tentativa posterior foi bloqueada por alteracoes concorrentes nao relacionadas antes de serem isoladas.
 - `git diff --check`
 - Smoke local com Next dev em `/app/publicacoes/minhas`: `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, preservando o guard privado sem sessao.
+
+## Complemento 2026-10-10 - Salvos com a mesma apresentacao do feed
+
+Pedido: reproduzir o card atual do feed em Salvos, mobile-first (~390px):
+conteudo do paciente, controles sem divisoria, rotulo Resposta profissional,
+identidade do psicologo e video sem recuo lateral. Posts originais de psicologos
+mantem midia antes dos controles. Preservar remover dos salvos, votos e compartilhar.
+
+Referencia: capturas enviadas pelo usuario em 2026-10-10 e feed atual.
+Builder/Quick Copy indisponivel; consultado `_product/proto/Posts Salvos.jpg`.
+O pedido atual substitui os detalhes antigos de divisoria/recuo desse prototipo.
+Decisao e impacto de deploy: ADR-0589; somente frontend, sem env, banco ou package novo.
+Validacao apenas local, sem push/deploy nesta task.
+
+- [x] Salvos reutiliza o mesmo PostCard do feed, sem duplicar sua apresentacao.
+- [x] Paciente: controles antes da resposta, rotulo acima da identidade e midia sem recuo.
+- [x] Psicologo: midia antes dos controles, sem divisoria.
+- [x] Remover dos salvos preserva a mutacao e o estado pendente da lista.
+- [x] Testes, check e build frontend aprovados.
+- [x] Validacao visual no browser local com dados reais existentes.
+
+### Evidencia parcial - 2026-10-10
+
+- `pnpm --dir frontend check`: aprovado (Biome, ESLint, TypeScript e suites).
+- Regressao de apresentacao: 25 testes aprovados, incluindo ordem da resposta e override de salvar.
+- `pnpm check:source-size` e `pnpm check:cycles`: aprovados.
+- Browser: inventario do agente sem navegadores conectados. Usuario solicitou ativar localhost;
+  iniciados frontend em 127.0.0.1:3334 e backend de desenvolvimento em 3001,
+  com tunel, Swagger, Sentry e schedulers automaticos desabilitados no processo.
+- Build e validacao visual autenticada ainda pendentes. Sem bump, commit, push ou deploy por enquanto.
+- Localhost confirmado: `/app/publicacoes/salvas` redireciona sem sessao para
+  `/auth/login` (HTTP 200); backend `/ping`, `/health` e `/ready` HTTP 200.
+  Servidores deixados ativos para login e inspecao do usuario.
+- Correcao do runtime local apos retorno Google para ngrok offline: aplicada ADR-0434,
+  com GOOGLE_OAUTH_BASE_URL no backend localhost:3001 e callbacks do frontend
+  no host localhost:3334, somente no processo. Tunel continua desligado.
+  `/health`, `/ready` e pagina de login HTTP 200; inicio OAuth HTTP 302 para
+  accounts.google.com com redirect_uri local confirmado, sem concluir autenticacao.
+  Login real e autorizacao desse redirect URI no Google ainda dependem da tentativa do usuario.
+
+- Revisao visual do usuario: resposta salva individualmente ainda tinha faixa Respondido em e divisorias. Tambem ajustado SavedReplyCard para identidade/comunidade/favorito do feed, rotulo profissional, autoplay e controles sem separador; acoes continuam direcionadas a resposta salva.
+- Refinamento explicito do usuario: rotulo Resposta profissional somente na resposta em destaque dentro de post de paciente; ausente no video-resposta salvo individualmente. Teste de regressao ajustado para cobrir a ausencia no card isolado.
+- A pedido do usuario, frontend local transferido de 3334 para 3000; WEB_URL e callbacks Google do processo backend ajustados para localhost:3000. API permanece em 3001; nenhum ambiente remoto alterado.
+
+### Validacao final local - 2026-10-10
+
+Check geral e builds backend/frontend aprovados. Browser local autenticado confirmou salvar post e resposta, voto e remocao do voto, controles sem divisoria, rotulo apenas na resposta destacada e video sem recuo no viewport 390x844. Video real de 2:06 reproduziu (tempo avancou a 0:12), com controles e card isolado preservados. Em desktop, composicao conferida no mesmo PostCard do feed. Origem produtiva consultada READ ONLY, copia minima autorizada; sem escrita remota. Como nao ha credenciais Stream no ambiente isolado, os bytes reais do video autorizado foram copiados para arquivo local ignorado, sem simular endpoint, fabricar conteudo nem mudar configuracao produtiva. A referencia original permanece no snapshot privado. Validacao cobre apresentacao/player local; assinatura Stream produtiva nao foi alterada.

@@ -635,3 +635,4 @@ Formato recomendado:
 - [ADR-0585 — Respostas salvas com contexto da comunidade](0585-respostas-salvas-contexto-comunidade.md)
 - [ADR-0586 — Rascunho temporario ao editar nome na publicacao](0586-anonimato-edicao-perfil-rascunho.md)
 - [ADR-0587 — Retorno canonico ao compositor apos editar perfil](0587-perfil-paciente-retorno-compositor.md)
+- [ADR-0589 — Salvos reutiliza a apresentacao do feed](0589-salvos-apresentacao-feed.md)
