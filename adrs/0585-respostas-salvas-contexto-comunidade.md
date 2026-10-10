@@ -1,4 +1,4 @@
-# ADR-0580 - Respostas salvas com contexto da comunidade
+# ADR-0585 - Respostas salvas com contexto da comunidade
 
 ## Status
 
@@ -27,4 +27,4 @@ inalterados.
 Salvos e perfil profissional passam a apresentar a mesma relacao entre autoria,
 comunidade e pergunta. Comentarios de pacientes ganham o mesmo chevron sem receber
 o destaque de pergunta reservado a resposta profissional. Nao ha alteracao de
-API, persistencia, dependencia ou rollout entre aplicacoes. Relacionado a TASK-240.
+API, persistencia, dependencia ou rollout entre aplicacoes. Relacionado a TASK-242.

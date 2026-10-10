@@ -15,8 +15,12 @@ import {
   communitySelect,
   normalizePagination,
   postSelect,
-  sortGeneralFeedPostResults,
 } from "../support/community-feed";
+import {
+  loadAvailableProfessionalReplies,
+  loadOriginalVideoPostIds,
+} from "../support/community-feed-media";
+import { isMixedFeedEligible, sortMixedFeedPosts } from "../support/community-feed-mix";
 import {
   getCommunityPostSortMetrics,
   getFollowedCommunityIds,
@@ -344,7 +348,7 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
       },
     };
 
-    const [allItems, count, followingCount] = await Promise.all([
+    const [allItems, followingCount] = await Promise.all([
       prisma.community_post.findMany({
         where,
         orderBy: [
@@ -356,17 +360,24 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
         ],
         select: postSelect,
       }),
-      prisma.community_post.count({ where }),
       scope === "following" && followerUserId
         ? prisma.community_member.count({ where: followedMembershipWhere })
         : Promise.resolve(0),
     ]);
-    const allPostIds = allItems.map((item) => item.id);
-    const sortMetricsByPostId = await getCommunityPostSortMetrics(allPostIds);
-    const items = sortGeneralFeedPostResults(allItems, sortMetricsByPostId).slice(
-      pagination.skip,
-      pagination.skip + pagination.limit,
+    const eligibleItems = (await loadAvailableProfessionalReplies(allItems)).filter(
+      isMixedFeedEligible,
     );
+    const count = eligibleItems.length;
+    const allPostIds = eligibleItems.map((item) => item.id);
+    const sortMetricsByPostId = await getCommunityPostSortMetrics(allPostIds);
+    const videoPostIds = await loadOriginalVideoPostIds(eligibleItems);
+    const items = sortMixedFeedPosts(
+      eligibleItems,
+      sortMetricsByPostId,
+      videoPostIds,
+      Date.now(),
+      data.q.seed,
+    ).slice(pagination.skip, pagination.skip + pagination.limit);
     const highlightedRepliesByPostId = await selectHighlightedProfessionalReplies(items);
     const postIds = items.map((item) => item.id);
     const communityIds = [...new Set(items.map((item) => item.community.id))];

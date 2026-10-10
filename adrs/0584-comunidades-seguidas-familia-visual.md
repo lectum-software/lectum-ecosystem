@@ -1,4 +1,4 @@
-# ADR-0579 - Comunidades seguidas na familia visual da Lectum
+# ADR-0584 - Comunidades seguidas na familia visual da Lectum
 
 ## Status
 
@@ -28,4 +28,4 @@ a URL estiver ausente ou falhar no carregamento.
 A tela passa a compartilhar tipografia, superficies e interacoes com o produto
 atual, reduzindo altura e duplicacao. A ordem, os dados, a paginacao infinita e os
 estados de erro/vazio permanecem. Nao ha mudanca de API, dependencia ou persistencia.
-Relacionado a TASK-239.
+Relacionado a TASK-241.

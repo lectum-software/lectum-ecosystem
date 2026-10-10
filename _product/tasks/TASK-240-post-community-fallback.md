@@ -1,4 +1,4 @@
-# TASK-238 - Comunidade geral no fim da selecao de post
+# TASK-240 - Comunidade geral no fim da selecao de post
 
 ## Escopo
 
@@ -6,7 +6,7 @@ Na criacao de post, ordenar as comunidades especificas alfabeticamente e deixar
 saude-mental-em-geral por ultimo, com separador sutil e a descricao solicitada:
 "Nao encontrou uma comunidade especifica? Publique aqui." (acentuada na UI).
 Nao mudar catalogo, busca, valores enviados ou seletores de outros fluxos.
-ADR-0578. Referencia: captura e texto do usuario de 07/10/2026.
+ADR-0583. Referencia: captura e texto do usuario de 07/10/2026.
 PROTO-INVENTORY consultado; Builder indisponivel. Reutilizar o seletor existente,
 mobile-first, com validacao em 390px e desktop.
 

@@ -1,4 +1,4 @@
-# TASK-240 - Respostas salvas com contexto da comunidade
+# TASK-242 - Respostas salvas com contexto da comunidade
 
 ## Escopo
 
@@ -7,7 +7,7 @@ Todas as respostas passam a mostrar a comunidade com chevron na mesma linha do
 autor. Respostas de psicologos tambem reutilizam a pergunta original usada no
 perfil profissional. A referencia visual enviada em 09/10/2026 e os componentes
 reais do perfil sao a fonte de verdade. Builder/Quick Copy nao esta exposto neste
-cliente. ADR-0580.
+cliente. ADR-0585.
 
 ## Aceite
 

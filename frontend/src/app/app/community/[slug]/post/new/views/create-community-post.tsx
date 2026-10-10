@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, CircleCheck, Info, Lightbulb, Loader2, PencilLine, X } from "lucide-react";
+import { Camera, Info, Lightbulb, Loader2, PencilLine, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -37,6 +37,7 @@ import {
 } from "../modules/create-post-support";
 
 import { AnonymousPostSwitch } from "./anonymous-post-switch";
+import { ProfileUpdateConfirmation } from "./profile-update-confirmation";
 
 export const CreateCommunityPostLogic = ({
   asModalSlot = false,
@@ -505,30 +506,10 @@ export const CreateCommunityPostLogic = ({
         </header>
 
         {profileUpdateConfirmationName ? (
-          <div className="flex min-h-0 flex-1 items-center justify-center px-6 py-10">
-            <div className="grid w-full max-w-sm justify-items-center text-center">
-              <div aria-live="polite" className="grid justify-items-center">
-                <span className="grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary">
-                  <CircleCheck className="h-8 w-8" aria-hidden="true" />
-                </span>
-                <h2 className="mt-5 text-xl font-black text-foreground">Nome atualizado</h2>
-                <p className="mt-2 text-sm leading-6 text-muted">
-                  Sua publicação será identificada como{" "}
-                  <strong className="font-bold text-foreground">
-                    {profileUpdateConfirmationName}
-                  </strong>
-                  .
-                </p>
-              </div>
-              <Button
-                className="mt-7 h-12 w-full rounded-full text-base font-bold"
-                onClick={continueAfterProfileUpdate}
-                type="button"
-              >
-                Continuar para o post
-              </Button>
-            </div>
-          </div>
+          <ProfileUpdateConfirmation
+            displayName={profileUpdateConfirmationName}
+            onContinue={continueAfterProfileUpdate}
+          />
         ) : (
           <form
             className="flex min-h-0 flex-1 flex-col"
@@ -555,7 +536,7 @@ export const CreateCommunityPostLogic = ({
                   hasSelectedMedia ? "min-h-full flex-none" : "flex-none",
                 )}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-col items-start gap-1.5">
                   {formProps.fields
                     .filter((field) => field.name === "community_slug")
                     .map(renderFormField)}

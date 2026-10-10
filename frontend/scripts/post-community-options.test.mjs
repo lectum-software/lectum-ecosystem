@@ -21,10 +21,7 @@ test("comunidade geral fica por ultimo, sem alterar a lista original", () => {
     ["ansiedade", "depressao", "tdah", "saude-mental-em-geral"],
   );
   assert.equal(communities[0], general);
-  assert.equal(
-    options.at(-1).description,
-    "Não encontrou uma comunidade específica? Publique aqui.",
-  );
+  assert.equal(options.at(-1).description, "Não sabe onde postar? Publique aqui.");
   assert.equal(options.at(-1).separatorBefore, true);
   assert.equal(options.at(-1).disabled, undefined);
   assert.ok(options.slice(0, -1).every((option) => !option.description && !option.separatorBefore));

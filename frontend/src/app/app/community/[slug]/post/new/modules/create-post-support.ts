@@ -220,7 +220,7 @@ export const resolveCommunityOptions = (communities: Array<{ name: string; slug:
       value: community.slug,
       ...(community.slug === "saude-mental-em-geral"
         ? {
-            description: "Não encontrou uma comunidade específica? Publique aqui.",
+            description: "Não sabe onde postar? Publique aqui.",
             separatorBefore: true,
           }
         : {}),

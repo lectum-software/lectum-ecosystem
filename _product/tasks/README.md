@@ -1,14 +1,18 @@
+Implementado localmente: complemento TASK-23, feed misto 4:1, bonus de video e variacao backend de ate 5%. ADR-0582, candidata de publicacao; checks/builds/smoke HTTP aprovados. Browser local validado em dev no desktop e mobile 390px; publicacao autorizada, ainda pendente.
+
+Refinamento anterior TASK-23/25 (ADR-0581): publicado e validado em producao 0.1.615 via PR #98. Complemento local atual: ADR-0582.
+
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
-Ajuste de frontend em 09/10/2026: [TASK-243 - Confirmacao do nome no retorno ao post](TASK-243-confirmacao-nome-retorno-post.md). Mostra uma confirmacao unica dentro da modal, informa o nome que identificara a publicacao e libera o rascunho somente pelo botao de continuar. Sem link extra, backend, banco, env, package novo ou contrato.
+Ajuste de frontend em 09/10/2026: [TASK-245 - Confirmacao do nome no retorno ao post](TASK-245-confirmacao-nome-retorno-post.md). Mostra uma confirmacao unica dentro da modal, informa o nome que identificara a publicacao e libera o rascunho somente pelo botao de continuar. Sem link extra, backend, banco, env, package novo ou contrato.
 
-Ajuste de frontend em 09/10/2026: [TASK-242 - Perfil do paciente e retorno ao compositor](TASK-242-perfil-paciente-retorno-compositor.md). Mantem salvar em rodape sticky, ancora as acoes do avatar ao lapis e conclui o retorno direto ao post identificado com o rascunho restaurado. Sem backend, banco, env, package novo ou contrato.
+Ajuste de frontend em 09/10/2026: [TASK-244 - Perfil do paciente e retorno ao compositor](TASK-244-perfil-paciente-retorno-compositor.md). Mantem salvar em rodape sticky, ancora as acoes do avatar ao lapis e conclui o retorno direto ao post identificado com o rascunho restaurado. Sem backend, banco, env, package novo ou contrato.
 
-Ajuste de frontend em 09/10/2026: [TASK-241 - Anonimato com edicao de nome e rascunho temporario](TASK-241-anonimato-edicao-perfil-rascunho.md). Enxuga a orientacao, leva o paciente a edicao do perfil e preserva comunidade, titulo e texto na modal, retornando com anonimato desligado. Sem pagina de rascunhos, backend, banco, env, package novo ou contrato.
+Ajuste de frontend em 09/10/2026: [TASK-243 - Anonimato com edicao de nome e rascunho temporario](TASK-243-anonimato-edicao-perfil-rascunho.md). Enxuga a orientacao, leva o paciente a edicao do perfil e preserva comunidade, titulo e texto na modal, retornando com anonimato desligado. Sem pagina de rascunhos, backend, banco, env, package novo ou contrato.
 
-Ajuste visual de frontend em 09/10/2026: [TASK-240 - Respostas salvas com contexto da comunidade](TASK-240-respostas-salvas-contexto-comunidade.md). Leva a comunidade com chevron para a autoria de todas as respostas salvas e reutiliza a pergunta original do perfil nas respostas profissionais. Sem backend, banco, env, package novo ou contrato.
+Ajuste visual de frontend em 09/10/2026: [TASK-242 - Respostas salvas com contexto da comunidade](TASK-242-respostas-salvas-contexto-comunidade.md). Leva a comunidade com chevron para a autoria de todas as respostas salvas e reutiliza a pergunta original do perfil nas respostas profissionais. Sem backend, banco, env, package novo ou contrato.
 
-Ajuste visual de frontend em 09/10/2026: [TASK-239 - Comunidades seguidas na familia visual da Lectum](TASK-239-comunidades-seguidas-familia-visual.md). Remove metricas e destaque promocional duplicado, compacta a lista seguida e reutiliza o carrossel oficial de comunidades sugeridas. Sem backend, banco, env, package novo ou contrato.
+Ajuste visual de frontend em 09/10/2026: [TASK-241 - Comunidades seguidas na familia visual da Lectum](TASK-241-comunidades-seguidas-familia-visual.md). Remove metricas e destaque promocional duplicado, compacta a lista seguida e reutiliza o carrossel oficial de comunidades sugeridas. Sem backend, banco, env, package novo ou contrato.
 
 Ajuste de 06/10/2026: [TASK-219 - Tema nas respostas das publicacoes do perfil](TASK-219-tema-respostas-publicacoes-perfil.md). Chevron e tema somente nas respostas da aba Publicacoes, reutilizando o cabecalho de posts. ADR-0559.
 
@@ -17,6 +21,22 @@ Ajuste em 02/10/2026: [TASK-213 - Pergunta completa na arte social](TASK-213-per
 Ajuste de frontend em 02/10/2026: [TASK-212 — Remover faixa vazia da modal de criar post](TASK-212-remover-faixa-vazia-modal-criar-post.md). A descrição sem mídia cresce com o texto, sem altura cheia forçada nem teto de altura; a rolagem fica no formulário até o rodapé, com teclado aberto ou fechado. O rodapé permanece no fluxo normal e o comportamento com mídia é preservado. Sem backend, banco, env ou contrato de API.
 
 Ajuste de frontend em 02/10/2026: [TASK-211 — Menu desktop de criar post e perfil do psicólogo](TASK-211-menu-desktop-criar-post-perfil-psicologo.md). Remove "Avaliações feitas" do perfil do psicólogo e troca o espaço de Favoritos no menu lateral desktop pela ação "Criar post", reutilizando a mesma modal/fluxo de conversão do botão central mobile. Sem backend, banco, env ou contrato de API.
+
+Ajuste visual em 08/10/2026: texto de orientação "Não sabe onde postar? Publique aqui.", correção de empilhamento da busca sticky em dropdowns pesquisáveis e refinamento do seletor de comunidades na criação de post. Após revisão visual de homologação, o usuário pediu a remoção dos pontos coloridos. Builder/Quick Copy não foi acionado por não haver ferramenta direta neste cliente; referência ativa consultada em `_product/tasks/PROTO-INVENTORY.md` (`Criar Nova Postagem - Pacientes/Psicólogo` e filtros de psicólogos). Alteração exclusivamente frontend, sem backend, banco, env, package novo, mock ou mudança de contrato. ADR: `adrs/0578-ajustes-dropdown-criar-post-comunidades.md`.
+
+Critérios de aceite do ajuste de criação de post/dropdowns:
+
+- [x] Integração preserva a base remota atual e valida o controller real no browser em 390px/1440px com catálogo local real; sem fallback de cor, mocks ou escrita no banco. Promoção autorizada pelo usuário: deploys manuais preservando a configuração original de autodeploy (qualquer suspensão temporária deve ser restaurada); resultados remotos serão registrados no PR.
+
+- [x] Saúde Mental em Geral é sempre a última opção dentro da rolagem; a descrição "Não sabe onde postar? Publique aqui." aparece abaixo do título, na mesma opção, sem texto solto no formulário (testes de regressão e catálogo real local).
+- [x] Revisão sem pontos em 0.1.611: check/build e Chromium local do componente real em 390px/1440px aprovados; zero indicadores, descrição/separador/ordem/rolagem preservados, catálogo real e sem escrita no banco.
+- [ ] Aprovação visual autenticada da revisão sem pontos em homologação, mobile (~390px) e desktop: depende de evidência do usuário; Computer Use bloqueado pela verificação segura de URL.
+- [x] Dropdowns pesquisáveis mantêm o campo de busca acima da lista, sem opções aparecendo por trás da busca, inclusive nos filtros de psicólogos.
+- [x] Revisão solicitada após homologação: remover os pontos coloridos das opções e do valor selecionado, inclusive quando a API informa cor válida; preservar as cores cadastradas e o catálogo (20 testes focais aprovados).
+- [x] Nenhum mock, package novo, env nova, backend ou migration foi usado.
+- [x] Refinamento preservado: linha discreta antes de Saúde Mental em Geral e descrição abaixo do título, dentro da rolagem. A decisão anterior de exibir pontos foi substituída pelo pedido de remoção; sem alterar banco ou paleta das comunidades. Validação visual autenticada da nova revisão permanece pendente.
+
+Impacto de deploy: somente frontend; apps podem ser publicados separadamente. Rollback por reversão revisada em `homolog`. Push em `homolog` dispara deploy automático de homologação. Validações locais: `pnpm --dir frontend check` e `pnpm --dir frontend build` aprovados. Browser local ficou limitado porque Computer Use não retornou browsers conectados.
 
 Ajuste visual em 30/09/2026: centralizacao vertical do texto da pergunta na caixinha branca do MP4 social de video-resposta. A captura anexada foi usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao foi acionado por nao haver ferramenta direta neste cliente; referencia ativa baseada no anexo e em `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`. Alteracao exclusivamente no renderer FFmpeg do `video/`, sem mudar upload, filas, contrato HTTP, backend, frontend, admin, banco, env, package novo ou mocks. ADR: `adrs/0540-centralizacao-texto-caixinha-social.md`.
 
@@ -542,12 +562,14 @@ ou cortesia manual.
 | 235 | [TASK-235 - Miniatura de video na edicao de comentario](TASK-235-reply-video-preview.md) | Done | 234 |
 | 236 | [TASK-236 - Controles abaixo da midia no post de psicologo](TASK-236-feed-media-actions.md) | Done | 235 |
 | 237 | [TASK-237 - Avatar e cor na criacao de comunidade](TASK-237-community-create-avatar.md) | Done | 236 |
-| 238 | [TASK-238 - Comunidade geral na selecao de post](TASK-238-post-community-fallback.md) | Done | 237 |
-| 239 | [TASK-239 - Comunidades seguidas na familia visual da Lectum](TASK-239-comunidades-seguidas-familia-visual.md) | Done | 238 |
-| 240 | [TASK-240 - Respostas salvas com contexto da comunidade](TASK-240-respostas-salvas-contexto-comunidade.md) | Done | 239 |
-| 241 | [TASK-241 - Anonimato com edicao de nome e rascunho temporario](TASK-241-anonimato-edicao-perfil-rascunho.md) | Done | 240 |
-| 242 | [TASK-242 - Perfil do paciente e retorno ao compositor](TASK-242-perfil-paciente-retorno-compositor.md) | Done | 241 |
-| 243 | [TASK-243 - Confirmacao do nome no retorno ao post](TASK-243-confirmacao-nome-retorno-post.md) | Done | 242 |
+| 238 | [TASK-238 - Lupa alinhada na pesquisa de psicologos](TASK-238-search-icon-alignment.md) | Done | 237 |
+| 239 | [TASK-239 - Publicacoes do perfil por votos e comentarios](TASK-239-profile-publication-order.md) | Done | 238 |
+| 240 | [TASK-240 - Comunidade geral na selecao de post](TASK-240-post-community-fallback.md) | Done | 239 |
+| 241 | [TASK-241 - Comunidades seguidas na familia visual da Lectum](TASK-241-comunidades-seguidas-familia-visual.md) | Done | 240 |
+| 242 | [TASK-242 - Respostas salvas com contexto da comunidade](TASK-242-respostas-salvas-contexto-comunidade.md) | Done | 241 |
+| 243 | [TASK-243 - Anonimato com edicao de nome e rascunho temporario](TASK-243-anonimato-edicao-perfil-rascunho.md) | Done | 242 |
+| 244 | [TASK-244 - Perfil do paciente e retorno ao compositor](TASK-244-perfil-paciente-retorno-compositor.md) | Done | 243 |
+| 245 | [TASK-245 - Confirmacao do nome no retorno ao post](TASK-245-confirmacao-nome-retorno-post.md) | Done | 244 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -40,11 +40,13 @@ const professionalReply = ({
   upvotes: number;
 }): ProfessionalReplyResult => ({
   author: {
+    active: true,
     avatar: null,
     deleted: false,
     id: `author-${id}`,
     name: `Psicologo ${id}`,
     psychologist_profile: {
+      deleted: false,
       cfp_verified_at: new Date("2026-01-01T00:00:00.000Z"),
       crp: "06/123456",
       crp_status: "verificado",

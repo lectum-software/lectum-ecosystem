@@ -1,4 +1,4 @@
-# TASK-239 - Comunidades seguidas na familia visual da Lectum
+# TASK-241 - Comunidades seguidas na familia visual da Lectum
 
 ## Escopo
 
@@ -6,7 +6,7 @@ Reorganizar a tela `Comunidades seguidas` a partir das referencias enviadas em
 09/10/2026 e dos componentes atuais de Inicio, Salvos e Favoritos. Remover a
 composicao promocional exclusiva da tela, preservar a consulta real e aproximar
 tipografia, superficies, espacamentos e recomendacoes do padrao vigente.
-ADR-0579. PROTO-INVENTORY e `_product/proto/Seguindo.jpg` consultados; a referencia
+ADR-0584. PROTO-INVENTORY e `_product/proto/Seguindo.jpg` consultados; a referencia
 historica explica a composicao anterior, mas as capturas atuais definem a familia
 visual aprovada. Builder/Quick Copy nao esta exposto neste cliente.
 

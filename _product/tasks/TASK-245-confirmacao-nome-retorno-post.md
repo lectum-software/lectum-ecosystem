@@ -1,10 +1,10 @@
-# TASK-243 - Confirmacao do nome no retorno ao post
+# TASK-245 - Confirmacao do nome no retorno ao post
 
 ## Escopo
 
 Dar seguranca ao paciente depois de alterar o nome a partir da modal de criar post.
 Ao retornar ao rascunho, a propria modal confirma qual nome identificara a publicacao
-antes de liberar novamente o formulario. Extensao da TASK-242 e da ADR-0582.
+antes de liberar novamente o formulario. Extensao da TASK-244 e da ADR-0587.
 
 ## Aceite
 

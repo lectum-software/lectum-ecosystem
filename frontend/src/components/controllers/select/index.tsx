@@ -9,7 +9,7 @@ import type { ControllerFieldProps } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 
 const dropdownContentClassName =
-  "absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]";
+  "absolute left-0 right-0 top-[calc(100%+6px)] z-[80] isolate rounded-2xl border border-border bg-surface p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]";
 
 export function SelectController<FormType extends FieldValues>({
   name,
@@ -159,7 +159,7 @@ export function SelectController<FormType extends FieldValues>({
             return (
               <div
                 className={cn(
-                  option.separatorBefore && index > 0 && "mt-1 border-t border-border pt-1",
+                  option.separatorBefore && index > 0 && "mt-1.5 border-t border-border/60 pt-1.5",
                 )}
                 key={`${option.label}-${optionValue}`}
               >
@@ -170,7 +170,7 @@ export function SelectController<FormType extends FieldValues>({
                 ) : null}
                 <button
                   className={cn(
-                    "flex w-full items-center rounded-xl px-3 py-2 text-left text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50",
+                    "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50",
                     String(field.value) === optionValue && "bg-primary-soft text-primary",
                     selectOptionClassName,
                     String(field.value) === optionValue && selectOptionSelectedClassName,
@@ -193,9 +193,9 @@ export function SelectController<FormType extends FieldValues>({
                 >
                   {option.description ? (
                     <span className="block min-w-0">
-                      <span className="block">{option.label}</span>
+                      <span className="block truncate">{option.label}</span>
                       <span
-                        className="mt-1 block text-xs font-normal leading-relaxed text-muted"
+                        className="mt-1 block text-xs font-normal leading-5 text-muted"
                         id={`${inputId}-option-${index}-description`}
                       >
                         {option.description}
@@ -301,11 +301,15 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(dropdownContentClassName, "max-h-72", selectContentClassName)}
+                    className={cn(
+                      dropdownContentClassName,
+                      "overflow-hidden p-0",
+                      selectContentClassName,
+                    )}
                     id={listboxId}
                     role="listbox"
                   >
-                    <div className="sticky top-0 z-10 bg-surface p-1">
+                    <div className="relative z-20 border-border/70 border-b bg-surface p-2 shadow-lectum-soft">
                       <div className="relative">
                         <Search
                           aria-hidden="true"
@@ -322,8 +326,10 @@ export function SelectController<FormType extends FieldValues>({
                       </div>
                     </div>
 
-                    {hideEmptyOption ? null : emptyOption}
-                    {renderFilteredOptions()}
+                    <div className="max-h-56 overflow-y-auto p-1.5">
+                      {hideEmptyOption ? null : emptyOption}
+                      {renderFilteredOptions()}
+                    </div>
                   </div>
                 ) : null}
               </fieldset>
@@ -401,7 +407,11 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(dropdownContentClassName, "max-h-64", selectContentClassName)}
+                    className={cn(
+                      dropdownContentClassName,
+                      "max-h-64 overflow-y-auto",
+                      selectContentClassName,
+                    )}
                     id={listboxId}
                     role="listbox"
                   >
@@ -463,7 +473,11 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(dropdownContentClassName, "max-h-64", selectContentClassName)}
+                    className={cn(
+                      dropdownContentClassName,
+                      "max-h-64 overflow-y-auto",
+                      selectContentClassName,
+                    )}
                     id={listboxId}
                     role="listbox"
                   >

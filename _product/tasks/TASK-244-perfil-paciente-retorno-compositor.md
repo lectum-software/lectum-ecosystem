@@ -1,11 +1,11 @@
-# TASK-242 - Perfil do paciente e retorno ao compositor
+# TASK-244 - Perfil do paciente e retorno ao compositor
 
 ## Escopo
 
 Alinhar a edicao do perfil do paciente ao comportamento visual ja usado no perfil
 profissional e concluir o retorno da edicao de nome iniciada pela modal de criar
 post. A referencia visual e funcional e o perfil profissional existente, os prints
-enviados em 09/10/2026 e a jornada implementada na TASK-241. ADR-0582.
+enviados em 09/10/2026 e a jornada implementada na TASK-243. ADR-0587.
 
 ## Aceite
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -36,7 +36,6 @@ import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import {
   classifyUploadedCommunityMedia,
   clearCreatePostProfileDraft,
-  consumeCreatePostProfileUpdated,
   createSelectedMediaId,
   EDITOR_FIELD_IDS,
   getCreatePostInitialEditorFocusDelays,
@@ -45,26 +44,23 @@ import {
   moveContenteditableCaretToEnd,
   normalizeParam,
   prepareSelectedVideoPreview,
-  readCreatePostProfileDraft,
   resolveCommunityOptions,
   resolveCreatePostCloseFallbackHref,
   resolveCreatePostDefaultSlug,
   resolveCreatePostError,
-  resolveCreatePostProfileReturnHref,
   type SelectedPostMedia,
   SHEET_CLOSE_DELAY_MS,
-  saveCreatePostProfileDraft,
   scheduleCorrectedCreatePostErrorClear,
   type UseCreateCommunityPostControllerOptions,
 } from "../modules/create-post-support";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "../use-form";
 import { useCreatePostDiscardConfirmation } from "./use-create-post-discard-confirmation";
+import { useCreatePostProfileReturn } from "./use-create-post-profile-return";
 
 export const useCreateCommunityPostController = ({
   onCloseComplete,
 }: UseCreateCommunityPostControllerOptions = {}) => {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const params = useParams<{ slug?: string | string[] }>();
   const routeSlug = normalizeParam(params?.slug);
@@ -75,9 +71,6 @@ export const useCreateCommunityPostController = ({
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
-  const [profileUpdateConfirmationName, setProfileUpdateConfirmationName] = useState<string | null>(
-    null,
-  );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [hasSheetOpened, setHasSheetOpened] = useState(false);
   const keyboardViewportOffset = useEditorKeyboardOffset();
@@ -88,21 +81,6 @@ export const useCreateCommunityPostController = ({
   const selectedMediaPreviewGenerationRef = useRef(0);
   const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
   const titleAutoFocusCancelledRef = useRef(false);
-  const draftRestoreAttemptedRef = useRef(false);
-  const currentHref = useMemo(() => {
-    const query = searchParams.toString();
-    return `${pathname}${query ? `?${query}` : ""}`;
-  }, [pathname, searchParams]);
-  const createPostReturnHref = useMemo(
-    () =>
-      resolveCreatePostProfileReturnHref({
-        communitySlugFromQuery,
-        currentHref,
-        routeSlug,
-      }),
-    [communitySlugFromQuery, currentHref, routeSlug],
-  );
-  const profileEditHref = `/app/perfil/editar?returnTo=${encodeURIComponent(createPostReturnHref)}`;
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
@@ -119,38 +97,17 @@ export const useCreateCommunityPostController = ({
   });
   const { formProps, hook } = form;
 
-  useEffect(() => {
-    if (!storedUserId || draftRestoreAttemptedRef.current) return;
-
-    draftRestoreAttemptedRef.current = true;
-    const draft = readCreatePostProfileDraft({
-      returnHref: createPostReturnHref,
-      storage: window.sessionStorage,
-      userId: storedUserId,
-    });
-    const confirmationName = consumeCreatePostProfileUpdated({
-      returnHref: createPostReturnHref,
-      storage: window.sessionStorage,
-      userId: storedUserId,
-    });
-    if (!draft) return;
-
-    hook.reset(draft);
-    queueMicrotask(() => {
-      setProfileUpdateConfirmationName(confirmationName);
-    });
-  }, [createPostReturnHref, hook, storedUserId]);
-
-  const preserveDraftForProfileEdit = useCallback(() => {
-    if (!storedUserId) return;
-
-    saveCreatePostProfileDraft({
-      returnHref: createPostReturnHref,
-      storage: window.sessionStorage,
-      userId: storedUserId,
-      values: hook.getValues(),
-    });
-  }, [createPostReturnHref, hook, storedUserId]);
+  const {
+    continueAfterProfileUpdate,
+    preserveDraftForProfileEdit,
+    profileEditHref,
+    profileUpdateConfirmationName,
+  } = useCreatePostProfileReturn({
+    communitySlugFromQuery,
+    form: hook,
+    routeSlug,
+    storedUserId,
+  });
   const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
   const { prepareVideo, clearVideo, preparationProgress, isPreparingVideo } =
@@ -691,7 +648,7 @@ export const useCreateCommunityPostController = ({
     cancelDiscardConfirmation,
     communitiesQuery,
     confirmDiscardAndClose,
-    continueAfterProfileUpdate: () => setProfileUpdateConfirmationName(null),
+    continueAfterProfileUpdate,
     discardConfirmationOpen,
     fileInputRef,
     focusEditorFromUserGesture,

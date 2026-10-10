@@ -1,4 +1,4 @@
-# ADR-0582 - Retorno canonico ao compositor apos editar perfil
+# ADR-0587 - Retorno canonico ao compositor apos editar perfil
 
 ## Status
 
@@ -7,7 +7,7 @@ Aceito.
 ## Contexto
 
 A modal de criar post pode ser aberta por estado local, sem alterar a URL da pagina.
-Nesse caso, a TASK-241 guardava como retorno a rota do feed. Depois de salvar o nome,
+Nesse caso, a TASK-243 guardava como retorno a rota do feed. Depois de salvar o nome,
 o paciente voltava ao feed com a modal fechada, embora o rascunho estivesse salvo.
 A edicao do paciente tambem ainda apresentava a acao de salvar no fim do formulario
 e as opcoes do avatar como uma folha fixa distante do botao que as acionava.
@@ -35,4 +35,4 @@ rota ou editar o perfil fora desse fluxo nao exibe a confirmacao.
 O paciente retorna diretamente ao post identificado, com comunidade, titulo e texto
 restaurados, e ao fechar a modal volta para a pagina anterior. As mudancas ficam no
 frontend e nao alteram API, banco, dependencias ou outros ambientes. Relacionado a
-TASK-242 e TASK-243.
+TASK-244 e TASK-245.

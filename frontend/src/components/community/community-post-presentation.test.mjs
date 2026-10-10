@@ -10,6 +10,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Controller, useForm } from "react-hook-form";
 import { Provider } from "react-redux";
 
+const readSource = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
+
 const { AnonymousPostSwitch } = await import(
   "../../app/app/community/[slug]/post/new/views/anonymous-post-switch.tsx"
 );
@@ -456,6 +458,12 @@ test("dica de anonimato usa texto compacto, fundo azul e edicao de perfil sem pe
     ),
     "utf8",
   );
+  const profileReturnHook = readSource(
+    "../../app/app/community/[slug]/post/new/hooks/use-create-post-profile-return.ts",
+  );
+  const profileUpdateConfirmation = readSource(
+    "../../app/app/community/[slug]/post/new/views/profile-update-confirmation.tsx",
+  );
   const profileEdit = readFileSync(
     new URL("../../app/app/profile/edit/logic.tsx", import.meta.url),
     "utf8",
@@ -472,18 +480,18 @@ test("dica de anonimato usa texto compacto, fundo azul e edicao de perfil sem pe
   assert.match(view, /className="whitespace-pre-line">\{anonymousTipText\}<\/p>/);
   assert.doesNotMatch(view, /target="_blank"|rel="noopener noreferrer"/);
   assert.match(view, />\s*Editar nome no perfil\s*<\/Link>/);
-  assert.match(controller, /saveCreatePostProfileDraft/);
-  assert.match(controller, /consumeCreatePostProfileUpdated/);
-  assert.match(controller, /resolveCreatePostProfileReturnHref/);
+  assert.match(profileReturnHook, /saveCreatePostProfileDraft/);
+  assert.match(profileReturnHook, /consumeCreatePostProfileUpdated/);
+  assert.match(profileReturnHook, /resolveCreatePostProfileReturnHref/);
   assert.match(controller, /clearCreatePostProfileDraft\(window\.sessionStorage\)/);
   assert.match(profileEdit, /normalizeSafeInternalRedirect\(searchParams\.get\("returnTo"\)/);
   assert.match(profileEdit, /backHref=\{returnTo \|\| "\/app\/perfil"\}/);
   assert.match(profileEdit, /router\.replace\(returnTo \|\| "\/app\/perfil"\)/);
   assert.match(profileEdit, /saveCreatePostProfileUpdated/);
-  assert.match(view, />\s*Nome atualizado\s*<\/h2>/);
-  assert.match(view, /Sua publica.*identificada como/);
-  assert.match(view, />\s*Continuar para o post\s*<\/Button>/);
-  assert.doesNotMatch(view, /Editar novamente/);
+  assert.match(profileUpdateConfirmation, />\s*Nome atualizado\s*<\/h2>/);
+  assert.match(profileUpdateConfirmation, /Sua publica.*identificada como/);
+  assert.match(profileUpdateConfirmation, />\s*Continuar para o post\s*<\/Button>/);
+  assert.doesNotMatch(profileUpdateConfirmation, /Editar novamente/);
   assert.match(profileEdit, /sticky bottom-4 z-10/);
   assert.match(profileEdit, /absolute top-\[calc\(100%\+0\.5rem\)\] right-0 z-30 w-44/);
   assert.doesNotMatch(profileEdit, /fixed inset-x-4 bottom-\[calc\(env\(safe-area-inset-bottom\)/);

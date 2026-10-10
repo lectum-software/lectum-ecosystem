@@ -1055,3 +1055,54 @@ Builder/Quick Copy nao estava autenticado neste ambiente (`npx "@builder.io/dev-
 - [x] Browser local mobile-first no frontend buildado em `http://127.0.0.1:3070`: `/version` respondeu `0.1.240`; `/comunidades/relacionamentos-com-proposito` e `/psicologos/profissional-indisponivel` responderam HTTP 200 sem mock; Chrome headless 390x844 confirmou o estado `Perfil indisponivel` com o botao `Voltar a pagina anterior`.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
 - Smoke de homologacao sera executado e reportado apos o push de `homolog`, pois o push dispara o deploy automatico.
+
+
+## Refinamento 2026-10-09 — Feed com acolhimento profissional recente
+
+Especificacao vigente: ADR-0581. Dependencias TASK-22/23/25 concluidas. Uma unica task
+cobre elegibilidade do feed e formula compartilhada de destaque com TASK-25.
+Substitui formulas historicas anteriores.
+
+- [x] Feed exige resposta direta em video valida de psicologo verificado antes de contar/paginar.
+- [x] Stream indisponivel/excluido e videos de comentarios nao habilitam o feed.
+- [x] Dez respostas de sete dias superam cinquenta de um ano, demais fatores equivalentes.
+- [x] Nova resposta nao renova historico; texto profissional tambem pontua no destaque.
+- [x] Utilidade/comentarios complementam sem dominar participacao profissional recente.
+- [x] Comunidades mantem posts sem video/resposta e filtros existentes.
+- [x] Frontend respeita ranking do backend, sem formula paralela nem embaralhamento.
+- [x] Testes, checks, builds e leitura com dados reais executados (limite: base sem video elegivel).
+- [ ] Validacao visual no browser e integracao positiva com videos reais (indisponiveis localmente).
+- [ ] Publicacao e smoke de nova versao, somente conforme autorizacao e gate operacional vigente.
+
+Deploy: backend/frontend separados, sem schema/migration, env, package ou efeito em jobs.
+Preferir backend primeiro; rollout aceita versoes diferentes. Rollback por reversao revisada
+em homolog. Sem promocao produtiva. Layout mobile-first preservado; Builder indisponivel,
+referencias locais do inventario. Evidencias serao registradas apos execucao.
+
+Evidencias locais: `pnpm check` aprovado com configuracao minima de teste, backend 886/886;
+builds backend/frontend aprovados; Prisma validate; 10 testes focais backend e 7 frontend;
+integracao read-only com 10 posts persistidos, zero elegiveis e cinco filtros de comunidade.
+Video no check geral teve 11 skips de ferramentas locais; runtime video nao foi alterado.
+Frontend buildado respondeu HTTP 200 em /comunidades e /app/community/feed; /version
+0.1.615, no-store e noindex. Nao equivale a validacao visual: browser indisponivel neste cliente.
+Versao incrementada uma vez para 0.1.615 nos cinco manifests. Detalhes e limitacoes: ADR-0581.
+Publicacao adiada conforme fluxo atualizado LOCAL-TO-PRODUCTION/ADR-0572; nenhum main/deploy.
+
+## Complemento 2026-10-09 - Feed misto 4:1 (ADR-0582)
+
+- [x] Posts originais de psicologos ativos/verificados entram sem exigir resposta.
+- [x] Pacientes continuam exigindo video-resposta profissional valido.
+- [x] Ciclo global 4:1, sem duplicacao, com preenchimento da fila restante e paginacao correta.
+- [x] Profissionais ordenados por recencia/engajamento, bonus unico de 15% por video disponivel.
+- [x] Video Stream considera ready/purpose/owner/context; carrossel e legado preservados.
+- [x] Filtros do feed e ordenacoes internas das comunidades preservados.
+- [x] Testes/check/build/Prisma e leitura real registrados; sem mock/seed/migration/env/package.
+
+Escopo backend/frontend, sem mudanca de layout; commit local em homolog, sem push/deploy.
+
+- [x] Variacao backend de ate 5% por seed, preservando 4:1 e relevancia; mesma seed durante paginacao e retorno, nova no refresh. Contrato opcional compativel.
+
+- [x] Validacao visual local: feed real carregado em dev, desktop confirmado pelo usuario e mobile 390px sem overflow. Original profissional sem respostas visivel.
+- [ ] Publicacao e smoke remoto: autorizados pelo usuario; promover somente apos gates e verificar versoes.
+
+Evidencias: ADR-0582, builds backend/frontend 0.1.616, checks por app aprovados, backend 892 testes, 16 focais, smoke HTTP local e integracao real somente leitura. Base local limitada a um original profissional elegivel; nenhum mock/seed criado.

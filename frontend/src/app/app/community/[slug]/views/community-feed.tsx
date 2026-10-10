@@ -25,11 +25,11 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useFeedVariationSeed } from "@/hooks/use-feed-variation-seed";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { LECTUM_APP_REFRESH_EVENT } from "@/utils/app-refresh";
 import {
   COMMUNITY_CREATE_POST_HREF,
   COMMUNITY_EXPLORE_HREF,
@@ -48,12 +48,7 @@ import {
 import { PsychologistReplyOnboarding } from "../components/reply-onboarding";
 import { useCommunityFeedScrollRestoration } from "../hooks/use-community-feed-scroll-restoration";
 import { usePsychologistReplyTip } from "../hooks/use-psychologist-reply-tip";
-import {
-  flattenCommunityPostPages,
-  PAGE_LIMIT,
-  resolveFeedError,
-  varyCommunityFeedPosts,
-} from "../modules/feed-support";
+import { flattenCommunityPostPages, PAGE_LIMIT, resolveFeedError } from "../modules/feed-support";
 import { CreateCommunityPostLogic } from "../post/new/logic";
 import type { CommunityRouteLogicProps } from "./community-detail";
 
@@ -73,7 +68,6 @@ export const CommunityFeedLogic = ({
   const [communityMenuOpen, setCommunityMenuOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
   const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
-  const [feedPresentationSeed, setFeedPresentationSeed] = useState(0);
   const lastScrollY = useRef(0);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
@@ -81,17 +75,19 @@ export const CommunityFeedLogic = ({
   const createPostHref = selectedCommunitySlug
     ? `${COMMUNITY_CREATE_POST_HREF}?community=${encodeURIComponent(selectedCommunitySlug)}`
     : COMMUNITY_CREATE_POST_HREF;
+  const variationSeed = useFeedVariationSeed();
   const query = useMemo(
     () => ({
       limit: PAGE_LIMIT,
+      seed: variationSeed || undefined,
       scope,
       ...(deferredSearch ? { search: deferredSearch } : {}),
       ...(selectedCommunitySlug ? { community: selectedCommunitySlug } : {}),
     }),
-    [deferredSearch, scope, selectedCommunitySlug],
+    [deferredSearch, scope, selectedCommunitySlug, variationSeed],
   );
   const communitiesQuery = useCommunities({ limit: 50, page: 1 });
-  const feed = useInfiniteCommunityFeedPosts(query);
+  const feed = useInfiniteCommunityFeedPosts(query, variationSeed > 0);
   const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.replyId ?? target.postId);
@@ -102,12 +98,8 @@ export const CommunityFeedLogic = ({
     () => flattenCommunityPostPages(feed.data?.pages),
     [feed.data?.pages],
   );
-  const variedPosts = useMemo(
-    () => varyCommunityFeedPosts(loadedPosts, feedPresentationSeed),
-    [feedPresentationSeed, loadedPosts],
-  );
-  const replyTip = usePsychologistReplyTip(variedPosts, JSON.stringify(query));
-  const posts = replyTip.posts;
+  const replyTip = usePsychologistReplyTip(loadedPosts, JSON.stringify(query));
+  const posts = loadedPosts;
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
   const firstFeedPage = feed.data?.pages[0];
   const hasNoFollowedCommunities =
@@ -179,18 +171,6 @@ export const CommunityFeedLogic = ({
       setCommunityMenuOpen(false);
     }
   };
-
-  useEffect(() => {
-    const handleRefreshRequest = () => {
-      setFeedPresentationSeed((currentSeed) => currentSeed + 1);
-    };
-
-    window.addEventListener(LECTUM_APP_REFRESH_EVENT, handleRefreshRequest);
-
-    return () => {
-      window.removeEventListener(LECTUM_APP_REFRESH_EVENT, handleRefreshRequest);
-    };
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {

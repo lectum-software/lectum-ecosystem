@@ -1,4 +1,4 @@
-# ADR-0578 - Comunidade geral como ultima opcao de publicacao
+# ADR-0583 - Comunidade geral como ultima opcao de publicacao
 
 ## Status
 
@@ -24,4 +24,4 @@ ha uma opcao anterior no resultado filtrado. Nao sintetizar comunidade ausente.
 Sem dependencia ou mudanca de backend. Os demais selects nao mudam sem optar
 pelas propriedades. Renomear o slug da comunidade exigira atualizar esta regra;
 mudar apenas o nome preserva o comportamento. Busca continua por nome/grupo.
-Rollback apenas de frontend. Relacionado a TASK-238.
+Rollback apenas de frontend. Relacionado a TASK-240.

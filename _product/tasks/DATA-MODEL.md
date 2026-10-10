@@ -673,6 +673,14 @@ Contratos derivados:
 
 Complemento 2026-07-12: `community_member.createdAt` é o marco histórico fixo **Membro desde**. O vínculo nasce quando o usuário segue/entra na comunidade ou quando faz a primeira participação real nela por post/resposta sem vínculo anterior. Interações posteriores não recalculam essa data. Se uma base legada tiver post/resposta anterior ao vínculo, o backfill e a leitura administrativa devem preservar a menor data real de participação.
 
+Complemento vigente em 2026-10-09 (TASK-23 / ADR-0581): o feed geral exige ao menos uma
+resposta direta em vídeo de psicólogo verificado, não excluída e com mídia disponível
+(Stream ready do autor/contexto; legado com referência pública válida). Filtrar antes
+de contar e paginar; texto e vídeo próprio do post não habilitam. Comunidades continuam
+exibindo posts sem respostas/vídeo. Destaque usa atividade profissional por resposta com
+meia-vida de 14 dias, bônus por profissional distinto e engajamento complementar limitado;
+não renova histórico por edição ou nova resposta. Contratos e schema permanecem iguais.
+
 `community_post` (TASK-23/24/26/28; PRD §9, fluxograma 19.5):
 
 | Campo | Tipo | Notas |
@@ -1300,3 +1308,14 @@ existente; cascade das evidências não transforma seus logs antigos em consenti
 - Baseline e triggers transacionais não alteram assinatura, pagamento ou entitlement. Antes da cobertura, o plano é desconhecido, não gratuito/pago presumido.
 - Atualizações relevantes e exclusões geram novas observações; IDs de gateway, documentos pessoais e notas não são copiados para a história.
 - A cobertura de classificação não corta os eventos de Analytics já coletados. A leitura paga pode apresentar eventos anteriores ao upgrade, sem fabricar eventos ausentes.
+
+### TASK-23 - Feed misto e variacao (ADR-0582, 2026-10-09)
+
+Sem alteracao de schema. Elegibilidade do feed passa a aceitar posts originais de
+psicologos ativos/verificados sem resposta; pacientes continuam exigindo video-resposta
+profissional. Quota global 4:1 antes de paginar, completando com a fila remanescente.
+CommunityFeedQuery aceita seed opcional, inteiro positivo ate 2147483647; clientes antigos
+continuam suportados. Ranking e variacao limitada permanecem exclusivos do backend.
+Campos internos active/deleted do autor/perfil sao usados na selecao, sem novo campo de
+resposta publica. Ordenacoes internas das comunidades nao mudam. Midia pronta consultada
+em lotes no banco, sem requisicoes individuais ao provider.

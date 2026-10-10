@@ -3,15 +3,9 @@ import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { cn } from "@/lib/utils";
-import {
-  COMMUNITY_FEED_VARIATION_WINDOW_SIZE,
-  varyCommunityFeedItems,
-} from "@/utils/community-feed-variation";
 
 export const PAGE_LIMIT = 12;
 
-export const FEED_VARIATION_WINDOW_SIZE = COMMUNITY_FEED_VARIATION_WINDOW_SIZE;
-export const FEED_VARIATION_MAX_ITEMS = PAGE_LIMIT;
 export const COMMUNITY_OPPORTUNITIES_WINDOW_DAYS = 90;
 
 export const COMMUNITY_POST_SORTS = [
@@ -223,12 +217,6 @@ export const flattenCommunityPostPages = (pages?: Array<{ data: CommunityPost[] 
   return posts;
 };
 
-export const varyCommunityFeedPosts = (posts: CommunityPost[], seed: number) =>
-  varyCommunityFeedItems(posts, seed, {
-    maxItems: FEED_VARIATION_MAX_ITEMS,
-    windowSize: FEED_VARIATION_WINDOW_SIZE,
-  });
-
 export const comparePostDates = (a: CommunityPost, b: CommunityPost) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
@@ -270,23 +258,6 @@ export const communityPostMetricForPeriod = (
   period: CommunityPostSortPeriod,
 ) => {
   return communityPostSortMetrics(post)[metric][period] ?? 0;
-};
-
-export const communityFeaturedScore = (post: CommunityPost, now: number) => {
-  const metrics = communityPostSortMetrics(post);
-  const createdAt = new Date(post.created_at).getTime();
-  const hoursSincePublication = Number.isNaN(createdAt)
-    ? 0
-    : Math.max(0, (now - createdAt) / 3_600_000);
-  const highlightScore =
-    metrics.upvotes.all * 3 +
-    metrics.comments.all * 5 +
-    metrics.psychologist_replies_count * 15 +
-    metrics.top_mentor_replies_count * 25 +
-    metrics.shares_count * 4 -
-    metrics.penalty;
-
-  return highlightScore / (hoursSincePublication + 2) ** 0.5;
 };
 
 export const sortCommunityPostsByMetric = (
@@ -349,14 +320,6 @@ export const sortCommunityPosts = (
     return sortCommunityPostsByMetric(items, "upvotes", periods.voted ?? "all");
   }
 
-  const now = Date.now();
-
-  return items.sort((a, b) => {
-    const aScore = communityFeaturedScore(a, now);
-    const bScore = communityFeaturedScore(b, now);
-
-    if (bScore !== aScore) return bScore - aScore;
-
-    return comparePostDates(a, b);
-  });
+  // Featured is globally ranked and paginated by the backend.
+  return items;
 };

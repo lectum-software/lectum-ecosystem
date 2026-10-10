@@ -1,4 +1,4 @@
-# TASK-241 - Anonimato com edicao de nome e rascunho temporario
+# TASK-243 - Anonimato com edicao de nome e rascunho temporario
 
 ## Escopo
 
@@ -7,7 +7,7 @@ linguagem visual da Lectum e oferecer acesso direto a edicao do nome do paciente
 Como essa navegacao interrompe a composicao, preservar temporariamente comunidade,
 titulo e texto na propria jornada da modal. Nao criar pagina ou listagem de
 rascunhos. A referencia visual enviada em 09/10/2026 e a modal real sao a fonte de
-verdade. Builder/Quick Copy nao esta exposto neste cliente. ADR-0581.
+verdade. Builder/Quick Copy nao esta exposto neste cliente. ADR-0586.
 
 ## Aceite
 
