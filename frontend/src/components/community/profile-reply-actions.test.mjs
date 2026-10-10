@@ -243,3 +243,23 @@ test("read-only vote controls also respect the hidden upvote label", () => {
   const source = readFileSync(new URL("./community-action-bar.tsx", import.meta.url), "utf8");
   assert.ok(source.includes('{showUpvoteText ? "Útil" : null}'));
 });
+
+test("saved replies share the profile community identity and professional question layouts", () => {
+  const source = readFileSync(
+    new URL("../../app/app/posts/saved/components/saved-reply-card.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /const isProfessionalReply = reply\.author\.role === "psicologo"/);
+  assert.match(source, /<OriginalPostCommunityLink community=\{community\}/);
+  assert.match(
+    source,
+    /isProfessionalReply && !showProfessionalVideoQuestion[\s\S]*?<ProfileReplyQuestion[\s\S]*?content=\{item\.post\.content\}[\s\S]*?title=\{item\.post\.title\}/,
+  );
+  assert.match(
+    source,
+    /showProfessionalVideoQuestion \?[\s\S]*?<ProfileReplyVideoQuestion title=\{item\.post\.title\}/,
+  );
+  assert.match(source, /videoOverlay=\{videoOverlay\}/);
+  assert.doesNotMatch(source, /Respondido em/);
+});

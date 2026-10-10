@@ -1,5 +1,7 @@
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
+Ajuste visual de frontend em 09/10/2026: [TASK-240 - Respostas salvas com contexto da comunidade](TASK-240-respostas-salvas-contexto-comunidade.md). Leva a comunidade com chevron para a autoria de todas as respostas salvas e reutiliza a pergunta original do perfil nas respostas profissionais. Sem backend, banco, env, package novo ou contrato.
+
 Ajuste visual de frontend em 09/10/2026: [TASK-239 - Comunidades seguidas na familia visual da Lectum](TASK-239-comunidades-seguidas-familia-visual.md). Remove metricas e destaque promocional duplicado, compacta a lista seguida e reutiliza o carrossel oficial de comunidades sugeridas. Sem backend, banco, env, package novo ou contrato.
 
 Ajuste de 06/10/2026: [TASK-219 - Tema nas respostas das publicacoes do perfil](TASK-219-tema-respostas-publicacoes-perfil.md). Chevron e tema somente nas respostas da aba Publicacoes, reutilizando o cabecalho de posts. ADR-0559.
@@ -536,6 +538,7 @@ ou cortesia manual.
 | 237 | [TASK-237 - Avatar e cor na criacao de comunidade](TASK-237-community-create-avatar.md) | Done | 236 |
 | 238 | [TASK-238 - Comunidade geral na selecao de post](TASK-238-post-community-fallback.md) | Done | 237 |
 | 239 | [TASK-239 - Comunidades seguidas na familia visual da Lectum](TASK-239-comunidades-seguidas-familia-visual.md) | Done | 238 |
+| 240 | [TASK-240 - Respostas salvas com contexto da comunidade](TASK-240-respostas-salvas-contexto-comunidade.md) | Done | 239 |
 
 ## Ordem operacional recomendada sem bloqueios
 
