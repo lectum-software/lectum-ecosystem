@@ -16,6 +16,7 @@
 - Cores e tokens: selo azul da pergunta, texto, bordas e superficies reutilizam os componentes existentes do perfil profissional.
 - Imagem: o video mantem proporcao, controles e enquadramento do item salvo. O destaque da pergunta nao cobre a autoria nem a barra de acoes.
 - Conteudo: pergunta original, profissional, comunidade, data, votos, comentarios, salvar e compartilhar permanecem visiveis.
+- Relacao profissional: a acao `Favoritar` reutiliza o controle oficial e fica entre o selo verificado e a comunidade, como no perfil.
 - Responsividade: nenhum texto ou controle se sobrepoe no viewport de 393 x 852.
 - Interacao: navegacao da comunidade, reproducao, WhatsApp quando disponivel e acoes do item foram preservadas.
 
@@ -34,6 +35,7 @@
 ## Checklist
 
 - [x] Comunidade com chevron na mesma linha do autor.
+- [x] Acao `Favoritar` entre o selo e a comunidade para psicologos.
 - [x] Pergunta original dentro do video profissional.
 - [x] Hierarquia visual compativel com o perfil profissional.
 - [x] Controles e navegacao do item salvo preservados.

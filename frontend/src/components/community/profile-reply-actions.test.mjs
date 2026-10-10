@@ -249,9 +249,18 @@ test("saved replies share the profile community identity and professional questi
     new URL("../../app/app/posts/saved/components/saved-reply-card.tsx", import.meta.url),
     "utf8",
   );
+  const authorHeader = source.slice(
+    source.indexOf("export const SavedReplyAuthorHeader"),
+    source.indexOf("export const SavedReplyMedia"),
+  );
 
   assert.match(source, /const isProfessionalReply = reply\.author\.role === "psicologo"/);
-  assert.match(source, /<OriginalPostCommunityLink community=\{community\}/);
+  assert.match(authorHeader, /<OriginalPostCommunityLink community=\{community\}/);
+  assert.match(authorHeader, /\{isPsychologist \? \([\s\S]*?<FeedFavoriteButton author=\{author\}/);
+  assert.match(authorHeader, /ml-1 flex h-0 w-\[66px\] shrink-0 items-center justify-start/);
+  assert.ok(
+    authorHeader.indexOf("FeedFavoriteButton") < authorHeader.indexOf("OriginalPostCommunityLink"),
+  );
   assert.match(
     source,
     /isProfessionalReply && !showProfessionalVideoQuestion[\s\S]*?<ProfileReplyQuestion[\s\S]*?content=\{item\.post\.content\}[\s\S]*?title=\{item\.post\.title\}/,

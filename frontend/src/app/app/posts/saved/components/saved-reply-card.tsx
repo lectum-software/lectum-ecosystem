@@ -20,6 +20,7 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
 import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
@@ -112,6 +113,11 @@ export const SavedReplyAuthorHeader = ({
             )}
             {author.verified ? (
               <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
+            ) : null}
+            {isPsychologist ? (
+              <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
+                <FeedFavoriteButton author={author} />
+              </span>
             ) : null}
             <OriginalPostCommunityLink community={community} />
           </div>
