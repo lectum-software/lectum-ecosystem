@@ -177,6 +177,10 @@ export function SelectController<FormType extends FieldValues>({
                   )}
                   disabled={option.disabled}
                   aria-selected={String(field.value) === optionValue}
+                  aria-label={option.description ? option.label : undefined}
+                  aria-describedby={
+                    option.description ? `${inputId}-option-${index}-description` : undefined
+                  }
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     field.onChange(option.value);
@@ -187,14 +191,19 @@ export function SelectController<FormType extends FieldValues>({
                   role="option"
                   type="button"
                 >
-                  <span className="min-w-0">
-                    <span className="block truncate">{option.label}</span>
-                    {option.description ? (
-                      <span className="mt-1 block text-xs leading-5 text-muted">
+                  {option.description ? (
+                    <span className="block min-w-0">
+                      <span className="block truncate">{option.label}</span>
+                      <span
+                        className="mt-1 block text-xs font-normal leading-5 text-muted"
+                        id={`${inputId}-option-${index}-description`}
+                      >
                         {option.description}
                       </span>
-                    ) : null}
-                  </span>
+                    </span>
+                  ) : (
+                    option.label
+                  )}
                 </button>
               </div>
             );

@@ -36,7 +36,7 @@ test("comunidade geral fica por último com descrição, preservando o catálogo
   );
   assert.equal(options.at(-1).description, "Não sabe onde postar? Publique aqui.");
   assert.equal(options.at(-1).separatorBefore, true);
-  assert.equal(options[0].separatorBefore, false);
+  assert.equal(options[0].separatorBefore, undefined);
   assert.equal(options[0].description, undefined);
   assert.deepEqual(communities, original);
   assert.deepEqual(resolveCommunityOptions([]), []);

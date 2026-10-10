@@ -278,3 +278,33 @@ test("integration keeps home shelves outside posts and community shelf after the
   assert.match(detail, /hasNextPage: postsQuery.hasNextPage/);
   assert.match(detail, /useCommunityRecommendations\(showRecommendations, community\)/);
 });
+
+test("followed communities reuse the compact Lectum family instead of promotional blocks", () => {
+  const source = readFileSync(
+    new URL("../../app/app/following/logic.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /title="Comunidades seguidas"/);
+  assert.match(source, /contentClassName="bg-background px-0 py-0"/);
+  assert.match(
+    source,
+    /<h2 className="text-base font-semibold text-foreground">Minhas comunidades/,
+  );
+  assert.match(source, /<CommunityRecommendationsCarousel communities=\{recommendedCommunities\}/);
+  assert.match(source, /grid-cols-\[64px_minmax\(0,1fr\)_20px\]/);
+  assert.match(source, /text-\[15px\] font-semibold leading-5/);
+  assert.doesNotMatch(source, /Minha atividade|Em destaque|FeaturedCommunity|ActivityCard/);
+  assert.doesNotMatch(source, /community-card-overlay|text-\[1\.7rem\] font-black/);
+});
+
+test("community avatars fall back to initials when remote media fails", () => {
+  const avatar = readFileSync(new URL("./community-avatar.tsx", import.meta.url), "utf8");
+  const carousel = readFileSync(
+    new URL("./community-recommendations-carousel.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(avatar, /failedImageUrl/);
+  assert.match(avatar, /onError=\{\(\) => setFailedImageUrl\(imageUrl\)\}/);
+  assert.match(avatar, /getCommunityInitials\(name\)/);
+  assert.match(carousel, /<CommunityAvatar/);
+});

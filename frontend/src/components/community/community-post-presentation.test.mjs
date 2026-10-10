@@ -10,12 +10,25 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Controller, useForm } from "react-hook-form";
 import { Provider } from "react-redux";
 
+const readSource = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
+
 const { AnonymousPostSwitch } = await import(
   "../../app/app/community/[slug]/post/new/views/anonymous-post-switch.tsx"
 );
 const { createCommunityPostSchema, toCreateCommunityPostPayload } = await import(
   "../../app/app/community/[slug]/post/new/use-form.tsx"
 );
+const {
+  CREATE_POST_PROFILE_DRAFT_KEY,
+  CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS,
+  CREATE_POST_PROFILE_UPDATED_KEY,
+  clearCreatePostProfileDraft,
+  consumeCreatePostProfileUpdated,
+  readCreatePostProfileDraft,
+  resolveCreatePostProfileReturnHref,
+  saveCreatePostProfileDraft,
+  saveCreatePostProfileUpdated,
+} = await import("../../app/app/community/[slug]/post/new/modules/create-post-support.ts");
 const { getReplyOwnerActionCopy } = await import("./reply-owner-action-copy.ts");
 const nextImageUrl = import.meta.resolve("next/image.js");
 const nextImageBridge = `data:text/javascript,${encodeURIComponent(
@@ -421,6 +434,203 @@ test("onBlur é delegado intacto para o Controller, sem agendar foco", () => {
   assert.equal(element.props.onBlur, onBlur);
   element.props.onBlur();
   assert.equal(blurs, 1);
+});
+
+test("dica de anonimato usa texto compacto, fundo azul e edicao de perfil sem perder o rascunho", () => {
+  const support = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/new/modules/create-post-support.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const view = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/new/views/create-community-post.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const controller = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const profileReturnHook = readSource(
+    "../../app/app/community/[slug]/post/new/hooks/use-create-post-profile-return.ts",
+  );
+  const profileUpdateConfirmation = readSource(
+    "../../app/app/community/[slug]/post/new/views/profile-update-confirmation.tsx",
+  );
+  const profileEdit = readFileSync(
+    new URL("../../app/app/profile/edit/logic.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    support,
+    /Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras\.\\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido\./,
+  );
+  assert.doesNotMatch(support, /você também pode utilizar no perfil/);
+  assert.match(view, /border-primary\/20 bg-primary-soft/);
+  assert.match(view, /href=\{profileEditHref\}/);
+  assert.match(view, /onClick=\{preserveDraftForProfileEdit\}/);
+  assert.match(view, /className="whitespace-pre-line">\{anonymousTipText\}<\/p>/);
+  assert.doesNotMatch(view, /target="_blank"|rel="noopener noreferrer"/);
+  assert.match(view, />\s*Editar nome no perfil\s*<\/Link>/);
+  assert.match(profileReturnHook, /saveCreatePostProfileDraft/);
+  assert.match(profileReturnHook, /consumeCreatePostProfileUpdated/);
+  assert.match(profileReturnHook, /resolveCreatePostProfileReturnHref/);
+  assert.match(controller, /clearCreatePostProfileDraft\(window\.sessionStorage\)/);
+  assert.match(profileEdit, /normalizeSafeInternalRedirect\(searchParams\.get\("returnTo"\)/);
+  assert.match(profileEdit, /backHref=\{returnTo \|\| "\/app\/perfil"\}/);
+  assert.match(profileEdit, /router\.replace\(returnTo \|\| "\/app\/perfil"\)/);
+  assert.match(profileEdit, /saveCreatePostProfileUpdated/);
+  assert.match(profileUpdateConfirmation, />\s*Nome atualizado\s*<\/h2>/);
+  assert.match(profileUpdateConfirmation, /Sua publica.*identificada como/);
+  assert.match(profileUpdateConfirmation, />\s*Continuar para o post\s*<\/Button>/);
+  assert.doesNotMatch(profileUpdateConfirmation, /Editar novamente/);
+  assert.match(profileEdit, /sticky bottom-4 z-10/);
+  assert.match(profileEdit, /absolute top-\[calc\(100%\+0\.5rem\)\] right-0 z-30 w-44/);
+  assert.doesNotMatch(profileEdit, /fixed inset-x-4 bottom-\[calc\(env\(safe-area-inset-bottom\)/);
+});
+
+test("confirmacao do nome atualizado aparece uma vez e apenas no retorno ao compositor", () => {
+  const entries = new Map();
+  const storage = {
+    getItem: (key) => entries.get(key) ?? null,
+    removeItem: (key) => entries.delete(key),
+    setItem: (key, value) => entries.set(key, value),
+  };
+
+  assert.equal(
+    saveCreatePostProfileUpdated({
+      displayName: "Tulio",
+      returnHref: "/app/perfil",
+      storage,
+      userId: "patient-1",
+    }),
+    false,
+  );
+  assert.equal(entries.has(CREATE_POST_PROFILE_UPDATED_KEY), false);
+
+  assert.equal(
+    saveCreatePostProfileUpdated({
+      displayName: "  Tulio  ",
+      returnHref: "/app/comunidades/feed/publicacao/nova",
+      storage,
+      userId: "patient-1",
+    }),
+    true,
+  );
+  assert.equal(
+    consumeCreatePostProfileUpdated({
+      returnHref: "/app/comunidades/feed/publicacao/nova",
+      storage,
+      userId: "patient-1",
+    }),
+    "Tulio",
+  );
+  assert.equal(entries.has(CREATE_POST_PROFILE_UPDATED_KEY), false);
+  assert.equal(
+    consumeCreatePostProfileUpdated({
+      returnHref: "/app/comunidades/feed/publicacao/nova",
+      storage,
+      userId: "patient-1",
+    }),
+    null,
+  );
+});
+
+test("retorno da edicao de nome sempre aponta para o compositor aberto", () => {
+  assert.equal(
+    resolveCreatePostProfileReturnHref({
+      currentHref: "/",
+      routeSlug: "feed",
+    }),
+    "/app/comunidades/feed/publicacao/nova",
+  );
+  assert.equal(
+    resolveCreatePostProfileReturnHref({
+      communitySlugFromQuery: "ansiedade-em-equilibrio",
+      currentHref: "/?community=ansiedade-em-equilibrio",
+      routeSlug: "feed",
+    }),
+    "/app/comunidades/feed/publicacao/nova?community=ansiedade-em-equilibrio",
+  );
+  assert.equal(
+    resolveCreatePostProfileReturnHref({
+      currentHref: "/comunidades/relacionamentos-com-proposito",
+      routeSlug: "relacionamentos-com-proposito",
+    }),
+    "/app/comunidades/relacionamentos-com-proposito/publicacao/nova",
+  );
+  assert.equal(
+    resolveCreatePostProfileReturnHref({
+      currentHref: "/app/comunidades/feed/publicacao/nova?community=depressao",
+      routeSlug: "feed",
+    }),
+    "/app/comunidades/feed/publicacao/nova?community=depressao",
+  );
+});
+
+test("rascunho da ida ao perfil restaura texto identificado e respeita usuario, rota e validade", () => {
+  const values = {
+    anonymous: true,
+    community_slug: "ansiedade",
+    content: "Texto que deve continuar na modal.",
+    title: "Uma pergunta importante",
+  };
+  const entries = new Map();
+  const storage = {
+    getItem: (key) => entries.get(key) ?? null,
+    removeItem: (key) => entries.delete(key),
+    setItem: (key, value) => entries.set(key, value),
+  };
+
+  saveCreatePostProfileDraft({
+    returnHref: "/app/community/feed/post/new",
+    storage,
+    userId: "patient-1",
+    values,
+  });
+
+  assert.deepEqual(
+    readCreatePostProfileDraft({
+      returnHref: "/app/community/feed/post/new",
+      storage,
+      userId: "patient-1",
+    }),
+    { ...values, anonymous: false },
+  );
+
+  const savedDraft = JSON.parse(entries.get(CREATE_POST_PROFILE_DRAFT_KEY));
+  assert.equal("anonymous" in savedDraft.values, false);
+  assert.equal(
+    readCreatePostProfileDraft({
+      returnHref: "/app/community/outra/post/new",
+      storage,
+      userId: "patient-1",
+    }),
+    null,
+  );
+  assert.equal(entries.has(CREATE_POST_PROFILE_DRAFT_KEY), false);
+
+  entries.set(CREATE_POST_PROFILE_DRAFT_KEY, JSON.stringify({ ...savedDraft, savedAt: 0 }));
+  assert.equal(
+    readCreatePostProfileDraft({
+      now: CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS + 1,
+      returnHref: savedDraft.returnHref,
+      storage,
+      userId: savedDraft.userId,
+    }),
+    null,
+  );
+
+  clearCreatePostProfileDraft(storage);
+  assert.equal(entries.size, 0);
 });
 
 test("schema/payload reais preservam anonimato opcional do paciente e vedação ao psicólogo", () => {

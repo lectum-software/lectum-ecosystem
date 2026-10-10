@@ -1,7 +1,12 @@
 import type { UseFormReturn } from "react-hook-form";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityPostMediaUploadResponse } from "@/api/generator/types/community";
-import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import type { FieldOption } from "@/hooks/form";
+import {
+  COMMUNITY_CREATE_POST_HREF,
+  COMMUNITY_FEED_SLUG,
+  DEFAULT_COMMUNITY_FEED_HREF,
+} from "@/utils/community";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 import type { CreateCommunityPostForm } from "../use-form";
@@ -113,6 +118,31 @@ export const resolveCreatePostDefaultSlug = ({
   routeSlug?: string | null;
 }) => (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : communitySlugFromQuery);
 
+export const isCreatePostHref = (href: string) => {
+  const pathname = href.split(/[?#]/, 1)[0];
+  return /\/(?:post\/new|publicacao\/nova)$/.test(pathname);
+};
+
+export const resolveCreatePostProfileReturnHref = ({
+  communitySlugFromQuery,
+  currentHref,
+  routeSlug,
+}: {
+  communitySlugFromQuery?: string | null;
+  currentHref: string;
+  routeSlug?: string | null;
+}) => {
+  if (isCreatePostHref(currentHref)) return currentHref;
+
+  if (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG) {
+    return `/app/comunidades/${encodeURIComponent(routeSlug)}/publicacao/nova`;
+  }
+
+  return communitySlugFromQuery
+    ? `${COMMUNITY_CREATE_POST_HREF}?community=${encodeURIComponent(communitySlugFromQuery)}`
+    : COMMUNITY_CREATE_POST_HREF;
+};
+
 export const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {
   const apiError = error as ApiError;
   const rawMessage = getSafeApiErrorMessage(error, "");
@@ -175,7 +205,7 @@ export const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
 
 export const anonymousTipText =
-  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\n\nPara preservar sua privacidade, você também pode utilizar no perfil apenas seu primeiro nome ou um apelido.";
+  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido.";
 
 export const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 
@@ -185,14 +215,15 @@ export const communityNameCollator = new Intl.Collator("pt-BR", {
 
 export const resolveCommunityOptions = (communities: Array<{ name: string; slug: string }>) =>
   communities
-    .map((community) => ({
-      separatorBefore: community.slug === "saude-mental-em-geral",
-      description:
-        community.slug === "saude-mental-em-geral"
-          ? "Não sabe onde postar? Publique aqui."
-          : undefined,
+    .map((community): FieldOption & { value: string } => ({
       label: community.name,
       value: community.slug,
+      ...(community.slug === "saude-mental-em-geral"
+        ? {
+            description: "Não sabe onde postar? Publique aqui.",
+            separatorBefore: true,
+          }
+        : {}),
     }))
     .sort(
       (a, b) =>
@@ -207,6 +238,175 @@ export const CREATE_POST_TOUCH_AUTOFOCUS_DELAY_MS = SHEET_ENTER_ANIMATION_MS + 1
 export const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
 
 export const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
+
+export const CREATE_POST_PROFILE_DRAFT_KEY = "lectum:create-post-profile-draft";
+export const CREATE_POST_PROFILE_UPDATED_KEY = "lectum:create-post-profile-updated";
+export const CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
+type CreatePostProfileDraft = {
+  returnHref: string;
+  savedAt: number;
+  userId: string;
+  values: Pick<CreateCommunityPostForm, "community_slug" | "content" | "title">;
+};
+
+type CreatePostProfileDraftStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
+
+type CreatePostProfileUpdated = {
+  displayName: string;
+  returnHref: string;
+  savedAt: number;
+  userId: string;
+};
+
+export const saveCreatePostProfileDraft = ({
+  returnHref,
+  storage,
+  userId,
+  values,
+}: {
+  returnHref: string;
+  storage: CreatePostProfileDraftStorage;
+  userId: string;
+  values: CreateCommunityPostForm;
+}) => {
+  const draft: CreatePostProfileDraft = {
+    returnHref,
+    savedAt: Date.now(),
+    userId,
+    values: {
+      community_slug: values.community_slug,
+      content: values.content,
+      title: values.title,
+    },
+  };
+
+  try {
+    storage.setItem(CREATE_POST_PROFILE_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // A navegacao continua funcionando quando o storage do navegador esta indisponivel.
+  }
+};
+
+export const readCreatePostProfileDraft = ({
+  now = Date.now(),
+  returnHref,
+  storage,
+  userId,
+}: {
+  now?: number;
+  returnHref: string;
+  storage: CreatePostProfileDraftStorage;
+  userId: string;
+}) => {
+  try {
+    const rawDraft = storage.getItem(CREATE_POST_PROFILE_DRAFT_KEY);
+    if (!rawDraft) return null;
+
+    const draft = JSON.parse(rawDraft) as Partial<CreatePostProfileDraft>;
+    const values = draft.values;
+    const isValid =
+      draft.userId === userId &&
+      draft.returnHref === returnHref &&
+      typeof draft.savedAt === "number" &&
+      now - draft.savedAt <= CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS &&
+      typeof values?.community_slug === "string" &&
+      typeof values?.title === "string" &&
+      typeof values?.content === "string";
+
+    if (!isValid || !values) {
+      storage.removeItem(CREATE_POST_PROFILE_DRAFT_KEY);
+      return null;
+    }
+
+    return {
+      anonymous: false,
+      community_slug: values.community_slug,
+      content: values.content,
+      title: values.title,
+    } satisfies CreateCommunityPostForm;
+  } catch {
+    try {
+      storage.removeItem(CREATE_POST_PROFILE_DRAFT_KEY);
+    } catch {
+      // Nada a limpar quando o storage esta indisponivel.
+    }
+    return null;
+  }
+};
+
+export const clearCreatePostProfileDraft = (storage: CreatePostProfileDraftStorage) => {
+  try {
+    storage.removeItem(CREATE_POST_PROFILE_DRAFT_KEY);
+  } catch {
+    // O descarte local nao deve bloquear o fechamento ou a publicacao.
+  }
+};
+
+export const saveCreatePostProfileUpdated = ({
+  displayName,
+  returnHref,
+  storage,
+  userId,
+}: {
+  displayName: string;
+  returnHref: string;
+  storage: CreatePostProfileDraftStorage;
+  userId: string;
+}) => {
+  const normalizedName = displayName.trim();
+  if (!normalizedName || !isCreatePostHref(returnHref)) return false;
+
+  const confirmation: CreatePostProfileUpdated = {
+    displayName: normalizedName,
+    returnHref,
+    savedAt: Date.now(),
+    userId,
+  };
+
+  try {
+    storage.setItem(CREATE_POST_PROFILE_UPDATED_KEY, JSON.stringify(confirmation));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const consumeCreatePostProfileUpdated = ({
+  now = Date.now(),
+  returnHref,
+  storage,
+  userId,
+}: {
+  now?: number;
+  returnHref: string;
+  storage: CreatePostProfileDraftStorage;
+  userId: string;
+}): string | null => {
+  try {
+    const rawConfirmation = storage.getItem(CREATE_POST_PROFILE_UPDATED_KEY);
+    if (!rawConfirmation) return null;
+
+    storage.removeItem(CREATE_POST_PROFILE_UPDATED_KEY);
+    const confirmation = JSON.parse(rawConfirmation) as Partial<CreatePostProfileUpdated>;
+    const displayName = confirmation.displayName?.trim();
+    const isValid =
+      confirmation.userId === userId &&
+      confirmation.returnHref === returnHref &&
+      typeof confirmation.savedAt === "number" &&
+      now - confirmation.savedAt <= CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS &&
+      Boolean(displayName);
+
+    return isValid && displayName ? displayName : null;
+  } catch {
+    try {
+      storage.removeItem(CREATE_POST_PROFILE_UPDATED_KEY);
+    } catch {
+      // O marcador e descartavel e nao pode bloquear o retorno ao compositor.
+    }
+    return null;
+  }
+};
 
 export const COMMUNITY_POST_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";

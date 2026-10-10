@@ -1,6 +1,5 @@
 "use client";
 
-import { BadgeCheck, Reply } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,14 +20,20 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
+import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
+import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
+import { ProfileReplyVideoQuestion } from "@/components/community/profile-reply-video-question";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
 } from "@/components/community/social-video-preview-action";
 import { useInteractionSnapshot } from "@/components/community/use-interaction-snapshot";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
+import { cn } from "@/lib/utils";
 import {
   formatCommunityPostTime as formatMentorPostTime,
   getCommunityInitials as getInitials,
@@ -93,23 +98,28 @@ export const SavedReplyAuthorHeader = ({
       <SavedReplyAuthorAvatar author={author} href={profileHref} />
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center gap-x-2 gap-y-1">
-          <div className="flex min-w-0 items-center gap-[5px]">
+          <div className="flex min-w-0 flex-1 items-center gap-1">
             {profileHref ? (
               <Link
-                className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                className="min-w-[4ch] truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                 href={profileHref}
               >
                 {author.name}
               </Link>
             ) : (
-              <h2 className="min-w-0 truncate text-sm font-black text-foreground">{author.name}</h2>
+              <h2 className="min-w-[4ch] truncate text-sm font-black leading-tight text-foreground">
+                {author.name}
+              </h2>
             )}
             {author.verified ? (
-              <BadgeCheck
-                className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
-                aria-hidden
-              />
+              <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
             ) : null}
+            {isPsychologist ? (
+              <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
+                <FeedFavoriteButton author={author} />
+              </span>
+            ) : null}
+            <OriginalPostCommunityLink community={community} />
           </div>
         </div>
         {profileHref ? (
@@ -153,6 +163,7 @@ export const SavedReplyMedia = ({
   replyId,
   thumbnailUrl,
   title,
+  videoOverlay,
 }: {
   footer?: ReactNode;
   mediaType: string | null;
@@ -161,6 +172,7 @@ export const SavedReplyMedia = ({
   replyId: string;
   thumbnailUrl?: string | null;
   title: string;
+  videoOverlay?: ReactNode;
 }) => {
   if (!mediaUrl) return null;
 
@@ -176,6 +188,7 @@ export const SavedReplyMedia = ({
       overlayAction={overlayAction}
       thumbnailUrl={thumbnailUrl}
       variant="reply"
+      videoOverlay={videoOverlay}
     />
   );
 };
@@ -205,6 +218,12 @@ export const SavedReplyCard = ({
   });
 
   if (!reply) return null;
+
+  const isProfessionalReply = reply.author.role === "psicologo";
+  const showProfessionalVideoQuestion = Boolean(
+    isProfessionalReply && reply.media_type === "video" && reply.media_url,
+  );
+  const showReplyContent = Boolean(reply.content.trim());
 
   const handleVote = (value: 1 | -1) => {
     const nextVote = voteState.currentVote === value ? null : value;
@@ -303,20 +322,11 @@ export const SavedReplyCard = ({
       onKeyDown={handleCardKeyDown}
       tabIndex={-1}
     >
-      <div className="mb-3 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
-        <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
-        <span className="shrink-0">Respondido em</span>
-        <Link
-          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-muted underline-offset-4 hover:text-primary hover:underline dark:text-muted md:no-underline md:hover:text-muted md:hover:no-underline dark:md:hover:text-muted"
-          href={`/comunidades/${item.post.community.slug}`}
-        >
-          {item.post.community.name}
-        </Link>
-      </div>
+      {isProfessionalReply && !showProfessionalVideoQuestion ? (
+        <ProfileReplyQuestion content={item.post.content} title={item.post.title} />
+      ) : null}
 
-      <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
-
-      <div className="mb-3">
+      <div className={cn(isProfessionalReply ? (showReplyContent ? "mb-2" : "mb-0") : "mb-3")}>
         <SavedReplyAuthorHeader
           community={item.post.community}
           author={reply.author}
@@ -324,11 +334,13 @@ export const SavedReplyCard = ({
         />
       </div>
 
-      <div className="grid gap-2">
-        <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
-      </div>
+      {showReplyContent ? (
+        <div className="grid gap-2">
+          <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
+        </div>
+      ) : null}
 
-      <div className="mt-4 grid gap-4">
+      <div className={cn("grid gap-4", isProfessionalReply ? "mt-3" : "mt-4")}>
         <SavedReplyMedia
           footer={reply.media_url ? professionalWhatsappCta : undefined}
           mediaType={reply.media_type}
@@ -337,6 +349,11 @@ export const SavedReplyCard = ({
           replyId={reply.id}
           thumbnailUrl={reply.thumbnail_url}
           title={reply.title ?? "Mídia da resposta salva"}
+          videoOverlay={
+            showProfessionalVideoQuestion ? (
+              <ProfileReplyVideoQuestion title={item.post.title} />
+            ) : undefined
+          }
         />
 
         {reply.media_url ? null : professionalWhatsappCta}
