@@ -1,5 +1,7 @@
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
+Ajuste de frontend em 09/10/2026: [TASK-243 - Confirmacao do nome no retorno ao post](TASK-243-confirmacao-nome-retorno-post.md). Mostra uma confirmacao unica dentro da modal, informa o nome que identificara a publicacao e libera o rascunho somente pelo botao de continuar. Sem link extra, backend, banco, env, package novo ou contrato.
+
 Ajuste de frontend em 09/10/2026: [TASK-242 - Perfil do paciente e retorno ao compositor](TASK-242-perfil-paciente-retorno-compositor.md). Mantem salvar em rodape sticky, ancora as acoes do avatar ao lapis e conclui o retorno direto ao post identificado com o rascunho restaurado. Sem backend, banco, env, package novo ou contrato.
 
 Ajuste de frontend em 09/10/2026: [TASK-241 - Anonimato com edicao de nome e rascunho temporario](TASK-241-anonimato-edicao-perfil-rascunho.md). Enxuga a orientacao, leva o paciente a edicao do perfil e preserva comunidade, titulo e texto na modal, retornando com anonimato desligado. Sem pagina de rascunhos, backend, banco, env, package novo ou contrato.
@@ -545,6 +547,7 @@ ou cortesia manual.
 | 240 | [TASK-240 - Respostas salvas com contexto da comunidade](TASK-240-respostas-salvas-contexto-comunidade.md) | Done | 239 |
 | 241 | [TASK-241 - Anonimato com edicao de nome e rascunho temporario](TASK-241-anonimato-edicao-perfil-rascunho.md) | Done | 240 |
 | 242 | [TASK-242 - Perfil do paciente e retorno ao compositor](TASK-242-perfil-paciente-retorno-compositor.md) | Done | 241 |
+| 243 | [TASK-243 - Confirmacao do nome no retorno ao post](TASK-243-confirmacao-nome-retorno-post.md) | Done | 242 |
 
 ## Ordem operacional recomendada sem bloqueios
 

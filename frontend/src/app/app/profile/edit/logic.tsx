@@ -13,6 +13,7 @@ import type {
   PatientProfileAvatarRemoval,
   PatientProfileAvatarUpload,
 } from "@/api/generator/types";
+import { saveCreatePostProfileUpdated } from "@/app/app/community/[slug]/post/new/modules/create-post-support";
 import { components } from "@/components/controllers";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -73,7 +74,13 @@ export const ProfileEditLogic = () => {
         patient_profile: data.profile,
       }),
     );
-    toast.success("Perfil atualizado com sucesso");
+    const savedComposerConfirmation = saveCreatePostProfileUpdated({
+      displayName: data.user.name ?? "",
+      returnHref: returnTo || "/app/perfil",
+      storage: window.sessionStorage,
+      userId: String(data.user.id),
+    });
+    if (!savedComposerConfirmation) toast.success("Perfil atualizado com sucesso");
     router.replace(returnTo || "/app/perfil");
   };
 

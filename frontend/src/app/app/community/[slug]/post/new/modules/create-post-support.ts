@@ -118,6 +118,11 @@ export const resolveCreatePostDefaultSlug = ({
   routeSlug?: string | null;
 }) => (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : communitySlugFromQuery);
 
+export const isCreatePostHref = (href: string) => {
+  const pathname = href.split(/[?#]/, 1)[0];
+  return /\/(?:post\/new|publicacao\/nova)$/.test(pathname);
+};
+
 export const resolveCreatePostProfileReturnHref = ({
   communitySlugFromQuery,
   currentHref,
@@ -127,10 +132,7 @@ export const resolveCreatePostProfileReturnHref = ({
   currentHref: string;
   routeSlug?: string | null;
 }) => {
-  const currentPathname = currentHref.split(/[?#]/, 1)[0];
-  const isCreatePostRoute = /\/(?:post\/new|publicacao\/nova)$/.test(currentPathname);
-
-  if (isCreatePostRoute) return currentHref;
+  if (isCreatePostHref(currentHref)) return currentHref;
 
   if (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG) {
     return `/app/comunidades/${encodeURIComponent(routeSlug)}/publicacao/nova`;
@@ -238,6 +240,7 @@ export const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-conte
 export const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
 
 export const CREATE_POST_PROFILE_DRAFT_KEY = "lectum:create-post-profile-draft";
+export const CREATE_POST_PROFILE_UPDATED_KEY = "lectum:create-post-profile-updated";
 export const CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
 type CreatePostProfileDraft = {
@@ -248,6 +251,13 @@ type CreatePostProfileDraft = {
 };
 
 type CreatePostProfileDraftStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
+
+type CreatePostProfileUpdated = {
+  displayName: string;
+  returnHref: string;
+  savedAt: number;
+  userId: string;
+};
 
 export const saveCreatePostProfileDraft = ({
   returnHref,
@@ -330,6 +340,71 @@ export const clearCreatePostProfileDraft = (storage: CreatePostProfileDraftStora
     storage.removeItem(CREATE_POST_PROFILE_DRAFT_KEY);
   } catch {
     // O descarte local nao deve bloquear o fechamento ou a publicacao.
+  }
+};
+
+export const saveCreatePostProfileUpdated = ({
+  displayName,
+  returnHref,
+  storage,
+  userId,
+}: {
+  displayName: string;
+  returnHref: string;
+  storage: CreatePostProfileDraftStorage;
+  userId: string;
+}) => {
+  const normalizedName = displayName.trim();
+  if (!normalizedName || !isCreatePostHref(returnHref)) return false;
+
+  const confirmation: CreatePostProfileUpdated = {
+    displayName: normalizedName,
+    returnHref,
+    savedAt: Date.now(),
+    userId,
+  };
+
+  try {
+    storage.setItem(CREATE_POST_PROFILE_UPDATED_KEY, JSON.stringify(confirmation));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const consumeCreatePostProfileUpdated = ({
+  now = Date.now(),
+  returnHref,
+  storage,
+  userId,
+}: {
+  now?: number;
+  returnHref: string;
+  storage: CreatePostProfileDraftStorage;
+  userId: string;
+}): string | null => {
+  try {
+    const rawConfirmation = storage.getItem(CREATE_POST_PROFILE_UPDATED_KEY);
+    if (!rawConfirmation) return null;
+
+    storage.removeItem(CREATE_POST_PROFILE_UPDATED_KEY);
+    const confirmation = JSON.parse(rawConfirmation) as Partial<CreatePostProfileUpdated>;
+    const displayName = confirmation.displayName?.trim();
+    const isValid =
+      confirmation.userId === userId &&
+      confirmation.returnHref === returnHref &&
+      typeof confirmation.savedAt === "number" &&
+      now - confirmation.savedAt <= CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS &&
+      Boolean(displayName);
+
+    return isValid && displayName ? displayName : null;
+  } catch {
+    try {
+      storage.removeItem(CREATE_POST_PROFILE_UPDATED_KEY);
+    } catch {
+      // O marcador e descartavel e nao pode bloquear o retorno ao compositor.
+    }
+    return null;
   }
 };
 

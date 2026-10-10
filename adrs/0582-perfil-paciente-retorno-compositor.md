@@ -24,9 +24,15 @@ Na tela do paciente, reutilizar o rodape sticky do perfil profissional e ancorar
 menu de avatar ao botao de lapis. A copy de anonimato permanece em um unico bloco
 compacto com quebra simples. Anonimato e midia continuam fora do rascunho.
 
+Depois de um salvamento bem-sucedido iniciado pelo compositor, gravar um marcador
+descartavel no `sessionStorage`, vinculado ao usuario e a rota de retorno. A modal
+consome esse marcador uma unica vez e apresenta uma etapa de confirmacao com o nome
+atualizado e somente a acao `Continuar para o post`. Voltar sem salvar, recarregar a
+rota ou editar o perfil fora desse fluxo nao exibe a confirmacao.
+
 ## Consequencias
 
 O paciente retorna diretamente ao post identificado, com comunidade, titulo e texto
 restaurados, e ao fechar a modal volta para a pagina anterior. As mudancas ficam no
 frontend e nao alteram API, banco, dependencias ou outros ambientes. Relacionado a
-TASK-242.
+TASK-242 e TASK-243.

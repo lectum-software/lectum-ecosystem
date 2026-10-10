@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Info, Lightbulb, Loader2, PencilLine, X } from "lucide-react";
+import { Camera, CircleCheck, Info, Lightbulb, Loader2, PencilLine, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -55,6 +55,7 @@ export const CreateCommunityPostLogic = ({
     cancelDiscardConfirmation,
     communitiesQuery,
     confirmDiscardAndClose,
+    continueAfterProfileUpdate,
     discardConfirmationOpen,
     fileInputRef,
     focusEditorFromUserGesture,
@@ -75,6 +76,7 @@ export const CreateCommunityPostLogic = ({
     onSubmit,
     preserveEditorFocusFromBlankTap,
     preserveDraftForProfileEdit,
+    profileUpdateConfirmationName,
     profileEditHref,
     registerEditorInteraction,
     removeSelectedMediaAt,
@@ -502,104 +504,133 @@ export const CreateCommunityPostLogic = ({
           </div>
         </header>
 
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          noValidate
-          onFocusCapture={(event) => {
-            const target = event.target as HTMLElement;
-            if (EDITOR_FIELD_IDS.has(target.id)) {
-              registerEditorInteraction(target.id);
-            }
-          }}
-          onSubmit={onSubmit}
-        >
-          <div
-            className={cn(
-              "flex min-h-0 flex-1 flex-col px-5 pt-4 pb-4",
-              "overflow-x-hidden overflow-y-auto overscroll-contain",
-            )}
-            data-create-post-editor-scroll={hasSelectedMedia ? "media" : "content"}
-            onPointerDown={preserveBlankTapFocus}
+        {profileUpdateConfirmationName ? (
+          <div className="flex min-h-0 flex-1 items-center justify-center px-6 py-10">
+            <div className="grid w-full max-w-sm justify-items-center text-center">
+              <div aria-live="polite" className="grid justify-items-center">
+                <span className="grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary">
+                  <CircleCheck className="h-8 w-8" aria-hidden="true" />
+                </span>
+                <h2 className="mt-5 text-xl font-black text-foreground">Nome atualizado</h2>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  Sua publicação será identificada como{" "}
+                  <strong className="font-bold text-foreground">
+                    {profileUpdateConfirmationName}
+                  </strong>
+                  .
+                </p>
+              </div>
+              <Button
+                className="mt-7 h-12 w-full rounded-full text-base font-bold"
+                onClick={continueAfterProfileUpdate}
+                type="button"
+              >
+                Continuar para o post
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form
+            className="flex min-h-0 flex-1 flex-col"
+            noValidate
+            onFocusCapture={(event) => {
+              const target = event.target as HTMLElement;
+              if (EDITOR_FIELD_IDS.has(target.id)) {
+                registerEditorInteraction(target.id);
+              }
+            }}
+            onSubmit={onSubmit}
           >
             <div
               className={cn(
-                "flex min-h-0 flex-col gap-3",
-                hasSelectedMedia ? "min-h-full flex-none" : "flex-none",
+                "flex min-h-0 flex-1 flex-col px-5 pt-4 pb-4",
+                "overflow-x-hidden overflow-y-auto overscroll-contain",
               )}
+              data-create-post-editor-scroll={hasSelectedMedia ? "media" : "content"}
+              onPointerDown={preserveBlankTapFocus}
             >
-              <div className="flex items-start justify-between gap-3">
-                {formProps.fields
-                  .filter((field) => field.name === "community_slug")
-                  .map(renderFormField)}
-              </div>
-
-              <div className="flex min-h-0 flex-1 flex-col gap-0">
-                <div
-                  onPointerDown={preserveTitleBlankTapFocus}
-                  onPointerDownCapture={registerTitleEditorGesture}
-                  onTouchStartCapture={registerTitleEditorGesture}
-                >
-                  {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
-                </div>
-
-                <div
-                  className="flex min-h-0 flex-1 flex-col"
-                  onPointerDown={preserveContentBlankTapFocus}
-                  onPointerDownCapture={focusContentEditorFromGesture}
-                  onTouchStartCapture={focusContentEditorFromGesture}
-                >
-                  {formProps.fields
-                    .filter((field) => field.name === "content")
-                    .map(renderFormField)}
-                  {renderSelectedMediaPreview()}
-                </div>
-              </div>
-
-              <div className="grid gap-3 pb-2">
-                {communitiesQuery.isError ? (
-                  <InlineAlert title="Não foi possível carregar comunidades" variant="error">
-                    Verifique sua conexão e tente novamente.
-                  </InlineAlert>
-                ) : null}
-
-                {hasNoCommunities ? (
-                  <InlineAlert title="Nenhuma comunidade disponível" variant="info">
-                    Ainda não há comunidades publicadas para receber posts.
-                  </InlineAlert>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-2 pb-[var(--lectum-create-post-footer-bottom-padding)] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
-            {videoUploadProgress ? (
-              <CommunityVideoUploadProgress
-                className="mb-2"
-                onCancel={cancelActiveVideoUpload}
-                progress={videoUploadProgress}
-              />
-            ) : null}
-            <div className="flex min-h-11 items-center justify-between gap-3">
-              {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
-
-              <Button
+              <div
                 className={cn(
-                  "h-11 min-w-[6.5rem] shrink-0 rounded-full px-6 font-sans text-base font-[800] leading-none tracking-[-0.02em] shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
-                  !requiredFieldsReady &&
-                    "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
+                  "flex min-h-0 flex-col gap-3",
+                  hasSelectedMedia ? "min-h-full flex-none" : "flex-none",
                 )}
-                disabled={isSubmitDisabled}
-                style={{ fontFamily: "var(--font-sans)", fontWeight: 800 }}
-                type="submit"
               >
-                {isSubmitting ? (
-                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                ) : null}
-                Postar
-              </Button>
+                <div className="flex items-start justify-between gap-3">
+                  {formProps.fields
+                    .filter((field) => field.name === "community_slug")
+                    .map(renderFormField)}
+                </div>
+
+                <div className="flex min-h-0 flex-1 flex-col gap-0">
+                  <div
+                    onPointerDown={preserveTitleBlankTapFocus}
+                    onPointerDownCapture={registerTitleEditorGesture}
+                    onTouchStartCapture={registerTitleEditorGesture}
+                  >
+                    {formProps.fields
+                      .filter((field) => field.name === "title")
+                      .map(renderFormField)}
+                  </div>
+
+                  <div
+                    className="flex min-h-0 flex-1 flex-col"
+                    onPointerDown={preserveContentBlankTapFocus}
+                    onPointerDownCapture={focusContentEditorFromGesture}
+                    onTouchStartCapture={focusContentEditorFromGesture}
+                  >
+                    {formProps.fields
+                      .filter((field) => field.name === "content")
+                      .map(renderFormField)}
+                    {renderSelectedMediaPreview()}
+                  </div>
+                </div>
+
+                <div className="grid gap-3 pb-2">
+                  {communitiesQuery.isError ? (
+                    <InlineAlert title="Não foi possível carregar comunidades" variant="error">
+                      Verifique sua conexão e tente novamente.
+                    </InlineAlert>
+                  ) : null}
+
+                  {hasNoCommunities ? (
+                    <InlineAlert title="Nenhuma comunidade disponível" variant="info">
+                      Ainda não há comunidades publicadas para receber posts.
+                    </InlineAlert>
+                  ) : null}
+                </div>
+              </div>
             </div>
-          </footer>
-        </form>
+
+            <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-2 pb-[var(--lectum-create-post-footer-bottom-padding)] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+              {videoUploadProgress ? (
+                <CommunityVideoUploadProgress
+                  className="mb-2"
+                  onCancel={cancelActiveVideoUpload}
+                  progress={videoUploadProgress}
+                />
+              ) : null}
+              <div className="flex min-h-11 items-center justify-between gap-3">
+                {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
+
+                <Button
+                  className={cn(
+                    "h-11 min-w-[6.5rem] shrink-0 rounded-full px-6 font-sans text-base font-[800] leading-none tracking-[-0.02em] shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
+                    !requiredFieldsReady &&
+                      "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
+                  )}
+                  disabled={isSubmitDisabled}
+                  style={{ fontFamily: "var(--font-sans)", fontWeight: 800 }}
+                  type="submit"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                  ) : null}
+                  Postar
+                </Button>
+              </div>
+            </footer>
+          </form>
+        )}
       </section>
     </div>
   );

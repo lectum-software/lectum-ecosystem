@@ -36,6 +36,7 @@ import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import {
   classifyUploadedCommunityMedia,
   clearCreatePostProfileDraft,
+  consumeCreatePostProfileUpdated,
   createSelectedMediaId,
   EDITOR_FIELD_IDS,
   getCreatePostInitialEditorFocusDelays,
@@ -74,6 +75,9 @@ export const useCreateCommunityPostController = ({
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
+  const [profileUpdateConfirmationName, setProfileUpdateConfirmationName] = useState<string | null>(
+    null,
+  );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [hasSheetOpened, setHasSheetOpened] = useState(false);
   const keyboardViewportOffset = useEditorKeyboardOffset();
@@ -124,7 +128,17 @@ export const useCreateCommunityPostController = ({
       storage: window.sessionStorage,
       userId: storedUserId,
     });
-    if (draft) hook.reset(draft);
+    const confirmationName = consumeCreatePostProfileUpdated({
+      returnHref: createPostReturnHref,
+      storage: window.sessionStorage,
+      userId: storedUserId,
+    });
+    if (!draft) return;
+
+    hook.reset(draft);
+    queueMicrotask(() => {
+      setProfileUpdateConfirmationName(confirmationName);
+    });
   }, [createPostReturnHref, hook, storedUserId]);
 
   const preserveDraftForProfileEdit = useCallback(() => {
@@ -677,6 +691,7 @@ export const useCreateCommunityPostController = ({
     cancelDiscardConfirmation,
     communitiesQuery,
     confirmDiscardAndClose,
+    continueAfterProfileUpdate: () => setProfileUpdateConfirmationName(null),
     discardConfirmationOpen,
     fileInputRef,
     focusEditorFromUserGesture,
@@ -698,6 +713,7 @@ export const useCreateCommunityPostController = ({
     onSubmit,
     preserveEditorFocusFromBlankTap,
     preserveDraftForProfileEdit,
+    profileUpdateConfirmationName,
     profileEditHref,
     registerEditorInteraction,
     removeSelectedMediaAt,

@@ -19,10 +19,13 @@ const { createCommunityPostSchema, toCreateCommunityPostPayload } = await import
 const {
   CREATE_POST_PROFILE_DRAFT_KEY,
   CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS,
+  CREATE_POST_PROFILE_UPDATED_KEY,
   clearCreatePostProfileDraft,
+  consumeCreatePostProfileUpdated,
   readCreatePostProfileDraft,
   resolveCreatePostProfileReturnHref,
   saveCreatePostProfileDraft,
+  saveCreatePostProfileUpdated,
 } = await import("../../app/app/community/[slug]/post/new/modules/create-post-support.ts");
 const { getReplyOwnerActionCopy } = await import("./reply-owner-action-copy.ts");
 const nextImageUrl = import.meta.resolve("next/image.js");
@@ -470,14 +473,67 @@ test("dica de anonimato usa texto compacto, fundo azul e edicao de perfil sem pe
   assert.doesNotMatch(view, /target="_blank"|rel="noopener noreferrer"/);
   assert.match(view, />\s*Editar nome no perfil\s*<\/Link>/);
   assert.match(controller, /saveCreatePostProfileDraft/);
+  assert.match(controller, /consumeCreatePostProfileUpdated/);
   assert.match(controller, /resolveCreatePostProfileReturnHref/);
   assert.match(controller, /clearCreatePostProfileDraft\(window\.sessionStorage\)/);
   assert.match(profileEdit, /normalizeSafeInternalRedirect\(searchParams\.get\("returnTo"\)/);
   assert.match(profileEdit, /backHref=\{returnTo \|\| "\/app\/perfil"\}/);
   assert.match(profileEdit, /router\.replace\(returnTo \|\| "\/app\/perfil"\)/);
+  assert.match(profileEdit, /saveCreatePostProfileUpdated/);
+  assert.match(view, />\s*Nome atualizado\s*<\/h2>/);
+  assert.match(view, /Sua publica.*identificada como/);
+  assert.match(view, />\s*Continuar para o post\s*<\/Button>/);
+  assert.doesNotMatch(view, /Editar novamente/);
   assert.match(profileEdit, /sticky bottom-4 z-10/);
   assert.match(profileEdit, /absolute top-\[calc\(100%\+0\.5rem\)\] right-0 z-30 w-44/);
   assert.doesNotMatch(profileEdit, /fixed inset-x-4 bottom-\[calc\(env\(safe-area-inset-bottom\)/);
+});
+
+test("confirmacao do nome atualizado aparece uma vez e apenas no retorno ao compositor", () => {
+  const entries = new Map();
+  const storage = {
+    getItem: (key) => entries.get(key) ?? null,
+    removeItem: (key) => entries.delete(key),
+    setItem: (key, value) => entries.set(key, value),
+  };
+
+  assert.equal(
+    saveCreatePostProfileUpdated({
+      displayName: "Tulio",
+      returnHref: "/app/perfil",
+      storage,
+      userId: "patient-1",
+    }),
+    false,
+  );
+  assert.equal(entries.has(CREATE_POST_PROFILE_UPDATED_KEY), false);
+
+  assert.equal(
+    saveCreatePostProfileUpdated({
+      displayName: "  Tulio  ",
+      returnHref: "/app/comunidades/feed/publicacao/nova",
+      storage,
+      userId: "patient-1",
+    }),
+    true,
+  );
+  assert.equal(
+    consumeCreatePostProfileUpdated({
+      returnHref: "/app/comunidades/feed/publicacao/nova",
+      storage,
+      userId: "patient-1",
+    }),
+    "Tulio",
+  );
+  assert.equal(entries.has(CREATE_POST_PROFILE_UPDATED_KEY), false);
+  assert.equal(
+    consumeCreatePostProfileUpdated({
+      returnHref: "/app/comunidades/feed/publicacao/nova",
+      storage,
+      userId: "patient-1",
+    }),
+    null,
+  );
 });
 
 test("retorno da edicao de nome sempre aponta para o compositor aberto", () => {
