@@ -35,6 +35,7 @@ import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import {
   classifyUploadedCommunityMedia,
+  clearCreatePostProfileDraft,
   createSelectedMediaId,
   EDITOR_FIELD_IDS,
   getCreatePostInitialEditorFocusDelays,
@@ -54,6 +55,7 @@ import {
 } from "../modules/create-post-support";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "../use-form";
 import { useCreatePostDiscardConfirmation } from "./use-create-post-discard-confirmation";
+import { useCreatePostProfileReturn } from "./use-create-post-profile-return";
 
 export const useCreateCommunityPostController = ({
   onCloseComplete,
@@ -64,6 +66,7 @@ export const useCreateCommunityPostController = ({
   const routeSlug = normalizeParam(params?.slug);
   const communitySlugFromQuery = searchParams.get("community")?.trim() || null;
   const storedUser = useAppSelector((state) => state.user);
+  const storedUserId = storedUser?.id ? String(storedUser.id) : null;
   const isPsychologist = storedUser?.role === "psicologo";
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
@@ -93,6 +96,18 @@ export const useCreateCommunityPostController = ({
     loadingCommunities: communitiesQuery.isLoading,
   });
   const { formProps, hook } = form;
+
+  const {
+    continueAfterProfileUpdate,
+    preserveDraftForProfileEdit,
+    profileEditHref,
+    profileUpdateConfirmationName,
+  } = useCreatePostProfileReturn({
+    communitySlugFromQuery,
+    form: hook,
+    routeSlug,
+    storedUserId,
+  });
   const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
   const { prepareVideo, clearVideo, preparationProgress, isPreparingVideo } =
@@ -114,6 +129,7 @@ export const useCreateCommunityPostController = ({
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
       clearSelectedMedia();
+      clearCreatePostProfileDraft(window.sessionStorage);
       const publicationHref = `/comunidades/${encodeURIComponent(post.community.slug)}/publicacao/${encodeURIComponent(post.id)}`;
 
       try {
@@ -320,6 +336,7 @@ export const useCreateCommunityPostController = ({
   const performClose = () => {
     abortActiveVideoUpload();
     clearSelectedMedia();
+    clearCreatePostProfileDraft(window.sessionStorage);
     setIsSheetOpen(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
 
@@ -631,6 +648,7 @@ export const useCreateCommunityPostController = ({
     cancelDiscardConfirmation,
     communitiesQuery,
     confirmDiscardAndClose,
+    continueAfterProfileUpdate,
     discardConfirmationOpen,
     fileInputRef,
     focusEditorFromUserGesture,
@@ -651,6 +669,9 @@ export const useCreateCommunityPostController = ({
     mediaPermission,
     onSubmit,
     preserveEditorFocusFromBlankTap,
+    preserveDraftForProfileEdit,
+    profileUpdateConfirmationName,
+    profileEditHref,
     registerEditorInteraction,
     removeSelectedMediaAt,
     requiredFieldsReady,

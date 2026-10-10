@@ -1107,7 +1107,7 @@ Escopo backend/frontend, sem mudanca de layout; commit local em homolog, sem pus
 
 Evidencias: ADR-0582, builds backend/frontend 0.1.616, checks por app aprovados, backend 892 testes, 16 focais, smoke HTTP local e integracao real somente leitura. Base local limitada a um original profissional elegivel; nenhum mock/seed criado.
 
-## Complemento 2026-10-10 - Feed profissional com filtros (ADR-0584)
+## Complemento 2026-10-10 - Feed profissional com filtros (ADR-0588)
 
 Escopo aprovado: psicologo inicia em Oportunidades; chips iguais aos das comunidades.
 Em destaque reproduz o feed do paciente; outros modos aceitam posts sem video/resposta.
@@ -1123,4 +1123,4 @@ Referencia visual: capturas atuais e Feed Comunidade.jpg; Builder indisponivel.
 - [x] Checks/builds backend/frontend e validacao local sem mocks.
 - [x] Validacao visual mobile/desktop e commit local; sem publicacao.
 
-Evidencias do complemento: ADR-0584; checks dos quatro apps e builds backend/frontend aprovados; integracao local somente leitura e browser 390px/desktop. Versao local 0.1.618. Sem push/deploy.
+Evidencias do complemento: ADR-0588; checks dos quatro apps e builds backend/frontend aprovados; integracao local somente leitura e browser 390px/desktop. Versao local 0.1.618. Sem push/deploy.

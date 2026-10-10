@@ -1,10 +1,20 @@
-Implementado e validado localmente (2026-10-10): complemento TASK-23, filtros do feed profissional, ADR-0584, versao 0.1.618. Oportunidades padrao; destaque espelha paciente. Checks/builds, integracao real e browser 390px/desktop aprovados. Sem push/deploy.
+Implementado e validado localmente (2026-10-10): complemento TASK-23, filtros do feed profissional, ADR-0588, versao 0.1.618. Oportunidades padrao; destaque espelha paciente. Checks/builds, integracao real e browser 390px/desktop aprovados. Sem push/deploy.
 
 Implementado localmente: complemento TASK-23, feed misto 4:1, bonus de video e variacao backend de ate 5%. ADR-0582, candidata de publicacao; checks/builds/smoke HTTP aprovados. Browser local validado em dev no desktop e mobile 390px; publicacao autorizada, ainda pendente.
 
 Refinamento anterior TASK-23/25 (ADR-0581): publicado e validado em producao 0.1.615 via PR #98. Complemento local atual: ADR-0582.
 
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
+
+Ajuste de frontend em 09/10/2026: [TASK-245 - Confirmacao do nome no retorno ao post](TASK-245-confirmacao-nome-retorno-post.md). Mostra uma confirmacao unica dentro da modal, informa o nome que identificara a publicacao e libera o rascunho somente pelo botao de continuar. Sem link extra, backend, banco, env, package novo ou contrato.
+
+Ajuste de frontend em 09/10/2026: [TASK-244 - Perfil do paciente e retorno ao compositor](TASK-244-perfil-paciente-retorno-compositor.md). Mantem salvar em rodape sticky, ancora as acoes do avatar ao lapis e conclui o retorno direto ao post identificado com o rascunho restaurado. Sem backend, banco, env, package novo ou contrato.
+
+Ajuste de frontend em 09/10/2026: [TASK-243 - Anonimato com edicao de nome e rascunho temporario](TASK-243-anonimato-edicao-perfil-rascunho.md). Enxuga a orientacao, leva o paciente a edicao do perfil e preserva comunidade, titulo e texto na modal, retornando com anonimato desligado. Sem pagina de rascunhos, backend, banco, env, package novo ou contrato.
+
+Ajuste visual de frontend em 09/10/2026: [TASK-242 - Respostas salvas com contexto da comunidade](TASK-242-respostas-salvas-contexto-comunidade.md). Leva a comunidade com chevron para a autoria de todas as respostas salvas e reutiliza a pergunta original do perfil nas respostas profissionais. Sem backend, banco, env, package novo ou contrato.
+
+Ajuste visual de frontend em 09/10/2026: [TASK-241 - Comunidades seguidas na familia visual da Lectum](TASK-241-comunidades-seguidas-familia-visual.md). Remove metricas e destaque promocional duplicado, compacta a lista seguida e reutiliza o carrossel oficial de comunidades sugeridas. Sem backend, banco, env, package novo ou contrato.
 
 Ajuste de 06/10/2026: [TASK-219 - Tema nas respostas das publicacoes do perfil](TASK-219-tema-respostas-publicacoes-perfil.md). Chevron e tema somente nas respostas da aba Publicacoes, reutilizando o cabecalho de posts. ADR-0559.
 
@@ -556,6 +566,12 @@ ou cortesia manual.
 | 237 | [TASK-237 - Avatar e cor na criacao de comunidade](TASK-237-community-create-avatar.md) | Done | 236 |
 | 238 | [TASK-238 - Lupa alinhada na pesquisa de psicologos](TASK-238-search-icon-alignment.md) | Done | 237 |
 | 239 | [TASK-239 - Publicacoes do perfil por votos e comentarios](TASK-239-profile-publication-order.md) | Done | 238 |
+| 240 | [TASK-240 - Comunidade geral na selecao de post](TASK-240-post-community-fallback.md) | Done | 239 |
+| 241 | [TASK-241 - Comunidades seguidas na familia visual da Lectum](TASK-241-comunidades-seguidas-familia-visual.md) | Done | 240 |
+| 242 | [TASK-242 - Respostas salvas com contexto da comunidade](TASK-242-respostas-salvas-contexto-comunidade.md) | Done | 241 |
+| 243 | [TASK-243 - Anonimato com edicao de nome e rascunho temporario](TASK-243-anonimato-edicao-perfil-rascunho.md) | Done | 242 |
+| 244 | [TASK-244 - Perfil do paciente e retorno ao compositor](TASK-244-perfil-paciente-retorno-compositor.md) | Done | 243 |
+| 245 | [TASK-245 - Confirmacao do nome no retorno ao post](TASK-245-confirmacao-nome-retorno-post.md) | Done | 244 |
 
 ## Ordem operacional recomendada sem bloqueios
 

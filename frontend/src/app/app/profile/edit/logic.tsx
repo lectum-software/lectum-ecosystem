@@ -2,7 +2,7 @@
 
 import { ImagePlus, Loader2, Pencil, Save, Trash2, UserRound } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import type {
   PatientProfileAvatarRemoval,
   PatientProfileAvatarUpload,
 } from "@/api/generator/types";
+import { saveCreatePostProfileUpdated } from "@/app/app/community/[slug]/post/new/modules/create-post-support";
 import { components } from "@/components/controllers";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -23,6 +24,7 @@ import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { resolvePublicMediaKind } from "@/utils/media-preparation";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 import { toPatientProfilePayload, usePatientProfileForm } from "./use-form";
 
 const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
@@ -56,11 +58,13 @@ const resolvePatientProfileError = (error: unknown) => {
 
 export const ProfileEditLogic = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const storedUser = useAppSelector((state) => state.user);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
+  const returnTo = normalizeSafeInternalRedirect(searchParams.get("returnTo"), "/app/perfil");
 
   const handleProfileUpdated = (data: PatientPrivateProfile) => {
     setApiError(null);
@@ -70,8 +74,14 @@ export const ProfileEditLogic = () => {
         patient_profile: data.profile,
       }),
     );
-    toast.success("Perfil atualizado com sucesso");
-    router.push("/app/perfil");
+    const savedComposerConfirmation = saveCreatePostProfileUpdated({
+      displayName: data.user.name ?? "",
+      returnHref: returnTo || "/app/perfil",
+      storage: window.sessionStorage,
+      userId: String(data.user.id),
+    });
+    if (!savedComposerConfirmation) toast.success("Perfil atualizado com sucesso");
+    router.replace(returnTo || "/app/perfil");
   };
 
   const handleAvatarUpdated = (data: PatientProfileAvatarUpload | PatientProfileAvatarRemoval) => {
@@ -174,7 +184,11 @@ export const ProfileEditLogic = () => {
   return (
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-4 pb-6 sm:max-w-xl lg:max-w-2xl">
-        <AppPageHeader backHref="/app/perfil" backLabel="Voltar ao perfil" title="Editar perfil" />
+        <AppPageHeader
+          backHref={returnTo || "/app/perfil"}
+          backLabel={returnTo === "/app/perfil" ? "Voltar ao perfil" : "Voltar ao post"}
+          title="Editar perfil"
+        />
 
         {!isPatient ? (
           <InlineAlert title="Perfil pessoal" variant="warning">
@@ -238,31 +252,27 @@ export const ProfileEditLogic = () => {
                       type="button"
                     />
                     <div
-                      className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 overflow-hidden rounded-[28px] border border-border bg-surface p-2 text-left shadow-lectum-soft ring-1 ring-border/70 sm:absolute sm:top-[calc(100%+0.75rem)] sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-56 sm:-translate-x-1/2 sm:rounded-2xl"
+                      className="absolute top-[calc(100%+0.5rem)] right-0 z-30 w-44 overflow-hidden rounded-2xl border border-border bg-surface text-left shadow-[var(--lectum-shadow-soft)]"
                       role="menu"
                     >
                       <button
-                        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                         disabled={isSavingAvatar || !isPatient}
                         onClick={handleAvatarFilePickerOption}
                         role="menuitem"
                         type="button"
                       >
-                        <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-primary">
-                          <ImagePlus className="h-4 w-4" aria-hidden="true" />
-                        </span>
+                        <ImagePlus className="h-4 w-4" aria-hidden="true" />
                         Alterar foto
                       </button>
                       <button
-                        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={isSavingAvatar || !storedUser?.avatar || !isPatient}
                         onClick={handleAvatarRemoval}
                         role="menuitem"
                         type="button"
                       >
-                        <span className="grid h-9 w-9 place-items-center rounded-full bg-danger/10 text-danger">
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        </span>
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                         Remover foto
                       </button>
                     </div>
@@ -306,18 +316,20 @@ export const ProfileEditLogic = () => {
                 {visibleError}
               </InlineAlert>
             ) : null}
-            <Button
-              className="h-14 w-full rounded-full"
-              disabled={isSaving || !isPatient}
-              type="submit"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Save className="h-4 w-4" aria-hidden="true" />
-              )}
-              Salvar Alterações
-            </Button>
+            <div className="sticky bottom-4 z-10 rounded-full bg-surface/90 p-2 shadow-[var(--lectum-shadow-soft)] backdrop-blur">
+              <Button
+                className="h-14 w-full rounded-full text-base"
+                disabled={isSaving || !isPatient}
+                type="submit"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="h-4 w-4" aria-hidden="true" />
+                )}
+                Salvar alterações
+              </Button>
+            </div>
           </form>
         ) : null}
       </section>

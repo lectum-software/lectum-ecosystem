@@ -1,13 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useId } from "react";
 import type { Community } from "@/api/generator/types/community";
 import { HorizontalScrollControls } from "@/components/ui/horizontal-scroll-controls";
 import { COMMUNITY_EXPLORE_HREF } from "@/utils/community";
-import { getCommunityInitials } from "@/utils/community-display";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { CommunityAvatar } from "./community-avatar";
 import { CommunityFollowToggle } from "./community-follow-toggle";
 
 export const CommunityRecommendationsCarousel = ({
@@ -48,7 +46,6 @@ export const CommunityRecommendationsCarousel = ({
           {/* Reserve 28px plus the 4px edge padding for the next card at every snap point. */}
           <ul className="flex gap-[12px] [--visible-cards:1] @min-[320px]/recommendations:[--visible-cards:2] @min-[480px]/recommendations:[--visible-cards:3] @min-[640px]/recommendations:[--visible-cards:4] @min-[800px]/recommendations:[--visible-cards:5] @min-[960px]/recommendations:[--visible-cards:6]">
             {communities.map((community) => {
-              const avatar = resolvePublicMediaUrl(community.avatar_url);
               return (
                 <li
                   key={community.slug}
@@ -59,21 +56,12 @@ export const CommunityRecommendationsCarousel = ({
                     className="flex min-h-0 flex-1 flex-col items-center gap-2 rounded-[18px] text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     aria-label={`Explorar ${community.name}`}
                   >
-                    <span className="relative grid h-[76px] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-media-foreground bg-primary-soft text-lg font-semibold text-primary shadow-lectum-soft dark:border-background">
-                      {avatar ? (
-                        <Image
-                          alt={`Avatar da comunidade ${community.name}`}
-                          src={avatar}
-                          fill
-                          sizes="76px"
-                          unoptimized={isPublicMediaUrl(community.avatar_url)}
-                          className="object-cover"
-                          draggable={false}
-                        />
-                      ) : (
-                        getCommunityInitials(community.name)
-                      )}
-                    </span>
+                    <CommunityAvatar
+                      avatarUrl={community.avatar_url}
+                      className="h-[76px] w-[76px] rounded-[18px] border-[4px] border-media-foreground bg-primary-soft text-lg font-semibold text-primary shadow-lectum-soft dark:border-background"
+                      name={community.name}
+                      sizes="76px"
+                    />
                     <div className="grid h-[54px] w-full shrink-0 place-items-center">
                       <h3 className="line-clamp-3 text-[14px] font-semibold leading-[18px] text-foreground [overflow-wrap:anywhere]">
                         {community.name}

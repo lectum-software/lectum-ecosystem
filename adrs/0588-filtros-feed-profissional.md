@@ -1,4 +1,4 @@
-# ADR-0584 - Filtros do feed profissional
+# ADR-0588 - Filtros do feed profissional
 
 Data: 2026-10-10
 Status: aceito; implementado e validado localmente
