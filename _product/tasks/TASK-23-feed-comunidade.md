@@ -1124,3 +1124,11 @@ Referencia visual: capturas atuais e Feed Comunidade.jpg; Builder indisponivel.
 - [x] Validacao visual mobile/desktop e commit local; sem publicacao.
 
 Evidencias do complemento: ADR-0588; checks dos quatro apps e builds backend/frontend aprovados; integracao local somente leitura e browser 390px/desktop. Versao local 0.1.618. Sem push/deploy.
+
+## Complemento 2026-10-10 - Retorno preserva aba (ADR-0591)
+- [x] Persistir aba e periodos na URL da comunidade, sem criar entradas extras de historico ou mudar scroll.
+- [x] Manter defaults por perfil apenas quando nao ha selecao valida; restringir Oportunidades ao psicologo.
+- [x] Biome e TypeScript locais aprovados.
+- [x] Browser real comunidade -> post -> voltar preservou sort=new; build final aprovado e commit local preparado. Publicacao autorizada por PR.
+
+Evidencia final: localhost com post real importado sob autorizacao, selecao Novos, abertura do post e botao Voltar retornaram a mesma URL sort=new e checkbox Novos selecionado. Testes de defaults por perfil e restricao de Oportunidades aprovados. Check geral e builds frontend/backend aprovados; sem alteracao de dados produtivos no smoke.

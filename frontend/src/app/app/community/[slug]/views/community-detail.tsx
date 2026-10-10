@@ -2,7 +2,7 @@
 
 import { MessageCircle, Plus, UsersRound } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   type MouseEvent as ReactMouseEvent,
   useCallback,
@@ -55,8 +55,11 @@ import { PsychologistReplyOnboarding } from "../components/reply-onboarding";
 import { useCommunityFeedScrollRestoration } from "../hooks/use-community-feed-scroll-restoration";
 import { usePsychologistReplyTip } from "../hooks/use-psychologist-reply-tip";
 import {
+  COMMUNITY_POST_SORT_PERIODS,
+  COMMUNITY_POST_SORTS,
   type CommunityPostSelectedPeriods,
   type CommunityPostSort,
+  type CommunityPostSortPeriod,
   communityCreatePostHref,
   communityDetailHref,
   flattenCommunityPostPages,
@@ -79,14 +82,38 @@ export const CommunityDetailLogic = ({
   const conversion = useProgressiveConversion();
   const currentUser = useAppSelector((state) => state.user);
   const isPsychologistUser = currentUser?.role === "psicologo";
-  const [sort, setSort] = useState<CommunityPostSort>("featured");
-  const [sortPeriods, setSortPeriods] = useState<CommunityPostSelectedPeriods>({});
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requestedSort = COMMUNITY_POST_SORTS.find(
+    (item) => item.value === searchParams.get("sort"),
+  )?.value;
+  const sort: CommunityPostSort =
+    requestedSort && (requestedSort !== "opportunities" || isPsychologistUser)
+      ? requestedSort
+      : isPsychologistUser
+        ? "opportunities"
+        : "featured";
+  const sortPeriods = useMemo(() => {
+    const periods: CommunityPostSelectedPeriods = {};
+    for (const key of ["commented", "voted"] as const) {
+      const period = COMMUNITY_POST_SORT_PERIODS.find(
+        (item) => item.value === searchParams.get(`${key}Period`),
+      )?.value;
+      if (period) periods[key] = period;
+    }
+    return periods;
+  }, [searchParams]);
+  const setSort = (value: CommunityPostSort, period?: CommunityPostSortPeriod) => {
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("sort", value);
+    if (period && (value === "commented" || value === "voted")) next.set(`${value}Period`, period);
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  };
   const [communitySearchOpen, setCommunitySearchOpen] = useState(false);
   const [communitySearch, setCommunitySearch] = useState("");
   const deferredCommunitySearch = useDeferredValue(communitySearch.trim());
   const communitySearchInputRef = useRef<HTMLInputElement>(null);
   const communitySearchReturnStateRef = useRef<{ scrollY: number } | null>(null);
-  const professionalDefaultSortAppliedRef = useRef(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
   const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
@@ -173,26 +200,6 @@ export const CommunityDetailLogic = ({
 
     communitySearchInputRef.current?.focus();
   }, [communitySearchOpen]);
-
-  useEffect(() => {
-    if (isPsychologistUser && !professionalDefaultSortAppliedRef.current) {
-      professionalDefaultSortAppliedRef.current = true;
-      const timeout = window.setTimeout(() => {
-        setSort((current) => (current === "featured" ? "opportunities" : current));
-      }, 0);
-
-      return () => window.clearTimeout(timeout);
-    }
-
-    if (!isPsychologistUser && sort === "opportunities") {
-      professionalDefaultSortAppliedRef.current = false;
-      const timeout = window.setTimeout(() => {
-        setSort("featured");
-      }, 0);
-
-      return () => window.clearTimeout(timeout);
-    }
-  }, [isPsychologistUser, sort]);
 
   const openCommunitySearch = () => {
     communitySearchReturnStateRef.current = {
@@ -383,8 +390,7 @@ export const CommunityDetailLogic = ({
                 showProfessionalOptions={isPsychologistUser}
                 onChange={setSort}
                 onPeriodChange={(value, period) => {
-                  setSort(value);
-                  setSortPeriods((current) => ({ ...current, [value]: period }));
+                  setSort(value, period);
                 }}
                 periods={sortPeriods}
                 value={sort}
