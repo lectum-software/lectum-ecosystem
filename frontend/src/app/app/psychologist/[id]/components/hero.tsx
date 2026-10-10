@@ -189,7 +189,7 @@ export const ProfileHero = ({
         </div>
 
         <div className="mt-4 grid gap-2">
-          <h1 className="min-w-0 break-words text-[1.55rem] font-black leading-tight tracking-normal text-foreground dark:text-foreground">
+          <h1 className="min-w-0 break-words text-[1.55rem] font-black leading-[1.4] tracking-normal text-foreground dark:text-foreground">
             {profile.verified ? (
               <>
                 {displayName.slice(0, lastNameStart)}

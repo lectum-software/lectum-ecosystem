@@ -179,6 +179,7 @@ export const SavedReplyMedia = ({
   return (
     <CommunityMediaBlock
       alt={title}
+      enableFeedAutoplay
       analyticsTarget={
         mediaType === "video" ? { targetId: replyId, targetType: "reply" } : undefined
       }
@@ -360,7 +361,7 @@ export const SavedReplyCard = ({
       </div>
 
       <CommunityActionBar
-        className="mt-4 border-border border-t pt-3"
+        className="mt-4 max-[380px]:flex-wrap max-[380px]:gap-y-1.5 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-none"
         comments={{
           count: reply.replies_received_count,
           href: replyLink,
@@ -373,7 +374,6 @@ export const SavedReplyCard = ({
           active: true,
           disabled: removePending,
           label: "Remover dos salvos",
-          count: reply.saves_count,
           onClick: () => onRemove(item.post.id, reply.id),
         }}
         share={{

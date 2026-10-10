@@ -93,7 +93,19 @@ export const getCommunityFeedPosts = async (query: CommunityFeedQuery = {}) => {
     query,
   });
 
-  return handleReq<CommunityFeedResponse>(handle);
+  try {
+    return await handleReq<CommunityFeedResponse>(handle);
+  } catch (error) {
+    // Old APIs reject unknown query fields. Keep their curated feed during rollout.
+    if (getApiErrorStatus(error) !== 400 || (!query.sort && !query.period)) throw error;
+    const legacyQuery = { ...query };
+    delete legacyQuery.sort;
+    delete legacyQuery.period;
+    const response = await handleReq<CommunityFeedResponse>(
+      callEndpoint({ route: "/api/private/community/feed/posts", query: legacyQuery }),
+    );
+    return { ...response, professional_filters_available: false };
+  }
 };
 
 export const getCommunityTopMentors = async (query: CommunityTopMentorsQuery = {}) => {

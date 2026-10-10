@@ -39,6 +39,7 @@ model user {
   has_seen_psychologist_reply_tip         Boolean                       @default(false)
   has_seen_psychologist_original_post_tip Boolean                       @default(false)
   has_seen_community_post_tip             Boolean                       @default(false)
+  has_seen_patient_privacy_notice          Boolean                       @default(false)
   recovery_code                           String?
   recovery_date                           DateTime?
   confirm_code                            String?
@@ -1456,6 +1457,7 @@ model notification {
   deliveries    notification_delivery[] @relation("notification_delivery_notification")
 
   @@index([user_id])
+  @@index([user_id, seen_at])
   @@map("notifications")
 }
 

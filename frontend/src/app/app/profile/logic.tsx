@@ -13,6 +13,7 @@ import {
   LogOut,
   MessagesSquare,
   Moon,
+  ShieldCheck,
   Smartphone,
   Star,
   TriangleAlert,
@@ -20,9 +21,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { ComponentType, ReactNode } from "react";
+import { type ComponentType, type ReactNode, useRef, useState } from "react";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import { LoadingState } from "@/components/ui/loading-state";
+import { Modal } from "@/components/ui/modal";
 import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useSignOut } from "@/hooks/cookies/signout";
@@ -37,6 +39,11 @@ import {
   isPaidRegistryVerificationComplete,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
+import {
+  PatientPrivacyExplanation,
+  PatientPrivacyNotice,
+  PatientPrivacyPolicyLink,
+} from "./patient-privacy";
 
 type ProfileRow = {
   ariaLabel?: string;
@@ -180,6 +187,9 @@ export const ProfileLogic = () => {
   const user = useAppSelector((state) => state.user);
   const { out } = useSignOut();
   const pwaInstall = usePwaInstallAccountAction();
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const privacyCloseRef = useRef<HTMLButtonElement>(null);
+  const privacyReturnRef = useRef<HTMLElement>(null);
   const isPsychologist = user?.role === "psicologo";
   const psychologistProfile = usePsychologistFreeProfile({ enabled: Boolean(isPsychologist) });
   const professionalProfileData = psychologistProfile.profile.data;
@@ -270,6 +280,9 @@ export const ProfileLogic = () => {
         ]
       : [{ href: "/app/avaliacoes", icon: Star, label: "Avaliações" }]),
     { href: "/app/configuracoes/conta", icon: Lock, label: "E-mail e senha" },
+    ...(user.role === "paciente"
+      ? [{ icon: ShieldCheck, label: "Privacidade", onClick: () => setPrivacyOpen(true) }]
+      : []),
     {
       hideChevron: true,
       icon: Moon,
@@ -310,8 +323,8 @@ export const ProfileLogic = () => {
               )}
             </div>
 
-            <h1 className="mt-5 text-2xl font-bold leading-7 text-foreground">
-              <span className="line-clamp-2 block min-w-0 break-words">
+            <h1 className="mt-5 text-2xl font-bold leading-[1.4] text-foreground">
+              <span className="line-clamp-2 block min-w-0 break-words pb-0.5">
                 <span>{displayName}</span>
                 {isPsychologist && hasVerifiedBadge ? (
                   <VerifiedBadgeIcon aria-hidden="true" className="ml-1 inline h-5 w-5" />
@@ -330,6 +343,8 @@ export const ProfileLogic = () => {
 
         {showProfessionalUpgradeCard ? <ProfessionalUpgradeCard /> : null}
 
+        {user.role === "paciente" ? <PatientPrivacyNotice key={user.id} /> : null}
+
         <Section rows={communityRows} title="Comunidade" />
 
         <Section rows={accountRows} title="Conta" />
@@ -340,6 +355,28 @@ export const ProfileLogic = () => {
         </Button>
 
         {pwaInstall.dialog}
+        {user.role === "paciente" ? (
+          <Modal
+            initialFocusRef={privacyCloseRef}
+            labelledBy="patient-privacy-dialog-title"
+            onClose={() => setPrivacyOpen(false)}
+            open={privacyOpen}
+            returnFocusRef={privacyReturnRef}
+          >
+            <div className="w-full max-w-md space-y-5 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] sm:p-6">
+              <h2 className="text-lg font-bold" id="patient-privacy-dialog-title">
+                Seu perfil não é público
+              </h2>
+              <PatientPrivacyExplanation />
+              <PatientPrivacyPolicyLink />
+              <Button asChild className="w-full" variant="outline">
+                <button onClick={() => setPrivacyOpen(false)} ref={privacyCloseRef} type="button">
+                  Fechar
+                </button>
+              </Button>
+            </div>
+          </Modal>
+        ) : null}
       </section>
     </PrivateTemplate>
   );

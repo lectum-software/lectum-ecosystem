@@ -628,8 +628,13 @@ Formato recomendado:
 - [ADR-0581 — Feed com acolhimento profissional recente em video](0581-feed-acolhimento-profissional-recente.md)
 
 - [ADR-0582 — Feed misto com publicacoes profissionais](0582-feed-misto-publicacoes-profissionais.md)
+
+- [ADR-0588 — Filtros do feed profissional](0588-filtros-feed-profissional.md)
 - [ADR-0583 — Comunidade geral como ultima opcao](0583-post-community-fallback.md)
 - [ADR-0584 — Comunidades seguidas na familia visual da Lectum](0584-comunidades-seguidas-familia-visual.md)
 - [ADR-0585 — Respostas salvas com contexto da comunidade](0585-respostas-salvas-contexto-comunidade.md)
 - [ADR-0586 — Rascunho temporario ao editar nome na publicacao](0586-anonimato-edicao-perfil-rascunho.md)
 - [ADR-0587 — Retorno canonico ao compositor apos editar perfil](0587-perfil-paciente-retorno-compositor.md)
+- [ADR-0589 — Salvos reutiliza a apresentacao do feed](0589-salvos-apresentacao-feed.md)
+- [ADR-0590 — Aviso de perfil nao publico do paciente](0590-aviso-perfil-privado-paciente.md)
+- [ADR-0591 — Preservar aba da comunidade](0591-preservar-aba-comunidade.md)

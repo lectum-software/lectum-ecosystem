@@ -82,3 +82,19 @@ test("sessao conserva seed em remount e renova somente no refresh", async () => 
   assert.match(view, /useInfiniteCommunityFeedPosts\(query, variationSeed > 0\)/);
   assert.match(view, /const posts = loadedPosts/);
 });
+
+test("comunidade restaura aba e periodos pela URL sem reaplicar default", () => {
+  const detail = readFileSync(
+    new URL("../app/app/community/[slug]/views/community-detail.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(detail, /searchParams.get\("sort"\)/);
+  assert.match(detail, /next.set\("sort", value\)/);
+  assert.match(
+    detail,
+    /router.replace\(`\$\{pathname\}\?\$\{next.toString\(\)\}`, \{ scroll: false \}\)/,
+  );
+  assert.match(detail, /searchParams.get\(`\$\{key\}Period`\)/);
+  assert.match(detail, /requestedSort !== "opportunities" \|\| isPsychologistUser/);
+  assert.doesNotMatch(detail, /professionalDefaultSortAppliedRef/);
+});

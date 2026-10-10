@@ -82,6 +82,7 @@ export const deleteGoogleIntentSchema: IValidatorRequest = {
 
 export const onboardingTipsSchema: IValidatorRequest = {
   body: [
+    { key: "has_seen_patient_privacy_notice", method: "boolean", optional: true },
     {
       key: "has_seen_discover_psychologists_tip",
       method: "boolean",

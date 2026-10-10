@@ -1106,3 +1106,29 @@ Escopo backend/frontend, sem mudanca de layout; commit local em homolog, sem pus
 - [ ] Publicacao e smoke remoto: autorizados pelo usuario; promover somente apos gates e verificar versoes.
 
 Evidencias: ADR-0582, builds backend/frontend 0.1.616, checks por app aprovados, backend 892 testes, 16 focais, smoke HTTP local e integracao real somente leitura. Base local limitada a um original profissional elegivel; nenhum mock/seed criado.
+
+## Complemento 2026-10-10 - Feed profissional com filtros (ADR-0588)
+
+Escopo aprovado: psicologo inicia em Oportunidades; chips iguais aos das comunidades.
+Em destaque reproduz o feed do paciente; outros modos aceitam posts sem video/resposta.
+Paciente e visitante permanecem sem filtros e com feed atual. Backend exige role real.
+Sem mudanca no fluxo de abrir e responder; sem novas dependencias, envs ou migrations.
+Referencia visual: capturas atuais e Feed Comunidade.jpg; Builder indisponivel.
+
+- [x] Oportunidades padrao profissional e regras identicas as comunidades.
+- [x] Em destaque preserva elegibilidade, ranking e variacao do feed do paciente.
+- [x] Novos/comentados/uteis incluem posts sem resposta; periodos preservados.
+- [x] Paciente/visitante sem chips e sem acesso aos modos via query manipulada.
+- [x] Busca, escopo, comunidade, cache e paginacao consistentes por filtro.
+- [x] Checks/builds backend/frontend e validacao local sem mocks.
+- [x] Validacao visual mobile/desktop e commit local; sem publicacao.
+
+Evidencias do complemento: ADR-0588; checks dos quatro apps e builds backend/frontend aprovados; integracao local somente leitura e browser 390px/desktop. Versao local 0.1.618. Sem push/deploy.
+
+## Complemento 2026-10-10 - Retorno preserva aba (ADR-0591)
+- [x] Persistir aba e periodos na URL da comunidade, sem criar entradas extras de historico ou mudar scroll.
+- [x] Manter defaults por perfil apenas quando nao ha selecao valida; restringir Oportunidades ao psicologo.
+- [x] Biome e TypeScript locais aprovados.
+- [x] Browser real comunidade -> post -> voltar preservou sort=new; build final aprovado e commit local preparado. Publicacao autorizada por PR.
+
+Evidencia final: localhost com post real importado sob autorizacao, selecao Novos, abertura do post e botao Voltar retornaram a mesma URL sort=new e checkbox Novos selecionado. Testes de defaults por perfil e restricao de Oportunidades aprovados. Check geral e builds frontend/backend aprovados; sem alteracao de dados produtivos no smoke.

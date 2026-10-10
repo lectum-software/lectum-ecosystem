@@ -1319,3 +1319,7 @@ continuam suportados. Ranking e variacao limitada permanecem exclusivos do backe
 Campos internos active/deleted do autor/perfil sao usados na selecao, sem novo campo de
 resposta publica. Ordenacoes internas das comunidades nao mudam. Midia pronta consultada
 em lotes no banco, sem requisicoes individuais ao provider.
+
+## Complemento 2026-10-10 - Aviso de privacidade do paciente (ADR-0585)
+
+user.has_seen_patient_privacy_notice: Boolean, default false. Flag independente das outras dicas; persistida por conta ao clicar Entendi. Nao representa consentimento legal nem altera visibilidade de dados. Expansao com default trata registros existentes, sem remocao de campos. Endpoint existente account/tips com propriedade aditiva; UI tolera ausencia e nunca confirma persistencia por fallback local.

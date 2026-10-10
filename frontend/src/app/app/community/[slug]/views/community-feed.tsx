@@ -25,6 +25,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { useFeedVariationSeed } from "@/hooks/use-feed-variation-seed";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
 } from "@/utils/lectum-share-target";
+import { CommunityPostSortChips } from "../components/community-header";
 import { FeedCommunitySelect, FeedSearchMenu, FilterMenu } from "../components/feed-controls";
 import { InfinitePostLoader, PostCard } from "../components/post-card";
 import {
@@ -48,7 +50,13 @@ import {
 import { PsychologistReplyOnboarding } from "../components/reply-onboarding";
 import { useCommunityFeedScrollRestoration } from "../hooks/use-community-feed-scroll-restoration";
 import { usePsychologistReplyTip } from "../hooks/use-psychologist-reply-tip";
-import { flattenCommunityPostPages, PAGE_LIMIT, resolveFeedError } from "../modules/feed-support";
+import {
+  type CommunityPostSelectedPeriods,
+  type CommunityPostSort,
+  flattenCommunityPostPages,
+  PAGE_LIMIT,
+  resolveFeedError,
+} from "../modules/feed-support";
 import { CreateCommunityPostLogic } from "../post/new/logic";
 import type { CommunityRouteLogicProps } from "./community-detail";
 
@@ -58,6 +66,12 @@ export const CommunityFeedLogic = ({
   const params = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
   const conversion = useProgressiveConversion();
+  const currentUser = useAppSelector((state) => state.user);
+  const isPsychologistUser = currentUser?.role === "psicologo";
+  const [professionalSort, setProfessionalSort] = useState<CommunityPostSort>("opportunities");
+  const [sortPeriods, setSortPeriods] = useState<CommunityPostSelectedPeriods>({});
+  const sort = isPsychologistUser ? professionalSort : "featured";
+  const period = sort === "commented" || sort === "voted" ? sortPeriods[sort] : undefined;
   const routeSlug = typeof params.slug === "string" ? params.slug : COMMUNITY_FEED_SLUG;
   const queryCommunitySlug = searchParams.get("community")?.trim() || null;
   const selectedCommunitySlug =
@@ -81,10 +95,12 @@ export const CommunityFeedLogic = ({
       limit: PAGE_LIMIT,
       seed: variationSeed || undefined,
       scope,
+      sort,
+      ...(period ? { period } : {}),
       ...(deferredSearch ? { search: deferredSearch } : {}),
       ...(selectedCommunitySlug ? { community: selectedCommunitySlug } : {}),
     }),
-    [deferredSearch, scope, selectedCommunitySlug, variationSeed],
+    [deferredSearch, scope, selectedCommunitySlug, variationSeed, sort, period],
   );
   const communitiesQuery = useCommunities({ limit: 50, page: 1 });
   const feed = useInfiniteCommunityFeedPosts(query, variationSeed > 0);
@@ -245,6 +261,19 @@ export const CommunityFeedLogic = ({
             />
           </div>
         </header>
+
+        {isPsychologistUser && firstFeedPage?.professional_filters_available !== false ? (
+          <CommunityPostSortChips
+            showProfessionalOptions
+            onChange={setProfessionalSort}
+            onPeriodChange={(value, nextPeriod) => {
+              setProfessionalSort(value);
+              setSortPeriods((current) => ({ ...current, [value]: nextPeriod }));
+            }}
+            periods={sortPeriods}
+            value={sort}
+          />
+        ) : null}
 
         {isInitialFeedLoading ? (
           <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">

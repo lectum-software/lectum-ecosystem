@@ -1,3 +1,11 @@
+Validado localmente (2026-10-10): complemento TASK-23, retorno do post preserva aba/periodos, ADR-0591. Browser real, testes e builds aprovados. Lote autorizado para PR homolog -> main; homolog remoto nao sera publicado.
+
+Validado localmente (2026-10-10): complemento TASK-21, aviso privado, nome sem reload e tipografia, ADR-0590. Check geral, builds e integracao real aprovados; limitacao do hero publico registrada. Publicacao autorizada por PR.
+
+Validado localmente (2026-10-10): complemento [TASK-28 - Salvos com a apresentacao do feed](TASK-28-meus-posts-posts-salvos.md), ADR-0589. Check geral/builds e browser com video real 390px aprovados. Publicacao autorizada; PR/deploy pendentes.
+
+Implementado e validado localmente (2026-10-10): complemento TASK-23, filtros do feed profissional, ADR-0588, versao 0.1.618. Oportunidades padrao; destaque espelha paciente. Checks/builds, integracao real e browser 390px/desktop aprovados. Sem push/deploy.
+
 Implementado localmente: complemento TASK-23, feed misto 4:1, bonus de video e variacao backend de ate 5%. ADR-0582, candidata de publicacao; checks/builds/smoke HTTP aprovados. Browser local validado em dev no desktop e mobile 390px; publicacao autorizada, ainda pendente.
 
 Refinamento anterior TASK-23/25 (ADR-0581): publicado e validado em producao 0.1.615 via PR #98. Complemento local atual: ADR-0582.

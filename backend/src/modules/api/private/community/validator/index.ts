@@ -83,6 +83,20 @@ export const suggestionSchema: IValidatorRequest = {
 export const feedSchema: IValidatorRequest = {
   query: [
     {
+      key: "sort",
+      coerse: "string",
+      method: "enumeric",
+      values: ["opportunities", "featured", "new", "commented", "voted"],
+      optional: true,
+    },
+    {
+      key: "period",
+      coerse: "string",
+      method: "enumeric",
+      values: ["week", "month", "year", "all"],
+      optional: true,
+    },
+    {
       key: "seed",
       coerse: "number",
       method: "numeric",

@@ -18,10 +18,10 @@ import {
   normalizeCommunityPostSortPeriod,
   normalizePagination,
   postSelect,
-  resolveCommunityOpportunitiesStartDate,
   sortCommunityPostResults,
 } from "../support/community-feed";
 import { loadAvailableProfessionalReplies } from "../support/community-feed-media";
+import { communityOpportunityWhere } from "../support/community-feed-mode";
 import {
   getCommunityPostSortMetrics,
   getFollowedCommunityIds,
@@ -58,18 +58,7 @@ export class CommunityPostRepository extends CommunityRepositoryContext {
       deleted: false,
       status: "publicado",
       OR: postSearchWhere(search),
-      ...(sort === "opportunities"
-        ? {
-            author: {
-              role: {
-                not: "psicologo",
-              },
-            },
-            createdAt: {
-              gte: resolveCommunityOpportunitiesStartDate(),
-            },
-          }
-        : {}),
+      ...communityOpportunityWhere(sort),
     };
 
     const [allItems, count] = await Promise.all([

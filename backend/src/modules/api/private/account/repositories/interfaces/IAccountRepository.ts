@@ -18,6 +18,7 @@ export interface IAccountRepository {
     has_seen_psychologist_profile_video_tip: boolean;
     has_seen_psychologist_reply_tip: boolean;
     has_seen_psychologist_original_post_tip: boolean;
+    has_seen_patient_privacy_notice: boolean;
   } | null>;
   updateOnboardingTips: (
     userId: string,
@@ -29,6 +30,7 @@ export interface IAccountRepository {
       has_seen_psychologist_profile_video_tip?: boolean;
       has_seen_psychologist_reply_tip?: boolean;
       has_seen_psychologist_original_post_tip?: boolean;
+      has_seen_patient_privacy_notice?: boolean;
     },
   ) => Promise<{
     has_seen_community_post_tip: boolean;
@@ -38,6 +40,7 @@ export interface IAccountRepository {
     has_seen_psychologist_profile_video_tip: boolean;
     has_seen_psychologist_reply_tip: boolean;
     has_seen_psychologist_original_post_tip: boolean;
+    has_seen_patient_privacy_notice: boolean;
   }>;
   updateUserAndClearTokens: (userId: string, data: Prisma.userUpdateInput) => Promise<user>;
 }

@@ -33,6 +33,7 @@ export type AccountOnboardingTipsBody = {
   has_seen_psychologist_profile_video_tip?: boolean;
   has_seen_psychologist_reply_tip?: boolean;
   has_seen_psychologist_original_post_tip?: boolean;
+  has_seen_patient_privacy_notice?: boolean;
 };
 
 export type AccountOnboardingTipsResponse = {
@@ -43,6 +44,7 @@ export type AccountOnboardingTipsResponse = {
   has_seen_psychologist_profile_video_tip: boolean;
   has_seen_psychologist_reply_tip: boolean;
   has_seen_psychologist_original_post_tip: boolean;
+  has_seen_patient_privacy_notice: boolean;
 };
 
 export type AccountGoogleSecurity = {

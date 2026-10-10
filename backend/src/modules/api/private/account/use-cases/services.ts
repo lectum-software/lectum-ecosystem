@@ -153,6 +153,7 @@ export const onboardingTips = async (data: IAccountDTO) => {
   }
 
   const response: AccountOnboardingTipsResponse = {
+    has_seen_patient_privacy_notice: Boolean(current.has_seen_patient_privacy_notice),
     has_seen_community_post_tip: Boolean(current.has_seen_community_post_tip),
     has_seen_discover_psychologists_tip: Boolean(current.has_seen_discover_psychologists_tip),
     has_seen_psychologists_my_search_tip: Boolean(current.has_seen_psychologists_my_search_tip),
@@ -183,7 +184,14 @@ export const updateOnboardingTips = async (data: IAccountOnboardingTipsDTO) => {
     };
   }
 
+  if (data.b.has_seen_patient_privacy_notice !== undefined && current.role !== "paciente") {
+    return { status: 403, ...error("role_not_authorized", {}) };
+  }
+
   const next = {
+    ...(typeof data.b.has_seen_patient_privacy_notice === "boolean"
+      ? { has_seen_patient_privacy_notice: data.b.has_seen_patient_privacy_notice }
+      : {}),
     ...(typeof data.b.has_seen_community_post_tip === "boolean"
       ? { has_seen_community_post_tip: data.b.has_seen_community_post_tip }
       : {}),
@@ -222,6 +230,7 @@ export const updateOnboardingTips = async (data: IAccountOnboardingTipsDTO) => {
   const repository = new AccountRepository();
   const updated = await repository.updateOnboardingTips(current.id, next);
   const response: AccountOnboardingTipsResponse = {
+    has_seen_patient_privacy_notice: Boolean(updated.has_seen_patient_privacy_notice),
     has_seen_community_post_tip: Boolean(updated.has_seen_community_post_tip),
     has_seen_discover_psychologists_tip: Boolean(updated.has_seen_discover_psychologists_tip),
     has_seen_psychologists_my_search_tip: Boolean(updated.has_seen_psychologists_my_search_tip),

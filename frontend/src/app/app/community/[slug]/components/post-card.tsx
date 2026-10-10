@@ -13,7 +13,10 @@ import {
 } from "react";
 import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { CommunityPost } from "@/api/generator/types/community";
-import { CommunityActionBar } from "@/components/community/community-action-bar";
+import {
+  CommunityActionBar,
+  type CommunityActionBarProps,
+} from "@/components/community/community-action-bar";
 import {
   CommunityMediaBlock,
   type CommunityMediaOverlayAction,
@@ -265,12 +268,14 @@ export const PostCard = ({
   onShare,
   post,
   replyTipTarget = false,
+  saveActionOverride,
   showCommunityHeader = true,
 }: {
   onOpen?: () => void;
   onShare: (post: CommunityPost) => void;
   post: CommunityPost;
   replyTipTarget?: boolean;
+  saveActionOverride?: CommunityActionBarProps["save"];
   showCommunityHeader?: boolean;
 }) => {
   const router = useRouter();
@@ -602,6 +607,7 @@ export const PostCard = ({
           disabled: saveMutation.isPending,
           label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar post",
           onClick: handleToggleSave,
+          ...saveActionOverride,
         }}
         share={{
           label: `Compartilhar post: ${post.title}`,
