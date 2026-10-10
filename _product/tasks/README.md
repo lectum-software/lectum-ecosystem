@@ -1,3 +1,5 @@
+Implementado e validado localmente (2026-10-10): complemento TASK-23, filtros do feed profissional, ADR-0584, versao 0.1.618. Oportunidades padrao; destaque espelha paciente. Checks/builds, integracao real e browser 390px/desktop aprovados. Sem push/deploy.
+
 Implementado localmente: complemento TASK-23, feed misto 4:1, bonus de video e variacao backend de ate 5%. ADR-0582, candidata de publicacao; checks/builds/smoke HTTP aprovados. Browser local validado em dev no desktop e mobile 390px; publicacao autorizada, ainda pendente.
 
 Refinamento anterior TASK-23/25 (ADR-0581): publicado e validado em producao 0.1.615 via PR #98. Complemento local atual: ADR-0582.

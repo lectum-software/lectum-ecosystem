@@ -15,6 +15,7 @@ import type {
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import * as api from "@/api/req/community";
+import { useAppSelector } from "@/hooks/redux";
 import { nextListPage } from "@/utils/infinite-list";
 import {
   type MediaPreparationPurpose,
@@ -77,8 +78,14 @@ export const useCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = 
 };
 
 export const useInfiniteCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = true) => {
+  const user = useAppSelector((state) => state.user);
   return useInfiniteQuery({
-    queryKey: keys.community.feed({ ...query, mode: "infinite" }),
+    queryKey: keys.community.feed({
+      ...query,
+      mode: "infinite",
+      viewer: user?.id ?? null,
+      role: user?.role ?? null,
+    }),
     queryFn: ({ pageParam }) => api.getCommunityFeedPosts({ ...query, page: pageParam as number }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>

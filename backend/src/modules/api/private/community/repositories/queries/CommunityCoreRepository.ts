@@ -13,14 +13,20 @@ import type {
 import {
   communityRuleSelect,
   communitySelect,
+  normalizeCommunityPostSortPeriod,
   normalizePagination,
   postSelect,
+  sortCommunityPostResults,
 } from "../support/community-feed";
 import {
   loadAvailableProfessionalReplies,
   loadOriginalVideoPostIds,
 } from "../support/community-feed-media";
 import { isMixedFeedEligible, sortMixedFeedPosts } from "../support/community-feed-mix";
+import {
+  communityOpportunityWhere,
+  resolveCommunityFeedSort,
+} from "../support/community-feed-mode";
 import {
   getCommunityPostSortMetrics,
   getFollowedCommunityIds,
@@ -300,6 +306,8 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
 
   async feed(data: ICommunityFeedDTO): Promise<CommunityFeedResponse> {
     const pagination = normalizePagination(data.q);
+    const sort = resolveCommunityFeedSort(data.auth?.role, data.q.sort);
+    const period = normalizeCommunityPostSortPeriod(data.q.period);
     const search = data.q.search?.trim();
     const communitySlug = data.q.community?.trim() || null;
     const scope = normalizeScope(data.q.scope);
@@ -337,6 +345,7 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
         members: communityMemberFilter,
       },
       OR: postSearchWhere(search),
+      ...communityOpportunityWhere(sort),
     };
 
     const followedMembershipWhere: Prisma.community_memberWhereInput = {
@@ -364,20 +373,25 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
         ? prisma.community_member.count({ where: followedMembershipWhere })
         : Promise.resolve(0),
     ]);
-    const eligibleItems = (await loadAvailableProfessionalReplies(allItems)).filter(
-      isMixedFeedEligible,
-    );
+    const availableItems = await loadAvailableProfessionalReplies(allItems);
+    const eligibleItems =
+      sort === "featured" ? availableItems.filter(isMixedFeedEligible) : availableItems;
     const count = eligibleItems.length;
     const allPostIds = eligibleItems.map((item) => item.id);
     const sortMetricsByPostId = await getCommunityPostSortMetrics(allPostIds);
-    const videoPostIds = await loadOriginalVideoPostIds(eligibleItems);
-    const items = sortMixedFeedPosts(
-      eligibleItems,
-      sortMetricsByPostId,
-      videoPostIds,
-      Date.now(),
-      data.q.seed,
-    ).slice(pagination.skip, pagination.skip + pagination.limit);
+    const videoPostIds =
+      sort === "featured" ? await loadOriginalVideoPostIds(eligibleItems) : new Set<string>();
+    const rankedItems =
+      sort === "featured"
+        ? sortMixedFeedPosts(
+            eligibleItems,
+            sortMetricsByPostId,
+            videoPostIds,
+            Date.now(),
+            data.q.seed,
+          )
+        : sortCommunityPostResults(eligibleItems, sort, period, sortMetricsByPostId);
+    const items = rankedItems.slice(pagination.skip, pagination.skip + pagination.limit);
     const highlightedRepliesByPostId = await selectHighlightedProfessionalReplies(items);
     const postIds = items.map((item) => item.id);
     const communityIds = [...new Set(items.map((item) => item.community.id))];

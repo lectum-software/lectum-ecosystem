@@ -629,3 +629,5 @@ Formato recomendado:
 - [ADR-0581 — Feed com acolhimento profissional recente em video](0581-feed-acolhimento-profissional-recente.md)
 
 - [ADR-0582 — Feed misto com publicacoes profissionais](0582-feed-misto-publicacoes-profissionais.md)
+
+- [ADR-0584 — Filtros do feed profissional](0584-filtros-feed-profissional.md)

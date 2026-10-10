@@ -25,6 +25,7 @@ import {
   originalProfessionalScore,
   sortMixedFeedPosts,
 } from "./community-feed-mix";
+import { communityOpportunityWhere, resolveCommunityFeedSort } from "./community-feed-mode";
 import { feedVariationWeight } from "./community-feed-variation";
 
 const now = Date.now();
@@ -427,4 +428,44 @@ it("variacao e determinista, limitada a 5%, preserva 4:1 e altera empates", () =
       sortMixedFeedPosts([old, dominant], new Map(), new Set([old.id]), now, seed)[0].id,
       dominant.id,
     );
+});
+
+describe("modos do feed profissional", () => {
+  it("paciente e visitante nao mudam destaque via query; clientes antigos preservados", () => {
+    for (const sort of ["opportunities", "featured", "new", "commented", "voted", undefined]) {
+      assert.equal(resolveCommunityFeedSort("paciente", sort), "featured");
+      assert.equal(resolveCommunityFeedSort(undefined, sort), "featured");
+      assert.equal(resolveCommunityFeedSort("psicologo", sort), sort ?? "featured");
+    }
+  });
+  it("oportunidades usa mesma janela e exclui autores profissionais, nao todos os respondidos", () => {
+    const where = communityOpportunityWhere("opportunities");
+    assert.deepEqual(where.author, { role: { not: "psicologo" } });
+    assert.ok(where.createdAt);
+    assert.deepEqual(communityOpportunityWhere("featured"), {});
+    const unanswered = post("unanswered", 0, 1);
+    const answered = post("answered", 2, 2);
+    const professional = { ...post("professional", 0, 0), author: reply("professional").author };
+    const old = post("old", 0, 365);
+    const metrics = new Map([
+      [answered.id, { ...emptyCommunityPostSortMetrics(), psychologist_replies_count: 2 }],
+    ]);
+    assert.deepEqual(
+      sortCommunityPostResults(
+        [old, professional, answered, unanswered],
+        "opportunities",
+        "all",
+        metrics,
+      ).map((p) => p.id),
+      ["unanswered", "answered"],
+    );
+    for (const sort of ["new", "commented", "voted"] as const) {
+      assert.equal(
+        sortCommunityPostResults([unanswered, professional], sort, "week", metrics).length,
+        2,
+      );
+    }
+    assert.equal(isMixedFeedEligible(unanswered), false);
+    assert.equal(isMixedFeedEligible(professional), true);
+  });
 });

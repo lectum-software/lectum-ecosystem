@@ -17,6 +17,8 @@ export type CommunityPostsQuery = {
 export type CommunityFeedScope = "all" | "following";
 
 export type CommunityFeedQuery = {
+  sort?: "opportunities" | "featured" | "new" | "commented" | "voted";
+  period?: "week" | "month" | "year" | "all";
   seed?: number;
   page?: number;
   limit?: number;
@@ -171,6 +173,7 @@ export type CommunityPostsResponse = {
 };
 
 export type CommunityFeedResponse = {
+  professional_filters_available?: boolean;
   data: CommunityPost[];
   page: number;
   pages: number;
