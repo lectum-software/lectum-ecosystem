@@ -16,6 +16,13 @@ const { AnonymousPostSwitch } = await import(
 const { createCommunityPostSchema, toCreateCommunityPostPayload } = await import(
   "../../app/app/community/[slug]/post/new/use-form.tsx"
 );
+const {
+  CREATE_POST_PROFILE_DRAFT_KEY,
+  CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS,
+  clearCreatePostProfileDraft,
+  readCreatePostProfileDraft,
+  saveCreatePostProfileDraft,
+} = await import("../../app/app/community/[slug]/post/new/modules/create-post-support.ts");
 const { getReplyOwnerActionCopy } = await import("./reply-owner-action-copy.ts");
 const nextImageUrl = import.meta.resolve("next/image.js");
 const nextImageBridge = `data:text/javascript,${encodeURIComponent(
@@ -421,6 +428,106 @@ test("onBlur é delegado intacto para o Controller, sem agendar foco", () => {
   assert.equal(element.props.onBlur, onBlur);
   element.props.onBlur();
   assert.equal(blurs, 1);
+});
+
+test("dica de anonimato usa texto compacto, fundo azul e edicao de perfil sem perder o rascunho", () => {
+  const support = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/new/modules/create-post-support.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const view = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/new/views/create-community-post.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const controller = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const profileEdit = readFileSync(
+    new URL("../../app/app/profile/edit/logic.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    support,
+    /Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras\.\\n\\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido/,
+  );
+  assert.doesNotMatch(support, /você também pode utilizar no perfil/);
+  assert.match(view, /border-primary\/20 bg-primary-soft/);
+  assert.match(view, /href=\{profileEditHref\}/);
+  assert.match(view, /onClick=\{preserveDraftForProfileEdit\}/);
+  assert.doesNotMatch(view, /target="_blank"|rel="noopener noreferrer"/);
+  assert.match(view, />\s*Editar nome no perfil\s*<\/Link>/);
+  assert.match(controller, /saveCreatePostProfileDraft/);
+  assert.match(controller, /clearCreatePostProfileDraft\(window\.sessionStorage\)/);
+  assert.match(profileEdit, /normalizeSafeInternalRedirect\(searchParams\.get\("returnTo"\)/);
+  assert.match(profileEdit, /backHref=\{returnTo \|\| "\/app\/perfil"\}/);
+});
+
+test("rascunho da ida ao perfil restaura texto identificado e respeita usuario, rota e validade", () => {
+  const values = {
+    anonymous: true,
+    community_slug: "ansiedade",
+    content: "Texto que deve continuar na modal.",
+    title: "Uma pergunta importante",
+  };
+  const entries = new Map();
+  const storage = {
+    getItem: (key) => entries.get(key) ?? null,
+    removeItem: (key) => entries.delete(key),
+    setItem: (key, value) => entries.set(key, value),
+  };
+
+  saveCreatePostProfileDraft({
+    returnHref: "/app/community/feed/post/new",
+    storage,
+    userId: "patient-1",
+    values,
+  });
+
+  assert.deepEqual(
+    readCreatePostProfileDraft({
+      returnHref: "/app/community/feed/post/new",
+      storage,
+      userId: "patient-1",
+    }),
+    { ...values, anonymous: false },
+  );
+
+  const savedDraft = JSON.parse(entries.get(CREATE_POST_PROFILE_DRAFT_KEY));
+  assert.equal("anonymous" in savedDraft.values, false);
+  assert.equal(
+    readCreatePostProfileDraft({
+      returnHref: "/app/community/outra/post/new",
+      storage,
+      userId: "patient-1",
+    }),
+    null,
+  );
+  assert.equal(entries.has(CREATE_POST_PROFILE_DRAFT_KEY), false);
+
+  entries.set(CREATE_POST_PROFILE_DRAFT_KEY, JSON.stringify({ ...savedDraft, savedAt: 0 }));
+  assert.equal(
+    readCreatePostProfileDraft({
+      now: CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS + 1,
+      returnHref: savedDraft.returnHref,
+      storage,
+      userId: savedDraft.userId,
+    }),
+    null,
+  );
+
+  clearCreatePostProfileDraft(storage);
+  assert.equal(entries.size, 0);
 });
 
 test("schema/payload reais preservam anonimato opcional do paciente e vedação ao psicólogo", () => {

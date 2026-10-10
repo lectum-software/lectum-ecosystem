@@ -2,7 +2,7 @@
 
 import { ImagePlus, Loader2, Pencil, Save, Trash2, UserRound } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { resolvePublicMediaKind } from "@/utils/media-preparation";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 import { toPatientProfilePayload, usePatientProfileForm } from "./use-form";
 
 const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
@@ -56,11 +57,13 @@ const resolvePatientProfileError = (error: unknown) => {
 
 export const ProfileEditLogic = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const storedUser = useAppSelector((state) => state.user);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
+  const returnTo = normalizeSafeInternalRedirect(searchParams.get("returnTo"), "/app/perfil");
 
   const handleProfileUpdated = (data: PatientPrivateProfile) => {
     setApiError(null);
@@ -71,7 +74,7 @@ export const ProfileEditLogic = () => {
       }),
     );
     toast.success("Perfil atualizado com sucesso");
-    router.push("/app/perfil");
+    router.push(returnTo || "/app/perfil");
   };
 
   const handleAvatarUpdated = (data: PatientProfileAvatarUpload | PatientProfileAvatarRemoval) => {
@@ -174,7 +177,11 @@ export const ProfileEditLogic = () => {
   return (
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-4 pb-6 sm:max-w-xl lg:max-w-2xl">
-        <AppPageHeader backHref="/app/perfil" backLabel="Voltar ao perfil" title="Editar perfil" />
+        <AppPageHeader
+          backHref={returnTo || "/app/perfil"}
+          backLabel={returnTo === "/app/perfil" ? "Voltar ao perfil" : "Voltar ao post"}
+          title="Editar perfil"
+        />
 
         {!isPatient ? (
           <InlineAlert title="Perfil pessoal" variant="warning">

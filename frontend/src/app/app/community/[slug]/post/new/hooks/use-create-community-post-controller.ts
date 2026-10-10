@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -35,6 +35,7 @@ import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import {
   classifyUploadedCommunityMedia,
+  clearCreatePostProfileDraft,
   createSelectedMediaId,
   EDITOR_FIELD_IDS,
   getCreatePostInitialEditorFocusDelays,
@@ -43,12 +44,14 @@ import {
   moveContenteditableCaretToEnd,
   normalizeParam,
   prepareSelectedVideoPreview,
+  readCreatePostProfileDraft,
   resolveCommunityOptions,
   resolveCreatePostCloseFallbackHref,
   resolveCreatePostDefaultSlug,
   resolveCreatePostError,
   type SelectedPostMedia,
   SHEET_CLOSE_DELAY_MS,
+  saveCreatePostProfileDraft,
   scheduleCorrectedCreatePostErrorClear,
   type UseCreateCommunityPostControllerOptions,
 } from "../modules/create-post-support";
@@ -59,11 +62,13 @@ export const useCreateCommunityPostController = ({
   onCloseComplete,
 }: UseCreateCommunityPostControllerOptions = {}) => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const params = useParams<{ slug?: string | string[] }>();
   const routeSlug = normalizeParam(params?.slug);
   const communitySlugFromQuery = searchParams.get("community")?.trim() || null;
   const storedUser = useAppSelector((state) => state.user);
+  const storedUserId = storedUser?.id ? String(storedUser.id) : null;
   const isPsychologist = storedUser?.role === "psicologo";
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
@@ -78,6 +83,12 @@ export const useCreateCommunityPostController = ({
   const selectedMediaPreviewGenerationRef = useRef(0);
   const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
   const titleAutoFocusCancelledRef = useRef(false);
+  const draftRestoreAttemptedRef = useRef(false);
+  const currentCreatePostHref = useMemo(() => {
+    const query = searchParams.toString();
+    return `${pathname}${query ? `?${query}` : ""}`;
+  }, [pathname, searchParams]);
+  const profileEditHref = `/app/perfil/editar?returnTo=${encodeURIComponent(currentCreatePostHref)}`;
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
@@ -93,6 +104,29 @@ export const useCreateCommunityPostController = ({
     loadingCommunities: communitiesQuery.isLoading,
   });
   const { formProps, hook } = form;
+
+  useEffect(() => {
+    if (!storedUserId || draftRestoreAttemptedRef.current) return;
+
+    draftRestoreAttemptedRef.current = true;
+    const draft = readCreatePostProfileDraft({
+      returnHref: currentCreatePostHref,
+      storage: window.sessionStorage,
+      userId: storedUserId,
+    });
+    if (draft) hook.reset(draft);
+  }, [currentCreatePostHref, hook, storedUserId]);
+
+  const preserveDraftForProfileEdit = useCallback(() => {
+    if (!storedUserId) return;
+
+    saveCreatePostProfileDraft({
+      returnHref: currentCreatePostHref,
+      storage: window.sessionStorage,
+      userId: storedUserId,
+      values: hook.getValues(),
+    });
+  }, [currentCreatePostHref, hook, storedUserId]);
   const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
   const { prepareVideo, clearVideo, preparationProgress, isPreparingVideo } =
@@ -114,6 +148,7 @@ export const useCreateCommunityPostController = ({
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
       clearSelectedMedia();
+      clearCreatePostProfileDraft(window.sessionStorage);
       const publicationHref = `/comunidades/${encodeURIComponent(post.community.slug)}/publicacao/${encodeURIComponent(post.id)}`;
 
       try {
@@ -320,6 +355,7 @@ export const useCreateCommunityPostController = ({
   const performClose = () => {
     abortActiveVideoUpload();
     clearSelectedMedia();
+    clearCreatePostProfileDraft(window.sessionStorage);
     setIsSheetOpen(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
 
@@ -651,6 +687,8 @@ export const useCreateCommunityPostController = ({
     mediaPermission,
     onSubmit,
     preserveEditorFocusFromBlankTap,
+    preserveDraftForProfileEdit,
+    profileEditHref,
     registerEditorInteraction,
     removeSelectedMediaAt,
     requiredFieldsReady,

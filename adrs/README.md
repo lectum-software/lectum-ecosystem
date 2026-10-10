@@ -624,3 +624,4 @@ Formato recomendado:
 - [ADR-0578 — Comunidade geral como ultima opcao](0578-post-community-fallback.md)
 - [ADR-0579 — Comunidades seguidas na familia visual da Lectum](0579-comunidades-seguidas-familia-visual.md)
 - [ADR-0580 — Respostas salvas com contexto da comunidade](0580-respostas-salvas-contexto-comunidade.md)
+- [ADR-0581 — Rascunho temporario ao editar nome na publicacao](0581-anonimato-edicao-perfil-rascunho.md)

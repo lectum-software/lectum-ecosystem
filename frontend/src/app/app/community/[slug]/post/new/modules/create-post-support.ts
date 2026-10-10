@@ -176,7 +176,7 @@ export const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
 
 export const anonymousTipText =
-  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\n\nPara preservar sua privacidade, você também pode utilizar no perfil apenas seu primeiro nome ou um apelido.";
+  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\n\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido";
 
 export const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 
@@ -209,6 +209,102 @@ export const CREATE_POST_TOUCH_AUTOFOCUS_DELAY_MS = SHEET_ENTER_ANIMATION_MS + 1
 export const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
 
 export const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
+
+export const CREATE_POST_PROFILE_DRAFT_KEY = "lectum:create-post-profile-draft";
+export const CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
+type CreatePostProfileDraft = {
+  returnHref: string;
+  savedAt: number;
+  userId: string;
+  values: Pick<CreateCommunityPostForm, "community_slug" | "content" | "title">;
+};
+
+type CreatePostProfileDraftStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
+
+export const saveCreatePostProfileDraft = ({
+  returnHref,
+  storage,
+  userId,
+  values,
+}: {
+  returnHref: string;
+  storage: CreatePostProfileDraftStorage;
+  userId: string;
+  values: CreateCommunityPostForm;
+}) => {
+  const draft: CreatePostProfileDraft = {
+    returnHref,
+    savedAt: Date.now(),
+    userId,
+    values: {
+      community_slug: values.community_slug,
+      content: values.content,
+      title: values.title,
+    },
+  };
+
+  try {
+    storage.setItem(CREATE_POST_PROFILE_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // A navegacao continua funcionando quando o storage do navegador esta indisponivel.
+  }
+};
+
+export const readCreatePostProfileDraft = ({
+  now = Date.now(),
+  returnHref,
+  storage,
+  userId,
+}: {
+  now?: number;
+  returnHref: string;
+  storage: CreatePostProfileDraftStorage;
+  userId: string;
+}) => {
+  try {
+    const rawDraft = storage.getItem(CREATE_POST_PROFILE_DRAFT_KEY);
+    if (!rawDraft) return null;
+
+    const draft = JSON.parse(rawDraft) as Partial<CreatePostProfileDraft>;
+    const values = draft.values;
+    const isValid =
+      draft.userId === userId &&
+      draft.returnHref === returnHref &&
+      typeof draft.savedAt === "number" &&
+      now - draft.savedAt <= CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS &&
+      typeof values?.community_slug === "string" &&
+      typeof values?.title === "string" &&
+      typeof values?.content === "string";
+
+    if (!isValid || !values) {
+      storage.removeItem(CREATE_POST_PROFILE_DRAFT_KEY);
+      return null;
+    }
+
+    return {
+      anonymous: false,
+      community_slug: values.community_slug,
+      content: values.content,
+      title: values.title,
+    } satisfies CreateCommunityPostForm;
+  } catch {
+    try {
+      storage.removeItem(CREATE_POST_PROFILE_DRAFT_KEY);
+    } catch {
+      // Nada a limpar quando o storage esta indisponivel.
+    }
+    return null;
+  }
+};
+
+export const clearCreatePostProfileDraft = (storage: CreatePostProfileDraftStorage) => {
+  try {
+    storage.removeItem(CREATE_POST_PROFILE_DRAFT_KEY);
+  } catch {
+    // O descarte local nao deve bloquear o fechamento ou a publicacao.
+  }
+};
 
 export const COMMUNITY_POST_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";

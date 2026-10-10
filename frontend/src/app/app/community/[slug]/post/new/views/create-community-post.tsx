@@ -1,7 +1,8 @@
 "use client";
 
-import { Camera, Info, Lightbulb, Loader2, X } from "lucide-react";
+import { Camera, Info, Lightbulb, Loader2, PencilLine, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
@@ -73,6 +74,8 @@ export const CreateCommunityPostLogic = ({
     mediaPermission,
     onSubmit,
     preserveEditorFocusFromBlankTap,
+    preserveDraftForProfileEdit,
+    profileEditHref,
     registerEditorInteraction,
     removeSelectedMediaAt,
     requiredFieldsReady,
@@ -228,10 +231,10 @@ export const CreateCommunityPostLogic = ({
         return (
           <div className="relative min-w-0 flex-1">
             {checked && !isAnonymousTipDismissed ? (
-              <div className="absolute bottom-[calc(100%+0.75rem)] left-0 z-20 w-[min(21rem,calc(100vw-2rem))] rounded-2xl border border-primary/15 bg-surface px-4 py-3 pr-9 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
+              <div className="absolute bottom-[calc(100%+0.75rem)] left-0 z-20 w-[min(21rem,calc(100vw-2rem))] rounded-2xl border border-primary/20 bg-primary-soft px-4 py-3 pr-9 text-xs leading-5 text-foreground shadow-[var(--lectum-shadow-soft)]">
                 <button
                   aria-label="Fechar dica sobre anonimato"
-                  className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-full text-subtle transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
+                  className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-full text-muted transition hover:bg-primary/10 hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
                   onClick={() => {
                     setIsAnonymousTipDismissed(true);
                     focusLastEditor();
@@ -243,7 +246,7 @@ export const CreateCommunityPostLogic = ({
                   <X className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <div className="flex items-start gap-2.5">
-                  <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface/80 text-primary">
                     <Lightbulb className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
@@ -252,6 +255,16 @@ export const CreateCommunityPostLogic = ({
                         {paragraph}
                       </p>
                     ))}
+                    <Link
+                      aria-label="Editar nome no perfil"
+                      className="mt-3 inline-flex items-center gap-1.5 font-bold text-primary no-underline underline-offset-4 transition hover:text-primary hover:underline focus:outline-none focus-visible:rounded-sm focus-visible:ring-4 focus-visible:ring-primary/15"
+                      data-create-post-editor-ignore="true"
+                      href={profileEditHref}
+                      onClick={preserveDraftForProfileEdit}
+                    >
+                      <PencilLine className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      Editar nome no perfil
+                    </Link>
                   </div>
                 </div>
               </div>
