@@ -60,6 +60,7 @@ export class AccountRepository implements IAccountRepository {
         has_seen_psychologist_profile_video_tip: true,
         has_seen_psychologist_reply_tip: true,
         has_seen_psychologist_original_post_tip: true,
+        has_seen_patient_privacy_notice: true,
       },
     });
   }
@@ -74,6 +75,7 @@ export class AccountRepository implements IAccountRepository {
       has_seen_psychologist_profile_video_tip?: boolean;
       has_seen_psychologist_reply_tip?: boolean;
       has_seen_psychologist_original_post_tip?: boolean;
+      has_seen_patient_privacy_notice?: boolean;
     },
   ) {
     return this.repository.update({
@@ -89,6 +91,7 @@ export class AccountRepository implements IAccountRepository {
         has_seen_psychologist_profile_video_tip: true,
         has_seen_psychologist_reply_tip: true,
         has_seen_psychologist_original_post_tip: true,
+        has_seen_patient_privacy_notice: true,
       },
     });
   }

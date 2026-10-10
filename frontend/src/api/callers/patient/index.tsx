@@ -8,6 +8,7 @@ import type {
   PatientProfileAvatarUpload,
   PatientRelationQuery,
   patient_profile,
+  user,
 } from "@/api/generator/types";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
 import * as api from "@/api/req/patient";
@@ -186,6 +187,21 @@ export const usePatient = ({
   const favoritesKey = keys.patient.favorites(favoritesQuery);
   const followsKey = keys.patient.follows(followsQuery);
 
+  const synchronizeProfile = async (data: PatientPrivateProfile) => {
+    const hydrateKey = keys.auth.hydrate(data.user.id);
+    await Promise.all([
+      queryClient.cancelQueries({ queryKey: hydrateKey, exact: true }),
+      queryClient.cancelQueries({ queryKey: profileKey, exact: true }),
+    ]);
+    queryClient.setQueryData(profileKey, data.profile);
+    queryClient.setQueryData<user>(hydrateKey, (cached) =>
+      cached?.id === data.user.id
+        ? { ...cached, ...data.user, patient_profile: data.profile }
+        : undefined,
+    );
+    queryClient.invalidateQueries({ queryKey: profileKey });
+  };
+
   const profile = useQuery({
     queryKey: profileKey,
     queryFn: () => api.getPatientProfile(),
@@ -222,9 +238,8 @@ export const usePatient = ({
 
   const updateProfile = useMutation({
     mutationFn: (body: api.UpdatePatientProfilePayload) => api.updatePatientProfile(body),
-    onSuccess: (data) => {
-      queryClient.setQueryData(profileKey, data.profile);
-      queryClient.invalidateQueries({ queryKey: profileKey });
+    onSuccess: async (data) => {
+      await synchronizeProfile(data);
       callbacks?.updateProfile?.onSuccess?.(data);
     },
     onError: callbacks?.updateProfile?.onError,
@@ -235,10 +250,8 @@ export const usePatient = ({
       const prepared = await prepareUpload({ file, purpose: "patient-avatar" });
       return api.uploadPatientProfileAvatar(prepared.file);
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(profileKey, data.profile.profile);
-      queryClient.invalidateQueries({ queryKey: profileKey });
-      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+    onSuccess: async (data) => {
+      await synchronizeProfile(data.profile);
       callbacks?.avatar?.onSuccess?.(data);
     },
     onError: callbacks?.avatar?.onError,
@@ -246,10 +259,8 @@ export const usePatient = ({
 
   const deleteAvatar = useMutation({
     mutationFn: () => api.deletePatientProfileAvatar(),
-    onSuccess: (data) => {
-      queryClient.setQueryData(profileKey, data.profile.profile);
-      queryClient.invalidateQueries({ queryKey: profileKey });
-      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+    onSuccess: async (data) => {
+      await synchronizeProfile(data.profile);
       callbacks?.deleteAvatar?.onSuccess?.(data);
     },
     onError: callbacks?.deleteAvatar?.onError,

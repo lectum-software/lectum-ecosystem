@@ -40,6 +40,7 @@ export interface UseAccountProps {
   };
   enableSecurity?: boolean;
   enableTips?: boolean;
+  requirePersistedTips?: boolean;
 }
 
 const ANONYMOUS_ONBOARDING_TIPS: AccountOnboardingTipsResponse = {
@@ -65,6 +66,7 @@ export const useAccount = ({
   callbacks,
   enableSecurity = true,
   enableTips = false,
+  requirePersistedTips = false,
 }: UseAccountProps = {}) => {
   const queryClient = useQueryClient();
   const userId = useAppSelector((state) => state.user?.id);
@@ -89,7 +91,9 @@ export const useAccount = ({
     queryKey: tipsQueryKey,
     queryFn: () =>
       hasAuthenticatedUser
-        ? api.onboardingTips().catch(() => ANONYMOUS_ONBOARDING_TIPS)
+        ? requirePersistedTips
+          ? api.onboardingTips()
+          : api.onboardingTips().catch(() => ANONYMOUS_ONBOARDING_TIPS)
         : ANONYMOUS_ONBOARDING_TIPS,
     enabled: enableTips && hasAuthenticatedUser,
     refetchOnWindowFocus: false,
@@ -116,6 +120,17 @@ export const useAccount = ({
 
   const updateOnboardingTips = useMutation({
     mutationFn: async (body: api.AccountOnboardingTipsPayload) => {
+      if (requirePersistedTips) {
+        if (!hasAuthenticatedUser) throw new Error("Confirmação indisponível.");
+        const response = await api.updateOnboardingTips(body);
+        if (
+          body.has_seen_patient_privacy_notice === true &&
+          response.has_seen_patient_privacy_notice !== true
+        ) {
+          throw new Error("Confirmação indisponível.");
+        }
+        return response;
+      }
       if (!hasAuthenticatedUser) {
         return resolveLocalOnboardingTips(body, onboardingTips.data);
       }

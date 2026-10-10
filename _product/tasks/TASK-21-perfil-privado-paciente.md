@@ -318,3 +318,28 @@ O navegador conectado falhou ao inicializar. O fluxo real com psicologo novo
 permanece pendente de verificacao em homologacao; producao nao promovida.
 
 Sem backend, migration, env ou dependencia nova. ADR-0109 registra rollout e rollback.
+
+## Complemento 2026-10-10 - Aviso de perfil privado (ADR-0590)
+
+Solicitacao aprovada; cluster PostgreSQL isolado preparado em loopback. Migracoes e integracao executadas apenas nele, com copias minimas de contas existentes; nenhuma escrita no banco remoto.
+
+- [x] Conferir que perfil paciente e privado por auth.id e diretorio publico e restrito a psicologos.
+- [x] Confirmar isolamento do banco de desenvolvimento (cluster novo em 127.0.0.1).
+- [x] Aviso exclusivo de paciente entre cabecalho e menu, com texto aprovado e ressalva sobre publicacoes nao anonimas.
+- [x] Entendi persistido na conta, sem falso sucesso em erro; explicacao acessivel em Privacidade.
+- [x] Migracao aditiva, db:migrate, checks/builds e browser local mobile/desktop.
+- [x] Commit local com bump unico; publicacao por PR autorizada, ainda pendente.
+
+### Refinamento de nomes (10/10/2026)
+- [x] Preservar tamanho/peso dos nomes, ampliando discretamente a entrelinha dos cabecalhos privado e publico e o respiro inferior do nome privado.
+- [x] Conferir perfil privado real no localhost em mobile 390px e desktop; Biome focal e 20 testes de profile-hero aprovados.
+- [ ] Conferir visualmente perfil publico com descendentes no nome no banco local isolado; finalizar checks/build e commit junto a execucao em andamento, sem push/deploy.
+
+### Sincronizacao da edicao de perfil (10/10/2026)
+- [x] Atualizar cache de hidratacao da mesma conta antes do retorno ao perfil, preservando dados de sessao e cancelando leituras antigas.
+- [x] Salvar e voltar sem reload validado no browser; check geral e builds finais aprovados.
+- [x] Smoke real local: salvar o nome ja persistido e retornar automaticamente ao perfil mostra o valor atualizado sem reload.
+
+### Validacao final do lote - 2026-10-10
+Check geral aprovado (backend 896 testes), build frontend/backend aprovados; db:migrate no PostgreSQL isolado em sincronia. Integracao real confirma persistencia, idempotencia, isolamento entre contas e recusa para profissional. Usuario conferiu aviso mobile e solicitou botao azul, aplicado; nome atualizado sem reload em smoke real. Public hero possui 20 testes de regressao aprovados; a copia minima do autor nao inclui CPF/cadastros completos, portanto o guard corretamente impede abrir seu perfil publico local. Nao ampliar coleta de PII para uma verificacao tipografica: limitacao especifica permanece registrada, sem afirmar validacao visual desse caso publico.
+Consulta produtiva READ ONLY anterior ao deploy: notifications total 516096 bytes, indice user_id/seen_at 40960 bytes. Recriacao do indice aplicada localmente e preservada em migration corretiva, sem editar migration aplicada. Sem env nova; rollback preserva coluna aditiva.

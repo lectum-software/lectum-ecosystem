@@ -636,3 +636,4 @@ Formato recomendado:
 - [ADR-0586 — Rascunho temporario ao editar nome na publicacao](0586-anonimato-edicao-perfil-rascunho.md)
 - [ADR-0587 — Retorno canonico ao compositor apos editar perfil](0587-perfil-paciente-retorno-compositor.md)
 - [ADR-0589 — Salvos reutiliza a apresentacao do feed](0589-salvos-apresentacao-feed.md)
+- [ADR-0590 — Aviso de perfil nao publico do paciente](0590-aviso-perfil-privado-paciente.md)

@@ -1,3 +1,5 @@
+Validado localmente (2026-10-10): complemento TASK-21, aviso privado, nome sem reload e tipografia, ADR-0590. Check geral, builds e integracao real aprovados; limitacao do hero publico registrada. Publicacao autorizada por PR.
+
 Validado localmente (2026-10-10): complemento [TASK-28 - Salvos com a apresentacao do feed](TASK-28-meus-posts-posts-salvos.md), ADR-0589. Check geral/builds e browser com video real 390px aprovados. Publicacao autorizada; PR/deploy pendentes.
 
 Implementado e validado localmente (2026-10-10): complemento TASK-23, filtros do feed profissional, ADR-0588, versao 0.1.618. Oportunidades padrao; destaque espelha paciente. Checks/builds, integracao real e browser 390px/desktop aprovados. Sem push/deploy.

@@ -526,6 +526,7 @@ export interface user extends PersistedObject {
   has_seen_psychologist_profile_video_tip?: boolean | null;
   has_seen_psychologist_reply_tip?: boolean | null;
   has_seen_psychologist_original_post_tip?: boolean | null;
+  has_seen_patient_privacy_notice?: boolean | null;
   has_seen_community_post_tip?: boolean | null;
   recovery_code?: string | null;
   recovery_date?: Date | null;
