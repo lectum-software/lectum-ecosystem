@@ -250,11 +250,7 @@ export const CreateCommunityPostLogic = ({
                     <Lightbulb className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    {anonymousTipText.split("\n\n").map((paragraph, index) => (
-                      <p className={cn(index > 0 && "mt-2")} key={paragraph}>
-                        {paragraph}
-                      </p>
-                    ))}
+                    <p className="whitespace-pre-line">{anonymousTipText}</p>
                     <Link
                       aria-label="Editar nome no perfil"
                       className="mt-3 inline-flex items-center gap-1.5 font-bold text-primary no-underline underline-offset-4 transition hover:text-primary hover:underline focus:outline-none focus-visible:rounded-sm focus-visible:ring-4 focus-visible:ring-primary/15"

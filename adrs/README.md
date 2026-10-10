@@ -625,3 +625,4 @@ Formato recomendado:
 - [ADR-0579 — Comunidades seguidas na familia visual da Lectum](0579-comunidades-seguidas-familia-visual.md)
 - [ADR-0580 — Respostas salvas com contexto da comunidade](0580-respostas-salvas-contexto-comunidade.md)
 - [ADR-0581 — Rascunho temporario ao editar nome na publicacao](0581-anonimato-edicao-perfil-rascunho.md)
+- [ADR-0582 — Retorno canonico ao compositor apos editar perfil](0582-perfil-paciente-retorno-compositor.md)

@@ -2,7 +2,11 @@ import type { UseFormReturn } from "react-hook-form";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityPostMediaUploadResponse } from "@/api/generator/types/community";
 import type { FieldOption } from "@/hooks/form";
-import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import {
+  COMMUNITY_CREATE_POST_HREF,
+  COMMUNITY_FEED_SLUG,
+  DEFAULT_COMMUNITY_FEED_HREF,
+} from "@/utils/community";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 import type { CreateCommunityPostForm } from "../use-form";
@@ -114,6 +118,29 @@ export const resolveCreatePostDefaultSlug = ({
   routeSlug?: string | null;
 }) => (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : communitySlugFromQuery);
 
+export const resolveCreatePostProfileReturnHref = ({
+  communitySlugFromQuery,
+  currentHref,
+  routeSlug,
+}: {
+  communitySlugFromQuery?: string | null;
+  currentHref: string;
+  routeSlug?: string | null;
+}) => {
+  const currentPathname = currentHref.split(/[?#]/, 1)[0];
+  const isCreatePostRoute = /\/(?:post\/new|publicacao\/nova)$/.test(currentPathname);
+
+  if (isCreatePostRoute) return currentHref;
+
+  if (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG) {
+    return `/app/comunidades/${encodeURIComponent(routeSlug)}/publicacao/nova`;
+  }
+
+  return communitySlugFromQuery
+    ? `${COMMUNITY_CREATE_POST_HREF}?community=${encodeURIComponent(communitySlugFromQuery)}`
+    : COMMUNITY_CREATE_POST_HREF;
+};
+
 export const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {
   const apiError = error as ApiError;
   const rawMessage = getSafeApiErrorMessage(error, "");
@@ -176,7 +203,7 @@ export const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
 
 export const anonymousTipText =
-  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\n\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido";
+  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido.";
 
 export const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 

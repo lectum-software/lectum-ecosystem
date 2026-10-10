@@ -49,6 +49,7 @@ import {
   resolveCreatePostCloseFallbackHref,
   resolveCreatePostDefaultSlug,
   resolveCreatePostError,
+  resolveCreatePostProfileReturnHref,
   type SelectedPostMedia,
   SHEET_CLOSE_DELAY_MS,
   saveCreatePostProfileDraft,
@@ -84,11 +85,20 @@ export const useCreateCommunityPostController = ({
   const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
   const titleAutoFocusCancelledRef = useRef(false);
   const draftRestoreAttemptedRef = useRef(false);
-  const currentCreatePostHref = useMemo(() => {
+  const currentHref = useMemo(() => {
     const query = searchParams.toString();
     return `${pathname}${query ? `?${query}` : ""}`;
   }, [pathname, searchParams]);
-  const profileEditHref = `/app/perfil/editar?returnTo=${encodeURIComponent(currentCreatePostHref)}`;
+  const createPostReturnHref = useMemo(
+    () =>
+      resolveCreatePostProfileReturnHref({
+        communitySlugFromQuery,
+        currentHref,
+        routeSlug,
+      }),
+    [communitySlugFromQuery, currentHref, routeSlug],
+  );
+  const profileEditHref = `/app/perfil/editar?returnTo=${encodeURIComponent(createPostReturnHref)}`;
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
@@ -110,23 +120,23 @@ export const useCreateCommunityPostController = ({
 
     draftRestoreAttemptedRef.current = true;
     const draft = readCreatePostProfileDraft({
-      returnHref: currentCreatePostHref,
+      returnHref: createPostReturnHref,
       storage: window.sessionStorage,
       userId: storedUserId,
     });
     if (draft) hook.reset(draft);
-  }, [currentCreatePostHref, hook, storedUserId]);
+  }, [createPostReturnHref, hook, storedUserId]);
 
   const preserveDraftForProfileEdit = useCallback(() => {
     if (!storedUserId) return;
 
     saveCreatePostProfileDraft({
-      returnHref: currentCreatePostHref,
+      returnHref: createPostReturnHref,
       storage: window.sessionStorage,
       userId: storedUserId,
       values: hook.getValues(),
     });
-  }, [currentCreatePostHref, hook, storedUserId]);
+  }, [createPostReturnHref, hook, storedUserId]);
   const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
     useCommunityVideoUpload();
   const { prepareVideo, clearVideo, preparationProgress, isPreparingVideo } =

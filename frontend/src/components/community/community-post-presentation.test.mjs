@@ -21,6 +21,7 @@ const {
   CREATE_POST_PROFILE_DRAFT_MAX_AGE_MS,
   clearCreatePostProfileDraft,
   readCreatePostProfileDraft,
+  resolveCreatePostProfileReturnHref,
   saveCreatePostProfileDraft,
 } = await import("../../app/app/community/[slug]/post/new/modules/create-post-support.ts");
 const { getReplyOwnerActionCopy } = await import("./reply-owner-action-copy.ts");
@@ -459,18 +460,56 @@ test("dica de anonimato usa texto compacto, fundo azul e edicao de perfil sem pe
 
   assert.match(
     support,
-    /Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras\.\\n\\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido/,
+    /Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras\.\\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido\./,
   );
   assert.doesNotMatch(support, /você também pode utilizar no perfil/);
   assert.match(view, /border-primary\/20 bg-primary-soft/);
   assert.match(view, /href=\{profileEditHref\}/);
   assert.match(view, /onClick=\{preserveDraftForProfileEdit\}/);
+  assert.match(view, /className="whitespace-pre-line">\{anonymousTipText\}<\/p>/);
   assert.doesNotMatch(view, /target="_blank"|rel="noopener noreferrer"/);
   assert.match(view, />\s*Editar nome no perfil\s*<\/Link>/);
   assert.match(controller, /saveCreatePostProfileDraft/);
+  assert.match(controller, /resolveCreatePostProfileReturnHref/);
   assert.match(controller, /clearCreatePostProfileDraft\(window\.sessionStorage\)/);
   assert.match(profileEdit, /normalizeSafeInternalRedirect\(searchParams\.get\("returnTo"\)/);
   assert.match(profileEdit, /backHref=\{returnTo \|\| "\/app\/perfil"\}/);
+  assert.match(profileEdit, /router\.replace\(returnTo \|\| "\/app\/perfil"\)/);
+  assert.match(profileEdit, /sticky bottom-4 z-10/);
+  assert.match(profileEdit, /absolute top-\[calc\(100%\+0\.5rem\)\] right-0 z-30 w-44/);
+  assert.doesNotMatch(profileEdit, /fixed inset-x-4 bottom-\[calc\(env\(safe-area-inset-bottom\)/);
+});
+
+test("retorno da edicao de nome sempre aponta para o compositor aberto", () => {
+  assert.equal(
+    resolveCreatePostProfileReturnHref({
+      currentHref: "/",
+      routeSlug: "feed",
+    }),
+    "/app/comunidades/feed/publicacao/nova",
+  );
+  assert.equal(
+    resolveCreatePostProfileReturnHref({
+      communitySlugFromQuery: "ansiedade-em-equilibrio",
+      currentHref: "/?community=ansiedade-em-equilibrio",
+      routeSlug: "feed",
+    }),
+    "/app/comunidades/feed/publicacao/nova?community=ansiedade-em-equilibrio",
+  );
+  assert.equal(
+    resolveCreatePostProfileReturnHref({
+      currentHref: "/comunidades/relacionamentos-com-proposito",
+      routeSlug: "relacionamentos-com-proposito",
+    }),
+    "/app/comunidades/relacionamentos-com-proposito/publicacao/nova",
+  );
+  assert.equal(
+    resolveCreatePostProfileReturnHref({
+      currentHref: "/app/comunidades/feed/publicacao/nova?community=depressao",
+      routeSlug: "feed",
+    }),
+    "/app/comunidades/feed/publicacao/nova?community=depressao",
+  );
 });
 
 test("rascunho da ida ao perfil restaura texto identificado e respeita usuario, rota e validade", () => {

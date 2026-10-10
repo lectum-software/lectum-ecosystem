@@ -74,7 +74,7 @@ export const ProfileEditLogic = () => {
       }),
     );
     toast.success("Perfil atualizado com sucesso");
-    router.push(returnTo || "/app/perfil");
+    router.replace(returnTo || "/app/perfil");
   };
 
   const handleAvatarUpdated = (data: PatientProfileAvatarUpload | PatientProfileAvatarRemoval) => {
@@ -245,31 +245,27 @@ export const ProfileEditLogic = () => {
                       type="button"
                     />
                     <div
-                      className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 overflow-hidden rounded-[28px] border border-border bg-surface p-2 text-left shadow-lectum-soft ring-1 ring-border/70 sm:absolute sm:top-[calc(100%+0.75rem)] sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-56 sm:-translate-x-1/2 sm:rounded-2xl"
+                      className="absolute top-[calc(100%+0.5rem)] right-0 z-30 w-44 overflow-hidden rounded-2xl border border-border bg-surface text-left shadow-[var(--lectum-shadow-soft)]"
                       role="menu"
                     >
                       <button
-                        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                         disabled={isSavingAvatar || !isPatient}
                         onClick={handleAvatarFilePickerOption}
                         role="menuitem"
                         type="button"
                       >
-                        <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-primary">
-                          <ImagePlus className="h-4 w-4" aria-hidden="true" />
-                        </span>
+                        <ImagePlus className="h-4 w-4" aria-hidden="true" />
                         Alterar foto
                       </button>
                       <button
-                        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={isSavingAvatar || !storedUser?.avatar || !isPatient}
                         onClick={handleAvatarRemoval}
                         role="menuitem"
                         type="button"
                       >
-                        <span className="grid h-9 w-9 place-items-center rounded-full bg-danger/10 text-danger">
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        </span>
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                         Remover foto
                       </button>
                     </div>
@@ -313,18 +309,20 @@ export const ProfileEditLogic = () => {
                 {visibleError}
               </InlineAlert>
             ) : null}
-            <Button
-              className="h-14 w-full rounded-full"
-              disabled={isSaving || !isPatient}
-              type="submit"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Save className="h-4 w-4" aria-hidden="true" />
-              )}
-              Salvar Alterações
-            </Button>
+            <div className="sticky bottom-4 z-10 rounded-full bg-surface/90 p-2 shadow-[var(--lectum-shadow-soft)] backdrop-blur">
+              <Button
+                className="h-14 w-full rounded-full text-base"
+                disabled={isSaving || !isPatient}
+                type="submit"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="h-4 w-4" aria-hidden="true" />
+                )}
+                Salvar alterações
+              </Button>
+            </div>
           </form>
         ) : null}
       </section>
