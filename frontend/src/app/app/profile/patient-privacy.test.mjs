@@ -3,15 +3,15 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
-test("aviso e consulta de privacidade sao exclusivos do paciente, antes do menu", () => {
+test("aviso permanece exclusivo do paciente, sem item de privacidade no menu", () => {
   const profile = read("./logic.tsx");
   assert.match(profile, /user.role === "paciente" \? <PatientPrivacyNotice/);
   assert.ok(
     profile.indexOf("<PatientPrivacyNotice") < profile.indexOf("<Section rows={communityRows}"),
   );
-  assert.match(profile, /label: "Privacidade"/);
-  assert.match(profile, /<PatientPrivacyExplanation/);
-  assert.match(profile, /<Modal/);
+  assert.doesNotMatch(profile, /label: "Privacidade"|privacyOpen|patient-privacy-dialog-title/);
+  assert.doesNotMatch(profile, /<Modal|<PatientPrivacyExplanation/);
+  assert.match(read("./patient-privacy.tsx"), /href="\/politica-de-privacidade"/);
 });
 test("aviso informa visibilidade sem prometer anonimato de publicacoes", () => {
   const notice = read("./patient-privacy.tsx");

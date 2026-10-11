@@ -1,3 +1,5 @@
+Validado localmente: TASK-21 / ADR-0602, remover item Privacidade do menu do perfil sem alterar aviso inicial, paginas legais ou regras de acesso. Sem publicacao.
+
 ## Lote autorizado em 2026-10-11
 
 Validado localmente: contexto compacto de origem em Minhas publicacoes, TASK-28 / ADR-0601. Revisao: link transparente para origem, identidade da propria contribuicao abaixo e sem Respondido em; substitui preview azul/miniatura, sem contrato novo. Check/build/testes e aprovacao visual do usuario em 11/10 concluidos, sem publicacao.

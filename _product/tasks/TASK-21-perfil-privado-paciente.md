@@ -343,3 +343,13 @@ Solicitacao aprovada; cluster PostgreSQL isolado preparado em loopback. Migracoe
 ### Validacao final do lote - 2026-10-10
 Check geral aprovado (backend 896 testes), build frontend/backend aprovados; db:migrate no PostgreSQL isolado em sincronia. Integracao real confirma persistencia, idempotencia, isolamento entre contas e recusa para profissional. Usuario conferiu aviso mobile e solicitou botao azul, aplicado; nome atualizado sem reload em smoke real. Public hero possui 20 testes de regressao aprovados; a copia minima do autor nao inclui CPF/cadastros completos, portanto o guard corretamente impede abrir seu perfil publico local. Nao ampliar coleta de PII para uma verificacao tipografica: limitacao especifica permanece registrada, sem afirmar validacao visual desse caso publico.
 Consulta produtiva READ ONLY anterior ao deploy: notifications total 516096 bytes, indice user_id/seen_at 40960 bytes. Recriacao do indice aplicada localmente e preservada em migration corretiva, sem editar migration aplicada. Sem env nova; rollback preserva coluna aditiva.
+
+## Complemento 11/10: remover item Privacidade do menu (ADR-0602)
+
+- [x] Remover somente o item Privacidade da secao Conta do perfil e a modal acionada exclusivamente por ele.
+- [x] Preservar aviso inicial do paciente, confirmacao Entendi e persistencia por conta; nao alterar paginas legais, anonimato ou protecao de dados.
+- [x] Validar testes, check, build e perfil local mobile-first.
+
+Referencia: captura e solicitacao do usuario; Builder indisponivel. Frontend apenas, sem pacote, env, migration ou contrato novo; rollback por reversao de codigo.
+
+Usuario confirmou conferencia com "conferi". Check completo frontend e build aprovados (.tmp/oct11-profile-privacy-check.log e oct11-profile-privacy-build.log). Sem push/deploy.
