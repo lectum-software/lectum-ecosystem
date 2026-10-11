@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useMemo } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useWatch } from "react-hook-form";
 import {
   useDirectoryPsychologistSearchImpression,
   useDirectoryPsychologists,
@@ -334,6 +335,35 @@ export const usePsychologistsDirectory = () => {
     values: filterValues,
   });
 
+  const filterDraft = useWatch({ control: filters.hook.control });
+  const filterCountQueryKey = JSON.stringify({
+    ...toQuery(normalizeFormValues(filterDraft), 1),
+    limit: 1,
+  });
+  const [settledFilterCountQueryKey, setSettledFilterCountQueryKey] = useState(filterCountQueryKey);
+
+  useEffect(() => {
+    if (!isFiltersOpen) return;
+    const timer = window.setTimeout(() => setSettledFilterCountQueryKey(filterCountQueryKey), 300);
+    return () => window.clearTimeout(timer);
+  }, [filterCountQueryKey, isFiltersOpen]);
+
+  const filterCountQuery = useMemo<DirectoryPsychologistsQuery>(
+    () => JSON.parse(settledFilterCountQueryKey),
+    [settledFilterCountQueryKey],
+  );
+  const isFilterCountSettled = filterCountQueryKey === settledFilterCountQueryKey;
+  const filterCountDirectory = useDirectoryPsychologists(
+    filterCountQuery,
+    isFiltersOpen && isFilterCountSettled,
+  );
+  const isFilterCountLoading =
+    !isFilterCountSettled || filterCountDirectory.isPending || filterCountDirectory.isFetching;
+  const filterResultCount =
+    isFiltersOpen && !isFilterCountLoading && !filterCountDirectory.isError
+      ? filterCountDirectory.data?.count
+      : undefined;
+
   const errorMessage = directory.isError ? resolveDirectoryErrorMessage(directory.error) : null;
 
   const hasSelectedSearchFilters =
@@ -445,6 +475,8 @@ export const usePsychologistsDirectory = () => {
     featuredPsychologist,
     featuredPsychologistId,
     filters,
+    filterResultCount,
+    isFilterCountLoading,
     hasActiveFilters,
     infoSectionBottom,
     isMobileSearchFocusMode,

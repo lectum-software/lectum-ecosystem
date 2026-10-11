@@ -36,6 +36,8 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
     activeFilterChips,
     errorMessage,
     filters,
+    filterResultCount,
+    isFilterCountLoading,
     hasActiveFilters,
     isMobileSearchFocusMode,
     psychologists,
@@ -119,16 +121,25 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                   icon={UsersRound}
                   title="Nenhum Psicólogo encontrado"
                   action={
-                    hasActiveFilters ? (
+                    <div className="flex flex-wrap justify-center gap-2">
                       <button
-                        aria-label="Limpar filtros"
-                        className="mt-3 rounded-full bg-success px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-success"
-                        onClick={clearFilters}
+                        className="mt-3 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                        onClick={handleFiltersOpen}
                         type="button"
                       >
-                        Limpar filtros
+                        Ajustar filtros
                       </button>
-                    ) : null
+                      {hasActiveFilters ? (
+                        <button
+                          aria-label="Limpar filtros"
+                          className="mt-3 rounded-full bg-success px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-success"
+                          onClick={clearFilters}
+                          type="button"
+                        >
+                          Limpar filtros
+                        </button>
+                      ) : null}
+                    </div>
                   }
                 />
               </div>
@@ -506,6 +517,23 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                             type="submit"
                           >
                             Aplicar filtros
+                            <span
+                              aria-live="polite"
+                              className="ml-2 inline-flex min-w-10 items-center justify-center rounded-full bg-white/20 px-2 py-0.5 tabular-nums"
+                            >
+                              {isFilterCountLoading ? (
+                                <span aria-label="Atualizando quantidade" role="status">
+                                  …
+                                </span>
+                              ) : filterResultCount !== undefined ? (
+                                `(${filterResultCount})`
+                              ) : (
+                                <>
+                                  <span aria-hidden="true">—</span>
+                                  <span className="sr-only">Quantidade indisponível</span>
+                                </>
+                              )}
+                            </span>
                           </button>
                         </div>
                       </filters.Form>

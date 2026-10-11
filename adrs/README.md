@@ -638,3 +638,5 @@ Formato recomendado:
 - [ADR-0589 — Salvos reutiliza a apresentacao do feed](0589-salvos-apresentacao-feed.md)
 - [ADR-0590 — Aviso de perfil nao publico do paciente](0590-aviso-perfil-privado-paciente.md)
 - [ADR-0591 — Preservar aba da comunidade](0591-preservar-aba-comunidade.md)
+
+- [ADR-0592 — Contagem real do rascunho de filtros](0592-contagem-rascunho-filtros.md)
