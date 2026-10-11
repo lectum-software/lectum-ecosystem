@@ -561,3 +561,8 @@ Validacao apenas local, sem push/deploy nesta task.
 ### Validacao final local - 2026-10-10
 
 Check geral e builds backend/frontend aprovados. Browser local autenticado confirmou salvar post e resposta, voto e remocao do voto, controles sem divisoria, rotulo apenas na resposta destacada e video sem recuo no viewport 390x844. Video real de 2:06 reproduziu (tempo avancou a 0:12), com controles e card isolado preservados. Em desktop, composicao conferida no mesmo PostCard do feed. Origem produtiva consultada READ ONLY, copia minima autorizada; sem escrita remota. Como nao ha credenciais Stream no ambiente isolado, os bytes reais do video autorizado foram copiados para arquivo local ignorado, sem simular endpoint, fabricar conteudo nem mudar configuracao produtiva. A referencia original permanece no snapshot privado. Validacao cobre apresentacao/player local; assinatura Stream produtiva nao foi alterada.
+
+
+## Complemento pendente 2026-10-11: Ver mais respostas
+
+Regra aprovada registrada no README. Inspecao somente leitura do banco isolado encontrou dois posts, cada um com uma unica resposta profissional. Solicitada autorizacao para copiar mais uma resposta publica do mesmo post, com dados minimos do autor, para validar a linha sem simular conteudo. Nenhuma implementacao deste complemento iniciada. Enquanto aguarda, executar o dropdown independente da TASK-23.

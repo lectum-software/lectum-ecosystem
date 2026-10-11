@@ -640,3 +640,5 @@ Formato recomendado:
 - [ADR-0591 — Preservar aba da comunidade](0591-preservar-aba-comunidade.md)
 
 - [ADR-0592 — Contagem real do rascunho de filtros](0592-contagem-rascunho-filtros.md)
+
+- [ADR-0593 — Dropdown curto por quantidade de publicacoes](0593-dropdown-comunidades-por-publicacoes.md)

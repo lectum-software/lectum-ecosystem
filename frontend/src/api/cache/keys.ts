@@ -35,6 +35,7 @@ const keys = {
   },
   community: {
     root: () => ["community"],
+    feedOptions: () => ["community", "feed-options"],
     detail: (slug: string) => ["community", slug, "detail"],
     feed: (filters?: unknown) => ["community", "feed", filters],
     list: (filters?: unknown) => ["community", "list", filters],

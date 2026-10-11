@@ -1,5 +1,17 @@
 # TASK-23: Feed de comunidade
 
+## Complemento 2026-10-11: dropdown curto por publicacoes
+
+- [x] Exibir ate quatro comunidades por posts_count decrescente; desempate por nome e slug.
+- [x] Todas as comunidades no final, depois de divisor; preservar acesso ao catalogo completo e nome da comunidade selecionada fora das quatro.
+- [x] Considerar todas as paginas reais, nao apenas as primeiras 50 comunidades.
+- [x] Testes, check, build, browser local 390px e desktop; commit local.
+
+Validacao: cinco testes de cabecalho, check completo e build aprovados; browser local 390px/1280px exibiu quatro comunidades na ordem das contagens reais e a quinta opcao abriu /comunidades. Versao local 0.1.625.
+
+Referencia: captura do usuario e inventario de prototipos; Builder indisponivel. ADR-0593. Somente frontend/contrato existente; sem env, package ou migration. Rollback por reversao; sem push/deploy.
+
+
 ## Ajuste 2026-10-05 - Proximo card parcialmente visivel (0.1.585)
 
 - [x] Dimensionar cards pela largura do proprio carrossel, usando container queries e CSS calc.

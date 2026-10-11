@@ -13,7 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useCommunities, useInfiniteCommunityFeedPosts } from "@/api/callers/community";
+import { useFeedCommunityOptions, useInfiniteCommunityFeedPosts } from "@/api/callers/community";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import {
   COMMUNITIES_PER_CAROUSEL,
@@ -102,7 +102,7 @@ export const CommunityFeedLogic = ({
     }),
     [deferredSearch, scope, selectedCommunitySlug, variationSeed, sort, period],
   );
-  const communitiesQuery = useCommunities({ limit: 50, page: 1 });
+  const communitiesQuery = useFeedCommunityOptions();
   const feed = useInfiniteCommunityFeedPosts(query, variationSeed > 0);
   const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
@@ -248,7 +248,7 @@ export const CommunityFeedLogic = ({
 
             <FeedCommunitySelect
               activeSlug={selectedCommunitySlug}
-              communities={communitiesQuery.data?.data ?? []}
+              communities={communitiesQuery.data ?? []}
               onOpenChange={handleCommunityMenuOpenChange}
               open={communityMenuOpen}
             />
