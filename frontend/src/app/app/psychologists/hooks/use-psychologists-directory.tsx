@@ -336,6 +336,7 @@ export const usePsychologistsDirectory = () => {
   });
 
   const filterDraft = useWatch({ control: filters.hook.control });
+  const hasFilterCountCriteria = Object.values(normalizeFormValues(filterDraft)).some(Boolean);
   const filterCountQueryKey = JSON.stringify({
     ...toQuery(normalizeFormValues(filterDraft), 1),
     limit: 1,
@@ -355,12 +356,16 @@ export const usePsychologistsDirectory = () => {
   const isFilterCountSettled = filterCountQueryKey === settledFilterCountQueryKey;
   const filterCountDirectory = useDirectoryPsychologists(
     filterCountQuery,
-    isFiltersOpen && isFilterCountSettled,
+    isFiltersOpen && hasFilterCountCriteria && isFilterCountSettled,
   );
   const isFilterCountLoading =
-    !isFilterCountSettled || filterCountDirectory.isPending || filterCountDirectory.isFetching;
+    hasFilterCountCriteria &&
+    (!isFilterCountSettled || filterCountDirectory.isPending || filterCountDirectory.isFetching);
   const filterResultCount =
-    isFiltersOpen && !isFilterCountLoading && !filterCountDirectory.isError
+    isFiltersOpen &&
+    hasFilterCountCriteria &&
+    !isFilterCountLoading &&
+    !filterCountDirectory.isError
       ? filterCountDirectory.data?.count
       : undefined;
 
@@ -476,6 +481,7 @@ export const usePsychologistsDirectory = () => {
     featuredPsychologistId,
     filters,
     filterResultCount,
+    hasFilterCountCriteria,
     isFilterCountLoading,
     hasActiveFilters,
     infoSectionBottom,

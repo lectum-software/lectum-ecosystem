@@ -646,3 +646,5 @@ Formato recomendado:
 - [ADR-0594 — Outras respostas profissionais em Salvos](0594-salvos-mais-respostas-profissionais.md)
 
 - [ADR-0595 — Controles de video-resposta no perfil](0595-controles-video-resposta-perfil.md)
+
+- [ADR-0596 — Contagem somente com filtros efetivos](0596-contagem-somente-com-filtros.md)

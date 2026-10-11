@@ -34,9 +34,9 @@ test("count projection reuses the same complete filter mapping as apply", () => 
 test("preview observes the form, is modal-only and hides stale/error counts", () => {
   const source = read("./hooks/use-psychologists-directory.tsx");
   assert.match(source, /useWatch\(\{ control: filters.hook.control \}\)/);
-  assert.match(source, /isFiltersOpen && isFilterCountSettled/);
+  assert.match(source, /isFiltersOpen && hasFilterCountCriteria && isFilterCountSettled/);
   assert.match(source, /setSettledFilterCountQueryKey\(filterCountQueryKey\),\s*300/);
-  assert.match(source, /!isFilterCountLoading && !filterCountDirectory.isError/);
+  assert.match(source, /!isFilterCountLoading &&\s*!filterCountDirectory.isError/);
   assert.match(source, /filterCountDirectory.data\?\.count/);
   assert.match(source, /clearTimeout\(timer\)/);
 });
@@ -46,4 +46,13 @@ test("button preserves zero, displays loading and uses a subtle parenthesized ba
   assert.ok(source.includes("($" + "{filterResultCount})"));
   assert.match(source, /bg-primary-foreground\/20/);
   assert.match(source, /Atualizando quantidade/);
+});
+
+test("empty normalized criteria hide the badge and disable the preview query", () => {
+  const hook = read("./hooks/use-psychologists-directory.tsx");
+  const view = read("./view/index.tsx");
+  assert.match(hook, /Object.values\(normalizeFormValues\(filterDraft\)\).some\(Boolean\)/);
+  assert.match(hook, /isFiltersOpen && hasFilterCountCriteria && isFilterCountSettled/);
+  assert.match(hook, /hasFilterCountCriteria &&\s*\(!isFilterCountSettled/);
+  assert.match(view, /hasFilterCountCriteria &&/);
 });

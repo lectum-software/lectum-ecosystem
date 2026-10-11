@@ -37,6 +37,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
     errorMessage,
     filters,
     filterResultCount,
+    hasFilterCountCriteria,
     isFilterCountLoading,
     hasActiveFilters,
     isMobileSearchFocusMode,
@@ -517,23 +518,25 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                             type="submit"
                           >
                             Aplicar filtros
-                            <span
-                              aria-live="polite"
-                              className="ml-2 inline-flex min-w-10 items-center justify-center rounded-full bg-primary-foreground/20 px-2 py-0.5 tabular-nums"
-                            >
-                              {isFilterCountLoading ? (
-                                <span aria-label="Atualizando quantidade" role="status">
-                                  …
-                                </span>
-                              ) : filterResultCount !== undefined ? (
-                                `(${filterResultCount})`
-                              ) : (
-                                <>
-                                  <span aria-hidden="true">—</span>
-                                  <span className="sr-only">Quantidade indisponível</span>
-                                </>
-                              )}
-                            </span>
+                            {hasFilterCountCriteria && (
+                              <span
+                                aria-live="polite"
+                                className="ml-2 inline-flex min-w-10 items-center justify-center rounded-full bg-primary-foreground/20 px-2 py-0.5 tabular-nums"
+                              >
+                                {isFilterCountLoading ? (
+                                  <span aria-label="Atualizando quantidade" role="status">
+                                    …
+                                  </span>
+                                ) : filterResultCount !== undefined ? (
+                                  `(${filterResultCount})`
+                                ) : (
+                                  <>
+                                    <span aria-hidden="true">—</span>
+                                    <span className="sr-only">Quantidade indisponível</span>
+                                  </>
+                                )}
+                              </span>
+                            )}
                           </button>
                         </div>
                       </filters.Form>
