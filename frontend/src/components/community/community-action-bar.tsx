@@ -47,6 +47,7 @@ export type CommunityActionBarProps = {
   disabled?: boolean;
   endSlotAlignment?: "trailing" | "inline";
   endSlot?: ReactNode;
+  beforeSaveSlot?: ReactNode;
   reply?: {
     iconOnly?: boolean;
     label?: string;
@@ -132,6 +133,7 @@ export const CommunityActionBar = ({
   disabled,
   endSlotAlignment = "trailing",
   endSlot,
+  beforeSaveSlot,
   onVote,
   reply,
   save,
@@ -358,6 +360,8 @@ export const CommunityActionBar = ({
             {reply.iconOnly ? null : "Responder"}
           </PostActionButton>
         ) : null}
+
+        {beforeSaveSlot}
 
         {shouldRenderSecondaryActionsInline ? (
           <>

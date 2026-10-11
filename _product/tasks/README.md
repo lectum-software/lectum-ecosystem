@@ -1,5 +1,7 @@
 ## Lote autorizado em 2026-10-11
 
+Validado localmente: WhatsApp discreto, TASK-25 / ADR-0599. Ordem comentario, WhatsApp, salvar; desenho 17px. Check/build aprovados e usuario confirmou "agora deu certo". Sem push/deploy.
+
 Validado localmente: complemento TASK-25 / ADR-0598 (alinhamento, Respondendo a e midia integrada na modal). Check e build aprovados; usuario confirmou a conferencia local com "Deu certo". Automacao de browser indisponivel. Sem push/deploy.
 
 Usuario autorizou implementar os ajustes pendentes abaixo em 2026-10-11. As notas anteriores de nao implementar registram a fase de definicao e estao substituidas por esta autorizacao. Executar uma task por vez, mobile-first, validacao local e commits locais, sem push/deploy.
@@ -19,7 +21,7 @@ Usuario autorizou implementar os ajustes pendentes abaixo em 2026-10-11. As nota
 - [ ] Minhas publicacoes, pacientes e psicologos: manter as opcoes Posts e Respostas e seus contadores, substituindo a apresentacao atual por botoes no padrao dos filtros do feed. Usar tambem como referencia explicita as abas Sobre/Publicacoes/Avaliacoes do perfil publico do psicologo, incluindo apresentacao dos contadores e estado selecionado (captura aprovada em 2026-10-11, 16:56). Reutilizar padroes existentes, sem implementar ainda.
 - [ ] Minhas publicacoes, somente psicologos: acrescentar icone de WhatsApp com quantidade de cliques atribuida a cada conteudo junto aos demais controles/contadores, tanto em Posts quanto em Respostas. Metrica privada para o autor, nao botao para abrir o proprio WhatsApp; nao exibir para pacientes. Na implementacao, verificar a fonte real e a atribuicao por post/resposta, sem simular contagem ou confundir com total do perfil. Decisao aprovada em 2026-10-11; apenas registrar para implementacao futura.
 
-- [ ] WhatsApp em posts e respostas de psicologos somente de texto: substituir o bloco "WhatsApp / Fale com [nome]" por apenas um icone de WhatsApp a direita de Compartilhar na barra de interacoes. Usar a mesma cor e tamanho dos demais icones, sem verde e sem texto visivel; manter descricao acessivel e area de toque confortavel. Preservar destino e regras atuais de disponibilidade do contato. Nao alterar o bloco de contato dos videos nem ampliar esta decisao para publicacoes com outras midias. Referencia: capturas e aprovacao do usuario em 2026-10-11. Apenas registrado para implementacao futura; **nao implementar ainda**.
+- [x] WhatsApp em posts e respostas de psicologos somente de texto: substituir o bloco "WhatsApp / Fale com [nome]" por apenas um icone de WhatsApp entre comentario e salvar na barra de interacoes. Usar a mesma cor e tamanho dos demais icones, sem verde e sem texto visivel; manter descricao acessivel e area de toque confortavel. Preservar destino e regras atuais de disponibilidade do contato. Nao alterar o bloco de contato dos videos nem ampliar esta decisao para publicacoes com outras midias. Referencia: capturas e aprovacao do usuario em 2026-10-11. Apenas registrado para implementacao futura; **nao implementar ainda**.
 
 - [x] Persistencia da aba no feed principal: ao abrir um post e retornar ao feed, restaurar a aba/filtro anteriormente selecionado (por exemplo, Em destaque), sem voltar automaticamente para Oportunidades, padrao do psicologo. Aplicar ao feed o comportamento ja ajustado dentro das comunidades. Implementado apos autorizacao: check/build aprovados e confirmacao manual do usuario no localhost (ADR-0597); limite de evidencia para Destaque vazio registrado. Sem publicacao.
 
@@ -2655,3 +2657,5 @@ validado em navegador isolado 390/1440px: cancelar, Escape, foco e ausencia de
 overflow; nenhum DELETE enviado. QA com exclusao autenticada real nao executada.
 Check global frontend segue bloqueado pela formatacao preexistente de
 mentor-author-ranking.test.mjs; lint e Biome dos arquivos alterados aprovados.
+
+Refinamento WhatsApp aprovado em 11/10 (ADR-0599): ordem votos, comentario, WhatsApp, salvar, compartilhar substitui a posicao anterior depois de Compartilhar. Desenho de 16px com alvo de toque preservado. Implementado; check frontend completo e build aprovados (.tmp/oct11-whatsapp-position-check.log e .tmp/oct11-whatsapp-position-build.log). Visual do refinamento pendente; browser automatizado indisponivel. Sem commit/push/deploy deste ajuste.

@@ -160,6 +160,7 @@ export const CommunityPostCard = ({
     showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
       <CommunityWhatsAppCta
         attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
+        size={hasCompactReplyActions ? "xs" : "sm"}
         psychologist={toCommunityWhatsAppIdentity(displayAuthor)}
         stopPropagation
         trackingContext={{
@@ -630,7 +631,6 @@ export const CommunityPostCard = ({
           reply={highlightedProfessionalReply}
           showWhatsappCta={showWhatsappCta}
         />
-        {shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
       </div>
 
       <CommunityActionBar
@@ -662,6 +662,7 @@ export const CommunityPostCard = ({
             ? voteSnapshot.downvotes
             : undefined
         }
+        beforeSaveSlot={shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
         endSlot={footerExtra}
         onVote={interactiveActions ? handleVote : undefined}
         save={{

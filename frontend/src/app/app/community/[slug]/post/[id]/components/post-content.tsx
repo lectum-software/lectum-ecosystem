@@ -326,7 +326,7 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
           variant="detail"
         />
       )}
-      {shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
+
       {lectumDownloadDialog}
     </div>
   );
@@ -516,6 +516,23 @@ export const PostVoteBar = ({
       label: "Comentar no post",
       onClick: onFocusCommentComposer,
     }}
+    beforeSaveSlot={
+      post.author.role === "psicologo" &&
+      post.author.whatsapp_url &&
+      !post.media_url &&
+      !(post.media_items ?? []).length ? (
+        <CommunityWhatsAppCta
+          psychologist={toCommunityWhatsAppIdentity(post.author)}
+          stopPropagation
+          trackingContext={{
+            pageKind: "community_post",
+            path: `/comunidades/${post.community.slug}/publicacao/${post.id}`,
+            targetId: post.id,
+            targetType: "community_post",
+          }}
+        />
+      ) : null
+    }
     currentVote={currentVote}
     disabled={disabled}
     onVote={onVote}

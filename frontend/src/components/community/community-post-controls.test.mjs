@@ -537,3 +537,56 @@ test("favorite changes use the originating account and do not manufacture a part
   assert.equal(client.getQueryData(keys.patient.favoriteIds("new")), undefined);
   client.clear();
 });
+
+const { CommunityWhatsAppCta } = await import("./community-whatsapp-cta.tsx");
+test("text-only WhatsApp renders a monochrome icon and accessible name", () => {
+  const html = renderRelations({
+    children: createElement(CommunityWhatsAppCta, {
+      psychologist: { id: "psi", name: "Ana", whatsappUrl: null },
+      size: "xs",
+    }),
+  });
+  assert.match(html, /aria-label="Fale com Ana pelo WhatsApp"/);
+  assert.match(html, /h-7 w-7/);
+  assert.match(html, /h-\[17px\] w-\[17px\]/);
+  assert.match(html, /text-muted/);
+  assert.doesNotMatch(
+    html.replace(/<title>.*?<\/title>/g, ""),
+    /text-success|bg-success|>WhatsApp<|>Fale com Ana</,
+  );
+});
+test("media-attached WhatsApp retains its labelled contact block", () => {
+  const html = renderRelations({
+    children: createElement(CommunityWhatsAppCta, {
+      attached: true,
+      psychologist: { id: "psi", name: "Ana", whatsappUrl: null },
+    }),
+  });
+  assert.match(html, />WhatsApp</);
+  assert.match(html, />Fale com Ana</);
+  assert.match(html, /rounded-b-\[15px\]/);
+});
+
+const { CommunityActionBar } = await import("./community-action-bar.tsx");
+test("WhatsApp slot stays after comments and before save in both action layouts", () => {
+  for (const secondaryActionsPlacement of ["inline", "trailing"]) {
+    const html = renderToStaticMarkup(
+      createElement(CommunityActionBar, {
+        upvotesCount: 0,
+        comments: { label: "Comment marker", count: 0 },
+        beforeSaveSlot: createElement("span", null, "Contact marker"),
+        save: { label: "Save marker" },
+        share: { label: "Share marker" },
+        secondaryActionsPlacement,
+      }),
+    );
+    const positions = ["Comment marker", "Contact marker", "Save marker", "Share marker"].map(
+      (label) => html.indexOf(label),
+    );
+    assert.ok(positions.every((index) => index >= 0));
+    assert.deepEqual(
+      positions,
+      [...positions].sort((a, b) => a - b),
+    );
+  }
+});

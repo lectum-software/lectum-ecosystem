@@ -495,3 +495,18 @@ ADR-0598. Sem mudanca de backend, env, package ou dados. Referencia: capturas fo
 Validacao tecnica do editor aprovada: check completo e build frontend, teste focal 8/8 e tres testes SSR de camera azul/miniatura/estado desabilitado. Fluxo autenticado de remover/desfazer/salvar e visual continuam pendentes; falha de inicializacao do navegador registrada no ADR-0598. Nenhuma publicacao realizada.
 
 Confirmacao posterior: usuario validou no localhost com "Deu certo". Criterios deste complemento concluidos; nao alegamos testes de interacao automatizados.
+
+## Complemento 2026-10-11: WhatsApp em conteudo textual (ADR-0599)
+
+- [x] Substituir CTA textual por icone monocromatico sem rotulo visivel, acessivel.
+- [x] Posicionar entre comentario e salvar nas barras de post/resposta, preservando autoria e tracking.
+- [x] Preservar CTA anexado a midia; pacientes nao recebem contato profissional.
+- [x] Testes, check/build e conferencia local.
+
+WhatsApp: check frontend completo, build final e testes SSR de icone monocromatico/CTA de midia aprovados. Conferencia visual e navegacao de contato permanecem pendentes; sem commit/push/deploy (ADR-0599).
+
+Refinamento WhatsApp aprovado em 11/10 (ADR-0599): ordem votos, comentario, WhatsApp, salvar, compartilhar substitui a posicao anterior depois de Compartilhar. Desenho de 16px com alvo de toque preservado. Implementado; check frontend completo e build aprovados (.tmp/oct11-whatsapp-position-check.log e .tmp/oct11-whatsapp-position-build.log). Visual do refinamento pendente; browser automatizado indisponivel. Sem commit/push/deploy deste ajuste.
+
+Refino de tamanho aprovado: WhatsApp textual em 17px, mantendo alvo de toque e ordem; substitui 16px do refinamento anterior (ADR-0599).
+
+Usuario confirmou o refinamento final de 17px com "agora deu certo". Complemento WhatsApp aprovado localmente. Sem push/deploy.

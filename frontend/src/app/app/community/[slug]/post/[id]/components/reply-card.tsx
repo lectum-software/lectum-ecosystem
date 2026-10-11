@@ -203,6 +203,20 @@ export const ReplyVoteBar = ({
   return (
     <CommunityActionBar
       className="mt-2 sm:mt-3"
+      beforeSaveSlot={
+        reply.author.role === "psicologo" && reply.author.whatsapp_url && !reply.media_url ? (
+          <CommunityWhatsAppCta
+            size="xs"
+            psychologist={toCommunityWhatsAppIdentity(reply.author)}
+            stopPropagation
+            trackingContext={{
+              pageKind: "community_post",
+              targetId: reply.id,
+              targetType: "post_reply",
+            }}
+          />
+        ) : null
+      }
       currentVote={currentVote}
       disabled={disabled}
       onVote={onVote}
@@ -539,12 +553,6 @@ export const ReplyCard = ({
               variant="reply"
             />
           </div>
-
-          {replyWhatsappCta && !hasReplyMedia ? (
-            <div className="mt-2" data-comment-collapse-ignore="true">
-              {replyWhatsappCta}
-            </div>
-          ) : null}
 
           <div data-comment-collapse-ignore="true">
             <ReplyVoteBar
