@@ -32,7 +32,7 @@ import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 const PAGE_LIMIT = 20;
 const FAVORITES_HEADER_DESCRIPTION =
-  "Profissionais que voc\u00ea salvou para comparar e conversar quando quiser.";
+  "Profissionais com quem você se identificou, para acompanhar e conversar quando quiser.";
 
 type RelationMode = "favorites";
 
@@ -205,7 +205,7 @@ const FavoritePageHeader = () => (
 
       <div className="mt-5 min-w-0">
         <h1 className="text-2xl font-bold leading-7 text-foreground">Favoritos</h1>
-        <p className="mx-auto mt-2 max-w-[34rem] text-sm leading-5 text-muted">
+        <p className="mx-auto mt-2 max-w-[34rem] text-balance text-sm leading-5 text-muted">
           {FAVORITES_HEADER_DESCRIPTION}
         </p>
       </div>

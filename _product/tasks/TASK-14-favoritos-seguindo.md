@@ -1,5 +1,18 @@
 # TASK-14: Favoritos e seguindo
 
+## Complemento 2026-10-11: texto acolhedor em Favoritos
+
+- [x] Substituir somente a descricao por "Profissionais com quem você se identificou, para acompanhar e conversar quando quiser."; preservar titulo, cards e interacoes.
+- [x] Teste de regressao do texto aprovado e ausencia do incentivo a comparar; 18 testes de navegacao aprovados.
+- [x] Check completo e build do frontend aprovados em 2026-10-11.
+- [x] Browser local mobile 390px e viewport normal: texto equilibrado, sem corte; aprovacao visual do usuario em 2026-10-11.
+- Refinamento visual solicitado apos captura local: equilibrar as linhas da descricao com `text-balance`, preservando texto, fonte e largura maxima, sem quebra fixa que prejudique mobile. Conferencia visual e build final aprovados.
+- [x] Bump unico 0.1.623 e commit proprio em homolog apos validacao visual.
+
+Referencia: captura aprovada pelo usuario e `_product/proto/Favoritos.jpg`; Builder/Quick Copy indisponivel entre as ferramentas deste cliente. Alteracao mobile-first sem mudar dimensoes/layout, apenas copy. Sem backend, banco, migration, package ou env nova; rollback por reversao do texto no frontend. Sem push/deploy.
+
+Integracao do browser recuperada; bloqueio anterior resolvido. Sem ADR novo: ajuste editorial e CSS de quebra, sem regra de dominio ou arquitetura nova.
+
 ## Correcao 2026-10-05 (0.1.577)
 
 - Corrigida a atualizacao otimista dos favoritos no Explorar: o cache infinito agora tem cada pagina atualizada sem assumir o formato da busca simples.

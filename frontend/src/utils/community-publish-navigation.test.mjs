@@ -99,6 +99,13 @@ test("favorites opts out of the bottom bar and adds only an icon back to profile
   );
   assert.equal((header.match(/<h1\b/g) ?? []).length, 1);
   assert.match(header, /\{FAVORITES_HEADER_DESCRIPTION\}/);
+  assert.match(header, /max-w-\[34rem\] text-balance text-sm leading-5/);
+  assert.ok(
+    source.includes(
+      "Profissionais com quem você se identificou, para acompanhar e conversar quando quiser.",
+    ),
+  );
+  assert.doesNotMatch(source, /salvou para comparar/);
   assert.doesNotMatch(header, /router\.back|history\.back|AppPageHeader|SecondaryPageHeader/);
 });
 
