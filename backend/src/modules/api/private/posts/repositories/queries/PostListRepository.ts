@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { getFollowedCommunityIds } from "@/modules/api/private/community/repositories/support/community-ranking";
+import { getOtherProfessionalReplyAuthors } from "@/modules/api/private/community/repositories/support/other-professional-replies";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
@@ -17,6 +18,7 @@ import {
   normalizeListType,
   normalizePagination,
   normalizeVoteValue,
+  selectHighlightedListProfessionalReply,
   toAuthorResponse,
   toListPostResponse,
   toPaginatedListResponse,
@@ -535,6 +537,14 @@ export class PostListRepository extends PostRepositoryContext {
       getFollowedCommunityIds(data.auth.id!, communityIds),
     ]);
 
+    const highlights = new Map<string, { id: string }>();
+    for (const { post } of postSaves) {
+      if (post.author.role !== "paciente") continue;
+      const highlight = selectHighlightedListProfessionalReply(post.replies);
+      if (highlight) highlights.set(post.id, highlight);
+    }
+    const otherReplyAuthors = await getOtherProfessionalReplyAuthors(prisma, highlights);
+
     const postItems = postSaves.map<PostListItemDTO>((item) => ({
       id: item.id,
       type: "post",
@@ -550,6 +560,7 @@ export class PostListRepository extends PostRepositoryContext {
         mutedPostIds.has(item.post.id),
         postsWithPsychologistReplies.has(item.post.id),
         followedCommunityIds.has(item.post.community.id),
+        otherReplyAuthors.get(item.post.id),
       ),
       reply: null,
     }));

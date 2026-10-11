@@ -107,6 +107,9 @@ test("feed coloca controles apos a midia somente em posts de psicologos com anex
     const saved = renderPost(
       "paciente",
       {
+        other_professional_reply_authors: [
+          { id: "other-professional", name: "Outro profissional", avatar: null },
+        ],
         highlighted_professional_reply: {
           id: "reply-order-test",
           content: "Resposta em video",
@@ -123,6 +126,8 @@ test("feed coloca controles apos a midia somente em posts de psicologos com anex
     );
     assert.ok(saved.indexOf("Resposta profissional") < saved.indexOf("data-feed-reply-author"));
     assert.doesNotMatch(saved, /border-t(?:\s|")/);
+    assert.match(saved, /Ver mais respostas/);
+    assert.ok(saved.indexOf("data-feed-reply-author") < saved.indexOf("Ver mais respostas"));
     assert.match(
       saved,
       /disabled=""[^>]*aria-label="Remover dos salvos"|aria-label="Remover dos salvos"[^>]*disabled=""/,
@@ -158,6 +163,7 @@ test("respostas salvas usam identidade do feed sem faixa Respondido em ou diviso
   assert.match(source, /community=\{community\}/);
   assert.match(source, /<FeedFavoriteButton author=\{author\}/);
   assert.doesNotMatch(source, /Resposta profissional/);
+  assert.doesNotMatch(source, /MoreProfessionalReplies|Ver mais respostas/);
   assert.doesNotMatch(source, /Respondido em|border-t|h-px w-full/);
   assert.match(source, /enableFeedAutoplay/);
   assert.match(source, /onRemove\(item.post.id, reply.id\)/);

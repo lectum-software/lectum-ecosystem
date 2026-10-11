@@ -519,7 +519,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                             Aplicar filtros
                             <span
                               aria-live="polite"
-                              className="ml-2 inline-flex min-w-10 items-center justify-center rounded-full bg-white/20 px-2 py-0.5 tabular-nums"
+                              className="ml-2 inline-flex min-w-10 items-center justify-center rounded-full bg-primary-foreground/20 px-2 py-0.5 tabular-nums"
                             >
                               {isFilterCountLoading ? (
                                 <span aria-label="Atualizando quantidade" role="status">

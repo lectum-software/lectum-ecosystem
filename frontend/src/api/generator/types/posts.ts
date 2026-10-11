@@ -76,6 +76,7 @@ export type PostProfessionalReply = {
 
 export type PostListPost = PostDetail & {
   highlighted_professional_reply: PostProfessionalReply | null;
+  other_professional_reply_authors?: Pick<CommunityAuthor, "id" | "name" | "avatar">[];
 };
 
 export type UserPostReply = {

@@ -162,6 +162,7 @@ export type PostProfessionalReplyDTO = {
 
 export type PostListPostDTO = PostDetailDTO & {
   highlighted_professional_reply: PostProfessionalReplyDTO | null;
+  other_professional_reply_authors?: Pick<PostAuthorDTO, "id" | "name" | "avatar">[];
 };
 
 export type PostListReplyDTO = {

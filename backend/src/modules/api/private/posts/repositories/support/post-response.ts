@@ -542,6 +542,7 @@ export const toListPostResponse = (
   mutedByCurrentUser = false,
   hasPsychologistReply = false,
   communityFollowing?: boolean,
+  otherProfessionalReplyAuthors: PostListPostDTO["other_professional_reply_authors"] = [],
 ): PostListPostDTO => ({
   ...toPostResponse(
     item,
@@ -551,6 +552,7 @@ export const toListPostResponse = (
     mutedByCurrentUser,
     hasPsychologistReply,
   ),
+  other_professional_reply_authors: otherProfessionalReplyAuthors,
   highlighted_professional_reply: toHighlightedProfessionalReply(
     selectHighlightedListProfessionalReply(item.replies),
     savedReplyIds,

@@ -642,3 +642,5 @@ Formato recomendado:
 - [ADR-0592 — Contagem real do rascunho de filtros](0592-contagem-rascunho-filtros.md)
 
 - [ADR-0593 — Dropdown curto por quantidade de publicacoes](0593-dropdown-comunidades-por-publicacoes.md)
+
+- [ADR-0594 — Outras respostas profissionais em Salvos](0594-salvos-mais-respostas-profissionais.md)

@@ -44,6 +44,6 @@ test("button preserves zero, displays loading and uses a subtle parenthesized ba
   const source = read("./view/index.tsx");
   assert.match(source, /filterResultCount !== undefined/);
   assert.ok(source.includes("($" + "{filterResultCount})"));
-  assert.match(source, /bg-white\/20/);
+  assert.match(source, /bg-primary-foreground\/20/);
   assert.match(source, /Atualizando quantidade/);
 });
