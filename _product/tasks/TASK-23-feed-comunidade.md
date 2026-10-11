@@ -1144,3 +1144,11 @@ Evidencias do complemento: ADR-0588; checks dos quatro apps e builds backend/fro
 - [x] Browser real comunidade -> post -> voltar preservou sort=new; build final aprovado e commit local preparado. Publicacao autorizada por PR.
 
 Evidencia final: localhost com post real importado sob autorizacao, selecao Novos, abertura do post e botao Voltar retornaram a mesma URL sort=new e checkbox Novos selecionado. Testes de defaults por perfil e restricao de Oportunidades aprovados. Check geral e builds frontend/backend aprovados; sem alteracao de dados produtivos no smoke.
+
+## Complemento 2026-10-11: retorno do feed principal
+
+- [x] Derivar aba e periodos da URL, validando pelo catalogo existente e preservando parametros.
+- [x] Manter Oportunidades como default profissional e Em destaque fixo para paciente/visitante.
+- [x] Check/build aprovados; usuario confirmou teste manual local apos orientacao de abrir/voltar em Novos e atualizar Em destaque. Limite: Destaque vazio, sem percurso completo nessa aba (ADR-0597).
+
+ADR-0597. Mesmo padrao da comunidade; sem novo storage, backend, ranking, schema, env ou package. Sem publicacao.
