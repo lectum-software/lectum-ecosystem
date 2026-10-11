@@ -1000,3 +1000,13 @@ raiz e repetiu o frontend completo, mas parou em `backend prisma generate`
 por ausencia local de `DATABASE_URL`; nao houve mudanca funcional no backend.
 O push de homologacao inicia deploy automatico; o resultado desse deploy sera
 registrado no relato de entrega, sem promover para producao nesta solicitacao.
+
+## Complemento 2026-10-11 — Controles de video-respostas
+
+- [x] Usar a barra maior de Salvos nas video-respostas do perfil, com Util, contador de respostas, salvar e compartilhar.
+- [x] Preservar IDs e interacoes da resposta, player e barras compactas dos comentarios e respostas sem video.
+- [x] Validar componente real em browser local mobile-first 390px e desktop 1280px, com API e video reais autorizados, sem mocks. Voto aplicado e revertido; link abriu a conversa da resposta.
+- [x] Check e build finais do frontend aprovados (logs locais oct11-profile-check-final e oct11-profile-build).
+- [ ] Conferencia end-to-end na pagina publica completa: perfil local indicado nao possui cadastro profissional nem video-respostas; usuario informou que conferira em producao.
+
+ADR-0595. Suporte temporario de QA autenticado removido antes do build/commit. Nenhum perfil privado adicional copiado, nenhum guard alterado. Builder/Quick Copy indisponivel; referencia nas capturas do usuario e componente Salvos. Sem backend, schema, env ou package novo. Publicacao deste lote ainda nao realizada.

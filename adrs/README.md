@@ -644,3 +644,5 @@ Formato recomendado:
 - [ADR-0593 — Dropdown curto por quantidade de publicacoes](0593-dropdown-comunidades-por-publicacoes.md)
 
 - [ADR-0594 — Outras respostas profissionais em Salvos](0594-salvos-mais-respostas-profissionais.md)
+
+- [ADR-0595 — Controles de video-resposta no perfil](0595-controles-video-resposta-perfil.md)
