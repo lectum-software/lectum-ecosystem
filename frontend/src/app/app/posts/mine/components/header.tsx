@@ -2,7 +2,6 @@
 
 import { ArrowLeft, BadgeCheck, CornerUpLeft, FileText } from "lucide-react";
 import Link from "next/link";
-import { Fragment } from "react";
 import type { UserPostsType } from "@/api/generator/types/posts";
 import { cn } from "@/lib/utils";
 
@@ -27,58 +26,36 @@ export const FilterTabs = ({
   ];
 
   return (
-    <nav
-      aria-label={interactionCopy.filterAriaLabel}
-      className="overflow-hidden rounded-[24px] border border-border bg-surface/95 px-3 py-4 dark:border-border dark:bg-surface sm:px-5"
-    >
-      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5" role="tablist">
-        {tabs.map((item, index) => {
+    <nav aria-label={interactionCopy.filterAriaLabel}>
+      <div className="grid grid-cols-2 items-center gap-1.5 py-1" role="tablist">
+        {tabs.map((item) => {
           const active = item.value === value;
           const count = counts?.[item.value];
-          const formattedCount = typeof count === "number" ? count.toLocaleString("pt-BR") : "...";
           const Icon = item.icon;
-
           return (
-            <Fragment key={item.value}>
-              {index > 0 ? (
-                <span
-                  className="hidden h-5 w-px bg-surface-muted dark:bg-border sm:block"
-                  aria-hidden="true"
-                />
-              ) : null}
-              <button
-                aria-selected={active}
-                className={cn(
-                  "inline-flex min-w-0 items-center gap-2 rounded-full px-2 py-1.5 text-[13px] font-bold leading-none transition-[background-color,color,opacity] disabled:opacity-65",
-                  active
-                    ? "text-primary"
-                    : "text-muted hover:bg-surface-muted hover:text-foreground dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground",
-                )}
-                disabled={disabled}
-                onClick={() => onChange(item.value)}
-                role="tab"
-                type="button"
+            <button
+              key={item.value}
+              aria-selected={active}
+              className={cn(
+                "inline-flex h-8 min-h-8 min-w-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-1.5 text-xs font-bold leading-none tracking-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-65",
+                active
+                  ? "border-border/80 bg-surface text-foreground shadow-lectum-tab dark:border-border/70 dark:shadow-none"
+                  : "border-transparent bg-transparent text-muted hover:text-foreground",
+              )}
+              disabled={disabled}
+              onClick={() => onChange(item.value)}
+              role="tab"
+              type="button"
+            >
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="whitespace-nowrap text-xs font-bold leading-none">{item.label}</span>
+              <span
+                className="min-w-0 truncate text-xs font-bold leading-none tabular-nums text-primary-strong"
+                title={count?.toLocaleString("pt-BR")}
               >
-                <Icon
-                  className={cn(
-                    "h-4 w-4 shrink-0",
-                    active ? "text-primary" : "text-muted dark:text-muted",
-                  )}
-                  aria-hidden="true"
-                />
-                <span className="whitespace-nowrap">
-                  <strong
-                    className={cn(
-                      "font-extrabold",
-                      active ? "text-primary" : "text-foreground dark:text-foreground",
-                    )}
-                  >
-                    {formattedCount}
-                  </strong>{" "}
-                  {item.label}
-                </span>
-              </button>
-            </Fragment>
+                {typeof count === "number" ? count.toLocaleString("pt-BR") : "\u2026"}
+              </span>
+            </button>
           );
         })}
       </div>

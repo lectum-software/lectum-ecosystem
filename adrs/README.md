@@ -653,3 +653,5 @@ Formato recomendado:
 
 - [ADR-0598 — Alinhamento e contexto do comentario](0598-alinhamento-contexto-comentario.md)
 - [ADR-0599 — WhatsApp discreto em conteudo sem midia](0599-whatsapp-discreto-conteudo-textual.md)
+
+- [ADR-0600 — Abas de Minhas publicacoes](0600-abas-minhas-publicacoes.md)

@@ -590,3 +590,44 @@ test("WhatsApp slot stays after comments and before save in both action layouts"
     );
   }
 });
+
+const { FilterTabs: MyPublicationTabs } = await import(
+  "../../app/app/posts/mine/components/header.tsx"
+);
+const { getInteractionCopy: publicationInteractionCopy } = await import(
+  "../../app/app/posts/mine/modules/support.ts"
+);
+test("my publications pills preserve role labels and real counters after the label", () => {
+  for (const professional of [true, false]) {
+    const copy = publicationInteractionCopy(professional);
+    const html = renderToStaticMarkup(
+      createElement(MyPublicationTabs, {
+        counts: { posts: 12, replies: 0 },
+        interactionCopy: copy,
+        value: "replies",
+        onChange() {},
+      }),
+    );
+    assert.match(html, /grid-cols-2/);
+    assert.match(html, /shadow-lectum-tab/);
+    assert.match(html, /aria-selected="true"/);
+    assert.ok(
+      html.includes('<span class="whitespace-nowrap text-xs font-bold leading-none">Posts</span>'),
+    );
+    assert.ok(html.indexOf(">Posts<") < html.indexOf(">12<"));
+    assert.ok(html.includes(copy.plural));
+    assert.match(html, />0</);
+  }
+});
+test("my publication tabs preserve loading counts and disabled state", () => {
+  const html = renderToStaticMarkup(
+    createElement(MyPublicationTabs, {
+      disabled: true,
+      interactionCopy: publicationInteractionCopy(false),
+      value: "posts",
+      onChange() {},
+    }),
+  );
+  assert.equal((html.match(/disabled=""/g) ?? []).length, 2);
+  assert.equal((html.match(/>\u2026</g) ?? []).length, 2);
+});

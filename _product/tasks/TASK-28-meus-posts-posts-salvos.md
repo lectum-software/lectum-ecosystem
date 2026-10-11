@@ -578,3 +578,13 @@ Copia adicional autorizada limitada a uma resposta publica do mesmo post e dados
 Check geral encontrou apenas timeout no teste optional-auth-failure sob concorrencia; teste focal passou isolado. Suite backend reexecutada serialmente para reduzir carga, sem alterar teste nem desativar verificacao. Evidencias em .tmp/oct11-saved-*.log. Complemento do selo de filtros: bg-primary-foreground/20 substitui branco literal, mantendo aparencia e atendendo check:source-safety.
 
 Sem migration, package ou env nova. Sem push/deploy; frontend/backend independentes. Commit local apos validacao.
+
+## Complemento 11/10: abas no padrao do feed/perfil (ADR-0600)
+
+- [x] Capsulas Posts e Respostas/Comentarios com contadores reais apos o rotulo, sem bloco branco externo.
+- [x] Preservar selecao, callbacks, papeis, carregamento e bloqueio durante consulta.
+- [x] Check, build e conferencia local mobile-first.
+
+Abas: implementacao local e check/build/testes aprovados; conferencia visual autenticada pendente por indisponibilidade do navegador automatizado. ADR-0600. Sem commit/push/deploy.
+
+Aprovacao visual final do usuario em 2026-10-11 apos correcao da tipografia. Check, build e 21 testes aprovados; commit local, sem push/deploy.
