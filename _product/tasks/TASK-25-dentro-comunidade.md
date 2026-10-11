@@ -480,3 +480,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel usada foi o screenshot do usuario e `_product/proto/Dentro da Comunidade.jpg`.
 - ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write src/utils/media.ts`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/community/depressao`, HTTP local `200 image/png` em `/images/community/explore/depressao.png` e Chrome/CDP mobile 390x844 na URL ngrok `/community/depressao`, confirmando avatar carregado por `/_next/image?url=%2Fimages%2Fcommunity%2Fexplore%2Fdepressao.png` com `naturalWidth=76` e `naturalHeight=76`.
+
+## Complemento 2026-10-11: alinhamento e contexto do comentario
+
+- [x] Usar Respondendo a [NOME] nos dois contextos de resposta, preservando anonimato e fallback Respondendo ao post.
+- [x] Ajuste sutil de padding vertical: 12px + linha 20px + 12px = 44px, alinhado ao botao centralizado; fonte inalterada e crescimento com multiline/anexo preservado.
+- [x] Check e build frontend aprovados em 2026-10-11; teste focal 7/7. Logs locais: .tmp/oct11-composer-alignment-check.log e .tmp/oct11-composer-alignment-build.log.
+- [x] Conferencia local confirmada pelo usuario com "Deu certo" apos solicitacao de verificar campo/modal e remover/desfazer. Browser automatizado indisponivel.
+
+ADR-0598. Sem mudanca de backend, env, package ou dados. Referencia: capturas fornecidas e Dentro da Comunidade; Builder indisponivel. Sem push/deploy.
+
+- [x] Modal de editar comentario com controle azul integrado e miniatura, preservando permissao, remover/desfazer e salvamento (mesmo complemento TASK-25 / ADR-0598).
+
+Validacao tecnica do editor aprovada: check completo e build frontend, teste focal 8/8 e tres testes SSR de camera azul/miniatura/estado desabilitado. Fluxo autenticado de remover/desfazer/salvar e visual continuam pendentes; falha de inicializacao do navegador registrada no ADR-0598. Nenhuma publicacao realizada.
+
+Confirmacao posterior: usuario validou no localhost com "Deu certo". Criterios deste complemento concluidos; nao alegamos testes de interacao automatizados.

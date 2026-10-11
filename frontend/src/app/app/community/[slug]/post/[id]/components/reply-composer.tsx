@@ -138,9 +138,9 @@ export const ReplyComposer = ({
   );
   const autoFocusTargetId = replyTarget?.id ?? "main";
   const replyContextLabel = replyTarget?.name
-    ? `Respondendo ${replyTarget.name}`
+    ? `Respondendo a ${replyTarget.name}`
     : replyToName
-      ? `Respondendo ${replyToName}`
+      ? `Respondendo a ${replyToName}`
       : "Respondendo ao post";
   const composerContentField = useMemo(
     () => ({

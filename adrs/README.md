@@ -650,3 +650,5 @@ Formato recomendado:
 - [ADR-0596 — Contagem somente com filtros efetivos](0596-contagem-somente-com-filtros.md)
 
 - [ADR-0597 — Retorno para a aba do feed principal](0597-retorno-aba-feed-principal.md)
+
+- [ADR-0598 — Alinhamento e contexto do comentario](0598-alinhamento-contexto-comentario.md)

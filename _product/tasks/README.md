@@ -1,14 +1,16 @@
 ## Lote autorizado em 2026-10-11
 
+Validado localmente: complemento TASK-25 / ADR-0598 (alinhamento, Respondendo a e midia integrada na modal). Check e build aprovados; usuario confirmou a conferencia local com "Deu certo". Automacao de browser indisponivel. Sem push/deploy.
+
 Usuario autorizou implementar os ajustes pendentes abaixo em 2026-10-11. As notas anteriores de nao implementar registram a fase de definicao e estao substituidas por esta autorizacao. Executar uma task por vez, mobile-first, validacao local e commits locais, sem push/deploy.
 
 ## Decisao aprovada para implementacao futura (2026-10-11)
 
-- [ ] Compositor de comentarios: centralizar verticalmente o placeholder "Adicionar comentario" e o texto de uma linha em relacao ao botao de midia, sem alterar o tamanho da fonte; preservar expansao natural com multiplas linhas e anexos. Referencia: capturas do usuario de 2026-10-11, 17:10. Apenas registrar, sem implementar ainda.
-- [ ] Contexto acima do compositor de comentarios: corrigir "Respondendo [NOME]" para **"Respondendo a [NOME]"**, preservando a identificacao e o anonimato existentes. Decisao aprovada em 2026-10-11; incluir no lote futuro, sem implementar ainda.
+- [x] Compositor de comentarios: centralizar verticalmente o placeholder "Adicionar comentario" e o texto de uma linha em relacao ao botao de midia, sem alterar o tamanho da fonte; preservar expansao natural com multiplas linhas e anexos. Referencia: capturas do usuario de 2026-10-11, 17:10. Apenas registrar, sem implementar ainda.
+- [x] Contexto acima do compositor de comentarios: corrigir "Respondendo [NOME]" para **"Respondendo a [NOME]"**, preservando a identificacao e o anonimato existentes. Decisao aprovada em 2026-10-11; incluir no lote futuro, sem implementar ainda.
 
 - [ ] Minhas publicacoes, contexto de origem para pacientes e psicologos: quando o conteudo de origem tiver midia, apresentar miniatura compacta alinhada a direita dentro do card azul, com identificacao do autor no topo e trecho do conteudo ao lado da miniatura. Sem simbolo de play, player ou reproducao no card; toda a area azul leva ao conteudo original correspondente. Inclui psicologo comentando em video de outro psicologo. Esta regra se aplica a midia de origem, nao a midia do proprio comentario/resposta. Decisao aprovada em 2026-10-11; apenas registrar, sem implementar ainda.
-- [ ] Modal Editar comentario do psicologo: remover o botao separado "Midia" abaixo do campo e seguir o padrao do compositor inicial, com botao azul de midia dentro da area do comentario e apresentacao integrada do anexo. Preservar os comportamentos existentes de edicao, remocao/desfazer e salvamento. Referencia: capturas do usuario de 2026-10-11, 17:08. Ajuste para implementacao futura; nao implementar nesta etapa de definicao.
+- [x] Modal Editar comentario do psicologo: remover o botao separado "Midia" abaixo do campo e seguir o padrao do compositor inicial, com botao azul de midia dentro da area do comentario e apresentacao integrada do anexo. Preservar os comportamentos existentes de edicao, remocao/desfazer e salvamento. Referencia: capturas do usuario de 2026-10-11, 17:08. Ajuste para implementacao futura; nao implementar nesta etapa de definicao.
 
 - [ ] Minhas publicacoes: remover os titulos "Comentario de origem" e "Post de origem" dos cards de contexto nas respostas de psicologos e comentarios de pacientes. Manter o destaque azul, a identificacao do autor (respeitando anonimato), o conteudo de origem e o acesso a publicacao original. Decisao aprovada em 2026-10-11; apenas registrar para implementacao futura, **nao implementar ainda**.
 
