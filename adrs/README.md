@@ -655,3 +655,5 @@ Formato recomendado:
 - [ADR-0599 — WhatsApp discreto em conteudo sem midia](0599-whatsapp-discreto-conteudo-textual.md)
 
 - [ADR-0600 — Abas de Minhas publicacoes](0600-abas-minhas-publicacoes.md)
+
+- [ADR-0601 — Contexto de origem em Minhas publicacoes](0601-contexto-origem-minhas-publicacoes.md)

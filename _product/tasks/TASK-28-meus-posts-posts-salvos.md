@@ -588,3 +588,22 @@ Sem migration, package ou env nova. Sem push/deploy; frontend/backend independen
 Abas: implementacao local e check/build/testes aprovados; conferencia visual autenticada pendente por indisponibilidade do navegador automatizado. ADR-0600. Sem commit/push/deploy.
 
 Aprovacao visual final do usuario em 2026-10-11 apos correcao da tipografia. Check, build e 21 testes aprovados; commit local, sem push/deploy.
+
+## Complemento 11/10: contexto compacto de origem (ADR-0601)
+
+- [x] Link transparente Ver publicacao original, sem preview azul ou detalhes da origem.
+- [x] Abaixo do link, identidade da propria contribuicao com chevron/comunidade e data; sem Respondido em. Midia propria preservada.
+- [x] Origem correta (post ou resposta-pai) e anonimato preservados, sem contrato novo.
+- [x] Checks, builds, testes e conferencia local.
+
+Evidencias ADR-0601: check/build frontend e build/Prisma/TypeScript/Biome backend aprovados; 23 testes de controles. Integracao READ ONLY verificou cinco respostas reais locais (todas diretas ao post). Teste backend optional-auth-failure passou isolado apos timeout na suite concorrente. Browser automatizado indisponivel; conferir visualmente Minhas publicacoes, incluindo comentario em video de outro psicologo. Sem commit/push/deploy deste complemento.
+
+Revisao visual 11/10: usuario pediu restaurar a divisoria acima dos controles e corrigir menu de tres pontos, cujas opcoes eram atravessadas pelos controles. Cabecalho/menu usa camada 30 acima da barra 20; preservar area de clique, fechamento e modais existentes. Esta decisao substitui a remocao da divisoria apenas nestes cards. Check/build/browser da revisao pendentes.
+
+Revisao menu/divisoria: check completo frontend, build e 24 testes de controles aprovados. Logs .tmp/oct11-mine-menu-check.log, oct11-mine-menu-build.log e oct11-mine-menu-tests.log. Browser integrado acessivel mas sem login; verificacao autenticada depende do usuario no Chrome ou login integrado. Sem novo commit, bump, push ou deploy enquanto a conferencia visual permanece pendente.
+
+Refino 11/10: MyPostsHeader reutiliza AppPageHeader, como Salvos (h-14, 56px), mantendo titulo e retorno ao perfil. Sem novo componente ou contrato; teste compara SSR diretamente com o componente usado em Salvos. Validacao da revisao pendente.
+
+Padronizacao completa do header: mesmo AppPageHeader de Salvos, incluindo altura 56px, tipografia, seta, cores, bordas, raio, sombra e espacamento interno; container responsivo de Minhas publicacoes alinhado a Salvos. Nenhuma alteracao em Salvos nem no componente compartilhado. Check completo frontend e build final aprovados (.tmp/oct11-mine-header-check.log e .tmp/oct11-mine-header-standard-build.log); 25 testes focais aprovados, incluindo igualdade SSR do header. Teste legado atualizado para validar o uso do componente compartilhado. Conferencia visual autenticada ainda pendente; sem commit/push/deploy deste complemento.
+
+Aprovacao visual do usuario em 11/10/2026: header padronizado, contexto compacto e revisoes aceitos; check/build final aprovados. Complemento concluido localmente, sem push/deploy. Evidencias anteriores de pendencia sao historicas e substituidas por esta aprovacao.

@@ -128,7 +128,7 @@ export const MyPostsLogic = () => {
       desktopSidebarDefaultCollapsed
       showMobileNavigation={false}
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8 lg:max-w-3xl">
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-2xl md:py-8 lg:max-w-3xl">
         <MyPostsHeader interactionCopy={interactionCopy} />
 
         <div className="grid gap-4 pt-4">

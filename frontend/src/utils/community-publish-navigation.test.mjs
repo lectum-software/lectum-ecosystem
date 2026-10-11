@@ -115,9 +115,6 @@ test("favorites and my posts reuse the blue saved-page back-arrow appearance", (
     readSource("../components/psychologists/psychologist-relation-list.tsx").split(
       "const FavoritePageHeader =",
     )[1],
-    readSource("../app/app/posts/mine/components/header.tsx").split(
-      "export const MyPostsHeader =",
-    )[1],
   ];
   for (const source of sources) {
     const backLink = source.match(/<Link\b[\s\S]*?<\/Link>/)?.[0] ?? "";
@@ -141,8 +138,12 @@ test("favorites and my posts reuse the blue saved-page back-arrow appearance", (
       /ChevronLeft|bg-foreground\/10|border-border|bg-surface|text-muted/,
     );
   }
-  assert.match(sources[2], /href="\/app\/perfil"/);
-  assert.match(sources[2], /\{interactionCopy.screenTitle\}/);
+  const mineHeader = readSource("../app/app/posts/mine/components/header.tsx").split(
+    "export const MyPostsHeader =",
+  )[1];
+  assert.match(mineHeader, /<AppPageHeader/);
+  assert.match(mineHeader, /backHref="\/app\/perfil"/);
+  assert.match(mineHeader, /title=\{interactionCopy.screenTitle\}/);
 });
 
 test("create action replaces favorites in the mobile center and desktop sidebar", () => {

@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, BadgeCheck, CornerUpLeft, FileText } from "lucide-react";
-import Link from "next/link";
+import { BadgeCheck, CornerUpLeft, FileText } from "lucide-react";
 import type { UserPostsType } from "@/api/generator/types/posts";
+import { AppPageHeader } from "@/components/ui/app-page-header";
 import { cn } from "@/lib/utils";
 
 import type { FilterTabCounts, InteractionCopy } from "../modules/support";
@@ -64,22 +64,11 @@ export const FilterTabs = ({
 };
 
 export const MyPostsHeader = ({ interactionCopy }: { interactionCopy: InteractionCopy }) => (
-  <header className="rounded-[26px] border border-border bg-surface px-4 py-3.5 shadow-lectum-soft dark:border-border dark:bg-surface sm:px-5 sm:py-4">
-    <div className="grid min-h-10 grid-cols-[40px_1fr_40px] items-center gap-2">
-      <Link
-        aria-label="Voltar para perfil"
-        className="grid h-10 w-10 place-items-center justify-self-start rounded-full bg-primary-soft text-primary transition hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        href="/app/perfil"
-        title="Voltar para perfil"
-      >
-        <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-      </Link>
-      <h1 className="min-w-0 truncate text-center text-[16px] font-extrabold leading-tight tracking-[-0.025em] text-foreground dark:text-foreground sm:text-[17px]">
-        {interactionCopy.screenTitle}
-      </h1>
-      <span aria-hidden="true" />
-    </div>
-  </header>
+  <AppPageHeader
+    backHref="/app/perfil"
+    backLabel="Voltar para perfil"
+    title={interactionCopy.screenTitle}
+  />
 );
 
 export const ProfessionalAnsweredBadge = ({ className }: { className?: string }) => (
