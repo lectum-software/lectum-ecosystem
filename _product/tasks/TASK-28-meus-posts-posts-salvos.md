@@ -644,3 +644,11 @@ Implementacao e validacao tecnica ADR-0604 concluidas: 20 cenarios PostgreSQL de
 Evidencia parcial ADR-0607: regra e preflight aprovados em 20 cenarios/21 testes PostgreSQL isolado; backend check (896 testes), frontend check e ambos os builds aprovados. Browser autenticado de paciente em 390px e desktop: menu e chip conferidos, exclusoes sem video canceladas nas duas telas. Falta conferencia visual do bloqueio e do destaque/Ver mais respostas com conteudo local apropriado; conta atual possui post/comentario sem video-respostas. Solicitado ao usuario, sem importar dados de producao ou inventar conteudo. Revisao ainda sem commit/bump/push/deploy.
 
 Aprovacao final ADR-0607: usuario confirmou os cenarios pendentes com "Conferidos e aprovados" e autorizou producao. Validacao local concluida; preparar commit e PR homolog -> main. Pendencias anteriores ficam registradas como historico, substituidas por esta aprovacao.
+## Refinamento 12/10: modal sem aviso redundante
+
+- [x] Remover o bloco azul Comentario preservado/Resposta preservada, preservando explicacao principal, Cancelar, Silenciar, preflight e regra transacional.
+- [ ] Check/build e conferencia local do refinamento.
+
+Referencia: captura do usuario apos smoke produtivo 0.1.639. Sem alterar Salvos, backend, schema, env ou dependencias. Nova revisao local, sem autorizacao adicional de publicacao.
+- [x] Check completo frontend e build aprovados; regressao cobre retirada do aviso e manutencao da explicacao e erros reais.
+- [ ] Conferencia visual da modal revisada: navegador local indisponivel por timeout da automacao. Sem push/deploy do refinamento.

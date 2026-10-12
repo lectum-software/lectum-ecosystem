@@ -2,6 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+test("blocked reply modal omits redundant preserved-content notice but keeps mute errors", () => {
+  const source = readFileSync(new URL("reply-owner-action-menu.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /preservedTitle|variant="info"/);
+  assert.match(source, /description=\{copy.blockedDescription\}/);
+  assert.match(source, /title="Não foi possível silenciar" variant="error"/);
+  assert.match(source, /onAction=\{handleBlockedMute\}/);
+});
+
 test("post checks fresh video status before confirmation and preserves transactional conflict", () => {
   const source = readFileSync(new URL("post-owner-action-menu.tsx", import.meta.url), "utf8");
   const request = source

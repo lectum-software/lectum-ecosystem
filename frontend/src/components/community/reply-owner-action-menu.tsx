@@ -396,12 +396,7 @@ export const ReplyOwnerActionMenu = ({
           <InlineAlert title="Não foi possível silenciar" variant="error">
             {actionError}
           </InlineAlert>
-        ) : (
-          <InlineAlert title={copy.preservedTitle} variant="info">
-            Psicólogos podem excluir seus próprios comentários e respostas a qualquer momento; esta
-            restrição vale para pacientes quando já existe contribuição profissional abaixo.
-          </InlineAlert>
-        )}
+        ) : null}
       </ReplyActionModal>
     </div>
   );
