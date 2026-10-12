@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 
 const { isAuthEntryPath } = await import("./auth-entry.ts");
+const { navigateBackFromCommunityPost } = await import("./community-post-navigation.ts");
 const { resolveAuthRedirect } = await import("./auth-redirect.ts");
 const { navigateBackFromCommunity, navigateBackFromTopMentors } = await import(
   "./community-ranking-navigation.ts"
@@ -40,6 +41,40 @@ const visit = (path) => {
   window.location.pathname = path;
   recordAppNavigationPoint(path);
 };
+
+for (const destination of [
+  "/comunidades/ansiedade/publicacao/post-id",
+  "/comunidades/ansiedade/publicacao/post-id/resposta/reply-id",
+]) {
+  test(`public content opened from My Publications returns to the list: ${destination}`, () => {
+    resetNavigationAfterAuthentication();
+    visit("/app/publicacoes/minhas");
+    visit(destination);
+    navigateBackFromCommunityPost(router, null, true);
+    assert.deepEqual(calls, ["back"]);
+  });
+}
+
+test("post return prioritizes its current list over an older remembered feed", () => {
+  visit("/app/publicacoes/minhas");
+  visit("/comunidades/ansiedade/publicacao/post-id");
+  navigateBackFromCommunityPost(router, "/comunidades/ansiedade", true);
+  assert.deepEqual(calls, ["back"]);
+});
+
+test("shared post without app navigation returns to the feed, not external history", () => {
+  visit("/comunidades/ansiedade/publicacao/post-id");
+  navigateBackFromCommunityPost(router, null, true);
+  assert.deepEqual(calls, ["push:/"]);
+});
+
+test("post return does not cross the authentication boundary", () => {
+  visit("/app/publicacoes/minhas");
+  resetNavigationAfterAuthentication();
+  visit("/comunidades/ansiedade/publicacao/post-id");
+  navigateBackFromCommunityPost(router, null, true);
+  assert.deepEqual(calls, ["push:/"]);
+});
 
 test("ranking after authentication returns to community and then feed, never signup", () => {
   visit("/comunidades/ansiedade");
