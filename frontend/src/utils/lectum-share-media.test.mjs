@@ -151,6 +151,9 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.doesNotMatch(dialogHookSource, /requestLectumScreenWakeLock/);
   assert.doesNotMatch(dialogHookSource, /toast\.loading/);
   assert.match(dialogSource, /const resolvedMediaUrl = target\.mediaUrl/);
+  assert.match(dialogSource, /createPortal\(/);
+  assert.match(dialogSource, /document\.body/);
+  assert.match(dialogSource, /isolate z-\[1000\]/);
   assert.match(dialogSource, /data-lectum-share-preview-art/);
   assert.match(dialogSource, /data-lectum-share-preview-volume-button/);
   assert.match(dialogSource, /absolute right-3 bottom-3 z-\[3\]/);
@@ -207,6 +210,20 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.doesNotMatch(dialogSource, removedRuntimePattern);
   assert.doesNotMatch(wakeLockSource, removedRuntimePattern);
   assert.doesNotMatch(packageSource, removedRuntimePattern);
+});
+
+test("video-resposta usa o comentario pai na previa e no render social", () => {
+  const targetSource = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
+  const replyCardSource = readFileSync(
+    new URL("../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    targetSource,
+    /options\.parentContent \?\? \("parent_content" in reply \? reply\.parent_content : null\)/,
+  );
+  assert.match(replyCardSource, /parentContent:\s*reply\.parent_content/);
 });
 
 test("previa aplica a mesma truncagem explicita do nome no MP4", () => {

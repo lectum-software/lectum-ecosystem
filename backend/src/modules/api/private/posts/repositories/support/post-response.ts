@@ -166,6 +166,11 @@ export const replyBaseSelect = {
   createdAt: true,
   edited_at: true,
   parent_reply_id: true,
+  parent_reply: {
+    select: {
+      content: true,
+    },
+  },
   author: {
     select: authorSelect,
   },
@@ -590,6 +595,7 @@ export const toReplyResponse = (
     created_at: item.createdAt,
     edited_at: item.edited_at,
     parent_reply_id: item.parent_reply_id,
+    parent_content: item.parent_reply?.content ?? null,
     is_post_author: isPostAuthor,
     current_user_vote: currentVotes.get(item.id) ?? null,
     saved: savedReplyIds?.has(item.id) ?? false,

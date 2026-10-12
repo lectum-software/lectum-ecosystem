@@ -672,3 +672,4 @@ Formato recomendado:
 - [ADR-0608 — Favorito de perfil profissional indisponivel](0608-favorito-perfil-profissional-indisponivel.md)
 - [ADR-0609 — Oportunidades como demanda nao atendida](0609-ranking-oportunidades-demanda.md)
 - [ADR-0610 — Abertura progressiva por ramificacao](0610-arvore-respostas-progressiva.md)
+- [ADR-0611 — Previa social e conectores da arvore](0611-previa-social-conectores-comentarios.md)

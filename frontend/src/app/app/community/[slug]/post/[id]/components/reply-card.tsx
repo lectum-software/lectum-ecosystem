@@ -221,6 +221,7 @@ export const ReplyCard = ({
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
   const replyRelativeUrl = createFocusedReplyRelativeUrl(threadHrefBase, reply.id);
   const hasTreeContinuation = visibleChildren.length > 0;
+  const hasBranchConnector = hasTreeContinuation || Boolean(branchAction);
   const avatarSize = depth > 0 ? "xs" : isProfessional ? "reply" : "sm";
   const hasReplyMedia = Boolean(reply.media_url);
   const isNestedReply = depth > 0;
@@ -307,6 +308,7 @@ export const ReplyCard = ({
         },
         reply,
         {
+          parentContent: reply.parent_content,
           relativeUrl: replyRelativeUrl,
         },
       )
@@ -322,7 +324,7 @@ export const ReplyCard = ({
       className="relative rounded-[20px] py-0.5 text-foreground dark:text-foreground"
       id={`reply-${reply.id}`}
     >
-      {hasTreeContinuation ? (
+      {hasBranchConnector ? (
         <span
           className={cn(
             "pointer-events-none absolute bottom-0 z-0 w-[1.5px] -translate-x-1/2 rounded-full bg-border-strong",
@@ -386,7 +388,10 @@ export const ReplyCard = ({
                   ) : null}
                   {isProfessional ? (
                     <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
-                      <FeedFavoriteButton author={reply.author} />
+                      <FeedFavoriteButton
+                        author={reply.author}
+                        heartClassName={isNestedReply ? "h-2.5 w-2.5" : "h-3 w-3"}
+                      />
                     </span>
                   ) : null}
                 </div>
@@ -522,19 +527,27 @@ export const ReplyCard = ({
 
       {visibleChildren.length > 0 ? (
         <div
-          className="relative z-10 mt-3 ml-4 grid gap-4 pl-[18px] sm:ml-[18px] sm:pl-[22px]"
+          className={cn(
+            "relative z-10 mt-3 grid gap-4",
+            isNestedReply ? "ml-3 pl-[18px]" : "ml-4 pl-[18px] sm:ml-[18px] sm:pl-[22px]",
+          )}
           id={`reply-children-${reply.id}`}
         >
           {visibleChildren.map((child) => (
             <div className="relative" key={child.id}>
               <svg
-                className="pointer-events-none absolute top-0 -left-[18px] z-0 h-5 w-[18px] overflow-visible text-border-strong sm:-left-[22px] sm:w-[22px]"
+                className={cn(
+                  "pointer-events-none absolute -top-0.5 z-0 h-[22px] overflow-visible text-border-strong",
+                  isNestedReply
+                    ? "-left-[18px] w-[18px]"
+                    : "-left-[18px] w-[18px] sm:-left-[22px] sm:w-[22px]",
+                )}
                 aria-hidden="true"
                 focusable="false"
-                viewBox="0 0 22 20"
+                viewBox="0 -2 22 22"
               >
                 <path
-                  d="M0 0 V10 C0 14.4 3.6 18 8 18 H22"
+                  d="M0 -2 V10 C0 14.4 3.6 18 8 18 H22"
                   fill="none"
                   stroke="currentColor"
                   strokeLinecap="round"
@@ -580,13 +593,35 @@ export const ReplyCard = ({
       branchActionLabel &&
       (branchAction.kind === "collapse" || canRevealLoadedChildren || threadHref) ? (
         <div
-          className="relative z-10 mt-2 ml-4 pl-[18px] sm:ml-[18px] sm:pl-[22px]"
+          className={cn(
+            "relative z-10 mt-2 min-h-5",
+            isNestedReply ? "ml-3 pl-[18px]" : "ml-4 pl-[18px] sm:ml-[18px] sm:pl-[22px]",
+          )}
           data-comment-collapse-ignore="true"
         >
+          <svg
+            className={cn(
+              "pointer-events-none absolute -top-0.5 left-0 h-[18px] overflow-visible text-border-strong",
+              isNestedReply ? "w-[18px]" : "w-[18px] sm:w-[22px]",
+            )}
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 -2 22 18"
+          >
+            <path
+              d="M0 -2 V5 C0 9.4 3.6 13 8 13 H22"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
           {branchAction.kind !== "collapse" && !canRevealLoadedChildren && threadHref ? (
             <Link
               aria-label={`${branchActionLabel} desta conversa`}
-              className="inline-flex w-fit items-center gap-1.5 rounded-full px-1.5 py-1 text-[12px] font-bold text-primary no-underline transition hover:bg-primary-soft hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              className="inline-flex w-fit items-center gap-1 rounded-full px-1 py-0.5 text-[11px] font-semibold text-muted no-underline transition hover:bg-surface-muted hover:text-foreground hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               href={threadHref}
               onClick={stopReplyTreeCollapsePropagation}
             >
@@ -599,10 +634,7 @@ export const ReplyCard = ({
               aria-expanded={effectiveVisibleChildCount > 0}
               aria-label={`${branchActionLabel} desta conversa`}
               className={cn(
-                "inline-flex w-fit items-center gap-1.5 rounded-full px-1.5 py-1 text-[12px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98]",
-                branchAction.kind === "collapse"
-                  ? "text-muted hover:bg-surface-muted hover:text-foreground"
-                  : "text-primary hover:bg-primary-soft hover:text-primary",
+                "inline-flex w-fit items-center gap-1 rounded-full px-1 py-0.5 text-[11px] font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98]",
               )}
               onClick={(event) => {
                 event.stopPropagation();
@@ -612,9 +644,9 @@ export const ReplyCard = ({
             >
               <span>{branchActionLabel}</span>
               {branchAction.kind === "collapse" ? (
-                <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                <ChevronUp className="h-3 w-3" aria-hidden="true" />
               ) : (
-                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                <ChevronDown className="h-3 w-3" aria-hidden="true" />
               )}
             </button>
           )}

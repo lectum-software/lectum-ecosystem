@@ -80,6 +80,15 @@ describe("post share render media selection", () => {
     assert.doesNotMatch(source, /cardLabel:\s*"Perguntaram na Lectum"/);
   });
 
+  it("usa o comentario pai no MP4 de uma resposta aninhada", async () => {
+    const source = await shareRenderServiceSource();
+
+    assert.match(
+      source,
+      /reply\.parent_reply_id\s*\?\s*reply\.parent_reply\?\.content\s*:\s*reply\.post\.title/,
+    );
+  });
+
   it("aceita URL absoluta legada de posts/media mesmo quando a BASE atual diverge", () => {
     const previousBase = process.env.BASE;
     process.env.BASE = "https://api-atual.example";

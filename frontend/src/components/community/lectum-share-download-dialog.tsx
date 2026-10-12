@@ -3,6 +3,7 @@
 import { Copy, Download, Volume2, VolumeX, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
@@ -203,7 +204,7 @@ export const LectumShareDownloadDialog = ({
     };
   }, [disabled, onClose, open]);
 
-  if (!target) return null;
+  if (!target || typeof document === "undefined") return null;
 
   const sheetMotionState = open ? "enter" : "exit";
   const resolvedMediaUrl = target.mediaUrl;
@@ -243,10 +244,10 @@ export const LectumShareDownloadDialog = ({
     void playVideoWithSound(previewVideo);
   };
 
-  return (
+  return createPortal(
     <div
       className={cn(
-        "fixed inset-0 z-[120] flex items-end justify-center overflow-hidden overscroll-none bg-foreground/32 transition-opacity duration-200 ease-out dark:bg-background/72 sm:items-center sm:bg-foreground/45 sm:backdrop-blur-[8px] sm:dark:bg-background/75",
+        "fixed inset-0 isolate z-[1000] flex items-end justify-center overflow-hidden overscroll-none bg-foreground/32 transition-opacity duration-200 ease-out dark:bg-background/72 sm:items-center sm:bg-foreground/45 sm:backdrop-blur-[8px] sm:dark:bg-background/75",
         open ? "opacity-100" : "pointer-events-none opacity-0",
       )}
     >
@@ -428,6 +429,7 @@ export const LectumShareDownloadDialog = ({
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body,
   );
 };
