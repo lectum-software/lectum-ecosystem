@@ -1,4 +1,5 @@
 import "./mine-whatsapp-metric.test.mjs";
+import "./delete-video-policy.test.mjs";
 import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

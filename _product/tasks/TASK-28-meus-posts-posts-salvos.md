@@ -618,3 +618,16 @@ Aprovacao visual do usuario em 11/10/2026: header padronizado, contexto compacto
 Validacao tecnica: check completo frontend e 27 testes focais aprovados; build frontend e backend aprovados. Backend Prisma/TypeScript/Biome aprovados, suite 895/896 com timeout do teste optional-auth-failure sob concorrencia; repeticao isolada passou sem mudanca. Integracao READ ONLY no PostgreSQL isolado conferiu 7 contribuicoes profissionais (zero cliques registrados), 2 itens de pacientes sem campo privado e ausencia do campo em Salvos. Nao validar incremento positivo como concluido: banco local nao possui evento elegivel. Sem escritas remotas ou mocks. Guards ADR/tasks/source-safety/ciclos aprovados; source-size continua bloqueado exclusivamente por reply-card.tsx preexistente com 708 linhas, fora deste ajuste. Conferencia visual solicitada; sem commit/bump/push/deploy deste complemento.
 
 Aprovacao visual recebida em 11/10/2026: usuario confirmou Posts e Respostas, identidade e contador WhatsApp com "aprovado, continue". Complemento concluido localmente com limite de evidencia explicito: zero real validado; incremento positivo ainda nao exercitado por ausencia de evento local elegivel. Sem push/deploy.
+
+## Complemento 11/10: preservar somente video-respostas profissionais na exclusao (ADR-0604)
+
+- [x] Paciente pode excluir proprio post com respostas profissionais somente de texto/imagem; bloqueia se alguma resposta ativa do post for de psicologo com media_type video.
+- [x] Paciente pode excluir proprio comentario sem video-resposta profissional na subarvore; bloquear inclusive descendentes indiretos com video. Videos fora da subarvore nao bloqueiam comentario.
+- [x] Psicologo pode excluir os proprios posts/comentarios independentemente dos descendentes; autoria, transacao serializavel, soft-delete/cascata e contadores preservados.
+- [x] Respostas ja excluidas nao bloqueiam; texto e imagem de psicologo nao bloqueiam; video de paciente nao bloqueia.
+- [x] Frontend nao usa badges genericos de resposta profissional como permissao; backend decide no snapshot transacional e UI trata 409 com texto de video e opcao Silenciar.
+- [x] Testes com PostgreSQL real isolado, checks/builds e conferencia local aprovada pelo usuario; commit proprio preparado.
+
+Implementacao e validacao tecnica ADR-0604 concluidas: 20 cenarios PostgreSQL descartavel, frontend check/build e backend build aprovados. Suite backend com timeout preexistente (895/896), repeticao isolada passou; root check bloqueado por BOM preexistente ADR-0599, source-size preexistente reply-card.tsx 708/700. Conferencia visual autenticada e commit pendentes; nenhum bump/push/deploy.
+
+11/10: usuario confirmou os dois ultimos ajustes com Conferidos e aprovados e autorizou publicar. Gates gerais pendentes serao tratados antes do push.

@@ -1,3 +1,5 @@
+Aprovado localmente: TASK-28 / ADR-0604, exclusao preserva apenas video-respostas de psicologos na cascata do paciente. Usuario aprovou e autorizou publicar em 11/10; gates do lote pendentes.
+
 Validado localmente: TASK-28 / ADR-0603, identidade de Posts e contadores privados WhatsApp por conteudo. Usuario aprovou Posts e Respostas em 11/10; builds, testes focais e integracao local com dados reais aprovados. Sem push/deploy.
 
 Validado localmente: TASK-21 / ADR-0602, remover item Privacidade do menu do perfil sem alterar aviso inicial, paginas legais ou regras de acesso. Sem publicacao.

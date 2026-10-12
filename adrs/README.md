@@ -661,3 +661,5 @@ Formato recomendado:
 - [ADR-0602 — Remover item Privacidade do perfil](0602-remover-item-privacidade-perfil.md)
 
 - [ADR-0603 — Metricas WhatsApp e identidade em Minhas publicacoes](0603-metricas-whatsapp-minhas-publicacoes.md)
+
+- [ADR-0604 — Exclusao preserva video-respostas profissionais](0604-exclusao-preserva-video-resposta.md)
