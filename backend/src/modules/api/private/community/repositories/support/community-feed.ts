@@ -43,6 +43,26 @@ export const COMMUNITY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 
 export const COMMUNITY_OPPORTUNITIES_WINDOW_DAYS = 90;
 
+export const COMMUNITY_OPPORTUNITY_RECENT_ACTIVITY_DAYS = 14;
+
+export const COMMUNITY_OPPORTUNITY_FRESHNESS_WEIGHT = 40;
+
+export const COMMUNITY_OPPORTUNITY_UNIQUE_PATIENT_WEIGHT = 12;
+
+export const COMMUNITY_OPPORTUNITY_UNIQUE_PATIENT_CAP = 5;
+
+export const COMMUNITY_OPPORTUNITY_REPEAT_COMMENT_WEIGHT = 4;
+
+export const COMMUNITY_OPPORTUNITY_REPEAT_COMMENT_CAP = 16;
+
+export const COMMUNITY_OPPORTUNITY_RECENT_ACTIVITY_WEIGHT = 20;
+
+export const COMMUNITY_OPPORTUNITY_PROFESSIONAL_REPLY_PENALTY = 35;
+
+export const COMMUNITY_OPPORTUNITY_PROFESSIONAL_REPLY_CAP = 4;
+
+const DAY_IN_MS = 86_400_000;
+
 export const communitySelect = {
   id: true,
   name: true,
@@ -261,6 +281,9 @@ export const emptyCommunitySortPeriodMetrics = (): CommunityPostSortMetricsDTO["
 export const emptyCommunityPostSortMetrics = (): CommunityPostSortMetricsDTO => ({
   comments: emptyCommunitySortPeriodMetrics(),
   upvotes: emptyCommunitySortPeriodMetrics(),
+  patient_comments_count: 0,
+  unique_patient_commenters_count: 0,
+  latest_patient_comment_at: null,
   psychologist_replies_count: 0,
   top_mentor_replies_count: 0,
   shares_count: 0,
@@ -360,6 +383,62 @@ export const communityPostFeaturedScore = (
   return featuredPostScore(post, communityPostMetrics(post.id, metricsByPostId), now);
 };
 
+const linearRecencyScore = (
+  createdAt: Date | null,
+  windowDays: number,
+  weight: number,
+  now: number,
+) => {
+  if (!createdAt) return 0;
+
+  const timestamp = createdAt.getTime();
+  if (!Number.isFinite(timestamp)) return 0;
+
+  const ageInDays = Math.max(0, (now - timestamp) / DAY_IN_MS);
+  return Math.max(0, weight * (1 - ageInDays / windowDays));
+};
+
+export const communityOpportunityScore = (
+  post: PostResult,
+  metrics: CommunityPostSortMetricsDTO,
+  now: number,
+) => {
+  const freshnessScore = linearRecencyScore(
+    post.createdAt,
+    COMMUNITY_OPPORTUNITIES_WINDOW_DAYS,
+    COMMUNITY_OPPORTUNITY_FRESHNESS_WEIGHT,
+    now,
+  );
+  const uniquePatientScore =
+    Math.min(COMMUNITY_OPPORTUNITY_UNIQUE_PATIENT_CAP, metrics.unique_patient_commenters_count) *
+    COMMUNITY_OPPORTUNITY_UNIQUE_PATIENT_WEIGHT;
+  const repeatedPatientComments = Math.max(
+    0,
+    metrics.patient_comments_count - metrics.unique_patient_commenters_count,
+  );
+  const repeatCommentScore = Math.min(
+    COMMUNITY_OPPORTUNITY_REPEAT_COMMENT_CAP,
+    Math.log2(repeatedPatientComments + 1) * COMMUNITY_OPPORTUNITY_REPEAT_COMMENT_WEIGHT,
+  );
+  const recentActivityScore = linearRecencyScore(
+    metrics.latest_patient_comment_at,
+    COMMUNITY_OPPORTUNITY_RECENT_ACTIVITY_DAYS,
+    COMMUNITY_OPPORTUNITY_RECENT_ACTIVITY_WEIGHT,
+    now,
+  );
+  const professionalReplyPenalty =
+    Math.min(COMMUNITY_OPPORTUNITY_PROFESSIONAL_REPLY_CAP, metrics.psychologist_replies_count) *
+    COMMUNITY_OPPORTUNITY_PROFESSIONAL_REPLY_PENALTY;
+
+  return (
+    freshnessScore +
+    uniquePatientScore +
+    repeatCommentScore +
+    recentActivityScore -
+    professionalReplyPenalty
+  );
+};
+
 export const sortCommunityPostResults = (
   items: PostResult[],
   sort: CommunityPostSortValue,
@@ -383,15 +462,22 @@ export const sortCommunityPostResults = (
   }
 
   if (sort === "opportunities") {
+    const now = Date.now();
+
     return sortedItems.sort((a, b) => {
       const aMetrics = communityPostMetrics(a.id, metricsByPostId);
       const bMetrics = communityPostMetrics(b.id, metricsByPostId);
+      const scoreDiff =
+        communityOpportunityScore(b, bMetrics, now) - communityOpportunityScore(a, aMetrics, now);
+      if (scoreDiff !== 0) return scoreDiff;
+
       const professionalRepliesDiff =
         aMetrics.psychologist_replies_count - bMetrics.psychologist_replies_count;
       if (professionalRepliesDiff !== 0) return professionalRepliesDiff;
 
-      const totalRepliesDiff = a.replies_count - b.replies_count;
-      if (totalRepliesDiff !== 0) return totalRepliesDiff;
+      const uniquePatientDiff =
+        bMetrics.unique_patient_commenters_count - aMetrics.unique_patient_commenters_count;
+      if (uniquePatientDiff !== 0) return uniquePatientDiff;
 
       return compareCommunityPostDates(a, b);
     });

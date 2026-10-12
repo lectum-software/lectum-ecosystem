@@ -119,6 +119,9 @@ export type CommunitySortPeriodMetrics = {
 export type CommunityPostSortMetrics = {
   comments: CommunitySortPeriodMetrics;
   upvotes: CommunitySortPeriodMetrics;
+  patient_comments_count?: number;
+  unique_patient_commenters_count?: number;
+  latest_patient_comment_at?: string | null;
   psychologist_replies_count: number;
   top_mentor_replies_count: number;
   shares_count: number;

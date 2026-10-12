@@ -351,6 +351,7 @@ export const getCommunityPostSortMetrics = async (postIds: string[]) => {
   const metricsByPostId = new Map<string, CommunityPostSortMetricsDTO>(
     postIds.map((postId) => [postId, emptyCommunityPostSortMetrics()]),
   );
+  const patientCommentersByPostId = new Map<string, Set<string>>();
 
   if (postIds.length === 0) return metricsByPostId;
 
@@ -421,6 +422,22 @@ export const getCommunityPostSortMetrics = async (postIds: string[]) => {
     if (!metrics) continue;
 
     incrementCommunitySortPeriodMetrics(metrics.comments, reply.createdAt, periodStarts);
+
+    if (reply.author.role === "paciente" && reply.author.active && !reply.author.deleted) {
+      metrics.patient_comments_count += 1;
+
+      const commenters = patientCommentersByPostId.get(reply.post_id) ?? new Set<string>();
+      commenters.add(reply.author.id);
+      patientCommentersByPostId.set(reply.post_id, commenters);
+      metrics.unique_patient_commenters_count = commenters.size;
+
+      if (
+        !metrics.latest_patient_comment_at ||
+        reply.createdAt > metrics.latest_patient_comment_at
+      ) {
+        metrics.latest_patient_comment_at = reply.createdAt;
+      }
+    }
 
     const profile = reply.author.psychologist_profile;
     const isVerifiedPsychologist =

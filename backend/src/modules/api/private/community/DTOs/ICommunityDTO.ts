@@ -170,6 +170,9 @@ export type CommunitySortPeriodMetricsDTO = {
 export type CommunityPostSortMetricsDTO = {
   comments: CommunitySortPeriodMetricsDTO;
   upvotes: CommunitySortPeriodMetricsDTO;
+  patient_comments_count: number;
+  unique_patient_commenters_count: number;
+  latest_patient_comment_at: Date | null;
   psychologist_replies_count: number;
   top_mentor_replies_count: number;
   shares_count: number;

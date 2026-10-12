@@ -1,3 +1,5 @@
+Implementado e validado localmente: [TASK-247 - Ranking de oportunidades por demanda nao atendida](TASK-247-ranking-oportunidades-demanda.md), ADR-0609. A aba profissional considera recencia, pacientes distintos, atividade recente e cobertura profissional antes da paginacao. Checks focais, checks amplos e builds aprovados; sem push/deploy.
+
 Em preparacao para publicacao TASK-28 / ADR-0607: remocao do bloco azul aprovada visualmente pelo usuario; texto de preservacao simplificado a pedido. Sem mudanca de regra.
 
 Refinamento local TASK-28 / ADR-0607: remover aviso azul redundante da modal de exclusao bloqueada. Release 0.1.639 publicado via PR #103 e smoke concluido; novo ajuste ainda sem publicacao.
@@ -636,6 +638,7 @@ ou cortesia manual.
 | 244 | [TASK-244 - Perfil do paciente e retorno ao compositor](TASK-244-perfil-paciente-retorno-compositor.md) | Done | 243 |
 | 245 | [TASK-245 - Confirmacao do nome no retorno ao post](TASK-245-confirmacao-nome-retorno-post.md) | Done | 244 |
 | 246 | [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md) | Done | 245 |
+| 247 | [TASK-247 - Ranking de oportunidades por demanda nao atendida](TASK-247-ranking-oportunidades-demanda.md) | Done | 246 |
 
 ## Ordem operacional recomendada sem bloqueios
 

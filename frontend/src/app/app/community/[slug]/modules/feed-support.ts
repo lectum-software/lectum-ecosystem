@@ -16,8 +16,6 @@ export const topFeedCommunities = (communities: readonly Community[]) =>
     )
     .slice(0, 4);
 
-export const COMMUNITY_OPPORTUNITIES_WINDOW_DAYS = 90;
-
 export const COMMUNITY_POST_SORTS = [
   { icon: Sparkles, label: "Oportunidades", professionalOnly: true, value: "opportunities" },
   { icon: Flame, label: "Em destaque", value: "featured" },
@@ -230,19 +228,6 @@ export const flattenCommunityPostPages = (pages?: Array<{ data: CommunityPost[] 
 export const comparePostDates = (a: CommunityPost, b: CommunityPost) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
-export const resolveCommunityOpportunitiesStartTime = () => {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - COMMUNITY_OPPORTUNITIES_WINDOW_DAYS);
-
-  return startDate.getTime();
-};
-
-export const isCommunityOpportunityPost = (post: CommunityPost, startTime: number) => {
-  const createdAt = new Date(post.created_at).getTime();
-
-  return post.author.role !== "psicologo" && !Number.isNaN(createdAt) && createdAt >= startTime;
-};
-
 export const fallbackCommunityPeriodMetrics = (
   value: number,
 ): Record<CommunityPostSortPeriod, number> => ({
@@ -256,6 +241,9 @@ export const communityPostSortMetrics = (post: CommunityPost) =>
   post.sort_metrics ?? {
     comments: fallbackCommunityPeriodMetrics(post.replies_count),
     upvotes: fallbackCommunityPeriodMetrics(post.upvotes_count),
+    patient_comments_count: 0,
+    unique_patient_commenters_count: 0,
+    latest_patient_comment_at: null,
     psychologist_replies_count: post.highlighted_professional_reply ? 1 : 0,
     top_mentor_replies_count: post.highlighted_professional_reply?.author.featured_badge ? 1 : 0,
     shares_count: 0,
@@ -304,22 +292,8 @@ export const sortCommunityPosts = (
   }
 
   if (sort === "opportunities") {
-    const opportunityStartTime = resolveCommunityOpportunitiesStartTime();
-
-    return items
-      .filter((post) => isCommunityOpportunityPost(post, opportunityStartTime))
-      .sort((a, b) => {
-        const aMetrics = communityPostSortMetrics(a);
-        const bMetrics = communityPostSortMetrics(b);
-        const professionalRepliesDiff =
-          aMetrics.psychologist_replies_count - bMetrics.psychologist_replies_count;
-        if (professionalRepliesDiff !== 0) return professionalRepliesDiff;
-
-        const totalRepliesDiff = a.replies_count - b.replies_count;
-        if (totalRepliesDiff !== 0) return totalRepliesDiff;
-
-        return comparePostDates(a, b);
-      });
+    // Opportunities is globally ranked and paginated by the backend.
+    return items;
   }
 
   if (sort === "commented") {

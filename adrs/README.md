@@ -670,3 +670,4 @@ Formato recomendado:
 
 - [ADR-0607 — Revisao de Minhas publicacoes apos publicacao](0607-revisao-minhas-publicacoes.md)
 - [ADR-0608 — Favorito de perfil profissional indisponivel](0608-favorito-perfil-profissional-indisponivel.md)
+- [ADR-0609 — Oportunidades como demanda nao atendida](0609-ranking-oportunidades-demanda.md)
