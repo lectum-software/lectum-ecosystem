@@ -74,6 +74,7 @@ export type PostAuthorDTO = {
   id: string;
   name: string;
   avatar: string | null;
+  favorite_available: boolean;
   role: string | null;
   type_label: string;
   anonymous: boolean;

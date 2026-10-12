@@ -1,4 +1,5 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import { isProfessionalFavoriteAvailable } from "@/utils/professional-favorite-availability";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
@@ -93,19 +94,8 @@ export const postSearchWhere = (search?: string): Prisma.community_postWhereInpu
   ];
 };
 
-export const isCommunityFavoriteAvailable = (author: AuthorResult) => {
-  const profile = author.psychologist_profile;
-
-  return Boolean(
-    author.role === "psicologo" &&
-      author.active &&
-      !author.deleted &&
-      profile &&
-      !profile.deleted &&
-      profile.published &&
-      profile.video_url?.trim(),
-  );
-};
+export const isCommunityFavoriteAvailable = (author: AuthorResult) =>
+  isProfessionalFavoriteAvailable(author);
 
 export const toAuthorResponse = (
   author: AuthorResult,

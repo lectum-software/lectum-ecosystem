@@ -19,6 +19,7 @@ const listReply = ({
   upvotes: number;
 }): ProfessionalReplyResult => ({
   author: {
+    active: true,
     avatar: null,
     deleted: false,
     id: `author-${id}`,
@@ -27,10 +28,13 @@ const listReply = ({
       cfp_verified_at: new Date("2026-01-01T00:00:00.000Z"),
       crp: "06/123456",
       crp_status: "verificado",
+      deleted: false,
       gender: "masculino",
       professional_first_name: "Psicologo",
       professional_last_name: id,
+      published: true,
       subscriptions: [{ id: `subscription-${id}`, source: "admin_grant" }],
+      video_url: "/public/files/profile/video.mp4",
       whatsapp: null,
     },
     role: "psicologo",

@@ -35,3 +35,18 @@ A comunidade deixa de oferecer uma acao que falharia. Favoritos temporariamente
 indisponiveis reaparecem sem intervencao do paciente. Backend e frontend mudam, mas
 o contrato e aditivo, nao ha migration ou escrita de dados e os artefatos podem ser
 publicados em qualquer ordem. Rollback por reversao revisada em `homolog`.
+
+## Complemento 2026-10-12 - paridade entre feed e detalhe
+
+O feed e o detalhe do post possuem seletores e serializadores de autor distintos.
+A primeira implementacao cobriu apenas o feed, deixando `favorite_available`
+ausente nas respostas carregadas pelo detalhe do post. A regra passa a ser
+centralizada em um utilitario backend e consumida pelos dois serializadores.
+
+O seletor do detalhe passa a carregar somente os campos necessarios para decidir a
+elegibilidade: conta ativa/nao excluida e perfil existente, publicado, nao excluido
+e com video. Respostas diretas e aninhadas usam o mesmo mapeamento recursivo.
+
+A consulta da pagina de Favoritos tambem usa o mesmo fragmento de disponibilidade.
+Ela continua apenas ocultando o card: nenhuma relacao existente e removida. A
+mudanca permanece aditiva e backend-only, sem migration, env ou nova dependencia.

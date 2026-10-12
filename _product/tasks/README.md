@@ -1,3 +1,5 @@
+Correcao complementar validada localmente: [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md), ADR-0608. O detalhe do post e todas as respostas aninhadas agora ocultam `+ Favoritar` para psicologos indisponiveis; a lista de Favoritos aplica a mesma elegibilidade sem apagar a relacao. Backend 907/907, testes focais e build aprovados; sem push/deploy.
+
 Implementado e validado localmente: [TASK-248 - Arvore de respostas progressiva](TASK-248-arvore-respostas-progressiva.md), ADR-0610. Cada ramo abre de forma independente em lotes, preserva o recuo recursivo e oferece uma unica acao no final. Check, build e browser real mobile/desktop aprovados; sem push/deploy.
 
 Implementado e validado localmente: [TASK-247 - Ranking de oportunidades por demanda nao atendida](TASK-247-ranking-oportunidades-demanda.md), ADR-0609. A aba profissional considera recencia, pacientes distintos, atividade recente e cobertura profissional antes da paginacao. Checks focais, checks amplos e builds aprovados; sem push/deploy.
