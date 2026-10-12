@@ -380,6 +380,8 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     ...formProps.fields[0],
     inputClassName: cn(
       formProps.fields[0].inputClassName,
+      "min-h-[44px] border-0 bg-transparent py-3 leading-5 shadow-none focus:ring-0",
+      canShowMediaControls && !hasEffectiveMedia && "pl-12",
       hasEffectiveMedia
         ? "max-h-[min(8.5rem,24dvh)] sm:max-h-[min(10rem,28dvh)]"
         : "max-h-[min(16rem,40dvh)] sm:max-h-[min(18rem,46dvh)]",
@@ -423,37 +425,58 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
           <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
             <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-5 sm:px-6">
               <div className="grid gap-4">
-                {FieldComponent ? (
-                  <FieldComponent control={hook.control} {...contentField} />
-                ) : null}
-
-                {canShowMediaControls ? (
-                  <ReplyMediaAttachmentControl
-                    currentMedia={{
-                      mediaType: reply.media_type,
-                      mediaUrl: reply.media_url,
-                      thumbnailUrl: reply.thumbnail_url,
-                    }}
-                    disabled={isSubmitting}
-                    fileInputRef={fileInputRef}
-                    isUploading={uploadMutation.isPending}
-                    mediaPermission={mediaPermission}
-                    onAfterAction={focusEditor}
-                    onMediaChange={handleMediaChange}
-                    onPermissionDenied={() => setMediaUpgradeModalOpen(true)}
-                    onRemoveCurrent={() => {
-                      clearSelectedMedia();
-                      setRemoveMedia(true);
-                    }}
-                    onRemoveSelected={() => {
-                      clearSelectedMedia();
-                      setRemoveMedia(false);
-                    }}
-                    onUndoRemove={() => setRemoveMedia(false)}
-                    removeCurrent={removeMedia}
-                    selectedMedia={selectedMedia}
-                    variant="editor"
-                  />
+                <div
+                  className="relative rounded-[1.35rem] border border-border bg-surface focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10"
+                  data-reply-edit-composer="true"
+                >
+                  {FieldComponent ? (
+                    <FieldComponent control={hook.control} {...contentField} />
+                  ) : null}
+                  {canShowMediaControls ? (
+                    <ReplyMediaAttachmentControl
+                      className={hasEffectiveMedia ? "px-4 pb-3" : "absolute top-1 left-1"}
+                      currentMedia={{
+                        mediaType: reply.media_type,
+                        mediaUrl: reply.media_url,
+                        thumbnailUrl: reply.thumbnail_url,
+                      }}
+                      disabled={isSubmitting}
+                      fileInputRef={fileInputRef}
+                      isUploading={uploadMutation.isPending}
+                      mediaPermission={mediaPermission}
+                      onAfterAction={focusEditor}
+                      onMediaChange={handleMediaChange}
+                      onPermissionDenied={() => setMediaUpgradeModalOpen(true)}
+                      onRemoveCurrent={() => {
+                        clearSelectedMedia();
+                        setRemoveMedia(true);
+                      }}
+                      onRemoveSelected={() => {
+                        clearSelectedMedia();
+                        setRemoveMedia(false);
+                      }}
+                      removeCurrent={removeMedia}
+                      selectedMedia={selectedMedia}
+                      variant="composer"
+                    />
+                  ) : null}
+                </div>
+                {canShowMediaControls && removeMedia && !selectedMedia ? (
+                  <span className="inline-flex w-fit items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 text-xs font-bold text-muted">
+                    Mídia atual será removida
+                    <button
+                      className="text-muted transition hover:text-foreground focus:outline-none focus:ring-2 focus:ring-border"
+                      disabled={isSubmitting}
+                      onClick={() => {
+                        setRemoveMedia(false);
+                        focusEditor();
+                      }}
+                      onMouseDown={(event) => event.preventDefault()}
+                      type="button"
+                    >
+                      Desfazer
+                    </button>
+                  </span>
                 ) : null}
 
                 {mediaProgress ? (

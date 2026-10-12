@@ -22,6 +22,7 @@ import {
   feedHeaderControlClassName,
   feedHeaderDropdownPanelClassName,
   feedHeaderMenuItemClassName,
+  topFeedCommunities,
 } from "../modules/feed-support";
 
 export const AuthorAvatar = ({
@@ -304,18 +305,19 @@ export const FeedCommunitySelect = ({
   onOpenChange: (value: boolean) => void;
   open: boolean;
 }) => {
-  const communityOptions: FeedCommunityOption[] = communities.map((community) => {
-    const metadata = getCommunityFeedChip(community.slug);
+  const communityOptions: FeedCommunityOption[] = topFeedCommunities(communities).map(
+    (community) => {
+      const metadata = getCommunityFeedChip(community.slug);
 
-    return {
-      avatar_url: community.avatar_url,
-      iconUrl: metadata?.iconUrl,
-      name: community.name,
-      slug: community.slug,
-    };
-  });
-  const activeCommunity =
-    communityOptions.find((community) => community.slug === activeSlug) ?? null;
+      return {
+        avatar_url: community.avatar_url,
+        iconUrl: metadata?.iconUrl,
+        name: community.name,
+        slug: community.slug,
+      };
+    },
+  );
+  const activeCommunity = communities.find((community) => community.slug === activeSlug) ?? null;
 
   return (
     <div className="relative min-w-0 flex-1">
@@ -350,20 +352,6 @@ export const FeedCommunitySelect = ({
             "left-0 right-0 max-h-[70vh] overflow-y-auto",
           )}
         >
-          <Link
-            className={cn(feedHeaderMenuItemClassName(false), "font-black hover:text-primary")}
-            href={COMMUNITY_EXPLORE_HREF}
-            onClick={() => onOpenChange(false)}
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <Compass className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              <span className="min-w-0 truncate">Todas as comunidades</span>
-            </span>
-            <ArrowRight className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-          </Link>
-
-          <div className="my-1 h-px bg-border" />
-
           {communityOptions.map((item) => {
             const isActive = item.slug === activeSlug;
 
@@ -383,6 +371,20 @@ export const FeedCommunitySelect = ({
               </Link>
             );
           })}
+
+          <div className="my-1 h-px bg-border" />
+
+          <Link
+            className={cn(feedHeaderMenuItemClassName(false), "font-black hover:text-primary")}
+            href={COMMUNITY_EXPLORE_HREF}
+            onClick={() => onOpenChange(false)}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <Compass className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              <span className="min-w-0 truncate">Todas as comunidades</span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+          </Link>
         </div>
       ) : null}
     </div>

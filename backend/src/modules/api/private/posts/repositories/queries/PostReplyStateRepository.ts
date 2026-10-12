@@ -162,6 +162,7 @@ export class PostReplyStateRepository extends PostRepositoryContext {
           select: {
             id: true,
             parent_reply_id: true,
+            media_type: true,
             author: {
               select: {
                 role: true,
@@ -197,7 +198,10 @@ export class PostReplyStateRepository extends PostRepositoryContext {
           shouldBlockProfessionalReplies &&
           replies.some(
             (item) =>
-              item.id !== reply.id && replyIds.has(item.id) && item.author.role === "psicologo",
+              item.id !== reply.id &&
+              replyIds.has(item.id) &&
+              item.author.role === "psicologo" &&
+              item.media_type === "video",
           );
 
         if (hasProfessionalDescendant) {

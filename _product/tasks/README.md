@@ -1,3 +1,52 @@
+Publicacao autorizada em andamento: TASK-225 / ADR-0606. Lote aprovado; resolver gates locais e sessao Dokploy antes de push/PR/merge.
+
+Aprovados pelo usuario para producao em 11/10: TASK-202 / ADR-0605 (camada do composer) e TASK-28 / ADR-0604 (exclusao com video-resposta). Publicacao autorizada; gates gerais em andamento.
+
+TASK-28 / ADR-0604 concluida localmente no commit cf84baf3.
+
+Validado localmente: TASK-28 / ADR-0603, identidade de Posts e contadores privados WhatsApp por conteudo. Usuario aprovou Posts e Respostas em 11/10; builds, testes focais e integracao local com dados reais aprovados. Sem push/deploy.
+
+Validado localmente: TASK-21 / ADR-0602, remover item Privacidade do menu do perfil sem alterar aviso inicial, paginas legais ou regras de acesso. Sem publicacao.
+
+## Lote autorizado em 2026-10-11
+
+Validado localmente: contexto compacto de origem em Minhas publicacoes, TASK-28 / ADR-0601. Revisao: link transparente para origem, identidade da propria contribuicao abaixo e sem Respondido em; substitui preview azul/miniatura, sem contrato novo. Check/build/testes e aprovacao visual do usuario em 11/10 concluidos, sem publicacao.
+
+Validado localmente: abas de Minhas publicacoes (TASK-28 / ADR-0600), capsulas com contadores no padrao do perfil/feed. Check, build, 21 testes e aprovacao visual do usuario em 11/10. Sem push/deploy.
+
+Validado localmente: WhatsApp discreto, TASK-25 / ADR-0599. Ordem comentario, WhatsApp, salvar; desenho 17px. Check/build aprovados e usuario confirmou "agora deu certo". Sem push/deploy.
+
+Validado localmente: complemento TASK-25 / ADR-0598 (alinhamento, Respondendo a e midia integrada na modal). Check e build aprovados; usuario confirmou a conferencia local com "Deu certo". Automacao de browser indisponivel. Sem push/deploy.
+
+Usuario autorizou implementar os ajustes pendentes abaixo em 2026-10-11. As notas anteriores de nao implementar registram a fase de definicao e estao substituidas por esta autorizacao. Executar uma task por vez, mobile-first, validacao local e commits locais, sem push/deploy.
+
+## Decisao aprovada para implementacao futura (2026-10-11)
+
+- [x] Compositor de comentarios: centralizar verticalmente o placeholder "Adicionar comentario" e o texto de uma linha em relacao ao botao de midia, sem alterar o tamanho da fonte; preservar expansao natural com multiplas linhas e anexos. Referencia: capturas do usuario de 2026-10-11, 17:10. Apenas registrar, sem implementar ainda.
+- [x] Contexto acima do compositor de comentarios: corrigir "Respondendo [NOME]" para **"Respondendo a [NOME]"**, preservando a identificacao e o anonimato existentes. Decisao aprovada em 2026-10-11; incluir no lote futuro, sem implementar ainda.
+
+- [x] Minhas publicacoes, pacientes e psicologos: substituir detalhes da origem por link transparente Ver publicacao original com seta; abaixo, identificar o autor da propria resposta/comentario com foto, nome, selo quando aplicavel, chevron/comunidade e data. Remover Respondido em. Preservar anonimato e destino da origem (post ou resposta-pai). Revisao de 11/10 substitui o card azul e miniatura; ADR-0601.
+- [x] Modal Editar comentario do psicologo: remover o botao separado "Midia" abaixo do campo e seguir o padrao do compositor inicial, com botao azul de midia dentro da area do comentario e apresentacao integrada do anexo. Preservar os comportamentos existentes de edicao, remocao/desfazer e salvamento. Referencia: capturas do usuario de 2026-10-11, 17:08. Ajuste para implementacao futura; nao implementar nesta etapa de definicao.
+
+- [x] Minhas publicacoes: remover o bloco de origem e seus titulos, conforme revisao ADR-0601, mantendo apenas o acesso discreto ao conteudo original.
+
+- [x] Layout dos cards em Minhas publicacoes do psicologo: respostas seguem revisao ADR-0601 (link original e identidade da propria contribuicao); nos Posts adicionar identidade do proprio psicologo com chevron/comunidade/data. Manter divisoria acima dos controles, restaurada por revisao posterior de 11/10. Contador privado de WhatsApp por conteudo implementado e aprovado em Posts e Respostas (ADR-0603), sem confundir com contato publico.
+
+- [x] Minhas publicacoes, pacientes e psicologos: manter as opcoes Posts e Respostas e seus contadores, substituindo a apresentacao atual por botoes no padrao dos filtros do feed. Usar tambem como referencia explicita as abas Sobre/Publicacoes/Avaliacoes do perfil publico do psicologo, incluindo apresentacao dos contadores e estado selecionado (captura aprovada em 2026-10-11, 16:56). Reutilizar padroes existentes, sem implementar ainda.
+- [x] Minhas publicacoes, somente psicologos: acrescentar icone de WhatsApp com quantidade de cliques atribuida a cada conteudo junto aos demais controles/contadores, tanto em Posts quanto em Respostas. Metrica privada para o autor, nao botao para abrir o proprio WhatsApp; nao exibir para pacientes. Na implementacao, verificar a fonte real e a atribuicao por post/resposta, sem simular contagem ou confundir com total do perfil. Implementado apos autorizacao do lote; validado localmente e aprovado pelo usuario em 11/10 (ADR-0603).
+
+- [x] WhatsApp em posts e respostas de psicologos somente de texto: substituir o bloco "WhatsApp / Fale com [nome]" por apenas um icone de WhatsApp entre comentario e salvar na barra de interacoes. Usar a mesma cor e tamanho dos demais icones, sem verde e sem texto visivel; manter descricao acessivel e area de toque confortavel. Preservar destino e regras atuais de disponibilidade do contato. Nao alterar o bloco de contato dos videos nem ampliar esta decisao para publicacoes com outras midias. Referencia: capturas e aprovacao do usuario em 2026-10-11. Apenas registrado para implementacao futura; **nao implementar ainda**.
+
+- [x] Persistencia da aba no feed principal: ao abrir um post e retornar ao feed, restaurar a aba/filtro anteriormente selecionado (por exemplo, Em destaque), sem voltar automaticamente para Oportunidades, padrao do psicologo. Aplicar ao feed o comportamento ja ajustado dentro das comunidades. Implementado apos autorizacao: check/build aprovados e confirmacao manual do usuario no localhost (ADR-0597); limite de evidencia para Destaque vazio registrado. Sem publicacao.
+
+- [x] Ajuste posterior dos filtros de psicologos: quando nenhum criterio estiver preenchido/selecionado (pesquisa vazia e opcoes padrao Todas/Todos), mostrar somente **Aplicar filtros**, sem quantidade nem selo. Exibir a contagem apenas quando houver algum filtro efetivo; ao limpar todos, ocultar novamente. Objetivo: nao apresentar o total de psicologos da plataforma nesse botao. Com filtros ativos e nenhum resultado, manter **(0)**. Implementado apos autorizacao do lote: check/build e browser local 390px/desktop aprovados, ADR-0596. Sem publicacao.
+
+- [x] Dropdown Escolher comunidade do feed: exibir somente as quatro comunidades com mais publicacoes, em ordem decrescente de quantidade de posts (nao de respostas). Colocar **"Todas as comunidades →"** no final, como quinta opcao, separada por uma linha e levando a pagina com a lista completa. Usar contagens reais e desempate estavel conforme padrao existente; sem selecao aleatoria. Referencia: captura e decisao do usuario de 2026-10-11. Implementacao, check, build e browser aprovados (ADR-0593); publicacao pendente.
+- [x] Perfil publico do psicologo: nas video-respostas da aba Publicacoes, substituir a barra compacta de interacoes pelo mesmo padrao maior usado nas video-respostas de Salvos: votos no controle com rotulo Util e contador, comentarios/respostas com contador, salvar e compartilhar, mantendo os comportamentos e os dados da resposta. Igualar tamanhos, espacamentos e areas de toque a referencia de Salvos, reutilizando o componente existente. Nao alterar os controles do player (play/som/progresso) nem as barras compactas dentro dos comentarios. Referencia: capturas do usuario de 2026-10-11 as 15:07. Implementacao, check, build e browser do componente real aprovados (ADR-0595). Conferencia da pagina publica completa pendente por ausencia de perfil local elegivel, com ciencia do usuario; publicacao pendente.
+- [x] Filtros de psicologos: mostrar a quantidade total de resultados dos filtros selecionados no botao, a direita de "Aplicar filtros", entre parenteses e em selo discreto de fundo branco translucido (ex.: **Aplicar filtros (12)**). Atualizar conforme as escolhas, considerando todas as paginas; indicar carregamento sem apresentar contagem desatualizada. Sem resultados, mostrar **(0)**, sem mensagem adicional. Implementacao, check, build e browser local aprovados (ADR-0592); publicacao pendente.
+- [x] Salvos: quando o item salvo for um post com resposta profissional em destaque e houver outras respostas, exibir abaixo do destaque a linha **"Ver mais respostas"**, com a mesma apresentacao do feed (avatares/indicador) e acesso ao post para consultar as respostas. Nao exibir quando houver somente a resposta destacada; este ajuste nao se aplica a uma video-resposta salva isoladamente. Referencia: capturas do usuario de 2026-10-11. Implementacao, builds, testes e browser local aprovados (ADR-0594); publicacao pendente.
+- [x] Favoritos: substituir a descricao por **"Profissionais com quem você se identificou, para acompanhar e conversar quando quiser."** Manter o titulo Favoritos e o restante da tela. Texto e quebra equilibrada aprovados pelo usuario; testes, check, build e browser locais aprovados. Publicacao pendente.
+
 Validado localmente (2026-10-10): complemento TASK-23, retorno do post preserva aba/periodos, ADR-0591. Browser real, testes e builds aprovados. Lote autorizado para PR homolog -> main; homolog remoto nao sera publicado.
 
 Validado localmente (2026-10-10): complemento TASK-21, aviso privado, nome sem reload e tipografia, ADR-0590. Check geral, builds e integracao real aprovados; limitacao do hero publico registrada. Publicacao autorizada por PR.
@@ -2622,3 +2671,5 @@ validado em navegador isolado 390/1440px: cancelar, Escape, foco e ausencia de
 overflow; nenhum DELETE enviado. QA com exclusao autenticada real nao executada.
 Check global frontend segue bloqueado pela formatacao preexistente de
 mentor-author-ranking.test.mjs; lint e Biome dos arquivos alterados aprovados.
+
+Refinamento WhatsApp aprovado em 11/10 (ADR-0599): ordem votos, comentario, WhatsApp, salvar, compartilhar substitui a posicao anterior depois de Compartilhar. Desenho de 16px com alvo de toque preservado. Implementado; check frontend completo e build aprovados (.tmp/oct11-whatsapp-position-check.log e .tmp/oct11-whatsapp-position-build.log). Visual do refinamento pendente; browser automatizado indisponivel. Sem commit/push/deploy deste ajuste.

@@ -162,6 +162,7 @@ export type PostProfessionalReplyDTO = {
 
 export type PostListPostDTO = PostDetailDTO & {
   highlighted_professional_reply: PostProfessionalReplyDTO | null;
+  other_professional_reply_authors?: Pick<PostAuthorDTO, "id" | "name" | "avatar">[];
 };
 
 export type PostListReplyDTO = {
@@ -186,6 +187,8 @@ export type PostListReplyDTO = {
 };
 
 export type PostListItemDTO = {
+  /** Private metric: present only on the psychologist owner mine endpoint. */
+  whatsapp_clicks_count?: number;
   id: string;
   type: "post" | "reply";
   created_at: Date;

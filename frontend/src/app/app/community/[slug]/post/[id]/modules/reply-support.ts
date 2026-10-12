@@ -477,3 +477,14 @@ export const isReplyTreeInteractiveTarget = (
 export const stopReplyTreeCollapsePropagation: MouseEventHandler<HTMLElement> = (event) => {
   event.stopPropagation();
 };
+
+export const createFocusedReplyRelativeUrl = (
+  threadHrefBase: string | undefined,
+  replyId: string,
+) => {
+  const postHref = threadHrefBase?.replace(/\/resposta\/?$/u, "");
+
+  if (!postHref) return `#reply-${replyId}`;
+
+  return `${postHref}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+};

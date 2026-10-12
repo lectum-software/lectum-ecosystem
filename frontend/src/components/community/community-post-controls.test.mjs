@@ -1,3 +1,5 @@
+import "./mine-whatsapp-metric.test.mjs";
+import "./delete-video-policy.test.mjs";
 import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -536,4 +538,156 @@ test("favorite changes use the originating account and do not manufacture a part
   updateFavoriteIds(client, "new", "psi", true);
   assert.equal(client.getQueryData(keys.patient.favoriteIds("new")), undefined);
   client.clear();
+});
+
+const { CommunityWhatsAppCta } = await import("./community-whatsapp-cta.tsx");
+test("text-only WhatsApp renders a monochrome icon and accessible name", () => {
+  const html = renderRelations({
+    children: createElement(CommunityWhatsAppCta, {
+      psychologist: { id: "psi", name: "Ana", whatsappUrl: null },
+      size: "xs",
+    }),
+  });
+  assert.match(html, /aria-label="Fale com Ana pelo WhatsApp"/);
+  assert.match(html, /h-7 w-7/);
+  assert.match(html, /h-\[17px\] w-\[17px\]/);
+  assert.match(html, /text-muted/);
+  assert.doesNotMatch(
+    html.replace(/<title>.*?<\/title>/g, ""),
+    /text-success|bg-success|>WhatsApp<|>Fale com Ana</,
+  );
+});
+test("media-attached WhatsApp retains its labelled contact block", () => {
+  const html = renderRelations({
+    children: createElement(CommunityWhatsAppCta, {
+      attached: true,
+      psychologist: { id: "psi", name: "Ana", whatsappUrl: null },
+    }),
+  });
+  assert.match(html, />WhatsApp</);
+  assert.match(html, />Fale com Ana</);
+  assert.match(html, /rounded-b-\[15px\]/);
+});
+
+const { CommunityActionBar } = await import("./community-action-bar.tsx");
+test("WhatsApp slot stays after comments and before save in both action layouts", () => {
+  for (const secondaryActionsPlacement of ["inline", "trailing"]) {
+    const html = renderToStaticMarkup(
+      createElement(CommunityActionBar, {
+        upvotesCount: 0,
+        comments: { label: "Comment marker", count: 0 },
+        beforeSaveSlot: createElement("span", null, "Contact marker"),
+        save: { label: "Save marker" },
+        share: { label: "Share marker" },
+        secondaryActionsPlacement,
+      }),
+    );
+    const positions = ["Comment marker", "Contact marker", "Save marker", "Share marker"].map(
+      (label) => html.indexOf(label),
+    );
+    assert.ok(positions.every((index) => index >= 0));
+    assert.deepEqual(
+      positions,
+      [...positions].sort((a, b) => a - b),
+    );
+  }
+});
+
+const { FilterTabs: MyPublicationTabs } = await import(
+  "../../app/app/posts/mine/components/header.tsx"
+);
+const { getInteractionCopy: publicationInteractionCopy } = await import(
+  "../../app/app/posts/mine/modules/support.ts"
+);
+test("my publications pills preserve role labels and real counters after the label", () => {
+  for (const professional of [true, false]) {
+    const copy = publicationInteractionCopy(professional);
+    const html = renderToStaticMarkup(
+      createElement(MyPublicationTabs, {
+        counts: { posts: 12, replies: 0 },
+        interactionCopy: copy,
+        value: "replies",
+        onChange() {},
+      }),
+    );
+    assert.match(html, /grid-cols-2/);
+    assert.match(html, /shadow-lectum-tab/);
+    assert.match(html, /aria-selected="true"/);
+    assert.ok(
+      html.includes('<span class="whitespace-nowrap text-xs font-bold leading-none">Posts</span>'),
+    );
+    assert.ok(html.indexOf(">Posts<") < html.indexOf(">12<"));
+    assert.ok(html.includes(copy.plural));
+    assert.match(html, />0</);
+  }
+});
+test("my publication tabs preserve loading counts and disabled state", () => {
+  const html = renderToStaticMarkup(
+    createElement(MyPublicationTabs, {
+      disabled: true,
+      interactionCopy: publicationInteractionCopy(false),
+      value: "posts",
+      onChange() {},
+    }),
+  );
+  assert.equal((html.match(/disabled=""/g) ?? []).length, 2);
+  assert.equal((html.match(/>\u2026</g) ?? []).length, 2);
+});
+
+const { OriginLink } = await import("../../app/app/posts/mine/components/origin-preview.tsx");
+
+test("mine original publication link is transparent and opens the actual source", () => {
+  const post = {
+    id: "post",
+    title: "Hidden origin title",
+    content: "Hidden origin content",
+    community: { slug: "topic" },
+  };
+  const render = (reply) =>
+    renderToStaticMarkup(createElement(OriginLink, { item: { post, reply } }));
+  const direct = render({ parent_reply_id: null });
+  assert.match(direct, /href="\/comunidades\/topic\/publicacao\/post"/);
+  assert.match(direct, /bg-transparent/);
+  assert.match(direct, /Ver publica.*original/);
+  assert.doesNotMatch(direct, /Hidden origin|bg-primary|<img|<video/);
+  const nested = render({ id: "own", parent_reply_id: "parent" });
+  assert.match(nested, /focusReplyId=parent#reply-parent/);
+  assert.doesNotMatch(nested, /focusReplyId=own/);
+});
+
+test("mine reply identity follows origin link without old context line", () => {
+  const source = readFileSync(
+    new URL("../../app/app/posts/mine/components/reply-item-card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(source.indexOf("<OriginLink") < source.indexOf("<AuthorIdentityLine"));
+  assert.ok(source.includes("name={getCommunityAuthorDisplayName(reply.author)}"));
+  assert.ok(source.includes("community={item.post.community}"));
+  assert.ok(source.includes("reply.author.id === item.post.author.id"));
+  assert.doesNotMatch(source, /interactionCopy.contextLabel|OriginPreview/);
+});
+
+test("mine reply menu layers above controls and restores their separator", () => {
+  const source = readFileSync(
+    new URL("../../app/app/posts/mine/components/reply-item-card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(source.includes('className="relative z-30 flex min-w-0 items-start gap-3"'));
+  assert.ok(source.includes('className="relative z-20 border-t border-border/80 pt-3"'));
+});
+
+test("mine header uses the same fixed-height header as saved publications", async () => {
+  const { MyPostsHeader } = await import("../../app/app/posts/mine/components/header.tsx");
+  const { AppPageHeader } = await import("../ui/app-page-header.tsx");
+  const props = {
+    backHref: "/app/perfil",
+    backLabel: "Voltar para perfil",
+    title: "Minhas publica\u00e7\u00f5es",
+  };
+  const actual = renderToStaticMarkup(
+    createElement(MyPostsHeader, { interactionCopy: { screenTitle: props.title } }),
+  );
+  const expected = renderToStaticMarkup(createElement(AppPageHeader, props));
+  assert.equal(actual, expected);
+  assert.match(actual, /grid h-14 grid-cols/);
 });

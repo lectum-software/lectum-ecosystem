@@ -4,12 +4,24 @@ import test from "node:test";
 
 const readSource = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
+test("composer fica abaixo do overlay de criar post no mobile e desktop", () => {
+  const composer = readSource(
+    "../app/app/community/[slug]/post/[id]/components/reply-composer.tsx",
+  );
+  const modal = readSource("../app/app/community/[slug]/post/new/views/create-community-post.tsx");
+  const composerLayer = Number(composer.match(/fixed inset-x-0 bottom-0 z-\[(\d+)\]/)?.[1]);
+  const modalLayer = Number(modal.match(/fixed inset-0 z-\[(\d+)\]/)?.[1]);
+  assert.ok(composerLayer > 50, "composer permanece acima da navegacao");
+  assert.ok(composerLayer < modalLayer, "overlay intercepta cliques antes do composer");
+  assert.doesNotMatch(composer, /(?:sm|md|lg):z-/);
+});
+
 test("composer principal de comentarios permanece fixo no rodape mobile", () => {
   const composerSource = readSource(
     "../app/app/community/[slug]/post/[id]/components/reply-composer.tsx",
   );
 
-  assert.match(composerSource, /"fixed inset-x-0 bottom-0 z-\[80\]/);
+  assert.match(composerSource, /"fixed inset-x-0 bottom-0 z-\[60\]/);
   assert.match(
     composerSource,
     /if \(!isInline && shouldUseKeyboardSafeArea\) {\s*style\.bottom = `\$\{keyboardOffset\}px`;\s*}/s,
@@ -86,4 +98,37 @@ test("modal de criar post nao estica descricao sem midia", () => {
     /data-create-post-editor-scroll=\{hasSelectedMedia \? "media" : "locked"\}/,
   );
   assert.doesNotMatch(createPostSource, /<footer className="absolute inset-x-0 bottom-0/);
+});
+
+test("single-line text and placeholder share the media button vertical center", () => {
+  const form = readSource("../app/app/community/[slug]/post/[id]/use-form.tsx");
+  const composer = readSource(
+    "../app/app/community/[slug]/post/[id]/components/reply-composer.tsx",
+  );
+  assert.match(form, /min-h-\[44px\].*py-3 text-sm leading-5/);
+  assert.match(form, /autoGrow: true/);
+  assert.match(form, /max-h-\[160px\]/);
+  assert.match(composer, /top-1\/2 left-1 z-10 -translate-y-1\/2/);
+});
+test("reply context uses Respondendo a for both target variants", () => {
+  const source = readSource("../app/app/community/[slug]/post/[id]/components/reply-composer.tsx");
+  assert.match(source, /Respondendo a \$\{replyTarget\.name\}/);
+  assert.match(source, /Respondendo a \$\{replyToName\}/);
+  assert.ok(source.includes("Respondendo ao post"));
+  assert.doesNotMatch(source, /Respondendo \$\{/);
+});
+
+test("reply editing reuses the inline composer and preserves undo", () => {
+  const modal = readSource("../components/community/reply-edit-modal.tsx");
+  const media = readSource("../components/community/reply-media-attachment-control.tsx");
+  assert.match(modal, /data-reply-edit-composer="true"/);
+  assert.match(modal, /variant="composer"/);
+  assert.doesNotMatch(modal, /variant="editor"/);
+  assert.match(modal, /canShowMediaControls && !hasEffectiveMedia && "pl-12"/);
+  assert.match(modal, /canShowMediaControls && removeMedia && !selectedMedia/);
+  assert.match(modal, /setRemoveMedia\(false\);\s+focusEditor\(\);/);
+  assert.match(
+    media,
+    /if \(selectedMedia\) \{\s+onRemoveSelected\(\);\s+\} else \{\s+onRemoveCurrent\?\.\(\);/,
+  );
 });

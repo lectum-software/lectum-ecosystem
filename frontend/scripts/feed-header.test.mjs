@@ -3,9 +3,40 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const { feedHeaderControlClassName, feedHeaderDropdownPanelClassName } = await import(
-  "../src/app/app/community/[slug]/modules/feed-support.ts"
-);
+const { feedHeaderControlClassName, feedHeaderDropdownPanelClassName, topFeedCommunities } =
+  await import("../src/app/app/community/[slug]/modules/feed-support.ts");
+
+test("dropdown ranks four communities by posts, breaking ties stably without changing input", () => {
+  const make = (slug, posts_count, name = slug) => ({ slug, name, posts_count });
+  const communities = [make("z", 1), make("b", 8), make("d", 3), make("a", 8), make("c", 5)];
+  const original = [...communities];
+  assert.deepEqual(
+    topFeedCommunities(communities).map((item) => item.slug),
+    ["a", "b", "c", "d"],
+  );
+  assert.deepEqual(communities, original);
+  assert.deepEqual(topFeedCommunities([]), []);
+  assert.equal(topFeedCommunities(communities.slice(0, 2)).length, 2);
+  assert.deepEqual(
+    topFeedCommunities([make("z", 0, "Igual"), make("a", 0, "Igual")]).map((item) => item.slug),
+    ["a", "z"],
+  );
+});
+
+test("all communities link follows shortcuts and the selector reads every API page", () => {
+  const selector = source("components/feed-controls.tsx").split(
+    "export const FeedCommunitySelect =",
+  )[1];
+  assert.ok(selector.indexOf("communityOptions.map") < selector.indexOf("Todas as comunidades"));
+  assert.match(selector, /activeCommunity = communities.find/);
+  const caller = readFileSync(
+    new URL("../src/api/callers/community/index.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(caller, /page <= first.pages/);
+  assert.match(caller, /communities.push\(\.\.\.next.data\)/);
+  assert.match(caller, /staleTime: 60_000/);
+});
 
 const source = (file) =>
   readFileSync(new URL(`../src/app/app/community/[slug]/${file}`, import.meta.url), "utf8");

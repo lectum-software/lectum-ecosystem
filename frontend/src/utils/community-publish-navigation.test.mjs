@@ -99,6 +99,13 @@ test("favorites opts out of the bottom bar and adds only an icon back to profile
   );
   assert.equal((header.match(/<h1\b/g) ?? []).length, 1);
   assert.match(header, /\{FAVORITES_HEADER_DESCRIPTION\}/);
+  assert.match(header, /max-w-\[34rem\] text-balance text-sm leading-5/);
+  assert.ok(
+    source.includes(
+      "Profissionais com quem você se identificou, para acompanhar e conversar quando quiser.",
+    ),
+  );
+  assert.doesNotMatch(source, /salvou para comparar/);
   assert.doesNotMatch(header, /router\.back|history\.back|AppPageHeader|SecondaryPageHeader/);
 });
 
@@ -107,9 +114,6 @@ test("favorites and my posts reuse the blue saved-page back-arrow appearance", (
     readSource("../components/ui/app-page-header.tsx"),
     readSource("../components/psychologists/psychologist-relation-list.tsx").split(
       "const FavoritePageHeader =",
-    )[1],
-    readSource("../app/app/posts/mine/components/header.tsx").split(
-      "export const MyPostsHeader =",
     )[1],
   ];
   for (const source of sources) {
@@ -134,8 +138,12 @@ test("favorites and my posts reuse the blue saved-page back-arrow appearance", (
       /ChevronLeft|bg-foreground\/10|border-border|bg-surface|text-muted/,
     );
   }
-  assert.match(sources[2], /href="\/app\/perfil"/);
-  assert.match(sources[2], /\{interactionCopy.screenTitle\}/);
+  const mineHeader = readSource("../app/app/posts/mine/components/header.tsx").split(
+    "export const MyPostsHeader =",
+  )[1];
+  assert.match(mineHeader, /<AppPageHeader/);
+  assert.match(mineHeader, /backHref="\/app\/perfil"/);
+  assert.match(mineHeader, /title=\{interactionCopy.screenTitle\}/);
 });
 
 test("create action replaces favorites in the mobile center and desktop sidebar", () => {

@@ -163,7 +163,7 @@ export const ProfessionalReplyPreview = ({
               variant="reply"
             />
           ) : whatsappCta ? (
-            <div className="mt-3">{whatsappCta}</div>
+            <div className="mt-3 flex justify-end">{whatsappCta}</div>
           ) : null}
         </div>
       </div>

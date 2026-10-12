@@ -22,8 +22,8 @@ import {
 } from "@/utils/lectum-share-target";
 import { FilterTabs, MyPostsHeader, ProfessionalAnsweredBadge } from "./components/header";
 import { InfiniteMyPostsLoader } from "./components/infinite-loader";
-
 import { ReplyItemCard } from "./components/reply-item-card";
+import { WhatsappMetric } from "./components/whatsapp-metric";
 import {
   type FilterTabCounts,
   flattenUserPostPages,
@@ -128,7 +128,7 @@ export const MyPostsLogic = () => {
       desktopSidebarDefaultCollapsed
       showMobileNavigation={false}
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8 lg:max-w-3xl">
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-2xl md:py-8 lg:max-w-3xl">
         <MyPostsHeader interactionCopy={interactionCopy} />
 
         <div className="grid gap-4 pt-4">
@@ -196,6 +196,12 @@ export const MyPostsLogic = () => {
                   />
                 ) : (
                   <CommunityPostCard
+                    actionBarBeforeSaveSlot={
+                      <WhatsappMetric
+                        count={item.whatsapp_clicks_count}
+                        isPsychologist={isPsychologist}
+                      />
+                    }
                     actionBarShowUpvoteText={false}
                     actionBarVoteLabel="Marcar post como útil"
                     actionBarVotePresentation="inline"
@@ -220,7 +226,7 @@ export const MyPostsLogic = () => {
                     onShare={sharePost}
                     openPostOnCardClick
                     post={item.post}
-                    showAuthorHeader={false}
+                    showAuthorHeader
                     showHighlightedProfessionalReply={!isPsychologist}
                     showProfessionalEngagementCounters
                     showWhatsappCta={false}

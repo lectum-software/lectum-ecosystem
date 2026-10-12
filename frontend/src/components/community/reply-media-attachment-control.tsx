@@ -401,7 +401,11 @@ export function ReplyMediaAttachmentControl({
             className="absolute -top-1 -right-1 z-10 grid h-5 w-5 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={disabled}
             onClick={() => {
-              onRemoveSelected();
+              if (selectedMedia) {
+                onRemoveSelected();
+              } else {
+                onRemoveCurrent?.();
+              }
               onAfterAction?.();
             }}
             onMouseDown={(event) => event.preventDefault()}

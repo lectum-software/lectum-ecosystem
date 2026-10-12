@@ -1,13 +1,14 @@
 "use client";
 
-import { Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
 import { useSaveReply, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts";
+import { AuthorIdentityLine } from "@/app/app/community/[slug]/components/feed-controls";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
+import { AuthorAvatar } from "@/components/community/community-post-card-author";
 import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
 import {
   canShowSocialVideoPreviewAction,
@@ -17,16 +18,19 @@ import { useInteractionSnapshot } from "@/components/community/use-interaction-s
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
-import { formatCommunityRelativeTime as formatRelativeTime } from "@/utils/community-display";
+import {
+  formatCommunityRelativeTime as formatRelativeTime,
+  getCommunityAuthorDisplayName,
+} from "@/utils/community-display";
 import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
-
 import {
   focusedReplyHref,
   type InteractionCopy,
   isReplyCardInteractiveTarget,
 } from "../modules/support";
-
 import { ProfessionalAnsweredBadge } from "./header";
+import { OriginLink } from "./origin-preview";
+import { WhatsappMetric } from "./whatsapp-metric";
 
 export const ReplyItemCard = ({
   interactionCopy,
@@ -171,20 +175,6 @@ export const ReplyItemCard = ({
     event.preventDefault();
     openReply();
   };
-  const isReplyToComment = Boolean(reply.parent_reply_id);
-  const originPostExcerpt = item.post.content.trim() || "Sem texto.";
-  const originCommentExcerpt = reply.parent_content?.trim() || "Comentário sem texto.";
-  const originPreview = isReplyToComment
-    ? {
-        excerpt: originCommentExcerpt,
-        label: "COMENTÁRIO DE ORIGEM",
-        title: null,
-      }
-    : {
-        excerpt: originPostExcerpt,
-        label: "POST DE ORIGEM",
-        title: item.post.title,
-      };
 
   return (
     <article
@@ -194,20 +184,31 @@ export const ReplyItemCard = ({
       onKeyDown={handleCardKeyDown}
       tabIndex={-1}
     >
-      <div className="relative z-20 flex min-w-0 items-center gap-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
-          <span className="shrink-0">{interactionCopy.contextLabel}</span>
-          <Link
-            className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-muted no-underline hover:text-muted hover:no-underline dark:text-muted dark:hover:text-muted"
-            href={`/comunidades/${item.post.community.slug}`}
-          >
-            {item.post.community.name}
-          </Link>
-          <span className="shrink-0 text-muted" aria-hidden="true">
-            &bull;
-          </span>
-          <span className="shrink-0 text-muted">{formatRelativeTime(reply.created_at)}</span>
+      <OriginLink item={item} />
+
+      <div className="relative z-30 flex min-w-0 items-start gap-3">
+        <AuthorAvatar
+          anonymous={
+            item.post.anonymous &&
+            reply.author.role !== "psicologo" &&
+            reply.author.id === item.post.author.id
+          }
+          avatar={reply.author.avatar}
+          name={getCommunityAuthorDisplayName(reply.author)}
+          href={isPsychologistReply ? `/psicologos/${reply.author.id}` : undefined}
+        />
+        <div className="grid min-w-0 flex-1 gap-1">
+          <AuthorIdentityLine
+            name={getCommunityAuthorDisplayName(reply.author)}
+            href={isPsychologistReply ? `/psicologos/${reply.author.id}` : undefined}
+            community={item.post.community}
+            verified={reply.author.verified}
+          />
+          <p className="text-[11px] font-medium leading-tight text-muted">
+            {isPsychologistReply ? `${reply.author.type_label} · ` : ""}
+            {formatRelativeTime(reply.created_at)}
+            {reply.edited_at ? " · editado" : ""}
+          </p>
         </div>
         <ReplyOwnerActionMenu
           className="-mr-1"
@@ -218,38 +219,26 @@ export const ReplyItemCard = ({
         />
       </div>
 
-      <Link
-        aria-label={openReplyLabel}
-        className="relative z-10 grid gap-4 text-inherit no-underline outline-none hover:text-inherit hover:no-underline focus-visible:rounded-[20px] focus-visible:ring-2 focus-visible:ring-primary/25"
-        href={replyHref}
-      >
-        <blockquote className="overflow-hidden rounded-2xl border border-primary/10 bg-primary-soft/40 px-4 py-3">
-          <p className="text-[11px] font-black tracking-[0.08em] text-primary">
-            {originPreview.label}
-          </p>
-          {originPreview.title ? (
-            <p className="mt-1 line-clamp-1 text-xs font-black text-foreground">
-              {originPreview.title}
-            </p>
+      {reply.title || hasReplyText ? (
+        <Link
+          aria-label={openReplyLabel}
+          className="relative z-10 grid gap-4 text-inherit no-underline outline-none hover:text-inherit hover:no-underline focus-visible:rounded-[20px] focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={replyHref}
+        >
+          {reply.title || hasReplyText ? (
+            <div className="grid gap-2">
+              {reply.title ? (
+                <h2 className="text-lg font-black text-foreground">{reply.title}</h2>
+              ) : null}
+              {hasReplyText ? (
+                <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+                  {reply.content}
+                </p>
+              ) : null}
+            </div>
           ) : null}
-          <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-muted">
-            {originPreview.excerpt}
-          </p>
-        </blockquote>
-
-        {reply.title || hasReplyText ? (
-          <div className="grid gap-2">
-            {reply.title ? (
-              <h2 className="text-lg font-black text-foreground">{reply.title}</h2>
-            ) : null}
-            {hasReplyText ? (
-              <p className="whitespace-pre-line text-sm leading-6 text-foreground">
-                {reply.content}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-      </Link>
+        </Link>
+      ) : null}
 
       {hasReplyMedia ? (
         <div
@@ -277,7 +266,10 @@ export const ReplyItemCard = ({
       ) : null}
 
       <CommunityActionBar
-        className="relative z-20 border-border/80 border-t pt-3"
+        beforeSaveSlot={
+          <WhatsappMetric count={item.whatsapp_clicks_count} isPsychologist={isPsychologistReply} />
+        }
+        className="relative z-20 border-t border-border/80 pt-3"
         comments={{
           count: reply.replies_received_count,
           href: replyHref,

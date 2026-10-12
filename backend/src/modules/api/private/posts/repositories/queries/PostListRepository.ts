@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { getFollowedCommunityIds } from "@/modules/api/private/community/repositories/support/community-ranking";
+import { getOtherProfessionalReplyAuthors } from "@/modules/api/private/community/repositories/support/other-professional-replies";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
@@ -17,10 +18,13 @@ import {
   normalizeListType,
   normalizePagination,
   normalizeVoteValue,
+  selectHighlightedListProfessionalReply,
   toAuthorResponse,
   toListPostResponse,
   toPaginatedListResponse,
 } from "../support/post-response";
+
+import { getOwnedContentWhatsappCounts } from "../support/whatsapp-counts";
 
 import { PostRepositoryContext } from "./PostRepositoryContext";
 
@@ -266,7 +270,16 @@ export class PostListRepository extends PostRepositoryContext {
       getFollowedCommunityIds(data.auth.id!, communityIds),
     ]);
 
+    const whatsappCounts = await getOwnedContentWhatsappCounts(
+      data.auth.id!,
+      data.auth.role,
+      postIds,
+      replyIds,
+    );
     const postItems = posts.map<PostListItemDTO>((post) => ({
+      ...(data.auth.role === "psicologo"
+        ? { whatsapp_clicks_count: whatsappCounts.get(`post:${post.id}`) ?? 0 }
+        : {}),
       id: post.id,
       type: "post",
       created_at: post.createdAt,
@@ -285,6 +298,9 @@ export class PostListRepository extends PostRepositoryContext {
       reply: null,
     }));
     const replyItems = replies.map<PostListItemDTO>((reply) => ({
+      ...(data.auth.role === "psicologo"
+        ? { whatsapp_clicks_count: whatsappCounts.get(`reply:${reply.id}`) ?? 0 }
+        : {}),
       id: reply.id,
       type: "reply",
       created_at: reply.createdAt,
@@ -535,6 +551,14 @@ export class PostListRepository extends PostRepositoryContext {
       getFollowedCommunityIds(data.auth.id!, communityIds),
     ]);
 
+    const highlights = new Map<string, { id: string }>();
+    for (const { post } of postSaves) {
+      if (post.author.role !== "paciente") continue;
+      const highlight = selectHighlightedListProfessionalReply(post.replies);
+      if (highlight) highlights.set(post.id, highlight);
+    }
+    const otherReplyAuthors = await getOtherProfessionalReplyAuthors(prisma, highlights);
+
     const postItems = postSaves.map<PostListItemDTO>((item) => ({
       id: item.id,
       type: "post",
@@ -550,6 +574,7 @@ export class PostListRepository extends PostRepositoryContext {
         mutedPostIds.has(item.post.id),
         postsWithPsychologistReplies.has(item.post.id),
         followedCommunityIds.has(item.post.community.id),
+        otherReplyAuthors.get(item.post.id),
       ),
       reply: null,
     }));

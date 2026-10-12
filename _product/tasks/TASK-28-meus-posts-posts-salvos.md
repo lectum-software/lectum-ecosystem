@@ -561,3 +561,73 @@ Validacao apenas local, sem push/deploy nesta task.
 ### Validacao final local - 2026-10-10
 
 Check geral e builds backend/frontend aprovados. Browser local autenticado confirmou salvar post e resposta, voto e remocao do voto, controles sem divisoria, rotulo apenas na resposta destacada e video sem recuo no viewport 390x844. Video real de 2:06 reproduziu (tempo avancou a 0:12), com controles e card isolado preservados. Em desktop, composicao conferida no mesmo PostCard do feed. Origem produtiva consultada READ ONLY, copia minima autorizada; sem escrita remota. Como nao ha credenciais Stream no ambiente isolado, os bytes reais do video autorizado foram copiados para arquivo local ignorado, sem simular endpoint, fabricar conteudo nem mudar configuracao produtiva. A referencia original permanece no snapshot privado. Validacao cobre apresentacao/player local; assinatura Stream produtiva nao foi alterada.
+
+
+## Complemento 2026-10-11: Ver mais respostas
+
+ADR-0594: contrato aditivo alimenta o mesmo PostCard do feed com autores de outras respostas profissionais. Consulta em lote, somente posts de pacientes com destaque; resposta salva isolada permanece sem a linha.
+
+- [x] Linha aparece abaixo do destaque quando existe outra resposta profissional, com avatar e indicador do feed.
+- [x] Clique abre o post real e as duas respostas; retorno a Salvos preservado.
+- [x] Resposta isolada e post sem outras respostas nao recebem a linha.
+- [x] Browser autenticado local em 390x844 e 1280x900, video real reproduzindo e avatar real autorizado.
+- [x] Build backend/frontend e checks de codigo aprovados; regressao de apresentacao e integracao com banco local real aprovadas.
+
+Copia adicional autorizada limitada a uma resposta publica do mesmo post e dados minimos do autor; origem READ ONLY. Bytes do avatar publico servidos pelo middleware estatico local existente, arquivos ignorados. Nenhuma escrita em producao. Outros exemplos antigos sem midia local continuam indisponiveis e nao foram usados como evidencia do player.
+
+Check geral encontrou apenas timeout no teste optional-auth-failure sob concorrencia; teste focal passou isolado. Suite backend reexecutada serialmente para reduzir carga, sem alterar teste nem desativar verificacao. Evidencias em .tmp/oct11-saved-*.log. Complemento do selo de filtros: bg-primary-foreground/20 substitui branco literal, mantendo aparencia e atendendo check:source-safety.
+
+Sem migration, package ou env nova. Sem push/deploy; frontend/backend independentes. Commit local apos validacao.
+
+## Complemento 11/10: abas no padrao do feed/perfil (ADR-0600)
+
+- [x] Capsulas Posts e Respostas/Comentarios com contadores reais apos o rotulo, sem bloco branco externo.
+- [x] Preservar selecao, callbacks, papeis, carregamento e bloqueio durante consulta.
+- [x] Check, build e conferencia local mobile-first.
+
+Abas: implementacao local e check/build/testes aprovados; conferencia visual autenticada pendente por indisponibilidade do navegador automatizado. ADR-0600. Sem commit/push/deploy.
+
+Aprovacao visual final do usuario em 2026-10-11 apos correcao da tipografia. Check, build e 21 testes aprovados; commit local, sem push/deploy.
+
+## Complemento 11/10: contexto compacto de origem (ADR-0601)
+
+- [x] Link transparente Ver publicacao original, sem preview azul ou detalhes da origem.
+- [x] Abaixo do link, identidade da propria contribuicao com chevron/comunidade e data; sem Respondido em. Midia propria preservada.
+- [x] Origem correta (post ou resposta-pai) e anonimato preservados, sem contrato novo.
+- [x] Checks, builds, testes e conferencia local.
+
+Evidencias ADR-0601: check/build frontend e build/Prisma/TypeScript/Biome backend aprovados; 23 testes de controles. Integracao READ ONLY verificou cinco respostas reais locais (todas diretas ao post). Teste backend optional-auth-failure passou isolado apos timeout na suite concorrente. Browser automatizado indisponivel; conferir visualmente Minhas publicacoes, incluindo comentario em video de outro psicologo. Sem commit/push/deploy deste complemento.
+
+Revisao visual 11/10: usuario pediu restaurar a divisoria acima dos controles e corrigir menu de tres pontos, cujas opcoes eram atravessadas pelos controles. Cabecalho/menu usa camada 30 acima da barra 20; preservar area de clique, fechamento e modais existentes. Esta decisao substitui a remocao da divisoria apenas nestes cards. Check/build/browser da revisao pendentes.
+
+Revisao menu/divisoria: check completo frontend, build e 24 testes de controles aprovados. Logs .tmp/oct11-mine-menu-check.log, oct11-mine-menu-build.log e oct11-mine-menu-tests.log. Browser integrado acessivel mas sem login; verificacao autenticada depende do usuario no Chrome ou login integrado. Sem novo commit, bump, push ou deploy enquanto a conferencia visual permanece pendente.
+
+Refino 11/10: MyPostsHeader reutiliza AppPageHeader, como Salvos (h-14, 56px), mantendo titulo e retorno ao perfil. Sem novo componente ou contrato; teste compara SSR diretamente com o componente usado em Salvos. Validacao da revisao pendente.
+
+Padronizacao completa do header: mesmo AppPageHeader de Salvos, incluindo altura 56px, tipografia, seta, cores, bordas, raio, sombra e espacamento interno; container responsivo de Minhas publicacoes alinhado a Salvos. Nenhuma alteracao em Salvos nem no componente compartilhado. Check completo frontend e build final aprovados (.tmp/oct11-mine-header-check.log e .tmp/oct11-mine-header-standard-build.log); 25 testes focais aprovados, incluindo igualdade SSR do header. Teste legado atualizado para validar o uso do componente compartilhado. Conferencia visual autenticada ainda pendente; sem commit/push/deploy deste complemento.
+
+Aprovacao visual do usuario em 11/10/2026: header padronizado, contexto compacto e revisoes aceitos; check/build final aprovados. Complemento concluido localmente, sem push/deploy. Evidencias anteriores de pendencia sao historicas e substituidas por esta aprovacao.
+
+## Complemento 11/10: autoria dos Posts e metrica privada WhatsApp (ADR-0603)
+
+- [x] Posts de Minhas publicacoes mostram identidade do autor, chevron/comunidade/data no padrao existente e preservam divisoria.
+- [x] Psicologo ve icone neutro e quantidade real de cliques por post/resposta entre comentarios e salvar; metrica somente leitura, inclusive zero real. Paciente e listas publicas/salvas nao recebem a metrica.
+- [x] Contar eventos whatsapp_click ativos atribuidos ao conteudo, incluindo aliases existentes, excluindo cliques do proprio autor; historico registrado, sem simular ou reconstruir cliques ausentes.
+- [x] Contrato opcional tolera backend antigo sem apresentar zero inventado. Checks/builds, integracao local real e conferencia visual.
+
+Validacao tecnica: check completo frontend e 27 testes focais aprovados; build frontend e backend aprovados. Backend Prisma/TypeScript/Biome aprovados, suite 895/896 com timeout do teste optional-auth-failure sob concorrencia; repeticao isolada passou sem mudanca. Integracao READ ONLY no PostgreSQL isolado conferiu 7 contribuicoes profissionais (zero cliques registrados), 2 itens de pacientes sem campo privado e ausencia do campo em Salvos. Nao validar incremento positivo como concluido: banco local nao possui evento elegivel. Sem escritas remotas ou mocks. Guards ADR/tasks/source-safety/ciclos aprovados; source-size continua bloqueado exclusivamente por reply-card.tsx preexistente com 708 linhas, fora deste ajuste. Conferencia visual solicitada; sem commit/bump/push/deploy deste complemento.
+
+Aprovacao visual recebida em 11/10/2026: usuario confirmou Posts e Respostas, identidade e contador WhatsApp com "aprovado, continue". Complemento concluido localmente com limite de evidencia explicito: zero real validado; incremento positivo ainda nao exercitado por ausencia de evento local elegivel. Sem push/deploy.
+
+## Complemento 11/10: preservar somente video-respostas profissionais na exclusao (ADR-0604)
+
+- [x] Paciente pode excluir proprio post com respostas profissionais somente de texto/imagem; bloqueia se alguma resposta ativa do post for de psicologo com media_type video.
+- [x] Paciente pode excluir proprio comentario sem video-resposta profissional na subarvore; bloquear inclusive descendentes indiretos com video. Videos fora da subarvore nao bloqueiam comentario.
+- [x] Psicologo pode excluir os proprios posts/comentarios independentemente dos descendentes; autoria, transacao serializavel, soft-delete/cascata e contadores preservados.
+- [x] Respostas ja excluidas nao bloqueiam; texto e imagem de psicologo nao bloqueiam; video de paciente nao bloqueia.
+- [x] Frontend nao usa badges genericos de resposta profissional como permissao; backend decide no snapshot transacional e UI trata 409 com texto de video e opcao Silenciar.
+- [x] Testes com PostgreSQL real isolado, checks/builds e conferencia local aprovada pelo usuario; commit proprio preparado.
+
+Implementacao e validacao tecnica ADR-0604 concluidas: 20 cenarios PostgreSQL descartavel, frontend check/build e backend build aprovados. Suite backend com timeout preexistente (895/896), repeticao isolada passou; root check bloqueado por BOM preexistente ADR-0599, source-size preexistente reply-card.tsx 708/700. Conferencia visual autenticada e commit pendentes; nenhum bump/push/deploy.
+
+11/10: usuario confirmou os dois ultimos ajustes com Conferidos e aprovados e autorizou publicar. Gates gerais pendentes serao tratados antes do push.

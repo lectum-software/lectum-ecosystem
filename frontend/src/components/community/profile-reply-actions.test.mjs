@@ -210,14 +210,32 @@ test("reply mutation, guest intent and thread navigation retain the reply identi
   assert.match(source, /\/resposta\/\$\{primaryReply.id\}/);
 });
 
-test("profile replies use the compact inline reply toolbar while original posts retain their layout", () => {
+test("profile video replies use saved-post controls while other replies stay compact", () => {
   const source = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
+  assert.match(
+    source,
+    /hasPostStyleReplyActions = Boolean\(primaryReply && displayMediaType === "video"\)/,
+  );
+  assert.match(
+    source,
+    /hasCompactReplyActions = Boolean\(primaryReply && !hasPostStyleReplyActions\)/,
+  );
+  assert.match(source, /count: hasCompactReplyActions \? undefined : interactionData.comments/);
   assert.match(source, /primaryReply\s*\? "mt-2 sm:mt-3"/);
-  assert.match(source, /secondaryActionsPlacement=\{primaryReply \? "inline" : "trailing"\}/);
-  assert.match(source, /votePresentation=\{primaryReply \? "inline" : actionBarVotePresentation\}/);
-  assert.match(source, /showUpvoteText=\{primaryReply \? false : actionBarShowUpvoteText\}/);
-  assert.match(source, /size=\{primaryReply \? "xs" : "sm"\}/);
-  for (const counter of ["interactionData.comments", "saveAction.count", "shareCount"]) {
+  assert.match(
+    source,
+    /secondaryActionsPlacement=\{hasCompactReplyActions \? "inline" : "trailing"\}/,
+  );
+  assert.match(
+    source,
+    /votePresentation=\{hasCompactReplyActions \? "inline" : actionBarVotePresentation\}/,
+  );
+  assert.match(
+    source,
+    /showUpvoteText=\{hasCompactReplyActions \? false : actionBarShowUpvoteText\}/,
+  );
+  assert.match(source, /size=\{hasCompactReplyActions \? "xs" : "sm"\}/);
+  for (const counter of ["saveAction.count", "shareCount"]) {
     assert.ok(source.includes(`count: primaryReply ? undefined : ${counter}`));
   }
 });

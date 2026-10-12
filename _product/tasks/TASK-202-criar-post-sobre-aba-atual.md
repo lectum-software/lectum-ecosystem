@@ -57,3 +57,11 @@ rolagem preservadas; repetir em outra aba. Usuario autenticou manualmente.
 Resultado remoto e evidencias registrados fora do repo em
 outputs/modal-publicacao-0537.md do workspace apos este commit ser publicado.
 
+
+## Correcao 11/10/2026 - ADR-0605
+
+- [x] Composer abaixo do overlay Criar Post no detalhe de publicacao, em mobile e desktop, sem desmontar rascunho.
+- [x] Regressao (9 testes focais) e frontend check/build.
+- [x] Conferencia visual autenticada aprovada pelo usuario; commit proprio preparado.
+
+Bug priorizado pelo usuario; ADR-0604 aguarda conferencia separada. Sem backend ou publicacao.

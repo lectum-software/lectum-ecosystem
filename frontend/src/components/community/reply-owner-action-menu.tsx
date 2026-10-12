@@ -216,11 +216,6 @@ export const ReplyOwnerActionMenu = ({
     setActionError(null);
     setMenuOpen(false);
 
-    if (!isPsychologistReply && reply.has_verified_professional_reply) {
-      setBlockedModalOpen(true);
-      return;
-    }
-
     setDeleteModalOpen(true);
   };
 

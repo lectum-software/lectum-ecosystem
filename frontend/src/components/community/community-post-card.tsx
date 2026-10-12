@@ -51,6 +51,7 @@ import {
 } from "./community-post-card-support";
 
 export const CommunityPostCard = ({
+  actionBarBeforeSaveSlot,
   actionBarShowUpvoteText = true,
   actionBarVoteLabel = "Marcar como útil",
   actionBarVotePresentation = "cluster",
@@ -100,6 +101,8 @@ export const CommunityPostCard = ({
     primaryReply?.media_type ?? singlePostMediaItem?.media_type ?? post.media_type;
   const displayMediaUrl =
     primaryReply?.media_url ?? singlePostMediaItem?.media_url ?? post.media_url;
+  const hasPostStyleReplyActions = Boolean(primaryReply && displayMediaType === "video");
+  const hasCompactReplyActions = Boolean(primaryReply && !hasPostStyleReplyActions);
   const showProfileVideoQuestion = Boolean(
     primaryReply && displayMediaType === "video" && displayMediaUrl,
   );
@@ -130,6 +133,7 @@ export const CommunityPostCard = ({
   );
   const shouldCompactProfileReplyMedia =
     profilePublicationMode && isReplyContribution && Boolean(primaryReply);
+  const isFeedPresentation = presentation === "feed";
   const isPsychologistPost = displayAuthor.role === "psicologo";
   const isAnonymousPatient = !primaryReply && !isPsychologistPost && post.anonymous;
   const displayAuthorName = isReplyContribution
@@ -158,6 +162,7 @@ export const CommunityPostCard = ({
     showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
       <CommunityWhatsAppCta
         attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
+        size={hasCompactReplyActions ? "xs" : "sm"}
         psychologist={toCommunityWhatsAppIdentity(displayAuthor)}
         stopPropagation
         trackingContext={{
@@ -361,11 +366,9 @@ export const CommunityPostCard = ({
     onOpen: openLectumDownloadDialog,
     target: highlightedReplySocialTarget,
   });
-  const isFeedPresentation = presentation === "feed";
   const { handleCardClick, handleCardKeyDown } = createPostCardNavigation(openPostOnCardClick, () =>
     router.push(postHref),
   );
-
   return (
     <article
       className={cn(
@@ -628,20 +631,21 @@ export const CommunityPostCard = ({
           reply={highlightedProfessionalReply}
           showWhatsappCta={showWhatsappCta}
         />
-        {shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
       </div>
 
       <CommunityActionBar
         className={
-          primaryReply
-            ? "mt-2 sm:mt-3"
-            : cn(
-                "mt-4 border-t pt-3",
-                isFeedPresentation ? "border-border dark:border-border" : "border-border",
-              )
+          hasPostStyleReplyActions
+            ? "mt-4 max-[380px]:flex-wrap max-[380px]:gap-y-1.5 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-none"
+            : primaryReply
+              ? "mt-2 sm:mt-3"
+              : cn(
+                  "mt-4 border-t pt-3",
+                  isFeedPresentation ? "border-border dark:border-border" : "border-border",
+                )
         }
         comments={{
-          count: primaryReply ? undefined : interactionData.comments,
+          count: hasCompactReplyActions ? undefined : interactionData.comments,
           href: primaryReply
             ? `/comunidades/${post.community.slug}/publicacao/${post.id}/resposta/${primaryReply.id}`
             : postHref,
@@ -658,6 +662,10 @@ export const CommunityPostCard = ({
             ? voteSnapshot.downvotes
             : undefined
         }
+        beforeSaveSlot={
+          actionBarBeforeSaveSlot ??
+          (shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta)
+        }
         endSlot={footerExtra}
         onVote={interactiveActions ? handleVote : undefined}
         save={{
@@ -667,7 +675,7 @@ export const CommunityPostCard = ({
           label: saveAction.label,
           onClick: saveAction.onClick,
         }}
-        secondaryActionsPlacement={primaryReply ? "inline" : "trailing"}
+        secondaryActionsPlacement={hasCompactReplyActions ? "inline" : "trailing"}
         share={{
           count: primaryReply ? undefined : shareCount,
           label: primaryReply
@@ -679,11 +687,11 @@ export const CommunityPostCard = ({
                 : "Compartilhar publicação",
           onClick: () => onShare(post),
         }}
-        showUpvoteText={primaryReply ? false : actionBarShowUpvoteText}
-        size={primaryReply ? "xs" : "sm"}
+        showUpvoteText={hasCompactReplyActions ? false : actionBarShowUpvoteText}
+        size={hasCompactReplyActions ? "xs" : "sm"}
         upvotesCount={voteSnapshot.upvotes}
         voteLabel={primaryReply ? "Marcar resposta como útil" : actionBarVoteLabel}
-        votePresentation={primaryReply ? "inline" : actionBarVotePresentation}
+        votePresentation={hasCompactReplyActions ? "inline" : actionBarVotePresentation}
       />
       {lectumDownloadDialog}
     </article>

@@ -262,6 +262,7 @@ export class PostStateRepository extends PostRepositoryContext {
               where: {
                 post_id: post.id,
                 deleted: false,
+                media_type: "video",
                 author: {
                   role: "psicologo",
                 },

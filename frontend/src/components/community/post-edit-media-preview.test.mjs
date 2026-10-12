@@ -123,6 +123,30 @@ test("comentario preserva miniatura selecionada, imagem existente e estado de re
   assert.doesNotMatch(removed, /<video|<img/);
 });
 
+test("controle inline sem anexo usa camera azul e input unico", () => {
+  const html = renderReplyMedia({ variant: "composer", currentMedia: null });
+  assert.match(html, /border-primary bg-primary text-primary-foreground/);
+  assert.match(html, /data-reply-media-trigger="true"/);
+  assert.equal((html.match(/type="file"/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /Adicionar mídia|<figure/);
+});
+
+test("controle inline com midia atual mostra miniatura compacta e remocao", () => {
+  const html = renderReplyMedia({
+    variant: "composer",
+    currentMedia: { mediaType: "image", mediaUrl: "/public/files/image.jpg" },
+  });
+  assert.match(html, /h-14 w-24/);
+  assert.match(html, /aria-label="Remover mídia anexada"/);
+  assert.doesNotMatch(html, /data-reply-media-trigger|<figure/);
+});
+
+test("controle inline removido permite nova selecao e respeita estado de envio", () => {
+  const html = renderReplyMedia({ variant: "composer", removeCurrent: true, disabled: true });
+  assert.match(html, /data-reply-media-trigger="true"[^>]*disabled=""/);
+  assert.doesNotMatch(html, /<video|<img/);
+});
+
 // Real component, React markup and handlers; no modules or APIs are replaced.
 // SSR verifies native button semantics, not actual browser Tab/Enter/Space or uploads.
 const media = (source, overrides = {}) => ({

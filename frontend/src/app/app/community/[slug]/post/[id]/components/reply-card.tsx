@@ -40,6 +40,7 @@ import {
 import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import {
   countReplyTreeDescendants,
+  createFocusedReplyRelativeUrl,
   findReplyInTree,
   formatReplyAuthorMeta,
   MAX_REPLY_TREE_DEPTH,
@@ -50,16 +51,7 @@ import {
 import type { ReplyComposerForm } from "../use-form";
 
 import { AuthorAvatar } from "./post-content";
-
 import { ReplyComposer } from "./reply-composer";
-
-const createFocusedReplyRelativeUrl = (threadHrefBase: string | undefined, replyId: string) => {
-  const postHref = threadHrefBase?.replace(/\/resposta\/?$/u, "");
-
-  if (!postHref) return `#reply-${replyId}`;
-
-  return `${postHref}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
-};
 
 export type ReplyOverflowMenuProps = {
   deletePending?: boolean;
@@ -203,6 +195,20 @@ export const ReplyVoteBar = ({
   return (
     <CommunityActionBar
       className="mt-2 sm:mt-3"
+      beforeSaveSlot={
+        reply.author.role === "psicologo" && reply.author.whatsapp_url && !reply.media_url ? (
+          <CommunityWhatsAppCta
+            size="xs"
+            psychologist={toCommunityWhatsAppIdentity(reply.author)}
+            stopPropagation
+            trackingContext={{
+              pageKind: "community_post",
+              targetId: reply.id,
+              targetType: "post_reply",
+            }}
+          />
+        ) : null
+      }
       currentVote={currentVote}
       disabled={disabled}
       onVote={onVote}
@@ -539,12 +545,6 @@ export const ReplyCard = ({
               variant="reply"
             />
           </div>
-
-          {replyWhatsappCta && !hasReplyMedia ? (
-            <div className="mt-2" data-comment-collapse-ignore="true">
-              {replyWhatsappCta}
-            </div>
-          ) : null}
 
           <div data-comment-collapse-ignore="true">
             <ReplyVoteBar

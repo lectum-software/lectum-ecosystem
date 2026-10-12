@@ -256,7 +256,7 @@ export const ProfessionalReplyPreview = ({
             />
           </div>
         ) : replyWhatsappCta ? (
-          <div className="pointer-events-auto mt-3">{replyWhatsappCta}</div>
+          <div className="pointer-events-auto mt-3 flex justify-end">{replyWhatsappCta}</div>
         ) : null}
       </div>
     </div>
@@ -516,7 +516,6 @@ export const PostCard = ({
         post={post}
       />
       <MoreProfessionalReplies href={postDetailHref} post={post} />
-      {hasPostMedia ? null : authorWhatsappCta}
     </div>
   );
 
@@ -599,6 +598,7 @@ export const PostCard = ({
           href: postDetailHref,
           label: "Comentar no post",
         }}
+        beforeSaveSlot={hasPostMedia ? null : authorWhatsappCta}
         currentVote={voteSnapshot.currentVote}
         disabled={voteMutation.isPending}
         onVote={handleVote}

@@ -46,6 +46,23 @@ export const useCommunities = (query: CommunityListQuery = {}, enabled = true) =
   });
 };
 
+export const useFeedCommunityOptions = () =>
+  useQuery({
+    queryKey: keys.community.feedOptions(),
+    queryFn: async () => {
+      const first = await api.getCommunities({ limit: 50, page: 1 });
+      const communities = [...first.data];
+      for (let page = 2; page <= first.pages; page += 1) {
+        const next = await api.getCommunities({ limit: 50, page });
+        communities.push(...next.data);
+      }
+      return [...new Map(communities.map((community) => [community.id, community])).values()];
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+
 export const useCommunityRecommendationCandidates = (viewerId: string, enabled: boolean) => {
   return useQuery({
     queryKey: [...keys.community.root(), "recommendations", viewerId],

@@ -1,5 +1,17 @@
 # TASK-13: Psicólogos: listagem e filtros
 
+## Complemento 2026-10-11: total no botao de filtros
+
+- [x] Mostrar total real de todas as paginas em selo translucido entre parenteses, a direita de Aplicar filtros.
+- [x] Observar todos os campos RHF do rascunho; aguardar 300ms antes da consulta, somente com modal aberta; nunca mostrar valor anterior durante atualizacao/erro. Zero real aparece como (0), sem mensagem adicional.
+- [x] Preservar aplicar/limpar/fechar e os filtros efetivamente aplicados.
+- [x] Testes, check, build e browser local mobile/desktop; commit proprio.
+
+Validacao: check completo e build frontend aprovados; 3 regressoes adicionais. Browser real em 390px e 1280px: contagem (0), transicao de carregamento ao escolher Online, aplicar/reabrir/limpar. Base local sem profissionais publicos elegiveis; nenhum resultado positivo foi inventado. Botao Ajustar filtros tambem acessivel no vazio para permitir revisar a busca.
+
+Referencia: captura do usuario e proto de filtros no inventario; Builder/Quick Copy indisponivel. ADR-0592. Impacto: somente frontend, contrato existente count, sem banco, package ou env; rollout independente e rollback por reversao. Sem push/deploy.
+
+
 ## Metadata
 
 | Campo | Valor |
@@ -1769,3 +1781,12 @@ Validacoes do complemento:
 - `pnpm --dir frontend build`.
 - `pnpm check`.
 - Browser local/HTTP em `http://127.0.0.1:3010/psicologos` e `http://127.0.0.1:3010/psicologos/cmtalyodj008v01k96xpx42eo`, ambos com 200; captura headless foi tentada, mas o Chrome permaneceu em processo sem gerar screenshot, entao a verificacao visual ficou coberta por build, rota local e teste estatico da ordem Bio/chips.
+
+## Complemento 2026-10-11: contagem somente com criterios
+
+- [x] Ocultar selo e quantidade sem filtros efetivos, incluindo pesquisa vazia/espacos e selecoes padrao.
+- [x] Desabilitar consulta de previa sem criterios e ocultar resultados antigos imediatamente ao limpar.
+- [x] Preservar contagem real, zero e carregamento quando ha filtro.
+- [x] Check/build e browser mobile/desktop finais: sem criterios nao mostra selo; Online carrega e mostra (0) real; limpar/reabrir remove selo. Logs locais oct11-empty-filter-check/build, ambos exit 0.
+
+Frontend somente, sem contrato, banco, env ou packages novos. ADR-0596. Builder/Quick Copy indisponivel; referencia nas capturas do usuario e inventario/proto existentes. Sem publicacao.

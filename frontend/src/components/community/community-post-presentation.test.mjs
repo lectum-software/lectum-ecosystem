@@ -669,11 +669,11 @@ test("copy de resposta de paciente com descendentes mantém aviso e pronome femi
   );
 });
 
-test("bloqueio e preservação usam resposta no feminino, sem mudar a restrição", () => {
+test("bloqueio e preservação usam resposta no feminino, com restrição específica a vídeo", () => {
   const copy = replyCopy();
   assert.equal(copy.blockedTitle, "Não é possível excluir esta resposta");
   assert.equal(copy.preservedTitle, "Resposta preservada");
-  assert.match(copy.blockedDescription, /^Esta resposta já recebeu contribuições/);
+  assert.match(copy.blockedDescription, /^Esta resposta possui uma resposta em vídeo/);
   assert.match(copy.blockedDescription, /não podem ser excluídos por pacientes/);
   assert.match(copy.blockedDescription, /Você pode silenciar a conversa/);
 });
@@ -683,7 +683,7 @@ test("comentário preserva concordância masculina e avisos de descendentes", ()
   assert.equal(professional.deleteTitle, "Excluir comentário?");
   assert.equal(professional.blockedTitle, "Não é possível excluir este comentário");
   assert.equal(professional.preservedTitle, "Comentário preservado");
-  assert.match(professional.blockedDescription, /^Este comentário já recebeu/);
+  assert.match(professional.blockedDescription, /^Este comentário possui uma resposta em vídeo/);
   assert.match(professional.deleteDescription, /^Este comentário e as respostas/);
   assert.match(professional.deleteDescription, /abaixo dele serão removidos/);
   const patient = replyCopy({ kind: "comentário", hasReplies: true });

@@ -2,7 +2,7 @@
 
 import { CalendarDays, Plus } from "lucide-react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Fragment,
   type MouseEvent as ReactMouseEvent,
@@ -13,7 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useCommunities, useInfiniteCommunityFeedPosts } from "@/api/callers/community";
+import { useFeedCommunityOptions, useInfiniteCommunityFeedPosts } from "@/api/callers/community";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import {
   COMMUNITIES_PER_CAROUSEL,
@@ -51,8 +51,11 @@ import { PsychologistReplyOnboarding } from "../components/reply-onboarding";
 import { useCommunityFeedScrollRestoration } from "../hooks/use-community-feed-scroll-restoration";
 import { usePsychologistReplyTip } from "../hooks/use-psychologist-reply-tip";
 import {
+  COMMUNITY_POST_SORT_PERIODS,
+  COMMUNITY_POST_SORTS,
   type CommunityPostSelectedPeriods,
   type CommunityPostSort,
+  type CommunityPostSortPeriod,
   flattenCommunityPostPages,
   PAGE_LIMIT,
   resolveFeedError,
@@ -68,8 +71,32 @@ export const CommunityFeedLogic = ({
   const conversion = useProgressiveConversion();
   const currentUser = useAppSelector((state) => state.user);
   const isPsychologistUser = currentUser?.role === "psicologo";
-  const [professionalSort, setProfessionalSort] = useState<CommunityPostSort>("opportunities");
-  const [sortPeriods, setSortPeriods] = useState<CommunityPostSelectedPeriods>({});
+  const pathname = usePathname();
+  const router = useRouter();
+  const professionalSort: CommunityPostSort =
+    COMMUNITY_POST_SORTS.find((item) => item.value === searchParams.get("sort"))?.value ??
+    "opportunities";
+  const sortPeriods = useMemo(() => {
+    const periods: CommunityPostSelectedPeriods = {};
+    for (const key of ["commented", "voted"] as const) {
+      const selected = COMMUNITY_POST_SORT_PERIODS.find(
+        (item) => item.value === searchParams.get(`${key}Period`),
+      )?.value;
+      if (selected) periods[key] = selected;
+    }
+    return periods;
+  }, [searchParams]);
+  const setProfessionalSort = (
+    value: CommunityPostSort,
+    selectedPeriod?: CommunityPostSortPeriod,
+  ) => {
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("sort", value);
+    if (selectedPeriod && (value === "commented" || value === "voted")) {
+      next.set(`${value}Period`, selectedPeriod);
+    }
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  };
   const sort = isPsychologistUser ? professionalSort : "featured";
   const period = sort === "commented" || sort === "voted" ? sortPeriods[sort] : undefined;
   const routeSlug = typeof params.slug === "string" ? params.slug : COMMUNITY_FEED_SLUG;
@@ -102,7 +129,7 @@ export const CommunityFeedLogic = ({
     }),
     [deferredSearch, scope, selectedCommunitySlug, variationSeed, sort, period],
   );
-  const communitiesQuery = useCommunities({ limit: 50, page: 1 });
+  const communitiesQuery = useFeedCommunityOptions();
   const feed = useInfiniteCommunityFeedPosts(query, variationSeed > 0);
   const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
@@ -248,7 +275,7 @@ export const CommunityFeedLogic = ({
 
             <FeedCommunitySelect
               activeSlug={selectedCommunitySlug}
-              communities={communitiesQuery.data?.data ?? []}
+              communities={communitiesQuery.data ?? []}
               onOpenChange={handleCommunityMenuOpenChange}
               open={communityMenuOpen}
             />
@@ -266,10 +293,7 @@ export const CommunityFeedLogic = ({
           <CommunityPostSortChips
             showProfessionalOptions
             onChange={setProfessionalSort}
-            onPeriodChange={(value, nextPeriod) => {
-              setProfessionalSort(value);
-              setSortPeriods((current) => ({ ...current, [value]: nextPeriod }));
-            }}
+            onPeriodChange={setProfessionalSort}
             periods={sortPeriods}
             value={sort}
           />

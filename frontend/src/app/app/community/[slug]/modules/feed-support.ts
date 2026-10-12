@@ -1,10 +1,20 @@
 import { ArrowUp, Clock, Flame, MessageCircle, Sparkles } from "lucide-react";
 import { getSafeApiErrorMessage } from "@/api/errors";
-import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
+import type { Community, CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { cn } from "@/lib/utils";
 
 export const PAGE_LIMIT = 12;
+
+export const topFeedCommunities = (communities: readonly Community[]) =>
+  [...communities]
+    .sort(
+      (a, b) =>
+        (b.posts_count ?? 0) - (a.posts_count ?? 0) ||
+        a.name.localeCompare(b.name, "pt-BR") ||
+        a.slug.localeCompare(b.slug, "pt-BR"),
+    )
+    .slice(0, 4);
 
 export const COMMUNITY_OPPORTUNITIES_WINDOW_DAYS = 90;
 

@@ -638,3 +638,32 @@ Formato recomendado:
 - [ADR-0589 — Salvos reutiliza a apresentacao do feed](0589-salvos-apresentacao-feed.md)
 - [ADR-0590 — Aviso de perfil nao publico do paciente](0590-aviso-perfil-privado-paciente.md)
 - [ADR-0591 — Preservar aba da comunidade](0591-preservar-aba-comunidade.md)
+
+- [ADR-0592 — Contagem real do rascunho de filtros](0592-contagem-rascunho-filtros.md)
+
+- [ADR-0593 — Dropdown curto por quantidade de publicacoes](0593-dropdown-comunidades-por-publicacoes.md)
+
+- [ADR-0594 — Outras respostas profissionais em Salvos](0594-salvos-mais-respostas-profissionais.md)
+
+- [ADR-0595 — Controles de video-resposta no perfil](0595-controles-video-resposta-perfil.md)
+
+- [ADR-0596 — Contagem somente com filtros efetivos](0596-contagem-somente-com-filtros.md)
+
+- [ADR-0597 — Retorno para a aba do feed principal](0597-retorno-aba-feed-principal.md)
+
+- [ADR-0598 — Alinhamento e contexto do comentario](0598-alinhamento-contexto-comentario.md)
+- [ADR-0599 — WhatsApp discreto em conteudo sem midia](0599-whatsapp-discreto-conteudo-textual.md)
+
+- [ADR-0600 — Abas de Minhas publicacoes](0600-abas-minhas-publicacoes.md)
+
+- [ADR-0601 — Contexto de origem em Minhas publicacoes](0601-contexto-origem-minhas-publicacoes.md)
+
+- [ADR-0602 — Remover item Privacidade do perfil](0602-remover-item-privacidade-perfil.md)
+
+- [ADR-0603 — Metricas WhatsApp e identidade em Minhas publicacoes](0603-metricas-whatsapp-minhas-publicacoes.md)
+
+- [ADR-0604 — Exclusao preserva video-respostas profissionais](0604-exclusao-preserva-video-resposta.md)
+
+- [ADR-0605 — Composer abaixo da modal de criar post](0605-composer-abaixo-modal-criar-post.md)
+
+- [ADR-0606 — Publicacao do lote de interface de outubro](0606-publicacao-lote-interface-outubro.md)

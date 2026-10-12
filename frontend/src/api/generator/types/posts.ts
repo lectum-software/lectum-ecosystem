@@ -76,6 +76,7 @@ export type PostProfessionalReply = {
 
 export type PostListPost = PostDetail & {
   highlighted_professional_reply: PostProfessionalReply | null;
+  other_professional_reply_authors?: Pick<CommunityAuthor, "id" | "name" | "avatar">[];
 };
 
 export type UserPostReply = {
@@ -100,6 +101,8 @@ export type UserPostReply = {
 };
 
 export type UserPostListItem = {
+  /** Private metric: present only on the psychologist owner mine endpoint. */
+  whatsapp_clicks_count?: number;
   id: string;
   type: "post" | "reply";
   created_at: string;
