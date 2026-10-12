@@ -4,12 +4,24 @@ import test from "node:test";
 
 const readSource = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
+test("composer fica abaixo do overlay de criar post no mobile e desktop", () => {
+  const composer = readSource(
+    "../app/app/community/[slug]/post/[id]/components/reply-composer.tsx",
+  );
+  const modal = readSource("../app/app/community/[slug]/post/new/views/create-community-post.tsx");
+  const composerLayer = Number(composer.match(/fixed inset-x-0 bottom-0 z-\[(\d+)\]/)?.[1]);
+  const modalLayer = Number(modal.match(/fixed inset-0 z-\[(\d+)\]/)?.[1]);
+  assert.ok(composerLayer > 50, "composer permanece acima da navegacao");
+  assert.ok(composerLayer < modalLayer, "overlay intercepta cliques antes do composer");
+  assert.doesNotMatch(composer, /(?:sm|md|lg):z-/);
+});
+
 test("composer principal de comentarios permanece fixo no rodape mobile", () => {
   const composerSource = readSource(
     "../app/app/community/[slug]/post/[id]/components/reply-composer.tsx",
   );
 
-  assert.match(composerSource, /"fixed inset-x-0 bottom-0 z-\[80\]/);
+  assert.match(composerSource, /"fixed inset-x-0 bottom-0 z-\[60\]/);
   assert.match(
     composerSource,
     /if \(!isInline && shouldUseKeyboardSafeArea\) {\s*style\.bottom = `\$\{keyboardOffset\}px`;\s*}/s,

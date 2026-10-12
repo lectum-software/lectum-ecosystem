@@ -663,3 +663,5 @@ Formato recomendado:
 - [ADR-0603 — Metricas WhatsApp e identidade em Minhas publicacoes](0603-metricas-whatsapp-minhas-publicacoes.md)
 
 - [ADR-0604 — Exclusao preserva video-respostas profissionais](0604-exclusao-preserva-video-resposta.md)
+
+- [ADR-0605 — Composer abaixo da modal de criar post](0605-composer-abaixo-modal-criar-post.md)

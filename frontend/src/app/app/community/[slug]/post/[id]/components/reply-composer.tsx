@@ -549,7 +549,7 @@ export const ReplyComposer = ({
           isInline
             ? "mt-3 rounded-[20px] border shadow-none"
             : cn(
-                "fixed inset-x-0 bottom-0 z-[80] rounded-t-[24px] border-t bg-surface shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
+                "fixed inset-x-0 bottom-0 z-[60] rounded-t-[24px] border-t bg-surface shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
                 shouldUseKeyboardSafeArea
                   ? "pb-[var(--lectum-bottom-nav-padding)]"
                   : "pb-[var(--lectum-bottom-fixed-padding)]",

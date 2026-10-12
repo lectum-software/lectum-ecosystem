@@ -1,4 +1,6 @@
-Aprovado localmente: TASK-28 / ADR-0604, exclusao preserva apenas video-respostas de psicologos na cascata do paciente. Usuario aprovou e autorizou publicar em 11/10; gates do lote pendentes.
+Aprovados pelo usuario para producao em 11/10: TASK-202 / ADR-0605 (camada do composer) e TASK-28 / ADR-0604 (exclusao com video-resposta). Publicacao autorizada; gates gerais em andamento.
+
+TASK-28 / ADR-0604 concluida localmente no commit cf84baf3.
 
 Validado localmente: TASK-28 / ADR-0603, identidade de Posts e contadores privados WhatsApp por conteudo. Usuario aprovou Posts e Respostas em 11/10; builds, testes focais e integracao local com dados reais aprovados. Sem push/deploy.
 
