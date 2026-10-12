@@ -67,6 +67,8 @@ Refinamento anterior TASK-23/25 (ADR-0581): publicado e validado em producao 0.1
 
 Em andamento: [TASK-198 — Diagnóstico e reconciliação segura de uploads Stream interrompidos](TASK-198-reconciliacao-segura-uploads-stream.md). Operação manual não destrutiva; evidência produtiva pendente, sem reenvio nem alteração da regra de contas excluídas.
 
+Ajuste de backend e frontend em 11/10/2026: [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md). Oculta a acao e o card enquanto o perfil profissional nao esta disponivel, preservando a relacao para retorno automatico na reativacao. ADR-0608.
+
 Ajuste de frontend em 09/10/2026: [TASK-245 - Confirmacao do nome no retorno ao post](TASK-245-confirmacao-nome-retorno-post.md). Mostra uma confirmacao unica dentro da modal, informa o nome que identificara a publicacao e libera o rascunho somente pelo botao de continuar. Sem link extra, backend, banco, env, package novo ou contrato.
 
 Ajuste de frontend em 09/10/2026: [TASK-244 - Perfil do paciente e retorno ao compositor](TASK-244-perfil-paciente-retorno-compositor.md). Mantem salvar em rodape sticky, ancora as acoes do avatar ao lapis e conclui o retorno direto ao post identificado com o rascunho restaurado. Sem backend, banco, env, package novo ou contrato.
@@ -633,6 +635,7 @@ ou cortesia manual.
 | 243 | [TASK-243 - Anonimato com edicao de nome e rascunho temporario](TASK-243-anonimato-edicao-perfil-rascunho.md) | Done | 242 |
 | 244 | [TASK-244 - Perfil do paciente e retorno ao compositor](TASK-244-perfil-paciente-retorno-compositor.md) | Done | 243 |
 | 245 | [TASK-245 - Confirmacao do nome no retorno ao post](TASK-245-confirmacao-nome-retorno-post.md) | Done | 244 |
+| 246 | [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md) | Done | 245 |
 
 ## Ordem operacional recomendada sem bloqueios
 

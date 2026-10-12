@@ -93,6 +93,20 @@ export const postSearchWhere = (search?: string): Prisma.community_postWhereInpu
   ];
 };
 
+export const isCommunityFavoriteAvailable = (author: AuthorResult) => {
+  const profile = author.psychologist_profile;
+
+  return Boolean(
+    author.role === "psicologo" &&
+      author.active &&
+      !author.deleted &&
+      profile &&
+      !profile.deleted &&
+      profile.published &&
+      profile.video_url?.trim(),
+  );
+};
+
 export const toAuthorResponse = (
   author: AuthorResult,
   mentorScore = 0,
@@ -129,6 +143,7 @@ export const toAuthorResponse = (
         ? (anonymousDisplayName ?? "Membro Anônimo")
         : displayName,
     avatar: shouldHideIdentity ? null : author.avatar,
+    favorite_available: isCommunityFavoriteAvailable(author),
     role: author.role,
     type_label: isDeletedAuthor
       ? isPsychologist

@@ -37,6 +37,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
   const ready = !conversion.isAuthenticated || (Boolean(viewerId) && favorites.isSuccess);
 
   const favorite = useCallback(() => {
+    if (author.favorite_available === false) return;
     if (author.read_only) return;
     if (ownProfile || pending || !ready) return;
     if (!conversion.isAuthenticated) {
@@ -48,6 +49,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
     const mutation = favorited ? unfavoritePsychologist : favoritePsychologist;
     mutation.mutate(id);
   }, [
+    author.favorite_available,
     author.read_only,
     conversion,
     favoritePsychologist,
@@ -68,7 +70,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
     if (intent) window.setTimeout(favorite, 0);
   }, [conversion, favorite, favorited, id, pending, ready]);
 
-  if (author.role !== "psicologo" || !ready || ownProfile) {
+  if (author.role !== "psicologo" || author.favorite_available === false || !ready || ownProfile) {
     return null;
   }
   return (

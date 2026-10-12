@@ -35,14 +35,26 @@ const { ProgressiveConversionContext, noopContext } = await import(
   "../conversion/progressive-conversion-state.ts"
 );
 
-const renderIdentity = ({ viewerId, ids, community = true, readOnly = false }) => {
+const renderIdentity = ({
+  viewerId,
+  ids,
+  community = true,
+  favoriteAvailable,
+  readOnly = false,
+}) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   if (ids) client.setQueryData(keys.patient.favoriteIds(viewerId), ids);
   const store = configureStore({
     reducer: rootReducer,
     preloadedState: { user: viewerId ? { id: viewerId } : null },
   });
-  const author = { id: "psi", name: "Ana Lima", role: "psicologo", read_only: readOnly };
+  const author = {
+    id: "psi",
+    name: "Ana Lima",
+    role: "psicologo",
+    favorite_available: favoriteAvailable,
+    read_only: readOnly,
+  };
   const html = renderToStaticMarkup(
     createElement(
       Provider,
@@ -94,6 +106,17 @@ test("public preview cannot favorite, while normal profiles keep the action", ()
     assert.match(html, /<button[^>]*disabled=""/);
     assert.doesNotMatch(renderIdentity({ viewerId, ids: [] }), /<button[^>]*disabled=""/);
   }
+});
+
+test("unavailable professionals hide the action until their profile returns", () => {
+  assert.doesNotMatch(
+    renderIdentity({ viewerId: "viewer", ids: [], favoriteAvailable: false }),
+    /favorite-toggle|Favoritar Ana Lima/,
+  );
+  assert.match(
+    renderIdentity({ viewerId: "viewer", ids: [], favoriteAvailable: true }),
+    /aria-pressed="false"/,
+  );
 });
 
 test("empty-slot CSS only collapses slots next to a community and restores its width", () => {

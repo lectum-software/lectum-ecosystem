@@ -131,6 +131,7 @@ export type CommunityAuthorDTO = {
   name: string;
   avatar: string | null;
   role: string | null;
+  favorite_available?: boolean;
   type_label: string;
   crp: string | null;
   verified: boolean;
