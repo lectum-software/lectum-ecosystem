@@ -647,8 +647,13 @@ Aprovacao final ADR-0607: usuario confirmou os cenarios pendentes com "Conferido
 ## Refinamento 12/10: modal sem aviso redundante
 
 - [x] Remover o bloco azul Comentario preservado/Resposta preservada, preservando explicacao principal, Cancelar, Silenciar, preflight e regra transacional.
-- [ ] Check/build e conferencia local do refinamento.
+- [x] Check/build e conferencia local do refinamento.
 
 Referencia: captura do usuario apos smoke produtivo 0.1.639. Sem alterar Salvos, backend, schema, env ou dependencias. Nova revisao local, sem autorizacao adicional de publicacao.
 - [x] Check completo frontend e build aprovados; regressao cobre retirada do aviso e manutencao da explicacao e erros reais.
-- [ ] Conferencia visual da modal revisada: navegador local indisponivel por timeout da automacao. Sem push/deploy do refinamento.
+- [x] Conferencia visual da modal revisada confirmada pelo usuario em 12/10; publicacao autorizada.
+
+Refino textual adicional 12/10: usuario solicitou exatamente "Para preservar o conteúdo compartilhado pelos profissionais, comentários com vídeos de psicólogos não podem ser excluídos.". Somente copy da modal; regra e preflight preservados. Publicacao anterior interrompida antes do envio para incluir este pedido; validacao tecnica do texto em andamento.
+
+Copy de post tambem simplificada a pedido: "Para preservar o conteúdo compartilhado pelos profissionais, posts que tenham respostas em vídeo não podem ser excluídos.". Mesma validacao de regressao, nenhuma alteracao na regra.
+- [x] Duas frases exatas solicitadas pelo usuario cobertas por regressao; 32 testes focais e build final aprovados. Sem mudanca de regra ou layout alem da remocao ja conferida.

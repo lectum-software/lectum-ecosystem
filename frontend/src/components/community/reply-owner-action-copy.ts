@@ -21,6 +21,6 @@ export const getReplyOwnerActionCopy = ({
         ? `${subject} já possui respostas de outros membros.\n\nAo excluir, as respostas encadeadas abaixo ${pronoun} também serão removidas.\n\nEsta ação não poderá ser desfeita.`
         : "Esta ação não poderá ser desfeita.",
     blockedTitle: `Não é possível excluir ${isReply ? "esta resposta" : "este comentário"}`,
-    blockedDescription: `${subject} possui uma resposta em vídeo de um psicólogo na conversa abaixo.\n\nPara preservar o conteúdo compartilhado pelos profissionais, comentários e respostas com vídeos de psicólogos entre suas respostas encadeadas não podem ser excluídos por pacientes.\n\nVocê pode silenciar a conversa para parar de receber novas notificações desse post.`,
+    blockedDescription: `${subject} possui uma resposta em vídeo de um psicólogo na conversa abaixo.\n\nPara preservar o conteúdo compartilhado pelos profissionais, comentários com vídeos de psicólogos não podem ser excluídos.\n\nVocê pode silenciar a conversa para parar de receber novas notificações desse post.`,
   };
 };

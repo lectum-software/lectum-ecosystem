@@ -49,3 +49,17 @@ test("reply checks entire fresh subtree before confirmation and preserves confli
   assert.match(detail, /<ReplyOwnerActionMenu/);
   assert.doesNotMatch(detail, /CommunityDeleteConfirmationModal|onDelete\(\)/);
 });
+
+test("blocked post modal uses the requested concise preservation copy", () => {
+  const source = readFileSync(new URL("post-owner-action-menu.tsx", import.meta.url), "utf8");
+  assert.ok(
+    source.includes(
+      "Para preservar o conteúdo compartilhado pelos profissionais, posts que tenham respostas em vídeo não podem ser excluídos.",
+    ),
+  );
+  assert.ok(
+    !source.includes(
+      "Para preservar o conteúdo compartilhado pelos profissionais, pacientes não podem excluir posts que tenham respostas em vídeo de psicólogos.",
+    ),
+  );
+});

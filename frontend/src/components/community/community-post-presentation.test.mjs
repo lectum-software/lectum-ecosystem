@@ -674,7 +674,10 @@ test("bloqueio e preservação usam resposta no feminino, com restrição espec�
   assert.equal(copy.blockedTitle, "Não é possível excluir esta resposta");
   assert.equal("preservedTitle" in copy, false);
   assert.match(copy.blockedDescription, /^Esta resposta possui uma resposta em vídeo/);
-  assert.match(copy.blockedDescription, /não podem ser excluídos por pacientes/);
+  assert.equal(
+    copy.blockedDescription.split("\n\n")[1],
+    "Para preservar o conteúdo compartilhado pelos profissionais, comentários com vídeos de psicólogos não podem ser excluídos.",
+  );
   assert.match(copy.blockedDescription, /Você pode silenciar a conversa/);
 });
 

@@ -366,7 +366,7 @@ export const PostOwnerActionMenu = ({
       <PostActionModal
         action={post.muted_by_current_user ? "Silenciado" : "Silenciar"}
         description={
-          "Este post já recebeu uma resposta em vídeo de um psicólogo.\n\nPara preservar o conteúdo compartilhado pelos profissionais, pacientes não podem excluir posts que tenham respostas em vídeo de psicólogos.\n\nVocê pode silenciar este post para parar de receber novas notificações."
+          "Este post já recebeu uma resposta em vídeo de um psicólogo.\n\nPara preservar o conteúdo compartilhado pelos profissionais, posts que tenham respostas em vídeo não podem ser excluídos.\n\nVocê pode silenciar este post para parar de receber novas notificações."
         }
         disabled={muteMutation.isPending}
         icon={<AlertTriangle className="h-5 w-5" aria-hidden="true" />}

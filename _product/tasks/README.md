@@ -1,3 +1,5 @@
+Em preparacao para publicacao TASK-28 / ADR-0607: remocao do bloco azul aprovada visualmente pelo usuario; texto de preservacao simplificado a pedido. Sem mudanca de regra.
+
 Refinamento local TASK-28 / ADR-0607: remover aviso azul redundante da modal de exclusao bloqueada. Release 0.1.639 publicado via PR #103 e smoke concluido; novo ajuste ainda sem publicacao.
 
 Em andamento: TASK-28 / ADR-0607. Revisao pos-publicacao: controles antes do destaque, mais respostas, preflight de exclusao, menus alinhados e remocao do selo de resposta verificada. Validacao local conferida e aprovada pelo usuario; publicacao autorizada, preparando PR homolog -> main.
