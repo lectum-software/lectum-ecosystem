@@ -4,7 +4,7 @@ import test from "node:test";
 
 const { varyCommunityFeedItems } = await import("./community-feed-variation.ts");
 
-test("feed e destaque não sobrescrevem ranking global calculado pelo backend", () => {
+test("feed, destaque e oportunidades não sobrescrevem ranking global do backend", () => {
   const base = new URL("../app/app/community/[slug]/", import.meta.url);
   const view = readFileSync(new URL("views/community-feed.tsx", base), "utf8");
   const support = readFileSync(new URL("modules/feed-support.ts", base), "utf8");
@@ -21,6 +21,11 @@ test("feed e destaque não sobrescrevem ranking global calculado pelo backend", 
     support,
     /Featured is globally ranked and paginated by the backend\.\s*return items;/,
   );
+  assert.match(
+    support,
+    /Opportunities is globally ranked and paginated by the backend\.\s*return items;/,
+  );
+  assert.doesNotMatch(support, /const professionalRepliesDiff/);
 });
 
 const createPost = (id) => ({

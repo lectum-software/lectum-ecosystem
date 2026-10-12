@@ -6,6 +6,7 @@ import {
   professionalActivityScore,
 } from "./community-featured";
 import {
+  communityOpportunityScore,
   emptyCommunityPostSortMetrics,
   type PostResult,
   type ProfessionalReplyResult,
@@ -469,5 +470,78 @@ describe("modos do feed profissional", () => {
     }
     assert.equal(isMixedFeedEligible(unanswered), false);
     assert.equal(isMixedFeedEligible(professional), true);
+  });
+
+  it("oportunidades prioriza demanda coletiva recente com pouca cobertura profissional", () => {
+    const freshUnanswered = post("fresh-unanswered", 0, 0);
+    const activeConversation = post("active-conversation", 6, 2);
+    const freshMetrics = emptyCommunityPostSortMetrics();
+    const activeMetrics = {
+      ...emptyCommunityPostSortMetrics(),
+      patient_comments_count: 6,
+      unique_patient_commenters_count: 5,
+      latest_patient_comment_at: daysAgo(0),
+      psychologist_replies_count: 1,
+    };
+
+    assert.ok(
+      communityOpportunityScore(activeConversation, activeMetrics, now) >
+        communityOpportunityScore(freshUnanswered, freshMetrics, now),
+    );
+    assert.deepEqual(
+      sortCommunityPostResults(
+        [freshUnanswered, activeConversation],
+        "opportunities",
+        "all",
+        new Map([
+          [freshUnanswered.id, freshMetrics],
+          [activeConversation.id, activeMetrics],
+        ]),
+      ).map((item) => item.id),
+      [activeConversation.id, freshUnanswered.id],
+    );
+  });
+
+  it("oportunidades valoriza pessoas distintas mais que repeticoes da mesma pessoa", () => {
+    const repeated = post("repeated", 10, 1);
+    const collective = post("collective", 5, 1);
+    const repeatedMetrics = {
+      ...emptyCommunityPostSortMetrics(),
+      patient_comments_count: 10,
+      unique_patient_commenters_count: 1,
+      latest_patient_comment_at: daysAgo(0),
+    };
+    const collectiveMetrics = {
+      ...emptyCommunityPostSortMetrics(),
+      patient_comments_count: 5,
+      unique_patient_commenters_count: 5,
+      latest_patient_comment_at: daysAgo(0),
+    };
+
+    assert.ok(
+      communityOpportunityScore(collective, collectiveMetrics, now) >
+        communityOpportunityScore(repeated, repeatedMetrics, now),
+    );
+  });
+
+  it("oportunidades reduz progressivamente posts ja cobertos por psicologos", () => {
+    const candidate = post("candidate", 4, 1);
+    const base = {
+      ...emptyCommunityPostSortMetrics(),
+      patient_comments_count: 4,
+      unique_patient_commenters_count: 4,
+      latest_patient_comment_at: daysAgo(0),
+    };
+    const oneReply = { ...base, psychologist_replies_count: 1 };
+    const threeReplies = { ...base, psychologist_replies_count: 3 };
+
+    assert.ok(
+      communityOpportunityScore(candidate, base, now) >
+        communityOpportunityScore(candidate, oneReply, now),
+    );
+    assert.ok(
+      communityOpportunityScore(candidate, oneReply, now) >
+        communityOpportunityScore(candidate, threeReplies, now),
+    );
   });
 });

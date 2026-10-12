@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import { anonymousDisplayNameForAuthor } from "@/utils/anonymous-author";
 import type { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
+import { isProfessionalFavoriteAvailable } from "@/utils/professional-favorite-availability";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
@@ -45,13 +46,16 @@ export const communitySelect = {
 } satisfies Prisma.communitySelect;
 
 export const professionalProfileSelect = {
+  deleted: true,
   professional_first_name: true,
   professional_last_name: true,
+  published: true,
   gender: true,
   crp: true,
   whatsapp: true,
   cfp_verified_at: true,
   crp_status: true,
+  video_url: true,
   subscriptions: {
     where: activeProfessionalEntitlementWhere(),
     select: {
@@ -62,6 +66,7 @@ export const professionalProfileSelect = {
 } satisfies Prisma.psychologist_profileSelect;
 
 export const authorSelect = {
+  active: true,
   id: true,
   deleted: true,
   name: true,
@@ -357,6 +362,7 @@ export const toAuthorResponse = (
         ? (anonymousDisplayName ?? "Membro Anônimo")
         : displayName,
     avatar: shouldHideIdentity ? null : author.avatar,
+    favorite_available: isProfessionalFavoriteAvailable(author),
     role: author.role,
     type_label: isDeletedAuthor
       ? isPsychologist

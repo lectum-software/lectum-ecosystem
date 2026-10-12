@@ -4,6 +4,10 @@ import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { resolveProfessionalExperienceTagVisibility } from "@/utils/professional-experience-tag";
 import {
+  professionalFavoriteAvailableProfileWhere,
+  professionalFavoriteAvailableUserWhere,
+} from "@/utils/professional-favorite-availability";
+import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
@@ -107,16 +111,7 @@ export class FavoriteRepository implements IFavoriteRepository {
     const pagination = normalizePagination(data.q);
     const search = data.q.search?.trim();
     const profileWhere: Prisma.psychologist_profileWhereInput = {
-      published: true,
-      deleted: false,
-      video_url: {
-        not: null,
-      },
-      NOT: [
-        {
-          video_url: "",
-        },
-      ],
+      ...professionalFavoriteAvailableProfileWhere(),
       available_days: data.q.available_today
         ? {
             array_contains: [currentWeekdayValue()],
@@ -134,9 +129,7 @@ export class FavoriteRepository implements IFavoriteRepository {
       AND: data.q.verified ? [verifiedProfessionalProfileWhere()] : undefined,
     };
     const psychologistWhere: Prisma.userWhereInput = {
-      role: "psicologo",
-      active: true,
-      deleted: false,
+      ...professionalFavoriteAvailableUserWhere(),
       psychologist_profile: {
         is: profileWhere,
       },
@@ -409,23 +402,7 @@ export class FavoriteRepository implements IFavoriteRepository {
     const psychologist = await prisma.user.findFirst({
       where: {
         id: psychologistId,
-        role: "psicologo",
-        active: true,
-        deleted: false,
-        psychologist_profile: {
-          is: {
-            published: true,
-            deleted: false,
-            video_url: {
-              not: null,
-            },
-            NOT: [
-              {
-                video_url: "",
-              },
-            ],
-          },
-        },
+        ...professionalFavoriteAvailableUserWhere(),
       },
       select: {
         id: true,

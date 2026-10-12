@@ -55,10 +55,18 @@ export const AuthorAvatar = ({
   author: PostDetail["author"] | PostReply["author"];
   href?: string;
   onProfileClick?: MouseEventHandler<HTMLAnchorElement>;
-  size?: "sm" | "md" | "reply";
+  size?: "xs" | "sm" | "md" | "reply";
 }) => {
-  const sizeClass = size === "sm" ? "h-8 w-8" : size === "reply" ? "h-9 w-9" : "h-10 w-10";
-  const imageSize = size === "sm" ? "32px" : size === "reply" ? "36px" : "40px";
+  const sizeClass =
+    size === "xs"
+      ? "h-6 w-6"
+      : size === "sm"
+        ? "h-8 w-8"
+        : size === "reply"
+          ? "h-9 w-9"
+          : "h-10 w-10";
+  const imageSize =
+    size === "xs" ? "24px" : size === "sm" ? "32px" : size === "reply" ? "36px" : "40px";
 
   if (anonymous) {
     return (
@@ -68,7 +76,10 @@ export const AuthorAvatar = ({
           sizeClass,
         )}
       >
-        <UserX className={size === "sm" ? "h-4 w-4" : "h-5 w-5"} aria-hidden="true" />
+        <UserX
+          className={size === "xs" ? "h-3.5 w-3.5" : size === "sm" ? "h-4 w-4" : "h-5 w-5"}
+          aria-hidden="true"
+        />
       </span>
     );
   }
