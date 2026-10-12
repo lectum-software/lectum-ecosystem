@@ -23,6 +23,8 @@ const config = parseVideoServiceConfig({
   NODE_ENV: "test",
   REDIS_URL: "redis://localhost:6379/0",
   VIDEO_SERVICE_API_KEY: "x".repeat(32),
+  VIDEO_FFMPEG_PATH: process.env.VIDEO_FFMPEG_PATH,
+  VIDEO_FFPROBE_PATH: process.env.VIDEO_FFPROBE_PATH,
 });
 const metadata = {
   cardLabel: "Respondido na Lectum",
@@ -37,17 +39,13 @@ const metadata = {
 describe("social share local FFmpeg output", () => {
   let directory: string;
   let unavailableReason: string | undefined;
+  let probeUnavailableReason: string | undefined;
 
   before(async () => {
     try {
       const filters = await runManagedProcess({
         args: ["-hide_banner", "-filters"],
         command: config.ffmpegPath,
-        timeoutMs: 10_000,
-      });
-      await runManagedProcess({
-        args: ["-version"],
-        command: config.ffprobePath,
         timeoutMs: 10_000,
       });
       if (!/\bdrawtext\s/u.test(filters)) {
@@ -59,10 +57,25 @@ describe("social share local FFmpeg output", () => {
         error instanceof ManagedProcessError &&
         error.diagnosticCode === "process_binary_unavailable"
       ) {
-        unavailableReason = "FFmpeg/ffprobe não instalado; sem evidência de render real";
+        unavailableReason = "FFmpeg não instalado; sem evidência de render real";
         return;
       }
       throw error;
+    }
+
+    try {
+      await runManagedProcess({
+        args: ["-version"],
+        command: config.ffprobePath,
+        timeoutMs: 10_000,
+      });
+    } catch (error) {
+      if (
+        error instanceof ManagedProcessError &&
+        error.diagnosticCode === "process_binary_unavailable"
+      ) {
+        probeUnavailableReason = "ffprobe nao instalado; verificacao de metadados indisponivel";
+      } else throw error;
     }
 
     directory = await mkdtemp(join(tmpdir(), "lectum-social-share-local-"));
@@ -99,6 +112,77 @@ describe("social share local FFmpeg output", () => {
   after(async () => {
     if (directory) await rm(directory, { force: true, recursive: true });
   });
+
+  for (const filterMode of ["standard", "portable"] as const) {
+    it(`MP4 sem caixinha preserva pixels do fundo e identificacao: ${filterMode}`, async (context) => {
+      if (unavailableReason) return context.skip(unavailableReason);
+      const fontFile =
+        (await resolveSocialShareFontFile()) ??
+        (await resolveSocialShareFontFile(["C:/Windows/Fonts/arialbd.ttf"]));
+      const inputMetadata = { ...metadata, hideSourceCard: true };
+      const outputPath = join(directory, `hidden-${filterMode}.mp4`);
+      await runManagedProcess({
+        command: config.ffmpegPath,
+        timeoutMs: 60_000,
+        args: buildSocialShareVideoArguments(
+          {
+            config,
+            metadata: inputMetadata,
+            outputPath,
+            source: { kind: "file", inputPath: join(directory, "silent.mp4") },
+          },
+          {
+            filterMode,
+            fontFile,
+            regularFontFile: fontFile,
+            professionalNameLayout: await measureSocialShareProfessionalName({
+              config,
+              metadata: inputMetadata,
+              fontFile,
+            }),
+          },
+        ),
+      });
+      for (const [region, crop] of [
+        ["card", "860:354:110:250"],
+        ["name", "1080:80:0:1400"],
+      ]) {
+        const rgbPath = join(directory, `hidden-${filterMode}-${region}.rgb`);
+        await runManagedProcess({
+          command: config.ffmpegPath,
+          timeoutMs: 30_000,
+          args: [
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-i",
+            outputPath,
+            "-vf",
+            `crop=${crop}`,
+            "-frames:v",
+            "1",
+            "-pix_fmt",
+            "rgb24",
+            "-f",
+            "rawvideo",
+            rgbPath,
+          ],
+        });
+        const pixels = await readFile(rgbPath);
+        if (region === "card")
+          assert.ok(
+            pixels.every((value) => value < 16),
+            "sem texto, fundo ou logo sobre o letterbox preto",
+          );
+        else
+          assert.ok(
+            pixels.some((value) => value > 180),
+            "identificacao continua visivel",
+          );
+      }
+    });
+  }
 
   for (const [index, name] of [
     "Rousel Cesconetto",
@@ -248,8 +332,8 @@ describe("social share local FFmpeg output", () => {
     },
   ] as const) {
     it(`renderiza e valida ${scenario.name}: ${scenario.width}x${scenario.height}`, async (context) => {
-      if (unavailableReason) {
-        context.skip(unavailableReason);
+      if (unavailableReason || probeUnavailableReason) {
+        context.skip(unavailableReason ?? probeUnavailableReason);
         return;
       }
       const limitedConfig = {

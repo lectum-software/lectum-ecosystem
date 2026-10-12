@@ -32,6 +32,7 @@ export type LectumShareMediaItem = {
 };
 
 export type LectumShareSocialTarget = LectumShareBaseTarget & {
+  hideSourceCard?: boolean;
   cardLabel: "Postado na Lectum" | "Respondido na Lectum";
   carouselCount: number;
   kind: "post_media" | "video_response";
@@ -73,6 +74,11 @@ type ShareTargetOptions = {
   parentContent?: string | null;
   relativeUrl?: string;
 };
+
+export const shouldHideReplyQuestion = (
+  reply: { parent_reply_id?: string | null; parent_content?: string | null },
+  parentContent = reply.parent_content,
+) => Boolean(reply.parent_reply_id && !parentContent?.trim());
 
 type ShareablePostWithMedia = Pick<
   PostListPost,
@@ -281,6 +287,7 @@ export const createLectumShareVideoDownloadTarget = (
 
   const parentContent =
     options.parentContent ?? ("parent_content" in reply ? reply.parent_content : null);
+  const hideSourceCard = shouldHideReplyQuestion(reply, parentContent);
   const postTitle = post.title.trim() || "Pergunta na Lectum";
   const hasCommentContext = Boolean(parentContent?.trim() || reply.parent_reply_id);
   const sourceText = (hasCommentContext ? parentContent : postTitle)?.trim() || postTitle;
@@ -317,6 +324,7 @@ export const createLectumShareVideoDownloadTarget = (
     shareText: postTitle,
     shareTitle: createLectumSocialShareTitle(professionalName),
     shareUrl: toAbsoluteShareUrl(relativeUrl),
+    hideSourceCard,
     sourceKind: hasCommentContext ? "comment" : "post",
     sourceText,
     whatsappShareUrl: toAbsoluteShareUrl(whatsappShareRelativeUrl),

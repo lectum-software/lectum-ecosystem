@@ -64,6 +64,7 @@ type VideoServiceEnvelope = {
 };
 
 export type ShareRenderTarget = {
+  hideSourceCard?: boolean;
   cardLabel: string;
   fileName: string;
   mediaUrl: string;
@@ -463,6 +464,7 @@ const resolveShareRenderTarget = async (
     const target: ShareRenderTarget = {
       ...info,
       cardLabel: "Respondido na Lectum",
+      hideSourceCard: Boolean(reply.parent_reply_id && !reply.parent_reply?.content?.trim()),
       fileName: buildShareFileName(info.professionalName, sourceText),
       mediaUrl: reply.media_url,
       postId: data.p.id,
@@ -524,6 +526,7 @@ export const startResolvedShareRenderArtifactJob = async (input: {
     body: JSON.stringify({
       metadata: {
         cardLabel: target.cardLabel,
+        hideSourceCard: target.hideSourceCard,
         professionalName: target.professionalName,
         professionalRoleLabel: target.professionalRoleLabel,
         professionalVerified: target.professionalVerified,

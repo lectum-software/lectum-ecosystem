@@ -56,7 +56,7 @@ const applyPreviewMutedState = (video: HTMLVideoElement, muted: boolean) => {
   }
 };
 
-const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
+export const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
   const sourceText = target.sourceText.trim() || "Conteúdo na Lectum";
   const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 30), [sourceText]);
 
@@ -66,42 +66,43 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
       className="pointer-events-none absolute inset-0 z-[2] text-center text-primary-foreground"
       data-lectum-share-preview-art="true"
     >
-      <div
-        className="absolute top-[13%] left-[10.2%] w-[79.7%] overflow-hidden rounded-[2.95cqw]"
-        style={{ fontFamily: "var(--font-manrope), Manrope, Arial, sans-serif" }}
-      >
-        <div className="flex h-[4.6cqh] min-h-[1.05rem] items-center justify-center bg-primary px-[3.2cqw] text-[3.45cqw] font-bold leading-none text-primary-foreground">
-          <span className="flex min-w-0 items-center justify-center gap-[1.1cqw]">
-            <Image
-              alt=""
-              aria-hidden="true"
-              className="h-[2.85cqw] w-auto shrink-0 -translate-y-[0.35cqw]"
-              height={252}
-              priority={false}
-              src="/images/social/lectum-symbol-white.png"
-              width={239}
-            />
-            <span className="min-w-0 truncate tracking-[-0.015em]">{target.cardLabel}</span>
-          </span>
-        </div>
+      {!target.hideSourceCard ? (
         <div
-          className="grid min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.6cqw]"
-          style={{ height: getPreviewSourceBodyHeight(sourceLines.length) }}
+          className="absolute top-[13%] left-[10.2%] w-[79.7%] overflow-hidden rounded-[2.95cqw]"
+          style={{ fontFamily: "var(--font-manrope), Manrope, Arial, sans-serif" }}
         >
-          <p
-            className={cn(
-              "whitespace-pre-line font-bold tracking-[-0.025em] text-media-background",
-              sourceLines.length > 2
-                ? "text-[4.05cqw] leading-[1.17]"
-                : "text-[4.65cqw] leading-[1.24]",
-            )}
-            data-lectum-share-preview-source-text="true"
+          <div className="flex h-[4.6cqh] min-h-[1.05rem] items-center justify-center bg-primary px-[3.2cqw] text-[3.45cqw] font-bold leading-none text-primary-foreground">
+            <span className="flex min-w-0 items-center justify-center gap-[1.1cqw]">
+              <Image
+                alt=""
+                aria-hidden="true"
+                className="h-[2.85cqw] w-auto shrink-0 -translate-y-[0.35cqw]"
+                height={252}
+                priority={false}
+                src="/images/social/lectum-symbol-white.png"
+                width={239}
+              />
+              <span className="min-w-0 truncate tracking-[-0.015em]">{target.cardLabel}</span>
+            </span>
+          </div>
+          <div
+            className="grid min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.6cqw]"
+            style={{ height: getPreviewSourceBodyHeight(sourceLines.length) }}
           >
-            {sourceLines.join("\n")}
-          </p>
+            <p
+              className={cn(
+                "whitespace-pre-line font-bold tracking-[-0.025em] text-media-background",
+                sourceLines.length > 2
+                  ? "text-[4.05cqw] leading-[1.17]"
+                  : "text-[4.65cqw] leading-[1.24]",
+              )}
+              data-lectum-share-preview-source-text="true"
+            >
+              {sourceLines.join("\n")}
+            </p>
+          </div>
         </div>
-      </div>
-
+      ) : null}
       <div className="absolute top-[69.35%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
         <div className="inline-grid max-w-full justify-items-start text-left">
           <div className="flex max-w-full items-center justify-start gap-[0.93cqw]">

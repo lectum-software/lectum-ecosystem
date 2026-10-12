@@ -96,9 +96,18 @@ const safeFileName = (target: LectumShareSocialTarget, extension: "mp4") => {
 };
 
 const createPreparedShareFileCacheKey = (target: LectumShareSocialTarget) =>
-  [target.kind, target.postId, target.replyId ?? "post", target.mediaUrl, target.sourceText].join(
-    "::",
-  );
+  JSON.stringify([
+    target.kind,
+    target.postId,
+    target.replyId ?? "post",
+    target.mediaUrl,
+    target.sourceText,
+    target.hideSourceCard === true,
+    target.cardLabel,
+    target.professional.name,
+    target.professional.roleLabel,
+    target.professional.verified,
+  ]);
 
 const isReusableShareRenderJobStatus = (status: PreparedShareRenderJob["status"]) =>
   status === "queued" ||

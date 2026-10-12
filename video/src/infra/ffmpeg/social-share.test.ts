@@ -45,6 +45,41 @@ const metadata = {
 };
 
 describe("FFmpeg social share command", () => {
+  it("preserva o layout legado quando a opcao de ocultar nao e enviada", () => {
+    assert.equal(sanitizeSocialShareMetadata(metadata).hideSourceCard, false);
+    assert.equal(
+      buildSocialShareFilter(metadata, 30),
+      buildSocialShareFilter({ ...metadata, hideSourceCard: false }, 30),
+    );
+  });
+
+  for (const filterMode of ["standard", "portable"] as const) {
+    for (const assets of [true, false]) {
+      it(`oculta toda a caixinha sem alterar identificacao: ${filterMode}, assets=${assets}`, () => {
+        const args = buildSocialShareVideoArguments(
+          {
+            config,
+            metadata: { ...metadata, hideSourceCard: true },
+            outputPath: "/safe/output.mp4",
+            source: { kind: "file", inputPath: "/safe/input.mp4" },
+          },
+          {
+            filterMode,
+            ...(assets
+              ? {}
+              : { cardBackgroundFile: null, logoFile: null, verifiedBadgeFile: null }),
+          },
+        );
+        const filter = args[args.indexOf("-filter_complex") + 1] ?? "";
+        assert.doesNotMatch(args.join(" "), /question-card-background|lectum-symbol-white/);
+        assert.doesNotMatch(filter, /Respondido na Lectum|Como lidar|ansiedade|card0|lectum_logo/);
+        assert.match(filter, /text='Ana Martins'.*:y=1400:fontsize=34/);
+        assert.match(filter, /text='Psicóloga'.*:y=1440:fontsize=21/);
+        if (assets) assert.match(filter, /\[1:v\]scale=26:24:flags=lanczos\[verified_badge\]/);
+        else assert.match(filter, /text='✓'/);
+      });
+    }
+  }
   for (const length of [18, 29, 30, 31, 90]) {
     it(`aplica limite de 30 caracteres para nome com ${length} caracteres`, () => {
       const name = "W".repeat(length);

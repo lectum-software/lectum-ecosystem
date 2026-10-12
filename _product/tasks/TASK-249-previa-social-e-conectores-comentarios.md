@@ -49,3 +49,36 @@ mais e ocultar, com capturas e medidas da borda continua. Testes focados: 3/3.
 As curvas intermediarias tambem usam bordas CSS com raio de 8px e a mesma espessura,
 alinhadas ao eixo da borda do pai em todos os recuos. O controle final aprovado
 permanece inalterado neste complemento.
+
+## Resposta a comentario sem texto - 2026-10-12
+
+- [x] Video-resposta a comentario sem texto oculta a caixinha no perfil e nos salvos.
+- [x] Previa social e MP4 omitem o bloco completo (fundo, titulo, logo e texto), sem aviso substituto.
+- [x] Respostas diretas ao post e comentarios com texto preservam a caixinha.
+- [x] Nome, selo e identificacao do profissional permanecem na arte social.
+- [x] Cache de arquivo/job diferencia visibilidade da caixinha e identificacao profissional.
+
+Regra de produto: a previa e o arquivo baixado devem apresentar o mesmo layout em
+todos os casos. A ocultacao deve valer tambem nos modos alternativos de FFmpeg.
+Testes cobrem o componente real da previa via SSR e os pixels do MP4 decodificado
+nos modos standard/portable, alem dos contratos frontend/backend/video.
+
+O complemento acrescenta `hideSourceCard` opcional aos metadados sociais. Publicar
+video (API e worker) primeiro, backend depois e frontend por ultimo: o servico de
+video antigo ignora o campo. Sem migration, env ou dependencia nova. Arquivos ja
+baixados nao sao modificados. Sem push/deploy neste ajuste.
+
+Validacao deste complemento (nao confundir com os builds anteriores):
+
+- Frontend: 29 testes focados de perfil/salvos/previa aprovados; lint dos arquivos
+  alterados, Biome e typecheck aprovados.
+- Backend: 10 testes de contrato e typecheck aprovados; download administrativo
+  usa a mesma decisao de ocultacao do download pelo usuario.
+- Video: check aprovado (92 testes, 13 skips por binarios fora do PATH) e build
+  aprovado. Os dois novos testes de MP4 real foram executados separadamente com
+  FFmpeg local explicito, sem skips, verificando pixels nos dois modos.
+- Previa real renderizada em Chrome headless a 393 e 1280px, com e sem caixinha,
+  em harness isolado do componente. Nao equivale a E2E autenticado do download.
+- Build/frontend e check integral nao concluidos neste complemento: C: atingiu
+  zero bytes livres. Dev server foi interrompido para evitar artefatos incompletos.
+- Builder/Quick Copy indisponivel; mantida a composicao existente da arte social.

@@ -1,12 +1,113 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { registerHooks } from "node:module";
 import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import "../../scripts/register-source-modules.mjs";
 import {
   isNativeShareAbortError,
   resolveLectumFileShareData,
   resolveLectumLinkShareData,
 } from "./lectum-share-media/native-share.ts";
 import { getPreviewSourceBodyHeight, wrapPreviewSourceText } from "./lectum-share-preview-text.ts";
+
+const { createLectumShareVideoDownloadTarget, shouldHideReplyQuestion } = await import(
+  "./lectum-share-target.ts"
+);
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === "next/image") {
+      const imageModule = nextResolve("next/dist/client/image-component.js", context).url;
+      return {
+        shortCircuit: true,
+        url: `data:text/javascript,${encodeURIComponent(`export { Image as default } from ${JSON.stringify(imageModule)}`)}`,
+      };
+    }
+    return nextResolve(specifier, context);
+  },
+});
+const { LectumSharePreviewArt } = await import(
+  "../components/community/lectum-share-download-dialog.tsx"
+);
+
+test("previa renderizada remove toda a pergunta e mantem identificacao sem aviso substituto", () => {
+  const target = {
+    sourceText: "Pergunta original",
+    cardLabel: "Respondido na Lectum",
+    professional: { name: "Ana", roleLabel: "Psicóloga", verified: true },
+  };
+  const visible = renderToStaticMarkup(createElement(LectumSharePreviewArt, { target }));
+  assert.match(visible, /Pergunta original/);
+  assert.match(visible, /Respondido na Lectum/);
+  const hidden = renderToStaticMarkup(
+    createElement(LectumSharePreviewArt, { target: { ...target, hideSourceCard: true } }),
+  );
+  assert.doesNotMatch(
+    hidden,
+    /Pergunta original|Respondido na Lectum|lectum-symbol-white|data-lectum-share-preview-source-text/,
+  );
+  assert.match(hidden, /Ana/);
+  assert.match(hidden, /Psicóloga/);
+});
+
+test("video sem texto no comentario pai nao ganha caixinha nem titulo substituto", () => {
+  const post = { id: "post-1", title: "Pergunta original" };
+  const reply = {
+    id: "reply-2",
+    parent_reply_id: "reply-1",
+    parent_content: null,
+    media_type: "video",
+    media_url: "/video.mp4",
+    content: "",
+    title: null,
+    author: {
+      role: "psicologo",
+      name: "Ana",
+      verified: true,
+      type_label: "Psicóloga",
+      avatar: null,
+    },
+  };
+  for (const parent_content of [null, "", "  \n  "]) {
+    const item = { ...reply, parent_content };
+    assert.equal(shouldHideReplyQuestion(item), true);
+    assert.equal(createLectumShareVideoDownloadTarget(post, item).hideSourceCard, true);
+  }
+  const direct = { ...reply, parent_reply_id: null };
+  assert.equal(shouldHideReplyQuestion(direct), false);
+  const directTarget = createLectumShareVideoDownloadTarget(post, direct);
+  assert.equal(directTarget.hideSourceCard, false);
+  assert.equal(directTarget.sourceText, post.title);
+  const textTarget = createLectumShareVideoDownloadTarget(post, {
+    ...reply,
+    parent_content: "Minha duvida",
+  });
+  assert.equal(textTarget.hideSourceCard, false);
+  assert.equal(textTarget.sourceText, "Minha duvida");
+  const resolved = createLectumShareVideoDownloadTarget(post, reply, {
+    parentContent: "Texto carregado",
+  });
+  assert.equal(resolved.hideSourceCard, false);
+  assert.equal(resolved.sourceText, "Texto carregado");
+});
+
+test("exibicao, previa e cache respeitam a ausencia da caixinha", () => {
+  const dialog = readFileSync(
+    new URL("../components/community/lectum-share-download-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const card = readFileSync(
+    new URL("../components/community/community-post-card.tsx", import.meta.url),
+    "utf8",
+  );
+  const media = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
+  assert.match(dialog, /!target\.hideSourceCard \? \(/);
+  assert.match(card, /ProfileReplyVideoQuestion title=\{post.title\} reply=\{primaryReply\}/);
+  assert.match(media, /target\.hideSourceCard === true/);
+  assert.match(media, /target\.professional\.verified/);
+  assert.doesNotMatch(dialog, /Respondendo (?:a )?outro v[ií]deo/i);
+});
 
 test("previa preserva a pergunta completa e cresce somente depois de tres linhas", () => {
   const question =
