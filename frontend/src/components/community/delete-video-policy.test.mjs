@@ -2,6 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+test("blocked reply modal omits redundant preserved-content notice but keeps mute errors", () => {
+  const source = readFileSync(new URL("reply-owner-action-menu.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /preservedTitle|variant="info"/);
+  assert.match(source, /description=\{copy.blockedDescription\}/);
+  assert.match(source, /title="Não foi possível silenciar" variant="error"/);
+  assert.match(source, /onAction=\{handleBlockedMute\}/);
+});
+
 test("post checks fresh video status before confirmation and preserves transactional conflict", () => {
   const source = readFileSync(new URL("post-owner-action-menu.tsx", import.meta.url), "utf8");
   const request = source
@@ -40,4 +48,18 @@ test("reply checks entire fresh subtree before confirmation and preserves confli
   );
   assert.match(detail, /<ReplyOwnerActionMenu/);
   assert.doesNotMatch(detail, /CommunityDeleteConfirmationModal|onDelete\(\)/);
+});
+
+test("blocked post modal uses the requested concise preservation copy", () => {
+  const source = readFileSync(new URL("post-owner-action-menu.tsx", import.meta.url), "utf8");
+  assert.ok(
+    source.includes(
+      "Para preservar o conteúdo compartilhado pelos profissionais, posts que tenham respostas em vídeo não podem ser excluídos.",
+    ),
+  );
+  assert.ok(
+    !source.includes(
+      "Para preservar o conteúdo compartilhado pelos profissionais, pacientes não podem excluir posts que tenham respostas em vídeo de psicólogos.",
+    ),
+  );
 });

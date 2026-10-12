@@ -26,3 +26,12 @@ Browser local autenticado como paciente: Posts/Comentarios em 390px, menu alinha
 Servidor local voltou em next dev, mantendo API isolada em 3001 e sessao autenticada. next start nao foi usado para validar fluxo autenticado: o build sem NEXT_PUBLIC_API_URL publicado nao adota automaticamente localhost (fallback restrito ao desenvolvimento). Nenhuma configuracao de seguranca foi relaxada. Desktop conferido depois da retomada. Sem commit/bump/push/deploy enquanto a evidencia restante esta pendente.
 
 Aprovacao final: usuario confirmou "Conferidos e aprovados" para bloqueio direto com video-resposta e controles/Ver mais respostas, autorizando producao. Esta evidencia substitui as pendencias visuais acima. Checks e builds locais aprovados; preparar commit e PR revisado, sem alteracao de dados publicados.
+## Refinamento 12/10
+
+Usuario removeu o aviso azul redundante de conteudo preservado da modal de comentario/resposta bloqueada. Manter somente descricao principal e acoes, com erro de silenciamento apenas se ocorrer falha real. Regra, preflight e endpoint nao mudam. Referencia e captura do usuario; Builder indisponivel. Revisao local separada do release 0.1.639; check/build/browser pendentes.
+Validacao tecnica do refinamento: frontend check completo e build aprovados (.tmp/oct12-modal-check.log e oct12-modal-build.log). Teste de regressao garante ausencia do aviso informativo e preservacao da descricao/erro de silenciamento. Browser local iniciado com API isolada, mas automacao da aba falhou por timeout; conferencia visual da modal revisada permanece pendente. Nenhum push/deploy deste refinamento.
+
+12/10: usuario confirmou conferencia local e autorizou producao; depois simplificou o paragrafo de preservacao. Manter regra de dominio intacta, mudando somente a copy para a frase exata solicitada. Pendencia visual anterior da remocao do bloco foi resolvida pela aprovacao do usuario.
+
+Mesmo refinamento de copy aplicado a modal de post, usando a frase exata solicitada pelo usuario. Sem mudanca de elegibilidade de exclusao.
+Validacao final das duas revisoes textuais: 32 testes focais aprovados, Biome e build frontend aprovados (.tmp/oct12-modal-final-build.log). Frases exatas solicitadas, sem nova alteracao de layout ou regra. Check completo sera reexecutado pelo hook obrigatorio de push.
