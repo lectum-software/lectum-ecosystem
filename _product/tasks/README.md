@@ -1,3 +1,5 @@
+Publicacao autorizada em andamento: TASK-225 / ADR-0606. Lote aprovado; resolver gates locais e sessao Dokploy antes de push/PR/merge.
+
 Aprovados pelo usuario para producao em 11/10: TASK-202 / ADR-0605 (camada do composer) e TASK-28 / ADR-0604 (exclusao com video-resposta). Publicacao autorizada; gates gerais em andamento.
 
 TASK-28 / ADR-0604 concluida localmente no commit cf84baf3.

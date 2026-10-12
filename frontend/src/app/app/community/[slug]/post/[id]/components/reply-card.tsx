@@ -40,6 +40,7 @@ import {
 import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import {
   countReplyTreeDescendants,
+  createFocusedReplyRelativeUrl,
   findReplyInTree,
   formatReplyAuthorMeta,
   MAX_REPLY_TREE_DEPTH,
@@ -50,16 +51,7 @@ import {
 import type { ReplyComposerForm } from "../use-form";
 
 import { AuthorAvatar } from "./post-content";
-
 import { ReplyComposer } from "./reply-composer";
-
-const createFocusedReplyRelativeUrl = (threadHrefBase: string | undefined, replyId: string) => {
-  const postHref = threadHrefBase?.replace(/\/resposta\/?$/u, "");
-
-  if (!postHref) return `#reply-${replyId}`;
-
-  return `${postHref}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
-};
 
 export type ReplyOverflowMenuProps = {
   deletePending?: boolean;

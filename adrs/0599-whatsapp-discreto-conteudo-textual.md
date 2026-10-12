@@ -1,4 +1,4 @@
-﻿# ADR-0599: WhatsApp discreto em conteudo sem midia
+# ADR-0599: WhatsApp discreto em conteudo sem midia
 
 Status: aceito. Data: 2026-10-11. Task: TASK-25.
 

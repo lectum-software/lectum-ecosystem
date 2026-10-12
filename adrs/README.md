@@ -665,3 +665,5 @@ Formato recomendado:
 - [ADR-0604 — Exclusao preserva video-respostas profissionais](0604-exclusao-preserva-video-resposta.md)
 
 - [ADR-0605 — Composer abaixo da modal de criar post](0605-composer-abaixo-modal-criar-post.md)
+
+- [ADR-0606 — Publicacao do lote de interface de outubro](0606-publicacao-lote-interface-outubro.md)

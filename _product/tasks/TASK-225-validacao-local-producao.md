@@ -37,3 +37,11 @@ Nenhum push nesta etapa. Instrucoes ficam em commit local; nenhum novo deploy.
 Nao desligar bancos, servicos ou remover volumes. Configuracoes externas sao
 confirmadas separadamente; reativar autodeploy so com autorizacao explicita.
 ADR-0565 documenta a decisao e o estado da transicao.
+
+## Publicacao autorizada 11/10/2026 (ADR-0606)
+
+- [x] Usuario aprovou lote incluindo exclusao por video e camada do composer.
+- [ ] Resolver gates, check completo/builds e commits locais.
+- [ ] Confirmar autodeploys homolog off, PR revisado e smoke produtivo.
+
+Preservar swagger e AGENTS locais fora do lote. Sem escrita em dados publicados.
