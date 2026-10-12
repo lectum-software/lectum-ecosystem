@@ -221,7 +221,10 @@ export const ReplyCard = ({
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
   const replyRelativeUrl = createFocusedReplyRelativeUrl(threadHrefBase, reply.id);
   const hasTreeContinuation = visibleChildren.length > 0;
-  const hasBranchConnector = hasTreeContinuation || Boolean(branchAction);
+  const showBranchAction = Boolean(
+    branchAction && (branchAction.kind === "collapse" || canRevealLoadedChildren || threadHref),
+  );
+  const hasBranchConnector = hasTreeContinuation || showBranchAction;
   const avatarSize = depth > 0 ? "xs" : isProfessional ? "reply" : "sm";
   const hasReplyMedia = Boolean(reply.media_url);
   const isNestedReply = depth > 0;
@@ -327,7 +330,11 @@ export const ReplyCard = ({
       {hasBranchConnector ? (
         <span
           className={cn(
-            "pointer-events-none absolute bottom-0 z-0 w-[1.5px] -translate-x-1/2 rounded-full bg-border-strong",
+            "pointer-events-none absolute z-0",
+            // One border draws both the stem and its terminal curve without a seam.
+            showBranchAction
+              ? "bottom-[11.25px] w-[9px] -translate-x-[0.75px] rounded-bl-[8px] border-b-[1.5px] border-l-[1.5px] border-border-strong"
+              : "bottom-0 -translate-x-[0.75px] border-l-[1.5px] border-border-strong",
             isNestedReply ? "top-8 left-3" : "top-10 left-4 sm:left-[1.125rem]",
           )}
           aria-hidden="true"
@@ -535,27 +542,15 @@ export const ReplyCard = ({
         >
           {visibleChildren.map((child) => (
             <div className="relative" key={child.id}>
-              <svg
+              <span
                 className={cn(
-                  "pointer-events-none absolute -top-0.5 z-0 h-[22px] overflow-visible text-border-strong",
+                  "pointer-events-none absolute top-0 z-0 h-[12.75px] rounded-bl-[8px] border-b-[1.5px] border-l-[1.5px] border-border-strong",
                   isNestedReply
-                    ? "-left-[18px] w-[18px]"
-                    : "-left-[18px] w-[18px] sm:-left-[22px] sm:w-[22px]",
+                    ? "-left-[18.75px] w-[18.75px]"
+                    : "-left-[18.75px] w-[18.75px] sm:-left-[22.75px] sm:w-[22.75px]",
                 )}
                 aria-hidden="true"
-                focusable="false"
-                viewBox="0 -2 22 22"
-              >
-                <path
-                  d="M0 -2 V10 C0 14.4 3.6 18 8 18 H22"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  vectorEffect="non-scaling-stroke"
-                />
-              </svg>
+              />
               <ReplyCard
                 activeInlineReplyFormRef={activeInlineReplyFormRef}
                 currentUserId={currentUserId}
@@ -589,32 +584,14 @@ export const ReplyCard = ({
         </div>
       ) : null}
 
-      {branchAction &&
-      branchActionLabel &&
-      (branchAction.kind === "collapse" || canRevealLoadedChildren || threadHref) ? (
+      {showBranchAction && branchAction && branchActionLabel ? (
         <div
           className={cn(
-            "relative z-10 mt-2 min-h-5",
-            isNestedReply ? "ml-3 pl-[8px]" : "ml-4 pl-[8px] sm:ml-[18px]",
+            "relative z-10 mt-2 flex h-5 items-center",
+            isNestedReply ? "ml-3 pl-[10px]" : "ml-4 pl-[10px] sm:ml-[18px]",
           )}
           data-comment-collapse-ignore="true"
         >
-          <svg
-            className="pointer-events-none absolute top-0 left-0 h-5 w-1.5 overflow-visible text-border-strong"
-            aria-hidden="true"
-            focusable="false"
-            viewBox="0 0 6 20"
-          >
-            <path
-              d="M0 0 V10 C0 14 3 15 6 18"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
           {branchAction.kind !== "collapse" && !canRevealLoadedChildren && threadHref ? (
             <Link
               aria-label={`${branchActionLabel} desta conversa`}

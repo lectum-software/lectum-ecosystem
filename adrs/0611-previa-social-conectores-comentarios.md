@@ -23,8 +23,10 @@ Os controles de ramo ficam compactos, cinza e bold, com 10px aplicados de forma 
 prevalecer sobre a regra tipografica global dos botoes. A linha vertical permanece
 ativa enquanto houver controle de ramo e recebe uma curva ate abrir, carregar mais ou
 ocultar respostas. As ligacoes intermediarias preservam o SVG publicado, cuja reta,
-curva, espessura e encaixe ja formam um traco continuo. O controle final reutiliza a
-mesma linguagem e espessura, mas encerra o path em diagonal, sem tangente horizontal.
+curva, espessura e encaixe ja formam um traco continuo. Para o controle final, reta
+e curva sao uma unica borda lateral/inferior com canto arredondado, terminando no
+centro da linha de acao de altura fixa. Nao ha SVG separado nem continuacao vertical
+abaixo da curva, evitando emendas visiveis por arredondamento de pixels.
 O deslocamento horizontal da linha passa a acompanhar a densidade
 do nivel atual, com pequena sobreposicao entre segmentos para evitar lacunas de pixel.
 O coracao favoritado recebe o mesmo escalonamento do selo verificado no comentario.
