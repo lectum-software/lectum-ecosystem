@@ -22,8 +22,8 @@ continua resolvendo o mesmo comentario diretamente no backend.
 Os controles de ramo ficam compactos, cinza e bold, com 10px aplicados de forma a
 prevalecer sobre a regra tipografica global dos botoes. A linha vertical permanece
 ativa enquanto houver controle de ramo e recebe uma curva ate abrir, carregar mais ou
-ocultar respostas. As ligacoes intermediarias preservam o SVG publicado, cuja reta,
-curva, espessura e encaixe ja formam um traco continuo. Para o controle final, reta
+ocultar respostas. As ligacoes intermediarias usam a mesma borda CSS arredondada,
+com espessura, raio e eixo alinhados a borda do pai. Para o controle final, reta
 e curva sao uma unica borda lateral/inferior com canto arredondado, terminando no
 centro da linha de acao de altura fixa. Nao ha SVG separado nem continuacao vertical
 abaixo da curva, evitando emendas visiveis por arredondamento de pixels.

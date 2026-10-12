@@ -40,9 +40,12 @@ titulo do post.
 
 O tamanho e o peso dos controles de ramo agora usam utilitarios importantes para
 nao serem sobrescritos pelo `font: inherit` global dos botoes. Os conectores
-intermediarios preservam exatamente o SVG ja publicado. A ponta reportada era a
+intermediarios usam a mesma borda arredondada do controle final. A ponta reportada era a
 continuacao vertical abaixo da curva: a reta ia ate o fundo do artigo. A reta e a
 curva terminal agora sao uma unica borda com canto arredondado, que termina no
 centro do controle. Isso elimina tanto a sobra vertical quanto a emenda entre
 elementos. Conferencia local em Chrome a 393x852 e 800x852 inclui abrir, carregar
 mais e ocultar, com capturas e medidas da borda continua. Testes focados: 3/3.
+As curvas intermediarias tambem usam bordas CSS com raio de 8px e a mesma espessura,
+alinhadas ao eixo da borda do pai em todos os recuos. O controle final aprovado
+permanece inalterado neste complemento.
