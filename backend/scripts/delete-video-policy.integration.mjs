@@ -16,6 +16,16 @@ const { PostReplyStateRepository } = await import(
   "../src/modules/api/private/posts/repositories/queries/PostReplyStateRepository.ts"
 );
 
+const { PostCoreRepository } = await import(
+  "../src/modules/api/private/posts/repositories/queries/PostCoreRepository.ts"
+);
+const { PostReplyRepository } = await import(
+  "../src/modules/api/private/posts/repositories/queries/PostReplyRepository.ts"
+);
+const { hasProfessionalVideoDescendant } = await import(
+  "../../frontend/src/components/community/reply-delete-preflight.ts"
+);
+
 await test("video deletion policy in real disposable PostgreSQL", async (t) => {
   const users = [];
   const communities = [];
@@ -167,6 +177,32 @@ await test("video deletion policy in real disposable PostgreSQL", async (t) => {
         where: { post_id: post.id },
         orderBy: { id: "asc" },
       });
+      const detail = await new PostCoreRepository().show({ auth, p: { id: post.id } });
+      const expectedVideo = rows.some(
+        (row) => !row.deleted && row.media_type === "video" && row.author_id !== actors.patient.id,
+      );
+      assert.equal(detail.post.has_psychologist_video_reply, expectedVideo);
+      if (scenario.replyOwner) {
+        const thread = await new PostReplyRepository(new PostCoreRepository()).replyThread({
+          auth,
+          p: { id: post.id, replyId: rows[0].id },
+        });
+        const descendantIds = new Set([rows[0].id]);
+        for (const row of rows) {
+          if (descendantIds.has(row.parent_reply_id) && !row.deleted) descendantIds.add(row.id);
+        }
+        assert.equal(
+          hasProfessionalVideoDescendant(thread),
+          rows.some(
+            (row) =>
+              row.id !== rows[0].id &&
+              descendantIds.has(row.id) &&
+              !row.deleted &&
+              row.media_type === "video" &&
+              row.author_id !== actors.patient.id,
+          ),
+        );
+      }
       const result = scenario.replyOwner
         ? await replies.deleteReply({ auth, p: { id: post.id, replyId: rows[0].id } })
         : await posts.deletePost({ auth, p: { id: post.id } });

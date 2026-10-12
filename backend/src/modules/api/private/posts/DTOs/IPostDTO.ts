@@ -106,6 +106,7 @@ export type PostDetailDTO = {
   saved: boolean;
   muted_by_current_user: boolean;
   has_psychologist_reply: boolean;
+  has_psychologist_video_reply?: boolean;
   community: PostCommunityDTO;
   author: PostAuthorDTO;
 };

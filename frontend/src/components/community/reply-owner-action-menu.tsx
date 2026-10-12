@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useDeleteReply, useMutePost } from "@/api/callers/posts";
+import { useDeleteReply, useMutePost, usePostReplyThread } from "@/api/callers/posts";
 import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostListPost, UserPostReply } from "@/api/generator/types/posts";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
@@ -20,14 +20,13 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-
+import { hasProfessionalVideoDescendant } from "./reply-delete-preflight";
 import { getReplyOwnerActionCopy } from "./reply-owner-action-copy";
 
 type OwnerActionReply = Pick<
   UserPostReply,
   | "author"
   | "content"
-  | "has_verified_professional_reply"
   | "id"
   | "media_type"
   | "media_url"
@@ -41,6 +40,7 @@ type OwnerActionPost = Pick<PostListPost, "id" | "muted_by_current_user" | "titl
 
 type ReplyOwnerActionMenuProps = {
   className?: string;
+  onEdit?: () => void;
   onDeleted?: () => void;
   onUpdated?: () => void;
   post: OwnerActionPost;
@@ -164,6 +164,7 @@ const ReplyActionModal = ({
 
 export const ReplyOwnerActionMenu = ({
   className,
+  onEdit,
   onDeleted,
   onUpdated,
   post,
@@ -178,6 +179,7 @@ export const ReplyOwnerActionMenu = ({
   const [actionError, setActionError] = useState<string | null>(null);
   const muteMutation = useMutePost();
   const deleteMutation = useDeleteReply();
+  const deletePreflight = usePostReplyThread(post.id, reply.id, false);
   const isOwnReply = Boolean(currentUser?.id && reply.author.id === currentUser.id);
   const isPsychologistReply = reply.author.role === "psicologo";
   const replyKind = useMemo(
@@ -212,8 +214,20 @@ export const ReplyOwnerActionMenu = ({
     muteMutation.mutate({ muted: post.muted_by_current_user, postId: post.id });
   };
 
-  const handleDeleteRequest = () => {
+  const handleDeleteRequest = async () => {
     setActionError(null);
+    if (!isPsychologistReply) {
+      const result = await deletePreflight.refetch();
+      if (result.error || !result.data || result.data.reply.id !== reply.id) {
+        setActionError("Não foi possível verificar a exclusão. Tente novamente.");
+        return;
+      }
+      if (hasProfessionalVideoDescendant(result.data.reply)) {
+        setMenuOpen(false);
+        setBlockedModalOpen(true);
+        return;
+      }
+    }
     setMenuOpen(false);
 
     setDeleteModalOpen(true);
@@ -260,7 +274,7 @@ export const ReplyOwnerActionMenu = ({
     );
   };
 
-  const busy = muteMutation.isPending || deleteMutation.isPending;
+  const busy = muteMutation.isPending || deleteMutation.isPending || deletePreflight.isFetching;
 
   return (
     <div className={cn("relative shrink-0", className)} ref={menuRef}>
@@ -290,7 +304,8 @@ export const ReplyOwnerActionMenu = ({
               event.stopPropagation();
               setMenuOpen(false);
               setActionError(null);
-              setEditModalOpen(true);
+              if (onEdit) onEdit();
+              else setEditModalOpen(true);
             }}
             role="menuitem"
             type="button"
@@ -323,8 +338,13 @@ export const ReplyOwnerActionMenu = ({
             type="button"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
-            Excluir
+            {deletePreflight.isFetching ? "Verificando…" : "Excluir"}
           </button>
+          {actionError ? (
+            <p role="alert" className="px-3 py-2 text-sm text-danger">
+              {actionError}
+            </p>
+          ) : null}
         </div>
       ) : null}
 

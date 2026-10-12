@@ -1,4 +1,6 @@
-Publicacao autorizada em andamento: TASK-225 / ADR-0606. Lote aprovado; resolver gates locais e sessao Dokploy antes de push/PR/merge.
+Em andamento: TASK-28 / ADR-0607. Revisao pos-publicacao: controles antes do destaque, mais respostas, preflight de exclusao, menus alinhados e remocao do selo de resposta verificada. Validacao local conferida e aprovada pelo usuario; publicacao autorizada, preparando PR homolog -> main.
+
+Lote anterior publicado 0.1.638 via PR #102; backend/frontend/admin verificados.
 
 Aprovados pelo usuario para producao em 11/10: TASK-202 / ADR-0605 (camada do composer) e TASK-28 / ADR-0604 (exclusao com video-resposta). Publicacao autorizada; gates gerais em andamento.
 

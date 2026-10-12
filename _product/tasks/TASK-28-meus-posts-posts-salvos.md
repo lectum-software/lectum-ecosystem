@@ -631,3 +631,16 @@ Aprovacao visual recebida em 11/10/2026: usuario confirmou Posts e Respostas, id
 Implementacao e validacao tecnica ADR-0604 concluidas: 20 cenarios PostgreSQL descartavel, frontend check/build e backend build aprovados. Suite backend com timeout preexistente (895/896), repeticao isolada passou; root check bloqueado por BOM preexistente ADR-0599, source-size preexistente reply-card.tsx 708/700. Conferencia visual autenticada e commit pendentes; nenhum bump/push/deploy.
 
 11/10: usuario confirmou os dois ultimos ajustes com Conferidos e aprovados e autorizou publicar. Gates gerais pendentes serao tratados antes do push.
+
+## Revisao pos-publicacao 11/10 (ADR-0607)
+
+- [x] Posts do paciente: controles antes do destaque profissional; Ver mais respostas abaixo quando houver outra resposta profissional, como no feed.
+- [x] Consultar bloqueio por video antes da confirmacao vermelha; manter DELETE transacional, texto/imagem permitidos e liberdade do psicologo sobre seu conteudo.
+- [x] Mesmo preflight e modal em comentarios de pacientes, incluindo pagina do post e thread; video em descendente indireto bloqueia, irmao nao bloqueia; 409 de corrida abre modal, nao alerta solto.
+- [x] Menu de Posts/Respostas/Comentarios alinhado com nome, sem linha propria; preservar area de toque e camada do menu.
+- [x] Remover chip Respondido por psicologo verificado de Posts e Comentarios de pacientes.
+- [x] Testes, checks, builds e browser local mobile-first (~390px), sem alterar Salvos.
+
+Evidencia parcial ADR-0607: regra e preflight aprovados em 20 cenarios/21 testes PostgreSQL isolado; backend check (896 testes), frontend check e ambos os builds aprovados. Browser autenticado de paciente em 390px e desktop: menu e chip conferidos, exclusoes sem video canceladas nas duas telas. Falta conferencia visual do bloqueio e do destaque/Ver mais respostas com conteudo local apropriado; conta atual possui post/comentario sem video-respostas. Solicitado ao usuario, sem importar dados de producao ou inventar conteudo. Revisao ainda sem commit/bump/push/deploy.
+
+Aprovacao final ADR-0607: usuario confirmou os cenarios pendentes com "Conferidos e aprovados" e autorizou producao. Validacao local concluida; preparar commit e PR homolog -> main. Pendencias anteriores ficam registradas como historico, substituidas por esta aprovacao.

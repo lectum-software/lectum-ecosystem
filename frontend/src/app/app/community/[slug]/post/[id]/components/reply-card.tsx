@@ -1,19 +1,11 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
-import {
-  type MouseEventHandler,
-  type RefObject,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type MouseEventHandler, type RefObject, useEffect, useMemo, useState } from "react";
 import { useSaveReply } from "@/api/callers/posts";
 import type { PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
-import { CommunityDeleteConfirmationModal } from "@/components/community/community-delete-confirmation-modal";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
@@ -52,117 +44,9 @@ import type { ReplyComposerForm } from "../use-form";
 
 import { AuthorAvatar } from "./post-content";
 import { ReplyComposer } from "./reply-composer";
+import { ReplyOverflowMenu } from "./reply-overflow-menu";
 
-export type ReplyOverflowMenuProps = {
-  deletePending?: boolean;
-  isOwnReply: boolean;
-  onDelete: () => void;
-  onEdit: () => void;
-  onReport: (trigger: HTMLButtonElement | null) => void;
-  reply: PostReply;
-};
-
-export const ReplyOverflowMenu = ({
-  deletePending,
-  isOwnReply,
-  onDelete,
-  onEdit,
-  onReport,
-  reply,
-}: ReplyOverflowMenuProps) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuTriggerRef = useRef<HTMLButtonElement>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const replyKind = reply.parent_reply_id ? "resposta" : "comentário";
-  const deleteDescription =
-    reply.replies_count > 0
-      ? `Este ${replyKind} possui respostas abaixo dele.\n\nAo excluir, as respostas encadeadas também serão removidas.\n\nEsta ação não poderá ser desfeita.`
-      : "Esta ação não poderá ser desfeita.";
-
-  return (
-    <div className="relative shrink-0" data-comment-collapse-ignore="true">
-      <button
-        aria-expanded={menuOpen}
-        aria-haspopup="menu"
-        aria-label={`Mais ações ${replyKind === "resposta" ? "da resposta" : "do comentário"}`}
-        ref={menuTriggerRef}
-        className="grid h-7 w-7 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97] dark:text-muted dark:hover:text-foreground"
-        onClick={(event) => {
-          event.stopPropagation();
-          setMenuOpen((current) => !current);
-        }}
-        type="button"
-      >
-        <MoreHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
-      </button>
-
-      {menuOpen ? (
-        <div
-          className="absolute top-7 right-0 z-[120] w-56 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-lectum-soft dark:border-border dark:bg-surface"
-          role="menu"
-        >
-          {isOwnReply ? (
-            <button
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-              onClick={(event) => {
-                event.stopPropagation();
-                setMenuOpen(false);
-                onEdit();
-              }}
-              role="menuitem"
-              type="button"
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-              Editar
-            </button>
-          ) : null}
-
-          {isOwnReply ? (
-            <button
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-danger transition hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={deletePending}
-              onClick={(event) => {
-                event.stopPropagation();
-                setMenuOpen(false);
-                setDeleteConfirmOpen(true);
-              }}
-              role="menuitem"
-              type="button"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-              Excluir
-            </button>
-          ) : (
-            <button
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-              onClick={(event) => {
-                event.stopPropagation();
-                setMenuOpen(false);
-                onReport(menuTriggerRef.current);
-              }}
-              role="menuitem"
-              type="button"
-            >
-              <Flag className="h-4 w-4" aria-hidden="true" />
-              Denunciar
-            </button>
-          )}
-        </div>
-      ) : null}
-      <CommunityDeleteConfirmationModal
-        description={deleteDescription}
-        onClose={() => setDeleteConfirmOpen(false)}
-        onConfirm={() => {
-          setDeleteConfirmOpen(false);
-          onDelete();
-        }}
-        open={deleteConfirmOpen}
-        pending={deletePending}
-        title={`Excluir ${replyKind}?`}
-      />
-    </div>
-  );
-};
+export { ReplyOverflowMenu } from "./reply-overflow-menu";
 
 export const ReplyVoteBar = ({
   currentVote,
@@ -508,6 +392,7 @@ export const ReplyCard = ({
               )}
             </div>
             <ReplyOverflowMenu
+              postId={postId}
               deletePending={deleteReplyPending}
               isOwnReply={isOwnReply}
               onDelete={() => onDeleteReply(reply)}

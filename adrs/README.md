@@ -667,3 +667,5 @@ Formato recomendado:
 - [ADR-0605 — Composer abaixo da modal de criar post](0605-composer-abaixo-modal-criar-post.md)
 
 - [ADR-0606 — Publicacao do lote de interface de outubro](0606-publicacao-lote-interface-outubro.md)
+
+- [ADR-0607 — Revisao de Minhas publicacoes apos publicacao](0607-revisao-minhas-publicacoes.md)

@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, CornerUpLeft, FileText } from "lucide-react";
+import { CornerUpLeft, FileText } from "lucide-react";
 import type { UserPostsType } from "@/api/generator/types/posts";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { cn } from "@/lib/utils";
@@ -69,16 +69,4 @@ export const MyPostsHeader = ({ interactionCopy }: { interactionCopy: Interactio
     backLabel="Voltar para perfil"
     title={interactionCopy.screenTitle}
   />
-);
-
-export const ProfessionalAnsweredBadge = ({ className }: { className?: string }) => (
-  <span
-    className={cn(
-      "inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-full border border-primary/10 bg-primary-soft/70 px-2.5 text-[10px] font-black tracking-[-0.01em] text-primary",
-      className,
-    )}
-  >
-    Respondido por psicólogo verificado
-    <BadgeCheck className="h-3.5 w-3.5 fill-primary text-primary-foreground" aria-hidden="true" />
-  </span>
 );

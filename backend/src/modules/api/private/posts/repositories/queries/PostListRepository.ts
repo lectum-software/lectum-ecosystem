@@ -276,6 +276,13 @@ export class PostListRepository extends PostRepositoryContext {
       postIds,
       replyIds,
     );
+    const highlights = new Map<string, { id: string }>();
+    for (const post of posts) {
+      if (post.author.role !== "paciente") continue;
+      const highlight = selectHighlightedListProfessionalReply(post.replies);
+      if (highlight) highlights.set(post.id, highlight);
+    }
+    const otherReplyAuthors = await getOtherProfessionalReplyAuthors(prisma, highlights);
     const postItems = posts.map<PostListItemDTO>((post) => ({
       ...(data.auth.role === "psicologo"
         ? { whatsapp_clicks_count: whatsappCounts.get(`post:${post.id}`) ?? 0 }
@@ -294,6 +301,7 @@ export class PostListRepository extends PostRepositoryContext {
         mutedPostIds.has(post.id),
         postsWithPsychologistReplies.has(post.id),
         followedCommunityIds.has(post.community.id),
+        otherReplyAuthors.get(post.id),
       ),
       reply: null,
     }));

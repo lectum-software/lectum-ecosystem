@@ -22,6 +22,7 @@ export type PostDetail = {
   saved: boolean;
   muted_by_current_user: boolean;
   has_psychologist_reply: boolean;
+  has_psychologist_video_reply?: boolean;
   community: Community;
   author: CommunityAuthor;
 };
