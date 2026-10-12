@@ -28,7 +28,6 @@ import {
   type InteractionCopy,
   isReplyCardInteractiveTarget,
 } from "../modules/support";
-import { ProfessionalAnsweredBadge } from "./header";
 import { OriginLink } from "./origin-preview";
 import { WhatsappMetric } from "./whatsapp-metric";
 
@@ -37,13 +36,11 @@ export const ReplyItemCard = ({
   item,
   onChanged,
   onShare,
-  showProfessionalAnsweredBadge,
 }: {
   interactionCopy: InteractionCopy;
   item: UserPostListItem;
   onChanged?: () => void;
   onShare: (post: PostListPost, replyId: string) => void;
-  showProfessionalAnsweredBadge: boolean;
 }) => {
   const router = useRouter();
   const currentUser = useAppSelector((state) => state.user);
@@ -84,8 +81,6 @@ export const ReplyItemCard = ({
   });
   const hasReplyMedia = Boolean(reply.media_url && reply.media_type);
   const hasReplyText = Boolean(reply.content.trim());
-  const hasVerifiedProfessionalReply =
-    showProfessionalAnsweredBadge && Boolean(reply.has_verified_professional_reply);
   const isPsychologistReply = reply.author.role === "psicologo";
   const openReplyLabel = `Abrir ${interactionCopy.singular} no post ${item.post.title}`;
 
@@ -211,7 +206,7 @@ export const ReplyItemCard = ({
           </p>
         </div>
         <ReplyOwnerActionMenu
-          className="-mr-1"
+          className="-mt-2 -mr-1"
           onDeleted={onChanged}
           onUpdated={onChanged}
           post={item.post}
@@ -259,10 +254,6 @@ export const ReplyItemCard = ({
             variant="reply"
           />
         </div>
-      ) : null}
-
-      {hasVerifiedProfessionalReply ? (
-        <ProfessionalAnsweredBadge className="relative z-10 w-fit" />
       ) : null}
 
       <CommunityActionBar

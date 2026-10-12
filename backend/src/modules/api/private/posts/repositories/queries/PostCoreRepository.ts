@@ -81,15 +81,19 @@ export class PostCoreRepository extends PostRepositoryContext {
       getPostIdsWithPsychologistReplies([post.id]),
     ]);
 
+    const videoReplies = await getPostIdsWithPsychologistReplies([post.id], "video");
     return {
-      post: toPostResponse(
-        post,
-        vote && !vote.deleted ? normalizeVoteValue(vote.value) : null,
-        Boolean(save && !save.deleted),
-        Boolean(membership && !membership.deleted),
-        mutedPostIds.has(post.id),
-        postsWithPsychologistReplies.has(post.id),
-      ),
+      post: {
+        has_psychologist_video_reply: videoReplies.has(post.id),
+        ...toPostResponse(
+          post,
+          vote && !vote.deleted ? normalizeVoteValue(vote.value) : null,
+          Boolean(save && !save.deleted),
+          Boolean(membership && !membership.deleted),
+          mutedPostIds.has(post.id),
+          postsWithPsychologistReplies.has(post.id),
+        ),
+      },
     };
   }
 }

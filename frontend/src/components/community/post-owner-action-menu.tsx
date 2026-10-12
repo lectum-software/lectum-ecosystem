@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useDeletePost, useMutePost } from "@/api/callers/posts";
+import { useDeletePost, useMutePost, usePostDetail } from "@/api/callers/posts";
 import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostDetail } from "@/api/generator/types/posts";
 import { PostEditModal } from "@/components/community/post-edit-modal";
@@ -175,6 +175,7 @@ export const PostOwnerActionMenu = ({
   const [actionError, setActionError] = useState<string | null>(null);
   const muteMutation = useMutePost();
   const deleteMutation = useDeletePost();
+  const deletePreflight = usePostDetail(post.id, false);
   const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
   const isPsychologistPost = post.author.role === "psicologo";
   const deleteTitle = isPsychologistPost ? "Excluir publicação?" : "Excluir post?";
@@ -206,10 +207,21 @@ export const PostOwnerActionMenu = ({
     muteMutation.mutate({ muted: post.muted_by_current_user, postId: post.id });
   };
 
-  const handleDeleteRequest = () => {
+  const handleDeleteRequest = async () => {
     setActionError(null);
+    if (!isPsychologistPost) {
+      const result = await deletePreflight.refetch();
+      if (result.error || !result.data) {
+        setActionError("Não foi possível verificar a exclusão. Tente novamente.");
+        return;
+      }
+      if (result.data.post.has_psychologist_video_reply) {
+        setMenuOpen(false);
+        setBlockedModalOpen(true);
+        return;
+      }
+    }
     setMenuOpen(false);
-
     setDeleteModalOpen(true);
   };
 
@@ -248,7 +260,7 @@ export const PostOwnerActionMenu = ({
     );
   };
 
-  const busy = muteMutation.isPending || deleteMutation.isPending;
+  const busy = muteMutation.isPending || deleteMutation.isPending || deletePreflight.isFetching;
 
   return (
     <div className={cn("relative shrink-0", className)} ref={menuRef}>
@@ -311,8 +323,13 @@ export const PostOwnerActionMenu = ({
             type="button"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
-            Excluir
+            {deletePreflight.isFetching ? "Verificando…" : "Excluir"}
           </button>
+          {actionError ? (
+            <p role="alert" className="px-3 py-2 text-sm text-danger">
+              {actionError}
+            </p>
+          ) : null}
         </div>
       ) : null}
 

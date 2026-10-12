@@ -1,8 +1,10 @@
 "use client";
 
 import type { MouseEventHandler } from "react";
+import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import type { CommunityMediaOverlayAction } from "@/components/community/community-media-frame";
 import type { LectumShareSocialTarget } from "@/utils/lectum-share-target";
+import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 
 type SocialPreviewAuthor = {
   id: string;
@@ -72,3 +74,22 @@ export const createSocialVideoPreviewOverlayAction = ({
     onClick: handleClick,
   };
 };
+
+export const createReplySocialPreviewTarget = (
+  post: PostListPost,
+  reply: PostProfessionalReply | null,
+  currentUser: SocialPreviewCurrentUser | null | undefined,
+  relativeUrl: string,
+) =>
+  reply &&
+  canShowSocialVideoPreviewAction({
+    author: reply.author,
+    currentUser,
+    mediaType: reply.media_type,
+    mediaUrl: reply.media_url,
+  })
+    ? createLectumShareVideoDownloadTarget(post, reply, {
+        parentContent: reply.parent_content,
+        relativeUrl,
+      })
+    : null;

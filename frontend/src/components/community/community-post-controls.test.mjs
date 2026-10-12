@@ -634,60 +634,53 @@ test("my publication tabs preserve loading counts and disabled state", () => {
   assert.equal((html.match(/>\u2026</g) ?? []).length, 2);
 });
 
-const { OriginLink } = await import("../../app/app/posts/mine/components/origin-preview.tsx");
-
-test("mine original publication link is transparent and opens the actual source", () => {
+test("mine patient controls precede highlighted reply and more replies follows it", () => {
+  const author = { id: "patient", name: "Patient", role: "paciente" };
   const post = {
     id: "post",
-    title: "Hidden origin title",
-    content: "Hidden origin content",
-    community: { slug: "topic" },
+    author,
+    title: "Question",
+    content: "Post content",
+    upvotes_count: 0,
+    created_at: "2026-10-01T12:00:00Z",
+    community: { slug: "topic", name: "Topic", category: "Topic" },
+    highlighted_professional_reply: {
+      id: "reply",
+      content: "Highlighted content",
+      created_at: "2026-10-01T12:00:00Z",
+      upvotes_count: 0,
+      author: { id: "psy", name: "Psychologist", role: "psicologo" },
+    },
+    other_professional_reply_authors: [{ id: "other", name: "Other", avatar: null }],
   };
-  const render = (reply) =>
-    renderToStaticMarkup(createElement(OriginLink, { item: { post, reply } }));
-  const direct = render({ parent_reply_id: null });
-  assert.match(direct, /href="\/comunidades\/topic\/publicacao\/post"/);
-  assert.match(direct, /bg-transparent/);
-  assert.match(direct, /Ver publica.*original/);
-  assert.doesNotMatch(direct, /Hidden origin|bg-primary|<img|<video/);
-  const nested = render({ id: "own", parent_reply_id: "parent" });
-  assert.match(nested, /focusReplyId=parent#reply-parent/);
-  assert.doesNotMatch(nested, /focusReplyId=own/);
+  const render = (overrides) =>
+    renderRelations({
+      userId: "patient",
+      ids: [],
+      children: createElement(
+        AppRouterContext.Provider,
+        { value: {} },
+        createElement(CommunityPostCard, {
+          post,
+          onShare() {},
+          showWhatsappCta: false,
+          highlightedReplyAfterActions: true,
+          authorHeaderExtra: createElement(
+            "button",
+            { type: "button", "data-owner-menu": true },
+            "Menu",
+          ),
+          ...overrides,
+        }),
+      ),
+    });
+  const html = render();
+  assert.ok(html.indexOf("data-community-action-bar") < html.indexOf("Highlighted content"));
+  assert.ok(html.indexOf("Highlighted content") < html.indexOf("Ver mais respostas"));
+  assert.ok(html.indexOf("Patient") < html.indexOf("data-owner-menu"));
+  assert.ok(html.indexOf("data-owner-menu") < html.indexOf("Question"));
+  const noOther = render({ post: { ...post, other_professional_reply_authors: [] } });
+  assert.doesNotMatch(noOther, /Ver mais respostas/);
 });
 
-test("mine reply identity follows origin link without old context line", () => {
-  const source = readFileSync(
-    new URL("../../app/app/posts/mine/components/reply-item-card.tsx", import.meta.url),
-    "utf8",
-  );
-  assert.ok(source.indexOf("<OriginLink") < source.indexOf("<AuthorIdentityLine"));
-  assert.ok(source.includes("name={getCommunityAuthorDisplayName(reply.author)}"));
-  assert.ok(source.includes("community={item.post.community}"));
-  assert.ok(source.includes("reply.author.id === item.post.author.id"));
-  assert.doesNotMatch(source, /interactionCopy.contextLabel|OriginPreview/);
-});
-
-test("mine reply menu layers above controls and restores their separator", () => {
-  const source = readFileSync(
-    new URL("../../app/app/posts/mine/components/reply-item-card.tsx", import.meta.url),
-    "utf8",
-  );
-  assert.ok(source.includes('className="relative z-30 flex min-w-0 items-start gap-3"'));
-  assert.ok(source.includes('className="relative z-20 border-t border-border/80 pt-3"'));
-});
-
-test("mine header uses the same fixed-height header as saved publications", async () => {
-  const { MyPostsHeader } = await import("../../app/app/posts/mine/components/header.tsx");
-  const { AppPageHeader } = await import("../ui/app-page-header.tsx");
-  const props = {
-    backHref: "/app/perfil",
-    backLabel: "Voltar para perfil",
-    title: "Minhas publica\u00e7\u00f5es",
-  };
-  const actual = renderToStaticMarkup(
-    createElement(MyPostsHeader, { interactionCopy: { screenTitle: props.title } }),
-  );
-  const expected = renderToStaticMarkup(createElement(AppPageHeader, props));
-  assert.equal(actual, expected);
-  assert.match(actual, /grid h-14 grid-cols/);
-});
+await import("./mine-layout.test.mjs");

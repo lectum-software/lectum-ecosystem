@@ -22,6 +22,7 @@ import { ProfileReplyQuestion } from "@/components/community/profile-reply-quest
 import { ProfileReplyVideoQuestion } from "@/components/community/profile-reply-video-question";
 import {
   canShowSocialVideoPreviewAction,
+  createReplySocialPreviewTarget,
   createSocialVideoPreviewOverlayAction,
 } from "@/components/community/social-video-preview-action";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
@@ -40,7 +41,7 @@ import {
   createLectumShareVideoDownloadTarget,
 } from "@/utils/lectum-share-target";
 import { AuthorAvatar } from "./community-post-card-author";
-import { ProfessionalReplyPreview } from "./community-post-card-reply-preview";
+import { PostProfessionalReplies } from "./community-post-card-reply-preview";
 import {
   type CommunityPostCardProps,
   createPostCardNavigation,
@@ -49,17 +50,18 @@ import {
   postDetailHref,
   publicationInteractionData,
 } from "./community-post-card-support";
-
 export const CommunityPostCard = ({
   actionBarBeforeSaveSlot,
   actionBarShowUpvoteText = true,
   actionBarVoteLabel = "Marcar como útil",
   actionBarVotePresentation = "cluster",
+  authorHeaderExtra,
   communityContextTone = "default",
   communityHeaderIncludesTime = false,
   desktopPlainLinks = false,
   footerExtra,
   headerExtra,
+  highlightedReplyAfterActions = false,
   hoverTone = "primary",
   interactiveActions = false,
   onShare,
@@ -348,19 +350,12 @@ export const CommunityPostCard = ({
   const highlightedReplyHref = highlightedProfessionalReply
     ? postDetailHref(post, highlightedProfessionalReply.id)
     : postHref;
-  const highlightedReplySocialTarget =
-    highlightedProfessionalReply &&
-    canShowSocialVideoPreviewAction({
-      author: highlightedProfessionalReply.author,
-      currentUser,
-      mediaType: highlightedProfessionalReply.media_type,
-      mediaUrl: highlightedProfessionalReply.media_url,
-    })
-      ? createLectumShareVideoDownloadTarget(post, highlightedProfessionalReply, {
-          parentContent: highlightedProfessionalReply.parent_content,
-          relativeUrl: highlightedReplyHref,
-        })
-      : null;
+  const highlightedReplySocialTarget = createReplySocialPreviewTarget(
+    post,
+    highlightedProfessionalReply,
+    currentUser,
+    highlightedReplyHref,
+  );
   const highlightedReplyOverlayAction = createSocialVideoPreviewOverlayAction({
     disabled: isDownloadingShareVideo,
     onOpen: openLectumDownloadDialog,
@@ -369,6 +364,19 @@ export const CommunityPostCard = ({
   const { handleCardClick, handleCardKeyDown } = createPostCardNavigation(openPostOnCardClick, () =>
     router.push(postHref),
   );
+  const professionalPreview = (
+    <PostProfessionalReplies
+      post={post}
+      reply={highlightedProfessionalReply}
+      overlayAction={highlightedReplyOverlayAction}
+      postHref={postHref}
+      presentation={isFeedPresentation ? "feed" : "default"}
+      profilePublicationMode={profilePublicationMode}
+      showWhatsappCta={showWhatsappCta}
+      showMoreReplies={highlightedReplyAfterActions}
+    />
+  );
+
   return (
     <article
       className={cn(
@@ -447,19 +455,16 @@ export const CommunityPostCard = ({
           {headerExtra}
         </div>
       ) : null}
-
       {showCommunityHeader && showAuthorHeader && !hasCommunityIdentity ? (
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
-
       {primaryReply && !showProfileVideoQuestion ? (
         <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
       ) : null}
-
       {showAuthorHeader ? (
         <div
           className={cn(
-            "flex items-start gap-3",
+            authorHeaderExtra ? "relative z-30 flex items-start gap-3" : "flex items-start gap-3",
             primaryReply ? (showDisplayText ? "mb-2" : "mb-0") : "mb-3",
           )}
         >
@@ -547,9 +552,9 @@ export const CommunityPostCard = ({
               </p>
             )}
           </div>
+          {authorHeaderExtra}
         </div>
       ) : null}
-
       {showDisplayText ? (
         <div className="grid gap-2">
           {displayTitle ? (
@@ -622,15 +627,7 @@ export const CommunityPostCard = ({
             }
           />
         )}
-        <ProfessionalReplyPreview
-          community={post.community}
-          overlayAction={highlightedReplyOverlayAction}
-          postHref={postHref}
-          presentation={isFeedPresentation ? "feed" : "default"}
-          profilePublicationMode={profilePublicationMode}
-          reply={highlightedProfessionalReply}
-          showWhatsappCta={showWhatsappCta}
-        />
+        {highlightedReplyAfterActions ? null : professionalPreview}
       </div>
 
       <CommunityActionBar
@@ -693,6 +690,9 @@ export const CommunityPostCard = ({
         voteLabel={primaryReply ? "Marcar resposta como útil" : actionBarVoteLabel}
         votePresentation={hasCompactReplyActions ? "inline" : actionBarVotePresentation}
       />
+      {highlightedReplyAfterActions && highlightedProfessionalReply ? (
+        <div className="mt-4 grid gap-3">{professionalPreview}</div>
+      ) : null}
       {lectumDownloadDialog}
     </article>
   );

@@ -20,7 +20,7 @@ import {
   createLectumSharePostMediaTarget,
   createLectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
-import { FilterTabs, MyPostsHeader, ProfessionalAnsweredBadge } from "./components/header";
+import { FilterTabs, MyPostsHeader } from "./components/header";
 import { InfiniteMyPostsLoader } from "./components/infinite-loader";
 import { ReplyItemCard } from "./components/reply-item-card";
 import { WhatsappMetric } from "./components/whatsapp-metric";
@@ -192,7 +192,6 @@ export const MyPostsLogic = () => {
                     key={item.id}
                     onChanged={handleReplyChanged}
                     onShare={sharePost}
-                    showProfessionalAnsweredBadge={!isPsychologist}
                   />
                 ) : (
                   <CommunityPostCard
@@ -208,18 +207,16 @@ export const MyPostsLogic = () => {
                     communityContextTone="muted"
                     communityHeaderIncludesTime
                     desktopPlainLinks
-                    headerExtra={
+                    authorHeaderExtra={
                       <div className="flex shrink-0 items-center gap-2">
-                        {!isPsychologist && item.post.highlighted_professional_reply ? (
-                          <ProfessionalAnsweredBadge className="hidden sm:inline-flex" />
-                        ) : null}
                         <PostOwnerActionMenu
-                          className="-mr-1"
+                          className="-mt-2 -mr-1"
                           onDeleted={handlePostDeleted}
                           post={item.post}
                         />
                       </div>
                     }
+                    highlightedReplyAfterActions
                     hoverTone="neutral"
                     interactiveActions
                     key={item.id}

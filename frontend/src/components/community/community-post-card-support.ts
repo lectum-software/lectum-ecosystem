@@ -27,6 +27,8 @@ export type CommunityPostCardProps = {
   desktopPlainLinks?: boolean;
   footerExtra?: ReactNode;
   headerExtra?: ReactNode;
+  authorHeaderExtra?: ReactNode;
+  highlightedReplyAfterActions?: boolean;
   interactiveActions?: boolean;
   onShare: (post: PostListPost) => void;
   openPostOnCardClick?: boolean;

@@ -1327,3 +1327,7 @@ user.has_seen_patient_privacy_notice: Boolean, default false. Flag independente 
 ## 2026-10-11 - Metrica privada de conteudo (ADR-0603)
 
 PostListItemDTO.whatsapp_clicks_count?: number no endpoint mine, somente psicologo autenticado e conteudos de sua autoria. Agregacao do important_action_event existente, aliases de post/resposta e exclusao de cliques proprios conforme Analytics. Campo ausente em pacientes, listas salvas e endpoints publicos; nenhuma coluna/migration nova.
+
+## 2026-10-11 - Preflight de exclusao por video (ADR-0607)
+
+PostDetailDTO.has_psychologist_video_reply?: boolean deriva de respostas ativas de psicologos com media_type video. Campo aditivo, sem persistencia nova; a ausencia em backend anterior preserva o tratamento de conflito no DELETE. Para comentarios, GET replyThread existente retorna a subarvore completa; o frontend examina descendentes ativos antes da confirmacao. O DELETE transacional permanece a autoridade em ambos os casos. A lista mine reutiliza outros autores profissionais do feed para Ver mais respostas; Salvos nao muda.

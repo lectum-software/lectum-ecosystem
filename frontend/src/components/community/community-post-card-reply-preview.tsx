@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import type { PostProfessionalReply } from "@/api/generator/types/posts";
+import { type ComponentProps, useState } from "react";
+import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
 import {
   CommunityMediaBlock,
@@ -21,8 +21,8 @@ import {
   formatCommunityPostTime as formatPostTimeLabel,
   getCommunityAuthorDisplayName,
 } from "@/utils/community-display";
-
 import { AuthorAvatar } from "./community-post-card-author";
+import { MoreProfessionalReplies } from "./more-professional-replies";
 
 export const ProfessionalReplyPreview = ({
   community,
@@ -263,3 +263,19 @@ export const ProfessionalReplyPreview = ({
     </div>
   );
 };
+
+export const PostProfessionalReplies = ({
+  post,
+  showMoreReplies,
+  ...props
+}: Omit<ComponentProps<typeof ProfessionalReplyPreview>, "community"> & {
+  post: PostListPost;
+  showMoreReplies: boolean;
+}) => (
+  <>
+    <ProfessionalReplyPreview {...props} community={post.community} />
+    {showMoreReplies && props.reply && props.postHref ? (
+      <MoreProfessionalReplies href={props.postHref} post={post} />
+    ) : null}
+  </>
+);
