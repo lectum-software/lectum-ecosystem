@@ -1,5 +1,17 @@
 # TASK-28: Meus posts e posts salvos
 
+## Correcao de retorno em 12/10/2026
+
+- [x] Voltar de post ou resposta aberto em Minhas Publicacoes respeita o historico da lista.
+- [x] O modo de entrada publica so forca o feed quando nao existe origem interna registrada.
+- [x] Preservar fallback de links compartilhados e a barreira de autenticacao.
+- [x] Testes de navegacao (23/23), Biome e TypeScript aprovados.
+
+Regra compartilhada pelos detalhes de post e conversa; somente frontend. Sem
+alteracao de dados, dependencias ou variaveis. Conferencia autenticada no browser
+e build completo nao repetidos nesta correcao; ambiente local com disco limitado.
+Referencia: ADR-0601. Sem push/deploy.
+
 ## Metadata
 
 | Campo | Valor |

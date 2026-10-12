@@ -1,5 +1,15 @@
 # ADR-0601: Contexto de origem em Minhas publicacoes
 
+## Retorno para a origem em 12/10/2026
+
+Posts e conversas publicas tambem sao abertos por Minhas Publicacoes. O parametro
+`forceBackToFeed` nao pode descartar o historico interno apenas porque nao existe
+uma memoria do feed comunitario. Os dois detalhes compartilham uma funcao de
+retorno que prioriza a origem registrada e delega ao guard existente de navegacao,
+preservando a barreira de autenticacao. Entrada direta sem origem continua indo ao
+feed. Regressao cobre post, resposta, feed antigo e entrada direta (23 testes de
+navegacao aprovados). Nenhuma nova persistencia ou mudanca no historico global.
+
 Status: em implementacao. Data: 2026-10-11. Task: TASK-28.
 
 Preservar o card azul, remover rotulos de origem e apresentar autoria mascarada pelo mapper existente, comunidade e data. Midia de origem usa somente miniatura compacta a direita, sem player/play; toda a area abre o post ou resposta de origem, nao a propria resposta. Midia da contribuicao permanece intacta. Pacientes e psicologos compartilham a regra. Conteudo removido nao expoe texto, autor ou midia.

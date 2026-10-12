@@ -622,7 +622,7 @@ export const CommunityPostCard = ({
             variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
             videoOverlay={
               showProfileVideoQuestion ? (
-                <ProfileReplyVideoQuestion title={post.title} />
+                <ProfileReplyVideoQuestion title={post.title} reply={primaryReply} />
               ) : undefined
             }
           />

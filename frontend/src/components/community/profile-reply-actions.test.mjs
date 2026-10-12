@@ -30,6 +30,31 @@ const { ProfileReplyVideoQuestion, getProfileQuestionFrame } = await import(
   "./profile-reply-video-question.tsx"
 );
 
+test("profile and saved video omit question when the parent comment has no text", () => {
+  for (const parent_content of [null, "", " \n "]) {
+    assert.equal(
+      renderToStaticMarkup(
+        createElement(ProfileReplyVideoQuestion, {
+          title: "Pergunta original",
+          reply: { parent_reply_id: "parent", parent_content },
+        }),
+      ),
+      "",
+    );
+  }
+  for (const reply of [
+    { parent_reply_id: null },
+    { parent_reply_id: "parent", parent_content: "Comentario com texto" },
+  ]) {
+    assert.match(
+      renderToStaticMarkup(
+        createElement(ProfileReplyVideoQuestion, { title: "Pergunta original", reply }),
+      ),
+      /Pergunta original/,
+    );
+  }
+});
+
 test("question stays at the player top with a proportional portrait frame in all layouts", () => {
   assert.deepEqual(getProfileQuestionFrame(320, 640), {
     width: 320,
@@ -95,7 +120,7 @@ test("profile question overlay stays inside the player shell and is opt-in for r
   assert.match(source, /primaryReply && displayMediaType === "video" && displayMediaUrl/);
   assert.match(
     source,
-    /showProfileVideoQuestion \?\s*\(?\s*<ProfileReplyVideoQuestion title=\{post.title\}/,
+    /showProfileVideoQuestion \?\s*\(?\s*<ProfileReplyVideoQuestion title=\{post.title\} reply=\{primaryReply\}/,
   );
   assert.doesNotMatch(source, /ProfileReplyQuestionContext|Ver contexto da pergunta/);
   const media = readFileSync(new URL("./community-media-frame.tsx", import.meta.url), "utf8");

@@ -1,4 +1,6 @@
-Correcao complementar validada localmente: [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md), ADR-0608. O detalhe do post e todas as respostas aninhadas agora ocultam `+ Favoritar` para psicologos indisponiveis; a lista de Favoritos aplica a mesma elegibilidade sem apagar a relacao. Backend 907/907, testes focais e build aprovados; sem push/deploy.
+Implementado e validado localmente: [TASK-249 - Previa social e conectores de comentarios](TASK-249-previa-social-e-conectores-comentarios.md), ADR-0611. A modal social usa portal acima do compositor, videos-resposta recebem o comentario pai e a arvore ganha controles de 10px bold com conectores que terminam na curva. Testes focais e QA visual mobile/desktop aprovados; sem push/deploy.
+
+Correcao complementar validada localmente: [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md), ADR-0608. O detalhe do post e todas as respostas aninhadas ocultam `+ Favoritar` e `Top X mentor` para psicologos indisponiveis; Favoritos preserva a relacao e o ranking promove o proximo mentor elegivel. Testes focais aprovados; sem push/deploy.
 
 Implementado e validado localmente: [TASK-248 - Arvore de respostas progressiva](TASK-248-arvore-respostas-progressiva.md), ADR-0610. Cada ramo abre de forma independente em lotes, preserva o recuo recursivo e oferece uma unica acao no final. Check, build e browser real mobile/desktop aprovados; sem push/deploy.
 
@@ -644,6 +646,7 @@ ou cortesia manual.
 | 246 | [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md) | Done | 245 |
 | 247 | [TASK-247 - Ranking de oportunidades por demanda nao atendida](TASK-247-ranking-oportunidades-demanda.md) | Done | 246 |
 | 248 | [TASK-248 - Arvore de respostas progressiva](TASK-248-arvore-respostas-progressiva.md) | Done | 247 |
+| 249 | [TASK-249 - Previa social e conectores de comentarios](TASK-249-previa-social-e-conectores-comentarios.md) | Done | 248 |
 
 ## Ordem operacional recomendada sem bloqueios
 

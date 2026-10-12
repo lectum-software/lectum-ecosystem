@@ -80,6 +80,33 @@ describe("post share render media selection", () => {
     assert.doesNotMatch(source, /cardLabel:\s*"Perguntaram na Lectum"/);
   });
 
+  it("usa o comentario pai no MP4 de uma resposta aninhada", async () => {
+    const source = await shareRenderServiceSource();
+
+    assert.match(
+      source,
+      /reply\.parent_reply_id\s*\?\s*reply\.parent_reply\?\.content\s*:\s*reply\.post\.title/,
+    );
+  });
+
+  it("omite a caixinha com base no comentario persistido e encaminha a decisao ao render", async () => {
+    const source = await shareRenderServiceSource();
+    assert.match(
+      source,
+      /hideSourceCard: Boolean\(reply\.parent_reply_id && !reply\.parent_reply\?\.content\?\.trim\(\)\)/,
+    );
+    assert.match(source, /metadata: \{[\s\S]*hideSourceCard: target\.hideSourceCard/);
+    const admin = await readFile(
+      "src/modules/api/admin/private/communities/manage/use-cases/services/content-video-downloads.ts",
+      "utf8",
+    );
+    assert.match(
+      admin,
+      /hideSourceCard: Boolean\(reply\.parent_reply_id && !reply\.parent_reply\?\.content\?\.trim\(\)\)/,
+    );
+    assert.match(admin, /hideSourceCard: media\.hideSourceCard \?\? false/);
+  });
+
   it("aceita URL absoluta legada de posts/media mesmo quando a BASE atual diverge", () => {
     const previousBase = process.env.BASE;
     process.env.BASE = "https://api-atual.example";

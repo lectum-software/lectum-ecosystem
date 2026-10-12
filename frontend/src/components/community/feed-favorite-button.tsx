@@ -14,7 +14,13 @@ import { RelationshipButton } from "@/components/ui/relationship-button";
 import { useAppSelector } from "@/hooks/redux";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 
-export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
+export const FeedFavoriteButton = ({
+  author,
+  heartClassName,
+}: {
+  author: CommunityAuthor;
+  heartClassName?: string;
+}) => {
   const { id } = author;
   const name = getCommunityAuthorDisplayName(author);
   const conversion = useProgressiveConversion();
@@ -93,7 +99,7 @@ export const FeedFavoriteButton = ({ author }: { author: CommunityAuthor }) => {
         Favoritar
       </span>
       <span aria-hidden="true" className="favorite-toggle-heart">
-        <FavoriteHeart active className="h-4 w-4" />
+        <FavoriteHeart active className={heartClassName ?? "h-4 w-4"} />
       </span>
     </RelationshipButton>
   );

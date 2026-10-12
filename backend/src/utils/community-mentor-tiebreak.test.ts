@@ -32,3 +32,13 @@ test("profile signals and public podium share the final tiebreak", () => {
     assert.match(source, /return compareCommunityMentorIdentity\(/);
   }
 });
+
+test("public podium filters unavailable profiles before ranking", () => {
+  const source = readFileSync(
+    "src/modules/api/private/community/repositories/queries/CommunityMentorRepository.ts",
+    "utf8",
+  );
+
+  assert.match(source, /professionalFavoriteAvailableUserWhere\(\)/);
+  assert.match(source, /psychologist_profile:\s*\{\s*is: verifiedProfessionalProfileWhere\(\)/);
+});

@@ -91,6 +91,7 @@ const filterChain = (inputLabel: string, filters: readonly string[], outputLabel
 export const sanitizeSocialShareMetadata = (
   metadata: SocialShareRenderMetadata,
 ): SocialShareRenderMetadata => ({
+  hideSourceCard: metadata.hideSourceCard === true,
   cardLabel: normalizeCardLabel(metadata.cardLabel),
   professionalName: normalizeProfessionalName(metadata.professionalName),
   professionalRoleLabel: normalizeProfessionalRoleLabel(metadata.professionalRoleLabel),
@@ -165,14 +166,14 @@ export const buildSocialShareFilter = (
   const verifiedBadgeX = professionalTextX + nameWidth + professional.checkGap;
   const verifiedBadgeY =
     professional.nameY + Math.round((professional.nameFontSize - professional.badgeHeight) / 2);
-  const hasCardBackgroundAsset = Boolean(cardBackgroundFile);
-  const hasLogoAsset = Boolean(logoFile);
+  const hasCardBackgroundAsset = !sanitized.hideSourceCard && Boolean(cardBackgroundFile);
+  const hasLogoAsset = !sanitized.hideSourceCard && Boolean(logoFile);
   const hasVerifiedBadgeAsset = sanitized.professionalVerified && Boolean(verifiedBadgeFile);
   let nextAssetInputIndex = 1;
   const cardBackgroundInputIndex = hasCardBackgroundAsset ? nextAssetInputIndex++ : null;
   const logoInputIndex = hasLogoAsset ? nextAssetInputIndex++ : null;
   const verifiedBadgeInputIndex = hasVerifiedBadgeAsset ? nextAssetInputIndex++ : null;
-  const overlayFilters = [
+  const sourceCardFilters = [
     ...(hasCardBackgroundAsset
       ? []
       : [
@@ -216,6 +217,9 @@ export const buildSocialShareFilter = (
       y: labelTextY,
     }),
     ...sourceTextFilters,
+  ];
+  const overlayFilters = [
+    ...(sanitized.hideSourceCard ? [] : sourceCardFilters),
     drawText({
       color: "white",
       fontFile,
@@ -364,8 +368,10 @@ export const buildSocialShareVideoArguments = (
     ];
   })();
   const assetInputArguments = [
-    ...(cardBackgroundFile ? ["-loop", "1", "-i", cardBackgroundFile] : []),
-    ...(logoFile ? ["-loop", "1", "-i", logoFile] : []),
+    ...(!sanitizedMetadata.hideSourceCard && cardBackgroundFile
+      ? ["-loop", "1", "-i", cardBackgroundFile]
+      : []),
+    ...(!sanitizedMetadata.hideSourceCard && logoFile ? ["-loop", "1", "-i", logoFile] : []),
     ...(verifiedBadgeFile ? ["-loop", "1", "-i", verifiedBadgeFile] : []),
   ];
 

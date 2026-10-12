@@ -25,12 +25,12 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
+import { navigateBackFromCommunityPost } from "@/utils/community-post-navigation";
 import {
   createLectumShareLinkTarget,
   createLectumShareVideoTarget,
   findPostReplyInTree,
 } from "@/utils/lectum-share-target";
-import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { publicCommunityPostFocusedReplyHref } from "@/utils/public-routes";
 import { getRememberedCommunityFeedHref } from "../../../hooks/use-community-feed-scroll-restoration";
 import { ThreadOriginalPostCard } from "../components/post-content";
@@ -113,7 +113,6 @@ export const PostReplyThreadLogic = ({
   });
   const post = postQuery.data?.post;
   const rootReply = threadQuery.data?.reply;
-  const threadBackFallbackHref = DEFAULT_COMMUNITY_FEED_HREF;
   const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
   const threadError = threadQuery.isError ? resolvePostError(threadQuery.error) : null;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
@@ -125,19 +124,7 @@ export const PostReplyThreadLogic = ({
 
   const handleThreadBack = () => {
     const rememberedFeedHref = getRememberedCommunityFeedHref(post?.id ?? postId);
-    const fallbackHref = rememberedFeedHref ?? threadBackFallbackHref;
-
-    if (forceBackToFeed) {
-      if (!rememberedFeedHref) {
-        router.push(threadBackFallbackHref);
-        return;
-      }
-
-      navigateBackWithFallback(router, fallbackHref);
-      return;
-    }
-
-    navigateBackWithFallback(router, fallbackHref);
+    navigateBackFromCommunityPost(router, rememberedFeedHref, forceBackToFeed);
   };
   const resetReplyComposerFocusHighlight = useReplyFocusHighlight(composerFocusReplyId, false, {
     focusKey: composerFocusRequestKey,

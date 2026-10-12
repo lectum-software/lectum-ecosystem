@@ -99,7 +99,7 @@ const buildOriginalVideoFileName = (author: AdminContentAuthor, sourceText: stri
 
 const selectVideoMediaUrl = (
   target: CanonicalContentTarget,
-): { mediaUrl: string; sourceText: string } | null => {
+): { hideSourceCard?: boolean; mediaUrl: string; sourceText: string } | null => {
   if (target.targetType === "post") {
     const post = target.content as AdminCommunityContentPostRecord;
     const mediaUrl = selectSharePostVideoMediaUrl(post);
@@ -115,6 +115,7 @@ const selectVideoMediaUrl = (
   if (reply.media_type !== "video" || !reply.media_url) return null;
 
   return {
+    hideSourceCard: Boolean(reply.parent_reply_id && !reply.parent_reply?.content?.trim()),
     mediaUrl: reply.media_url,
     sourceText: normalizeShareText(
       reply.parent_reply_id ? reply.parent_reply?.content : reply.post.title,
@@ -181,6 +182,7 @@ const buildShareRenderTarget = async (
         }
       : {
           cardLabel: "Respondido na Lectum",
+          hideSourceCard: media.hideSourceCard ?? false,
           fileName: buildShareFileName(professionalName, media.sourceText),
           mediaUrl: media.mediaUrl,
           postId: (content as AdminCommunityContentReplyRecord).post_id,

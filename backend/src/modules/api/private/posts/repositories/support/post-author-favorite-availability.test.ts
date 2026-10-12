@@ -54,6 +54,7 @@ const reply = (
   id,
   media_type: null,
   media_url: null,
+  parent_reply: null,
   parent_reply_id: null,
   replies,
   thumbnail_url: null,
@@ -81,5 +82,25 @@ describe("post detail author favorite availability", () => {
 
     assert.equal(result.author.favorite_available, false);
     assert.equal(result.replies[0]?.author.favorite_available, false);
+  });
+
+  it("hides the top mentor badge while the professional profile is unavailable", () => {
+    assert.equal(toAuthorResponse(professionalAuthor(), 80).featured_badge, "TOP #1 MENTOR");
+    assert.equal(toAuthorResponse(professionalAuthor({ active: false }), 80).featured_badge, null);
+    assert.equal(
+      toAuthorResponse(professionalAuthor({ profile: { published: false } }), 80).featured_badge,
+      null,
+    );
+  });
+
+  it("exposes the direct parent text used by social video previews", () => {
+    const author = professionalAuthor();
+    const child = reply("child", author);
+    child.parent_reply_id = "parent";
+    child.parent_reply = { content: "Comentario que originou a resposta" };
+
+    const result = toReplyResponse(child, new Map());
+
+    assert.equal(result.parent_content, "Comentario que originou a resposta");
   });
 });

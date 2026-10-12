@@ -221,7 +221,10 @@ test("all post headers and comments share the persistent favorite toggle", () =>
     new URL("../../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(replies, /<FeedFavoriteButton author=\{reply.author\} \/>/);
+  assert.match(
+    replies,
+    /<FeedFavoriteButton\s+author=\{reply\.author\}\s+heartClassName=\{isNestedReply/,
+  );
   assert.doesNotMatch(replies, /hideFavorited=\{false\}/);
   for (const file of ["./community-post-card.tsx", "./community-post-card-reply-preview.tsx"]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");

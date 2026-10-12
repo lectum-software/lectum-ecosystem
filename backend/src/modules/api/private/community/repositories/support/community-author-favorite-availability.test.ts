@@ -59,6 +59,15 @@ describe("community author favorite availability", () => {
     assert.equal(toAuthorResponse(professionalAuthor({ active: false })).favorite_available, false);
   });
 
+  it("hides the top mentor badge while the professional profile is unavailable", () => {
+    assert.equal(toAuthorResponse(professionalAuthor(), 80).featured_badge, "TOP #1 MENTOR");
+    assert.equal(toAuthorResponse(professionalAuthor({ active: false }), 80).featured_badge, null);
+    assert.equal(
+      toAuthorResponse(professionalAuthor({ profile: { published: false } }), 80).featured_badge,
+      null,
+    );
+  });
+
   it("hides favorites for unpublished, deleted or incomplete profiles", () => {
     for (const profile of [
       { published: false },

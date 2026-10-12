@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
+import { shouldHideReplyQuestion } from "@/utils/lectum-share-target";
 
 export const getProfileQuestionFrame = (width: number, height: number) => {
   const contentWidth = Math.min(width, (height * 9) / 16);
@@ -12,11 +13,19 @@ export const getProfileQuestionFrame = (width: number, height: number) => {
   };
 };
 
-export const ProfileReplyVideoQuestion = ({ title }: { title: string }) => {
+export const ProfileReplyVideoQuestion = ({
+  title,
+  reply,
+}: {
+  title: string;
+  reply?: Parameters<typeof shouldHideReplyQuestion>[0] | null;
+}) => {
+  const hidden = Boolean(reply && shouldHideReplyQuestion(reply));
   const planeRef = useRef<HTMLDivElement>(null);
   const [frame, setFrame] = useState<ReturnType<typeof getProfileQuestionFrame> | null>(null);
 
   useLayoutEffect(() => {
+    if (hidden) return;
     const player = planeRef.current?.parentElement;
     if (!player) return;
 
@@ -38,7 +47,9 @@ export const ProfileReplyVideoQuestion = ({ title }: { title: string }) => {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [hidden]);
+
+  if (hidden) return null;
 
   return (
     <div

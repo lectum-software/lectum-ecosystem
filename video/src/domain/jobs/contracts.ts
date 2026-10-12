@@ -4,6 +4,7 @@ export const VIDEO_JOB_NAME = "compress";
 export type VideoJobOperation = "compress" | "social_share";
 
 export type SocialShareRenderMetadata = {
+  hideSourceCard?: boolean;
   cardLabel: string;
   professionalName: string;
   professionalRoleLabel: string;

@@ -45,6 +45,7 @@ const SOCIAL_SHARE_OUTPUT_FILE_NAME = "lectum-video-redes-sociais.mp4";
 
 const socialShareRequestSchema = z.object({
   metadata: z.object({
+    hideSourceCard: z.boolean().default(false),
     cardLabel: z.string().trim().min(1).max(80),
     professionalName: z.string().trim().min(1).max(90),
     professionalRoleLabel: z.string().trim().min(1).max(48),
