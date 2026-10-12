@@ -10,8 +10,8 @@ dos controles da arvore de comentarios.
 
 - [x] A modal de previa social fica acima do compositor fixo e o botao de download permanece clicavel.
 - [x] Video-resposta a comentario usa o texto do comentario pai na previa e no MP4 gerado.
-- [x] `Ver X respostas`, `Ver mais` e `Ocultar respostas` usam tamanho compacto, cinza e semibold.
-- [x] O controle final do ramo recebe um conector curvo vindo da linha do comentario pai.
+- [x] `Ver X respostas`, `Ver mais` e `Ocultar respostas` usam 10px, cinza e bold.
+- [x] O controle final do ramo recebe um conector curvo vindo da linha do comentario pai, sem prolongamento reto depois da curva.
 - [x] Conectores de niveis internos se encontram sem lacuna entre o trecho reto e a curva.
 - [x] O coracao de favorito em comentarios acompanha o tamanho do selo verificado.
 - [x] Nenhum dado persistido, migration, env, dependencia ou mock e criado.
@@ -35,3 +35,12 @@ titulo do post.
 - Contratos automatizados confirmam portal acima do compositor, texto do comentario
   pai na previa e no MP4, dimensoes dos controles e escala do coracao.
 - Nenhum dado foi escrito durante o QA. Sem push ou deploy.
+
+## Refinamento complementar 2026-10-12
+
+O tamanho e o peso dos controles de ramo agora usam utilitarios importantes para
+nao serem sobrescritos pelo `font: inherit` global dos botoes. Os conectores
+intermediarios preservam exatamente o SVG ja publicado; o conector final preserva
+a mesma linguagem e espessura, mas termina inclinado, sem tangente horizontal.
+Teste de contrato e medicao em Chromium a 393x852 e 1440x1000 confirmam 10px,
+peso 700 e ausencia do prolongamento.

@@ -19,9 +19,13 @@ aplicacao. O contrato de resposta ganha `parent_content`, calculado pela relacao
 existente, e o frontend o envia explicitamente ao alvo social; o servico de render
 continua resolvendo o mesmo comentario diretamente no backend.
 
-Os controles de ramo ficam compactos, cinza e semibold. A linha vertical permanece
+Os controles de ramo ficam compactos, cinza e bold, com 10px aplicados de forma a
+prevalecer sobre a regra tipografica global dos botoes. A linha vertical permanece
 ativa enquanto houver controle de ramo e recebe uma curva ate abrir, carregar mais ou
-ocultar respostas. O deslocamento horizontal da linha passa a acompanhar a densidade
+ocultar respostas. As ligacoes intermediarias preservam o SVG publicado, cuja reta,
+curva, espessura e encaixe ja formam um traco continuo. O controle final reutiliza a
+mesma linguagem e espessura, mas encerra o path em diagonal, sem tangente horizontal.
+O deslocamento horizontal da linha passa a acompanhar a densidade
 do nivel atual, com pequena sobreposicao entre segmentos para evitar lacunas de pixel.
 O coracao favoritado recebe o mesmo escalonamento do selo verificado no comentario.
 

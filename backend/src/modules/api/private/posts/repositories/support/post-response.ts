@@ -341,6 +341,7 @@ export const toAuthorResponse = (
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
   const isDeletedAuthor = Boolean(author.deleted);
+  const isAvailableProfessional = isProfessionalFavoriteAvailable(author);
   const shouldMaskAuthor = !isPsychologist && anonymous;
   const shouldHideIdentity = isDeletedAuthor || shouldMaskAuthor;
   const deletedName = isPsychologist ? "Psicólogo Excluído" : "Membro Excluído";
@@ -367,7 +368,7 @@ export const toAuthorResponse = (
         ? (anonymousDisplayName ?? "Membro Anônimo")
         : displayName,
     avatar: shouldHideIdentity ? null : author.avatar,
-    favorite_available: isProfessionalFavoriteAvailable(author),
+    favorite_available: isAvailableProfessional,
     role: author.role,
     type_label: isDeletedAuthor
       ? isPsychologist
@@ -378,7 +379,9 @@ export const toAuthorResponse = (
     crp: isPsychologist && !isDeletedAuthor ? normalizeStoredCrp(profile?.crp) : null,
     verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
     featured_badge:
-      isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,
+      isPsychologist && !isDeletedAuthor && isAvailableProfessional
+        ? mentorBadgeForScore(profile, mentorScore)
+        : null,
     whatsapp_name: whatsappDisplayName,
     whatsapp_url:
       isPsychologist && !isDeletedAuthor

@@ -15,15 +15,17 @@ existente para que o card volte automaticamente quando o perfil for reativado.
 - [x] O card fica ausente de Favoritos enquanto o perfil estiver indisponivel.
 - [x] A acao e o card retornam depois que o perfil recupera a elegibilidade.
 - [x] Diretorio, perfil publico e elegibilidade de mentor mantem suas regras atuais.
+- [x] Perfis indisponiveis nao exibem selo `Top X mentor` em respostas antigas.
+- [x] O ranking ignora perfis indisponiveis e promove o proximo mentor elegivel.
 - [x] Nenhum banco, migration, env, dependencia ou mock e criado.
 
 ## Validacao
 
-- [x] Teste focado do contrato backend e dos estados de elegibilidade: 4/4.
+- [x] Testes focados de elegibilidade, serializacao e ranking backend: 13/13.
 - [x] Teste focado do slot de favorito no frontend: 5/5.
-- [ ] `pnpm --dir backend check`: formatacao, runtime deps e typecheck aprovados;
-      suite 892/896, com quatro timeouts operacionais preexistentes. Os cinco testes
-      desses arquivos passaram isoladamente.
+- [x] `pnpm --dir backend check`: formatacao, runtime deps e typecheck aprovados;
+      suite 909/911, com dois timeouts operacionais. Os cinco testes desses arquivos
+      passaram isoladamente.
 - [x] `pnpm --dir frontend check`.
 - [x] `pnpm --dir backend build`.
 - [x] `pnpm --dir frontend build`.
@@ -33,7 +35,7 @@ existente para que o card volte automaticamente quando o perfil for reativado.
 Backend e frontend, com campo aditivo e frontend tolerante a versoes anteriores.
 Os artefatos podem ser publicados em qualquer ordem. Sem alteracao de dados: o
 filtro ja aplicado na pagina de Favoritos oculta o card e a reativacao volta a
-inclui-lo. Versao candidata `0.1.644`. Rollback por reversao em `homolog`.
+inclui-lo. Versao candidata `0.1.649`. Rollback por reversao em `homolog`.
 
 ## Correcao complementar 2026-10-12 - detalhe do post e respostas aninhadas
 
@@ -56,3 +58,10 @@ ocultacao quando o novo contrato devolve `favorite_available: false`.
 Impacto de deploy: backend-only, contrato aditivo, sem migration, env, dependencia,
 job ou escrita de dados. O frontend ja sabe ocultar a acao quando recebe `false`.
 Rollback por reversao do commit; a relacao de favorito permanece preservada.
+
+## Correcao complementar 2026-10-12 - selo e ranking de mentor
+
+Os serializadores de autores passam a omitir `featured_badge` quando o perfil
+profissional nao esta publicamente disponivel. A consulta do ranking reutiliza a
+mesma regra de disponibilidade antes de ordenar candidatos, portanto o proximo
+profissional elegivel ocupa a posicao sem apagar historico ou respostas antigas.

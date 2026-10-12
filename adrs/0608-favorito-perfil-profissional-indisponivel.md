@@ -50,3 +50,11 @@ e com video. Respostas diretas e aninhadas usam o mesmo mapeamento recursivo.
 A consulta da pagina de Favoritos tambem usa o mesmo fragmento de disponibilidade.
 Ela continua apenas ocultando o card: nenhuma relacao existente e removida. A
 mudanca permanece aditiva e backend-only, sem migration, env ou nova dependencia.
+
+## Complemento 2026-10-12 - identidade de mentor indisponivel
+
+A disponibilidade publica tambem condiciona `featured_badge`. Respostas historicas
+continuam visiveis, mas deixam de apresentar `Top X mentor` enquanto o profissional
+estiver indisponivel. A consulta do ranking aplica o mesmo predicado antes da
+ordenacao; assim, o proximo candidato elegivel assume a posicao. Na reativacao, o
+profissional volta a participar normalmente, sem alteracao destrutiva de dados.

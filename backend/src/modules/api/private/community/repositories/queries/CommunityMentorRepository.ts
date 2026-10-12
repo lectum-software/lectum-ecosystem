@@ -3,6 +3,7 @@ import prisma from "@/infra/database/prisma";
 import { notifyCommunityTopMentorPodium } from "@/main/notification/community-top-mentors";
 import { getCommunityMentorWhatsappClickCounts } from "@/utils/community-mentor-ranking";
 import { compareCommunityMentorIdentity } from "@/utils/community-mentor-tiebreak";
+import { professionalFavoriteAvailableUserWhere } from "@/utils/professional-favorite-availability";
 import { getProfessionalWhatsappDisplayName } from "@/utils/professional-name";
 import { normalizeStoredCrp } from "@/utils/professional-registry";
 import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
@@ -64,24 +65,14 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
 
     const eligibleMentors = await prisma.user.findMany({
       where: {
-        deleted: false,
-        active: true,
-        role: "psicologo",
-        psychologist_profile: {
-          is: {
-            deleted: false,
-            published: true,
-            video_url: {
-              not: null,
+        AND: [
+          professionalFavoriteAvailableUserWhere(),
+          {
+            psychologist_profile: {
+              is: verifiedProfessionalProfileWhere(),
             },
-            NOT: [
-              {
-                video_url: "",
-              },
-            ],
-            ...verifiedProfessionalProfileWhere(),
           },
-        },
+        ],
       },
       select: topMentorUserSelect,
     });
