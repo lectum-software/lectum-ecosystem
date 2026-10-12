@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 type ActionHandler = MouseEventHandler<HTMLButtonElement>;
 type CommunityActionSize = "xs" | "sm" | "md";
+type CommunityActionSpacing = "default" | "relaxed";
 type VotePresentation = "cluster" | "inline";
 
 type ActionWithCount = {
@@ -57,6 +58,7 @@ export type CommunityActionBarProps = {
   };
   save?: SaveAction;
   secondaryActionsPlacement?: "trailing" | "inline";
+  spacing?: CommunityActionSpacing;
   share?: ShareAction;
   size?: CommunityActionSize;
   downvotesCount?: number;
@@ -67,11 +69,13 @@ export type CommunityActionBarProps = {
   onVote?: (value: 1 | -1) => void;
 };
 
-const actionBarClassName = (size: CommunityActionSize) =>
+const actionBarClassName = (size: CommunityActionSize, spacing: CommunityActionSpacing) =>
   cn(
     "flex w-full min-w-0 flex-nowrap items-center whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
     size === "xs"
-      ? "gap-1 overflow-visible"
+      ? spacing === "relaxed"
+        ? "gap-2 overflow-visible"
+        : "gap-1 overflow-visible"
       : "gap-1.5 overflow-x-auto sm:gap-1.5 sm:overflow-visible",
   );
 
@@ -138,6 +142,7 @@ export const CommunityActionBar = ({
   reply,
   save,
   secondaryActionsPlacement = "trailing",
+  spacing = "default",
   share,
   showUpvoteText = true,
   size = "sm",
@@ -245,7 +250,7 @@ export const CommunityActionBar = ({
 
   return (
     <div
-      className={cn(actionBarClassName(size), className)}
+      className={cn(actionBarClassName(size, spacing), className)}
       data-comment-collapse-ignore="true"
       data-community-action-bar={size}
     >
@@ -253,7 +258,7 @@ export const CommunityActionBar = ({
         className={cn(
           "flex min-w-0 flex-nowrap items-center sm:flex-none",
           inlineEndSlot ? "flex-1 overflow-hidden sm:flex-none sm:overflow-visible" : "flex-1",
-          size === "xs" ? "gap-1 sm:gap-1.5" : "gap-1.5",
+          size === "xs" ? (spacing === "relaxed" ? "gap-2" : "gap-1 sm:gap-1.5") : "gap-1.5",
         )}
       >
         <div className={voteClusterClassName(size, votePresentation)}>
@@ -376,10 +381,14 @@ export const CommunityActionBar = ({
           "flex shrink-0 flex-nowrap items-center",
           inlineEndSlot
             ? size === "xs"
-              ? "gap-0.5 pl-0.5"
+              ? spacing === "relaxed"
+                ? "gap-2 pl-1"
+                : "gap-0.5 pl-0.5"
               : "gap-1 pl-1"
             : size === "xs"
-              ? "ml-auto gap-0.5 pl-1 sm:ml-0 sm:gap-1 sm:pl-1"
+              ? spacing === "relaxed"
+                ? "ml-auto gap-2 pl-1 sm:ml-0"
+                : "ml-auto gap-0.5 pl-1 sm:ml-0 sm:gap-1 sm:pl-1"
               : "ml-auto gap-1 pl-2 sm:ml-0 sm:gap-1 sm:pl-1",
         )}
       >

@@ -1,3 +1,5 @@
+Implementado e validado localmente: [TASK-248 - Arvore de respostas progressiva](TASK-248-arvore-respostas-progressiva.md), ADR-0610. Cada ramo abre de forma independente em lotes, preserva o recuo recursivo e oferece uma unica acao no final. Check, build e browser real mobile/desktop aprovados; sem push/deploy.
+
 Implementado e validado localmente: [TASK-247 - Ranking de oportunidades por demanda nao atendida](TASK-247-ranking-oportunidades-demanda.md), ADR-0609. A aba profissional considera recencia, pacientes distintos, atividade recente e cobertura profissional antes da paginacao. Checks focais, checks amplos e builds aprovados; sem push/deploy.
 
 Em preparacao para publicacao TASK-28 / ADR-0607: remocao do bloco azul aprovada visualmente pelo usuario; texto de preservacao simplificado a pedido. Sem mudanca de regra.
@@ -639,6 +641,7 @@ ou cortesia manual.
 | 245 | [TASK-245 - Confirmacao do nome no retorno ao post](TASK-245-confirmacao-nome-retorno-post.md) | Done | 244 |
 | 246 | [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md) | Done | 245 |
 | 247 | [TASK-247 - Ranking de oportunidades por demanda nao atendida](TASK-247-ranking-oportunidades-demanda.md) | Done | 246 |
+| 248 | [TASK-248 - Arvore de respostas progressiva](TASK-248-arvore-respostas-progressiva.md) | Done | 247 |
 
 ## Ordem operacional recomendada sem bloqueios
 

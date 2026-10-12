@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
-import { type MouseEventHandler, type RefObject, useEffect, useMemo, useState } from "react";
+import { type MouseEventHandler, type RefObject, useEffect, useState } from "react";
 import { useSaveReply } from "@/api/callers/posts";
 import type { PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
@@ -31,7 +31,10 @@ import {
 } from "@/utils/community-display";
 import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import {
-  countReplyTreeDescendants,
+  getNextReplyBranchVisibleCount,
+  resolveReplyBranchAction,
+} from "@/utils/reply-branch-disclosure";
+import {
   createFocusedReplyRelativeUrl,
   findReplyInTree,
   formatReplyAuthorMeta,
@@ -78,7 +81,7 @@ export const ReplyVoteBar = ({
 
   return (
     <CommunityActionBar
-      className="mt-2 sm:mt-3"
+      className="mt-3"
       beforeSaveSlot={
         reply.author.role === "psicologo" && reply.author.whatsapp_url && !reply.media_url ? (
           <CommunityWhatsAppCta
@@ -114,6 +117,7 @@ export const ReplyVoteBar = ({
       }}
       showUpvoteText={false}
       size="xs"
+      spacing="relaxed"
       upvotesCount={reply.upvotes_count}
       voteLabel="Marcar resposta como útil"
       votePresentation="inline"
@@ -197,7 +201,7 @@ export const ReplyCard = ({
   const isComposerReplyTarget = isReplyComposerOpen || replyComposerTargetId === reply.id;
   const [contentExpanded, setContentExpanded] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [treeCollapsed, setTreeCollapsed] = useState(false);
+  const [visibleChildCount, setVisibleChildCount] = useState(0);
   const visualMaxDepth =
     maxInlineDepth < 0 ? MAX_REPLY_TREE_DEPTH : Math.min(maxInlineDepth, MAX_REPLY_TREE_DEPTH);
   const totalRepliesCount = reply.replies_count ?? reply.replies.length;
@@ -205,21 +209,41 @@ export const ReplyCard = ({
     focusReplyId && focusReplyId !== reply.id && findReplyInTree(reply.replies, focusReplyId),
   );
   const canRenderChildren = depth < visualMaxDepth || hasFocusedDescendant;
-  const visibleChildren = canRenderChildren ? reply.replies : [];
-  const hiddenRepliesCount = Math.max(0, totalRepliesCount - visibleChildren.length);
-  const collapsedRepliesCount = useMemo(() => countReplyTreeDescendants(reply), [reply]);
-  const canCollapseRootTree = depth === 0 && collapsedRepliesCount > 0;
-  const canToggleRootTree = canCollapseRootTree && !hasFocusedDescendant;
+  const loadedChildren = canRenderChildren ? reply.replies : [];
+  const effectiveVisibleChildCount = hasFocusedDescendant
+    ? loadedChildren.length
+    : Math.min(visibleChildCount, loadedChildren.length);
+  const visibleChildren = loadedChildren.slice(0, effectiveVisibleChildCount);
+  const branchAction = hasFocusedDescendant
+    ? null
+    : resolveReplyBranchAction(effectiveVisibleChildCount, totalRepliesCount);
+  const canRevealLoadedChildren = effectiveVisibleChildCount < loadedChildren.length;
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
   const replyRelativeUrl = createFocusedReplyRelativeUrl(threadHrefBase, reply.id);
-  const childrenHiddenByCollapse = canCollapseRootTree && treeCollapsed && !hasFocusedDescendant;
-
-  const hasTreeContinuation =
-    !childrenHiddenByCollapse && (visibleChildren.length > 0 || hiddenRepliesCount > 0);
-  const avatarSize = isProfessional ? "reply" : "sm";
+  const hasTreeContinuation = visibleChildren.length > 0;
+  const avatarSize = depth > 0 ? "xs" : isProfessional ? "reply" : "sm";
   const hasReplyMedia = Boolean(reply.media_url);
-  const toggleRootTreeCollapse = () => {
-    setTreeCollapsed((current) => !current);
+  const isNestedReply = depth > 0;
+
+  const branchActionLabel = branchAction
+    ? branchAction.kind === "collapse"
+      ? "Ocultar respostas"
+      : `${branchAction.kind === "more" ? "Ver mais " : "Ver "}${branchAction.count} ${
+          branchAction.count === 1 ? "resposta" : "respostas"
+        }`
+    : null;
+
+  const updateVisibleBranch = () => {
+    if (!branchAction) return;
+
+    if (branchAction.kind === "collapse") {
+      setVisibleChildCount(0);
+      return;
+    }
+
+    setVisibleChildCount((current) =>
+      getNextReplyBranchVisibleCount(current, loadedChildren.length),
+    );
   };
 
   const toggleSaveReply: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -300,14 +324,20 @@ export const ReplyCard = ({
     >
       {hasTreeContinuation ? (
         <span
-          className="pointer-events-none absolute top-10 bottom-0 left-4 z-0 w-[1.5px] -translate-x-1/2 rounded-full bg-border-strong sm:left-[1.125rem]"
+          className={cn(
+            "pointer-events-none absolute bottom-0 z-0 w-[1.5px] -translate-x-1/2 rounded-full bg-border-strong",
+            isNestedReply ? "top-8 left-3" : "top-10 left-4 sm:left-[1.125rem]",
+          )}
           aria-hidden="true"
         />
       ) : null}
 
       <div
         className={cn(
-          "grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-[background-color,box-shadow] duration-500 sm:grid-cols-[2.25rem_minmax(0,1fr)]",
+          "grid rounded-[20px] transition-[background-color,box-shadow] duration-500",
+          isNestedReply
+            ? "grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2"
+            : "grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 sm:grid-cols-[2.25rem_minmax(0,1fr)]",
           isComposerReplyTarget ? "bg-primary-soft/70 ring-1 ring-primary/20" : undefined,
         )}
         id={`reply-focus-${reply.id}`}
@@ -329,20 +359,28 @@ export const ReplyCard = ({
                 <div className="flex min-w-0 flex-1 items-center gap-1">
                   {isProfessional ? (
                     <Link
-                      className="min-w-0 truncate text-sm font-black leading-tight text-inherit no-underline hover:text-inherit hover:no-underline"
+                      className={cn(
+                        "min-w-0 truncate leading-tight text-inherit no-underline hover:text-inherit hover:no-underline",
+                        isNestedReply ? "text-xs font-bold" : "text-sm font-black",
+                      )}
                       href={`/psicologos/${reply.author.id}`}
                       onClick={stopReplyTreeCollapsePropagation}
                     >
                       {authorDisplayName}
                     </Link>
                   ) : (
-                    <h3 className="min-w-0 truncate text-sm font-black leading-tight">
+                    <h3
+                      className={cn(
+                        "min-w-0 truncate leading-tight",
+                        isNestedReply ? "text-xs font-bold" : "text-sm font-black",
+                      )}
+                    >
                       {authorDisplayName}
                     </h3>
                   )}
                   {reply.author.verified ? (
                     <VerifiedBadgeIcon
-                      className="h-3 w-3 shrink-0"
+                      className={cn("shrink-0", isNestedReply ? "h-2.5 w-2.5" : "h-3 w-3")}
                       aria-label="Perfil verificado"
                     />
                   ) : null}
@@ -355,7 +393,10 @@ export const ReplyCard = ({
               </div>
               {psychologistProfileHref ? (
                 <Link
-                  className="w-fit cursor-pointer text-[11px] font-semibold leading-tight text-muted no-underline hover:text-muted hover:no-underline"
+                  className={cn(
+                    "w-fit cursor-pointer font-semibold leading-tight text-muted no-underline hover:text-muted hover:no-underline",
+                    isNestedReply ? "text-[10px]" : "text-[11px]",
+                  )}
                   href={psychologistProfileHref}
                   onClick={stopReplyTreeCollapsePropagation}
                 >
@@ -374,7 +415,12 @@ export const ReplyCard = ({
                   </MentorAuthorMeta>
                 </Link>
               ) : (
-                <p className="text-[11px] font-semibold leading-tight text-muted">
+                <p
+                  className={cn(
+                    "font-semibold leading-tight text-muted",
+                    isNestedReply ? "text-[10px]" : "text-[11px]",
+                  )}
+                >
                   <MentorAuthorMeta
                     authorId={reply.author.role === "psicologo" ? reply.author.id : undefined}
                     badge={reply.author.featured_badge}
@@ -444,39 +490,6 @@ export const ReplyCard = ({
             />
           </div>
 
-          {canToggleRootTree ? (
-            <div className="mt-1" data-comment-collapse-ignore="true">
-              <button
-                aria-controls={hasTreeContinuation ? `reply-children-${reply.id}` : undefined}
-                aria-expanded={!childrenHiddenByCollapse}
-                aria-label={
-                  childrenHiddenByCollapse
-                    ? `Ver ${collapsedRepliesCount} ${
-                        collapsedRepliesCount === 1 ? "resposta" : "respostas"
-                      } desta conversa`
-                    : "Ocultar respostas desta conversa"
-                }
-                className="inline-flex w-fit items-center gap-1 rounded-full px-1.5 py-0.5 text-muted transition hover:bg-surface-muted hover:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  toggleRootTreeCollapse();
-                }}
-                type="button"
-              >
-                {childrenHiddenByCollapse ? (
-                  <ChevronDown className="h-3 w-3" aria-hidden="true" />
-                ) : (
-                  <ChevronUp className="h-3 w-3" aria-hidden="true" />
-                )}
-                <span className="whitespace-nowrap text-[12px] font-semibold leading-none tracking-[-0.01em]">
-                  {childrenHiddenByCollapse
-                    ? `Ver respostas (${collapsedRepliesCount})`
-                    : "Ocultar respostas"}
-                </span>
-              </button>
-            </div>
-          ) : null}
-
           {isOwnReply && editModalOpen ? (
             <ReplyEditModal
               onClose={() => setEditModalOpen(false)}
@@ -507,9 +520,9 @@ export const ReplyCard = ({
         </div>
       </div>
 
-      {hasTreeContinuation ? (
+      {visibleChildren.length > 0 ? (
         <div
-          className="relative z-10 mt-2 ml-4 grid gap-3 pl-[18px] sm:ml-[18px] sm:pl-[22px]"
+          className="relative z-10 mt-3 ml-4 grid gap-4 pl-[18px] sm:ml-[18px] sm:pl-[22px]"
           id={`reply-children-${reply.id}`}
         >
           {visibleChildren.map((child) => (
@@ -560,22 +573,51 @@ export const ReplyCard = ({
               />
             </div>
           ))}
-          {hiddenRepliesCount > 0 && threadHref ? (
+        </div>
+      ) : null}
+
+      {branchAction &&
+      branchActionLabel &&
+      (branchAction.kind === "collapse" || canRevealLoadedChildren || threadHref) ? (
+        <div
+          className="relative z-10 mt-2 ml-4 pl-[18px] sm:ml-[18px] sm:pl-[22px]"
+          data-comment-collapse-ignore="true"
+        >
+          {branchAction.kind !== "collapse" && !canRevealLoadedChildren && threadHref ? (
             <Link
-              className="group inline-flex w-fit items-center gap-2 rounded-full py-1 pr-2 text-[11px] font-black text-primary no-underline transition hover:text-primary hover:no-underline"
-              data-comment-collapse-ignore="true"
+              aria-label={`${branchActionLabel} desta conversa`}
+              className="inline-flex w-fit items-center gap-1.5 rounded-full px-1.5 py-1 text-[12px] font-bold text-primary no-underline transition hover:bg-primary-soft hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               href={threadHref}
               onClick={stopReplyTreeCollapsePropagation}
             >
-              <span
-                className="h-px w-5 rounded-full bg-surface-muted transition group-hover:bg-primary/45 dark:bg-border"
-                aria-hidden="true"
-              />
-              <span>
-                Ver mais {hiddenRepliesCount} {hiddenRepliesCount === 1 ? "resposta" : "respostas"}
-              </span>
+              <span>{branchActionLabel}</span>
+              <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
-          ) : null}
+          ) : (
+            <button
+              aria-controls={loadedChildren.length > 0 ? `reply-children-${reply.id}` : undefined}
+              aria-expanded={effectiveVisibleChildCount > 0}
+              aria-label={`${branchActionLabel} desta conversa`}
+              className={cn(
+                "inline-flex w-fit items-center gap-1.5 rounded-full px-1.5 py-1 text-[12px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98]",
+                branchAction.kind === "collapse"
+                  ? "text-muted hover:bg-surface-muted hover:text-foreground"
+                  : "text-primary hover:bg-primary-soft hover:text-primary",
+              )}
+              onClick={(event) => {
+                event.stopPropagation();
+                updateVisibleBranch();
+              }}
+              type="button"
+            >
+              <span>{branchActionLabel}</span>
+              {branchAction.kind === "collapse" ? (
+                <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+            </button>
+          )}
         </div>
       ) : null}
       {lectumDownloadDialog}
