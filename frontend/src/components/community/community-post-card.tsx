@@ -51,6 +51,7 @@ import {
 } from "./community-post-card-support";
 
 export const CommunityPostCard = ({
+  actionBarBeforeSaveSlot,
   actionBarShowUpvoteText = true,
   actionBarVoteLabel = "Marcar como útil",
   actionBarVotePresentation = "cluster",
@@ -132,6 +133,7 @@ export const CommunityPostCard = ({
   );
   const shouldCompactProfileReplyMedia =
     profilePublicationMode && isReplyContribution && Boolean(primaryReply);
+  const isFeedPresentation = presentation === "feed";
   const isPsychologistPost = displayAuthor.role === "psicologo";
   const isAnonymousPatient = !primaryReply && !isPsychologistPost && post.anonymous;
   const displayAuthorName = isReplyContribution
@@ -364,11 +366,9 @@ export const CommunityPostCard = ({
     onOpen: openLectumDownloadDialog,
     target: highlightedReplySocialTarget,
   });
-  const isFeedPresentation = presentation === "feed";
   const { handleCardClick, handleCardKeyDown } = createPostCardNavigation(openPostOnCardClick, () =>
     router.push(postHref),
   );
-
   return (
     <article
       className={cn(
@@ -662,7 +662,10 @@ export const CommunityPostCard = ({
             ? voteSnapshot.downvotes
             : undefined
         }
-        beforeSaveSlot={shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
+        beforeSaveSlot={
+          actionBarBeforeSaveSlot ??
+          (shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta)
+        }
         endSlot={footerExtra}
         onVote={interactiveActions ? handleVote : undefined}
         save={{

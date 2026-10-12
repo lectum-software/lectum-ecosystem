@@ -607,3 +607,14 @@ Refino 11/10: MyPostsHeader reutiliza AppPageHeader, como Salvos (h-14, 56px), m
 Padronizacao completa do header: mesmo AppPageHeader de Salvos, incluindo altura 56px, tipografia, seta, cores, bordas, raio, sombra e espacamento interno; container responsivo de Minhas publicacoes alinhado a Salvos. Nenhuma alteracao em Salvos nem no componente compartilhado. Check completo frontend e build final aprovados (.tmp/oct11-mine-header-check.log e .tmp/oct11-mine-header-standard-build.log); 25 testes focais aprovados, incluindo igualdade SSR do header. Teste legado atualizado para validar o uso do componente compartilhado. Conferencia visual autenticada ainda pendente; sem commit/push/deploy deste complemento.
 
 Aprovacao visual do usuario em 11/10/2026: header padronizado, contexto compacto e revisoes aceitos; check/build final aprovados. Complemento concluido localmente, sem push/deploy. Evidencias anteriores de pendencia sao historicas e substituidas por esta aprovacao.
+
+## Complemento 11/10: autoria dos Posts e metrica privada WhatsApp (ADR-0603)
+
+- [x] Posts de Minhas publicacoes mostram identidade do autor, chevron/comunidade/data no padrao existente e preservam divisoria.
+- [x] Psicologo ve icone neutro e quantidade real de cliques por post/resposta entre comentarios e salvar; metrica somente leitura, inclusive zero real. Paciente e listas publicas/salvas nao recebem a metrica.
+- [x] Contar eventos whatsapp_click ativos atribuidos ao conteudo, incluindo aliases existentes, excluindo cliques do proprio autor; historico registrado, sem simular ou reconstruir cliques ausentes.
+- [x] Contrato opcional tolera backend antigo sem apresentar zero inventado. Checks/builds, integracao local real e conferencia visual.
+
+Validacao tecnica: check completo frontend e 27 testes focais aprovados; build frontend e backend aprovados. Backend Prisma/TypeScript/Biome aprovados, suite 895/896 com timeout do teste optional-auth-failure sob concorrencia; repeticao isolada passou sem mudanca. Integracao READ ONLY no PostgreSQL isolado conferiu 7 contribuicoes profissionais (zero cliques registrados), 2 itens de pacientes sem campo privado e ausencia do campo em Salvos. Nao validar incremento positivo como concluido: banco local nao possui evento elegivel. Sem escritas remotas ou mocks. Guards ADR/tasks/source-safety/ciclos aprovados; source-size continua bloqueado exclusivamente por reply-card.tsx preexistente com 708 linhas, fora deste ajuste. Conferencia visual solicitada; sem commit/bump/push/deploy deste complemento.
+
+Aprovacao visual recebida em 11/10/2026: usuario confirmou Posts e Respostas, identidade e contador WhatsApp com "aprovado, continue". Complemento concluido localmente com limite de evidencia explicito: zero real validado; incremento positivo ainda nao exercitado por ausencia de evento local elegivel. Sem push/deploy.

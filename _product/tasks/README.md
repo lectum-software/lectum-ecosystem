@@ -1,3 +1,5 @@
+Validado localmente: TASK-28 / ADR-0603, identidade de Posts e contadores privados WhatsApp por conteudo. Usuario aprovou Posts e Respostas em 11/10; builds, testes focais e integracao local com dados reais aprovados. Sem push/deploy.
+
 Validado localmente: TASK-21 / ADR-0602, remover item Privacidade do menu do perfil sem alterar aviso inicial, paginas legais ou regras de acesso. Sem publicacao.
 
 ## Lote autorizado em 2026-10-11
@@ -22,10 +24,10 @@ Usuario autorizou implementar os ajustes pendentes abaixo em 2026-10-11. As nota
 
 - [x] Minhas publicacoes: remover o bloco de origem e seus titulos, conforme revisao ADR-0601, mantendo apenas o acesso discreto ao conteudo original.
 
-- [ ] Layout dos cards em Minhas publicacoes do psicologo: respostas seguem revisao ADR-0601 (link original e identidade da propria contribuicao); nos Posts adicionar identidade do proprio psicologo com chevron/comunidade/data. Manter divisoria acima dos controles, restaurada por revisao posterior de 11/10. Contador privado de WhatsApp por conteudo continua pendente em Posts e Respostas, sem confundir com contato publico.
+- [x] Layout dos cards em Minhas publicacoes do psicologo: respostas seguem revisao ADR-0601 (link original e identidade da propria contribuicao); nos Posts adicionar identidade do proprio psicologo com chevron/comunidade/data. Manter divisoria acima dos controles, restaurada por revisao posterior de 11/10. Contador privado de WhatsApp por conteudo implementado e aprovado em Posts e Respostas (ADR-0603), sem confundir com contato publico.
 
 - [x] Minhas publicacoes, pacientes e psicologos: manter as opcoes Posts e Respostas e seus contadores, substituindo a apresentacao atual por botoes no padrao dos filtros do feed. Usar tambem como referencia explicita as abas Sobre/Publicacoes/Avaliacoes do perfil publico do psicologo, incluindo apresentacao dos contadores e estado selecionado (captura aprovada em 2026-10-11, 16:56). Reutilizar padroes existentes, sem implementar ainda.
-- [ ] Minhas publicacoes, somente psicologos: acrescentar icone de WhatsApp com quantidade de cliques atribuida a cada conteudo junto aos demais controles/contadores, tanto em Posts quanto em Respostas. Metrica privada para o autor, nao botao para abrir o proprio WhatsApp; nao exibir para pacientes. Na implementacao, verificar a fonte real e a atribuicao por post/resposta, sem simular contagem ou confundir com total do perfil. Decisao aprovada em 2026-10-11; apenas registrar para implementacao futura.
+- [x] Minhas publicacoes, somente psicologos: acrescentar icone de WhatsApp com quantidade de cliques atribuida a cada conteudo junto aos demais controles/contadores, tanto em Posts quanto em Respostas. Metrica privada para o autor, nao botao para abrir o proprio WhatsApp; nao exibir para pacientes. Na implementacao, verificar a fonte real e a atribuicao por post/resposta, sem simular contagem ou confundir com total do perfil. Implementado apos autorizacao do lote; validado localmente e aprovado pelo usuario em 11/10 (ADR-0603).
 
 - [x] WhatsApp em posts e respostas de psicologos somente de texto: substituir o bloco "WhatsApp / Fale com [nome]" por apenas um icone de WhatsApp entre comentario e salvar na barra de interacoes. Usar a mesma cor e tamanho dos demais icones, sem verde e sem texto visivel; manter descricao acessivel e area de toque confortavel. Preservar destino e regras atuais de disponibilidade do contato. Nao alterar o bloco de contato dos videos nem ampliar esta decisao para publicacoes com outras midias. Referencia: capturas e aprovacao do usuario em 2026-10-11. Apenas registrado para implementacao futura; **nao implementar ainda**.
 

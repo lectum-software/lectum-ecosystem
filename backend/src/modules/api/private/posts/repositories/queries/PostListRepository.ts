@@ -24,6 +24,8 @@ import {
   toPaginatedListResponse,
 } from "../support/post-response";
 
+import { getOwnedContentWhatsappCounts } from "../support/whatsapp-counts";
+
 import { PostRepositoryContext } from "./PostRepositoryContext";
 
 export class PostListRepository extends PostRepositoryContext {
@@ -268,7 +270,16 @@ export class PostListRepository extends PostRepositoryContext {
       getFollowedCommunityIds(data.auth.id!, communityIds),
     ]);
 
+    const whatsappCounts = await getOwnedContentWhatsappCounts(
+      data.auth.id!,
+      data.auth.role,
+      postIds,
+      replyIds,
+    );
     const postItems = posts.map<PostListItemDTO>((post) => ({
+      ...(data.auth.role === "psicologo"
+        ? { whatsapp_clicks_count: whatsappCounts.get(`post:${post.id}`) ?? 0 }
+        : {}),
       id: post.id,
       type: "post",
       created_at: post.createdAt,
@@ -287,6 +298,9 @@ export class PostListRepository extends PostRepositoryContext {
       reply: null,
     }));
     const replyItems = replies.map<PostListItemDTO>((reply) => ({
+      ...(data.auth.role === "psicologo"
+        ? { whatsapp_clicks_count: whatsappCounts.get(`reply:${reply.id}`) ?? 0 }
+        : {}),
       id: reply.id,
       type: "reply",
       created_at: reply.createdAt,

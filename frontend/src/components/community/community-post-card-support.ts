@@ -17,6 +17,7 @@ export const publicationInteractionData = (
 };
 
 export type CommunityPostCardProps = {
+  actionBarBeforeSaveSlot?: ReactNode;
   actionBarShowUpvoteText?: boolean;
   actionBarVoteLabel?: string;
   actionBarVotePresentation?: "cluster" | "inline";

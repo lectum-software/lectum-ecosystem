@@ -30,6 +30,7 @@ import {
 } from "../modules/support";
 import { ProfessionalAnsweredBadge } from "./header";
 import { OriginLink } from "./origin-preview";
+import { WhatsappMetric } from "./whatsapp-metric";
 
 export const ReplyItemCard = ({
   interactionCopy,
@@ -265,6 +266,9 @@ export const ReplyItemCard = ({
       ) : null}
 
       <CommunityActionBar
+        beforeSaveSlot={
+          <WhatsappMetric count={item.whatsapp_clicks_count} isPsychologist={isPsychologistReply} />
+        }
         className="relative z-20 border-t border-border/80 pt-3"
         comments={{
           count: reply.replies_received_count,

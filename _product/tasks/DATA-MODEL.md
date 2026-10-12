@@ -1323,3 +1323,7 @@ em lotes no banco, sem requisicoes individuais ao provider.
 ## Complemento 2026-10-10 - Aviso de privacidade do paciente (ADR-0585)
 
 user.has_seen_patient_privacy_notice: Boolean, default false. Flag independente das outras dicas; persistida por conta ao clicar Entendi. Nao representa consentimento legal nem altera visibilidade de dados. Expansao com default trata registros existentes, sem remocao de campos. Endpoint existente account/tips com propriedade aditiva; UI tolera ausencia e nunca confirma persistencia por fallback local.
+
+## 2026-10-11 - Metrica privada de conteudo (ADR-0603)
+
+PostListItemDTO.whatsapp_clicks_count?: number no endpoint mine, somente psicologo autenticado e conteudos de sua autoria. Agregacao do important_action_event existente, aliases de post/resposta e exclusao de cliques proprios conforme Analytics. Campo ausente em pacientes, listas salvas e endpoints publicos; nenhuma coluna/migration nova.

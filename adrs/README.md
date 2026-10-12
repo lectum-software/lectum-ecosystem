@@ -659,3 +659,5 @@ Formato recomendado:
 - [ADR-0601 — Contexto de origem em Minhas publicacoes](0601-contexto-origem-minhas-publicacoes.md)
 
 - [ADR-0602 — Remover item Privacidade do perfil](0602-remover-item-privacidade-perfil.md)
+
+- [ADR-0603 — Metricas WhatsApp e identidade em Minhas publicacoes](0603-metricas-whatsapp-minhas-publicacoes.md)
