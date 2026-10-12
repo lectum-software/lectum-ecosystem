@@ -669,3 +669,4 @@ Formato recomendado:
 - [ADR-0606 — Publicacao do lote de interface de outubro](0606-publicacao-lote-interface-outubro.md)
 
 - [ADR-0607 — Revisao de Minhas publicacoes apos publicacao](0607-revisao-minhas-publicacoes.md)
+- [ADR-0608 — Favorito de perfil profissional indisponivel](0608-favorito-perfil-profissional-indisponivel.md)

@@ -70,11 +70,13 @@ export const professionalProfileSelect = {
   deleted: true,
   professional_first_name: true,
   professional_last_name: true,
+  published: true,
   gender: true,
   crp: true,
   whatsapp: true,
   cfp_verified_at: true,
   crp_status: true,
+  video_url: true,
   subscriptions: {
     where: activeProfessionalEntitlementWhere(),
     select: {
