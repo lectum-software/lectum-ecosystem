@@ -26,7 +26,11 @@ import {
   createLectumShareVideoTarget,
   findPostReplyInTree,
 } from "@/utils/lectum-share-target";
-import { publicCommunityPostFocusedReplyHref } from "@/utils/public-routes";
+import {
+  publicCommunityFocusedReplyThreadHref,
+  publicCommunityPostFocusedReplyHref,
+} from "@/utils/public-routes";
+import { findFocusedReplyContinuation } from "@/utils/reply-focus-navigation";
 import { submitReplyWithOptionalMedia } from "../modules/reply-submit";
 import {
   confirmDiscardReplyDraft,
@@ -34,6 +38,7 @@ import {
   EMPTY_REPLY_TARGETS,
   FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_MS,
   findReplyInTree,
+  MAX_REPLY_TREE_DEPTH,
   mergeUniqueReplies,
   POST_REPLY_COMPOSER_INPUT_SELECTOR,
   REPLIES_LIMIT,
@@ -174,6 +179,27 @@ export const usePostDetailController = ({
   useEffect(() => {
     if (!focusLookupReplyId || !focusReplyLookupQuery.data?.page) return;
 
+    const continuationRoot =
+      focusLookupReplyId === focusReplyIdFromUrl
+        ? findFocusedReplyContinuation(
+            focusReplyLookupQuery.data.data,
+            focusLookupReplyId,
+            MAX_REPLY_TREE_DEPTH,
+          )
+        : null;
+    if (continuationRoot && post) {
+      router.replace(
+        publicCommunityFocusedReplyThreadHref(
+          post.community.slug,
+          post.id,
+          continuationRoot,
+          focusLookupReplyId,
+        ),
+        { scroll: false },
+      );
+      return;
+    }
+
     const focusPage = focusReplyLookupQuery.data.page;
     const syncTimer = window.setTimeout(() => {
       setLoadedReplyPages((currentPages) => {
@@ -187,7 +213,7 @@ export const usePostDetailController = ({
     }, 0);
 
     return () => window.clearTimeout(syncTimer);
-  }, [focusLookupReplyId, focusReplyLookupQuery.data?.page]);
+  }, [focusLookupReplyId, focusReplyIdFromUrl, focusReplyLookupQuery.data, post, router]);
 
   const requestNextRepliesPage = useCallback(() => {
     setLoadedReplyPages((currentPages) => {

@@ -24,6 +24,21 @@ export type ReplyBranchAction =
   | { count: number; kind: "expand" | "more" }
   | { count: 0; kind: "collapse" };
 
+export const replyBranchActionLabel = (
+  action: ReplyBranchAction | null,
+  descendantsCount?: number,
+): string | null => {
+  if (!action) return null;
+  if (action.kind === "collapse") return "Ocultar respostas";
+  const count =
+    action.kind === "expand" &&
+    typeof descendantsCount === "number" &&
+    Number.isInteger(descendantsCount)
+      ? Math.max(action.count, descendantsCount)
+      : action.count;
+  return `${action.kind === "more" ? "Ver mais" : "Ver"} ${count} ${count === 1 ? "resposta" : "respostas"}`;
+};
+
 export const getNextReplyBranchVisibleCount = (
   currentVisibleCount: number,
   loadedRepliesCount: number,

@@ -22,6 +22,12 @@ Validado localmente: TASK-28 / ADR-0603, identidade de Posts e contadores privad
 
 Validado localmente: TASK-21 / ADR-0602, remover item Privacidade do menu do perfil sem alterar aviso inicial, paginas legais ou regras de acesso. Sem publicacao.
 
+## Foco profundo em 2026-10-13
+
+Em validacao local: [TASK-252 - Foco na continuacao](TASK-252-foco-resposta-na-continuacao.md),
+ADR-0614. Links de respostas profundas resolvem a pagina de continuacao e o
+comentario selecionado. Sem push/deploy deste ajuste.
+
 ## Correcoes aprovadas em 2026-10-13
 
 TASK-251 / ADR-0613: controles de ramos focados em Minhas Publicacoes e filtro ativo
@@ -664,6 +670,8 @@ ou cortesia manual.
 | 249 | [TASK-249 - Previa social e conectores de comentarios](TASK-249-previa-social-e-conectores-comentarios.md) | Done | 248 |
 | 250 | [TASK-250 - Bloqueio de video no retorno do perfil](TASK-250-criar-post-bloqueio-video-retorno-perfil.md) | Done | 249 |
 | 251 | [TASK-251 - Contexto da arvore e filtros do feed](TASK-251-contexto-arvore-filtros-feed.md) | Done | 250 |
+| 252 | [TASK-252 - Foco na continuacao da conversa](TASK-252-foco-resposta-na-continuacao.md) | In Progress | 251 |
+| 253 | [TASK-253 - Comentarios e contexto pessoal](TASK-253-comentarios-e-contexto-pessoal.md) | In Progress | 252 |
 
 ## Ordem operacional recomendada sem bloqueios
 

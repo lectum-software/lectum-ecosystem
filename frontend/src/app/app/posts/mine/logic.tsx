@@ -2,6 +2,7 @@
 
 import { FileText } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { useInfiniteMyPosts, useMyPosts } from "@/api/callers/posts";
 import type { PostListPost, UserPostsType } from "@/api/generator/types/posts";
@@ -20,6 +21,7 @@ import {
   createLectumSharePostMediaTarget,
   createLectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
+import { myPostsTabHref, resolveMyPostsTab } from "@/utils/my-posts-tab";
 import { FilterTabs, MyPostsHeader } from "./components/header";
 import { InfiniteMyPostsLoader } from "./components/infinite-loader";
 import { ReplyItemCard } from "./components/reply-item-card";
@@ -36,9 +38,10 @@ import {
 export const MyPostsLogic = () => {
   const sessionUser = useAppSelector((state) => state.user);
   const isPsychologist = sessionUser?.role === "psicologo";
-  const defaultType = isPsychologist ? "replies" : "posts";
-  const [selectedType, setSelectedType] = useState<UserPostsType | null>(null);
-  const type = selectedType ?? defaultType;
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const type = resolveMyPostsTab(searchParams.get("type"), isPsychologist);
   const [shareFeedback, setShareFeedback] = useState<"interaction" | "post" | null>(null);
   const query = useMemo(() => ({ limit: PAGE_LIMIT, type }), [type]);
   const postsCountQueryParams = useMemo(() => ({ limit: 1, page: 1, type: "posts" as const }), []);
@@ -107,7 +110,8 @@ export const MyPostsLogic = () => {
   };
 
   const handleFilterChange = (value: UserPostsType) => {
-    setSelectedType(value);
+    if (value === "all") return;
+    router.replace(myPostsTabHref(pathname, searchParams.toString(), value), { scroll: false });
   };
 
   const handlePostDeleted = () => {

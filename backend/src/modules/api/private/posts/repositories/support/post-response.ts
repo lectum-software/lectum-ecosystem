@@ -578,6 +578,7 @@ export const toReplyResponse = (
   currentVotes: Map<string, CurrentVote>,
   savedReplyIds?: Set<string>,
   authorContext?: ReplyAuthorContext,
+  descendantCounts?: ReadonlyMap<string, number>,
 ): PostReplyDTO => {
   const nestedReplies = "replies" in item ? item.replies : [];
   const isPostAuthor = authorContext?.postAuthorId === item.author.id;
@@ -595,6 +596,7 @@ export const toReplyResponse = (
     upvotes_count: item.upvotes_count,
     downvotes_count: item.downvotes_count,
     replies_count: item._count.replies,
+    descendants_count: descendantCounts?.get(item.id),
     created_at: item.createdAt,
     edited_at: item.edited_at,
     parent_reply_id: item.parent_reply_id,
@@ -610,7 +612,7 @@ export const toReplyResponse = (
       "community_reply",
     ),
     replies: nestedReplies.map((reply) =>
-      toReplyResponse(reply, currentVotes, savedReplyIds, authorContext),
+      toReplyResponse(reply, currentVotes, savedReplyIds, authorContext, descendantCounts),
     ),
   };
 };

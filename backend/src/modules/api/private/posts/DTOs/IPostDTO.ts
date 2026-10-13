@@ -136,6 +136,7 @@ export type PostReplyDTO = {
   upvotes_count: number;
   downvotes_count: number;
   replies_count: number;
+  descendants_count?: number;
   created_at: Date;
   edited_at: Date | null;
   parent_reply_id: string | null;

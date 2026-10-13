@@ -44,6 +44,14 @@ export const publicCommunityPostWhatsappShareHref = (slug: string, id: string) =
 export const publicCommunityReplyThreadHref = (slug: string, id: string, replyId: string) =>
   `${publicCommunityPostHref(slug, id)}/resposta/${replyId}`;
 
+export const publicCommunityFocusedReplyThreadHref = (
+  slug: string,
+  id: string,
+  rootReplyId: string,
+  focusReplyId: string,
+) =>
+  `${publicCommunityReplyThreadHref(slug, id, rootReplyId)}?focusReplyId=${encodeURIComponent(focusReplyId)}#reply-${encodeURIComponent(focusReplyId)}`;
+
 export const publicCommunityReplyWhatsappShareHref = (slug: string, id: string, replyId: string) =>
   `${publicCommunityReplyThreadHref(slug, id, replyId)}/whatsapp`;
 

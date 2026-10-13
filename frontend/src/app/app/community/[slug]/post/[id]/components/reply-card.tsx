@@ -34,6 +34,7 @@ import {
   getNextReplyBranchVisibleCount,
   getReplyBranchVisibleCount,
   type ReplyBranchVisibility,
+  replyBranchActionLabel,
   resolveReplyBranchAction,
 } from "@/utils/reply-branch-disclosure";
 import {
@@ -57,30 +58,15 @@ export const ReplyVoteBar = ({
   currentVote,
   disabled,
   onReply,
-  onShare,
-  onToggleSave,
   onVote,
   reply,
-  savePending,
 }: {
   currentVote: 1 | -1 | null;
   disabled?: boolean;
   onReply: () => void;
-  onShare: () => void;
-  onToggleSave: MouseEventHandler<HTMLButtonElement>;
   onVote: (value: 1 | -1) => void;
   reply: PostReply;
-  savePending?: boolean;
 }) => {
-  const handleToggleSave: MouseEventHandler<HTMLButtonElement> = (event) => {
-    event.stopPropagation();
-    onToggleSave(event);
-  };
-
-  const handleShare = () => {
-    onShare();
-  };
-
   return (
     <CommunityActionBar
       className="mt-3"
@@ -106,17 +92,7 @@ export const ReplyVoteBar = ({
         label: "Responder",
         onClick: onReply,
       }}
-      save={{
-        active: reply.saved,
-        disabled: savePending,
-        label: reply.saved ? "Remover dos salvos" : "Salvar coment\u00e1rio",
-        onClick: handleToggleSave,
-      }}
       secondaryActionsPlacement="inline"
-      share={{
-        label: "Compartilhar coment\u00e1rio",
-        onClick: handleShare,
-      }}
       showUpvoteText={false}
       size="xs"
       spacing="relaxed"
@@ -232,13 +208,7 @@ export const ReplyCard = ({
   const hasReplyMedia = Boolean(reply.media_url);
   const isNestedReply = depth > 0;
 
-  const branchActionLabel = branchAction
-    ? branchAction.kind === "collapse"
-      ? "Ocultar respostas"
-      : `${branchAction.kind === "more" ? "Ver mais " : "Ver "}${branchAction.count} ${
-          branchAction.count === 1 ? "resposta" : "respostas"
-        }`
-    : null;
+  const branchActionLabel = replyBranchActionLabel(branchAction, reply.descendants_count);
 
   const updateVisibleBranch = () => {
     if (!branchAction) return;
@@ -459,6 +429,12 @@ export const ReplyCard = ({
               onEdit={() => setEditModalOpen(true)}
               onReport={(trigger) => onReportReply(reply, trigger)}
               reply={reply}
+              secondaryActions={{
+                saved: reply.saved,
+                savePending: saveReplyMutation.isPending,
+                onToggleSave: toggleSaveReply,
+                onShare: () => onShare(reply),
+              }}
             />
           </div>
 
@@ -496,11 +472,8 @@ export const ReplyCard = ({
               currentVote={reply.current_user_vote}
               disabled={votePending}
               onReply={() => onReply(reply)}
-              onShare={() => onShare(reply)}
-              onToggleSave={toggleSaveReply}
               onVote={(value) => onVote(reply.id, value)}
               reply={reply}
-              savePending={saveReplyMutation.isPending}
             />
           </div>
 
