@@ -673,3 +673,4 @@ Formato recomendado:
 - [ADR-0609 — Oportunidades como demanda nao atendida](0609-ranking-oportunidades-demanda.md)
 - [ADR-0610 — Abertura progressiva por ramificacao](0610-arvore-respostas-progressiva.md)
 - [ADR-0611 — Previa social e conectores da arvore](0611-previa-social-conectores-comentarios.md)
+- [ADR-0612 — Suspensao de midia em toda entrada de Criar Post](0612-criar-post-suspensao-midia-rota-completa.md)

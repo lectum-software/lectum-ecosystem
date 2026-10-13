@@ -39,10 +39,7 @@ import {
 import { AnonymousPostSwitch } from "./anonymous-post-switch";
 import { ProfileUpdateConfirmation } from "./profile-update-confirmation";
 
-export const CreateCommunityPostLogic = ({
-  asModalSlot = false,
-  onCloseComplete,
-}: CreateCommunityPostLogicProps) => {
+export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPostLogicProps) => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const touchScrollStateRef = useRef<CreatePostModalTouchScrollState>({
     startX: 0,
@@ -91,7 +88,8 @@ export const CreateCommunityPostLogic = ({
     videoUploadProgress,
   } = controller;
   const [mediaUpgradeModalOpen, setMediaUpgradeModalOpen] = useState(false);
-  useModalMediaSuspension(asModalSlot, overlayRef);
+  // Canonical routes also render this sheet above a feed, including profile returns.
+  useModalMediaSuspension(true, overlayRef);
 
   const hasSelectedMedia = selectedMediaItems.length > 0;
   const preserveBlankTapFocus = hasSelectedMedia ? undefined : preserveEditorFocusFromBlankTap;
