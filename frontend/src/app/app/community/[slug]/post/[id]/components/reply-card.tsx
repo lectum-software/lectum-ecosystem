@@ -32,6 +32,8 @@ import {
 import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import {
   getNextReplyBranchVisibleCount,
+  getReplyBranchVisibleCount,
+  type ReplyBranchVisibility,
   resolveReplyBranchAction,
 } from "@/utils/reply-branch-disclosure";
 import {
@@ -201,7 +203,7 @@ export const ReplyCard = ({
   const isComposerReplyTarget = isReplyComposerOpen || replyComposerTargetId === reply.id;
   const [contentExpanded, setContentExpanded] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [visibleChildCount, setVisibleChildCount] = useState(0);
+  const [branchVisibility, setBranchVisibility] = useState<ReplyBranchVisibility | null>(null);
   const visualMaxDepth =
     maxInlineDepth < 0 ? MAX_REPLY_TREE_DEPTH : Math.min(maxInlineDepth, MAX_REPLY_TREE_DEPTH);
   const totalRepliesCount = reply.replies_count ?? reply.replies.length;
@@ -210,13 +212,14 @@ export const ReplyCard = ({
   );
   const canRenderChildren = depth < visualMaxDepth || hasFocusedDescendant;
   const loadedChildren = canRenderChildren ? reply.replies : [];
-  const effectiveVisibleChildCount = hasFocusedDescendant
-    ? loadedChildren.length
-    : Math.min(visibleChildCount, loadedChildren.length);
+  const effectiveVisibleChildCount = getReplyBranchVisibleCount(
+    branchVisibility,
+    focusReplyId ?? null,
+    hasFocusedDescendant,
+    loadedChildren.length,
+  );
   const visibleChildren = loadedChildren.slice(0, effectiveVisibleChildCount);
-  const branchAction = hasFocusedDescendant
-    ? null
-    : resolveReplyBranchAction(effectiveVisibleChildCount, totalRepliesCount);
+  const branchAction = resolveReplyBranchAction(effectiveVisibleChildCount, totalRepliesCount);
   const canRevealLoadedChildren = effectiveVisibleChildCount < loadedChildren.length;
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
   const replyRelativeUrl = createFocusedReplyRelativeUrl(threadHrefBase, reply.id);
@@ -240,14 +243,13 @@ export const ReplyCard = ({
   const updateVisibleBranch = () => {
     if (!branchAction) return;
 
-    if (branchAction.kind === "collapse") {
-      setVisibleChildCount(0);
-      return;
-    }
-
-    setVisibleChildCount((current) =>
-      getNextReplyBranchVisibleCount(current, loadedChildren.length),
-    );
+    setBranchVisibility({
+      focusReplyId: focusReplyId ?? null,
+      count:
+        branchAction.kind === "collapse"
+          ? 0
+          : getNextReplyBranchVisibleCount(effectiveVisibleChildCount, loadedChildren.length),
+    });
   };
 
   const toggleSaveReply: MouseEventHandler<HTMLButtonElement> = (event) => {

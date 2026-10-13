@@ -24,6 +24,10 @@ Validado localmente: TASK-21 / ADR-0602, remover item Privacidade do menu do per
 
 ## Correcao local de 2026-10-12
 
+TASK-251 / ADR-0613: controles de ramos focados em Minhas Publicacoes e filtro ativo
+visivel no carrossel do feed/comunidade. Check frontend aprovado; QA visual pendente
+por falta de espaco local, sem push/deploy.
+
 TASK-250: check frontend e guards aprovados em 0.1.654. Browser local confirmou o
 bloqueio na modal do feed e na rota completa, com liberacao ao fechar. Feed sem
 videos para conferir o ciclo completo de retorno do perfil; QA final pendente.
@@ -658,6 +662,7 @@ ou cortesia manual.
 | 248 | [TASK-248 - Arvore de respostas progressiva](TASK-248-arvore-respostas-progressiva.md) | Done | 247 |
 | 249 | [TASK-249 - Previa social e conectores de comentarios](TASK-249-previa-social-e-conectores-comentarios.md) | Done | 248 |
 | 250 | [TASK-250 - Bloqueio de video no retorno do perfil](TASK-250-criar-post-bloqueio-video-retorno-perfil.md) | In Progress | 249 |
+| 251 | [TASK-251 - Contexto da arvore e filtros do feed](TASK-251-contexto-arvore-filtros-feed.md) | In Progress | 250 |
 
 ## Ordem operacional recomendada sem bloqueios
 

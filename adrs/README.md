@@ -674,3 +674,4 @@ Formato recomendado:
 - [ADR-0610 — Abertura progressiva por ramificacao](0610-arvore-respostas-progressiva.md)
 - [ADR-0611 — Previa social e conectores da arvore](0611-previa-social-conectores-comentarios.md)
 - [ADR-0612 — Suspensao de midia em toda entrada de Criar Post](0612-criar-post-suspensao-midia-rota-completa.md)
+- [ADR-0613 — Controles de ramos focados e filtro ativo visivel](0613-contexto-arvore-filtros-feed.md)
