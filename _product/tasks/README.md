@@ -22,15 +22,15 @@ Validado localmente: TASK-28 / ADR-0603, identidade de Posts e contadores privad
 
 Validado localmente: TASK-21 / ADR-0602, remover item Privacidade do menu do perfil sem alterar aviso inicial, paginas legais ou regras de acesso. Sem publicacao.
 
-## Correcao local de 2026-10-12
+## Correcoes aprovadas em 2026-10-13
 
 TASK-251 / ADR-0613: controles de ramos focados em Minhas Publicacoes e filtro ativo
-visivel no carrossel do feed/comunidade. Check frontend aprovado; QA visual pendente
-por falta de espaco local, sem push/deploy.
+visivel no carrossel do feed/comunidade. Arvore e comunidade conferidas localmente;
+usuario confirmou o retorno ao filtro no feed principal. Preparando publicacao.
 
-TASK-250: check frontend e guards aprovados em 0.1.654. Browser local confirmou o
-bloqueio na modal do feed e na rota completa, com liberacao ao fechar. Feed sem
-videos para conferir o ciclo completo de retorno do perfil; QA final pendente.
+TASK-250: usuario confirmou video pausado no retorno da edicao do nome para Criar
+Post. Browser local ja havia confirmado o bloqueio na modal e na rota completa,
+com liberacao ao fechar. Versao 0.1.656 com check completo e build frontend aprovados.
 
 [TASK-250 - Bloqueio de video no retorno do perfil](TASK-250-criar-post-bloqueio-video-retorno-perfil.md),
 ADR-0612: Criar Post suspende a midia de fundo tambem na rota completa e na
@@ -661,8 +661,8 @@ ou cortesia manual.
 | 247 | [TASK-247 - Ranking de oportunidades por demanda nao atendida](TASK-247-ranking-oportunidades-demanda.md) | Done | 246 |
 | 248 | [TASK-248 - Arvore de respostas progressiva](TASK-248-arvore-respostas-progressiva.md) | Done | 247 |
 | 249 | [TASK-249 - Previa social e conectores de comentarios](TASK-249-previa-social-e-conectores-comentarios.md) | Done | 248 |
-| 250 | [TASK-250 - Bloqueio de video no retorno do perfil](TASK-250-criar-post-bloqueio-video-retorno-perfil.md) | In Progress | 249 |
-| 251 | [TASK-251 - Contexto da arvore e filtros do feed](TASK-251-contexto-arvore-filtros-feed.md) | In Progress | 250 |
+| 250 | [TASK-250 - Bloqueio de video no retorno do perfil](TASK-250-criar-post-bloqueio-video-retorno-perfil.md) | Done | 249 |
+| 251 | [TASK-251 - Contexto da arvore e filtros do feed](TASK-251-contexto-arvore-filtros-feed.md) | Done | 250 |
 
 ## Ordem operacional recomendada sem bloqueios
 
