@@ -115,13 +115,10 @@ test("profile video art has only the question label and full title, without bran
   assert.match(html, /overflow-y-auto/);
 });
 
-test("profile question overlay stays inside the player shell and is opt-in for reply videos", () => {
+test("profile reply videos use the text question header instead of a player overlay", () => {
   const source = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
-  assert.match(source, /primaryReply && displayMediaType === "video" && displayMediaUrl/);
-  assert.match(
-    source,
-    /showProfileVideoQuestion \?\s*\(?\s*<ProfileReplyVideoQuestion title=\{post.title\} reply=\{primaryReply\}/,
-  );
+  assert.match(source, /primaryReply \?\s*\(?\s*<ProfileReplyQuestion/);
+  assert.doesNotMatch(source, /ProfileReplyVideoQuestion|showProfileVideoQuestion|videoOverlay=/);
   assert.doesNotMatch(source, /ProfileReplyQuestionContext|Ver contexto da pergunta/);
   const media = readFileSync(new URL("./community-media-frame.tsx", import.meta.url), "utf8");
   assert.match(media, /overlay=\{videoOverlay\}/);
@@ -156,10 +153,7 @@ test("profile question accepts an empty description without an empty preview", (
 
 test("only profile replies show the question above the reply and do not open the post on card click", () => {
   const source = readFileSync(new URL("./community-post-card.tsx", import.meta.url), "utf8");
-  assert.match(
-    source,
-    /primaryReply && !showProfileVideoQuestion \?\s*\(?\s*<ProfileReplyQuestion/,
-  );
+  assert.match(source, /primaryReply \?\s*\(?\s*<ProfileReplyQuestion/);
   assert.ok(source.indexOf("{communityContextLabel}") < source.indexOf("<ProfileReplyQuestion"));
   assert.ok(source.indexOf("<ProfileReplyQuestion") < source.indexOf("<AuthorAvatar"));
   assert.ok(source.indexOf("<AuthorAvatar") < source.indexOf("<CommunityMediaBlock"));

@@ -687,3 +687,11 @@ test("mine patient controls precede highlighted reply and more replies follows i
 });
 
 await import("./mine-layout.test.mjs");
+const { registerProfessionalReplyPresentationTests } = await import(
+  "./professional-reply-presentation.test.mjs"
+);
+registerProfessionalReplyPresentationTests({
+  renderRelations,
+  CommunityPostCard,
+  AppRouterContext,
+});

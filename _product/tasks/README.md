@@ -673,6 +673,7 @@ ou cortesia manual.
 | 252 | [TASK-252 - Foco na continuacao da conversa](TASK-252-foco-resposta-na-continuacao.md) | In Progress | 251 |
 | 253 | [TASK-253 - Comentarios e contexto pessoal](TASK-253-comentarios-e-contexto-pessoal.md) | In Progress | 252 |
 | 254 | [TASK-254 - Menu curto e foco do composer iOS](TASK-254-menu-curto-e-foco-composer-ios.md) | In Progress | 253 |
+| 255 | [TASK-255 - Pergunta de video e acoes profissionais](TASK-255-pergunta-video-e-acoes-profissionais.md) | In Progress | 254 |
 
 ## Ordem operacional recomendada sem bloqueios
 
