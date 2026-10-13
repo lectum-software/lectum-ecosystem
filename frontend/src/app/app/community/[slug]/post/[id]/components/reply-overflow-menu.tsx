@@ -18,7 +18,7 @@ export type ReplyOverflowMenuProps = {
   onReport: (trigger: HTMLButtonElement | null) => void;
   postId: string;
   reply: PostReply;
-  secondaryActions: ReplySecondaryActions;
+  secondaryActions?: ReplySecondaryActions;
 };
 
 export const ReplyOverflowMenu = ({
@@ -96,7 +96,9 @@ export const ReplyOverflowMenu = ({
           className="absolute top-7 right-0 z-[120] w-56 rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-lectum-soft"
           role="menu"
         >
-          <ReplySecondaryMenuActions {...secondaryActions} onClose={() => setMenuOpen(false)} />
+          {secondaryActions ? (
+            <ReplySecondaryMenuActions {...secondaryActions} onClose={() => setMenuOpen(false)} />
+          ) : null}
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted hover:bg-surface-muted"
             onClick={(event) => {

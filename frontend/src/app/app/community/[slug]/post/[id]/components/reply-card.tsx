@@ -58,18 +58,28 @@ export const ReplyVoteBar = ({
   currentVote,
   disabled,
   onReply,
+  onShare,
+  onToggleSave,
   onVote,
   reply,
+  savePending,
 }: {
   currentVote: 1 | -1 | null;
   disabled?: boolean;
   onReply: () => void;
+  onShare: () => void;
+  onToggleSave: MouseEventHandler<HTMLButtonElement>;
   onVote: (value: 1 | -1) => void;
   reply: PostReply;
+  savePending?: boolean;
 }) => {
+  const isProfessional = reply.author.role === "psicologo";
   return (
     <CommunityActionBar
-      className="mt-3"
+      className={cn(
+        "mt-3",
+        isProfessional && "[&>div:first-child]:flex-wrap [&>div:first-child]:gap-y-1",
+      )}
       beforeSaveSlot={
         reply.author.role === "psicologo" && reply.author.whatsapp_url && !reply.media_url ? (
           <CommunityWhatsAppCta
@@ -93,6 +103,12 @@ export const ReplyVoteBar = ({
         onClick: onReply,
       }}
       secondaryActionsPlacement="inline"
+      save={
+        isProfessional
+          ? { active: reply.saved, disabled: savePending, onClick: onToggleSave }
+          : undefined
+      }
+      share={isProfessional ? { onClick: onShare } : undefined}
       showUpvoteText={false}
       size="xs"
       spacing="relaxed"
@@ -429,12 +445,16 @@ export const ReplyCard = ({
               onEdit={() => setEditModalOpen(true)}
               onReport={(trigger) => onReportReply(reply, trigger)}
               reply={reply}
-              secondaryActions={{
-                saved: reply.saved,
-                savePending: saveReplyMutation.isPending,
-                onToggleSave: toggleSaveReply,
-                onShare: () => onShare(reply),
-              }}
+              secondaryActions={
+                isProfessional
+                  ? undefined
+                  : {
+                      saved: reply.saved,
+                      savePending: saveReplyMutation.isPending,
+                      onToggleSave: toggleSaveReply,
+                      onShare: () => onShare(reply),
+                    }
+              }
             />
           </div>
 
@@ -472,8 +492,11 @@ export const ReplyCard = ({
               currentVote={reply.current_user_vote}
               disabled={votePending}
               onReply={() => onReply(reply)}
+              onShare={() => onShare(reply)}
+              onToggleSave={toggleSaveReply}
               onVote={(value) => onVote(reply.id, value)}
               reply={reply}
+              savePending={saveReplyMutation.isPending}
             />
           </div>
 

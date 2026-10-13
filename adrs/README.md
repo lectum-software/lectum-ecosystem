@@ -678,3 +678,4 @@ Formato recomendado:
 - [ADR-0614 — Foco profundo na continuacao](0614-foco-resposta-na-continuacao.md)
 - [ADR-0615 — Comentarios e contexto pessoal](0615-comentarios-contexto-pessoal.md)
 - [ADR-0616 — Preservar foco do composer iOS](0616-foco-composer-ios.md)
+- [ADR-0617 — Pergunta de video e acoes profissionais](0617-pergunta-video-e-acoes-profissionais.md)

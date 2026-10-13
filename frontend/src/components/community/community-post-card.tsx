@@ -19,7 +19,6 @@ import { OriginalPostCommunityLink } from "@/components/community/original-post-
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
-import { ProfileReplyVideoQuestion } from "@/components/community/profile-reply-video-question";
 import {
   canShowSocialVideoPreviewAction,
   createReplySocialPreviewTarget,
@@ -105,9 +104,6 @@ export const CommunityPostCard = ({
     primaryReply?.media_url ?? singlePostMediaItem?.media_url ?? post.media_url;
   const hasPostStyleReplyActions = Boolean(primaryReply && displayMediaType === "video");
   const hasCompactReplyActions = Boolean(primaryReply && !hasPostStyleReplyActions);
-  const showProfileVideoQuestion = Boolean(
-    primaryReply && displayMediaType === "video" && displayMediaUrl,
-  );
   const displayThumbnailUrl =
     primaryReply?.thumbnail_url ?? singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const displayMediaAnalyticsTarget =
@@ -458,7 +454,7 @@ export const CommunityPostCard = ({
       {showCommunityHeader && showAuthorHeader && !hasCommunityIdentity ? (
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
-      {primaryReply && !showProfileVideoQuestion ? (
+      {primaryReply ? (
         <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
       ) : null}
       {showAuthorHeader ? (
@@ -620,11 +616,6 @@ export const CommunityPostCard = ({
             overlayAction={displayMediaOverlayAction}
             thumbnailUrl={displayThumbnailUrl}
             variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
-            videoOverlay={
-              showProfileVideoQuestion ? (
-                <ProfileReplyVideoQuestion title={post.title} reply={primaryReply} />
-              ) : undefined
-            }
           />
         )}
         {highlightedReplyAfterActions ? null : professionalPreview}
