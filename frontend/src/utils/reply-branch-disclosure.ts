@@ -2,6 +2,24 @@ export const REPLY_BRANCH_INITIAL_VISIBLE_COUNT = 3;
 
 export const REPLY_BRANCH_PAGE_SIZE = 5;
 
+export type ReplyBranchVisibility = { focusReplyId: string | null; count: number };
+
+export const getReplyBranchVisibleCount = (
+  visibility: ReplyBranchVisibility | null,
+  focusReplyId: string | null,
+  hasFocusedDescendant: boolean,
+  loadedRepliesCount: number,
+) => {
+  // A deep link opens its path, but subsequent user actions own that branch.
+  const count =
+    visibility?.focusReplyId === focusReplyId
+      ? visibility.count
+      : hasFocusedDescendant
+        ? loadedRepliesCount
+        : 0;
+  return Math.max(0, Math.min(count, loadedRepliesCount));
+};
+
 export type ReplyBranchAction =
   | { count: number; kind: "expand" | "more" }
   | { count: 0; kind: "collapse" };

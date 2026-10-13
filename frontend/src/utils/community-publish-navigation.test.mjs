@@ -251,7 +251,7 @@ test("default publish action opens the existing composer over the current page w
   const composer = readSource(
     "../app/app/community/[slug]/post/new/views/create-community-post.tsx",
   );
-  assert.match(composer, /useModalMediaSuspension\(asModalSlot, overlayRef\)/);
+  assert.match(composer, /useModalMediaSuspension\(true, overlayRef\)/);
 });
 
 test("coach marks do not render above open modals", () => {

@@ -30,6 +30,7 @@ import { CommunityFollowButton } from "@/components/community/community-follow-b
 import { cn } from "@/lib/utils";
 import { Input } from "@/registry/new-york-v4/ui/input";
 import { getCommunityInitials as getInitials } from "@/utils/community-display";
+import { horizontalRevealDelta } from "@/utils/horizontal-scroll";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import {
   COMMUNITY_POST_SORT_PERIODS,
@@ -528,54 +529,80 @@ export const CommunityPostSortChips = ({
   periods: CommunityPostSelectedPeriods;
   showProfessionalOptions?: boolean;
   value: CommunityPostSort;
-}) => (
-  <nav
-    aria-label="Ordenação dos posts"
-    className="w-full max-w-full overflow-x-auto scroll-smooth overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-  >
-    <div className="flex min-w-max items-center gap-1.5 py-1 pr-2">
-      {COMMUNITY_POST_SORTS.map((item) => {
-        if ("professionalOnly" in item && item.professionalOnly && !showProfessionalOptions) {
-          return null;
-        }
+}) => {
+  const viewportRef = useRef<HTMLElement>(null);
 
-        const Icon = item.icon;
-        const active = value === item.value;
-        const hasPeriod = "period" in item;
-        const periodValue = hasPeriod
-          ? (periods[item.value as CommunityPostSortWithPeriod] ?? null)
-          : null;
-        if (hasPeriod) {
+  useLayoutEffect(() => {
+    if (value === "opportunities" && !showProfessionalOptions) return;
+    const viewport = viewportRef.current;
+    const active = viewport?.querySelector<HTMLElement>('button[aria-pressed="true"]');
+    if (!viewport || !active) return;
+
+    const revealActive = () => {
+      const left = horizontalRevealDelta(
+        viewport.getBoundingClientRect(),
+        active.getBoundingClientRect(),
+      );
+      if (left) viewport.scrollBy({ left, behavior: "instant" });
+    };
+    revealActive();
+    const observer = new ResizeObserver(revealActive);
+    observer.observe(viewport);
+    observer.observe(active);
+    if (viewport.firstElementChild) observer.observe(viewport.firstElementChild);
+    return () => observer.disconnect();
+  }, [value, showProfessionalOptions]);
+
+  return (
+    <nav
+      aria-label="Ordenação dos posts"
+      className="w-full max-w-full overflow-x-auto scroll-smooth overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      ref={viewportRef}
+    >
+      <div className="flex min-w-max items-center gap-1.5 py-1 pr-2">
+        {COMMUNITY_POST_SORTS.map((item) => {
+          if ("professionalOnly" in item && item.professionalOnly && !showProfessionalOptions) {
+            return null;
+          }
+
+          const Icon = item.icon;
+          const active = value === item.value;
+          const hasPeriod = "period" in item;
+          const periodValue = hasPeriod
+            ? (periods[item.value as CommunityPostSortWithPeriod] ?? null)
+            : null;
+          if (hasPeriod) {
+            return (
+              <CommunityPeriodSortChip
+                active={active}
+                icon={Icon}
+                key={item.value}
+                label={item.label}
+                onPeriodChange={onPeriodChange}
+                period={periodValue}
+                value={item.value as CommunityPostSortWithPeriod}
+              />
+            );
+          }
+
           return (
-            <CommunityPeriodSortChip
-              active={active}
-              icon={Icon}
+            <button
+              aria-pressed={active}
+              className={communityPostSortChipClassName(active)}
               key={item.value}
-              label={item.label}
-              onPeriodChange={onPeriodChange}
-              period={periodValue}
-              value={item.value as CommunityPostSortWithPeriod}
-            />
+              onClick={() => onChange(item.value)}
+              type="button"
+            >
+              <Icon
+                className="h-3.5 w-3.5 shrink-0 opacity-85"
+                aria-hidden="true"
+                strokeWidth={1.9}
+              />
+              <span className="whitespace-nowrap text-xs font-bold leading-none">{item.label}</span>
+            </button>
           );
-        }
-
-        return (
-          <button
-            aria-pressed={active}
-            className={communityPostSortChipClassName(active)}
-            key={item.value}
-            onClick={() => onChange(item.value)}
-            type="button"
-          >
-            <Icon
-              className="h-3.5 w-3.5 shrink-0 opacity-85"
-              aria-hidden="true"
-              strokeWidth={1.9}
-            />
-            <span className="whitespace-nowrap text-xs font-bold leading-none">{item.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  </nav>
-);
+        })}
+      </div>
+    </nav>
+  );
+};
