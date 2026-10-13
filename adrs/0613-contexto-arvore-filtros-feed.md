@@ -33,3 +33,15 @@ O carrossel conserva a selecao visivel ao montar e redimensionar, mas nao tenta
 memorizar uma posicao manual que deixava o filtro ativo fora da tela.
 Sem contrato, banco, env ou dependencia nova. Apenas frontend; rollback por versao
 anterior. Checks e limites de QA constam na task. Sem publicacao automatica.
+
+## Validacao de release em maquina limitada - 2026-10-13
+
+O teste isolado optional-auth-failure passou em cerca de cinco segundos, mas
+excedeu os mesmos 30 segundos duas vezes sob a concorrencia padrao da suite
+completa. Uma repeticao completa passou entre essas falhas, indicando instabilidade
+de execucao local, nao evidencia suficiente para ignorar o gate.
+
+Limitar o runner do backend a dois arquivos de teste simultaneos. Manter todos
+os arquivos, assercoes e timeouts, inclusive nos hooks de push. O custo e uma
+suite potencialmente mais lenta em maquinas grandes; o beneficio e menor disputa
+por CPU/memoria/disco. Nenhum comportamento do backend publicado e alterado.

@@ -30,7 +30,8 @@ usuario confirmou o retorno ao filtro no feed principal. Preparando publicacao.
 
 TASK-250: usuario confirmou video pausado no retorno da edicao do nome para Criar
 Post. Browser local ja havia confirmado o bloqueio na modal e na rota completa,
-com liberacao ao fechar. Versao 0.1.656 com check completo e build frontend aprovados.
+com liberacao ao fechar. Check completo e build aprovados em 0.1.656; release final
+0.1.657 estabiliza apenas a concorrencia dos testes backend e tem novo build aprovado.
 
 [TASK-250 - Bloqueio de video no retorno do perfil](TASK-250-criar-post-bloqueio-video-retorno-perfil.md),
 ADR-0612: Criar Post suspende a midia de fundo tambem na rota completa e na

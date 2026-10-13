@@ -83,3 +83,17 @@ espaco. Servidor frontend local encerrado; nenhum push ou deploy realizado.
 - Revisao do diff restrita as tres correcoes, testes, ADRs, tasks e bump obrigatorio.
   Sem contrato, banco, infraestrutura ou dependencia nova. Publicacao via PR,
   sem novo deploy de backend/video. Rollback frontend: deployment Vercel 0.1.653.
+
+## Estabilidade do hook de publicacao - 2026-10-13
+
+- O push de 0.1.656 foi bloqueado pelo mesmo timeout de optional-auth-failure.
+  Nenhum commit foi enviado. Os demais checks do hook passaram.
+- Concorrencia do runner backend limitada a dois arquivos (ADR-0613), sem remover
+  testes nem aumentar timeout. Sem alteracao no runtime ou configuracao produtiva.
+- Nova validacao e build de release necessarios antes de repetir o push.
+
+- Fechamento 0.1.657: check backend completo aprovado (913 testes, zero skips),
+  optional-auth-failure passou em 5,2s dentro da suite com limite original de 30s.
+- Novo build frontend 0.1.657 aprovado com TypeScript e 90 paginas, sem alteracao
+  das correcoes de UI aprovadas. Evidencias: .tmp/release-0657-backend-check.log e
+  .tmp/release-0657-frontend-build.log. Hooks completos mantidos na repeticao do push.
