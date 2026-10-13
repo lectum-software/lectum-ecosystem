@@ -414,7 +414,7 @@ test("only profile publication replies replace their context line with the inlin
     assert.match(html, />Ansiedade<\/span>/);
     assert.doesNotMatch(html, /Respondido em/);
     assert.match(html, /Perfil verificado/);
-    assert.match(html, new RegExp(`aria-pressed="${Boolean(ids.length)}"`));
+    assert.doesNotMatch(html, /favorite-toggle/);
     assert.match(html, /Professional answer/);
     assert.match(
       html,

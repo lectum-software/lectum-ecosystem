@@ -37,6 +37,7 @@ import {
   replyBranchActionLabel,
   resolveReplyBranchAction,
 } from "@/utils/reply-branch-disclosure";
+import { hasInlineReplySecondaryActions } from "@/utils/reply-tree-layout";
 import {
   createFocusedReplyRelativeUrl,
   findReplyInTree,
@@ -73,13 +74,10 @@ export const ReplyVoteBar = ({
   reply: PostReply;
   savePending?: boolean;
 }) => {
-  const isProfessional = reply.author.role === "psicologo";
+  const inlineSecondaryActions = hasInlineReplySecondaryActions(reply);
   return (
     <CommunityActionBar
-      className={cn(
-        "mt-3",
-        isProfessional && "[&>div:first-child]:flex-wrap [&>div:first-child]:gap-y-1",
-      )}
+      className="mt-3 overflow-x-auto [&>div:last-child:empty]:hidden"
       beforeSaveSlot={
         reply.author.role === "psicologo" && reply.author.whatsapp_url && !reply.media_url ? (
           <CommunityWhatsAppCta
@@ -104,14 +102,14 @@ export const ReplyVoteBar = ({
       }}
       secondaryActionsPlacement="inline"
       save={
-        isProfessional
+        inlineSecondaryActions
           ? { active: reply.saved, disabled: savePending, onClick: onToggleSave }
           : undefined
       }
-      share={isProfessional ? { onClick: onShare } : undefined}
+      share={inlineSecondaryActions ? { onClick: onShare } : undefined}
       showUpvoteText={false}
       size="xs"
-      spacing="relaxed"
+      spacing="default"
       upvotesCount={reply.upvotes_count}
       voteLabel="Marcar resposta como útil"
       votePresentation="inline"
@@ -202,7 +200,7 @@ export const ReplyCard = ({
   const hasFocusedDescendant = Boolean(
     focusReplyId && focusReplyId !== reply.id && findReplyInTree(reply.replies, focusReplyId),
   );
-  const canRenderChildren = depth < visualMaxDepth || hasFocusedDescendant;
+  const canRenderChildren = depth < visualMaxDepth;
   const loadedChildren = canRenderChildren ? reply.replies : [];
   const effectiveVisibleChildCount = getReplyBranchVisibleCount(
     branchVisibility,
@@ -446,7 +444,7 @@ export const ReplyCard = ({
               onReport={(trigger) => onReportReply(reply, trigger)}
               reply={reply}
               secondaryActions={
-                isProfessional
+                hasInlineReplySecondaryActions(reply)
                   ? undefined
                   : {
                       saved: reply.saved,

@@ -457,233 +457,241 @@ export const CommunityPostCard = ({
       {primaryReply ? (
         <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
       ) : null}
-      {showAuthorHeader ? (
-        <div
-          className={cn(
-            authorHeaderExtra ? "relative z-30 flex items-start gap-3" : "flex items-start gap-3",
-            primaryReply ? (showDisplayText ? "mb-2" : "mb-0") : "mb-3",
-          )}
-        >
-          <AuthorAvatar
-            anonymous={isAnonymousPatient}
-            avatar={displayAuthor.avatar}
-            href={psychologistProfileHref}
-            name={displayAuthorName}
-          />
-          <div className="grid min-w-0 flex-1 gap-0.5">
-            <div
-              className={cn(
-                "flex min-w-0 items-center gap-x-2 gap-y-1",
-                profilePublicationMode ? "flex-nowrap" : "flex-wrap",
-              )}
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-1">
-                {psychologistProfileHref ? (
-                  <Link
-                    className={cn(
-                      "truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline",
-                      hasCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
-                    )}
-                    href={psychologistProfileHref}
-                  >
-                    {displayAuthorName}
-                  </Link>
-                ) : (
-                  <h2
-                    className={cn(
-                      "truncate text-sm font-black leading-tight text-foreground",
-                      hasCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
-                    )}
-                  >
-                    {displayAuthorName}
-                  </h2>
+      <div
+        className={primaryReply ? "-mx-4 -mb-4 bg-primary-soft/50 p-4" : "contents"}
+        data-profile-reply-answer={primaryReply ? true : undefined}
+      >
+        {showAuthorHeader ? (
+          <div
+            className={cn(
+              authorHeaderExtra ? "relative z-30 flex items-start gap-3" : "flex items-start gap-3",
+              primaryReply ? (showDisplayText ? "mb-2" : "mb-0") : "mb-3",
+            )}
+          >
+            <AuthorAvatar
+              anonymous={isAnonymousPatient}
+              avatar={displayAuthor.avatar}
+              href={psychologistProfileHref}
+              name={displayAuthorName}
+            />
+            <div className="grid min-w-0 flex-1 gap-0.5">
+              <div
+                className={cn(
+                  "flex min-w-0 items-center gap-x-2 gap-y-1",
+                  profilePublicationMode ? "flex-nowrap" : "flex-wrap",
                 )}
-                {displayAuthor.verified ? (
-                  <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
-                ) : null}
-                {isPsychologistPost ? (
-                  <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
-                    <FeedFavoriteButton author={displayAuthor} />
-                  </span>
-                ) : null}
-                {hasCommunityIdentity ? (
-                  <OriginalPostCommunityLink
-                    community={post.community}
-                    withAction={Boolean(psychologistProfileHref)}
-                  />
-                ) : null}
-              </div>
-            </div>
-            {psychologistProfileHref ? (
-              <Link
-                className="w-fit text-[11px] font-medium leading-[1.15] text-muted no-underline transition hover:text-muted hover:no-underline"
-                href={psychologistProfileHref}
               >
-                <MentorAuthorMeta
-                  authorId={displayAuthor.role === "psicologo" ? displayAuthor.id : undefined}
-                  community={post.community}
-                  badge={displayFeaturedBadge}
-                  typeLabel={displayAuthor.type_label}
-                  date={
-                    <>
-                      {displayRelativeTime}
-                      {displayWasEdited ? " • editado" : ""}
-                    </>
-                  }
-                >
-                  {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
-                  {displayRelativeTime}
-                  {displayWasEdited ? (
-                    <>
-                      {" "}
-                      <span aria-hidden="true">&bull;</span>{" "}
-                      <span className="font-extrabold text-muted">editado</span>
-                    </>
+                <div className="flex min-w-0 flex-1 items-center gap-1">
+                  {psychologistProfileHref ? (
+                    <Link
+                      className={cn(
+                        "truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline",
+                        hasCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
+                      )}
+                      href={psychologistProfileHref}
+                    >
+                      {displayAuthorName}
+                    </Link>
+                  ) : (
+                    <h2
+                      className={cn(
+                        "truncate text-sm font-black leading-tight text-foreground",
+                        hasCommunityIdentity ? "min-w-[4ch]" : "min-w-0",
+                      )}
+                    >
+                      {displayAuthorName}
+                    </h2>
+                  )}
+                  {displayAuthor.verified ? (
+                    <VerifiedBadgeIcon
+                      className="h-3 w-3 shrink-0"
+                      aria-label="Perfil verificado"
+                    />
                   ) : null}
-                </MentorAuthorMeta>
+                  {isPsychologistPost && !profilePublicationMode ? (
+                    <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
+                      <FeedFavoriteButton author={displayAuthor} />
+                    </span>
+                  ) : null}
+                  {hasCommunityIdentity ? (
+                    <OriginalPostCommunityLink
+                      community={post.community}
+                      withAction={Boolean(psychologistProfileHref)}
+                    />
+                  ) : null}
+                </div>
+              </div>
+              {psychologistProfileHref ? (
+                <Link
+                  className="w-fit text-[11px] font-medium leading-[1.15] text-muted no-underline transition hover:text-muted hover:no-underline"
+                  href={psychologistProfileHref}
+                >
+                  <MentorAuthorMeta
+                    authorId={displayAuthor.role === "psicologo" ? displayAuthor.id : undefined}
+                    community={post.community}
+                    badge={displayFeaturedBadge}
+                    typeLabel={displayAuthor.type_label}
+                    date={
+                      <>
+                        {displayRelativeTime}
+                        {displayWasEdited ? " • editado" : ""}
+                      </>
+                    }
+                  >
+                    {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                    {displayRelativeTime}
+                    {displayWasEdited ? (
+                      <>
+                        {" "}
+                        <span aria-hidden="true">&bull;</span>{" "}
+                        <span className="font-extrabold text-muted">editado</span>
+                      </>
+                    ) : null}
+                  </MentorAuthorMeta>
+                </Link>
+              ) : (
+                <p className="text-[11px] font-medium leading-[1.15] text-muted">
+                  {displayTimeLabel}
+                </p>
+              )}
+            </div>
+            {authorHeaderExtra}
+          </div>
+        ) : null}
+        {showDisplayText ? (
+          <div className="grid gap-2">
+            {displayTitle ? (
+              <Link
+                className={cn(
+                  "cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground no-underline transition hover:text-foreground hover:no-underline",
+                  isFeedPresentation && "text-foreground dark:text-foreground",
+                  profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
+                  desktopPlainLinks &&
+                    "md:no-underline md:hover:text-foreground md:hover:no-underline",
+                )}
+                href={postHref}
+              >
+                {displayTitle}
               </Link>
+            ) : null}
+            {profilePublicationMode ? (
+              <InlineExpandableText
+                className="text-sm leading-6 text-muted"
+                expanded={contentExpanded}
+                onToggle={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setContentExpanded((current) => !current);
+                }}
+                text={displayContent}
+              />
             ) : (
-              <p className="text-[11px] font-medium leading-[1.15] text-muted">
-                {displayTimeLabel}
-              </p>
+              <InlineExpandableText
+                className={cn(
+                  "text-sm leading-6",
+                  isFeedPresentation ? "text-muted dark:text-muted" : "text-muted",
+                )}
+                expanded={false}
+                href={postHref}
+                text={displayContent}
+              />
             )}
           </div>
-          {authorHeaderExtra}
-        </div>
-      ) : null}
-      {showDisplayText ? (
-        <div className="grid gap-2">
-          {displayTitle ? (
-            <Link
-              className={cn(
-                "cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground no-underline transition hover:text-foreground hover:no-underline",
-                isFeedPresentation && "text-foreground dark:text-foreground",
-                profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
-                desktopPlainLinks &&
-                  "md:no-underline md:hover:text-foreground md:hover:no-underline",
-              )}
-              href={postHref}
-            >
-              {displayTitle}
-            </Link>
-          ) : null}
-          {profilePublicationMode ? (
-            <InlineExpandableText
-              className="text-sm leading-6 text-muted"
-              expanded={contentExpanded}
-              onToggle={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setContentExpanded((current) => !current);
-              }}
-              text={displayContent}
+        ) : null}
+
+        <div
+          className={cn(
+            "grid",
+            primaryReply ? "mt-3" : "mt-4",
+            isFeedPresentation ? "gap-3" : "gap-4",
+          )}
+        >
+          {shouldShowPostCarousel ? (
+            <PostMediaCarousel
+              alt={displayTitle ?? "Mídia da publicação"}
+              footer={authorWhatsappCta}
+              items={postImageMediaItems}
             />
           ) : (
-            <InlineExpandableText
-              className={cn(
-                "text-sm leading-6",
-                isFeedPresentation ? "text-muted dark:text-muted" : "text-muted",
-              )}
-              expanded={false}
-              href={postHref}
-              text={displayContent}
+            <CommunityMediaBlock
+              alt={displayTitle ?? "Mídia da publicação"}
+              analyticsTarget={displayMediaAnalyticsTarget}
+              enableCommunityAutoplay={profilePublicationMode}
+              footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
+              mediaType={displayMediaType}
+              mediaUrl={displayMediaUrl}
+              overlayAction={displayMediaOverlayAction}
+              thumbnailUrl={displayThumbnailUrl}
+              variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
             />
           )}
+          {highlightedReplyAfterActions ? null : professionalPreview}
         </div>
-      ) : null}
 
-      <div
-        className={cn(
-          "grid",
-          primaryReply ? "mt-3" : "mt-4",
-          isFeedPresentation ? "gap-3" : "gap-4",
-        )}
-      >
-        {shouldShowPostCarousel ? (
-          <PostMediaCarousel
-            alt={displayTitle ?? "Mídia da publicação"}
-            footer={authorWhatsappCta}
-            items={postImageMediaItems}
-          />
-        ) : (
-          <CommunityMediaBlock
-            alt={displayTitle ?? "Mídia da publicação"}
-            analyticsTarget={displayMediaAnalyticsTarget}
-            enableCommunityAutoplay={profilePublicationMode}
-            footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
-            mediaType={displayMediaType}
-            mediaUrl={displayMediaUrl}
-            overlayAction={displayMediaOverlayAction}
-            thumbnailUrl={displayThumbnailUrl}
-            variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
-          />
-        )}
-        {highlightedReplyAfterActions ? null : professionalPreview}
+        <CommunityActionBar
+          className={
+            hasPostStyleReplyActions
+              ? "mt-4 max-[380px]:flex-wrap max-[380px]:gap-y-1.5 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-none"
+              : primaryReply
+                ? "mt-2 sm:mt-3"
+                : cn(
+                    "mt-4 border-t pt-3",
+                    isFeedPresentation ? "border-border dark:border-border" : "border-border",
+                  )
+          }
+          comments={{
+            count: hasCompactReplyActions ? undefined : interactionData.comments,
+            href: primaryReply
+              ? `/comunidades/${post.community.slug}/publicacao/${post.id}/resposta/${primaryReply.id}`
+              : postHref,
+            label: primaryReply
+              ? "Comentários da resposta"
+              : isFeedPresentation
+                ? "Comentar no post"
+                : "Comentários",
+          }}
+          currentVote={voteSnapshot.currentVote}
+          disabled={voteMutation.isPending}
+          downvotesCount={
+            !primaryReply && shouldShowProfessionalEngagementCounters
+              ? voteSnapshot.downvotes
+              : undefined
+          }
+          beforeSaveSlot={
+            actionBarBeforeSaveSlot ??
+            (shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta)
+          }
+          endSlot={footerExtra}
+          onVote={interactiveActions ? handleVote : undefined}
+          save={{
+            active: saveAction.active,
+            count: primaryReply ? undefined : saveAction.count,
+            disabled: saveAction.disabled,
+            label: saveAction.label,
+            onClick: saveAction.onClick,
+          }}
+          secondaryActionsPlacement={hasCompactReplyActions ? "inline" : "trailing"}
+          share={{
+            count: primaryReply ? undefined : shareCount,
+            label: primaryReply
+              ? "Compartilhar resposta"
+              : isFeedPresentation
+                ? `Compartilhar post: ${post.title}`
+                : displayTitle
+                  ? `Compartilhar ${displayTitle}`
+                  : "Compartilhar publicação",
+            onClick: () => onShare(post),
+          }}
+          showUpvoteText={hasCompactReplyActions ? false : actionBarShowUpvoteText}
+          size={hasCompactReplyActions ? "xs" : "sm"}
+          upvotesCount={voteSnapshot.upvotes}
+          voteLabel={primaryReply ? "Marcar resposta como útil" : actionBarVoteLabel}
+          votePresentation={hasCompactReplyActions ? "inline" : actionBarVotePresentation}
+        />
+        {highlightedReplyAfterActions && highlightedProfessionalReply ? (
+          <div className="mt-4 grid gap-3">{professionalPreview}</div>
+        ) : null}
       </div>
-
-      <CommunityActionBar
-        className={
-          hasPostStyleReplyActions
-            ? "mt-4 max-[380px]:flex-wrap max-[380px]:gap-y-1.5 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-none"
-            : primaryReply
-              ? "mt-2 sm:mt-3"
-              : cn(
-                  "mt-4 border-t pt-3",
-                  isFeedPresentation ? "border-border dark:border-border" : "border-border",
-                )
-        }
-        comments={{
-          count: hasCompactReplyActions ? undefined : interactionData.comments,
-          href: primaryReply
-            ? `/comunidades/${post.community.slug}/publicacao/${post.id}/resposta/${primaryReply.id}`
-            : postHref,
-          label: primaryReply
-            ? "Comentários da resposta"
-            : isFeedPresentation
-              ? "Comentar no post"
-              : "Comentários",
-        }}
-        currentVote={voteSnapshot.currentVote}
-        disabled={voteMutation.isPending}
-        downvotesCount={
-          !primaryReply && shouldShowProfessionalEngagementCounters
-            ? voteSnapshot.downvotes
-            : undefined
-        }
-        beforeSaveSlot={
-          actionBarBeforeSaveSlot ??
-          (shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta)
-        }
-        endSlot={footerExtra}
-        onVote={interactiveActions ? handleVote : undefined}
-        save={{
-          active: saveAction.active,
-          count: primaryReply ? undefined : saveAction.count,
-          disabled: saveAction.disabled,
-          label: saveAction.label,
-          onClick: saveAction.onClick,
-        }}
-        secondaryActionsPlacement={hasCompactReplyActions ? "inline" : "trailing"}
-        share={{
-          count: primaryReply ? undefined : shareCount,
-          label: primaryReply
-            ? "Compartilhar resposta"
-            : isFeedPresentation
-              ? `Compartilhar post: ${post.title}`
-              : displayTitle
-                ? `Compartilhar ${displayTitle}`
-                : "Compartilhar publicação",
-          onClick: () => onShare(post),
-        }}
-        showUpvoteText={hasCompactReplyActions ? false : actionBarShowUpvoteText}
-        size={hasCompactReplyActions ? "xs" : "sm"}
-        upvotesCount={voteSnapshot.upvotes}
-        voteLabel={primaryReply ? "Marcar resposta como útil" : actionBarVoteLabel}
-        votePresentation={hasCompactReplyActions ? "inline" : actionBarVotePresentation}
-      />
-      {highlightedReplyAfterActions && highlightedProfessionalReply ? (
-        <div className="mt-4 grid gap-3">{professionalPreview}</div>
-      ) : null}
       {lectumDownloadDialog}
     </article>
   );

@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { publicCommunityFocusedReplyThreadHref } from "./public-routes.ts";
 import { findFocusedReplyContinuation } from "./reply-focus-navigation.ts";
+import "./reply-tree-layout.test.mjs";
+import "./reply-menu-position.test.mjs";
 
 const branch = (depth, level = 0) => ({
   id: `reply-${level}`,

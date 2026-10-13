@@ -16,6 +16,7 @@ import { useDeleteReply, useMutePost, usePostReplyThread } from "@/api/callers/p
 import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostListPost, UserPostReply } from "@/api/generator/types/posts";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
+import { ReplyMenuSurface } from "@/components/community/reply-menu-surface";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -177,7 +178,6 @@ export const ReplyOwnerActionMenu = ({
   secondaryActions,
 }: ReplyOwnerActionMenuProps) => {
   const currentUser = useAppSelector((state) => state.user);
-  const menuRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -198,29 +198,6 @@ export const ReplyOwnerActionMenu = ({
     isPsychologist: isPsychologistReply,
     hasReplies: reply.replies_received_count > 0,
   });
-
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (menuRef.current?.contains(event.target as Node)) return;
-      setMenuOpen(false);
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
-    window.addEventListener("pointerdown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [menuOpen]);
 
   if (!isOwnReply) return null;
 
@@ -294,7 +271,7 @@ export const ReplyOwnerActionMenu = ({
   const busy = muteMutation.isPending || deleteMutation.isPending || deletePreflight.isFetching;
 
   return (
-    <div className={cn("relative shrink-0", className)} ref={menuRef}>
+    <div className={cn("relative shrink-0", className)}>
       <button
         aria-expanded={menuOpen}
         aria-haspopup="menu"
@@ -311,10 +288,7 @@ export const ReplyOwnerActionMenu = ({
       </button>
 
       {menuOpen ? (
-        <div
-          className="absolute top-9 right-0 z-[120] w-64 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-[var(--lectum-shadow)]"
-          role="menu"
-        >
+        <ReplyMenuSurface triggerRef={triggerRef} onClose={() => setMenuOpen(false)}>
           {secondaryActions ? (
             <ReplySecondaryMenuActions {...secondaryActions} onClose={() => setMenuOpen(false)} />
           ) : null}
@@ -366,7 +340,7 @@ export const ReplyOwnerActionMenu = ({
               {actionError}
             </p>
           ) : null}
-        </div>
+        </ReplyMenuSurface>
       ) : null}
 
       {editModalOpen ? (

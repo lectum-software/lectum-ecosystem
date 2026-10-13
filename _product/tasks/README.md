@@ -674,6 +674,7 @@ ou cortesia manual.
 | 253 | [TASK-253 - Comentarios e contexto pessoal](TASK-253-comentarios-e-contexto-pessoal.md) | In Progress | 252 |
 | 254 | [TASK-254 - Menu curto e foco do composer iOS](TASK-254-menu-curto-e-foco-composer-ios.md) | In Progress | 253 |
 | 255 | [TASK-255 - Pergunta de video e acoes profissionais](TASK-255-pergunta-video-e-acoes-profissionais.md) | In Progress | 254 |
+| 256 | [TASK-256 - Divisao entre pergunta e resposta no perfil](TASK-256-divisao-pergunta-resposta-perfil.md) | In Progress | 255 |
 
 ## Ordem operacional recomendada sem bloqueios
 

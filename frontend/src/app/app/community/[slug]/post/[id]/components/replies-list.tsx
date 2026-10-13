@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
+import { useReplyTreeLayout } from "@/hooks/use-reply-tree-layout";
 import {
   isVerifiedProfessionalReply,
   MAX_REPLY_TREE_DEPTH,
@@ -79,9 +80,15 @@ export const RepliesList = ({
   votePending?: boolean;
 }) => {
   const orderedReplies = useMemo(() => orderRepliesForProfessionalPriority(replies), [replies]);
+  const { ref: listRef, depth: responsiveDepth } = useReplyTreeLayout(
+    replies,
+    maxInlineDepth,
+    focusReplyId,
+    threadHrefBase,
+  );
 
   return (
-    <section className="grid gap-4" id="discussao">
+    <section className="grid gap-4" id="discussao" ref={listRef}>
       {showSectionTitle ? (
         <div className="px-0.5">
           <h2 className="text-sm font-black tracking-[0.08em] text-muted uppercase">Discussão</h2>
@@ -124,7 +131,7 @@ export const RepliesList = ({
                   deleteReplyPending={deleteReplyPending}
                   focusReplyId={focusReplyId}
                   inlineReplyTargets={inlineReplyTargets}
-                  maxInlineDepth={maxInlineDepth}
+                  maxInlineDepth={responsiveDepth}
                   mediaPermission={mediaPermission}
                   onCancelInlineReplyTarget={onCancelInlineReplyTarget}
                   onInlineReplyDraftChange={onInlineReplyDraftChange}
