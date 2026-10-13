@@ -2,7 +2,7 @@
 
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useCreatePostReply,
@@ -31,7 +31,10 @@ import {
   createLectumShareVideoTarget,
   findPostReplyInTree,
 } from "@/utils/lectum-share-target";
-import { publicCommunityPostFocusedReplyHref } from "@/utils/public-routes";
+import {
+  normalizePublicCommunityFocusReplyId,
+  publicCommunityPostFocusedReplyHref,
+} from "@/utils/public-routes";
 import { getRememberedCommunityFeedHref } from "../../../hooks/use-community-feed-scroll-restoration";
 import { ThreadOriginalPostCard } from "../components/post-content";
 import { RepliesList } from "../components/replies-list";
@@ -61,6 +64,9 @@ export const PostReplyThreadLogic = ({
   forceBackToFeed?: boolean;
 } = {}) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const focusReplyIdFromUrl =
+    normalizePublicCommunityFocusReplyId(searchParams.get("focusReplyId") ?? undefined) ?? null;
   const params = useParams<{ id: string; replyId: string; slug: string }>();
   const postId = typeof params.id === "string" ? params.id : "";
   const replyId = typeof params.replyId === "string" ? params.replyId : "";
@@ -68,7 +74,7 @@ export const PostReplyThreadLogic = ({
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
   const conversion = useProgressiveConversion();
-  const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(null);
+  const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
   const [composerFocusReplyId, setComposerFocusReplyId] = useState<string | null>(null);
   const [composerFocusRequestKey, setComposerFocusRequestKey] = useState(0);
   const [replyComposerActive, setReplyComposerActive] = useState(false);
@@ -121,6 +127,15 @@ export const PostReplyThreadLogic = ({
     activeFocusReplyId,
     threadQuery.isFetching,
   );
+
+  useEffect(() => {
+    if (!replyId) return;
+    const timer = window.setTimeout(() => {
+      resetReplyFocusHighlight();
+      setActiveFocusReplyId(focusReplyIdFromUrl);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [focusReplyIdFromUrl, replyId, resetReplyFocusHighlight]);
 
   const handleThreadBack = () => {
     const rememberedFeedHref = getRememberedCommunityFeedHref(post?.id ?? postId);
