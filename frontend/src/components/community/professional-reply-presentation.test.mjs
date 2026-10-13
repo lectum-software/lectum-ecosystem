@@ -29,8 +29,10 @@ export const registerProfessionalReplyPresentationTests = ({
       upvotes_count: 0,
       community: { slug: "topic", name: "Topic", category: "Topic" },
     };
-    const render = (props) =>
+    const render = (props, ids = []) =>
       renderRelations({
+        userId: "viewer",
+        ids,
         children: createElement(
           AppRouterContext.Provider,
           { value: {} },
@@ -57,10 +59,26 @@ export const registerProfessionalReplyPresentationTests = ({
         },
       });
       assert.match(html, /data-profile-reply-question/);
+      assert.match(html, /bg-primary-soft\/50 p-4/);
+      assert.match(html, /data-profile-reply-answer="true"/);
+      assert.doesNotMatch(html, /favorite-toggle/);
       assert.ok(html.indexOf("Question") < html.indexOf(author.name));
       assert.ok(html.indexOf("Original post") < html.indexOf("Professional answer"));
       assert.doesNotMatch(html, /data-profile-video-question|data-profile-question-plane/);
       if (media_type === "video") assert.match(html, /<video/);
+    }
+    for (const ids of [[], [author.id]]) {
+      const profilePost = render(
+        {
+          profilePublicationMode: true,
+          post: { ...post, contribution_type: "post" },
+        },
+        ids,
+      );
+      assert.doesNotMatch(profilePost, /favorite-toggle|data-profile-reply-question/);
+      const feedPost = render({ post: { ...post, contribution_type: "post" } }, ids);
+      assert.match(feedPost, /favorite-toggle/);
+      assert.match(feedPost, new RegExp(`aria-pressed="${Boolean(ids.length)}"`));
     }
   });
   test("professional reply actions preserve WhatsApp order and do not repeat media contact", () => {
@@ -90,7 +108,9 @@ export const registerProfessionalReplyPresentationTests = ({
             onToggleSave: () => calls.push("save"),
           });
           const html = renderRelations({ children: bar });
-          if (role === "psicologo") {
+          assert.doesNotMatch(bar.props.className, /flex-wrap/);
+          assert.match(html, /flex-nowrap/);
+          if (role === "psicologo" && media_url) {
             assert.match(html, /lucide-bookmark/);
             assert.match(html, /aria-label="Compartilhar"/);
             assert.match(
@@ -98,20 +118,18 @@ export const registerProfessionalReplyPresentationTests = ({
               new RegExp(`aria-label="${saved ? "Remover dos salvos" : "Salvar"}"`),
             );
             assert.equal(bar.props.save.disabled, true);
-            assert.match(bar.props.className, /flex-wrap/);
             bar.props.save.onClick();
             bar.props.share.onClick();
             assert.deepEqual(calls, ["save", "share"]);
-            if (!media_url) {
-              const comment = html.indexOf('aria-label="Responder"');
-              const whatsapp = html.indexOf('aria-label="Fale com Professional pelo WhatsApp"');
-              const save = html.indexOf(`aria-label="${saved ? "Remover dos salvos" : "Salvar"}"`);
-              assert.ok(comment >= 0 && whatsapp > comment && save > whatsapp);
-            }
           } else {
             assert.doesNotMatch(html, /lucide-bookmark|aria-label="Compartilhar"/);
             assert.equal(bar.props.save, undefined);
             assert.equal(bar.props.share, undefined);
+          }
+          if (role === "psicologo" && !media_url) {
+            const comment = html.indexOf('aria-label="Responder"');
+            const whatsapp = html.indexOf('aria-label="Fale com Professional pelo WhatsApp"');
+            assert.ok(comment >= 0 && whatsapp > comment);
           }
           if (role !== "psicologo" || media_url) assert.doesNotMatch(html, /Fale com/);
         }

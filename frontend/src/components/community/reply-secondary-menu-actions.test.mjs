@@ -55,7 +55,7 @@ test("menu commands stop propagation, close and invoke the original handlers", (
   assert.deepEqual(calls, ["stop", "close", "save", "stop", "close", "share"]);
 });
 
-test("both ownership paths keep secondary actions only for non-professional comments", () => {
+test("both ownership paths expose menu actions for patients and text-only professionals", () => {
   const owner = readFileSync(new URL("./reply-owner-action-menu.tsx", import.meta.url), "utf8");
   const other = readFileSync(
     new URL(
@@ -75,10 +75,13 @@ test("both ownership paths keep secondary actions only for non-professional comm
     card.indexOf("export const ReplyVoteBar"),
     card.indexOf("export const ReplyCard"),
   );
-  assert.match(toolbar, /const isProfessional = reply.author.role === "psicologo"/);
-  assert.match(toolbar, /save=\{\s*isProfessional/);
-  assert.match(toolbar, /share=\{isProfessional/);
-  assert.match(card, /secondaryActions=\{\s*isProfessional\s*\? undefined/);
+  assert.match(toolbar, /const inlineSecondaryActions = hasInlineReplySecondaryActions\(reply\)/);
+  assert.match(toolbar, /save=\{\s*inlineSecondaryActions/);
+  assert.match(toolbar, /share=\{inlineSecondaryActions/);
+  assert.match(
+    card,
+    /secondaryActions=\{\s*hasInlineReplySecondaryActions\(reply\)\s*\? undefined/,
+  );
   assert.match(other, /\{secondaryActions \? \(/);
   assert.match(toolbar, /CommunityWhatsAppCta/);
   assert.match(card, /onToggleSave: toggleSaveReply/);

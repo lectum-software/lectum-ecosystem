@@ -140,6 +140,7 @@ test("profile question renders the complete title and description without author
   );
   assert.ok(html.includes(title));
   assert.ok(html.includes(content));
+  assert.doesNotMatch(html, /border-b|pb-5/);
   assert.doesNotMatch(html, /<a\b|href=|line-clamp|Patient identity/);
 });
 
