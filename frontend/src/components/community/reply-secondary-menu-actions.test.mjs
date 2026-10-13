@@ -21,7 +21,20 @@ test("save state, pending state and share remain accessible in the menu", () => 
   assert.match(html, /aria-checked="true"/);
   assert.match(html, /disabled=""/);
   assert.match(html, /Remover dos salvos/);
-  assert.match(html, /Compartilhar comentário/);
+  assert.match(html, />Compartilhar</);
+  assert.doesNotMatch(html, /Compartilhar comentário|Salvar comentário/);
+});
+
+test("unsaved comments use the short Salvar label", () => {
+  const html = renderToStaticMarkup(
+    createElement(ReplySecondaryMenuActions, {
+      saved: false,
+      onToggleSave() {},
+      onShare() {},
+      onClose() {},
+    }),
+  );
+  assert.match(html, />Salvar</);
 });
 
 test("menu commands stop propagation, close and invoke the original handlers", () => {

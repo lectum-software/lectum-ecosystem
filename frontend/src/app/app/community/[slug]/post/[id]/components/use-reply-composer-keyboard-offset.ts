@@ -4,7 +4,7 @@ import { type RefObject, useCallback, useEffect, useRef, useState } from "react"
 import { getReplyKeyboardOffset, isKeyboardInput } from "@/utils/fixed-bottom-viewport";
 import { POST_DETAIL_MOBILE_QUERY } from "../modules/reply-support";
 
-const POST_REPLY_KEYBOARD_SETTLE_DELAYS_MS = [80, 240] as const;
+const POST_REPLY_KEYBOARD_SETTLE_DELAYS_MS = [80, 240, 500, 900] as const;
 
 export const useReplyComposerKeyboardOffset = ({
   composerActive,
@@ -84,6 +84,7 @@ export const useReplyComposerKeyboardOffset = ({
     scheduleSettledKeyboardOffsetUpdate();
     viewport?.addEventListener("resize", scheduleSettledKeyboardOffsetUpdate);
     viewport?.addEventListener("scroll", scheduleSettledKeyboardOffsetUpdate);
+    window.addEventListener("scroll", scheduleKeyboardOffsetUpdate, { passive: true });
     window.addEventListener("orientationchange", scheduleSettledKeyboardOffsetUpdate);
     window.addEventListener("resize", scheduleSettledKeyboardOffsetUpdate);
     document.addEventListener("focusin", scheduleSettledKeyboardOffsetUpdate);
@@ -101,6 +102,7 @@ export const useReplyComposerKeyboardOffset = ({
 
       viewport?.removeEventListener("resize", scheduleSettledKeyboardOffsetUpdate);
       viewport?.removeEventListener("scroll", scheduleSettledKeyboardOffsetUpdate);
+      window.removeEventListener("scroll", scheduleKeyboardOffsetUpdate);
       window.removeEventListener("orientationchange", scheduleSettledKeyboardOffsetUpdate);
       window.removeEventListener("resize", scheduleSettledKeyboardOffsetUpdate);
       document.removeEventListener("focusin", scheduleSettledKeyboardOffsetUpdate);
