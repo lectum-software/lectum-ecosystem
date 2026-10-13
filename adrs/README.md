@@ -677,3 +677,4 @@ Formato recomendado:
 - [ADR-0613 — Controles de ramos focados e filtro ativo visivel](0613-contexto-arvore-filtros-feed.md)
 - [ADR-0614 — Foco profundo na continuacao](0614-foco-resposta-na-continuacao.md)
 - [ADR-0615 — Comentarios e contexto pessoal](0615-comentarios-contexto-pessoal.md)
+- [ADR-0616 — Preservar foco do composer iOS](0616-foco-composer-ios.md)

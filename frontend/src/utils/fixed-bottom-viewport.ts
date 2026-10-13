@@ -51,5 +51,5 @@ export const getReplyKeyboardOffset = ({
 
   const visibleBottom = viewportTop + viewportHeight;
   const overlap = Math.max(0, currentOffset + composerBottom - visibleBottom);
-  return overlap > 24 ? Math.min(Math.round(overlap) + 8, layoutHeight - 1) : 0;
+  return overlap > 4 ? Math.min(Math.round(overlap) + 8, layoutHeight - 1) : 0;
 };

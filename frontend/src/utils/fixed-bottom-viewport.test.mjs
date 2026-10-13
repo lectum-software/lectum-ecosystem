@@ -53,6 +53,43 @@ test("keyboard dismissal clears the offset even when composer active state was r
   assert.equal(getReplyKeyboardOffset({ ...keyboard, composerBottom: Number.NaN }), 0);
 });
 
+test("small keyboard overlaps are corrected and repeated scroll measurements do not accumulate", () => {
+  const offset = getReplyKeyboardOffset({ ...keyboard, composerBottom: 600 });
+  assert.equal(offset, 28);
+  for (let event = 0; event < 100; event++) {
+    assert.equal(
+      getReplyKeyboardOffset({ ...keyboard, composerBottom: 572, currentOffset: offset }),
+      offset,
+    );
+  }
+  assert.equal(getReplyKeyboardOffset({ ...keyboard, composerBottom: 584 }), 0);
+  assert.equal(
+    getReplyKeyboardOffset({ ...keyboard, composerBottom: 552, currentOffset: offset }),
+    0,
+  );
+});
+
+test("reply highlighting preserves editor focus and follows late keyboard/document movement", () => {
+  const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
+  const support = read("../app/app/community/[slug]/post/[id]/modules/reply-support.ts");
+  assert.match(
+    support,
+    /if \(scrollMode !== "composer-start"\) target\.focus\(\{ preventScroll: true \}\)/,
+  );
+  for (const view of ["post-detail-controller.ts", "reply-thread.tsx"]) {
+    assert.match(
+      read(`../app/app/community/[slug]/post/[id]/views/${view}`),
+      /scrollMode: "composer-start"/,
+    );
+  }
+  const hook = read(
+    "../app/app/community/[slug]/post/[id]/components/use-reply-composer-keyboard-offset.ts",
+  );
+  assert.match(hook, /\[80, 240, 500, 900\]/);
+  assert.match(hook, /window.addEventListener\("scroll", scheduleKeyboardOffsetUpdate/);
+  assert.match(hook, /window.removeEventListener\("scroll", scheduleKeyboardOffsetUpdate/);
+});
+
 test("recovery is scoped to iOS installed mobile bars and preserves explicit hidden/drag states", () => {
   const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
   const hook = read("../hooks/use-pwa-bottom-recovery.ts");

@@ -232,7 +232,9 @@ export const useReplyFocusHighlight = (
       target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
       void target.offsetWidth;
       target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
-      target.focus({ preventScroll: true });
+      // Reply actions already focused the editor during the user's tap (required on iOS).
+      // Highlighting must not blur it while the keyboard is opening.
+      if (scrollMode !== "composer-start") target.focus({ preventScroll: true });
       scrollReplyElementIntoFocus(target, scrollMode, motionBehavior);
       scheduleViewportFollow();
 
