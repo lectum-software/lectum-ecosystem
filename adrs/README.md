@@ -676,3 +676,4 @@ Formato recomendado:
 - [ADR-0612 — Suspensao de midia em toda entrada de Criar Post](0612-criar-post-suspensao-midia-rota-completa.md)
 - [ADR-0613 — Controles de ramos focados e filtro ativo visivel](0613-contexto-arvore-filtros-feed.md)
 - [ADR-0614 — Foco profundo na continuacao](0614-foco-resposta-na-continuacao.md)
+- [ADR-0615 — Comentarios e contexto pessoal](0615-comentarios-contexto-pessoal.md)

@@ -671,6 +671,7 @@ ou cortesia manual.
 | 250 | [TASK-250 - Bloqueio de video no retorno do perfil](TASK-250-criar-post-bloqueio-video-retorno-perfil.md) | Done | 249 |
 | 251 | [TASK-251 - Contexto da arvore e filtros do feed](TASK-251-contexto-arvore-filtros-feed.md) | Done | 250 |
 | 252 | [TASK-252 - Foco na continuacao da conversa](TASK-252-foco-resposta-na-continuacao.md) | In Progress | 251 |
+| 253 | [TASK-253 - Comentarios e contexto pessoal](TASK-253-comentarios-e-contexto-pessoal.md) | In Progress | 252 |
 
 ## Ordem operacional recomendada sem bloqueios
 

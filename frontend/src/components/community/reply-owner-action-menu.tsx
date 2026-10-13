@@ -22,6 +22,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { hasProfessionalVideoDescendant } from "./reply-delete-preflight";
 import { getReplyOwnerActionCopy } from "./reply-owner-action-copy";
+import {
+  type ReplySecondaryActions,
+  ReplySecondaryMenuActions,
+} from "./reply-secondary-menu-actions";
 
 type OwnerActionReply = Pick<
   UserPostReply,
@@ -45,6 +49,7 @@ type ReplyOwnerActionMenuProps = {
   onUpdated?: () => void;
   post: OwnerActionPost;
   reply: OwnerActionReply;
+  secondaryActions?: ReplySecondaryActions;
 };
 
 const errorMessageFromUnknown = (error: unknown) =>
@@ -169,9 +174,11 @@ export const ReplyOwnerActionMenu = ({
   onUpdated,
   post,
   reply,
+  secondaryActions,
 }: ReplyOwnerActionMenuProps) => {
   const currentUser = useAppSelector((state) => state.user);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -199,10 +206,20 @@ export const ReplyOwnerActionMenu = ({
       if (menuRef.current?.contains(event.target as Node)) return;
       setMenuOpen(false);
     };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
 
     window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
 
-    return () => window.removeEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [menuOpen]);
 
   if (!isOwnReply) return null;
@@ -282,6 +299,7 @@ export const ReplyOwnerActionMenu = ({
         aria-expanded={menuOpen}
         aria-haspopup="menu"
         aria-label="Mais ações"
+        ref={triggerRef}
         className="grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97]"
         onClick={(event) => {
           event.stopPropagation();
@@ -297,6 +315,9 @@ export const ReplyOwnerActionMenu = ({
           className="absolute top-9 right-0 z-[120] w-64 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-[var(--lectum-shadow)]"
           role="menu"
         >
+          {secondaryActions ? (
+            <ReplySecondaryMenuActions {...secondaryActions} onClose={() => setMenuOpen(false)} />
+          ) : null}
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
             disabled={busy}

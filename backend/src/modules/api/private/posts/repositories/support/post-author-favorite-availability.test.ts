@@ -76,6 +76,25 @@ describe("post detail author favorite availability", () => {
     );
   });
 
+  it("adds whole-branch counts recursively without changing direct counts", () => {
+    const author = professionalAuthor();
+    const tree = reply("parent", author, [reply("child", author)]);
+    const result = toReplyResponse(
+      tree,
+      new Map(),
+      undefined,
+      undefined,
+      new Map([
+        ["parent", 7],
+        ["child", 6],
+      ]),
+    );
+    assert.equal(result.replies_count, 1);
+    assert.equal(result.descendants_count, 7);
+    assert.equal(result.replies[0]?.descendants_count, 6);
+    assert.equal(toReplyResponse(tree, new Map()).descendants_count, undefined);
+  });
+
   it("hides favorite actions on direct and nested replies from an inactive profile", () => {
     const author = professionalAuthor({ active: false });
     const result = toReplyResponse(reply("parent", author, [reply("child", author)]), new Map());

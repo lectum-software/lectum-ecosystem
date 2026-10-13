@@ -37,6 +37,7 @@ export type PostReply = {
   upvotes_count: number;
   downvotes_count: number;
   replies_count: number;
+  descendants_count?: number;
   created_at: string;
   edited_at: string | null;
   parent_reply_id: string | null;

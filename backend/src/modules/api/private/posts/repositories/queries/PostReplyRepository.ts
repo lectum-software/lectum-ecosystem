@@ -22,6 +22,7 @@ import {
   replyBaseSelect,
   toReplyResponse,
 } from "../support/post-response";
+import { countReplyDescendants } from "../support/reply-descendant-counts";
 import {
   buildReplyThread,
   buildReplyTrees,
@@ -35,7 +36,6 @@ import {
   normalizeReplyMediaType,
   sortRepliesForDisplay,
 } from "../support/reply-tree";
-
 import type { PostCoreRepository } from "./PostCoreRepository";
 import { PostRepositoryContext } from "./PostRepositoryContext";
 
@@ -54,14 +54,19 @@ export class PostReplyRepository extends PostRepositoryContext {
       deleted: false,
     };
 
-    const [topLevelItems, count] = await Promise.all([
+    const [topLevelItems, count, replyParents] = await Promise.all([
       prisma.post_reply.findMany({
         where,
         orderBy: [{ upvotes_count: "desc" }, { createdAt: "desc" }, { id: "desc" }],
         select: replyBaseSelect,
       }),
       prisma.post_reply.count({ where }),
+      prisma.post_reply.findMany({
+        where: { post_id: post.id, deleted: false },
+        select: { id: true, parent_reply_id: true },
+      }),
     ]);
+    const descendantCounts = countReplyDescendants(replyParents);
     const sortedItems = await sortRepliesForDisplay(post.community_id, topLevelItems);
     const focusRootReplyId = await findRootReplyId(post.id, data.q.focusReplyId);
     const focusRootIndex = focusRootReplyId
@@ -137,10 +142,16 @@ export class PostReplyRepository extends PostRepositoryContext {
 
     return {
       data: items.map((item) =>
-        toReplyResponse(item, voteMap, savedReplyIds, {
-          postAnonymous: post.author.role !== "psicologo" && post.anonymous,
-          postAuthorId: post.author_id,
-        }),
+        toReplyResponse(
+          item,
+          voteMap,
+          savedReplyIds,
+          {
+            postAnonymous: post.author.role !== "psicologo" && post.anonymous,
+            postAuthorId: post.author_id,
+          },
+          descendantCounts,
+        ),
       ),
       page: effectivePage,
       pages: Math.ceil(count / pagination.limit),
@@ -208,10 +219,16 @@ export class PostReplyRepository extends PostRepositoryContext {
       }
     }
 
-    return toReplyResponse(thread, voteMap, savedReplyIds, {
-      postAnonymous: post.author.role !== "psicologo" && post.anonymous,
-      postAuthorId: post.author_id,
-    });
+    return toReplyResponse(
+      thread,
+      voteMap,
+      savedReplyIds,
+      {
+        postAnonymous: post.author.role !== "psicologo" && post.anonymous,
+        postAuthorId: post.author_id,
+      },
+      countReplyDescendants(replies),
+    );
   }
 
   async createReply(data: IPostCreateReplyDTO): Promise<PostMutationResult<PostReplyDTO>> {

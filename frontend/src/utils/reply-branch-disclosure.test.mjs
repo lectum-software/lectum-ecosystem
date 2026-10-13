@@ -4,8 +4,20 @@ import test from "node:test";
 import {
   getNextReplyBranchVisibleCount,
   getReplyBranchVisibleCount,
+  replyBranchActionLabel,
   resolveReplyBranchAction,
 } from "./reply-branch-disclosure.ts";
+
+test("collapsed labels count the entire branch without changing disclosure behavior", () => {
+  const collapsed = resolveReplyBranchAction(0, 1);
+  assert.equal(replyBranchActionLabel(collapsed, 5), "Ver 5 respostas");
+  assert.equal(replyBranchActionLabel(collapsed), "Ver 1 resposta");
+  assert.equal(replyBranchActionLabel(collapsed, 0), "Ver 1 resposta");
+  assert.equal(replyBranchActionLabel(collapsed, Number.NaN), "Ver 1 resposta");
+  assert.equal(replyBranchActionLabel(resolveReplyBranchAction(1, 1), 5), "Ocultar respostas");
+  assert.equal(replyBranchActionLabel(resolveReplyBranchAction(3, 5), 20), "Ver mais 2 respostas");
+  assert.equal(replyBranchActionLabel(null, 0), null);
+});
 
 test("abre tres respostas e avanca em lotes de cinco", () => {
   assert.equal(getNextReplyBranchVisibleCount(0, 12), 3);
