@@ -29,6 +29,100 @@ const { ProgressiveConversionProvider } = await import(
   "../conversion/progressive-conversion-provider.tsx"
 );
 const { store } = await import("../../store/index.ts");
+const { SavedReplyCard } = await import(
+  "../../app/app/posts/saved/components/saved-reply-card.tsx"
+);
+
+test("saved comments show the origin link before identity without question previews", () => {
+  const client = new QueryClient();
+  const renderReply = (role, media, parentId = null, whatsapp = true) =>
+    renderToStaticMarkup(
+      createElement(
+        AppRouterContext.Provider,
+        { value: { push() {}, replace() {}, prefetch() {} } },
+        createElement(
+          Provider,
+          { store },
+          createElement(
+            QueryClientProvider,
+            { client },
+            createElement(
+              ProgressiveConversionProvider,
+              { isAuthenticated: false, pathname: "/app/posts/saved" },
+              createElement(SavedReplyCard, {
+                onRemove() {},
+                onShare() {},
+                removePending: true,
+                item: {
+                  post: {
+                    id: "origin-post",
+                    title: "Hidden original title",
+                    content: "Hidden original description",
+                    community: { slug: "ansiedade", name: "Ansiedade", category: null },
+                  },
+                  reply: {
+                    id: "saved-comment",
+                    parent_reply_id: parentId,
+                    content: "Saved comment content",
+                    created_at: "2026-10-13T12:00:00Z",
+                    replies_received_count: 2,
+                    author: {
+                      id: "reply-author",
+                      name: "Autor do comentario",
+                      role,
+                      type_label: role === "psicologo" ? "Psicologo" : "Usuario",
+                      whatsapp_url: whatsapp ? "https://wa.me/5511999999999" : null,
+                    },
+                    media_type: media ? "video" : null,
+                    media_url: media ? "/public/files/saved-reply.mp4" : null,
+                  },
+                },
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+  try {
+    for (const role of ["psicologo", "paciente"]) {
+      for (const video of [true, false]) {
+        const html = renderReply(role, video);
+        assert.equal((html.match(/Ver publicação original/g) ?? []).length, 1);
+        assert.ok(html.indexOf("Ver publicação original") < html.indexOf("Autor do comentario"));
+        assert.match(html, /href="\/comunidades\/ansiedade\/publicacao\/origin-post"/);
+        assert.doesNotMatch(html, /Hidden original|>Pergunta<|data-profile-question/);
+        assert.match(html, /Saved comment content/);
+        assert.match(html, /focusReplyId=saved-comment#reply-saved-comment/);
+        assert.match(html, /aria-label="Remover dos salvos"/);
+        assert.match(html, /aria-label="Compartilhar resposta"/);
+        assert.match(html, /data-community-action-bar="sm"/);
+        assert.doesNotMatch(html, /max-\[380px\]:flex-wrap/);
+        assert.match(html, /max-\[380px\]:\[&amp;&gt;div:first-child\]:flex-none/);
+        const whatsappIndex = html.indexOf("Fale com");
+        const commentsIndex = html.indexOf('aria-label="Respostas"');
+        const saveIndex = html.indexOf('aria-label="Remover dos salvos"');
+        if (role === "psicologo") {
+          assert.ok(whatsappIndex >= 0);
+          assert.equal((html.match(/Fale com/g) ?? []).length, video ? 1 : 2);
+          if (video) {
+            assert.ok(whatsappIndex < commentsIndex);
+            assert.match(html, /rounded-t-none/);
+          } else {
+            assert.ok(commentsIndex < whatsappIndex && whatsappIndex < saveIndex);
+            assert.doesNotMatch(html, /rounded-t-none/);
+          }
+        } else {
+          assert.equal(whatsappIndex, -1);
+        }
+      }
+    }
+    const nested = renderReply("psicologo", false, "parent-comment");
+    assert.match(nested, /focusReplyId=parent-comment#reply-parent-comment/);
+    assert.doesNotMatch(renderReply("psicologo", false, null, false), /Fale com/);
+  } finally {
+    client.clear();
+  }
+});
 
 test("feed coloca controles apos a midia somente em posts de psicologos com anexos", () => {
   const client = new QueryClient();

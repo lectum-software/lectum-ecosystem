@@ -9,6 +9,7 @@ import { AuthorIdentityLine } from "@/app/app/community/[slug]/components/feed-c
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import { AuthorAvatar } from "@/components/community/community-post-card-author";
+import { OriginLink } from "@/components/community/reply-origin-link";
 import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
 import {
   canShowSocialVideoPreviewAction,
@@ -28,7 +29,6 @@ import {
   type InteractionCopy,
   isReplyCardInteractiveTarget,
 } from "../modules/support";
-import { OriginLink } from "./origin-preview";
 import { WhatsappMetric } from "./whatsapp-metric";
 
 export const ReplyItemCard = ({

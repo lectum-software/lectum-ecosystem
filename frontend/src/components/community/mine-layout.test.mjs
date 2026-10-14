@@ -55,7 +55,7 @@ test("mine posts and replies remove answered chip and align owner menus with fir
   assert.doesNotMatch(mine, /\sheaderExtra=/);
 });
 
-const { OriginLink } = await import("../../app/app/posts/mine/components/origin-preview.tsx");
+const { OriginLink } = await import("./reply-origin-link.tsx");
 
 test("mine original publication link is transparent and opens the actual source", () => {
   const post = {

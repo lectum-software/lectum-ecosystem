@@ -1,13 +1,13 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { UserPostListItem } from "@/api/generator/types/posts";
-import { focusedReplyHref } from "../modules/support";
 
 export const OriginLink = ({ item }: { item: UserPostListItem }) => {
   const parentId = item.reply?.parent_reply_id;
+  const postHref = `/comunidades/${item.post.community.slug}/publicacao/${item.post.id}`;
   const href = parentId
-    ? focusedReplyHref(item.post, parentId)
-    : `/comunidades/${item.post.community.slug}/publicacao/${item.post.id}`;
+    ? `${postHref}?focusReplyId=${encodeURIComponent(parentId)}#reply-${parentId}`
+    : postHref;
 
   return (
     <Link

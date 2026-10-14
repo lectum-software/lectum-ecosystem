@@ -2,6 +2,7 @@
 
 import { Bookmark, Share2 } from "lucide-react";
 import type { MouseEventHandler } from "react";
+import { cn } from "@/lib/utils";
 
 export type ReplySecondaryActions = {
   saved: boolean;
@@ -20,7 +21,12 @@ export const ReplySecondaryMenuActions = ({
   <>
     <button
       aria-checked={saved}
-      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted hover:bg-surface-muted disabled:opacity-60"
+      className={cn(
+        "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold disabled:opacity-60",
+        saved
+          ? "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary"
+          : "text-muted hover:bg-surface-muted",
+      )}
       disabled={savePending}
       onClick={(event) => {
         event.stopPropagation();
