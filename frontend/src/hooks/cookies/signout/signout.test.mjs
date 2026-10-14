@@ -75,6 +75,7 @@ test("manual logout revokes and clears the session before opening the public fee
     "local:persist:lectum",
     "local:lectum.adminViewAs",
     "session:lectum.adminViewAs",
+    "session:lectum.replyTreeReturn.v1",
     "navigate:/",
   ]);
 });

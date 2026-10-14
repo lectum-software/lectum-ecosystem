@@ -19,6 +19,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
+import { useReplyTreeReturnSnapshot } from "@/hooks/use-reply-tree-return";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
   createLectumShareLinkTarget,
@@ -68,6 +69,7 @@ export const usePostDetailController = ({
   const isMobile = useIsPostDetailMobile();
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
+  const { snapshot: treeReturn } = useReplyTreeReturnSnapshot(currentUserId);
   const conversion = useProgressiveConversion();
   const [loadedReplyPages, setLoadedReplyPages] = useState(() => createReplyPageRange(1));
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
@@ -154,7 +156,9 @@ export const usePostDetailController = ({
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
   const resetReplyFocusHighlight = useReplyFocusHighlight(
     activeFocusReplyId,
-    isRepliesFetching || Boolean(focusLookupReplyId),
+    isRepliesFetching ||
+      Boolean(focusLookupReplyId) ||
+      Boolean(treeReturn && activeFocusReplyId === focusReplyIdFromUrl),
   );
   const resetReplyComposerFocusHighlight = useReplyFocusHighlight(composerFocusReplyId, false, {
     focusKey: composerFocusRequestKey,
@@ -167,14 +171,14 @@ export const usePostDetailController = ({
 
     const syncTimer = window.setTimeout(() => {
       resetReplyFocusHighlight();
-      setLoadedReplyPages(createReplyPageRange(1));
+      setLoadedReplyPages(createReplyPageRange(treeReturn?.pageCount ?? 1));
       setFocusLookupReplyId(focusReplyIdFromUrl);
       setActiveFocusReplyId(focusReplyIdFromUrl);
       setComposerFocusReplyId(null);
     }, 0);
 
     return () => window.clearTimeout(syncTimer);
-  }, [focusReplyIdFromUrl, postId, resetReplyFocusHighlight]);
+  }, [focusReplyIdFromUrl, postId, resetReplyFocusHighlight, treeReturn]);
 
   useEffect(() => {
     if (!focusLookupReplyId || !focusReplyLookupQuery.data?.page) return;
@@ -578,6 +582,8 @@ export const usePostDetailController = ({
     hasMoreReplies,
     inlineReplyFormRef,
     isInitialRepliesLoading,
+    isRepliesFetching,
+    highestLoadedReplyPage,
     isLoadingMoreReplies,
     isMobile,
     loadMoreRepliesRef,
