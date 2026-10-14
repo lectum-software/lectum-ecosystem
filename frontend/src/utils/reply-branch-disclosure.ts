@@ -9,12 +9,13 @@ export const getReplyBranchVisibleCount = (
   focusReplyId: string | null,
   hasFocusedDescendant: boolean,
   loadedRepliesCount: number,
+  suppressFocusExpansion = false,
 ) => {
   // A deep link opens its path, but subsequent user actions own that branch.
   const count =
     visibility?.focusReplyId === focusReplyId
       ? visibility.count
-      : hasFocusedDescendant
+      : hasFocusedDescendant && !suppressFocusExpansion
         ? loadedRepliesCount
         : 0;
   return Math.max(0, Math.min(count, loadedRepliesCount));

@@ -695,3 +695,5 @@ registerProfessionalReplyPresentationTests({
   CommunityPostCard,
   AppRouterContext,
 });
+const { registerReplyTreeCollapseTests } = await import("./reply-tree-collapse.test.mjs");
+registerReplyTreeCollapseTests({ renderRelations, AppRouterContext });

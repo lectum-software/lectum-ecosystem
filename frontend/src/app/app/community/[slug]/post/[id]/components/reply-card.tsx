@@ -1,8 +1,14 @@
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
-import { type MouseEventHandler, type RefObject, useEffect, useState } from "react";
+import {
+  type MouseEventHandler,
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useSaveReply } from "@/api/callers/posts";
 import type { PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
@@ -34,7 +40,6 @@ import {
   getNextReplyBranchVisibleCount,
   getReplyBranchVisibleCount,
   type ReplyBranchVisibility,
-  replyBranchActionLabel,
   resolveReplyBranchAction,
 } from "@/utils/reply-branch-disclosure";
 import { hasInlineReplySecondaryActions } from "@/utils/reply-tree-layout";
@@ -45,11 +50,13 @@ import {
   MAX_REPLY_TREE_DEPTH,
   type ReplyMediaPermission,
   type ReplyTargetMap,
+  restoreCollapsedReplyFocus,
   stopReplyTreeCollapsePropagation,
 } from "../modules/reply-support";
 import type { ReplyComposerForm } from "../use-form";
 
 import { AuthorAvatar } from "./post-content";
+import { ReplyBranchFooter } from "./reply-branch-footer";
 import { ReplyComposer } from "./reply-composer";
 import { ReplyOverflowMenu } from "./reply-overflow-menu";
 
@@ -142,6 +149,7 @@ export const ReplyCard = ({
   replyApiError,
   replyComposerTargetId,
   replyDisabled,
+  suppressFocusExpansion = false,
   threadHrefBase,
   votePending,
 }: {
@@ -174,6 +182,7 @@ export const ReplyCard = ({
   replyApiError?: string | null;
   replyComposerTargetId?: string | null;
   replyDisabled?: boolean;
+  suppressFocusExpansion?: boolean;
   threadHrefBase?: string;
   votePending?: boolean;
 }) => {
@@ -194,6 +203,15 @@ export const ReplyCard = ({
   const [contentExpanded, setContentExpanded] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [branchVisibility, setBranchVisibility] = useState<ReplyBranchVisibility | null>(null);
+  const [collapsedFocusId, setCollapsedFocusId] = useState<string | null>();
+  const restoreRootFocus = useRef(false);
+  const suppressDescendantFocus =
+    suppressFocusExpansion || collapsedFocusId === (focusReplyId ?? null);
+  useLayoutEffect(() => {
+    if (!restoreRootFocus.current || branchVisibility?.count !== 0) return;
+    restoreRootFocus.current = false;
+    restoreCollapsedReplyFocus(reply.id);
+  }, [branchVisibility, reply.id]);
   const visualMaxDepth =
     maxInlineDepth < 0 ? MAX_REPLY_TREE_DEPTH : Math.min(maxInlineDepth, MAX_REPLY_TREE_DEPTH);
   const totalRepliesCount = reply.replies_count ?? reply.replies.length;
@@ -207,6 +225,7 @@ export const ReplyCard = ({
     focusReplyId ?? null,
     hasFocusedDescendant,
     loadedChildren.length,
+    suppressFocusExpansion,
   );
   const visibleChildren = loadedChildren.slice(0, effectiveVisibleChildCount);
   const branchAction = resolveReplyBranchAction(effectiveVisibleChildCount, totalRepliesCount);
@@ -215,25 +234,26 @@ export const ReplyCard = ({
   const replyRelativeUrl = createFocusedReplyRelativeUrl(threadHrefBase, reply.id);
   const hasTreeContinuation = visibleChildren.length > 0;
   const showBranchAction = Boolean(
-    branchAction && (branchAction.kind === "collapse" || canRevealLoadedChildren || threadHref),
+    branchAction && branchAction.kind !== "collapse" && (canRevealLoadedChildren || threadHref),
   );
-  const hasBranchConnector = hasTreeContinuation || showBranchAction;
+  const canCollapseTree = depth === 0 && hasTreeContinuation;
+  const hasBranchFooter = showBranchAction || canCollapseTree;
+  const hasBranchConnector = hasTreeContinuation || hasBranchFooter;
   const avatarSize = depth > 0 ? "xs" : isProfessional ? "reply" : "sm";
   const hasReplyMedia = Boolean(reply.media_url);
   const isNestedReply = depth > 0;
 
-  const branchActionLabel = replyBranchActionLabel(branchAction, reply.descendants_count);
-
   const updateVisibleBranch = () => {
-    if (!branchAction) return;
-
     setBranchVisibility({
       focusReplyId: focusReplyId ?? null,
-      count:
-        branchAction.kind === "collapse"
-          ? 0
-          : getNextReplyBranchVisibleCount(effectiveVisibleChildCount, loadedChildren.length),
+      count: getNextReplyBranchVisibleCount(effectiveVisibleChildCount, loadedChildren.length),
     });
+  };
+  const collapseTree = () => {
+    if (!canCollapseTree) return;
+    restoreRootFocus.current = true;
+    setCollapsedFocusId(focusReplyId ?? null);
+    setBranchVisibility({ focusReplyId: focusReplyId ?? null, count: 0 });
   };
 
   const toggleSaveReply: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -318,7 +338,7 @@ export const ReplyCard = ({
           className={cn(
             "pointer-events-none absolute z-0",
             // One border draws both the stem and its terminal curve without a seam.
-            showBranchAction
+            hasBranchFooter
               ? "bottom-[11.25px] w-[9px] -translate-x-[0.75px] rounded-bl-[8px] border-b-[1.5px] border-l-[1.5px] border-border-strong"
               : "bottom-0 -translate-x-[0.75px] border-l-[1.5px] border-border-strong",
             isNestedReply ? "top-8 left-3" : "top-10 left-4 sm:left-[1.125rem]",
@@ -336,6 +356,7 @@ export const ReplyCard = ({
           isComposerReplyTarget ? "bg-primary-soft/70 ring-1 ring-primary/20" : undefined,
         )}
         id={`reply-focus-${reply.id}`}
+        tabIndex={depth === 0 ? -1 : undefined}
       >
         <div className="relative flex justify-center">
           <AuthorAvatar
@@ -572,6 +593,7 @@ export const ReplyCard = ({
                 replyApiError={replyApiError}
                 replyComposerTargetId={replyComposerTargetId}
                 replyDisabled={replyDisabled}
+                suppressFocusExpansion={suppressDescendantFocus}
                 threadHrefBase={threadHrefBase}
                 votePending={votePending}
               />
@@ -580,48 +602,18 @@ export const ReplyCard = ({
         </div>
       ) : null}
 
-      {showBranchAction && branchAction && branchActionLabel ? (
-        <div
-          className={cn(
-            "relative z-10 mt-2 flex h-5 items-center",
-            isNestedReply ? "ml-3 pl-[10px]" : "ml-4 pl-[10px] sm:ml-[18px]",
-          )}
-          data-comment-collapse-ignore="true"
-        >
-          {branchAction.kind !== "collapse" && !canRevealLoadedChildren && threadHref ? (
-            <Link
-              aria-label={`${branchActionLabel} desta conversa`}
-              className="inline-flex w-fit items-center gap-0.5 rounded-full px-0.5 py-0.5 text-[10px] font-bold leading-none text-muted no-underline transition hover:bg-surface-muted hover:text-foreground hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-              href={threadHref}
-              onClick={stopReplyTreeCollapsePropagation}
-            >
-              <span>{branchActionLabel}</span>
-              <ChevronDown className="h-2.5 w-2.5" aria-hidden="true" />
-            </Link>
-          ) : (
-            <button
-              aria-controls={loadedChildren.length > 0 ? `reply-children-${reply.id}` : undefined}
-              aria-expanded={effectiveVisibleChildCount > 0}
-              aria-label={`${branchActionLabel} desta conversa`}
-              className={cn(
-                "inline-flex w-fit items-center gap-0.5 rounded-full px-0.5 py-0.5 !text-[10px] !font-bold !leading-none text-muted transition hover:bg-surface-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98]",
-              )}
-              onClick={(event) => {
-                event.stopPropagation();
-                updateVisibleBranch();
-              }}
-              type="button"
-            >
-              <span>{branchActionLabel}</span>
-              {branchAction.kind === "collapse" ? (
-                <ChevronUp className="h-2.5 w-2.5" aria-hidden="true" />
-              ) : (
-                <ChevronDown className="h-2.5 w-2.5" aria-hidden="true" />
-              )}
-            </button>
-          )}
-        </div>
-      ) : null}
+      <ReplyBranchFooter
+        action={branchAction}
+        canCollapseTree={canCollapseTree}
+        canRevealLoadedChildren={canRevealLoadedChildren}
+        descendantsCount={reply.descendants_count}
+        depth={depth}
+        onCollapse={collapseTree}
+        onExpand={updateVisibleBranch}
+        replyId={reply.id}
+        threadHref={threadHref}
+        visibleCount={effectiveVisibleChildCount}
+      />
       {lectumDownloadDialog}
     </article>
   );
