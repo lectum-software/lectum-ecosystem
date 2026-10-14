@@ -680,3 +680,4 @@ Formato recomendado:
 - [ADR-0616 — Preservar foco do composer iOS](0616-foco-composer-ios.md)
 - [ADR-0617 — Pergunta de video e acoes profissionais](0617-pergunta-video-e-acoes-profissionais.md)
 - [ADR-0618 — Divisao entre pergunta e resposta no perfil](0618-divisao-pergunta-resposta-perfil.md)
+- [ADR-0619 — Recolhimento unico por arvore](0619-recolhimento-unico-por-arvore.md)

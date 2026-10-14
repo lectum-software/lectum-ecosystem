@@ -16,7 +16,13 @@ O usuario pediu expressamente para nao alterar o botao de WhatsApp.
 Usar o contexto existente profilePublicationMode para omitir somente o Favoritar
 da autoria dos cards do perfil. Preservar a acao no topo e em outros contextos.
 Pergunta permanece branca. Autoria, texto, midia e acoes da resposta ficam numa
-faixa bg-primary-soft/50, sem nova borda, sombra ou arredondamento interno.
+bloco separado com a mesma moldura do ProfessionalReplyPreview do feed:
+rounded-[18px], border-border, bg-surface-muted e p-4, com variantes dark existentes.
+Compartilhar a mesma classe replySurfaceClass entre o preview e o perfil para
+evitar divergencia de acabamento, sem mudar a variante compacta do feed.
+Remover as margens negativas para preservar a margem do card externo nas laterais
+e abaixo da resposta. Este refinamento solicitado em 13/10/2026 apos a publicacao
+da 0.1.662 substitui a faixa azul de largura total inicialmente adotada.
 Nao acrescentar etiquetas nem duplicar a identidade do profissional.
 Aplicar a separacao em texto, video e imagem; Salvos permanece sem alteracao.
 Nao tocar nos componentes, estilos, handlers ou posicao do WhatsApp.

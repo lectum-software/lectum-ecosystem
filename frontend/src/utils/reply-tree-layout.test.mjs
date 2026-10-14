@@ -128,7 +128,14 @@ test("width boundaries cannot be bypassed by a focused descendant", () => {
   assert.match(card, /canRenderChildren = depth < visualMaxDepth;/);
   assert.doesNotMatch(card, /:flex-wrap/);
   assert.match(card, /maxInlineDepth=\{maxInlineDepth\}/);
-  assert.match(card, /!canRevealLoadedChildren && threadHref/);
+  const footer = readFileSync(
+    new URL(
+      "../app/app/community/[slug]/post/[id]/components/reply-branch-footer.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(footer, /!canRevealLoadedChildren && threadHref/);
   const list = readFileSync(
     new URL("../app/app/community/[slug]/post/[id]/components/replies-list.tsx", import.meta.url),
     "utf8",

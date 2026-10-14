@@ -167,6 +167,13 @@ const scrollReplyElementIntoFocus = (
   target.scrollIntoView({ behavior, block: "center", inline: "nearest" });
 };
 
+export const restoreCollapsedReplyFocus = (replyId: string) => {
+  const target = document.getElementById(`reply-focus-${replyId}`);
+  if (!target) return;
+  target.focus({ preventScroll: true });
+  scrollReplyElementIntoFocus(target, "composer-start", "instant");
+};
+
 export const useReplyFocusHighlight = (
   replyId?: string | null,
   pending = false,

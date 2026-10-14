@@ -13,7 +13,11 @@ Builder indisponivel, usando captura fornecida. ADR-0618.
 
 Remover Favoritar repetido nos cards de publicacoes do proprio perfil profissional,
 mantendo a acao no topo do perfil e nos feeds. Dividir pergunta branca e resposta com
-faixa azul muito suave, sem outro card/borda/sombra, em texto, video e imagem.
+bloco suave no mesmo layout da resposta profissional do feed, em texto, video e imagem.
+Refinamento solicitado apos a versao 0.1.662: cantos de 18px, borda e cores do
+feed, sem margens negativas. O padding do card externo preserva margens laterais
+e inferiores. Referencias: WhatsApp Image 2026-10-13 at 20.59.41.jpeg (feed)
+e WhatsApp Image 2026-10-13 at 20.59.23.jpeg (perfil), fornecidas pelo usuario.
 Corrigir os menus de resposta com portal opaco acima da arvore e do composer,
 posicionamento dentro do viewport visivel e abertura para cima quando necessario.
 Manter controles em uma linha e antecipar a continuacao por largura, aplicando
@@ -28,7 +32,8 @@ Nao alterar posicao, apresentacao ou comportamento do WhatsApp por pedido expres
 
 - [x] Cards de posts e respostas no perfil nao repetem Favoritar.
 - [x] Favoritar permanece nos cards fora do perfil e no cabecalho do perfil.
-- [x] Pergunta separada da resposta por faixa azul suave em todas as midias.
+- [x] Pergunta separada da resposta por bloco suave em todas as midias.
+- [x] Resposta do perfil segue borda, cantos, cores e espacamento interno do feed, com margens laterais e inferiores.
 - [x] Titulo, descricao e expansao do texto preservados, inclusive descricao vazia.
 - [x] Salvos mantem apresentacao anterior; faixa apenas nas respostas do perfil.
 - [x] WhatsApp e video sem alteracao.
@@ -52,6 +57,12 @@ Sem API, migration, env, dependencia ou alteracao de midia.
 Rollback somente de codigo frontend. Commit local; sem push/deploy automatico.
 Controle do navegador falhou ao iniciar o processo Node; QA visual pendente.
 
+Refinamento pos-publicacao da 0.1.662: alteracao restrita a moldura da resposta
+no perfil. Sem etiqueta nova, mudanca em WhatsApp, controles ou navegacao.
+Teste de renderizacao compara diretamente as classes do perfil com o componente
+real ProfessionalReplyPreview do feed para texto/video/imagem e impede margens
+negativas. Posts sem resposta nao recebem a moldura.
+
 Validacao em 13/10/2026, versao local 0.1.662:
 - pnpm --dir frontend check aprovado, incluindo regressao de camada preservada.
 - pnpm --dir frontend build aprovado com LECTUM_LOW_DISK_MODE=1.
@@ -62,3 +73,13 @@ Validacao em 13/10/2026, versao local 0.1.662:
 - Browser automatico indisponivel (falha do helper sandbox/Node); nao afirmar
   validacao visual em iPhone, desktop, Safari ou PWA. Task permanece In Progress
   exclusivamente pela conferencia visual autenticada.
+
+Validacao do refinamento, versao local 0.1.663:
+- 35 testes focados de componentes aprovados, incluindo igualdade da moldura
+  com o feed em texto, video e imagem, isolamento de posts e WhatsApp preservado.
+- Check completo frontend e build aprovados; logs em .tmp/release-0663-frontend-check-final.log
+  e .tmp/release-0663-frontend-build.log.
+- Guards de versao, tamanho de fontes, ciclos e git diff --check aprovados.
+- Frontend local reiniciado: /version 0.1.663 e /auth/login HTTP 200.
+- Navegador automatico continua indisponivel por falha do helper; QA visual pendente.
+- Ajuste somente local. Sem push/deploy; producao permanece na 0.1.662.

@@ -50,10 +50,16 @@ test("link para resposta abre ancestrais sem impedir ocultar e reabrir", () => {
   assert.equal(getReplyBranchVisibleCount({ focusReplyId: null, count: 3 }, null, false, 12), 3);
 });
 
-test("cada ancestral focado possui controle independente do caminho aberto", () => {
+test("recolher uma arvore nao reabre descendentes pelo mesmo foco nem afeta outra arvore", () => {
   const root = { focusReplyId: "target", count: 0 };
   assert.equal(getReplyBranchVisibleCount(root, "target", true, 8), 0);
   assert.equal(getReplyBranchVisibleCount(null, "target", true, 5), 5);
+  assert.equal(getReplyBranchVisibleCount(null, "target", true, 5, true), 0);
+  assert.equal(
+    getReplyBranchVisibleCount({ focusReplyId: "target", count: 3 }, "target", true, 5, true),
+    3,
+  );
+  assert.equal(getReplyBranchVisibleCount(null, "new-target", true, 5, false), 5);
   const source = readFileSync(
     new URL("../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
     "utf8",
@@ -61,6 +67,11 @@ test("cada ancestral focado possui controle independente do caminho aberto", () 
   assert.match(source, /getReplyBranchVisibleCount\(/);
   assert.match(source, /const branchAction = resolveReplyBranchAction\(/);
   assert.match(source, /setBranchVisibility\(\{/);
+  assert.match(source, /canCollapseTree = depth === 0 && hasTreeContinuation/);
+  assert.match(source, /suppressFocusExpansion=\{suppressDescendantFocus\}/);
+  assert.match(source, /collapsedFocusId === \(focusReplyId \?\? null\)/);
+  assert.match(source, /restoreCollapsedReplyFocus\(reply.id\)/);
+  assert.match(source, /tabIndex=\{depth === 0 \? -1 : undefined\}/);
   assert.doesNotMatch(source, /branchAction = hasFocusedDescendant/);
 });
 
@@ -70,11 +81,18 @@ test("controle do ramo permanece compacto, bold, cinza e termina na curva", () =
     "utf8",
   );
 
-  assert.match(source, /hasBranchConnector = hasTreeContinuation \|\| showBranchAction/);
+  const footer = readFileSync(
+    new URL(
+      "../app/app/community/[slug]/post/[id]/components/reply-branch-footer.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(source, /hasBranchConnector = hasTreeContinuation \|\| hasBranchFooter/);
   assert.match(source, /rounded-bl-\[8px\] border-b-\[1\.5px\] border-l-\[1\.5px\]/);
-  assert.match(source, /!text-\[10px\] !font-bold !leading-none text-muted/);
-  assert.match(source, /text-\[10px\] font-bold leading-none text-muted/);
-  assert.match(source, /isNestedReply \? "ml-3 pl-\[10px\]"/);
-  assert.match(source, /Chevron(?:Down|Up) className="h-2\.5 w-2\.5"/);
+  assert.match(footer, /!text-\[10px\] !font-bold !leading-none text-muted/);
+  assert.match(footer, /text-\[10px\] font-bold leading-none text-muted/);
+  assert.match(footer, /depth > 0 \? "ml-3 pl-\[10px\]"/);
+  assert.match(footer, /Chevron(?:Down|Up) className="h-2\.5 w-2\.5"/);
   assert.match(source, /heartClassName=\{isNestedReply \? "h-2\.5 w-2\.5" : "h-3 w-3"\}/);
 });
