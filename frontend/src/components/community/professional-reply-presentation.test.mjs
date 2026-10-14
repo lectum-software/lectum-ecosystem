@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createElement } from "react";
 import { ReplyVoteBar } from "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx";
+import { ProfessionalReplyPreview } from "./community-post-card-reply-preview.tsx";
 
 // Reuse the real provider harness and Next bridges from community-post-controls.test.mjs.
 export const registerProfessionalReplyPresentationTests = ({
@@ -44,6 +45,15 @@ export const registerProfessionalReplyPresentationTests = ({
           }),
         ),
       });
+    const feedPreview = renderRelations({
+      children: createElement(ProfessionalReplyPreview, {
+        community: post.community,
+        reply,
+        showWhatsappCta: false,
+      }),
+    });
+    const feedAnswerClass = feedPreview.match(/^<div class="([^"]+)"/)?.[1];
+    assert.ok(feedAnswerClass);
     for (const media_type of [null, "video", "image"]) {
       const html = render({
         profilePublicationMode: true,
@@ -59,7 +69,15 @@ export const registerProfessionalReplyPresentationTests = ({
         },
       });
       assert.match(html, /data-profile-reply-question/);
-      assert.match(html, /bg-primary-soft\/50 p-4/);
+      const profileAnswerClass = html.match(
+        /<div class="([^"]+)" data-profile-reply-answer="true"/,
+      )?.[1];
+      assert.equal(profileAnswerClass, feedAnswerClass);
+      assert.match(
+        profileAnswerClass,
+        /rounded-\[18px\] border border-border bg-surface-muted p-4/,
+      );
+      assert.doesNotMatch(profileAnswerClass, /(?:^|\s)-m[xyblrt]?-/);
       assert.match(html, /data-profile-reply-answer="true"/);
       assert.doesNotMatch(html, /favorite-toggle/);
       assert.ok(html.indexOf("Question") < html.indexOf(author.name));
@@ -75,7 +93,10 @@ export const registerProfessionalReplyPresentationTests = ({
         },
         ids,
       );
-      assert.doesNotMatch(profilePost, /favorite-toggle|data-profile-reply-question/);
+      assert.doesNotMatch(
+        profilePost,
+        /favorite-toggle|data-profile-reply-question|data-profile-reply-answer/,
+      );
       const feedPost = render({ post: { ...post, contribution_type: "post" } }, ids);
       assert.match(feedPost, /favorite-toggle/);
       assert.match(feedPost, new RegExp(`aria-pressed="${Boolean(ids.length)}"`));

@@ -40,7 +40,7 @@ import {
   createLectumShareVideoDownloadTarget,
 } from "@/utils/lectum-share-target";
 import { AuthorAvatar } from "./community-post-card-author";
-import { PostProfessionalReplies } from "./community-post-card-reply-preview";
+import { PostProfessionalReplies, replySurfaceClass } from "./community-post-card-reply-preview";
 import {
   type CommunityPostCardProps,
   createPostCardNavigation,
@@ -458,7 +458,7 @@ export const CommunityPostCard = ({
         <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
       ) : null}
       <div
-        className={primaryReply ? "-mx-4 -mb-4 bg-primary-soft/50 p-4" : "contents"}
+        className={primaryReply ? replySurfaceClass : "contents"}
         data-profile-reply-answer={primaryReply ? true : undefined}
       >
         {showAuthorHeader ? (

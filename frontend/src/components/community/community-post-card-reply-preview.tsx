@@ -24,6 +24,9 @@ import {
 import { AuthorAvatar } from "./community-post-card-author";
 import { MoreProfessionalReplies } from "./more-professional-replies";
 
+export const replySurfaceClass =
+  "rounded-[18px] border border-border bg-surface-muted p-4 dark:border-primary/20 dark:bg-primary/5";
+
 export const ProfessionalReplyPreview = ({
   community,
   postHref,
@@ -171,10 +174,7 @@ export const ProfessionalReplyPreview = ({
   }
 
   return (
-    <div
-      className="rounded-[18px] border border-border bg-surface-muted p-4 dark:border-primary/20 dark:bg-primary/5"
-      ref={setReplyAttentionElement}
-    >
+    <div className={replySurfaceClass} ref={setReplyAttentionElement}>
       {!profilePublicationMode ? (
         <p className="mb-3 text-[11px] font-medium tracking-normal text-muted">
           Resposta profissional
