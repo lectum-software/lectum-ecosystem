@@ -52,6 +52,25 @@ export const registerReplyTreeCollapseTests = ({ renderRelations, AppRouterConte
     assert.ok(html.indexOf('id="reply-target"') < html.indexOf(">Ocultar respostas<"));
     assert.doesNotMatch(html, /id="reply-closed"/);
   });
+  test("return snapshot opens the exact path without depending on a focus URL", () => {
+    const restoredBranches = {
+      root: { count: 1, contentExpanded: false },
+      child: { count: 1, contentExpanded: false },
+      target: { count: 0, contentExpanded: false },
+    };
+    const html = render(card(tree, { restoredBranches }));
+    assert.match(html, /id="reply-target"/);
+    assert.doesNotMatch(html, /id="reply-closed"/);
+    assert.equal((html.match(/>Ocultar respostas</g) ?? []).length, 1);
+    assert.match(html, /data-reply-branch-id="child" data-reply-visible-count="1"/);
+    const collapsed = render(
+      card(tree, {
+        focusReplyId: "target",
+        restoredBranches: { root: { count: 0, contentExpanded: false } },
+      }),
+    );
+    assert.doesNotMatch(collapsed, /id="reply-child"|>Ocultar respostas</);
+  });
   test("another root stays collapsed and continuation treats its displayed parent as the root", () => {
     const html = render(
       createElement(

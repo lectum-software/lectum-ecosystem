@@ -21,6 +21,8 @@ test("save state, pending state and share remain accessible in the menu", () => 
   assert.match(html, /aria-checked="true"/);
   assert.match(html, /disabled=""/);
   assert.match(html, /Remover dos salvos/);
+  assert.match(html, /bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary/);
+  assert.match(html, /fill="currentColor"/);
   assert.match(html, />Compartilhar</);
   assert.doesNotMatch(html, /Compartilhar comentário|Salvar comentário/);
 });
@@ -35,6 +37,9 @@ test("unsaved comments use the short Salvar label", () => {
     }),
   );
   assert.match(html, />Salvar</);
+  assert.doesNotMatch(html, /text-primary|bg-primary-soft/);
+  assert.match(html, /aria-checked="false"/);
+  assert.match(html, /fill="none"/);
 });
 
 test("menu commands stop propagation, close and invoke the original handlers", () => {

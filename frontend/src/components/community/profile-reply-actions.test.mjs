@@ -282,7 +282,7 @@ test("read-only vote controls also respect the hidden upvote label", () => {
   assert.ok(source.includes('{showUpvoteText ? "Útil" : null}'));
 });
 
-test("saved replies share the profile community identity and professional question layouts", () => {
+test("saved replies preserve identity but replace question previews with the origin link", () => {
   const source = readFileSync(
     new URL("../../app/app/posts/saved/components/saved-reply-card.tsx", import.meta.url),
     "utf8",
@@ -299,14 +299,7 @@ test("saved replies share the profile community identity and professional questi
   assert.ok(
     authorHeader.indexOf("FeedFavoriteButton") < authorHeader.indexOf("OriginalPostCommunityLink"),
   );
-  assert.match(
-    source,
-    /isProfessionalReply && !showProfessionalVideoQuestion[\s\S]*?<ProfileReplyQuestion[\s\S]*?content=\{item\.post\.content\}[\s\S]*?title=\{item\.post\.title\}/,
-  );
-  assert.match(
-    source,
-    /showProfessionalVideoQuestion \?[\s\S]*?<ProfileReplyVideoQuestion title=\{item\.post\.title\}/,
-  );
-  assert.match(source, /videoOverlay=\{videoOverlay\}/);
+  assert.match(source, /<OriginLink item=\{item\}/);
+  assert.doesNotMatch(source, /ProfileReplyQuestion|ProfileReplyVideoQuestion|videoOverlay=/);
   assert.doesNotMatch(source, /Respondido em/);
 });

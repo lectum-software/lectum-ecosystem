@@ -8,7 +8,7 @@ import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 import { isConfirmedUserSessionRejection } from "@/utils/session-rejection";
 
 const AUTH_STORAGE_KEYS = ["persist:lectum", "lectum.adminViewAs"];
-const AUTH_SESSION_STORAGE_KEYS = ["lectum.adminViewAs"];
+const AUTH_SESSION_STORAGE_KEYS = ["lectum.adminViewAs", "lectum.replyTreeReturn.v1"];
 
 export const revokeSession = async () => {
   const bearerToken = getBearerToken();

@@ -676,6 +676,8 @@ ou cortesia manual.
 | 255 | [TASK-255 - Pergunta de video e acoes profissionais](TASK-255-pergunta-video-e-acoes-profissionais.md) | In Progress | 254 |
 | 256 | [TASK-256 - Divisao entre pergunta e resposta no perfil](TASK-256-divisao-pergunta-resposta-perfil.md) | In Progress | 255 |
 | 257 | [TASK-257 - Recolhimento unico por arvore](TASK-257-recolhimento-unico-por-arvore.md) | In Progress | 256 |
+| 258 | [TASK-258 - Retorno a arvore apos continuacao](TASK-258-retorno-arvore-continuacao.md) | In Progress | 257 |
+| 259 | [TASK-259 - Origem e controles dos comentarios salvos](TASK-259-comentarios-salvos-origem.md) | In Progress | 258 |
 
 ## Ordem operacional recomendada sem bloqueios
 

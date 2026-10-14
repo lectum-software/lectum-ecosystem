@@ -214,6 +214,8 @@ export const PostDetailLogic = ({
     hasMoreReplies,
     inlineReplyFormRef,
     isInitialRepliesLoading,
+    isRepliesFetching,
+    highestLoadedReplyPage,
     isLoadingMoreReplies,
     isMobile,
     loadMoreRepliesRef,
@@ -402,6 +404,8 @@ export const PostDetailLogic = ({
                 focusReplyId={activeFocusReplyId}
                 inlineReplyTargets={visibleInlineReplyTargets}
                 loading={isInitialRepliesLoading}
+                loadedPageCount={highestLoadedReplyPage}
+                restorePending={isRepliesFetching}
                 mediaPermission={mediaPermission}
                 onCancelInlineReplyTarget={closeDesktopReplyTarget}
                 onInlineReplyDraftChange={setInlineReplyDraftState}

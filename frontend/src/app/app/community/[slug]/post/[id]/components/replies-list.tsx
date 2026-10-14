@@ -8,6 +8,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useReplyTreeLayout } from "@/hooks/use-reply-tree-layout";
+import { useReplyTreeReturn, useReplyTreeReturnSnapshot } from "@/hooks/use-reply-tree-return";
 import {
   isVerifiedProfessionalReply,
   MAX_REPLY_TREE_DEPTH,
@@ -26,6 +27,8 @@ export const RepliesList = ({
   errorMessage,
   inlineReplyTargets,
   loading,
+  loadedPageCount = 1,
+  restorePending = false,
   maxInlineDepth = MAX_REPLY_TREE_DEPTH,
   mediaPermission,
   onCancelInlineReplyTarget,
@@ -53,6 +56,8 @@ export const RepliesList = ({
   errorMessage?: string | null;
   inlineReplyTargets: ReplyTargetMap;
   loading?: boolean;
+  loadedPageCount?: number;
+  restorePending?: boolean;
   maxInlineDepth?: number;
   mediaPermission: ReplyMediaPermission;
   onCancelInlineReplyTarget: (replyId: string) => void;
@@ -79,6 +84,7 @@ export const RepliesList = ({
   threadHrefBase?: string;
   votePending?: boolean;
 }) => {
+  const { scope, snapshot } = useReplyTreeReturnSnapshot(currentUserId);
   const orderedReplies = useMemo(() => orderRepliesForProfessionalPriority(replies), [replies]);
   const { ref: listRef, depth: responsiveDepth } = useReplyTreeLayout(
     replies,
@@ -86,9 +92,22 @@ export const RepliesList = ({
     focusReplyId,
     threadHrefBase,
   );
+  const rememberContinuation = useReplyTreeReturn({
+    listRef,
+    pageCount: loadedPageCount,
+    ready: !loading && !restorePending && !errorMessage,
+    snapshot,
+    scope,
+    threadHrefBase,
+  });
 
   return (
-    <section className="grid gap-4" id="discussao" ref={listRef}>
+    <section
+      className="grid gap-4"
+      id="discussao"
+      ref={listRef}
+      onClickCapture={rememberContinuation}
+    >
       {showSectionTitle ? (
         <div className="px-0.5">
           <h2 className="text-sm font-black tracking-[0.08em] text-muted uppercase">Discussão</h2>
@@ -116,7 +135,7 @@ export const RepliesList = ({
       ) : null}
 
       {orderedReplies.length > 0 ? (
-        <div className="grid gap-3">
+        <div className="grid gap-3" key={`${scope}:${snapshot?.createdAt ?? "fresh"}`}>
           {orderedReplies.map((reply) => {
             const professionalTree = isVerifiedProfessionalReply(reply);
 
@@ -148,6 +167,7 @@ export const RepliesList = ({
                   replyApiError={replyApiError}
                   replyComposerTargetId={replyComposerTargetId}
                   replyDisabled={replyDisabled}
+                  restoredBranches={snapshot?.branches}
                   threadHrefBase={threadHrefBase}
                   votePending={votePending}
                 />

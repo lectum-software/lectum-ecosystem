@@ -23,8 +23,7 @@ import {
 import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
-import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
-import { ProfileReplyVideoQuestion } from "@/components/community/profile-reply-video-question";
+import { OriginLink } from "@/components/community/reply-origin-link";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
@@ -163,7 +162,6 @@ export const SavedReplyMedia = ({
   replyId,
   thumbnailUrl,
   title,
-  videoOverlay,
 }: {
   footer?: ReactNode;
   mediaType: string | null;
@@ -172,7 +170,6 @@ export const SavedReplyMedia = ({
   replyId: string;
   thumbnailUrl?: string | null;
   title: string;
-  videoOverlay?: ReactNode;
 }) => {
   if (!mediaUrl) return null;
 
@@ -189,7 +186,6 @@ export const SavedReplyMedia = ({
       overlayAction={overlayAction}
       thumbnailUrl={thumbnailUrl}
       variant="reply"
-      videoOverlay={videoOverlay}
     />
   );
 };
@@ -221,9 +217,6 @@ export const SavedReplyCard = ({
   if (!reply) return null;
 
   const isProfessionalReply = reply.author.role === "psicologo";
-  const showProfessionalVideoQuestion = Boolean(
-    isProfessionalReply && reply.media_type === "video" && reply.media_url,
-  );
   const showReplyContent = Boolean(reply.content.trim());
 
   const handleVote = (value: 1 | -1) => {
@@ -278,7 +271,7 @@ export const SavedReplyCard = ({
     onOpen: openLectumDownloadDialog,
     target: replySocialTarget,
   });
-  const hasProfessionalWhatsapp = Boolean(reply.author.whatsapp_url);
+  const hasProfessionalWhatsapp = isProfessionalReply && Boolean(reply.author.whatsapp_url);
   const professionalWhatsappCta = hasProfessionalWhatsapp ? (
     <CommunityWhatsAppCta
       attached={Boolean(reply.media_url)}
@@ -323,9 +316,9 @@ export const SavedReplyCard = ({
       onKeyDown={handleCardKeyDown}
       tabIndex={-1}
     >
-      {isProfessionalReply && !showProfessionalVideoQuestion ? (
-        <ProfileReplyQuestion content={item.post.content} title={item.post.title} />
-      ) : null}
+      <div className="mb-4">
+        <OriginLink item={item} />
+      </div>
 
       <div className={cn(isProfessionalReply ? (showReplyContent ? "mb-2" : "mb-0") : "mb-3")}>
         <SavedReplyAuthorHeader
@@ -341,27 +334,23 @@ export const SavedReplyCard = ({
         </div>
       ) : null}
 
-      <div className={cn("grid gap-4", isProfessionalReply ? "mt-3" : "mt-4")}>
-        <SavedReplyMedia
-          footer={reply.media_url ? professionalWhatsappCta : undefined}
-          mediaType={reply.media_type}
-          mediaUrl={reply.media_url}
-          overlayAction={replyOverlayAction}
-          replyId={reply.id}
-          thumbnailUrl={reply.thumbnail_url}
-          title={reply.title ?? "Mídia da resposta salva"}
-          videoOverlay={
-            showProfessionalVideoQuestion ? (
-              <ProfileReplyVideoQuestion title={item.post.title} />
-            ) : undefined
-          }
-        />
-
-        {reply.media_url ? null : professionalWhatsappCta}
-      </div>
+      {reply.media_url ? (
+        <div className={cn("grid gap-4", isProfessionalReply ? "mt-3" : "mt-4")}>
+          <SavedReplyMedia
+            footer={professionalWhatsappCta}
+            mediaType={reply.media_type}
+            mediaUrl={reply.media_url}
+            overlayAction={replyOverlayAction}
+            replyId={reply.id}
+            thumbnailUrl={reply.thumbnail_url}
+            title={reply.title ?? "Mídia da resposta salva"}
+          />
+        </div>
+      ) : null}
 
       <CommunityActionBar
-        className="mt-4 max-[380px]:flex-wrap max-[380px]:gap-y-1.5 max-[380px]:overflow-visible max-[380px]:[&>div:first-child]:flex-none"
+        beforeSaveSlot={reply.media_url ? undefined : professionalWhatsappCta}
+        className="mt-4 max-[380px]:[&>div:first-child]:flex-none"
         comments={{
           count: reply.replies_received_count,
           href: replyLink,

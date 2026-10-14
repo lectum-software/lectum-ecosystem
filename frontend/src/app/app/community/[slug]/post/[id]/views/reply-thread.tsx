@@ -21,6 +21,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
+import { useReplyTreeReturnSnapshot } from "@/hooks/use-reply-tree-return";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -73,6 +74,7 @@ export const PostReplyThreadLogic = ({
   const isMobile = useIsPostDetailMobile();
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
+  const { snapshot: treeReturn } = useReplyTreeReturnSnapshot(currentUserId);
   const conversion = useProgressiveConversion();
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
   const [composerFocusReplyId, setComposerFocusReplyId] = useState<string | null>(null);
@@ -125,7 +127,7 @@ export const PostReplyThreadLogic = ({
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
   const resetReplyFocusHighlight = useReplyFocusHighlight(
     activeFocusReplyId,
-    threadQuery.isFetching,
+    threadQuery.isFetching || Boolean(treeReturn && activeFocusReplyId === focusReplyIdFromUrl),
   );
 
   useEffect(() => {
@@ -439,6 +441,8 @@ export const PostReplyThreadLogic = ({
             ) : null}
 
             <RepliesList
+              key={replyId}
+              restorePending={threadQuery.isFetching}
               activeInlineReplyFormRef={inlineReplyFormRef}
               currentUserId={currentUserId}
               deleteReplyPending={deleteReplyMutation.isPending}

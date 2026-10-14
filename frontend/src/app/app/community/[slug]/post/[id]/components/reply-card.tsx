@@ -43,6 +43,7 @@ import {
   resolveReplyBranchAction,
 } from "@/utils/reply-branch-disclosure";
 import { hasInlineReplySecondaryActions } from "@/utils/reply-tree-layout";
+import type { ReplyBranchSnapshot } from "@/utils/reply-tree-return-memory";
 import {
   createFocusedReplyRelativeUrl,
   findReplyInTree,
@@ -149,6 +150,7 @@ export const ReplyCard = ({
   replyApiError,
   replyComposerTargetId,
   replyDisabled,
+  restoredBranches,
   suppressFocusExpansion = false,
   threadHrefBase,
   votePending,
@@ -182,6 +184,7 @@ export const ReplyCard = ({
   replyApiError?: string | null;
   replyComposerTargetId?: string | null;
   replyDisabled?: boolean;
+  restoredBranches?: Record<string, ReplyBranchSnapshot>;
   suppressFocusExpansion?: boolean;
   threadHrefBase?: string;
   votePending?: boolean;
@@ -200,9 +203,14 @@ export const ReplyCard = ({
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
   const isComposerReplyTarget = isReplyComposerOpen || replyComposerTargetId === reply.id;
-  const [contentExpanded, setContentExpanded] = useState(false);
+  const [contentExpanded, setContentExpanded] = useState(
+    restoredBranches?.[reply.id]?.contentExpanded ?? false,
+  );
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [branchVisibility, setBranchVisibility] = useState<ReplyBranchVisibility | null>(null);
+  const [branchVisibility, setBranchVisibility] = useState<ReplyBranchVisibility | null>(() => {
+    const saved = restoredBranches?.[reply.id];
+    return saved ? { count: saved.count, focusReplyId: focusReplyId ?? null } : null;
+  });
   const [collapsedFocusId, setCollapsedFocusId] = useState<string | null>();
   const restoreRootFocus = useRef(false);
   const suppressDescendantFocus =
@@ -332,6 +340,9 @@ export const ReplyCard = ({
     <article
       className="relative rounded-[20px] py-0.5 text-foreground dark:text-foreground"
       id={`reply-${reply.id}`}
+      data-reply-branch-id={reply.id}
+      data-reply-visible-count={effectiveVisibleChildCount}
+      data-reply-content-expanded={contentExpanded}
     >
       {hasBranchConnector ? (
         <span
@@ -593,6 +604,7 @@ export const ReplyCard = ({
                 replyApiError={replyApiError}
                 replyComposerTargetId={replyComposerTargetId}
                 replyDisabled={replyDisabled}
+                restoredBranches={collapsedFocusId === undefined ? restoredBranches : undefined}
                 suppressFocusExpansion={suppressDescendantFocus}
                 threadHrefBase={threadHrefBase}
                 votePending={votePending}

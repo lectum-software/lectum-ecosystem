@@ -42,11 +42,14 @@ export const ReplyBranchFooter = ({
         depth > 0 ? "ml-3 pl-[10px]" : "ml-4 pl-[10px] sm:ml-[18px]",
       )}
       data-comment-collapse-ignore="true"
+      data-reply-branch-footer="true"
+      id={`reply-branch-${replyId}`}
     >
       {showReveal ? (
         <div className="flex h-5 items-center">
           {!canRevealLoadedChildren && threadHref ? (
             <Link
+              data-reply-continuation="true"
               aria-label={`${label} desta conversa`}
               className="inline-flex w-fit items-center gap-0.5 rounded-full px-0.5 py-0.5 text-[10px] font-bold leading-none text-muted no-underline transition hover:bg-surface-muted hover:text-foreground hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               href={threadHref}
