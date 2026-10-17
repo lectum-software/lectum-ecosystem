@@ -75,6 +75,7 @@ import apiPrivatePsychologistBillingSync from "@/modules/api/private/psychologis
 import apiPrivatePsychologistCfp from "@/modules/api/private/psychologist/cfp";
 import apiPrivatePsychologistFreeProfile from "@/modules/api/private/psychologist/free-profile";
 import apiPrivatePsychologistReviews from "@/modules/api/private/psychologist/reviews";
+import apiPrivateWhatsappReports from "@/modules/api/private/psychologist/whatsapp-reports";
 import apiPrivatePsychologistWhatsappVerification from "@/modules/api/private/psychologist/whatsapp-verification";
 import apiPrivateVideoAssets from "@/modules/api/private/video-assets";
 import apiPublicAnalyticsAction from "@/modules/api/public/analytics/action";
@@ -251,6 +252,11 @@ mountRoleGuardedRoute(
   "/api/private/psychologist/analytics",
   "psicologo",
   apiPrivatePsychologistAnalytics,
+);
+mountRoleGuardedRoute(
+  "/api/private/psychologist/whatsapp-reports",
+  "psicologo",
+  apiPrivateWhatsappReports,
 );
 mountRoleGuardedRoute(
   "/api/private/psychologist/billing/plans",

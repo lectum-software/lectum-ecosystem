@@ -16,6 +16,9 @@ export default async (data: IUpdateDTO) => {
     };
 
   let res = null;
+  if (find.message_key === "weekly_whatsapp_report") {
+    return { status: 200, ...msg("index", {}), data: find };
+  }
   res = await _NOTIFICATION.update(data);
 
   return {

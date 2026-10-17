@@ -1,4 +1,5 @@
 import type { Request } from "express";
+import type { adminWhatsappReports } from "@/modules/whatsapp-reports/admin";
 import type { AdminPsychologistCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
 import type {
   AdminProfileConversionAbsoluteThresholds,
@@ -405,6 +406,7 @@ export type AdminPsychologistTrafficQualitySummary = {
 };
 
 export type AdminPsychologistStatisticsDTO = {
+  whatsapp_reports?: Awaited<ReturnType<typeof adminWhatsappReports>>;
   business: {
     cards: AdminPsychologistAvailabilityMetric[];
     series: AdminPsychologistStatisticsSeriesPoint[];

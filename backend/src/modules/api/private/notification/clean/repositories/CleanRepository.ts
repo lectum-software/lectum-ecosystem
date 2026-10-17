@@ -19,6 +19,7 @@ export class CleanRepository implements ICleanRepository {
     const res = await this.repository.updateMany({
       where: {
         user_id: auth.id!,
+        message_key: { not: "weekly_whatsapp_report" },
       },
       data: {
         read: true,

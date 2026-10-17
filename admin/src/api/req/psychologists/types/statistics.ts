@@ -105,6 +105,23 @@ export type AdminPsychologistVisibilityDiagnosis = {
 };
 
 export type AdminPsychologistStatistics = {
+  whatsapp_reports?: {
+    acquired_patients: number | null;
+    unanswered_weeks: number;
+    answered_weeks: number;
+    total_weeks: number;
+    source: "psychologist_reported";
+    weeks: {
+      id: string;
+      start_label: string;
+      end_label: string;
+      week_start: string;
+      week_end: string;
+      people_count: number;
+      acquired_count: number | null;
+      answered_at: string | null;
+    }[];
+  };
   business: {
     cards: AdminPsychologistEngagementMetric[];
     series: AdminPsychologistStatisticsPoint[];

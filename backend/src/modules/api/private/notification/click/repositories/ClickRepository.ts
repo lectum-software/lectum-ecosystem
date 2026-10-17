@@ -21,6 +21,8 @@ export class ClickRepository {
   }
 
   async click(props: IClickDTO): Promise<notification> {
+    const current = await this.find(props);
+    if (current?.message_key === "weekly_whatsapp_report") return current;
     const notification = await this.repository.update({
       data: {
         read: true,

@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { distinctWhatsappPeople } from "@/modules/whatsapp-reports/people";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   PsychologistAnalyticsCommunities,
@@ -259,6 +260,9 @@ export class PsychologistAnalyticsCommunityRepository {
           },
           select: {
             occurred_at: true,
+            id: true,
+            user_id: true,
+            visitor_id: true,
           },
         }),
       ]);
@@ -332,6 +336,9 @@ export class PsychologistAnalyticsCommunityRepository {
             },
             select: {
               occurred_at: true,
+              id: true,
+              user_id: true,
+              visitor_id: true,
               target_id: true,
               target_type: true,
             },
@@ -383,7 +390,7 @@ export class PsychologistAnalyticsCommunityRepository {
       number
     >(COMMUNITY_CONTENT_BREAKDOWN_DEFINITIONS.map((item) => [item.id, 0]));
 
-    for (const action of whatsappActions) {
+    for (const action of distinctWhatsappPeople(whatsappActions)) {
       if (!action.target_id) continue;
 
       const isPostTarget =
@@ -429,7 +436,7 @@ export class PsychologistAnalyticsCommunityRepository {
         name: community.name,
         slug: community.slug,
       })),
-      topMentorWhatsappActions.length,
+      distinctWhatsappPeople(topMentorWhatsappActions).length,
     );
     const communityActivityTotals = [...metricsByCommunityId.values()].reduce(
       (acc, metrics) => ({
@@ -448,8 +455,10 @@ export class PsychologistAnalyticsCommunityRepository {
     );
     const activityTotals = {
       ...communityActivityTotals,
-      total_whatsapp_clicks:
-        communityActivityTotals.total_whatsapp_clicks + topMentors.whatsapp_clicks,
+      total_whatsapp_clicks: distinctWhatsappPeople([
+        ...whatsappActions,
+        ...topMentorWhatsappActions,
+      ]).length,
     };
     const updatedAt =
       [

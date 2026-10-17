@@ -20,6 +20,7 @@ export class SeenRepository implements ISeenRepository {
         user_id: auth.id!,
         deleted: false,
         seen_at: null,
+        message_key: { not: "weekly_whatsapp_report" },
       },
       data: {
         seen_at: new Date(),

@@ -56,6 +56,8 @@ export type PsychologistAnalyticsPeriod = {
 };
 
 export type PsychologistAnalyticsMetrics = {
+  acquired_patients?: number | null;
+  unanswered_weeks?: number;
   search_results: number;
   profile_views: number;
   favorites_received: number;
@@ -275,4 +277,8 @@ export type PsychologistAnalyticsResponse = {
   communities: PsychologistAnalyticsCommunities;
   traffic_sources: PsychologistAnalyticsTrafficSources;
   unavailable: PsychologistAnalyticsUnavailableMetric[];
+};
+
+export type PsychologistAnalyticsPreview = {
+  access: { has_professional_entitlement: false; mode: "preview" };
 };

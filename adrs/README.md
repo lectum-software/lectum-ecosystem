@@ -683,3 +683,4 @@ Formato recomendado:
 - [ADR-0619 — Recolhimento unico por arvore](0619-recolhimento-unico-por-arvore.md)
 - [ADR-0620 — Retorno a arvore apos continuacao](0620-retorno-arvore-continuacao.md)
 - [ADR-0621 — Contexto de origem dos comentarios salvos](0621-comentarios-salvos-origem.md)
+- [ADR-0622 — Resumo semanal WhatsApp](0622-resumo-semanal-whatsapp.md)

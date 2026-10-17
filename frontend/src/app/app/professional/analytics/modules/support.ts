@@ -110,13 +110,18 @@ export const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCard
     source: "professional_review",
   },
   {
-    description: "Pessoas que tocaram para conversar com você.",
     id: "whatsapp_clicks",
     icon: WhatsAppIcon,
-    label: "Conversões WhatsApp",
-    layout: "wide",
+    label: "Cliques no WhatsApp",
     value: toCount(data?.metrics.whatsapp_clicks),
     source: "contact_request",
+  },
+  {
+    id: "acquired_patients",
+    icon: UsersRound,
+    label: "Pacientes adquiridos",
+    value: data?.metrics.acquired_patients == null ? "—" : toCount(data.metrics.acquired_patients),
+    description: `Dados informados pelo psicólogo.${data?.metrics.unanswered_weeks ? " Há semanas sem resposta." : ""}`,
   },
 ];
 

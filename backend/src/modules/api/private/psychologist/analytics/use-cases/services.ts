@@ -43,18 +43,15 @@ const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => 
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
 
   const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(
-    year,
-    month - 1,
-    day,
-    boundary === "start" ? 0 : 23,
-    boundary === "start" ? 0 : 59,
-    boundary === "start" ? 0 : 59,
-    boundary === "start" ? 0 : 999,
-  );
+  const calendarDate = new Date(Date.UTC(year, month - 1, day));
+  const date = new Date(`${value}T${boundary === "start" ? "00:00:00.000" : "23:59:59.999"}-03:00`);
 
   if (Number.isNaN(date.getTime())) return null;
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+  if (
+    calendarDate.getUTCFullYear() !== year ||
+    calendarDate.getUTCMonth() !== month - 1 ||
+    calendarDate.getUTCDate() !== day
+  ) {
     return null;
   }
 
@@ -85,7 +82,10 @@ const buildPeriod = (
     return {
       key,
       label: "Este ano",
-      start_at: new Date(endAt.getFullYear(), 0, 1, 0, 0, 0, 0),
+      start_at: parseDateOnly(
+        `${new Intl.DateTimeFormat("en", { timeZone: "America/Sao_Paulo", year: "numeric" }).format(endAt)}-01-01`,
+        "start",
+      )!,
       end_at: endAt,
     };
   }
@@ -121,7 +121,13 @@ export const index = async (data: IPsychologistAnalyticsIndexDTO) => {
   const repository = new PsychologistAnalyticsRepository();
   const hasEntitlement = await repository.hasProfessionalEntitlement(data.auth.id);
   if (!hasEntitlement) {
-    return { status: 403, ...error("professional_analytics_professional_plan", {}) };
+    return {
+      status: 200,
+      ...msg("index", {}),
+      data: {
+        access: { mode: "preview", has_professional_entitlement: false },
+      },
+    };
   }
 
   const period = buildPeriod(normalizePeriod(data.q.period), data.q);

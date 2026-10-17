@@ -823,6 +823,7 @@ model contact_request {
   user_id         String?
   psychologist_id String
   channel         String    @default("whatsapp")
+  visitor_key     String?
   user            user?     @relation("contact_request_user", fields: [user_id], references: [id], onDelete: SetNull)
   psychologist    user      @relation("contact_request_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
 
@@ -1455,10 +1456,36 @@ model notification {
   message_props Json?
   user          user                    @relation("notifications", fields: [user_id], references: [id])
   deliveries    notification_delivery[] @relation("notification_delivery_notification")
+  whatsapp_week professional_whatsapp_week?
 
   @@index([user_id])
   @@index([user_id, seen_at])
   @@map("notifications")
+}
+
+model professional_whatsapp_week {
+  id               String       @id @default(cuid())
+  deleted          Boolean      @default(false)
+  deletedAt        DateTime?     @map("deleted_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at")
+  psychologist_id  String
+  week_start       DateTime
+  week_end         DateTime
+  available_at     DateTime
+  people_count     Int
+  acquired_count   Int?
+  answered_at      DateTime?
+  auto_opened_at   DateTime?
+  push_claimed_at  DateTime?
+  push_status      String       @default("pending")
+  notification_id  String       @unique
+  notification     notification @relation(fields: [notification_id], references: [id], onDelete: Cascade)
+
+  @@unique([psychologist_id, week_start])
+  @@index([psychologist_id, week_end])
+  @@index([push_status, available_at])
+  @@map("professional_whatsapp_weeks")
 }
 
 model admin_notification_campaign {
