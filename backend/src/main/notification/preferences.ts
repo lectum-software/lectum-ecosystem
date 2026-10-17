@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 
 export const NOTIFICATION_MESSAGE_KEYS = [
+  "weekly_whatsapp_report",
   "nova_avaliacao",
   "novo_favorito",
   "visualizacao_perfil",

@@ -83,6 +83,7 @@ export const markAllUserNotificationDeliveriesRead = async (userId: string) => {
     },
     where: {
       channel: "in_app",
+      OR: [{ trigger_key: null }, { trigger_key: { not: "weekly_whatsapp_report" } }],
       clicked_at: null,
       deleted: false,
       notification_id: {

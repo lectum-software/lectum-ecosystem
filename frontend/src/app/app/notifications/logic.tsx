@@ -51,6 +51,12 @@ const PATIENT_NEW_POST_DESCRIPTION =
 const NOTIFICATION_ICON_TONE = "bg-primary-soft text-primary";
 
 const LABELS: Record<string, NotificationView> = {
+  weekly_whatsapp_report: {
+    title: "Seu resumo semanal está disponível",
+    description: "Informe quantas pessoas agendaram.",
+    icon: WhatsAppIcon,
+    tone: NOTIFICATION_ICON_TONE,
+  },
   nova_avaliacao: {
     title: "Nova avaliação recebida",
     description: "Clique para ver a avaliação no seu perfil.",
@@ -461,6 +467,7 @@ export const NotificationsLogic = () => {
     const view = getNotificationView(item.message_key, sessionRole);
     const title = getActorTitle(item, view);
     const markAsRead = () => {
+      if (item.message_key === "weekly_whatsapp_report") return;
       if (!item.read && item.id) {
         update.mutate({ id: item.id, read: true });
       }
@@ -475,6 +482,18 @@ export const NotificationsLogic = () => {
               <span className="block text-[15px] font-normal leading-5 text-foreground">
                 {title}
               </span>
+              {item.message_key === "weekly_whatsapp_report" ? (
+                <span className="mt-1 block text-sm text-muted">
+                  De {getStringProp(item.message_props, "start_label")} a{" "}
+                  {getStringProp(item.message_props, "end_label")},{" "}
+                  {getNumberProp(item.message_props, "people_count")}{" "}
+                  {getNumberProp(item.message_props, "people_count") === 1
+                    ? "pessoa clicou"
+                    : "pessoas clicaram"}{" "}
+                  no seu WhatsApp pela Lectum.
+                  {item.read ? " Respondido." : " Informe quantas agendaram."}
+                </span>
+              ) : null}
             </span>
 
             {!item.read ? (

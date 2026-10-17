@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { adminWhatsappReports } from "@/modules/whatsapp-reports/admin";
 import type { IAdminPsychologistStatisticsDTO } from "../../DTOs/IAdminPsychologistEngagementDTO";
 import { AdminPsychologistEngagementRepository } from "../../repositories/AdminPsychologistEngagementRepository";
 import { resolvePeriod } from "./business-content";
@@ -33,6 +34,13 @@ export const showAdminPsychologistStatistics = async (
   return {
     status: 200,
     ...msg("show", {}),
-    data: response,
+    data: {
+      ...response,
+      whatsapp_reports: await adminWhatsappReports(
+        profile.user.id,
+        period.period.from,
+        period.period.to,
+      ),
+    },
   };
 };

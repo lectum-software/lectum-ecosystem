@@ -68,7 +68,7 @@ export const createDirectoryPsychologistContact = async (
     route: "/api/private/directory/psychologists/:id/contact",
     method: "POST",
     params: { id },
-    body,
+    body: { ...body, visitor_id: getOrCreateAnalyticsIdentity()?.visitorId },
   });
 
   return handleReq<DirectoryPsychologistContactResponse>({
@@ -82,6 +82,7 @@ export const createDirectoryPsychologistContactClick = async (id: string) => {
   const handle = callEndpoint({
     route: "/api/private/directory/psychologists/:id/contact-click",
     method: "POST",
+    body: { visitor_id: getOrCreateAnalyticsIdentity()?.visitorId },
     params: { id },
   });
 
@@ -141,3 +142,5 @@ export const trackDirectoryPsychologistVideoWatch = async (
     signOutOnUnauthorized: false,
   });
 };
+
+import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";

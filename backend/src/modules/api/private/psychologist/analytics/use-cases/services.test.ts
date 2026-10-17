@@ -15,7 +15,7 @@ const visit = (node: ts.Node) => {
 visit(ast);
 const text = (node: ts.Node) => node.getText(ast);
 
-test("AST: Analytics profissional nega acesso antes da consulta de métricas", () => {
+test("AST: Analytics gratuito retorna apenas preview antes da consulta de métricas", () => {
   const guard = nodes.find(
     (node): node is ts.IfStatement =>
       ts.isIfStatement(node) && text(node.expression) === "!hasEntitlement",
@@ -26,10 +26,11 @@ test("AST: Analytics profissional nega acesso antes da consulta de métricas", (
   const returned = guard.thenStatement.statements[0];
   assert.ok(ts.isReturnStatement(returned));
   assert.ok(returned.expression && ts.isObjectLiteralExpression(returned.expression));
-  assert.deepEqual(returned.expression.properties.map(text), [
-    "status: 403",
-    '...error("professional_analytics_professional_plan", {})',
-  ]);
+  const properties = returned.expression.properties.map(text).join(" ");
+  assert.match(properties, /status: 200/);
+  assert.match(properties, /mode: "preview"/);
+  assert.match(properties, /has_professional_entitlement: false/);
+  assert.doesNotMatch(properties, /metrics|repository\.index/);
   const query = nodes.find(
     (node) => ts.isCallExpression(node) && text(node.expression) === "repository.index",
   );

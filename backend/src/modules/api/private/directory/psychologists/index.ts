@@ -12,6 +12,7 @@ import {
   view,
 } from "./use-cases/controller";
 import validator, {
+  contactClickValidator,
   contactValidator,
   profileListValidator,
   profileShowValidator,
@@ -31,7 +32,7 @@ routes.get(
   index,
 );
 routes.post("/:id/contact", optionalAuth, contactValidator, contact);
-routes.post("/:id/contact-click", optionalAuth, profileShowValidator, contactClick);
+routes.post("/:id/contact-click", optionalAuth, contactClickValidator, contactClick);
 routes.post("/:id/view", optionalAuth, profileShowValidator, view);
 routes.post("/:id/search-impression", optionalAuth, searchImpressionValidator, searchImpression);
 routes.post("/:id/video-watch", optionalAuth, profileVideoWatchValidator, videoWatch);

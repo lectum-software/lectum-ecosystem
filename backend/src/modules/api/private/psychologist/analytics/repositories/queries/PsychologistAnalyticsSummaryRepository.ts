@@ -1,4 +1,6 @@
 import prisma from "@/infra/database/prisma";
+import { acquiredPatientsSummary, whatsappPeopleCounts } from "@/modules/whatsapp-reports/counts";
+import { distinctWhatsappPeople } from "@/modules/whatsapp-reports/people";
 import { hasDirectorySelectedFilterParams } from "@/utils/analytics-traffic-path";
 import type {
   IPsychologistAnalyticsIndexDTO,
@@ -47,8 +49,8 @@ export class PsychologistAnalyticsSummaryRepository {
       profile,
       postsAggregate,
       presentationVideoSessions,
-      presentationVideoActionEvents,
-      psychologistWhatsappActionEvents,
+      rawPresentationVideoActionEvents,
+      rawPsychologistWhatsappActionEvents,
       favoriteEvents,
       communities,
       searchFilterLabelLookup,
@@ -95,24 +97,7 @@ export class PsychologistAnalyticsSummaryRepository {
           search_context_path: true,
         },
       }),
-      prisma.contact_request.count({
-        where: {
-          psychologist_id: userId,
-          deleted: false,
-          channel: "whatsapp",
-          createdAt: createdAtWindow,
-          OR: [
-            {
-              user_id: null,
-            },
-            {
-              user_id: {
-                not: userId,
-              },
-            },
-          ],
-        },
-      }),
+      whatsappPeopleCounts(period.start_at, new Date(period.end_at.getTime() + 1), userId),
       prisma.professional_review.count({
         where: {
           psychologist_id: userId,
@@ -215,6 +200,9 @@ export class PsychologistAnalyticsSummaryRepository {
         },
         select: {
           action_type: true,
+          id: true,
+          user_id: true,
+          visitor_id: true,
           occurred_at: true,
           path: true,
         },
@@ -240,6 +228,9 @@ export class PsychologistAnalyticsSummaryRepository {
         select: {
           occurred_at: true,
           page_kind: true,
+          id: true,
+          user_id: true,
+          visitor_id: true,
           path: true,
         },
       }),
@@ -259,6 +250,19 @@ export class PsychologistAnalyticsSummaryRepository {
       this.dependency.buildCommunities(userId, createdAtWindow),
       buildSearchFilterLabelLookup(),
     ]);
+    const presentationVideoActionEvents = [
+      ...rawPresentationVideoActionEvents.filter(
+        (action) => action.action_type !== "psychologist_video_whatsapp_click",
+      ),
+      ...distinctWhatsappPeople(
+        rawPresentationVideoActionEvents.filter(
+          (action) => action.action_type === "psychologist_video_whatsapp_click",
+        ),
+      ),
+    ];
+    const psychologistWhatsappActionEvents = distinctWhatsappPeople(
+      rawPsychologistWhatsappActionEvents,
+    );
     const trackedSearchResultImpressions = presentationVideoSearchImpressions.filter((impression) =>
       hasDirectorySelectedFilterParams(impression.search_context_path),
     );
@@ -273,7 +277,8 @@ export class PsychologistAnalyticsSummaryRepository {
       search_results: searchResults,
       profile_views: profileViews,
       favorites_received: favoriteEvents.length,
-      whatsapp_clicks: whatsappClicks,
+      whatsapp_clicks: whatsappClicks[0]?.people_count ?? 0,
+      ...(await acquiredPatientsSummary(userId, period.start_at, period.end_at)),
       reviews_received: reviewsReceived,
       rating_average: profile?.rating_avg || 0,
       rating_count_total: profile?.rating_count || 0,

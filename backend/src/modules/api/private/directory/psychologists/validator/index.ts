@@ -211,6 +211,7 @@ export const profileListSchema: IValidatorRequest = {
 export const contactSchema: IValidatorRequest = {
   ...profileShowSchema,
   body: [
+    { key: "visitor_id", method: "string", max: 120, optional: true },
     {
       key: "patient_phone",
       coerse: "string",
@@ -302,4 +303,8 @@ export const profileShowValidator = validator(profileShowSchema);
 export const searchImpressionValidator = validator(searchImpressionSchema);
 export const profileListValidator = validator(profileListSchema);
 export const contactValidator = validator(contactSchema);
+export const contactClickValidator = validator({
+  ...profileShowSchema,
+  body: [{ key: "visitor_id", method: "string", max: 120, optional: true }],
+});
 export const profileVideoWatchValidator = validator(profileVideoWatchSchema);

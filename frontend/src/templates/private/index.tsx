@@ -5,9 +5,10 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
+import { WhatsappWeekPrompt } from "@/components/analytics/whatsapp-week-prompt";
 import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LegalAcceptanceRequest } from "@/components/legal/acceptance-request";
@@ -563,6 +564,15 @@ export const PrivateTemplate = ({
       ) : null}
       {sessionUser?.id && !sessionUser.need_reset && canPromptLegalOnPath(normalizedPathname) ? (
         <LegalAcceptanceRequest key={sessionUser.id} userId={sessionUser.id} />
+      ) : null}
+      {sessionUser?.role === "psicologo" && sessionUser.id && !sessionUser.need_reset ? (
+        <Suspense fallback={null}>
+          <WhatsappWeekPrompt
+            key={sessionUser.id}
+            userId={sessionUser.id}
+            paused={createPostModalOpen || navigationHidden}
+          />
+        </Suspense>
       ) : null}
     </>
   );

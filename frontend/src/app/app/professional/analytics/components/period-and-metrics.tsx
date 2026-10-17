@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import type { PsychologistAnalyticsPeriodKey } from "@/api/generator/types/psychologist-analytics";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
 import { type AnalyticsCardView, PERIOD_OPTIONS } from "../modules/support";
 import { CustomPeriodForm } from "./custom-period-form";
@@ -120,29 +121,24 @@ export const PeriodTabs = ({
 };
 
 export const PremiumAnalyticsBanner = () => (
-  <section className="relative overflow-hidden rounded-[var(--lectum-card-radius)] border border-primary/20 bg-primary-soft p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
-    <div
-      aria-hidden
-      className="-right-10 -top-12 absolute h-32 w-32 rounded-full bg-surface/70 blur-3xl"
-    />
+  <section className="border-y border-primary/20 bg-primary-soft p-5 md:p-6">
     <div className="relative grid gap-4 md:grid-cols-[auto_1fr_auto] md:items-center">
       <span className="grid h-14 w-14 place-items-center rounded-2xl bg-surface text-primary shadow-[var(--lectum-shadow-soft)] md:h-16 md:w-16">
         <BarChart3 className="h-7 w-7" aria-hidden />
       </span>
       <div className="min-w-0">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
-          Recurso profissional
+          Disponível para assinantes
         </p>
         <h2 className="mt-2 text-xl font-extrabold leading-7 text-foreground">
           Desbloqueie seus Analytics
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted md:text-base md:leading-7">
-          Assine o plano profissional para acompanhar visualizações, cliques, desempenho do perfil e
-          evolução dos seus resultados na Lectum.
+          Assine o plano profissional para acompanhar seus resultados.
         </p>
       </div>
       <Button asChild className="h-12 w-full rounded-full px-6 text-base md:w-auto">
-        <Link href="/app/profissional/assinatura">
+        <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}>
           Fazer upgrade
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
@@ -197,12 +193,15 @@ export const MetricCard = ({ locked, metric }: { locked?: boolean; metric: Analy
 
       <p
         className={cn(
-          "mt-auto pt-2 text-2xl font-black leading-none tracking-[-0.05em] text-foreground sm:text-[1.75rem]",
+          "mt-auto pt-2 text-2xl font-black leading-none text-foreground sm:text-[1.75rem]",
           locked && "select-none blur-[5px]",
         )}
       >
         {metric.value}
       </p>
+      {metric.description ? (
+        <p className="mt-2 text-xs leading-4 text-subtle">{metric.description}</p>
+      ) : null}
     </article>
   );
 };

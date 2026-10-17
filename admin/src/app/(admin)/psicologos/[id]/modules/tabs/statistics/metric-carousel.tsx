@@ -15,7 +15,7 @@ import { BUSINESS_SERIES_METRIC_KEYS } from "../../support/config";
 import { buildStatisticsMetricComparison } from "../../support/formatters";
 
 export const businessStatisticsMetricItemClassName =
-  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] xl:w-[calc((100%_-_1.5rem)/4)] 2xl:w-[calc((100%_-_2rem)/5)]";
+  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] xl:w-[calc((100%_-_1.5rem)/4)] 2xl:w-[calc((100%_-_2.5rem)/6)]";
 
 export const visibilityStatisticsMetricItemClassName =
   "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)]";

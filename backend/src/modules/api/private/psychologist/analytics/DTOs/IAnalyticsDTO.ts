@@ -54,6 +54,8 @@ export type PsychologistAnalyticsPeriod = {
 };
 
 export type PsychologistAnalyticsMetrics = {
+  acquired_patients?: number | null;
+  unanswered_weeks?: number;
   search_results: number;
   profile_views: number;
   favorites_received: number;

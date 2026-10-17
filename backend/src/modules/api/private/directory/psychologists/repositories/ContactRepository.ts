@@ -1,5 +1,6 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import prisma from "@/infra/database/prisma";
+import { hashWhatsappVisitor } from "@/modules/whatsapp-reports/policy";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
@@ -150,6 +151,7 @@ export class ContactRepository implements IContactRepository {
     const contact = await prisma.contact_request.create({
       data: {
         user_id: actorId,
+        visitor_key: hashWhatsappVisitor(data.b?.visitor_id),
         psychologist_id: psychologist.id,
         channel: "whatsapp",
       },
@@ -258,6 +260,7 @@ export class ContactRepository implements IContactRepository {
       return tx.contact_request.create({
         data: {
           user_id: actorId,
+          visitor_key: hashWhatsappVisitor(data.b.visitor_id),
           psychologist_id: psychologist.id,
           channel: "whatsapp",
         },

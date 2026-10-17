@@ -14,11 +14,13 @@ export interface IContactDTO {
   b: {
     patient_phone: string;
     consent_accepted: boolean;
+    visitor_id?: string;
   };
   auth?: user;
 }
 
 export interface IContactClickDTO {
+  b?: { visitor_id?: string };
   p: {
     id: string;
   };

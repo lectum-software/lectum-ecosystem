@@ -29,7 +29,7 @@ test("AST: preview e negação do plano descartam dados antes da apresentação"
   );
   assert.equal(
     variable("visibleData")?.initializer?.getText(ast),
-    "isAnalyticsPreview ? undefined : data",
+    "!isAnalyticsPreview && hasFullAnalytics(data) ? data : undefined",
   );
 });
 

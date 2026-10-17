@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { usePsychologistAnalytics } from "@/api/callers/psychologist-analytics";
-import type { PsychologistAnalyticsPeriodKey } from "@/api/generator/types/psychologist-analytics";
+import type {
+  PsychologistAnalyticsPeriodKey,
+  PsychologistAnalyticsPreview,
+  PsychologistAnalyticsResponse,
+} from "@/api/generator/types/psychologist-analytics";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -20,6 +24,10 @@ import {
   resolveApiError,
 } from "./modules/support";
 
+const hasFullAnalytics = (
+  value: PsychologistAnalyticsResponse | PsychologistAnalyticsPreview | undefined,
+): value is PsychologistAnalyticsResponse => value?.access.mode === "full" && "metrics" in value;
+
 export const ProfessionalAnalyticsLogic = () => {
   const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("all");
   const [customRange, setCustomRange] = useState(getDefaultCustomRange);
@@ -34,18 +42,19 @@ export const ProfessionalAnalyticsLogic = () => {
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
   const shouldShowError = Boolean(errorMessage && !isProfessionalPlanError);
   const isAnalyticsPreview = data?.access.mode === "preview" || isProfessionalPlanError;
-  const visibleData = isAnalyticsPreview ? undefined : data;
+  const visibleData = !isAnalyticsPreview && hasFullAnalytics(data) ? data : undefined;
 
   return (
     <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>
       <section className="mx-auto grid w-full max-w-[430px] grid-cols-[minmax(0,1fr)] gap-4 md:max-w-3xl">
         <AppPageHeader backLabel="Voltar para perfil" title="Meus Analytics" />
+        {isAnalyticsPreview ? <PremiumAnalyticsBanner /> : null}
 
         <PeriodTabs
           current={period}
           customPopoverOpen={customPopoverOpen}
           customRange={customRange}
-          disabled={analytics.isFetching}
+          disabled={analytics.isFetching || isAnalyticsPreview}
           onChange={setPeriod}
           onCustomPopoverOpenChange={setCustomPopoverOpen}
           onCustomRangeApply={(range) => {
@@ -61,8 +70,6 @@ export const ProfessionalAnalyticsLogic = () => {
             <p>{errorMessage}</p>
           </InlineAlert>
         ) : null}
-
-        {isAnalyticsPreview ? <PremiumAnalyticsBanner /> : null}
 
         {!shouldShowError ? (
           <section

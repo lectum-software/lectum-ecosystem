@@ -22,6 +22,7 @@ import {
 } from "../../support/config";
 import { StatisticsGlobalPeriodCard, useStatisticsPeriodFilter } from "../../support/date-period";
 import { formatStatisticsPeriodSummary } from "../../support/formatters";
+import { AcquiredPatientsCard, AcquiredPatientsSection } from "./acquired-patients";
 import { EngagementLoadingState, StatisticsMetricToggleCard } from "./common";
 import {
   ActiveCommunitiesTable,
@@ -371,17 +372,27 @@ export const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail;
 
           <StatisticsMetricCarousel
             itemClassName={businessStatisticsMetricItemClassName}
-            items={businessCards.map(({ config, metric }) => ({
-              content: (
-                <StatisticsMetricToggleCard
-                  active={visibleBusinessMetricIds.includes(config.id) && metric.available}
-                  config={config}
-                  metric={metric}
-                  onToggle={() => toggleBusinessMetric(config.id)}
-                />
-              ),
-              id: config.id,
-            }))}
+            items={businessCards.flatMap(({ config, metric }) => [
+              {
+                content: (
+                  <StatisticsMetricToggleCard
+                    active={visibleBusinessMetricIds.includes(config.id) && metric.available}
+                    config={config}
+                    metric={metric}
+                    onToggle={() => toggleBusinessMetric(config.id)}
+                  />
+                ),
+                id: config.id,
+              },
+              ...(config.id === "whatsapp_clicks"
+                ? [
+                    {
+                      id: "acquired_patients",
+                      content: <AcquiredPatientsCard data={businessStatistics.whatsapp_reports} />,
+                    },
+                  ]
+                : []),
+            ])}
             showNavigation={false}
             title="conversão"
           />
@@ -390,6 +401,7 @@ export const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail;
             keys={visibleBusinessChartKeys}
             points={businessStatistics.business.series}
           />
+          <AcquiredPatientsSection data={businessStatistics.whatsapp_reports} />
         </CardShell>
 
         <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">

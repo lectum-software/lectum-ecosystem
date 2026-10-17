@@ -1331,3 +1331,9 @@ PostListItemDTO.whatsapp_clicks_count?: number no endpoint mine, somente psicolo
 ## 2026-10-11 - Preflight de exclusao por video (ADR-0607)
 
 PostDetailDTO.has_psychologist_video_reply?: boolean deriva de respostas ativas de psicologos com media_type video. Campo aditivo, sem persistencia nova; a ausencia em backend anterior preserva o tratamento de conflito no DELETE. Para comentarios, GET replyThread existente retorna a subarvore completa; o frontend examina descendentes ativos antes da confirmacao. O DELETE transacional permanece a autoridade em ambos os casos. A lista mine reutiliza outros autores profissionais do feed para Ver mais respostas; Salvos nao muda.
+
+## 2026-10-17 - Resumo semanal WhatsApp (TASK-260)
+
+`contact_request.visitor_key` opcional guarda o hash do identificador aleatorio de navegador ja usado pelo Analytics, nunca IP/fingerprint novo. Conta autenticada tem precedencia. Eventos legados anonimos sem identidade nao permitem deduplicacao retroativa.
+
+`professional_whatsapp_week`: profissional, inicio/fim exclusivo da semana, liberacao, pessoas estimadas, quantidade informada opcional, data de resposta/abertura automatica, notificacao unica e estado de entrega push. Unicidade profissional/semana. Datas em UTC, limites de calendario America/Sao_Paulo. Resposta pertence a semana, nao ao dia de envio. Analytics agrega semanas encerradas dentro do periodo; nao distribui respostas semanais por dia.
