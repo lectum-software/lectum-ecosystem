@@ -5,12 +5,19 @@ import { isChannelAllowed } from "@/main/notification/preferences";
 import { sendWebPushToSubscriptions } from "@/main/notification/push";
 import { notification as emitNotification } from "@/main/socket/events/notification";
 import { whatsappPeopleCounts } from "./counts";
-import { previousWhatsappWeek, reportDates, WEEKLY_WHATSAPP_KEY } from "./policy";
+import {
+  isWhatsappWeekReleased,
+  previousWhatsappWeek,
+  reportDates,
+  WEEKLY_WHATSAPP_KEY,
+} from "./policy";
 
 export async function runWeeklyWhatsappReports(now = new Date()) {
   if (process.env.WEEKLY_WHATSAPP_REPORTS_ENABLED !== "true") return;
   const week = previousWhatsappWeek(now);
   if (now < week.availableAt) return;
+  if (!isWhatsappWeekReleased(week.availableAt, process.env.WEEKLY_WHATSAPP_REPORTS_START_AT))
+    return;
   const candidates = await whatsappPeopleCounts(week.start, week.end);
   for (const candidate of candidates) {
     if (candidate.people_count < 1) continue;
