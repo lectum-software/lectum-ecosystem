@@ -679,6 +679,7 @@ ou cortesia manual.
 | 258 | [TASK-258 - Retorno a arvore apos continuacao](TASK-258-retorno-arvore-continuacao.md) | In Progress | 257 |
 | 259 | [TASK-259 - Origem e controles dos comentarios salvos](TASK-259-comentarios-salvos-origem.md) | In Progress | 258 |
 | 260 | [TASK-260 - Resumo semanal WhatsApp e Analytics](TASK-260-resumo-semanal-whatsapp.md) | Done | 259 |
+| 261 | [TASK-261 - Inicio programado do resumo semanal](TASK-261-inicio-resumo-semanal.md) | Done | 260 |
 
 ## Ordem operacional recomendada sem bloqueios
 

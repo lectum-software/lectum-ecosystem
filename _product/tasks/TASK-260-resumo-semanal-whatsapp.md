@@ -34,7 +34,7 @@ Deploy: migration expansiva antes do backend; scheduler opt-in. Sem push/deploy 
 
 1. Aplicar a migration expansiva no backend.
 2. Publicar backend, frontend e admin; confirmar saude e autorizacoes.
-3. Conferir Web Push e preferencias. Habilitar `WEEKLY_WHATSAPP_REPORTS_ENABLED=true` com `NOTIFICATION_DIGESTS_ENABLED` nao desativado.
+3. Conferir Web Push e preferencias. Para o primeiro envio autorizado em 19/10/2026, publicar a trava da TASK-261 e configurar `WEEKLY_WHATSAPP_REPORTS_START_AT=2026-10-19T12:00:00Z` antes de habilitar `WEEKLY_WHATSAPP_REPORTS_ENABLED=true`, com `NOTIFICATION_DIGESTS_ENABLED` nao desativado. Ver ADR-0623.
 4. Verificar geracao unica, entrega e resposta numa semana elegivel. A rotina inclui gratuitos e assinantes com pelo menos uma pessoa no periodo.
 
 Nao existe deduplicacao retroativa confiavel para cliques anonimos antigos sem identificador. Pacientes adquiridos e dado declarado, nao confirmacao independente de atendimento.

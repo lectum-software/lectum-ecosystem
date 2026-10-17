@@ -3,6 +3,16 @@ import { createHash } from "node:crypto";
 export const WEEKLY_WHATSAPP_KEY = "weekly_whatsapp_report";
 const DAY_MS = 86_400_000;
 
+export function isWhatsappWeekReleased(availableAt: Date, startAt?: string) {
+  if (!startAt?.trim()) return true;
+  // Require an explicit UTC instant and reject dates normalized by Date.parse.
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(startAt)) return false;
+  const timestamp = Date.parse(startAt);
+  if (!Number.isFinite(timestamp)) return false;
+  if (new Date(timestamp).toISOString() !== startAt.replace("Z", ".000Z")) return false;
+  return availableAt.getTime() >= timestamp;
+}
+
 export function previousWhatsappWeek(now = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",

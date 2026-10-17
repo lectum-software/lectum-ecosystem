@@ -102,6 +102,14 @@ async function main() {
   await runWeeklyWhatsappReports(now);
   assert.equal(await latestWhatsappReport(ids[0], now), null);
   process.env.WEEKLY_WHATSAPP_REPORTS_ENABLED = "true";
+  process.env.WEEKLY_WHATSAPP_REPORTS_START_AT = "invalid";
+  await runWeeklyWhatsappReports(now);
+  assert.equal(await latestWhatsappReport(ids[0], now), null);
+  process.env.WEEKLY_WHATSAPP_REPORTS_START_AT = "2026-10-26T12:00:00Z";
+  await runWeeklyWhatsappReports(now);
+  assert.equal(await latestWhatsappReport(ids[0], now), null);
+  assert.equal(await prisma.notification.count({ where: { user_id: ids[0] } }), 0);
+  process.env.WEEKLY_WHATSAPP_REPORTS_START_AT = "2026-10-19T12:00:00Z";
   await runWeeklyWhatsappReports(new Date("2026-10-19T11:59:59Z"));
   assert.equal(await latestWhatsappReport(ids[0], now), null);
   await Promise.all([runWeeklyWhatsappReports(now), runWeeklyWhatsappReports(now)]);

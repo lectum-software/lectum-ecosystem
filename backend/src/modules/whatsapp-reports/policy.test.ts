@@ -2,10 +2,37 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   hashWhatsappVisitor,
+  isWhatsappWeekReleased,
   previousWhatsappWeek,
   reportDates,
   validAcquiredCount,
 } from "./policy";
+
+test("inicio programado bloqueia semanas antigas e libera a primeira e seguintes", () => {
+  const start = "2026-10-19T12:00:00Z";
+  const oldWeek = previousWhatsappWeek(new Date("2026-10-17T21:00:00Z"));
+  const firstWeek = previousWhatsappWeek(new Date(start));
+  const nextWeek = previousWhatsappWeek(new Date("2026-10-26T12:00:00Z"));
+  assert.equal(isWhatsappWeekReleased(oldWeek.availableAt, start), false);
+  assert.equal(isWhatsappWeekReleased(firstWeek.availableAt, start), true);
+  assert.equal(isWhatsappWeekReleased(nextWeek.availableAt, start), true);
+  assert.equal(isWhatsappWeekReleased(firstWeek.availableAt, "2026-10-19T12:00:01Z"), false);
+});
+
+test("inicio opcional preserva comportamento e configuracao invalida falha fechada", () => {
+  const availableAt = new Date("2026-10-19T12:00:00Z");
+  for (const value of [undefined, "", "  "])
+    assert.equal(isWhatsappWeekReleased(availableAt, value), true);
+  for (const value of [
+    "invalid",
+    "2026-10-19",
+    "2026-10-19T09:00:00",
+    "2026-02-30T12:00:00Z",
+    "2026-10-19T24:00:00Z",
+    "2026-10-19T12:00:00Z ",
+  ])
+    assert.equal(isWhatsappWeekReleased(availableAt, value), false);
+});
 
 test("semana inclui domingo inteiro e fica disponivel segunda 09h de Brasilia", () => {
   const now = new Date("2026-10-19T12:00:00Z");
