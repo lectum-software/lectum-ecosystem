@@ -74,8 +74,11 @@ test("formulário real utiliza controllers, nomes, labels e slots reservados sem
   for (const field of CUSTOM_PERIOD_FIELDS) {
     assert.ok(html.includes(`name="${field.name}"`));
     assert.ok(html.includes(`id="${field.name}-error"`));
-    assert.equal(field.className, "[&>[role=alert]]:h-8");
+    assert.match(field.className, /min-w-0/);
+    assert.match(field.className, /\[&>\[role=alert\]\]:h-8/);
+    assert.match(field.inputClassName, /min-w-0 max-w-full/);
   }
+  assert.doesNotMatch(html, /autofocus/i);
   assert.match(html, /Aplicar período/);
 });
 

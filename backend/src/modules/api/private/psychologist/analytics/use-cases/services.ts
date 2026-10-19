@@ -126,6 +126,7 @@ export const index = async (data: IPsychologistAnalyticsIndexDTO) => {
       ...msg("index", {}),
       data: {
         access: { mode: "preview", has_professional_entitlement: false },
+        presentation_video: await repository.presentationVideoPreview(data.auth.id),
       },
     };
   }

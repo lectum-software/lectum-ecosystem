@@ -43,10 +43,13 @@ for (const helper of ["metricCards", "getTrafficSources", "getCommunitiesAnalyti
   });
 }
 
-test("AST: dados de vídeo também não passam em preview; bloqueios visuais são preservados", () => {
+test("AST: métricas de vídeo não passam em preview; mídia própria e bloqueios são preservados", () => {
   const video = nodes.find((node) => ts.isJsxAttribute(node) && text(node.name) === "video");
   assert.ok(video && ts.isJsxExpression(video.initializer));
   assert.equal(video.initializer.expression?.getText(ast), "visibleData?.presentation_video");
+  const media = nodes.find((node) => ts.isJsxAttribute(node) && text(node.name) === "media");
+  assert.ok(media && ts.isJsxExpression(media.initializer));
+  assert.equal(media.initializer.expression?.getText(ast), "data?.presentation_video");
   const locks = nodes.filter((node) => ts.isJsxAttribute(node) && text(node.name) === "locked");
   assert.equal(locks.length, 4);
   for (const lock of locks) {

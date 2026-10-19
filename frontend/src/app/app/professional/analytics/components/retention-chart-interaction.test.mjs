@@ -2,11 +2,51 @@ import "../../../../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { Provider } from "react-redux";
 import ts from "typescript";
 
-const { RetentionChart } = await import("./presentation-video.tsx");
+const { store } = await import("@/store/index.ts");
+
+const { RetentionChart, PresentationVideoAnalyticsSection } = await import(
+  "./presentation-video.tsx"
+);
+
+test("preview exibe a mídia própria sem exigir métricas liberadas", (t) => {
+  const client = new QueryClient();
+  t.after(() => client.clear());
+  const html = renderToStaticMarkup(
+    createElement(
+      Provider,
+      { store },
+      createElement(
+        QueryClientProvider,
+        { client },
+        createElement(PresentationVideoAnalyticsSection, {
+          locked: true,
+          media: { video_url: "/public/files/presentation.mp4", video_cover_url: null },
+        }),
+      ),
+    ),
+  );
+  assert.match(html, /<video/);
+  assert.match(html, /presentation\.mp4/);
+  assert.doesNotMatch(html, /Sem vídeo|Envie um vídeo de apresentação/);
+  assert.match(html, /blur-/);
+});
+
+test("perfil realmente sem vídeo mantém o estado vazio", () => {
+  const html = renderToStaticMarkup(
+    createElement(PresentationVideoAnalyticsSection, {
+      locked: true,
+      media: { video_url: null, video_cover_url: null },
+    }),
+  );
+  assert.doesNotMatch(html, /<video/);
+  assert.match(html, /Sem vídeo/);
+});
 const { getRetentionSeekPercent, getRetentionKeyboardSeekPercent } = await import(
   "./retention-chart-interaction.ts"
 );

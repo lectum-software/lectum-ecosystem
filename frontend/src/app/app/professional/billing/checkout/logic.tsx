@@ -2,7 +2,6 @@
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import { ArrowLeft, CheckCircle2, CreditCard, RefreshCw } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +23,7 @@ import {
   mercadoPagoPublicKey,
   resolveMercadoPagoPayerEmail,
 } from "@/utils/mercado-pago";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
   getPsychologistRegistrationRequirementPath,
   isAdministrativeCourtesySubscription,
@@ -363,13 +363,13 @@ export const ProfessionalBillingCheckoutLogic = () => {
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl">
         <Button
-          asChild
+          aria-label="Voltar"
           className="h-11 w-11 justify-self-start rounded-full bg-primary-soft p-0 text-primary shadow-[var(--lectum-shadow-soft)] hover:bg-primary-soft/80"
+          onClick={() => navigateBackWithFallback(router, "/app/profissional/assinatura")}
+          type="button"
           variant="ghost"
         >
-          <Link aria-label="Voltar para Minha Assinatura" href="/app/profissional/assinatura">
-            <ArrowLeft className="h-5 w-5" aria-hidden />
-          </Link>
+          <ArrowLeft className="h-5 w-5" aria-hidden />
         </Button>
 
         <div className="grid justify-items-center gap-3 text-center">

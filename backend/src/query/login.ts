@@ -4,6 +4,7 @@ export const loginInclude = () => ({
   patient_profile: true,
   psychologist_profile: {
     include: {
+      _count: { select: { subscriptions: { where: { deleted: false } } } },
       subscriptions: {
         where: activeSubscriptionPeriodWhere(),
         include: {

@@ -43,6 +43,15 @@ const { buildAuthRouteWithRedirect, getUserHomePath, resolveAuthRedirect, resolv
 const { getPsychologistPaidOnboardingRequirementPath, getPsychologistRegistrationRequirementPath } =
   await import("./psychologist-onboarding.ts");
 
+test("guard de sessão e login usam o mesmo destino sem forçar a raiz", () => {
+  const source = readFileSync(
+    new URL("../components/auth/auth-entry-guard.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /resolveAuthRedirect\(hidrate.data, safeReturnTo, "\/psicologos"\)/);
+  assert.doesNotMatch(source, /safeReturnTo \?\? "\/"/);
+});
+
 test("Google callback starts its single-use exchange only once per mount", () => {
   const source = readFileSync(new URL("../app/auth/redirect/logic.tsx", import.meta.url), "utf8");
   assert.match(source, /const exchangeStarted = useRef\(false\)/);
@@ -185,4 +194,41 @@ test("preserva retorno de aba ou modal ao migrar do login para cadastro", () => 
     ),
     target,
   );
+});
+
+const returningPsychologist = (subscriptions, count) => ({
+  confirmed: true,
+  role: "psicologo",
+  psychologist_profile: {
+    whatsapp: "+5511999999999",
+    subscriptions,
+    ...(count === undefined ? {} : { _count: { subscriptions: count } }),
+  },
+});
+
+for (const [name, account] of [
+  ["gratuito ativo", returningPsychologist([{ status: "ativa", plan: { slug: "gratuito" } }])],
+  ["plano anterior fora da janela ativa", returningPsychologist([], 1)],
+  [
+    "plano cancelado",
+    returningPsychologist([{ status: "cancelada", plan: { slug: "profissional" } }], 1),
+  ],
+]) {
+  test(`login de ${name} continua a navegação sem repetir a escolha do plano`, () => {
+    assert.equal(resolveAuthRedirect(account, null, "/psicologos"), "/psicologos");
+    assert.equal(
+      resolveAuthRedirect(account, "/app/profissional/estatisticas", "/psicologos"),
+      "/app/profissional/estatisticas",
+    );
+    assert.equal(getPsychologistPaidOnboardingRequirementPath(account), null);
+  });
+}
+
+test("conta nova ainda escolhe plano; contagem histórica não concede assinatura paga", () => {
+  const fresh = returningPsychologist([], 0);
+  assert.equal(
+    resolveAuthRedirect(fresh, null, "/psicologos"),
+    "/app/profissional/assinatura/planos",
+  );
+  assert.equal(getPsychologistPaidOnboardingRequirementPath(returningPsychologist([], 5)), null);
 });

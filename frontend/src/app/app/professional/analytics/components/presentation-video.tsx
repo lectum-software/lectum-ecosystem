@@ -434,17 +434,21 @@ export const RetentionChart = ({
 
 export const PresentationVideoAnalyticsSection = ({
   locked,
+  media,
   video,
 }: {
   locked?: boolean;
+  media?: Pick<PsychologistAnalyticsPresentationVideo, "video_url" | "video_cover_url"> | null;
   video?: PsychologistAnalyticsPresentationVideo;
 }) => {
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
   const cleanupVideoListenersRef = useRef<(() => void) | null>(null);
   const [currentVideoTime, setCurrentVideoTime] = useState(0);
   const [playerDurationSeconds, setPlayerDurationSeconds] = useState<number | null>(null);
-  const videoSrc = resolvePublicMediaUrl(video?.video_url ?? null);
-  const videoCoverSrc = resolvePublicMediaUrl(video?.video_cover_url ?? null);
+  const videoSrc = resolvePublicMediaUrl(media?.video_url ?? video?.video_url ?? null);
+  const videoCoverSrc = resolvePublicMediaUrl(
+    media?.video_cover_url ?? video?.video_cover_url ?? null,
+  );
   const averageRetention = video?.retention.average_retention_rate ?? 0;
   const averageWatchSeconds = video?.metrics.average_watch_seconds ?? 0;
   const durationSeconds = playerDurationSeconds ?? video?.duration_seconds ?? null;
