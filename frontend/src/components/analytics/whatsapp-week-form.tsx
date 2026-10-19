@@ -5,13 +5,13 @@ import { type Field, useFormList } from "@/hooks/form";
 import { Button } from "@/registry/new-york-v4/ui/button";
 
 type Values = { count: number | null };
-export const whatsappWeekFormSchema = (max: number) =>
+export const whatsappWeekFormSchema = () =>
   z.object({
     count: z
       .number()
       .int("Informe um número inteiro.")
       .min(0, "Informe zero ou mais pessoas.")
-      .max(max, `Informe até ${max} pessoas.`)
+      .max(1_000_000, "Informe até 1.000.000 de pacientes.")
       .nullable()
       .refine((value) => value !== null, "Informe a quantidade, inclusive se for zero."),
   });
@@ -31,7 +31,7 @@ export function WhatsappWeekForm({
       field: "input",
       type: "number",
       min: 0,
-      max: report.people_count,
+      max: 1_000_000,
       step: 1,
       label: "Quantidade de pessoas",
       required: true,
@@ -40,7 +40,7 @@ export function WhatsappWeekForm({
   ] satisfies Field<Values>[];
   const form = useFormList<Values>({
     fields,
-    schema: whatsappWeekFormSchema(report.people_count),
+    schema: whatsappWeekFormSchema(),
     defaultValues: { count: report.acquired_count },
     mode: "onSubmit",
     onlyRead: pending,

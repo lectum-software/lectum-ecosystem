@@ -22,7 +22,7 @@ const formatDate = (value: string | number) =>
     year: "numeric",
   }).format(new Date(value));
 const weekLabel = (week: WhatsappWeekHistoryItem) =>
-  `${formatDate(week.week_start)} a ${formatDate(new Date(week.week_end).getTime() - 1)}`;
+  `${formatDate(week.period_start ?? week.week_start)} a ${formatDate(new Date(week.week_end).getTime() - 1)}`;
 
 export function AcquiredPatientsLogic() {
   const user = useAppSelector((state) => state.user);
@@ -57,6 +57,11 @@ export function AcquiredPatientsLogic() {
             </Button>
           </InlineAlert>
         ) : null}
+        {history.isSuccess && weeks.length === 0 ? (
+          <p className="py-6 text-sm text-muted">
+            Nenhum clique no WhatsApp registrado no período.
+          </p>
+        ) : null}
         {weeks.length ? (
           <ul className="min-w-0 divide-y divide-border border-y border-border">
             {weeks.map((week) => (
@@ -66,7 +71,7 @@ export function AcquiredPatientsLogic() {
                     <h2 className="text-sm font-bold">{weekLabel(week)}</h2>
                     <p className="mt-1 text-xs text-muted">
                       {week.people_count.toLocaleString("pt-BR")}{" "}
-                      {week.people_count === 1 ? "pessoa no WhatsApp" : "pessoas no WhatsApp"}
+                      {week.people_count === 1 ? "clique no WhatsApp" : "cliques no WhatsApp"}
                     </p>
                   </div>
                   {week.editable ? (
@@ -156,10 +161,12 @@ export function AcquiredPatientsLogic() {
               <p className="text-sm font-semibold">{weekLabel(selected)}</p>
               <p className="text-sm text-muted">
                 {selected.people_count}{" "}
-                {selected.people_count === 1 ? "pessoa clicou" : "pessoas clicaram"} no seu link de
-                WhatsApp pela Lectum.
+                {selected.people_count === 1 ? "pessoa clicou" : "pessoas clicaram"} no seu botão de
+                WhatsApp neste período.
               </p>
-              <p className="text-sm">Quantas dessas pessoas agendaram um atendimento com você?</p>
+              <p className="text-sm">
+                Quantos novos pacientes você adquiriu pela Lectum neste período?
+              </p>
               <WhatsappWeekForm
                 key={selected.week_start}
                 report={selected}

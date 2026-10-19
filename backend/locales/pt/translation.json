@@ -1,6 +1,6 @@
 {
   "error": {
-    "invalid_whatsapp_report_count": "Informe uma quantidade inteira entre zero e o total de pessoas do resumo.",
+    "invalid_whatsapp_report_count": "Informe uma quantidade inteira entre zero e 1.000.000 para um período com cliques no WhatsApp.",
     "whatsapp_report_read_only": "Somente a semana atual e as quatro anteriores podem ser alteradas.",
     "invalid_structure": "Revise os dados informados.",
     "not_found": "não encontrad{{gender}}",

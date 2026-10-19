@@ -56,8 +56,10 @@ export function hashWhatsappVisitor(value: unknown) {
   return createHash("sha256").update(`lectum-whatsapp:${value}`).digest("hex");
 }
 
-export function validAcquiredCount(value: unknown, people: number): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= people;
+export function validAcquiredCount(value: unknown): value is number {
+  return (
+    typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000
+  );
 }
 
 export const weekDateLabel = (date: Date) =>

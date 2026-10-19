@@ -14,6 +14,7 @@ export type WhatsappWeekReport = {
 };
 export type WhatsappWeekHistoryItem = Omit<WhatsappWeekReport, "id"> & {
   id: string | null;
+  period_start?: string;
   editable: boolean;
 };
 export type WhatsappWeekHistory = { weeks: WhatsappWeekHistoryItem[]; next_page: number | null };

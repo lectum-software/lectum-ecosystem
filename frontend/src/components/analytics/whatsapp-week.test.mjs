@@ -19,11 +19,11 @@ const { PremiumAnalyticsBanner, MetricCard, PeriodTabs } = await import(
   "../../app/app/professional/analytics/components/period-and-metrics.tsx"
 );
 
-for (const count of [0, 1, 10]) {
+for (const count of [0, 1, 10, 11, 1_000_000]) {
   test(`formulario aceita resposta intencional ${count}`, async () => {
     const form = createFormControl({
       defaultValues: { count },
-      resolver: zodResolver(whatsappWeekFormSchema(10)),
+      resolver: zodResolver(whatsappWeekFormSchema()),
     });
     let submitted;
     await form.handleSubmit((value) => {
@@ -32,9 +32,9 @@ for (const count of [0, 1, 10]) {
     assert.deepEqual(submitted, { count });
   });
 }
-for (const count of [null, undefined, "", -1, 0.5, 11]) {
+for (const count of [null, undefined, "", -1, 0.5, 1_000_001]) {
   test(`formulario rejeita ausencia/valor invalido ${count}`, () => {
-    assert.equal(whatsappWeekFormSchema(10).safeParse({ count }).success, false);
+    assert.equal(whatsappWeekFormSchema().safeParse({ count }).success, false);
   });
 }
 test("formulario inicia vazio, usa controller real e preserva zero salvo", () => {
@@ -49,6 +49,7 @@ test("formulario inicia vazio, usa controller real e preserva zero salvo", () =>
   assert.match(render(null), /value=""/);
   assert.match(render(0), /value="0"/);
   assert.match(render(null), /type="number"/);
+  assert.doesNotMatch(render(null), /max="10"/);
   assert.match(render(null), /Sua resposta será registrada nos seus Analytics da Lectum\./);
   assert.doesNotMatch(render(null), /Não sei informar/);
 });

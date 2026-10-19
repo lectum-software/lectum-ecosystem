@@ -107,10 +107,17 @@ export async function answerWhatsappReport(userId: string, id: string, count: un
     if (!report) return { kind: "missing" as const };
     const now = new Date();
     if (!editableWhatsappWeek(report.week_start, now)) return { kind: "closed" as const };
+    const user = await tx.user.findFirst({
+      where: { id: userId, deleted: false, role: "psicologo" },
+      select: { createdAt: true },
+    });
+    if (!user) return { kind: "missing" as const };
+    if (report.week_end <= user.createdAt || user.createdAt > now)
+      return { kind: "closed" as const };
+    const periodStart = new Date(Math.max(report.week_start.getTime(), user.createdAt.getTime()));
     const people =
-      (await whatsappPeopleCounts(report.week_start, report.week_end, userId))[0]?.people_count ??
-      0;
-    if (!validAcquiredCount(count, people)) return { kind: "invalid" as const };
+      (await whatsappPeopleCounts(periodStart, report.week_end, userId))[0]?.people_count ?? 0;
+    if (people === 0 || !validAcquiredCount(count)) return { kind: "invalid" as const };
     const updated = await tx.professional_whatsapp_week.update({
       where: { id: report.id },
       data: { acquired_count: count, people_count: people, answered_at: now, auto_opened_at: now },

@@ -131,14 +131,14 @@ export function WhatsappWeekPrompt({ userId, paused }: { userId: string; paused:
               ,{" "}
               <strong>
                 {report.people_count}{" "}
-                {report.people_count === 1 ? "pessoa clicou" : "pessoas clicaram"} no seu link de
-                WhatsApp pela Lectum
+                {report.people_count === 1 ? "pessoa clicou" : "pessoas clicaram"} no seu botão de
+                WhatsApp neste período
               </strong>
               .
             </p>
             {report.editable !== false ? (
               <p className="text-sm leading-6">
-                Quantas dessas pessoas agendaram um atendimento com você?
+                Quantos novos pacientes você adquiriu pela Lectum neste período?
               </p>
             ) : null}
             {report.editable === false ? (

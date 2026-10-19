@@ -58,10 +58,10 @@ test("domingo UTC ainda e sabado em Brasilia; suporta virada do ano", () => {
   const week = previousWhatsappWeek(new Date("2027-01-04T12:00:00Z"));
   assert.deepEqual(reportDates(week.start, week.end), { start_label: "28/12", end_label: "03/01" });
 });
-test("zero e resposta; ausencia, fracao, negativos e excesso nao sao", () => {
-  for (const value of [0, 1, 10]) assert.equal(validAcquiredCount(value, 10), true);
-  for (const value of [null, undefined, "", "0", -1, 0.5, 11, NaN, Infinity])
-    assert.equal(validAcquiredCount(value, 10), false);
+test("adquiridos independem de cliques, mas exigem inteiro nao negativo no limite da API", () => {
+  for (const value of [0, 1, 10, 11, 1_000_000]) assert.equal(validAcquiredCount(value), true);
+  for (const value of [null, undefined, "", "0", -1, 0.5, 1_000_001, NaN, Infinity])
+    assert.equal(validAcquiredCount(value), false);
 });
 test("identidade anonima e estavel e nao conserva identificador bruto", () => {
   const id = "64bd1f2a-7ee4-4f38-962e-f2595ccde8bb";
