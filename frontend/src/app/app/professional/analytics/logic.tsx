@@ -91,6 +91,7 @@ export const ProfessionalAnalyticsLogic = () => {
 
         {!shouldShowError ? (
           <PresentationVideoAnalyticsSection
+            media={data?.presentation_video}
             locked={isAnalyticsPreview}
             video={visibleData?.presentation_video}
           />

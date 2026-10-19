@@ -45,6 +45,7 @@ export type psychologist_profile = {
   rating_count?: number;
   published?: boolean;
   subscriptions?: ProfessionalSubscription[];
+  _count?: { subscriptions: number };
   createdAt?: string;
   updatedAt?: string;
 };

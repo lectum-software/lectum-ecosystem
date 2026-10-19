@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRight, BarChart3 } from "lucide-react";
+import { ArrowRight, BarChart3, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useId, useRef } from "react";
 import type { PsychologistAnalyticsPeriodKey } from "@/api/generator/types/psychologist-analytics";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
@@ -28,23 +29,9 @@ export const PeriodTabs = ({
   onCustomPopoverOpenChange: (open: boolean) => void;
   onCustomRangeApply: (range: { end_at: string; start_at: string }) => void;
 }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!customPopoverOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (containerRef.current?.contains(event.target as Node)) return;
-
-      onCustomPopoverOpenChange(false);
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-    };
-  }, [customPopoverOpen, onCustomPopoverOpenChange]);
+  const customTabRef = useRef<HTMLButtonElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const titleId = useId();
 
   const handlePeriodClick = (nextPeriod: PsychologistAnalyticsPeriodKey) => {
     if (nextPeriod === "custom") {
@@ -62,7 +49,7 @@ export const PeriodTabs = ({
   };
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="min-w-0">
       <div
         className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="tablist"
@@ -85,6 +72,7 @@ export const PeriodTabs = ({
                 )}
                 disabled={disabled}
                 key={option.value}
+                ref={option.value === "custom" ? customTabRef : undefined}
                 onClick={() => handlePeriodClick(option.value)}
                 role="tab"
                 type="button"
@@ -96,26 +84,39 @@ export const PeriodTabs = ({
         </div>
       </div>
 
-      {customPopoverOpen ? (
-        <div
-          aria-label="Selecionar período personalizado"
-          className="absolute top-[calc(100%+0.65rem)] right-1 left-1 z-30 rounded-[24px] border border-primary/10 bg-surface p-4 shadow-lectum-soft sm:left-auto sm:w-[22rem]"
-          role="dialog"
-        >
+      <Modal
+        open={customPopoverOpen}
+        onClose={() => onCustomPopoverOpenChange(false)}
+        initialFocusRef={titleRef}
+        returnFocusRef={customTabRef}
+        labelledBy={titleId}
+      >
+        <div className="w-full min-w-0 max-w-md rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-lectum-soft sm:p-5">
           <div className="mb-3 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
-                Período personalizado
-              </p>
-              <p className="mt-1 text-xs leading-5 text-muted">
-                Escolha o intervalo para recalcular seus analytics.
-              </p>
-            </div>
+            <h2
+              id={titleId}
+              ref={titleRef}
+              tabIndex={-1}
+              className="min-w-0 pt-2 text-lg font-bold text-foreground outline-none"
+            >
+              Período personalizado
+            </h2>
+            <Button
+              aria-label="Fechar período personalizado"
+              variant="ghost"
+              type="button"
+              className="h-10 w-10 shrink-0 p-0"
+              onClick={() => onCustomPopoverOpenChange(false)}
+            >
+              <X className="h-5 w-5" aria-hidden />
+            </Button>
           </div>
 
-          <CustomPeriodForm range={customRange} disabled={disabled} onApply={applyCustomRange} />
+          {customPopoverOpen ? (
+            <CustomPeriodForm range={customRange} disabled={disabled} onApply={applyCustomRange} />
+          ) : null}
         </div>
-      ) : null}
+      </Modal>
     </div>
   );
 };

@@ -685,3 +685,4 @@ Formato recomendado:
 - [ADR-0621 — Contexto de origem dos comentarios salvos](0621-comentarios-salvos-origem.md)
 - [ADR-0622 — Resumo semanal WhatsApp](0622-resumo-semanal-whatsapp.md)
 - [ADR-0623 — Inicio programado do resumo semanal](0623-inicio-resumo-semanal.md)
+- [ADR-0624 — Navegacao de upgrade e Analytics gratuito](0624-navegacao-analytics-login.md)

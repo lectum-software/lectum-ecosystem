@@ -30,11 +30,24 @@ test("AST: Analytics gratuito retorna apenas preview antes da consulta de métri
   assert.match(properties, /status: 200/);
   assert.match(properties, /mode: "preview"/);
   assert.match(properties, /has_professional_entitlement: false/);
+  assert.match(
+    properties,
+    /presentation_video: await repository.presentationVideoPreview\(data.auth.id\)/,
+  );
   assert.doesNotMatch(properties, /metrics|repository\.index/);
   const query = nodes.find(
     (node) => ts.isCallExpression(node) && text(node.expression) === "repository.index",
   );
   assert.ok(query && guard.end < query.pos);
+});
+
+test("preview consulta apenas mídia do próprio perfil não excluído", () => {
+  const repository = readFileSync(
+    join(__dirname, "../repositories/AnalyticsRepository.ts"),
+    "utf8",
+  );
+  assert.match(repository, /where: \{ user_id: userId, deleted: false \}/);
+  assert.match(repository, /select: \{ video_url: true, video_cover_url: true \}/);
 });
 
 test("AST: preserva a consulta de entitlement existente, inclusive cortesia", () => {

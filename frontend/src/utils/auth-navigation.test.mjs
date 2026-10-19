@@ -8,8 +8,12 @@ const { resolveAuthRedirect } = await import("./auth-redirect.ts");
 const { navigateBackFromCommunity, navigateBackFromTopMentors } = await import(
   "./community-ranking-navigation.ts"
 );
-const { canNavigateBackInApp, recordAppNavigationPoint, resetNavigationAfterAuthentication } =
-  await import("./navigation-history.ts");
+const {
+  canNavigateBackInApp,
+  navigateBackWithFallback,
+  recordAppNavigationPoint,
+  resetNavigationAfterAuthentication,
+} = await import("./navigation-history.ts");
 
 const oldWindow = globalThis.window;
 const oldDocument = globalThis.document;
@@ -41,6 +45,27 @@ const visit = (path) => {
   window.location.pathname = path;
   recordAppNavigationPoint(path);
 };
+
+for (const origin of [
+  "/app/profissional/estatisticas",
+  "/app/perfil",
+  "/app/profissional/assinatura",
+]) {
+  test(`checkout returns to its actual origin: ${origin}`, () => {
+    resetNavigationAfterAuthentication();
+    visit(origin);
+    visit("/app/profissional/assinatura/pagamento");
+    navigateBackWithFallback(router, "/app/profissional/assinatura");
+    assert.deepEqual(calls, ["back"]);
+  });
+}
+
+test("checkout direct entry does not return to authentication", () => {
+  resetNavigationAfterAuthentication();
+  visit("/app/profissional/assinatura/pagamento");
+  navigateBackWithFallback(router, "/app/profissional/assinatura");
+  assert.deepEqual(calls, ["push:/app/profissional/assinatura"]);
+});
 
 for (const destination of [
   "/comunidades/ansiedade/publicacao/post-id",

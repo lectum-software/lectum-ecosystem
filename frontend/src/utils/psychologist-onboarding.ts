@@ -116,7 +116,9 @@ export const getPsychologistPlanSelectionRequirementPath = (
   const profile = data.psychologist_profile;
   const currentSubscription = getActiveSubscription(profile);
 
-  if (!profile || !currentSubscription) {
+  // A previous plan choice remains valid after expiration or cancellation.
+  const hasSelectedPlan = Boolean(currentSubscription || profile?._count?.subscriptions);
+  if (!profile || !hasSelectedPlan) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.plans;
   }
 

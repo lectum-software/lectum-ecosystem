@@ -281,4 +281,8 @@ export type PsychologistAnalyticsResponse = {
 
 export type PsychologistAnalyticsPreview = {
   access: { has_professional_entitlement: false; mode: "preview" };
+  presentation_video?: Pick<
+    PsychologistAnalyticsPresentationVideo,
+    "video_url" | "video_cover_url"
+  > | null;
 };

@@ -38,8 +38,8 @@ export const CUSTOM_PERIOD_FIELDS = [
     type: "date",
     label: "Início",
     required: true,
-    autoFocus: true,
-    className: "[&>[role=alert]]:h-8",
+    className: "min-w-0 [&>[role=alert]]:h-8",
+    inputClassName: "min-w-0 max-w-full appearance-none [&::-webkit-date-and-time-value]:text-left",
   },
   {
     name: "end_at",
@@ -47,7 +47,8 @@ export const CUSTOM_PERIOD_FIELDS = [
     type: "date",
     label: "Fim",
     required: true,
-    className: "[&>[role=alert]]:h-8",
+    className: "min-w-0 [&>[role=alert]]:h-8",
+    inputClassName: "min-w-0 max-w-full appearance-none [&::-webkit-date-and-time-value]:text-left",
   },
 ] satisfies Field<AnalyticsCustomRange>[];
 
@@ -71,7 +72,7 @@ export function CustomPeriodForm({
   return (
     <form.Form
       {...form.formProps}
-      className="grid gap-x-3 sm:grid-cols-2"
+      className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-x-3 sm:grid-cols-2"
       onSubmit={form.hook.handleSubmit((values) => {
         if (!disabled) onApply(values);
       })}

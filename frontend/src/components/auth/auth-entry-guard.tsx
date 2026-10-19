@@ -27,7 +27,7 @@ export const AuthEntryGuard = ({ children }: PropsWithChildren) => {
     const params = new URLSearchParams(window.location.search);
     const returnTo = resolveAuthReturnTo(params.get("redirectTo"), params.get("callbackUrl"));
     const safeReturnTo = returnTo && !returnTo.startsWith("/auth/") ? returnTo : null;
-    const target = resolveAuthRedirect(hidrate.data, safeReturnTo ?? "/", "/");
+    const target = resolveAuthRedirect(hidrate.data, safeReturnTo, "/psicologos");
     if (target) router.replace(target);
   }, [entry, hasToken, hidrate.data, hidrate.isError, hidrate.isFetching, router]);
 
