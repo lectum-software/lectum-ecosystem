@@ -2,6 +2,27 @@ import { createHash } from "node:crypto";
 
 export const WEEKLY_WHATSAPP_KEY = "weekly_whatsapp_report";
 const DAY_MS = 86_400_000;
+export const WHATSAPP_WEEK_MS = 7 * DAY_MS;
+
+export function editableWhatsappWeek(start: Date, now = new Date()) {
+  const current = previousWhatsappWeek(now).end.getTime();
+  const age = current - start.getTime();
+  return (
+    Number.isFinite(age) && age >= 0 && age <= 4 * WHATSAPP_WEEK_MS && age % WHATSAPP_WEEK_MS === 0
+  );
+}
+
+export function parseWhatsappWeek(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const start = new Date(`${value}T00:00:00-03:00`);
+  if (
+    !Number.isFinite(start.getTime()) ||
+    start.toISOString().slice(0, 10) !== value ||
+    start.getUTCDay() !== 1
+  )
+    return null;
+  return start;
+}
 
 export function isWhatsappWeekReleased(availableAt: Date, startAt?: string) {
   if (!startAt?.trim()) return true;
@@ -35,8 +56,10 @@ export function hashWhatsappVisitor(value: unknown) {
   return createHash("sha256").update(`lectum-whatsapp:${value}`).digest("hex");
 }
 
-export function validAcquiredCount(value: unknown, people: number): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= people;
+export function validAcquiredCount(value: unknown): value is number {
+  return (
+    typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000
+  );
 }
 
 export const weekDateLabel = (date: Date) =>

@@ -1479,8 +1479,8 @@ model professional_whatsapp_week {
   auto_opened_at   DateTime?
   push_claimed_at  DateTime?
   push_status      String       @default("pending")
-  notification_id  String       @unique
-  notification     notification @relation(fields: [notification_id], references: [id], onDelete: Cascade)
+  notification_id  String?       @unique
+  notification     notification? @relation(fields: [notification_id], references: [id], onDelete: Cascade)
 
   @@unique([psychologist_id, week_start])
   @@index([psychologist_id, week_end])

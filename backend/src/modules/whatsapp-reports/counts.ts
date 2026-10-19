@@ -1,4 +1,25 @@
 import prisma from "@/infra/database/prisma";
+import { previousWhatsappWeek } from "./policy";
+
+export function acquiredWeeksWhere(
+  psychologistId: string,
+  start: Date,
+  end: Date,
+  now = new Date(),
+) {
+  const today = new Date(
+    `${new Date(now.getTime() - 3 * 3600000).toISOString().slice(0, 10)}T00:00:00-03:00`,
+  );
+  return {
+    psychologist_id: psychologistId,
+    deleted: false,
+    OR: [
+      { week_end: { gt: start, lte: new Date(end.getTime() + 1) } },
+      // Preset intervals capture their end before the query; compare calendar days.
+      ...(start <= now && end >= today ? [{ week_start: previousWhatsappWeek(now).end }] : []),
+    ],
+  };
+}
 
 // Unknown legacy visitors remain separate: their identity cannot be reconstructed.
 export async function whatsappPeopleCounts(
@@ -22,11 +43,7 @@ export async function whatsappPeopleCounts(
 
 export async function acquiredPatientsSummary(psychologistId: string, start: Date, end: Date) {
   const weeks = await prisma.professional_whatsapp_week.findMany({
-    where: {
-      psychologist_id: psychologistId,
-      deleted: false,
-      week_end: { gt: start, lte: new Date(end.getTime() + 1) },
-    },
+    where: acquiredWeeksWhere(psychologistId, start, end),
     select: { acquired_count: true },
   });
   const answered = weeks.filter((week) => week.acquired_count !== null);

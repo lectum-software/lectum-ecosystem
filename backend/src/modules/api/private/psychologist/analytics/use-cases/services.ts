@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { acquiredPatientsSummary } from "@/modules/whatsapp-reports/counts";
 import type {
   IPsychologistAnalyticsIndexDTO,
   PsychologistAnalyticsPeriod,
@@ -119,6 +120,10 @@ export const index = async (data: IPsychologistAnalyticsIndexDTO) => {
   }
 
   const repository = new PsychologistAnalyticsRepository();
+  const period = buildPeriod(normalizePeriod(data.q.period), data.q);
+  if (!period) {
+    return { status: 400, ...error("invalid_analytics_date_range", {}) };
+  }
   const hasEntitlement = await repository.hasProfessionalEntitlement(data.auth.id);
   if (!hasEntitlement) {
     return {
@@ -127,15 +132,12 @@ export const index = async (data: IPsychologistAnalyticsIndexDTO) => {
       data: {
         access: { mode: "preview", has_professional_entitlement: false },
         presentation_video: await repository.presentationVideoPreview(data.auth.id),
+        acquired_summary: await acquiredPatientsSummary(
+          data.auth.id,
+          period.start_at,
+          period.end_at,
+        ),
       },
-    };
-  }
-
-  const period = buildPeriod(normalizePeriod(data.q.period), data.q);
-  if (!period) {
-    return {
-      status: 400,
-      ...error("invalid_analytics_date_range", {}),
     };
   }
 

@@ -15,15 +15,15 @@ registerHooks({
 
 const { whatsappWeekFormSchema, WhatsappWeekForm } = await import("./whatsapp-week-form.tsx");
 const { metricCards } = await import("../../app/app/professional/analytics/modules/support.ts");
-const { PremiumAnalyticsBanner, MetricCard } = await import(
+const { PremiumAnalyticsBanner, MetricCard, PeriodTabs } = await import(
   "../../app/app/professional/analytics/components/period-and-metrics.tsx"
 );
 
-for (const count of [0, 1, 10]) {
+for (const count of [0, 1, 10, 11, 1_000_000]) {
   test(`formulario aceita resposta intencional ${count}`, async () => {
     const form = createFormControl({
       defaultValues: { count },
-      resolver: zodResolver(whatsappWeekFormSchema(10)),
+      resolver: zodResolver(whatsappWeekFormSchema()),
     });
     let submitted;
     await form.handleSubmit((value) => {
@@ -32,9 +32,9 @@ for (const count of [0, 1, 10]) {
     assert.deepEqual(submitted, { count });
   });
 }
-for (const count of [null, undefined, "", -1, 0.5, 11]) {
+for (const count of [null, undefined, "", -1, 0.5, 1_000_001]) {
   test(`formulario rejeita ausencia/valor invalido ${count}`, () => {
-    assert.equal(whatsappWeekFormSchema(10).safeParse({ count }).success, false);
+    assert.equal(whatsappWeekFormSchema().safeParse({ count }).success, false);
   });
 }
 test("formulario inicia vazio, usa controller real e preserva zero salvo", () => {
@@ -49,6 +49,7 @@ test("formulario inicia vazio, usa controller real e preserva zero salvo", () =>
   assert.match(render(null), /value=""/);
   assert.match(render(0), /value="0"/);
   assert.match(render(null), /type="number"/);
+  assert.doesNotMatch(render(null), /max="10"/);
   assert.match(render(null), /Sua resposta será registrada nos seus Analytics da Lectum\./);
   assert.doesNotMatch(render(null), /Não sei informar/);
 });
@@ -59,7 +60,7 @@ test("indicadores lado a lado, ausencia distinta de zero e nota de autoria", () 
   assert.equal(cards.length, 6);
   assert.equal(cards[4].label, "Cliques no WhatsApp");
   assert.equal(cards[4].layout, undefined);
-  assert.equal(cards[4].description, undefined);
+  assert.equal(cards[4].description, "Pessoas únicas no período.");
   assert.equal(cards[5].label, "Pacientes adquiridos");
   assert.equal(cards[5].value, "0");
   assert.match(cards[5].description, /Dados informados pelo psicólogo/);
@@ -75,4 +76,33 @@ test("upgrade usa checkout de pagamento e texto aprovado", () => {
   assert.match(html, /Disponível para assinantes/);
   assert.match(html, /Assine o plano profissional para acompanhar seus resultados\./);
   assert.match(html, /href="\/app\/profissional\/assinatura\/pagamento"/);
+});
+
+test("contador de pacientes abre historico por link com chevron", () => {
+  const metric = metricCards()[5];
+  assert.equal(metric.href, "/app/profissional/pacientes-adquiridos");
+  const html = renderToStaticMarkup(createElement(MetricCard, { metric }));
+  assert.match(html, /href="\/app\/profissional\/pacientes-adquiridos"/);
+  assert.match(html, /chevron-right/);
+  assert.match(html, /after:inset-0/);
+  assert.doesNotMatch(html, /blur-/);
+});
+
+test("datas aparecem apenas no seletor personalizado aplicado", () => {
+  const render = (current) =>
+    renderToStaticMarkup(
+      createElement(PeriodTabs, {
+        current,
+        customPopoverOpen: false,
+        customRange: { start_at: "2026-10-01", end_at: "2026-10-18" },
+        onChange() {},
+        onCustomPopoverOpenChange() {},
+        onCustomRangeApply() {},
+      }),
+    );
+  assert.match(render("custom"), /Personalizado • 01\/10\/26 a 18\/10\/26/);
+  for (const period of ["all", "7d", "30d", "year"]) {
+    assert.doesNotMatch(render(period), /01\/10\/26|18\/10\/26/);
+    assert.match(render(period), />Personalizado<\/button>/);
+  }
 });

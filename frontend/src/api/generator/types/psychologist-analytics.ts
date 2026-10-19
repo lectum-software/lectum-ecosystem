@@ -280,6 +280,7 @@ export type PsychologistAnalyticsResponse = {
 };
 
 export type PsychologistAnalyticsPreview = {
+  acquired_summary?: { acquired_patients: number | null; unanswered_weeks: number };
   access: { has_professional_entitlement: false; mode: "preview" };
   presentation_video?: Pick<
     PsychologistAnalyticsPresentationVideo,

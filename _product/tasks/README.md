@@ -681,6 +681,8 @@ ou cortesia manual.
 | 260 | [TASK-260 - Resumo semanal WhatsApp e Analytics](TASK-260-resumo-semanal-whatsapp.md) | Done | 259 |
 | 261 | [TASK-261 - Inicio programado do resumo semanal](TASK-261-inicio-resumo-semanal.md) | Done | 260 |
 | 262 | [TASK-262 - Navegacao, Analytics e login gratuito](TASK-262-navegacao-analytics-login.md) | Done | 261 |
+| 263 | [TASK-263 - Historico de pacientes adquiridos](TASK-263-historico-pacientes-adquiridos.md) | Done | 262 |
+| 264 | [TASK-264 - Elegibilidade do historico de pacientes](TASK-264-elegibilidade-historico-pacientes.md) | Done | 263 |
 
 ## Ordem operacional recomendada sem bloqueios
 

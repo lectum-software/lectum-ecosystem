@@ -53,6 +53,7 @@ export const getDefaultCustomRange = () => {
 export type AnalyticsCardIcon = LucideIcon | typeof WhatsAppIcon;
 
 export type AnalyticsCardView = {
+  href?: string;
   description?: string;
   icon: AnalyticsCardIcon;
   id: string;
@@ -113,6 +114,7 @@ export const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCard
     id: "whatsapp_clicks",
     icon: WhatsAppIcon,
     label: "Cliques no WhatsApp",
+    description: "Pessoas únicas no período.",
     value: toCount(data?.metrics.whatsapp_clicks),
     source: "contact_request",
   },
@@ -120,6 +122,7 @@ export const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCard
     id: "acquired_patients",
     icon: UsersRound,
     label: "Pacientes adquiridos",
+    href: "/app/profissional/pacientes-adquiridos",
     value: data?.metrics.acquired_patients == null ? "—" : toCount(data.metrics.acquired_patients),
     description: `Dados informados pelo psicólogo.${data?.metrics.unanswered_weeks ? " Há semanas sem resposta." : ""}`,
   },

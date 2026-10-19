@@ -12,6 +12,7 @@ export const reportController =
             auth: req.auth,
             p: { id: String(req.p?.id ?? req.params.id ?? "") },
             b: req.b ?? {},
+            q: req.q ?? {},
           },
           operation,
         ),
