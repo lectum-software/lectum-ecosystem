@@ -136,24 +136,37 @@ export function WhatsappWeekPrompt({ userId, paused }: { userId: string; paused:
               </strong>
               .
             </p>
-            <p className="text-sm leading-6">
-              Quantas dessas pessoas agendaram um atendimento com você?
-            </p>
-            <WhatsappWeekForm
-              key={report.id}
-              report={report}
-              pending={answer.isPending}
-              onSubmit={async (count) => {
-                try {
-                  await answer.mutateAsync({ id: report.id, count });
-                  close();
-                } catch (err) {
-                  setError(
-                    getSafeApiErrorMessage(err, "Não foi possível salvar. Tente novamente."),
-                  );
-                }
-              }}
-            />
+            {report.editable !== false ? (
+              <p className="text-sm leading-6">
+                Quantas dessas pessoas agendaram um atendimento com você?
+              </p>
+            ) : null}
+            {report.editable === false ? (
+              <div className="grid gap-2 text-sm">
+                <p>
+                  {report.acquired_count === null
+                    ? "Resultado não informado."
+                    : `Pacientes adquiridos: ${report.acquired_count}.`}
+                </p>
+                <p className="text-muted">Este período está disponível somente para consulta.</p>
+              </div>
+            ) : (
+              <WhatsappWeekForm
+                key={report.id}
+                report={report}
+                pending={answer.isPending}
+                onSubmit={async (count) => {
+                  try {
+                    await answer.mutateAsync({ id: report.id, count });
+                    close();
+                  } catch (err) {
+                    setError(
+                      getSafeApiErrorMessage(err, "Não foi possível salvar. Tente novamente."),
+                    );
+                  }
+                }}
+              />
+            )}
           </>
         ) : (
           <>

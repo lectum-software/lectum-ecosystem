@@ -15,7 +15,7 @@ registerHooks({
 
 const { whatsappWeekFormSchema, WhatsappWeekForm } = await import("./whatsapp-week-form.tsx");
 const { metricCards } = await import("../../app/app/professional/analytics/modules/support.ts");
-const { PremiumAnalyticsBanner, MetricCard } = await import(
+const { PremiumAnalyticsBanner, MetricCard, PeriodTabs } = await import(
   "../../app/app/professional/analytics/components/period-and-metrics.tsx"
 );
 
@@ -59,7 +59,7 @@ test("indicadores lado a lado, ausencia distinta de zero e nota de autoria", () 
   assert.equal(cards.length, 6);
   assert.equal(cards[4].label, "Cliques no WhatsApp");
   assert.equal(cards[4].layout, undefined);
-  assert.equal(cards[4].description, undefined);
+  assert.equal(cards[4].description, "Pessoas únicas no período.");
   assert.equal(cards[5].label, "Pacientes adquiridos");
   assert.equal(cards[5].value, "0");
   assert.match(cards[5].description, /Dados informados pelo psicólogo/);
@@ -75,4 +75,33 @@ test("upgrade usa checkout de pagamento e texto aprovado", () => {
   assert.match(html, /Disponível para assinantes/);
   assert.match(html, /Assine o plano profissional para acompanhar seus resultados\./);
   assert.match(html, /href="\/app\/profissional\/assinatura\/pagamento"/);
+});
+
+test("contador de pacientes abre historico por link com chevron", () => {
+  const metric = metricCards()[5];
+  assert.equal(metric.href, "/app/profissional/pacientes-adquiridos");
+  const html = renderToStaticMarkup(createElement(MetricCard, { metric }));
+  assert.match(html, /href="\/app\/profissional\/pacientes-adquiridos"/);
+  assert.match(html, /chevron-right/);
+  assert.match(html, /after:inset-0/);
+  assert.doesNotMatch(html, /blur-/);
+});
+
+test("datas aparecem apenas no seletor personalizado aplicado", () => {
+  const render = (current) =>
+    renderToStaticMarkup(
+      createElement(PeriodTabs, {
+        current,
+        customPopoverOpen: false,
+        customRange: { start_at: "2026-10-01", end_at: "2026-10-18" },
+        onChange() {},
+        onCustomPopoverOpenChange() {},
+        onCustomRangeApply() {},
+      }),
+    );
+  assert.match(render("custom"), /Personalizado • 01\/10\/26 a 18\/10\/26/);
+  for (const period of ["all", "7d", "30d", "year"]) {
+    assert.doesNotMatch(render(period), /01\/10\/26|18\/10\/26/);
+    assert.match(render(period), />Personalizado<\/button>/);
+  }
 });

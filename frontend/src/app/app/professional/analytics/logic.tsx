@@ -54,7 +54,7 @@ export const ProfessionalAnalyticsLogic = () => {
           current={period}
           customPopoverOpen={customPopoverOpen}
           customRange={customRange}
-          disabled={analytics.isFetching || isAnalyticsPreview}
+          disabled={analytics.isFetching}
           onChange={setPeriod}
           onCustomPopoverOpenChange={setCustomPopoverOpen}
           onCustomRangeApply={(range) => {
@@ -77,7 +77,21 @@ export const ProfessionalAnalyticsLogic = () => {
             aria-label="Cards de analytics"
           >
             {metricCards(visibleData).map((metric) => (
-              <MetricCard key={metric.id} locked={isAnalyticsPreview} metric={metric} />
+              <MetricCard
+                key={metric.id}
+                locked={isAnalyticsPreview && metric.id !== "acquired_patients"}
+                metric={
+                  metric.id === "acquired_patients" && data && "acquired_summary" in data
+                    ? {
+                        ...metric,
+                        value:
+                          data.acquired_summary?.acquired_patients == null
+                            ? "—"
+                            : data.acquired_summary.acquired_patients.toLocaleString("pt-BR"),
+                      }
+                    : metric
+                }
+              />
             ))}
           </section>
         ) : null}

@@ -1,4 +1,8 @@
 const keys = {
+  whatsappReports: {
+    root: (userId: string) => ["whatsapp_reports", userId],
+    history: (userId: string) => ["whatsapp_reports", userId, "history"],
+  },
   legal: {
     root: () => ["legal"],
     current: () => ["legal", "current"],

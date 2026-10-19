@@ -30,7 +30,13 @@ export async function runWeeklyWhatsappReports(now = new Date()) {
       },
       select: { id: true },
     });
-    if (existing) continue;
+    if (existing) {
+      await prisma.professional_whatsapp_week.updateMany({
+        where: { id: existing.id, notification_id: null, deleted: false },
+        data: { people_count: candidate.people_count },
+      });
+      continue;
+    }
     try {
       await prisma.$transaction(async (tx) => {
         const notification = await tx.notification.create({
@@ -86,6 +92,8 @@ async function deliverWeeklyWhatsappPushes(now: Date, weekStart: Date) {
     where: {
       deleted: false,
       push_status: "pending",
+      notification_id: { not: null },
+      answered_at: null,
       week_start: weekStart,
       available_at: { lte: now },
     },
@@ -93,8 +101,9 @@ async function deliverWeeklyWhatsappPushes(now: Date, weekStart: Date) {
     orderBy: { createdAt: "asc" },
   });
   for (const report of pending) {
+    if (!report.notification_id) continue;
     const claimed = await prisma.professional_whatsapp_week.updateMany({
-      where: { id: report.id, push_status: "pending" },
+      where: { id: report.id, push_status: "pending", answered_at: null },
       data: { push_status: "sending", push_claimed_at: now },
     });
     if (!claimed.count) continue;

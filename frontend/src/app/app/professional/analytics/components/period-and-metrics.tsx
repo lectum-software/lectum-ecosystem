@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowRight, BarChart3, X } from "lucide-react";
+import { ArrowRight, BarChart3, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
-import { useId, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import type { PsychologistAnalyticsPeriodKey } from "@/api/generator/types/psychologist-analytics";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,27 @@ export const PeriodTabs = ({
   const customTabRef = useRef<HTMLButtonElement | null>(null);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const titleId = useId();
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (current === "custom" && (!customRange.start_at || !customRange.end_at)) return;
+    const tabs = tabsRef.current;
+    if (!tabs) return;
+    const revealSelection = () => {
+      const selected = tabs.querySelector(`[data-period="${current}"]`);
+      if (!selected) return;
+      const bounds = tabs.getBoundingClientRect();
+      const target = selected.getBoundingClientRect();
+      if (target.left < bounds.left || target.width > bounds.width)
+        tabs.scrollLeft += target.left - bounds.left;
+      else if (target.right > bounds.right) tabs.scrollLeft += target.right - bounds.right;
+    };
+    revealSelection();
+    const observer = new ResizeObserver(revealSelection);
+    observer.observe(tabs);
+    return () => observer.disconnect();
+  }, [current, customRange.start_at, customRange.end_at]);
+  const shortDate = (date: string) =>
+    `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(2, 4)}`;
 
   const handlePeriodClick = (nextPeriod: PsychologistAnalyticsPeriodKey) => {
     if (nextPeriod === "custom") {
@@ -53,6 +74,7 @@ export const PeriodTabs = ({
       <div
         className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="tablist"
+        ref={tabsRef}
       >
         <div className="flex min-w-max gap-1 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-1 shadow-[var(--lectum-shadow-soft)] sm:gap-2 md:min-w-0 md:justify-between">
           {PERIOD_OPTIONS.map((option) => {
@@ -72,12 +94,15 @@ export const PeriodTabs = ({
                 )}
                 disabled={disabled}
                 key={option.value}
+                data-period={option.value}
                 ref={option.value === "custom" ? customTabRef : undefined}
                 onClick={() => handlePeriodClick(option.value)}
                 role="tab"
                 type="button"
               >
-                {option.label}
+                {option.value === "custom" && current === "custom"
+                  ? `Personalizado • ${shortDate(customRange.start_at)} a ${shortDate(customRange.end_at)}`
+                  : option.label}
               </button>
             );
           })}
@@ -183,25 +208,35 @@ export const MetricCard = ({ locked, metric }: { locked?: boolean; metric: Analy
   }
 
   return (
-    <article className="flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-[20px] border border-primary/10 bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:min-h-[150px] sm:rounded-[22px] sm:p-4">
+    <article className="relative flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-[20px] border border-primary/10 bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:min-h-[150px] sm:rounded-[22px] sm:p-4">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary sm:h-10 sm:w-10">
         <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden />
       </span>
 
       <h2 className="mt-3 min-h-10 break-words text-[0.78rem] font-extrabold leading-5 text-muted sm:mt-4 sm:text-sm">
-        {metric.label}
+        {metric.href ? (
+          <Link
+            href={metric.href}
+            className="flex items-start justify-between gap-1 after:absolute after:inset-0 after:rounded-[20px] hover:text-primary focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary"
+          >
+            <span>{metric.label}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+          </Link>
+        ) : (
+          metric.label
+        )}
       </h2>
 
       <p
         className={cn(
-          "mt-auto pt-2 text-2xl font-black leading-none text-foreground sm:text-[1.75rem]",
+          "mt-2 text-2xl font-black leading-none text-foreground sm:text-[1.75rem]",
           locked && "select-none blur-[5px]",
         )}
       >
         {metric.value}
       </p>
       {metric.description ? (
-        <p className="mt-2 text-xs leading-4 text-subtle">{metric.description}</p>
+        <p className="mt-2 min-h-8 text-xs leading-4 text-subtle">{metric.description}</p>
       ) : null}
     </article>
   );

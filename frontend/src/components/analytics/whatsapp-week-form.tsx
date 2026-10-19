@@ -21,7 +21,7 @@ export function WhatsappWeekForm({
   pending,
   onSubmit,
 }: {
-  report: WhatsappWeekReport;
+  report: Pick<WhatsappWeekReport, "people_count" | "acquired_count">;
   pending: boolean;
   onSubmit: (count: number) => Promise<void>;
 }) {
