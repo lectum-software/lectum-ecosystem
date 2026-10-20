@@ -1059,3 +1059,5 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Ícones da tabela usam as cores das fatias; seleção compartilhada por toque/clique/teclado. Informações de Top Mentores preservadas.
 - [x] Sem cliques, anel neutro; origem única ocupa todo o anel. Estado bloqueado não permite seleção.
 - [x] Check completo e build aprovados. Prévia conferida em mobile/desktop: soma, cinco origens, cores, seleção compartilhada, teclado, estados vazio/único/bloqueado. Sem push/deploy.
+
+- [x] Texto de comunidades ajustado para “Veja quais conteúdos levam mais pacientes ao seu WhatsApp.” (20/10/2026).

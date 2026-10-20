@@ -59,7 +59,7 @@ export const CommunityActivitySection = ({
             Participação nas comunidades
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Veja quais conteúdos levam pacientes ao seu WhatsApp.
+            Veja quais conteúdos levam mais pacientes ao seu WhatsApp.
           </p>
         </div>
       </div>
