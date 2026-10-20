@@ -1004,3 +1004,13 @@ Limite de QA: não houve sessão autenticada de usuário real; a interface foi v
 
 A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/deploy.
 - [x] Check completo do frontend e build final aprovados; checks de ADR/tasks, source safety, tamanho e encoding aprovados.
+
+## Refinamento de interação — 19/10/2026
+
+- [x] Legenda com totais do período e balão com valores diários/semanais apenas após interação.
+- [x] Removidos Evolução no período, instruções de deslize/semanas e ressalva de múltiplos termos.
+- [x] Carrossel com rolagem por toque e setas discretas no desktop.
+- [x] Atalho de pacientes e chevron em cinza.
+- [x] Descrições das origens restauradas, uma única Principal origem e nota Pessoas únicas por origem.
+- [x] Blocos existentes de métricas/retenção do vídeo e comunidades preservados.
+- [x] Check completo e build do frontend aprovados. Prévia em 390/1440px validada: totais por origem, total único distinto da soma diária, balão, swipe nativo, setas, destaque único em empate, tabelas e blocos preservados. Sem push/deploy; dados da prévia são de validação.
