@@ -995,3 +995,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] Prévia dos componentes reais inspecionada em 390/1440px com dados explicitamente de validação, sem overflow. Nenhuma resposta simulada entrou no produto.
 
 Limite de QA: não houve sessão autenticada de usuário real; a interface foi validada isoladamente e a agregação com banco real descartável. Nenhum serviço/dado remoto foi acessado ou alterado. Sem push/deploy. Migration deve preceder backend e frontend na publicação. Origens históricas ausentes permanecem não identificadas. Evidências temporárias em work/analytics-* (ignoradas pelo Git).
+
+## Ajuste de identidade visual — 19/10/2026
+
+- [x] Cards claros, ícones suaves, seleção por borda e painel com os mesmos tokens das demais telas Lectum.
+- [x] Preservados os blocos de métricas/retenção do vídeo e participação/cliques da comunidade na página real e incluídos na prévia local completa.
+- [x] Prévia com cabeçalho/filtros nativos e fonte Manrope; validação em 390/1440px sem overflow, preservando toque, teclado, tabelas, Principal origem e atalho de pacientes.
+
+A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/deploy.
+- [x] Check completo do frontend e build final aprovados; checks de ADR/tasks, source safety, tamanho e encoding aprovados.

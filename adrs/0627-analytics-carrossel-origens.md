@@ -20,3 +20,6 @@ Builds de frontend/backend, tipos, lint e testes aprovados. Migration e integra�
 
 ## Pendências
 Aplicar migration antes do backend na publicação autorizada. QA com sessão autenticada real não executado; UI e agregação foram validadas separadamente. Builder/Quick Copy indisponível nesta sessão; referências fornecidas pelo usuário e inventário de protótipos consultados. Layout mobile-first (~390px).
+
+## Refinamento visual — 19/10/2026
+O carrossel mantém a identidade Lectum: superfícies claras, ícones em círculos azul suave, borda de seleção e sombras/tipografia dos componentes existentes. O painel temporal usa o mesmo cabeçalho visual das seções de vídeo e comunidade. As seções PresentationVideoAnalyticsSection e CommunityActivitySection permanecem na página, incluindo retenção e cliques por conteúdo; apenas as informações transferidas ao resumo deixam de ser duplicadas. A prévia local agora inclui esses componentes reais, AppPageHeader, PeriodTabs e a fonte Manrope, com dados explicitamente de validação.
