@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRef } from "react";
 import type { PsychologistAnalyticsCommunityHighlight } from "@/api/generator/types/psychologist-analytics";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { CommunityHighlightMedia } from "./community-highlight-media";
+import { CommunityHighlightMedia, isTextHighlight } from "./community-highlight-media";
 
 export function CommunityHighlights({
   items,
@@ -61,6 +61,7 @@ export function CommunityHighlights({
             className="mt-2 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain touch-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {highlights.map((item) => {
+              const textOnly = isTextHighlight(item);
               const postHref = `/comunidades/${encodeURIComponent(item.community_slug)}/publicacao/${encodeURIComponent(item.post_id)}`;
               const href = isReply
                 ? `${postHref}?focusReplyId=${encodeURIComponent(item.id)}#reply-${encodeURIComponent(item.id)}`
@@ -69,12 +70,16 @@ export function CommunityHighlights({
                 <Link
                   key={item.id}
                   href={href}
-                  className="relative aspect-[9/16] w-[108px] md:w-[120px] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-surface focus-visible:outline-2 focus-visible:outline-primary"
+                  className={`relative aspect-[9/16] w-[108px] md:w-[120px] shrink-0 snap-start overflow-hidden rounded-2xl border ${textOnly ? "border-muted/30" : "border-border"} bg-transparent focus-visible:outline-2 focus-visible:outline-primary`}
                   aria-label={`Abrir ${isReply ? "resposta" : "post"}: ${item.title || item.excerpt || "Conteúdo"}. ${item.whatsapp_clicks} cliques no WhatsApp`}
                 >
                   <CommunityHighlightMedia item={item} isReply={isReply} />
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--lectum-media-background)]/80 to-transparent" />
-                  <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--lectum-media-foreground)]">
+                  {!textOnly ? (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--lectum-media-background)]/80 to-transparent" />
+                  ) : null}
+                  <span
+                    className={`absolute bottom-3 right-3 inline-flex items-center gap-1.5 text-sm font-extrabold ${textOnly ? "text-muted" : "text-[var(--lectum-media-foreground)]"}`}
+                  >
                     <WhatsAppIcon className="h-4 w-4" aria-hidden />
                     {item.whatsapp_clicks.toLocaleString("pt-BR")}
                   </span>

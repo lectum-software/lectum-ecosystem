@@ -1093,3 +1093,8 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Ícones de post/comentário removidos das miniaturas textuais. Post apresenta título em negrito e trecho da descrição; resposta apresenta apenas o próprio texto, sem contexto da pergunta.
 - [x] Trechos truncados preservam espaço para o contador do WhatsApp.
 - [x] Check/build do frontend aprovados; prévia conferida em mobile e desktop com título/descrição no post e somente texto próprio na resposta. Sem push/deploy.
+
+## Acabamento dos cards textuais — 20/10/2026
+
+- [x] Posts e respostas sem mídia usam fundo transparente e borda cinza, sem degradê. Contador do WhatsApp em cinza mantém contraste; mídias preservam contador branco e degradê.
+- [x] Check/build do frontend aprovados. Browser confirmou fundos transparentes, ausência de degradê e contador não branco nos cards textuais em mobile/desktop. Sem push/deploy.

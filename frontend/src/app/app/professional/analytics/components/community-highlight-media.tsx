@@ -8,6 +8,14 @@ import { resolvePublicMediaUrl } from "@/utils/media";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 
+export function isTextHighlight(item: PsychologistAnalyticsCommunityHighlight) {
+  return (
+    !item.media_type?.startsWith("video") &&
+    !resolvePublicMediaUrl(item.media_url) &&
+    !resolvePublicMediaUrl(item.thumbnail_url)
+  );
+}
+
 function Poster({ source }: { source?: string | null }) {
   const [failed, setFailed] = useState<string | null>(null);
   return source && failed !== source ? (
@@ -83,7 +91,10 @@ export function CommunityHighlightMedia({
   const thumbnail = resolvePublicMediaUrl(item.thumbnail_url);
   const stream = video && isVideoAssetReference(item.media_url);
   return (
-    <div ref={ref} className="absolute inset-0 bg-surface-muted">
+    <div
+      ref={ref}
+      className={`absolute inset-0 ${isTextHighlight(item) ? "bg-transparent" : "bg-surface-muted"}`}
+    >
       {stream && item.media_url ? (
         <StreamPoster source={item.media_url} enabled={visible} />
       ) : video && source ? (
