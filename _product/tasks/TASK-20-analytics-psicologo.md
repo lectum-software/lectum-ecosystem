@@ -1080,3 +1080,10 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Contrato aditivo inclui media_url opcional; nenhum player ou reprodução automática na tela.
 
 - [x] Frontend check/build (633 testes) e backend check/build (936 testes) aprovados. Browser em 390/1440px validou pontinhos, fonte compacta, quadro real, contador branco dentro da miniatura, swipe, setas, links e estados vazio/bloqueado. Sem push/deploy.
+
+## Miniaturas menores — 20/10/2026
+
+- [x] Miniaturas com 108px de largura no mobile e 120px no desktop, mantendo 9:16 (192px e aproximadamente 213px de altura).
+- [x] Trechos de posts e respostas ajustados ao tamanho compacto; exemplos locais alternam vídeo e texto nos dois carrosséis.
+- [x] Check do frontend aprovado. Prévia conferida em 390/1440px: dois formatos em cada carrossel, larguras 108/120px, proporção 9:16, sem overflow horizontal e com contador legível.
+- [x] Build do frontend aprovado. Sem push/deploy.

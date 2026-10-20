@@ -52,3 +52,6 @@ O frontend substitui a tabela por legenda selecionável e acrescenta miniaturas 
 
 ## Quadros dos vídeos e legenda uniforme — 20/10/2026
 A legenda usa pontos e a tipografia compacta das séries temporais; o tamanho é aplicado também ao contêiner para respeitar a regra global de herança dos botões. Os destaques recebem media_url opcional para obter um quadro do vídeo original, evitando artes sociais antigas em thumbnail_url. Stream reutiliza a resolução autenticada de poster; arquivos legados reutilizam a extração local de quadro. IntersectionObserver adia esse trabalho até a proximidade da miniatura. URLs de objetos são revogadas no descarte. Não há reprodução nem controles de player. O contador branco fica sobre a miniatura vertical com degradê de contraste.
+
+## Escala compacta das miniaturas — 20/10/2026
+A largura passa a 108px no mobile e 120px no desktop, mantendo a proporção 9:16. Miniaturas textuais usam fonte compacta e truncamento para reservar o canto do contador. Exemplos de texto e vídeo existem apenas na prévia de validação; o produto continua usando conteúdos reais do ranking.

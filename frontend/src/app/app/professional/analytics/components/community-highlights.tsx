@@ -69,7 +69,7 @@ export function CommunityHighlights({
                 <Link
                   key={item.id}
                   href={href}
-                  className="relative aspect-[9/16] w-[44%] max-w-[160px] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-surface focus-visible:outline-2 focus-visible:outline-primary"
+                  className="relative aspect-[9/16] w-[108px] md:w-[120px] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-surface focus-visible:outline-2 focus-visible:outline-primary"
                   aria-label={`Abrir ${isReply ? "resposta" : "post"}: ${item.title || item.excerpt || "Conteúdo"}. ${item.whatsapp_clicks} cliques no WhatsApp`}
                 >
                   <CommunityHighlightMedia item={item} isReply={isReply} />

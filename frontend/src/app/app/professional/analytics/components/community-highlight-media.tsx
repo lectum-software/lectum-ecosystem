@@ -16,7 +16,7 @@ function Poster({ source }: { source?: string | null }) {
       src={source}
       alt=""
       fill
-      sizes="160px"
+      sizes="(min-width: 768px) 120px, 108px"
       className="object-cover"
       unoptimized
       onError={() => setFailed(source)}
@@ -96,11 +96,11 @@ export function CommunityHighlightMedia({
         <Poster />
       ) : (
         <div className="grid content-start gap-2 p-3 pb-12">
-          <Icon className="h-5 w-5 text-primary" aria-hidden />
+          <Icon className="h-4 w-4 text-primary" aria-hidden />
           {isReply && item.context ? (
-            <p className="line-clamp-2 text-xs font-semibold text-muted">{item.context}</p>
+            <p className="line-clamp-1 text-xs font-semibold text-muted">{item.context}</p>
           ) : null}
-          <p className="line-clamp-5 text-sm font-semibold leading-5 text-foreground">
+          <p className="line-clamp-4 text-xs font-semibold leading-4 text-foreground">
             {item.title || item.excerpt || "Ver conteúdo"}
           </p>
         </div>
