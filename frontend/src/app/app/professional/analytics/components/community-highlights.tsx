@@ -9,20 +9,28 @@ import { CommunityHighlightMedia, isTextHighlight } from "./community-highlight-
 
 export function CommunityHighlights({
   items,
-  kind,
   locked,
 }: {
-  items?: PsychologistAnalyticsCommunityHighlight[];
-  kind: "posts" | "replies";
+  items?: {
+    posts: PsychologistAnalyticsCommunityHighlight[];
+    replies: PsychologistAnalyticsCommunityHighlight[];
+  };
   locked?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
-  const isReply = kind === "replies";
-  const title = isReply ? "Respostas em destaque" : "Posts em destaque";
-  const highlights = (items ?? [])
+  const title = "Conteúdos em destaque";
+  const highlights = [
+    ...(items?.posts ?? []).map((item) => ({ ...item, kind: "post" as const })),
+    ...(items?.replies ?? []).map((item) => ({ ...item, kind: "reply" as const })),
+  ]
     .filter((item) => item.whatsapp_clicks > 0)
-    .sort((a, b) => b.whatsapp_clicks - a.whatsapp_clicks || a.id.localeCompare(b.id))
+    .sort(
+      (a, b) =>
+        b.whatsapp_clicks - a.whatsapp_clicks ||
+        a.id.localeCompare(b.id) ||
+        a.kind.localeCompare(b.kind),
+    )
     .slice(0, 5);
   const highlightCount = highlights.length;
   useEffect(() => {
@@ -50,9 +58,9 @@ export function CommunityHighlights({
   return (
     <section className="min-w-0 border-t border-border pt-4">
       <Link
-        href={`/app/publicacoes/minhas?type=${kind}`}
+        href="/app/publicacoes/minhas"
         className="flex items-center justify-between gap-3 rounded-lg py-2 text-foreground focus-visible:outline-2 focus-visible:outline-primary"
-        aria-label={`${title}: ver ${isReply ? "respostas" : "posts"} em Minhas Publicações`}
+        aria-label={`${title}: ver Minhas Publicações`}
       >
         <h3 className="text-sm font-extrabold">{title}</h3>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
@@ -62,11 +70,7 @@ export function CommunityHighlights({
       ) : !items ? (
         <p className="py-3 text-sm text-muted">Destaques ainda não disponíveis.</p>
       ) : !highlights.length ? (
-        <p className="py-3 text-sm text-muted">
-          {isReply
-            ? "Nenhuma resposta recebeu cliques neste período."
-            : "Nenhum post recebeu cliques neste período."}
-        </p>
+        <p className="py-3 text-sm text-muted">Nenhum conteúdo recebeu cliques neste período.</p>
       ) : (
         <>
           <div
@@ -74,6 +78,7 @@ export function CommunityHighlights({
             className="mt-2 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain touch-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {highlights.map((item) => {
+              const isReply = item.kind === "reply";
               const textOnly = isTextHighlight(item);
               const postHref = `/comunidades/${encodeURIComponent(item.community_slug)}/publicacao/${encodeURIComponent(item.post_id)}`;
               const href = isReply
@@ -81,20 +86,27 @@ export function CommunityHighlights({
                 : postHref;
               return (
                 <Link
-                  key={item.id}
+                  key={`${item.kind}:${item.id}`}
                   href={href}
-                  className={`relative aspect-[9/16] w-[108px] md:w-[120px] shrink-0 snap-start overflow-hidden rounded-2xl border ${textOnly ? "border-muted/30" : "border-border"} bg-transparent focus-visible:outline-2 focus-visible:outline-primary`}
+                  className="block w-[108px] md:w-[120px] shrink-0 snap-start rounded-2xl focus-visible:outline-2 focus-visible:outline-primary"
                   aria-label={`Abrir ${isReply ? "resposta" : "post"}: ${item.title || item.excerpt || "Conteúdo"}. ${item.whatsapp_clicks} cliques no WhatsApp`}
                 >
-                  <CommunityHighlightMedia item={item} isReply={isReply} />
-                  {!textOnly ? (
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--lectum-media-background)]/80 to-transparent" />
-                  ) : null}
-                  <span
-                    className={`absolute bottom-3 right-3 inline-flex items-center gap-1.5 text-sm font-extrabold ${textOnly ? "text-muted" : "text-[var(--lectum-media-foreground)]"}`}
+                  <div
+                    className={`relative aspect-[9/16] overflow-hidden rounded-2xl border ${textOnly ? "border-muted/30" : "border-border"} bg-transparent`}
                   >
-                    <WhatsAppIcon className="h-4 w-4" aria-hidden />
-                    {item.whatsapp_clicks.toLocaleString("pt-BR")}
+                    <CommunityHighlightMedia item={item} isReply={isReply} />
+                    {!textOnly ? (
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--lectum-media-background)]/80 to-transparent" />
+                    ) : null}
+                    <span
+                      className={`absolute bottom-3 right-3 inline-flex items-center gap-1.5 text-sm font-extrabold ${textOnly ? "text-muted" : "text-[var(--lectum-media-foreground)]"}`}
+                    >
+                      <WhatsAppIcon className="h-4 w-4" aria-hidden />
+                      {item.whatsapp_clicks.toLocaleString("pt-BR")}
+                    </span>
+                  </div>
+                  <span className="mt-2 block text-center text-xs text-muted">
+                    {isReply ? "Resposta" : "Post"}
                   </span>
                 </Link>
               );

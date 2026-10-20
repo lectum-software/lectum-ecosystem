@@ -1132,3 +1132,9 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 
 - [x] Cards das métricas do vídeo usam fundo transparente e borda cinza, preservando dimensões e carrossel.
 - [x] Check/build do frontend aprovados. Navegador em 390px/1440px confirmou fundo transparente, borda cinza sólida e altura de 88px. Removido recorte arredondado do viewport para preservar as bordas dos cards. Sem push/deploy.
+
+## Destaques unificados — 20/10/2026
+
+- [x] Removidos os ícones dos cabeçalhos Métricas principais e Resultados dos seus conteúdos.
+- [x] Conteúdos em destaque reúne os cinco conteúdos com mais cliques no período, com identificação Post/Resposta abaixo da miniatura e links individuais preservados.
+- [x] Check/build do frontend aprovados. Browser confirmou ranking misto top 5, rótulos, proporção 9:16, links de respostas, estados vazio/bloqueado e setas condicionais com resize. Prévia local atualizada; sem push/deploy.

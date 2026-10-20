@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Info, PlayCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -570,9 +570,6 @@ export const PresentationVideoAnalyticsSection = ({
     <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-            <PlayCircle className="h-6 w-6" aria-hidden />
-          </span>
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
               Vídeo de apresentação
