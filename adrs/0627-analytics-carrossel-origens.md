@@ -35,3 +35,6 @@ No WhatsApp, os ícones da tabela usam a cor da série e fundo suavizado, substi
 
 ## Espaçamento compacto — 20/10/2026
 A consulta temporal usa balão absoluto sobre a área do gráfico, sem reservar uma faixa vazia acima do SVG. Margens menores aproximam cabeçalho e legenda da plotagem; gráficos sem legenda não recebem a margem destinada a ela. A altura responsiva e as interações permanecem preservadas.
+
+## Refinamento do respiro — 20/10/2026
+Após revisão visual, o conjunto recebe 16px adicionais distribuídos entre a margem do cabeçalho e a margem da plotagem. Isso mantém uma separação moderada sem restaurar a faixa fixa reservada ao balão.

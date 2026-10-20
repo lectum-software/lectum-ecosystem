@@ -1038,3 +1038,10 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Balão sobreposto à área temporal, sem deslocar conteúdo; altura responsiva do gráfico preservada.
 - [x] Seis métricas verificadas em 390/1440px, sem mudança de altura ao consultar pontos. Regressão de toque, teclado, carrossel e blocos existentes aprovada.
 - [x] Check completo e build do frontend aprovados. Alteração local, sem push/deploy.
+
+## Respiro intermediário — 20/10/2026
+
+- [x] Acrescentados 16px de respiro ao conjunto cabeçalho/legenda/gráfico, distribuídos em duas margens de 8px adicionais.
+- [x] Mantido balão sobreposto, sem retorno da reserva fixa de 64px.
+- [x] Seis métricas verificadas em 390/1440px, sem deslocamento ao consultar pontos; visualização do vídeo conferida no mobile.
+- [x] Check completo e build do frontend aprovados. Sem push/deploy.

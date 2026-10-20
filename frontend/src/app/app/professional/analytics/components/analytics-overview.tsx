@@ -131,7 +131,7 @@ export function AnalyticsOverview({
         {current.description ? (
           <p className="mt-3 text-sm leading-6 text-muted">{current.description}</p>
         ) : null}
-        <div className="mt-3">
+        <div className="mt-5">
           {loading ? (
             <p className="py-10 text-center text-sm text-muted">Carregando gráfico…</p>
           ) : restricted ? (
