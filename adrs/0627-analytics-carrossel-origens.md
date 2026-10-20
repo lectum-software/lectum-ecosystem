@@ -55,3 +55,8 @@ A legenda usa pontos e a tipografia compacta das séries temporais; o tamanho é
 
 ## Escala compacta das miniaturas — 20/10/2026
 A largura passa a 108px no mobile e 120px no desktop, mantendo a proporção 9:16. Miniaturas textuais usam fonte compacta e truncamento para reservar o canto do contador. Exemplos de texto e vídeo existem apenas na prévia de validação; o produto continua usando conteúdos reais do ranking.
+
+## Densidade e atribuição após publicação — 20/10/2026
+Os contadores superiores reduzem ícones, tipografia, padding e largura; somente seu rótulo abrevia Vídeo de apresentação. As métricas detalhadas preservam duas linhas e indicação da próxima coluna, com altura mínima de 88px e contraste por tokens de borda/superfície. A barra de período mantém borda e sombra no viewport arredondado, não no conteúdo que rola. O balão temporal fica como irmão do slider, permitindo um botão acessível de fechar sem capturar novamente o ponteiro; Escape também fecha e o botão devolve foco ao gráfico.
+
+A série de vídeo identifica Dentro do perfil por rotas explícitas. O agrupamento reconhece também /app/psicologo/:id e /app/psicologos, usadas pelas rotas autenticadas em português. Registros sem origem ou com caminho não reconhecido permanecem em Origem não identificada; não há backfill presumido nem alteração de contagens. Contrato aditivo, sem migration. Player, medição de engajamento e sincronização da retenção não são alterados.

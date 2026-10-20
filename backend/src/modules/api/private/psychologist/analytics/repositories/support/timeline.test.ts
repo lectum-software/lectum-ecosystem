@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { analyticsDay, dailyPoints, originGroup, uniqueDailyContacts } from "./timeline";
+import {
+  analyticsDay,
+  dailyPoints,
+  originGroup,
+  presentationVideoOrigin,
+  uniqueDailyContacts,
+} from "./timeline";
 
 test("analytics use Sao Paulo calendar boundaries", () => {
   assert.equal(analyticsDay(new Date("2026-10-19T02:00:00Z")), "2026-10-18");
@@ -35,4 +41,29 @@ test("WhatsApp deduplicates within each day, keeping distinct legacy visitors", 
     ]).length,
     4,
   );
+});
+
+test("presentation views distinguish profile, directory and unattributed legacy origins", () => {
+  for (const path of [
+    "/psicologos/123",
+    "/psychologists/123",
+    "/app/psicologo/123",
+    "/app/psychologist/123",
+    "/app/psychologists/123",
+  ]) {
+    assert.equal(presentationVideoOrigin(`${path}?ref=feed`), "profile", path);
+  }
+  for (const path of ["/psicologos", "/app/psicologos", "/app/psychologists", "/psychologists"]) {
+    assert.equal(presentationVideoOrigin(path), "explore", path);
+    assert.equal(presentationVideoOrigin(`${path}?search=ansiedade`), "search", path);
+  }
+  for (const path of [
+    null,
+    "",
+    "/outra-pagina",
+    "/comunidades/ansiedade",
+    "/app/psicologo/123/contato",
+  ]) {
+    assert.equal(presentationVideoOrigin(path), "unknown", String(path));
+  }
 });
