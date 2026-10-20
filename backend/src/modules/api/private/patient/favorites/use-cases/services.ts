@@ -40,7 +40,7 @@ export const action = async (data: IFavoriteActionDTO, actionType: FavoriteActio
 
   const res =
     actionType === "favorite"
-      ? await repository.favorite(data.auth.id!, psychologistId)
+      ? await repository.favorite(data.auth.id!, psychologistId, data.b?.origin_path)
       : await repository.unfavorite(data.auth.id!, psychologistId);
   const { notification_event_id: notificationEventId, ...response } = res;
 

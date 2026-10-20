@@ -51,14 +51,9 @@ test("AST: métricas de vídeo não passam em preview; mídia própria e bloquei
   assert.ok(media && ts.isJsxExpression(media.initializer));
   assert.equal(media.initializer.expression?.getText(ast), "data?.presentation_video");
   const locks = nodes.filter((node) => ts.isJsxAttribute(node) && text(node.name) === "locked");
-  assert.equal(locks.length, 4);
-  for (const [index, lock] of locks.entries()) {
+  assert.equal(locks.length, 3);
+  for (const lock of locks) {
     assert.ok(ts.isJsxExpression(lock.initializer));
-    assert.equal(
-      lock.initializer.expression?.getText(ast),
-      index === 0
-        ? 'isAnalyticsPreview && metric.id !== "acquired_patients"'
-        : "isAnalyticsPreview",
-    );
+    assert.equal(lock.initializer.expression?.getText(ast), "isAnalyticsPreview");
   }
 });

@@ -266,6 +266,7 @@ export type PsychologistAnalyticsCommunities = {
 };
 
 export type PsychologistAnalyticsResponse = {
+  chart_data?: AnalyticsChartData;
   access: {
     has_professional_entitlement: boolean;
     mode: "full" | "preview";
@@ -286,4 +287,13 @@ export type PsychologistAnalyticsPreview = {
     PsychologistAnalyticsPresentationVideo,
     "video_url" | "video_cover_url"
   > | null;
+};
+
+export type AnalyticsTimeline = {
+  granularity: "day" | "week";
+  series: Array<{ id: string; label: string; points: Array<{ date: string; value: number }> }>;
+};
+export type AnalyticsChartData = {
+  timelines: Record<string, AnalyticsTimeline>;
+  video_search_terms: Array<{ term: string; views: number }>;
 };

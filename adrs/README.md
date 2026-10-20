@@ -688,3 +688,5 @@ Formato recomendado:
 - [ADR-0624 — Navegacao de upgrade e Analytics gratuito](0624-navegacao-analytics-login.md)
 - [ADR-0625 — Historico de pacientes adquiridos](0625-historico-pacientes-adquiridos.md)
 - [ADR-0626 — Elegibilidade do historico de pacientes](0626-elegibilidade-historico-pacientes.md)
+
+- [ADR-0627 — Analytics com seleção de métrica e origem de visualizações](0627-analytics-carrossel-origens.md)

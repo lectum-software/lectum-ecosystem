@@ -11,11 +11,10 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { PrivateTemplate } from "@/templates/private";
+import { AnalyticsOverview } from "./components/analytics-overview";
 import { CommunityActivitySection } from "./components/community-activity";
-
-import { MetricCard, PeriodTabs, PremiumAnalyticsBanner } from "./components/period-and-metrics";
+import { PeriodTabs, PremiumAnalyticsBanner } from "./components/period-and-metrics";
 import { PresentationVideoAnalyticsSection } from "./components/presentation-video";
-import { TrafficSourceSection } from "./components/traffic-source";
 import {
   getCommunitiesAnalytics,
   getDefaultCustomRange,
@@ -29,7 +28,7 @@ const hasFullAnalytics = (
 ): value is PsychologistAnalyticsResponse => value?.access.mode === "full" && "metrics" in value;
 
 export const ProfessionalAnalyticsLogic = () => {
-  const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("all");
+  const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("30d");
   const [customRange, setCustomRange] = useState(getDefaultCustomRange);
   const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
   const query = useMemo(
@@ -72,34 +71,22 @@ export const ProfessionalAnalyticsLogic = () => {
         ) : null}
 
         {!shouldShowError ? (
-          <section
-            className="grid min-w-0 grid-cols-2 items-stretch gap-3"
-            aria-label="Cards de analytics"
-          >
-            {metricCards(visibleData).map((metric) => (
-              <MetricCard
-                key={metric.id}
-                locked={isAnalyticsPreview && metric.id !== "acquired_patients"}
-                metric={
-                  metric.id === "acquired_patients" && data && "acquired_summary" in data
-                    ? {
-                        ...metric,
-                        value:
-                          data.acquired_summary?.acquired_patients == null
-                            ? "—"
-                            : data.acquired_summary.acquired_patients.toLocaleString("pt-BR"),
-                      }
-                    : metric
-                }
-              />
-            ))}
-          </section>
-        ) : null}
-
-        {!analytics.isLoading && !shouldShowError ? (
-          <TrafficSourceSection
-            locked={isAnalyticsPreview}
+          <AnalyticsOverview
+            cards={metricCards(visibleData).map((metric) =>
+              metric.id === "acquired_patients" && data && "acquired_summary" in data
+                ? {
+                    ...metric,
+                    value:
+                      data.acquired_summary?.acquired_patients == null
+                        ? "—"
+                        : data.acquired_summary.acquired_patients.toLocaleString("pt-BR"),
+                  }
+                : metric,
+            )}
+            data={visibleData}
             traffic={getTrafficSources(visibleData)}
+            locked={isAnalyticsPreview}
+            loading={analytics.isFetching}
           />
         ) : null}
 

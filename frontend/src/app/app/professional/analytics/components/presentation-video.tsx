@@ -20,7 +20,6 @@ import {
   clampPercent,
   formatSeconds,
   getPresentationVideoDashboardMetrics,
-  getPresentationVideoSearchTermsSummary,
   type PresentationVideoDashboardMetric,
   type PresentationVideoSearchTermsSummary,
   RETENTION_CHART_AXIS_LABEL_Y,
@@ -453,7 +452,6 @@ export const PresentationVideoAnalyticsSection = ({
   const averageWatchSeconds = video?.metrics.average_watch_seconds ?? 0;
   const durationSeconds = playerDurationSeconds ?? video?.duration_seconds ?? null;
   const presentationVideoMetrics = getPresentationVideoDashboardMetrics(video);
-  const searchTermsSummary = getPresentationVideoSearchTermsSummary(video);
 
   const handleVideoElementReady = useCallback((element: HTMLVideoElement | null) => {
     cleanupVideoListenersRef.current?.();
@@ -607,7 +605,6 @@ export const PresentationVideoAnalyticsSection = ({
           </div>
         </div>
       </article>
-      <PresentationVideoSearchTermsPanel locked={locked} summary={searchTermsSummary} />
     </section>
   );
 };

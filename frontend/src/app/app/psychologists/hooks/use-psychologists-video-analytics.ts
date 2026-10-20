@@ -265,6 +265,7 @@ export const usePsychologistsVideoAnalytics = ({
         : 0;
       const payload: DirectoryPsychologistVideoWatchPayload = {
         session_key: state.sessionKey,
+        origin_path: state.originPath,
         duration_seconds: durationSeconds,
         watched_seconds: Math.max(0, state.watchedSeconds.size),
         max_position_seconds: Math.max(0, Math.round(state.maxPosition)),

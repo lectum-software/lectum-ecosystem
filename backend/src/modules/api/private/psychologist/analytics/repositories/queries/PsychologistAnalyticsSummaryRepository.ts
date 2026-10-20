@@ -24,8 +24,8 @@ import {
   toCards,
   toTrafficSources,
 } from "../support/traffic";
-
 import type { PsychologistAnalyticsCommunityRepository } from "./PsychologistAnalyticsCommunityRepository";
+import { buildAnalyticsChartData } from "./PsychologistAnalyticsTimelineRepository";
 
 export class PsychologistAnalyticsSummaryRepository {
   constructor(protected readonly dependency: PsychologistAnalyticsCommunityRepository) {}
@@ -167,6 +167,8 @@ export class PsychologistAnalyticsSummaryRepository {
         },
         select: {
           video_url: true,
+          createdAt: true,
+          origin_path: true,
           watched_seconds: true,
           duration_seconds: true,
           max_position_seconds: true,
@@ -417,6 +419,12 @@ export class PsychologistAnalyticsSummaryRepository {
         profileViews,
         psychologistWhatsappActions: psychologistWhatsappActionEvents,
       }),
+      chart_data: await buildAnalyticsChartData(
+        userId,
+        period,
+        currentPresentationVideoSessions,
+        searchFilterLabelLookup,
+      ),
       unavailable: [],
     };
   }

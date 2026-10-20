@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { sanitizeAnalyticsPathWithTrafficQuery } from "@/utils/analytics-traffic-path";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { resolveProfessionalExperienceTagVisibility } from "@/utils/professional-experience-tag";
@@ -412,7 +413,11 @@ export class FavoriteRepository implements IFavoriteRepository {
     return Boolean(psychologist);
   }
 
-  async favorite(userId: string, psychologistId: string): Promise<FavoriteActionResponse> {
+  async favorite(
+    userId: string,
+    psychologistId: string,
+    originPath?: string,
+  ): Promise<FavoriteActionResponse> {
     return withSerializableTransaction(async (transaction) => {
       const existing = await transaction.psychologist_favorite.findUnique({
         where: {
@@ -445,6 +450,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             data: {
               user_id: userId,
               psychologist_id: psychologistId,
+              origin_path: originPath ? sanitizeAnalyticsPathWithTrafficQuery(originPath) : null,
             },
             select: { id: true },
           });

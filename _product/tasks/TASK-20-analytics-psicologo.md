@@ -976,3 +976,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada; Chrome
   headless 390x844 capturou o DOM de login/redirecionamento da rota protegida. A tela autenticada
   foi validada por fonte/build por depender de sessao privada.
+
+## Validação final — 19/10/2026
+
+- [x] WhatsApp selecionado inicialmente; carrossel sem comparação com período anterior.
+- [x] Visualizações do vídeo substituem Resultados de busca; séries Explorar/Minha Busca.
+- [x] Acessos e favoritos com séries por origem e legado identificado sem atribuição inventada.
+- [x] Gráfico consultável por toque, mouse e teclado; card selecionado totalmente visível.
+- [x] Tabela Buscas que levaram até você baseada em sessões com reprodução, não impressões.
+- [x] Tabela WhatsApp integrada com Principal origem em todos os empates positivos; bloco redundante removido.
+- [x] Card de pacientes seleciona gráfico; Gerenciar pacientes adquiridos abre o histórico. Granularidade semanal preservada.
+- [x] Migration aplicada com prisma migrate dev em PostgreSQL 17 isolado na porta 55439.
+- [x] Teste de integração real: visualizações versus impressões, origem legada, isolamento por profissional, pessoas únicas por dia e pacientes por semana.
+- [x] Builds frontend/backend aprovados; /health e /ready retornaram 200 no backend compilado com banco isolado.
+- [x] Biome, lint e tipos do frontend aprovados; 633 testes da suíte principal mais suítes complementares. A última suíte apresentou dados parciais sem presentation_video; tolerância corrigida e os 16 testes passaram na repetição.
+- [x] Check backend: 930 testes aprovados inicialmente; único arquivo interrompido por JWT_SECRET_KEY de teste ausente passou com os 3 testes após configurar a chave descartável. Biome, runtime-deps e tipos aprovados.
+- [x] Checks admin e video aprovados (video: 92 aprovados, 13 skips existentes).
+- [x] Prévia dos componentes reais inspecionada em 390/1440px com dados explicitamente de validação, sem overflow. Nenhuma resposta simulada entrou no produto.
+
+Limite de QA: não houve sessão autenticada de usuário real; a interface foi validada isoladamente e a agregação com banco real descartável. Nenhum serviço/dado remoto foi acessado ou alterado. Sem push/deploy. Migration deve preceder backend e frontend na publicação. Origens históricas ausentes permanecem não identificadas. Evidências temporárias em work/analytics-* (ignoradas pelo Git).

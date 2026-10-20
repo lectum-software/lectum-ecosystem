@@ -121,6 +121,7 @@ export type DirectoryPsychologistReviewsResponse =
   };
 
 export interface IProfileShowDTO {
+  b?: { origin_path?: string };
   p: {
     id: string;
   };
@@ -134,7 +135,7 @@ export type DirectoryPsychologistSearchImpressionPayload = {
 };
 
 export interface IProfileSearchImpressionDTO extends IProfileShowDTO {
-  b?: DirectoryPsychologistSearchImpressionPayload;
+  b?: DirectoryPsychologistSearchImpressionPayload & { origin_path?: string };
 }
 
 export interface IProfileListDTO extends IProfileShowDTO {

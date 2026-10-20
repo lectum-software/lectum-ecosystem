@@ -154,6 +154,7 @@ export const schema: IValidatorRequest = {
 export default validator(schema);
 
 export const profileShowSchema: IValidatorRequest = {
+  body: [{ key: "origin_path", method: "string", max: 2048, optional: true }],
   params: [
     {
       key: "id",
@@ -228,6 +229,7 @@ export const contactSchema: IValidatorRequest = {
 export const profileVideoWatchSchema: IValidatorRequest = {
   ...profileShowSchema,
   body: [
+    { key: "origin_path", method: "string", max: 2048, optional: true },
     {
       key: "session_key",
       coerse: "string",
