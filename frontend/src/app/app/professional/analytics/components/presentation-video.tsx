@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, PlayCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, PlayCircle } from "lucide-react";
 import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -47,19 +47,19 @@ export const PresentationVideoDashboardMetricCard = ({
   const Icon = metric.icon;
 
   return (
-    <article className="grid min-h-[68px] min-w-0 gap-1 rounded-[16px] bg-surface-muted/55 px-2.5 py-2 sm:min-h-[76px] sm:px-3 sm:py-2.5">
-      <div className="flex min-w-0 items-center gap-1.5">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-soft text-primary sm:h-7 sm:w-7">
-          <Icon className="h-3.5 w-3.5" aria-hidden />
+    <article className="grid min-h-[112px] min-w-0 snap-start content-between gap-3 rounded-[20px] bg-surface-muted/55 p-4">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Icon className="h-4.5 w-4.5" aria-hidden />
         </span>
-        <p className="min-w-0 break-words text-[0.66rem] font-semibold leading-4 text-muted sm:text-[0.72rem]">
+        <p className="min-w-0 break-words text-sm font-semibold leading-5 text-muted">
           {metric.label}
         </p>
       </div>
 
       <p
         className={cn(
-          "pl-[1.875rem] text-lg font-black leading-none tracking-[-0.05em] text-foreground sm:pl-[2.125rem] sm:text-xl",
+          "text-3xl font-black leading-none tracking-[-0.05em] text-foreground",
           locked && "select-none blur-[5px]",
         )}
       >
@@ -75,13 +75,53 @@ export const PresentationVideoMetricsPanel = ({
 }: {
   locked?: boolean;
   metrics: PresentationVideoDashboardMetric[];
-}) => (
-  <div className="grid min-w-0 grid-cols-2 gap-1.5 sm:gap-2">
-    {metrics.map((metric) => (
-      <PresentationVideoDashboardMetricCard key={metric.id} locked={locked} metric={metric} />
-    ))}
-  </div>
-);
+}) => {
+  const carouselRef = useRef<HTMLElement>(null);
+  const navigate = (direction: number) => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+    const card = carousel.firstElementChild as HTMLElement | null;
+    carousel.scrollBy({
+      left: direction * ((card?.offsetWidth ?? carousel.clientWidth) + 12),
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    });
+  };
+  return (
+    <div className="min-w-0">
+      <div className="mb-2 hidden justify-end gap-1 sm:flex">
+        <button
+          type="button"
+          aria-label="Métricas do vídeo anteriores"
+          onClick={() => navigate(-1)}
+          className="grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+        </button>
+        <button
+          type="button"
+          aria-label="Próximas métricas do vídeo"
+          onClick={() => navigate(1)}
+          className="grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </button>
+      </div>
+      <section
+        ref={carouselRef}
+        aria-label="Métricas do vídeo de apresentação"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: permite rolagem horizontal por teclado no carrossel.
+        tabIndex={0}
+        className="grid min-w-0 auto-cols-[78%] grid-flow-col grid-rows-2 gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory touch-auto rounded-[20px] pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] focus-visible:outline-2 focus-visible:outline-primary"
+      >
+        {metrics.map((metric) => (
+          <PresentationVideoDashboardMetricCard key={metric.id} locked={locked} metric={metric} />
+        ))}
+      </section>
+    </div>
+  );
+};
 
 export const PresentationVideoSearchTermsPanel = ({
   locked,

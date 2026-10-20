@@ -1045,3 +1045,10 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Mantido balão sobreposto, sem retorno da reserva fixa de 64px.
 - [x] Seis métricas verificadas em 390/1440px, sem deslocamento ao consultar pontos; visualização do vídeo conferida no mobile.
 - [x] Check completo e build do frontend aprovados. Sem push/deploy.
+
+## Carrossel de métricas do vídeo — 20/10/2026
+
+- [x] Oito contadores maiores, com números de 30px, rótulos de 14px e ícones ampliados.
+- [x] Duas linhas com arraste conjunto no mobile; coluna com 78% da largura e parte da próxima visível.
+- [x] Setas discretas no desktop; colunas de 46% mantêm os cards amplos em telas maiores. Retenção preservada.
+- [x] Check completo e build do frontend aprovados; prévia validada em 390/800/1440px, com oito cards, duas linhas, swipe, setas e retenção preservada. Sem push/deploy.

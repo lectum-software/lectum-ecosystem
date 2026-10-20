@@ -38,3 +38,6 @@ A consulta temporal usa balão absoluto sobre a área do gráfico, sem reservar 
 
 ## Refinamento do respiro — 20/10/2026
 Após revisão visual, o conjunto recebe 16px adicionais distribuídos entre a margem do cabeçalho e a margem da plotagem. Isso mantém uma separação moderada sem restaurar a faixa fixa reservada ao balão.
+
+## Contadores do vídeo em duas linhas — 20/10/2026
+As métricas detalhadas do vídeo usam grid por colunas com duas linhas, rolagem nativa e snap. Cada coluna ocupa 78% da largura no mobile, indicando a próxima sem diminuir a leitura dos cards. Nas telas maiores, as colunas ocupam 46% da largura e continuam roláveis para preservar a legibilidade. O painel pode receber foco para rolagem por teclado; setas atendem o desktop. A retenção permanece abaixo, sem mudança de dados.
