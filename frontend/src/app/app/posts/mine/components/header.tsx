@@ -67,7 +67,7 @@ export const FilterTabs = ({
 
 export const MyPostsHeader = ({ interactionCopy }: { interactionCopy: InteractionCopy }) => {
   const searchParams = useSearchParams();
-  const returnTo = analyticsReturnHref(searchParams.get("returnTo"));
+  const returnTo = analyticsReturnHref(searchParams?.get("returnTo") ?? null);
   return (
     <AppPageHeader
       backHref={returnTo ?? "/app/perfil"}
