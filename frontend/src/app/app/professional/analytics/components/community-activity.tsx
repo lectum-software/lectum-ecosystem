@@ -32,7 +32,7 @@ export const CommunityActivitySection = ({
     })),
     {
       id: "top_mentors" as const,
-      label: "Top Mentores",
+      label: "Ranking Top Mentores",
       value: communities.top_mentors.whatsapp_clicks,
       description: communities.top_mentors.message,
     },

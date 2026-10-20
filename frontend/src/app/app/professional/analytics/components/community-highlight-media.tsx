@@ -106,12 +106,12 @@ export function CommunityHighlightMedia({
       ) : (
         <div className="grid content-start gap-2 p-3 pb-12">
           {!isReply && item.title ? (
-            <p className="line-clamp-3 text-xs font-extrabold leading-4 text-foreground">
+            <p className="line-clamp-3 text-xs font-medium leading-4 text-foreground">
               {item.title}
             </p>
           ) : null}
           <p
-            className={`${isReply ? "line-clamp-6" : "line-clamp-3"} text-xs leading-4 text-foreground`}
+            className={`${isReply ? "line-clamp-6" : "line-clamp-3"} text-xs font-normal leading-4 text-muted`}
           >
             {item.excerpt || (isReply ? item.title : "") || "Ver conteúdo"}
           </p>

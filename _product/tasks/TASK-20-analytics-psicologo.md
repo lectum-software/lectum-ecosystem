@@ -1098,3 +1098,10 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 
 - [x] Posts e respostas sem mídia usam fundo transparente e borda cinza, sem degradê. Contador do WhatsApp em cinza mantém contraste; mídias preservam contador branco e degradê.
 - [x] Check/build do frontend aprovados. Browser confirmou fundos transparentes, ausência de degradê e contador não branco nos cards textuais em mobile/desktop. Sem push/deploy.
+
+## Hierarquia e ordem dos analytics — 20/10/2026
+
+- [x] Títulos das miniaturas textuais usam peso médio e descrições usam peso normal/cinza, preservando tamanho e leitura.
+- [x] Pacientes adquiridos passa à última posição do carrossel, após Avaliações.
+- [x] Legenda de comunidades passa a exibir Ranking Top Mentores.
+- [x] Check/build do frontend aprovados. Browser confirmou ordem, seleção de Pacientes adquiridos, rótulo Ranking Top Mentores e pesos 500/400 nas miniaturas. Sem push/deploy.

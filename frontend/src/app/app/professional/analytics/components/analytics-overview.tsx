@@ -16,8 +16,8 @@ const order = [
   "video_views",
   "profile_views",
   "favorites_received",
-  "acquired_patients",
   "reviews_received",
+  "acquired_patients",
 ];
 export function AnalyticsOverview({
   cards,

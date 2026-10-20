@@ -221,7 +221,7 @@ export const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
         },
         {
           id: "community_top_mentors",
-          label: "Top Mentores",
+          label: "Ranking Top Mentores",
           description: "Cliques no WhatsApp originados pela navegação no Ranking Top Mentores.",
           metric: "whatsapp_clicks",
           value: 0,
