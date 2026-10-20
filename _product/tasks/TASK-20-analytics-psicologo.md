@@ -1087,3 +1087,9 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Trechos de posts e respostas ajustados ao tamanho compacto; exemplos locais alternam vídeo e texto nos dois carrosséis.
 - [x] Check do frontend aprovado. Prévia conferida em 390/1440px: dois formatos em cada carrossel, larguras 108/120px, proporção 9:16, sem overflow horizontal e com contador legível.
 - [x] Build do frontend aprovado. Sem push/deploy.
+
+## Conteúdo das miniaturas textuais — 20/10/2026
+
+- [x] Ícones de post/comentário removidos das miniaturas textuais. Post apresenta título em negrito e trecho da descrição; resposta apresenta apenas o próprio texto, sem contexto da pergunta.
+- [x] Trechos truncados preservam espaço para o contador do WhatsApp.
+- [x] Check/build do frontend aprovados; prévia conferida em mobile e desktop com título/descrição no post e somente texto próprio na resposta. Sem push/deploy.

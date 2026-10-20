@@ -1,6 +1,5 @@
 "use client";
 
-import { FileText, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { PsychologistAnalyticsCommunityHighlight } from "@/api/generator/types/psychologist-analytics";
@@ -83,7 +82,6 @@ export function CommunityHighlightMedia({
   const source = resolvePublicMediaUrl(item.media_url);
   const thumbnail = resolvePublicMediaUrl(item.thumbnail_url);
   const stream = video && isVideoAssetReference(item.media_url);
-  const Icon = isReply ? MessageCircle : FileText;
   return (
     <div ref={ref} className="absolute inset-0 bg-surface-muted">
       {stream && item.media_url ? (
@@ -96,12 +94,15 @@ export function CommunityHighlightMedia({
         <Poster />
       ) : (
         <div className="grid content-start gap-2 p-3 pb-12">
-          <Icon className="h-4 w-4 text-primary" aria-hidden />
-          {isReply && item.context ? (
-            <p className="line-clamp-1 text-xs font-semibold text-muted">{item.context}</p>
+          {!isReply && item.title ? (
+            <p className="line-clamp-3 text-xs font-extrabold leading-4 text-foreground">
+              {item.title}
+            </p>
           ) : null}
-          <p className="line-clamp-4 text-xs font-semibold leading-4 text-foreground">
-            {item.title || item.excerpt || "Ver conteúdo"}
+          <p
+            className={`${isReply ? "line-clamp-6" : "line-clamp-3"} text-xs leading-4 text-foreground`}
+          >
+            {item.excerpt || (isReply ? item.title : "") || "Ver conteúdo"}
           </p>
         </div>
       )}
