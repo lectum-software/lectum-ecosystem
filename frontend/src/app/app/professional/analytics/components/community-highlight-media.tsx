@@ -59,7 +59,8 @@ function FilePoster({ source, enabled }: { source: string; enabled: boolean }) {
       if (url) URL.revokeObjectURL(url);
     };
   }, [source, enabled]);
-  return <Poster source={poster?.source === source ? poster.url : null} />;
+  const posterUrl = poster?.source === source ? poster.url : null;
+  return <Poster source={posterUrl} />;
 }
 
 export function CommunityHighlightMedia({
