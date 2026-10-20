@@ -1127,3 +1127,8 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 
 - [x] Contadores superiores sem ícones, com cards menores, sem sombra e pesos de texto reduzidos; ícone e título completo do gráfico preservados.
 - [x] Check e build do frontend aprovados. Prévia local validada em 390px/1440px: contadores com cerca de 80px, sem ícones, sem overflow da página; seleção e ícone do gráfico preservados. Sem push/deploy.
+
+## Métricas do vídeo sem preenchimento — 20/10/2026
+
+- [x] Cards das métricas do vídeo usam fundo transparente e borda cinza, preservando dimensões e carrossel.
+- [x] Check/build do frontend aprovados. Navegador em 390px/1440px confirmou fundo transparente, borda cinza sólida e altura de 88px. Removido recorte arredondado do viewport para preservar as bordas dos cards. Sem push/deploy.

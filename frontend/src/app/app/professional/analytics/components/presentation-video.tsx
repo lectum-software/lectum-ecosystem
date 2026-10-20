@@ -47,7 +47,7 @@ export const PresentationVideoDashboardMetricCard = ({
   const Icon = metric.icon;
 
   return (
-    <article className="grid min-h-[88px] min-w-0 snap-start content-between gap-2 rounded-2xl border border-border bg-border/40 p-3">
+    <article className="grid min-h-[88px] min-w-0 snap-start content-between gap-2 rounded-2xl border border-border-strong bg-transparent p-3">
       <div className="flex min-w-0 items-center gap-2">
         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
           <Icon className="h-4 w-4" aria-hidden />
@@ -113,7 +113,7 @@ export const PresentationVideoMetricsPanel = ({
         aria-label="Métricas do vídeo de apresentação"
         // biome-ignore lint/a11y/noNoninteractiveTabindex: permite rolagem horizontal por teclado no carrossel.
         tabIndex={0}
-        className="grid min-w-0 auto-cols-[72%] grid-flow-col grid-rows-2 gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory touch-auto rounded-[20px] pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] focus-visible:outline-2 focus-visible:outline-primary"
+        className="grid min-w-0 auto-cols-[72%] grid-flow-col grid-rows-2 gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory touch-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] focus-visible:outline-2 focus-visible:outline-primary"
       >
         {metrics.map((metric) => (
           <PresentationVideoDashboardMetricCard key={metric.id} locked={locked} metric={metric} />
