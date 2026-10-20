@@ -76,7 +76,7 @@ export function MetricTimeline({
         </div>
       ) : null}
       <div
-        className="relative mt-4 pt-16 touch-pan-y rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+        className={`relative touch-pan-y rounded-xl focus-visible:outline-2 focus-visible:outline-primary ${showLegend ? "mt-3" : ""}`}
         ref={measurePlot}
         role="slider"
         tabIndex={0}

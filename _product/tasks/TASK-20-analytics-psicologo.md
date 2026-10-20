@@ -1031,3 +1031,10 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Legendas dos demais gráficos e demais blocos mantidos.
 - [x] Prévia validada em 390/1440px: ausência das três legendas, preservação das demais, consulta temporal, carrossel e correspondência exata entre as quatro cores dos ícones e das linhas.
 - [x] Check completo e build do frontend aprovados. Alterações locais, sem push/deploy.
+
+## Espaçamento dos gráficos — 20/10/2026
+
+- [x] Removida a reserva fixa de 64px para o balão e reduzidas as margens entre cabeçalho, legenda e gráfico.
+- [x] Balão sobreposto à área temporal, sem deslocar conteúdo; altura responsiva do gráfico preservada.
+- [x] Seis métricas verificadas em 390/1440px, sem mudança de altura ao consultar pontos. Regressão de toque, teclado, carrossel e blocos existentes aprovada.
+- [x] Check completo e build do frontend aprovados. Alteração local, sem push/deploy.

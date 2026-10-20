@@ -32,3 +32,6 @@ O SVG mede a largura disponível e calcula a altura proporcional com limite de 3
 
 ## Legenda integrada — 20/10/2026
 No WhatsApp, os ícones da tabela usam a cor da série e fundo suavizado, substituindo a legenda superior. O mapa de cores é compartilhado e indexado por origem para preservar a associação mesmo quando a tabela muda de ordem. Pacientes adquiridos e Avaliações também omitem a legenda de total, já presente no card. As demais métricas preservam legendas por origem e todas mantêm a consulta temporal no balão.
+
+## Espaçamento compacto — 20/10/2026
+A consulta temporal usa balão absoluto sobre a área do gráfico, sem reservar uma faixa vazia acima do SVG. Margens menores aproximam cabeçalho e legenda da plotagem; gráficos sem legenda não recebem a margem destinada a ela. A altura responsiva e as interações permanecem preservadas.
