@@ -6,7 +6,7 @@ import type {
 } from "@/api/generator/types/psychologist-analytics";
 import { dayLabel, pointerDayIndex, timelineDates } from "../modules/timeline";
 
-const colors = [
+const palette = [
   "var(--lectum-primary)",
   "var(--lectum-success)",
   "var(--lectum-warning)",
@@ -17,10 +17,14 @@ export function MetricTimeline({
   timeline,
   period,
   total,
+  showLegend = true,
+  seriesColors = {},
 }: {
   timeline?: AnalyticsTimeline;
   period?: PsychologistAnalyticsPeriod;
   total?: number;
+  showLegend?: boolean;
+  seriesColors?: Record<string, string>;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [width, setWidth] = useState(300);
@@ -43,6 +47,7 @@ export function MetricTimeline({
   const series = timeline.series.filter(
     (s) => s.id !== "unknown" || s.points.some((p) => p.value > 0),
   );
+  const colors = series.map((s, i) => seriesColors[s.id] ?? palette[i % palette.length]);
   const values = series.map((s) => {
     const map = new Map(s.points.map((p) => [p.date, p.value]));
     return dates.map((date) => map.get(date) ?? 0);
@@ -57,17 +62,19 @@ export function MetricTimeline({
   const description = series.map((s, i) => `${s.label}: ${values[i][index]}`).join("; ");
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap gap-x-4 gap-y-2" data-testid="period-totals">
-        {series.map((s, i) => (
-          <span key={s.id} className="flex items-center gap-1.5 text-xs text-muted">
-            <span className="h-2 w-2 rounded-full" style={{ background: colors[i] }} />
-            {series.length === 1 ? "Total no período" : s.label}:{" "}
-            <strong className="text-foreground">
-              {(series.length === 1 ? (total ?? totals[i]) : totals[i]).toLocaleString("pt-BR")}
-            </strong>
-          </span>
-        ))}
-      </div>
+      {showLegend ? (
+        <div className="flex flex-wrap gap-x-4 gap-y-2" data-testid="period-totals">
+          {series.map((s, i) => (
+            <span key={s.id} className="flex items-center gap-1.5 text-xs text-muted">
+              <span className="h-2 w-2 rounded-full" style={{ background: colors[i] }} />
+              {series.length === 1 ? "Total no período" : s.label}:{" "}
+              <strong className="text-foreground">
+                {(series.length === 1 ? (total ?? totals[i]) : totals[i]).toLocaleString("pt-BR")}
+              </strong>
+            </span>
+          ))}
+        </div>
+      ) : null}
       <div
         className="relative mt-4 pt-16 touch-pan-y rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
         ref={measurePlot}

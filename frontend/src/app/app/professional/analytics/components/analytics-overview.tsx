@@ -8,6 +8,7 @@ import type {
 } from "@/api/generator/types/psychologist-analytics";
 import { cn } from "@/lib/utils";
 import { type AnalyticsCardView, trafficSourceIcons } from "../modules/support";
+import { WHATSAPP_ORIGIN_COLORS } from "../modules/timeline";
 import { MetricTimeline } from "./metric-timeline";
 
 const order = [
@@ -141,6 +142,10 @@ export function AnalyticsOverview({
             <MetricTimeline
               key={selected + data?.period.start_at + data?.period.end_at}
               timeline={data?.chart_data?.timelines[selected]}
+              showLegend={
+                !["whatsapp_clicks", "acquired_patients", "reviews_received"].includes(selected)
+              }
+              seriesColors={selected === "whatsapp_clicks" ? WHATSAPP_ORIGIN_COLORS : undefined}
               period={data?.period}
               total={typeof periodTotal === "number" ? periodTotal : undefined}
             />
@@ -169,7 +174,13 @@ export function AnalyticsOverview({
                     <tr key={source.id} className="border-b border-border last:border-0">
                       <th scope="row" className="py-3 pr-2 text-left font-medium">
                         <span className="flex items-center gap-3">
-                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                          <span
+                            className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
+                            style={{
+                              color: WHATSAPP_ORIGIN_COLORS[source.id],
+                              backgroundColor: `color-mix(in srgb, ${WHATSAPP_ORIGIN_COLORS[source.id]} 10%, var(--lectum-surface))`,
+                            }}
+                          >
                             <SourceIcon className="h-[18px] w-[18px]" aria-hidden />
                           </span>
                           <span>

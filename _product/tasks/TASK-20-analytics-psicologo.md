@@ -1023,3 +1023,11 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Acesso ao perfil inclui Página de favoritos; Favoritado inclui Dentro do perfil.
 - [x] Integração real em PostgreSQL isolado validou origens, legado sem origem, totais versus valores diários, deduplicação e consistência da tabela.
 - [x] Frontend check/build e backend tipos/build aprovados. Backend: 909 testes passaram inicialmente; falhas/cancelamentos por JWT descartável curto foram reexecutados com configuração válida. Testes visuais 390/1440px passaram, incluindo escala uniforme do SVG, ponto único, novas séries, legenda, toque e setas. Prévia de validação sem sessão autenticada; sem push/deploy.
+
+## Simplificação de legendas — 20/10/2026
+
+- [x] Ícones de origem do WhatsApp com as mesmas cores das linhas e fundo suave, sem marcador extra ou legenda duplicada.
+- [x] Removidas legendas de total de Pacientes adquiridos e Avaliações; totais dos cards e balões preservados.
+- [x] Legendas dos demais gráficos e demais blocos mantidos.
+- [x] Prévia validada em 390/1440px: ausência das três legendas, preservação das demais, consulta temporal, carrossel e correspondência exata entre as quatro cores dos ícones e das linhas.
+- [x] Check completo e build do frontend aprovados. Alterações locais, sem push/deploy.

@@ -30,3 +30,10 @@ export const pointerDayIndex = (clientX: number, left: number, width: number, co
     0,
     Math.min(count - 1, Math.round(((clientX - left) / Math.max(1, width)) * (count - 1))),
   );
+
+export const WHATSAPP_ORIGIN_COLORS: Record<string, string> = {
+  presentation_video: "var(--lectum-primary)",
+  communities: "var(--lectum-success)",
+  profile: "var(--lectum-warning)",
+  favorites: "var(--lectum-primary-strong)",
+};
