@@ -24,6 +24,7 @@ import {
   toCards,
   toTrafficSources,
 } from "../support/traffic";
+import { buildAnalyticsComparison } from "./comparison";
 import type { PsychologistAnalyticsCommunityRepository } from "./PsychologistAnalyticsCommunityRepository";
 import { buildAnalyticsChartData } from "./PsychologistAnalyticsTimelineRepository";
 
@@ -434,6 +435,7 @@ export class PsychologistAnalyticsSummaryRepository {
         mode: hasProfessionalEntitlement ? "full" : "preview",
       },
       period,
+      comparison: await buildAnalyticsComparison(userId, period, profile?.video_url ?? null),
       metrics,
       cards: toCards(metrics),
       presentation_video: presentationVideo,

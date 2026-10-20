@@ -1138,3 +1138,12 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Removidos os ícones dos cabeçalhos Métricas principais e Resultados dos seus conteúdos.
 - [x] Conteúdos em destaque reúne os cinco conteúdos com mais cliques no período, com identificação Post/Resposta abaixo da miniatura e links individuais preservados.
 - [x] Check/build do frontend aprovados. Browser confirmou ranking misto top 5, rótulos, proporção 9:16, links de respostas, estados vazio/bloqueado e setas condicionais com resize. Prévia local atualizada; sem push/deploy.
+
+## Comparação dos contadores — 20/10/2026
+
+- [x] Indicadores discretos de variação no canto inferior direito, usando totais reais do intervalo anterior de mesma duração.
+- [x] Todo o período e bases ausentes não exibem percentual; zero anterior mostra Novo somente quando há novos registros; zero em ambos mostra 0%.
+- [x] Toque abre datas/horas e valores comparados; botão separado preserva seleção do gráfico.
+- [x] Título alterado para Desempenho de conteúdo; chevron de destaques preserva destino Minhas Publicações.
+- [x] Voltar de Minhas Publicações restaura Analytics com período, métrica e posição, sem alterar o retorno ao perfil para acessos comuns.
+- [x] Baseline pnpm check aprovado (backend: 940 testes), builds de frontend/backend aprovados; lint final dos componentes e testes de comparação/retorno aprovados. Browser local validou badges dentro dos cards sem aumento de altura, modal e foco, omissão em Todo o período/payload legado e ida/volta com período, métrica e posição, inclusive StrictMode. Referências: capturas do usuário; Builder indisponível. Sem push/deploy.

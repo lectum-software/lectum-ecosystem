@@ -9,6 +9,7 @@ import type {
 import { cn } from "@/lib/utils";
 import { type AnalyticsCardView, trafficSourceIcons } from "../modules/support";
 import { WHATSAPP_ORIGIN_COLORS } from "../modules/timeline";
+import { comparisonForMetric, MetricComparison } from "./metric-comparison";
 import { MetricTimeline } from "./metric-timeline";
 
 const order = [
@@ -25,15 +26,21 @@ export function AnalyticsOverview({
   traffic,
   locked,
   loading,
+  initialSelected,
+  onMetricChange,
 }: {
   cards: AnalyticsCardView[];
   data?: PsychologistAnalyticsResponse;
   traffic: PsychologistAnalyticsTrafficSources;
   locked?: boolean;
   loading?: boolean;
+  initialSelected?: string;
+  onMetricChange?: (id: string) => void;
 }) {
   const carouselRef = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState("whatsapp_clicks");
+  const [selected, setSelected] = useState(
+    initialSelected && order.includes(initialSelected) ? initialSelected : "whatsapp_clicks",
+  );
   const ordered = [...cards].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   const current = ordered.find((card) => card.id === selected) ?? ordered[0];
   const CurrentIcon = current?.icon;
@@ -79,36 +86,57 @@ export function AnalyticsOverview({
       >
         {ordered.map((card) => {
           const active = selected === card.id;
+          const showComparison = !loading && !locked && comparisonForMetric(data, card.id);
           return (
-            <button
+            <div
               key={card.id}
-              type="button"
-              aria-pressed={active}
-              aria-controls="analytics-selected-metric"
-              onClick={(event) => {
-                setSelected(card.id);
-                event.currentTarget.scrollIntoView({
-                  block: "nearest",
-                  inline: "start",
-                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-                    ? "auto"
-                    : "smooth",
-                });
-              }}
-              className={cn(
-                "relative flex min-h-20 w-[46%] shrink-0 snap-start flex-col items-start rounded-xl border bg-surface p-3 text-left transition focus-visible:outline-2 focus-visible:outline-primary sm:w-[30%] md:w-[20%]",
-                active
-                  ? "border-primary ring-1 ring-primary/20"
-                  : "border-primary/10 hover:border-primary/40",
-              )}
+              className="relative w-[46%] shrink-0 snap-start sm:w-[30%] md:w-[20%]"
             >
-              <span className="min-h-8 text-xs font-normal leading-4 text-muted">
-                {card.id === "video_views" ? "Vídeo de apresentação" : card.label}
-              </span>
-              <span className="mt-1.5 text-xl font-semibold leading-none tracking-[-0.03em] text-foreground">
-                {loading || (locked && card.id !== "acquired_patients") ? "—" : card.value}
-              </span>
-            </button>
+              <button
+                type="button"
+                aria-pressed={active}
+                aria-controls="analytics-selected-metric"
+                data-metric-id={card.id}
+                onClick={(event) => {
+                  setSelected(card.id);
+                  onMetricChange?.(card.id);
+                  event.currentTarget.scrollIntoView({
+                    block: "nearest",
+                    inline: "start",
+                    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                      ? "auto"
+                      : "smooth",
+                  });
+                }}
+                className={cn(
+                  "relative flex min-h-20 w-full flex-col items-start rounded-xl border bg-surface p-3 text-left transition focus-visible:outline-2 focus-visible:outline-primary",
+                  active
+                    ? "border-primary ring-1 ring-primary/20"
+                    : "border-primary/10 hover:border-primary/40",
+                )}
+              >
+                <span className="min-h-8 text-xs font-normal leading-4 text-muted">
+                  {card.id === "video_views" ? "Vídeo de apresentação" : card.label}
+                </span>
+                <span
+                  className={cn(
+                    "mt-1.5 block w-full truncate text-xl font-semibold leading-none tracking-[-0.03em] text-foreground",
+                    showComparison && "pr-14",
+                  )}
+                  title={card.value}
+                >
+                  {loading || (locked && card.id !== "acquired_patients") ? "—" : card.value}
+                </span>
+              </button>
+              {showComparison && data ? (
+                <MetricComparison
+                  key={data.period.start_at + data.period.end_at}
+                  data={data}
+                  id={card.id}
+                  label={card.label}
+                />
+              ) : null}
+            </div>
           );
         })}
       </div>

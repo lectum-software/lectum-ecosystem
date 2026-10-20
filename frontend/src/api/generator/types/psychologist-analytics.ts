@@ -282,7 +282,23 @@ export type PsychologistAnalyticsCommunities = {
   updated_at: string | null;
 };
 
+export type AnalyticsComparison = {
+  previous_period: { start_at: string; end_at: string };
+  previous_values: Partial<
+    Record<
+      | "whatsapp_clicks"
+      | "video_views"
+      | "profile_views"
+      | "favorites_received"
+      | "reviews_received"
+      | "acquired_patients",
+      number | null
+    >
+  >;
+};
+
 export type PsychologistAnalyticsResponse = {
+  comparison?: AnalyticsComparison | null;
   chart_data?: AnalyticsChartData;
   access: {
     has_professional_entitlement: boolean;

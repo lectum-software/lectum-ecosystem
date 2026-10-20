@@ -17,9 +17,11 @@ const originStyles = {
 export const CommunityActivitySection = ({
   communities,
   locked,
+  returnTo,
 }: {
   communities: PsychologistAnalyticsCommunities;
   locked?: boolean;
+  returnTo?: string;
 }) => {
   const [selected, setSelected] = useState<string | null>(null);
   const items = [
@@ -52,7 +54,7 @@ export const CommunityActivitySection = ({
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Comunidade</p>
           <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
-            Resultados dos seus conteúdos
+            Desempenho de conteúdo
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Veja quais conteúdos levam mais pacientes ao seu WhatsApp.
@@ -146,7 +148,7 @@ export const CommunityActivitySection = ({
           );
         })}
       </ul>
-      <CommunityHighlights items={communities.highlights} locked={locked} />
+      <CommunityHighlights returnTo={returnTo} items={communities.highlights} locked={locked} />
     </section>
   );
 };

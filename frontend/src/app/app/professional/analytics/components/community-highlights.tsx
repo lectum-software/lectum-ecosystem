@@ -5,17 +5,20 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { PsychologistAnalyticsCommunityHighlight } from "@/api/generator/types/psychologist-analytics";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { rememberAnalyticsPosition } from "@/utils/analytics-return";
 import { CommunityHighlightMedia, isTextHighlight } from "./community-highlight-media";
 
 export function CommunityHighlights({
   items,
   locked,
+  returnTo,
 }: {
   items?: {
     posts: PsychologistAnalyticsCommunityHighlight[];
     replies: PsychologistAnalyticsCommunityHighlight[];
   };
   locked?: boolean;
+  returnTo?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
@@ -56,9 +59,14 @@ export function CommunityHighlights({
     });
   };
   return (
-    <section className="min-w-0 border-t border-border pt-4">
+    <section id="conteudos-em-destaque" className="min-w-0 border-t border-border pt-4">
       <Link
-        href="/app/publicacoes/minhas"
+        href={
+          returnTo
+            ? `/app/publicacoes/minhas?returnTo=${encodeURIComponent(returnTo)}`
+            : "/app/publicacoes/minhas"
+        }
+        onClick={rememberAnalyticsPosition}
         className="flex items-center justify-between gap-3 rounded-lg py-2 text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         aria-label={`${title}: ver Minhas Publicações`}
       >
