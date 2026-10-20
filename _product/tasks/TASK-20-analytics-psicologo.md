@@ -1062,3 +1062,12 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 
 - [x] Texto de comunidades ajustado para “Veja quais conteúdos levam mais pacientes ao seu WhatsApp.” (20/10/2026).
 - [x] Título da tabela de comunidades alterado para “Cliques WhatsApp” (20/10/2026).
+
+## Destaques de conteúdos nas comunidades — 20/10/2026
+
+- [x] Título Resultados dos seus conteúdos e legenda compacta ligada à rosca, substituindo a tabela.
+- [x] Carrosséis de miniaturas de posts e respostas, até cinco itens positivos por tipo, ordenados por cliques no período; contador visual apenas com ícone do WhatsApp e número.
+- [x] Atalhos para Minhas Publicações nas abas posts/replies; cada resposta abre com foco na resposta original.
+- [x] API adiciona highlights opcional e carrega metadados somente dos vencedores. Conteúdo publicado antes do período continua elegível, desde que receba cliques nele. Conteúdos excluídos e autores terceiros não entram.
+- [x] Integração PostgreSQL isolada aprovada para período, autoria, exclusão, repetição de pessoa por conteúdo, top cinco, contexto das respostas e período vazio.
+- [x] Frontend check/build e backend lint/tipos/build aprovados. Suíte backend: 930 passaram inicialmente; três falhas por JWT de teste ausente/timeout foram reexecutadas com configuração válida, todas aprovadas. Testes de ranking e integração passaram. Prévia validou legenda, 5+5 miniaturas, links de abas/resposta, swipe, setas, vazio e bloqueio em 390/1440px. Sem push/deploy.

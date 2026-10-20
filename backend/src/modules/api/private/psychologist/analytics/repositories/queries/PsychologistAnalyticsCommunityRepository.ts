@@ -20,6 +20,7 @@ import {
   COMMUNITY_WHATSAPP_POST_TARGET_TYPES,
   COMMUNITY_WHATSAPP_REPLY_TARGET_TYPES,
 } from "../support/traffic";
+import { buildCommunityHighlights } from "./community-highlights";
 
 export class PsychologistAnalyticsCommunityRepository {
   async hasProfessionalEntitlement(userId: string): Promise<boolean> {
@@ -113,6 +114,7 @@ export class PsychologistAnalyticsCommunityRepository {
     if (communityIds.length === 0) {
       return {
         content: emptyCommunityContentSummary(),
+        highlights: { posts: [], replies: [] },
         description:
           "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
         diagnosis: toCommunityActivityDiagnosis(emptyActivityTotals, 0),
@@ -472,8 +474,10 @@ export class PsychologistAnalyticsCommunityRepository {
         .filter((date): date is Date => Boolean(date))
         .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
 
+    const highlights = await buildCommunityHighlights(userId, whatsappActions);
     return {
       content,
+      highlights,
       description:
         "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
       diagnosis: toCommunityActivityDiagnosis(activityTotals, communities.length),

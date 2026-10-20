@@ -44,3 +44,8 @@ As métricas detalhadas do vídeo usam grid por colunas com duas linhas, rolagem
 
 ## Rosca de cliques nas comunidades — 20/10/2026
 A seção de comunidades passa a representar exclusivamente cliques no WhatsApp: os quatro tipos de conteúdo e Top Mentores formam uma rosca cuja soma corresponde às cinco linhas da tabela. O centro exibe Cliques, sem misturar contagem de conteúdo ou pessoas únicas. Cores dos ícones e seleção por toque/teclado vinculam a tabela às fatias, dispensando legenda adicional. Zero cliques usa anel neutro sem proporções artificiais; origem única usa anel completo.
+
+## Miniaturas de conteúdos em destaque — 20/10/2026
+O contrato de comunidades recebe highlights opcional com posts e replies. O ranking usa eventos de WhatsApp já filtrados por período e conteúdos ativos do profissional. Deduplica pessoas dentro de cada conteúdo, sem eliminar o crédito de outro conteúdo que a mesma pessoa tenha acessado; não soma os rankings para substituir o total agregado do canal. Empates usam ID estável e cada lista limita-se a cinco itens positivos. Metadados são buscados apenas para os vencedores e revalidam autoria, publicação e comunidade ativa; anexos apagados não são exibidos. Não há migração.
+
+O frontend substitui a tabela por legenda selecionável e acrescenta miniaturas com imagens estáticas ou trechos, sem players automáticos. Os contadores exibem ícone e número com descrição acessível. Links de resposta preservam focusReplyId; atalhos dos títulos abrem /app/publicacoes/minhas?type=posts ou replies. Estado sem resultados mantém o atalho; payload antigo sem highlights indica indisponibilidade em vez de inventar dados.

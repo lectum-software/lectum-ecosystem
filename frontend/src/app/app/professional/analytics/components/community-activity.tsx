@@ -3,9 +3,9 @@
 import { FileText, MessageCircle, Trophy, UsersRound } from "lucide-react";
 import { useState } from "react";
 import type { PsychologistAnalyticsCommunities } from "@/api/generator/types/psychologist-analytics";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { toCount } from "../modules/support";
+import { CommunityHighlights } from "./community-highlights";
 
 const originStyles = {
   post_with_video: { color: "var(--lectum-primary)", icon: FileText },
@@ -56,7 +56,7 @@ export const CommunityActivitySection = ({
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Comunidade</p>
           <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
-            Participação nas comunidades
+            Resultados dos seus conteúdos
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Veja quais conteúdos levam mais pacientes ao seu WhatsApp.
@@ -121,66 +121,35 @@ export const CommunityActivitySection = ({
         </div>
       </div>
 
-      <article className="overflow-hidden rounded-[24px] border border-primary/10 bg-surface">
-        <div className="flex items-center gap-2 border-b border-border bg-surface-muted/70 px-4 py-3">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <WhatsAppIcon className="h-4 w-4" aria-hidden />
-          </span>
-          <h3 className="text-sm font-black text-foreground">Cliques WhatsApp</h3>
-        </div>
-        <table className="w-full border-separate border-spacing-0 text-left">
-          <thead>
-            <tr className="text-[0.66rem] font-black uppercase tracking-[0.08em] text-subtle">
-              <th className="px-4 py-3">Conteúdo</th>
-              <th className="px-4 py-3 text-right">Cliques</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => {
-              const { icon: Icon, color } = originStyles[item.id];
-              return (
-                <tr key={item.id} className={cn(selected === item.id && "bg-surface-muted")}>
-                  <td className="border-t border-border">
-                    <button
-                      type="button"
-                      disabled={locked}
-                      aria-pressed={selected === item.id}
-                      onClick={() => toggle(item.id)}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-primary"
-                    >
-                      <span
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
-                        style={{
-                          color,
-                          backgroundColor: `color-mix(in srgb, ${color} 10%, var(--lectum-surface))`,
-                        }}
-                      >
-                        <Icon className="h-4 w-4" aria-hidden />
-                      </span>
-                      <span className="text-sm font-extrabold text-foreground">
-                        {item.label}
-                        {item.description ? (
-                          <span className="mt-1 block text-xs font-semibold leading-5 text-muted">
-                            {item.description}
-                          </span>
-                        ) : null}
-                      </span>
-                    </button>
-                  </td>
-                  <td
-                    className={cn(
-                      "border-t border-border px-4 py-3 text-right text-lg font-black text-foreground",
-                      locked && "select-none blur-[5px]",
-                    )}
-                  >
-                    {toCount(item.value)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </article>
+      <ul className="grid gap-1" aria-label="Origens dos cliques">
+        {items.map((item) => {
+          const { icon: Icon, color } = originStyles[item.id];
+          return (
+            <li key={item.id}>
+              <button
+                type="button"
+                disabled={locked}
+                aria-pressed={selected === item.id}
+                onClick={() => toggle(item.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left focus-visible:outline-2 focus-visible:outline-primary",
+                  selected === item.id && "bg-surface-muted",
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" style={{ color }} aria-hidden />
+                <span className="flex-1 text-sm text-muted">{item.label}</span>
+                <strong
+                  className={cn("text-sm text-foreground", locked && "select-none blur-[5px]")}
+                >
+                  {toCount(item.value)}
+                </strong>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <CommunityHighlights kind="posts" items={communities.highlights?.posts} locked={locked} />
+      <CommunityHighlights kind="replies" items={communities.highlights?.replies} locked={locked} />
     </section>
   );
 };

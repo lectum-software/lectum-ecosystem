@@ -252,7 +252,23 @@ export type PsychologistAnalyticsCommunityTopMentors = {
   whatsapp_clicks: number;
 };
 
+export type PsychologistAnalyticsCommunityHighlight = {
+  id: string;
+  post_id: string;
+  community_slug: string;
+  title: string;
+  excerpt: string;
+  context: string | null;
+  thumbnail_url: string | null;
+  media_type: string | null;
+  whatsapp_clicks: number;
+};
+
 export type PsychologistAnalyticsCommunities = {
+  highlights?: {
+    posts: PsychologistAnalyticsCommunityHighlight[];
+    replies: PsychologistAnalyticsCommunityHighlight[];
+  };
   content: PsychologistAnalyticsCommunityContentSummary;
   description: string;
   diagnosis: PsychologistAnalyticsCommunityActivityDiagnosis;
