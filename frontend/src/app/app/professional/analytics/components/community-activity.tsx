@@ -126,7 +126,7 @@ export const CommunityActivitySection = ({
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
             <WhatsAppIcon className="h-4 w-4" aria-hidden />
           </span>
-          <h3 className="text-sm font-black text-foreground">Cliques por conteúdo</h3>
+          <h3 className="text-sm font-black text-foreground">Cliques WhatsApp</h3>
         </div>
         <table className="w-full border-separate border-spacing-0 text-left">
           <thead>

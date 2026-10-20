@@ -1061,3 +1061,4 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Check completo e build aprovados. Prévia conferida em mobile/desktop: soma, cinco origens, cores, seleção compartilhada, teclado, estados vazio/único/bloqueado. Sem push/deploy.
 
 - [x] Texto de comunidades ajustado para “Veja quais conteúdos levam mais pacientes ao seu WhatsApp.” (20/10/2026).
+- [x] Título da tabela de comunidades alterado para “Cliques WhatsApp” (20/10/2026).
