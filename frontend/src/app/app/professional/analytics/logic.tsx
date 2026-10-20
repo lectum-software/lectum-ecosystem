@@ -88,9 +88,11 @@ export const ProfessionalAnalyticsLogic = () => {
     }
     const restore = () => {
       restored.current = true;
-      top == null
-        ? document.getElementById("conteudos-em-destaque")?.scrollIntoView({ behavior: "instant" })
-        : window.scrollTo({ top, behavior: "instant" });
+      if (top == null) {
+        document.getElementById("conteudos-em-destaque")?.scrollIntoView({ behavior: "instant" });
+      } else {
+        window.scrollTo({ top, behavior: "instant" });
+      }
     };
     const frame = requestAnimationFrame(restore);
     const observer = new ResizeObserver(restore);
