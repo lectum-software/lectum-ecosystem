@@ -66,6 +66,7 @@ export const indexSchema: IValidatorRequest = {
 };
 
 export const actionSchema: IValidatorRequest = {
+  body: [{ key: "origin_path", method: "string", max: 2048, optional: true }],
   params: [
     {
       key: "id",

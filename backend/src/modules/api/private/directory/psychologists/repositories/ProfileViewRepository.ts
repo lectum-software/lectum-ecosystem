@@ -107,6 +107,9 @@ export class ProfileViewRepository {
         device_id: deviceId ?? null,
         psychologist_id: psychologist.id,
         source: PROFILE_PAGE_SOURCE,
+        search_context_path: data.b?.origin_path
+          ? sanitizeAnalyticsPathWithTrafficQuery(data.b.origin_path)
+          : null,
         viewer_id: viewerId,
       },
       select: {

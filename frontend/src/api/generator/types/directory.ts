@@ -135,6 +135,7 @@ export type DirectoryPsychologistSearchImpressionPayload = {
 };
 
 export type DirectoryPsychologistVideoWatchPayload = {
+  origin_path?: string;
   completed?: boolean;
   duration_seconds?: number;
   max_position_seconds?: number;

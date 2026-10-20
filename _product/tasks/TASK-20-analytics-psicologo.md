@@ -976,3 +976,139 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada; Chrome
   headless 390x844 capturou o DOM de login/redirecionamento da rota protegida. A tela autenticada
   foi validada por fonte/build por depender de sessao privada.
+
+## Validação final — 19/10/2026
+
+- [x] WhatsApp selecionado inicialmente; carrossel sem comparação com período anterior.
+- [x] Visualizações do vídeo substituem Resultados de busca; séries Explorar/Minha Busca.
+- [x] Acessos e favoritos com séries por origem e legado identificado sem atribuição inventada.
+- [x] Gráfico consultável por toque, mouse e teclado; card selecionado totalmente visível.
+- [x] Tabela Buscas que levaram até você baseada em sessões com reprodução, não impressões.
+- [x] Tabela WhatsApp integrada com Principal origem em todos os empates positivos; bloco redundante removido.
+- [x] Card de pacientes seleciona gráfico; Gerenciar pacientes adquiridos abre o histórico. Granularidade semanal preservada.
+- [x] Migration aplicada com prisma migrate dev em PostgreSQL 17 isolado na porta 55439.
+- [x] Teste de integração real: visualizações versus impressões, origem legada, isolamento por profissional, pessoas únicas por dia e pacientes por semana.
+- [x] Builds frontend/backend aprovados; /health e /ready retornaram 200 no backend compilado com banco isolado.
+- [x] Biome, lint e tipos do frontend aprovados; 633 testes da suíte principal mais suítes complementares. A última suíte apresentou dados parciais sem presentation_video; tolerância corrigida e os 16 testes passaram na repetição.
+- [x] Check backend: 930 testes aprovados inicialmente; único arquivo interrompido por JWT_SECRET_KEY de teste ausente passou com os 3 testes após configurar a chave descartável. Biome, runtime-deps e tipos aprovados.
+- [x] Checks admin e video aprovados (video: 92 aprovados, 13 skips existentes).
+- [x] Prévia dos componentes reais inspecionada em 390/1440px com dados explicitamente de validação, sem overflow. Nenhuma resposta simulada entrou no produto.
+
+Limite de QA: não houve sessão autenticada de usuário real; a interface foi validada isoladamente e a agregação com banco real descartável. Nenhum serviço/dado remoto foi acessado ou alterado. Sem push/deploy. Migration deve preceder backend e frontend na publicação. Origens históricas ausentes permanecem não identificadas. Evidências temporárias em work/analytics-* (ignoradas pelo Git).
+
+## Ajuste de identidade visual — 19/10/2026
+
+- [x] Cards claros, ícones suaves, seleção por borda e painel com os mesmos tokens das demais telas Lectum.
+- [x] Preservados os blocos de métricas/retenção do vídeo e participação/cliques da comunidade na página real e incluídos na prévia local completa.
+- [x] Prévia com cabeçalho/filtros nativos e fonte Manrope; validação em 390/1440px sem overflow, preservando toque, teclado, tabelas, Principal origem e atalho de pacientes.
+
+A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/deploy.
+- [x] Check completo do frontend e build final aprovados; checks de ADR/tasks, source safety, tamanho e encoding aprovados.
+
+## Refinamento de interação — 19/10/2026
+
+- [x] Legenda com totais do período e balão com valores diários/semanais apenas após interação.
+- [x] Removidos Evolução no período, instruções de deslize/semanas e ressalva de múltiplos termos.
+- [x] Carrossel com rolagem por toque e setas discretas no desktop.
+- [x] Atalho de pacientes e chevron em cinza.
+- [x] Descrições das origens restauradas, uma única Principal origem e nota Pessoas únicas por origem.
+- [x] Blocos existentes de métricas/retenção do vídeo e comunidades preservados.
+- [x] Check completo e build do frontend aprovados. Prévia em 390/1440px validada: totais por origem, total único distinto da soma diária, balão, swipe nativo, setas, destaque único em empate, tabelas e blocos preservados. Sem push/deploy; dados da prévia são de validação.
+
+## Origens e proporções — 20/10/2026
+
+- [x] Gráfico responsivo com números e pontos sem distorção no desktop; ponto visível para uma única amostra.
+- [x] WhatsApp dividido em Vídeo de apresentação, Comunidades, Perfil e Favoritos, com totais por origem alinhados à tabela.
+- [x] Removido Pessoas únicas por origem.
+- [x] Acesso ao perfil inclui Página de favoritos; Favoritado inclui Dentro do perfil.
+- [x] Integração real em PostgreSQL isolado validou origens, legado sem origem, totais versus valores diários, deduplicação e consistência da tabela.
+- [x] Frontend check/build e backend tipos/build aprovados. Backend: 909 testes passaram inicialmente; falhas/cancelamentos por JWT descartável curto foram reexecutados com configuração válida. Testes visuais 390/1440px passaram, incluindo escala uniforme do SVG, ponto único, novas séries, legenda, toque e setas. Prévia de validação sem sessão autenticada; sem push/deploy.
+
+## Simplificação de legendas — 20/10/2026
+
+- [x] Ícones de origem do WhatsApp com as mesmas cores das linhas e fundo suave, sem marcador extra ou legenda duplicada.
+- [x] Removidas legendas de total de Pacientes adquiridos e Avaliações; totais dos cards e balões preservados.
+- [x] Legendas dos demais gráficos e demais blocos mantidos.
+- [x] Prévia validada em 390/1440px: ausência das três legendas, preservação das demais, consulta temporal, carrossel e correspondência exata entre as quatro cores dos ícones e das linhas.
+- [x] Check completo e build do frontend aprovados. Alterações locais, sem push/deploy.
+
+## Espaçamento dos gráficos — 20/10/2026
+
+- [x] Removida a reserva fixa de 64px para o balão e reduzidas as margens entre cabeçalho, legenda e gráfico.
+- [x] Balão sobreposto à área temporal, sem deslocar conteúdo; altura responsiva do gráfico preservada.
+- [x] Seis métricas verificadas em 390/1440px, sem mudança de altura ao consultar pontos. Regressão de toque, teclado, carrossel e blocos existentes aprovada.
+- [x] Check completo e build do frontend aprovados. Alteração local, sem push/deploy.
+
+## Respiro intermediário — 20/10/2026
+
+- [x] Acrescentados 16px de respiro ao conjunto cabeçalho/legenda/gráfico, distribuídos em duas margens de 8px adicionais.
+- [x] Mantido balão sobreposto, sem retorno da reserva fixa de 64px.
+- [x] Seis métricas verificadas em 390/1440px, sem deslocamento ao consultar pontos; visualização do vídeo conferida no mobile.
+- [x] Check completo e build do frontend aprovados. Sem push/deploy.
+
+## Carrossel de métricas do vídeo — 20/10/2026
+
+- [x] Oito contadores maiores, com números de 30px, rótulos de 14px e ícones ampliados.
+- [x] Duas linhas com arraste conjunto no mobile; coluna com 78% da largura e parte da próxima visível.
+- [x] Setas discretas no desktop; colunas de 46% mantêm os cards amplos em telas maiores. Retenção preservada.
+- [x] Check completo e build do frontend aprovados; prévia validada em 390/800/1440px, com oito cards, duas linhas, swipe, setas e retenção preservada. Sem push/deploy.
+
+## Comunidades por cliques — 20/10/2026
+
+- [x] Duas roscas de volume de posts/respostas substituídas por uma rosca das cinco origens de cliques no WhatsApp. Centro apresenta a soma da tabela e o rótulo Cliques.
+- [x] Ícones da tabela usam as cores das fatias; seleção compartilhada por toque/clique/teclado. Informações de Top Mentores preservadas.
+- [x] Sem cliques, anel neutro; origem única ocupa todo o anel. Estado bloqueado não permite seleção.
+- [x] Check completo e build aprovados. Prévia conferida em mobile/desktop: soma, cinco origens, cores, seleção compartilhada, teclado, estados vazio/único/bloqueado. Sem push/deploy.
+
+- [x] Texto de comunidades ajustado para “Veja quais conteúdos levam mais pacientes ao seu WhatsApp.” (20/10/2026).
+- [x] Título da tabela de comunidades alterado para “Cliques WhatsApp” (20/10/2026).
+
+## Destaques de conteúdos nas comunidades — 20/10/2026
+
+- [x] Título Resultados dos seus conteúdos e legenda compacta ligada à rosca, substituindo a tabela.
+- [x] Carrosséis de miniaturas de posts e respostas, até cinco itens positivos por tipo, ordenados por cliques no período; contador visual apenas com ícone do WhatsApp e número.
+- [x] Atalhos para Minhas Publicações nas abas posts/replies; cada resposta abre com foco na resposta original.
+- [x] API adiciona highlights opcional e carrega metadados somente dos vencedores. Conteúdo publicado antes do período continua elegível, desde que receba cliques nele. Conteúdos excluídos e autores terceiros não entram.
+- [x] Integração PostgreSQL isolada aprovada para período, autoria, exclusão, repetição de pessoa por conteúdo, top cinco, contexto das respostas e período vazio.
+- [x] Frontend check/build e backend lint/tipos/build aprovados. Suíte backend: 930 passaram inicialmente; três falhas por JWT de teste ausente/timeout foram reexecutadas com configuração válida, todas aprovadas. Testes de ranking e integração passaram. Prévia validou legenda, 5+5 miniaturas, links de abas/resposta, swipe, setas, vazio e bloqueio em 390/1440px. Sem push/deploy.
+
+## Legenda e miniaturas dos destaques — 20/10/2026
+
+- [x] Legenda de comunidades com pontinhos e tipografia text-xs (0,75rem) herdada pelos botões, no mesmo padrão das séries superiores.
+- [x] Miniaturas verticais do próprio vídeo parado: poster do Stream ou quadro extraído do arquivo legado, carregados quando próximos da área visível. Conteúdo sem vídeo mantém trecho ou imagem.
+- [x] Ícone do WhatsApp e número brancos sobre o canto inferior direito, com degradê para contraste e sem rodapé duplicado.
+- [x] Contrato aditivo inclui media_url opcional; nenhum player ou reprodução automática na tela.
+
+- [x] Frontend check/build (633 testes) e backend check/build (936 testes) aprovados. Browser em 390/1440px validou pontinhos, fonte compacta, quadro real, contador branco dentro da miniatura, swipe, setas, links e estados vazio/bloqueado. Sem push/deploy.
+
+## Miniaturas menores — 20/10/2026
+
+- [x] Miniaturas com 108px de largura no mobile e 120px no desktop, mantendo 9:16 (192px e aproximadamente 213px de altura).
+- [x] Trechos de posts e respostas ajustados ao tamanho compacto; exemplos locais alternam vídeo e texto nos dois carrosséis.
+- [x] Check do frontend aprovado. Prévia conferida em 390/1440px: dois formatos em cada carrossel, larguras 108/120px, proporção 9:16, sem overflow horizontal e com contador legível.
+- [x] Build do frontend aprovado. Sem push/deploy.
+
+## Conteúdo das miniaturas textuais — 20/10/2026
+
+- [x] Ícones de post/comentário removidos das miniaturas textuais. Post apresenta título em negrito e trecho da descrição; resposta apresenta apenas o próprio texto, sem contexto da pergunta.
+- [x] Trechos truncados preservam espaço para o contador do WhatsApp.
+- [x] Check/build do frontend aprovados; prévia conferida em mobile e desktop com título/descrição no post e somente texto próprio na resposta. Sem push/deploy.
+
+## Acabamento dos cards textuais — 20/10/2026
+
+- [x] Posts e respostas sem mídia usam fundo transparente e borda cinza, sem degradê. Contador do WhatsApp em cinza mantém contraste; mídias preservam contador branco e degradê.
+- [x] Check/build do frontend aprovados. Browser confirmou fundos transparentes, ausência de degradê e contador não branco nos cards textuais em mobile/desktop. Sem push/deploy.
+
+## Hierarquia e ordem dos analytics — 20/10/2026
+
+- [x] Títulos das miniaturas textuais usam peso médio e descrições usam peso normal/cinza, preservando tamanho e leitura.
+- [x] Pacientes adquiridos passa à última posição do carrossel, após Avaliações.
+- [x] Legenda de comunidades passa a exibir Ranking Top Mentores.
+- [x] Check/build do frontend aprovados. Browser confirmou ordem, seleção de Pacientes adquiridos, rótulo Ranking Top Mentores e pesos 500/400 nas miniaturas. Sem push/deploy.
+
+## Ordem dos destaques — 20/10/2026
+
+- [x] Respostas em destaque aparece antes de Posts em destaque. Ordem confirmada no navegador local.
+- [x] Setas dos destaques no desktop aparecem somente quando scrollWidth excede a largura visível; ResizeObserver acompanha o contêiner e os cards ao redimensionar ou trocar a quantidade de resultados.
+- [x] Título dentro da miniatura de post usa bold (700), mantendo descrição normal (400). Pesos confirmados no navegador.
+- [x] Check/build do frontend aprovados para ordem/setas. Ajuste final de peso validado com Biome e navegador. Navegação conferida com e sem overflow, resize e mobile. Sem push/deploy.

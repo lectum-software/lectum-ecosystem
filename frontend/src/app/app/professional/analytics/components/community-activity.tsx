@@ -1,160 +1,19 @@
 "use client";
 
-import { FileText, MessageCircle, UsersRound } from "lucide-react";
+import { UsersRound } from "lucide-react";
+import { useState } from "react";
 import type { PsychologistAnalyticsCommunities } from "@/api/generator/types/psychologist-analytics";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
+import { toCount } from "../modules/support";
+import { CommunityHighlights } from "./community-highlights";
 
-import { type AnalyticsCardIcon, clampPercent, toCount } from "../modules/support";
-
-export const CommunityContentDonut = ({
-  icon: Icon,
-  label,
-  locked,
-  totals,
-}: {
-  icon: AnalyticsCardIcon;
-  label: string;
-  locked?: boolean;
-  totals: PsychologistAnalyticsCommunities["content"]["posts"];
-}) => {
-  const withVideoRate =
-    totals.total > 0 ? clampPercent((totals.with_video / totals.total) * 100) : 0;
-  const roundedWithVideoRate = Math.round(withVideoRate);
-  const donutBackground =
-    totals.total > 0
-      ? `conic-gradient(var(--lectum-primary) 0 ${withVideoRate}%, var(--lectum-border-strong) ${withVideoRate}% 100%)`
-      : "conic-gradient(var(--lectum-border) 0 100%)";
-
-  return (
-    <article className="grid min-w-0 gap-3 rounded-[24px] border border-primary/10 bg-surface p-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon className="h-4 w-4" aria-hidden />
-        </span>
-        <p className="truncate text-sm font-black tracking-[-0.03em] text-foreground">{label}</p>
-      </div>
-
-      <div className="grid justify-items-center gap-3">
-        <div
-          aria-label={`${label}: ${toCount(totals.with_video)} com vídeo e ${toCount(
-            totals.without_video,
-          )} sem vídeo`}
-          className="grid h-28 w-28 place-items-center rounded-full p-3"
-          role="img"
-          style={{ background: donutBackground }}
-        >
-          <div className="grid h-full w-full place-items-center rounded-full bg-surface text-center">
-            <div>
-              <p
-                className={cn(
-                  "text-2xl font-black leading-none tracking-[-0.06em] text-foreground",
-                  locked && "select-none blur-[5px]",
-                )}
-              >
-                {toCount(totals.total)}
-              </p>
-              <p className="mt-1 text-[0.62rem] font-black uppercase tracking-[0.1em] text-subtle">
-                total
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid w-full gap-2">
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="inline-flex min-w-0 items-center gap-2 font-extrabold text-muted">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
-              Com vídeo
-            </span>
-            <span className={cn("font-black text-foreground", locked && "select-none blur-[5px]")}>
-              {toCount(totals.with_video)} ({roundedWithVideoRate}%)
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="inline-flex min-w-0 items-center gap-2 font-extrabold text-muted">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-border-strong" />
-              Sem vídeo
-            </span>
-            <span className={cn("font-black text-foreground", locked && "select-none blur-[5px]")}>
-              {toCount(totals.without_video)}
-            </span>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
+const originStyles = {
+  post_with_video: { color: "var(--lectum-primary)" },
+  post_without_video: { color: "var(--lectum-success)" },
+  reply_with_video: { color: "var(--lectum-warning)" },
+  reply_without_video: { color: "var(--lectum-primary-strong)" },
+  top_mentors: { color: "var(--lectum-muted)" },
 };
-
-export const CommunityWhatsappContentTable = ({
-  items,
-  locked,
-  topMentors,
-}: {
-  items: PsychologistAnalyticsCommunities["content"]["whatsapp_clicks_by_content"];
-  locked?: boolean;
-  topMentors: PsychologistAnalyticsCommunities["top_mentors"];
-}) => (
-  <article className="overflow-hidden rounded-[24px] border border-primary/10 bg-surface">
-    <div className="flex min-w-0 items-center gap-2 border-border border-b bg-surface-muted/70 px-4 py-3">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <WhatsAppIcon className="h-4 w-4" aria-hidden />
-      </span>
-      <div className="min-w-0">
-        <p className="text-sm font-black tracking-[-0.03em] text-foreground">
-          Cliques por conteúdo
-        </p>
-      </div>
-    </div>
-
-    <table className="w-full border-separate border-spacing-0 text-left">
-      <thead>
-        <tr className="text-[0.66rem] font-black uppercase tracking-[0.08em] text-subtle">
-          <th className="px-4 py-3">Conteúdo</th>
-          <th className="px-4 py-3 text-right">WhatsApp</th>
-        </tr>
-      </thead>
-      <tbody>
-        {items.map((item) => (
-          <tr className="border-border border-t" key={item.id}>
-            <td className="border-border border-t px-4 py-3 text-sm font-extrabold text-foreground">
-              {item.label}
-            </td>
-            <td
-              className={cn(
-                "border-border border-t px-4 py-3 text-right text-lg font-black tracking-[-0.04em] text-foreground",
-                locked && "select-none blur-[5px]",
-              )}
-            >
-              {toCount(item.whatsapp_clicks)}
-            </td>
-          </tr>
-        ))}
-        <tr className="border-border border-t" key="top-mentors">
-          <td className="border-border border-t px-4 py-3 text-sm text-foreground">
-            <span className="font-extrabold">Top Mentores</span>
-            <p
-              className={cn(
-                "mt-1 text-xs font-semibold leading-5",
-                topMentors.status === "in_top_5" ? "text-muted" : "text-subtle",
-              )}
-            >
-              {topMentors.message}
-            </p>
-          </td>
-          <td
-            className={cn(
-              "border-border border-t px-4 py-3 text-right text-lg font-black tracking-[-0.04em] text-foreground",
-              locked && "select-none blur-[5px]",
-            )}
-          >
-            {toCount(topMentors.whatsapp_clicks)}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </article>
-);
 
 export const CommunityActivitySection = ({
   communities,
@@ -163,7 +22,30 @@ export const CommunityActivitySection = ({
   communities: PsychologistAnalyticsCommunities;
   locked?: boolean;
 }) => {
-  const content = communities.content;
+  const [selected, setSelected] = useState<string | null>(null);
+  const items = [
+    ...communities.content.whatsapp_clicks_by_content.map((item) => ({
+      id: item.id,
+      label: item.label,
+      value: item.whatsapp_clicks,
+      description: "",
+    })),
+    {
+      id: "top_mentors" as const,
+      label: "Ranking Top Mentores",
+      value: communities.top_mentors.whatsapp_clicks,
+      description: communities.top_mentors.message,
+    },
+  ];
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  const toggle = (id: string) => setSelected((current) => (current === id ? null : id));
+  let offset = 0;
+  const segments = items.map((item) => {
+    const start = offset;
+    const share = total > 0 ? (item.value / total) * 100 : 0;
+    offset += share;
+    return { ...item, start, share };
+  });
 
   return (
     <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
@@ -174,32 +56,102 @@ export const CommunityActivitySection = ({
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Comunidade</p>
           <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
-            Participação nas comunidades
+            Resultados dos seus conteúdos
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{communities.description}</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+            Veja quais conteúdos levam mais pacientes ao seu WhatsApp.
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <CommunityContentDonut
-          icon={FileText}
-          label="Posts"
-          locked={locked}
-          totals={content.posts}
-        />
-        <CommunityContentDonut
-          icon={MessageCircle}
-          label="Respostas"
-          locked={locked}
-          totals={content.replies}
-        />
+      <div className="relative mx-auto h-52 w-52">
+        <svg viewBox="0 0 200 200" className={cn("h-full w-full", locked && "blur-[5px]")}>
+          <title>Cliques no WhatsApp por conteúdo</title>
+          <circle
+            cx="100"
+            cy="100"
+            r="74"
+            fill="none"
+            stroke="var(--lectum-border)"
+            strokeWidth="20"
+          />
+          {!locked &&
+            segments
+              .filter((item) => item.value > 0)
+              .map((item) => (
+                // biome-ignore lint/a11y/useSemanticElements: fatia SVG interativa com teclado; button não é válido dentro de svg.
+                <circle
+                  key={item.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${item.label}: ${toCount(item.value)} cliques`}
+                  aria-pressed={selected === item.id}
+                  cx="100"
+                  cy="100"
+                  r="74"
+                  pathLength="100"
+                  fill="none"
+                  stroke={originStyles[item.id].color}
+                  strokeWidth={selected === item.id ? 26 : 20}
+                  strokeDasharray={`${item.share} ${100 - item.share}`}
+                  strokeDashoffset={-item.start}
+                  transform="rotate(-90 100 100)"
+                  className="cursor-pointer focus-visible:outline-none focus-visible:stroke-[28]"
+                  style={{ opacity: selected && selected !== item.id ? 0.3 : 1 }}
+                  onClick={() => toggle(item.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      toggle(item.id);
+                    }
+                  }}
+                />
+              ))}
+        </svg>
+        <div className="pointer-events-none absolute inset-0 grid place-content-center text-center">
+          <p
+            className={cn(
+              "text-3xl font-black tracking-[-0.05em] text-foreground",
+              locked && "select-none blur-[5px]",
+            )}
+          >
+            {toCount(total)}
+          </p>
+          <p className="mt-1 text-xs font-extrabold text-muted">Cliques</p>
+        </div>
       </div>
 
-      <CommunityWhatsappContentTable
-        items={content.whatsapp_clicks_by_content}
-        locked={locked}
-        topMentors={communities.top_mentors}
-      />
+      <ul className="flex flex-wrap gap-x-4 gap-y-2 text-xs" aria-label="Origens dos cliques">
+        {items.map((item) => {
+          const { color } = originStyles[item.id];
+          return (
+            <li key={item.id}>
+              <button
+                type="button"
+                disabled={locked}
+                aria-pressed={selected === item.id}
+                onClick={() => toggle(item.id)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded text-left text-xs text-muted focus-visible:outline-2 focus-visible:outline-primary",
+                  selected === item.id && "bg-surface-muted",
+                )}
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ background: color }}
+                  aria-hidden
+                />
+                <span>{item.label}:</span>
+                <strong className={cn("text-foreground", locked && "select-none blur-[5px]")}>
+                  {toCount(item.value)}
+                </strong>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <CommunityHighlights kind="replies" items={communities.highlights?.replies} locked={locked} />
+      <CommunityHighlights kind="posts" items={communities.highlights?.posts} locked={locked} />
     </section>
   );
 };

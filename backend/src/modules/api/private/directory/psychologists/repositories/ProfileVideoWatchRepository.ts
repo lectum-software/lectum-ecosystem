@@ -1,4 +1,5 @@
 import prisma from "@/infra/database/prisma";
+import { sanitizeAnalyticsPathWithTrafficQuery } from "@/utils/analytics-traffic-path";
 import type {
   DirectoryPsychologistVideoWatchResponse,
   IProfileVideoWatchDTO,
@@ -132,6 +133,9 @@ export class ProfileVideoWatchRepository {
           psychologist_id: psychologistId,
           viewer_id: viewerId,
           session_key: data.b.session_key,
+          origin_path: data.b.origin_path
+            ? sanitizeAnalyticsPathWithTrafficQuery(data.b.origin_path)
+            : null,
           video_url: profile?.video_url ?? null,
           duration_seconds: durationSeconds,
           watched_seconds: watchedSeconds,

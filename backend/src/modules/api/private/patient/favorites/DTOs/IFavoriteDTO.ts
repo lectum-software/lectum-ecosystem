@@ -64,6 +64,7 @@ export interface IFavoriteIndexDTO {
 }
 
 export interface IFavoriteActionDTO {
+  b?: { origin_path?: string };
   p: {
     id: string;
   };

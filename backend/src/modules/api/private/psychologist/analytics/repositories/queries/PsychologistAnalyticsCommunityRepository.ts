@@ -1,6 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { distinctWhatsappPeople } from "@/modules/whatsapp-reports/people";
+import { distinctWhatsappPeople, type PersonAction } from "@/modules/whatsapp-reports/people";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   PsychologistAnalyticsCommunities,
@@ -20,6 +20,7 @@ import {
   COMMUNITY_WHATSAPP_POST_TARGET_TYPES,
   COMMUNITY_WHATSAPP_REPLY_TARGET_TYPES,
 } from "../support/traffic";
+import { buildCommunityHighlights } from "./community-highlights";
 
 export class PsychologistAnalyticsCommunityRepository {
   async hasProfessionalEntitlement(userId: string): Promise<boolean> {
@@ -42,6 +43,7 @@ export class PsychologistAnalyticsCommunityRepository {
   async buildCommunities(
     userId: string,
     createdAtWindow: Prisma.DateTimeFilter,
+    onWhatsappActions?: (actions: PersonAction[]) => void,
   ): Promise<PsychologistAnalyticsCommunities> {
     const communities = await prisma.community.findMany({
       where: {
@@ -112,6 +114,7 @@ export class PsychologistAnalyticsCommunityRepository {
     if (communityIds.length === 0) {
       return {
         content: emptyCommunityContentSummary(),
+        highlights: { posts: [], replies: [] },
         description:
           "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
         diagnosis: toCommunityActivityDiagnosis(emptyActivityTotals, 0),
@@ -453,6 +456,7 @@ export class PsychologistAnalyticsCommunityRepository {
       }),
       emptyActivityTotals,
     );
+    onWhatsappActions?.([...whatsappActions, ...topMentorWhatsappActions]);
     const activityTotals = {
       ...communityActivityTotals,
       total_whatsapp_clicks: distinctWhatsappPeople([
@@ -470,8 +474,10 @@ export class PsychologistAnalyticsCommunityRepository {
         .filter((date): date is Date => Boolean(date))
         .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
 
+    const highlights = await buildCommunityHighlights(userId, whatsappActions);
     return {
       content,
+      highlights,
       description:
         "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
       diagnosis: toCommunityActivityDiagnosis(activityTotals, communities.length),

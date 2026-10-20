@@ -6,7 +6,6 @@ import {
   type LucideIcon,
   PlayCircle,
   Repeat2,
-  Search,
   Share2,
   Star,
   UsersRound,
@@ -83,10 +82,10 @@ export const clampPercent = (value: number) => Math.min(100, Math.max(0, value))
 
 export const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] => [
   {
-    id: "search_results",
-    icon: Search,
-    label: "Resultados de busca",
-    value: toCount(data?.metrics.search_results),
+    id: "video_views",
+    icon: PlayCircle,
+    label: "Visualizações do vídeo de apresentação",
+    value: toCount(data?.presentation_video?.metrics.views),
     source: "profile_view_event",
   },
   {
@@ -222,7 +221,7 @@ export const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
         },
         {
           id: "community_top_mentors",
-          label: "Top Mentores",
+          label: "Ranking Top Mentores",
           description: "Cliques no WhatsApp originados pela navegação no Ranking Top Mentores.",
           metric: "whatsapp_clicks",
           value: 0,

@@ -254,7 +254,24 @@ export type PsychologistAnalyticsCommunityTopMentors = {
   whatsapp_clicks: number;
 };
 
+export type PsychologistAnalyticsCommunityHighlight = {
+  media_url?: string | null;
+  id: string;
+  post_id: string;
+  community_slug: string;
+  title: string;
+  excerpt: string;
+  context: string | null;
+  thumbnail_url: string | null;
+  media_type: string | null;
+  whatsapp_clicks: number;
+};
+
 export type PsychologistAnalyticsCommunities = {
+  highlights?: {
+    posts: PsychologistAnalyticsCommunityHighlight[];
+    replies: PsychologistAnalyticsCommunityHighlight[];
+  };
   content: PsychologistAnalyticsCommunityContentSummary;
   description: string;
   diagnosis: PsychologistAnalyticsCommunityActivityDiagnosis;
@@ -266,6 +283,7 @@ export type PsychologistAnalyticsCommunities = {
 };
 
 export type PsychologistAnalyticsResponse = {
+  chart_data?: AnalyticsChartData;
   access: {
     has_professional_entitlement: boolean;
     mode: "full" | "preview";
@@ -286,4 +304,18 @@ export type PsychologistAnalyticsPreview = {
     PsychologistAnalyticsPresentationVideo,
     "video_url" | "video_cover_url"
   > | null;
+};
+
+export type AnalyticsTimeline = {
+  granularity: "day" | "week";
+  series: Array<{
+    id: string;
+    label: string;
+    total?: number;
+    points: Array<{ date: string; value: number }>;
+  }>;
+};
+export type AnalyticsChartData = {
+  timelines: Record<string, AnalyticsTimeline>;
+  video_search_terms: Array<{ term: string; views: number }>;
 };

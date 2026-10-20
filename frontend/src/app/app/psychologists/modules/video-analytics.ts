@@ -6,6 +6,7 @@ export type VideoProgressState = {
 };
 
 export type FeedVideoAnalyticsState = {
+  originPath?: string;
   completed: boolean;
   lastPosition: number;
   lastSentAt: number;
@@ -25,6 +26,8 @@ export type FeedVideoAnalyticsState = {
 };
 
 export const createEmptyFeedVideoAnalyticsState = (): FeedVideoAnalyticsState => ({
+  originPath:
+    typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined,
   completed: false,
   lastPosition: 0,
   lastSentAt: 0,

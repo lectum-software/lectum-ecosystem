@@ -625,6 +625,7 @@ model psychologist_approach {
 }
 
 model psychologist_favorite {
+  origin_path String? @map("origin_path")
   id              String    @id @default(cuid())
   deleted         Boolean   @default(false)
   deletedAt       DateTime? @map("deleted_at")
@@ -855,6 +856,7 @@ model profile_view_event {
 }
 
 model profile_video_watch_session {
+  origin_path String? @map("origin_path")
   id                   String    @id @default(cuid())
   deleted              Boolean   @default(false)
   deletedAt            DateTime? @map("deleted_at")

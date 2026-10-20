@@ -122,6 +122,12 @@ export const favoritePsychologist = async (id: string) => {
   const handle = callEndpoint({
     route: "/api/private/user/favorites/:id",
     method: "POST",
+    body: {
+      origin_path:
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : undefined,
+    },
     params: { id },
   });
 
