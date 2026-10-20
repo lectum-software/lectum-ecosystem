@@ -1014,3 +1014,12 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Descrições das origens restauradas, uma única Principal origem e nota Pessoas únicas por origem.
 - [x] Blocos existentes de métricas/retenção do vídeo e comunidades preservados.
 - [x] Check completo e build do frontend aprovados. Prévia em 390/1440px validada: totais por origem, total único distinto da soma diária, balão, swipe nativo, setas, destaque único em empate, tabelas e blocos preservados. Sem push/deploy; dados da prévia são de validação.
+
+## Origens e proporções — 20/10/2026
+
+- [x] Gráfico responsivo com números e pontos sem distorção no desktop; ponto visível para uma única amostra.
+- [x] WhatsApp dividido em Vídeo de apresentação, Comunidades, Perfil e Favoritos, com totais por origem alinhados à tabela.
+- [x] Removido Pessoas únicas por origem.
+- [x] Acesso ao perfil inclui Página de favoritos; Favoritado inclui Dentro do perfil.
+- [x] Integração real em PostgreSQL isolado validou origens, legado sem origem, totais versus valores diários, deduplicação e consistência da tabela.
+- [x] Frontend check/build e backend tipos/build aprovados. Backend: 909 testes passaram inicialmente; falhas/cancelamentos por JWT descartável curto foram reexecutados com configuração válida. Testes visuais 390/1440px passaram, incluindo escala uniforme do SVG, ponto único, novas séries, legenda, toque e setas. Prévia de validação sem sessão autenticada; sem push/deploy.

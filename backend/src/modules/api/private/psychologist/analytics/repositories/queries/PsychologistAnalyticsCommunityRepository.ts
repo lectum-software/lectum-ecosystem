@@ -1,6 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { distinctWhatsappPeople } from "@/modules/whatsapp-reports/people";
+import { distinctWhatsappPeople, type PersonAction } from "@/modules/whatsapp-reports/people";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   PsychologistAnalyticsCommunities,
@@ -42,6 +42,7 @@ export class PsychologistAnalyticsCommunityRepository {
   async buildCommunities(
     userId: string,
     createdAtWindow: Prisma.DateTimeFilter,
+    onWhatsappActions?: (actions: PersonAction[]) => void,
   ): Promise<PsychologistAnalyticsCommunities> {
     const communities = await prisma.community.findMany({
       where: {
@@ -453,6 +454,7 @@ export class PsychologistAnalyticsCommunityRepository {
       }),
       emptyActivityTotals,
     );
+    onWhatsappActions?.([...whatsappActions, ...topMentorWhatsappActions]);
     const activityTotals = {
       ...communityActivityTotals,
       total_whatsapp_clicks: distinctWhatsappPeople([

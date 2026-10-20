@@ -3,11 +3,14 @@ export const analyticsDay = (date: Date) =>
 
 export const originGroup = (
   path: string | null,
-): "presentation_video" | "communities" | "unknown" => {
+): "presentation_video" | "communities" | "favorites" | "profile" | "unknown" => {
   if (!path) return "unknown";
   const pathname = path.split("?")[0];
   if (pathname === "/psicologos" || pathname === "/app/psychologists") return "presentation_video";
   if (/^\/(?:app\/)?(?:comunidades|communities)(?:\/|$)/.test(pathname)) return "communities";
+  if (/^\/(?:app\/)?(?:favorites|favoritos)(?:\/|$)/.test(pathname)) return "favorites";
+  if (/^\/(?:psicologos|psychologists|app\/psychologists)\/[^/]+\/?$/.test(pathname))
+    return "profile";
   return "unknown";
 };
 

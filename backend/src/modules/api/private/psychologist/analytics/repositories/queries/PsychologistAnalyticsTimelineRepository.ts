@@ -1,5 +1,6 @@
 import prisma from "@/infra/database/prisma";
 import { acquiredWeeksWhere } from "@/modules/whatsapp-reports/counts";
+import type { PersonAction } from "@/modules/whatsapp-reports/people";
 import {
   extractSearchFiltersFromTrafficPath,
   extractSearchTermsFromTrafficPath,
@@ -11,7 +12,9 @@ import type {
   AnalyticsTimeline,
   PsychologistAnalyticsPeriod,
 } from "../../DTOs/IAnalyticsDTO";
-import { dailyPoints, originGroup, uniqueDailyContacts } from "../support/timeline";
+import { dailyPoints, originGroup } from "../support/timeline";
+import { isCommunityTopMentorsTrafficPath, isFavoritesTrafficPath } from "../support/traffic";
+import { whatsappTimeline } from "../support/whatsapp-timeline";
 
 type VideoSession = { createdAt: Date; origin_path: string | null };
 export async function buildAnalyticsChartData(
@@ -19,9 +22,14 @@ export async function buildAnalyticsChartData(
   period: PsychologistAnalyticsPeriod,
   sessions: VideoSession[],
   labels: TrafficFilterLabelLookup,
+  actions: {
+    video: Array<PersonAction & { action_type: string }>;
+    psychologist: Array<PersonAction & { path: string | null; page_kind: string }>;
+    communities: PersonAction[];
+  },
 ): Promise<AnalyticsChartData> {
   const createdAt = { gte: period.start_at, lte: period.end_at };
-  const [profiles, favorites, contacts, reviews, weeks] = await Promise.all([
+  const [profiles, favorites, reviews, weeks] = await Promise.all([
     prisma.profile_view_event.findMany({
       where: {
         psychologist_id: userId,
@@ -36,16 +44,6 @@ export async function buildAnalyticsChartData(
       where: { psychologist_id: userId, deleted: false, createdAt, user_id: { not: userId } },
       select: { createdAt: true, origin_path: true },
     }),
-    prisma.contact_request.findMany({
-      where: {
-        psychologist_id: userId,
-        deleted: false,
-        channel: "whatsapp",
-        createdAt,
-        OR: [{ user_id: null }, { user_id: { not: userId } }],
-      },
-      select: { id: true, user_id: true, visitor_key: true, createdAt: true },
-    }),
     prisma.professional_review.findMany({
       where: { psychologist_id: userId, deleted: false, status: "publicada", createdAt },
       select: { createdAt: true },
@@ -57,17 +55,25 @@ export async function buildAnalyticsChartData(
   ]);
   const origins = (
     events: Array<{ createdAt: Date; origin_path: string | null }>,
+    extra: { id: "favorites" | "profile"; label: string },
   ): AnalyticsTimeline => ({
     granularity: "day",
     series: [
       { id: "presentation_video", label: "Vídeo de apresentação" },
       { id: "communities", label: "Comunidades" },
+      extra,
       { id: "unknown", label: "Outras / não identificadas" },
     ].map((series) => ({
       ...series,
       points: dailyPoints(
         events
-          .filter((event) => originGroup(event.origin_path) === series.id)
+          .filter((event) => {
+            const origin = originGroup(event.origin_path);
+            const assigned = ["presentation_video", "communities", extra.id].includes(origin)
+              ? origin
+              : "unknown";
+            return assigned === series.id;
+          })
           .map((event) => ({ date: event.createdAt })),
       ),
     })),
@@ -111,20 +117,34 @@ export async function buildAnalyticsChartData(
       },
       profile_views: origins(
         profiles.map((event) => ({ ...event, origin_path: event.search_context_path })),
+        { id: "favorites", label: "Página de favoritos" },
       ),
-      favorites_received: origins(favorites),
-      whatsapp_clicks: {
-        granularity: "day",
-        series: [
-          {
-            id: "total",
-            label: "Pessoas únicas no dia",
-            points: dailyPoints(
-              uniqueDailyContacts(contacts).map((event) => ({ date: event.createdAt })),
-            ),
-          },
-        ],
-      },
+      favorites_received: origins(favorites, { id: "profile", label: "Dentro do perfil" }),
+      whatsapp_clicks: whatsappTimeline([
+        {
+          id: "presentation_video",
+          label: "Vídeo de apresentação",
+          events: actions.video.filter(
+            (action) => action.action_type === "psychologist_video_whatsapp_click",
+          ),
+        },
+        { id: "communities", label: "Comunidades", events: actions.communities },
+        {
+          id: "profile",
+          label: "Perfil",
+          events: actions.psychologist.filter(
+            (action) =>
+              action.page_kind === "psychologist_profile" &&
+              !isFavoritesTrafficPath(action.path) &&
+              !isCommunityTopMentorsTrafficPath(action.path, action.page_kind),
+          ),
+        },
+        {
+          id: "favorites",
+          label: "Favoritos",
+          events: actions.psychologist.filter((action) => isFavoritesTrafficPath(action.path)),
+        },
+      ]),
       reviews_received: {
         granularity: "day",
         series: [

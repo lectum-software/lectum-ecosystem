@@ -1,12 +1,18 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type {
   AnalyticsTimeline,
   PsychologistAnalyticsPeriod,
 } from "@/api/generator/types/psychologist-analytics";
 import { dayLabel, pointerDayIndex, timelineDates } from "../modules/timeline";
 
-const colors = ["var(--lectum-primary)", "var(--lectum-success)", "var(--lectum-muted)"];
+const colors = [
+  "var(--lectum-primary)",
+  "var(--lectum-success)",
+  "var(--lectum-warning)",
+  "var(--lectum-primary-strong)",
+  "var(--lectum-muted)",
+];
 export function MetricTimeline({
   timeline,
   period,
@@ -17,6 +23,16 @@ export function MetricTimeline({
   total?: number;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
+  const [width, setWidth] = useState(300);
+  const measurePlot = useCallback((plot: HTMLDivElement | null) => {
+    if (!plot) return;
+    const observer = new ResizeObserver(([entry]) =>
+      setWidth(Math.max(1, entry.contentRect.width)),
+    );
+    observer.observe(plot);
+    return () => observer.disconnect();
+  }, []);
+  const height = Math.max(192, Math.min(320, width * 0.42));
   if (!timeline)
     return <p className="py-10 text-center text-sm text-muted">Histórico ainda não disponível.</p>;
   const dates = timelineDates(timeline, period);
@@ -33,9 +49,11 @@ export function MetricTimeline({
   });
   const max = Math.max(1, ...values.flat());
   const index = Math.min(selected ?? dates.length - 1, dates.length - 1);
-  const x = (i: number) => (dates.length === 1 ? 150 : (i / (dates.length - 1)) * 300);
-  const y = (value: number) => 140 - (value / max) * 120;
-  const totals = values.map((points) => points.reduce((sum, value) => sum + value, 0));
+  const x = (i: number) => (dates.length === 1 ? width / 2 : (i / (dates.length - 1)) * width);
+  const y = (value: number) => height - 20 - (value / max) * (height - 45);
+  const totals = values.map(
+    (points, i) => series[i].total ?? points.reduce((sum, value) => sum + value, 0),
+  );
   const description = series.map((s, i) => `${s.label}: ${values[i][index]}`).join("; ");
   return (
     <div className="min-w-0">
@@ -52,6 +70,7 @@ export function MetricTimeline({
       </div>
       <div
         className="relative mt-4 pt-16 touch-pan-y rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+        ref={measurePlot}
         role="slider"
         tabIndex={0}
         aria-label={
@@ -99,8 +118,8 @@ export function MetricTimeline({
             role="status"
             className="pointer-events-none absolute top-0 z-10 w-max max-w-full rounded-xl bg-foreground px-3 py-2 text-xs text-background shadow-[var(--lectum-shadow-soft)]"
             style={{
-              left: `${(x(index) / 300) * 100}%`,
-              transform: `translateX(-${(x(index) / 300) * 100}%)`,
+              left: `${(x(index) / width) * 100}%`,
+              transform: `translateX(-${(x(index) / width) * 100}%)`,
             }}
           >
             <p className="font-extrabold">
@@ -118,23 +137,24 @@ export function MetricTimeline({
           </div>
         ) : null}
         <svg
-          viewBox="0 0 300 160"
-          className="h-48 w-full overflow-visible"
-          preserveAspectRatio="none"
+          viewBox={`0 0 ${width} ${height}`}
+          className="w-full overflow-visible"
+          style={{ height }}
+          preserveAspectRatio="xMidYMid meet"
           aria-hidden="true"
         >
           {[0, max].map((value) => (
             <g key={value}>
               <line
                 x1="0"
-                x2="300"
+                x2={width}
                 y1={y(value)}
                 y2={y(value)}
                 stroke="currentColor"
                 className="text-border"
                 strokeDasharray="3 4"
               />
-              <text x="1" y={y(value) - 5} fontSize="9" fill="currentColor" className="text-muted">
+              <text x="1" y={y(value) - 5} fontSize="11" fill="currentColor" className="text-muted">
                 {value}
               </text>
             </g>
@@ -150,7 +170,7 @@ export function MetricTimeline({
                 strokeWidth="2"
                 vectorEffect="non-scaling-stroke"
               />
-              {selected !== null ? (
+              {selected !== null || dates.length === 1 ? (
                 <circle cx={x(index)} cy={y(points[index])} r="3" fill={colors[i]} />
               ) : null}
             </g>
@@ -160,7 +180,7 @@ export function MetricTimeline({
               x1={x(index)}
               x2={x(index)}
               y1="15"
-              y2="140"
+              y2={height - 20}
               stroke="currentColor"
               className="text-muted"
               strokeDasharray="3 4"

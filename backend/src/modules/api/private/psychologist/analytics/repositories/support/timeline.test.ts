@@ -14,7 +14,11 @@ test("analytics use Sao Paulo calendar boundaries", () => {
 });
 test("missing attribution is never relabeled as community or video", () => {
   assert.equal(originGroup(null), "unknown");
-  assert.equal(originGroup("/psicologos/123"), "unknown");
+  assert.equal(originGroup("/psicologos/123"), "profile");
+  assert.equal(originGroup("/app/favoritos?tab=psychologists"), "favorites");
+  assert.equal(originGroup("/app/favorites"), "favorites");
+  assert.equal(originGroup("/app/psychologists/123"), "profile");
+  assert.equal(originGroup("/outra-pagina"), "unknown");
   assert.equal(originGroup("/psicologos?specialty=ansiedade"), "presentation_video");
   assert.equal(originGroup("/comunidades/ansiedade/publicacao/123"), "communities");
 });

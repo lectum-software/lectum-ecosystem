@@ -291,7 +291,12 @@ export type PsychologistAnalyticsPreview = {
 
 export type AnalyticsTimeline = {
   granularity: "day" | "week";
-  series: Array<{ id: string; label: string; points: Array<{ date: string; value: number }> }>;
+  series: Array<{
+    id: string;
+    label: string;
+    total?: number;
+    points: Array<{ date: string; value: number }>;
+  }>;
 };
 export type AnalyticsChartData = {
   timelines: Record<string, AnalyticsTimeline>;

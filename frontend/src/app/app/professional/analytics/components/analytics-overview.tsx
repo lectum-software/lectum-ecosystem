@@ -193,7 +193,6 @@ export function AnalyticsOverview({
                 })}
               </tbody>
             </table>
-            <p className="mt-3 text-xs text-muted">Pessoas únicas por origem.</p>
           </div>
         ) : null}
         {!loading && !restricted && selected === "video_views" ? (

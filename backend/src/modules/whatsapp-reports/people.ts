@@ -1,4 +1,4 @@
-type PersonAction = {
+export type PersonAction = {
   id: string;
   user_id: string | null;
   visitor_id: string;
