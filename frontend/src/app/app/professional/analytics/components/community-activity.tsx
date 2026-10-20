@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, MessageCircle, Trophy, UsersRound } from "lucide-react";
+import { UsersRound } from "lucide-react";
 import { useState } from "react";
 import type { PsychologistAnalyticsCommunities } from "@/api/generator/types/psychologist-analytics";
 import { cn } from "@/lib/utils";
@@ -8,11 +8,11 @@ import { toCount } from "../modules/support";
 import { CommunityHighlights } from "./community-highlights";
 
 const originStyles = {
-  post_with_video: { color: "var(--lectum-primary)", icon: FileText },
-  post_without_video: { color: "var(--lectum-success)", icon: FileText },
-  reply_with_video: { color: "var(--lectum-warning)", icon: MessageCircle },
-  reply_without_video: { color: "var(--lectum-primary-strong)", icon: MessageCircle },
-  top_mentors: { color: "var(--lectum-muted)", icon: Trophy },
+  post_with_video: { color: "var(--lectum-primary)" },
+  post_without_video: { color: "var(--lectum-success)" },
+  reply_with_video: { color: "var(--lectum-warning)" },
+  reply_without_video: { color: "var(--lectum-primary-strong)" },
+  top_mentors: { color: "var(--lectum-muted)" },
 };
 
 export const CommunityActivitySection = ({
@@ -121,9 +121,9 @@ export const CommunityActivitySection = ({
         </div>
       </div>
 
-      <ul className="grid gap-1" aria-label="Origens dos cliques">
+      <ul className="flex flex-wrap gap-x-4 gap-y-2 text-xs" aria-label="Origens dos cliques">
         {items.map((item) => {
-          const { icon: Icon, color } = originStyles[item.id];
+          const { color } = originStyles[item.id];
           return (
             <li key={item.id}>
               <button
@@ -132,15 +132,17 @@ export const CommunityActivitySection = ({
                 aria-pressed={selected === item.id}
                 onClick={() => toggle(item.id)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left focus-visible:outline-2 focus-visible:outline-primary",
+                  "flex items-center gap-1.5 rounded text-left text-xs text-muted focus-visible:outline-2 focus-visible:outline-primary",
                   selected === item.id && "bg-surface-muted",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0" style={{ color }} aria-hidden />
-                <span className="flex-1 text-sm text-muted">{item.label}</span>
-                <strong
-                  className={cn("text-sm text-foreground", locked && "select-none blur-[5px]")}
-                >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ background: color }}
+                  aria-hidden
+                />
+                <span>{item.label}:</span>
+                <strong className={cn("text-foreground", locked && "select-none blur-[5px]")}>
                   {toCount(item.value)}
                 </strong>
               </button>

@@ -253,6 +253,7 @@ export type PsychologistAnalyticsCommunityTopMentors = {
 };
 
 export type PsychologistAnalyticsCommunityHighlight = {
+  media_url?: string | null;
   id: string;
   post_id: string;
   community_slug: string;

@@ -1071,3 +1071,12 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] API adiciona highlights opcional e carrega metadados somente dos vencedores. Conteúdo publicado antes do período continua elegível, desde que receba cliques nele. Conteúdos excluídos e autores terceiros não entram.
 - [x] Integração PostgreSQL isolada aprovada para período, autoria, exclusão, repetição de pessoa por conteúdo, top cinco, contexto das respostas e período vazio.
 - [x] Frontend check/build e backend lint/tipos/build aprovados. Suíte backend: 930 passaram inicialmente; três falhas por JWT de teste ausente/timeout foram reexecutadas com configuração válida, todas aprovadas. Testes de ranking e integração passaram. Prévia validou legenda, 5+5 miniaturas, links de abas/resposta, swipe, setas, vazio e bloqueio em 390/1440px. Sem push/deploy.
+
+## Legenda e miniaturas dos destaques — 20/10/2026
+
+- [x] Legenda de comunidades com pontinhos e tipografia text-xs (0,75rem) herdada pelos botões, no mesmo padrão das séries superiores.
+- [x] Miniaturas verticais do próprio vídeo parado: poster do Stream ou quadro extraído do arquivo legado, carregados quando próximos da área visível. Conteúdo sem vídeo mantém trecho ou imagem.
+- [x] Ícone do WhatsApp e número brancos sobre o canto inferior direito, com degradê para contraste e sem rodapé duplicado.
+- [x] Contrato aditivo inclui media_url opcional; nenhum player ou reprodução automática na tela.
+
+- [x] Frontend check/build (633 testes) e backend check/build (936 testes) aprovados. Browser em 390/1440px validou pontinhos, fonte compacta, quadro real, contador branco dentro da miniatura, swipe, setas, links e estados vazio/bloqueado. Sem push/deploy.
