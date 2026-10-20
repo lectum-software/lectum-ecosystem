@@ -78,7 +78,6 @@ export function AnalyticsOverview({
         className="touch-auto flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pt-1 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {ordered.map((card) => {
-          const Icon = card.icon;
           const active = selected === card.id;
           return (
             <button
@@ -97,19 +96,16 @@ export function AnalyticsOverview({
                 });
               }}
               className={cn(
-                "relative flex min-h-[120px] w-[56%] shrink-0 snap-start flex-col items-start rounded-[20px] border bg-surface p-3 text-left shadow-[var(--lectum-shadow-soft)] transition focus-visible:outline-2 focus-visible:outline-primary sm:w-[40%] sm:rounded-[22px] md:w-[24%]",
+                "relative flex min-h-20 w-[46%] shrink-0 snap-start flex-col items-start rounded-xl border bg-surface p-3 text-left transition focus-visible:outline-2 focus-visible:outline-primary sm:w-[30%] md:w-[20%]",
                 active
                   ? "border-primary ring-1 ring-primary/20"
                   : "border-primary/10 hover:border-primary/40",
               )}
             >
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                <Icon className="h-4 w-4" aria-hidden />
-              </span>
-              <span className="mt-2 min-h-8 text-xs font-semibold leading-4 text-muted">
+              <span className="min-h-8 text-xs font-normal leading-4 text-muted">
                 {card.id === "video_views" ? "Vídeo de apresentação" : card.label}
               </span>
-              <span className="mt-2 text-2xl font-black leading-none tracking-[-0.03em] text-foreground">
+              <span className="mt-1.5 text-xl font-semibold leading-none tracking-[-0.03em] text-foreground">
                 {loading || (locked && card.id !== "acquired_patients") ? "—" : card.value}
               </span>
             </button>

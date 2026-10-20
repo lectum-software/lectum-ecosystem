@@ -1122,3 +1122,8 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Sombra e contorno arredondado no viewport da barra de período, sem cortes quadrados do conteúdo rolável.
 - [x] Guards do repositório e checks de frontend/backend/admin/video aprovados; builds de frontend e backend aprovados. A etapa de backend foi retomada com configuração local após ausência inicial de DATABASE_URL.
 - [x] Navegador local em 390px/1440px confirmou dimensões, duas linhas, rolagem, título curto/completo, cantos da barra e fechar/reabrir o balão por toque e teclado, sem erros de página. Referências: capturas enviadas pelo usuário; Builder indisponível nesta sessão. Sem push/deploy.
+
+## Contadores superiores discretos — 20/10/2026
+
+- [x] Contadores superiores sem ícones, com cards menores, sem sombra e pesos de texto reduzidos; ícone e título completo do gráfico preservados.
+- [x] Check e build do frontend aprovados. Prévia local validada em 390px/1440px: contadores com cerca de 80px, sem ícones, sem overflow da página; seleção e ícone do gráfico preservados. Sem push/deploy.
