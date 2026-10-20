@@ -150,8 +150,8 @@ export const CommunityActivitySection = ({
           );
         })}
       </ul>
-      <CommunityHighlights kind="posts" items={communities.highlights?.posts} locked={locked} />
       <CommunityHighlights kind="replies" items={communities.highlights?.replies} locked={locked} />
+      <CommunityHighlights kind="posts" items={communities.highlights?.posts} locked={locked} />
     </section>
   );
 };

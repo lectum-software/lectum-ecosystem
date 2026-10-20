@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PsychologistAnalyticsCommunityHighlight } from "@/api/generator/types/psychologist-analytics";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { CommunityHighlightMedia, isTextHighlight } from "./community-highlight-media";
@@ -17,12 +17,25 @@ export function CommunityHighlights({
   locked?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
   const isReply = kind === "replies";
   const title = isReply ? "Respostas em destaque" : "Posts em destaque";
   const highlights = (items ?? [])
     .filter((item) => item.whatsapp_clicks > 0)
     .sort((a, b) => b.whatsapp_clicks - a.whatsapp_clicks || a.id.localeCompare(b.id))
     .slice(0, 5);
+  const highlightCount = highlights.length;
+  useEffect(() => {
+    if (locked || !highlightCount) return;
+    const carousel = ref.current;
+    if (!carousel) return;
+    const observer = new ResizeObserver(() => {
+      setHasOverflow(carousel.scrollWidth > carousel.clientWidth + 1);
+    });
+    observer.observe(carousel);
+    for (const card of carousel.children) observer.observe(card);
+    return () => observer.disconnect();
+  }, [locked, highlightCount]);
   const scroll = (direction: number) => {
     const carousel = ref.current;
     if (!carousel) return;
@@ -87,7 +100,7 @@ export function CommunityHighlights({
               );
             })}
           </div>
-          {highlights.length > 1 ? (
+          {hasOverflow ? (
             <div className="mt-1 hidden justify-end gap-1 md:flex">
               <button
                 type="button"

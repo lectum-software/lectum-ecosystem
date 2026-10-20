@@ -1105,3 +1105,10 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Pacientes adquiridos passa à última posição do carrossel, após Avaliações.
 - [x] Legenda de comunidades passa a exibir Ranking Top Mentores.
 - [x] Check/build do frontend aprovados. Browser confirmou ordem, seleção de Pacientes adquiridos, rótulo Ranking Top Mentores e pesos 500/400 nas miniaturas. Sem push/deploy.
+
+## Ordem dos destaques — 20/10/2026
+
+- [x] Respostas em destaque aparece antes de Posts em destaque. Ordem confirmada no navegador local.
+- [x] Setas dos destaques no desktop aparecem somente quando scrollWidth excede a largura visível; ResizeObserver acompanha o contêiner e os cards ao redimensionar ou trocar a quantidade de resultados.
+- [x] Título dentro da miniatura de post usa bold (700), mantendo descrição normal (400). Pesos confirmados no navegador.
+- [x] Check/build do frontend aprovados para ordem/setas. Ajuste final de peso validado com Biome e navegador. Navegação conferida com e sem overflow, resize e mobile. Sem push/deploy.
