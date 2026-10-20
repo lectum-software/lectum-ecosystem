@@ -41,3 +41,6 @@ Após revisão visual, o conjunto recebe 16px adicionais distribuídos entre a m
 
 ## Contadores do vídeo em duas linhas — 20/10/2026
 As métricas detalhadas do vídeo usam grid por colunas com duas linhas, rolagem nativa e snap. Cada coluna ocupa 78% da largura no mobile, indicando a próxima sem diminuir a leitura dos cards. Nas telas maiores, as colunas ocupam 46% da largura e continuam roláveis para preservar a legibilidade. O painel pode receber foco para rolagem por teclado; setas atendem o desktop. A retenção permanece abaixo, sem mudança de dados.
+
+## Rosca de cliques nas comunidades — 20/10/2026
+A seção de comunidades passa a representar exclusivamente cliques no WhatsApp: os quatro tipos de conteúdo e Top Mentores formam uma rosca cuja soma corresponde às cinco linhas da tabela. O centro exibe Cliques, sem misturar contagem de conteúdo ou pessoas únicas. Cores dos ícones e seleção por toque/teclado vinculam a tabela às fatias, dispensando legenda adicional. Zero cliques usa anel neutro sem proporções artificiais; origem única usa anel completo.

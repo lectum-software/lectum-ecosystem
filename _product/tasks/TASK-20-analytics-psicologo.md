@@ -1052,3 +1052,10 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Duas linhas com arraste conjunto no mobile; coluna com 78% da largura e parte da próxima visível.
 - [x] Setas discretas no desktop; colunas de 46% mantêm os cards amplos em telas maiores. Retenção preservada.
 - [x] Check completo e build do frontend aprovados; prévia validada em 390/800/1440px, com oito cards, duas linhas, swipe, setas e retenção preservada. Sem push/deploy.
+
+## Comunidades por cliques — 20/10/2026
+
+- [x] Duas roscas de volume de posts/respostas substituídas por uma rosca das cinco origens de cliques no WhatsApp. Centro apresenta a soma da tabela e o rótulo Cliques.
+- [x] Ícones da tabela usam as cores das fatias; seleção compartilhada por toque/clique/teclado. Informações de Top Mentores preservadas.
+- [x] Sem cliques, anel neutro; origem única ocupa todo o anel. Estado bloqueado não permite seleção.
+- [x] Check completo e build aprovados. Prévia conferida em mobile/desktop: soma, cinco origens, cores, seleção compartilhada, teclado, estados vazio/único/bloqueado. Sem push/deploy.
