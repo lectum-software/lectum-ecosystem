@@ -16,7 +16,7 @@ const event = (
   occurred_at: new Date("2026-10-20T12:00:00Z"),
 });
 
-test("highlights deduplicate within a content, preserve other contents and separate posts/replies", () => {
+test("highlights count repeated clicks, preserve other contents and separate posts/replies", () => {
   const actions = [
     event("1", "a", "v1"),
     event("2", "a", "v1"),
@@ -26,7 +26,7 @@ test("highlights deduplicate within a content, preserve other contents and separ
     event("6", "mentor", "v3", "psychologist"),
   ];
   assert.deepEqual(rankCommunityHighlights(actions, "posts"), [
-    { id: "a", whatsapp_clicks: 2 },
+    { id: "a", whatsapp_clicks: 3 },
     { id: "b", whatsapp_clicks: 1 },
   ]);
   assert.deepEqual(rankCommunityHighlights(actions, "replies"), [{ id: "r", whatsapp_clicks: 1 }]);

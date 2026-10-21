@@ -55,6 +55,7 @@ export const store = async (req: Request) => {
   }
 
   await repository.create({
+    eventId: data.b.event_id,
     visitorId,
     sessionId,
     userId,

@@ -12,7 +12,8 @@ import type {
   PsychologistAnalyticsPeriod,
 } from "../../DTOs/IAnalyticsDTO";
 import { dailyPoints, originGroup, presentationVideoOrigin } from "../support/timeline";
-import { isCommunityTopMentorsTrafficPath, isFavoritesTrafficPath } from "../support/traffic";
+
+import { whatsappOriginGroups } from "../support/whatsapp-origins";
 import { whatsappTimeline } from "../support/whatsapp-timeline";
 
 type VideoSession = { createdAt: Date; origin_path: string | null };
@@ -22,9 +23,14 @@ export async function buildAnalyticsChartData(
   sessions: VideoSession[],
   labels: TrafficFilterLabelLookup,
   actions: {
-    video: Array<PersonAction & { action_type: string }>;
-    psychologist: Array<PersonAction & { path: string | null; page_kind: string }>;
-    communities: PersonAction[];
+    allWhatsapp: Array<
+      PersonAction & {
+        action_type: string;
+        target_type: string | null;
+        page_kind: string;
+        path: string | null;
+      }
+    >;
   },
 ): Promise<AnalyticsChartData> {
   const createdAt = { gte: period.start_at, lte: period.end_at };
@@ -113,31 +119,7 @@ export async function buildAnalyticsChartData(
         { id: "favorites", label: "Página de favoritos" },
       ),
       favorites_received: origins(favorites, { id: "profile", label: "Dentro do perfil" }),
-      whatsapp_clicks: whatsappTimeline([
-        {
-          id: "presentation_video",
-          label: "Vídeo de apresentação",
-          events: actions.video.filter(
-            (action) => action.action_type === "psychologist_video_whatsapp_click",
-          ),
-        },
-        { id: "communities", label: "Comunidades", events: actions.communities },
-        {
-          id: "profile",
-          label: "Perfil",
-          events: actions.psychologist.filter(
-            (action) =>
-              action.page_kind === "psychologist_profile" &&
-              !isFavoritesTrafficPath(action.path) &&
-              !isCommunityTopMentorsTrafficPath(action.path, action.page_kind),
-          ),
-        },
-        {
-          id: "favorites",
-          label: "Favoritos",
-          events: actions.psychologist.filter((action) => isFavoritesTrafficPath(action.path)),
-        },
-      ]),
+      whatsapp_clicks: whatsappTimeline(whatsappOriginGroups(actions.allWhatsapp)),
       reviews_received: {
         granularity: "day",
         series: [

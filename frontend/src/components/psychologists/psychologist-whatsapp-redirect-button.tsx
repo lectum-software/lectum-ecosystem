@@ -385,6 +385,7 @@ export const PsychologistWhatsAppRedirectButton = ({
     if (analyticsIdentity) {
       void importantActionTracking
         .mutateAsync({
+          event_id: crypto.randomUUID(),
           action_type: importantActionType,
           display_mode: getDisplayMode(),
           occurred_at: new Date().toISOString(),

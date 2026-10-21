@@ -1,5 +1,6 @@
 import {
   CheckCircle2,
+  CircleHelp,
   Clock3,
   Eye,
   Heart,
@@ -113,9 +114,8 @@ export const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCard
     id: "whatsapp_clicks",
     icon: WhatsAppIcon,
     label: "Cliques no WhatsApp",
-    description: "Pessoas únicas no período.",
     value: toCount(data?.metrics.whatsapp_clicks),
-    source: "contact_request",
+    source: "important_action_event",
   },
   {
     id: "acquired_patients",
@@ -128,6 +128,7 @@ export const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCard
 ];
 
 export const trafficSourceIcons: Record<PsychologistAnalyticsTrafficSource["id"], LucideIcon> = {
+  unknown: CircleHelp,
   communities: UsersRound,
   favorites: Heart,
   profile: Eye,
@@ -580,6 +581,7 @@ export type TrafficSourceWithDisplay = PsychologistAnalyticsTrafficSource & {
 };
 
 export const TRAFFIC_SOURCE_ORDER: Record<PsychologistAnalyticsTrafficSource["id"], number> = {
+  unknown: 4,
   presentation_video: 0,
   communities: 1,
   profile: 2,

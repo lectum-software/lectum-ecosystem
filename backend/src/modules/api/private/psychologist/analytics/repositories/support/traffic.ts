@@ -466,6 +466,7 @@ export const toTrafficSources = (input: {
   ];
   const sources = trafficSourceDefinitions.map((source) => {
     const sourceMetrics = {
+      unknown: { breakdown: [], profile_views: 0, whatsapp_clicks: 0 },
       communities: {
         breakdown: communityBreakdown,
         profile_views: 0,
@@ -554,11 +555,11 @@ export const toCards = (
   },
   {
     id: "whatsapp_clicks",
-    label: "Conversões WhatsApp",
+    label: "Cliques no WhatsApp",
     value: metrics.whatsapp_clicks,
-    source: "contact_request",
+    source: "important_action_event",
     unit: "count",
-    description: "Contatos pelo WhatsApp registrados no período selecionado.",
+    description: "Ações de clique no WhatsApp registradas no período selecionado.",
   },
   {
     id: "reviews_received",

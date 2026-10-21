@@ -17,6 +17,7 @@ export interface IImportantActionDTO {
   p: Record<string, never>;
   q: Record<string, never>;
   b: {
+    event_id?: string;
     visitor_id: string;
     session_id: string;
     action_type: ImportantActionType;
@@ -30,6 +31,7 @@ export interface IImportantActionDTO {
 }
 
 export type CreateImportantActionInput = {
+  eventId?: string;
   visitorId: string;
   sessionId: string;
   userId?: string | null;

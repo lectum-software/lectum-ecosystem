@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { important_action_event, visitor_session } from "@/interfaces/objects";
@@ -31,6 +32,12 @@ export class ImportantActionRepository implements IImportantActionRepository {
       },
     };
 
+    if (input.eventId) {
+      const id = createHash("sha256")
+        .update(JSON.stringify([input.visitorId, input.eventId]))
+        .digest("hex");
+      return this.repository.upsert({ where: { id }, create: { ...args.data, id }, update: {} });
+    }
     return this.repository.create(args);
   }
 

@@ -45,7 +45,22 @@ export function AnalyticsOverview({
   const current = ordered.find((card) => card.id === selected) ?? ordered[0];
   const CurrentIcon = current?.icon;
   const restricted = locked && selected !== "acquired_patients";
-  const sources = [...traffic.sources].sort((a, b) => b.whatsapp_clicks - a.whatsapp_clicks);
+  const unknownClicks =
+    data?.chart_data?.timelines.whatsapp_clicks?.series.find((series) => series.id === "unknown")
+      ?.total ?? 0;
+  const sources: PsychologistAnalyticsTrafficSources["sources"] = [...traffic.sources];
+  if (unknownClicks > 0 && !sources.some((source) => source.id === "unknown"))
+    sources.push({
+      id: "unknown",
+      label: "Origem não identificada",
+      description: "Cliques registrados sem uma origem identificada.",
+      whatsapp_clicks: unknownClicks,
+      profile_views: 0,
+      conversion_rate: 0,
+      badge: null,
+      breakdown: [],
+    });
+  sources.sort((a, b) => b.whatsapp_clicks - a.whatsapp_clicks);
   const principalOrigin = sources.find((source) => source.whatsapp_clicks > 0)?.id;
   const periodTotal =
     selected === "video_views"
@@ -152,6 +167,32 @@ export function AnalyticsOverview({
             <h2 className="text-xl font-extrabold leading-7 tracking-[-0.03em]">{current.label}</h2>
           </div>
         </div>
+        {selected === "whatsapp_clicks" ? (
+          <dl
+            className="mt-3 grid gap-1 text-sm leading-6 text-muted"
+            aria-label="Resumo de cliques no período"
+          >
+            {[
+              ["Total de cliques", data?.metrics.whatsapp_clicks],
+              ["Pessoas únicas", data?.metrics.whatsapp_unique_people],
+              ["Cliques por pessoa", data?.metrics.whatsapp_clicks_per_person],
+            ].map(([label, value]) => (
+              <div key={label} className="flex flex-wrap items-baseline gap-x-2">
+                <dt>{label}:</dt>
+                <dd className="font-semibold text-foreground">
+                  {loading || restricted || typeof value !== "number"
+                    ? "—"
+                    : value.toLocaleString(
+                        "pt-BR",
+                        label === "Cliques por pessoa"
+                          ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+                          : undefined,
+                      )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
         {current.description ? (
           <p className="mt-3 text-sm leading-6 text-muted">{current.description}</p>
         ) : null}

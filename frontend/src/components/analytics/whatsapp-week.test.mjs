@@ -14,7 +14,9 @@ registerHooks({
 });
 
 const { whatsappWeekFormSchema, WhatsappWeekForm } = await import("./whatsapp-week-form.tsx");
-const { metricCards } = await import("../../app/app/professional/analytics/modules/support.ts");
+const { metricCards, fallbackTrafficSources } = await import(
+  "../../app/app/professional/analytics/modules/support.ts"
+);
 const { PremiumAnalyticsBanner, MetricCard, PeriodTabs } = await import(
   "../../app/app/professional/analytics/components/period-and-metrics.tsx"
 );
@@ -60,7 +62,8 @@ test("indicadores lado a lado, ausencia distinta de zero e nota de autoria", () 
   assert.equal(cards.length, 6);
   assert.equal(cards[4].label, "Cliques no WhatsApp");
   assert.equal(cards[4].layout, undefined);
-  assert.equal(cards[4].description, "Pessoas únicas no período.");
+  assert.equal(cards[4].value, "3");
+  assert.equal(cards[4].source, "important_action_event");
   assert.equal(cards[5].label, "Pacientes adquiridos");
   assert.equal(cards[5].value, "0");
   assert.match(cards[5].description, /Dados informados pelo psicólogo/);
@@ -105,4 +108,31 @@ test("datas aparecem apenas no seletor personalizado aplicado", () => {
     assert.doesNotMatch(render(period), /01\/10\/26|18\/10\/26/);
     assert.match(render(period), />Personalizado<\/button>/);
   }
+});
+
+const { AnalyticsOverview } = await import(
+  "../../app/app/professional/analytics/components/analytics-overview.tsx"
+);
+test("resumo de WhatsApp distingue ações, pessoas e média sem alterar pacientes adquiridos", () => {
+  const data = {
+    metrics: {
+      whatsapp_clicks: 4,
+      whatsapp_unique_people: 2,
+      whatsapp_clicks_per_person: 2,
+      acquired_patients: 1,
+    },
+    period: { key: "custom", start_at: "2026-10-19T03:00:00Z", end_at: "2026-10-21T02:59:59Z" },
+  };
+  const html = renderToStaticMarkup(
+    createElement(AnalyticsOverview, {
+      cards: metricCards(data),
+      data,
+      traffic: fallbackTrafficSources,
+    }),
+  );
+  assert.match(html, /Total de cliques:/);
+  assert.match(html, /Pessoas únicas:/);
+  assert.match(html, /Cliques por pessoa:/);
+  assert.ok(html.includes(">2,0</dd>"));
+  assert.equal(metricCards(data).find((card) => card.id === "acquired_patients").value, "1");
 });

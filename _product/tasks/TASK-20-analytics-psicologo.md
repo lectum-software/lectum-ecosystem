@@ -1147,3 +1147,12 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Título alterado para Desempenho de conteúdo; chevron de destaques preserva destino Minhas Publicações.
 - [x] Voltar de Minhas Publicações restaura Analytics com período, métrica e posição, sem alterar o retorno ao perfil para acessos comuns.
 - [x] Baseline pnpm check aprovado (backend: 940 testes), builds de frontend/backend aprovados; lint final dos componentes e testes de comparação/retorno aprovados. Browser local validou badges dentro dos cards sem aumento de altura, modal e foco, omissão em Todo o período/payload legado e ida/volta com período, métrica e posição, inclusive StrictMode. Referências: capturas do usuário; Builder indisponível. Sem push/deploy.
+
+
+## Cliques como ações e pessoas separadas — 21/10/2026
+
+- [x] Total de cliques, séries diárias, origens, conteúdos e comparação anterior contam eventos, inclusive repetidos pela mesma pessoa.
+- [x] Resumo do gráfico apresenta Total de cliques, Pessoas únicas e Cliques por pessoa; média sem pessoas é indisponível.
+- [x] Modal, histórico, notificações semanais e pacientes adquiridos mantêm sua regra baseada em pessoas e valores informados pelo psicólogo.
+- [x] Chave opcional por ação evita duplicar reenvios novos; cliques independentes recebem chaves diferentes.
+- [x] pnpm check aprovado (backend: 948 testes), builds de frontend/backend aprovados e prévia dos componentes reais conferida em 390px/1440px, sem overflow nem erros de runtime. Testes da modal preservam DISTINCT e valores informados. Banco PostgreSQL local indisponível (ECONNREFUSED): não foi possível executar integração com banco nem confirmar readiness local; nenhum dado produtivo foi acessado. Histórico limitado aos eventos existentes; reenvios legados sem chave não são reconstruídos. Sem push/deploy.
