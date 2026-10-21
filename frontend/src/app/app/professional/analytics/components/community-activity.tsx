@@ -1,6 +1,5 @@
 "use client";
 
-import { UsersRound } from "lucide-react";
 import { useState } from "react";
 import type { PsychologistAnalyticsCommunities } from "@/api/generator/types/psychologist-analytics";
 import { cn } from "@/lib/utils";
@@ -18,9 +17,11 @@ const originStyles = {
 export const CommunityActivitySection = ({
   communities,
   locked,
+  returnTo,
 }: {
   communities: PsychologistAnalyticsCommunities;
   locked?: boolean;
+  returnTo?: string;
 }) => {
   const [selected, setSelected] = useState<string | null>(null);
   const items = [
@@ -50,13 +51,10 @@ export const CommunityActivitySection = ({
   return (
     <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
       <div className="flex min-w-0 items-start gap-3">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-          <UsersRound className="h-6 w-6" aria-hidden />
-        </span>
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Comunidade</p>
           <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
-            Resultados dos seus conteúdos
+            Desempenho de conteúdo
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Veja quais conteúdos levam mais pacientes ao seu WhatsApp.
@@ -150,8 +148,7 @@ export const CommunityActivitySection = ({
           );
         })}
       </ul>
-      <CommunityHighlights kind="replies" items={communities.highlights?.replies} locked={locked} />
-      <CommunityHighlights kind="posts" items={communities.highlights?.posts} locked={locked} />
+      <CommunityHighlights returnTo={returnTo} items={communities.highlights} locked={locked} />
     </section>
   );
 };

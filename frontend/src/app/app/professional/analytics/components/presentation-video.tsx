@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Info, PlayCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -47,19 +47,19 @@ export const PresentationVideoDashboardMetricCard = ({
   const Icon = metric.icon;
 
   return (
-    <article className="grid min-h-[112px] min-w-0 snap-start content-between gap-3 rounded-[20px] bg-surface-muted/55 p-4">
+    <article className="grid min-h-[88px] min-w-0 snap-start content-between gap-2 rounded-2xl border border-border-strong bg-transparent p-3">
       <div className="flex min-w-0 items-center gap-2">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon className="h-4.5 w-4.5" aria-hidden />
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Icon className="h-4 w-4" aria-hidden />
         </span>
-        <p className="min-w-0 break-words text-sm font-semibold leading-5 text-muted">
+        <p className="min-w-0 break-words text-xs font-semibold leading-4 text-muted">
           {metric.label}
         </p>
       </div>
 
       <p
         className={cn(
-          "text-3xl font-black leading-none tracking-[-0.05em] text-foreground",
+          "text-2xl font-bold leading-none tracking-[-0.05em] text-foreground",
           locked && "select-none blur-[5px]",
         )}
       >
@@ -113,7 +113,7 @@ export const PresentationVideoMetricsPanel = ({
         aria-label="Métricas do vídeo de apresentação"
         // biome-ignore lint/a11y/noNoninteractiveTabindex: permite rolagem horizontal por teclado no carrossel.
         tabIndex={0}
-        className="grid min-w-0 auto-cols-[78%] grid-flow-col grid-rows-2 gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory touch-auto rounded-[20px] pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] focus-visible:outline-2 focus-visible:outline-primary"
+        className="grid min-w-0 auto-cols-[72%] grid-flow-col grid-rows-2 gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory touch-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] focus-visible:outline-2 focus-visible:outline-primary"
       >
         {metrics.map((metric) => (
           <PresentationVideoDashboardMetricCard key={metric.id} locked={locked} metric={metric} />
@@ -570,9 +570,6 @@ export const PresentationVideoAnalyticsSection = ({
     <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-            <PlayCircle className="h-6 w-6" aria-hidden />
-          </span>
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
               Vídeo de apresentação

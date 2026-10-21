@@ -1112,3 +1112,38 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Setas dos destaques no desktop aparecem somente quando scrollWidth excede a largura visível; ResizeObserver acompanha o contêiner e os cards ao redimensionar ou trocar a quantidade de resultados.
 - [x] Título dentro da miniatura de post usa bold (700), mantendo descrição normal (400). Pesos confirmados no navegador.
 - [x] Check/build do frontend aprovados para ordem/setas. Ajuste final de peso validado com Biome e navegador. Navegação conferida com e sem overflow, resize e mobile. Sem push/deploy.
+
+## Refinamentos após publicação — 20/10/2026
+
+- [x] Contadores superiores compactos e rótulo Vídeo de apresentação; título completo preservado no gráfico.
+- [x] Balão temporal com fechar por botão e Escape, preservando seleção por toque/teclado e foco.
+- [x] Visualizações dentro do perfil separadas de origens desconhecidas, incluindo rotas autenticadas em português.
+- [x] Métricas do vídeo menores, em duas linhas, com fundo e borda mais perceptíveis.
+- [x] Sombra e contorno arredondado no viewport da barra de período, sem cortes quadrados do conteúdo rolável.
+- [x] Guards do repositório e checks de frontend/backend/admin/video aprovados; builds de frontend e backend aprovados. A etapa de backend foi retomada com configuração local após ausência inicial de DATABASE_URL.
+- [x] Navegador local em 390px/1440px confirmou dimensões, duas linhas, rolagem, título curto/completo, cantos da barra e fechar/reabrir o balão por toque e teclado, sem erros de página. Referências: capturas enviadas pelo usuário; Builder indisponível nesta sessão. Sem push/deploy.
+
+## Contadores superiores discretos — 20/10/2026
+
+- [x] Contadores superiores sem ícones, com cards menores, sem sombra e pesos de texto reduzidos; ícone e título completo do gráfico preservados.
+- [x] Check e build do frontend aprovados. Prévia local validada em 390px/1440px: contadores com cerca de 80px, sem ícones, sem overflow da página; seleção e ícone do gráfico preservados. Sem push/deploy.
+
+## Métricas do vídeo sem preenchimento — 20/10/2026
+
+- [x] Cards das métricas do vídeo usam fundo transparente e borda cinza, preservando dimensões e carrossel.
+- [x] Check/build do frontend aprovados. Navegador em 390px/1440px confirmou fundo transparente, borda cinza sólida e altura de 88px. Removido recorte arredondado do viewport para preservar as bordas dos cards. Sem push/deploy.
+
+## Destaques unificados — 20/10/2026
+
+- [x] Removidos os ícones dos cabeçalhos Métricas principais e Resultados dos seus conteúdos.
+- [x] Conteúdos em destaque reúne os cinco conteúdos com mais cliques no período, com identificação Post/Resposta abaixo da miniatura e links individuais preservados.
+- [x] Check/build do frontend aprovados. Browser confirmou ranking misto top 5, rótulos, proporção 9:16, links de respostas, estados vazio/bloqueado e setas condicionais com resize. Prévia local atualizada; sem push/deploy.
+
+## Comparação dos contadores — 20/10/2026
+
+- [x] Indicadores discretos de variação no canto inferior direito, usando totais reais do intervalo anterior de mesma duração.
+- [x] Todo o período e bases ausentes não exibem percentual; zero anterior mostra Novo somente quando há novos registros; zero em ambos mostra 0%.
+- [x] Toque abre datas/horas e valores comparados; botão separado preserva seleção do gráfico.
+- [x] Título alterado para Desempenho de conteúdo; chevron de destaques preserva destino Minhas Publicações.
+- [x] Voltar de Minhas Publicações restaura Analytics com período, métrica e posição, sem alterar o retorno ao perfil para acessos comuns.
+- [x] Baseline pnpm check aprovado (backend: 940 testes), builds de frontend/backend aprovados; lint final dos componentes e testes de comparação/retorno aprovados. Browser local validou badges dentro dos cards sem aumento de altura, modal e foco, omissão em Todo o período/payload legado e ida/volta com período, métrica e posição, inclusive StrictMode. Referências: capturas do usuário; Builder indisponível. Sem push/deploy.

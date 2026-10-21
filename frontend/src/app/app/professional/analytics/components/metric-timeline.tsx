@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useState } from "react";
+import { X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import type {
   AnalyticsTimeline,
   PsychologistAnalyticsPeriod,
@@ -26,6 +27,11 @@ export function MetricTimeline({
   showLegend?: boolean;
   seriesColors?: Record<string, string>;
 }) {
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const closeSelection = () => {
+    setSelected(null);
+    sliderRef.current?.focus({ preventScroll: true });
+  };
   const [selected, setSelected] = useState<number | null>(null);
   const [width, setWidth] = useState(300);
   const measurePlot = useCallback((plot: HTMLDivElement | null) => {
@@ -75,60 +81,30 @@ export function MetricTimeline({
           ))}
         </div>
       ) : null}
-      <div
-        className={`relative touch-pan-y rounded-xl focus-visible:outline-2 focus-visible:outline-primary ${showLegend ? "mt-5" : "mt-2"}`}
-        ref={measurePlot}
-        role="slider"
-        tabIndex={0}
-        aria-label={
-          timeline.granularity === "week"
-            ? "Selecionar semana no gráfico"
-            : "Selecionar dia no gráfico"
-        }
-        aria-valuemin={0}
-        aria-valuemax={dates.length - 1}
-        aria-valuenow={index}
-        aria-valuetext={`${dayLabel(dates[index])}; ${description}`}
-        onPointerDown={(event) => {
-          if (event.button !== 0) return;
-          event.currentTarget.setPointerCapture(event.pointerId);
-          const rect = event.currentTarget.getBoundingClientRect();
-          setSelected(pointerDayIndex(event.clientX, rect.left, rect.width, dates.length));
-        }}
-        onPointerMove={(event) => {
-          if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-          const rect = event.currentTarget.getBoundingClientRect();
-          setSelected(pointerDayIndex(event.clientX, rect.left, rect.width, dates.length));
-        }}
-        onPointerUp={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId))
-            event.currentTarget.releasePointerCapture(event.pointerId);
-        }}
-        onKeyDown={(event) => {
-          const next =
-            event.key === "ArrowRight"
-              ? index + 1
-              : event.key === "ArrowLeft"
-                ? index - 1
-                : event.key === "Home"
-                  ? 0
-                  : event.key === "End"
-                    ? dates.length - 1
-                    : null;
-          if (next === null) return;
-          event.preventDefault();
-          setSelected(Math.max(0, Math.min(dates.length - 1, next)));
-        }}
-      >
+      <div className={`relative ${showLegend ? "mt-5" : "mt-2"}`} ref={measurePlot}>
         {selected !== null ? (
           <div
             role="status"
-            className="pointer-events-none absolute top-0 z-10 w-max max-w-full rounded-xl bg-foreground px-3 py-2 text-xs text-background shadow-[var(--lectum-shadow-soft)]"
+            className="absolute top-0 z-10 w-max max-w-full rounded-xl bg-foreground pl-3 pr-11 py-2 text-xs text-background shadow-[var(--lectum-shadow-soft)]"
             style={{
               left: `${(x(index) / width) * 100}%`,
               transform: `translateX(-${(x(index) / width) * 100}%)`,
             }}
           >
+            <button
+              type="button"
+              aria-label="Fechar detalhes do gráfico"
+              className="absolute right-0 top-0 grid h-11 w-11 place-items-center rounded-xl text-background hover:bg-background/10 focus-visible:outline-2 focus-visible:outline-background"
+              onClick={closeSelection}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  closeSelection();
+                }
+              }}
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </button>
             <p className="font-extrabold">
               {timeline.granularity === "week" ? "Semana de " : ""}
               {dayLabel(dates[index])}
@@ -143,57 +119,114 @@ export function MetricTimeline({
             </div>
           </div>
         ) : null}
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full overflow-visible"
-          style={{ height }}
-          preserveAspectRatio="xMidYMid meet"
-          aria-hidden="true"
+        <div
+          className={`touch-pan-y rounded-xl focus-visible:outline-2 focus-visible:outline-primary`}
+          ref={sliderRef}
+          role="slider"
+          tabIndex={0}
+          aria-label={
+            timeline.granularity === "week"
+              ? "Selecionar semana no gráfico"
+              : "Selecionar dia no gráfico"
+          }
+          aria-valuemin={0}
+          aria-valuemax={dates.length - 1}
+          aria-valuenow={index}
+          aria-valuetext={`${dayLabel(dates[index])}; ${description}`}
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            const rect = event.currentTarget.getBoundingClientRect();
+            setSelected(pointerDayIndex(event.clientX, rect.left, rect.width, dates.length));
+          }}
+          onPointerMove={(event) => {
+            if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+            const rect = event.currentTarget.getBoundingClientRect();
+            setSelected(pointerDayIndex(event.clientX, rect.left, rect.width, dates.length));
+          }}
+          onPointerUp={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId))
+              event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setSelected(null);
+              return;
+            }
+            const next =
+              event.key === "ArrowRight"
+                ? index + 1
+                : event.key === "ArrowLeft"
+                  ? index - 1
+                  : event.key === "Home"
+                    ? 0
+                    : event.key === "End"
+                      ? dates.length - 1
+                      : null;
+            if (next === null) return;
+            event.preventDefault();
+            setSelected(Math.max(0, Math.min(dates.length - 1, next)));
+          }}
         >
-          {[0, max].map((value) => (
-            <g key={value}>
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            className="w-full overflow-visible"
+            style={{ height }}
+            preserveAspectRatio="xMidYMid meet"
+            aria-hidden="true"
+          >
+            {[0, max].map((value) => (
+              <g key={value}>
+                <line
+                  x1="0"
+                  x2={width}
+                  y1={y(value)}
+                  y2={y(value)}
+                  stroke="currentColor"
+                  className="text-border"
+                  strokeDasharray="3 4"
+                />
+                <text
+                  x="1"
+                  y={y(value) - 5}
+                  fontSize="11"
+                  fill="currentColor"
+                  className="text-muted"
+                >
+                  {value}
+                </text>
+              </g>
+            ))}
+            {values.map((points, i) => (
+              <g key={series[i].id}>
+                <path
+                  d={points
+                    .map((value, j) => `${(j === 0 ? "M" : "L") + x(j)},${y(value)}`)
+                    .join(" ")}
+                  fill="none"
+                  stroke={colors[i]}
+                  strokeWidth="2"
+                  vectorEffect="non-scaling-stroke"
+                />
+                {selected !== null || dates.length === 1 ? (
+                  <circle cx={x(index)} cy={y(points[index])} r="3" fill={colors[i]} />
+                ) : null}
+              </g>
+            ))}
+            {selected !== null ? (
               <line
-                x1="0"
-                x2={width}
-                y1={y(value)}
-                y2={y(value)}
+                x1={x(index)}
+                x2={x(index)}
+                y1="15"
+                y2={height - 20}
                 stroke="currentColor"
-                className="text-border"
+                className="text-muted"
                 strokeDasharray="3 4"
               />
-              <text x="1" y={y(value) - 5} fontSize="11" fill="currentColor" className="text-muted">
-                {value}
-              </text>
-            </g>
-          ))}
-          {values.map((points, i) => (
-            <g key={series[i].id}>
-              <path
-                d={points
-                  .map((value, j) => `${(j === 0 ? "M" : "L") + x(j)},${y(value)}`)
-                  .join(" ")}
-                fill="none"
-                stroke={colors[i]}
-                strokeWidth="2"
-                vectorEffect="non-scaling-stroke"
-              />
-              {selected !== null || dates.length === 1 ? (
-                <circle cx={x(index)} cy={y(points[index])} r="3" fill={colors[i]} />
-              ) : null}
-            </g>
-          ))}
-          {selected !== null ? (
-            <line
-              x1={x(index)}
-              x2={x(index)}
-              y1="15"
-              y2={height - 20}
-              stroke="currentColor"
-              className="text-muted"
-              strokeDasharray="3 4"
-            />
-          ) : null}
-        </svg>
+            ) : null}
+          </svg>
+        </div>
       </div>
       <div className="flex justify-between text-xs text-muted">
         <span>{dayLabel(dates[0])}</span>

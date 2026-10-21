@@ -72,11 +72,11 @@ export const PeriodTabs = ({
   return (
     <div className="min-w-0">
       <div
-        className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="overflow-x-auto rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="tablist"
         ref={tabsRef}
       >
-        <div className="flex min-w-max gap-1 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-1 shadow-[var(--lectum-shadow-soft)] sm:gap-2 md:min-w-0 md:justify-between">
+        <div className="flex min-w-max gap-1 p-1 sm:gap-2 md:min-w-0 md:justify-between">
           {PERIOD_OPTIONS.map((option) => {
             const active = !customPopoverOpen && option.value === current;
             const customActive = option.value === "custom" && customPopoverOpen;

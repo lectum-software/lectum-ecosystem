@@ -142,7 +142,7 @@ test("favorites and my posts reuse the blue saved-page back-arrow appearance", (
     "export const MyPostsHeader =",
   )[1];
   assert.match(mineHeader, /<AppPageHeader/);
-  assert.match(mineHeader, /backHref="\/app\/perfil"/);
+  assert.match(mineHeader, /backHref=\{returnTo \?\? "\/app\/perfil"\}/);
   assert.match(mineHeader, /title=\{interactionCopy.screenTitle\}/);
 });
 

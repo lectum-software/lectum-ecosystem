@@ -1,3 +1,8 @@
+import {
+  extractSearchTermsFromTrafficPath,
+  hasDirectorySelectedFilterParams,
+} from "@/utils/analytics-traffic-path";
+
 export const analyticsDay = (date: Date) =>
   new Date(date.getTime() - 3 * 3600000).toISOString().slice(0, 10);
 
@@ -6,10 +11,15 @@ export const originGroup = (
 ): "presentation_video" | "communities" | "favorites" | "profile" | "unknown" => {
   if (!path) return "unknown";
   const pathname = path.split("?")[0];
-  if (pathname === "/psicologos" || pathname === "/app/psychologists") return "presentation_video";
+  if (["/psicologos", "/psychologists", "/app/psicologos", "/app/psychologists"].includes(pathname))
+    return "presentation_video";
   if (/^\/(?:app\/)?(?:comunidades|communities)(?:\/|$)/.test(pathname)) return "communities";
   if (/^\/(?:app\/)?(?:favorites|favoritos)(?:\/|$)/.test(pathname)) return "favorites";
-  if (/^\/(?:psicologos|psychologists|app\/psychologists)\/[^/]+\/?$/.test(pathname))
+  if (
+    /^\/(?:psicologos|psychologists|app\/(?:psicologo|psychologist|psicologos|psychologists))\/[^/]+\/?$/.test(
+      pathname,
+    )
+  )
     return "profile";
   return "unknown";
 };
@@ -44,4 +54,14 @@ export const uniqueDailyContacts = <
     seen.add(key);
     return true;
   });
+};
+
+export const presentationVideoOrigin = (path: string | null) => {
+  const origin = originGroup(path);
+  if (origin === "profile") return "profile";
+  if (origin !== "presentation_video") return "unknown";
+  return hasDirectorySelectedFilterParams(path) ||
+    extractSearchTermsFromTrafficPath(path).length > 0
+    ? "search"
+    : "explore";
 };

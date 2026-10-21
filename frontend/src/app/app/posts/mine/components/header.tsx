@@ -1,9 +1,11 @@
 "use client";
 
 import { CornerUpLeft, FileText } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import type { UserPostsType } from "@/api/generator/types/posts";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { cn } from "@/lib/utils";
+import { analyticsReturnHref } from "@/utils/analytics-return";
 
 import type { FilterTabCounts, InteractionCopy } from "../modules/support";
 
@@ -63,10 +65,14 @@ export const FilterTabs = ({
   );
 };
 
-export const MyPostsHeader = ({ interactionCopy }: { interactionCopy: InteractionCopy }) => (
-  <AppPageHeader
-    backHref="/app/perfil"
-    backLabel="Voltar para perfil"
-    title={interactionCopy.screenTitle}
-  />
-);
+export const MyPostsHeader = ({ interactionCopy }: { interactionCopy: InteractionCopy }) => {
+  const searchParams = useSearchParams();
+  const returnTo = analyticsReturnHref(searchParams?.get("returnTo") ?? null);
+  return (
+    <AppPageHeader
+      backHref={returnTo ?? "/app/perfil"}
+      backLabel={returnTo ? "Voltar para Analytics" : "Voltar para perfil"}
+      title={interactionCopy.screenTitle}
+    />
+  );
+};

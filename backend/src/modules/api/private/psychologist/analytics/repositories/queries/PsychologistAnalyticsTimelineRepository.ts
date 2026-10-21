@@ -4,7 +4,6 @@ import type { PersonAction } from "@/modules/whatsapp-reports/people";
 import {
   extractSearchFiltersFromTrafficPath,
   extractSearchTermsFromTrafficPath,
-  hasDirectorySelectedFilterParams,
   type TrafficFilterLabelLookup,
 } from "@/utils/analytics-traffic-path";
 import type {
@@ -12,7 +11,7 @@ import type {
   AnalyticsTimeline,
   PsychologistAnalyticsPeriod,
 } from "../../DTOs/IAnalyticsDTO";
-import { dailyPoints, originGroup } from "../support/timeline";
+import { dailyPoints, originGroup, presentationVideoOrigin } from "../support/timeline";
 import { isCommunityTopMentorsTrafficPath, isFavoritesTrafficPath } from "../support/traffic";
 import { whatsappTimeline } from "../support/whatsapp-timeline";
 
@@ -78,16 +77,9 @@ export async function buildAnalyticsChartData(
       ),
     })),
   });
-  const videoOrigin = (session: VideoSession) =>
-    originGroup(session.origin_path) === "presentation_video"
-      ? hasDirectorySelectedFilterParams(session.origin_path) ||
-        extractSearchTermsFromTrafficPath(session.origin_path).length > 0
-        ? "search"
-        : "explore"
-      : "unknown";
   const terms = new Map<string, { term: string; views: number }>();
   for (const session of sessions) {
-    if (videoOrigin(session) !== "search") continue;
+    if (presentationVideoOrigin(session.origin_path) !== "search") continue;
     const labelsForSession = new Set([
       ...extractSearchFiltersFromTrafficPath(session.origin_path, labels),
       ...extractSearchTermsFromTrafficPath(session.origin_path),
@@ -105,12 +97,13 @@ export async function buildAnalyticsChartData(
         series: [
           { id: "explore", label: "Explorar" },
           { id: "search", label: "Minha Busca" },
-          { id: "unknown", label: "Outras / não identificadas" },
+          { id: "profile", label: "Dentro do perfil" },
+          { id: "unknown", label: "Origem não identificada" },
         ].map((series) => ({
           ...series,
           points: dailyPoints(
             sessions
-              .filter((session) => videoOrigin(session) === series.id)
+              .filter((session) => presentationVideoOrigin(session.origin_path) === series.id)
               .map((session) => ({ date: session.createdAt })),
           ),
         })),
