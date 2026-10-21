@@ -103,7 +103,7 @@ export async function buildAnalyticsChartData(
         series: [
           { id: "explore", label: "Explorar" },
           { id: "search", label: "Minha Busca" },
-          { id: "profile", label: "Dentro do perfil" },
+          { id: "profile", label: "Perfil" },
           { id: "unknown", label: "Origem não identificada" },
         ].map((series) => ({
           ...series,
@@ -118,7 +118,7 @@ export async function buildAnalyticsChartData(
         profiles.map((event) => ({ ...event, origin_path: event.search_context_path })),
         { id: "favorites", label: "Página de favoritos" },
       ),
-      favorites_received: origins(favorites, { id: "profile", label: "Dentro do perfil" }),
+      favorites_received: origins(favorites, { id: "profile", label: "Perfil" }),
       whatsapp_clicks: whatsappTimeline(whatsappOriginGroups(actions.allWhatsapp)),
       reviews_received: {
         granularity: "day",

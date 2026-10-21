@@ -1163,3 +1163,8 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Substituir a tabela de origens pela legenda compartilhada com Acesso ao perfil, acima do gráfico.
 - [x] Exibir total de cliques, pessoas únicas e média de cliques por pessoa abaixo do gráfico, com divisor e tipografia text-sm/font-bold/text-muted de Gerenciar pacientes adquiridos.
 - Referência: capturas fornecidas pelo usuário; Builder indisponível nesta sessão. Layout mobile-first, sem mudanças no cálculo das métricas.
+
+
+### 2026-10-21 — Nome da origem Perfil
+
+- [x] Padronizar como Perfil as legendas das séries de vídeo e favoritos, seguindo a nomenclatura de cliques WhatsApp. Alteração apenas textual; identificadores e cálculos preservados.
