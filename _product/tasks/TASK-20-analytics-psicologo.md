@@ -1156,3 +1156,10 @@ A prévia usa dados de validação e não substitui QA autenticado. Nenhum push/
 - [x] Modal, histórico, notificações semanais e pacientes adquiridos mantêm sua regra baseada em pessoas e valores informados pelo psicólogo.
 - [x] Chave opcional por ação evita duplicar reenvios novos; cliques independentes recebem chaves diferentes.
 - [x] pnpm check aprovado (backend: 948 testes), builds de frontend/backend aprovados e prévia dos componentes reais conferida em 390px/1440px, sem overflow nem erros de runtime. Testes da modal preservam DISTINCT e valores informados. Banco PostgreSQL local indisponível (ECONNREFUSED): não foi possível executar integração com banco nem confirmar readiness local; nenhum dado produtivo foi acessado. Histórico limitado aos eventos existentes; reenvios legados sem chave não são reconstruídos. Sem push/deploy.
+
+
+### 2026-10-21 — Legenda e resumo de cliques
+
+- [x] Substituir a tabela de origens pela legenda compartilhada com Acesso ao perfil, acima do gráfico.
+- [x] Exibir total de cliques, pessoas únicas e média de cliques por pessoa abaixo do gráfico, com divisor e tipografia text-sm/font-bold/text-muted de Gerenciar pacientes adquiridos.
+- Referência: capturas fornecidas pelo usuário; Builder indisponível nesta sessão. Layout mobile-first, sem mudanças no cálculo das métricas.

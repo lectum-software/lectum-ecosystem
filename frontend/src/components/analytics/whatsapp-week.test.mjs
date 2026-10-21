@@ -132,7 +132,7 @@ test("resumo de WhatsApp distingue ações, pessoas e média sem alterar pacient
   );
   assert.match(html, /Total de cliques:/);
   assert.match(html, /Pessoas únicas:/);
-  assert.match(html, /Cliques por pessoa:/);
+  assert.match(html, /Média de cliques por pessoa:/);
   assert.ok(html.includes(">2,0</dd>"));
   assert.equal(metricCards(data).find((card) => card.id === "acquired_patients").value, "1");
 });

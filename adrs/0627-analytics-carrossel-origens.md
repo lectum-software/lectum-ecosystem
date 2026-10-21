@@ -83,3 +83,10 @@ O botão de WhatsApp envia event_id opcional por clique, usado em upsert atômic
 Deploy: backend antes do frontend, sem migração. Rollback por artefatos anteriores; registros com IDs novos continuam compatíveis. Nenhuma escrita em produção nesta tarefa. Referência visual: capturas do usuário, Builder indisponível.
 
 Validação: pnpm check completo aprovado, 948 testes no backend, builds frontend/backend aprovados; SSR e navegador em 390px/1440px validam os três indicadores e alternância para pacientes. Testes cobrem cliques repetidos, canais/dias, deduplicação por ID, desconhecidos, limites da comparação, filtros de autoria e preservação da consulta DISTINCT dos relatórios. Consultas foram verificadas por contrato e testes isolados: PostgreSQL local recusou conexão; integração real/readiness ficam pendentes de ambiente disponível. Sem acesso a dados produtivos e sem publicação.
+
+
+### 2026-10-21 — Legenda e resumo de cliques
+
+- [x] Substituir a tabela de origens pela legenda compartilhada com Acesso ao perfil, acima do gráfico.
+- [x] Exibir total de cliques, pessoas únicas e média de cliques por pessoa abaixo do gráfico, com divisor e tipografia text-sm/font-bold/text-muted de Gerenciar pacientes adquiridos.
+- Referência: capturas fornecidas pelo usuário; Builder indisponível nesta sessão. Layout mobile-first, sem mudanças no cálculo das métricas.
