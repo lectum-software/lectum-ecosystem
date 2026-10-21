@@ -1,6 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { distinctWhatsappPeople, type PersonAction } from "@/modules/whatsapp-reports/people";
+import type { PersonAction } from "@/modules/whatsapp-reports/people";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   PsychologistAnalyticsCommunities,
@@ -10,7 +10,6 @@ import {
   buildCommunityTopMentors,
   COMMUNITY_CONTENT_BREAKDOWN_DEFINITIONS,
   emptyCommunityContentSummary,
-  emptyCommunityTopMentors,
   isVideoCommunityContent,
   toCommunityActivityDiagnosis,
   toCommunityContentBreakdownId,
@@ -20,6 +19,7 @@ import {
   COMMUNITY_WHATSAPP_POST_TARGET_TYPES,
   COMMUNITY_WHATSAPP_REPLY_TARGET_TYPES,
 } from "../support/traffic";
+import { distinctWhatsappActions } from "../support/whatsapp-actions";
 import { buildCommunityHighlights } from "./community-highlights";
 
 export class PsychologistAnalyticsCommunityRepository {
@@ -110,21 +110,6 @@ export class PsychologistAnalyticsCommunityRepository {
       total_replies: 0,
       total_whatsapp_clicks: 0,
     };
-
-    if (communityIds.length === 0) {
-      return {
-        content: emptyCommunityContentSummary(),
-        highlights: { posts: [], replies: [] },
-        description:
-          "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
-        diagnosis: toCommunityActivityDiagnosis(emptyActivityTotals, 0),
-        following_communities: 0,
-        participating_communities: 0,
-        source: COMMUNITY_ANALYTICS_SOURCE,
-        top_mentors: emptyCommunityTopMentors(),
-        updated_at: null,
-      };
-    }
 
     const [postItems, replyItems, authoredPosts, authoredReplies, topMentorWhatsappActions] =
       await Promise.all([
@@ -393,7 +378,7 @@ export class PsychologistAnalyticsCommunityRepository {
       number
     >(COMMUNITY_CONTENT_BREAKDOWN_DEFINITIONS.map((item) => [item.id, 0]));
 
-    for (const action of distinctWhatsappPeople(whatsappActions)) {
+    for (const action of distinctWhatsappActions(whatsappActions)) {
       if (!action.target_id) continue;
 
       const isPostTarget =
@@ -439,7 +424,7 @@ export class PsychologistAnalyticsCommunityRepository {
         name: community.name,
         slug: community.slug,
       })),
-      distinctWhatsappPeople(topMentorWhatsappActions).length,
+      distinctWhatsappActions(topMentorWhatsappActions).length,
     );
     const communityActivityTotals = [...metricsByCommunityId.values()].reduce(
       (acc, metrics) => ({
@@ -459,7 +444,7 @@ export class PsychologistAnalyticsCommunityRepository {
     onWhatsappActions?.([...whatsappActions, ...topMentorWhatsappActions]);
     const activityTotals = {
       ...communityActivityTotals,
-      total_whatsapp_clicks: distinctWhatsappPeople([
+      total_whatsapp_clicks: distinctWhatsappActions([
         ...whatsappActions,
         ...topMentorWhatsappActions,
       ]).length,

@@ -1,7 +1,8 @@
 import prisma from "@/infra/database/prisma";
-import { acquiredPatientsSummary, whatsappPeopleCounts } from "@/modules/whatsapp-reports/counts";
+import { acquiredPatientsSummary } from "@/modules/whatsapp-reports/counts";
 import type { AnalyticsComparison, PsychologistAnalyticsPeriod } from "../../DTOs/IAnalyticsDTO";
 import { previousAnalyticsPeriod } from "../support/comparison";
+import { analyticsWhatsappActions } from "./whatsapp-actions";
 
 export async function buildAnalyticsComparison(
   userId: string,
@@ -13,7 +14,7 @@ export async function buildAnalyticsComparison(
   const createdAt = { gte: previous.start_at, lte: previous.end_at };
   const viewers = [{ viewer_id: null }, { viewer_id: { not: userId } }];
   const [contacts, views, favorites, reviews, videoViews, acquired] = await Promise.all([
-    whatsappPeopleCounts(previous.start_at, new Date(previous.end_at.getTime() + 1), userId),
+    analyticsWhatsappActions(userId, previous),
     prisma.profile_view_event.count({
       where: {
         psychologist_id: userId,
@@ -58,7 +59,7 @@ export async function buildAnalyticsComparison(
   return {
     previous_period: previous,
     previous_values: {
-      whatsapp_clicks: contacts[0]?.people_count ?? 0,
+      whatsapp_clicks: contacts.length,
       profile_views: views,
       favorites_received: favorites,
       reviews_received: reviews,

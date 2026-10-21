@@ -7,7 +7,7 @@ import type {
   PsychologistAnalyticsTrafficSources,
 } from "@/api/generator/types/psychologist-analytics";
 import { cn } from "@/lib/utils";
-import { type AnalyticsCardView, trafficSourceIcons } from "../modules/support";
+import type { AnalyticsCardView } from "../modules/support";
 import { WHATSAPP_ORIGIN_COLORS } from "../modules/timeline";
 import { comparisonForMetric, MetricComparison } from "./metric-comparison";
 import { MetricTimeline } from "./metric-timeline";
@@ -23,7 +23,6 @@ const order = [
 export function AnalyticsOverview({
   cards,
   data,
-  traffic,
   locked,
   loading,
   initialSelected,
@@ -45,8 +44,6 @@ export function AnalyticsOverview({
   const current = ordered.find((card) => card.id === selected) ?? ordered[0];
   const CurrentIcon = current?.icon;
   const restricted = locked && selected !== "acquired_patients";
-  const sources = [...traffic.sources].sort((a, b) => b.whatsapp_clicks - a.whatsapp_clicks);
-  const principalOrigin = sources.find((source) => source.whatsapp_clicks > 0)?.id;
   const periodTotal =
     selected === "video_views"
       ? data?.presentation_video?.metrics.views
@@ -166,69 +163,38 @@ export function AnalyticsOverview({
             <MetricTimeline
               key={selected + data?.period.start_at + data?.period.end_at}
               timeline={data?.chart_data?.timelines[selected]}
-              showLegend={
-                !["whatsapp_clicks", "acquired_patients", "reviews_received"].includes(selected)
-              }
+              showLegend={!["acquired_patients", "reviews_received"].includes(selected)}
               seriesColors={selected === "whatsapp_clicks" ? WHATSAPP_ORIGIN_COLORS : undefined}
               period={data?.period}
               total={typeof periodTotal === "number" ? periodTotal : undefined}
             />
           )}
         </div>
-        {!loading && !restricted && selected === "whatsapp_clicks" ? (
-          <div className="mt-6 border-t border-border pt-5">
-            <h3 className="text-base font-extrabold tracking-[-0.02em]">
-              De onde vieram os cliques
-            </h3>
-            <table className="mt-3 w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs text-muted">
-                  <th scope="col" className="pb-2">
-                    Origem
-                  </th>
-                  <th scope="col" className="pb-2 text-right">
-                    Cliques
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sources.map((source) => {
-                  const SourceIcon = trafficSourceIcons[source.id];
-                  return (
-                    <tr key={source.id} className="border-b border-border last:border-0">
-                      <th scope="row" className="py-3 pr-2 text-left font-medium">
-                        <span className="flex items-center gap-3">
-                          <span
-                            className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
-                            style={{
-                              color: WHATSAPP_ORIGIN_COLORS[source.id],
-                              backgroundColor: `color-mix(in srgb, ${WHATSAPP_ORIGIN_COLORS[source.id]} 10%, var(--lectum-surface))`,
-                            }}
-                          >
-                            <SourceIcon className="h-[18px] w-[18px]" aria-hidden />
-                          </span>
-                          <span>
-                            <span className="font-bold">{source.label}</span>
-                            <span className="mt-1 block text-xs font-normal leading-5 text-muted">
-                              {source.description}
-                            </span>
-                          </span>
-                        </span>
-                        {source.id === principalOrigin ? (
-                          <span className="mt-2 ml-12 block w-fit rounded-full border border-primary/10 bg-primary-soft px-2 py-1 text-[10px] font-black uppercase tracking-wide text-primary">
-                            Principal origem
-                          </span>
-                        ) : null}
-                      </th>
-                      <td className="py-3 text-right font-bold">
-                        {source.whatsapp_clicks.toLocaleString("pt-BR")}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+        {selected === "whatsapp_clicks" ? (
+          <dl
+            className="mt-5 grid gap-2 border-t border-border pt-4 text-sm font-bold leading-6 text-muted"
+            aria-label="Resumo de cliques no período"
+          >
+            {[
+              ["Total de cliques", data?.metrics.whatsapp_clicks],
+              ["Pessoas únicas", data?.metrics.whatsapp_unique_people],
+              ["Média de cliques por pessoa", data?.metrics.whatsapp_clicks_per_person],
+            ].map(([label, value]) => (
+              <div key={label} className="flex flex-wrap items-baseline gap-x-2">
+                <dt>{label}:</dt>
+                <dd className="font-semibold text-foreground">
+                  {loading || restricted || typeof value !== "number"
+                    ? "—"
+                    : value.toLocaleString(
+                        "pt-BR",
+                        label === "Média de cliques por pessoa"
+                          ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+                          : undefined,
+                      )}
+                </dd>
+              </div>
+            ))}
+          </dl>
         ) : null}
         {!loading && !restricted && selected === "video_views" ? (
           <div className="mt-6 border-t border-border pt-5">

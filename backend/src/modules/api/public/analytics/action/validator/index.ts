@@ -35,6 +35,13 @@ export const schema: IValidatorRequest = {
   query: [],
   body: [
     {
+      key: "event_id",
+      method: "string",
+      coerse: "string",
+      optional: true,
+      custom: trackingIdSchema,
+    },
+    {
       key: "visitor_id",
       method: "string",
       coerse: "string",

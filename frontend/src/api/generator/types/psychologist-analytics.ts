@@ -25,6 +25,7 @@ export type PsychologistAnalyticsMetricId =
 
 export type PsychologistAnalyticsMetricSource =
   | "profile_view_event"
+  | "important_action_event"
   | "contact_request"
   | "psychologist_favorite"
   | "professional_review"
@@ -56,6 +57,8 @@ export type PsychologistAnalyticsPeriod = {
 };
 
 export type PsychologistAnalyticsMetrics = {
+  whatsapp_unique_people?: number;
+  whatsapp_clicks_per_person?: number | null;
   acquired_patients?: number | null;
   unanswered_weeks?: number;
   search_results: number;
@@ -136,6 +139,7 @@ export type PsychologistAnalyticsPresentationVideo = {
 };
 
 export type PsychologistAnalyticsTrafficSourceId =
+  | "unknown"
   | "communities"
   | "favorites"
   | "profile"

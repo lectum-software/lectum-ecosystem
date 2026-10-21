@@ -1,6 +1,5 @@
 import prisma from "@/infra/database/prisma";
-import { acquiredPatientsSummary, whatsappPeopleCounts } from "@/modules/whatsapp-reports/counts";
-import { distinctWhatsappPeople, type PersonAction } from "@/modules/whatsapp-reports/people";
+import { acquiredPatientsSummary } from "@/modules/whatsapp-reports/counts";
 import { hasDirectorySelectedFilterParams } from "@/utils/analytics-traffic-path";
 import type {
   IPsychologistAnalyticsIndexDTO,
@@ -24,9 +23,11 @@ import {
   toCards,
   toTrafficSources,
 } from "../support/traffic";
+import { whatsappActionSummary } from "../support/whatsapp-actions";
 import { buildAnalyticsComparison } from "./comparison";
 import type { PsychologistAnalyticsCommunityRepository } from "./PsychologistAnalyticsCommunityRepository";
 import { buildAnalyticsChartData } from "./PsychologistAnalyticsTimelineRepository";
+import { analyticsWhatsappActions } from "./whatsapp-actions";
 
 export class PsychologistAnalyticsSummaryRepository {
   constructor(protected readonly dependency: PsychologistAnalyticsCommunityRepository) {}
@@ -37,7 +38,6 @@ export class PsychologistAnalyticsSummaryRepository {
     hasProfessionalEntitlement: boolean,
   ): Promise<PsychologistAnalyticsResponse> {
     const userId = data.auth.id!;
-    let communityWhatsappActions: PersonAction[] = [];
     const createdAtWindow = {
       gte: period.start_at,
       lte: period.end_at,
@@ -99,7 +99,7 @@ export class PsychologistAnalyticsSummaryRepository {
           search_context_path: true,
         },
       }),
-      whatsappPeopleCounts(period.start_at, new Date(period.end_at.getTime() + 1), userId),
+      analyticsWhatsappActions(userId, period),
       prisma.professional_review.count({
         where: {
           psychologist_id: userId,
@@ -251,24 +251,11 @@ export class PsychologistAnalyticsSummaryRepository {
           createdAt: true,
         },
       }),
-      this.dependency.buildCommunities(userId, createdAtWindow, (actions) => {
-        communityWhatsappActions = actions;
-      }),
+      this.dependency.buildCommunities(userId, createdAtWindow),
       buildSearchFilterLabelLookup(),
     ]);
-    const presentationVideoActionEvents = [
-      ...rawPresentationVideoActionEvents.filter(
-        (action) => action.action_type !== "psychologist_video_whatsapp_click",
-      ),
-      ...distinctWhatsappPeople(
-        rawPresentationVideoActionEvents.filter(
-          (action) => action.action_type === "psychologist_video_whatsapp_click",
-        ),
-      ),
-    ];
-    const psychologistWhatsappActionEvents = distinctWhatsappPeople(
-      rawPsychologistWhatsappActionEvents,
-    );
+    const presentationVideoActionEvents = rawPresentationVideoActionEvents;
+    const psychologistWhatsappActionEvents = rawPsychologistWhatsappActionEvents;
     const trackedSearchResultImpressions = presentationVideoSearchImpressions.filter((impression) =>
       hasDirectorySelectedFilterParams(impression.search_context_path),
     );
@@ -283,7 +270,7 @@ export class PsychologistAnalyticsSummaryRepository {
       search_results: searchResults,
       profile_views: profileViews,
       favorites_received: favoriteEvents.length,
-      whatsapp_clicks: whatsappClicks[0]?.people_count ?? 0,
+      ...whatsappActionSummary(whatsappClicks),
       ...(await acquiredPatientsSummary(userId, period.start_at, period.end_at)),
       reviews_received: reviewsReceived,
       rating_average: profile?.rating_avg || 0,
@@ -412,9 +399,7 @@ export class PsychologistAnalyticsSummaryRepository {
       currentPresentationVideoSessions,
       searchFilterLabelLookup,
       {
-        video: rawPresentationVideoActionEvents,
-        psychologist: rawPsychologistWhatsappActionEvents,
-        communities: communityWhatsappActions,
+        allWhatsapp: whatsappClicks,
       },
     );
     const trafficSources = toTrafficSources({

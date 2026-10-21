@@ -69,6 +69,7 @@ export type PageViewDurationResponse = {
 };
 
 export type ImportantActionTrackingRequest = {
+  event_id?: string;
   visitor_id: string;
   session_id: string;
   action_type:

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { whatsappTimeline } from "./whatsapp-timeline";
 
-test("each origin deduplicates people by day and independently across the period", () => {
+test("each origin counts actions by day, including repeat clicks by the same person", () => {
   const event = {
     id: "1",
     user_id: "u1",
@@ -22,9 +22,9 @@ test("each origin deduplicates people by day and independently across the period
     { id: "favorites", label: "Favoritos", events: [event] },
     { id: "communities", label: "Comunidades", events: [] },
   ]);
-  assert.equal(result.series[0].total, 1);
+  assert.equal(result.series[0].total, 3);
   assert.deepEqual(result.series[0].points, [
-    { date: "2026-10-19", value: 1 },
+    { date: "2026-10-19", value: 2 },
     { date: "2026-10-20", value: 1 },
   ]);
   assert.equal(result.series[1].total, 1);

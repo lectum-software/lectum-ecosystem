@@ -32,6 +32,7 @@ export const pointerDayIndex = (clientX: number, left: number, width: number, co
   );
 
 export const WHATSAPP_ORIGIN_COLORS: Record<string, string> = {
+  unknown: "var(--lectum-muted)",
   presentation_video: "var(--lectum-primary)",
   communities: "var(--lectum-success)",
   profile: "var(--lectum-warning)",

@@ -1,8 +1,9 @@
-import { distinctWhatsappPeople, type PersonAction } from "@/modules/whatsapp-reports/people";
+import type { PersonAction } from "@/modules/whatsapp-reports/people";
 import {
   COMMUNITY_WHATSAPP_POST_TARGET_TYPES,
   COMMUNITY_WHATSAPP_REPLY_TARGET_TYPES,
 } from "./traffic";
+import { distinctWhatsappActions } from "./whatsapp-actions";
 
 export type HighlightAction = PersonAction & {
   target_id: string | null;
@@ -20,7 +21,7 @@ export const rankCommunityHighlights = (actions: HighlightAction[], kind: "posts
     groups.set(action.target_id, group);
   }
   return [...groups]
-    .map(([id, events]) => ({ id, whatsapp_clicks: distinctWhatsappPeople(events).length }))
+    .map(([id, events]) => ({ id, whatsapp_clicks: distinctWhatsappActions(events).length }))
     .filter((item) => item.whatsapp_clicks > 0)
     .sort((a, b) => b.whatsapp_clicks - a.whatsapp_clicks || a.id.localeCompare(b.id))
     .slice(0, 5);
