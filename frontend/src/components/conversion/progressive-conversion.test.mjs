@@ -226,16 +226,98 @@ function visit(node) {
 }
 visit(core);
 
-test("wiring: scroll effect cleanup cancels its delayed initial check, not only its listener", () => {
-  const effect = effectBodies.find((body) => body.includes("window.scrollY"));
-  assert.match(effect, /const timeout = window\.setTimeout\(onScroll, 250\)/);
-  assert.match(effect, /return \(\) => \{[\s\S]*window\.clearTimeout\(timeout\)/);
-  assert.match(effect, /window\.removeEventListener\("scroll", onScroll\)/);
+test("automatic signup has only the active-time gate and defers behind visible modals", () => {
+  const effect = effectBodies.find((body) => body.includes("trackVisibleNavigation"));
+  assert.match(effect, /canShowAutomaticSignup\(elapsedMs\)/);
+  assert.match(effect, /!hasVisibleModalLayer\(\)/);
+  assert.match(effect, /!hasPromptBeenShown\(\)/);
+  assert.doesNotMatch(coreText, /openPrompt\("trigger_(scroll|psicologos|comunidade)"\)/);
+  assert.doesNotMatch(coreText, /60_000|nextSeconds >= 90|nextCount < 2/);
 });
 
-test("wiring: profile/post visit effect cancels queued zero-delay prompts", () => {
-  const effect = effectBodies.find((body) => body.includes("OPENED_POSTS_KEY"));
-  assert.match(effect, /timeouts\.push\(window\.setTimeout/);
-  assert.match(effect, /return \(\) =>[\s\S]*timeouts\.forEach/);
-  assert.match(effect, /window\.clearTimeout\(timeout\)/);
+const timing = await import("../onboarding/navigation-prompt-timing.ts");
+
+test("visible navigation accumulates across surfaces, pauses when hidden and cleans up", (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setInterval"], now: 1_000_000 });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  const storage = new Map();
+  const events = new EventTarget();
+  globalThis.window = {
+    sessionStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, value),
+    },
+    setInterval,
+    clearInterval,
+    addEventListener: events.addEventListener.bind(events),
+    removeEventListener: events.removeEventListener.bind(events),
+  };
+  globalThis.document = {
+    visibilityState: "visible",
+    addEventListener: events.addEventListener.bind(events),
+    removeEventListener: events.removeEventListener.bind(events),
+  };
+  const seen = [];
+  let stop = timing.trackVisibleNavigation("test:community", (ms) => seen.push(ms));
+  let close;
+  try {
+    t.mock.timers.tick(20_000);
+    assert.equal(seen.at(-1), 20_000);
+    document.visibilityState = "hidden";
+    events.dispatchEvent(new Event("visibilitychange"));
+    t.mock.timers.tick(300_000);
+    assert.equal(seen.at(-1), 20_000);
+    document.visibilityState = "visible";
+    events.dispatchEvent(new Event("visibilitychange"));
+    stop();
+    stop = timing.trackVisibleNavigation("test:community", (ms) => seen.push(ms));
+    t.mock.timers.tick(9_500);
+    assert.ok(seen.at(-1) < timing.COMMUNITY_TIP_DELAY_MS);
+    t.mock.timers.tick(500);
+    assert.equal(seen.at(-1), timing.COMMUNITY_TIP_DELAY_MS);
+
+    assert.equal(timing.canShowAutomaticSignup(179_999), false);
+    assert.equal(timing.canShowAutomaticSignup(180_000), true);
+    close = timing.trackCommunityTipOpen();
+    t.mock.timers.tick(300_000);
+    assert.equal(timing.canShowAutomaticSignup(500_000), false);
+    close();
+    assert.equal(timing.canShowAutomaticSignup(500_000), false);
+    t.mock.timers.tick(119_999);
+    assert.equal(timing.canShowAutomaticSignup(500_000), false);
+    t.mock.timers.tick(1);
+    assert.equal(timing.canShowAutomaticSignup(500_000), true);
+    assert.equal(timing.canShowAutomaticSignup(179_999), false);
+
+    // User actions bypass the automatic cooldown and the session frequency limit.
+    storage.set("modal_exibida_na_sessao", "true");
+    window.dispatchEvent = events.dispatchEvent.bind(events);
+    const state = openerState();
+    state.open("trigger_comentar", makeIntent("create_post"));
+    state.open("trigger_salvar", makeIntent("save_post"));
+    assert.equal(state.prompts.length, 2);
+    state.open("trigger_tempo");
+    assert.equal(state.prompts.length, 2);
+
+    stop();
+    const count = seen.length;
+    t.mock.timers.tick(10_000);
+    assert.equal(seen.length, count);
+  } finally {
+    close?.();
+    stop();
+    globalThis.window = previousWindow;
+    globalThis.document = previousDocument;
+  }
+});
+
+test("the public home feed counts as discovery, unlike auth and private account pages", async () => {
+  const { isPublicDiscoveryPath } = await import("./progressive-conversion-state.ts");
+  for (const path of ["/", "/comunidades/ansiedade", "/psicologos", "/comunidades/feed"]) {
+    assert.equal(isPublicDiscoveryPath(path), true);
+  }
+  for (const path of ["/auth/login", "/app/perfil"]) {
+    assert.equal(isPublicDiscoveryPath(path), false);
+  }
 });

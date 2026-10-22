@@ -2,6 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount } from "@/api/callers/account";
+import { hasVisibleModalLayer } from "@/components/onboarding/modal-layer";
+import {
+  COMMUNITY_TIP_DELAY_MS,
+  communityTimeKey,
+  trackCommunityTipOpen,
+  trackVisibleNavigation,
+} from "@/components/onboarding/navigation-prompt-timing";
 import { useAppSelector } from "@/hooks/redux";
 import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import {
@@ -49,22 +56,12 @@ export const useCommunityPublishTip = () => {
       return;
     }
 
-    let timeout: number | undefined;
-    const schedule = () => {
-      window.clearTimeout(timeout);
-      if (document.visibilityState !== "visible") return;
-      timeout = window.setTimeout(() => {
-        if (document.visibilityState !== "visible" || hasSeenCommunityPublishTip(userId)) return;
-        setVisibleFor(identity);
-        persistSeen();
-      }, 450);
-    };
-    schedule();
-    document.addEventListener("visibilitychange", schedule);
-    return () => {
-      window.clearTimeout(timeout);
-      document.removeEventListener("visibilitychange", schedule);
-    };
+    return trackVisibleNavigation(communityTimeKey(identity), (elapsedMs) => {
+      if (elapsedMs < COMMUNITY_TIP_DELAY_MS || hasVisibleModalLayer()) return;
+      if (document.visibilityState !== "visible" || hasSeenCommunityPublishTip(userId)) return;
+      setVisibleFor(identity);
+      persistSeen();
+    });
   }, [
     account.onboardingTips.isSuccess,
     hasToken,
@@ -75,10 +72,15 @@ export const useCommunityPublishTip = () => {
     userId,
   ]);
 
+  const isVisible = !isPsychologist && visibleFor === identity;
+  useEffect(() => {
+    if (isVisible) return trackCommunityTipOpen();
+  }, [isVisible]);
+
   const dismiss = useCallback(() => {
     persistSeen();
     setVisibleFor(null);
   }, [persistSeen]);
 
-  return { dismiss, isVisible: !isPsychologist && visibleFor === identity };
+  return { dismiss, isVisible };
 };

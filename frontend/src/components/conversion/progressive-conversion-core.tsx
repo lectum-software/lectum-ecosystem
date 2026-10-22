@@ -2,6 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import { hasVisibleModalLayer } from "@/components/onboarding/modal-layer";
+import {
+  canShowAutomaticSignup,
+  SIGNUP_TIME_KEY,
+  trackVisibleNavigation,
+} from "@/components/onboarding/navigation-prompt-timing";
 import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
 
 import {
@@ -11,29 +17,17 @@ import {
 import { ProgressiveConversionPrompt } from "./progressive-conversion-prompt";
 
 import {
-  addToSessionSet,
   type ConversionIntent,
   type ConversionTrigger,
   clearPendingIntent,
   getCurrentReturnTo,
-  getPathSegments,
   hasPromptBeenShown,
-  isCommunityDetailPath,
-  isCommunityPostPath,
   isConversionPromptSuppressedPath,
-  isPsychologistProfilePath,
   isPublicDiscoveryPath,
-  isPublicPsychologistsPath,
-  NAVIGATION_SECONDS_KEY,
-  OPENED_POSTS_KEY,
-  PROFILE_IDS_KEY,
   ProgressiveConversionContext,
   type ProgressiveConversionProviderProps,
   type RequestConversionOptions,
-  readNumber,
   readPendingIntent,
-  WHATSAPP_CLICK_COUNT_KEY,
-  writeNumber,
 } from "./progressive-conversion-state";
 
 export const ProgressiveConversionProvider = ({
@@ -79,27 +73,8 @@ export const ProgressiveConversionProvider = ({
   );
 
   const requestWhatsAppAccess = useCallback(
-    (whatsappUrl: string, returnTo?: string) => {
-      if (isAuthenticated) return true;
-      const trustedUrl = normalizeTrustedWhatsAppUrl(whatsappUrl);
-      if (!trustedUrl) return false;
-      const nextCount = readNumber(WHATSAPP_CLICK_COUNT_KEY) + 1;
-      writeNumber(WHATSAPP_CLICK_COUNT_KEY, nextCount);
-      if (isPublicPsychologistsPath(pathnameRef.current)) return true;
-
-      if (nextCount < 2 || hasPromptBeenShown()) return true;
-
-      return requestConversion("trigger_whatsapp", {
-        intent: {
-          payload: {
-            whatsappUrl: trustedUrl,
-          },
-          returnTo: returnTo ?? getCurrentReturnTo(),
-          type: "open_whatsapp",
-        },
-      });
-    },
-    [isAuthenticated, requestConversion],
+    (whatsappUrl: string) => Boolean(normalizeTrustedWhatsAppUrl(whatsappUrl)),
+    [],
   );
 
   const consumePendingIntent = useCallback((predicate?: (intent: ConversionIntent) => boolean) => {
@@ -139,104 +114,11 @@ export const ProgressiveConversionProvider = ({
       return;
     }
 
-    let previousTick = Date.now();
-    const interval = window.setInterval(() => {
-      if (document.visibilityState !== "visible") {
-        previousTick = Date.now();
-
-        return;
-      }
-
-      const now = Date.now();
-      const elapsedSeconds = Math.max(0, (now - previousTick) / 1000);
-      previousTick = now;
-
-      const nextSeconds = readNumber(NAVIGATION_SECONDS_KEY) + elapsedSeconds;
-      writeNumber(NAVIGATION_SECONDS_KEY, nextSeconds);
-
-      if (nextSeconds >= 90) {
-        window.clearInterval(interval);
+    return trackVisibleNavigation(SIGNUP_TIME_KEY, (elapsedMs) => {
+      if (!hasPromptBeenShown() && canShowAutomaticSignup(elapsedMs) && !hasVisibleModalLayer()) {
         openPrompt("trigger_tempo");
       }
-    }, 1000);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [isAuthenticated, openPrompt, pathname]);
-
-  useEffect(() => {
-    if (isAuthenticated || hasPromptBeenShown()) return;
-    const timeouts: number[] = [];
-
-    if (isPsychologistProfilePath(pathname)) {
-      const psychologistId = getPathSegments(pathname)[1];
-      const count = addToSessionSet(PROFILE_IDS_KEY, psychologistId);
-
-      if (count >= 3) {
-        timeouts.push(window.setTimeout(() => openPrompt("trigger_psicologos"), 0));
-      }
-    }
-
-    if (isCommunityPostPath(pathname)) {
-      const segments = getPathSegments(pathname);
-      const postKey = `${segments[1]}:${segments[3]}`;
-      const count = addToSessionSet(OPENED_POSTS_KEY, postKey);
-
-      if (count >= 3) {
-        timeouts.push(window.setTimeout(() => openPrompt("trigger_comunidade"), 0));
-      }
-    }
-    return () => {
-      timeouts.forEach((timeout) => {
-        window.clearTimeout(timeout);
-      });
-    };
-  }, [isAuthenticated, openPrompt, pathname]);
-
-  useEffect(() => {
-    if (isAuthenticated || hasPromptBeenShown() || !isCommunityDetailPath(pathname)) return;
-
-    const timeout = window.setTimeout(() => {
-      openPrompt("trigger_comunidade");
-    }, 60_000);
-
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [isAuthenticated, openPrompt, pathname]);
-
-  useEffect(() => {
-    if (
-      isAuthenticated ||
-      hasPromptBeenShown() ||
-      (!isCommunityDetailPath(pathname) && !isCommunityPostPath(pathname))
-    ) {
-      return;
-    }
-
-    const onScroll = () => {
-      if (hasPromptBeenShown()) return;
-
-      const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (scrollableHeight <= 0) return;
-
-      const progress =
-        (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
-
-      if (progress >= 0.75) {
-        window.removeEventListener("scroll", onScroll);
-        openPrompt("trigger_scroll");
-      }
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    const timeout = window.setTimeout(onScroll, 250);
-
-    return () => {
-      window.clearTimeout(timeout);
-      window.removeEventListener("scroll", onScroll);
-    };
+    });
   }, [isAuthenticated, openPrompt, pathname]);
 
   const closePrompt = () => {

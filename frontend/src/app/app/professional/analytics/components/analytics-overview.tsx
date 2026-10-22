@@ -112,7 +112,7 @@ export function AnalyticsOverview({
                     : "border-primary/10 hover:border-primary/40",
                 )}
               >
-                <span className="min-h-8 text-xs font-normal leading-4 text-muted">
+                <span className="min-h-8 text-xs font-semibold leading-4 text-muted">
                   {card.id === "video_views" ? "Vídeo de apresentação" : card.label}
                 </span>
                 <span

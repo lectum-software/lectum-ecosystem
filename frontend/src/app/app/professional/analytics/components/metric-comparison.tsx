@@ -43,7 +43,7 @@ export function MetricComparison({
     change.direction === "up" ? "Aumento" : change.direction === "down" ? "Queda" : "Sem variação";
   return (
     <>
-      <span className="absolute bottom-2 right-2 text-[10px] leading-4">
+      <span className="absolute bottom-2 right-2 text-[10px] font-semibold leading-4">
         <button
           ref={triggerRef}
           type="button"

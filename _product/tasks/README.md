@@ -683,6 +683,8 @@ ou cortesia manual.
 | 262 | [TASK-262 - Navegacao, Analytics e login gratuito](TASK-262-navegacao-analytics-login.md) | Done | 261 |
 | 263 | [TASK-263 - Historico de pacientes adquiridos](TASK-263-historico-pacientes-adquiridos.md) | Done | 262 |
 | 264 | [TASK-264 - Elegibilidade do historico de pacientes](TASK-264-elegibilidade-historico-pacientes.md) | Done | 263 |
+| 265 | [TASK-265 - Tempo das orientacoes de navegacao](TASK-265-tempo-orientacoes-navegacao.md) | Done | 202 |
+| 266 | [TASK-266 - Tipografia dos analytics](TASK-266-tipografia-analytics.md) | Done | 265 |
 
 ## Ordem operacional recomendada sem bloqueios
 
