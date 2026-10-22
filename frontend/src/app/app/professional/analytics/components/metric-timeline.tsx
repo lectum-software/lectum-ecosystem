@@ -50,9 +50,9 @@ export function MetricTimeline({
     return (
       <p className="py-10 text-center text-sm text-muted">Ainda não há dados neste período.</p>
     );
-  const series = timeline.series.filter(
-    (s) => s.id !== "unknown" || s.points.some((p) => p.value > 0),
-  );
+  const series = timeline.series
+    .filter((s) => s.id !== "unknown" || s.points.some((p) => p.value > 0))
+    .map((s) => (s.id === "favorites" ? { ...s, label: "Favoritos" } : s));
   const colors = series.map((s, i) => seriesColors[s.id] ?? palette[i % palette.length]);
   const values = series.map((s) => {
     const map = new Map(s.points.map((p) => [p.date, p.value]));
@@ -71,7 +71,10 @@ export function MetricTimeline({
       {showLegend ? (
         <div className="flex flex-wrap gap-x-4 gap-y-2" data-testid="period-totals">
           {series.map((s, i) => (
-            <span key={s.id} className="flex items-center gap-1.5 text-xs text-muted">
+            <span
+              key={s.id}
+              className="flex items-center gap-1.5 text-xs font-semibold leading-4 text-muted"
+            >
               <span className="h-2 w-2 rounded-full" style={{ background: colors[i] }} />
               {series.length === 1 ? "Total no período" : s.label}:{" "}
               <strong className="text-foreground">
