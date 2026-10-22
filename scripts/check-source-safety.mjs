@@ -185,7 +185,11 @@ for (const relativePath of files) {
 
     if (!isUiSource(relativePath)) continue;
 
-    if (uiMockPattern.test(line)) {
+    // Node's test clock controls time only; product data and API substitutes remain forbidden.
+    const isTestClockControl =
+      isTestSource(relativePath) &&
+      /^\s*t\.mock\.timers\.(?:enable|tick|reset)\(/u.test(line);
+    if (uiMockPattern.test(line) && !isTestClockControl) {
       failures.push(`${relativePath}:${index + 1}: mock ou dado artificial em código de produto`);
     }
 

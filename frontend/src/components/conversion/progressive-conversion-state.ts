@@ -194,6 +194,7 @@ export const isPublicDiscoveryPath = (pathname: string) => {
   const normalizedPathname = normalizePath(pathname);
 
   return (
+    normalizedPathname === "/" ||
     normalizedPathname === "/comunidades" ||
     normalizedPathname.startsWith("/comunidades/") ||
     normalizedPathname === "/community" ||

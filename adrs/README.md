@@ -690,3 +690,4 @@ Formato recomendado:
 - [ADR-0626 — Elegibilidade do historico de pacientes](0626-elegibilidade-historico-pacientes.md)
 
 - [ADR-0627 — Analytics com seleção de métrica e origem de visualizações](0627-analytics-carrossel-origens.md)
+- [ADR-0628 — Coordenacao temporal das orientacoes de navegacao](0628-tempo-orientacoes-navegacao.md)
