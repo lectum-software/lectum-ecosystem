@@ -24,13 +24,19 @@ test("neutral ranking styles retain a dark variant without changing podium metal
     assert.ok(Math.max(...channels) - Math.min(...channels) <= 24, "Color must remain neutral");
     return channels.reduce((total, channel) => total + channel, 0) / channels.length;
   };
-  const lightBackground = neutralColor(/\.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #([\da-f]{6});/);
-  const darkBackground = neutralColor(/\.dark \.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #([\da-f]{6});/);
+  const lightBackground = neutralColor(
+    /\.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #([\da-f]{6});/,
+  );
+  const darkBackground = neutralColor(
+    /\.dark \.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #([\da-f]{6});/,
+  );
   assert.ok(lightBackground > 220);
   assert.ok(darkBackground < 60);
   assert.doesNotMatch(css, /--top-mentor-backdrop/);
   const lightLabel = neutralColor(/\.top-mentor-ranking-eyebrow\s*\{\s*color: #([\da-f]{6});/);
-  const darkLabel = neutralColor(/\.dark \.top-mentor-ranking-eyebrow\s*\{\s*color: #([\da-f]{6});/);
+  const darkLabel = neutralColor(
+    /\.dark \.top-mentor-ranking-eyebrow\s*\{\s*color: #([\da-f]{6});/,
+  );
   assert.ok(lightLabel > 80 && lightLabel < 130);
   assert.ok(darkLabel > 140 && darkLabel < 190);
   for (const metal of ["gold", "silver", "bronze"]) {
