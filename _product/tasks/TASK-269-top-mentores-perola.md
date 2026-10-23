@@ -51,5 +51,10 @@ Refinamento 0.1.708: validacao visual clara/escura aprovada em 320/390/1440px.
 Build adicional compilou, mas foi interrompido apos ENOSPC recorrente no cache
 local. Nao considerar esse build concluido; repetir antes da publicacao.
 
+Validacao de release em 2026-10-23: build frontend 0.1.708 concluido com exit 0
+usando o modo existente LECTUM_LOW_DISK_MODE=1; build backend tambem aprovado.
+Teste visual passou a ler as cores centralizadas e verificar neutralidade e
+luminosidade, sem duplicar literais de tokens fora de globals.css.
+
 Somente frontend; sem banco, dependencia, env nova ou alteracao de regra.
 Rollback pelo codigo anterior. Sem push, merge ou deploy automatico.

@@ -17,11 +17,22 @@ test("ranking presentation uses a compact uppercase label without community back
 
 test("neutral ranking styles retain a dark variant without changing podium metal classes", () => {
   const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(css, /\.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #eceeef;/);
-  assert.match(css, /\.dark \.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #27292d;/);
+  const neutralColor = (pattern) => {
+    const value = css.match(pattern)?.[1];
+    assert.ok(value, "Expected a centralized neutral color");
+    const channels = value.match(/.{2}/g).map((channel) => Number.parseInt(channel, 16));
+    assert.ok(Math.max(...channels) - Math.min(...channels) <= 24, "Color must remain neutral");
+    return channels.reduce((total, channel) => total + channel, 0) / channels.length;
+  };
+  const lightBackground = neutralColor(/\.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #([\da-f]{6});/);
+  const darkBackground = neutralColor(/\.dark \.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #([\da-f]{6});/);
+  assert.ok(lightBackground > 220);
+  assert.ok(darkBackground < 60);
   assert.doesNotMatch(css, /--top-mentor-backdrop/);
-  assert.match(css, /\.top-mentor-ranking-eyebrow\s*\{\s*color: #686c72;/);
-  assert.match(css, /\.dark \.top-mentor-ranking-eyebrow\s*\{\s*color: #a1a5ad;/);
+  const lightLabel = neutralColor(/\.top-mentor-ranking-eyebrow\s*\{\s*color: #([\da-f]{6});/);
+  const darkLabel = neutralColor(/\.dark \.top-mentor-ranking-eyebrow\s*\{\s*color: #([\da-f]{6});/);
+  assert.ok(lightLabel > 80 && lightLabel < 130);
+  assert.ok(darkLabel > 140 && darkLabel < 190);
   for (const metal of ["gold", "silver", "bronze"]) {
     assert.ok(css.includes(`.top-mentor-podium-column--${metal}`));
   }
