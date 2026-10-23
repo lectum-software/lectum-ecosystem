@@ -693,3 +693,4 @@ Formato recomendado:
 - [ADR-0628 — Coordenacao temporal das orientacoes de navegacao](0628-tempo-orientacoes-navegacao.md)
 - [ADR-0629 — Rotulos e tipografia dos analytics](0629-tipografia-analytics.md)
 - [ADR-0630 — Favorito transitorio e nascimento](0630-favorito-transitorio-nascimento.md)
+- [ADR-0631 — Origem da acao e destinos de notificacoes](0631-origens-analytics-notificacoes.md)

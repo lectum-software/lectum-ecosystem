@@ -8,7 +8,7 @@ import keys from "@/api/cache/keys";
 import { usePatient } from "@/api/callers/patient";
 import { loadFavoriteIds } from "@/api/callers/patient/favorite-ids";
 import type { CommunityAuthor } from "@/api/generator/types/community";
-import { getFavoritePsychologists } from "@/api/req/patient";
+import { captureFavoriteAction, getFavoritePsychologists } from "@/api/req/patient";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { FavoriteHeart } from "@/components/ui/favorite-heart";
 import { RelationshipButton } from "@/components/ui/relationship-button";
@@ -40,7 +40,16 @@ export const FeedFavoriteButton = ({
   const pending =
     useIsMutating({
       mutationKey: keys.patient.favoriteMutation(viewerId ?? "guest"),
-      predicate: (mutation) => mutation.state.variables === id,
+      predicate: (mutation) => {
+        const variables = mutation.state.variables;
+        return (
+          variables === id ||
+          (typeof variables === "object" &&
+            variables !== null &&
+            "id" in variables &&
+            variables.id === id)
+        );
+      },
     }) > 0;
   const ownProfile = viewerId === id;
   const favorited = favorites.data?.includes(id) ?? false;
@@ -56,7 +65,7 @@ export const FeedFavoriteButton = ({
       });
       return;
     }
-    favoritePsychologist.mutate(id, {
+    favoritePsychologist.mutate(captureFavoriteAction(id), {
       onSuccess: (data) => {
         if (data.favorited) setConfirmation(confirmationKey);
       },

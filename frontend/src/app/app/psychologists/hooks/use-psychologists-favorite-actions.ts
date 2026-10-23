@@ -61,11 +61,16 @@ export const usePsychologistsFavoriteActions = ({
       }));
 
       if (nextFavorited) {
-        favoritePsychologist.mutate(psychologistId, {
+        const action = captureFavoriteAction(psychologistId);
+        favoritePsychologist.mutate(action, {
           onError: clearFavoriteOverride,
           onSuccess: () => {
             clearFavoriteOverride();
-            trackPresentationVideoAction("psychologist_video_favorite", psychologistId);
+            trackPresentationVideoAction(
+              "psychologist_video_favorite",
+              psychologistId,
+              action.originPath,
+            );
           },
         });
         return;
@@ -108,8 +113,8 @@ export const usePsychologistsFavoriteActions = ({
   }, [conversion, currentUserId, favoriteOverrides, psychologists, toggleFavorite]);
 
   const favoritePendingId =
-    favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
-      ? favoritePsychologist.variables
+    favoritePsychologist.isPending && favoritePsychologist.variables
+      ? favoritePsychologist.variables.id
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
         : null;
@@ -156,3 +161,5 @@ export const usePsychologistsFavoriteActions = ({
 };
 
 export type PsychologistsFavoriteActions = ReturnType<typeof usePsychologistsFavoriteActions>;
+
+import { captureFavoriteAction } from "@/api/req/patient";

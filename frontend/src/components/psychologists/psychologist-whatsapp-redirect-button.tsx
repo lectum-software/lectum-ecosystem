@@ -13,7 +13,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { getCurrentAnalyticsPath, normalizeAnalyticsPath } from "@/utils/analytics-path";
+import { getCurrentInteractionPath, interactionAnalyticsPath } from "@/utils/analytics-path";
 import { formatCrpLabel } from "@/utils/crp";
 import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -390,7 +390,9 @@ export const PsychologistWhatsAppRedirectButton = ({
           display_mode: getDisplayMode(),
           occurred_at: new Date().toISOString(),
           page_kind: trackingContext?.pageKind,
-          path: normalizeAnalyticsPath(trackingContext?.path ?? getCurrentAnalyticsPath()),
+          path: interactionAnalyticsPath(
+            getCurrentInteractionPath() ?? trackingContext?.path ?? "/",
+          ),
           session_id: analyticsIdentity.sessionId,
           target_id: trackingContext?.targetId ?? undefined,
           target_type: trackingContext?.targetType ?? undefined,

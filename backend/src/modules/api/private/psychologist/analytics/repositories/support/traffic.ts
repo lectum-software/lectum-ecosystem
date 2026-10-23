@@ -17,6 +17,7 @@ import type {
 } from "../../DTOs/IAnalyticsDTO";
 
 import { percentage } from "./math";
+import { originGroup } from "./timeline";
 
 export const RETENTION_BUCKETS = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
 
@@ -60,6 +61,7 @@ export type PsychologistWhatsappActionEvent = {
 
 export type FavoriteReceivedEvent = {
   createdAt: Date;
+  origin_path: string | null;
 };
 
 export type PsychologistCommunityReference = {
@@ -238,6 +240,7 @@ export const buildPresentationVideoTrafficBreakdown = (
   for (const action of actions) {
     if (action.action_type !== PROFILE_VIDEO_WHATSAPP_ACTION) continue;
 
+    if (originGroup(action.path) !== "presentation_video") continue;
     const sourceId = hasDirectorySelectedFilterParams(action.path) ? "search_results" : "explore";
     const group = groups.get(sourceId);
     if (!group) continue;
@@ -350,14 +353,9 @@ export const buildTrafficBreakdownItem = (input: {
 });
 
 export const isCommunityTopMentorsTrafficPath = (path: string | null, pageKind?: string | null) => {
-  const normalized = (path ?? "").toLowerCase();
-  const normalizedPageKind = (pageKind ?? "").toLowerCase();
-
-  return (
-    normalizedPageKind === "community_top_mentors" ||
-    normalized.includes("/comunidades/top-mentores") ||
-    normalized.includes("/community/top-mentors") ||
-    normalized.includes("traffic_origin=community_top_mentors")
+  if (!path) return pageKind === "community_top_mentors";
+  return /^\/(?:app\/)?(?:comunidades\/top-mentores|community\/top-mentors)\/?$/.test(
+    path.split(/[?#]/)[0],
   );
 };
 
@@ -405,9 +403,7 @@ export const buildCommunityTrafficBreakdown = (
 };
 
 export const isFavoritesTrafficPath = (path: string | null) => {
-  const normalized = (path ?? "").toLowerCase();
-
-  return normalized.includes("/favorites") || normalized.includes("/favoritos");
+  return originGroup(path) === "favorites";
 };
 
 export const toTrafficSources = (input: {
@@ -435,25 +431,38 @@ export const toTrafficSources = (input: {
       !isFavoritesTrafficPath(action.path) &&
       !isCommunityTopMentorsTrafficPath(action.path, action.page_kind),
   ).length;
-  const favoritesFromVideo = presentationVideoActions.filter(
-    (action) => action.action_type === "psychologist_video_favorite",
-  ).length;
-  const favoritesFromProfile = Math.max(0, input.favoriteEvents.length - favoritesFromVideo);
+  const favoriteCount = (origin: ReturnType<typeof originGroup>) =>
+    input.favoriteEvents.filter((event) => originGroup(event.origin_path) === origin).length;
   const favoriteBreakdown = [
     buildTrafficBreakdownItem({
       id: "favorites_from_profile",
       label: "Pelo perfil",
-      description: "Favoritos recebidos no perfil ou sem origem de vídeo identificada.",
+      description: "Favoritos recebidos no perfil.",
       metric: "favorites",
-      value: favoritesFromProfile,
+      value: favoriteCount("profile"),
     }),
     buildTrafficBreakdownItem({
       id: "favorites_from_video",
       label: "Pelo vídeo de apresentação",
       description: "Favoritos registrados a partir do vídeo de apresentação.",
       metric: "favorites",
-      value: favoritesFromVideo,
+      value: favoriteCount("presentation_video"),
     }),
+    ...(
+      [
+        ["communities", "favorites_from_communities", "Pelas comunidades"],
+        ["favorites", "favorites_from_favorites", "Pelos favoritos"],
+        ["unknown", "favorites_from_unknown", "Origem não identificada"],
+      ] as const
+    ).map(([origin, id, label]) =>
+      buildTrafficBreakdownItem({
+        id,
+        label,
+        description: label,
+        metric: "favorites",
+        value: favoriteCount(origin),
+      }),
+    ),
   ];
   const profileBreakdown = [
     buildTrafficBreakdownItem({

@@ -337,7 +337,7 @@ export const hashVideoSessionStorageKey = (value: string) => {
 };
 
 export const createVideoSessionKey = (profileId: string, videoUrl: string) => {
-  const storageKey = `lectum:presentation-video-session:${profileId}:${hashVideoSessionStorageKey(videoUrl)}`;
+  const storageKey = `lectum:presentation-video-session:v2:${profileId}:profile:${hashVideoSessionStorageKey(videoUrl)}`;
 
   try {
     const stored = window.sessionStorage.getItem(storageKey);

@@ -146,6 +146,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
       }
 
       const body: DirectoryPsychologistVideoWatchPayload = {
+        origin_path: `/psicologos/${profile.id}`,
         session_key: sessionKeyRef.current,
         duration_seconds: durationSeconds,
         watched_seconds: watchedSeconds,

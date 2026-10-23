@@ -686,6 +686,7 @@ ou cortesia manual.
 | 265 | [TASK-265 - Tempo das orientacoes de navegacao](TASK-265-tempo-orientacoes-navegacao.md) | Done | 202 |
 | 266 | [TASK-266 - Tipografia dos analytics](TASK-266-tipografia-analytics.md) | Done | 265 |
 | 267 | [TASK-267 - Favorito transitorio e nascimento](TASK-267-favorito-transitorio-nascimento.md) | Done | 266 |
+| 268 | [TASK-268 - Origens dos analytics e notificacoes](TASK-268-origens-analytics-notificacoes.md) | Done | 267 |
 
 ## Ordem operacional recomendada sem bloqueios
 

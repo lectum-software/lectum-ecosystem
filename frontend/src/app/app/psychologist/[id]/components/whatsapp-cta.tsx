@@ -9,24 +9,15 @@ import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 import { toPsychologistWhatsAppIdentity } from "../modules/support";
 
-export const WhatsAppCta = ({
-  profile,
-  trafficOrigin,
-}: {
-  profile: DirectoryPsychologistProfile;
-  trafficOrigin?: string | null;
-}) => {
+export const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   if (!profile.whatsapp_url) {
     return null;
   }
 
   const whatsappIdentity = toPsychologistWhatsAppIdentity(profile);
   const whatsappName = getPsychologistWhatsappDisplayName(whatsappIdentity);
-  const whatsappTrackingPath =
-    trafficOrigin === "community_top_mentors" ? "/comunidades/top-mentores" : undefined;
   const whatsappTrackingContext = {
     pageKind: "psychologist_profile",
-    ...(whatsappTrackingPath ? { path: whatsappTrackingPath } : {}),
     targetId: profile.id,
     targetType: "psychologist",
   };

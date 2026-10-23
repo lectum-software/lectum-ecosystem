@@ -1,3 +1,5 @@
+import { getCurrentInteractionPath } from "@/utils/analytics-path";
+
 export const SWIPE_HINT_NUDGE_DURATION_MS = 760;
 
 export type VideoProgressState = {
@@ -26,8 +28,7 @@ export type FeedVideoAnalyticsState = {
 };
 
 export const createEmptyFeedVideoAnalyticsState = (): FeedVideoAnalyticsState => ({
-  originPath:
-    typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined,
+  originPath: getCurrentInteractionPath(),
   completed: false,
   lastPosition: 0,
   lastSentAt: 0,
@@ -57,8 +58,12 @@ const hashVideoSessionStorageKey = (value: string) => {
   return (hash >>> 0).toString(36);
 };
 
-export const createVideoSessionKey = (profileId: string, videoUrl: string) => {
-  const storageKey = `lectum:presentation-video-session:${profileId}:${hashVideoSessionStorageKey(videoUrl)}`;
+export const createVideoSessionKey = (
+  profileId: string,
+  videoUrl: string,
+  originPath = getCurrentInteractionPath(),
+) => {
+  const storageKey = `lectum:presentation-video-session:v2:${profileId}:${hashVideoSessionStorageKey(JSON.stringify([videoUrl, originPath]))}`;
 
   try {
     const stored = window.sessionStorage.getItem(storageKey);

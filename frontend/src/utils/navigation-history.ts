@@ -14,8 +14,10 @@ type BrowserHistoryState = {
 const APP_NAVIGATION_HISTORY_KEY = "lectum.appNavigationHistory";
 const APP_NAVIGATION_HISTORY_LIMIT = 25;
 const AUTH_NAVIGATION_BOUNDARY_KEY = "lectum.authNavigationBoundary";
+let documentNavigationHistory: string[] = [];
 
 export const resetNavigationAfterAuthentication = () => {
+  documentNavigationHistory = [];
   writeAppNavigationHistory([]);
   if (typeof window === "undefined") return;
   try {
@@ -78,6 +80,19 @@ const getPreviousAppHref = () => {
 };
 
 export const getPreviousAppNavigationHref = () => getPreviousAppHref();
+
+// Attribution must not reuse another document's persisted navigation trail.
+export const getProfileViewNavigationOrigin = () => {
+  if (typeof window === "undefined") return null;
+  const current = getCurrentAppHref();
+  const history = [...documentNavigationHistory];
+  while (history.length && history[history.length - 1] === current) history.pop();
+  const previous = history[history.length - 1];
+  if (previous) return previous.startsWith("/auth/") ? null : previous;
+  if (!hasSameOriginReferrer()) return null;
+  const referrer = new URL(document.referrer);
+  return referrer.pathname === current ? null : referrer.pathname;
+};
 
 const hasSameOriginReferrer = () => {
   if (typeof window === "undefined" || !document.referrer) return false;
@@ -144,6 +159,11 @@ export const navigateBackWithFallback = (
 export const recordAppNavigationPoint = (href?: string) => {
   const currentHref = normalizeSafeInternalRedirect(href ?? getCurrentAppHref());
   if (!currentHref) return;
+  if (documentNavigationHistory.at(-1) !== currentHref) {
+    documentNavigationHistory = [...documentNavigationHistory, currentHref].slice(
+      -APP_NAVIGATION_HISTORY_LIMIT,
+    );
+  }
 
   const history = readAppNavigationHistory();
   const lastHref = history[history.length - 1];

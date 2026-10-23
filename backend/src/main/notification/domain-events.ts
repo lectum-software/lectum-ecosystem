@@ -37,7 +37,6 @@ type DispatchEvent = {
   props?: Record<string, unknown>;
 };
 
-const professionalProfileRedirect = (psychologistId: string) => `/psicologos/${psychologistId}`;
 const professionalReviewsRedirect = "/app/profissional/avaliacoes";
 const professionalAnalyticsRedirect = "/app/profissional/estatisticas";
 const communityPostRedirect = (communitySlug: string, postId: string) =>
@@ -128,7 +127,7 @@ export const notifyNewPsychologistFavorite = async (params: {
     actorId: params.actorId,
     messageKey: "novo_favorito",
     recipientIds: [params.psychologistId],
-    redirect: professionalProfileRedirect(params.psychologistId),
+    redirect: professionalAnalyticsRedirect,
     sourceId: params.favoriteId,
     sourceType: "psychologist_favorite",
     props: {

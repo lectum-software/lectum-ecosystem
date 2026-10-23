@@ -7,6 +7,7 @@ import {
   subscribeDocumentAttention,
 } from "@/components/analytics/attention";
 import { playVideoWithActiveDocument } from "@/lib/video-playback";
+import { getCurrentInteractionPath } from "@/utils/analytics-path";
 import { resetVideoElementToStart } from "../modules/directory-url";
 import {
   clampNumber,
@@ -173,7 +174,11 @@ export const usePsychologistsVideoAnalytics = ({
     (profileId: string, videoUrl: string) => {
       const current = feedVideoAnalyticsRef.current;
 
-      if (current.profileId === profileId && current.videoUrl === videoUrl) {
+      if (
+        current.profileId === profileId &&
+        current.videoUrl === videoUrl &&
+        current.originPath === getCurrentInteractionPath()
+      ) {
         if (!current.sessionKey) {
           current.sessionKey = createVideoSessionKey(profileId, videoUrl);
         }

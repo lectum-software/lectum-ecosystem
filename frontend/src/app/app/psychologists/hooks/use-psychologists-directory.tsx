@@ -271,7 +271,11 @@ export const usePsychologistsDirectory = () => {
   ]);
 
   const trackPresentationVideoAction = useCallback(
-    (actionType: ImportantActionTrackingRequest["action_type"], psychologistId: string) => {
+    (
+      actionType: ImportantActionTrackingRequest["action_type"],
+      psychologistId: string,
+      originPath = currentAnalyticsPath(),
+    ) => {
       const analyticsIdentity = getOrCreateAnalyticsIdentity();
       if (!analyticsIdentity) return;
 
@@ -281,7 +285,7 @@ export const usePsychologistsDirectory = () => {
           display_mode: getDisplayMode(),
           occurred_at: new Date().toISOString(),
           page_kind: "psychologists",
-          path: currentAnalyticsPath(),
+          path: originPath,
           session_id: analyticsIdentity.sessionId,
           target_id: psychologistId,
           target_type: "psychologist",

@@ -28,6 +28,20 @@ test("missing attribution is never relabeled as community or video", () => {
   assert.equal(originGroup("/psicologos?specialty=ansiedade"), "presentation_video");
   assert.equal(originGroup("/comunidades/ansiedade/publicacao/123"), "communities");
 });
+
+test("origins match route boundaries, aliases and query-independent surfaces", () => {
+  for (const [path, expected] of [
+    ["/", "communities"],
+    ["/app/community/anxiety", "communities"],
+    ["/psicologos/?q=ansiedade", "presentation_video"],
+    ["/psicologos/123?returnTo=/favorites&traffic_origin=community_top_mentors", "profile"],
+    ["/unknown?returnTo=/favoritos", "unknown"],
+    ["/favoritos-extra", "unknown"],
+    ["//external.test/psicologos", "unknown"],
+    ["https://external.test/psicologos", "unknown"],
+  ])
+    assert.equal(originGroup(path), expected, path);
+});
 test("WhatsApp deduplicates within each day, keeping distinct legacy visitors", () => {
   const createdAt = new Date("2026-10-19T12:00:00Z");
   const event = { id: "1", user_id: "u1", visitor_key: null, createdAt };

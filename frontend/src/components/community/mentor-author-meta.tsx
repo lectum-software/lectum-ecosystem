@@ -44,10 +44,10 @@ export const MentorAuthorMeta = ({
     <span className="block min-w-0 whitespace-normal">
       <span
         className="block leading-snug"
-        title={communityName ? `Top ${rank} mentor na comunidade ${communityName}` : undefined}
+        title={communityName ? `Top ${rank} Mentor na comunidade ${communityName}` : undefined}
       >
         {typeLabel ? <>{typeLabel} &bull; </> : null}
-        Top {rank} mentor{" "}
+        Top {rank} Mentor{" "}
         {theme
           ? `de ${theme}`
           : communityName
