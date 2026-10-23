@@ -1,5 +1,16 @@
 export const ANALYTICS_PATH = "/app/profissional/estatisticas";
 export const ANALYTICS_SCROLL_KEY = "lectum.analytics.return-scroll";
+export const ANALYTICS_METRICS = [
+  "whatsapp_clicks",
+  "video_views",
+  "profile_views",
+  "favorites_received",
+  "reviews_received",
+  "acquired_patients",
+];
+export function analyticsRequestedMetric(value: string | null | undefined) {
+  return value && ANALYTICS_METRICS.includes(value) ? value : "whatsapp_clicks";
+}
 export function analyticsReturnHref(value: string | null) {
   if (!value) return null;
   try {

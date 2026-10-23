@@ -1,11 +1,28 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  ANALYTICS_METRICS,
   ANALYTICS_SCROLL_KEY,
+  analyticsRequestedMetric,
   analyticsReturnHref,
   rememberAnalyticsPosition,
 } from "./analytics-return.ts";
 import { myPostsTabHref } from "./my-posts-tab.ts";
+
+test("direct metric links use an allowlist without requiring restoration", () => {
+  for (const metric of ANALYTICS_METRICS) assert.equal(analyticsRequestedMetric(metric), metric);
+  for (const metric of [null, undefined, "", "unknown", "constructor", "FAVORITES_RECEIVED"]) {
+    assert.equal(analyticsRequestedMetric(metric), "whatsapp_clicks");
+  }
+  const source = readFileSync(
+    new URL("../app/app/professional/analytics/logic.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /analyticsRequestedMetric\(searchParams.get\("metric"\)\)/);
+  assert.match(source, /ProfessionalAnalyticsPage key=\{searchParams.get\("metric"\)/);
+  assert.match(source, /navigateBackWithFallback\(router, "\/app\/perfil"\)/);
+});
 
 test("analytics return keeps period across publication tabs and rejects other origins", () => {
   const target =

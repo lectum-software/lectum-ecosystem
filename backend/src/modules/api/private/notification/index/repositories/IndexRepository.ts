@@ -426,6 +426,11 @@ export class IndexRepository implements IIndexRepository {
 
       return {
         ...item,
+        redirect: professionalAnalyticsNotificationRedirect(
+          item.message_key,
+          "in_app",
+          item.redirect,
+        ),
         actor: null,
       };
     });

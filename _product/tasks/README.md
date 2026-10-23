@@ -688,6 +688,7 @@ ou cortesia manual.
 | 267 | [TASK-267 - Favorito transitorio e nascimento](TASK-267-favorito-transitorio-nascimento.md) | Done | 266 |
 | 268 | [TASK-268 - Origens dos analytics e notificacoes](TASK-268-origens-analytics-notificacoes.md) | Done | 267 |
 | 269 | [TASK-269 - Top Mentores com fundo perola](TASK-269-top-mentores-perola.md) | Done | 268 |
+| 270 | [TASK-270 - Notificacoes selecionam a metrica dos Analytics](TASK-270-notificacoes-metrica-analytics.md) | Done | 269 |
 
 ## Ordem operacional recomendada sem bloqueios
 
