@@ -37,5 +37,19 @@ Validar mobile-first em 390px e desktop em 1440px.
 
 ## Deploy e rollback
 
+Refinamento solicitado em 2026-10-23: suavizar apenas a cor da linha auxiliar
+para cinza #686c72 (claro) e #a1a5ad (escuro), preservando tamanho e peso.
+Contraste minimo superior a 4.5:1 contra os extremos dos fundos correspondentes.
+
+Previa ficticia solicitada pelo usuario: comunidade local isolada
+previa-layout-top-mentores, cinco perfis com sobrenome Exemplo e iniciais.
+Sem mocks no frontend ou alteracao do ranking. Script ignorado
+.tmp/task269-layout-preview.ts valida host, porta e nome do banco local;
+modo cleanup remove exclusivamente os IDs task269-layout-preview.
+Dados ficam disponiveis para revisao visual, sem publicacao remota.
+Refinamento 0.1.708: validacao visual clara/escura aprovada em 320/390/1440px.
+Build adicional compilou, mas foi interrompido apos ENOSPC recorrente no cache
+local. Nao considerar esse build concluido; repetir antes da publicacao.
+
 Somente frontend; sem banco, dependencia, env nova ou alteracao de regra.
 Rollback pelo codigo anterior. Sem push, merge ou deploy automatico.

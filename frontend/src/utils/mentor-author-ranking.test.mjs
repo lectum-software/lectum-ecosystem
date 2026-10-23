@@ -20,6 +20,8 @@ test("neutral ranking styles retain a dark variant without changing podium metal
   assert.match(css, /\.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #eceeef;/);
   assert.match(css, /\.dark \.top-mentor-ranking-header\s*\{[^}]*--top-mentor-pearl: #27292d;/);
   assert.doesNotMatch(css, /--top-mentor-backdrop/);
+  assert.match(css, /\.top-mentor-ranking-eyebrow\s*\{\s*color: #686c72;/);
+  assert.match(css, /\.dark \.top-mentor-ranking-eyebrow\s*\{\s*color: #a1a5ad;/);
   for (const metal of ["gold", "silver", "bronze"]) {
     assert.ok(css.includes(`.top-mentor-podium-column--${metal}`));
   }

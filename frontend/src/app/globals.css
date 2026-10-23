@@ -699,7 +699,7 @@ video::backdrop {
 }
 
 .top-mentor-ranking-eyebrow {
-  color: #45474c;
+  color: #686c72;
 }
 
 .dark .top-mentor-ranking-header {
@@ -708,7 +708,7 @@ video::backdrop {
 }
 
 .dark .top-mentor-ranking-eyebrow {
-  color: var(--foreground);
+  color: #a1a5ad;
 }
 
 .top-mentor-podium-column > .top-mentor-column-name {

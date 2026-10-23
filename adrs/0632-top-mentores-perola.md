@@ -14,6 +14,9 @@ para branco, terminando no fundo da pagina. No tema escuro, usar cinzas neutros
 com transicao para o fundo existente. Preservar ouro, prata e bronze do podio.
 Controles recebem primeiro plano contrastante sobre superficie clara.
 
+Refinamento visual aprovado: linha auxiliar cinza #686c72 no tema claro e
+#a1a5ad no escuro para reduzir peso visual sem alterar fonte, tamanho ou peso.
+
 ## Consequencias
 
 Tratamento igual entre comunidades sem modificar classificacao, dados ou rotas.
