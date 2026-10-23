@@ -18,8 +18,10 @@ import {
   COMMUNITY_ANALYTICS_SOURCE,
   COMMUNITY_WHATSAPP_POST_TARGET_TYPES,
   COMMUNITY_WHATSAPP_REPLY_TARGET_TYPES,
+  isCommunityTopMentorsTrafficPath,
 } from "../support/traffic";
 import { distinctWhatsappActions } from "../support/whatsapp-actions";
+import { whatsappOrigin } from "../support/whatsapp-origins";
 import { buildCommunityHighlights } from "./community-highlights";
 
 export class PsychologistAnalyticsCommunityRepository {
@@ -111,7 +113,7 @@ export class PsychologistAnalyticsCommunityRepository {
       total_whatsapp_clicks: 0,
     };
 
-    const [postItems, replyItems, authoredPosts, authoredReplies, topMentorWhatsappActions] =
+    const [postItems, replyItems, authoredPosts, authoredReplies, rawTopMentorWhatsappActions] =
       await Promise.all([
         prisma.community_post.findMany({
           where: {
@@ -251,10 +253,15 @@ export class PsychologistAnalyticsCommunityRepository {
             id: true,
             user_id: true,
             visitor_id: true,
+            path: true,
+            page_kind: true,
           },
         }),
       ]);
 
+    const topMentorWhatsappActions = rawTopMentorWhatsappActions.filter((action) =>
+      isCommunityTopMentorsTrafficPath(action.path, action.page_kind),
+    );
     const postIdToCommunityId = new Map(
       authoredPosts.map((post) => [post.id, post.community_id] as const),
     );
@@ -297,7 +304,7 @@ export class PsychologistAnalyticsCommunityRepository {
       });
     }
 
-    const whatsappActions =
+    const rawWhatsappActions =
       targetFilters.length > 0
         ? await prisma.important_action_event.findMany({
             where: {
@@ -329,10 +336,16 @@ export class PsychologistAnalyticsCommunityRepository {
               visitor_id: true,
               target_id: true,
               target_type: true,
+              action_type: true,
+              page_kind: true,
+              path: true,
             },
           })
         : [];
 
+    const whatsappActions = rawWhatsappActions.filter(
+      (action) => whatsappOrigin(action) === "communities",
+    );
     const metricsByCommunityId = new Map<
       string,
       { posts_published: number; replies_published: number; whatsapp_clicks: number }

@@ -46,7 +46,7 @@ export const MentorBadge = ({
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const rank = resolveMentorBadgeRank(badge ?? "");
   const tone = resolveMentorBadgeTone(rank);
-  const tooltip = `Top ${rank} mentor nesta comunidade`;
+  const tooltip = `Top ${rank} Mentor nesta comunidade`;
   const dimensions = medalDimensions[tone];
   const avatarSize = size === "avatar";
 

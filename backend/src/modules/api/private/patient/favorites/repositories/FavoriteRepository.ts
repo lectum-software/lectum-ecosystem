@@ -443,6 +443,14 @@ export class FavoriteRepository implements IFavoriteRepository {
             data: {
               deleted: false,
               deletedAt: null,
+              ...(existing.deleted
+                ? {
+                    createdAt: new Date(),
+                    origin_path: originPath
+                      ? sanitizeAnalyticsPathWithTrafficQuery(originPath)
+                      : null,
+                  }
+                : {}),
             },
             select: { id: true },
           })

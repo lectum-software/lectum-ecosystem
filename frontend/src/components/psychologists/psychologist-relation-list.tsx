@@ -512,12 +512,12 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
       return;
     }
 
-    favoritePsychologist.mutate(psychologist.id);
+    favoritePsychologist.mutate(captureFavoriteAction(psychologist.id));
   };
 
   const favoritePendingId =
-    favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
-      ? favoritePsychologist.variables
+    favoritePsychologist.isPending && favoritePsychologist.variables
+      ? favoritePsychologist.variables.id
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
         : null;
@@ -602,3 +602,5 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     </PrivateTemplate>
   );
 }
+
+import { captureFavoriteAction } from "@/api/req/patient";

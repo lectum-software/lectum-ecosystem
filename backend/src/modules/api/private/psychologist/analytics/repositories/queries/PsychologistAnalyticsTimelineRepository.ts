@@ -67,6 +67,7 @@ export async function buildAnalyticsChartData(
       { id: "presentation_video", label: "Vídeo de apresentação" },
       { id: "communities", label: "Comunidades" },
       extra,
+      ...(extra.id === "profile" ? [{ id: "favorites", label: "Favoritos" }] : []),
       { id: "unknown", label: "Outras / não identificadas" },
     ].map((series) => ({
       ...series,
@@ -74,7 +75,9 @@ export async function buildAnalyticsChartData(
         events
           .filter((event) => {
             const origin = originGroup(event.origin_path);
-            const assigned = ["presentation_video", "communities", extra.id].includes(origin)
+            const assigned = ["presentation_video", "communities", extra.id, "favorites"].includes(
+              origin,
+            )
               ? origin
               : "unknown";
             return assigned === series.id;
@@ -116,7 +119,7 @@ export async function buildAnalyticsChartData(
       },
       profile_views: origins(
         profiles.map((event) => ({ ...event, origin_path: event.search_context_path })),
-        { id: "favorites", label: "Página de favoritos" },
+        { id: "favorites", label: "Favoritos" },
       ),
       favorites_received: origins(favorites, { id: "profile", label: "Perfil" }),
       whatsapp_clicks: whatsappTimeline(whatsappOriginGroups(actions.allWhatsapp)),

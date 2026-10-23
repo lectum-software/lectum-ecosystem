@@ -687,15 +687,28 @@ video::backdrop {
 }
 
 .top-mentor-ranking-header {
+  --top-mentor-pearl: #eceeef;
+  --top-mentor-highlight: #ffffff;
   overflow: hidden;
   background: linear-gradient(
     to bottom,
-    var(--top-mentor-backdrop) 0%,
-    var(--top-mentor-backdrop) 20%,
-    color-mix(in srgb, var(--top-mentor-backdrop) 65%, var(--background)) 50%,
-    color-mix(in srgb, var(--top-mentor-backdrop) 20%, var(--background)) 75%,
+    var(--top-mentor-pearl) 0%,
+    var(--top-mentor-highlight) 60%,
     var(--background) 95%
   );
+}
+
+.top-mentor-ranking-eyebrow {
+  color: #686c72;
+}
+
+.dark .top-mentor-ranking-header {
+  --top-mentor-pearl: #27292d;
+  --top-mentor-highlight: #1b1d21;
+}
+
+.dark .top-mentor-ranking-eyebrow {
+  color: #a1a5ad;
 }
 
 .top-mentor-podium-column > .top-mentor-column-name {

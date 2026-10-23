@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePsychologistAnalytics } from "@/api/callers/psychologist-analytics";
 import type {
@@ -13,6 +13,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { PrivateTemplate } from "@/templates/private";
 import { ANALYTICS_PATH, ANALYTICS_SCROLL_KEY } from "@/utils/analytics-return";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { AnalyticsOverview } from "./components/analytics-overview";
 import { CommunityActivitySection } from "./components/community-activity";
 import { PeriodTabs, PremiumAnalyticsBanner } from "./components/period-and-metrics";
@@ -30,6 +31,7 @@ const hasFullAnalytics = (
 ): value is PsychologistAnalyticsResponse => value?.access.mode === "full" && "metrics" in value;
 
 export const ProfessionalAnalyticsLogic = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const returning = searchParams.get("restore") === "1";
   const requestedPeriod = searchParams.get("period") ?? "30d";
@@ -117,7 +119,11 @@ export const ProfessionalAnalyticsLogic = () => {
         id="analytics-page"
         className="mx-auto grid w-full max-w-[430px] grid-cols-[minmax(0,1fr)] gap-4 md:max-w-3xl"
       >
-        <AppPageHeader backLabel="Voltar para perfil" title="Meus Analytics" />
+        <AppPageHeader
+          backLabel="Voltar"
+          onBack={() => navigateBackWithFallback(router, "/app/perfil")}
+          title="Meus Analytics"
+        />
         {isAnalyticsPreview ? <PremiumAnalyticsBanner /> : null}
 
         <PeriodTabs

@@ -296,7 +296,7 @@ export const PsychologistProfileLogic = () => {
       return;
     }
 
-    favoritePsychologist.mutate(profile.id);
+    favoritePsychologist.mutate(captureFavoriteAction(profile.id));
   };
 
   useEffect(() => {
@@ -312,7 +312,7 @@ export const PsychologistProfileLogic = () => {
     if (!psychologistId || psychologistId !== profile.id || profile.favorited) return;
     if (currentUser?.id && currentUser.id === profile.id) return;
 
-    favoritePsychologist.mutate(profile.id);
+    favoritePsychologist.mutate(captureFavoriteAction(profile.id));
   }, [conversion, currentUser?.id, favoritePsychologist, isReadOnly, profile]);
 
   const shareProfile = async () => {
@@ -369,8 +369,8 @@ export const PsychologistProfileLogic = () => {
   };
 
   const favoritePendingId =
-    favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
-      ? favoritePsychologist.variables
+    favoritePsychologist.isPending && favoritePsychologist.variables
+      ? favoritePsychologist.variables.id
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
         : null;
@@ -535,9 +535,7 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                 </div>
 
-                {!isReadOnly ? (
-                  <WhatsAppCta profile={profile} trafficOrigin={urlParams.get("traffic_origin")} />
-                ) : null}
+                {!isReadOnly ? <WhatsAppCta profile={profile} /> : null}
               </>
             ) : null}
           </div>
@@ -546,3 +544,5 @@ export const PsychologistProfileLogic = () => {
     </PrivateTemplate>
   );
 };
+
+import { captureFavoriteAction } from "@/api/req/patient";

@@ -3,7 +3,7 @@ import test from "node:test";
 import { distinctWhatsappPeople } from "@/modules/whatsapp-reports/people";
 import { rankCommunityHighlights } from "./community-highlights";
 import { whatsappActionSummary } from "./whatsapp-actions";
-import { whatsappOriginGroups } from "./whatsapp-origins";
+import { whatsappOrigin, whatsappOriginGroups } from "./whatsapp-origins";
 import { whatsappTimeline } from "./whatsapp-timeline";
 
 const event = (id: string, target = "reply-a", user = "person-a", day = 19) => ({
@@ -87,4 +87,23 @@ test("unidentified origin is retained and top mentors belong to communities once
   assert.equal(groups.find((group) => group.id === "unknown")?.events.length, 1);
   assert.equal(groups.find((group) => group.id === "communities")?.events.length, 1);
   assert.equal(groups.flatMap((group) => group.events).length, 2);
+});
+
+test("WhatsApp uses the action surface, not return URLs or inherited ranking context", () => {
+  const action = { ...event("one"), target_type: "psychologist" };
+  for (const [path, expected] of [
+    ["/psicologos/a?traffic_origin=community_top_mentors", "profile"],
+    ["/psicologos/a?returnTo=/favoritos", "profile"],
+    ["/app/favoritos", "favorites"],
+    ["/unknown?returnTo=/comunidades/top-mentores", "unknown"],
+  ])
+    assert.equal(whatsappOrigin({ ...action, path }), expected, path);
+  assert.equal(
+    whatsappOrigin({
+      ...action,
+      path: "/psicologos/a",
+      action_type: "psychologist_video_whatsapp_click",
+    }),
+    "profile",
+  );
 });

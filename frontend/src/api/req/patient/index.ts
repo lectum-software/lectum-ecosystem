@@ -118,15 +118,21 @@ export const getFavoritePsychologists = async (query: PatientRelationQuery = {})
   return handleReq<PatientRelationListResponse>(handle);
 };
 
-export const favoritePsychologist = async (id: string) => {
+export const captureFavoriteAction = (id: string) => ({
+  id,
+  originPath:
+    typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined,
+});
+
+export const favoritePsychologist = async ({
+  id,
+  originPath,
+}: ReturnType<typeof captureFavoriteAction>) => {
   const handle = callEndpoint({
     route: "/api/private/user/favorites/:id",
     method: "POST",
     body: {
-      origin_path:
-        typeof window !== "undefined"
-          ? window.location.pathname + window.location.search
-          : undefined,
+      origin_path: originPath,
     },
     params: { id },
   });

@@ -268,8 +268,8 @@ export const usePatient = ({
 
   const favoritePsychologist = useMutation({
     mutationKey: keys.patient.favoriteMutation(viewerId ?? "guest"),
-    mutationFn: (id: string) => api.favoritePsychologist(id),
-    onMutate: async (id) => {
+    mutationFn: api.favoritePsychologist,
+    onMutate: async ({ id }) => {
       await Promise.all([
         queryClient.cancelQueries({ queryKey: keys.patient.favoriteIdsRoot() }),
         queryClient.cancelQueries({ queryKey: keys.directory.psychologistsRoot() }),

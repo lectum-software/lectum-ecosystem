@@ -10,10 +10,14 @@ export const originGroup = (
   path: string | null,
 ): "presentation_video" | "communities" | "favorites" | "profile" | "unknown" => {
   if (!path) return "unknown";
-  const pathname = path.split("?")[0];
+  // Match the actual surface, never a route mentioned inside query parameters.
+  if (!path.startsWith("/") || path.startsWith("//")) return "unknown";
+  const pathname = path.split(/[?#]/)[0].replace(/\/+$/, "") || "/";
   if (["/psicologos", "/psychologists", "/app/psicologos", "/app/psychologists"].includes(pathname))
     return "presentation_video";
-  if (/^\/(?:app\/)?(?:comunidades|communities)(?:\/|$)/.test(pathname)) return "communities";
+  if (["/", "/app", "/app/inicio", "/app/home"].includes(pathname)) return "communities";
+  if (/^\/(?:app\/)?(?:comunidades|communities|community)(?:\/|$)/.test(pathname))
+    return "communities";
   if (/^\/(?:app\/)?(?:favorites|favoritos)(?:\/|$)/.test(pathname)) return "favorites";
   if (
     /^\/(?:psicologos|psychologists|app\/(?:psicologo|psychologist|psicologos|psychologists))\/[^/]+\/?$/.test(

@@ -15,7 +15,7 @@ import type {
   DirectoryPsychologistVideoWatchResponse,
 } from "@/api/generator/types/directory";
 import { handleReq } from "@/api/handle";
-import { getPreviousAppNavigationHref } from "@/utils/navigation-history";
+import { getProfileViewNavigationOrigin } from "@/utils/navigation-history";
 
 export const getDirectoryPsychologists = async (query: DirectoryPsychologistsQuery = {}) => {
   const handle = callEndpoint({
@@ -97,7 +97,7 @@ export const createDirectoryPsychologistContactClick = async (id: string) => {
 export const trackDirectoryPsychologistProfileView = async (id: string) => {
   const handle = callEndpoint({
     route: "/api/private/directory/psychologists/:id/view",
-    body: { origin_path: getPreviousAppNavigationHref() ?? undefined },
+    body: { origin_path: getProfileViewNavigationOrigin() ?? undefined },
     method: "POST",
     params: { id },
   });

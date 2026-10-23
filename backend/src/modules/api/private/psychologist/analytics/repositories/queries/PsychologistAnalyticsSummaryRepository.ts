@@ -15,6 +15,7 @@ import {
   percentage,
   toPresentationVideoCards,
 } from "../support/community";
+import { originGroup } from "../support/timeline";
 import {
   buildPresentationVideoSearchTerms,
   buildSearchFilterLabelLookup,
@@ -24,6 +25,7 @@ import {
   toTrafficSources,
 } from "../support/traffic";
 import { whatsappActionSummary } from "../support/whatsapp-actions";
+import { whatsappOrigin } from "../support/whatsapp-origins";
 import { buildAnalyticsComparison } from "./comparison";
 import type { PsychologistAnalyticsCommunityRepository } from "./PsychologistAnalyticsCommunityRepository";
 import { buildAnalyticsChartData } from "./PsychologistAnalyticsTimelineRepository";
@@ -44,7 +46,7 @@ export class PsychologistAnalyticsSummaryRepository {
     };
 
     const [
-      profileViews,
+      profileViewEvents,
       presentationVideoSearchImpressions,
       whatsappClicks,
       reviewsReceived,
@@ -57,7 +59,7 @@ export class PsychologistAnalyticsSummaryRepository {
       communities,
       searchFilterLabelLookup,
     ] = await Promise.all([
-      prisma.profile_view_event.count({
+      prisma.profile_view_event.findMany({
         where: {
           psychologist_id: userId,
           deleted: false,
@@ -74,6 +76,7 @@ export class PsychologistAnalyticsSummaryRepository {
             },
           ],
         },
+        select: { search_context_path: true },
       }),
       prisma.profile_view_event.findMany({
         where: {
@@ -249,11 +252,13 @@ export class PsychologistAnalyticsSummaryRepository {
         },
         select: {
           createdAt: true,
+          origin_path: true,
         },
       }),
       this.dependency.buildCommunities(userId, createdAtWindow),
       buildSearchFilterLabelLookup(),
     ]);
+    const profileViews = profileViewEvents.length;
     const presentationVideoActionEvents = rawPresentationVideoActionEvents;
     const psychologistWhatsappActionEvents = rawPsychologistWhatsappActionEvents;
     const trackedSearchResultImpressions = presentationVideoSearchImpressions.filter((impression) =>
@@ -310,7 +315,20 @@ export class PsychologistAnalyticsSummaryRepository {
         (max, session) => Math.max(max, session.duration_seconds),
         0,
       ) || null;
-    const actionMetrics = countVideoActionEvents(presentationVideoActionEvents);
+    const actionMetrics = countVideoActionEvents(
+      presentationVideoActionEvents.filter(
+        (action) => originGroup(action.path) === "presentation_video",
+      ),
+    );
+    actionMetrics.favorites_from_video = favoriteEvents.filter(
+      (event) => originGroup(event.origin_path) === "presentation_video",
+    ).length;
+    actionMetrics.profile_accesses_from_video = profileViewEvents.filter(
+      (event) => originGroup(event.search_context_path) === "presentation_video",
+    ).length;
+    actionMetrics.whatsapp_clicks_from_video = whatsappClicks.filter(
+      (event) => whatsappOrigin(event) === "presentation_video",
+    ).length;
     const latestVideoEventAt =
       [
         ...currentPresentationVideoSessions.map((session) => session.last_event_at),
