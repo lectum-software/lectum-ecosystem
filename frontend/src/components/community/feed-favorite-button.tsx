@@ -2,7 +2,8 @@
 
 import { useIsMutating, useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import keys from "@/api/cache/keys";
 import { usePatient } from "@/api/callers/patient";
 import { loadFavoriteIds } from "@/api/callers/patient/favorite-ids";
@@ -25,7 +26,10 @@ export const FeedFavoriteButton = ({
   const name = getCommunityAuthorDisplayName(author);
   const conversion = useProgressiveConversion();
   const viewerId = useAppSelector((state) => state.user?.id);
-  const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
+  const [confirmation, setConfirmation] = useState<string | null>(null);
+  const confirmationKey = `${viewerId}:${id}`;
+  const confirming = confirmation === confirmationKey;
+  const { favoritePsychologist } = usePatient({ enableProfile: false });
   const favorites = useQuery({
     queryKey: keys.patient.favoriteIds(viewerId ?? "guest"),
     queryFn: ({ signal }) => loadFavoriteIds(getFavoritePsychologists, signal),
@@ -37,7 +41,7 @@ export const FeedFavoriteButton = ({
     useIsMutating({
       mutationKey: keys.patient.favoriteMutation(viewerId ?? "guest"),
       predicate: (mutation) => mutation.state.variables === id,
-    }) > 0 || unfavoritePsychologist.isPending;
+    }) > 0;
   const ownProfile = viewerId === id;
   const favorited = favorites.data?.includes(id) ?? false;
   const ready = !conversion.isAuthenticated || (Boolean(viewerId) && favorites.isSuccess);
@@ -45,27 +49,38 @@ export const FeedFavoriteButton = ({
   const favorite = useCallback(() => {
     if (author.favorite_available === false) return;
     if (author.read_only) return;
-    if (ownProfile || pending || !ready) return;
+    if (ownProfile || pending || !ready || favorited || confirming) return;
     if (!conversion.isAuthenticated) {
       conversion.requestConversion("trigger_favorito", {
         intent: { type: "favorite_psychologist", payload: { psychologistId: id } },
       });
       return;
     }
-    const mutation = favorited ? unfavoritePsychologist : favoritePsychologist;
-    mutation.mutate(id);
+    favoritePsychologist.mutate(id, {
+      onSuccess: (data) => {
+        if (data.favorited) setConfirmation(confirmationKey);
+      },
+      onError: () => toast.error("Não foi possível favoritar. Tente novamente."),
+    });
   }, [
     author.favorite_available,
     author.read_only,
     conversion,
+    confirmationKey,
+    confirming,
     favoritePsychologist,
     favorited,
     id,
     ownProfile,
     pending,
     ready,
-    unfavoritePsychologist,
   ]);
+
+  useEffect(() => {
+    if (!confirmation) return;
+    const timer = window.setTimeout(() => setConfirmation(null), 900);
+    return () => window.clearTimeout(timer);
+  }, [confirmation]);
 
   useEffect(() => {
     if (!conversion.isAuthenticated || !ready || pending || favorited) return;
@@ -79,15 +94,26 @@ export const FeedFavoriteButton = ({
   if (author.role !== "psicologo" || author.favorite_available === false || !ready || ownProfile) {
     return null;
   }
+  if (confirming) {
+    return (
+      <span
+        className="favorite-confirmation inline-flex h-5 w-6 items-center justify-center"
+        role="status"
+      >
+        <span className="sr-only">Psicólogo adicionado aos favoritos</span>
+        <FavoriteHeart active className={heartClassName ?? "h-4 w-4"} />
+      </span>
+    );
+  }
+  if (favorited) return null;
   return (
     <RelationshipButton
       aria-busy={pending}
-      aria-label={favorited ? `Remover ${name} dos favoritos` : `Favoritar ${name}`}
-      aria-pressed={favorited}
+      aria-label={`Favoritar ${name}`}
+      aria-pressed={false}
       className="favorite-toggle pointer-events-auto border-0"
       disabled={pending || author.read_only}
       size="compact"
-      title={favorited ? `Remover ${name} dos favoritos` : undefined}
       onClick={(event) => {
         event.stopPropagation();
         favorite();
@@ -97,9 +123,6 @@ export const FeedFavoriteButton = ({
       <span aria-hidden="true" className="favorite-toggle-label gap-1">
         <Plus className="h-3 w-3 shrink-0" />
         Favoritar
-      </span>
-      <span aria-hidden="true" className="favorite-toggle-heart">
-        <FavoriteHeart active className={heartClassName ?? "h-4 w-4"} />
       </span>
     </RelationshipButton>
   );

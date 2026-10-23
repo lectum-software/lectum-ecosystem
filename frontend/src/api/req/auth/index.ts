@@ -17,6 +17,7 @@ export type ResetPasswordPayload = {
 };
 
 export type RegisterPatientPayload = {
+  birthdate: string;
   name: string;
   email: string;
   password: string;
@@ -30,6 +31,7 @@ export type RegisterPatientPayload = {
 };
 
 export type RegisterPsychologistPayload = {
+  birthdate: string;
   name: string;
   professional_first_name: string;
   professional_last_name: string;
@@ -47,6 +49,18 @@ export type RegisterPsychologistPayload = {
 export type VerifyCodePayload = {
   code: string;
 };
+
+export const prepareGoogleRegistration = async (deviceId: string, body: Record<string, string>) =>
+  handleReq<{ state: string }>({
+    ...callEndpoint({
+      route: "/api/public/google/login/:id/registration",
+      params: { id: deviceId },
+      body,
+      config: { withCredentials: true },
+    }),
+    hideError: true,
+    signOutOnUnauthorized: false,
+  });
 
 export const login = async (body: LoginPayload) => {
   const handle = callEndpoint({

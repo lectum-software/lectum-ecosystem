@@ -80,7 +80,7 @@ export class ProfileRepository implements IProfileRepository {
     const profileData: Prisma.patient_profileUpdateInput = {
       goal: data.b.goal ?? null,
       gender: data.b.gender ?? null,
-      birthdate: data.b.birthdate ?? null,
+      birthdate: data.b.birthdate,
       phone: data.b.phone ?? null,
       bio: data.b.bio ?? null,
       city: data.b.city ?? null,

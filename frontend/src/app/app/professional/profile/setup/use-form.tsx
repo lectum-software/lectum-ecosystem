@@ -5,6 +5,7 @@ import type {
 } from "@/api/generator/types/free-profile";
 import { onlyDigits } from "@/components/controllers/utils";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
+import { toBirthdateInput, toBirthdateIso } from "@/utils/birthdate";
 import {
   COUNTRY_CALLING_CODE_OPTIONS,
   findCountryCallingCode,
@@ -69,46 +70,10 @@ export type FreeProfileForm = {
   available_days: string[];
 };
 
+export { toBirthdateIso } from "@/utils/birthdate";
 export { toWhatsappPhoneE164, toWhatsappPhoneInput };
 
-export const toBirthdateIso = (value?: string | null) => {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value?.trim() ?? "");
-  if (!match) return null;
-
-  const [, dayValue, monthValue, yearValue] = match;
-  const year = Number(yearValue);
-  const month = Number(monthValue);
-  const day = Number(dayValue);
-  const time = Date.UTC(year, month - 1, day);
-  const parsed = new Date(time);
-
-  if (
-    parsed.getUTCFullYear() !== year ||
-    parsed.getUTCMonth() !== month - 1 ||
-    parsed.getUTCDate() !== day
-  ) {
-    return null;
-  }
-
-  const today = new Date();
-  const todayTime = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-
-  if (time > todayTime || time < Date.UTC(1900, 0, 1)) {
-    return null;
-  }
-
-  return `${yearValue}-${monthValue}-${dayValue}`;
-};
-
 const isValidBirthdate = (value: string) => Boolean(toBirthdateIso(value));
-
-const toBirthdateInput = (value?: string | null) => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? "");
-  if (!match) return "";
-
-  const [, year, month, day] = match;
-  return `${day}/${month}/${year}`;
-};
 
 const requiredText = (message: string) => z.string({ error: message }).trim().min(1, message);
 

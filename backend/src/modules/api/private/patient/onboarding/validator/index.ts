@@ -1,3 +1,4 @@
+import { adultBirthdateDateSchema } from "@/utils/adult-birthdate";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 export const schema: IValidatorRequest = {
@@ -23,9 +24,7 @@ export const schema: IValidatorRequest = {
     },
     {
       key: "birthdate",
-      method: "date",
-      max_today: true,
-      optional: true,
+      custom: adultBirthdateDateSchema.optional(),
     },
     {
       key: "phone",

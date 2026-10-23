@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { prepareGoogleRegistration } from "@/api/req/auth";
 import { resolveRegisterErrorMessage } from "@/app/auth/register/error-message";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import {
@@ -14,7 +15,6 @@ import {
   AdultDeclarationModal,
 } from "@/components/legal/adult-declaration-modal";
 import { LegalLinks } from "@/components/legal/links";
-import { adultConfirmedSchema } from "@/components/legal/use-form";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
@@ -22,6 +22,7 @@ import { useUserSet } from "@/hooks/user-set";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { buildAuthRouteWithRedirect, resolveAuthReturnTo } from "@/utils/auth-redirect";
+import { adultBirthdateSchema, toBirthdateIso } from "@/utils/birthdate";
 import { fingerprint } from "@/utils/fingerprint";
 import { normalizeProfessionalNamePart } from "@/utils/professional-name";
 import { buildTrustedGoogleLoginUrl } from "@/utils/trusted-navigation";
@@ -61,7 +62,9 @@ export const RegisterPsychologistLogic = () => {
   const isPending = registerPsychologist.isPending || googlePending;
 
   const handleSubmit = (data: RegisterPsychologistForm) => {
-    if (!adultConfirmedSchema.safeParse(data.adult_confirmed).success) return;
+    if (!adultBirthdateSchema.safeParse(data.birthdate).success) return;
+    const birthdate = toBirthdateIso(data.birthdate);
+    if (!birthdate) return;
     setApiError(null);
     const professionalFirstName = normalizeProfessionalNamePart(data.professional_first_name);
     const professionalLastName = normalizeProfessionalNamePart(data.professional_last_name);
@@ -77,7 +80,8 @@ export const RegisterPsychologistLogic = () => {
       role: "psicologo",
       terms_accepted: true,
       terms_version: LEGACY_TERMS_VERSION,
-      adult_confirmed: data.adult_confirmed,
+      adult_confirmed: true,
+      birthdate,
       ...(analyticsIdentity
         ? {
             analytics_session_id: analyticsIdentity.sessionId,
@@ -88,19 +92,22 @@ export const RegisterPsychologistLogic = () => {
   };
 
   const handleGoogleRegister = async (values: AdultDeclarationForm) => {
-    if (!adultConfirmedSchema.safeParse(values.adult_confirmed).success) return;
+    if (!adultBirthdateSchema.safeParse(values.birthdate).success) return;
+    const birthdate = toBirthdateIso(values.birthdate);
+    if (!birthdate) return;
     setAdultReviewOpen(false);
     try {
       setGooglePending(true);
       setApiError(null);
 
       const currentDeviceId = await fingerprint();
+      if (!currentDeviceId) throw new Error("Device identifier is unavailable");
       const query = new URLSearchParams({
         intent: "register",
         role: "psicologo",
         terms_accepted: "true",
         terms_version: LEGACY_TERMS_VERSION,
-        adult_confirmed: String(values.adult_confirmed),
+        adult_confirmed: "true",
       });
       const analyticsIdentity = getOrCreateAnalyticsIdentity();
       if (analyticsIdentity) {
@@ -111,7 +118,14 @@ export const RegisterPsychologistLogic = () => {
         query.set("redirectTo", redirectTo);
       }
 
-      window.location.href = buildTrustedGoogleLoginUrl(currentDeviceId, query);
+      const { state } = await prepareGoogleRegistration(currentDeviceId, {
+        ...Object.fromEntries(query),
+        birthdate,
+      });
+      window.location.href = buildTrustedGoogleLoginUrl(
+        currentDeviceId,
+        new URLSearchParams({ registration_state: state }),
+      );
     } catch {
       setGooglePending(false);
       setApiError("Não foi possível iniciar o cadastro com Google. Tente novamente.");

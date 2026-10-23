@@ -412,7 +412,7 @@ export const ReplyCard = ({
                     />
                   ) : null}
                   {isProfessional ? (
-                    <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
+                    <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start feed-favorite-slot">
                       <FeedFavoriteButton
                         author={reply.author}
                         heartClassName={isNestedReply ? "h-2.5 w-2.5" : "h-3 w-3"}

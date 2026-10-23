@@ -5,12 +5,21 @@ import { z } from "zod";
 import { Modal } from "@/components/ui/modal";
 import { type Field, useFormList } from "@/hooks/form";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { ADULT_DECLARATION, adultConfirmedSchema } from "./use-form";
+import { adultBirthdateSchema } from "@/utils/birthdate";
 
-export const adultDeclarationSchema = z.object({ adult_confirmed: adultConfirmedSchema });
+export const adultDeclarationSchema = z.object({ birthdate: adultBirthdateSchema });
 export type AdultDeclarationForm = z.infer<typeof adultDeclarationSchema>;
 const fields: Field<AdultDeclarationForm>[] = [
-  { name: "adult_confirmed", field: "checkbox", label: ADULT_DECLARATION, className: "w-full" },
+  {
+    name: "birthdate",
+    field: "calendar",
+    label: "Data de nascimento",
+    placeholder: "00/00/0000",
+    autoComplete: "bday",
+    dateDisplayFormat: "pt-BR",
+    required: true,
+    className: "w-full",
+  },
 ];
 
 // Mounted only by an explicit Google-registration click. No OAuth request before valid submit.
@@ -24,7 +33,7 @@ export const AdultDeclarationModal = ({
   const { Form, formProps, hook } = useFormList<AdultDeclarationForm>({
     fields,
     schema: adultDeclarationSchema,
-    defaultValues: { adult_confirmed: false },
+    defaultValues: { birthdate: "" },
   });
   const id = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -39,11 +48,10 @@ export const AdultDeclarationModal = ({
     >
       <section className="max-h-full w-full max-w-[430px] overflow-y-auto rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-lectum-soft">
         <h2 className="text-xl font-extrabold" id={`${id}-title`}>
-          Antes de criar sua conta
+          Qual é sua data de nascimento?
         </h2>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Contas Lectum são exclusivas para pessoas com 18 anos ou mais. Confirme sua idade antes de
-          continuar com Google.
+          Para se cadastrar na Lectum, você precisa ter 18 anos ou mais.
         </p>
         <Form
           className="mt-5 grid gap-3"

@@ -96,7 +96,10 @@ test("own posts keep badge and community while their favorite slot is empty", ()
 test("other profiles retain the label or heart; unresolved favorites have no button", () => {
   assert.match(renderIdentity({}), /aria-pressed="false"/);
   assert.match(renderIdentity({ viewerId: "viewer", ids: [] }), /aria-pressed="false"/);
-  assert.match(renderIdentity({ viewerId: "viewer", ids: ["psi"] }), /aria-pressed="true"/);
+  assert.doesNotMatch(
+    renderIdentity({ viewerId: "viewer", ids: ["psi"] }),
+    /favorite-toggle|lucide-heart/,
+  );
   assert.doesNotMatch(renderIdentity({ viewerId: "viewer" }), /favorite-toggle/);
 });
 

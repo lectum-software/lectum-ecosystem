@@ -1,3 +1,4 @@
+import { adultBirthdateDateSchema } from "@/utils/adult-birthdate";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const BRAZIL_STATES = [
@@ -54,10 +55,7 @@ export const schema: IValidatorRequest = {
     },
     {
       key: "birthdate",
-      method: "date",
-      max_today: true,
-      nullable: true,
-      optional: true,
+      custom: adultBirthdateDateSchema.nullable().optional(),
     },
     {
       key: "phone",

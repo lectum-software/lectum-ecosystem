@@ -20,6 +20,7 @@ export interface IStoreDTO {
     role?: "paciente" | "psicologo";
     terms_accepted?: boolean;
     adult_confirmed?: boolean;
+    birthdate?: string;
     terms_version?: string;
     analytics_visitor_id?: string;
     analytics_session_id?: string;

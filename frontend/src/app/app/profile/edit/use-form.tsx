@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { z } from "zod";
 import type { patient_profile, user } from "@/api/generator/types";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
+import { adultBirthdateSchema, toBirthdateInput, toBirthdateIso } from "@/utils/birthdate";
 import { CITY_OPTIONS_BY_STATE } from "../../professional/profile/setup/brazil-cities";
 import { STATE_OPTIONS } from "../../professional/profile/setup/options";
 
@@ -68,18 +69,7 @@ export const patientProfileSchema = z
     name: z.string().trim().min(2, "Informe seu nome de exibição").max(120),
     gender: z.enum(patientGenders).nullable().optional(),
     goal: z.enum(patientGoals).nullable().optional(),
-    birthdate: z
-      .string()
-      .nullable()
-      .optional()
-      .refine(
-        (value) => {
-          if (!value) return true;
-          const date = new Date(`${value}T00:00:00`);
-          return !Number.isNaN(date.getTime()) && date <= new Date();
-        },
-        { message: "Informe uma data de nascimento válida" },
-      ),
+    birthdate: adultBirthdateSchema.or(z.literal("")).nullable().optional(),
     phone: z
       .string()
       .nullable()
@@ -158,6 +148,14 @@ const fields = [
     max: 120,
   },
   {
+    name: "birthdate",
+    field: "calendar",
+    label: "Data de nascimento",
+    placeholder: "00/00/0000",
+    autoComplete: "bday",
+    dateDisplayFormat: "pt-BR",
+  },
+  {
     name: "gender",
     field: "select",
     label: "Gênero",
@@ -200,7 +198,9 @@ export const toPatientProfilePayload = (
   name: values.name.trim(),
   gender: values.gender ?? null,
   goal: values.goal ?? (isPatientGoal(profile?.goal) ? profile.goal : null),
-  birthdate: values.birthdate || profile?.birthdate?.slice(0, 10) || null,
+  birthdate: values.birthdate
+    ? toBirthdateIso(values.birthdate)
+    : profile?.birthdate?.slice(0, 10) || null,
   phone: onlyDigits(values.phone) || profile?.phone || null,
   bio: values.bio?.trim() || profile?.bio || null,
   city: trimToNull(values.city),
@@ -215,7 +215,7 @@ export const usePatientProfileForm = ({ profile, user }: UsePatientProfileFormPr
       name: user?.name || "",
       gender: isPatientGender(profile?.gender) ? profile.gender : null,
       goal: isPatientGoal(profile?.goal) ? profile.goal : null,
-      birthdate: profile?.birthdate?.slice(0, 10) ?? null,
+      birthdate: toBirthdateInput(profile?.birthdate),
       phone: onlyDigits(profile?.phone).replace(/^55(?=\d{10,11}$)/, ""),
       bio: profile?.bio ?? "",
       state: isPatientState(profile?.state) ? profile.state : null,
