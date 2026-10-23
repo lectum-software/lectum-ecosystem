@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { ADULT_DECLARATION, adultConfirmedSchema } from "@/components/legal/use-form";
 import { type Field, useFormList } from "@/hooks/form";
+import { adultBirthdateSchema } from "@/utils/birthdate";
 
 // Compatibility only: never a published document or authoritative legal acceptance.
 export const LEGACY_TERMS_VERSION = "task09-professional-terms-pending-legal-copy";
@@ -23,7 +23,7 @@ export const registerPsychologistSchema = z
       .min(10, "Use no m\u00ednimo 10 caracteres")
       .max(128, "Use no m\u00e1ximo 128 caracteres"),
     password_confirm: z.string().min(1, "Confirme sua senha"),
-    adult_confirmed: adultConfirmedSchema,
+    birthdate: adultBirthdateSchema,
   })
   .superRefine((data, ctx) => {
     if (data.password !== data.password_confirm) {
@@ -87,10 +87,14 @@ const fields = [
     inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
   },
   {
-    name: "adult_confirmed",
-    field: "checkbox",
-    label: ADULT_DECLARATION,
-    inputClassName: "mt-0.5 h-4 w-4",
+    name: "birthdate",
+    field: "calendar",
+    label: "Data de nascimento",
+    description: "Para se cadastrar na Lectum, você precisa ter 18 anos ou mais.",
+    placeholder: "00/00/0000",
+    autoComplete: "bday",
+    dateDisplayFormat: "pt-BR",
+    required: true,
   },
 ] satisfies Field<RegisterPsychologistForm>[];
 
@@ -104,7 +108,7 @@ export const useForm = () => {
       email: "",
       password: "",
       password_confirm: "",
-      adult_confirmed: false,
+      birthdate: "",
     },
   });
 };

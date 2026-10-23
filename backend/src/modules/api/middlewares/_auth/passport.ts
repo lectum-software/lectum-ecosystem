@@ -400,6 +400,7 @@ if (isGoogleOAuthConfigured()) {
                   role,
                   terms_accepted: termsAccepted,
                   adult_confirmed: adultConfirmed,
+                  birthdate: state?.query.birthdate,
                   terms_version: termsVersion,
                   analytics_visitor_id: analyticsVisitorId,
                   analytics_session_id: analyticsSessionId,

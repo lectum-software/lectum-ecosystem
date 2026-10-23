@@ -24,6 +24,14 @@ registerHooks({
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
+    if (url.startsWith(sourceRoot.href) && url.endsWith(".json")) {
+      const value = JSON.parse(readFileSync(new URL(url), "utf8"));
+      return {
+        format: "module",
+        shortCircuit: true,
+        source: `export default ${JSON.stringify(value)};`,
+      };
+    }
     if (url.startsWith(sourceRoot.href) && /\.tsx?$/.test(url)) {
       const source = ts.transpileModule(readFileSync(new URL(url), "utf8"), {
         fileName: fileURLToPath(url),

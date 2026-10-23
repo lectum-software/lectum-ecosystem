@@ -102,83 +102,41 @@ test("inactive feed favorite uses a plus inheriting the label color without a bo
     assert.doesNotMatch(html, /bg-surface|hover:bg-/);
     assert.match(html, /aria-pressed="false"/);
     assert.match(html, /aria-label="Favoritar Ana Lima"/);
-    assert.match(html, /aria-hidden="true" class="favorite-toggle-heart"/);
+    assert.doesNotMatch(html, /favorite-toggle-heart|favorite-confirmation/);
     assert.doesNotMatch(html, /Seguindo/);
   }
   for (const state of [{ userId: "psi", ids: [] }, { userId: "viewer" }, { authenticated: true }])
     assert.equal(renderRelations({ ...state, children }), "");
 });
 
-test("known favorites retain the production heart and can be unfavorited", () => {
+test("known favorites render nothing and cannot be removed from the feed", () => {
   const author = { id: "psi", name: "Ana Lima", role: "psicologo" };
   const children = createElement(FeedFavoriteButton, { author });
-  const inactive = renderRelations({ userId: "viewer", ids: [], children });
-  assert.match(inactive, /aria-pressed="false"/);
-  assert.match(inactive, /favorite-toggle-label gap-1">.*lucide-plus.*<\/svg>Favoritar<\/span>/);
-  const active = renderRelations({ userId: "viewer", ids: ["psi"], children });
-  assert.match(active, /aria-pressed="true"/);
-  assert.match(active, /aria-label="Remover Ana Lima dos favoritos"/);
-  assert.match(active, /lucide-heart/);
-  assert.match(active, /fill-current/);
-  assert.match(active, /text-favorite/);
-  assert.match(active, /stroke-width="2"/);
-  assert.match(active, /favorite-toggle pointer-events-auto/);
-  assert.match(active, /title="Remover Ana Lima dos favoritos"/);
-  assert.doesNotMatch(active, />Favoritado|text-danger/);
-  assert.equal(renderRelations({ userId: "psi", ids: [], children }), "");
-  assert.equal(
-    renderRelations({
-      children: createElement(FeedFavoriteButton, {
-        author: { ...author, role: "paciente" },
-      }),
-    }),
-    "",
+  assert.match(
+    renderRelations({ userId: "viewer", ids: [], children }),
+    /aria-label="Favoritar Ana Lima"/,
   );
+  assert.equal(renderRelations({ userId: "viewer", ids: ["psi"], children }), "");
+  assert.equal(renderRelations({ userId: "psi", ids: [], children }), "");
+  const source = readFileSync(new URL("./feed-favorite-button.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /unfavoritePsychologist|Remover .*favoritos/);
+  assert.match(source, /onSuccess: \(data\) =>/);
+  assert.match(source, /if \(data.favorited\) setConfirmation/);
+  assert.match(source, /clearTimeout/);
 });
 
-test("favorite transitions compact the slot beside the badge and respect reduced motion", () => {
+test("success feedback fades out and honors reduced motion without an empty slot", () => {
   const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
-  assert.match(
-    css,
-    /\.favorite-toggle\[aria-pressed="true"\] \{\s*width: 24px;\s*border-color: transparent;/,
-  );
-  assert.match(css, /\.favorite-toggle-heart \{[^}]*left: 2px;[^}]*opacity: 0;/);
-  assert.match(
-    css,
-    /\.favorite-toggle\[aria-pressed="true"\] \.favorite-toggle-label \{\s*opacity: 0;/,
-  );
-  assert.match(
-    css,
-    /\.favorite-toggle\[aria-pressed="true"\] \.favorite-toggle-heart \{\s*opacity: 1;/,
-  );
-  assert.match(
-    css,
-    /@media \(prefers-reduced-motion: reduce\) \{\s*\.favorite-toggle,[\s\S]*?transition: none;/,
-  );
+  assert.match(css, /animation: favorite-confirmation 900ms/);
+  assert.match(css, /\.feed-favorite-slot:empty\s*\{\s*display: none/);
+  assert.match(css, /animation-name: favorite-confirmation-reduced/);
+  assert.doesNotMatch(css, /\.favorite-toggle\[aria-pressed="true"\]/);
   for (const suffix of ["", "-soft", "-border"]) {
     assert.ok(css.includes(`--lectum-favorite${suffix}: var(--lectum-danger${suffix});`));
   }
 });
 
-test("original post community follows the compact favorite slot without changing replies", () => {
-  const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
-  const slot =
-    'span:has(> .favorite-toggle[aria-pressed="true"]):has(+ [data-original-post-community])';
-  assert.ok(css.includes(`${slot} {\n  width: 24px;`));
-  assert.match(
-    css,
-    /span:has\(> \.favorite-toggle\) \+ \[data-original-post-community\] \{\s*transition: max-width 260ms ease;/,
-  );
-  assert.match(css, /max-width: min\(48%, calc\(100% - 82px\)\);/);
-  const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
-  assert.match(
-    reduced,
-    /span:has\(> \.favorite-toggle\):has\(\+ \[data-original-post-community\]\)/,
-  );
-  assert.match(
-    reduced,
-    /span:has\(> \.favorite-toggle\) \+ \[data-original-post-community\] \{\s*transition: none;/,
-  );
+test("favorite authors keep their identity and community but no favorite action", () => {
   const author = { id: "psi", name: "Camilla Sousa", role: "psicologo", verified: true };
   for (const active of [false, true]) {
     for (const original of [false, true]) {
@@ -190,13 +148,14 @@ test("original post community follows the compact favorite slot without changing
           verified: true,
           action: createElement(FeedFavoriteButton, { author }),
           community: original
-            ? { name: "Ansiedade em equilibrio", category: "Ansiedade", slug: "ansiedade" }
+            ? { name: "Ansiedade", category: "Ansiedade", slug: "ansiedade" }
             : undefined,
         }),
       });
-      assert.ok(html.includes(`aria-pressed="${active}"`));
+      assert.equal(html.includes('aria-pressed="false"'), !active);
       assert.equal(html.includes("data-original-post-community"), original);
-      assert.match(html, /w-\[66px\] shrink-0/);
+      assert.match(html, /Perfil verificado/);
+      assert.match(html, /feed-favorite-slot/);
     }
   }
 });
@@ -232,7 +191,7 @@ test("all post headers and comments share the persistent favorite toggle", () =>
     assert.match(source, /ml-1 flex h-0 w-\[66px\] shrink-0 items-center justify-start/);
   }
   const favorite = readFileSync(new URL("./feed-favorite-button.tsx", import.meta.url), "utf8");
-  assert.match(favorite, /favorited \? unfavoritePsychologist : favoritePsychologist/);
+  assert.doesNotMatch(favorite, /unfavoritePsychologist/);
   assert.match(favorite, /pending \|\| favorited\) return/);
   assert.doesNotMatch(favorite, /hideFavorited/);
 });

@@ -509,7 +509,7 @@ export const CommunityPostCard = ({
                     />
                   ) : null}
                   {isPsychologistPost && !profilePublicationMode ? (
-                    <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
+                    <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start feed-favorite-slot">
                       <FeedFavoriteButton author={displayAuthor} />
                     </span>
                   ) : null}

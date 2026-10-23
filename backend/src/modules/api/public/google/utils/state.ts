@@ -10,6 +10,7 @@ import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/uti
 import { isPublishedRuntime } from "@/utils/runtime-config";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "lectum_google_oauth_nonce";
+export const GOOGLE_REGISTRATION_COOKIE = "lectum_google_registration";
 export const GOOGLE_DELETE_REAUTH_STATE_COOKIE = "lectum_google_delete_reauth";
 const GOOGLE_OAUTH_STATE_AUDIENCE = "lectum-google-oauth";
 const GOOGLE_DELETE_REAUTH_STATE_AUDIENCE = "lectum-google-delete-reauth";
@@ -22,6 +23,7 @@ const GOOGLE_OAUTH_STATE_TAG_BYTES = 16;
 const GOOGLE_OAUTH_STATE_MAX_LENGTH = 16_384;
 const ALLOWED_QUERY_KEYS = new Set([
   "adult_confirmed",
+  "birthdate",
   "analytics_session_id",
   "analytics_visitor_id",
   "callbackUrl",
@@ -110,6 +112,11 @@ export const googleOAuthStateClearCookieOptions = () => {
 };
 
 export const googleDeleteReauthStateCookieOptions = () => googleOAuthStateCookieOptions();
+
+export const googleRegistrationCookieOptions = () => ({
+  ...googleOAuthStateCookieOptions(),
+  path: "/api/public/google/login",
+});
 
 export const googleDeleteReauthStateClearCookieOptions = () => {
   const { maxAge: _maxAge, ...options } = googleDeleteReauthStateCookieOptions();

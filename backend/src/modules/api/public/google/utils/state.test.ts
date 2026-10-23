@@ -13,6 +13,19 @@ before(() => {
 });
 
 describe("Google OAuth state", () => {
+  it("preserva nascimento cifrado e vinculado ao navegador sem expor a data no state", () => {
+    for (const role of ["paciente", "psicologo"]) {
+      const { nonce, state } = createGoogleOAuthState("device_identifier_123", {
+        intent: "register",
+        role,
+        birthdate: "1990-04-03",
+        adult_confirmed: "true",
+      });
+      assert.equal(state.includes("1990-04-03"), false);
+      assert.equal(verifyGoogleOAuthState(state, nonce)?.query.birthdate, "1990-04-03");
+      assert.equal(verifyGoogleOAuthState(state, "wrong-browser"), null);
+    }
+  });
   it("vincula o retorno ao nonce do navegador que iniciou o fluxo", () => {
     const { nonce, state } = createGoogleOAuthState("device_identifier_123", {
       redirectTo: "/app/perfil",

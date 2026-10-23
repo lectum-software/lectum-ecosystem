@@ -114,7 +114,7 @@ export const SavedReplyAuthorHeader = ({
               <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
             ) : null}
             {isPsychologist ? (
-              <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">
+              <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start feed-favorite-slot">
                 <FeedFavoriteButton author={author} />
               </span>
             ) : null}

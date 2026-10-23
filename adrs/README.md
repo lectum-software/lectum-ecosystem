@@ -692,3 +692,4 @@ Formato recomendado:
 - [ADR-0627 — Analytics com seleção de métrica e origem de visualizações](0627-analytics-carrossel-origens.md)
 - [ADR-0628 — Coordenacao temporal das orientacoes de navegacao](0628-tempo-orientacoes-navegacao.md)
 - [ADR-0629 — Rotulos e tipografia dos analytics](0629-tipografia-analytics.md)
+- [ADR-0630 — Favorito transitorio e nascimento](0630-favorito-transitorio-nascimento.md)

@@ -98,8 +98,8 @@ export const registerProfessionalReplyPresentationTests = ({
         /favorite-toggle|data-profile-reply-question|data-profile-reply-answer/,
       );
       const feedPost = render({ post: { ...post, contribution_type: "post" } }, ids);
-      assert.match(feedPost, /favorite-toggle/);
-      assert.match(feedPost, new RegExp(`aria-pressed="${Boolean(ids.length)}"`));
+      assert.equal(feedPost.includes("favorite-toggle"), ids.length === 0);
+      assert.doesNotMatch(feedPost, /aria-pressed="true"|lucide-heart/);
     }
   });
   test("professional reply actions preserve WhatsApp order and do not repeat media contact", () => {

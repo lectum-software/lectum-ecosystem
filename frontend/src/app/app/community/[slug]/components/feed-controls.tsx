@@ -131,7 +131,9 @@ export const AuthorIdentityLine = ({
         <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
       ) : null}
       {action ? (
-        <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start">{action}</span>
+        <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start feed-favorite-slot">
+          {action}
+        </span>
       ) : null}
       {community ? (
         <OriginalPostCommunityLink community={community} withAction={Boolean(action)} />

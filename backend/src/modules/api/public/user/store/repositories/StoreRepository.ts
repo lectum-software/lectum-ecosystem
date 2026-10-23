@@ -11,6 +11,7 @@ import {
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
 import { assertAdultRegistration } from "@/modules/legal/registration";
+import { registrationBirthdate } from "@/utils/adult-birthdate";
 
 //Utils
 import { log } from "@/utils/logs";
@@ -50,6 +51,7 @@ export class StoreRepository implements IStoreRepository {
         password_confirm: _passwordConfirm,
         terms_accepted,
         adult_confirmed,
+        birthdate,
         terms_version,
         analytics_session_id,
         analytics_visitor_id,
@@ -57,6 +59,7 @@ export class StoreRepository implements IStoreRepository {
       } = props.b;
       void _passwordConfirm;
       const role = userData.role || "paciente";
+      const dateOfBirth = registrationBirthdate(birthdate);
       await assertAdultRegistration(adult_confirmed, tx);
       const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
         analytics_session_id,
@@ -75,6 +78,7 @@ export class StoreRepository implements IStoreRepository {
         await tx.patient_profile.create({
           data: {
             user_id: item.id,
+            birthdate: dateOfBirth,
           },
         });
       }
@@ -85,6 +89,7 @@ export class StoreRepository implements IStoreRepository {
             user_id: item.id,
             professional_first_name,
             professional_last_name,
+            birthdate: dateOfBirth,
             crp_status: "pendente",
             published: false,
           },

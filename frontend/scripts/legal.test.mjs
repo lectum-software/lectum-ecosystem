@@ -96,11 +96,11 @@ for (const [label, schema, name] of [
       password: "Unit-test-password",
       password_confirm: "Unit-test-password",
     };
-    for (const value of [undefined, false, "true", 1]) {
-      assert.equal(schema.safeParse({ ...input, adult_confirmed: value }).success, false);
+    for (const value of [undefined, false, "true", 1, "31/02/2000", "01/01/2020"]) {
+      assert.equal(schema.safeParse({ ...input, birthdate: value }).success, false);
     }
-    const parsed = schema.parse({ ...input, adult_confirmed: true });
-    assert.equal(parsed.adult_confirmed, true);
+    const parsed = schema.parse({ ...input, birthdate: "01/01/1990" });
+    assert.equal(parsed.birthdate, "01/01/1990");
     assert.equal("terms_accepted" in parsed, false);
   });
 }
@@ -114,7 +114,7 @@ test("maioridade no Google e aceite formal nunca aceitam false, string, ausênci
       false,
     );
   }
-  assert.equal(adultDeclarationSchema.safeParse({ adult_confirmed: true }).success, true);
+  assert.equal(adultDeclarationSchema.safeParse({ birthdate: "01/01/1990" }).success, true);
 });
 
 test("cada declaração jurídica exige true independente", () => {
@@ -271,11 +271,12 @@ test("modal real: duas declarações legais mais checkbox 18+, todos desmarcados
 test("modal Google real mostra uma autodeclaração vazia e IDs RHF únicos", () => {
   const modal = () => createElement(AdultDeclarationModal, { onClose() {}, async onSubmit() {} });
   const html = renderToStaticMarkup(createElement(Fragment, null, modal(), modal()));
-  assert.equal((html.match(/type="checkbox"/g) ?? []).length, 2);
+  assert.equal((html.match(/name="birthdate"/g) ?? []).length, 2);
+  assert.match(html, /inputMode="numeric"/);
   assert.doesNotMatch(html, /\schecked(?:=|\s|>)/);
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
   assert.equal(ids.length, new Set(ids).size);
-  assert.match(html, /Contas Lectum são exclusivas/);
+  assert.match(html, /você precisa ter 18 anos ou mais/);
 });
 
 for (const role of ["patient", "psychologist"]) {
@@ -285,13 +286,16 @@ for (const role of ["patient", "psychologist"]) {
     const google = declarations.find((node) => node.name.getText(tree) === "handleGoogleRegister");
     assert.ok(google);
     const body = google.initializer.getText(tree);
-    assert.ok(body.indexOf("adultConfirmedSchema.safeParse") < body.indexOf("fingerprint()"));
-    assert.match(body, /adult_confirmed: String\(values.adult_confirmed\)/);
+    assert.ok(body.indexOf("adultBirthdateSchema.safeParse") < body.indexOf("fingerprint()"));
+    assert.match(body, /adult_confirmed: "true"/);
+    assert.match(body, /prepareGoogleRegistration/);
+    assert.match(body, /const birthdate = toBirthdateIso\(values.birthdate\)/);
     assert.doesNotMatch(body, /setValue|current\.documents|document_ids/);
     const manual = declarations
       .find((node) => node.name.getText(tree) === "handleSubmit")
       .initializer.getText(tree);
-    assert.match(manual, /adult_confirmed: data.adult_confirmed/);
+    assert.match(manual, /adult_confirmed: true/);
+    assert.match(manual, /const birthdate = toBirthdateIso\(data.birthdate\)/);
     const all = tree.getFullText();
     assert.match(all, /onClick=\{\(\) => setAdultReviewOpen\(true\)\}/);
     assert.doesNotMatch(all, /Ao continuar, você aceita/);
@@ -337,3 +341,4 @@ test("contratos SSR/rollout/cache: públicos no-store, privado por usuário, pol
     assert.match(source(`../src/app/${route}/page.tsx`), /dynamic = "force-dynamic"/);
   }
 });
+import "../src/utils/birthdate.test.mjs";

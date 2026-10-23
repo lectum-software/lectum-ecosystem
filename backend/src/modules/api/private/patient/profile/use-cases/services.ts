@@ -78,7 +78,7 @@ export const update = async (data: IUpdateProfileDTO) => {
       city,
       goal: data.b.goal ?? null,
       gender: data.b.gender ?? null,
-      birthdate: data.b.birthdate ?? null,
+      birthdate: data.b.birthdate,
       state,
     },
   });

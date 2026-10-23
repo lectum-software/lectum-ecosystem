@@ -1,5 +1,6 @@
 //
 import { z } from "zod";
+import { adultBirthdateSchema } from "@/utils/adult-birthdate";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 export const schema: IValidatorRequest = {
@@ -27,6 +28,7 @@ export const schema: IValidatorRequest = {
 
   body: [
     { key: "adult_confirmed", custom: z.boolean().optional() },
+    { key: "birthdate", custom: adultBirthdateSchema.optional() },
     //*
     {
       key: "name",

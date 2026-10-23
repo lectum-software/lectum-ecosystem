@@ -88,17 +88,31 @@
   position: relative;
   width: 66px;
   padding-inline: 0;
-  transition:
-    width 260ms ease,
-    border-color 180ms ease;
 }
 
-.favorite-toggle[aria-pressed="true"] {
+.favorite-toggle-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.favorite-confirmation {
+  animation: favorite-confirmation 900ms ease-out forwards;
+}
+
+.feed-favorite-slot:empty {
+  display: none;
+}
+
+.feed-favorite-slot:has(> .favorite-confirmation) {
   width: 24px;
-  border-color: transparent;
 }
 
-/* Only original posts reclaim the label space before their community link. */
+/* Reclaim space before the community link when the action has disappeared. */
 span:empty:has(+ [data-original-post-community]) {
   display: none;
 }
@@ -107,64 +121,38 @@ span:empty + [data-original-post-community] {
   max-width: 48%;
 }
 
-span:has(> .favorite-toggle):has(+ [data-original-post-community]) {
-  transition: width 260ms ease;
+@keyframes favorite-confirmation {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
 }
 
-span:has(> .favorite-toggle[aria-pressed="true"]):has(+ [data-original-post-community]) {
-  width: 24px;
-}
-
-span:has(> .favorite-toggle) + [data-original-post-community] {
-  transition: max-width 260ms ease;
-}
-
-span:has(> .favorite-toggle[aria-pressed="true"]) + [data-original-post-community] {
-  max-width: min(48%, calc(100% - 82px));
-}
-
-.favorite-toggle-label,
-.favorite-toggle-heart {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.favorite-toggle-label {
-  inset: 0;
-  white-space: nowrap;
-  transition: opacity 120ms ease;
-}
-
-.favorite-toggle-heart {
-  inset-block: 0;
-  left: 2px;
-  opacity: 0;
-  transform: scale(0.85);
-  transition:
-    opacity 180ms ease,
-    transform 240ms ease;
-}
-
-.favorite-toggle[aria-pressed="true"] .favorite-toggle-label {
-  opacity: 0;
-}
-
-.favorite-toggle[aria-pressed="true"] .favorite-toggle-heart {
-  opacity: 1;
-  transform: scale(1);
-  transition-delay: 80ms;
+@keyframes favorite-confirmation-reduced {
+  0%,
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .favorite-toggle,
-  .favorite-toggle-label,
-  .favorite-toggle-heart,
-  span:has(> .favorite-toggle):has(+ [data-original-post-community]),
-  span:has(> .favorite-toggle) + [data-original-post-community] {
-    transition: none;
+  .favorite-confirmation {
+    animation-name: favorite-confirmation-reduced;
   }
 }
 

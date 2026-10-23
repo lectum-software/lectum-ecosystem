@@ -17,6 +17,7 @@ import { assertAdultRegistration } from "@/modules/legal/registration";
 import { loginInclude } from "@/query/login";
 import { withInvalidatedRecovery } from "@/utils/account-credentials";
 import { isSuspensionExpired } from "@/utils/account-status";
+import { registrationBirthdate } from "@/utils/adult-birthdate";
 import { log } from "@/utils/logs";
 import { getUserTokenLimit } from "@/utils/runtime-config";
 import type { IFindByEmailDTO } from "../DTOs/IFindByEmailDTO";
@@ -144,12 +145,14 @@ export class LoginRepository implements ILoginRepository {
         professional_last_name,
         terms_accepted,
         adult_confirmed,
+        birthdate,
         terms_version,
         analytics_session_id,
         analytics_visitor_id,
         ...userData
       } = data.b;
       const role = userData.role || "paciente";
+      const dateOfBirth = registrationBirthdate(birthdate);
       await assertAdultRegistration(adult_confirmed, tx);
       const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
         analytics_session_id,
@@ -175,6 +178,7 @@ export class LoginRepository implements ILoginRepository {
         await tx.patient_profile.create({
           data: {
             user_id: user.id,
+            birthdate: dateOfBirth,
           },
         });
       }
@@ -185,6 +189,7 @@ export class LoginRepository implements ILoginRepository {
             user_id: user.id,
             professional_first_name,
             professional_last_name,
+            birthdate: dateOfBirth,
             crp_status: "pendente",
             published: false,
           },
