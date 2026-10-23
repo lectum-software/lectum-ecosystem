@@ -12,7 +12,11 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { PrivateTemplate } from "@/templates/private";
-import { ANALYTICS_PATH, ANALYTICS_SCROLL_KEY } from "@/utils/analytics-return";
+import {
+  ANALYTICS_PATH,
+  ANALYTICS_SCROLL_KEY,
+  analyticsRequestedMetric,
+} from "@/utils/analytics-return";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { AnalyticsOverview } from "./components/analytics-overview";
 import { CommunityActivitySection } from "./components/community-activity";
@@ -31,6 +35,11 @@ const hasFullAnalytics = (
 ): value is PsychologistAnalyticsResponse => value?.access.mode === "full" && "metrics" in value;
 
 export const ProfessionalAnalyticsLogic = () => {
+  const searchParams = useSearchParams();
+  return <ProfessionalAnalyticsPage key={searchParams.get("metric") ?? ""} />;
+};
+
+const ProfessionalAnalyticsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returning = searchParams.get("restore") === "1";
@@ -66,7 +75,7 @@ export const ProfessionalAnalyticsLogic = () => {
 
   const restored = useRef(false);
   const [selectedMetric, setSelectedMetric] = useState(
-    returning ? (searchParams.get("metric") ?? "whatsapp_clicks") : "whatsapp_clicks",
+    analyticsRequestedMetric(searchParams.get("metric")),
   );
   const returnTo =
     ANALYTICS_PATH +

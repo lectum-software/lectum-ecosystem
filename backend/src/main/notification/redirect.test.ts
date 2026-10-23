@@ -11,15 +11,30 @@ for (const key of ["novo_favorito", "clique_whatsapp"]) {
       );
       assert.equal(
         professionalAnalyticsNotificationRedirect(key, "in_app", fallback),
-        "/app/profissional/estatisticas",
+        key === "novo_favorito"
+          ? "/app/profissional/estatisticas?metric=favorites_received"
+          : "/app/profissional/estatisticas",
       );
     }
   });
 }
 
+test("profile views select their metric in-app without changing push destinations", () => {
+  for (const fallback of ["/app/profissional/estatisticas", "/psicologos/old", null, undefined]) {
+    assert.equal(
+      professionalAnalyticsNotificationRedirect("visualizacao_perfil", "in_app", fallback),
+      "/app/profissional/estatisticas?metric=profile_views",
+    );
+    assert.equal(
+      professionalAnalyticsNotificationRedirect("visualizacao_perfil", "push", fallback),
+      fallback,
+    );
+  }
+});
+
 test("other notifications preserve their destinations in both channels", () => {
   for (const channel of ["push", "in_app"] as const) {
-    for (const key of ["nova_resposta", "visualizacao_perfil", "weekly_whatsapp_report", null]) {
+    for (const key of ["nova_resposta", "weekly_whatsapp_report", null, undefined]) {
       for (const fallback of [
         "/comunidades/test",
         "/app/notificacoes?whatsapp_week=report",

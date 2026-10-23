@@ -1,25 +1,19 @@
 "use client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   PsychologistAnalyticsResponse,
   PsychologistAnalyticsTrafficSources,
 } from "@/api/generator/types/psychologist-analytics";
 import { cn } from "@/lib/utils";
+import { ANALYTICS_METRICS, analyticsRequestedMetric } from "@/utils/analytics-return";
 import type { AnalyticsCardView } from "../modules/support";
 import { WHATSAPP_ORIGIN_COLORS } from "../modules/timeline";
 import { comparisonForMetric, MetricComparison } from "./metric-comparison";
 import { MetricTimeline } from "./metric-timeline";
 
-const order = [
-  "whatsapp_clicks",
-  "video_views",
-  "profile_views",
-  "favorites_received",
-  "reviews_received",
-  "acquired_patients",
-];
+const order = ANALYTICS_METRICS;
 export function AnalyticsOverview({
   cards,
   data,
@@ -37,9 +31,20 @@ export function AnalyticsOverview({
   onMetricChange?: (id: string) => void;
 }) {
   const carouselRef = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState(
-    initialSelected && order.includes(initialSelected) ? initialSelected : "whatsapp_clicks",
-  );
+  const [selected, setSelected] = useState(analyticsRequestedMetric(initialSelected));
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    const active = carousel?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!carousel || !active) return;
+    // Reveal the selected metric without moving the page away from its header.
+    carousel.scrollTo({
+      left:
+        carousel.scrollLeft +
+        active.getBoundingClientRect().left -
+        carousel.getBoundingClientRect().left,
+      behavior: "instant",
+    });
+  }, []);
   const ordered = [...cards].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   const current = ordered.find((card) => card.id === selected) ?? ordered[0];
   const CurrentIcon = current?.icon;
