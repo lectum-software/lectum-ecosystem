@@ -4,7 +4,6 @@ import { ArrowLeft, Medal, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
@@ -314,7 +313,7 @@ const RankingHero = ({
             aria-label={`Top 5 mentores em ${communityName}`}
             className="grid w-full min-w-0 max-w-[24rem] gap-2 sm:max-w-2xl"
           >
-            <span className="text-lg font-medium leading-tight tracking-normal text-muted dark:text-muted sm:text-xl">
+            <span className="top-mentor-ranking-eyebrow text-[14px] font-extrabold uppercase leading-tight tracking-normal">
               Top 5 Mentores em
             </span>
             <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.08] tracking-normal text-foreground [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
@@ -460,31 +459,25 @@ export const CommunityTopMentorsLogic = () => {
     }
   };
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
-  const pageStyle: CSSProperties & { "--top-mentor-backdrop": string } = {
-    "--top-mentor-backdrop": communityData?.visual_soft_color ?? "var(--background)",
-  };
 
   return (
     <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-background px-0 py-0 sm:py-0 lg:pb-0">
       <section className="mx-auto grid min-h-screen w-full min-w-0 max-w-full content-start gap-0 bg-background sm:max-w-2xl lg:max-w-3xl">
-        <header
-          className="top-mentor-ranking-header grid min-w-0 content-start px-4 pt-4"
-          style={pageStyle}
-        >
+        <header className="top-mentor-ranking-header grid min-w-0 content-start px-4 pt-4">
           <nav aria-label="Ações do ranking" className="mb-4 flex items-center justify-between">
             <button
               aria-label="Voltar para a comunidade"
               title="Voltar para a comunidade"
               onClick={() => navigateBackFromTopMentors(router, community)}
               type="button"
-              className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-primary-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
+              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface/80 text-foreground transition hover:bg-surface focus-visible:outline-2 focus-visible:outline-primary"
             >
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
               aria-label="Compartilhar Top Mentores"
               title="Compartilhar Top Mentores"
-              className="grid h-10 w-10 place-items-center rounded-full bg-media-background/15 text-primary-foreground backdrop-blur transition hover:bg-media-background/25 focus-visible:outline-2 focus-visible:outline-primary"
+              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface/80 text-foreground transition hover:bg-surface focus-visible:outline-2 focus-visible:outline-primary"
               onClick={shareRanking}
               type="button"
             >

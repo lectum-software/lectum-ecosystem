@@ -694,3 +694,4 @@ Formato recomendado:
 - [ADR-0629 — Rotulos e tipografia dos analytics](0629-tipografia-analytics.md)
 - [ADR-0630 — Favorito transitorio e nascimento](0630-favorito-transitorio-nascimento.md)
 - [ADR-0631 — Origem da acao e destinos de notificacoes](0631-origens-analytics-notificacoes.md)
+- [ADR-0632 — Fundo neutro e tipografia do Top Mentores](0632-top-mentores-perola.md)
