@@ -406,7 +406,11 @@ export class IndexRepository implements IIndexRepository {
 
         return {
           ...item,
-          redirect: favoriteNotificationRedirect(item.message_key, "in_app", item.redirect),
+          redirect: professionalAnalyticsNotificationRedirect(
+            item.message_key,
+            "in_app",
+            item.redirect,
+          ),
           actor: favoriteId ? (favoriteActors.get(favoriteId) ?? null) : null,
         };
       }
@@ -464,4 +468,4 @@ export class IndexRepository implements IIndexRepository {
   }
 }
 
-import { favoriteNotificationRedirect } from "@/main/notification/redirect";
+import { professionalAnalyticsNotificationRedirect } from "@/main/notification/redirect";

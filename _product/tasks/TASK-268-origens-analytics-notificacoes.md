@@ -51,3 +51,20 @@ Manter componentes existentes e verificar em 390px e desktop. Builder indisponiv
 ## Limites
 
 Favoritos continuam sendo vinculos ativos, nao um historico imutavel de todos os cliques. A janela anti-spam de acessos e as regras de pessoas unicas foram preservadas. Registros antigos ja classificados incorretamente podem nao permitir recuperacao da origem real. Push validado no roteamento; nenhum push foi enviado a dispositivo real nesta task.
+
+## Complemento: push de clique no WhatsApp
+
+- [x] Compartilhar a regra de destinos por canal com novo favorito: push abre Notificacoes, aviso interno abre Meus Analytics.
+- [x] Preservar destinos dos demais eventos, incluindo o relatorio semanal de WhatsApp.
+- [x] Validar testes e checks locais do complemento.
+
+Sem migration, variavel ou dependencia nova. Publicacao requer apenas backend;
+rollback pelo codigo anterior. Pushes ja entregues conservam o destino antigo.
+Nenhum envio externo ou alteracao em producao neste complemento.
+
+Validacao em 0.1.706: 7 testes direcionados de redirecionamento/politica passaram;
+check completo do backend passou com 955 testes. Frontend e checks comuns da raiz
+passaram. A primeira execucao geral parou no backend por JWT ausente e timeout
+de inicializacao; reexecucao do backend com env temporaria local passou integralmente.
+Admin/video nao foram reexecutados apos essa parada e nao tiveram codigo alterado.
+Health/ready locais responderam HTTP 200. Nenhum push real enviado.

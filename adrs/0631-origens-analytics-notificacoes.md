@@ -7,6 +7,11 @@ Data: 2026-10-23
 
 Novo favorito: push abre /app/notificacoes e notificacao interna abre /app/profissional/estatisticas. Compatibilizar notificacoes existentes na leitura, sem reescrever banco produtivo.
 
+Complemento aprovado em 2026-10-23: clique no WhatsApp segue a mesma regra por
+canal do novo favorito. Centralizar ambos no mesmo resolvedor. Nao alterar o
+relatorio semanal de WhatsApp nem regras de identidade, preferencia ou anti-spam.
+Pushes ja entregues nao sao reescritos; a regra vale para novos envios apos deploy.
+
 Analytics atribuem uma acao a sua superficie real. Uma entrada no perfil pelo ranking nao transforma um clique no WhatsApp dentro do perfil em clique no ranking. Parametros de URL nao podem se passar pelo pathname.
 
 Favoritos sao apurados a partir dos registros ativos e sua origin_path, nunca pela subtracao de eventos opcionais de telemetria. Reativacao inicia uma nova data e origem para o vinculo ativo; chamadas repetidas quando ja ativo preservam ambos. Nao reconstruir origens antigas sem evidencia.

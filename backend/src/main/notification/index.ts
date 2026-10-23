@@ -7,7 +7,7 @@ import { createNotificationDelivery } from "./deliveries";
 import { isChannelAllowed } from "./preferences";
 import { sendWebPushToSubscriptions } from "./push";
 import { isImmediatePushSuppressedByDigestPolicy } from "./push-policy";
-import { favoriteNotificationRedirect } from "./redirect";
+import { professionalAnalyticsNotificationRedirect } from "./redirect";
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -195,7 +195,11 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
         data: {
           message_key: meta.message_key,
           message_props: props,
-          redirect: favoriteNotificationRedirect(meta.message_key, "in_app", meta.redirect),
+          redirect: professionalAnalyticsNotificationRedirect(
+            meta.message_key,
+            "in_app",
+            meta.redirect,
+          ),
           user_id: user.id,
         },
       });
@@ -262,7 +266,8 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
       const result = await sendWebPushToSubscriptions({
         body: content.body,
         redirect:
-          favoriteNotificationRedirect(meta.message_key, "push", meta.redirect) ?? undefined,
+          professionalAnalyticsNotificationRedirect(meta.message_key, "push", meta.redirect) ??
+          undefined,
         subscriptions: user.notification_subscriptions,
         title: content.title,
       });
