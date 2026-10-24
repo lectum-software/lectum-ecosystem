@@ -1109,6 +1109,13 @@ O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re
 
 ---
 
+## Identidade fiscal interna (TASK-272)
+
+TASK-272: fiscal_identity_event e um historico interno append-only por perfil,
+com nome fiscal, CPF vinculado, origem (infosimples/manual_admin), ator ou consulta
+confirmada e data. Relacao nao incluida nas respostas do profissional. A nota
+preserva o nome no snapshot, sem atualizacao retroativa por edicao administrativa.
+
 ## Analytics first-party e tráfego
 
 Adicionado na TASK-49 para sustentar a aba Admin Tráfego sem integração de terceiros, sem IP bruto e sem user-agent bruto.

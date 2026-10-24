@@ -20,6 +20,7 @@ import {
   RegistryVerificationDialog,
   registryVerificationBadge,
 } from "./actions";
+import { FiscalIdentityForm } from "./fiscal-identity";
 
 export const RegistryVerificationCard = ({ id }: { id: string }) => {
   const [action, setAction] = useState<"approve" | "reject" | "save" | null>(null);
@@ -78,6 +79,8 @@ export const RegistryVerificationCard = ({ id }: { id: string }) => {
           registry={registry}
         />
       </div>
+
+      <FiscalIdentityForm id={id} />
 
       <div className="mt-5">
         <h3 className="text-sm font-bold text-foreground">Últimas tentativas</h3>

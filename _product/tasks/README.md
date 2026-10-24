@@ -689,6 +689,7 @@ ou cortesia manual.
 | 268 | [TASK-268 - Origens dos analytics e notificacoes](TASK-268-origens-analytics-notificacoes.md) | Done | 267 |
 | 269 | [TASK-269 - Top Mentores com fundo perola](TASK-269-top-mentores-perola.md) | Done | 268 |
 | 270 | [TASK-270 - Notificacoes selecionam a metrica dos Analytics](TASK-270-notificacoes-metrica-analytics.md) | Done | 269 |
+| 272 | [TASK-272 - Identidade fiscal interna](TASK-272-internal-fiscal-identity.md) | Done | 270 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -9,8 +9,10 @@ import {
   useAdminPsychologistBilling,
   useAdminPsychologistGrantCourtesy,
 } from "@/api/callers/psychologists";
+import { useFiscalIdentity } from "@/api/callers/psychologists/fiscal-identity";
 import { resolveApiError } from "@/api/handle";
 import type { AdminPsychologistBilling, AdminPsychologistDetail } from "@/api/req/psychologists";
+import type { FiscalIdentityInput } from "@/api/req/psychologists/fiscal-identity";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { CardShell, ErrorState, IconCircle } from "../../components/shared";
@@ -45,11 +47,13 @@ import {
 
 const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
   const mutation = useAdminPsychologistGrantCourtesy(id);
-  const [pendingCourtesyValues, setPendingCourtesyValues] = useState<CourtesyFormValues | null>(
-    null,
-  );
+  const fiscalQuery = useFiscalIdentity(id);
+  const [pendingCourtesyValues, setPendingCourtesyValues] = useState<
+    (CourtesyFormValues & { fiscal_identity: FiscalIdentityInput }) | null
+  >(null);
   const form = useForm<CourtesyFormValues>({
     defaultValues: {
+      fiscal_full_name: "",
       cpf: formatCpfInput(billing.courtesy.cpf),
       crp:
         normalizeCrpRegistrationDisplay(
@@ -70,7 +74,8 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
     mode: "onSubmit",
     resolver: zodResolver(courtesyConfirmationSchema),
   });
-  const disabled = !billing.courtesy.can_grant || mutation.isPending;
+  const disabled =
+    !billing.courtesy.can_grant || mutation.isPending || !fiscalQuery.data || fiscalQuery.isError;
   const regionalOptions = useMemo(
     () => createCrpRegionSelectOptions(billing.courtesy.regional_crp),
     [billing.courtesy.regional_crp],
@@ -78,6 +83,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
 
   useEffect(() => {
     form.reset({
+      fiscal_full_name: form.getValues("fiscal_full_name"),
       cpf: formatCpfInput(billing.courtesy.cpf),
       crp:
         normalizeCrpRegistrationDisplay(
@@ -91,9 +97,23 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
     confirmationForm.reset({ confirmation: "" });
   }, [billing.courtesy, confirmationForm, form]);
 
+  useEffect(() => {
+    if (fiscalQuery.data && !form.getFieldState("fiscal_full_name").isDirty) {
+      form.setValue("fiscal_full_name", fiscalQuery.data.current?.full_name ?? "");
+    }
+  }, [fiscalQuery.data, form]);
+
   const onSubmit: SubmitHandler<CourtesyFormValues> = async (values) => {
+    if (!fiscalQuery.data) return;
     confirmationForm.reset({ confirmation: "" });
-    setPendingCourtesyValues(values);
+    setPendingCourtesyValues({
+      ...values,
+      fiscal_identity: {
+        full_name: values.fiscal_full_name,
+        revision: fiscalQuery.data.revision,
+        profile_revision: fiscalQuery.data.profile_revision,
+      },
+    });
   };
 
   const onConfirmSubmit: SubmitHandler<CourtesyConfirmationFormValues> = async (values) => {
@@ -101,6 +121,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
 
     try {
       await mutation.mutateAsync({
+        fiscal_identity: pendingCourtesyValues.fiscal_identity,
         confirmation: values.confirmation.trim().toUpperCase(),
         cpf: normalizeCpfInput(pendingCourtesyValues.cpf),
         crp: normalizeCrpRegistrationDisplay(pendingCourtesyValues.crp) || "",
@@ -114,6 +135,8 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
       toast.success("Cortesia concedida com sucesso.");
     } catch (error) {
       toast.error(resolveApiError(error));
+      await fiscalQuery.refetch();
+      setPendingCourtesyValues(null);
     }
   };
   const closeConfirmationModal = () => {
@@ -150,6 +173,20 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
 
         <FormProvider {...form}>
           <form className="mt-5 space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+            {fiscalQuery.isError ? (
+              <ErrorState
+                message={resolveApiError(fiscalQuery.error)}
+                onRetry={() => void fiscalQuery.refetch()}
+              />
+            ) : null}
+            <InputController<CourtesyFormValues>
+              autoComplete="off"
+              disabled={disabled}
+              label="Nome completo para emissão fiscal"
+              name="fiscal_full_name"
+              maxLength={150}
+              required
+            />
             <div className="grid gap-4 sm:grid-cols-3">
               <SelectController<CourtesyFormValues>
                 disabled={disabled}
@@ -264,6 +301,10 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
             </div>
 
             <dl className="mt-5 divide-y divide-border rounded-2xl border border-border bg-surface-muted px-4 text-sm">
+              <FieldRow
+                label="Nome completo para emissão fiscal"
+                value={pendingCourtesyValues.fiscal_full_name}
+              />
               <FieldRow
                 label="Regional CRP"
                 value={formatCrpRegion(pendingCourtesyValues.regional_crp)}

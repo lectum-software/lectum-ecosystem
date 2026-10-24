@@ -1,4 +1,6 @@
 import prisma from "@/infra/database/prisma";
+import { fiscalIdentityInputSchema } from "@/modules/billing/invoices/fiscal-identity";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";
 import { normalizeCrpRegistrationNumber } from "@/utils/professional-registry";
 
@@ -6,6 +8,8 @@ const SOURCE_ADMIN_GRANT = "admin_grant";
 
 export type GrantProfessionalSubscriptionArgs = {
   actor: string;
+  fiscalActorId?: string;
+  fiscalIdentity?: { full_name: string; revision: string | null; profile_revision: string };
   cpf?: string | null;
   crpNumber?: string | null;
   crpRegion?: string | null;
@@ -214,6 +218,14 @@ const findTarget = async (
 export const grantProfessionalSubscription = async (args: GrantProfessionalSubscriptionArgs) => {
   assertAudit(args);
 
+  const fiscal =
+    args.fiscalIdentity === undefined
+      ? null
+      : fiscalIdentityInputSchema.safeParse(args.fiscalIdentity);
+  if (fiscal && (!fiscal.success || !args.fiscalActorId?.trim()))
+    throw new Error("fiscal_identity_invalid");
+  const fiscalIdentity = fiscal?.success ? fiscal.data : null;
+
   const target = await findTarget(args);
   const periodEnd = resolveGrantPeriodEnd(args);
   const identityOverride = normalizeIdentityOverride(args);
@@ -230,7 +242,25 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
   }
 
   const now = new Date();
-  const subscription = await prisma.$transaction(async (tx) => {
+  const subscription = await withSerializableTransaction(async (tx) => {
+    if (fiscalIdentity) {
+      const latest = await tx.fiscal_identity_event.findFirst({
+        where: { psychologist_id: target.profileId },
+        orderBy: { sequence: "desc" },
+      });
+      if ((latest?.id ?? null) !== fiscalIdentity.revision)
+        throw new Error("fiscal_identity_changed");
+      const locked = await tx.psychologist_profile.updateMany({
+        where: {
+          id: target.profileId,
+          deleted: false,
+          updatedAt: new Date(fiscalIdentity.profile_revision),
+          user: { active: true, deleted: false, role: "psicologo" },
+        },
+        data: { updatedAt: new Date() },
+      });
+      if (locked.count !== 1) throw new Error("fiscal_identity_changed");
+    }
     const externalBillingSubscription = await tx.professional_subscription.findFirst({
       where: {
         deleted: false,
@@ -304,6 +334,23 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
           id: target.profileId,
         },
         data: profileUpdateData,
+      });
+    }
+
+    if (fiscalIdentity) {
+      const profile = await tx.psychologist_profile.findUniqueOrThrow({
+        where: { id: target.profileId },
+      });
+      const cpf = normalizeCpfForOverride(profile.cpf);
+      if (!cpf) throw new Error("cpf_invalid");
+      await tx.fiscal_identity_event.create({
+        data: {
+          psychologist_id: target.profileId,
+          cpf,
+          full_name: fiscalIdentity.full_name,
+          source: "manual_admin",
+          actor_id: args.fiscalActorId!,
+        },
       });
     }
 

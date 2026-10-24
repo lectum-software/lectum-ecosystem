@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { fiscalNameSchema } from "@/modules/billing/invoices/fiscal-identity";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const psychologistParam = {
@@ -52,6 +54,14 @@ export const updateIdentitySchema: IValidatorRequest = {
 };
 
 export const showValidator = validator(showSchema);
+export const fiscalIdentityValidator = validator({
+  params: [psychologistParam],
+  body: [
+    { key: "full_name", custom: fiscalNameSchema },
+    { key: "revision", custom: z.string().min(1).max(120).nullable() },
+    { key: "profile_revision", custom: z.iso.datetime() },
+  ],
+});
 export const approveValidator = validator(approveSchema);
 export const rejectValidator = validator(rejectSchema);
 export const updateIdentityValidator = validator(updateIdentitySchema);

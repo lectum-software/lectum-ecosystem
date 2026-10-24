@@ -413,6 +413,7 @@ model psychologist_profile {
   createdAt                       DateTime                      @default(now()) @map("created_at")
   user_id                         String                        @unique
   professional_first_name         String?                       @map("professional_first_name")
+  fiscal_identity_events          fiscal_identity_event[]
   professional_last_name          String?                       @map("professional_last_name")
   headline                        String?
   bio                             String?
@@ -757,6 +758,21 @@ model professional_subscription_history {
   @@index([psychologist_id, observed_at, id], map: "subscription_history_profile_idx")
   @@index([subscription_id, observed_at, id], map: "subscription_history_lookup_idx")
   @@map("professional_subscription_history")
+}
+
+model fiscal_identity_event {
+  id                String   @id @default(cuid())
+  sequence          Int      @unique @default(autoincrement())
+  psychologist_id   String
+  full_name         String   @db.VarChar(150)
+  cpf               String   @db.VarChar(11)
+  source            String
+  actor_id          String?
+  registry_check_id String?
+  created_at        DateTime @default(now())
+  psychologist      psychologist_profile @relation(fields: [psychologist_id], references: [id], onDelete: Cascade)
+
+  @@index([psychologist_id, sequence])
 }
 
 model billing_address {
