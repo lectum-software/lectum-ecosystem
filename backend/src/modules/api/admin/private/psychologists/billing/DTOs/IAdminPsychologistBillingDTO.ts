@@ -73,6 +73,7 @@ export type AdminPsychologistBillingDTO = {
 };
 
 export type AdminPsychologistBillingGrantBody = {
+  fiscal_identity?: { full_name: string; revision: string | null; profile_revision: string };
   confirmation: string;
   cpf?: string | null;
   crp?: string | null;

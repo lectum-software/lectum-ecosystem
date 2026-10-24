@@ -6,6 +6,7 @@ import {
   showRegistryVerification,
   updateRegistryIdentity,
 } from "./services";
+import { saveFiscalIdentity, showFiscalIdentity } from "./services/fiscal-identity";
 
 export const show = async (req: Request, res: Response) => {
   try {
@@ -16,6 +17,28 @@ export const show = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_psychologist_registry_verification_show", err);
+  }
+};
+
+export const showFiscal = async (req: Request, res: Response) => {
+  try {
+    return send(
+      res,
+      await showFiscalIdentity(req as unknown as Parameters<typeof showFiscalIdentity>[0]),
+    );
+  } catch (err) {
+    return error500(res, "admin_fiscal_identity_show", err);
+  }
+};
+
+export const saveFiscal = async (req: Request, res: Response) => {
+  try {
+    return send(
+      res,
+      await saveFiscalIdentity(req as unknown as Parameters<typeof saveFiscalIdentity>[0]),
+    );
+  } catch (err) {
+    return error500(res, "admin_fiscal_identity_save", err);
   }
 };
 

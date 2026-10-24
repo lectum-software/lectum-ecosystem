@@ -334,6 +334,7 @@ export type AdminPsychologistBilling = {
 };
 
 export type AdminPsychologistGrantCourtesyInput = {
+  fiscal_identity?: { full_name: string; revision: string | null; profile_revision: string };
   confirmation: string;
   cpf: string;
   crp: string;

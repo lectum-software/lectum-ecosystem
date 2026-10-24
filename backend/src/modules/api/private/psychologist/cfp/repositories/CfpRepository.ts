@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_registry_check, psychologist_profile } from "@/interfaces/objects";
+import { fiscalNameSchema } from "@/modules/billing/invoices/fiscal-identity";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";
 import {
@@ -230,6 +231,23 @@ export class CfpRepository implements ICfpRepository {
             (identity.crp_registration_date?.getTime() ?? null);
         if (!exactRetry) return { ok: false, reason: "profile_locked" };
       } else {
+        const fiscalName = fiscalNameSchema.safeParse(result.nome);
+        if (
+          identity.cpf &&
+          fiscalName.success &&
+          normalizeDigits(raw.request?.cpf) === identity.cpf
+        ) {
+          await tx.fiscal_identity_event.create({
+            data: {
+              psychologist_id: check.psychologist_id!,
+              full_name: fiscalName.data,
+              cpf: identity.cpf,
+              source: "infosimples",
+              registry_check_id: check.id!,
+              created_at: confirmedAt,
+            },
+          });
+        }
         // A missing/deleted check causes rollback, never an approval without its evidence.
         await tx.professional_registry_check.update({
           where: { id: check.id, psychologist_id: check.psychologist_id, deleted: false },

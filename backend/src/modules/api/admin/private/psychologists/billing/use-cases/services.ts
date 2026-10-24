@@ -222,6 +222,9 @@ const statusLabel = (status?: string | null) => {
 const mapGrantError = (err: unknown): Resolve => {
   const message = err instanceof Error ? err.message : "unknown";
   const copy: Record<string, string> = {
+    fiscal_identity_invalid: "Informe o nome completo para emissão fiscal.",
+    fiscal_identity_changed:
+      "O registro foi atualizado. Recarregue os dados antes de conceder a cortesia.",
     crp_registration_date_future: "A data de inscricao no CRP nao pode estar no futuro.",
     crp_registration_date_invalid: "A data de inscricao no CRP e invalida.",
     cpf_invalid: "Informe um CPF valido com 11 digitos.",
@@ -233,7 +236,8 @@ const mapGrantError = (err: unknown): Resolve => {
   };
   const knownCode = Object.hasOwn(copy, message) ? message : "admin_courtesy_grant_failed";
   const status =
-    knownCode === "external_billing_subscription_blocks_admin_grant"
+    knownCode === "external_billing_subscription_blocks_admin_grant" ||
+    knownCode === "fiscal_identity_changed"
       ? 409
       : knownCode === "professional_plan_not_found" ||
           knownCode === "psychologist_profile_not_found_for_grant" ||
@@ -351,6 +355,8 @@ export const grantCourtesy = async (data: IAdminPsychologistBillingGrantDTO): Pr
   try {
     const grantResult = await grantProfessionalSubscription({
       actor: adminActor(data.auth ?? data.admin),
+      fiscalIdentity: data.b.fiscal_identity,
+      fiscalActorId: adminId(data.auth ?? data.admin) ?? undefined,
       cpf: data.b.cpf === undefined ? undefined : trimOrNull(data.b.cpf),
       crpNumber: data.b.crp === undefined ? undefined : trimOrNull(data.b.crp),
       crpRegion: data.b.regional_crp === undefined ? undefined : trimOrNull(data.b.regional_crp),

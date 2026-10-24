@@ -1,5 +1,7 @@
 {
   "error": {
+    "admin_fiscal_name_invalid": "Informe o nome completo para emissão fiscal.",
+    "admin_fiscal_cpf_required": "Complete o CPF no registro do profissional antes de salvar o nome fiscal.",
     "invalid_whatsapp_report_count": "Informe uma quantidade inteira entre zero e 1.000.000 para um período com cliques no WhatsApp.",
     "whatsapp_report_read_only": "Somente a semana atual e as quatro anteriores podem ser alteradas.",
     "invalid_structure": "Revise os dados informados.",

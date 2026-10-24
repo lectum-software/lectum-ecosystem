@@ -14,6 +14,15 @@ const createCrpRegistrationDateSchema = (requiredMessage: string) =>
     );
 
 export const courtesyDetailsSchema = z.object({
+  fiscal_full_name: z
+    .string()
+    .trim()
+    .min(3, "Informe o nome completo para emissão fiscal.")
+    .max(150, "Use até 150 caracteres.")
+    .refine(
+      (value) => [...value].every((char) => char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127),
+      "Revise o nome informado.",
+    ),
   cpf: z
     .string()
     .trim()

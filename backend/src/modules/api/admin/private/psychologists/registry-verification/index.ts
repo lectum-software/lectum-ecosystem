@@ -1,7 +1,15 @@
 import { Router } from "express";
-import { approve, reject, show, updateIdentity } from "./use-cases/controller";
+import {
+  approve,
+  reject,
+  saveFiscal,
+  show,
+  showFiscal,
+  updateIdentity,
+} from "./use-cases/controller";
 import {
   approveValidator,
+  fiscalIdentityValidator,
   rejectValidator,
   showValidator,
   updateIdentityValidator,
@@ -10,6 +18,8 @@ import {
 const routes = Router();
 
 routes.get("/:id/registry-verification", showValidator, show);
+routes.get("/:id/registry-verification/fiscal-identity", showValidator, showFiscal);
+routes.put("/:id/registry-verification/fiscal-identity", fiscalIdentityValidator, saveFiscal);
 routes.put("/:id/registry-verification/identity", updateIdentityValidator, updateIdentity);
 routes.post("/:id/registry-verification/approve", approveValidator, approve);
 routes.post("/:id/registry-verification/reject", rejectValidator, reject);

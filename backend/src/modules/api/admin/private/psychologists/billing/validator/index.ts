@@ -1,3 +1,4 @@
+import { fiscalIdentityInputSchema } from "@/modules/billing/invoices/fiscal-identity";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const psychologistParam = {
@@ -15,6 +16,7 @@ export const showSchema: IValidatorRequest = {
 export const grantSchema: IValidatorRequest = {
   params: [psychologistParam],
   body: [
+    { key: "fiscal_identity", custom: fiscalIdentityInputSchema, optional: true },
     {
       key: "confirmation",
       coerse: "string",
