@@ -34,6 +34,7 @@ import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import {
+  CREATE_POST_PROFILE_RETURN_PARAM,
   classifyUploadedCommunityMedia,
   clearCreatePostProfileDraft,
   createSelectedMediaId,
@@ -352,6 +353,11 @@ export const useCreateCommunityPostController = ({
       });
 
       if (createPostAuthReturn.replaceCreatePostAuthReturnWithHome(router)) return;
+      // Profile editing can leave another composer or the editor in browser history.
+      if (searchParams.get(CREATE_POST_PROFILE_RETURN_PARAM) === "1") {
+        router.replace(fallbackHref);
+        return;
+      }
       navigateBackWithFallback(router, fallbackHref);
     }, SHEET_CLOSE_DELAY_MS);
   };

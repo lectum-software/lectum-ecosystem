@@ -549,7 +549,7 @@ test("retorno da edicao de nome sempre aponta para o compositor aberto", () => {
       currentHref: "/",
       routeSlug: "feed",
     }),
-    "/app/comunidades/feed/publicacao/nova",
+    "/app/comunidades/feed/publicacao/nova?profileReturn=1",
   );
   assert.equal(
     resolveCreatePostProfileReturnHref({
@@ -557,21 +557,34 @@ test("retorno da edicao de nome sempre aponta para o compositor aberto", () => {
       currentHref: "/?community=ansiedade-em-equilibrio",
       routeSlug: "feed",
     }),
-    "/app/comunidades/feed/publicacao/nova?community=ansiedade-em-equilibrio",
+    "/app/comunidades/feed/publicacao/nova?community=ansiedade-em-equilibrio&profileReturn=1",
   );
   assert.equal(
     resolveCreatePostProfileReturnHref({
       currentHref: "/comunidades/relacionamentos-com-proposito",
       routeSlug: "relacionamentos-com-proposito",
     }),
-    "/app/comunidades/relacionamentos-com-proposito/publicacao/nova",
+    "/app/comunidades/relacionamentos-com-proposito/publicacao/nova?profileReturn=1",
   );
   assert.equal(
     resolveCreatePostProfileReturnHref({
       currentHref: "/app/comunidades/feed/publicacao/nova?community=depressao",
       routeSlug: "feed",
     }),
-    "/app/comunidades/feed/publicacao/nova?community=depressao",
+    "/app/comunidades/feed/publicacao/nova?community=depressao&profileReturn=1",
+  );
+});
+
+test("retorno do perfil preserva filtros e ancora sem duplicar o marcador", () => {
+  const expected = "/app/community/feed/post/new?community=ansiedade&profileReturn=1#editor";
+  const firstReturn = resolveCreatePostProfileReturnHref({
+    currentHref: "/app/community/feed/post/new?community=ansiedade#editor",
+    routeSlug: "feed",
+  });
+  assert.equal(firstReturn, expected);
+  assert.equal(
+    resolveCreatePostProfileReturnHref({ currentHref: firstReturn, routeSlug: "feed" }),
+    expected,
   );
 });
 
