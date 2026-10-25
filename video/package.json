@@ -1,6 +1,6 @@
 {
   "name": "@lectum/video-service",
-  "version": "0.1.714",
+  "version": "0.1.715",
   "private": true,
   "type": "module",
   "description": "Serviço isolado de processamento assíncrono de vídeos da Lectum",
@@ -32,8 +32,8 @@
     "express": "5.2.1",
     "helmet": "8.3.0",
     "ioredis": "6.0.0",
-    "multer": "2.3.0",
-    "zod": "4.5.4"
+    "multer": "2.5.0",
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.12",
@@ -42,5 +42,11 @@
     "@types/node": "26.4.1",
     "tsx": "4.23.13",
     "typescript": "7.0.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "body-parser": "2.4.0",
+      "proxy-addr": "2.0.8"
+    }
   }
 }

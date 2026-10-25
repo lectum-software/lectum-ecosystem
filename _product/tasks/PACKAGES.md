@@ -8,6 +8,17 @@ padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
 
+### Security refresh 2026-10-25 (TASK-274 / ADR-0637)
+
+Full audits of root, backend, frontend, Admin and video returned zero known
+vulnerabilities after targeted updates. Backend: Multer 2.5.0, Nodemailer
+10.1.4, Zod >=4.6.6 and fixed transitive overrides. Next apps: Next and
+eslint-config-next 16.4.1, Sentry 10.75.2, Axios >=1.20.0, Zod >=4.6.6,
+Sharp 0.35.5 and patched tooling dependencies. Video: Multer 2.5.0,
+Zod 4.6.6, body-parser 2.4.0 and proxy-addr 2.0.8. Root: fast-uri 3.1.9
+and js-yaml 4.3.2. Independent lockfiles retained; runtime floors unchanged.
+This dated result does not guarantee absence of undiscovered vulnerabilities.
+
 - Usar `pnpm`.
 - Não instalar pacote novo sem necessidade explícita da task.
 - Preferir pacotes já instalados e padrões locais.

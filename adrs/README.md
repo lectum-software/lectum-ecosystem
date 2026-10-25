@@ -698,3 +698,4 @@ Formato recomendado:
 - [ADR-0633 — Notificacoes selecionam a metrica dos Analytics](0633-notificacoes-metrica-analytics.md)
 - [ADR-0635 — Nome fiscal interno do profissional](0635-internal-fiscal-identity.md)
 - [ADR-0636 — Feedback privado de usuarios](0636-private-user-feedback.md)
+- [ADR-0637 — Security updates before feedback rollout](0637-feedback-release-security.md)
