@@ -697,3 +697,4 @@ Formato recomendado:
 - [ADR-0632 — Fundo neutro e tipografia do Top Mentores](0632-top-mentores-perola.md)
 - [ADR-0633 — Notificacoes selecionam a metrica dos Analytics](0633-notificacoes-metrica-analytics.md)
 - [ADR-0635 — Nome fiscal interno do profissional](0635-internal-fiscal-identity.md)
+- [ADR-0636 — Feedback privado de usuarios](0636-private-user-feedback.md)

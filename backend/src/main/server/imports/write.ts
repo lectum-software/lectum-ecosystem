@@ -7,6 +7,7 @@ import apiAdminPrivateCommunitiesDashboard from "@/modules/api/admin/private/com
 import apiAdminPrivateCommunitiesManage from "@/modules/api/admin/private/communities/manage";
 import apiAdminPrivateDashboardExport from "@/modules/api/admin/private/dashboard/export";
 import apiAdminPrivateDashboardSummary from "@/modules/api/admin/private/dashboard/summary";
+import apiAdminFeedback from "@/modules/api/admin/private/feedback";
 import apiAdminPrivateFinanceDashboard from "@/modules/api/admin/private/finance/dashboard";
 import apiAdminPrivateFinanceLists from "@/modules/api/admin/private/finance/lists";
 import apiAdminPrivateModeration from "@/modules/api/admin/private/moderation";
@@ -47,6 +48,7 @@ import apiPrivateAuthNeedReset from "@/modules/api/private/auth/need_reset";
 import apiPrivateAuthReset from "@/modules/api/private/auth/reset";
 import apiPrivateCommunity from "@/modules/api/private/community";
 import apiPrivateDirectoryPsychologists from "@/modules/api/private/directory/psychologists";
+import apiFeedback from "@/modules/api/private/feedback";
 import apiPrivateLegal from "@/modules/api/private/legal";
 import apiPrivateNotificationClean from "@/modules/api/private/notification/clean";
 import apiPrivateNotificationClick from "@/modules/api/private/notification/click";
@@ -208,6 +210,8 @@ mountRoute("/api/admin/private/dashboard/export", apiAdminPrivateDashboardExport
 mountRoute("/api/admin/private/finance/dashboard", apiAdminPrivateFinanceDashboard);
 mountRoute("/api/admin/private/finance", apiAdminPrivateFinanceLists);
 mountRoute("/api/admin/private/moderation", apiAdminPrivateModeration);
+mountRoute("/api/admin/private/feedback", apiAdminFeedback);
+mountAuthOnlyRoute("/api/private/feedback", apiFeedback);
 mountRoute("/api/admin/private/notifications", apiAdminPrivateNotifications);
 mountRoute("/api/admin/private/patients/dashboard", apiAdminPrivatePatientsDashboard);
 mountRoute("/api/admin/private/patients", apiAdminPrivatePatientsList);

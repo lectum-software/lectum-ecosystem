@@ -6,6 +6,7 @@ import {
   BarChart3,
   Bookmark,
   ChevronRight,
+  CircleHelp,
   Compass,
   Edit3,
   Heart,
@@ -271,6 +272,7 @@ export const ProfileLogic = () => {
         ]
       : [{ href: "/app/avaliacoes", icon: Star, label: "Avaliações" }]),
     { href: "/app/configuracoes/conta", icon: Lock, label: "E-mail e senha" },
+    { href: "/app/ajuda", icon: CircleHelp, label: "Ajuda e feedback" },
     {
       hideChevron: true,
       icon: Moon,

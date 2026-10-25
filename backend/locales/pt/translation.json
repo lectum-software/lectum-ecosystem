@@ -1,5 +1,10 @@
 {
   "error": {
+    "feedback_image": "Envie até 3 capturas JPEG, PNG ou WebP de até 5 MB cada. Verifique se os arquivos são imagens válidas.",
+    "feedback_limit": "Você atingiu o limite de feedbacks nas últimas 24 horas. Tente novamente mais tarde.",
+    "feedback_busy": "Há um envio em andamento. Aguarde um instante e tente novamente.",
+    "feedback_conflict": "Este registro foi alterado. Recarregue os dados antes de tentar novamente.",
+    "feedback_missing": "Feedback não encontrado.",
     "admin_fiscal_name_invalid": "Informe o nome completo para emissão fiscal.",
     "admin_fiscal_cpf_required": "Complete o CPF no registro do profissional antes de salvar o nome fiscal.",
     "invalid_whatsapp_report_count": "Informe uma quantidade inteira entre zero e 1.000.000 para um período com cliques no WhatsApp.",
@@ -263,6 +268,7 @@
   },
   "message": {
     "store": "dado criado",
+    "feedback_sent": "Feedback enviado. Obrigado por ajudar a melhorar a Lectum.",
     "login_success": "Login realizado com sucesso.",
     "auth_success": "Autenticação realizada com sucesso",
     "recovery_code_success": "Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação.",

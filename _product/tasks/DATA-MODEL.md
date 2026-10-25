@@ -1109,6 +1109,17 @@ O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re
 
 ---
 
+## Feedback privado (TASK-273)
+
+user_feedbacks armazena relato autenticado, autor, chave de idempotencia, fingerprint,
+status, classificacao, nota interna, revisao para concorrencia e dados tecnicos minimos.
+feedback_attachments guarda capturas recodificadas JPEG, limitadas a tres de 1 MiB
+por relato, em tabela separada; listagens nunca selecionam os bytes.
+Exclusao da conta remove relatos e capturas por cascade. Alteracoes administrativas
+geram admin_activity_logs sem copiar o texto do relato, notas ou imagens.
+Nao existe leitura publica nem URL de bucket: download exige autenticacao Admin.
+Migration aditiva 20261025013413_private_user_feedback; sem backfill.
+
 ## Identidade fiscal interna (TASK-272)
 
 TASK-272: fiscal_identity_event e um historico interno append-only por perfil,

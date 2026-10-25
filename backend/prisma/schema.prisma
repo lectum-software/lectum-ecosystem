@@ -11,6 +11,7 @@ datasource db {
 }
 
 model user {
+  feedbacks user_feedback[]
   legal_acceptances legal_acceptance[]
 
   id                                      String                        @id @default(cuid())
@@ -97,6 +98,40 @@ model user {
   @@index([account_status, account_status_expires_at, deleted])
   @@index([role, deleted])
   @@map("users")
+}
+
+model user_feedback {
+  id            String                @id @default(cuid())
+  user_id       String
+  user          user                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  request_id    String
+  fingerprint   String
+  description   String
+  status        String                @default("new")
+  category      String                @default("unclassified")
+  internal_note String                @default("")
+  revision      Int                   @default(0)
+  app_version   String?
+  viewport      String?
+  created_at    DateTime              @default(now())
+  updated_at    DateTime              @updatedAt
+  attachments   feedback_attachment[]
+
+  @@unique([user_id, request_id])
+  @@index([status, created_at])
+  @@index([user_id, created_at])
+  @@map("user_feedbacks")
+}
+
+model feedback_attachment {
+  id          String        @id @default(cuid())
+  feedback_id String
+  feedback    user_feedback @relation(fields: [feedback_id], references: [id], onDelete: Cascade)
+  content     Bytes
+  size        Int
+
+  @@index([feedback_id])
+  @@map("feedback_attachments")
 }
 
 model admin {

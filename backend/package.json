@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.712",
+  "version": "0.1.713",
   "packageManager": "pnpm@10.33.0",
   "private": true,
   "prisma": {
@@ -69,6 +69,7 @@
     "passport-jwt": "^4.0.1",
     "pg": "^8.21.0",
     "prisma": "^7.9.1",
+    "sharp": "0.35.5",
     "socket.io": "^4.8.3",
     "swagger-ui-express": "^5.0.1",
     "twilio": "^6.0.2",

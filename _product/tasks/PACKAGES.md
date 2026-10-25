@@ -259,6 +259,14 @@ frontend/Admin para corrigir encerramento de processo por entrada inválida. Mul
 aplica `fileSize` inclusivo: o ajuste `+1` fica apenas em `fieldSize` e `parts`. Parsers públicos
 limitam também profundidade e índice de campos antes de materializar objetos.
 
+## Capturas privadas de feedback (TASK-273)
+
+Backend adiciona `sharp@0.35.5` como dependencia de runtime para decodificar imagens
+JPEG/PNG/WebP, verificar dimensoes, remover EXIF e limitar tamanho antes da persistencia.
+Versao e requisito Node >=20.9 verificados via registry; Node 22 da imagem do backend
+e Node 24 local compativeis. Lock inclui binarios opcionais Linux x64 e Windows.
+Sem SDK externo, novo servico ou bucket publico. Decisao e limites em ADR-0636.
+
 ## Testes e qualidade candidatos
 
 Atualmente o backend também possui testes unitários com o test runner nativo do Node + `tsx`, sem framework adicional. Frontend/admin validam Biome sem warnings, ESLint com `--max-warnings=0` e TypeScript. Para uma suíte automatizada futura:
