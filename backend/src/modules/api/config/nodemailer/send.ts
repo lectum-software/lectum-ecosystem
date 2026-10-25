@@ -73,7 +73,7 @@ const renderConditionalBlocks = (template: string, context: TemplateContext) => 
   return html;
 };
 
-const renderTemplate = (template: string, context: TemplateContext) => {
+export const renderTemplate = (template: string, context: TemplateContext) => {
   let html = template.replace(/{{!--[\s\S]*?--}}/g, "");
   html = renderConditionalBlocks(html, context);
 
@@ -143,7 +143,9 @@ const send = async ({
         extName: ".hbs",
       };
 
-      transporter.use("compile", hbs(handlebarOptions as unknown as Parameters<typeof hbs>[0]));
+      // The plugin still declares @types/nodemailer 8; v10 bundles its own Mail types.
+      const plugin = hbs(handlebarOptions as unknown as Parameters<typeof hbs>[0]);
+      transporter.use("compile", plugin as unknown as Parameters<typeof transporter.use>[1]);
 
       const headers: Record<string, string> = {};
 

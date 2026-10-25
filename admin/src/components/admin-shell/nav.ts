@@ -21,6 +21,7 @@ export const adminNavItems = [
     children: [
       { label: "Visão geral", href: "/moderacao" },
       { label: "Denúncias", href: "/moderacao/denuncias", badge: "denuncias" },
+      { label: "Feedbacks", href: "/moderacao/feedbacks", badge: "feedbacks" },
       { label: "Compliance", href: "/moderacao/compliance", badge: "compliance" },
       { label: "Operacionais", href: "/moderacao/operacionais", badge: "operacionais" },
       {

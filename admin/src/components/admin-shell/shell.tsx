@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useFeedbackCount } from "@/api/callers/feedback";
 import { useAdminModerationSummary } from "@/api/callers/moderation";
 import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { getSidebarCollapsed, setSidebarCollapsed } from "@/lib/storage";
@@ -21,6 +22,7 @@ type SidebarContentProps = {
 };
 
 type ModerationSubmenuBadge =
+  | "feedbacks"
   | "compliance"
   | "conteudoSensivel"
   | "denuncias"
@@ -40,6 +42,7 @@ const formatNavCount = (value: number) => (value > 99 ? "99+" : String(value));
 const pendingCountLabel = (value: number) => `${value} ${value === 1 ? "pendência" : "pendências"}`;
 
 const moderationSubmenuBadgeTone: Record<ModerationSubmenuBadge, "danger" | "warning"> = {
+  feedbacks: "warning",
   compliance: "danger",
   conteudoSensivel: "warning",
   denuncias: "danger",
@@ -90,17 +93,20 @@ const SidebarContent = ({
   const openGroupHref =
     openGroupOverride?.pathname === pathname ? openGroupOverride.href : activeGroupHref;
   const moderationSummary = useAdminModerationSummary();
+  const feedbackCount = useFeedbackCount();
   const communitySuggestionsNewTotal =
     moderationSummary.data?.community_suggestions?.new_suggestions_total ?? 0;
   const moderationPendingTotal =
     (moderationSummary.data?.pending_total ?? 0) +
     (moderationSummary.data?.operational_alerts?.counts.total ?? 0) +
-    communitySuggestionsNewTotal;
+    communitySuggestionsNewTotal +
+    (feedbackCount.data?.new_count ?? 0);
   const moderationUrgentTotal =
     (moderationSummary.data?.urgent_pending_total ?? 0) +
     (moderationSummary.data?.operational_alerts?.counts.urgent_total ?? 0);
   const hasModerationSummary = Boolean(moderationSummary.data);
   const moderationSubmenuPendingCounts: Record<ModerationSubmenuBadge, number> = {
+    feedbacks: feedbackCount.data?.new_count ?? 0,
     compliance: moderationSummary.data?.operational_alerts?.counts.compliance_total ?? 0,
     conteudoSensivel: moderationSummary.data?.pending_total ?? 0,
     denuncias: moderationSummary.data?.operational_alerts?.counts.pending_reports ?? 0,
