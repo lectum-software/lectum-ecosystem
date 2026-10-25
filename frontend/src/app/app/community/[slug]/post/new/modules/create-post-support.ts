@@ -123,6 +123,8 @@ export const isCreatePostHref = (href: string) => {
   return /\/(?:post\/new|publicacao\/nova)$/.test(pathname);
 };
 
+export const CREATE_POST_PROFILE_RETURN_PARAM = "profileReturn";
+
 export const resolveCreatePostProfileReturnHref = ({
   communitySlugFromQuery,
   currentHref,
@@ -132,15 +134,20 @@ export const resolveCreatePostProfileReturnHref = ({
   currentHref: string;
   routeSlug?: string | null;
 }) => {
-  if (isCreatePostHref(currentHref)) return currentHref;
-
-  if (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG) {
-    return `/app/comunidades/${encodeURIComponent(routeSlug)}/publicacao/nova`;
+  let returnHref = currentHref;
+  if (!isCreatePostHref(currentHref)) {
+    returnHref =
+      routeSlug && routeSlug !== COMMUNITY_FEED_SLUG
+        ? `/app/comunidades/${encodeURIComponent(routeSlug)}/publicacao/nova`
+        : COMMUNITY_CREATE_POST_HREF;
+    if (communitySlugFromQuery && (!routeSlug || routeSlug === COMMUNITY_FEED_SLUG)) {
+      returnHref += `?community=${encodeURIComponent(communitySlugFromQuery)}`;
+    }
   }
 
-  return communitySlugFromQuery
-    ? `${COMMUNITY_CREATE_POST_HREF}?community=${encodeURIComponent(communitySlugFromQuery)}`
-    : COMMUNITY_CREATE_POST_HREF;
+  const url = new URL(returnHref, "https://lectum.invalid");
+  url.searchParams.set(CREATE_POST_PROFILE_RETURN_PARAM, "1");
+  return `${url.pathname}${url.search}${url.hash}`;
 };
 
 export const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {

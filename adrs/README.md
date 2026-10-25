@@ -699,3 +699,4 @@ Formato recomendado:
 - [ADR-0635 — Nome fiscal interno do profissional](0635-internal-fiscal-identity.md)
 - [ADR-0636 — Feedback privado de usuarios](0636-private-user-feedback.md)
 - [ADR-0637 — Security updates before feedback rollout](0637-feedback-release-security.md)
+- [ADR-0638 — Close post composer after profile detour](0638-post-profile-close-loop.md)
