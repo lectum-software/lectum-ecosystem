@@ -23,6 +23,11 @@ Capturar somente versao e viewport; sem telemetria oculta, UA ou dados de sessao
 Dados e notas nao sao publicados ao psicologo/paciente.
 Sem notificacoes, emissao fiscal ou disparos externos.
 
+Refinamento de 25/10/2026: suporte separado dos links legais existentes na tela
+de ajuda; envio em largura total apos os anexos. Textos reduzidos a pedido do
+usuario, sem mudar os limites de upload, autenticacao ou contrato de metadados.
+Preview de leitura usa capturas locais, nunca uma rota publica de bypass.
+
 ## Rollout e rollback
 Schema expansivo com tabelas novas. Aplicar migration no backend antes das UIs.
 Sem novas envs. Rollback de codigo conserva dados; nunca apagar tabelas.

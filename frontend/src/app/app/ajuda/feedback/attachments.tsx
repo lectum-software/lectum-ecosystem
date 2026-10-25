@@ -104,7 +104,7 @@ export function Attachments({
         ) : null}
       </div>
       <p className="text-xs leading-5 text-muted">
-        Até 3 imagens de 5 MB cada. Evite incluir informações pessoais ou de pacientes.
+        Até 3 imagens de 5MB cada. Evite incluir informações pessoais.
       </p>
     </fieldset>
   );

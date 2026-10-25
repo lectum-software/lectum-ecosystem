@@ -17,6 +17,23 @@ status Novo/Em analise/Concluido, notas internas e contador de novos.
 - [x] Migration local, testes, checks e builds aprovados.
 
 ## Referencias e limites
+Refinamento visual solicitado em 25/10/2026:
+- [x] Enviar retangular em largura total depois das capturas; sem botao no cabecalho.
+- [x] Texto de anexos simplificado e remocao da frase sobre versao/viewport.
+- [x] Ajuda separada em suporte e documentos legais existentes; descricao do
+  feedback e rotulo Suporte via WhatsApp, com o icone existente da Lectum.
+- [x] Blocos com raio, bordas, superficie e sombra dos grupos do perfil.
+- [x] Preview somente leitura atualizado e telas reais verificadas em 390/1440px.
+
+Evidencias do refinamento: .tmp/task273-refinement-browser-final.log valida
+links, icone existente, raio, troca de superficie no tema escuro, textos,
+largura/posicao do botao e envio real HTTP 201 em 390/1440px. Fixtures removidas.
+Check frontend completo aprovado em .tmp/task273-refinement-check-final.log.
+Build final aprovado em .tmp/task273-refinement-build-final.log (low disk mode).
+Preview .tmp/task273-layout.html atualizado, sem bypass de autenticacao.
+Smoke autenticado do build via next start nao validou a sessao local; o fluxo
+real foi revalidado com next dev e API/banco isolados, sem mocks.
+
 Capturas do usuario e componentes existentes sao a referencia visual.
 Builder MCP indisponivel; inventario de prototipos consultado.
 Sem e-mail, push ou WhatsApp automaticos, nem Sentry Feedback.

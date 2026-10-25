@@ -78,21 +78,6 @@ export function FeedbackForm({ appVersion }: { appVersion?: string }) {
             <ArrowLeft aria-hidden className="h-5 w-5" />
           </Link>
           <h1 className="min-w-0 flex-1 text-base font-bold">Enviar feedback</h1>
-          {!sent ? (
-            <Button
-              form="feedback-form"
-              type="submit"
-              disabled={pending || !form.hook.formState.isValid}
-              className="shrink-0"
-            >
-              {pending ? (
-                <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send aria-hidden className="h-4 w-4" />
-              )}{" "}
-              Enviar
-            </Button>
-          ) : null}
         </header>
         {sent ? (
           <div role="status" className="grid justify-items-center gap-4 py-12 text-center">
@@ -112,9 +97,18 @@ export function FeedbackForm({ appVersion }: { appVersion?: string }) {
             className="space-y-5"
           >
             <Attachments files={files} onChange={setFiles} disabled={pending} onError={setError} />
-            <p className="text-xs leading-5 text-muted">
-              A versão da Lectum e o tamanho da tela serão enviados junto com seu feedback.
-            </p>
+            <Button
+              type="submit"
+              disabled={pending || !form.hook.formState.isValid}
+              className="w-full rounded-lg"
+            >
+              {pending ? (
+                <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send aria-hidden className="h-4 w-4" />
+              )}
+              Enviar
+            </Button>
             <p role="alert" className="min-h-5 text-sm text-danger">
               {error}
             </p>
