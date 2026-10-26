@@ -30,7 +30,7 @@ for (const answered of [false, true]) {
         relativeTime: "8 h",
       }),
     );
-    assert.match(html, /<h3 class="[^"]*font-bold[^"]*">Quantos pacientes chegaram/);
+    assert.match(html, /<h3 class="[^"]*font-bold[^"]*">Pacientes adquiridos<\/h3>/);
     assert.match(html, /1 pessoa clicou no seu WhatsApp/);
     assert.match(html, /href="\/app\/notificacoes\?whatsapp_week=week-id"/);
     assert.match(html, /bg-primary/);
@@ -43,7 +43,8 @@ for (const answered of [false, true]) {
       assert.doesNotMatch(html, /Informe mesmo que nenhuma/);
     } else {
       assert.match(html, />Informar agendamentos<\/a>/);
-      assert.match(html, /Informe mesmo que nenhuma/);
+      assert.match(html, /Quantas agendaram uma consulta\?/);
+      assert.doesNotMatch(html, /Informe mesmo que nenhuma/);
     }
   });
 }

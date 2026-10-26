@@ -27,7 +27,7 @@ export function WeeklyWhatsappNotification({
       <div className="min-w-0 flex-1 border-b border-border/70 pb-4">
         <div className="flex items-start justify-between gap-3">
           <h3 className="min-w-0 text-[15px] font-bold leading-5 text-foreground">
-            Quantos pacientes chegaram até você pela Lectum?
+            Pacientes adquiridos
           </h3>
           {!answered ? (
             <span className="mt-1 inline-flex shrink-0 items-center">
@@ -41,9 +41,7 @@ export function WeeklyWhatsappNotification({
           {peopleCount !== undefined
             ? `${peopleCount} ${peopleCount === 1 ? "pessoa clicou" : "pessoas clicaram"} no seu WhatsApp. `
             : ""}
-          {answered
-            ? "Agendamentos informados."
-            : "Quantas agendaram uma consulta? Informe mesmo que nenhuma."}
+          {answered ? "Agendamentos informados." : "Quantas agendaram uma consulta?"}
         </p>
         {href ? (
           <Button

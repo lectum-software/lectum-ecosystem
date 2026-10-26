@@ -1,7 +1,7 @@
 # ADR-0640 - Explicit weekly WhatsApp report action
 
 Use a dedicated presentation component for weekly report notifications, with
-an always-bold question, factual click counts and a primary rectangular link
+an always-bold title "Pacientes adquiridos", factual click counts and a primary rectangular link
 styled by the existing Button. The container is not interactive, avoiding nested
 links/buttons. The existing safe redirect opens the report modal.
 
@@ -11,3 +11,6 @@ and offer Ver resposta. Other notifications and their click behavior are unchang
 
 Update future push copy without generating notifications or resending old pushes.
 No data model, fiscal integration or deployment configuration changes.
+
+Copy refinement: remove the explicit zero-response prompt from the notification.
+Zero remains a valid intentional answer in the existing report form.

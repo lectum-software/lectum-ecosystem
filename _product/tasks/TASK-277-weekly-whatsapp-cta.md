@@ -9,8 +9,8 @@ Status: Done
 - Keep SendNF disabled and its unrelated local changes untouched.
 
 ## Acceptance
-- [x] Title asks how many patients arrived through Lectum, always bold.
-- [x] Description preserves dates/click count and explicitly invites a zero response.
+- [x] Short title "Pacientes adquiridos", always bold.
+- [x] Description preserves dates/click count and asks how many booked a consultation.
 - [x] Primary blue rectangular action uses the existing Button and safe report redirect.
 - [x] Answered report shows Ver resposta without prompting a duplicate response.
 - [x] Future push copy matches the in-app copy; no resend of previous pushes.
@@ -26,6 +26,11 @@ keyboard activation, dismiss without answer, zero submission, persisted answer,
 Ver resposta, bold title, light/dark layout, no horizontal overflow.
 Temporary local test accounts and reports were removed. No mocked API or
 production data was used. Screenshots and logs are in .tmp/task277-*.
+
+Copy refinement on 2026-10-26: title shortened and explicit zero-response prompt
+removed. Revalidated 20 focused tests and the real browser flow at 320/390/1440px,
+including zero submission and answered state. Full builds were not repeated for
+this text-only refinement.
 
 ## Operations
 No migration, environment variable, dependency or scheduler activation.

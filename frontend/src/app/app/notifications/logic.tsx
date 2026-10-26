@@ -53,8 +53,8 @@ const NOTIFICATION_ICON_TONE = "bg-primary-soft text-primary";
 
 const LABELS: Record<string, NotificationView> = {
   weekly_whatsapp_report: {
-    title: "Quantos pacientes chegaram até você pela Lectum?",
-    description: "Quantas agendaram uma consulta? Informe mesmo que nenhuma.",
+    title: "Pacientes adquiridos",
+    description: "Quantas agendaram uma consulta?",
     icon: WhatsAppIcon,
     tone: NOTIFICATION_ICON_TONE,
   },
