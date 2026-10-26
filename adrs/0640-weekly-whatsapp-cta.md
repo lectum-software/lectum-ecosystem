@@ -21,3 +21,7 @@ Keep header inset, surface styling, internal spacing and desktop width unchanged
 
 Follow-up: use --lectum-card-radius (12px) on the notification surface, matching
 profile cards. Keep the approved margins and other surface styling unchanged.
+
+Icon refinement: use Lucide UserRound for acquired patients, retaining WhatsApp
+branding only for WhatsApp contact notifications. Podium medal images keep the
+same fixed slot but omit the colored icon tone. Other icons retain their tone.

@@ -18,6 +18,8 @@ Status: Done
 - [x] Mobile white notification block uses the same outer margins and 430px cap
   as profile cards, without changing internal spacing or desktop width.
 - [x] White notification surface shares the profile card radius token (12px).
+- [x] Acquired-patient notification uses the shared Lucide person icon.
+- [x] Podium medal images have no colored background, preserving their icon slot.
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -45,6 +47,12 @@ Radius follow-up: reuse the existing 12px token. Focused tests (20), Biome and
 browser comparison against the profile at 320/390/600/1440px passed; margins and
 report behavior remain unchanged. No full build repeated for this single-class
 styling adjustment.
+
+Icon follow-up: 20 focused tests and Biome passed. Real local API screenshots
+were refreshed for both roles. Browser assertions confirm two UserRound icons
+(pending/answered), all three medal slots transparent, and Top Mentor typography
+equal to other standard notifications: 15px / 18.75px line height / weight 400.
+No typography change or full production rebuild for this icon-only refinement.
 
 ## Operations
 No migration, environment variable, dependency or scheduler activation.

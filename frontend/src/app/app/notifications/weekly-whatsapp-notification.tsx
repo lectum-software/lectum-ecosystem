@@ -1,5 +1,5 @@
+import { UserRound } from "lucide-react";
 import Link from "next/link";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/registry/new-york-v4/ui/button";
 
 type Props = {
@@ -22,7 +22,7 @@ export function WeeklyWhatsappNotification({
   return (
     <div className="flex w-full items-start gap-4 px-3 py-3 text-left">
       <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-        <WhatsAppIcon className="h-5 w-5" aria-hidden={true} />
+        <UserRound className="h-5 w-5" aria-hidden={true} />
       </span>
       <div className="min-w-0 flex-1 border-b border-border/70 pb-4">
         <div className="flex items-start justify-between gap-3">

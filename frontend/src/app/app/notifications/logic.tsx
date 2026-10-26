@@ -13,6 +13,7 @@ import {
   Settings,
   Share2,
   Star,
+  UserRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -55,7 +56,7 @@ const LABELS: Record<string, NotificationView> = {
   weekly_whatsapp_report: {
     title: "Pacientes adquiridos",
     description: "Quantas agendaram uma consulta?",
-    icon: WhatsAppIcon,
+    icon: UserRound,
     tone: NOTIFICATION_ICON_TONE,
   },
   nova_avaliacao: {
@@ -326,7 +327,10 @@ const NotificationVisual = ({ actor, item, view }: NotificationVisualProps) => {
   if (!actor) {
     return (
       <span
-        className={cn("mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl", view.tone)}
+        className={cn(
+          "mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl",
+          !medalSrc && view.tone,
+        )}
       >
         {medalSrc ? (
           <Image alt="" height={34} src={medalSrc} width={28} />
