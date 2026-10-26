@@ -16,7 +16,8 @@ Status: Done
 - [x] Future push copy matches the in-app copy; no resend of previous pushes.
 - [x] Checks/builds and mobile/desktop browser verification.
 - [x] Mobile white notification block uses the same outer margins and 430px cap
-  as profile cards, without changing internal spacing, radius or desktop layout.
+  as profile cards, without changing internal spacing or desktop width.
+- [x] White notification surface shares the profile card radius token (12px).
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -39,6 +40,11 @@ profile and notification surface x/width. At 390px both use 18.75px gutters and
 352.5px surface width. Desktop styles remain unchanged. Real report interactions
 and light/dark overflow checks were repeated.
 Frontend production build, 20 focused tests and Biome passed for the width trial.
+
+Radius follow-up: reuse the existing 12px token. Focused tests (20), Biome and
+browser comparison against the profile at 320/390/600/1440px passed; margins and
+report behavior remain unchanged. No full build repeated for this single-class
+styling adjustment.
 
 ## Operations
 No migration, environment variable, dependency or scheduler activation.

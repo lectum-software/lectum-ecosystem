@@ -563,7 +563,7 @@ export const NotificationsLogic = () => {
             title="Nenhuma notificação"
           />
         ) : (
-          <div className="grid gap-8 rounded-[2rem] border border-border bg-surface p-3 shadow-sm">
+          <div className="grid gap-8 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-sm">
             {groups.today.length > 0 ? (
               <section aria-labelledby="notifications-today">
                 <h2

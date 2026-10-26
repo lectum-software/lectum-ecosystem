@@ -18,3 +18,6 @@ Zero remains a valid intentional answer in the existing report form.
 Mobile width trial: reuse the profile's 430px content cap and PageShell gutters,
 removing only the duplicate horizontal padding around the notification surface.
 Keep header inset, surface styling, internal spacing and desktop width unchanged.
+
+Follow-up: use --lectum-card-radius (12px) on the notification surface, matching
+profile cards. Keep the approved margins and other surface styling unchanged.
