@@ -535,7 +535,7 @@ export const NotificationsLogic = () => {
 
   return (
     <PrivateTemplate>
-      <section className="mx-auto w-full max-w-2xl px-5 py-5 md:py-8">
+      <section className="mx-auto w-full max-w-[430px] py-5 md:max-w-2xl md:px-5 md:py-8">
         <SecondaryPageHeader
           action={
             <NotificationsHeaderActions
@@ -544,7 +544,7 @@ export const NotificationsLogic = () => {
               onMarkAllRead={() => clean.mutate()}
             />
           }
-          className="mb-4"
+          className="mb-4 px-5 md:px-0"
           title="Notificações"
         />
 

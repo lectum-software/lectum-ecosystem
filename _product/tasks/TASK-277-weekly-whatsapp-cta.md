@@ -15,6 +15,8 @@ Status: Done
 - [x] Answered report shows Ver resposta without prompting a duplicate response.
 - [x] Future push copy matches the in-app copy; no resend of previous pushes.
 - [x] Checks/builds and mobile/desktop browser verification.
+- [x] Mobile white notification block uses the same outer margins and 430px cap
+  as profile cards, without changing internal spacing, radius or desktop layout.
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -31,6 +33,12 @@ Copy refinement on 2026-10-26: title shortened and explicit zero-response prompt
 removed. Revalidated 20 focused tests and the real browser flow at 320/390/1440px,
 including zero submission and answered state. Full builds were not repeated for
 this text-only refinement.
+
+Mobile width trial: browser measurements at 320/390/600px confirmed identical
+profile and notification surface x/width. At 390px both use 18.75px gutters and
+352.5px surface width. Desktop styles remain unchanged. Real report interactions
+and light/dark overflow checks were repeated.
+Frontend production build, 20 focused tests and Biome passed for the width trial.
 
 ## Operations
 No migration, environment variable, dependency or scheduler activation.

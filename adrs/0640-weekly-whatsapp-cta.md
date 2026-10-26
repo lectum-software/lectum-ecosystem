@@ -14,3 +14,7 @@ No data model, fiscal integration or deployment configuration changes.
 
 Copy refinement: remove the explicit zero-response prompt from the notification.
 Zero remains a valid intentional answer in the existing report form.
+
+Mobile width trial: reuse the profile's 430px content cap and PageShell gutters,
+removing only the duplicate horizontal padding around the notification surface.
+Keep header inset, surface styling, internal spacing and desktop width unchanged.
