@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+import { WeeklyWhatsappNotification } from "./weekly-whatsapp-notification";
 
 type NotificationItem = ApiNotification;
 type NotificationActor = NonNullable<NotificationItem["actor"]>;
@@ -52,8 +53,8 @@ const NOTIFICATION_ICON_TONE = "bg-primary-soft text-primary";
 
 const LABELS: Record<string, NotificationView> = {
   weekly_whatsapp_report: {
-    title: "Seu resumo semanal está disponível",
-    description: "Informe quantas pessoas agendaram.",
+    title: "Quantos pacientes chegaram até você pela Lectum?",
+    description: "Quantas agendaram uma consulta? Informe mesmo que nenhuma.",
     icon: WhatsAppIcon,
     tone: NOTIFICATION_ICON_TONE,
   },
@@ -464,6 +465,20 @@ export const NotificationsLogic = () => {
   }, [hasAuthToken, index.isError, index.isLoading, seen]);
 
   const renderItem = (item: NotificationItem) => {
+    if (item.message_key === "weekly_whatsapp_report") {
+      return (
+        <li key={item.id}>
+          <WeeklyWhatsappNotification
+            startLabel={getStringProp(item.message_props, "start_label")}
+            endLabel={getStringProp(item.message_props, "end_label")}
+            peopleCount={getNumberProp(item.message_props, "people_count")}
+            answered={Boolean(item.read)}
+            href={normalizeSafeInternalRedirect(item.redirect)}
+            relativeTime={getRelativeTime(item.createdAt)}
+          />
+        </li>
+      );
+    }
     const view = getNotificationView(item.message_key, sessionRole);
     const title = getActorTitle(item, view);
     const markAsRead = () => {
@@ -482,18 +497,6 @@ export const NotificationsLogic = () => {
               <span className="block text-[15px] font-normal leading-5 text-foreground">
                 {title}
               </span>
-              {item.message_key === "weekly_whatsapp_report" ? (
-                <span className="mt-1 block text-sm text-muted">
-                  De {getStringProp(item.message_props, "start_label")} a{" "}
-                  {getStringProp(item.message_props, "end_label")},{" "}
-                  {getNumberProp(item.message_props, "people_count")}{" "}
-                  {getNumberProp(item.message_props, "people_count") === 1
-                    ? "pessoa clicou"
-                    : "pessoas clicaram"}{" "}
-                  no seu WhatsApp pela Lectum.
-                  {item.read ? " Respondido." : " Informe quantas agendaram."}
-                </span>
-              ) : null}
             </span>
 
             {!item.read ? (

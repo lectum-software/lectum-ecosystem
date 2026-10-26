@@ -693,6 +693,7 @@ ou cortesia manual.
 | 273 | [TASK-273 - Ajuda e feedback](TASK-273-help-feedback.md) | Done | 272 |
 | 274 | [TASK-274 - Feedback release security](TASK-274-feedback-release-security.md) | Done | 273 |
 | 275 | [TASK-275 - Post profile close loop](TASK-275-post-profile-close-loop.md) | Done | 274 |
+| 277 | [TASK-277 - Weekly WhatsApp notification CTA](TASK-277-weekly-whatsapp-cta.md) | Done | - |
 
 ## Ordem operacional recomendada sem bloqueios
 

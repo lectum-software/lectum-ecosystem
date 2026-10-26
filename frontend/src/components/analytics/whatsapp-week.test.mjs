@@ -14,6 +14,51 @@ registerHooks({
 });
 
 const { whatsappWeekFormSchema, WhatsappWeekForm } = await import("./whatsapp-week-form.tsx");
+const { WeeklyWhatsappNotification } = await import(
+  "../../app/app/notifications/weekly-whatsapp-notification.tsx"
+);
+
+for (const answered of [false, true]) {
+  test(`notificacao semanal tem titulo em negrito e acao propria: answered=${answered}`, () => {
+    const html = renderToStaticMarkup(
+      createElement(WeeklyWhatsappNotification, {
+        startLabel: "19/10",
+        endLabel: "25/10",
+        peopleCount: 1,
+        answered,
+        href: "/app/notificacoes?whatsapp_week=week-id",
+        relativeTime: "8 h",
+      }),
+    );
+    assert.match(html, /<h3 class="[^"]*font-bold[^"]*">Quantos pacientes chegaram/);
+    assert.match(html, /1 pessoa clicou no seu WhatsApp/);
+    assert.match(html, /href="\/app\/notificacoes\?whatsapp_week=week-id"/);
+    assert.match(html, /bg-primary/);
+    assert.match(html, /rounded-lg/);
+    assert.equal((html.match(/<a /g) ?? []).length, 1);
+    assert.doesNotMatch(html, /<button/);
+    if (answered) {
+      assert.match(html, />Ver resposta<\/a>/);
+      assert.match(html, /Agendamentos informados/);
+      assert.doesNotMatch(html, /Informe mesmo que nenhuma/);
+    } else {
+      assert.match(html, />Informar agendamentos<\/a>/);
+      assert.match(html, /Informe mesmo que nenhuma/);
+    }
+  });
+}
+
+test("notificacao semanal suporta plural e ausencia de destino sem acao falsa", () => {
+  const html = renderToStaticMarkup(
+    createElement(WeeklyWhatsappNotification, {
+      peopleCount: 12,
+      answered: false,
+      relativeTime: "1 d",
+    }),
+  );
+  assert.match(html, /12 pessoas clicaram/);
+  assert.doesNotMatch(html, /<a |<button|undefined/);
+});
 const { metricCards, fallbackTrafficSources } = await import(
   "../../app/app/professional/analytics/modules/support.ts"
 );
