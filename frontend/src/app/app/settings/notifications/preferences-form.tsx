@@ -233,6 +233,7 @@ export const fromFormValues = (
 ): NotificationPrefs => {
   const prefs = SWITCH_CATEGORIES.reduce<NotificationPrefs>(
     (acc, category) => {
+      if (category.key === "top_mentor_podium" && role !== "psicologo") return acc;
       acc[category.key] = {
         enabled: values[getEnabledFieldName(category.key)],
       };
@@ -273,7 +274,14 @@ export const NotificationPreferencesForm = ({
     () =>
       sessionRole === "psicologo"
         ? SECTIONS
-        : SECTIONS.filter((section) => section.key !== "perfil" && section.key !== "assinatura"),
+        : SECTIONS.filter(
+            (section) => section.key !== "perfil" && section.key !== "assinatura",
+          ).map((section) => ({
+            ...section,
+            categories: section.categories.filter(
+              (category) => category.key !== "top_mentor_podium",
+            ),
+          })),
     [sessionRole],
   );
 

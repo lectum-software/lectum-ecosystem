@@ -24,6 +24,7 @@ Status: Done
 - [x] Podium description identifies the rank as "Top X Mentor da comunidade".
 - [x] Pending weekly report action is labeled "Informar pacientes"; answered remains "Ver resposta".
 - [x] Notification settings cards share list gutters/radius, hide redundant new-post label accessibly and use plain-language permission copy.
+- [x] Top Mentores preference is shown only to psychologists; patient saves preserve any existing hidden preference.
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -83,6 +84,12 @@ tests, Biome and real local API browser assertions passed. Both previews were
 refreshed, with no horizontal overflow. Local Next dev needed a restart after
 the previous build; preview generation passed after recompilation. No full
 production rebuild repeated for these text-only changes.
+
+Role follow-up: eleven preference tests passed, covering psychologist, patient,
+unresolved roles and preservation of hidden podium preferences. Real local API
+browser validation passed for both roles at 320/390/1440px, including role-specific
+visibility and saving/reloading preferences. Both read-only screenshots were
+refreshed. No full production rebuild repeated for this role-filtering change.
 
 No migration, environment variable, dependency or scheduler activation.
 Deploy backend/frontend independently; old notifications use the updated frontend rendering.

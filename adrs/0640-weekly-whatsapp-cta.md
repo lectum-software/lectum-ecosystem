@@ -40,3 +40,7 @@ Settings follow-up: reuse the list's responsive wrapper and card-radius token.
 Hide only the redundant select label visually, preserving its accessible name.
 Permission explanations use plain language; native permission requests, blocked
 permission handling and preference persistence remain unchanged.
+
+Role correction: show the podium preference only for psychologists. Patients
+(and unresolved roles) do not see the control. Their form submission preserves
+any previously stored podium preference instead of overwriting a hidden setting.

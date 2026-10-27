@@ -59,16 +59,16 @@ async function failedQuery(cache) {
     },
   };
 }
-function FormWithMutation({ query }) {
+function FormWithMutation({ query, sessionRole }) {
   const update = useMutation();
-  return createElement(NotificationPreferencesForm, { query, update, sessionRole: "paciente" });
+  return createElement(NotificationPreferencesForm, { query, update, sessionRole });
 }
-function render(query, queryClient) {
+function render(query, queryClient, sessionRole) {
   return renderToStaticMarkup(
     createElement(
       QueryClientProvider,
       { client: queryClient },
-      createElement(FormWithMutation, { query }),
+      createElement(FormWithMutation, { query, sessionRole }),
     ),
   );
 }
@@ -77,7 +77,7 @@ for (const cached of [false, true]) {
   test(`falha real de leitura ${cached ? "com" : "sem"} cache não exibe formulário editável`, async () => {
     const state = await failedQuery(cached ? preferences : undefined);
     try {
-      const html = render(state.result, state.queryClient);
+      const html = render(state.result, state.queryClient, "paciente");
       assert.equal(html.includes("Não foi possível carregar suas preferências"), true);
       assert.equal(html.includes("Tentar novamente"), true);
       assert.equal(/<form|role="switch"|type="submit"/.test(html), false);
@@ -96,12 +96,12 @@ test("React/RHF renderizam switches persistidos sem reativar opt-outs", () => {
     enabled: false,
   });
   try {
-    const html = render(observer.getCurrentResult(), queryClient);
+    const html = render(observer.getCurrentResult(), queryClient, "paciente");
     assert.match(html, /<form/);
     const replyButton = html.match(/<button\b[^>]*aria-label="Respostas em meus posts"[^>]*>/)?.[0];
     assert.match(replyButton ?? "missing", /aria-checked="false"/);
     assert.equal(html.includes("Desativado"), true);
-    assert.doesNotMatch(html, /Tentar novamente|Novas avaliações/);
+    assert.doesNotMatch(html, /Tentar novamente|Novas avaliações|Top Mentores/);
     assert.match(html, /disabled="" type="submit"/);
     assert.doesNotMatch(html, /Preferência de/);
     assert.match(html, /\[&amp;&gt;label\]:sr-only/);
@@ -113,6 +113,36 @@ test("React/RHF renderizam switches persistidos sem reativar opt-outs", () => {
     observer.destroy();
     queryClient.clear();
   }
+});
+
+for (const role of ["psicologo", "paciente", null, undefined]) {
+  test(`Top Mentores é exclusivo do psicólogo: ${role}`, () => {
+    const queryClient = client();
+    queryClient.setQueryData(keys.notification.preferences(), preferences);
+    const observer = new QueryObserver(queryClient, {
+      queryKey: keys.notification.preferences(),
+      enabled: false,
+    });
+    try {
+      const html = render(observer.getCurrentResult(), queryClient, role);
+      assert.equal(html.includes('aria-label="Top Mentores"'), role === "psicologo");
+    } finally {
+      observer.destroy();
+      queryClient.clear();
+    }
+  });
+}
+
+test("paciente não altera preferência oculta de Top Mentores ao salvar", () => {
+  for (const existing of [undefined, { enabled: false }, { enabled: true }]) {
+    const prefs = existing ? { top_mentor_podium: existing } : {};
+    const values = toFormValues(prefs, "paciente");
+    values.top_mentor_podium__enabled = !values.top_mentor_podium__enabled;
+    assert.deepEqual(fromFormValues(values, "paciente", prefs).top_mentor_podium, existing);
+  }
+  const values = toFormValues({}, "psicologo");
+  values.top_mentor_podium__enabled = false;
+  assert.deepEqual(fromFormValues(values, "psicologo").top_mentor_podium, { enabled: false });
 });
 
 test("mudança validada por RHF/Zod preserva categorias não representadas no formulário", async () => {
@@ -174,7 +204,7 @@ test("mutação pendente desabilita switches e seletor para preservar a edição
       }),
     );
     const switches = [...html.matchAll(/<button\b[^>]*role="switch"[^>]*>/g)];
-    assert.equal(switches.length, 5);
+    assert.equal(switches.length, 4);
     for (const [control] of switches) assert.match(control, /disabled=""/);
     const select = html.match(/<button\b[^>]*role="combobox"[^>]*>/)?.[0];
     assert.match(select ?? "missing", /disabled=""/);
