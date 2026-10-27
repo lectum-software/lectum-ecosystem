@@ -1,4 +1,5 @@
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
+import { classifyGatewayMessage } from "./diagnostic";
 import type { PaymentGatewayErrorDetails } from "./error-log";
 import { buildCardUpdateIdempotencyKey } from "./idempotency";
 import type {
@@ -129,6 +130,7 @@ const sanitizeMercadoPagoError = (err: unknown): MercadoPagoSafeErrorDetails => 
 
   return {
     status,
+    diagnostic: classifyGatewayMessage(err.message),
     status_detail: toSafeGatewayCode(err.status_detail),
     error: toSafeGatewayCode(err.error ?? err.code),
     cause_codes: Array.from(new Set(causeCodes)).slice(0, 8),
