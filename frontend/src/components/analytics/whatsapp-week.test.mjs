@@ -35,7 +35,7 @@ for (const answered of [false, true]) {
     assert.match(html, /href="\/app\/notificacoes\?whatsapp_week=week-id"/);
     assert.match(html, /bg-primary/);
     assert.match(html, /rounded-lg/);
-    assert.match(html, /lucide-user-round/);
+    assert.match(html, /lucide-user-round-plus/);
     assert.equal((html.match(/<a /g) ?? []).length, 1);
     assert.doesNotMatch(html, /<button/);
     if (answered) {

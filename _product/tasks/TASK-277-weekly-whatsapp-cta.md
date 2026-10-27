@@ -18,8 +18,9 @@ Status: Done
 - [x] Mobile white notification block uses the same outer margins and 430px cap
   as profile cards, without changing internal spacing or desktop width.
 - [x] White notification surface shares the profile card radius token (12px).
-- [x] Acquired-patient notification uses the shared Lucide person icon.
+- [x] Acquired-patient notification uses the shared Lucide person-plus icon.
 - [x] Podium medal images have no colored background, preserving their icon slot.
+- [x] Podium uses a bold congratulatory title and the existing achievement as smaller description.
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -53,6 +54,14 @@ were refreshed for both roles. Browser assertions confirm two UserRound icons
 (pending/answered), all three medal slots transparent, and Top Mentor typography
 equal to other standard notifications: 15px / 18.75px line height / weight 400.
 No typography change or full production rebuild for this icon-only refinement.
+
+Celebration follow-up: Top Mentor now has a bold 15px congratulatory title and
+the existing achievement as a text-sm muted description. Acquired patients uses
+UserRoundPlus. Twenty focused tests and Biome passed; real API screenshots for
+both roles were refreshed. Browser assertions checked all three podium titles,
+smaller descriptions matching the weekly description, transparent medals, both
+person-plus states and no horizontal overflow at 390px.
+Frontend production build and its TypeScript check passed.
 
 ## Operations
 No migration, environment variable, dependency or scheduler activation.

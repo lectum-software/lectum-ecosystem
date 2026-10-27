@@ -13,7 +13,7 @@ import {
   Settings,
   Share2,
   Star,
-  UserRound,
+  UserRoundPlus,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -56,7 +56,7 @@ const LABELS: Record<string, NotificationView> = {
   weekly_whatsapp_report: {
     title: "Pacientes adquiridos",
     description: "Quantas agendaram uma consulta?",
-    icon: UserRound,
+    icon: UserRoundPlus,
     tone: NOTIFICATION_ICON_TONE,
   },
   nova_avaliacao: {
@@ -498,9 +498,18 @@ export const NotificationsLogic = () => {
         <span className="min-w-0 flex-1 border-b border-border/70 pb-4">
           <span className="flex items-start justify-between gap-3">
             <span className="min-w-0">
-              <span className="block text-[15px] font-normal leading-5 text-foreground">
-                {title}
-              </span>
+              {item.message_key === "top_mentor_podium" ? (
+                <>
+                  <span className="block text-[15px] font-bold leading-5 text-foreground">
+                    Parabéns! 🎉
+                  </span>
+                  <span className="mt-1 block text-sm text-muted">{title}</span>
+                </>
+              ) : (
+                <span className="block text-[15px] font-normal leading-5 text-foreground">
+                  {title}
+                </span>
+              )}
             </span>
 
             {!item.read ? (
