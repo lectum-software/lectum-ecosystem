@@ -103,6 +103,12 @@ test("React/RHF renderizam switches persistidos sem reativar opt-outs", () => {
     assert.equal(html.includes("Desativado"), true);
     assert.doesNotMatch(html, /Tentar novamente|Novas avaliações/);
     assert.match(html, /disabled="" type="submit"/);
+    assert.doesNotMatch(html, /Preferência de/);
+    assert.match(html, /\[&amp;&gt;label\]:sr-only/);
+    assert.match(
+      html,
+      /<label[^>]*for="novo_post__post_author_scope"[^>]*><span>Novas postagens<\/span>/,
+    );
   } finally {
     observer.destroy();
     queryClient.clear();

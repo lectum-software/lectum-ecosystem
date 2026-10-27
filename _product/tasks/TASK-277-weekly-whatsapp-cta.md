@@ -23,6 +23,7 @@ Status: Done
 - [x] Podium uses a bold congratulatory title and the existing achievement as smaller description.
 - [x] Podium description identifies the rank as "Top X Mentor da comunidade".
 - [x] Pending weekly report action is labeled "Informar pacientes"; answered remains "Ver resposta".
+- [x] Notification settings cards share list gutters/radius, hide redundant new-post label accessibly and use plain-language permission copy.
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -66,6 +67,16 @@ person-plus states and no horizontal overflow at 390px.
 Frontend production build and its TypeScript check passed.
 
 ## Operations
+Settings follow-up: six preference tests passed, including hidden-label/accessibility
+regression coverage. Real local API browser validation passed for patient and
+professional at 320/390/1440px: shared widths, mobile gutters, 12px radius,
+screen-reader-only select label, no text/horizontal overflow and preference
+save/reload. Desktop sidebar collapse remains route-specific. Permission request
+logic is unchanged: activation is offered for supported/default permission with
+a configured key; denied permission directs users to browser/device settings.
+Native push delivery was not exercised (local push configuration is disabled).
+Frontend production build and TypeScript validation passed for the settings changes.
+
 Copy follow-up: podium descriptions use "Top X Mentor da comunidade" for all
 three ranks; pending report action uses "Informar pacientes". Twenty focused
 tests, Biome and real local API browser assertions passed. Both previews were

@@ -321,7 +321,7 @@ export const NotificationPreferencesForm = ({
             </h2>
           )}
 
-          <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
+          <div className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-sm">
             {section.categories.map((category, index) => {
               const Icon = category.icon;
               const isNewPost = category.key === "novo_post";
@@ -348,13 +348,13 @@ export const NotificationPreferencesForm = ({
                   <div className="justify-self-end">
                     {isNewPost ? (
                       <SelectController<NotificationSettingsForm>
-                        className="w-[136px] max-w-[42vw] gap-0 text-xs font-bold text-muted min-[380px]:w-[142px] sm:w-[148px] [&>span:first-child]:sr-only [&_[role=alert]]:hidden"
+                        className="w-[112px] max-w-[42vw] gap-0 text-xs font-bold text-muted min-[380px]:w-[142px] sm:w-[148px] [&>label]:sr-only [&_[role=alert]]:hidden"
                         control={form.hook.control}
                         disabled={update.isPending}
                         field="select"
                         hideEmptyOption
                         inputClassName="h-10 rounded-[1.15rem] border-border bg-surface px-3.5 pr-9 text-[13px] font-bold text-primary shadow-none hover:border-border hover:bg-surface-muted focus:border-primary focus:ring-0"
-                        label={`Preferência de ${category.label}`}
+                        label={category.label}
                         name="novo_post__post_author_scope"
                         options={newPostOptions}
                         selectChevronClassName="right-3.5 h-4 w-4 text-primary/75"
