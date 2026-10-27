@@ -33,7 +33,7 @@ test("analytics return keeps period across publication tabs and rejects other or
     "replies",
   );
   const query = new URL(href, "https://lectum.local").searchParams;
-  assert.equal(analyticsReturnHref(query.get("returnTo")), target + "#conteudos-em-destaque");
+  assert.equal(analyticsReturnHref(query.get("returnTo")), `${target}#conteudos-em-destaque`);
   for (const invalid of [
     null,
     "https://evil.test/app/profissional/estatisticas",

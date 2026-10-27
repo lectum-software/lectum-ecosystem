@@ -264,7 +264,7 @@ rejeição por risco posterior. O HTTP 400 e os hints isolados não identificam 
 - [x] Correlacionar falha local e fatura notificada com referência opaca e vocabulário fechado.
 - [x] Consultar somente GET após webhook autenticado; falha diagnóstica não muda entitlement nem cria retry financeiro.
 - [x] Validar testes e checks por aplicação, builds backend/frontend e smoke local sem enviar cartão.
-- [ ] Passar check integral da raiz (bloqueio preexistente em notificações, fora desta alteração).
+- [x] Passar check integral da raiz (extração mínima de notificações autorizada e validada).
 - [ ] Versionar, commitar e publicar em homolog, registrar smoke antes da promoção por PR.
 - [ ] Promover por PR revisado e validar versões e saúde em produção sem realizar cobrança.
 
@@ -287,3 +287,8 @@ Bloqueios de publicação em 27/10: `check:source-size` falha no arquivo preexis
 Vercel disponível só acessa outra equipe, sem Lectum; login na equipe correta solicitado.
 Dokploy homolog e produção estão com autodeploy desligado. Homolog backend saudável,
 mas ainda em 0.1.617, não valida esta alteração. Nenhuma promoção/deploy foi executada.
+
+Atualização do gate: primeiro push foi bloqueado pelos hooks, sem publicar. Após
+autorização explícita, extração mínima na TASK-277 resolveu source-size (588 linhas);
+check integral e builds backend/frontend passaram em 0.1.731. Publicação ainda depende
+de smoke de homologação da versão nova e acesso à equipe Lectum no Vercel.

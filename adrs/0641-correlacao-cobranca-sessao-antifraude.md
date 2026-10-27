@@ -85,3 +85,8 @@ Autodeploy Dokploy de homolog/produção confirmado desligado na UI. Homolog bac
 0.1.617 com health/ready 200 não valida este release. Vercel atual sem acesso à equipe
 Lectum; login solicitado. Não promover sem resolver check raiz e smoke de homolog da
 versão nova. Nenhum deploy ou alteração financeira executado nesta implementação.
+
+Atualização: extração mínima autorizada na TASK-277 resolveu o gate arquitetural e a
+informação Biome. Check integral da raiz e builds backend/frontend passam em 0.1.731.
+Primeiro push de 0.1.730 foi bloqueado pelo hook (nenhum bypass); promoção segue
+pendente do smoke homolog da nova versão e acesso Vercel adequado.

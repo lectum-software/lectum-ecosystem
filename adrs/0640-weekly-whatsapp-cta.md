@@ -64,3 +64,15 @@ no permission bypass or report mutation is introduced.
 Podium descriptions use foreground at 80% opacity for stronger contrast in both
 themes, and only the community name is italic. Settings headers share card width;
 option labels reuse the profile row's text-sm/font-semibold typography.
+
+## Architectural gate follow-up — 2026-10-27
+
+The previously published composition exceeded the 600-line architectural limit and
+blocked publication of the billing follow-up. User authorized extracting the existing
+pure relative-time and notification-grouping helpers into a colocated module, without
+changes to their bodies, UI, routes or state. No new dependency/environment/migration.
+The separate release-follow-up commit must pass source-size, regression tests and
+frontend validation; rollback is a code revert. Validation completed: seven focused
+tests, Biome, typecheck, source-size, full repository check and frontend build pass.
+Composition is 588 lines; extracted bodies and untouched UI composition were compared
+against the previous commit. Release manifests synchronized at 0.1.731.
