@@ -4,7 +4,6 @@ import type { QueryObserverResult, UseMutationResult } from "@tanstack/react-que
 import {
   ArrowUp,
   Bookmark,
-  CreditCard,
   Eye,
   Heart,
   Medal,
@@ -39,8 +38,7 @@ type NotificationCategory = {
     | "upvote"
     | "compartilhamento"
     | "salvamento"
-    | "top_mentor_podium"
-    | "billing_subscription_status";
+    | "top_mentor_podium";
   label: string;
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 };
@@ -105,17 +103,6 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
         key: "top_mentor_podium",
         label: "Top Mentores",
         icon: Medal,
-      },
-    ],
-  },
-  {
-    key: "assinatura",
-    label: "ASSINATURA",
-    categories: [
-      {
-        key: "billing_subscription_status",
-        label: "Cobrança da assinatura",
-        icon: CreditCard,
       },
     ],
   },
@@ -202,7 +189,6 @@ export const notificationSettingsSchema = z.object({
   compartilhamento__enabled: z.boolean(),
   salvamento__enabled: z.boolean(),
   top_mentor_podium__enabled: z.boolean(),
-  billing_subscription_status__enabled: z.boolean(),
   novo_post__post_author_scope: z.enum([
     "patients_only",
     "professionals_only",
@@ -233,12 +219,13 @@ export const fromFormValues = (
 ): NotificationPrefs => {
   const prefs = SWITCH_CATEGORIES.reduce<NotificationPrefs>(
     (acc, category) => {
+      if (category.key === "top_mentor_podium" && role !== "psicologo") return acc;
       acc[category.key] = {
         enabled: values[getEnabledFieldName(category.key)],
       };
       return acc;
     },
-    { ...currentPrefs },
+    { ...currentPrefs, billing_subscription_status: { enabled: true } },
   );
 
   const newPostScope = values.novo_post__post_author_scope;
@@ -273,7 +260,12 @@ export const NotificationPreferencesForm = ({
     () =>
       sessionRole === "psicologo"
         ? SECTIONS
-        : SECTIONS.filter((section) => section.key !== "perfil" && section.key !== "assinatura"),
+        : SECTIONS.filter((section) => section.key !== "perfil").map((section) => ({
+            ...section,
+            categories: section.categories.filter(
+              (category) => category.key !== "top_mentor_podium",
+            ),
+          })),
     [sessionRole],
   );
 
@@ -321,7 +313,7 @@ export const NotificationPreferencesForm = ({
             </h2>
           )}
 
-          <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
+          <div className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-sm">
             {section.categories.map((category, index) => {
               const Icon = category.icon;
               const isNewPost = category.key === "novo_post";
@@ -348,13 +340,13 @@ export const NotificationPreferencesForm = ({
                   <div className="justify-self-end">
                     {isNewPost ? (
                       <SelectController<NotificationSettingsForm>
-                        className="w-[136px] max-w-[42vw] gap-0 text-xs font-bold text-muted min-[380px]:w-[142px] sm:w-[148px] [&>span:first-child]:sr-only [&_[role=alert]]:hidden"
+                        className="w-[112px] max-w-[42vw] gap-0 text-xs font-bold text-muted min-[380px]:w-[142px] sm:w-[148px] [&>label]:sr-only [&_[role=alert]]:hidden"
                         control={form.hook.control}
                         disabled={update.isPending}
                         field="select"
                         hideEmptyOption
                         inputClassName="h-10 rounded-[1.15rem] border-border bg-surface px-3.5 pr-9 text-[13px] font-bold text-primary shadow-none hover:border-border hover:bg-surface-muted focus:border-primary focus:ring-0"
-                        label={`Preferência de ${category.label}`}
+                        label={category.label}
                         name="novo_post__post_author_scope"
                         options={newPostOptions}
                         selectChevronClassName="right-3.5 h-4 w-4 text-primary/75"

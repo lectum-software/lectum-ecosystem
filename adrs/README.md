@@ -700,5 +700,5 @@ Formato recomendado:
 - [ADR-0636 — Feedback privado de usuarios](0636-private-user-feedback.md)
 - [ADR-0637 — Security updates before feedback rollout](0637-feedback-release-security.md)
 - [ADR-0638 — Close post composer after profile detour](0638-post-profile-close-loop.md)
-
 - [ADR-0639 — Classificação segura de erros de assinatura](0639-classificacao-segura-erros-assinatura.md)
+- [ADR-0640 — Weekly WhatsApp notification CTA](0640-weekly-whatsapp-cta.md)

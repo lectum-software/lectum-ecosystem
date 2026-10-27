@@ -89,7 +89,7 @@ export const normalizeNotificationPrefs = (
   for (const key of SWITCH_NOTIFICATION_KEYS) {
     const entry = isRecord(source[key]) ? source[key] : undefined;
     normalized[key] = {
-      enabled: normalizeEnabled(entry),
+      enabled: key === "billing_subscription_status" || normalizeEnabled(entry),
     };
   }
 
@@ -115,6 +115,8 @@ export const isChannelAllowed = (
   key: string,
   channel: keyof Pick<NotificationPreferenceEntry, "email" | "in_app" | "push">,
 ) => {
+  // Billing notices are transactional; browser permission is enforced by push delivery.
+  if (key === "billing_subscription_status") return true;
   if (!isRecord(prefs)) return true;
 
   const entry = isRecord(prefs[key]) ? (prefs[key] as NotificationPreferenceEntry) : undefined;
@@ -128,6 +130,7 @@ export const isChannelAllowed = (
 };
 
 export const isNotificationEnabled = (prefs: unknown, key: string) => {
+  if (key === "billing_subscription_status") return true;
   if (!isRecord(prefs)) return true;
 
   const entry = isRecord(prefs[key]) ? (prefs[key] as NotificationPreferenceEntry) : undefined;

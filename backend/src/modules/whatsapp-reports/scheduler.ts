@@ -120,8 +120,8 @@ async function deliverWeeklyWhatsappPushes(now: Date, weekStart: Date) {
     const dates = reportDates(report.week_start, report.week_end);
     const result = allowed
       ? await sendWebPushToSubscriptions({
-          title: "Seu resumo semanal está disponível",
-          body: `De ${dates.start_label} a ${dates.end_label}, ${report.people_count} ${report.people_count === 1 ? "pessoa clicou" : "pessoas clicaram"} no seu WhatsApp pela Lectum. Informe quantas agendaram.`,
+          title: "Pacientes adquiridos",
+          body: `De ${dates.start_label} a ${dates.end_label}, ${report.people_count} ${report.people_count === 1 ? "pessoa clicou" : "pessoas clicaram"} no seu WhatsApp. Quantas agendaram uma consulta?`,
           redirect: `/app/notificacoes?whatsapp_week=${report.id}`,
           subscriptions: user.notification_subscriptions,
         })

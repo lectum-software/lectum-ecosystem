@@ -13,6 +13,7 @@ import {
   Settings,
   Share2,
   Star,
+  UserRoundPlus,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+import { WeeklyWhatsappNotification } from "./weekly-whatsapp-notification";
 
 type NotificationItem = ApiNotification;
 type NotificationActor = NonNullable<NotificationItem["actor"]>;
@@ -52,9 +54,9 @@ const NOTIFICATION_ICON_TONE = "bg-primary-soft text-primary";
 
 const LABELS: Record<string, NotificationView> = {
   weekly_whatsapp_report: {
-    title: "Seu resumo semanal está disponível",
-    description: "Informe quantas pessoas agendaram.",
-    icon: WhatsAppIcon,
+    title: "Pacientes adquiridos",
+    description: "Quantas agendaram uma consulta?",
+    icon: UserRoundPlus,
     tone: NOTIFICATION_ICON_TONE,
   },
   nova_avaliacao: {
@@ -175,10 +177,10 @@ const getDisplayStringProp = (value: unknown, key: string) => {
 };
 
 const topMentorPositionLabel = (position?: number) => {
-  if (position === 1) return "1º lugar";
-  if (position === 2) return "2º lugar";
-  if (position === 3) return "3º lugar";
-  return "Top Mentores";
+  if (position === 1) return "Top 1 Mentor";
+  if (position === 2) return "Top 2 Mentor";
+  if (position === 3) return "Top 3 Mentor";
+  return "Top Mentor";
 };
 
 const topMentorMedalSrc = (position?: number) => {
@@ -267,7 +269,7 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
     const position = getNumberProp(item.message_props, "position");
 
     return communityName
-      ? `Você chegou ao ${topMentorPositionLabel(position)} em ${communityName}.`
+      ? `Você é o ${topMentorPositionLabel(position)} da comunidade ${communityName}.`
       : "Você entrou no Top Mentores.";
   }
 
@@ -325,7 +327,10 @@ const NotificationVisual = ({ actor, item, view }: NotificationVisualProps) => {
   if (!actor) {
     return (
       <span
-        className={cn("mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl", view.tone)}
+        className={cn(
+          "mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl",
+          !medalSrc && view.tone,
+        )}
       >
         {medalSrc ? (
           <Image alt="" height={34} src={medalSrc} width={28} />
@@ -464,6 +469,20 @@ export const NotificationsLogic = () => {
   }, [hasAuthToken, index.isError, index.isLoading, seen]);
 
   const renderItem = (item: NotificationItem) => {
+    if (item.message_key === "weekly_whatsapp_report") {
+      return (
+        <li key={item.id}>
+          <WeeklyWhatsappNotification
+            startLabel={getStringProp(item.message_props, "start_label")}
+            endLabel={getStringProp(item.message_props, "end_label")}
+            peopleCount={getNumberProp(item.message_props, "people_count")}
+            answered={Boolean(item.read)}
+            href={normalizeSafeInternalRedirect(item.redirect)}
+            relativeTime={getRelativeTime(item.createdAt)}
+          />
+        </li>
+      );
+    }
     const view = getNotificationView(item.message_key, sessionRole);
     const title = getActorTitle(item, view);
     const markAsRead = () => {
@@ -479,21 +498,18 @@ export const NotificationsLogic = () => {
         <span className="min-w-0 flex-1 border-b border-border/70 pb-4">
           <span className="flex items-start justify-between gap-3">
             <span className="min-w-0">
-              <span className="block text-[15px] font-normal leading-5 text-foreground">
-                {title}
-              </span>
-              {item.message_key === "weekly_whatsapp_report" ? (
-                <span className="mt-1 block text-sm text-muted">
-                  De {getStringProp(item.message_props, "start_label")} a{" "}
-                  {getStringProp(item.message_props, "end_label")},{" "}
-                  {getNumberProp(item.message_props, "people_count")}{" "}
-                  {getNumberProp(item.message_props, "people_count") === 1
-                    ? "pessoa clicou"
-                    : "pessoas clicaram"}{" "}
-                  no seu WhatsApp pela Lectum.
-                  {item.read ? " Respondido." : " Informe quantas agendaram."}
+              {item.message_key === "top_mentor_podium" ? (
+                <>
+                  <span className="block text-[15px] font-bold leading-5 text-foreground">
+                    Parabéns! 🎉
+                  </span>
+                  <span className="mt-1 block text-sm text-muted">{title}</span>
+                </>
+              ) : (
+                <span className="block text-[15px] font-normal leading-5 text-foreground">
+                  {title}
                 </span>
-              ) : null}
+              )}
             </span>
 
             {!item.read ? (
@@ -532,7 +548,7 @@ export const NotificationsLogic = () => {
 
   return (
     <PrivateTemplate>
-      <section className="mx-auto w-full max-w-2xl px-5 py-5 md:py-8">
+      <section className="mx-auto w-full max-w-[430px] py-5 md:max-w-2xl md:px-5 md:py-8">
         <SecondaryPageHeader
           action={
             <NotificationsHeaderActions
@@ -541,7 +557,7 @@ export const NotificationsLogic = () => {
               onMarkAllRead={() => clean.mutate()}
             />
           }
-          className="mb-4"
+          className="mb-4 px-5 md:px-0"
           title="Notificações"
         />
 
@@ -560,7 +576,7 @@ export const NotificationsLogic = () => {
             title="Nenhuma notificação"
           />
         ) : (
-          <div className="grid gap-8 rounded-[2rem] border border-border bg-surface p-3 shadow-sm">
+          <div className="grid gap-8 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-sm">
             {groups.today.length > 0 ? (
               <section aria-labelledby="notifications-today">
                 <h2

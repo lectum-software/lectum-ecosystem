@@ -23,7 +23,7 @@ const BrowserNotificationPermissionCard = () => {
   if (!isConfirmedUser) return null;
 
   const sharedClassName =
-    "mb-6 rounded-3xl border border-border bg-surface p-4 text-sm shadow-sm md:p-5";
+    "mb-6 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 text-sm shadow-sm md:p-5";
 
   if (isChecking && permission === "loading") {
     return (
@@ -55,8 +55,8 @@ const BrowserNotificationPermissionCard = () => {
               Notificações do navegador indisponíveis
             </h2>
             <p className="mt-1 leading-5 text-muted">
-              Este navegador não oferece suporte completo a push. Suas notificações in-app continuam
-              disponíveis na central da Lectum.
+              Você pode acompanhar suas notificações dentro da Lectum, mas não receber avisos por
+              este navegador.
             </p>
           </div>
         </div>
@@ -66,14 +66,14 @@ const BrowserNotificationPermissionCard = () => {
 
   if (!hasVapidKey && !isChecking) {
     return (
-      <section className={sharedClassName} aria-label="Push ainda não configurado">
+      <section className={sharedClassName} aria-label="Notificações do navegador indisponíveis">
         <div className="flex gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-muted text-muted">
             <Info className="h-5 w-5" aria-hidden={true} />
           </span>
           <div className="min-w-0">
             <h2 className="font-extrabold text-foreground">
-              Push ainda não está disponível neste ambiente
+              Notificações do navegador indisponíveis
             </h2>
             <p className="mt-1 leading-5 text-muted">
               As notificações no navegador ainda não estão disponíveis. Enquanto isso, a central de
@@ -95,9 +95,8 @@ const BrowserNotificationPermissionCard = () => {
           <div className="min-w-0">
             <h2 className="font-extrabold text-foreground">Notificações bloqueadas</h2>
             <p className="mt-1 leading-5 text-muted">
-              O navegador bloqueou notificações para a Lectum. Para receber push, reative a
-              permissão nas configurações do navegador ou do sistema. Não vamos tentar pedir
-              novamente por aqui.
+              Para receber avisos da Lectum, permita as notificações nas configurações do navegador
+              ou do aparelho.
             </p>
           </div>
         </div>
@@ -115,8 +114,7 @@ const BrowserNotificationPermissionCard = () => {
           <div className="min-w-0">
             <h2 className="font-extrabold text-foreground">Notificações do navegador ativas</h2>
             <p className="mt-1 leading-5 text-muted">
-              A Lectum pode revalidar sua inscrição push de forma segura. Você ainda controla quais
-              categorias deseja receber abaixo.
+              Você pode receber notificações da Lectum neste navegador.
             </p>
           </div>
         </div>
@@ -164,8 +162,8 @@ export const NotificationSettingsLogic = () => {
   const { query, update } = useNotificationPreferences();
   return (
     <PrivateTemplate>
-      <section className="mx-auto w-full max-w-2xl px-5 py-5 md:py-8">
-        <header className="mb-6 flex items-start gap-3">
+      <section className="mx-auto w-full max-w-[430px] py-5 md:max-w-2xl md:px-5 md:py-8">
+        <header className="mb-6 flex items-start gap-3 px-5 md:px-0">
           <Button
             asChild
             className="h-10 w-10 shrink-0 rounded-full p-0"
