@@ -18,6 +18,8 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
+import { getBillingMutationErrorMessage } from "@/utils/billing-error";
 import {
   getMercadoPagoDeviceSessionId,
   isMercadoPagoPublicConfigurationValid,
@@ -267,8 +269,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
           last4,
           payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
         });
-      } catch {
-        // handleReq já exibe o erro público sanitizado; impedir rejeição não tratada no Brick.
+      } catch (error) {
+        if (!isAdminViewAsReadOnlyError(error)) {
+          toast.error(getBillingMutationErrorMessage(error, "checkout"));
+        }
       }
     },
     [isCourtesyRenewal],

@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceito; implementado e validado localmente, publicação pendente — 2026-10-27.
+Aceito; publicado em 0.1.732 via PR #134 — 2026-10-27.
 
 ## Task relacionada
 
@@ -55,6 +55,16 @@ backend ping/health/ready 200, billing privado sem sessão 401; frontend version
 autenticado ponta a ponta ou envio de cartão. Testes focais: 10 backend e 9 frontend.
 Sem acesso ao banco remoto nem credenciais reais de provider durante validação. Testes
 unitários não substituem aprovação financeira real; a causa do 400 permanece em investigação.
+
+## Evidência de publicação e acompanhamento
+
+PR #134 mesclado como `509651f27`; homolog backend 0.1.732 com ping/health/ready
+200 antes da promoção. Backend/frontend/admin produtivos verificados em 0.1.732,
+backend health/ready 200. Smoke sem cobrança pelo agente. Tentativa posterior feita
+pelo usuário registrou `device_session_present=true`; consultas correlacionadas e
+somente leitura confirmaram pagamento recusado por risco e preapproval cancelada.
+Presença da sessão não é garantia de aprovação ou de processamento do sinal pelo
+provider. Continuação de mensagens e diagnóstico em ADR-0643.
 
 ## Referências
 

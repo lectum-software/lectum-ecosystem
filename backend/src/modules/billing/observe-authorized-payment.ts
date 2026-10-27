@@ -1,3 +1,7 @@
+import {
+  authorizedPaymentElapsedMs,
+  authorizedPaymentReadFailure,
+} from "./payment-gateway/authorized-payment";
 import { billingReference, classifyBillingPayment } from "./payment-gateway/observability";
 import type { PaymentGateway } from "./payment-gateway/PaymentGateway";
 
@@ -27,6 +31,8 @@ export const observeAuthorizedPayment = async ({
   repository,
   resourceId,
 }: ObservationInput) => {
+  const startedAt = performance.now();
+  let stage: "provider_get" | "local_lookup" = "provider_get";
   const base = {
     operation: "observe_authorized_payment",
     invoice_ref: billingReference("invoice", resourceId),
@@ -34,6 +40,7 @@ export const observeAuthorizedPayment = async ({
   };
   try {
     const payment = await gateway.getAuthorizedPayment(resourceId);
+    stage = "local_lookup";
     const local =
       payment.external_reference && payment.gateway_subscription_id
         ? await repository.findSubscriptionByGatewayReference({
@@ -52,6 +59,7 @@ export const observeAuthorizedPayment = async ({
 
     console.info("[BILLING] Resultado de fatura consultado.", {
       ...base,
+      elapsed_ms: authorizedPaymentElapsedMs(startedAt),
       correlation: matchedLocalId ? "matched" : "unresolved",
       ...(matchedLocalId ? { attempt_ref: billingReference("attempt", matchedLocalId) } : {}),
       ...(payment.gateway_payment_id
@@ -59,11 +67,15 @@ export const observeAuthorizedPayment = async ({
         : {}),
       result: classifyBillingPayment(payment.status, payment.status_detail),
     });
-  } catch {
+  } catch (error) {
     // No raw exception, provider response, retries, or change to the webhook acknowledgement.
     console.warn("[BILLING] Diagnóstico de fatura indisponível.", {
       ...base,
       result: "unavailable",
+      ...(stage === "local_lookup"
+        ? { stage, failure_kind: "lookup_failed" }
+        : authorizedPaymentReadFailure(error)),
+      elapsed_ms: authorizedPaymentElapsedMs(startedAt),
     });
   }
 };

@@ -17,6 +17,8 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
+import { getBillingMutationErrorMessage } from "@/utils/billing-error";
 import {
   getMercadoPagoDeviceSessionId,
   isMercadoPagoPublicConfigurationValid,
@@ -200,8 +202,10 @@ export const ProfessionalBillingCardLogic = () => {
           brand: formData.payment_method_id || null,
           last4: additionalData?.lastFourDigits || null,
         });
-      } catch {
-        // handleReq já exibe o erro público sanitizado; impedir rejeição não tratada no Brick.
+      } catch (error) {
+        if (!isAdminViewAsReadOnlyError(error)) {
+          toast.error(getBillingMutationErrorMessage(error, "payment-method"));
+        }
       }
     },
     [],
@@ -353,7 +357,10 @@ export const ProfessionalBillingCardLogic = () => {
 
                   {billing.paymentMethod.isError ? (
                     <InlineAlert title="Não foi possível alterar o cartão" variant="error">
-                      {getErrorMessage(billing.paymentMethod.error)}
+                      {getBillingMutationErrorMessage(
+                        billing.paymentMethod.error,
+                        "payment-method",
+                      )}
                     </InlineAlert>
                   ) : null}
                 </div>

@@ -704,3 +704,4 @@ Formato recomendado:
 - [ADR-0640 — Weekly WhatsApp notification CTA](0640-weekly-whatsapp-cta.md)
 - [ADR-0641 — Correlação de cobrança e sessão antifraude](0641-correlacao-cobranca-sessao-antifraude.md)
 - [ADR-0642 — Sessão antifraude opaca com separador ponto](0642-sessao-antifraude-com-ponto.md)
+- [ADR-0643 — Mensagem cautelosa de cobrança e diagnóstico de leitura](0643-mensagem-cobranca-e-diagnostico-de-leitura.md)

@@ -1,5 +1,9 @@
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
-import { isAuthorizedPaymentId, projectAuthorizedPayment } from "./authorized-payment";
+import {
+  AuthorizedPaymentReadError,
+  isAuthorizedPaymentId,
+  readAuthorizedPayment,
+} from "./authorized-payment";
 import { normalizeDeviceSessionId } from "./device-session";
 import { extractGatewayDiagnostics } from "./diagnostic";
 import type { PaymentGatewayErrorDetails } from "./error-log";
@@ -47,7 +51,6 @@ type MercadoPagoPreApprovalRaw = {
 const GATEWAY = "mercadopago";
 const MERCADO_PAGO_CURRENT_USER_URL = "https://api.mercadopago.com/users/me";
 const MERCADO_PAGO_REQUEST_TIMEOUT_MS = 10_000;
-const MERCADO_PAGO_DIAGNOSTIC_TIMEOUT_MS = 3_000;
 
 type MercadoPagoSafeErrorDetails = PaymentGatewayErrorDetails;
 
@@ -251,6 +254,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
     try {
       return await action();
     } catch (err) {
+      if (operation === "get_authorized_payment" && err instanceof AuthorizedPaymentReadError) {
+        throw err;
+      }
       throw new MercadoPagoAdapterError(operation, err);
     }
   }
@@ -435,22 +441,12 @@ export class MercadoPagoAdapter implements PaymentGateway {
 
   async getAuthorizedPayment(id: string): Promise<GatewayAuthorizedPayment> {
     if (!isAuthorizedPaymentId(id)) {
-      throw new MercadoPagoAdapterError("get_authorized_payment", {});
+      throw new AuthorizedPaymentReadError("resource_validation", "invalid_resource");
     }
 
-    return this.runGatewayOperation("get_authorized_payment", async () => {
-      // Diagnostic only: no retries, redirects, resource writes or extra provider fields.
-      const response = await fetch(`https://api.mercadopago.com/authorized_payments/${id}`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${this.accessToken}` },
-        redirect: "error",
-        signal: AbortSignal.timeout(MERCADO_PAGO_DIAGNOSTIC_TIMEOUT_MS),
-      });
-
-      if (!response.ok) throw { status: response.status };
-
-      return projectAuthorizedPayment(await response.json());
-    });
+    return this.runGatewayOperation("get_authorized_payment", () =>
+      readAuthorizedPayment(id, this.accessToken),
+    );
   }
 
   async getSubscriptionPaymentSummary(

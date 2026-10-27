@@ -97,3 +97,34 @@ test("unclassified 4xx errors must not blame the card", () => {
     );
   }
 });
+
+test("generic rejection hints do not establish a specific card refusal", () => {
+  for (const fallbackCode of [
+    "billing_gateway_checkout_failed",
+    "billing_gateway_payment_method_failed",
+  ]) {
+    assert.deepEqual(
+      resolvePaymentGatewayPublicError(
+        {
+          details: {
+            status: 400,
+            diagnostic: "provider_error_unclassified",
+            diagnostic_hints: ["card_validation", "rejected"],
+          },
+        },
+        fallbackCode,
+      ),
+      { status: 502, code: fallbackCode },
+    );
+  }
+});
+
+test("a classified refusal keeps safe copy without disclosing the provider reason", () => {
+  assert.deepEqual(
+    resolvePaymentGatewayPublicError(
+      { details: { status: 400, status_detail: "cc_rejected_high_risk" } },
+      "billing_gateway_checkout_failed",
+    ),
+    { status: 402, code: "billing_gateway_card_declined" },
+  );
+});
