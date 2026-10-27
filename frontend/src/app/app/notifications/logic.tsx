@@ -268,9 +268,13 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
     const communityName = getDisplayStringProp(item.message_props, "community_name");
     const position = getNumberProp(item.message_props, "position");
 
-    return communityName
-      ? `Você é o ${topMentorPositionLabel(position)} da comunidade ${communityName}.`
-      : "Você entrou no Top Mentores.";
+    return communityName ? (
+      <>
+        Você é o {topMentorPositionLabel(position)} da comunidade <em>{communityName}</em>.
+      </>
+    ) : (
+      "Você entrou no Top Mentores."
+    );
   }
 
   return view.title;
@@ -503,7 +507,7 @@ export const NotificationsLogic = () => {
                   <span className="block text-[15px] font-bold leading-5 text-foreground">
                     Parabéns! 🎉
                   </span>
-                  <span className="mt-1 block text-sm text-muted">{title}</span>
+                  <span className="mt-1 block text-sm text-foreground/80">{title}</span>
                 </>
               ) : (
                 <span className="block text-[15px] font-normal leading-5 text-foreground">

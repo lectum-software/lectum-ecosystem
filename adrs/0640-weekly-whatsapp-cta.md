@@ -55,3 +55,12 @@ Switch alignment: use a half-height anchor and negative half-thumb translation
 in the shared form controller instead of a fixed top inset. Preserve control
 dimensions, horizontal travel and interactions; other shared uses inherit the
 same vertical alignment correction.
+
+Post-release refinement (2026-10-27): answered weekly notifications navigate to
+the existing analytics route with metric=acquired_patients instead of reopening
+the weekly input modal. Pending notifications retain the report-specific link.
+This also works when a legacy answered notification has no modal destination;
+no permission bypass or report mutation is introduced.
+Podium descriptions use foreground at 80% opacity for stronger contrast in both
+themes, and only the community name is italic. Settings headers share card width;
+option labels reuse the profile row's text-sm/font-semibold typography.

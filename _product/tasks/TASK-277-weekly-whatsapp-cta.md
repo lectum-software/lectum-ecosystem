@@ -118,6 +118,10 @@ ADR: 0640.
 
 ## Production release preparation - 2026-10-26
 
+Release 0.1.728 was subsequently verified on production frontend/backend, with
+health and readiness HTTP 200. The follow-up below remains local until separately
+authorized for publication.
+
 - User approved publishing the notification changes and confirmed all Backend/
   Video autodeploys and frontend/Admin automatic promotions remain disabled.
 - Release 0.1.728 incorporates current main (70d62963d), retaining the previously
@@ -136,3 +140,24 @@ ADR: 0640.
 - Deployment pending: reviewed homolog-to-main PR, Backend deploy and health
   verification, then frontend promotion. No Video/Admin functional changes,
   database migration, new variable or SendNF activation are included.
+
+## Post-release refinement - 2026-10-27
+
+- [x] Darker Top Mentor description; only the community name is italic.
+- [x] Answered reports link to Analytics with acquired_patients selected.
+- [x] Pending reports retain the input modal and intentional zero remains valid.
+- [x] Settings header uses the same width as white cards.
+- [x] Option labels match profile row size, family and semibold weight.
+
+Mobile-first refinement using the user-provided screenshots and existing profile
+components; Builder is unavailable in this client. No backend/API/DB/dependency
+change. SendNF excluded. Rollback frontend artifact only.
+
+Validation: frontend check and production build passed; 33 focused tests passed.
+Version, source-size, encoding and source-safety guards passed. Real local API/DB
+browser checks at 320, 390 and 1440px confirmed profile-matched typography, header
+alignment, italic community names, loaded medals, no horizontal overflow and
+answered-report navigation with acquired_patients selected. Pending reports still
+open the form; dismissal preserves pending state and an intentional zero persists.
+Temporary QA records were removed. Release 0.1.729 remains local, without push or
+deployment.

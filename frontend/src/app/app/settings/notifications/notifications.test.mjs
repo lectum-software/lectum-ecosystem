@@ -98,6 +98,8 @@ test("React/RHF renderizam switches persistidos sem reativar opt-outs", () => {
   try {
     const html = render(observer.getCurrentResult(), queryClient, "paciente");
     assert.match(html, /<form/);
+    assert.match(html, /<h3 class="min-w-0 text-sm font-semibold leading-5 text-foreground">/);
+    assert.doesNotMatch(html, /<h3[^>]*text-\[15px\]/);
     const replyButton = html.match(/<button\b[^>]*aria-label="Respostas em meus posts"[^>]*>/)?.[0];
     assert.match(replyButton ?? "missing", /aria-checked="false"/);
     assert.match(html, /top-1\/2 -translate-y-1\/2/);
