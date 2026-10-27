@@ -1,3 +1,5 @@
+Em execução: [TASK-32 — Correlação de cobrança e sessão antifraude](TASK-32-checkout-assinatura.md), ADR-0641. Contrato opcional, logs fechados e GET autenticado de fatura; sem cobrança de teste ou mudança de configuração financeira.
+
 Implementado e validado localmente: [TASK-249 - Previa social e conectores de comentarios](TASK-249-previa-social-e-conectores-comentarios.md), ADR-0611. A modal social usa portal acima do compositor, videos-resposta recebem o comentario pai e a arvore ganha controles de 10px bold com conectores que terminam na curva. Testes focais e QA visual mobile/desktop aprovados; sem push/deploy.
 
 Correcao complementar validada localmente: [TASK-246 - Favorito indisponivel na comunidade](TASK-246-favorito-indisponivel-comunidade.md), ADR-0608. O detalhe do post e todas as respostas aninhadas ocultam `+ Favoritar` e `Top X mentor` para psicologos indisponiveis; Favoritos preserva a relacao e o ranking promove o proximo mentor elegivel. Testes focais aprovados; sem push/deploy.

@@ -4,6 +4,7 @@ export interface IPaymentMethodSessionDTO {
   auth: user;
   b: {
     card_token: string;
+    device_session_id?: string;
     payment_type_id: "credit_card" | "debit_card" | "prepaid_card";
     brand?: string | null;
     last4?: string | null;

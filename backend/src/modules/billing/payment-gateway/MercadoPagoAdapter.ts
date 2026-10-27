@@ -1,9 +1,12 @@
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
+import { isAuthorizedPaymentId, projectAuthorizedPayment } from "./authorized-payment";
+import { normalizeDeviceSessionId } from "./device-session";
 import { extractGatewayDiagnostics } from "./diagnostic";
 import type { PaymentGatewayErrorDetails } from "./error-log";
 import { buildCardUpdateIdempotencyKey } from "./idempotency";
 import type {
   BillingSubscriptionStatus,
+  GatewayAuthorizedPayment,
   GatewayCancelSubscriptionInput,
   GatewaySubscription,
   GatewaySubscriptionInput,
@@ -44,6 +47,7 @@ type MercadoPagoPreApprovalRaw = {
 const GATEWAY = "mercadopago";
 const MERCADO_PAGO_CURRENT_USER_URL = "https://api.mercadopago.com/users/me";
 const MERCADO_PAGO_REQUEST_TIMEOUT_MS = 10_000;
+const MERCADO_PAGO_DIAGNOSTIC_TIMEOUT_MS = 3_000;
 
 type MercadoPagoSafeErrorDetails = PaymentGatewayErrorDetails;
 
@@ -149,8 +153,6 @@ export class MercadoPagoAdapterError extends Error {
 
 export class MercadoPagoAdapter implements PaymentGateway {
   private readonly accessToken: string;
-  private readonly preApproval: PreApproval;
-  private readonly preApprovalPlan: PreApprovalPlan;
   private readonly shouldValidateSandboxSeller: boolean;
   private readonly webhookSecret: string | null;
   private sandboxSellerValidation: Promise<void> | null = null;
@@ -181,22 +183,24 @@ export class MercadoPagoAdapter implements PaymentGateway {
     this.accessToken = accessToken;
     this.shouldValidateSandboxSeller = isSandbox;
 
-    const subscriptionConfig = new MercadoPagoConfig({
-      accessToken,
-      options: {
-        timeout: MERCADO_PAGO_REQUEST_TIMEOUT_MS,
-      },
-    });
-    const planConfig = new MercadoPagoConfig({
-      accessToken,
-      options: {
-        timeout: MERCADO_PAGO_REQUEST_TIMEOUT_MS,
-      },
-    });
-
-    this.preApproval = new PreApproval(subscriptionConfig);
-    this.preApprovalPlan = new PreApprovalPlan(planConfig);
     this.webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET || null;
+  }
+
+  private createSdkConfig(): MercadoPagoConfig {
+    // SDK methods mutate config.options. Never reuse session/idempotency options
+    // across operations, even when this adapter is shared by concurrent requests.
+    return new MercadoPagoConfig({
+      accessToken: this.accessToken,
+      options: { timeout: MERCADO_PAGO_REQUEST_TIMEOUT_MS },
+    });
+  }
+
+  private createPreApproval(): PreApproval {
+    return new PreApproval(this.createSdkConfig());
+  }
+
+  private createPreApprovalPlan(): PreApprovalPlan {
+    return new PreApprovalPlan(this.createSdkConfig());
   }
 
   private async validateSandboxSellerAccount(): Promise<void> {
@@ -258,7 +262,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     idempotencyKey,
   }: GatewaySubscriptionPlanInput): Promise<GatewaySubscriptionPlanResult> {
     const response = await this.runGatewayOperation("create_subscription_plan", () =>
-      this.preApprovalPlan.create({
+      this.createPreApprovalPlan().create({
         body: {
           auto_recurring: {
             frequency: 1,
@@ -293,7 +297,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
 
   async getSubscriptionPlan(gatewayPlanId: string): Promise<GatewaySubscriptionPlan> {
     const response = await this.runGatewayOperation("get_subscription_plan", () =>
-      this.preApprovalPlan.get({
+      this.createPreApprovalPlan().get({
         preApprovalPlanId: gatewayPlanId,
       }),
     );
@@ -313,6 +317,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     planName,
     amountCents,
     cardToken,
+    deviceSessionId,
     payerEmail,
     returnUrl,
     startDate,
@@ -320,7 +325,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const recurringStartDate = toIsoDateString(startDate);
 
     const response = await this.runGatewayOperation("create_subscription", () =>
-      this.preApproval.create({
+      this.createPreApproval().create({
         body: {
           ...(gatewayPlanId ? { preapproval_plan_id: gatewayPlanId } : {}),
           auto_recurring: {
@@ -339,6 +344,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
         },
         requestOptions: {
           idempotencyKey: `lectum-preapproval-${subscriptionId}`,
+          meliSessionId: normalizeDeviceSessionId(deviceSessionId),
         },
       }),
     );
@@ -360,15 +366,17 @@ export class MercadoPagoAdapter implements PaymentGateway {
   async updateSubscriptionCard({
     gatewaySubscriptionId,
     cardToken,
+    deviceSessionId,
   }: GatewayUpdateSubscriptionCardInput): Promise<GatewaySubscriptionResult> {
     const response = await this.runGatewayOperation("update_subscription_card", () =>
-      this.preApproval.update({
+      this.createPreApproval().update({
         id: gatewaySubscriptionId,
         body: {
           card_token_id: cardToken,
         },
         requestOptions: {
           idempotencyKey: buildCardUpdateIdempotencyKey({ gatewaySubscriptionId, cardToken }),
+          meliSessionId: normalizeDeviceSessionId(deviceSessionId),
         },
       }),
     );
@@ -387,7 +395,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     gatewaySubscriptionId,
   }: GatewayCancelSubscriptionInput): Promise<GatewaySubscriptionResult> {
     const response = await this.runGatewayOperation("cancel_subscription", () =>
-      this.preApproval.update({
+      this.createPreApproval().update({
         id: gatewaySubscriptionId,
         body: {
           status: "cancelled",
@@ -410,7 +418,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
 
   async getSubscription(gatewaySubscriptionId: string): Promise<GatewaySubscription> {
     const response = await this.runGatewayOperation("get_subscription", () =>
-      this.preApproval.get({
+      this.createPreApproval().get({
         id: gatewaySubscriptionId,
       }),
     );
@@ -423,6 +431,26 @@ export class MercadoPagoAdapter implements PaymentGateway {
       next_payment_date: response.next_payment_date ?? null,
       raw: response,
     };
+  }
+
+  async getAuthorizedPayment(id: string): Promise<GatewayAuthorizedPayment> {
+    if (!isAuthorizedPaymentId(id)) {
+      throw new MercadoPagoAdapterError("get_authorized_payment", {});
+    }
+
+    return this.runGatewayOperation("get_authorized_payment", async () => {
+      // Diagnostic only: no retries, redirects, resource writes or extra provider fields.
+      const response = await fetch(`https://api.mercadopago.com/authorized_payments/${id}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${this.accessToken}` },
+        redirect: "error",
+        signal: AbortSignal.timeout(MERCADO_PAGO_DIAGNOSTIC_TIMEOUT_MS),
+      });
+
+      if (!response.ok) throw { status: response.status };
+
+      return projectAuthorizedPayment(await response.json());
+    });
   }
 
   async getSubscriptionPaymentSummary(

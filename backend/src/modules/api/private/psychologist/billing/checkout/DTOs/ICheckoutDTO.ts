@@ -4,6 +4,7 @@ export interface ICheckoutDTO {
   auth: user;
   b: {
     card_token: string;
+    device_session_id?: string;
     brand?: string | null;
     intent?: "courtesy_renewal";
     last4?: string | null;

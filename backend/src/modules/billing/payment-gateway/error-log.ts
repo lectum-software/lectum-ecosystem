@@ -1,4 +1,5 @@
 import { safeGatewayDiagnostic, safeGatewayHints } from "./diagnostic";
+import { safePaymentCode } from "./payment-codes";
 
 export type PaymentGatewayErrorLog = {
   name: string;
@@ -29,14 +30,7 @@ const safeStatus = (value: unknown) => {
   return value;
 };
 
-const safeCode = (value: unknown) => {
-  const normalized =
-    typeof value === "string" || typeof value === "number"
-      ? String(value).trim().toLowerCase()
-      : "";
-
-  return /^[a-z0-9_]{2,80}$/.test(normalized) ? normalized : undefined;
-};
+const safeCode = safePaymentCode;
 
 const safeCauseCodes = (value: unknown) => {
   if (!Array.isArray(value)) return [];

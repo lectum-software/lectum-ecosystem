@@ -251,3 +251,39 @@ ADR-0639.
 - [ ] Confirmar causa do 400 em tentativa real após deploy.
 
 Complemento de diagnóstico: tentativa após 0.1.717 permaneceu com 400 sem detalhe reconhecido. Captura segura agora inclui causas aninhadas e sinais de vocabulário fechado; causa efetiva ainda pendente.
+
+## Complemento em execução — 27/10/2026: correlação e sessão antifraude
+
+ADR-0641. Escopo autorizado: observabilidade sanitizada e sessão opcional do SDK, sem
+gerar cobranças de teste, trocar credenciais/API ou alterar dados financeiros existentes.
+Consultas somente leitura do incidente distinguiram rejeição de credenciais anterior da
+rejeição por risco posterior. O HTTP 400 e os hints isolados não identificam essa causa.
+
+- [x] Capturar a sessão do SDK no submit de checkout/cartão, opcional e sem persistência/log.
+- [x] Validar o contrato aditivo e isolar configuração do SDK por operação, inclusive concorrência.
+- [x] Correlacionar falha local e fatura notificada com referência opaca e vocabulário fechado.
+- [x] Consultar somente GET após webhook autenticado; falha diagnóstica não muda entitlement nem cria retry financeiro.
+- [x] Validar testes e checks por aplicação, builds backend/frontend e smoke local sem enviar cartão.
+- [ ] Passar check integral da raiz (bloqueio preexistente em notificações, fora desta alteração).
+- [ ] Versionar, commitar e publicar em homolog, registrar smoke antes da promoção por PR.
+- [ ] Promover por PR revisado e validar versões e saúde em produção sem realizar cobrança.
+
+Deploy: sem pacote, env ou migration nova; sessão ausente mantém comportamento anterior.
+Backend/frontend permanecem independentes; preferir backend primeiro. Rollback por revert,
+sem limpeza de dados. Sessão é sinal adicional, não promessa de aprovação. Layout inalterado;
+Builder não necessário para alteração de transporte, preservar referências visuais da TASK-32.
+
+Evidência local: backend check com 992 testes aprovados; frontend check, admin check e
+video check aprovados (13 testes opcionais de video ignorados pelo próprio runner);
+builds backend/frontend aprovados. Prisma gerado e migrations existentes aplicadas somente
+a um PostgreSQL efêmero em loopback, sem reset/seeds ou acesso ao banco remoto do `.env`.
+`/health`, `/ready`, `/ping` locais HTTP 200; endpoints privados de billing recusam sessão
+ausente com 401; browser da rota de cartão redireciona corretamente ao login. Não é uma
+validação de aprovação financeira nem um checkout autenticado ponta a ponta.
+
+Bloqueios de publicação em 27/10: `check:source-size` falha no arquivo preexistente
+`frontend/src/app/app/notifications/logic.tsx` (622 linhas, teto 600, já presente no HEAD
+8846a2944); extração mínima solicitada ao usuário antes de ampliar escopo. A sessão
+Vercel disponível só acessa outra equipe, sem Lectum; login na equipe correta solicitado.
+Dokploy homolog e produção estão com autodeploy desligado. Homolog backend saudável,
+mas ainda em 0.1.617, não valida esta alteração. Nenhuma promoção/deploy foi executada.

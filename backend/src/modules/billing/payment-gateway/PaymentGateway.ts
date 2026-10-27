@@ -6,6 +6,7 @@ export type GatewaySubscriptionInput = {
   planName: string;
   amountCents: number;
   cardToken: string;
+  deviceSessionId?: string;
   payerEmail: string;
   returnUrl?: string | null;
   startDate?: Date | string | null;
@@ -41,6 +42,15 @@ export type GatewaySubscriptionResult = {
 export type GatewayUpdateSubscriptionCardInput = {
   gatewaySubscriptionId: string;
   cardToken: string;
+  deviceSessionId?: string;
+};
+
+export type GatewayAuthorizedPayment = {
+  gateway_subscription_id: string | null;
+  gateway_payment_id: string | null;
+  external_reference: string | null;
+  status: string | null;
+  status_detail: string | null;
 };
 
 export type GatewayCancelSubscriptionInput = {
@@ -90,6 +100,7 @@ export interface PaymentGateway {
   ): Promise<GatewaySubscriptionResult>;
   cancelSubscription(input: GatewayCancelSubscriptionInput): Promise<GatewaySubscriptionResult>;
   getSubscription(gatewaySubscriptionId: string): Promise<GatewaySubscription>;
+  getAuthorizedPayment(id: string): Promise<GatewayAuthorizedPayment>;
   getSubscriptionPaymentSummary(
     gatewaySubscriptionId: string,
   ): Promise<GatewaySubscriptionPaymentSummary>;
