@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
+  getMercadoPagoDeviceSessionId,
   isMercadoPagoPublicConfigurationValid,
   mercadoPagoPublicKey,
   resolveMercadoPagoPayerEmail,
@@ -119,6 +120,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const checkoutMutateAsync = billing.checkout.mutateAsync;
   const syncMutateAsync = billing.sync.mutateAsync;
   const currentRefetch = billing.current.refetch;
+  const supportsDeviceSessionId = billing.current.data?.capabilities?.device_session_id === true;
+  const supportsDeviceSessionIdRef = useRef(supportsDeviceSessionId);
   const checkoutMutateAsyncRef = useRef(checkoutMutateAsync);
   const syncMutateAsyncRef = useRef(syncMutateAsync);
   const currentRefetchRef = useRef(currentRefetch);
@@ -130,7 +133,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
   useEffect(() => {
     checkoutMutateAsyncRef.current = checkoutMutateAsync;
-  }, [checkoutMutateAsync]);
+    supportsDeviceSessionIdRef.current = supportsDeviceSessionId;
+  }, [checkoutMutateAsync, supportsDeviceSessionId]);
 
   useEffect(() => {
     syncMutateAsyncRef.current = syncMutateAsync;
@@ -247,8 +251,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
       }
 
       try {
+        const deviceSessionId = getMercadoPagoDeviceSessionId(supportsDeviceSessionIdRef.current);
         await checkoutMutateAsyncRef.current({
           card_token: token,
+          ...(deviceSessionId ? { device_session_id: deviceSessionId } : {}),
           brand,
           ...(isCourtesyRenewal ? { intent: "courtesy_renewal" as const } : {}),
           last4,

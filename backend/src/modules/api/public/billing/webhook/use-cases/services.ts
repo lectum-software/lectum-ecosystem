@@ -1,4 +1,8 @@
 import { error, msg } from "@/helpers/translate";
+import {
+  observeAuthorizedPayment,
+  shouldObserveAuthorizedPayment,
+} from "@/modules/billing/observe-authorized-payment";
 import { getPaymentGateway } from "@/modules/billing/payment-gateway";
 import { syncMercadoPagoSubscriptionRecord } from "@/modules/billing/sync-mercado-pago-subscription";
 import type { IWebhookDTO } from "../DTOs/IWebhookDTO";
@@ -105,6 +109,10 @@ export default async ({ body, headers, query }: IWebhookDTO) => {
     type: event.type,
     payload: event.raw,
   });
+
+  if (shouldObserveAuthorizedPayment(event.type, paymentEvent.created)) {
+    await observeAuthorizedPayment({ gateway, repository, resourceId: event.resourceId });
+  }
 
   if (isPreapprovalSubscriptionEvent(event.type)) {
     const gatewaySubscription = await gateway.getSubscription(event.resourceId);

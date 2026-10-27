@@ -1,7 +1,13 @@
+import { deviceSessionIdSchema } from "@/modules/billing/payment-gateway/device-session";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 export const requestSchema: IValidatorRequest = {
   body: [
+    {
+      key: "device_session_id",
+      custom: deviceSessionIdSchema,
+      optional: true,
+    },
     {
       key: "card_token",
       coerse: "string",

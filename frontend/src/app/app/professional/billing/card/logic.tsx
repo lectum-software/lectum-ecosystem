@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
+  getMercadoPagoDeviceSessionId,
   isMercadoPagoPublicConfigurationValid,
   mercadoPagoPublicKey,
   resolveMercadoPagoPayerEmail,
@@ -111,10 +112,13 @@ export const ProfessionalBillingCardLogic = () => {
     },
   });
   const paymentMethodMutateAsyncRef = useRef(billing.paymentMethod.mutateAsync);
+  const supportsDeviceSessionId = billing.current.data?.capabilities?.device_session_id === true;
+  const supportsDeviceSessionIdRef = useRef(supportsDeviceSessionId);
 
   useEffect(() => {
     paymentMethodMutateAsyncRef.current = billing.paymentMethod.mutateAsync;
-  }, [billing.paymentMethod.mutateAsync]);
+    supportsDeviceSessionIdRef.current = supportsDeviceSessionId;
+  }, [billing.paymentMethod.mutateAsync, supportsDeviceSessionId]);
 
   useEffect(() => {
     if (!isMercadoPagoPublicConfigurationValid || !mercadoPagoPublicKey) return;
@@ -181,8 +185,10 @@ export const ProfessionalBillingCardLogic = () => {
       }
 
       try {
+        const deviceSessionId = getMercadoPagoDeviceSessionId(supportsDeviceSessionIdRef.current);
         await paymentMethodMutateAsyncRef.current({
           card_token: token,
+          ...(deviceSessionId ? { device_session_id: deviceSessionId } : {}),
           payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
           brand: formData.payment_method_id || null,
           last4: additionalData?.lastFourDigits || null,

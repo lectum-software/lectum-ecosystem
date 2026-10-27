@@ -5,6 +5,13 @@ import {
   resolvePaymentGatewayPublicError,
   sanitizePaymentGatewayError,
 } from "@/modules/billing/payment-gateway";
+import { normalizeDeviceSessionId } from "@/modules/billing/payment-gateway/device-session";
+import {
+  type BillingOperationContext,
+  logBillingAttempt,
+  logBillingFailure,
+  logBillingResult,
+} from "@/modules/billing/payment-gateway/observability";
 import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
 import { parseSafeExternalHttpsUrl } from "@/utils/safe-external-url";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
@@ -386,16 +393,29 @@ export default async (data: ICheckoutDTO) => {
     ReturnType<CheckoutRepository["createPendingSubscription"]>
   > | null = null;
   const paymentMethodDisplay = resolvePaymentMethodDisplay(data.b);
+  const deviceSessionId = normalizeDeviceSessionId(data.b.device_session_id);
+  let operationContext: BillingOperationContext | null = null;
+  let gatewayCompleted = false;
 
   try {
     if (isCourtesyRenewal) {
       const scheduledSubscription = await repository.findScheduledGatewaySubscription(profile.id!);
 
       if (scheduledSubscription?.id && scheduledSubscription.gateway_subscription_id) {
+        operationContext = {
+          operation: "update_subscription_card",
+          subscriptionId: scheduledSubscription.id,
+          deviceSessionPresent: Boolean(deviceSessionId),
+        };
+        gatewayCompleted = false;
+        logBillingAttempt(operationContext);
         const gatewayResult = await gateway.updateSubscriptionCard({
           cardToken: data.b.card_token,
+          deviceSessionId,
           gatewaySubscriptionId: scheduledSubscription.gateway_subscription_id,
         });
+        gatewayCompleted = true;
+        logBillingResult(operationContext);
         const current = await repository.setGatewaySubscriptionId(
           scheduledSubscription.id,
           gatewayResult.gateway_subscription_id,
@@ -433,16 +453,26 @@ export default async (data: ICheckoutDTO) => {
       profile.id!,
       professionalPlan.id,
     );
+    operationContext = {
+      operation: "create_subscription",
+      subscriptionId: pendingSubscription.id!,
+      deviceSessionPresent: Boolean(deviceSessionId),
+    };
+    gatewayCompleted = false;
+    logBillingAttempt(operationContext);
     const gatewayResult = await gateway.createSubscription({
       subscriptionId: pendingSubscription.id!,
       gatewayPlanId,
       planName: professionalPlan.name || "Plano Profissional Lectum",
       amountCents: professionalPlan.price_cents,
       cardToken: data.b.card_token,
+      deviceSessionId,
       payerEmail,
       returnUrl: gatewayReturnUrl,
       startDate: courtesyStartDate,
     });
+    gatewayCompleted = true;
+    logBillingResult(operationContext);
 
     const current = await repository.setGatewaySubscriptionId(
       pendingSubscription.id!,
@@ -482,14 +512,22 @@ export default async (data: ICheckoutDTO) => {
       },
     };
   } catch (err) {
+    if (operationContext) {
+      logBillingFailure(
+        operationContext,
+        err,
+        gatewayCompleted ? "local_after_gateway" : "gateway",
+      );
+    } else {
+      console.error("[BILLING] Falha ao preparar a operação.", {
+        name: "BillingLocalPreparationError",
+        observed_at: new Date().toISOString(),
+      });
+    }
+
     if (pendingSubscription?.id) {
       await repository.cancelSubscription(pendingSubscription.id);
     }
-
-    console.error(
-      "[BILLING] Falha ao iniciar a cobrança externa.",
-      sanitizePaymentGatewayError(err),
-    );
 
     const configError = isPaymentGatewayConfigurationError(err);
     const publicError = resolvePaymentGatewayPublicError(err, "billing_gateway_checkout_failed");
