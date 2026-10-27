@@ -51,9 +51,6 @@ const PAYMENT_DETAIL_TO_TRANSLATION: Record<string, string> = {
 const normalizeCode = (value: unknown) =>
   typeof value === "string" ? value.trim().toLowerCase() : "";
 
-const isGatewayCardRejectionStatus = (status?: number) =>
-  status === 400 || status === 402 || status === 409 || status === 422;
-
 export const resolvePaymentGatewayPublicError = (
   err: unknown,
   fallbackCode: string,
@@ -74,13 +71,6 @@ export const resolvePaymentGatewayPublicError = (
         code: translation,
       };
     }
-  }
-
-  if (isGatewayCardRejectionStatus(details.status)) {
-    return {
-      status: CARD_DECLINE_HTTP_STATUS,
-      code: "billing_gateway_card_declined",
-    };
   }
 
   return {
