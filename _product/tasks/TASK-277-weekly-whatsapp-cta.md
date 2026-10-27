@@ -115,3 +115,24 @@ No migration, environment variable, dependency or scheduler activation.
 Deploy backend/frontend independently; old notifications use the updated frontend rendering.
 Rollback code only. No remote push/deploy in this task.
 ADR: 0640.
+
+## Production release preparation - 2026-10-26
+
+- User approved publishing the notification changes and confirmed all Backend/
+  Video autodeploys and frontend/Admin automatic promotions remain disabled.
+- Release 0.1.728 incorporates current main (70d62963d), retaining the previously
+  published payment diagnostic fixes. Pending SendNF work is excluded.
+- Backend check: 972/973 tests passed; optional-auth subprocess timed out under
+  load, then passed on its isolated rerun. Backend production build passed.
+- Frontend full check and production build passed, including 643 primary tests,
+  supplemental suites, 20 weekly report tests and 12 preference tests.
+- Dependency audit reported zero known production vulnerabilities in all apps.
+  Version, encoding, source safety, source size and import-cycle checks passed.
+- Local visual/API validations above remain applicable; native push delivery
+  was not exercised. One pre-existing Sentry build deprecation remains.
+- Production baseline: backend/admin 0.1.718, frontend 0.1.716; backend health
+  and readiness returned HTTP 200. Monitoring: CPU 2.44%, RAM 4.02/7.75 GiB,
+  disk 48.67/58.76 GB. Run only one VPS build at a time.
+- Deployment pending: reviewed homolog-to-main PR, Backend deploy and health
+  verification, then frontend promotion. No Video/Admin functional changes,
+  database migration, new variable or SendNF activation are included.

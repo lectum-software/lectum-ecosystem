@@ -239,3 +239,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   Cidade à direita de Estado, preservando a ordem vertical mobile e os controllers da TASK-02.
 - Sem mudança de contrato, banco, gateway ou env; rollback é revert do ajuste visual.
 - ADR atualizado: `adrs/0455-autopreenchimento-cep-endereco-assinatura.md`.
+
+## Diagnóstico da troca de conta — 26/10/2026
+
+ADR-0639.
+
+- [x] Não atribuir 4xx desconhecido ao cartão.
+- [x] Preservar somente diagnósticos fixos e seguros.
+- [x] Validar tipos, build e regressões do backend sobre homolog atualizada.
+- [ ] Publicar após hooks e revisão do PR.
+- [ ] Confirmar causa do 400 em tentativa real após deploy.
+
+Complemento de diagnóstico: tentativa após 0.1.717 permaneceu com 400 sem detalhe reconhecido. Captura segura agora inclui causas aninhadas e sinais de vocabulário fechado; causa efetiva ainda pendente.

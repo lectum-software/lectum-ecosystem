@@ -137,11 +137,18 @@ for (const role of ["psicologo", "paciente", null, undefined]) {
 
 test("cobrança permanece ativa sem campo editável, inclusive com preferência antiga desativada", () => {
   for (const role of ["paciente", "psicologo"]) {
-    const prefs = { billing_subscription_status: { enabled: false, in_app: false, push: false, email: false } };
+    const prefs = {
+      billing_subscription_status: { enabled: false, in_app: false, push: false, email: false },
+    };
     const values = toFormValues(prefs, role);
     assert.equal("billing_subscription_status__enabled" in values, false);
-    assert.deepEqual(fromFormValues(values, role, prefs).billing_subscription_status, { enabled: true });
-    assert.equal(PREFERENCE_FIELDS.some(field => field.name.startsWith("billing_")), false);
+    assert.deepEqual(fromFormValues(values, role, prefs).billing_subscription_status, {
+      enabled: true,
+    });
+    assert.equal(
+      PREFERENCE_FIELDS.some((field) => field.name.startsWith("billing_")),
+      false,
+    );
   }
 });
 

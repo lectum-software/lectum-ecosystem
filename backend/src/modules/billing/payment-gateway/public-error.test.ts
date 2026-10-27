@@ -85,3 +85,15 @@ test("sanitizePaymentGatewayError logs only safe payment metadata", () => {
     cause_codes: ["cc_rejected_bad_filled_security_code"],
   });
 });
+
+test("unclassified 4xx errors must not blame the card", () => {
+  for (const status of [400, 402, 409, 422]) {
+    assert.deepEqual(
+      resolvePaymentGatewayPublicError({ details: { status } }, "billing_gateway_checkout_failed"),
+      {
+        status: 502,
+        code: "billing_gateway_checkout_failed",
+      },
+    );
+  }
+});
