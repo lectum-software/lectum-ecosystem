@@ -44,3 +44,9 @@ permission handling and preference persistence remain unchanged.
 Role correction: show the podium preference only for psychologists. Patients
 (and unresolved roles) do not see the control. Their form submission preserves
 any previously stored podium preference instead of overwriting a hidden setting.
+
+Billing notices are transactional account communications, not optional content.
+Remove the subscription switch and normalize its retained API key to enabled.
+Delivery checks ignore legacy billing opt-outs, so no data backfill is required.
+Existing browser permission/subscription checks and email delivery safeguards
+remain unchanged. No historical notice replay or changes to collection timing.

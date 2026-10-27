@@ -126,12 +126,23 @@ for (const role of ["psicologo", "paciente", null, undefined]) {
     try {
       const html = render(observer.getCurrentResult(), queryClient, role);
       assert.equal(html.includes('aria-label="Top Mentores"'), role === "psicologo");
+      assert.doesNotMatch(html, /Cobrança da assinatura|ASSINATURA/);
     } finally {
       observer.destroy();
       queryClient.clear();
     }
   });
 }
+
+test("cobrança permanece ativa sem campo editável, inclusive com preferência antiga desativada", () => {
+  for (const role of ["paciente", "psicologo"]) {
+    const prefs = { billing_subscription_status: { enabled: false, in_app: false, push: false, email: false } };
+    const values = toFormValues(prefs, role);
+    assert.equal("billing_subscription_status__enabled" in values, false);
+    assert.deepEqual(fromFormValues(values, role, prefs).billing_subscription_status, { enabled: true });
+    assert.equal(PREFERENCE_FIELDS.some(field => field.name.startsWith("billing_")), false);
+  }
+});
 
 test("paciente não altera preferência oculta de Top Mentores ao salvar", () => {
   for (const existing of [undefined, { enabled: false }, { enabled: true }]) {

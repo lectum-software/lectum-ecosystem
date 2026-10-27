@@ -4,7 +4,6 @@ import type { QueryObserverResult, UseMutationResult } from "@tanstack/react-que
 import {
   ArrowUp,
   Bookmark,
-  CreditCard,
   Eye,
   Heart,
   Medal,
@@ -39,8 +38,7 @@ type NotificationCategory = {
     | "upvote"
     | "compartilhamento"
     | "salvamento"
-    | "top_mentor_podium"
-    | "billing_subscription_status";
+    | "top_mentor_podium";
   label: string;
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 };
@@ -105,17 +103,6 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
         key: "top_mentor_podium",
         label: "Top Mentores",
         icon: Medal,
-      },
-    ],
-  },
-  {
-    key: "assinatura",
-    label: "ASSINATURA",
-    categories: [
-      {
-        key: "billing_subscription_status",
-        label: "Cobrança da assinatura",
-        icon: CreditCard,
       },
     ],
   },
@@ -202,7 +189,6 @@ export const notificationSettingsSchema = z.object({
   compartilhamento__enabled: z.boolean(),
   salvamento__enabled: z.boolean(),
   top_mentor_podium__enabled: z.boolean(),
-  billing_subscription_status__enabled: z.boolean(),
   novo_post__post_author_scope: z.enum([
     "patients_only",
     "professionals_only",
@@ -239,7 +225,7 @@ export const fromFormValues = (
       };
       return acc;
     },
-    { ...currentPrefs },
+    { ...currentPrefs, billing_subscription_status: { enabled: true } },
   );
 
   const newPostScope = values.novo_post__post_author_scope;
@@ -274,9 +260,7 @@ export const NotificationPreferencesForm = ({
     () =>
       sessionRole === "psicologo"
         ? SECTIONS
-        : SECTIONS.filter(
-            (section) => section.key !== "perfil" && section.key !== "assinatura",
-          ).map((section) => ({
+        : SECTIONS.filter((section) => section.key !== "perfil").map((section) => ({
             ...section,
             categories: section.categories.filter(
               (category) => category.key !== "top_mentor_podium",

@@ -25,6 +25,7 @@ Status: Done
 - [x] Pending weekly report action is labeled "Informar pacientes"; answered remains "Ver resposta".
 - [x] Notification settings cards share list gutters/radius, hide redundant new-post label accessibly and use plain-language permission copy.
 - [x] Top Mentores preference is shown only to psychologists; patient saves preserve any existing hidden preference.
+- [x] Billing preference is removed from settings and always enabled in normalization and delivery, including legacy opt-outs.
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -68,6 +69,18 @@ person-plus states and no horizontal overflow at 390px.
 Frontend production build and its TypeScript check passed.
 
 ## Operations
+Billing follow-up: remove the subscription preference block. Billing notices are
+transactional and always enabled, including legacy disabled preferences and
+older clients submitting false. Other notification preferences and browser
+permission checks remain unchanged. No retroactive resend.
+Validation: 12 frontend preference tests, 17 notification tests and four billing
+dunning tests passed. Real local database delivery succeeded with a disabled
+legacy billing preference while an optional reply notification stayed blocked.
+Repository update normalized a submitted billing opt-out to enabled. Browser
+checks and save/reload passed for both roles at 320/390/1440px; preview refreshed.
+No external push or email was sent during validation.
+Frontend production build and backend TypeScript validation passed.
+
 Settings follow-up: six preference tests passed, including hidden-label/accessibility
 regression coverage. Real local API browser validation passed for patient and
 professional at 320/390/1440px: shared widths, mobile gutters, 12px radius,
