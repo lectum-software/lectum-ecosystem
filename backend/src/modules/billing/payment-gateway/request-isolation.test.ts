@@ -125,6 +125,49 @@ test("session cannot leak to later cancel, reads, plans or card updates without 
   }
 });
 
+test("231-character dotted sessions reach SDK headers byte-exact without cross-operation leaks", async () => {
+  const transport = captureTransport();
+  const createSession = `${"A".repeat(115)}.${"B".repeat(115)}`;
+  const updateSession = `${"C".repeat(115)}.${"D".repeat(115)}`;
+  try {
+    const gateway = new MercadoPagoAdapter();
+    await Promise.all([
+      expectIntercepted(gateway.createSubscription(createInput("dotted-create", createSession))),
+      expectIntercepted(
+        gateway.updateSubscriptionCard({
+          gatewaySubscriptionId: "dotted-update",
+          cardToken: "local-card-token-dotted",
+          deviceSessionId: updateSession,
+        }),
+      ),
+    ]);
+    await expectIntercepted(gateway.cancelSubscription({ gatewaySubscriptionId: "dotted-cancel" }));
+    await expectIntercepted(gateway.createSubscription(createInput("no-session-after-dotted")));
+
+    assert.equal(transport.requests.length, 4);
+    const create = transport.requests.find(
+      (item) => item.body?.external_reference === "dotted-create",
+    );
+    const update = transport.requests.find((item) => item.url.endsWith("/dotted-update"));
+    assert.ok(create);
+    assert.ok(update);
+    for (const [request, session] of [
+      [create, createSession],
+      [update, updateSession],
+    ] as const) {
+      const value = request.headers.get("x-meli-session-id");
+      assert.equal(value, session);
+      assert.equal(Buffer.byteLength(value!), 231);
+      assert.deepEqual(Buffer.from(value!), Buffer.from(session));
+    }
+    for (const request of transport.requests.slice(2)) {
+      assert.equal(request.headers.get("x-meli-session-id"), null);
+    }
+  } finally {
+    transport.restore();
+  }
+});
+
 test("diagnostic invoice lookup is a bounded fixed-host GET without session or retry", async () => {
   const transport = captureTransport();
   try {

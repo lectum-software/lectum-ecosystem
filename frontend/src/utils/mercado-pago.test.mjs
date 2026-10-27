@@ -22,6 +22,7 @@ test("sessão antifraude é opcional e segura sem browser ou sem valor do SDK", 
   assert.equal(typeof window, "undefined");
   assert.equal(getMercadoPagoDeviceSessionId(), undefined);
   assert.equal(getMercadoPagoDeviceSessionId(true), undefined);
+  assert.equal(getMercadoPagoDeviceSessionId(true, true), undefined);
   withBrowserWindow({}, () => assert.equal(getMercadoPagoDeviceSessionId(true), undefined));
   withBrowserWindow({ deviceId: "lectum-device", "x-device": "lectum-device" }, () => {
     assert.equal(getMercadoPagoDeviceSessionId(true), undefined);
@@ -40,6 +41,7 @@ test("backend sem capability true não permite ler nem enviar a sessão", () => 
     assert.equal(getMercadoPagoDeviceSessionId(), undefined);
     for (const capability of [undefined, false, null, 0, 1, "true", {}]) {
       assert.equal(getMercadoPagoDeviceSessionId(capability), undefined);
+      assert.equal(getMercadoPagoDeviceSessionId(capability, true), undefined);
     }
     assert.equal(reads, 0);
     assert.equal(getMercadoPagoDeviceSessionId(true), "session-ready");
@@ -53,8 +55,44 @@ test("aceita somente identificador ASCII alfanumérico, hífen e underscore de 1
   for (const value of ["a", "_", "-", "Session_123-ABC", "a".repeat(256)]) {
     withBrowserWindow({ MP_DEVICE_SESSION_ID: value }, () => {
       assert.equal(getMercadoPagoDeviceSessionId(true), value);
+      assert.equal(getMercadoPagoDeviceSessionId(true, false), value);
+      assert.equal(getMercadoPagoDeviceSessionId(true, true), value);
     });
   }
+});
+
+test("preserva sessão sintética de 231 caracteres com pontos somente com ambas capabilities", () => {
+  const value = `${"a".repeat(80)}.${"B".repeat(70)}.${"0".repeat(79)}`;
+  assert.equal(value.length, 231);
+  withBrowserWindow({ MP_DEVICE_SESSION_ID: value }, () => {
+    assert.equal(getMercadoPagoDeviceSessionId(), undefined);
+    assert.equal(getMercadoPagoDeviceSessionId(false, true), undefined);
+    assert.equal(getMercadoPagoDeviceSessionId(true), undefined);
+    for (const dottedCapability of [undefined, false, null, 0, 1, "true", {}]) {
+      assert.equal(getMercadoPagoDeviceSessionId(true, dottedCapability), undefined);
+    }
+    assert.equal(getMercadoPagoDeviceSessionId(true, true), value);
+    assert.equal(getMercadoPagoDeviceSessionId(true, false), undefined);
+  });
+});
+
+test("ponto é o único caractere novo e mantém limites sem inferir ou normalizar formato", () => {
+  for (const value of [
+    ".",
+    ".leading",
+    "trailing.",
+    "a..b",
+    "Session_123-ABC.part",
+    `${"a".repeat(255)}.`,
+  ]) {
+    withBrowserWindow({ MP_DEVICE_SESSION_ID: value }, () => {
+      assert.equal(getMercadoPagoDeviceSessionId(true), undefined);
+      assert.equal(getMercadoPagoDeviceSessionId(true, true), value);
+    });
+  }
+  withBrowserWindow({ MP_DEVICE_SESSION_ID: `${"a".repeat(256)}.` }, () => {
+    assert.equal(getMercadoPagoDeviceSessionId(true, true), undefined);
+  });
 });
 
 test("omite valores inválidos sem converter, truncar ou remover whitespace", () => {
@@ -73,17 +111,24 @@ test("omite valores inválidos sem converter, truncar ou remover whitespace", ()
     "session\r",
     "session\t",
     "session\0",
+    "session\x7f",
+    "session\r\nX-Header: injected",
     "sessão",
+    "session\u200b",
     "session/123",
-    "session.123",
+    "session\\123",
     "session:123",
     "session+123",
     "session=123",
+    "session%2E123",
+    ".session ",
+    "session.\n",
   ];
 
   for (const value of values) {
     withBrowserWindow({ MP_DEVICE_SESSION_ID: value }, () => {
       assert.equal(getMercadoPagoDeviceSessionId(true), undefined);
+      assert.equal(getMercadoPagoDeviceSessionId(true, true), undefined);
     });
   }
 });
@@ -96,6 +141,7 @@ test("falha de leitura do SDK degrada para ausência sem bloquear submit", () =>
   });
   withBrowserWindow(browserWindow, () => {
     assert.equal(getMercadoPagoDeviceSessionId(true), undefined);
+    assert.equal(getMercadoPagoDeviceSessionId(true, true), undefined);
   });
 });
 
@@ -119,11 +165,23 @@ test("checkout e cartão capturam a sessão opcional dentro do submit e preserva
     const submit = source.slice(source.indexOf("const handleSubmit = useCallback("));
     assert.match(
       submit,
-      /const deviceSessionId = getMercadoPagoDeviceSessionId\(supportsDeviceSessionIdRef.current\);/,
+      /const deviceSessionId = getMercadoPagoDeviceSessionId\(\s*supportsDeviceSessionIdRef.current,\s*supportsDottedDeviceSessionIdRef.current,\s*\);/,
     );
     assert.match(source, /billing.current.data\?\.capabilities\?\.device_session_id === true/);
+    assert.match(
+      source,
+      /billing.current.data\?\.capabilities\?\.device_session_id_dotted === true/,
+    );
     assert.match(source, /const supportsDeviceSessionIdRef = useRef\(supportsDeviceSessionId\);/);
+    assert.match(
+      source,
+      /const supportsDottedDeviceSessionIdRef = useRef\(supportsDottedDeviceSessionId\);/,
+    );
     assert.match(source, /supportsDeviceSessionIdRef.current = supportsDeviceSessionId;/);
+    assert.match(
+      source,
+      /supportsDottedDeviceSessionIdRef.current = supportsDottedDeviceSessionId;/,
+    );
     assert.match(
       submit,
       /\.\.\.\(deviceSessionId \? \{ device_session_id: deviceSessionId \} : \{\}\)/,

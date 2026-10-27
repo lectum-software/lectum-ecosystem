@@ -63,6 +63,7 @@ export type BillingCurrentResponse = {
   current: ProfessionalSubscription | null;
   capabilities?: {
     device_session_id?: boolean;
+    device_session_id_dotted?: boolean;
   };
 };
 

@@ -14,12 +14,28 @@ for (const [name, validator] of [
     });
     const body = { card_token: "local-unit-card-token", payment_type_id: "credit_card" };
     assert.equal(schemas.body.safeParse(body).success, true);
-    const session = "SDK-session_0123";
-    assert.equal(
-      schemas.body.parse({ ...body, device_session_id: session }).device_session_id,
-      session,
-    );
-    for (const value of [null, 123, [], {}, "", "x".repeat(257), "valid\n", "unsafe\r\nheader"]) {
+    for (const session of ["SDK-session_0123", `${"A".repeat(115)}.${"B".repeat(115)}`]) {
+      assert.equal(
+        schemas.body.parse({ ...body, device_session_id: session }).device_session_id,
+        session,
+      );
+    }
+    for (const value of [
+      null,
+      123,
+      [],
+      {},
+      "",
+      "x".repeat(257),
+      "valid\n",
+      "unsafe\r\nheader",
+      "dot.session\u007f",
+      "dot.session/other",
+      "dot.session+other",
+      "dot.session:other",
+      "dot.session=other",
+      "dot.sessão",
+    ]) {
       assert.equal(schemas.body.safeParse({ ...body, device_session_id: value }).success, false);
     }
     assert.equal(schemas.body.safeParse({ ...body, unknown_field: "not-allowed" }).success, false);

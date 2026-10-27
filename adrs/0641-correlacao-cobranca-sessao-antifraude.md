@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceito; implementação validada localmente, publicação bloqueada — 2026-10-27.
+Aceito; implementação inicial publicada em 0.1.731 via PR #133 — 2026-10-27.
+Os bloqueios históricos abaixo foram resolvidos; correção de formato detalhada no ADR-0642.
 
 ## Task relacionada
 

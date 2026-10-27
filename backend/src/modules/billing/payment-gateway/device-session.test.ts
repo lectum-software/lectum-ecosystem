@@ -5,10 +5,17 @@ import { deviceSessionIdSchema, normalizeDeviceSessionId } from "./device-sessio
 test("device session is optional and preserves only bounded ASCII header values", () => {
   assert.equal(deviceSessionIdSchema.optional().safeParse(undefined).success, true);
   assert.equal(normalizeDeviceSessionId(undefined), undefined);
-  for (const value of ["a", "SDK_session-0123", "x".repeat(256)]) {
+  for (const value of ["a", "SDK_session-0123", "SDK.session-0123", `${"x".repeat(255)}.`]) {
     assert.equal(deviceSessionIdSchema.parse(value), value);
     assert.equal(normalizeDeviceSessionId(value), value);
   }
+});
+
+test("a 231-character dotted session remains opaque and byte-exact", () => {
+  const session = `${"A".repeat(115)}.${"B".repeat(115)}`;
+  assert.equal(session.length, 231);
+  assert.equal(deviceSessionIdSchema.parse(session), session);
+  assert.equal(normalizeDeviceSessionId(session), session);
 });
 
 test("device session rejects coercion, control characters, whitespace and unbounded input", () => {
@@ -22,6 +29,11 @@ test("device session rejects coercion, control characters, whitespace and unboun
     "session\t",
     "sessão",
     "session/other",
+    "session+other",
+    "session:other",
+    "session=other",
+    "session.other\u007f",
+    "session.other\u0080",
     "session\u0000",
     123,
     null,

@@ -121,7 +121,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const syncMutateAsync = billing.sync.mutateAsync;
   const currentRefetch = billing.current.refetch;
   const supportsDeviceSessionId = billing.current.data?.capabilities?.device_session_id === true;
+  const supportsDottedDeviceSessionId =
+    billing.current.data?.capabilities?.device_session_id_dotted === true;
   const supportsDeviceSessionIdRef = useRef(supportsDeviceSessionId);
+  const supportsDottedDeviceSessionIdRef = useRef(supportsDottedDeviceSessionId);
   const checkoutMutateAsyncRef = useRef(checkoutMutateAsync);
   const syncMutateAsyncRef = useRef(syncMutateAsync);
   const currentRefetchRef = useRef(currentRefetch);
@@ -134,7 +137,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
   useEffect(() => {
     checkoutMutateAsyncRef.current = checkoutMutateAsync;
     supportsDeviceSessionIdRef.current = supportsDeviceSessionId;
-  }, [checkoutMutateAsync, supportsDeviceSessionId]);
+    supportsDottedDeviceSessionIdRef.current = supportsDottedDeviceSessionId;
+  }, [checkoutMutateAsync, supportsDeviceSessionId, supportsDottedDeviceSessionId]);
 
   useEffect(() => {
     syncMutateAsyncRef.current = syncMutateAsync;
@@ -251,7 +255,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
       }
 
       try {
-        const deviceSessionId = getMercadoPagoDeviceSessionId(supportsDeviceSessionIdRef.current);
+        const deviceSessionId = getMercadoPagoDeviceSessionId(
+          supportsDeviceSessionIdRef.current,
+          supportsDottedDeviceSessionIdRef.current,
+        );
         await checkoutMutateAsyncRef.current({
           card_token: token,
           ...(deviceSessionId ? { device_session_id: deviceSessionId } : {}),
