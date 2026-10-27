@@ -1,6 +1,7 @@
 import { UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { ANALYTICS_PATH } from "@/utils/analytics-return";
 
 type Props = {
   startLabel?: string;
@@ -19,6 +20,7 @@ export function WeeklyWhatsappNotification({
   href,
   relativeTime,
 }: Props) {
+  const actionHref = answered ? `${ANALYTICS_PATH}?metric=acquired_patients` : href;
   return (
     <div className="flex w-full items-start gap-4 px-3 py-3 text-left">
       <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
@@ -43,12 +45,12 @@ export function WeeklyWhatsappNotification({
             : ""}
           {answered ? "Agendamentos informados." : "Quantas agendaram uma consulta?"}
         </p>
-        {href ? (
+        {actionHref ? (
           <Button
             asChild
             className="mt-3 min-h-11 max-w-full whitespace-normal rounded-lg px-4 py-2 text-center text-sm font-semibold shadow-none"
           >
-            <Link href={href}>{answered ? "Ver resposta" : "Informar pacientes"}</Link>
+            <Link href={actionHref}>{answered ? "Ver resposta" : "Informar pacientes"}</Link>
           </Button>
         ) : null}
         <span className="mt-2 block text-xs font-medium text-subtle">{relativeTime}</span>

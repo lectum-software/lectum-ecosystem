@@ -333,7 +333,7 @@ export const NotificationPreferencesForm = ({
                     <Icon className="h-5 w-5" aria-hidden={true} />
                   </span>
 
-                  <h3 className="min-w-0 text-[15px] font-bold leading-5 text-foreground">
+                  <h3 className="min-w-0 text-sm font-semibold leading-5 text-foreground">
                     {category.label}
                   </h3>
 

@@ -163,7 +163,7 @@ export const NotificationSettingsLogic = () => {
   return (
     <PrivateTemplate>
       <section className="mx-auto w-full max-w-[430px] py-5 md:max-w-2xl md:px-5 md:py-8">
-        <header className="mb-6 flex items-start gap-3 px-5 md:px-0">
+        <header className="mb-6 flex items-start gap-3">
           <Button
             asChild
             className="h-10 w-10 shrink-0 rounded-full p-0"

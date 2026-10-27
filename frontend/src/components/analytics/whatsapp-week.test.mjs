@@ -32,17 +32,19 @@ for (const answered of [false, true]) {
     );
     assert.match(html, /<h3 class="[^"]*font-bold[^"]*">Pacientes adquiridos<\/h3>/);
     assert.match(html, /1 pessoa clicou no seu WhatsApp/);
-    assert.match(html, /href="\/app\/notificacoes\?whatsapp_week=week-id"/);
     assert.match(html, /bg-primary/);
     assert.match(html, /rounded-lg/);
     assert.match(html, /lucide-user-round-plus/);
     assert.equal((html.match(/<a /g) ?? []).length, 1);
     assert.doesNotMatch(html, /<button/);
     if (answered) {
+      assert.match(html, /href="\/app\/profissional\/estatisticas\?metric=acquired_patients"/);
+      assert.doesNotMatch(html, /whatsapp_week=/);
       assert.match(html, />Ver resposta<\/a>/);
       assert.match(html, /Agendamentos informados/);
       assert.doesNotMatch(html, /Informe mesmo que nenhuma/);
     } else {
+      assert.match(html, /href="\/app\/notificacoes\?whatsapp_week=week-id"/);
       assert.match(html, />Informar pacientes<\/a>/);
       assert.match(html, /Quantas agendaram uma consulta\?/);
       assert.doesNotMatch(html, /Informe mesmo que nenhuma/);
@@ -60,6 +62,14 @@ test("notificacao semanal suporta plural e ausencia de destino sem acao falsa", 
   );
   assert.match(html, /12 pessoas clicaram/);
   assert.doesNotMatch(html, /<a |<button|undefined/);
+});
+test("resposta existente abre analytics mesmo sem o destino legado da modal", () => {
+  const html = renderToStaticMarkup(
+    createElement(WeeklyWhatsappNotification, { answered: true, relativeTime: "1 d" }),
+  );
+  assert.match(html, /href="\/app\/profissional\/estatisticas\?metric=acquired_patients"/);
+  assert.match(html, />Ver resposta<\/a>/);
+  assert.doesNotMatch(html, /whatsapp_week=/);
 });
 const { metricCards, fallbackTrafficSources } = await import(
   "../../app/app/professional/analytics/modules/support.ts"
