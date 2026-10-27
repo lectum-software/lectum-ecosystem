@@ -1,9 +1,10 @@
-import { safeGatewayDiagnostic } from "./diagnostic";
+import { safeGatewayDiagnostic, safeGatewayHints } from "./diagnostic";
 
 export type PaymentGatewayErrorLog = {
   name: string;
   status?: number;
   diagnostic?: string;
+  diagnostic_hints?: string[];
   status_detail?: string;
   cause_codes?: string[];
 };
@@ -11,6 +12,7 @@ export type PaymentGatewayErrorLog = {
 export type PaymentGatewayErrorDetails = {
   status?: number;
   diagnostic?: string;
+  diagnostic_hints?: string[];
   status_detail?: string;
   error?: string;
   cause_codes?: string[];
@@ -58,6 +60,7 @@ export const getPaymentGatewayErrorDetails = (error: unknown): PaymentGatewayErr
   return {
     status: safeStatus(details?.status ?? errorRecord?.status),
     diagnostic: safeGatewayDiagnostic(details?.diagnostic),
+    diagnostic_hints: safeGatewayHints(details?.diagnostic_hints),
     status_detail: safeCode(details?.status_detail ?? errorRecord?.status_detail),
     error: safeCode(details?.error ?? errorRecord?.error ?? errorRecord?.code),
     cause_codes: safeCauseCodes(rawCause),
@@ -73,6 +76,7 @@ export const sanitizePaymentGatewayError = (error: unknown): PaymentGatewayError
   };
 
   if (details.diagnostic) safeLog.diagnostic = details.diagnostic;
+  if (details.diagnostic_hints?.length) safeLog.diagnostic_hints = details.diagnostic_hints;
   if (details.status_detail) safeLog.status_detail = details.status_detail;
   if (details.cause_codes?.length) safeLog.cause_codes = details.cause_codes;
 

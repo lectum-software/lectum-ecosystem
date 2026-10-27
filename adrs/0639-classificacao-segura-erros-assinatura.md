@@ -35,3 +35,11 @@ Build backend aprovado. Hooks de commit/push permanecem gates antes da publicaç
 ## Pendências
 
 Confirmar causa do 400 de produção e validar pagamento após eventual correção da configuração.
+
+## Complemento — resposta não classificada em produção
+
+Após publicar 0.1.717 e confirmar health/ready 200, a nova tentativa retornou somente status 400. A lista de mensagens exatas não cobriu a resposta real. O SDK instalado lança o JSON do corpo, sem anexar os headers em erros; portanto não há request ID recuperável dessa interface.
+
+Ampliar a inspeção em memória para message/error/code/status_detail e descrições em cause/errors, com limites de tamanho e quantidade. Quando não houver correspondência exata, registrar provider_error_unclassified e diagnostic_hints de um vocabulário fechado. Esses sinais não são a causa confirmada: apenas indicam assuntos encontrados no texto. Nunca copiar substrings, nomes, emails, tokens ou texto técnico do provider ao log. Não alterar payload, retries, transporte nem classificação pública a partir desses sinais.
+
+Doze testes direcionados aprovados, incluindo causas aninhadas, resposta sem mensagem e tentativa de injeção de dados no diagnóstico. Publicação segue os mesmos gates e a autorização de concluir o diagnóstico de pagamentos.
