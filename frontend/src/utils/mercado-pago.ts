@@ -19,7 +19,10 @@ export const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
   return authenticatedEmail.trim();
 };
 
-export const getMercadoPagoDeviceSessionId = (enabled = false): string | undefined => {
+export const getMercadoPagoDeviceSessionId = (
+  enabled = false,
+  allowDotted = false,
+): string | undefined => {
   if (enabled !== true || typeof window === "undefined") return undefined;
 
   try {
@@ -28,7 +31,8 @@ export const getMercadoPagoDeviceSessionId = (enabled = false): string | undefin
       typeof value !== "string" ||
       value.length === 0 ||
       value.length > 256 ||
-      /[^A-Za-z0-9_-]/.test(value)
+      /[^A-Za-z0-9_.-]/.test(value) ||
+      (value.includes(".") && allowDotted !== true)
     ) {
       return undefined;
     }

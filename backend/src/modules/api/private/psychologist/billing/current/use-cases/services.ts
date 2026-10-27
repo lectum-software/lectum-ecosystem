@@ -16,6 +16,9 @@ export default async (data: ICurrentDTO) => {
   return {
     status: 200,
     ...msg("show", {}),
-    data: { current, capabilities: { device_session_id: true } },
+    data: {
+      current,
+      capabilities: { device_session_id: true, device_session_id_dotted: true },
+    },
   };
 };

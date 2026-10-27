@@ -265,8 +265,8 @@ rejeição por risco posterior. O HTTP 400 e os hints isolados não identificam 
 - [x] Consultar somente GET após webhook autenticado; falha diagnóstica não muda entitlement nem cria retry financeiro.
 - [x] Validar testes e checks por aplicação, builds backend/frontend e smoke local sem enviar cartão.
 - [x] Passar check integral da raiz (extração mínima de notificações autorizada e validada).
-- [ ] Versionar, commitar e publicar em homolog, registrar smoke antes da promoção por PR.
-- [ ] Promover por PR revisado e validar versões e saúde em produção sem realizar cobrança.
+- [x] Versionar, commitar e publicar em homolog, registrar smoke antes da promoção por PR.
+- [x] Promover por PR revisado e validar versões e saúde em produção sem realizar cobrança.
 
 Deploy: sem pacote, env ou migration nova; sessão ausente mantém comportamento anterior.
 Backend/frontend permanecem independentes; preferir backend primeiro. Rollback por revert,
@@ -292,3 +292,38 @@ Atualização do gate: primeiro push foi bloqueado pelos hooks, sem publicar. Ap
 autorização explícita, extração mínima na TASK-277 resolveu source-size (588 linhas);
 check integral e builds backend/frontend passaram em 0.1.731. Publicação ainda depende
 de smoke de homologação da versão nova e acesso à equipe Lectum no Vercel.
+
+Atualização operacional posterior: bloqueios acima resolvidos. PR #133 mesclado como
+`ba6c4d60`; backend homolog 0.1.731 com ping/health/ready 200 antes da promoção.
+Backend, frontend e admin produtivos verificados em 0.1.731; backend health/ready 200.
+Vercel frontend estava Staged por atribuição automática de domínios desativada; promoção
+manual concluída e opção reativada depois por autorização explícita. Evidências e limites
+do smoke estão nos comentários do PR. Nenhuma cobrança foi efetuada pelo agente.
+
+## Correção em execução — 27/10/2026: sessão com ponto
+
+ADR-0642. Console real do usuário no checkout publicado: SDK carregado, sessão string
+com 231 caracteres, ASCII visível e somente `.` fora da allowlist anterior. Não foi
+coletado o identificador. Isso comprova omissão pelo helper, não causalidade do HTTP 400.
+
+- [x] Aceitar ponto adicionalmente a letras ASCII, números, hífen e underscore, sem alterar o valor.
+- [x] Manter 1–256 caracteres e recusar whitespace, controles, Unicode e coerção em frontend/backend.
+- [x] Anunciar `capabilities.device_session_id_dotted=true`; frontend só envia sessão com ponto após esse anúncio, preservando compatibilidade com backend 0.1.731.
+- [x] Cobrir helper, validators reais, transporte byte-exato e rollout de versões mistas por testes.
+- [x] Validar checks/builds e browser local sem enviar cartão ou simular aprovação financeira.
+- [ ] Versionar, commitar e publicar em homolog com smoke; promoção produtiva somente via PR revisado.
+
+Sem novo pacote, env, migration ou mudança visual. Reutilizar SDK existente: widget está
+presente e define a global; não carregar script antifraude duplicado. Preferir backend antes
+do frontend; a capability adicional protege a ordem inversa. Rollback por revert, frontend
+primeiro e recarga das abas antes de retornar o backend à validação antiga. Não alterar
+credenciais, tipo de API, assinaturas ou dados financeiros; não executar cobrança.
+
+Evidência local 0.1.732: check integral aprovado (995 testes backend; video com 92
+aprovados e 13 opcionais ignorados); builds backend/frontend aprovados; 10 testes
+focais backend e 9 frontend aprovados; revisão independente sem bloqueantes. Backend
+local `/ping`, `/health`, `/ready` HTTP 200 e rota privada sem autenticação 401.
+Frontend local `/version` HTTP 200 em 0.1.732; browser da rota pagamento redireciona
+ao login preservando callback. QA de guarda de autenticação, não checkout autenticado
+ponta a ponta. Execução isolada em loopback, sem credenciais reais de provider ou
+acesso ao banco remoto, sem nova migration nem submissão financeira.
