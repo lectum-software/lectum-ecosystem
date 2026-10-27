@@ -55,7 +55,7 @@ export const createPsychologistBillingCheckout = async (body: BillingCheckoutPay
     body,
   });
 
-  return handleReq<BillingCheckoutResponse>(handle);
+  return handleReq<BillingCheckoutResponse>({ ...handle, hideError: true });
 };
 
 export const syncPsychologistBillingSubscription = async () => {
@@ -93,5 +93,5 @@ export const updatePsychologistBillingPaymentMethod = async (body: BillingPaymen
     body,
   });
 
-  return handleReq<BillingPaymentMethodResponse>(handle);
+  return handleReq<BillingPaymentMethodResponse>({ ...handle, hideError: true });
 };

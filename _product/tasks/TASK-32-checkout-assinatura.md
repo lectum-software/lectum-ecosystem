@@ -311,7 +311,7 @@ coletado o identificador. Isso comprova omissão pelo helper, não causalidade d
 - [x] Anunciar `capabilities.device_session_id_dotted=true`; frontend só envia sessão com ponto após esse anúncio, preservando compatibilidade com backend 0.1.731.
 - [x] Cobrir helper, validators reais, transporte byte-exato e rollout de versões mistas por testes.
 - [x] Validar checks/builds e browser local sem enviar cartão ou simular aprovação financeira.
-- [ ] Versionar, commitar e publicar em homolog com smoke; promoção produtiva somente via PR revisado.
+- [x] Versionar, commitar e publicar em homolog com smoke; promoção produtiva somente via PR revisado.
 
 Sem novo pacote, env, migration ou mudança visual. Reutilizar SDK existente: widget está
 presente e define a global; não carregar script antifraude duplicado. Preferir backend antes
@@ -327,3 +327,37 @@ Frontend local `/version` HTTP 200 em 0.1.732; browser da rota pagamento redirec
 ao login preservando callback. QA de guarda de autenticação, não checkout autenticado
 ponta a ponta. Execução isolada em loopback, sem credenciais reais de provider ou
 acesso ao banco remoto, sem nova migration nem submissão financeira.
+
+Publicação 0.1.732 concluída via PR #134 (merge `509651f27`), após smoke homolog;
+backend/frontend/admin em produção verificados na mesma versão, health/ready 200.
+Tentativa posterior executada pelo usuário: sessão presente no backend e recusa por
+risco confirmada por consultas correlacionadas somente leitura. O agente não cobrou.
+
+## Ajuste em execução — 27/10/2026: mensagem cautelosa e diagnóstico de leitura
+
+ADR-0643. Escopo: cópia segura de checkout/cartão, diagnóstico fechado de consulta de
+fatura, análise de alternativas de API e rascunho de chamado. Sem trocar credenciais,
+produto financeiro, assinatura, preço, cronograma ou dados de produção.
+
+- [x] Tratar falha indeterminada sem afirmar problema de rede, recusa ou ausência de cobrança.
+- [x] Preservar erros de cartão explicitamente classificados e controles de sessão/permissão.
+- [x] Diferenciar validação, GET e lookup local em logs sanitizados, com duração e HTTP quando conhecido.
+- [x] Manter GET único, timeout de 3s, sem retry financeiro ou mudança de entitlement.
+- [x] Validar regressões, checks/builds e browser local, documentando limites do QA sem cobrança.
+- [x] Preparar chamado sem PII/segredos e análise fundamentada de Payments/Orders/Assinaturas.
+- [x] Versionar e commitar em homolog; informar separadamente publicação e smoke.
+
+Sem env, pacote, schema ou migration nova. Rollout aditivo e independente entre apps;
+rollback por revert sem migração de dados. Layout preservado, inclusive mobile-first
+~390px; referências da TASK-32 em PROTO-INVENTORY. Builder/Quick Copy indisponível,
+usar referência exportada e não redesenhar o checkout. Não usar uma cobrança real
+como teste para encerrar esta task.
+
+Evidência local 0.1.733: check integral da raiz e builds backend/frontend aprovados;
+revisões independentes de logs e mensagem sem bloqueantes. Backend ping/health/ready
+200, billing sem sessão 401; frontend version 200/no-store. Browser local nas duas
+rotas valida guarda de autenticação e callback, não checkout autenticado ou toast
+pós-submit (sem profissional autenticado local). Cópias e seleção de erro cobertas
+por testes unitários reais do helper/código; sem endpoints simulados. Banco local
+isolado, sem credenciais de provider nem acesso ao banco remoto. Produção não foi
+alterada por esta task; chamado preparado, não enviado.

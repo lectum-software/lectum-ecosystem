@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { AuthorizedPaymentReadError } from "./authorized-payment";
 import { buildCardUpdateIdempotencyKey } from "./idempotency";
 import { MercadoPagoAdapter, MercadoPagoAdapterError } from "./MercadoPagoAdapter";
 
@@ -172,7 +173,10 @@ test("diagnostic invoice lookup is a bounded fixed-host GET without session or r
   const transport = captureTransport();
   try {
     const gateway = new MercadoPagoAdapter();
-    await expectIntercepted(gateway.getAuthorizedPayment("local-invoice-123"));
+    await assert.rejects(
+      gateway.getAuthorizedPayment("local-invoice-123"),
+      AuthorizedPaymentReadError,
+    );
     assert.equal(transport.requests.length, 1);
     const request = transport.requests[0];
     assert.equal(request.url, "https://api.mercadopago.com/authorized_payments/local-invoice-123");
@@ -183,7 +187,7 @@ test("diagnostic invoice lookup is a bounded fixed-host GET without session or r
     assert.equal(request.headers.get("x-meli-session-id"), null);
     assert.equal(request.headers.get("x-idempotency-key"), null);
     for (const id of ["../users/me", "abc\n", "https://example.invalid", ""]) {
-      await expectIntercepted(gateway.getAuthorizedPayment(id));
+      await assert.rejects(gateway.getAuthorizedPayment(id), AuthorizedPaymentReadError);
     }
     assert.equal(transport.requests.length, 1);
   } finally {
