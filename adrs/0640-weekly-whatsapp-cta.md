@@ -50,3 +50,8 @@ Remove the subscription switch and normalize its retained API key to enabled.
 Delivery checks ignore legacy billing opt-outs, so no data backfill is required.
 Existing browser permission/subscription checks and email delivery safeguards
 remain unchanged. No historical notice replay or changes to collection timing.
+
+Switch alignment: use a half-height anchor and negative half-thumb translation
+in the shared form controller instead of a fixed top inset. Preserve control
+dimensions, horizontal travel and interactions; other shared uses inherit the
+same vertical alignment correction.

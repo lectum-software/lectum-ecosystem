@@ -26,6 +26,7 @@ Status: Done
 - [x] Notification settings cards share list gutters/radius, hide redundant new-post label accessibly and use plain-language permission copy.
 - [x] Top Mentores preference is shown only to psychologists; patient saves preserve any existing hidden preference.
 - [x] Billing preference is removed from settings and always enabled in normalization and delivery, including legacy opt-outs.
+- [x] Switch thumbs remain vertically centered on their tracks in both states and responsive widths.
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -69,6 +70,12 @@ person-plus states and no horizontal overflow at 390px.
 Frontend production build and its TypeScript check passed.
 
 ## Operations
+Switch follow-up: 12 preference tests and Biome passed. Real local browser
+measurements confirmed thumb/track vertical centers within 0.1px at 320/390/1440px
+for both roles, before and after toggling on/off. Control dimensions and horizontal
+travel are unchanged. Both read-only previews were refreshed.
+Frontend production build and TypeScript validation passed.
+
 Billing follow-up: remove the subscription preference block. Billing notices are
 transactional and always enabled, including legacy disabled preferences and
 older clients submitting false. Other notification preferences and browser
