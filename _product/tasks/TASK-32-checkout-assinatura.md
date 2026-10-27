@@ -249,3 +249,5 @@ ADR-0639.
 - [x] Validar tipos, build e regressões do backend sobre homolog atualizada.
 - [ ] Publicar após hooks e revisão do PR.
 - [ ] Confirmar causa do 400 em tentativa real após deploy.
+
+Complemento de diagnóstico: tentativa após 0.1.717 permaneceu com 400 sem detalhe reconhecido. Captura segura agora inclui causas aninhadas e sinais de vocabulário fechado; causa efetiva ainda pendente.
