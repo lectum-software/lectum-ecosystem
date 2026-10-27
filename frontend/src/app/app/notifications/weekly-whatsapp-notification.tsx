@@ -48,7 +48,7 @@ export function WeeklyWhatsappNotification({
             asChild
             className="mt-3 min-h-11 max-w-full whitespace-normal rounded-lg px-4 py-2 text-center text-sm font-semibold shadow-none"
           >
-            <Link href={href}>{answered ? "Ver resposta" : "Informar agendamentos"}</Link>
+            <Link href={href}>{answered ? "Ver resposta" : "Informar pacientes"}</Link>
           </Button>
         ) : null}
         <span className="mt-2 block text-xs font-medium text-subtle">{relativeTime}</span>

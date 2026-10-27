@@ -21,6 +21,8 @@ Status: Done
 - [x] Acquired-patient notification uses the shared Lucide person-plus icon.
 - [x] Podium medal images have no colored background, preserving their icon slot.
 - [x] Podium uses a bold congratulatory title and the existing achievement as smaller description.
+- [x] Podium description identifies the rank as "Top X Mentor da comunidade".
+- [x] Pending weekly report action is labeled "Informar pacientes"; answered remains "Ver resposta".
 
 ## Validation
 Frontend full check and build passed; weekly flow has 20 passing tests.
@@ -64,6 +66,13 @@ person-plus states and no horizontal overflow at 390px.
 Frontend production build and its TypeScript check passed.
 
 ## Operations
+Copy follow-up: podium descriptions use "Top X Mentor da comunidade" for all
+three ranks; pending report action uses "Informar pacientes". Twenty focused
+tests, Biome and real local API browser assertions passed. Both previews were
+refreshed, with no horizontal overflow. Local Next dev needed a restart after
+the previous build; preview generation passed after recompilation. No full
+production rebuild repeated for these text-only changes.
+
 No migration, environment variable, dependency or scheduler activation.
 Deploy backend/frontend independently; old notifications use the updated frontend rendering.
 Rollback code only. No remote push/deploy in this task.

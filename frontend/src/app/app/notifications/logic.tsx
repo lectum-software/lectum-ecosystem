@@ -177,10 +177,10 @@ const getDisplayStringProp = (value: unknown, key: string) => {
 };
 
 const topMentorPositionLabel = (position?: number) => {
-  if (position === 1) return "1º lugar";
-  if (position === 2) return "2º lugar";
-  if (position === 3) return "3º lugar";
-  return "Top Mentores";
+  if (position === 1) return "Top 1 Mentor";
+  if (position === 2) return "Top 2 Mentor";
+  if (position === 3) return "Top 3 Mentor";
+  return "Top Mentor";
 };
 
 const topMentorMedalSrc = (position?: number) => {
@@ -269,7 +269,7 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
     const position = getNumberProp(item.message_props, "position");
 
     return communityName
-      ? `Você chegou ao ${topMentorPositionLabel(position)} em ${communityName}.`
+      ? `Você é o ${topMentorPositionLabel(position)} da comunidade ${communityName}.`
       : "Você entrou no Top Mentores.";
   }
 

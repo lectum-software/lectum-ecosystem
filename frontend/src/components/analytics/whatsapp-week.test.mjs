@@ -43,7 +43,7 @@ for (const answered of [false, true]) {
       assert.match(html, /Agendamentos informados/);
       assert.doesNotMatch(html, /Informe mesmo que nenhuma/);
     } else {
-      assert.match(html, />Informar agendamentos<\/a>/);
+      assert.match(html, />Informar pacientes<\/a>/);
       assert.match(html, /Quantas agendaram uma consulta\?/);
       assert.doesNotMatch(html, /Informe mesmo que nenhuma/);
     }

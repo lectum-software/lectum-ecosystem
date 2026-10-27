@@ -29,3 +29,9 @@ same fixed slot but omit the colored icon tone. Other icons retain their tone.
 Podium hierarchy: separate a short congratulatory title (15px, bold) from the
 existing position/community text (text-sm, muted), matching the weekly report
 hierarchy. Preserve notification links, read behavior and transparent medal slots.
+
+Podium copy: describe the position as "Top X Mentor da comunidade", using the
+stored podium position (1/2/3) and community name, without changing ranking rules.
+
+Weekly action copy: use "Informar pacientes" for pending reports, keeping
+"Ver resposta" for answered reports and the existing consultation count semantics.
