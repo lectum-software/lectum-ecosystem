@@ -25,6 +25,7 @@ export type VerticalVideoElementProps = Omit<
   VideoDataAttributes;
 
 export type VerticalVideoPlayerProps = {
+  bottomOverlay?: ReactNode;
   className?: string;
   controls?: boolean;
   controlsVariant?: ControlsVariant;

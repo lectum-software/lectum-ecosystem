@@ -28,10 +28,12 @@ export function MetricComparison({
   data,
   id,
   label,
+  selected = false,
 }: {
   data: PsychologistAnalyticsResponse;
   id: string;
   label: string;
+  selected?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -53,6 +55,7 @@ export function MetricComparison({
           aria-expanded={open}
           className={
             "rounded px-1 py-1 text-[10px] font-semibold leading-4 focus-visible:outline-2 focus-visible:outline-primary " +
+            (selected ? "bg-surface " : "") +
             (change.direction === "up"
               ? "text-success"
               : change.direction === "down"

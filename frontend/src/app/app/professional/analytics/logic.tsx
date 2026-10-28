@@ -23,6 +23,7 @@ import { CommunityActivitySection } from "./components/community-activity";
 import { PeriodTabs, PremiumAnalyticsBanner } from "./components/period-and-metrics";
 import { PresentationVideoAnalyticsSection } from "./components/presentation-video";
 import {
+  analyticsPeriodLabel,
   getCommunitiesAnalytics,
   getDefaultCustomRange,
   getTrafficSources,
@@ -45,7 +46,7 @@ const ProfessionalAnalyticsPage = () => {
   const returning = searchParams.get("restore") === "1";
   const requestedPeriod = searchParams.get("period") ?? "30d";
   const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>(
-    returning && ["7d", "30d", "90d", "365d", "year", "all", "custom"].includes(requestedPeriod)
+    returning && ["7d", "30d", "365d", "custom"].includes(requestedPeriod)
       ? (requestedPeriod as PsychologistAnalyticsPeriodKey)
       : "30d",
   );
@@ -180,6 +181,7 @@ const ProfessionalAnalyticsPage = () => {
 
         {!shouldShowError ? (
           <PresentationVideoAnalyticsSection
+            periodLabel={analyticsPeriodLabel(period, customRange)}
             media={data?.presentation_video}
             locked={isAnalyticsPreview}
             video={visibleData?.presentation_video}
@@ -188,6 +190,7 @@ const ProfessionalAnalyticsPage = () => {
 
         {!shouldShowError ? (
           <CommunityActivitySection
+            periodLabel={analyticsPeriodLabel(period, customRange)}
             returnTo={returnTo}
             communities={getCommunitiesAnalytics(visibleData)}
             locked={isAnalyticsPreview}

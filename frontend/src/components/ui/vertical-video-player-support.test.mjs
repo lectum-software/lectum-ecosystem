@@ -38,6 +38,24 @@ test("controles persistentes permitem visibilidade permanente no modo imersivo",
   );
 });
 
+test("contact overlay is inside the expanded player and independent of hidden controls", () => {
+  const source = readFileSync(new URL("./vertical-video-player.tsx", import.meta.url), "utf8");
+  const start = source.indexOf("<VerticalVideoPlayerBottomOverlay");
+  const end = source.indexOf("<VerticalVideoStreamStatus", start);
+  const overlay = source.slice(start, end);
+  assert.ok(start > source.indexOf("<VerticalVideoPlayerShell"));
+  assert.ok(end < source.indexOf("</VerticalVideoPlayerShell>"));
+  assert.match(overlay, /usesPersistentControls && !persistentControlsHidden/);
+  assert.match(overlay, /\{bottomOverlay\}/);
+  const component = readFileSync(
+    new URL("./vertical-video-player-bottom-overlay.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(component, /data-lectum-video-bottom-overlay="true"/);
+  assert.match(component, /4\.5rem/);
+  assert.doesNotMatch(component, /opacity-0|pointer-events-none|aria-hidden/);
+});
+
 test("feed imersivo de psicologos opta por controles sempre visiveis", () => {
   const slideSource = readFileSync(
     new URL("../../app/app/psychologists/view/components/slide.tsx", import.meta.url),

@@ -3,14 +3,21 @@
 import { ArrowRight, BarChart3, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef } from "react";
+import { z } from "zod";
 import type { PsychologistAnalyticsPeriodKey } from "@/api/generator/types/psychologist-analytics";
+import { SelectController } from "@/components/controllers/select";
 import { Modal } from "@/components/ui/modal";
+import { useFormList } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
 import { type AnalyticsCardView, PERIOD_OPTIONS } from "../modules/support";
 import { CustomPeriodForm } from "./custom-period-form";
+
+const periodSchema = z.object({
+  period: z.enum(["7d", "30d", "90d", "365d", "year", "all", "custom"]),
+});
 
 export const PeriodTabs = ({
   customPopoverOpen,
@@ -32,30 +39,22 @@ export const PeriodTabs = ({
   const customTabRef = useRef<HTMLButtonElement | null>(null);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const titleId = useId();
-  const tabsRef = useRef<HTMLDivElement>(null);
+  const selectorRef = useRef<HTMLDivElement>(null);
+  const { hook: form } = useFormList<{ period: PsychologistAnalyticsPeriodKey }>({
+    fields: [{ name: "period", field: "select" }],
+    schema: periodSchema,
+    defaultValues: { period: current },
+    values: { period: current },
+  });
   useEffect(() => {
-    if (current === "custom" && (!customRange.start_at || !customRange.end_at)) return;
-    const tabs = tabsRef.current;
-    if (!tabs) return;
-    const revealSelection = () => {
-      const selected = tabs.querySelector(`[data-period="${current}"]`);
-      if (!selected) return;
-      const bounds = tabs.getBoundingClientRect();
-      const target = selected.getBoundingClientRect();
-      if (target.left < bounds.left || target.width > bounds.width)
-        tabs.scrollLeft += target.left - bounds.left;
-      else if (target.right > bounds.right) tabs.scrollLeft += target.right - bounds.right;
-    };
-    revealSelection();
-    const observer = new ResizeObserver(revealSelection);
-    observer.observe(tabs);
-    return () => observer.disconnect();
-  }, [current, customRange.start_at, customRange.end_at]);
+    customTabRef.current = selectorRef.current?.querySelector('[role="combobox"]') ?? null;
+  }, []);
   const shortDate = (date: string) =>
     `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(2, 4)}`;
 
   const handlePeriodClick = (nextPeriod: PsychologistAnalyticsPeriodKey) => {
     if (nextPeriod === "custom") {
+      form.setValue("period", current);
       onCustomPopoverOpenChange(true);
       return;
     }
@@ -71,42 +70,31 @@ export const PeriodTabs = ({
 
   return (
     <div className="min-w-0">
-      <div
-        className="overflow-x-auto rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        role="tablist"
-        ref={tabsRef}
-      >
-        <div className="flex min-w-max gap-1 p-1 sm:gap-2 md:min-w-0 md:justify-between">
-          {PERIOD_OPTIONS.map((option) => {
-            const active = !customPopoverOpen && option.value === current;
-            const customActive = option.value === "custom" && customPopoverOpen;
-
-            return (
-              <button
-                aria-expanded={option.value === "custom" ? customPopoverOpen : undefined}
-                aria-haspopup={option.value === "custom" ? "dialog" : undefined}
-                aria-selected={active || customActive}
-                className={cn(
-                  "h-9 whitespace-nowrap rounded-full px-2 text-[0.78rem] font-extrabold transition disabled:opacity-60 sm:h-10 sm:px-3 sm:text-sm md:flex-1",
-                  active || customActive
-                    ? "bg-primary text-primary-foreground shadow-[var(--lectum-shadow-soft)]"
-                    : "text-muted hover:bg-primary-soft/70 hover:text-primary",
-                )}
-                disabled={disabled}
-                key={option.value}
-                data-period={option.value}
-                ref={option.value === "custom" ? customTabRef : undefined}
-                onClick={() => handlePeriodClick(option.value)}
-                role="tab"
-                type="button"
-              >
-                {option.value === "custom" && current === "custom"
-                  ? `Personalizado • ${shortDate(customRange.start_at)} a ${shortDate(customRange.end_at)}`
-                  : option.label}
-              </button>
-            );
-          })}
-        </div>
+      <div ref={selectorRef}>
+        <SelectController
+          field="select"
+          name="period"
+          control={form.control}
+          label="Período"
+          className="gap-0 text-[16px] font-medium [&>label]:sr-only [&>[role=alert]]:hidden"
+          inputClassName="h-auto min-h-12 rounded-[var(--lectum-card-radius)] py-3 text-base font-medium shadow-[var(--lectum-shadow-soft)] [&>span]:whitespace-normal [&>span]:overflow-visible [&>span]:text-clip"
+          selectContentClassName="rounded-[var(--lectum-card-radius)]"
+          selectOptionClassName="min-h-11 text-base"
+          disabled={disabled}
+          useCustomSelect
+          hideEmptyOption
+          options={PERIOD_OPTIONS.map((option) => ({
+            ...option,
+            label:
+              option.value === "custom" && current === "custom"
+                ? `Personalizado • ${shortDate(customRange.start_at)} a ${shortDate(customRange.end_at)}`
+                : option.label,
+          }))}
+          onChangeCallback={(value) => {
+            const option = PERIOD_OPTIONS.find((option) => option.value === value);
+            if (option) handlePeriodClick(option.value);
+          }}
+        />
       </div>
 
       <Modal

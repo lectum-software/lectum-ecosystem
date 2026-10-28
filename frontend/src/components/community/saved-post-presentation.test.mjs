@@ -103,10 +103,12 @@ test("saved comments show the origin link before identity without question previ
         const saveIndex = html.indexOf('aria-label="Remover dos salvos"');
         if (role === "psicologo") {
           assert.ok(whatsappIndex >= 0);
-          assert.equal((html.match(/Fale com/g) ?? []).length, video ? 1 : 2);
+          assert.equal((html.match(/Fale com/g) ?? []).length, 2);
           if (video) {
             assert.ok(whatsappIndex < commentsIndex);
-            assert.match(html, /rounded-t-none/);
+            assert.match(html, /data-community-video-contact="true"/);
+            assert.equal((html.match(/>Fale com[^<]*</g) ?? []).length, 1);
+            assert.doesNotMatch(html, /rounded-t-none/);
           } else {
             assert.ok(commentsIndex < whatsappIndex && whatsappIndex < saveIndex);
             assert.doesNotMatch(html, /rounded-t-none/);

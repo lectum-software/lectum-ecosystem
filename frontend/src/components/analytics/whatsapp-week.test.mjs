@@ -71,9 +71,7 @@ test("resposta existente abre analytics mesmo sem o destino legado da modal", ()
   assert.match(html, />Ver resposta<\/a>/);
   assert.doesNotMatch(html, /whatsapp_week=/);
 });
-const { metricCards, fallbackTrafficSources } = await import(
-  "../../app/app/professional/analytics/modules/support.ts"
-);
+const { metricCards } = await import("../../app/app/professional/analytics/modules/support.ts");
 const { PremiumAnalyticsBanner, MetricCard, PeriodTabs } = await import(
   "../../app/app/professional/analytics/components/period-and-metrics.tsx"
 );
@@ -163,12 +161,13 @@ test("datas aparecem apenas no seletor personalizado aplicado", () => {
   assert.match(render("custom"), /Personalizado • 01\/10\/26 a 18\/10\/26/);
   for (const period of ["all", "7d", "30d", "year"]) {
     assert.doesNotMatch(render(period), /01\/10\/26|18\/10\/26/);
-    assert.match(render(period), />Personalizado<\/button>/);
+    assert.match(render(period), /role="combobox"/);
+    assert.doesNotMatch(render(period), /role="tablist"/);
   }
 });
 
-const { AnalyticsOverview } = await import(
-  "../../app/app/professional/analytics/components/analytics-overview.tsx"
+const { PeopleSummary } = await import(
+  "../../app/app/professional/analytics/components/metric-details.tsx"
 );
 test("resumo de WhatsApp distingue ações, pessoas e média sem alterar pacientes adquiridos", () => {
   const data = {
@@ -180,16 +179,10 @@ test("resumo de WhatsApp distingue ações, pessoas e média sem alterar pacient
     },
     period: { key: "custom", start_at: "2026-10-19T03:00:00Z", end_at: "2026-10-21T02:59:59Z" },
   };
-  const html = renderToStaticMarkup(
-    createElement(AnalyticsOverview, {
-      cards: metricCards(data),
-      data,
-      traffic: fallbackTrafficSources,
-    }),
-  );
-  assert.match(html, /Total de cliques:/);
-  assert.match(html, /Pessoas únicas:/);
-  assert.match(html, /Média de cliques por pessoa:/);
+  const html = renderToStaticMarkup(createElement(PeopleSummary, { metrics: data.metrics }));
+  assert.match(html, /Total de cliques/);
+  assert.match(html, /Pessoas únicas/);
+  assert.match(html, /Média de cliques por pessoa/);
   assert.ok(html.includes(">2,0</dd>"));
   assert.equal(metricCards(data).find((card) => card.id === "acquired_patients").value, "1");
 });

@@ -5,11 +5,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import test from "node:test";
-import { configureStore } from "@reduxjs/toolkit";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Provider } from "react-redux";
 
 const nextImageUrl = import.meta.resolve("next/image.js");
 const nextImageBridge = `data:text/javascript,${encodeURIComponent(
@@ -41,40 +39,11 @@ const { CommunityFollowToggle } = await import("./community-follow-toggle.tsx");
 const { CommunityHeader } = await import(
   "../../app/app/community/[slug]/components/community-header.tsx"
 );
-const { default: rootReducer } = await import("../../store/modules/rootReducers.ts");
 const { default: keys } = await import("../../api/cache/keys.ts");
 const { loadFavoriteIds, updateFavoriteIds } = await import(
   "../../api/callers/patient/favorite-ids.ts"
 );
-const { ProgressiveConversionContext, noopContext } = await import(
-  "../conversion/progressive-conversion-state.ts"
-);
-
-const renderRelations = ({ userId, authenticated = Boolean(userId), ids, children }) => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
-  if (ids) client.setQueryData(keys.patient.favoriteIds(userId), ids);
-  const store = configureStore({
-    reducer: rootReducer,
-    preloadedState: { user: userId ? { id: userId } : null },
-  });
-  const html = renderToStaticMarkup(
-    createElement(
-      Provider,
-      { store },
-      createElement(
-        QueryClientProvider,
-        { client },
-        createElement(
-          ProgressiveConversionContext.Provider,
-          { value: { ...noopContext, isAuthenticated: authenticated } },
-          children,
-        ),
-      ),
-    ),
-  );
-  client.clear();
-  return html;
-};
+const { renderRelations } = await import("./community-relations-test-renderer.mjs");
 
 test("inactive feed favorite uses a plus inheriting the label color without a border", () => {
   const children = createElement(FeedFavoriteButton, {
@@ -503,6 +472,52 @@ test("favorite changes use the originating account and do not manufacture a part
 });
 
 const { CommunityWhatsAppCta } = await import("./community-whatsapp-cta.tsx");
+
+test("video contact is translucent with one action and no separate WhatsApp heading", () => {
+  const html = renderRelations({
+    children: createElement(CommunityWhatsAppCta, {
+      attached: true,
+      overVideo: true,
+      psychologist: { id: "psi", name: "Ana", whatsappUrl: null },
+    }),
+  });
+  assert.match(html, /aria-label="Fale com Ana pelo WhatsApp"/);
+  assert.match(html, /data-community-video-contact="true"/);
+  assert.match(html, /border-media-foreground\/90 bg-media-foreground\/10/);
+  assert.match(html, /min-h-\[44px\]/);
+  assert.match(html, /overflow-visible text-clip whitespace-normal/);
+  assert.match(html, /lucide-arrow-right/);
+  assert.equal((html.match(/>Fale com Ana</g) ?? []).length, 1);
+  assert.doesNotMatch(html.replace(/<title>.*?<\/title>/g, ""), />WhatsApp<|bg-media-background/);
+});
+
+test("vertical media contact replaces footer while images and horizontal fallback retain it", async () => {
+  const { CommunityMediaBlock } = await import("./community-media-frame.tsx");
+  for (const [mediaType, variant, hasOverlay] of [
+    ["video", "reply", true],
+    ["video", "post", false],
+    ["image", "reply", false],
+  ]) {
+    const html = renderRelations({
+      children: createElement(CommunityMediaBlock, {
+        alt: "QA media",
+        mediaType,
+        variant,
+        mediaUrl:
+          mediaType === "image"
+            ? "/community/icons/qa.png"
+            : "https://lh3.googleusercontent.com/media.mp4",
+        footer: createElement(CommunityWhatsAppCta, {
+          attached: true,
+          psychologist: { id: "psi", name: "Ana", whatsappUrl: null },
+        }),
+      }),
+    });
+    assert.equal(html.includes('data-community-video-contact="true"'), hasOverlay);
+    assert.equal(html.replace(/<title>.*?<\/title>/g, "").includes(">WhatsApp<"), !hasOverlay);
+    assert.equal(html.includes('data-lectum-video-bottom-overlay="true"'), hasOverlay);
+  }
+});
 test("text-only WhatsApp renders a monochrome icon and accessible name", () => {
   const html = renderRelations({
     children: createElement(CommunityWhatsAppCta, {
@@ -518,6 +533,21 @@ test("text-only WhatsApp renders a monochrome icon and accessible name", () => {
     html.replace(/<title>.*?<\/title>/g, ""),
     /text-success|bg-success|>WhatsApp<|>Fale com Ana</,
   );
+});
+
+test("non-contact media footers are never converted into video overlays", async () => {
+  const { CommunityMediaBlock } = await import("./community-media-frame.tsx");
+  const html = renderRelations({
+    children: createElement(CommunityMediaBlock, {
+      alt: "QA media",
+      mediaType: "video",
+      variant: "reply",
+      mediaUrl: "https://lh3.googleusercontent.com/media.mp4",
+      footer: createElement("span", null, "Media caption"),
+    }),
+  });
+  assert.match(html, /Media caption/);
+  assert.doesNotMatch(html, /data-lectum-video-bottom-overlay/);
 });
 test("media-attached WhatsApp retains its labelled contact block", () => {
   const html = renderRelations({
