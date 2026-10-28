@@ -1,11 +1,11 @@
 "use client";
 import { X } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import type {
   AnalyticsTimeline,
   PsychologistAnalyticsPeriod,
 } from "@/api/generator/types/psychologist-analytics";
-import { dayLabel, pointerDayIndex, timelineDates } from "../modules/timeline";
+import { dayLabel, pointerDayIndex, smoothTimelinePath, timelineValues } from "../modules/timeline";
 
 const palette = [
   "var(--lectum-primary)",
@@ -28,6 +28,7 @@ export function MetricTimeline({
   seriesColors?: Record<string, string>;
 }) {
   const sliderRef = useRef<HTMLDivElement>(null);
+  const gradientId = useId();
   const closeSelection = () => {
     setSelected(null);
     sliderRef.current?.focus({ preventScroll: true });
@@ -45,27 +46,25 @@ export function MetricTimeline({
   const height = Math.max(192, Math.min(320, width * 0.42));
   if (!timeline)
     return <p className="py-10 text-center text-sm text-muted">Histórico ainda não disponível.</p>;
-  const dates = timelineDates(timeline, period);
+  const { dates, series, values, totals: pointTotals } = timelineValues(timeline, period);
   if (!dates.length)
     return (
       <p className="py-10 text-center text-sm text-muted">Ainda não há dados neste período.</p>
     );
-  const series = timeline.series
-    .filter((s) => s.id !== "unknown" || s.points.some((p) => p.value > 0))
-    .map((s) => (s.id === "favorites" ? { ...s, label: "Favoritos" } : s));
   const colors = series.map((s, i) => seriesColors[s.id] ?? palette[i % palette.length]);
-  const values = series.map((s) => {
-    const map = new Map(s.points.map((p) => [p.date, p.value]));
-    return dates.map((date) => map.get(date) ?? 0);
-  });
-  const max = Math.max(1, ...values.flat());
+  const max = Math.max(1, ...pointTotals);
   const index = Math.min(selected ?? dates.length - 1, dates.length - 1);
   const x = (i: number) => (dates.length === 1 ? width / 2 : (i / (dates.length - 1)) * width);
   const y = (value: number) => height - 20 - (value / max) * (height - 45);
   const totals = values.map(
     (points, i) => series[i].total ?? points.reduce((sum, value) => sum + value, 0),
   );
-  const description = series.map((s, i) => `${s.label}: ${values[i][index]}`).join("; ");
+  const description =
+    `Total: ${pointTotals[index]}; ` +
+    series.map((s, i) => `${s.label}: ${values[i][index]}`).join("; ");
+  const path = smoothTimelinePath(
+    pointTotals.map((value, index) => ({ x: x(index), y: y(value) })),
+  );
   return (
     <div className="min-w-0">
       {showLegend ? (
@@ -112,13 +111,16 @@ export function MetricTimeline({
               {timeline.granularity === "week" ? "Semana de " : ""}
               {dayLabel(dates[index])}
             </p>
+            <p className="mt-1 font-bold">Total: {pointTotals[index].toLocaleString("pt-BR")}</p>
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-              {series.map((s, i) => (
-                <span key={s.id}>
-                  {series.length > 1 ? `${s.label}: ` : ""}
-                  <strong>{values[i][index].toLocaleString("pt-BR")}</strong>
-                </span>
-              ))}
+              {series.length > 1
+                ? series.map((s, i) => (
+                    <span key={s.id}>
+                      {series.length > 1 ? `${s.label}: ` : ""}
+                      <strong>{values[i][index].toLocaleString("pt-BR")}</strong>
+                    </span>
+                  ))
+                : null}
             </div>
           </div>
         ) : null}
@@ -179,6 +181,16 @@ export function MetricTimeline({
             preserveAspectRatio="xMidYMid meet"
             aria-hidden="true"
           >
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--lectum-primary)" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="var(--lectum-primary)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              d={`${path} L ${x(dates.length - 1)},${y(0)} L ${x(0)},${y(0)} Z`}
+              fill={`url(#${gradientId})`}
+            />
             {[0, max].map((value) => (
               <g key={value}>
                 <line
@@ -201,22 +213,26 @@ export function MetricTimeline({
                 </text>
               </g>
             ))}
-            {values.map((points, i) => (
-              <g key={series[i].id}>
-                <path
-                  d={points
-                    .map((value, j) => `${(j === 0 ? "M" : "L") + x(j)},${y(value)}`)
-                    .join(" ")}
-                  fill="none"
-                  stroke={colors[i]}
-                  strokeWidth="2"
-                  vectorEffect="non-scaling-stroke"
+            <g>
+              <path
+                data-testid="total-curve"
+                d={path}
+                fill="none"
+                stroke="var(--lectum-primary)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
+              />
+              {selected !== null || dates.length === 1 ? (
+                <circle
+                  cx={x(index)}
+                  cy={y(pointTotals[index])}
+                  r="4"
+                  fill="var(--lectum-primary)"
                 />
-                {selected !== null || dates.length === 1 ? (
-                  <circle cx={x(index)} cy={y(points[index])} r="3" fill={colors[i]} />
-                ) : null}
-              </g>
-            ))}
+              ) : null}
+            </g>
             {selected !== null ? (
               <line
                 x1={x(index)}

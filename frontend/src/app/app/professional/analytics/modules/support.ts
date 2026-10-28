@@ -24,12 +24,21 @@ import type {
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 export const PERIOD_OPTIONS: Array<{ label: string; value: PsychologistAnalyticsPeriodKey }> = [
-  { label: "7 dias", value: "7d" },
-  { label: "30 dias", value: "30d" },
-  { label: "Este ano", value: "year" },
-  { label: "Todo o período", value: "all" },
+  { label: "Últimos 7 dias", value: "7d" },
+  { label: "Últimos 30 dias", value: "30d" },
+  { label: "Últimos 12 meses", value: "365d" },
   { label: "Personalizado", value: "custom" },
 ];
+
+export const analyticsPeriodLabel = (
+  period: PsychologistAnalyticsPeriodKey,
+  range: { start_at: string; end_at: string },
+) => {
+  const date = (value: string) => value.slice(0, 10).split("-").reverse().join("/");
+  return period === "custom"
+    ? `Personalizado: ${date(range.start_at)} a ${date(range.end_at)}`
+    : (PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Últimos 30 dias");
+};
 
 export const toInputDate = (date: Date) => {
   const year = date.getFullYear();

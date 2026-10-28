@@ -704,3 +704,4 @@ Formato recomendado:
 - [ADR-0640 — Weekly WhatsApp notification CTA](0640-weekly-whatsapp-cta.md)
 - [ADR-0642 — Analytics period and counter hierarchy](0642-analytics-period-counter-hierarchy.md)
 - [ADR-0643 — Community video contact overlay](0643-community-video-contact-overlay.md)
+- [ADR-0644 — Analytics total and origin details](0644-analytics-total-origin-details.md)
