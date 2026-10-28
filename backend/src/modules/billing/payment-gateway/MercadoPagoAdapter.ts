@@ -24,6 +24,7 @@ import type {
   PaymentGateway,
   VerifyWebhookSignatureInput,
 } from "./PaymentGateway";
+import { observeSubscriptionTransport } from "./subscription-transport";
 import { verifyMercadoPagoWebhookSignature } from "./webhook-signature";
 
 type RecordBody = Record<string, unknown>;
@@ -325,34 +326,45 @@ export class MercadoPagoAdapter implements PaymentGateway {
     cardToken,
     deviceSessionId,
     payerEmail,
+    authenticatedPayerEmail,
     returnUrl,
     startDate,
   }: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult> {
     const recurringStartDate = toIsoDateString(startDate);
 
+    const body = {
+      ...(gatewayPlanId ? { preapproval_plan_id: gatewayPlanId } : {}),
+      auto_recurring: {
+        frequency: 1,
+        frequency_type: "months",
+        ...(recurringStartDate ? { start_date: recurringStartDate } : {}),
+        transaction_amount: amountCents / 100,
+        currency_id: "BRL",
+      },
+      back_url: returnUrl || undefined,
+      card_token_id: cardToken,
+      external_reference: subscriptionId,
+      payer_email: payerEmail,
+      reason: planName,
+      status: "authorized",
+    };
     const response = await this.runGatewayOperation("create_subscription", () =>
-      this.createPreApproval().create({
-        body: {
-          ...(gatewayPlanId ? { preapproval_plan_id: gatewayPlanId } : {}),
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: "months",
-            ...(recurringStartDate ? { start_date: recurringStartDate } : {}),
-            transaction_amount: amountCents / 100,
-            currency_id: "BRL",
-          },
-          back_url: returnUrl || undefined,
-          card_token_id: cardToken,
-          external_reference: subscriptionId,
-          payer_email: payerEmail,
-          reason: planName,
-          status: "authorized",
+      observeSubscriptionTransport(
+        {
+          subscriptionId,
+          deviceSessionId,
+          authenticatedPayerEmail,
+          payloadPayerEmail: body.payer_email,
         },
-        requestOptions: {
-          idempotencyKey: `lectum-preapproval-${subscriptionId}`,
-          meliSessionId: normalizeDeviceSessionId(deviceSessionId),
-        },
-      }),
+        () =>
+          this.createPreApproval().create({
+            body,
+            requestOptions: {
+              idempotencyKey: `lectum-preapproval-${subscriptionId}`,
+              meliSessionId: normalizeDeviceSessionId(deviceSessionId),
+            },
+          }),
+      ),
     );
 
     if (!response.id) {
