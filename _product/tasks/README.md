@@ -1,4 +1,10 @@
-Validado localmente em 0.1.733: [TASK-32 — Mensagem de cobrança e diagnóstico de leitura](TASK-32-checkout-assinatura.md), ADR-0643. Cópia cautelosa para falha indeterminada e diagnóstico fechado de validação/GET/lookup; checks, builds e smoke local aprovados. Chamado sanitizado preparado, não enviado. Sem cobrança nem troca de produto financeiro; produção permanece na 0.1.732 até promoção autorizada.
+Validado localmente em 0.1.737: TASK-32 / ADR-0648 — backend Node 24.22.1, imagem Linux amd64 e observação do corpo HTTP com privacidade. Patch qs 6.16.1 independente em backend/video; checks, quatro builds, cinco auditorias e PostgreSQL efêmero aprovados (limites no ADR). Commit local; sem push/deploy. Não é correção de recusa de risco.
+
+Publicado em 28/10: TASK-32 / ADR-0647, integração 0.1.736 pelo PR #137. Preserva PR #136; diagnóstico sem mudança de cobrança. Check integral, quatro builds, smoke local e smoke produtivo backend/frontend/admin aprovados; evidências no PR #137.
+
+Validado localmente em 0.1.734: [TASK-32 — Observação segura da saída HTTP](TASK-32-checkout-assinatura.md), ADR-0647. Cabeçalho final da sessão e e-mail do payload comparados sem expor valores; corpo transmitido explicitamente desconhecido no Node 22. Check integral, build backend, 20 testes focais nos runtimes 22/24 e smoke local aprovados. Commit local em homolog; sem push, deploy ou cobrança. Não altera a decisão de risco.
+
+Histórico 0.1.733: [TASK-32 — Mensagem de cobrança e diagnóstico de leitura](TASK-32-checkout-assinatura.md), ADR-0643. Cópia cautelosa e diagnóstico fechado de validação/GET/lookup; publicação posterior autorizada via PR #135. Chamado enviado pelo usuário e respondido com confirmação de recusa de risco. A saúde atual de produção não foi consultada nesta nova execução local.
 
 Implementado e validado localmente: [TASK-249 - Previa social e conectores de comentarios](TASK-249-previa-social-e-conectores-comentarios.md), ADR-0611. A modal social usa portal acima do compositor, videos-resposta recebem o comentario pai e a arvore ganha controles de 10px bold com conectores que terminam na curva. Testes focais e QA visual mobile/desktop aprovados; sem push/deploy.
 

@@ -361,3 +361,69 @@ pós-submit (sem profissional autenticado local). Cópias e seleção de erro co
 por testes unitários reais do helper/código; sem endpoints simulados. Banco local
 isolado, sem credenciais de provider nem acesso ao banco remoto. Produção não foi
 alterada por esta task; chamado preparado, não enviado.
+
+## Diagnóstico validado localmente — 28/10/2026: saída HTTP da assinatura
+
+ADR-0647. Suporte confirmou recusa de risco, não falha do endpoint. Escopo autorizado:
+instrumentação passiva no backend, validação local e commit; sem push/deploy/cobrança.
+
+- [x] Correlacionar cabeçalho final de sessão com a entrada usando apenas booleanos e referência opaca.
+- [x] Comparar payload do adapter com e-mail autenticado, distinguindo-o do corpo efetivamente observado.
+- [x] Representar explicitamente a ausência de bodyChunkSent no Node 22, sem consumir streams.
+- [x] Preservar requisições/resultados, isolar concorrência e limitar/limpar dados transitórios.
+- [x] Validar transporte real em loopback Node 22/24, privacidade, limites e falhas; sem simular gateway.
+- [x] Executar checks/build backend e smoke local isolado, sem dados ou credenciais produtivas.
+- [x] Versionar e commitar em homolog, mantendo publicação pendente de autorização.
+
+Impacto: somente backend; contrato HTTP, UI, banco, pacotes e envs inalterados.
+Rollout aditivo independente; rollback por revert sem dados. Não alterar retries,
+entitlement, produto/API ou decisões de risco. Evidência de transporte não comprova
+ingestão do sinal pelo provider. Sem alteração visual; Builder/proto não se aplicam.
+
+Evidência local 0.1.734: check integral aprovado, incluindo 1.023 testes backend
+(todos aprovados; video conserva 13 testes opcionais ignorados). Build backend
+aprovado. Suite focal com 20 testes aprovada em Node 24.21.0/Undici 7.29.1 e em
+Node 22.23.4/Undici 6.29.1, este em container sem rede externa e montagem somente
+leitura. Os testes usam transporte HTTP loopback real, exceto um teste unitário
+explicitamente separado para evento malformado do canal; não simulam aprovação.
+Revisão independente sem bloqueantes. Smoke local isolado: ping/health/ready 200.
+
+Node 22 confirma cabeçalho final e envio do corpo, mas a identidade do e-mail no
+corpo transmitido permanece desconhecida; `payload_payer_email_*` é comparação
+no adapter, não evidência de bytes no transporte. Nenhum diagnóstico captura
+valores em logs; cenários de logger falhando preservam sucesso e erro originais.
+Sem novo pacote/env/migration, UI inalterada. Sem cobrança, acesso ao banco remoto,
+push ou deploy. Publicação e observação de tráfego produtivo continuam pendentes
+de autorização, sem prometer alteração da recusa de risco.
+
+Publicação autorizada em 28/10: integrar atualizações já publicadas no PR #136,
+renumerar ADR de diagnóstico para 0647 e preparar 0.1.736. Revalidar lote local
+antes do PR; evidências operacionais e smoke produtivo serão registrados no PR.
+Não alterar produto/API nem efetuar tentativa de assinatura pelo agente.
+
+## Runtime validado localmente — 28/10/2026: Node 24 no backend
+
+ADR-0648. Usuário autorizou a adoção se houver benefício demonstrável. Ganho alvo:
+suporte mais longo e observação passiva do corpo HTTP, preservando a privacidade.
+Não é correção demonstrada para recusa de risco. Mudança e commit locais somente.
+
+- [x] Confirmar patch de segurança e compatibilidade das dependências existentes.
+- [x] Corrigir qs transitivo backend/video em 6.16.1; repetir cinco auditorias e quatro builds.
+- [x] Migrar base Docker e contrato engines do backend, sem mudar runtime dos outros apps.
+- [x] Preservar Debian, pnpm/Corepack offline, frozen-lockfile, prune e usuário não-root.
+- [x] Exigir observação de corpo e passar os testes de transporte na imagem final Linux amd64.
+- [x] Validar módulos nativos, Prisma/pg e boot/health/readiness com PostgreSQL isolado.
+- [x] Passar checks/builds no Node 24.22.1; não usar o host 24.21 como prova desse patch.
+- [x] Versionar e commitar em homolog; manter publicação pendente de autorização.
+
+Sem env, schema/migration, pacote novo ou UI. Rollout independente backend/video após
+rebuild completo de cada imagem; rollback pela imagem anterior 0.1.736/Node 22 sem tocar dados.
+Não alterar TLS, autorização, payloads, retries financeiros ou política de logs.
+
+Evidências 0.1.737 no ADR-0648: check integral (backend 1.032/1.032), quatro
+builds, cinco auditorias sem advisories conhecidos, imagem final amd64 com 20/20
+testes de transporte e native modules reais. PostgreSQL efêmero: 109 migrations
+existentes, Prisma/pg, startup e SIGTERM aprovados. Readiness 200 em test; 503
+esperado em production sem Stream real (fail-closed preservado, não smoke remoto).
+Video mantém 13 skips opcionais FFmpeg locais; runtime/FFmpeg não foram alterados.
+Sem push/deploy/cobrança. Nova publicação requer confirmação e smoke produtivo.

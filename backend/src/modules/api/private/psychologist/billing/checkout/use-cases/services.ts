@@ -468,6 +468,7 @@ export default async (data: ICheckoutDTO) => {
       cardToken: data.b.card_token,
       deviceSessionId,
       payerEmail,
+      authenticatedPayerEmail: data.auth.email?.trim(),
       returnUrl: gatewayReturnUrl,
       startDate: courtesyStartDate,
     });

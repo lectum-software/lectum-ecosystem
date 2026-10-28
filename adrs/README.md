@@ -708,3 +708,6 @@ Formato recomendado:
 - [ADR-0644 — Analytics total and origin details](0644-analytics-total-origin-details.md)
 - [ADR-0645 — Analytics period and counter hierarchy](0645-analytics-period-counter-hierarchy.md)
 - [ADR-0646 — Community video contact overlay](0646-community-video-contact-overlay.md)
+- [ADR-0647 — Observação segura do transporte de assinaturas](0647-observacao-segura-do-transporte-de-assinaturas.md)
+
+- [ADR-0648 — Backend Node 24 com validação da imagem final](0648-backend-node24-runtime.md)
