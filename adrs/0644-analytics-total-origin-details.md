@@ -28,5 +28,6 @@ video counter label to preserve compact sizing. Video origins follow a stable
 Explorar / Minha Busca / Perfil order; other metric origins retain volume order.
 Remove repeated Origem headings but retain semantic table headers. Use metric-specific
 Visualizacoes and Acessos columns; preserve Total for favorites and Cliques for WhatsApp.
-Date and total share the tooltip heading, wrapping only when necessary.
+Date and total are adjacent in the tooltip heading, separated by a bullet,
+wrapping only when necessary.
 Lower section period labels have a 0.25rem gap. All changes are presentation-only.

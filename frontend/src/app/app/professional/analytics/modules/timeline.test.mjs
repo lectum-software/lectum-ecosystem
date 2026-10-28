@@ -260,3 +260,13 @@ test("origin tables use metric-specific columns without a redundant heading", as
   }
   assert.equal(JSON.stringify(timeline), before);
 });
+
+test("point heading keeps date and total adjacent with a decorative bullet", () => {
+  const source = readFileSync(
+    new URL("../components/metric-timeline.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /<p className="font-extrabold" data-testid="point-heading">/);
+  assert.match(source, /<span aria-hidden>•<\/span>/);
+  assert.match(source, /<span>Total: /);
+});
