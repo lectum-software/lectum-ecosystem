@@ -11,6 +11,7 @@ import { ANALYTICS_METRICS, analyticsRequestedMetric } from "@/utils/analytics-r
 import type { AnalyticsCardView } from "../modules/support";
 import { WHATSAPP_ORIGIN_COLORS } from "../modules/timeline";
 import { comparisonForMetric, MetricComparison } from "./metric-comparison";
+import { MetricDetails } from "./metric-details";
 import { MetricTimeline } from "./metric-timeline";
 
 const order = ANALYTICS_METRICS;
@@ -32,11 +33,13 @@ export function AnalyticsOverview({
 }) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(analyticsRequestedMetric(initialSelected));
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Cached period changes must reveal the selection even when loading stays false.
   useEffect(() => {
+    if (loading) return;
     const carousel = carouselRef.current;
     const active = carousel?.querySelector<HTMLElement>('[aria-pressed="true"]');
     if (!carousel || !active) return;
-    // Reveal the selected metric without moving the page away from its header.
+    // Reveal the selection after loading too, since changing periods can shift the carousel.
     carousel.scrollTo({
       left:
         carousel.scrollLeft +
@@ -44,18 +47,26 @@ export function AnalyticsOverview({
         carousel.getBoundingClientRect().left,
       behavior: "instant",
     });
-  }, []);
+  }, [loading, data?.period.key, data?.period.start_at, data?.period.end_at]);
   const ordered = [...cards].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   const current = ordered.find((card) => card.id === selected) ?? ordered[0];
-  const CurrentIcon = current?.icon;
   const restricted = locked && selected !== "acquired_patients";
   const periodTotal =
     selected === "video_views"
       ? data?.presentation_video?.metrics.views
       : data?.metrics[selected as keyof NonNullable<typeof data>["metrics"]];
+  const timeline = data?.chart_data?.timelines[selected];
+  const visibleTimeline =
+    selected === "favorites_received" && timeline
+      ? { ...timeline, series: timeline.series.filter((series) => series.id !== "favorites") }
+      : timeline;
   if (!current) return null;
   return (
-    <section className="min-w-0" aria-label="Resumo de analytics" aria-busy={loading}>
+    <section
+      className="min-w-0 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] md:p-6"
+      aria-label="Resumo de analytics"
+      aria-busy={loading}
+    >
       <div className="mb-1 hidden justify-end gap-1 md:flex">
         {[-1, 1].map((direction) => (
           <button
@@ -90,10 +101,7 @@ export function AnalyticsOverview({
           const active = selected === card.id;
           const showComparison = !loading && !locked && comparisonForMetric(data, card.id);
           return (
-            <div
-              key={card.id}
-              className="relative w-[46%] shrink-0 snap-start sm:w-[30%] md:w-[20%]"
-            >
+            <div key={card.id} className="relative w-[78%] shrink-0 snap-start md:w-[36%]">
               <button
                 type="button"
                 aria-pressed={active}
@@ -111,18 +119,26 @@ export function AnalyticsOverview({
                   });
                 }}
                 className={cn(
-                  "relative flex min-h-20 w-full flex-col items-start rounded-xl border bg-surface p-3 text-left transition focus-visible:outline-2 focus-visible:outline-primary",
+                  "relative flex min-h-[100px] h-full w-full flex-col items-start rounded-lg border p-3 text-left transition motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
                   active
-                    ? "border-primary ring-1 ring-primary/20"
-                    : "border-primary/10 hover:border-primary/40",
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-transparent text-foreground hover:border-primary/40",
                 )}
               >
-                <span className="min-h-8 text-xs font-semibold leading-4 text-muted">
-                  {card.id === "video_views" ? "Vídeo de apresentação" : card.label}
+                <span
+                  className={cn(
+                    "flex min-h-10 items-start gap-2 text-[15px] font-medium leading-5",
+                  )}
+                >
+                  <card.icon
+                    className={cn("h-5 w-5 shrink-0", !active && "text-primary")}
+                    aria-hidden
+                  />
+                  <span>{card.id === "video_views" ? "Vídeo de apresentação" : card.label}</span>
                 </span>
                 <span
                   className={cn(
-                    "mt-1.5 block w-full truncate text-xl font-semibold leading-none tracking-[-0.03em] text-foreground",
+                    "mt-auto block w-full truncate pt-2 text-[28px] font-bold leading-none tracking-normal",
                     showComparison && "pr-14",
                   )}
                   title={card.value}
@@ -136,28 +152,18 @@ export function AnalyticsOverview({
                   data={data}
                   id={card.id}
                   label={card.label}
+                  selected={active}
                 />
               ) : null}
             </div>
           );
         })}
       </div>
-      <div
-        id="analytics-selected-metric"
-        className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6"
-      >
-        <div className="flex items-center gap-3">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-            {CurrentIcon ? <CurrentIcon className="h-6 w-6" aria-hidden /> : null}
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-xl font-extrabold leading-7 tracking-[-0.03em]">{current.label}</h2>
-          </div>
-        </div>
+      <section id="analytics-selected-metric" aria-label={current.label}>
         {current.description ? (
           <p className="mt-3 text-sm leading-6 text-muted">{current.description}</p>
         ) : null}
-        <div className="mt-5">
+        <div className="mt-2">
           {loading ? (
             <p className="py-10 text-center text-sm text-muted">Carregando gráfico…</p>
           ) : restricted ? (
@@ -167,39 +173,25 @@ export function AnalyticsOverview({
           ) : (
             <MetricTimeline
               key={selected + data?.period.start_at + data?.period.end_at}
-              timeline={data?.chart_data?.timelines[selected]}
-              showLegend={!["acquired_patients", "reviews_received"].includes(selected)}
+              timeline={visibleTimeline}
+              showLegend={false}
               seriesColors={selected === "whatsapp_clicks" ? WHATSAPP_ORIGIN_COLORS : undefined}
               period={data?.period}
               total={typeof periodTotal === "number" ? periodTotal : undefined}
             />
           )}
         </div>
-        {selected === "whatsapp_clicks" ? (
-          <dl
-            className="mt-5 grid gap-2 border-t border-border pt-4 text-sm font-bold leading-6 text-muted"
-            aria-label="Resumo de cliques no período"
-          >
-            {[
-              ["Total de cliques", data?.metrics.whatsapp_clicks],
-              ["Pessoas únicas", data?.metrics.whatsapp_unique_people],
-              ["Média de cliques por pessoa", data?.metrics.whatsapp_clicks_per_person],
-            ].map(([label, value]) => (
-              <div key={label} className="flex flex-wrap items-baseline gap-x-2">
-                <dt>{label}:</dt>
-                <dd className="font-semibold text-foreground">
-                  {loading || restricted || typeof value !== "number"
-                    ? "—"
-                    : value.toLocaleString(
-                        "pt-BR",
-                        label === "Média de cliques por pessoa"
-                          ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
-                          : undefined,
-                      )}
-                </dd>
-              </div>
-            ))}
-          </dl>
+        {!loading &&
+        !restricted &&
+        ["whatsapp_clicks", "video_views", "profile_views", "favorites_received"].includes(
+          selected,
+        ) ? (
+          <MetricDetails
+            key={selected}
+            timeline={visibleTimeline}
+            metric={selected}
+            metrics={data?.metrics}
+          />
         ) : null}
         {!loading && !restricted && selected === "video_views" ? (
           <div className="mt-6 border-t border-border pt-5">
@@ -247,7 +239,7 @@ export function AnalyticsOverview({
             <ChevronRight className="h-5 w-5" aria-hidden />
           </Link>
         ) : null}
-      </div>
+      </section>
     </section>
   );
 }

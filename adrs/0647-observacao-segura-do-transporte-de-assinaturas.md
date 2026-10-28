@@ -1,4 +1,4 @@
-# ADR-0644 — Observação segura do transporte de assinaturas
+# ADR-0647 — Observação segura do transporte de assinaturas
 
 ## Status
 
@@ -76,3 +76,26 @@ da evidência HTTP real. Cobertura de corpo observável somente no runtime que
 publica os chunks; Node 22 mantém campos de transporte desconhecidos. Revisão
 independente sem bloqueantes. Versão 0.1.734, commit local em homolog; sem push,
 deploy, cobrança ou consulta a dados produtivos.
+
+## Integração para publicação — 28/10/2026
+
+Autorização produtiva recebida. Integrar origin/homolog 9843f3206, já promovido
+pelo time no PR #136 (0.1.735), sem remover mudanças de analytics/vídeo. ADR
+renumerado de 0644 para 0647 por colisão com ADR publicado pelo outro trabalho.
+Nova versão de integração 0.1.736; repetir checks, builds e smoke local antes
+do push. Nenhuma alteração funcional adicional em billing. Frontend/admin de
+produção estavam 0.1.735, backend 0.1.733, ping/health/ready 200 no preflight.
+
+Publicação via PR homolog → main; backend primeiro, sem builds simultâneos na
+VPS. Sem env/migration nova, sem teste financeiro pelo agente. Verificar logs
+de deploy e versões após promoção. Evidências operacionais finais no PR para
+não criar outro commit/bump somente para registrar a publicação.
+
+Gates locais da integração 0.1.736 aprovados: check integral, builds backend,
+frontend, admin e video, 20/20 testes focais novamente no Node 22 e smoke
+local ping/health/ready 200. Diff contra main preserva integralmente fontes
+frontend/admin/video e migrations/lockfiles; alteração funcional apenas backend.
+Dokploy homolog backend/video revalidados off, sem schedules; preview backend
+off. Vercel frontend/admin conectados ao repo, sem deploy hooks, homolog false
+na configuração versionada efetivamente usada pelos projetos. Produção backend
+exige Deploy manual (autodeploy off); manter rollout serial na VPS.

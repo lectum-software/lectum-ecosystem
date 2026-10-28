@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import {
   getPsychologistWhatsappDisplayName,
@@ -24,6 +25,7 @@ export type CommunityWhatsAppAuthor = {
 
 type CommunityWhatsAppCtaProps = {
   attached?: boolean;
+  overVideo?: boolean;
   className?: string;
   size?: "xs" | "sm";
   psychologist: PsychologistWhatsAppIdentity;
@@ -48,6 +50,7 @@ export const toCommunityWhatsAppIdentity = (
 
 export const CommunityWhatsAppCta = ({
   attached = false,
+  overVideo = false,
   className,
   size = "sm",
   psychologist,
@@ -56,6 +59,30 @@ export const CommunityWhatsAppCta = ({
 }: CommunityWhatsAppCtaProps) => {
   const headingLabel = "WhatsApp";
   const actionLabel = `Fale com ${getPsychologistWhatsappDisplayName(psychologist)}`;
+
+  if (overVideo) {
+    return (
+      <PsychologistWhatsAppRedirectButton
+        aria-label={`${actionLabel} pelo WhatsApp`}
+        className={cn(
+          "flex min-h-[44px] w-full min-w-0 items-center justify-center gap-2 whitespace-normal rounded-lg border border-media-foreground/90 bg-media-foreground/10 px-3 py-2.5 text-media-foreground shadow-none backdrop-blur-sm transition hover:bg-media-foreground/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-foreground disabled:opacity-60",
+          className,
+        )}
+        data-post-card-ignore-click="true"
+        data-community-video-contact="true"
+        psychologist={psychologist}
+        stopPropagation
+        trackingContext={trackingContext}
+      >
+        <PsychologistWhatsAppButtonContent
+          iconClassName="h-4 w-4 text-media-foreground"
+          label={actionLabel}
+          labelClassName="overflow-visible text-clip whitespace-normal break-words text-left text-[14px] font-semibold leading-5 text-media-foreground"
+        />
+        <ArrowRight className="h-4 w-4 shrink-0 text-media-foreground" aria-hidden />
+      </PsychologistWhatsAppRedirectButton>
+    );
+  }
 
   if (!attached) {
     return (

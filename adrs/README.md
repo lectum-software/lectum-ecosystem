@@ -705,5 +705,7 @@ Formato recomendado:
 - [ADR-0641 — Correlação de cobrança e sessão antifraude](0641-correlacao-cobranca-sessao-antifraude.md)
 - [ADR-0642 — Sessão antifraude opaca com separador ponto](0642-sessao-antifraude-com-ponto.md)
 - [ADR-0643 — Mensagem cautelosa de cobrança e diagnóstico de leitura](0643-mensagem-cobranca-e-diagnostico-de-leitura.md)
-
-- [ADR-0644 — Observação segura do transporte de assinaturas](0644-observacao-segura-do-transporte-de-assinaturas.md)
+- [ADR-0644 — Analytics total and origin details](0644-analytics-total-origin-details.md)
+- [ADR-0645 — Analytics period and counter hierarchy](0645-analytics-period-counter-hierarchy.md)
+- [ADR-0646 — Community video contact overlay](0646-community-video-contact-overlay.md)
+- [ADR-0647 — Observação segura do transporte de assinaturas](0647-observacao-segura-do-transporte-de-assinaturas.md)

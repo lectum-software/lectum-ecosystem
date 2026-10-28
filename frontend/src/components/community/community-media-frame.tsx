@@ -1,12 +1,22 @@
 "use client";
 
 import Image from "next/image";
-import { type MouseEventHandler, type ReactNode, useCallback, useEffect, useState } from "react";
+import {
+  type ComponentProps,
+  cloneElement,
+  isValidElement,
+  type MouseEventHandler,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import {
   type ContentVideoWatchTrackingTarget,
   useContentVideoWatchTracking,
 } from "@/components/analytics/content-video-watch-tracker";
 import { useCommunityVideoAutoplay } from "@/components/community/community-feed-video-autoplay";
+import { CommunityWhatsAppCta } from "@/components/community/community-whatsapp-cta";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -373,7 +383,15 @@ export const CommunityMediaBlock = ({
     : detectedMedia?.src === resolvedUrl && detectedMedia.type === normalizedMediaType
       ? detectedMedia.orientation
       : "landscape";
-  const hasFooter = Boolean(footer);
+  // Move the same contact action into the player, preserving identity and tracking in every surface.
+  const videoContact =
+    normalizedMediaType === "video" &&
+    orientation === "portrait" &&
+    isValidElement<ComponentProps<typeof CommunityWhatsAppCta>>(footer) &&
+    footer.type === CommunityWhatsAppCta
+      ? cloneElement(footer, { overVideo: true })
+      : null;
+  const hasFooter = Boolean(footer) && !videoContact;
   const frameClassName = cn(
     getCommunityMediaFrameClassName(variant, orientation, className),
     hasFooter && "gap-0",
@@ -401,6 +419,7 @@ export const CommunityMediaBlock = ({
       <div className={frameClassName}>
         <div className="relative w-full">
           <VerticalVideoPlayer
+            bottomOverlay={videoContact}
             className={cn(
               "w-full border-border shadow-none",
               videoMediaFrameAspectClassName[orientation],
@@ -449,7 +468,7 @@ export const CommunityMediaBlock = ({
             </button>
           ) : null}
         </div>
-        {footer}
+        {hasFooter ? footer : null}
       </div>
     );
   }

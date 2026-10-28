@@ -475,7 +475,9 @@ export const PresentationVideoAnalyticsSection = ({
   locked,
   media,
   video,
+  periodLabel,
 }: {
+  periodLabel?: string;
   locked?: boolean;
   media?: Pick<PsychologistAnalyticsPresentationVideo, "video_url" | "video_cover_url"> | null;
   video?: PsychologistAnalyticsPresentationVideo;
@@ -577,9 +579,7 @@ export const PresentationVideoAnalyticsSection = ({
             <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
               Métricas principais
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              Acompanhe como os visitantes assistem seu vídeo de apresentação.
-            </p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">{periodLabel}</p>
           </div>
         </div>
       </div>

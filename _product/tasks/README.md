@@ -1,4 +1,6 @@
-Validado localmente em 0.1.734: [TASK-32 — Observação segura da saída HTTP](TASK-32-checkout-assinatura.md), ADR-0644. Cabeçalho final da sessão e e-mail do payload comparados sem expor valores; corpo transmitido explicitamente desconhecido no Node 22. Check integral, build backend, 20 testes focais nos runtimes 22/24 e smoke local aprovados. Commit local em homolog; sem push, deploy ou cobrança. Não altera a decisão de risco.
+Em preparação de publicação autorizada: TASK-32 / ADR-0647, versão de integração 0.1.736. Preserva PR #136 já publicado; diagnóstico sem mudança de cobrança. Check integral, quatro builds e smoke local aprovados; gatilhos de homologação conferidos. Evidências finais de produção no PR.
+
+Validado localmente em 0.1.734: [TASK-32 — Observação segura da saída HTTP](TASK-32-checkout-assinatura.md), ADR-0647. Cabeçalho final da sessão e e-mail do payload comparados sem expor valores; corpo transmitido explicitamente desconhecido no Node 22. Check integral, build backend, 20 testes focais nos runtimes 22/24 e smoke local aprovados. Commit local em homolog; sem push, deploy ou cobrança. Não altera a decisão de risco.
 
 Histórico 0.1.733: [TASK-32 — Mensagem de cobrança e diagnóstico de leitura](TASK-32-checkout-assinatura.md), ADR-0643. Cópia cautelosa e diagnóstico fechado de validação/GET/lookup; publicação posterior autorizada via PR #135. Chamado enviado pelo usuário e respondido com confirmação de recusa de risco. A saúde atual de produção não foi consultada nesta nova execução local.
 
@@ -698,6 +700,10 @@ ou cortesia manual.
 | 274 | [TASK-274 - Feedback release security](TASK-274-feedback-release-security.md) | Done | 273 |
 | 275 | [TASK-275 - Post profile close loop](TASK-275-post-profile-close-loop.md) | Done | 274 |
 | 277 | [TASK-277 - Weekly WhatsApp notification CTA](TASK-277-weekly-whatsapp-cta.md) | Done | - |
+| 278 | [TASK-278 - Analytics period selector and counters](TASK-278-analytics-period-counters.md) | Done | 277 |
+| 279 | [TASK-279 - WhatsApp over community video](TASK-279-video-whatsapp-overlay.md) | Done | 278 |
+| 280 | [TASK-280 - Analytics total and origins](TASK-280-analytics-total-and-origins.md) | Done | 279 |
+| 281 | [TASK-281 - Analytics detail refinements](TASK-281-analytics-detail-refinements.md) | Done | 280 |
 
 ## Ordem operacional recomendada sem bloqueios
 

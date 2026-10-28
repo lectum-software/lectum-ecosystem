@@ -364,7 +364,7 @@ alterada por esta task; chamado preparado, não enviado.
 
 ## Diagnóstico validado localmente — 28/10/2026: saída HTTP da assinatura
 
-ADR-0644. Suporte confirmou recusa de risco, não falha do endpoint. Escopo autorizado:
+ADR-0647. Suporte confirmou recusa de risco, não falha do endpoint. Escopo autorizado:
 instrumentação passiva no backend, validação local e commit; sem push/deploy/cobrança.
 
 - [x] Correlacionar cabeçalho final de sessão com a entrada usando apenas booleanos e referência opaca.
@@ -395,3 +395,8 @@ valores em logs; cenários de logger falhando preservam sucesso e erro originais
 Sem novo pacote/env/migration, UI inalterada. Sem cobrança, acesso ao banco remoto,
 push ou deploy. Publicação e observação de tráfego produtivo continuam pendentes
 de autorização, sem prometer alteração da recusa de risco.
+
+Publicação autorizada em 28/10: integrar atualizações já publicadas no PR #136,
+renumerar ADR de diagnóstico para 0647 e preparar 0.1.736. Revalidar lote local
+antes do PR; evidências operacionais e smoke produtivo serão registrados no PR.
+Não alterar produto/API nem efetuar tentativa de assinatura pelo agente.
