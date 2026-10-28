@@ -31,3 +31,19 @@ Visualizacoes and Acessos columns; preserve Total for favorites and Cliques for 
 Date and total are adjacent in the tooltip heading, separated by a bullet,
 wrapping only when necessary.
 Lower section period labels have a 0.25rem gap. All changes are presentation-only.
+
+## TASK-283 content breakdown and retention refinement
+
+Render community content origins as full-width rows with a color dot, label and
+count (share of total clicks). Sort a derived array by descending count, then
+canonical category order for ties; keep zero rows. Use the same derived order
+for donut segments, preserving selection and colors by category ID.
+Percentages use pt-BR formatting with up to one decimal; zero totals show 0%,
+and positive shares under 0.1% show <0,1% rather than suggesting zero activity.
+Rounded percentages may not sum to exactly 100%; counts and segment shares
+remain unchanged. Palette tokens are categorical, not success/warning signals,
+and have light/dark variants.
+
+The retention outer tinted panel, inner white panel, player/empty placeholder
+and dropoff notice reuse the enclosing card radius. This is local presentation
+consistency, without changing the shared video player or any metrics/controls.

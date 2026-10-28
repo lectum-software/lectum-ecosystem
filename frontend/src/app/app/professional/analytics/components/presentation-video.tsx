@@ -456,7 +456,7 @@ export const RetentionChart = ({
       </div>
 
       {dropoff ? (
-        <div className="mt-3 w-full rounded-2xl border border-primary/10 bg-surface px-3 py-3 text-left text-xs leading-5 text-muted">
+        <div className="mt-3 w-full rounded-[var(--lectum-card-radius)] border border-primary/10 bg-surface px-3 py-3 text-left text-xs leading-5 text-muted">
           <span className="block font-extrabold text-foreground">Maior queda estimada</span>
           <span
             className={cn(locked && "select-none blur-[4px]")}
@@ -586,7 +586,7 @@ export const PresentationVideoAnalyticsSection = ({
 
       <PresentationVideoMetricsPanel locked={locked} metrics={presentationVideoMetrics} />
 
-      <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:p-5">
+      <article className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-primary/10 bg-primary-soft/55 p-4 md:p-5">
         <div className="min-w-0">
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
@@ -614,11 +614,11 @@ export const PresentationVideoAnalyticsSection = ({
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-surface/90 p-3 shadow-[var(--lectum-shadow-soft)] md:p-4">
+        <div className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-primary/10 bg-surface/90 p-3 shadow-[var(--lectum-shadow-soft)] md:p-4">
           <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(150px,220px)_minmax(0,1fr)] md:items-center">
             {videoSrc ? (
               <VerticalVideoPlayer
-                className="mx-auto w-full max-w-[190px] rounded-[22px] border-0 shadow-[var(--lectum-shadow-soft)] md:max-w-[220px]"
+                className="mx-auto w-full max-w-[190px] rounded-[var(--lectum-card-radius)] border-0 shadow-[var(--lectum-shadow-soft)] md:max-w-[220px]"
                 controlsVariant="minimal"
                 onVideoElementReady={handleVideoElementReady}
                 poster={videoCoverSrc}
@@ -626,7 +626,7 @@ export const PresentationVideoAnalyticsSection = ({
                 title="Vídeo de apresentação"
               />
             ) : (
-              <div className="mx-auto grid aspect-[9/16] w-full max-w-[190px] place-items-center rounded-[22px] border border-dashed border-primary/20 bg-surface text-center text-sm font-bold text-muted md:max-w-[220px]">
+              <div className="mx-auto grid aspect-[9/16] w-full max-w-[190px] place-items-center rounded-[var(--lectum-card-radius)] border border-dashed border-primary/20 bg-surface text-center text-sm font-bold text-muted md:max-w-[220px]">
                 Sem vídeo
               </div>
             )}
