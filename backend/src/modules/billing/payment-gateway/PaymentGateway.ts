@@ -8,6 +8,8 @@ export type GatewaySubscriptionInput = {
   cardToken: string;
   deviceSessionId?: string;
   payerEmail: string;
+  // Internal diagnostic expectation only; never an additional provider/API field.
+  authenticatedPayerEmail?: string;
   returnUrl?: string | null;
   startDate?: Date | string | null;
 };
