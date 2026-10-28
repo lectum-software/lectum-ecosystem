@@ -119,22 +119,24 @@ export function AnalyticsOverview({
                   });
                 }}
                 className={cn(
-                  "relative flex min-h-[100px] h-full w-full flex-col items-start rounded-lg border p-3 text-left transition motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
+                  "relative flex min-h-[100px] h-full w-full flex-col items-start rounded-2xl border p-3 text-left transition motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
                   active
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-transparent text-foreground hover:border-primary/40",
+                    : "border-border-strong bg-transparent text-foreground hover:border-primary/40",
                 )}
               >
-                <span
-                  className={cn(
-                    "flex min-h-10 items-start gap-2 text-[15px] font-medium leading-5",
-                  )}
-                >
-                  <card.icon
-                    className={cn("h-5 w-5 shrink-0", !active && "text-primary")}
-                    aria-hidden
-                  />
-                  <span>{card.id === "video_views" ? "Vídeo de apresentação" : card.label}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                    <card.icon className="h-4 w-4" aria-hidden />
+                  </span>
+                  <span
+                    className={cn(
+                      "min-w-0 break-words text-xs font-semibold leading-4",
+                      active ? "text-primary-foreground" : "text-muted",
+                    )}
+                  >
+                    {card.id === "video_views" ? "Vídeo de apresentação" : card.label}
+                  </span>
                 </span>
                 <span
                   className={cn(

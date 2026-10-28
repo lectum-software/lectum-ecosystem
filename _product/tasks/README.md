@@ -700,6 +700,7 @@ ou cortesia manual.
 | 279 | [TASK-279 - WhatsApp over community video](TASK-279-video-whatsapp-overlay.md) | Done | 278 |
 | 280 | [TASK-280 - Analytics total and origins](TASK-280-analytics-total-and-origins.md) | Done | 279 |
 | 281 | [TASK-281 - Analytics detail refinements](TASK-281-analytics-detail-refinements.md) | Done | 280 |
+| 282 | [TASK-282 - Video contact and metric style](TASK-282-video-contact-and-metric-style.md) | Done | 281 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -27,3 +27,10 @@ selected card's comparison preserves its existing positive/negative colors.
 
 Verification uses the local real API/database with temporary records and cleanup;
 screenshots can be shared in a standalone read-only gallery without exposing sessions.
+
+## Counter family refinement (2026-10-28)
+
+Top counters reuse the lower video metric cards' rounded border, circular icon badge,
+compact semibold label and muted inactive text. Preserve the existing top dimensions,
+28px totals, blue selected state and separate bottom-right comparison action.
+No calculations, filtering, carousel behavior or data contracts change.

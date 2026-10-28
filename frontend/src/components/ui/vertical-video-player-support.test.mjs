@@ -53,6 +53,9 @@ test("contact overlay is inside the expanded player and independent of hidden co
   );
   assert.match(component, /data-lectum-video-bottom-overlay="true"/);
   assert.match(component, /4\.5rem/);
+  assert.match(component, /inset-x-3 bottom-3/);
+  assert.match(component, /sm:inset-x-4 sm:bottom-4/);
+  assert.match(component, /: undefined/);
   assert.doesNotMatch(component, /opacity-0|pointer-events-none|aria-hidden/);
 });
 

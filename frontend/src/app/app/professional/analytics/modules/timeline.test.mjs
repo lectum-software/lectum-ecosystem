@@ -41,7 +41,13 @@ test("overview places wider compact counters with icons inside chart surface, pr
     "utf8",
   );
   assert.match(video, /text-xs font-semibold leading-4 text-muted/);
-  assert.match(overview, /text-\[15px\] font-medium leading-5/);
+  assert.match(overview, /min-w-0 break-words text-xs font-semibold leading-4/);
+  assert.match(overview, /rounded-2xl border p-3/);
+  assert.match(
+    overview,
+    /h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-soft text-primary/,
+  );
+  assert.match(overview, /<card.icon className="h-4 w-4"/);
   assert.match(overview, /text-\[28px\] font-bold/);
   assert.ok(overview.includes("w-[78%]"));
   assert.ok(overview.includes("md:w-[36%]"));
@@ -49,7 +55,7 @@ test("overview places wider compact counters with icons inside chart surface, pr
   assert.ok(overview.includes("<card.icon"));
   assert.doesNotMatch(overview, /CurrentIcon/);
   assert.match(overview, /bg-primary text-primary-foreground/);
-  assert.match(overview, /border-border bg-transparent text-foreground/);
+  assert.match(overview, /border-border-strong bg-transparent text-foreground/);
   assert.ok(overview.includes('card.id === "video_views" ? "Vídeo de apresentação" : card.label'));
   const comparison = readFileSync(
     new URL("../components/metric-comparison.tsx", import.meta.url),

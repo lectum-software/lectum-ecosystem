@@ -38,3 +38,13 @@ have lower contrast; the explicitly requested translucent white style is kept
 for this visual trial, without adding a black panel.
 
 Rollback is frontend-only. There are no migrations or environment changes.
+
+## Visual trial refinement (2026-10-28)
+
+Per user request, remove both fill and backdrop blur from the video contact,
+including hover. Preserve the white semantic border, icon, label and focus outline.
+With controls hidden, use the same responsive spacing token for bottom and sides.
+Do not inherit the page navigation's fixed-bottom padding in that state.
+Visible controls retain their prior clearance; expanded playback retains the CTA.
+Bright footage can reduce contrast further; this is an explicit transparent trial,
+not a change to contact permissions, typography or tracking.
