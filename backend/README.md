@@ -123,6 +123,18 @@ Pago sem a marca `test_user` são bloqueados por padrão.
 
 ## Docker do backend
 
+O backend usa **Node 24.22.1 LTS** (contrato `>=24.22.1 <25`), com imagem oficial
+Debian Bookworm slim fixada por tag/digest no Dockerfile. Atualizar patch e digest
+em conjunto após consultar releases de segurança e repetir a validação; não assumir
+que o pin dispensa manutenção. ADR-0648. Frontend, admin e video mantêm seus runtimes
+independentes. Para desenvolvimento do backend, selecione esse Node no gerenciador
+local ou use a imagem; não é necessário alterar o Node global dos outros projetos.
+
+A imagem final roda como `node`, inclui pnpm offline e executa testes HTTP loopback
+do diagnóstico de assinatura no build. Nenhum pagamento é criado. O teste exige
+suporte a chunks do corpo pelo Undici, sem remover os limites/limpeza de memória
+e sem imprimir dados sensíveis. Um build bem-sucedido não prova aprovação financeira.
+
 O Dockerfile do backend deve ser buildado usando `backend/` como contexto, mantendo frontend/admin como apps separadas:
 
 ```bash

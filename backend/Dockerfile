@@ -3,7 +3,8 @@
 # Build with the backend directory as Docker context:
 #   docker build -t lectum-backend ./backend
 
-FROM node:22-bookworm-slim AS base
+# Keep the tested security patch/digest aligned with package.json (ADR-0648).
+FROM node:24.22.1-bookworm-slim@sha256:be8204d4bd327363357f532187b752ff62759c31bedf98e9e18fc08c9cbd605c AS base
 
 ENV PNPM_HOME=/pnpm
 ENV COREPACK_HOME=/corepack
@@ -78,6 +79,11 @@ USER node
 # Prova no build que o usuário não privilegiado encontra o pnpm já embarcado,
 # sem depender de download ou mutação do container em runtime.
 RUN pnpm --version
+
+# Exercise real loopback transport in the final runtime, never a financial provider.
+# Fail rather than silently accepting a runtime without outbound body observation.
+RUN node -e 'const [major, minor] = (process.versions.undici || "0.0").split(".").map(Number); if (!(major > 7 || (major === 7 && minor >= 11))) process.exit(1)' \
+  && node --test dist/modules/billing/payment-gateway/outbound-transport.test.js
 
 EXPOSE ${PORT}
 
