@@ -8,6 +8,17 @@ padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
 
+### Backend runtime 2026-10-28 (TASK-32 / ADR-0648)
+
+Backend adota Node `>=24.22.1 <25`, imagem Debian Bookworm slim com patch/digest
+fixados e atualização deliberada de segurança. Auditoria encontrou GHSA-6pq8-jhm2-2vcw
+em `qs` transitivo de Express; backend/video adotam override `qs@6.16.1` e lockfiles
+independentes, sem novo pacote. Demais dependências e runtimes preservados;
+compatibilidade precisa ser validada na imagem Linux final, inclusive módulos nativos
+e Prisma. Frontend/admin/video continuam independentes. A mudança não comprova
+aprovação financeira nem dispensa auditorias futuras. Validação em 28/10: cinco
+auditorias de produção sem advisories conhecidos, checks e quatro builds aprovados.
+
 ### Security refresh 2026-10-25 (TASK-274 / ADR-0637)
 
 Full audits of root, backend, frontend, Admin and video returned zero known

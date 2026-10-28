@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.736",
+  "version": "0.1.737",
   "packageManager": "pnpm@10.33.0",
   "private": true,
   "prisma": {
@@ -34,7 +34,7 @@
     "observability:check": "node --enable-source-maps dist/operations/observability/check-observability.js"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.22.1 <25"
   },
   "keywords": [],
   "dependencies": {
@@ -116,7 +116,7 @@
       "hono": "4.12.34",
       "mysql2": "3.23.1",
       "nanoid@>=4.0.0 <5.1.16": "5.1.16",
-      "qs": "6.16.0",
+      "qs": "6.16.1",
       "socket.io-parser": "4.2.7",
       "valibot": "1.4.2",
       "ws": "8.21.0"

@@ -1,4 +1,6 @@
-Em preparação de publicação autorizada: TASK-32 / ADR-0647, versão de integração 0.1.736. Preserva PR #136 já publicado; diagnóstico sem mudança de cobrança. Check integral, quatro builds e smoke local aprovados; gatilhos de homologação conferidos. Evidências finais de produção no PR.
+Validado localmente em 0.1.737: TASK-32 / ADR-0648 — backend Node 24.22.1, imagem Linux amd64 e observação do corpo HTTP com privacidade. Patch qs 6.16.1 independente em backend/video; checks, quatro builds, cinco auditorias e PostgreSQL efêmero aprovados (limites no ADR). Commit local; sem push/deploy. Não é correção de recusa de risco.
+
+Publicado em 28/10: TASK-32 / ADR-0647, integração 0.1.736 pelo PR #137. Preserva PR #136; diagnóstico sem mudança de cobrança. Check integral, quatro builds, smoke local e smoke produtivo backend/frontend/admin aprovados; evidências no PR #137.
 
 Validado localmente em 0.1.734: [TASK-32 — Observação segura da saída HTTP](TASK-32-checkout-assinatura.md), ADR-0647. Cabeçalho final da sessão e e-mail do payload comparados sem expor valores; corpo transmitido explicitamente desconhecido no Node 22. Check integral, build backend, 20 testes focais nos runtimes 22/24 e smoke local aprovados. Commit local em homolog; sem push, deploy ou cobrança. Não altera a decisão de risco.
 
