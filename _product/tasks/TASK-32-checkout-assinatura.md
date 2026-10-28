@@ -251,3 +251,113 @@ ADR-0639.
 - [ ] Confirmar causa do 400 em tentativa real após deploy.
 
 Complemento de diagnóstico: tentativa após 0.1.717 permaneceu com 400 sem detalhe reconhecido. Captura segura agora inclui causas aninhadas e sinais de vocabulário fechado; causa efetiva ainda pendente.
+
+## Complemento em execução — 27/10/2026: correlação e sessão antifraude
+
+ADR-0641. Escopo autorizado: observabilidade sanitizada e sessão opcional do SDK, sem
+gerar cobranças de teste, trocar credenciais/API ou alterar dados financeiros existentes.
+Consultas somente leitura do incidente distinguiram rejeição de credenciais anterior da
+rejeição por risco posterior. O HTTP 400 e os hints isolados não identificam essa causa.
+
+- [x] Capturar a sessão do SDK no submit de checkout/cartão, opcional e sem persistência/log.
+- [x] Validar o contrato aditivo e isolar configuração do SDK por operação, inclusive concorrência.
+- [x] Correlacionar falha local e fatura notificada com referência opaca e vocabulário fechado.
+- [x] Consultar somente GET após webhook autenticado; falha diagnóstica não muda entitlement nem cria retry financeiro.
+- [x] Validar testes e checks por aplicação, builds backend/frontend e smoke local sem enviar cartão.
+- [x] Passar check integral da raiz (extração mínima de notificações autorizada e validada).
+- [x] Versionar, commitar e publicar em homolog, registrar smoke antes da promoção por PR.
+- [x] Promover por PR revisado e validar versões e saúde em produção sem realizar cobrança.
+
+Deploy: sem pacote, env ou migration nova; sessão ausente mantém comportamento anterior.
+Backend/frontend permanecem independentes; preferir backend primeiro. Rollback por revert,
+sem limpeza de dados. Sessão é sinal adicional, não promessa de aprovação. Layout inalterado;
+Builder não necessário para alteração de transporte, preservar referências visuais da TASK-32.
+
+Evidência local: backend check com 992 testes aprovados; frontend check, admin check e
+video check aprovados (13 testes opcionais de video ignorados pelo próprio runner);
+builds backend/frontend aprovados. Prisma gerado e migrations existentes aplicadas somente
+a um PostgreSQL efêmero em loopback, sem reset/seeds ou acesso ao banco remoto do `.env`.
+`/health`, `/ready`, `/ping` locais HTTP 200; endpoints privados de billing recusam sessão
+ausente com 401; browser da rota de cartão redireciona corretamente ao login. Não é uma
+validação de aprovação financeira nem um checkout autenticado ponta a ponta.
+
+Bloqueios de publicação em 27/10: `check:source-size` falha no arquivo preexistente
+`frontend/src/app/app/notifications/logic.tsx` (622 linhas, teto 600, já presente no HEAD
+8846a2944); extração mínima solicitada ao usuário antes de ampliar escopo. A sessão
+Vercel disponível só acessa outra equipe, sem Lectum; login na equipe correta solicitado.
+Dokploy homolog e produção estão com autodeploy desligado. Homolog backend saudável,
+mas ainda em 0.1.617, não valida esta alteração. Nenhuma promoção/deploy foi executada.
+
+Atualização do gate: primeiro push foi bloqueado pelos hooks, sem publicar. Após
+autorização explícita, extração mínima na TASK-277 resolveu source-size (588 linhas);
+check integral e builds backend/frontend passaram em 0.1.731. Publicação ainda depende
+de smoke de homologação da versão nova e acesso à equipe Lectum no Vercel.
+
+Atualização operacional posterior: bloqueios acima resolvidos. PR #133 mesclado como
+`ba6c4d60`; backend homolog 0.1.731 com ping/health/ready 200 antes da promoção.
+Backend, frontend e admin produtivos verificados em 0.1.731; backend health/ready 200.
+Vercel frontend estava Staged por atribuição automática de domínios desativada; promoção
+manual concluída e opção reativada depois por autorização explícita. Evidências e limites
+do smoke estão nos comentários do PR. Nenhuma cobrança foi efetuada pelo agente.
+
+## Correção em execução — 27/10/2026: sessão com ponto
+
+ADR-0642. Console real do usuário no checkout publicado: SDK carregado, sessão string
+com 231 caracteres, ASCII visível e somente `.` fora da allowlist anterior. Não foi
+coletado o identificador. Isso comprova omissão pelo helper, não causalidade do HTTP 400.
+
+- [x] Aceitar ponto adicionalmente a letras ASCII, números, hífen e underscore, sem alterar o valor.
+- [x] Manter 1–256 caracteres e recusar whitespace, controles, Unicode e coerção em frontend/backend.
+- [x] Anunciar `capabilities.device_session_id_dotted=true`; frontend só envia sessão com ponto após esse anúncio, preservando compatibilidade com backend 0.1.731.
+- [x] Cobrir helper, validators reais, transporte byte-exato e rollout de versões mistas por testes.
+- [x] Validar checks/builds e browser local sem enviar cartão ou simular aprovação financeira.
+- [x] Versionar, commitar e publicar em homolog com smoke; promoção produtiva somente via PR revisado.
+
+Sem novo pacote, env, migration ou mudança visual. Reutilizar SDK existente: widget está
+presente e define a global; não carregar script antifraude duplicado. Preferir backend antes
+do frontend; a capability adicional protege a ordem inversa. Rollback por revert, frontend
+primeiro e recarga das abas antes de retornar o backend à validação antiga. Não alterar
+credenciais, tipo de API, assinaturas ou dados financeiros; não executar cobrança.
+
+Evidência local 0.1.732: check integral aprovado (995 testes backend; video com 92
+aprovados e 13 opcionais ignorados); builds backend/frontend aprovados; 10 testes
+focais backend e 9 frontend aprovados; revisão independente sem bloqueantes. Backend
+local `/ping`, `/health`, `/ready` HTTP 200 e rota privada sem autenticação 401.
+Frontend local `/version` HTTP 200 em 0.1.732; browser da rota pagamento redireciona
+ao login preservando callback. QA de guarda de autenticação, não checkout autenticado
+ponta a ponta. Execução isolada em loopback, sem credenciais reais de provider ou
+acesso ao banco remoto, sem nova migration nem submissão financeira.
+
+Publicação 0.1.732 concluída via PR #134 (merge `509651f27`), após smoke homolog;
+backend/frontend/admin em produção verificados na mesma versão, health/ready 200.
+Tentativa posterior executada pelo usuário: sessão presente no backend e recusa por
+risco confirmada por consultas correlacionadas somente leitura. O agente não cobrou.
+
+## Ajuste em execução — 27/10/2026: mensagem cautelosa e diagnóstico de leitura
+
+ADR-0643. Escopo: cópia segura de checkout/cartão, diagnóstico fechado de consulta de
+fatura, análise de alternativas de API e rascunho de chamado. Sem trocar credenciais,
+produto financeiro, assinatura, preço, cronograma ou dados de produção.
+
+- [x] Tratar falha indeterminada sem afirmar problema de rede, recusa ou ausência de cobrança.
+- [x] Preservar erros de cartão explicitamente classificados e controles de sessão/permissão.
+- [x] Diferenciar validação, GET e lookup local em logs sanitizados, com duração e HTTP quando conhecido.
+- [x] Manter GET único, timeout de 3s, sem retry financeiro ou mudança de entitlement.
+- [x] Validar regressões, checks/builds e browser local, documentando limites do QA sem cobrança.
+- [x] Preparar chamado sem PII/segredos e análise fundamentada de Payments/Orders/Assinaturas.
+- [x] Versionar e commitar em homolog; informar separadamente publicação e smoke.
+
+Sem env, pacote, schema ou migration nova. Rollout aditivo e independente entre apps;
+rollback por revert sem migração de dados. Layout preservado, inclusive mobile-first
+~390px; referências da TASK-32 em PROTO-INVENTORY. Builder/Quick Copy indisponível,
+usar referência exportada e não redesenhar o checkout. Não usar uma cobrança real
+como teste para encerrar esta task.
+
+Evidência local 0.1.733: check integral da raiz e builds backend/frontend aprovados;
+revisões independentes de logs e mensagem sem bloqueantes. Backend ping/health/ready
+200, billing sem sessão 401; frontend version 200/no-store. Browser local nas duas
+rotas valida guarda de autenticação e callback, não checkout autenticado ou toast
+pós-submit (sem profissional autenticado local). Cópias e seleção de erro cobertas
+por testes unitários reais do helper/código; sem endpoints simulados. Banco local
+isolado, sem credenciais de provider nem acesso ao banco remoto. Produção não foi
+alterada por esta task; chamado preparado, não enviado.

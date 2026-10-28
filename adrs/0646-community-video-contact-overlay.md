@@ -1,4 +1,4 @@
-# ADR-0643 - Community video contact overlay
+# ADR-0646 - Community video contact overlay
 
 Status: Accepted locally, 2026-10-27.
 
@@ -19,6 +19,11 @@ VerticalVideoPlayer accepts an optional bottomOverlay ReactNode inside its
 shell. The existing expansion portal carries it into the expanded view.
 Visibility does not depend on controls; bottom spacing does, reserving space
 above visible controls and safe-area padding. Width is bounded on large screens.
+
+Release preparation uses the existing media-foreground semantic token for the
+white CTA. Bottom-overlay and minimal-controls rendering live in small player
+components, preserving the existing controls and keeping the composition file
+within the repository size limit.
 
 The CTA uses the current redirect component with propagation stopped. No new
 contact endpoint, permission bypass, analytics event or dependency is added.

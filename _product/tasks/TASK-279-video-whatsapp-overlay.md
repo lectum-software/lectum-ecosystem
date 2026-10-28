@@ -23,7 +23,7 @@ Keep images, carousels, horizontal video and text-only contact presentations.
 
 User's screenshot and request are the visual reference. Existing local component
 patterns and prototype inventory were consulted; Builder is unavailable.
-ADR-0643 records the shared player slot and scoped presentation.
+ADR-0646 records the shared player slot and scoped presentation.
 
 Temporary local database records must be removed after browser QA. No real
 WhatsApp message is sent and no production data is changed.

@@ -33,4 +33,4 @@ Lectum screenshots are the implementation references.
 ## Isolation
 
 No database, billing, SendNF, backend or dependency changes. Temporary QA users and
-records must be removed after browser verification. See ADR-0642.
+records must be removed after browser verification. See ADR-0645.

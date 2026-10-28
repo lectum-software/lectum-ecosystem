@@ -18,7 +18,10 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
+import { getBillingMutationErrorMessage } from "@/utils/billing-error";
 import {
+  getMercadoPagoDeviceSessionId,
   isMercadoPagoPublicConfigurationValid,
   mercadoPagoPublicKey,
   resolveMercadoPagoPayerEmail,
@@ -119,6 +122,11 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const checkoutMutateAsync = billing.checkout.mutateAsync;
   const syncMutateAsync = billing.sync.mutateAsync;
   const currentRefetch = billing.current.refetch;
+  const supportsDeviceSessionId = billing.current.data?.capabilities?.device_session_id === true;
+  const supportsDottedDeviceSessionId =
+    billing.current.data?.capabilities?.device_session_id_dotted === true;
+  const supportsDeviceSessionIdRef = useRef(supportsDeviceSessionId);
+  const supportsDottedDeviceSessionIdRef = useRef(supportsDottedDeviceSessionId);
   const checkoutMutateAsyncRef = useRef(checkoutMutateAsync);
   const syncMutateAsyncRef = useRef(syncMutateAsync);
   const currentRefetchRef = useRef(currentRefetch);
@@ -130,7 +138,9 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
   useEffect(() => {
     checkoutMutateAsyncRef.current = checkoutMutateAsync;
-  }, [checkoutMutateAsync]);
+    supportsDeviceSessionIdRef.current = supportsDeviceSessionId;
+    supportsDottedDeviceSessionIdRef.current = supportsDottedDeviceSessionId;
+  }, [checkoutMutateAsync, supportsDeviceSessionId, supportsDottedDeviceSessionId]);
 
   useEffect(() => {
     syncMutateAsyncRef.current = syncMutateAsync;
@@ -247,15 +257,22 @@ export const ProfessionalBillingCheckoutLogic = () => {
       }
 
       try {
+        const deviceSessionId = getMercadoPagoDeviceSessionId(
+          supportsDeviceSessionIdRef.current,
+          supportsDottedDeviceSessionIdRef.current,
+        );
         await checkoutMutateAsyncRef.current({
           card_token: token,
+          ...(deviceSessionId ? { device_session_id: deviceSessionId } : {}),
           brand,
           ...(isCourtesyRenewal ? { intent: "courtesy_renewal" as const } : {}),
           last4,
           payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
         });
-      } catch {
-        // handleReq já exibe o erro público sanitizado; impedir rejeição não tratada no Brick.
+      } catch (error) {
+        if (!isAdminViewAsReadOnlyError(error)) {
+          toast.error(getBillingMutationErrorMessage(error, "checkout"));
+        }
       }
     },
     [isCourtesyRenewal],

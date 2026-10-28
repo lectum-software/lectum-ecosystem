@@ -17,7 +17,10 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
+import { getBillingMutationErrorMessage } from "@/utils/billing-error";
 import {
+  getMercadoPagoDeviceSessionId,
   isMercadoPagoPublicConfigurationValid,
   mercadoPagoPublicKey,
   resolveMercadoPagoPayerEmail,
@@ -111,10 +114,17 @@ export const ProfessionalBillingCardLogic = () => {
     },
   });
   const paymentMethodMutateAsyncRef = useRef(billing.paymentMethod.mutateAsync);
+  const supportsDeviceSessionId = billing.current.data?.capabilities?.device_session_id === true;
+  const supportsDottedDeviceSessionId =
+    billing.current.data?.capabilities?.device_session_id_dotted === true;
+  const supportsDeviceSessionIdRef = useRef(supportsDeviceSessionId);
+  const supportsDottedDeviceSessionIdRef = useRef(supportsDottedDeviceSessionId);
 
   useEffect(() => {
     paymentMethodMutateAsyncRef.current = billing.paymentMethod.mutateAsync;
-  }, [billing.paymentMethod.mutateAsync]);
+    supportsDeviceSessionIdRef.current = supportsDeviceSessionId;
+    supportsDottedDeviceSessionIdRef.current = supportsDottedDeviceSessionId;
+  }, [billing.paymentMethod.mutateAsync, supportsDeviceSessionId, supportsDottedDeviceSessionId]);
 
   useEffect(() => {
     if (!isMercadoPagoPublicConfigurationValid || !mercadoPagoPublicKey) return;
@@ -181,14 +191,21 @@ export const ProfessionalBillingCardLogic = () => {
       }
 
       try {
+        const deviceSessionId = getMercadoPagoDeviceSessionId(
+          supportsDeviceSessionIdRef.current,
+          supportsDottedDeviceSessionIdRef.current,
+        );
         await paymentMethodMutateAsyncRef.current({
           card_token: token,
+          ...(deviceSessionId ? { device_session_id: deviceSessionId } : {}),
           payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
           brand: formData.payment_method_id || null,
           last4: additionalData?.lastFourDigits || null,
         });
-      } catch {
-        // handleReq já exibe o erro público sanitizado; impedir rejeição não tratada no Brick.
+      } catch (error) {
+        if (!isAdminViewAsReadOnlyError(error)) {
+          toast.error(getBillingMutationErrorMessage(error, "payment-method"));
+        }
       }
     },
     [],
@@ -340,7 +357,10 @@ export const ProfessionalBillingCardLogic = () => {
 
                   {billing.paymentMethod.isError ? (
                     <InlineAlert title="Não foi possível alterar o cartão" variant="error">
-                      {getErrorMessage(billing.paymentMethod.error)}
+                      {getBillingMutationErrorMessage(
+                        billing.paymentMethod.error,
+                        "payment-method",
+                      )}
                     </InlineAlert>
                   ) : null}
                 </div>

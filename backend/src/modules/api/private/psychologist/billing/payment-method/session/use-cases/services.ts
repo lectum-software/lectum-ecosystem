@@ -4,6 +4,13 @@ import {
   isPaymentGatewayConfigurationError,
   resolvePaymentGatewayPublicError,
 } from "@/modules/billing/payment-gateway";
+import { normalizeDeviceSessionId } from "@/modules/billing/payment-gateway/device-session";
+import {
+  type BillingOperationContext,
+  logBillingAttempt,
+  logBillingFailure,
+  logBillingResult,
+} from "@/modules/billing/payment-gateway/observability";
 import type { IPaymentMethodSessionDTO } from "../DTOs/IPaymentMethodSessionDTO";
 import { PaymentMethodSessionRepository } from "../repositories/PaymentMethodSessionRepository";
 
@@ -47,12 +54,24 @@ export default async (data: IPaymentMethodSessionDTO) => {
     };
   }
 
+  const deviceSessionId = normalizeDeviceSessionId(data.b.device_session_id);
+  const operationContext: BillingOperationContext = {
+    operation: "update_subscription_card",
+    subscriptionId: subscription.id!,
+    deviceSessionPresent: Boolean(deviceSessionId),
+  };
+
+  let gatewayCompleted = false;
   try {
     const gateway = getPaymentGateway();
+    logBillingAttempt(operationContext);
     const gatewayResult = await gateway.updateSubscriptionCard({
       gatewaySubscriptionId: subscription.gateway_subscription_id,
       cardToken: data.b.card_token,
+      deviceSessionId,
     });
+    gatewayCompleted = true;
+    logBillingResult(operationContext);
 
     const paymentMethod = await repository.savePaymentMethod(data.auth.id!, {
       gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
@@ -74,6 +93,7 @@ export default async (data: IPaymentMethodSessionDTO) => {
       },
     };
   } catch (err) {
+    logBillingFailure(operationContext, err, gatewayCompleted ? "local_after_gateway" : "gateway");
     const configError = isPaymentGatewayConfigurationError(err);
     const publicError = resolvePaymentGatewayPublicError(
       err,

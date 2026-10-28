@@ -65,7 +65,7 @@ export const CommunityWhatsAppCta = ({
       <PsychologistWhatsAppRedirectButton
         aria-label={`${actionLabel} pelo WhatsApp`}
         className={cn(
-          "flex min-h-[44px] w-full min-w-0 items-center justify-center gap-2 whitespace-normal rounded-lg border border-white/90 bg-white/10 px-3 py-2.5 text-white shadow-none backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-60",
+          "flex min-h-[44px] w-full min-w-0 items-center justify-center gap-2 whitespace-normal rounded-lg border border-media-foreground/90 bg-media-foreground/10 px-3 py-2.5 text-media-foreground shadow-none backdrop-blur-sm transition hover:bg-media-foreground/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-foreground disabled:opacity-60",
           className,
         )}
         data-post-card-ignore-click="true"
@@ -75,11 +75,11 @@ export const CommunityWhatsAppCta = ({
         trackingContext={trackingContext}
       >
         <PsychologistWhatsAppButtonContent
-          iconClassName="h-4 w-4 text-white"
+          iconClassName="h-4 w-4 text-media-foreground"
           label={actionLabel}
-          labelClassName="overflow-visible text-clip whitespace-normal break-words text-left text-[14px] font-semibold leading-5 text-white"
+          labelClassName="overflow-visible text-clip whitespace-normal break-words text-left text-[14px] font-semibold leading-5 text-media-foreground"
         />
-        <ArrowRight className="h-4 w-4 shrink-0 text-white" aria-hidden />
+        <ArrowRight className="h-4 w-4 shrink-0 text-media-foreground" aria-hidden />
       </PsychologistWhatsAppRedirectButton>
     );
   }

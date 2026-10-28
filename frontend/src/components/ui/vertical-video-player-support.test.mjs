@@ -40,16 +40,20 @@ test("controles persistentes permitem visibilidade permanente no modo imersivo",
 
 test("contact overlay is inside the expanded player and independent of hidden controls", () => {
   const source = readFileSync(new URL("./vertical-video-player.tsx", import.meta.url), "utf8");
-  const start = source.indexOf("{bottomOverlay ? (");
+  const start = source.indexOf("<VerticalVideoPlayerBottomOverlay");
   const end = source.indexOf("<VerticalVideoStreamStatus", start);
   const overlay = source.slice(start, end);
   assert.ok(start > source.indexOf("<VerticalVideoPlayerShell"));
   assert.ok(end < source.indexOf("</VerticalVideoPlayerShell>"));
-  assert.match(overlay, /data-lectum-video-bottom-overlay="true"/);
   assert.match(overlay, /usesPersistentControls && !persistentControlsHidden/);
-  assert.match(overlay, /4\.5rem/);
   assert.match(overlay, /\{bottomOverlay\}/);
-  assert.doesNotMatch(overlay, /opacity-0|pointer-events-none|aria-hidden/);
+  const component = readFileSync(
+    new URL("./vertical-video-player-bottom-overlay.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(component, /data-lectum-video-bottom-overlay="true"/);
+  assert.match(component, /4\.5rem/);
+  assert.doesNotMatch(component, /opacity-0|pointer-events-none|aria-hidden/);
 });
 
 test("feed imersivo de psicologos opta por controles sempre visiveis", () => {

@@ -2,6 +2,19 @@
 
 Status: Done
 
+## Release gate follow-up — 2026-10-27 (validated locally)
+
+User authorized the minimum extraction needed to unblock the billing release.
+The existing notification composition reached 622 lines, exceeding the 600-line gate.
+Move only unchanged relative-time/grouping helpers to a colocated pure module; preserve
+all JSX, requests, state, routes and notification semantics. No env, package, database
+or provider change. Rollback is a code revert. ADR-0640 records the follow-up.
+
+- [x] Extract time/grouping helpers without changing behavior.
+- [x] Clear source-size gate and existing test-format information.
+- [x] Pass focused tests, frontend check/build and repository check.
+
+
 ## Scope
 - Strong title and explicit action for the weekly acquired-patient report.
 - Reference: user screenshot WhatsApp Image 2026-10-26 at 17.16.04.jpeg.
@@ -161,3 +174,8 @@ answered-report navigation with acquired_patients selected. Pending reports stil
 open the form; dismissal preserves pending state and an intentional zero persists.
 Temporary QA records were removed. Release 0.1.729 remains local, without push or
 deployment.
+
+Release gate validation: composition now 588 lines. Extracted bodies and remaining
+composition match their previous source byte-for-byte except imports/exports and the
+removed helper block. Seven focused tests, typecheck, Biome, source-size, full root
+check and frontend build passed on 0.1.731. No JSX or visible behavior changed.

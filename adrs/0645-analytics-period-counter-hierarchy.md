@@ -1,4 +1,4 @@
-# ADR-0642 - Analytics period and counter hierarchy
+# ADR-0645 - Analytics period and counter hierarchy
 
 Date: 2026-10-27
 Status: Accepted

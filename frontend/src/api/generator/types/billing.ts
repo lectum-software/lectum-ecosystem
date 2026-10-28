@@ -61,6 +61,10 @@ export type BillingPlansResponse = {
 
 export type BillingCurrentResponse = {
   current: ProfessionalSubscription | null;
+  capabilities?: {
+    device_session_id?: boolean;
+    device_session_id_dotted?: boolean;
+  };
 };
 
 export type BillingPaymentMethod = {
@@ -108,6 +112,7 @@ export type BillingSelectFreeResponse = {
 
 export type BillingCheckoutPayload = {
   card_token: string;
+  device_session_id?: string;
   brand?: string | null;
   intent?: "courtesy_renewal";
   last4?: string | null;
@@ -138,6 +143,7 @@ export type BillingCancelSubscriptionResponse = {
 
 export type BillingPaymentMethodPayload = {
   card_token: string;
+  device_session_id?: string;
   payment_type_id: "credit_card" | "debit_card" | "prepaid_card";
   brand?: string | null;
   last4?: string | null;

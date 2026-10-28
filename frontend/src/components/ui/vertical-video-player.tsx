@@ -13,11 +13,13 @@ import {
 } from "react";
 import { cn } from "@/lib/utils";
 import { playVideoWithActiveDocument, useActiveVideoPlaybackGuard } from "@/lib/video-playback";
+import { VerticalVideoPlayerBottomOverlay } from "./vertical-video-player-bottom-overlay";
 import {
   useInlineContentVideoExpansion,
   useMobileContentFullscreenStyles,
 } from "./vertical-video-player-content-expansion";
 import { useVerticalVideoPlayerImmersiveControls } from "./vertical-video-player-immersive-controls";
+import { VerticalVideoPlayerMinimalControls } from "./vertical-video-player-minimal-controls";
 import { VerticalVideoPlayerMutedOverlayControl } from "./vertical-video-player-muted-overlay-control";
 import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
 import { useVideoPlaybackContinuity } from "./vertical-video-player-playback-continuity";
@@ -586,20 +588,11 @@ export const VerticalVideoPlayer = ({
         Seu navegador não suporta a reprodução de vídeo.
       </video>
       {overlay}
-      {bottomOverlay ? (
-        <div
-          className="absolute inset-x-3 z-[3] mx-auto min-w-0 max-w-[420px] sm:inset-x-4"
-          data-lectum-video-bottom-overlay="true"
-          style={{
-            bottom:
-              usesPersistentControls && !persistentControlsHidden
-                ? "calc(var(--lectum-bottom-fixed-padding) + 4.5rem)"
-                : "max(12px, var(--lectum-bottom-fixed-padding))",
-          }}
-        >
-          {bottomOverlay}
-        </div>
-      ) : null}
+      <VerticalVideoPlayerBottomOverlay
+        controlsVisible={usesPersistentControls && !persistentControlsHidden}
+      >
+        {bottomOverlay}
+      </VerticalVideoPlayerBottomOverlay>
       <VerticalVideoStreamStatus
         adaptivePlaybackFailed={adaptivePlaybackFailed}
         error={playback.error}
@@ -690,22 +683,11 @@ export const VerticalVideoPlayer = ({
         />
       ) : null}
       {usesMinimalControls ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-media-background/80 via-media-background/45 to-transparent px-4 pt-12 pb-[var(--lectum-bottom-fixed-padding)]">
-          <div className="pointer-events-auto flex items-center">
-            <button
-              aria-label={isPaused ? `Reproduzir video: ${title}` : `Pausar video: ${title}`}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface/95 text-foreground shadow-[var(--lectum-shadow-soft)] transition hover:scale-[1.03] hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70"
-              onClick={handleContentClick}
-              type="button"
-            >
-              {isPaused ? (
-                <Play className="h-4 w-4 fill-current" />
-              ) : (
-                <Pause className="h-4 w-4 fill-current" />
-              )}
-            </button>
-          </div>
-        </div>
+        <VerticalVideoPlayerMinimalControls
+          isPaused={isPaused}
+          title={title}
+          onClick={handleContentClick}
+        />
       ) : null}
     </VerticalVideoPlayerShell>
   );
