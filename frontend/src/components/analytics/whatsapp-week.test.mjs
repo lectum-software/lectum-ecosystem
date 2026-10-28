@@ -163,7 +163,8 @@ test("datas aparecem apenas no seletor personalizado aplicado", () => {
   assert.match(render("custom"), /Personalizado • 01\/10\/26 a 18\/10\/26/);
   for (const period of ["all", "7d", "30d", "year"]) {
     assert.doesNotMatch(render(period), /01\/10\/26|18\/10\/26/);
-    assert.match(render(period), />Personalizado<\/button>/);
+    assert.match(render(period), /role="combobox"/);
+    assert.doesNotMatch(render(period), /role="tablist"/);
   }
 });
 

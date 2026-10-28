@@ -694,6 +694,7 @@ ou cortesia manual.
 | 274 | [TASK-274 - Feedback release security](TASK-274-feedback-release-security.md) | Done | 273 |
 | 275 | [TASK-275 - Post profile close loop](TASK-275-post-profile-close-loop.md) | Done | 274 |
 | 277 | [TASK-277 - Weekly WhatsApp notification CTA](TASK-277-weekly-whatsapp-cta.md) | Done | - |
+| 278 | [TASK-278 - Analytics period selector and counters](TASK-278-analytics-period-counters.md) | Done | 277 |
 
 ## Ordem operacional recomendada sem bloqueios
 

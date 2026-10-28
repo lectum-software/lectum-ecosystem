@@ -53,6 +53,11 @@ export function AnalyticsOverview({
     selected === "video_views"
       ? data?.presentation_video?.metrics.views
       : data?.metrics[selected as keyof NonNullable<typeof data>["metrics"]];
+  const timeline = data?.chart_data?.timelines[selected];
+  const visibleTimeline =
+    selected === "favorites_received" && timeline
+      ? { ...timeline, series: timeline.series.filter((series) => series.id !== "favorites") }
+      : timeline;
   if (!current) return null;
   return (
     <section className="min-w-0" aria-label="Resumo de analytics" aria-busy={loading}>
@@ -111,18 +116,23 @@ export function AnalyticsOverview({
                   });
                 }}
                 className={cn(
-                  "relative flex min-h-20 w-full flex-col items-start rounded-xl border bg-surface p-3 text-left transition focus-visible:outline-2 focus-visible:outline-primary",
+                  "relative flex min-h-[112px] h-full w-full flex-col items-start rounded-xl border p-3 text-left transition motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
                   active
-                    ? "border-primary ring-1 ring-primary/20"
-                    : "border-primary/10 hover:border-primary/40",
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-primary/10 bg-surface text-foreground hover:border-primary/40",
                 )}
               >
-                <span className="min-h-8 text-xs font-semibold leading-4 text-muted">
+                <span
+                  className={cn(
+                    "min-h-10 text-[15px] font-medium leading-5",
+                    !active && "text-muted",
+                  )}
+                >
                   {card.id === "video_views" ? "Vídeo de apresentação" : card.label}
                 </span>
                 <span
                   className={cn(
-                    "mt-1.5 block w-full truncate text-xl font-semibold leading-none tracking-[-0.03em] text-foreground",
+                    "mt-auto block w-full truncate pt-3 text-[28px] font-bold leading-none tracking-normal",
                     showComparison && "pr-14",
                   )}
                   title={card.value}
@@ -136,6 +146,7 @@ export function AnalyticsOverview({
                   data={data}
                   id={card.id}
                   label={card.label}
+                  selected={active}
                 />
               ) : null}
             </div>
@@ -167,7 +178,7 @@ export function AnalyticsOverview({
           ) : (
             <MetricTimeline
               key={selected + data?.period.start_at + data?.period.end_at}
-              timeline={data?.chart_data?.timelines[selected]}
+              timeline={visibleTimeline}
               showLegend={!["acquired_patients", "reviews_received"].includes(selected)}
               seriesColors={selected === "whatsapp_clicks" ? WHATSAPP_ORIGIN_COLORS : undefined}
               period={data?.period}

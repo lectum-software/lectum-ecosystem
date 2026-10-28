@@ -702,3 +702,4 @@ Formato recomendado:
 - [ADR-0638 — Close post composer after profile detour](0638-post-profile-close-loop.md)
 - [ADR-0639 — Classificação segura de erros de assinatura](0639-classificacao-segura-erros-assinatura.md)
 - [ADR-0640 — Weekly WhatsApp notification CTA](0640-weekly-whatsapp-cta.md)
+- [ADR-0642 — Analytics period and counter hierarchy](0642-analytics-period-counter-hierarchy.md)
