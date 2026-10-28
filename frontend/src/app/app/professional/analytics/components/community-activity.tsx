@@ -8,11 +8,14 @@ import { CommunityHighlights } from "./community-highlights";
 
 const originStyles = {
   post_with_video: { color: "var(--lectum-primary)" },
-  post_without_video: { color: "var(--lectum-success)" },
-  reply_with_video: { color: "var(--lectum-warning)" },
-  reply_without_video: { color: "var(--lectum-primary-strong)" },
-  top_mentors: { color: "var(--lectum-muted)" },
+  post_without_video: { color: "var(--lectum-chart-sky)" },
+  reply_with_video: { color: "var(--lectum-chart-lilac)" },
+  reply_without_video: { color: "var(--lectum-chart-indigo)" },
+  top_mentors: { color: "var(--lectum-chart-slate)" },
 };
+
+const originOrder = Object.keys(originStyles);
+const percentageFormat = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 
 export const CommunityActivitySection = ({
   communities,
@@ -39,14 +42,13 @@ export const CommunityActivitySection = ({
       value: communities.top_mentors.whatsapp_clicks,
       description: communities.top_mentors.message,
     },
-  ];
+  ].sort((a, b) => b.value - a.value || originOrder.indexOf(a.id) - originOrder.indexOf(b.id));
   const total = items.reduce((sum, item) => sum + item.value, 0);
   const toggle = (id: string) => setSelected((current) => (current === id ? null : id));
-  let offset = 0;
-  const segments = items.map((item) => {
-    const start = offset;
+  const segments = items.map((item, index) => {
+    const precedingValue = items.slice(0, index).reduce((sum, previous) => sum + previous.value, 0);
+    const start = total > 0 ? (precedingValue / total) * 100 : 0;
     const share = total > 0 ? (item.value / total) * 100 : 0;
-    offset += share;
     return { ...item, start, share };
   });
 
@@ -119,29 +121,44 @@ export const CommunityActivitySection = ({
         </div>
       </div>
 
-      <ul className="flex flex-wrap gap-x-4 gap-y-2 text-xs" aria-label="Origens dos cliques">
-        {items.map((item) => {
+      <ul
+        className="min-w-0 divide-y divide-border text-sm leading-5"
+        aria-label="Origens dos cliques"
+      >
+        {segments.map((item) => {
           const { color } = originStyles[item.id];
           return (
-            <li key={item.id}>
+            <li key={item.id} data-content-origin={item.id}>
               <button
                 type="button"
                 disabled={locked}
                 aria-pressed={selected === item.id}
                 onClick={() => toggle(item.id)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded text-left text-xs text-muted focus-visible:outline-2 focus-visible:outline-primary",
+                  "grid min-h-14 w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded py-3 text-left text-foreground focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
                   selected === item.id && "bg-surface-muted",
                 )}
               >
                 <span
-                  className="h-2 w-2 shrink-0 rounded-full"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
                   style={{ background: color }}
                   aria-hidden
                 />
-                <span>{item.label}:</span>
-                <strong className={cn("text-foreground", locked && "select-none blur-[5px]")}>
-                  {toCount(item.value)}
+                <span className="min-w-0 break-words font-medium">{item.label}</span>
+                <strong
+                  className={cn(
+                    "whitespace-nowrap text-right font-semibold tabular-nums",
+                    locked && "select-none blur-[5px]",
+                  )}
+                >
+                  {toCount(item.value)}{" "}
+                  <span className="font-normal text-muted">
+                    (
+                    {item.share > 0 && item.share < 0.1
+                      ? "<0,1"
+                      : percentageFormat.format(item.share)}
+                    %)
+                  </span>
                 </strong>
               </button>
             </li>

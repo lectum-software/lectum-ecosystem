@@ -11,6 +11,10 @@
   --lectum-primary-foreground: #ffffff;
   --lectum-primary-hover: #247bd1;
   --lectum-primary-soft: #eaf5ff;
+  --lectum-chart-sky: #74b6df;
+  --lectum-chart-lilac: #a78bcb;
+  --lectum-chart-indigo: #6266b2;
+  --lectum-chart-slate: #7c8fa8;
   --lectum-surface: #ffffff;
   --lectum-surface-muted: #f8fafc;
   --lectum-border: #e2e8f0;
@@ -65,6 +69,10 @@
   --lectum-primary-foreground: #ffffff;
   --lectum-primary-hover: #6cb4f5;
   --lectum-primary-soft: #16243a;
+  --lectum-chart-sky: #91c9eb;
+  --lectum-chart-lilac: #c4a8e5;
+  --lectum-chart-indigo: #9599df;
+  --lectum-chart-slate: #a0b2cb;
   --lectum-surface: #131c2e;
   --lectum-surface-muted: #0f1726;
   --lectum-border: #273349;

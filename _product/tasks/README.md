@@ -706,6 +706,9 @@ ou cortesia manual.
 | 279 | [TASK-279 - WhatsApp over community video](TASK-279-video-whatsapp-overlay.md) | Done | 278 |
 | 280 | [TASK-280 - Analytics total and origins](TASK-280-analytics-total-and-origins.md) | Done | 279 |
 | 281 | [TASK-281 - Analytics detail refinements](TASK-281-analytics-detail-refinements.md) | Done | 280 |
+| 282 | [TASK-282 - Video contact and metric style](TASK-282-video-contact-and-metric-style.md) | Done | 281 |
+| 283 | [TASK-283 - Content legend and retention radius](TASK-283-content-legend-and-retention-radius.md) | Done | 282 |
+| 284 | [TASK-284 - Analytics typography and selected icon](TASK-284-analytics-typography-and-selected-icon.md) | Done | 283 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -65,7 +65,7 @@ export const CommunityWhatsAppCta = ({
       <PsychologistWhatsAppRedirectButton
         aria-label={`${actionLabel} pelo WhatsApp`}
         className={cn(
-          "flex min-h-[44px] w-full min-w-0 items-center justify-center gap-2 whitespace-normal rounded-lg border border-media-foreground/90 bg-media-foreground/10 px-3 py-2.5 text-media-foreground shadow-none backdrop-blur-sm transition hover:bg-media-foreground/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-foreground disabled:opacity-60",
+          "flex min-h-[44px] w-full min-w-0 items-center justify-center gap-2 whitespace-normal rounded-lg border border-media-foreground/90 bg-transparent px-3 py-2.5 text-media-foreground shadow-none transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-foreground disabled:opacity-60",
           className,
         )}
         data-post-card-ignore-click="true"

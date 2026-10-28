@@ -9,11 +9,120 @@ import { pointerDayIndex, smoothTimelinePath, timelineDates, timelineValues } fr
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    return nextResolve(specifier === "next/link" ? "next/link.js" : specifier, context);
+    return nextResolve(
+      ["next/link", "next/image"].includes(specifier) ? `${specifier}.js` : specifier,
+      context,
+    );
   },
 });
 
 const { MetricTimeline } = await import("../components/metric-timeline.tsx");
+const { CommunityActivitySection } = await import("../components/community-activity.tsx");
+
+const contentCategories = [
+  ["post_with_video", "Posts com vídeo"],
+  ["post_without_video", "Posts sem vídeo"],
+  ["reply_with_video", "Respostas com vídeo"],
+  ["reply_without_video", "Respostas sem vídeo"],
+];
+function renderContentDistribution(values, locked = false, reversed = false) {
+  const breakdown = contentCategories.map(([id, label], index) => ({
+    id,
+    label,
+    whatsapp_clicks: values[index],
+  }));
+  const communities = {
+    content: { whatsapp_clicks_by_content: reversed ? [...breakdown].reverse() : breakdown },
+    top_mentors: { whatsapp_clicks: values[4], message: "" },
+    highlights: { posts: [], replies: [] },
+  };
+  const before = JSON.stringify(communities);
+  const html = renderToStaticMarkup(
+    createElement(CommunityActivitySection, {
+      communities,
+      locked,
+      periodLabel: "Últimos 30 dias",
+    }),
+  );
+  assert.equal(JSON.stringify(communities), before, "presentation must not mutate API data");
+  const rows = [...html.matchAll(/<li data-content-origin="([^"]+)">([\s\S]*?)<\/li>/g)];
+  return {
+    html,
+    rows: rows.map(([, id, markup]) => ({
+      id,
+      text: markup.replace(/<[^>]+>/g, "").trim(),
+    })),
+  };
+}
+
+test("content legend sorts counts descending with percentages and stable category colors", () => {
+  const { html, rows } = renderContentDistribution([12, 24, 6, 15, 3]);
+  assert.deepEqual(
+    rows.map((row) => row.id),
+    [
+      "post_without_video",
+      "reply_without_video",
+      "post_with_video",
+      "reply_with_video",
+      "top_mentors",
+    ],
+  );
+  assert.match(rows[0].text, /24.*\(40%\)/);
+  assert.match(rows[1].text, /15.*\(25%\)/);
+  assert.match(rows[4].text, /3.*\(5%\)/);
+  assert.match(html, /divide-y divide-border/);
+  // Buttons inherit their font from the list through the global form-control reset.
+  assert.match(html, /<ul class="min-w-0 divide-y divide-border text-sm leading-5"/);
+  for (const token of ["primary", "chart-sky", "chart-lilac", "chart-indigo", "chart-slate"]) {
+    assert.ok(html.includes(`stroke="var(--lectum-${token})"`));
+    assert.ok(html.includes(`background:var(--lectum-${token})`));
+  }
+  assert.doesNotMatch(html, /var\(--lectum-warning\)|var\(--lectum-success\)/);
+});
+
+test("content legend preserves zero rows, canonical ties and locked controls", () => {
+  const { html, rows } = renderContentDistribution([0, 0, 0, 0, 0], false, true);
+  assert.deepEqual(
+    rows.map((row) => row.id),
+    [...contentCategories.map(([id]) => id), "top_mentors"],
+  );
+  assert.ok(rows.every((row) => /0.*\(0%\)/.test(row.text)));
+  assert.doesNotMatch(html, /role="button"/);
+  const tied = renderContentDistribution([3, 3, 0, 0, 3], false, true);
+  assert.deepEqual(
+    tied.rows.map((row) => row.id),
+    [
+      "post_with_video",
+      "post_without_video",
+      "top_mentors",
+      "reply_with_video",
+      "reply_without_video",
+    ],
+  );
+  assert.match(tied.rows[0].text, /\(33,3%\)/);
+  const locked = renderContentDistribution([12, 24, 6, 15, 3], true);
+  assert.equal((locked.html.match(/disabled=""/g) ?? []).length, 5);
+  assert.doesNotMatch(locked.html, /role="button"/);
+});
+
+test("content percentages retain small positive shares and single-origin totals", () => {
+  const tiny = renderContentDistribution([1, 9999, 0, 0, 0]);
+  assert.match(tiny.rows[1].text, /\(&lt;0,1%\)/);
+  const single = renderContentDistribution([0, 0, 25, 0, 0]);
+  assert.match(single.rows[0].text, /25.*\(100%\)/);
+  assert.match(single.html, /stroke-dasharray="100 0"/);
+});
+
+test("retention surfaces and video reuse the outer card radius", () => {
+  const source = readFileSync(
+    new URL("../components/presentation-video.tsx", import.meta.url),
+    "utf8",
+  );
+  const retention = source.slice(source.indexOf('<article className="grid min-w-0 gap-4'));
+  assert.equal((retention.match(/rounded-\[var\(--lectum-card-radius\)\]/g) ?? []).length, 4);
+  assert.doesNotMatch(retention, /rounded-\[26px\]|rounded-\[22px\]/);
+  assert.match(source, /mt-3 w-full rounded-\[var\(--lectum-card-radius\)\] border/);
+});
 
 test("favorites label is consistent in the legend and accessible details without changing totals", () => {
   const timeline = {
@@ -41,7 +150,14 @@ test("overview places wider compact counters with icons inside chart surface, pr
     "utf8",
   );
   assert.match(video, /text-xs font-semibold leading-4 text-muted/);
-  assert.match(overview, /text-\[15px\] font-medium leading-5/);
+  assert.match(overview, /min-w-0 break-words text-base font-semibold leading-5/);
+  assert.match(overview, /rounded-2xl border p-3/);
+  assert.match(overview, /h-7 w-7 shrink-0 place-items-center rounded-full/);
+  assert.match(
+    overview,
+    /active\s*\? "bg-transparent text-primary-foreground"\s*: "bg-primary-soft text-primary"/,
+  );
+  assert.match(overview, /<card.icon className="h-4 w-4"/);
   assert.match(overview, /text-\[28px\] font-bold/);
   assert.ok(overview.includes("w-[78%]"));
   assert.ok(overview.includes("md:w-[36%]"));
@@ -49,7 +165,7 @@ test("overview places wider compact counters with icons inside chart surface, pr
   assert.ok(overview.includes("<card.icon"));
   assert.doesNotMatch(overview, /CurrentIcon/);
   assert.match(overview, /bg-primary text-primary-foreground/);
-  assert.match(overview, /border-border bg-transparent text-foreground/);
+  assert.match(overview, /border-border-strong bg-transparent text-foreground/);
   assert.ok(overview.includes('card.id === "video_views" ? "Vídeo de apresentação" : card.label'));
   const comparison = readFileSync(
     new URL("../components/metric-comparison.tsx", import.meta.url),

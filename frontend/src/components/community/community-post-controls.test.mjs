@@ -473,7 +473,7 @@ test("favorite changes use the originating account and do not manufacture a part
 
 const { CommunityWhatsAppCta } = await import("./community-whatsapp-cta.tsx");
 
-test("video contact is translucent with one action and no separate WhatsApp heading", () => {
+test("video contact is transparent with one action and no separate WhatsApp heading", () => {
   const html = renderRelations({
     children: createElement(CommunityWhatsAppCta, {
       attached: true,
@@ -483,7 +483,8 @@ test("video contact is translucent with one action and no separate WhatsApp head
   });
   assert.match(html, /aria-label="Fale com Ana pelo WhatsApp"/);
   assert.match(html, /data-community-video-contact="true"/);
-  assert.match(html, /border-media-foreground\/90 bg-media-foreground\/10/);
+  assert.match(html, /border-media-foreground\/90 bg-transparent/);
+  assert.doesNotMatch(html, /backdrop-blur|hover:bg-|bg-media-foreground/);
   assert.match(html, /min-h-\[44px\]/);
   assert.match(html, /overflow-visible text-clip whitespace-normal/);
   assert.match(html, /lucide-arrow-right/);
