@@ -121,7 +121,10 @@ export const CommunityActivitySection = ({
         </div>
       </div>
 
-      <ul className="min-w-0 divide-y divide-border" aria-label="Origens dos cliques">
+      <ul
+        className="min-w-0 divide-y divide-border text-sm leading-5"
+        aria-label="Origens dos cliques"
+      >
         {segments.map((item) => {
           const { color } = originStyles[item.id];
           return (
@@ -132,7 +135,7 @@ export const CommunityActivitySection = ({
                 aria-pressed={selected === item.id}
                 onClick={() => toggle(item.id)}
                 className={cn(
-                  "grid min-h-14 w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded py-3 text-left text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
+                  "grid min-h-14 w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded py-3 text-left text-foreground focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
                   selected === item.id && "bg-surface-muted",
                 )}
               >

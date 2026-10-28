@@ -126,12 +126,19 @@ export function AnalyticsOverview({
                 )}
               >
                 <span className="flex min-w-0 items-center gap-2">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <span
+                    className={cn(
+                      "grid h-7 w-7 shrink-0 place-items-center rounded-full",
+                      active
+                        ? "bg-transparent text-primary-foreground"
+                        : "bg-primary-soft text-primary",
+                    )}
+                  >
                     <card.icon className="h-4 w-4" aria-hidden />
                   </span>
                   <span
                     className={cn(
-                      "min-w-0 break-words text-xs font-semibold leading-4",
+                      "min-w-0 break-words text-base font-semibold leading-5",
                       active ? "text-primary-foreground" : "text-muted",
                     )}
                   >

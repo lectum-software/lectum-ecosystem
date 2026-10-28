@@ -71,6 +71,8 @@ test("content legend sorts counts descending with percentages and stable categor
   assert.match(rows[1].text, /15.*\(25%\)/);
   assert.match(rows[4].text, /3.*\(5%\)/);
   assert.match(html, /divide-y divide-border/);
+  // Buttons inherit their font from the list through the global form-control reset.
+  assert.match(html, /<ul class="min-w-0 divide-y divide-border text-sm leading-5"/);
   for (const token of ["primary", "chart-sky", "chart-lilac", "chart-indigo", "chart-slate"]) {
     assert.ok(html.includes(`stroke="var(--lectum-${token})"`));
     assert.ok(html.includes(`background:var(--lectum-${token})`));
@@ -148,11 +150,12 @@ test("overview places wider compact counters with icons inside chart surface, pr
     "utf8",
   );
   assert.match(video, /text-xs font-semibold leading-4 text-muted/);
-  assert.match(overview, /min-w-0 break-words text-xs font-semibold leading-4/);
+  assert.match(overview, /min-w-0 break-words text-base font-semibold leading-5/);
   assert.match(overview, /rounded-2xl border p-3/);
+  assert.match(overview, /h-7 w-7 shrink-0 place-items-center rounded-full/);
   assert.match(
     overview,
-    /h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-soft text-primary/,
+    /active\s*\? "bg-transparent text-primary-foreground"\s*: "bg-primary-soft text-primary"/,
   );
   assert.match(overview, /<card.icon className="h-4 w-4"/);
   assert.match(overview, /text-\[28px\] font-bold/);

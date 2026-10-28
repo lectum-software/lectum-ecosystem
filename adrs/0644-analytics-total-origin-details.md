@@ -47,3 +47,13 @@ and have light/dark variants.
 The retention outer tinted panel, inner white panel, player/empty placeholder
 and dropoff notice reuse the enclosing card radius. This is local presentation
 consistency, without changing the shared video player or any metrics/controls.
+
+## TASK-284 typography and selected icon
+
+Content legend text inherits text-sm from the list, matching profile rows.
+Applying the size directly to buttons is ineffective because the unlayered
+global form-control reset uses font: inherit. Keep the correction local.
+Counter titles use text-base/leading-5 because they also name the chart.
+Preserve the icon slot dimensions, but remove its fill when selected and use
+primary foreground for the glyph. Inactive icons retain their soft circle.
+No changes to counters, sorting, percentages or any API contract.
