@@ -35,6 +35,7 @@ import {
 } from "./vertical-video-player-support";
 
 export const VerticalVideoPlayer = ({
+  bottomOverlay,
   className,
   controls = true,
   controlsVariant = "native",
@@ -585,6 +586,20 @@ export const VerticalVideoPlayer = ({
         Seu navegador não suporta a reprodução de vídeo.
       </video>
       {overlay}
+      {bottomOverlay ? (
+        <div
+          className="absolute inset-x-3 z-[3] mx-auto min-w-0 max-w-[420px] sm:inset-x-4"
+          data-lectum-video-bottom-overlay="true"
+          style={{
+            bottom:
+              usesPersistentControls && !persistentControlsHidden
+                ? "calc(var(--lectum-bottom-fixed-padding) + 4.5rem)"
+                : "max(12px, var(--lectum-bottom-fixed-padding))",
+          }}
+        >
+          {bottomOverlay}
+        </div>
+      ) : null}
       <VerticalVideoStreamStatus
         adaptivePlaybackFailed={adaptivePlaybackFailed}
         error={playback.error}
