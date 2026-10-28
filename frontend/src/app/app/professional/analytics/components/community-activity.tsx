@@ -58,7 +58,7 @@ export const CommunityActivitySection = ({
           <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
             Desempenho de conteúdo
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{periodLabel}</p>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">{periodLabel}</p>
         </div>
       </div>
 

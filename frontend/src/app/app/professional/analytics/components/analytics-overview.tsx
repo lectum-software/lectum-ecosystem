@@ -33,11 +33,13 @@ export function AnalyticsOverview({
 }) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(analyticsRequestedMetric(initialSelected));
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Cached period changes must reveal the selection even when loading stays false.
   useEffect(() => {
+    if (loading) return;
     const carousel = carouselRef.current;
     const active = carousel?.querySelector<HTMLElement>('[aria-pressed="true"]');
     if (!carousel || !active) return;
-    // Reveal the selected metric without moving the page away from its header.
+    // Reveal the selection after loading too, since changing periods can shift the carousel.
     carousel.scrollTo({
       left:
         carousel.scrollLeft +
@@ -45,7 +47,7 @@ export function AnalyticsOverview({
         carousel.getBoundingClientRect().left,
       behavior: "instant",
     });
-  }, []);
+  }, [loading, data?.period.key, data?.period.start_at, data?.period.end_at]);
   const ordered = [...cards].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   const current = ordered.find((card) => card.id === selected) ?? ordered[0];
   const restricted = locked && selected !== "acquired_patients";
@@ -120,7 +122,7 @@ export function AnalyticsOverview({
                   "relative flex min-h-[100px] h-full w-full flex-col items-start rounded-lg border p-3 text-left transition motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
                   active
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:border-primary/40",
+                    : "border-border bg-transparent text-foreground hover:border-primary/40",
                 )}
               >
                 <span

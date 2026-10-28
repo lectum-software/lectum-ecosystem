@@ -49,6 +49,8 @@ test("overview places wider compact counters with icons inside chart surface, pr
   assert.ok(overview.includes("<card.icon"));
   assert.doesNotMatch(overview, /CurrentIcon/);
   assert.match(overview, /bg-primary text-primary-foreground/);
+  assert.match(overview, /border-border bg-transparent text-foreground/);
+  assert.ok(overview.includes('card.id === "video_views" ? "Vídeo de apresentação" : card.label'));
   const comparison = readFileSync(
     new URL("../components/metric-comparison.tsx", import.meta.url),
     "utf8",
@@ -227,4 +229,34 @@ test("period menu offers only requested ranges and custom label keeps dates", as
   const range = { start_at: "2026-10-01", end_at: "2026-10-28" };
   assert.equal(analyticsPeriodLabel("custom", range), "Personalizado: 01/10/2026 a 28/10/2026");
   assert.equal(analyticsPeriodLabel("365d", range), "Últimos 12 meses");
+});
+
+test("origin tables use metric-specific columns without a redundant heading", async () => {
+  const { MetricDetails } = await import("../components/metric-details.tsx");
+  const timeline = {
+    granularity: "day",
+    series: [
+      { id: "search", label: "Minha Busca", points: [{ date: "2026-10-20", value: 8 }] },
+      { id: "profile", label: "Perfil", points: [{ date: "2026-10-20", value: 12 }] },
+      { id: "explore", label: "Explorar", points: [{ date: "2026-10-20", value: 1 }] },
+    ],
+  };
+  const before = JSON.stringify(timeline);
+  for (const [metric, column] of [
+    ["video_views", "Visualizações"],
+    ["profile_views", "Acessos"],
+    ["favorites_received", "Total"],
+  ]) {
+    const html = renderToStaticMarkup(createElement(MetricDetails, { timeline, metric }));
+    assert.doesNotMatch(html, /<h3/);
+    assert.match(html, new RegExp(`scope="col"[^>]*>${column}`));
+    assert.match(html, /scope="col"[^>]*>Origem/);
+    if (metric === "video_views") {
+      assert.ok(html.indexOf(">Explorar<") < html.indexOf(">Minha Busca<"));
+      assert.ok(html.indexOf(">Minha Busca<") < html.indexOf(">Perfil<"));
+    } else {
+      assert.ok(html.indexOf(">Perfil<") < html.indexOf(">Minha Busca<"));
+    }
+  }
+  assert.equal(JSON.stringify(timeline), before);
 });

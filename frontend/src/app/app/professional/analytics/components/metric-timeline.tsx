@@ -107,11 +107,16 @@ export function MetricTimeline({
             >
               <X className="h-4 w-4" aria-hidden />
             </button>
-            <p className="font-extrabold">
-              {timeline.granularity === "week" ? "Semana de " : ""}
-              {dayLabel(dates[index])}
-            </p>
-            <p className="mt-1 font-bold">Total: {pointTotals[index].toLocaleString("pt-BR")}</p>
+            <div
+              className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 font-extrabold"
+              data-testid="point-heading"
+            >
+              <p>
+                {timeline.granularity === "week" ? "Semana de " : ""}
+                {dayLabel(dates[index])}
+              </p>
+              <p>Total: {pointTotals[index].toLocaleString("pt-BR")}</p>
+            </div>
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
               {series.length > 1
                 ? series.map((s, i) => (

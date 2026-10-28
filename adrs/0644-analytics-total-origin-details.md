@@ -21,3 +21,12 @@ Legacy year/all values remain accepted by API but are not offered in this menu.
 ## Consequences
 No dependency, migration or env changes. Frontend-only rollback. Local screenshots
 for a read-only gallery come from a real isolated database fixture, removed after QA.
+
+## TASK-281 refinement
+Unselected counters are transparent on the shared white surface. Keep the short
+video counter label to preserve compact sizing. Video origins follow a stable
+Explorar / Minha Busca / Perfil order; other metric origins retain volume order.
+Remove repeated Origem headings but retain semantic table headers. Use metric-specific
+Visualizacoes and Acessos columns; preserve Total for favorites and Cliques for WhatsApp.
+Date and total share the tooltip heading, wrapping only when necessary.
+Lower section period labels have a 0.25rem gap. All changes are presentation-only.

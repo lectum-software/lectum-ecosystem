@@ -65,10 +65,22 @@ export function MetricDetails({
     defaultValues: { detail: "origin" },
   });
   const detail = form.watch("detail");
-  const series = timeline ? [...timelineSeries(timeline)].sort((a, b) => b.total - a.total) : [];
+  const videoOriginOrder: Record<string, number> = {
+    explore: 0,
+    search: 1,
+    profile: 2,
+    unknown: 3,
+  };
+  const series = timeline
+    ? [...timelineSeries(timeline)].sort((a, b) =>
+        metric === "video_views"
+          ? (videoOriginOrder[a.id] ?? 4) - (videoOriginOrder[b.id] ?? 4) || b.total - a.total
+          : b.total - a.total,
+      )
+    : [];
   return (
     <div className="mt-5 border-t border-border pt-4">
-      {metric === "whatsapp_clicks" ? (
+      {metric === "whatsapp_clicks" && (
         <SelectController
           field="select"
           name="detail"
@@ -84,8 +96,6 @@ export function MetricDetails({
             { label: "Pessoas", value: "people" },
           ]}
         />
-      ) : (
-        <h3 className="mb-3 text-base font-bold">Origem</h3>
       )}
       {metric === "whatsapp_clicks" && detail === "people" ? (
         <PeopleSummary metrics={metrics} />
@@ -96,8 +106,17 @@ export function MetricDetails({
               <th scope="col" className="pb-3 font-semibold">
                 Origem
               </th>
-              <th scope="col" className="w-16 pb-3 text-right font-semibold">
-                {metric === "whatsapp_clicks" ? "Cliques" : "Total"}
+              <th
+                scope="col"
+                className={`${metric === "video_views" ? "w-24" : "w-16"} pb-3 text-right font-semibold`}
+              >
+                {metric === "whatsapp_clicks"
+                  ? "Cliques"
+                  : metric === "video_views"
+                    ? "Visualizações"
+                    : metric === "profile_views"
+                      ? "Acessos"
+                      : "Total"}
               </th>
             </tr>
           </thead>
