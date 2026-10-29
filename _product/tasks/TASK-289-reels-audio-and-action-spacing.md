@@ -81,3 +81,23 @@ The compiled server responds with version 0.1.744. Its existing public-asset
 security policy rejects localhost API URLs in production mode; end-to-end local
 video checks therefore use the development server and isolated local database.
 No production security policy was relaxed to make the local smoke pass.
+
+## Follow-up after production 0.1.744
+
+The user reported a detached badge after a wrapping name. Replace the flex-column
+header with inline text: the final word, badge and Favorite remain adjacent while
+earlier words wrap. Preserve the full name, single profile link and favorite action.
+All four action SVG boxes measured 20px (18px below 359px); the share glyph receives
+a 10% optical reduction without changing its reserved box or touch target.
+
+- [x] Last name, badge and Favorite remain adjacent in mobile and desktop layouts.
+- [x] Upvote, comments and save retain equal dimensions; share receives optical correction.
+- [x] Real local-video verification at 320/390/430/1440px with three author names.
+- [x] Mobile action blocks use the directory visual spacing (28/30/32px by viewport), counting icon and label together; touch targets remain at least 44px.
+- [x] Final frontend check and isolated low-disk production build passed for 0.1.745.
+
+The layout suite passed all 17 tests, including whole-item gap measurements with
+counters and the WhatsApp disc. Local Chromium screenshots were checked at mobile
+390px and desktop 1440px; the live local-video smoke also passed at 320px and 430px.
+
+No new push or production deployment is authorized for this follow-up.

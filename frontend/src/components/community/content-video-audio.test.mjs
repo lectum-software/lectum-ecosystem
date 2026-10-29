@@ -45,6 +45,7 @@ const modules = {
     "exports.refreshContentVideoInteraction = async () => ({});",
   "./content-video-comments-sheet": "exports.ContentVideoCommentsSheet = () => null;",
   "./feed-favorite-button": "exports.FeedFavoriteButton = () => null;",
+  "./content-video-author": "exports.ContentVideoAuthor = () => null;",
   "@/components/psychologists/psychologist-whatsapp-redirect-button":
     "exports.PsychologistWhatsAppRedirectButton = () => null;",
   "@/components/ui/verified-badge": "exports.VerifiedBadgeIcon = () => null;",
