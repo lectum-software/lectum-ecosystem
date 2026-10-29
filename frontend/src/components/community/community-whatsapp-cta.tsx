@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import {
   getPsychologistWhatsappDisplayName,
@@ -65,7 +64,7 @@ export const CommunityWhatsAppCta = ({
       <PsychologistWhatsAppRedirectButton
         aria-label={`${actionLabel} pelo WhatsApp`}
         className={cn(
-          "flex min-h-[44px] w-full min-w-0 items-center justify-center gap-2 whitespace-normal rounded-lg border border-media-foreground/90 bg-transparent px-3 py-2.5 text-media-foreground shadow-none transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-foreground disabled:opacity-60",
+          "ml-auto flex min-h-[44px] w-fit min-w-0 max-w-full items-center justify-center rounded-full border-0 bg-transparent px-0 py-[5px] text-media-foreground shadow-none transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-foreground disabled:opacity-60",
           className,
         )}
         data-post-card-ignore-click="true"
@@ -74,12 +73,13 @@ export const CommunityWhatsAppCta = ({
         stopPropagation
         trackingContext={trackingContext}
       >
-        <PsychologistWhatsAppButtonContent
-          iconClassName="h-4 w-4 text-media-foreground"
-          label={actionLabel}
-          labelClassName="overflow-visible text-clip whitespace-normal break-words text-left text-[14px] font-semibold leading-5 text-media-foreground"
-        />
-        <ArrowRight className="h-4 w-4 shrink-0 text-media-foreground" aria-hidden />
+        <span className="flex min-h-[34px] min-w-0 max-w-full items-center justify-center gap-[7px] rounded-full bg-whatsapp-contact px-4 py-[7px] shadow-sm">
+          <PsychologistWhatsAppButtonContent
+            iconClassName="h-[17px] w-[17px] text-media-foreground"
+            label={actionLabel}
+            labelClassName="text-left text-[13px] font-semibold leading-5 text-media-foreground"
+          />
+        </span>
       </PsychologistWhatsAppRedirectButton>
     );
   }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import "./vertical-video-player-muted-overlay-control.test.mjs";
 import {
   shouldHidePersistentVideoControls,
   shouldUseInlineContentVideoExpansion,
@@ -56,7 +57,9 @@ test("contact overlay is inside the expanded player and independent of hidden co
   assert.match(component, /inset-x-3 bottom-3/);
   assert.match(component, /sm:inset-x-4 sm:bottom-4/);
   assert.match(component, /--lectum-video-safe-bottom/);
-  assert.doesNotMatch(component, /opacity-0|pointer-events-none|aria-hidden/);
+  assert.match(component, /pointer-events-none/);
+  assert.match(component, /\[&>\*\]:pointer-events-auto/);
+  assert.doesNotMatch(component, /opacity-0|aria-hidden/);
 });
 
 test("feed imersivo de psicologos opta por controles sempre visiveis", () => {

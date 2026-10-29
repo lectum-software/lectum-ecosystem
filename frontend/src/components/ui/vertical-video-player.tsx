@@ -91,6 +91,7 @@ export const VerticalVideoPlayer = ({
   const effectiveSource = playback.source;
   const usesMinimalControls = controls && controlsVariant === "minimal";
   const usesPersistentControls = controls && controlsVariant === "persistent";
+  const usesMutedOverlayControl = mutedControlVisibility === "when-hidden";
   const usesMediaPersistentControls =
     usesPersistentControls && persistentControlsLayout === "media";
   const usesInlineContentExpansion = shouldUseInlineContentVideoExpansion({
@@ -167,7 +168,7 @@ export const VerticalVideoPlayer = ({
   }, [usesMinimalControls, usesPersistentControls, videoElementVersion]);
 
   useEffect(() => {
-    if (!usesMinimalControls && !usesPersistentControls) return;
+    if (!usesMinimalControls && !usesPersistentControls && !usesMutedOverlayControl) return;
     // Reexecuta quando o ref recebe outro elemento ao alternar o portal expandido.
     void videoElementVersion;
 
@@ -207,7 +208,7 @@ export const VerticalVideoPlayer = ({
       video.removeEventListener("timeupdate", syncPlayerState);
       video.removeEventListener("volumechange", syncPlayerState);
     };
-  }, [usesMinimalControls, usesPersistentControls, videoElementVersion]);
+  }, [usesMinimalControls, usesPersistentControls, usesMutedOverlayControl, videoElementVersion]);
 
   const {
     controlsFocusProps,
@@ -676,9 +677,8 @@ export const VerticalVideoPlayer = ({
           title={title}
         />
       ) : null}
-      {usesPersistentControls &&
-      persistentControlsHidden &&
-      mutedControlVisibility === "when-hidden" &&
+      {usesMutedOverlayControl &&
+      (!controls || (usesPersistentControls && persistentControlsHidden)) &&
       isMuted ? (
         <VerticalVideoPlayerMutedOverlayControl
           onClick={handlePersistentMuteToggle}

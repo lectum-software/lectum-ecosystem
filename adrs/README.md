@@ -712,3 +712,4 @@ Formato recomendado:
 
 - [ADR-0648 — Backend Node 24 com validação da imagem final](0648-backend-node24-runtime.md)
 - [ADR-0650 — Content video reels](0650-content-video-reels.md)
+- [ADR-0651 — Compact video contact and inline mute](0651-video-contact-and-inline-mute.md)
