@@ -710,6 +710,7 @@ ou cortesia manual.
 | 283 | [TASK-283 - Content legend and retention radius](TASK-283-content-legend-and-retention-radius.md) | Done | 282 |
 | 284 | [TASK-284 - Analytics typography and selected icon](TASK-284-analytics-typography-and-selected-icon.md) | Done | 283 |
 | 285 | [TASK-285 - Content video reels and pending refinements](TASK-285-content-video-reels.md) | In progress | 284 |
+| 286 | [TASK-286 - Compact video contact and inline mute](TASK-286-video-contact-and-mute.md) | In progress | 285 |
 
 ## Ordem operacional recomendada sem bloqueios
 

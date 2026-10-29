@@ -39,6 +39,7 @@
   --lectum-top-mentor-gold: #9c7924;
   --lectum-top-mentor-bronze: #a8703a;
   --lectum-whatsapp: #25d366;
+  --lectum-whatsapp-contact: #15803d;
   --lectum-instagram-yellow: #fdf497;
   --lectum-instagram-orange: #fd5949;
   --lectum-instagram-magenta: #d6249f;
@@ -292,6 +293,7 @@ span:empty + [data-original-post-community] {
   --color-top-mentor-gold: var(--lectum-top-mentor-gold);
   --color-top-mentor-bronze: var(--lectum-top-mentor-bronze);
   --color-whatsapp: var(--lectum-whatsapp);
+  --color-whatsapp-contact: var(--lectum-whatsapp-contact);
   --shadow-lectum: var(--lectum-shadow);
   --shadow-lectum-soft: var(--lectum-shadow-soft);
   --shadow-lectum-tab: var(--lectum-shadow-tab);
