@@ -55,7 +55,7 @@ export type PostShareBody = {
 };
 
 export type PostVoteBody = {
-  value: 1 | -1;
+  value: 1;
   replyId?: string;
 };
 
@@ -341,6 +341,7 @@ export type PostMutationResult<T> =
   | { kind: "invalid_content" }
   | { kind: "media_not_allowed" }
   | { kind: "invalid_target" }
+  | { kind: "invalid_vote_value" }
   | { kind: "forbidden" }
   | { kind: "professional_replies_block" };
 

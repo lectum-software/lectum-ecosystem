@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
+import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { cn } from "@/lib/utils";
 import { playVideoWithSound } from "@/lib/video-playback";
 import {
@@ -130,6 +131,8 @@ export const LectumShareDownloadDialog = ({
   preparing = false,
   target,
 }: LectumShareDownloadDialogProps) => {
+  const overlayRef = useRef<HTMLElement>(null);
+  const portalHost = useModalPortalHost(Boolean(target), overlayRef);
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isPreviewMuted, setIsPreviewMuted] = useState(false);
 
@@ -165,7 +168,8 @@ export const LectumShareDownloadDialog = ({
     pauseBackgroundMedia();
 
     const previewVideo =
-      previewVideoRef.current ?? document.querySelector<HTMLVideoElement>(PREVIEW_VIDEO_SELECTOR);
+      previewVideoRef.current ??
+      (portalHost ?? document).querySelector<HTMLVideoElement>(PREVIEW_VIDEO_SELECTOR);
     if (!previewVideo) return;
 
     const playPreviewVideo = () => {
@@ -187,14 +191,16 @@ export const LectumShareDownloadDialog = ({
       previewVideo.removeEventListener("canplay", playPreviewVideo);
       previewVideo.pause();
     };
-  }, [open, target]);
+  }, [open, portalHost, target]);
 
   useEffect(() => {
-    if (!open || disabled || typeof window === "undefined") return;
+    if (!open || typeof window === "undefined") return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!disabled) onClose();
       }
     };
 
@@ -274,6 +280,8 @@ export const LectumShareDownloadDialog = ({
         data-lectum-share-download-sheet-state={open ? "open" : "closed"}
         data-post-card-ignore-click="true"
         role="dialog"
+        ref={overlayRef}
+        tabIndex={-1}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 pt-1">
@@ -431,6 +439,6 @@ export const LectumShareDownloadDialog = ({
         }
       `}</style>
     </div>,
-    document.body,
+    portalHost ?? document.body,
   );
 };

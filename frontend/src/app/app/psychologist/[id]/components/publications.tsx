@@ -10,6 +10,7 @@ import type {
 } from "@/api/generator/types/directory";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { ContentVideoScope } from "@/components/community/content-video-host";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HorizontalScrollControls } from "@/components/ui/horizontal-scroll-controls";
@@ -209,13 +210,22 @@ export const PostsPreviewSection = ({
       {isLoading ? <LoadingState label="Carregando publicações" /> : null}
 
       {!isLoading && !isError && featuredPost ? (
-        <div className="mt-3">
-          <ProfileCommunityPostCard
-            canInteract={canInteract}
-            onShare={onShare}
-            post={featuredPost}
-          />
-        </div>
+        <ContentVideoScope
+          mode="profile"
+          entries={[featuredPost, ...posts.filter((post) => post !== featuredPost)].map((post) => ({
+            postId: post.id,
+            replyId:
+              post.contribution_type === "reply" ? post.highlighted_professional_reply?.id : null,
+          }))}
+        >
+          <div className="mt-3">
+            <ProfileCommunityPostCard
+              canInteract={canInteract}
+              onShare={onShare}
+              post={featuredPost}
+            />
+          </div>
+        </ContentVideoScope>
       ) : null}
 
       {!isLoading && !isError && !featuredPost ? (
@@ -279,17 +289,28 @@ export const PostsTab = ({
       ) : null}
 
       {!isLoading && !isError && posts.length > 0 ? (
-        <div className="grid gap-3.5">
-          {posts.map((post) => (
-            <ProfileCommunityPostCard
-              canInteract={canInteract}
-              readOnly={readOnly}
-              key={`${post.contribution_type}-${post.id}-${post.highlighted_professional_reply?.id ?? "post"}`}
-              onShare={onShare}
-              post={post}
-            />
-          ))}
-        </div>
+        <ContentVideoScope
+          mode="profile"
+          entries={posts.map((post) => ({
+            postId: post.id,
+            replyId:
+              post.contribution_type === "reply" ? post.highlighted_professional_reply?.id : null,
+          }))}
+          hasNextPage={hasNextPage}
+          onLoadMore={onLoadMore}
+        >
+          <div className="grid gap-3.5">
+            {posts.map((post) => (
+              <ProfileCommunityPostCard
+                canInteract={canInteract}
+                readOnly={readOnly}
+                key={`${post.contribution_type}-${post.id}-${post.highlighted_professional_reply?.id ?? "post"}`}
+                onShare={onShare}
+                post={post}
+              />
+            ))}
+          </div>
+        </ContentVideoScope>
       ) : null}
 
       {isFetching && !isFetchingNextPage && !isLoading ? (

@@ -44,12 +44,21 @@ import { PostProfessionalReplies, replySurfaceClass } from "./community-post-car
 import {
   type CommunityPostCardProps,
   createPostCardNavigation,
+  type PostCardSaveSnapshot,
+  type PostCardVoteSnapshot,
   type PostWithOptionalSortMetrics,
   type ProfileContributionPost,
   postDetailHref,
   publicationInteractionData,
 } from "./community-post-card-support";
-export const CommunityPostCard = ({
+import { ContentVideoPost } from "./content-video-context";
+export const CommunityPostCard = (props: CommunityPostCardProps) => (
+  <ContentVideoPost postId={props.post.id} hideInlineContact={props.profilePublicationMode}>
+    <CommunityPostCardContent {...props} />
+  </ContentVideoPost>
+);
+
+const CommunityPostCardContent = ({
   actionBarBeforeSaveSlot,
   actionBarShowUpvoteText = true,
   actionBarVoteLabel = "Marcar como útil",
@@ -178,17 +187,8 @@ export const CommunityPostCard = ({
   const interactionData = publicationInteractionData(post, primaryReply);
   const conversion = useProgressiveConversion();
   const [contentExpanded, setContentExpanded] = useState(false);
-  const [voteOverride, setVoteOverride] = useState<{
-    currentVote: 1 | -1 | null;
-    downvotes: number;
-    postId: string;
-    upvotes: number;
-  } | null>(null);
-  const [saveOverride, setSaveOverride] = useState<{
-    postId: string;
-    saved: boolean;
-    saves: number;
-  } | null>(null);
+  const [voteOverride, setVoteOverride] = useState<PostCardVoteSnapshot | null>(null);
+  const [saveOverride, setSaveOverride] = useState<PostCardSaveSnapshot | null>(null);
   const voteSnapshot =
     voteOverride?.postId === interactionId
       ? voteOverride

@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2, Send } from "lucide-react";
 import {
   type ChangeEvent,
   type CSSProperties,
@@ -33,7 +32,6 @@ import {
 import { usePwaBottomRecovery } from "@/hooks/use-pwa-bottom-recovery";
 import { useVideoSourcePreparation } from "@/hooks/use-video-source-preparation";
 import { cn } from "@/lib/utils";
-import { Button } from "@/registry/new-york-v4/ui/button";
 import {
   getCommunityMediaSelectionSizeError,
   resolveMediaUploadError,
@@ -49,6 +47,7 @@ import {
 } from "../modules/reply-support";
 import { type ReplyComposerForm, useReplyComposerForm } from "../use-form";
 import { findReplyComposerInput } from "./reply-composer-dom";
+import { ReplyComposerSubmitButton } from "./reply-composer-submit-button";
 import { useReplyComposerKeyboardOffset } from "./use-reply-composer-keyboard-offset";
 
 export const ReplyComposer = ({
@@ -80,7 +79,7 @@ export const ReplyComposer = ({
   ) => Promise<void> | void;
   replyToName?: string | null;
   replyTarget: ReplyTarget;
-  variant?: "inline" | "main";
+  variant?: "inline" | "main" | "embedded";
 }) => {
   const form = useReplyComposerForm();
   const { formProps, hook } = form;
@@ -123,10 +122,11 @@ export const ReplyComposer = ({
   const ready = hasDraft || Boolean(selectedMedia);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
+  const isEmbedded = variant === "embedded";
   const keyboardOffset = useReplyComposerKeyboardOffset({
     composerActive,
     composerRef: composerFormNodeRef,
-    isInline,
+    isInline: isInline || isEmbedded,
   });
   const shouldShowMediaTriggerInField =
     !selectedMedia && (mediaPickerActive || mediaPermission.showControl);
@@ -134,7 +134,7 @@ export const ReplyComposer = ({
   const shouldUseKeyboardSafeArea = composerActive && keyboardOffset > 0;
   usePwaBottomRecovery(
     composerFormNodeRef,
-    !isInline && !shouldUseKeyboardSafeArea && !draggingToCancel && dragOffset === 0,
+    !isInline && !isEmbedded && !shouldUseKeyboardSafeArea && !draggingToCancel && dragOffset === 0,
   );
   const autoFocusTargetId = replyTarget?.id ?? "main";
   const replyContextLabel = replyTarget?.name
@@ -346,7 +346,7 @@ export const ReplyComposer = ({
   }, [endMediaPickerInteraction, mediaPickerActive]);
 
   useEffect(() => {
-    if (!composerActive || isInline || typeof window === "undefined") return;
+    if (!composerActive || isInline || isEmbedded || typeof window === "undefined") return;
     if (!window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches) return;
 
     const markUserScrollIntent = () => {
@@ -382,7 +382,7 @@ export const ReplyComposer = ({
       window.removeEventListener("touchmove", markUserScrollIntent);
       window.removeEventListener("wheel", handleWheel);
     };
-  }, [composerActive, dismissComposerKeyboard, isInline]);
+  }, [composerActive, dismissComposerKeyboard, isEmbedded, isInline]);
 
   const handleMediaChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -548,12 +548,14 @@ export const ReplyComposer = ({
           draggingToCancel ? "transition-none" : "transition-transform duration-200 ease-out",
           isInline
             ? "mt-3 rounded-[20px] border shadow-none"
-            : cn(
-                "fixed inset-x-0 bottom-0 z-[60] rounded-t-[24px] border-t bg-surface shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
-                shouldUseKeyboardSafeArea
-                  ? "pb-[var(--lectum-bottom-nav-padding)]"
-                  : "pb-[var(--lectum-bottom-fixed-padding)]",
-              ),
+            : isEmbedded
+              ? "relative shrink-0 rounded-t-[24px] border-t pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+              : cn(
+                  "fixed inset-x-0 bottom-0 z-[60] rounded-t-[24px] border-t bg-surface shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
+                  shouldUseKeyboardSafeArea
+                    ? "pb-[var(--lectum-bottom-nav-padding)]"
+                    : "pb-[var(--lectum-bottom-fixed-padding)]",
+                ),
         )}
         onBlur={(event) => {
           const nextTarget = event.relatedTarget;
@@ -581,7 +583,7 @@ export const ReplyComposer = ({
         onPointerMove={handleCancelPointerMove}
         onPointerUp={handleCancelPointerEnd}
         onTouchStartCapture={markComposerInternalPointer}
-        data-fixed-bottom-recovery={isInline ? undefined : true}
+        data-fixed-bottom-recovery={isInline || isEmbedded ? undefined : true}
         ref={assignComposerFormRef}
         style={composerStyle}
       >
@@ -636,25 +638,17 @@ export const ReplyComposer = ({
               />
             ) : null}
           </div>
-          <Button
-            aria-label="Enviar resposta"
-            className="h-11 w-11 shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-lectum-soft hover:bg-primary-hover disabled:bg-surface-muted disabled:text-subtle disabled:opacity-100 disabled:shadow-none"
+          <ReplyComposerSubmitButton
             disabled={
-              disabled ||
+              Boolean(disabled) ||
               hook.formState.isSubmitting ||
               isPreparingVideo ||
               !ready ||
               needsReadableFile
             }
             onClick={submitComposer}
-            type="button"
-          >
-            {disabled && ready ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Send className="h-4 w-4" aria-hidden="true" />
-            )}
-          </Button>
+            loading={Boolean(disabled && ready)}
+          />
         </div>
 
         <p className={cn("text-[11px] font-medium leading-4 text-subtle", "pr-[3.25rem]")}>

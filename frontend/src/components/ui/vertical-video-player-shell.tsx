@@ -3,6 +3,7 @@
 import type { CSSProperties, FocusEventHandler, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { useExpandedVideoViewport } from "./vertical-video-player-content-expansion";
 
 type VerticalVideoPlayerShellProps = {
   children: ReactNode;
@@ -24,21 +25,35 @@ export const VerticalVideoPlayerShell = ({
   onFocusCapture,
   style,
 }: VerticalVideoPlayerShellProps) => {
+  const viewport = useExpandedVideoViewport(isContentExpanded);
   const rootClassName = cn(
     baseRootClassName,
     className,
     isContentExpanded &&
       "fixed inset-0 isolate z-[1100] h-[100dvh] min-h-[100dvh] w-screen max-w-none rounded-none border-0 bg-media-background shadow-none",
   );
-  const rootStyle: CSSProperties | undefined = isContentExpanded
-    ? {
+  const rootStyle = isContentExpanded
+    ? ({
         ...(style ?? {}),
         aspectRatio: "auto",
-        height: "100dvh",
-        maxHeight: "100dvh",
+        backgroundColor: "var(--lectum-media-background)",
+        top: viewport?.top ?? 0,
+        left: viewport?.left ?? 0,
+        right: "auto",
+        bottom: "auto",
+        height: viewport?.height ?? "100dvh",
+        maxHeight: viewport?.height ?? "100dvh",
+        minHeight: 0,
+        minWidth: 0,
         maxWidth: "none",
-        width: "100vw",
-      }
+        width: viewport?.width ?? "100vw",
+        // Expanded controls belong to this viewport, not the app navigation below it.
+        "--lectum-bottom-fixed-padding":
+          "max(1rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))",
+        "--lectum-video-safe-bottom": "env(safe-area-inset-bottom, 0px)",
+        "--lectum-video-safe-left": "env(safe-area-inset-left, 0px)",
+        "--lectum-video-safe-right": "env(safe-area-inset-right, 0px)",
+      } satisfies CSSProperties & Record<`--${string}`, string>)
     : style;
   const playerRoot = (
     <div

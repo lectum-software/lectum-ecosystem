@@ -17,7 +17,7 @@ export const MAX_TOP_MENTORS_LIMIT = 10;
 
 export const TOP_MENTOR_UPVOTE_WEIGHT = 4;
 
-export const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
+export const TOP_MENTOR_DOWNVOTE_WEIGHT = 0;
 
 export const TOP_MENTOR_COMMENT_WEIGHT = 3;
 
@@ -38,8 +38,6 @@ export const TOP_MENTOR_VIDEO_REPLY_WEIGHT = 4;
 export const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 
 export const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
-
-export const COMMUNITY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 
 export const COMMUNITY_OPPORTUNITIES_WINDOW_DAYS = 90;
 
@@ -364,16 +362,12 @@ export const communityPostMetrics = (
 ) => metricsByPostId.get(postId) ?? emptyCommunityPostSortMetrics();
 
 export const communityVoteRankingScore = ({
-  downvotes_count,
   upvotes_count,
-}: Pick<PostResult, "downvotes_count" | "upvotes_count">) =>
-  upvotes_count - downvotes_count * COMMUNITY_DOWNVOTE_RANKING_WEIGHT;
+}: Pick<PostResult, "downvotes_count" | "upvotes_count">) => upvotes_count;
 
 export const professionalReplyVoteRankingScore = ({
-  downvotes_count,
   upvotes_count,
-}: Pick<ProfessionalReplyResult, "downvotes_count" | "upvotes_count">) =>
-  upvotes_count - downvotes_count * COMMUNITY_DOWNVOTE_RANKING_WEIGHT;
+}: Pick<ProfessionalReplyResult, "downvotes_count" | "upvotes_count">) => upvotes_count;
 
 export const communityPostFeaturedScore = (
   post: PostResult,

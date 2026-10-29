@@ -240,9 +240,6 @@ export const compareRanking = (
   const postDiff = right.metrics.posts_published - left.metrics.posts_published;
   if (postDiff !== 0) return postDiff;
 
-  const downvoteDiff = left.metrics.downvotes_received - right.metrics.downvotes_received;
-  if (downvoteDiff !== 0) return downvoteDiff;
-
   const removedPostDiff = left.metrics.removed_posts - right.metrics.removed_posts;
   if (removedPostDiff !== 0) return removedPostDiff;
 

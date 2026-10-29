@@ -76,6 +76,9 @@ export type {
 } from "./patient-relations";
 export type {
   CreatePostReplyPayload,
+  PostContentVideo,
+  PostContentVideosQuery,
+  PostContentVideosResponse,
   PostDeleteResponse,
   PostDetail,
   PostDetailResponse,

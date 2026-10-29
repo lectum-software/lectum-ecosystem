@@ -101,7 +101,10 @@ export function AnalyticsOverview({
           const active = selected === card.id;
           const showComparison = !loading && !locked && comparisonForMetric(data, card.id);
           return (
-            <div key={card.id} className="relative w-[78%] shrink-0 snap-start md:w-[36%]">
+            <div
+              key={card.id}
+              className="relative w-[72%] min-w-max shrink-0 snap-start md:w-[36%]"
+            >
               <button
                 type="button"
                 aria-pressed={active}
@@ -139,6 +142,7 @@ export function AnalyticsOverview({
                   <span
                     className={cn(
                       "min-w-0 break-words text-base font-semibold leading-5",
+                      card.id === "video_views" && "whitespace-nowrap",
                       active ? "text-primary-foreground" : "text-muted",
                     )}
                   >

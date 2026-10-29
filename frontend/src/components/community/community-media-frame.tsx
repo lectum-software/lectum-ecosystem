@@ -9,6 +9,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
+import { useContentVideoLauncher, useContentVideoPost } from "./content-video-context";
 
 export type CommunityMediaFrameVariant = "post" | "detail" | "reply";
 export type CommunityMediaOrientation = "landscape" | "portrait" | "square";
@@ -280,6 +282,14 @@ export const CommunityMediaBlock = ({
   videoOverlay,
   viewportClassName,
 }: CommunityMediaBlockProps) => {
+  const videoPost = useContentVideoPost();
+  const launchVideo = useContentVideoLauncher();
+  const inlineVideoRef = useRef<HTMLVideoElement | null>(null);
+  const reelsPostId =
+    videoPost?.postId ?? (analyticsTarget?.targetType === "post" ? analyticsTarget.targetId : null);
+  const canOpenReels = Boolean(
+    launchVideo && reelsPostId && analyticsTarget && !videoPost?.disabled,
+  );
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
   const isStreamVideo = normalizedMediaType === "video" && isVideoAssetReference(mediaUrl);
@@ -306,6 +316,7 @@ export const CommunityMediaBlock = ({
   } = useCommunityVideoAutoplay(communityAutoplayEnabled);
   const handleVideoReady = useCallback(
     (video: HTMLVideoElement | null) => {
+      inlineVideoRef.current = video;
       handleVideoElementReady(video);
       handleCommunityVideoElementReady(video);
     },
@@ -391,7 +402,8 @@ export const CommunityMediaBlock = ({
     footer.type === CommunityWhatsAppCta
       ? cloneElement(footer, { overVideo: true })
       : null;
-  const hasFooter = Boolean(footer) && !videoContact;
+  const visibleVideoContact = videoPost?.hideInlineContact ? null : videoContact;
+  const hasFooter = Boolean(footer) && !videoContact && !videoPost?.hideInlineContact;
   const frameClassName = cn(
     getCommunityMediaFrameClassName(variant, orientation, className),
     hasFooter && "gap-0",
@@ -419,7 +431,7 @@ export const CommunityMediaBlock = ({
       <div className={frameClassName}>
         <div className="relative w-full">
           <VerticalVideoPlayer
-            bottomOverlay={videoContact}
+            bottomOverlay={visibleVideoContact}
             className={cn(
               "w-full border-border shadow-none",
               videoMediaFrameAspectClassName[orientation],
@@ -427,6 +439,7 @@ export const CommunityMediaBlock = ({
               viewportClassName,
               videoClassName,
             )}
+            controls={!canOpenReels}
             controlsVariant="persistent"
             fit="contain"
             fullscreenVariant="content"
@@ -435,6 +448,23 @@ export const CommunityMediaBlock = ({
               communityAutoplayEnabled ? handleCommunitySoundEnabledChange : undefined
             }
             onVideoElementReady={handleVideoReady}
+            onContentClick={
+              canOpenReels
+                ? () => {
+                    if (!reelsPostId || !analyticsTarget) return;
+                    launchVideo?.({
+                      initial: {
+                        postId: reelsPostId,
+                        mediaUrl,
+                        replyId:
+                          analyticsTarget.targetType === "reply" ? analyticsTarget.targetId : null,
+                      },
+                      initialTime: inlineVideoRef.current?.currentTime ?? 0,
+                    });
+                    inlineVideoRef.current?.pause();
+                  }
+                : undefined
+            }
             overlay={videoOverlay}
             persistentControlsLayout="media"
             poster={resolvedPosterUrl}

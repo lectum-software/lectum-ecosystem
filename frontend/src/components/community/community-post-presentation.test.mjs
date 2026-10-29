@@ -187,7 +187,7 @@ test("post surfaces preserve community navigation without follow actions", () =>
   }
 });
 
-test("vote cluster has no independent fill and keeps selection feedback", () => {
+test("upvote cluster has no independent fill and only highlights a positive selection", () => {
   for (const size of ["xs", "sm", "md"]) {
     for (const currentVote of [null, 1, -1]) {
       const html = renderToStaticMarkup(
@@ -195,8 +195,17 @@ test("vote cluster has no independent fill and keeps selection feedback", () => 
       );
       assert.match(html, /border-border bg-transparent p-px dark:border-border/);
       assert.doesNotMatch(html, /dark:bg-surface/);
-      if (currentVote === 1) assert.match(html, /bg-success\/10/);
-      if (currentVote === -1) assert.match(html, /bg-danger\/10/);
+      assert.doesNotMatch(html, /bg-danger\/10|Dar downvote|lucide-arrow-down/);
+      assert.equal((html.match(/<button\b/g) ?? []).length, 1);
+      assert.match(html, /lucide-arrow-up/);
+      assert.match(html, />Útil</);
+      if (currentVote === 1) {
+        assert.match(html, /bg-success\/10/);
+        assert.match(html, /aria-pressed="true"/);
+      } else {
+        assert.doesNotMatch(html, /bg-success\/10/);
+        assert.match(html, /aria-pressed="false"/);
+      }
     }
   }
 });

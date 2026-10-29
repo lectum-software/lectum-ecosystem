@@ -11,6 +11,7 @@ import type { DisplayMode, ImportantActionTrackingRequest } from "@/api/req/anal
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCurrentInteractionPath, interactionAnalyticsPath } from "@/utils/analytics-path";
@@ -209,6 +210,7 @@ export const PsychologistWhatsAppRedirectModal = ({
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  const portalHost = useModalPortalHost(isOpen, dialogRef);
   const avatarSrc = useMemo(
     () => resolvePublicMediaUrl(psychologist.avatar ?? null),
     [psychologist.avatar],
@@ -216,6 +218,7 @@ export const PsychologistWhatsAppRedirectModal = ({
 
   useEffect(() => {
     if (!isOpen || typeof document === "undefined") return;
+    if (portalHost && !portalHost.contains(dialogRef.current)) return;
 
     const previousBodyOverflow = document.body.style.overflow;
     const previousDocumentOverflow = document.documentElement.style.overflow;
@@ -228,7 +231,7 @@ export const PsychologistWhatsAppRedirectModal = ({
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousDocumentOverflow;
     };
-  }, [isOpen]);
+  }, [isOpen, portalHost]);
 
   if (!isOpen) return null;
 
@@ -242,7 +245,13 @@ export const PsychologistWhatsAppRedirectModal = ({
       className="fixed inset-0 z-[9999] flex min-h-dvh items-center justify-center bg-foreground/45 px-4 py-6 text-foreground backdrop-blur-md dark:bg-background/75 sm:px-6"
       data-psychologists-scroll-lock="true"
       onClick={(event) => event.stopPropagation()}
-      onKeyDown={(event) => event.stopPropagation()}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+        if (event.key === "Escape") {
+          event.preventDefault();
+          if (manualFallbackVisible) onClose();
+        }
+      }}
       onPointerDown={(event) => event.stopPropagation()}
       onTouchMove={(event) => event.stopPropagation()}
       onWheel={(event) => event.stopPropagation()}
@@ -316,7 +325,7 @@ export const PsychologistWhatsAppRedirectModal = ({
         ) : null}
       </div>
     </div>,
-    document.body,
+    portalHost ?? document.body,
   );
 };
 

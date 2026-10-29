@@ -539,8 +539,7 @@ export const topMentorScore = (metrics: TopMentorMutableMetrics) => {
     metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
     metrics.video_replies_published * TOP_MENTOR_VIDEO_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
-  const penaltyPoints =
-    metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
+  const penaltyPoints = metrics.removed_posts_penalty;
 
   return positivePoints - penaltyPoints;
 };
@@ -548,7 +547,6 @@ export const topMentorScore = (metrics: TopMentorMutableMetrics) => {
 export const hasTopMentorRankingSignal = (metrics: TopMentorMutableMetrics) => {
   return (
     metrics.upvotes_received > 0 ||
-    metrics.downvotes_received > 0 ||
     metrics.comments_received > 0 ||
     metrics.shares_received > 0 ||
     metrics.saves_received > 0 ||
@@ -576,12 +574,13 @@ export const topMentorsFormula = () => ({
   active_day_weight: TOP_MENTOR_ACTIVE_DAY_WEIGHT,
   removed_post_penalty_step: TOP_MENTOR_REMOVED_POST_PENALTY_STEP,
   description:
-    "score = (cobertura de respostas × 10) + (respostas publicadas × 3) + (vídeo-respostas × 4) + (upvotes × 4) - (downvotes × 3) + (comentários recebidos × 3) + (compartilhamentos × 3) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 3) + (posts publicados × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
+    "score = (cobertura de respostas × 10) + (respostas publicadas × 3) + (vídeo-respostas × 4) + (upvotes × 4) + (comentários recebidos × 3) + (compartilhamentos × 3) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 3) + (posts publicados × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
   notes: [
     "Cobertura de respostas conta no máximo 1 ponto de cobertura por post de paciente respondido pelo psicólogo no período.",
     "Respostas publicadas também pontuam para reconhecer contribuições adicionais no mesmo post.",
     "Vídeo-respostas recebem bônus por exigirem maior esforço e serem diferencial da experiência profissional.",
-    "Upvotes, downvotes, salvamentos e compartilhamentos feitos pelo próprio psicólogo no próprio conteúdo não entram no score.",
+    "Upvotes, salvamentos e compartilhamentos feitos pelo próprio psicólogo no próprio conteúdo não entram no score.",
+    "Downvotes históricos não afetam o score nem os desempates.",
     "Compartilhamentos consideram posts e respostas compartilhados; cliques no WhatsApp só entram quando a comunidade de origem pode ser identificada e funcionam como bônus, não como base do ranking.",
   ],
 });

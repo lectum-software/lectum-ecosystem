@@ -159,7 +159,14 @@ test("overview places wider compact counters with icons inside chart surface, pr
   );
   assert.match(overview, /<card.icon className="h-4 w-4"/);
   assert.match(overview, /text-\[28px\] font-bold/);
-  assert.ok(overview.includes("w-[78%]"));
+  assert.ok(overview.includes("w-[72%] min-w-max"));
+  assert.ok(video.includes("auto-cols-[72%]"));
+  assert.ok(overview.includes('card.id === "video_views" && "whitespace-nowrap"'));
+  const period = readFileSync(
+    new URL("../components/period-and-metrics.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(period, /inputClassName="[^"]*text-muted/);
   assert.ok(overview.includes("md:w-[36%]"));
   assert.ok(overview.includes("min-h-[100px]"));
   assert.ok(overview.includes("<card.icon"));

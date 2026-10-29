@@ -20,7 +20,6 @@ import {
   type MentorBadgeByCommunityId,
   mentorBadgeForScore,
   PROFILE_PUBLICATION_COMMENT_WEIGHT,
-  PROFILE_PUBLICATION_DOWNVOTE_WEIGHT,
   PROFILE_PUBLICATION_PSYCHOLOGIST_REPLY_WEIGHT,
   PROFILE_PUBLICATION_SAVE_WEIGHT,
   PROFILE_PUBLICATION_SHARE_WEIGHT,
@@ -286,7 +285,6 @@ export const toPostResponse = (
 
 export const profilePublicationScore = ({
   comments,
-  downvotes = 0,
   psychologistReplies = 0,
   saves,
   shares = 0,
@@ -306,8 +304,7 @@ export const profilePublicationScore = ({
   psychologistReplies * PROFILE_PUBLICATION_PSYCHOLOGIST_REPLY_WEIGHT +
   topMentorReplies * PROFILE_PUBLICATION_TOP_MENTOR_REPLY_WEIGHT +
   shares * PROFILE_PUBLICATION_SHARE_WEIGHT +
-  saves * PROFILE_PUBLICATION_SAVE_WEIGHT -
-  downvotes * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT;
+  saves * PROFILE_PUBLICATION_SAVE_WEIGHT;
 
 export const postEngagementScore = (post: ProfilePostResult) => {
   const verifiedProfessionalReplies = post.replies.filter((reply) =>

@@ -24,6 +24,7 @@ import {
   isCommunityFeedExhausted,
 } from "@/components/community/community-recommendations";
 import { CommunityRecommendationsCarousel } from "@/components/community/community-recommendations-carousel";
+import { ContentVideoScope } from "@/components/community/content-video-host";
 import { useCommunityRecommendations } from "@/components/community/use-community-recommendations";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -445,18 +446,25 @@ export const CommunityDetailLogic = ({
             ) : null}
 
             {!isInitialPostsLoading && posts.length > 0 ? (
-              <div className="grid gap-4">
-                {posts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    onShare={sharePost}
-                    post={post}
-                    replyTipTarget={post.id === replyTip.targetPostId}
-                    onOpen={post.id === replyTip.targetPostId ? replyTip.dismiss : undefined}
-                    showCommunityHeader={false}
-                  />
-                ))}
-              </div>
+              <ContentVideoScope
+                mode="feed"
+                entries={posts.map((post) => ({ postId: post.id }))}
+                hasNextPage={Boolean(hasNextCommunityPostsPage)}
+                onLoadMore={() => fetchNextCommunityPostsPage()}
+              >
+                <div className="grid gap-4">
+                  {posts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      onShare={sharePost}
+                      post={post}
+                      replyTipTarget={post.id === replyTip.targetPostId}
+                      onOpen={post.id === replyTip.targetPostId ? replyTip.dismiss : undefined}
+                      showCommunityHeader={false}
+                    />
+                  ))}
+                </div>
+              </ContentVideoScope>
             ) : null}
 
             {postsQuery.isFetching && !postsQuery.isFetchingNextPage && !isInitialPostsLoading ? (

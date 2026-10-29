@@ -120,7 +120,27 @@ test("recovery is scoped to iOS installed mobile bars and preserves explicit hid
   const composer = read("../app/app/community/[slug]/post/[id]/components/reply-composer.tsx");
   assert.match(
     composer,
-    /!isInline && !shouldUseKeyboardSafeArea && !draggingToCancel && dragOffset === 0/,
+    /!isInline && !isEmbedded && !shouldUseKeyboardSafeArea && !draggingToCancel && dragOffset === 0/,
   );
-  assert.match(composer, /data-fixed-bottom-recovery=\{isInline \? undefined : true\}/);
+  assert.match(
+    composer,
+    /data-fixed-bottom-recovery=\{isInline \|\| isEmbedded \? undefined : true\}/,
+  );
+});
+
+test("embedded composer stays in sheet flow without fixed-bottom or keyboard recovery", () => {
+  const composer = readFileSync(
+    new URL("../app/app/community/[slug]/post/[id]/components/reply-composer.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(composer, /const isEmbedded = variant === "embedded"/);
+  assert.match(
+    composer,
+    /useReplyComposerKeyboardOffset\(\{[^}]*isInline: isInline \|\| isEmbedded/s,
+  );
+  const embeddedClasses = composer.match(/: isEmbedded\s*\? "([^"]+)"/)?.[1];
+  assert.ok(embeddedClasses, "embedded has its own layout branch before the fixed composer");
+  assert.match(embeddedClasses, /\brelative\b/);
+  assert.match(embeddedClasses, /\bshrink-0\b/);
+  assert.doesNotMatch(embeddedClasses, /\bfixed\b|\bbottom-0\b/);
 });

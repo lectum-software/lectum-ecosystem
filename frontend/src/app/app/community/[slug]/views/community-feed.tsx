@@ -20,6 +20,7 @@ import {
   communityCarouselOffset,
 } from "@/components/community/community-recommendations";
 import { CommunityRecommendationsCarousel } from "@/components/community/community-recommendations-carousel";
+import { ContentVideoScope } from "@/components/community/content-video-host";
 import { useCommunityRecommendations } from "@/components/community/use-community-recommendations";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -349,30 +350,40 @@ export const CommunityFeedLogic = ({
         ) : null}
 
         {!isInitialFeedLoading && posts.length > 0 ? (
-          <div className="grid gap-4">
-            {posts.map((post, index) => {
-              const offset = communityCarouselOffset(
-                index,
-                posts.length,
-                feed.hasNextPage === false,
-              );
-              return (
-                <Fragment key={post.id}>
-                  <PostCard
-                    onShare={sharePost}
-                    post={post}
-                    replyTipTarget={post.id === replyTip.targetPostId}
-                    onOpen={post.id === replyTip.targetPostId ? replyTip.dismiss : undefined}
-                  />
-                  {showRecommendations && offset !== null ? (
-                    <CommunityRecommendationsCarousel
-                      communities={recommendations.slice(offset, offset + COMMUNITIES_PER_CAROUSEL)}
+          <ContentVideoScope
+            mode="feed"
+            entries={posts.map((post) => ({ postId: post.id }))}
+            hasNextPage={Boolean(hasNextFeedPage)}
+            onLoadMore={() => fetchNextFeedPage()}
+          >
+            <div className="grid gap-4">
+              {posts.map((post, index) => {
+                const offset = communityCarouselOffset(
+                  index,
+                  posts.length,
+                  feed.hasNextPage === false,
+                );
+                return (
+                  <Fragment key={post.id}>
+                    <PostCard
+                      onShare={sharePost}
+                      post={post}
+                      replyTipTarget={post.id === replyTip.targetPostId}
+                      onOpen={post.id === replyTip.targetPostId ? replyTip.dismiss : undefined}
                     />
-                  ) : null}
-                </Fragment>
-              );
-            })}
-          </div>
+                    {showRecommendations && offset !== null ? (
+                      <CommunityRecommendationsCarousel
+                        communities={recommendations.slice(
+                          offset,
+                          offset + COMMUNITIES_PER_CAROUSEL,
+                        )}
+                      />
+                    ) : null}
+                  </Fragment>
+                );
+              })}
+            </div>
+          </ContentVideoScope>
         ) : null}
 
         {feed.isFetching && !feed.isFetchingNextPage && !isInitialFeedLoading ? (

@@ -38,6 +38,7 @@ import {
 
 export const VerticalVideoPlayer = ({
   bottomOverlay,
+  bottomOverlayExpandedOnly = false,
   className,
   controls = true,
   controlsVariant = "native",
@@ -589,6 +590,7 @@ export const VerticalVideoPlayer = ({
       </video>
       {overlay}
       <VerticalVideoPlayerBottomOverlay
+        visible={!bottomOverlayExpandedOnly || isContentExpanded}
         controlsVisible={usesPersistentControls && !persistentControlsHidden}
       >
         {bottomOverlay}
@@ -614,6 +616,7 @@ export const VerticalVideoPlayer = ({
         </button>
       ) : null}
       <button
+        data-lectum-video-surface="true"
         aria-label={
           persistentControlsHidden
             ? `Mostrar controles do vídeo: ${title}`

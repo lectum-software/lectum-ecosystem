@@ -52,7 +52,7 @@ export const originalProfessionalScore = (
     0,
     3 * metrics.upvotes.all + metrics.comments.all + 2 * metrics.shares_count,
   );
-  const penalty = Math.max(0, metrics.penalty) + 0.6 * Math.max(0, post.downvotes_count);
+  const penalty = Math.max(0, metrics.penalty);
   return (
     Math.max(0, 1 + Math.log2(1 + engagement) - penalty) *
     featuredActivityDecay(post.createdAt, now) *

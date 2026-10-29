@@ -577,9 +577,6 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
         const postDiff = b.metrics.posts_published - a.metrics.posts_published;
         if (postDiff !== 0) return postDiff;
 
-        const downvoteDiff = a.metrics.downvotes_received - b.metrics.downvotes_received;
-        if (downvoteDiff !== 0) return downvoteDiff;
-
         const removedPostDiff = a.metrics.removed_posts - b.metrics.removed_posts;
         if (removedPostDiff !== 0) return removedPostDiff;
 

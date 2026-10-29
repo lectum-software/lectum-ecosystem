@@ -24,6 +24,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { type Field, useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
+import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { useVideoSourcePreparation } from "@/hooks/use-video-source-preparation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -78,6 +79,8 @@ const fields = [
 ] satisfies Field<ReplyEditForm>[];
 
 export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: ReplyEditModalProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const portalHost = useModalPortalHost(open, overlayRef);
   const storedUser = useAppSelector((state) => state.user);
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const canShowMediaControls = mediaPermission.showControl && reply.author.role === "psicologo";
@@ -203,7 +206,11 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     const previousBodyOverflow = document.body.style.overflow;
     const previousDocumentOverflow = document.documentElement.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") handleClose();
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        event.preventDefault();
+        event.stopPropagation();
+        handleClose();
+      }
     };
 
     document.body.style.overflow = "hidden";
@@ -402,6 +409,8 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
           if (event.target === event.currentTarget) handleClose();
         }}
         role="dialog"
+        ref={overlayRef}
+        tabIndex={-1}
       >
         <section className="pointer-events-auto flex max-h-[min(88dvh,44rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-surface shadow-lectum-soft animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 dark:shadow-[var(--lectum-shadow)]">
           <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
@@ -540,6 +549,6 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
         </section>
       </div>
     </>,
-    document.body,
+    portalHost ?? document.body,
   );
 }

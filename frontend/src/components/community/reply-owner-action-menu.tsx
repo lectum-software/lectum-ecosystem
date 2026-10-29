@@ -19,6 +19,7 @@ import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { ReplyMenuSurface } from "@/components/community/reply-menu-surface";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppSelector } from "@/hooks/redux";
+import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { hasProfessionalVideoDescendant } from "./reply-delete-preflight";
@@ -81,11 +82,17 @@ const ReplyActionModal = ({
   title: string;
   variant?: "default" | "destructive";
 }) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const portalHost = useModalPortalHost(open, overlayRef);
   useEffect(() => {
     if (!open) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -104,6 +111,8 @@ const ReplyActionModal = ({
         if (event.target === event.currentTarget) onClose();
       }}
       role="dialog"
+      ref={overlayRef}
+      tabIndex={-1}
     >
       <section className="relative z-[1001] w-full max-w-[430px] rounded-[28px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow)]">
         <div className="flex items-start justify-between gap-4">
@@ -165,7 +174,7 @@ const ReplyActionModal = ({
     </div>
   );
 
-  return createPortal(modal, document.body);
+  return createPortal(modal, portalHost ?? document.body);
 };
 
 export const ReplyOwnerActionMenu = ({

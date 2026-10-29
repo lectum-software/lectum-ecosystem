@@ -10,6 +10,7 @@ import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
 import { WhatsappWeekPrompt } from "@/components/analytics/whatsapp-week-prompt";
 import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
+import { ContentVideoHost } from "@/components/community/content-video-host";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LegalAcceptanceRequest } from "@/components/legal/acceptance-request";
 import { canPromptLegalOnPath } from "@/components/legal/policy";
@@ -62,7 +63,13 @@ const CreateCommunityPostLogic = dynamic(
   { ssr: false },
 );
 
-export const PrivateTemplate = ({
+export const PrivateTemplate = (props: PrivateTemplateProps) => (
+  <ContentVideoHost>
+    <PrivateTemplateContent {...props} />
+  </ContentVideoHost>
+);
+
+const PrivateTemplateContent = ({
   allowAnonymous = false,
   bottomNavigationCenterAction,
   children,

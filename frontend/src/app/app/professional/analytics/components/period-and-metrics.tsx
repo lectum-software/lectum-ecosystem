@@ -77,7 +77,7 @@ export const PeriodTabs = ({
           control={form.control}
           label="Período"
           className="gap-0 text-[16px] font-medium [&>label]:sr-only [&>[role=alert]]:hidden"
-          inputClassName="h-auto min-h-12 rounded-[var(--lectum-card-radius)] py-3 text-base font-medium shadow-[var(--lectum-shadow-soft)] [&>span]:whitespace-normal [&>span]:overflow-visible [&>span]:text-clip"
+          inputClassName="h-auto min-h-12 rounded-[var(--lectum-card-radius)] py-3 text-base font-medium text-muted shadow-[var(--lectum-shadow-soft)] [&>span]:whitespace-normal [&>span]:overflow-visible [&>span]:text-clip"
           selectContentClassName="rounded-[var(--lectum-card-radius)]"
           selectOptionClassName="min-h-11 text-base"
           disabled={disabled}

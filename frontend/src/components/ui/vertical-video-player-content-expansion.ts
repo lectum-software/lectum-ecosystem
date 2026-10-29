@@ -1,12 +1,71 @@
 "use client";
 
-import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   type FullscreenVariant,
   MOBILE_FULLSCREEN_MEDIA_QUERY,
   type StoredVideoStyle,
   staticMobileContentFullscreenStyles,
 } from "./vertical-video-player-support";
+
+type ExpandedVideoViewport = { top: number; left: number; width: number; height: number };
+
+export const observeExpandedVideoViewport = (
+  enabled: boolean,
+  setViewport: Dispatch<SetStateAction<ExpandedVideoViewport | null>>,
+) => {
+  if (!enabled) return;
+
+  const visualViewport = window.visualViewport;
+  let frame = 0;
+  const updateViewport = () => {
+    window.cancelAnimationFrame(frame);
+    frame = window.requestAnimationFrame(() => {
+      const next = {
+        top: visualViewport?.offsetTop ?? 0,
+        left: visualViewport?.offsetLeft ?? 0,
+        width: visualViewport?.width ?? window.innerWidth,
+        height: visualViewport?.height ?? window.innerHeight,
+      };
+      if (next.width <= 0 || next.height <= 0) return;
+      setViewport((current) =>
+        current &&
+        current.top === next.top &&
+        current.left === next.left &&
+        current.width === next.width &&
+        current.height === next.height
+          ? current
+          : next,
+      );
+    });
+  };
+
+  updateViewport();
+  window.addEventListener("resize", updateViewport);
+  visualViewport?.addEventListener("resize", updateViewport);
+  visualViewport?.addEventListener("scroll", updateViewport);
+  return () => {
+    window.cancelAnimationFrame(frame);
+    window.removeEventListener("resize", updateViewport);
+    visualViewport?.removeEventListener("resize", updateViewport);
+    visualViewport?.removeEventListener("scroll", updateViewport);
+  };
+};
+
+export const useExpandedVideoViewport = (enabled: boolean) => {
+  const [viewport, setViewport] = useState<ExpandedVideoViewport | null>(null);
+  useEffect(() => observeExpandedVideoViewport(enabled, setViewport), [enabled]);
+
+  return enabled ? viewport : null;
+};
 
 export const useMobileContentFullscreenStyles = ({
   fullscreenVariant,

@@ -1,6 +1,14 @@
 import type { KeyboardEvent, MouseEvent, MouseEventHandler, ReactNode } from "react";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 
+export type PostCardVoteSnapshot = {
+  currentVote: 1 | -1 | null;
+  downvotes: number;
+  postId: string;
+  upvotes: number;
+};
+export type PostCardSaveSnapshot = { postId: string; saved: boolean; saves: number };
+
 export const publicationInteractionData = (
   post: PostListPost,
   reply?: PostProfessionalReply | null,

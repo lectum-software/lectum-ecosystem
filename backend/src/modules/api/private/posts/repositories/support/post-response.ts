@@ -31,8 +31,6 @@ export const MAX_LIMIT = 50;
 // Three descendant hops + the direct comment = four visual layers in the main thread.
 export const INLINE_REPLY_DESCENDANT_DEPTH = 3;
 
-export const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
-
 export const SHARE_ANTI_SPAM_WINDOW_MS = 60 * 60 * 1000;
 
 export const communitySelect = {
@@ -519,10 +517,8 @@ export const toHighlightedProfessionalReply = (
 };
 
 export const professionalReplyPreviewScore = ({
-  downvotes_count,
   upvotes_count,
-}: Pick<ProfessionalReplyResult, "downvotes_count" | "upvotes_count">) =>
-  upvotes_count - downvotes_count * REPLY_DOWNVOTE_RANKING_WEIGHT;
+}: Pick<ProfessionalReplyResult, "downvotes_count" | "upvotes_count">) => upvotes_count;
 
 export const professionalReplyVideoTieBreakScore = ({
   media_type,

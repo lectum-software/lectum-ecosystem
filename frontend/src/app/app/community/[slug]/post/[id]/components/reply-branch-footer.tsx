@@ -14,6 +14,7 @@ export const ReplyBranchFooter = ({
   depth,
   onCollapse,
   onExpand,
+  onOpenThread,
   replyId,
   threadHref,
   visibleCount,
@@ -25,6 +26,7 @@ export const ReplyBranchFooter = ({
   depth: number;
   onCollapse: () => void;
   onExpand: () => void;
+  onOpenThread?: () => void;
   replyId: string;
   threadHref: string | null;
   visibleCount: number;
@@ -53,7 +55,13 @@ export const ReplyBranchFooter = ({
               aria-label={`${label} desta conversa`}
               className="inline-flex w-fit items-center gap-0.5 rounded-full px-0.5 py-0.5 text-[10px] font-bold leading-none text-muted no-underline transition hover:bg-surface-muted hover:text-foreground hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               href={threadHref}
-              onClick={stopReplyTreeCollapsePropagation}
+              onClick={(event) => {
+                stopReplyTreeCollapsePropagation(event);
+                if (onOpenThread) {
+                  event.preventDefault();
+                  onOpenThread();
+                }
+              }}
             >
               <span>{label}</span>
               <ChevronDown className="h-2.5 w-2.5" aria-hidden="true" />

@@ -103,6 +103,23 @@ const post = (id: string, count = 0, days = 7): PostResult => ({
 });
 
 describe("destaque por acolhimento profissional recente", () => {
+  it("ignores historical downvotes in featured and original professional feed scores", () => {
+    const original = post("historical", 2, 1);
+    const historical = { ...original, downvotes_count: 10000 };
+    const metrics = emptyCommunityPostSortMetrics();
+    metrics.upvotes.all = 12;
+    assert.equal(
+      featuredPostScore(original, metrics, now),
+      featuredPostScore(historical, metrics, now),
+    );
+    for (const video of [false, true]) {
+      assert.equal(
+        originalProfessionalScore(original, metrics, video, now),
+        originalProfessionalScore(historical, metrics, video, now),
+      );
+    }
+  });
+
   it("aplica meia-vida individual de 14 dias sem favorecer datas futuras", () => {
     assert.equal(featuredActivityDecay(daysAgo(14), now), 0.5);
     assert.equal(featuredActivityDecay(daysAgo(-1), now), 1);
