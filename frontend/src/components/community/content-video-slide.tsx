@@ -34,6 +34,7 @@ import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import {
   getVideoSoundEnabled,
+  getVideoSoundPreferenceRevision,
   setVideoSoundEnabledByUser,
   subscribeVideoSoundPreference,
 } from "@/lib/video-sound-preference";
@@ -109,26 +110,24 @@ export const ContentVideoSlide = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const activeRef = useRef(active);
+  const audioAttempt = useRef(0);
+  const blockedSoundRevision = useRef<number | null>(null);
+  const manuallyPaused = useRef(false);
   useLayoutEffect(() => {
     activeRef.current = active;
+    blockedSoundRevision.current = null;
+    manuallyPaused.current = false;
     if (!active) videoRef.current?.pause();
     return () => {
       activeRef.current = false;
       videoRef.current?.pause();
+      audioAttempt.current += 1;
     };
   }, [active]);
   const [panel, setPanel] = useState<Panel>(null);
   const panelRef = useRef<Panel>(null);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => !getVideoSoundEnabled());
-  useEffect(
-    () =>
-      subscribeVideoSoundPreference((enabled) => {
-        if (videoRef.current) videoRef.current.muted = !enabled;
-        setMuted(!enabled);
-      }),
-    [],
-  );
   const [time, setTime] = useState(initialTime);
   const [duration, setDuration] = useState(0);
   const [seeking, setSeeking] = useState(false);
@@ -189,20 +188,46 @@ export const ContentVideoSlide = ({
     const video = videoRef.current;
     if (!video) return;
     const eligible = () =>
-      activeRef.current && !panelRef.current && !seekingRef.current && videoRef.current === video;
+      !manuallyPaused.current &&
+      activeRef.current &&
+      !panelRef.current &&
+      !seekingRef.current &&
+      videoRef.current === video;
     if (!eligible()) return;
-    const started = await playVideoWithActiveDocument(video);
+    const attempt = ++audioAttempt.current;
+    const revision = getVideoSoundPreferenceRevision();
+    video.muted = !getVideoSoundEnabled() || blockedSoundRevision.current === revision;
+    setMuted(video.muted);
+    let autoplayBlocked = false;
+    const started = await playVideoWithActiveDocument(video, {
+      onAutoplayBlocked: () => {
+        autoplayBlocked = true;
+      },
+    });
     if (!eligible()) {
       video.pause();
       return;
     }
-    if (!started && video.paused && !video.muted) {
+    if (attempt !== audioAttempt.current || revision !== getVideoSoundPreferenceRevision()) return;
+    if (!started && autoplayBlocked && video.paused && !video.muted) {
+      blockedSoundRevision.current = revision;
       video.muted = true;
       setMuted(true);
       await playVideoWithActiveDocument(video);
       if (!eligible()) video.pause();
     }
   }, []);
+
+  useEffect(
+    () =>
+      subscribeVideoSoundPreference((enabled) => {
+        audioAttempt.current += 1;
+        if (videoRef.current) videoRef.current.muted = !enabled;
+        setMuted(!enabled);
+        if (enabled) void play();
+      }),
+    [play],
+  );
 
   useEffect(() => {
     if (active) void play();
@@ -240,6 +265,7 @@ export const ContentVideoSlide = ({
       return;
     }
     const video = videoRef.current;
+    manuallyPaused.current = !video?.paused;
     if (video?.paused) void play();
     else video?.pause();
   };
@@ -348,9 +374,13 @@ export const ContentVideoSlide = ({
             void play();
           },
           onTimeUpdate: (event) => setTime(event.currentTarget.currentTime),
+          onCanPlay: (event) => {
+            if (event.currentTarget.paused) void play();
+          },
           onPlay: (event) => {
             if (!activeRef.current || panelRef.current || seekingRef.current)
               event.currentTarget.pause();
+            else if (manuallyPaused.current) event.currentTarget.pause();
             else setPaused(false);
           },
           onPause: () => setPaused(true),
@@ -445,8 +475,8 @@ export const ContentVideoSlide = ({
                 );
               }}
             >
-              <ArrowUp aria-hidden />
-              <span>Útil · {upvotes}</span>
+              <ArrowUp aria-hidden strokeWidth={vote === 1 ? 3.2 : 2} />
+              <span>{upvotes}</span>
             </button>
             <button
               className={styles.action}

@@ -25,6 +25,7 @@ export type CommunityWhatsAppAuthor = {
 type CommunityWhatsAppCtaProps = {
   attached?: boolean;
   overVideo?: boolean;
+  videoLabelExpanded?: boolean;
   className?: string;
   size?: "xs" | "sm";
   psychologist: PsychologistWhatsAppIdentity;
@@ -50,6 +51,7 @@ export const toCommunityWhatsAppIdentity = (
 export const CommunityWhatsAppCta = ({
   attached = false,
   overVideo = false,
+  videoLabelExpanded = true,
   className,
   size = "sm",
   psychologist,
@@ -64,21 +66,36 @@ export const CommunityWhatsAppCta = ({
       <PsychologistWhatsAppRedirectButton
         aria-label={`${actionLabel} pelo WhatsApp`}
         className={cn(
-          "ml-auto flex min-h-[44px] w-fit min-w-0 max-w-full items-center justify-center rounded-full border-0 bg-transparent px-0 py-[5px] text-media-foreground shadow-none transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-foreground disabled:opacity-60",
+          "ml-auto flex min-h-[44px] w-fit min-w-[44px] max-w-full items-center justify-end rounded-full border-0 bg-transparent px-0 py-[5px] text-media-foreground shadow-none transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-foreground disabled:opacity-60",
           className,
         )}
         data-post-card-ignore-click="true"
         data-community-video-contact="true"
+        data-contact-expanded={videoLabelExpanded}
         psychologist={psychologist}
         stopPropagation
         trackingContext={trackingContext}
       >
-        <span className="flex min-h-[34px] min-w-0 max-w-full items-center justify-center gap-[7px] rounded-full bg-whatsapp-contact px-4 py-[7px] shadow-sm">
-          <PsychologistWhatsAppButtonContent
-            iconClassName="h-[15px] w-[15px] text-media-foreground"
-            label={actionLabel}
-            labelClassName="text-left text-[13px] font-semibold leading-5 text-media-foreground"
+        <span
+          className={cn(
+            "flex min-h-[34px] min-w-0 max-w-full items-center justify-center rounded-full bg-whatsapp-contact py-[7px] shadow-sm transition-[padding] duration-[800ms] ease-in-out motion-reduce:transition-none",
+            videoLabelExpanded ? "px-4" : "px-[9.5px]",
+          )}
+        >
+          <WhatsAppIcon
+            aria-hidden="true"
+            className="h-[15px] w-[15px] shrink-0 overflow-visible text-media-foreground"
+            viewBox="-0.75 -0.75 21.5 21.5"
           />
+          <span
+            aria-hidden="true"
+            className={cn(
+              "min-w-0 overflow-hidden whitespace-nowrap text-ellipsis text-left text-[13px] font-normal leading-5 text-media-foreground transition-[max-width,margin,opacity] duration-[800ms] ease-in-out motion-reduce:transition-none",
+              videoLabelExpanded ? "ml-[7px] max-w-[240px] opacity-100" : "ml-0 max-w-0 opacity-0",
+            )}
+          >
+            {actionLabel}
+          </span>
         </span>
       </PsychologistWhatsAppRedirectButton>
     );

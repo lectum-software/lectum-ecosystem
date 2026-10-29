@@ -405,9 +405,9 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
       <PsychologistWhatsAppRedirectButton
         aria-label={`Fale com ${whatsappName || displayName} no WhatsApp`}
         className={cn(
-          "grid h-8 w-8 shrink-0 place-items-center rounded-full border transition focus:outline-none focus:ring-4 focus:ring-success/15",
+          "grid h-8 w-8 shrink-0 place-items-center rounded-full border transition focus:outline-none focus:ring-4 focus:ring-whatsapp-contact/15",
           canOpenWhatsApp
-            ? "border-transparent bg-transparent text-success hover:border-success/20 hover:bg-transparent"
+            ? "border-transparent bg-transparent text-whatsapp-contact hover:border-whatsapp-contact/20 hover:bg-transparent"
             : "cursor-not-allowed border-transparent bg-transparent text-subtle",
         )}
         psychologist={{

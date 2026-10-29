@@ -30,7 +30,7 @@ export const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile
       >
         <div className="mx-auto w-full max-w-[430px]">
           <PsychologistWhatsAppRedirectButton
-            className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-[8px] bg-success px-3 text-[13px] font-bold text-primary-foreground transition hover:bg-success/90"
+            className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-[8px] bg-whatsapp-contact px-3 text-[13px] font-bold text-primary-foreground transition hover:bg-whatsapp-contact/90"
             psychologist={whatsappIdentity}
             trackingContext={whatsappTrackingContext}
           >
@@ -44,7 +44,7 @@ export const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Fale com ${whatsappName} no WhatsApp`}
-        className="group fixed right-5 bottom-10 z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-media-foreground bg-success text-primary-foreground shadow-lectum-soft transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-success hover:shadow-lectum-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2 focus-visible:ring-offset-white motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
+        className="group fixed right-5 bottom-10 z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-media-foreground bg-whatsapp-contact text-primary-foreground shadow-lectum-soft transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-whatsapp-contact hover:shadow-lectum-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-whatsapp-contact focus-visible:ring-offset-2 focus-visible:ring-offset-white motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
         psychologist={whatsappIdentity}
         title={`Fale com ${whatsappName}`}
         trackingContext={whatsappTrackingContext}

@@ -1,10 +1,107 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import test from "node:test";
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
 const viewer = read("./content-video-viewer.tsx") + read("./content-video-slide.tsx");
 const css = read("./content-video-viewer.module.css");
+
+test("visible action gaps are equal and long author names keep favorite beside them", async (t) => {
+  const require = createRequire(import.meta.url);
+  let chromium;
+  try {
+    ({ chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright"));
+  } catch {
+    t.skip("Playwright is unavailable");
+    return;
+  }
+  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  try {
+    for (const width of [320, 390, 430, 1440]) {
+      const page = await browser.newPage({ viewport: { width, height: 844 } });
+      await page.setContent(`<style>
+        *{box-sizing:border-box}body{margin:0;font-family:Arial}
+        ${css}
+        .test-stage{position:relative;width:${width < 1024 ? width : 506}px;height:700px;
+          --info-bottom:24px;--desktop-card-width:506px}
+        .favorite{flex:none;white-space:nowrap;font-size:12px;border:0;padding:0}
+      </style><div class="test-stage">
+        <div class="identity"><div class="author">
+          <a class="name">Alessandra Ianhez de Camargo</a><svg class="badge"></svg>
+          <button class="favorite">+ Favoritar</button>
+        </div></div>
+        <div class="rail">
+          <button class="action" aria-pressed="false"><svg></svg><span>1000</span></button>
+          <button class="action"><svg></svg><span>1000</span></button>
+          <button class="action"><svg></svg></button>
+          <button class="action"><svg></svg></button>
+          <button class="contact"><i class="contactGlyph"><svg></svg></i></button>
+        </div>
+      </div>`);
+      const result = await page.evaluate(() => {
+        const actions = [...document.querySelectorAll(".rail > button")];
+        const visible = actions.map((button) => {
+          const icon = button.querySelector(".contactGlyph") || button.querySelector("svg");
+          const text = button.querySelector("span");
+          const rect = icon.getBoundingClientRect();
+          const desktop = innerWidth >= 1024;
+          const top = desktop ? button.getBoundingClientRect().top : rect.top;
+          return {
+            top,
+            bottom: text ? text.getBoundingClientRect().bottom : desktop ? top + 40 : rect.bottom,
+          };
+        });
+        const name = document.querySelector(".name").getBoundingClientRect();
+        const favorite = document.querySelector(".favorite").getBoundingClientRect();
+        const author = document.querySelector(".author").getBoundingClientRect();
+        return {
+          gaps: visible.slice(1).map((item, index) => item.top - visible[index].bottom),
+          touchHeights: actions.map((button) => button.getBoundingClientRect().height),
+          beside:
+            favorite.top < name.bottom && favorite.bottom > name.top && favorite.left > name.right,
+          contained: favorite.right <= author.right + 1 && name.left >= author.left,
+          iconWidth: actions[0].querySelector("svg").getBoundingClientRect().width,
+        };
+      });
+      assert.ok(
+        Math.max(...result.gaps) - Math.min(...result.gaps) < 1,
+        `${width}: ${JSON.stringify(result)}`,
+      );
+      assert.ok(
+        result.beside && result.contained,
+        `${width}: favorite must stay beside the complete wrapping name`,
+      );
+      assert.ok(result.touchHeights.every((height) => height >= (width < 1024 ? 44 : 40)));
+      assert.equal(result.iconWidth, width < 359 ? 18 : 20);
+      const upvote = page.locator(".rail > button").first();
+      assert.equal(
+        await upvote.locator("span").evaluate((el) => getComputedStyle(el).fontWeight),
+        "600",
+      );
+      await upvote.evaluate((el) => el.setAttribute("aria-pressed", "true"));
+      assert.equal(
+        await upvote.locator("span").evaluate((el) => getComputedStyle(el).fontWeight),
+        "800",
+      );
+      assert.equal(await upvote.locator("span").innerText(), "1000");
+      await page.close();
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
+test("reels upvote shows only its count with accessible semantics and no tooltip", () => {
+  const upvote = viewer.match(
+    /<button\s+className=\{styles.action\}\s+aria-label="Marcar como útil"[\s\S]*?<\/button>/,
+  )?.[0];
+  assert.ok(upvote);
+  assert.match(upvote, /aria-pressed=\{vote === 1\}/);
+  assert.match(upvote, /<ArrowUp aria-hidden strokeWidth=\{vote === 1 \? 3\.2 : 2\} \/>/);
+  assert.match(upvote, /<span>\{upvotes\}<\/span>/);
+  assert.doesNotMatch(upvote, /title=|Tooltip|Útil ·/);
+});
 
 test("expanded content fills its viewport using the directory cover fit", () => {
   const directory = read("../../app/app/psychologists/view/components/slide.tsx");
@@ -84,7 +181,12 @@ test("sound follows the shared preference and explicit user changes update it", 
   assert.match(slide, /useState\(\(\) => !getVideoSoundEnabled\(\)\)/);
   assert.match(
     slide,
-    /useEffect\(\s*\(\) =>\s*subscribeVideoSoundPreference\(\(enabled\) => \{\s*if \(videoRef.current\) videoRef.current.muted = !enabled;\s*setMuted\(!enabled\);\s*\}\),\s*\[\],\s*\)/,
+    /useEffect\(\s*\(\) =>\s*subscribeVideoSoundPreference\(\(enabled\) => \{\s*audioAttempt.current \+= 1;\s*if \(videoRef.current\) videoRef.current.muted = !enabled;\s*setMuted\(!enabled\);\s*if \(enabled\) void play\(\);\s*\}\),\s*\[play\],\s*\)/,
+  );
+  assert.match(slide, /!started && autoplayBlocked && video.paused && !video.muted/);
+  assert.match(
+    slide,
+    /attempt !== audioAttempt.current \|\| revision !== getVideoSoundPreferenceRevision\(\)/,
   );
   assert.match(slide, /onSoundEnabledChange=\{setVideoSoundEnabledByUser\}/);
   assert.match(

@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.743",
+  "version": "0.1.744",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -25,7 +25,8 @@
     "test:whatsapp-week": "node --test src/components/analytics/whatsapp-week.test.mjs",
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:profile-reply-actions && pnpm test:profile-hero && pnpm test:feed-header && pnpm test:favorite-slot && pnpm test:fixed-bottom && pnpm test:reply-tip && pnpm test:signout && pnpm test:auth-navigation && pnpm test:directory-relations && pnpm test:community-recommendations && pnpm test:infinite-lists && pnpm test:reply-focus && pnpm test:whatsapp-week && pnpm test:content-videos",
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:profile-reply-actions && pnpm test:profile-hero && pnpm test:feed-header && pnpm test:favorite-slot && pnpm test:fixed-bottom && pnpm test:reply-tip && pnpm test:signout && pnpm test:auth-navigation && pnpm test:directory-relations && pnpm test:community-recommendations && pnpm test:infinite-lists && pnpm test:reply-focus && pnpm test:whatsapp-week && pnpm test:content-videos && pnpm test:video-contact",
+    "test:video-contact": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/components/community/content-video-audio.test.mjs src/components/psychologists/whatsapp-contact-color.test.mjs",
     "test:content-videos": "node --test src/components/community/community-upvote-only.test.mjs src/components/community/content-video-comments-sheet.test.mjs src/components/community/content-video-interaction-refresh.test.mjs src/components/community/use-content-video-queue.test.mjs src/components/ui/vertical-video-player-viewport.test.mjs src/hooks/use-modal-portal-host.test.mjs src/components/community/content-video-viewer-layout.test.mjs src/components/community/use-content-video-scroll.test.mjs"
   },
   "dependencies": {
