@@ -1,5 +1,6 @@
 import "./mine-whatsapp-metric.test.mjs";
 import "./delete-video-policy.test.mjs";
+import "./use-video-contact-reveal.test.mjs";
 import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -484,11 +485,16 @@ test("video contact is a compact right-aligned green pill with an independent to
   assert.match(html, /aria-label="Fale com Ana pelo WhatsApp"/);
   assert.match(html, /data-community-video-contact="true"/);
   assert.match(html, /ml-auto flex min-h-\[44px\] w-fit/);
-  assert.match(html, /rounded-full bg-whatsapp-contact px-4 py-\[7px\]/);
+  assert.match(html, /rounded-full bg-whatsapp-contact py-\[7px\]/);
+  assert.match(html, /data-contact-expanded="true"/);
+  assert.match(html, /motion-reduce:transition-none/);
   assert.match(html, /min-h-\[34px\]/);
   assert.match(html, /min-h-\[44px\]/);
-  assert.match(html, /text-\[13px\] font-semibold leading-5/);
+  assert.match(html, /text-\[13px\] font-normal leading-5/);
+  assert.match(html, /duration-\[800ms\] ease-in-out/);
   assert.match(html, /h-\[15px\] w-\[15px\]/);
+  assert.match(html, /viewBox="-0.75 -0.75 21.5 21.5"/);
+  assert.match(html, /shrink-0 overflow-visible text-media-foreground/);
   assert.doesNotMatch(html, /lucide-arrow-right/);
   assert.equal((html.match(/>Fale com Ana</g) ?? []).length, 1);
   assert.doesNotMatch(html.replace(/<title>.*?<\/title>/g, ""), />WhatsApp<|bg-media-background/);

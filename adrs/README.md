@@ -715,3 +715,4 @@ Formato recomendado:
 - [ADR-0651 — Compact video contact and inline mute](0651-video-contact-and-inline-mute.md)
 - [ADR-0652 — Content reels parity and descendant-scoped comments](0652-content-reels-parity-and-scoped-comments.md)
 - [ADR-0653 — Feed audio recovery](0653-feed-audio-recovery.md)
+- [ADR-0654 — Reels sound and action spacing](0654-reels-sound-and-action-spacing.md)

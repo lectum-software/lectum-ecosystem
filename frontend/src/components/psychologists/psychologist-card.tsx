@@ -320,7 +320,7 @@ export function PsychologistCard({
           >
             {psychologist.whatsapp_url ? (
               <PsychologistWhatsAppRedirectButton
-                className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full min-w-0 rounded-[999px] bg-success px-4 text-[15px] font-medium leading-none text-primary-foreground hover:bg-success/90"
+                className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full min-w-0 rounded-[999px] bg-whatsapp-contact px-4 text-[15px] font-medium leading-none text-primary-foreground hover:bg-whatsapp-contact/90"
                 psychologist={{
                   avatar: psychologist.avatar,
                   crp: psychologist.crp,
@@ -335,7 +335,7 @@ export function PsychologistCard({
               </PsychologistWhatsAppRedirectButton>
             ) : (
               <Button
-                className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full rounded-[999px] bg-success px-4 text-[15px] font-medium leading-none text-primary-foreground"
+                className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full rounded-[999px] bg-whatsapp-contact px-4 text-[15px] font-medium leading-none text-primary-foreground"
                 disabled
                 type="button"
               >

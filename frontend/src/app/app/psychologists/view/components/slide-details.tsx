@@ -373,7 +373,7 @@ export const PsychologistSlideDetails = ({
                 }}
               >
                 <span
-                  className="grid place-items-center rounded-full bg-success transition hover:bg-success"
+                  className="grid place-items-center rounded-full bg-whatsapp-contact transition hover:bg-whatsapp-contact"
                   style={{
                     height: `${metrics.actionPrimaryButtonSize}px`,
                     width: `${metrics.actionPrimaryButtonSize}px`,
@@ -413,7 +413,7 @@ export const PsychologistSlideDetails = ({
                 }}
               >
                 <span
-                  className="grid place-items-center rounded-full bg-success"
+                  className="grid place-items-center rounded-full bg-whatsapp-contact"
                   style={{
                     height: `${metrics.actionPrimaryButtonSize}px`,
                     width: `${metrics.actionPrimaryButtonSize}px`,

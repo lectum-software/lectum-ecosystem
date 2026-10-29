@@ -24,6 +24,7 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 import { useContentVideoLauncher, useContentVideoPost } from "./content-video-context";
+import { useVideoContactReveal } from "./use-video-contact-reveal";
 
 export type CommunityMediaFrameVariant = "post" | "detail" | "reply";
 export type CommunityMediaOrientation = "landscape" | "portrait" | "square";
@@ -292,6 +293,15 @@ export const CommunityMediaBlock = ({
   );
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
+  const { handleVideoReady: handleContactVideoReady, expanded: contactExpanded } =
+    useVideoContactReveal(
+      normalizedMediaType === "video" &&
+        isValidElement(footer) &&
+        footer.type === CommunityWhatsAppCta &&
+        !videoPost?.hideInlineContact
+        ? `${analyticsTarget?.targetId ?? ""}:${resolvedUrl}`
+        : null,
+    );
   const isStreamVideo = normalizedMediaType === "video" && isVideoAssetReference(mediaUrl);
   const communityAutoplayEnabled =
     (enableCommunityAutoplay || enableFeedAutoplay) && normalizedMediaType === "video";
@@ -317,10 +327,11 @@ export const CommunityMediaBlock = ({
   const handleVideoReady = useCallback(
     (video: HTMLVideoElement | null) => {
       inlineVideoRef.current = video;
+      handleContactVideoReady(video);
       handleVideoElementReady(video);
       handleCommunityVideoElementReady(video);
     },
-    [handleCommunityVideoElementReady, handleVideoElementReady],
+    [handleCommunityVideoElementReady, handleVideoElementReady, handleContactVideoReady],
   );
   const [detectedMedia, setDetectedMedia] = useState<{
     height?: number | null;
@@ -400,7 +411,7 @@ export const CommunityMediaBlock = ({
     orientation === "portrait" &&
     isValidElement<ComponentProps<typeof CommunityWhatsAppCta>>(footer) &&
     footer.type === CommunityWhatsAppCta
-      ? cloneElement(footer, { overVideo: true })
+      ? cloneElement(footer, { overVideo: true, videoLabelExpanded: contactExpanded })
       : null;
   const visibleVideoContact = videoPost?.hideInlineContact ? null : videoContact;
   const hasFooter = Boolean(footer) && !videoContact && !videoPost?.hideInlineContact;

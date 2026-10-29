@@ -299,7 +299,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
             {desktopActionPsychologist.whatsapp_url ? (
               <PsychologistWhatsAppRedirectButton
                 aria-label={`Fale com ${desktopActionWhatsappName || desktopActionDisplayName} no WhatsApp`}
-                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-success transition hover:scale-105 hover:bg-surface-muted active:scale-95"
+                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-whatsapp-contact transition hover:scale-105 hover:bg-surface-muted active:scale-95"
                 data-psychologists-tip-target={isDesktopActionRailHidden ? undefined : "whatsapp"}
                 importantActionType="psychologist_video_whatsapp_click"
                 onClick={handleWhatsappInteraction}
@@ -320,19 +320,19 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                   targetType: "psychologist",
                 }}
               >
-                <WhatsAppIcon aria-hidden="true" className="h-5 w-5 text-whatsapp" />
+                <WhatsAppIcon aria-hidden="true" className="h-5 w-5 text-whatsapp-contact" />
               </PsychologistWhatsAppRedirectButton>
             ) : (
               <button
                 aria-disabled="true"
                 aria-label={`WhatsApp indisponível para ${desktopActionDisplayName}`}
-                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-success opacity-55"
+                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-whatsapp-contact opacity-55"
                 disabled={isDesktopActionRailHidden}
                 onClick={stopInteractionPropagation}
                 tabIndex={isDesktopActionRailHidden ? -1 : undefined}
                 type="button"
               >
-                <WhatsAppIcon aria-hidden="true" className="h-5 w-5 text-whatsapp" />
+                <WhatsAppIcon aria-hidden="true" className="h-5 w-5 text-whatsapp-contact" />
               </button>
             )}
             <span className="text-[10px] font-bold text-muted">WhatsApp</span>

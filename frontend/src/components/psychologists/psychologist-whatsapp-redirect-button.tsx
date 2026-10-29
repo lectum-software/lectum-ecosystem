@@ -288,11 +288,11 @@ export const PsychologistWhatsAppRedirectModal = ({
         <p className="mt-1 text-sm font-semibold text-muted">{professionalLabel(psychologist)}</p>
 
         <div
-          className="mt-5 rounded-2xl border border-success/20 bg-success/5 px-4 py-3"
+          className="mt-5 rounded-2xl border border-whatsapp-contact/20 bg-whatsapp-contact/5 px-4 py-3"
           id={descriptionId}
         >
           <p className="inline-flex items-center justify-center gap-2 text-sm font-bold text-foreground">
-            <WhatsAppIcon className="h-4 w-4 text-success" aria-hidden="true" />
+            <WhatsAppIcon className="h-4 w-4 text-whatsapp-contact" aria-hidden="true" />
             Abrindo conversa no WhatsApp
           </p>
           <p className="mt-1 text-xs leading-5 text-muted">
@@ -303,7 +303,7 @@ export const PsychologistWhatsAppRedirectModal = ({
         {manualFallbackVisible ? (
           <div className="mt-5 grid gap-3">
             <Button
-              className="h-11 rounded-2xl bg-success text-primary-foreground hover:bg-success/90"
+              className="h-11 rounded-2xl bg-whatsapp-contact text-primary-foreground hover:bg-whatsapp-contact/90"
               disabled={!redirectUrl}
               onClick={onManualOpen}
             >

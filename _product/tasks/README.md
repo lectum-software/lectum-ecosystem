@@ -713,6 +713,7 @@ ou cortesia manual.
 | 286 | [TASK-286 - Compact video contact and inline mute](TASK-286-video-contact-and-mute.md) | In progress | 285 |
 | 287 | [TASK-287 - Content reels parity and scoped comments](TASK-287-content-reels-parity.md) | Implemented locally; visual approval pending | 285, 286 |
 | 288 | [TASK-288 - Feed audio recovery](TASK-288-feed-audio-recovery.md) | Implemented locally; iOS confirmation pending | 286, 287 |
+| 289 | [TASK-289 - Reels sound and action spacing](TASK-289-reels-audio-and-action-spacing.md) | Validated locally; publication authorized | 287, 288 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -154,18 +154,15 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 0;
+  padding: 13px 0;
   border: 0;
   background: transparent;
   color: var(--lectum-media-foreground);
   line-height: 1;
   width: 44px;
-  height: 44px;
+  min-height: 44px;
+  height: auto;
   justify-content: center;
-}
-.action:not(:has(span))::after {
-  content: "";
-  height: 13px;
 }
 .action svg {
   display: block;
@@ -175,16 +172,19 @@
 .action span {
   font-size: 10px;
   line-height: 13px;
-  font-weight: 600;
+  font-weight: var(--action-count-weight, 600);
 }
 .action[aria-pressed="true"] {
+  --action-count-weight: 800;
   color: var(--lectum-primary);
 }
 .contact {
   display: grid;
   place-items: center;
   width: 44px;
-  height: 44px;
+  min-height: 44px;
+  height: auto;
+  padding: 13px 0;
   border-radius: 50%;
   background: transparent;
   color: var(--lectum-media-foreground);
@@ -196,7 +196,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--lectum-success);
+  background: var(--lectum-whatsapp-contact);
 }
 .contact svg {
   width: 15px;
@@ -213,10 +213,15 @@
 .author {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
 }
+.author > :not(.name) {
+  flex-shrink: 0;
+}
 .name {
+  min-width: 0;
+  flex: 0 1 auto;
   color: var(--lectum-media-foreground);
   font-size: 17px;
   font-weight: 700;
@@ -600,16 +605,25 @@
     top: 50%;
     bottom: auto;
     width: 68px;
-    gap: 12px;
+    gap: 16px;
     transform: translateY(-35%);
   }
   .action {
     isolation: isolate;
-    height: 61px;
-    padding-top: 10px;
+    min-height: 40px;
+    height: 40px;
+    padding: 10px 0 0;
     justify-content: flex-start;
     gap: 14px;
     color: var(--lectum-muted);
+  }
+  .action:has(span) {
+    height: 57px;
+  }
+  .contact {
+    min-height: 40px;
+    height: 40px;
+    padding: 0;
   }
   .action::before,
   .contactGlyph {
@@ -627,7 +641,7 @@
     z-index: -1;
   }
   .contactGlyph {
-    color: var(--lectum-success);
+    color: var(--lectum-whatsapp-contact);
   }
   .contact svg {
     width: 20px;
