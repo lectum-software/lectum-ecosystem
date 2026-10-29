@@ -236,7 +236,7 @@ test("feed de psicologos separa volume explicito de tap e protege retomadas", ()
   assert.match(stream, /player.stopLoad\(\)/);
 });
 
-test("comunidade nao reativa som depois do fallback mudo", async (t) => {
+test("feed preserves explicit sound and scopes browser denial to the current activation", async (t) => {
   const {
     registerCommunityFeedVideoAutoplay,
     setCommunityFeedVideoSoundEnabled,
@@ -397,6 +397,8 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   await show(second);
   assert.equal(second.muted, false, "the next video still plays with sound");
   assert.equal(second.paused, false);
+  policyBlocked.dispatchEvent(new Event("play"));
+  assert.equal(second.paused, false, "a stale play event from a paused video cannot steal focus");
   const afterBlock = addVideo("mounted-after-policy-denial");
   await show(afterBlock);
   assert.equal(afterBlock.muted, false, "new players inherit the explicit choice, not the denial");
@@ -406,12 +408,12 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   assert.equal(afterBlock.muted, false, "a stale muted snapshot cannot override opt-in");
   assert.equal(afterBlock.volume, 1);
   await show(policyBlocked);
-  assert.equal(policyBlocked.paused, false, "returning to a fallback video autoplays muted");
-  assert.equal(policyBlocked.muted, true);
-  assert.deepEqual(policyBlocked.attempts, [false, true, true]);
+  assert.equal(policyBlocked.paused, false, "returning retries the explicit sound choice");
+  assert.equal(policyBlocked.muted, false, "a past denial cannot permanently mute one video");
+  assert.deepEqual(policyBlocked.attempts, [false, true, false]);
   await policyBlocked.play();
   assert.equal(policyBlocked.paused, false, "manual play remains available after denial");
-  assert.equal(policyBlocked.muted, true, "play alone is not a new volume action");
+  assert.equal(policyBlocked.muted, false, "play preserves the existing explicit choice");
   setCommunityFeedVideoSoundEnabled(true);
   assert.equal(policyBlocked.muted, false, "a fresh volume action clears the local fallback");
 
@@ -423,7 +425,7 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   setCommunityFeedVideoSoundEnabled(false);
   setCommunityFeedVideoSoundEnabled(true);
   await show(retryAfterChoice);
-  assert.deepEqual(retryAfterChoice.attempts, [false, true]);
+  assert.deepEqual(retryAfterChoice.attempts, [false, true, false]);
   assert.equal(retryAfterChoice.paused, false, "a new explicit choice permits a new attempt");
   for (const event of ["playing", "loadedmetadata"]) {
     retryAfterChoice.muted = true;
@@ -448,6 +450,31 @@ test("comunidade nao reativa som depois do fallback mudo", async (t) => {
   await fullyBlocked.play();
   assert.equal(fullyBlocked.paused, false, "manual play can recover a fully denied video");
   assert.equal(fullyBlocked.muted, true);
+
+  fullyBlocked.pause();
+  const pausedAttempts = fullyBlocked.attempts.length;
+  setCommunityFeedVideoSoundEnabled(true);
+  assert.equal(fullyBlocked.attempts.length, pausedAttempts, "volume cannot resume a user pause");
+  assert.equal(fullyBlocked.paused, true);
+
+  const gestureRecovery = addVideo("gesture-recovery");
+  gestureRecovery.nextPlay = () => {
+    gestureRecovery.nextPlay = () =>
+      Promise.reject(new DOMException("Muted denied", "NotAllowedError"));
+    return Promise.reject(new DOMException("Audible denied", "NotAllowedError"));
+  };
+  await show(gestureRecovery);
+  assert.equal(gestureRecovery.paused, true);
+  setCommunityFeedVideoSoundEnabled(true);
+  assert.deepEqual(gestureRecovery.attempts, [false, true, false], "play runs inside the gesture");
+  await flush();
+  assert.equal(gestureRecovery.paused, false);
+  assert.equal(gestureRecovery.muted, false);
+  gestureRecovery.dispatchEvent(new Event("pause"));
+  gestureRecovery.paused = true;
+  gestureRecovery.dispatchEvent(new Event("canplay"));
+  await flush();
+  assert.equal(gestureRecovery.paused, false, "a queued stale pause cannot mark a user pause");
 
   setCommunityFeedVideoSoundEnabled(false);
   assert.equal(third.muted, true);

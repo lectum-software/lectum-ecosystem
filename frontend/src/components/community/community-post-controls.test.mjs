@@ -488,6 +488,7 @@ test("video contact is a compact right-aligned green pill with an independent to
   assert.match(html, /min-h-\[34px\]/);
   assert.match(html, /min-h-\[44px\]/);
   assert.match(html, /text-\[13px\] font-semibold leading-5/);
+  assert.match(html, /h-\[15px\] w-\[15px\]/);
   assert.doesNotMatch(html, /lucide-arrow-right/);
   assert.equal((html.match(/>Fale com Ana</g) ?? []).length, 1);
   assert.doesNotMatch(html.replace(/<title>.*?<\/title>/g, ""), />WhatsApp<|bg-media-background/);
