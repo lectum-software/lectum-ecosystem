@@ -711,6 +711,7 @@ ou cortesia manual.
 | 284 | [TASK-284 - Analytics typography and selected icon](TASK-284-analytics-typography-and-selected-icon.md) | Done | 283 |
 | 285 | [TASK-285 - Content video reels and pending refinements](TASK-285-content-video-reels.md) | In progress | 284 |
 | 286 | [TASK-286 - Compact video contact and inline mute](TASK-286-video-contact-and-mute.md) | In progress | 285 |
+| 287 | [TASK-287 - Content reels parity and scoped comments](TASK-287-content-reels-parity.md) | Implemented locally; visual approval pending | 285, 286 |
 
 ## Ordem operacional recomendada sem bloqueios
 

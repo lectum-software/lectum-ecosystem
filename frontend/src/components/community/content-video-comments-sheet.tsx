@@ -20,11 +20,15 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
+import {
+  getContentVideoCommentReplies,
+  getContentVideoCommentTarget,
+} from "./content-video-comments-scope";
 
 export type ContentVideoCommentsSheetProps = {
   postId: string;
   communitySlug: string;
-  /** Focus this reply in the discussion, including deeper continuation branches. */
+  /** Show only descendants of this video reply; omitted for an original video post. */
   replyId?: string;
   open: boolean;
   onClose: () => void;
@@ -40,6 +44,7 @@ const DiscussionBranch = ({
   reportReturnFocusRef,
   threadId,
   threadHrefBase,
+  videoReplyId,
 }: {
   active: boolean;
   controller: DiscussionController;
@@ -48,18 +53,26 @@ const DiscussionBranch = ({
   reportReturnFocusRef: RefObject<HTMLButtonElement | null>;
   threadId: string;
   threadHrefBase: string;
+  videoReplyId?: string;
 }) => {
   const { post } = controller;
-  const threadQuery = usePostReplyThread(post?.id ?? "", threadId, Boolean(threadId));
+  const queryReplyId = videoReplyId || threadId;
+  const threadQuery = usePostReplyThread(post?.id ?? "", queryReplyId, Boolean(queryReplyId));
   const listContainerRef = useRef<HTMLDivElement>(null);
   const lastFocusedReply = useRef<string | null>(null);
   const replies = useMemo(
     () =>
-      threadId ? (threadQuery.data?.reply ? [threadQuery.data.reply] : []) : controller.replies,
-    [controller.replies, threadId, threadQuery.data],
+      videoReplyId
+        ? getContentVideoCommentReplies(videoReplyId, threadQuery.data?.reply, threadId)
+        : threadId
+          ? threadQuery.data?.reply
+            ? [threadQuery.data.reply]
+            : []
+          : controller.replies,
+    [controller.replies, threadId, threadQuery.data, videoReplyId],
   );
-  const pending = threadId ? threadQuery.isFetching : controller.isRepliesFetching;
-  const error = threadId
+  const pending = queryReplyId ? threadQuery.isFetching : controller.isRepliesFetching;
+  const error = queryReplyId
     ? threadQuery.isError
       ? resolvePostError(threadQuery.error)
       : null
@@ -102,7 +115,7 @@ const DiscussionBranch = ({
         errorMessage={error}
         focusReplyId={focusReplyId}
         inlineReplyTargets={controller.visibleInlineReplyTargets}
-        loading={threadId ? threadQuery.isLoading : controller.isInitialRepliesLoading}
+        loading={queryReplyId ? threadQuery.isLoading : controller.isInitialRepliesLoading}
         loadedPageCount={controller.highestLoadedReplyPage}
         restorePending={pending}
         mediaPermission={controller.mediaPermission}
@@ -110,7 +123,13 @@ const DiscussionBranch = ({
         onDeleteReply={(reply) =>
           controller.deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
         }
-        onOpenThread={active ? onOpenThread : undefined}
+        onOpenThread={
+          active
+            ? (id) => {
+                if (findReplyInTree(replies, id)) onOpenThread(id);
+              }
+            : undefined
+        }
         onReply={controller.handleReplyTarget}
         onReportReply={(reply, trigger) => {
           reportReturnFocusRef.current = trigger;
@@ -136,7 +155,7 @@ const DiscussionBranch = ({
         <Button
           className="mt-3"
           onClick={() => {
-            if (threadId) void threadQuery.refetch();
+            if (queryReplyId) void threadQuery.refetch();
             else controller.retryReplies();
           }}
           type="button"
@@ -145,7 +164,7 @@ const DiscussionBranch = ({
           Tentar novamente
         </Button>
       ) : null}
-      {!threadId && (controller.hasMoreReplies || controller.isLoadingMoreReplies) ? (
+      {!queryReplyId && (controller.hasMoreReplies || controller.isLoadingMoreReplies) ? (
         <div
           className="flex justify-center py-3"
           ref={active ? controller.loadMoreRepliesRef : undefined}
@@ -183,11 +202,18 @@ const OpenContentVideoCommentsSheet = ({
   const [viewport, setViewport] = useState<{ bottom: number; height: number } | null>(null);
   const controller = usePostDetailController({
     postId,
-    initialFocusReplyId: replyId,
     embedded: true,
-    onOpenThread: openThread,
+    // Post-wide focus continuations may include ancestors outside a video's discussion.
+    onOpenThread: replyId ? undefined : openThread,
   });
   const { post } = controller;
+  const videoQuery = usePostReplyThread(postId, replyId ?? "", Boolean(replyId && post));
+  const videoReply = videoQuery.data?.reply;
+  const commentCount = replyId
+    ? videoReply
+      ? (videoReply.replies_count ?? videoReply.replies.length)
+      : undefined
+    : post?.replies_count;
   const submitting =
     controller.createReplyMutation.isPending || controller.uploadReplyMediaMutation.isPending;
   const currentThread = threads[threads.length - 1];
@@ -251,8 +277,8 @@ const OpenContentVideoCommentsSheet = ({
             </Button>
           ) : null}
           <h2 className="min-w-0 flex-1 text-sm font-bold" id={titleId}>
-            {post
-              ? `${post.replies_count} ${post.replies_count === 1 ? "comentário" : "comentários"}`
+            {commentCount !== undefined
+              ? `${commentCount} ${commentCount === 1 ? "comentário" : "comentários"}`
               : "Comentários"}
           </h2>
           <button
@@ -308,13 +334,14 @@ const OpenContentVideoCommentsSheet = ({
                 onOpenThread={openThread}
                 reportReturnFocusRef={reportReturnFocusRef}
                 threadId={threadId}
+                videoReplyId={replyId}
                 threadHrefBase={`/comunidades/${post.community.slug || communitySlug}/publicacao/${post.id}/resposta`}
               />
             ))}
             <ReplyComposer
               apiError={controller.replyError}
               autoFocus={Boolean(controller.activeMobileReplyTarget)}
-              disabled={submitting}
+              disabled={submitting || Boolean(replyId && (!videoReply || videoQuery.isError))}
               formRef={controller.composerRef}
               mediaPermission={controller.mediaPermission}
               onCancelContext={() => {
@@ -325,12 +352,12 @@ const OpenContentVideoCommentsSheet = ({
               onSubmit={(values, mediaFile, operation) =>
                 controller.submitReply(
                   values,
-                  controller.activeMobileReplyTarget?.id ?? null,
+                  getContentVideoCommentTarget(replyId, controller.activeMobileReplyTarget),
                   mediaFile,
                   operation,
                 )
               }
-              replyToName={getCommunityAuthorDisplayName(post.author)}
+              replyToName={getCommunityAuthorDisplayName(videoReply?.author ?? post.author)}
               replyTarget={controller.activeMobileReplyTarget}
               variant="embedded"
             />

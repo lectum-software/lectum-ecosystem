@@ -226,6 +226,12 @@ export const useContentVideoQueue = (
     error,
     expired,
     ended,
+    select: (target: number) => {
+      if (!Number.isFinite(target)) return;
+      setIndex(
+        Math.max(0, Math.min(Math.trunc(target), Math.max(0, items.length - (ended ? 1 : 0)))),
+      );
+    },
     next: () =>
       setIndex((value) => Math.min(value + 1, Math.max(0, items.length - (ended ? 1 : 0)))),
     previous: () => setIndex((value) => Math.max(0, value - 1)),

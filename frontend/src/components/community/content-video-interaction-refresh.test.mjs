@@ -200,14 +200,16 @@ test("unmount abort rejects a late result so it cannot patch another video", asy
 });
 
 test("viewer refreshes on comments close, renders queue state and blocks stale toggles", () => {
-  const source = readFileSync(new URL("./content-video-viewer.tsx", import.meta.url), "utf8");
+  const source = ["./content-video-viewer.tsx", "./content-video-slide.tsx"]
+    .map((file) => readFileSync(new URL(file, import.meta.url), "utf8"))
+    .join("\n");
   assert.match(source, /const \{ current_user_vote: vote, upvotes_count: upvotes, saved \} = item/);
   assert.match(source, /panel === "comments" && next !== "comments"/);
   assert.match(source, /if \(closingComments\) void refreshInteractions\(\)/);
   assert.match(source, /onInteraction\(patch\)/);
   assert.match(
     source,
-    /onInteraction=\{\(patch\) => queue\.updateItem\(contentVideoKey\(item\), patch\)\}/,
+    /onInteraction=\{\(patch\) => queue\.updateItem\(contentVideoKey\(video\), patch\)\}/,
   );
   assert.match(source, /disabled=\{voteMutation\.isPending \|\| syncingInteractions\}/);
   assert.match(source, /postSave\.isPending \|\| replySave\.isPending \|\| syncingInteractions/);

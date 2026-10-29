@@ -9,6 +9,37 @@
   overflow: hidden;
   overscroll-behavior: none;
 }
+.feed {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  overflow-anchor: none;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.feed::-webkit-scrollbar {
+  display: none;
+}
+.feed[data-locked] {
+  overflow-y: hidden;
+}
+.slide {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .feed {
+    scroll-behavior: auto;
+  }
+}
 .stage {
   position: relative;
   width: 100%;
@@ -20,7 +51,8 @@
   border: 0;
   background: var(--lectum-media-background);
   isolation: isolate;
-  --bottom: max(8px, env(safe-area-inset-bottom));
+  --bottom: env(safe-area-inset-bottom, 0px);
+  --info-bottom: calc(var(--bottom) + 22px);
 }
 .player {
   position: absolute;
@@ -108,12 +140,13 @@
 .rail {
   position: absolute;
   right: 16px;
-  bottom: calc(var(--bottom) + 20px);
+  bottom: var(--info-bottom);
   z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 26px;
+  gap: 6px;
+  width: 44px;
 }
 .action {
   position: relative;
@@ -126,13 +159,13 @@
   background: transparent;
   color: var(--lectum-media-foreground);
   line-height: 1;
-  min-width: 36px;
+  width: 44px;
+  height: 44px;
+  justify-content: center;
 }
-.action::before {
+.action:not(:has(span))::after {
   content: "";
-  position: absolute;
-  inset: -7px -4px;
-  min-height: 44px;
+  height: 13px;
 }
 .action svg {
   display: block;
@@ -150,12 +183,20 @@
 .contact {
   display: grid;
   place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--lectum-media-foreground);
+  border: 0;
+}
+.contactGlyph {
+  display: grid;
+  place-items: center;
   width: 36px;
   height: 36px;
   border-radius: 50%;
   background: var(--lectum-success);
-  color: var(--lectum-media-foreground);
-  border: 0;
 }
 .contact svg {
   width: 15px;
@@ -165,8 +206,8 @@
   position: absolute;
   z-index: 4;
   left: 16px;
-  right: 76px;
-  bottom: calc(var(--bottom) + 20px);
+  right: 70px;
+  bottom: var(--info-bottom);
   text-shadow: 0 1px 4px color-mix(in srgb, var(--lectum-media-background) 53%, transparent);
 }
 .author {
@@ -190,10 +231,11 @@
   flex-shrink: 0;
 }
 .role {
-  margin-top: 3px;
+  margin-top: 6px;
   font-size: 11px;
   line-height: 16px;
   font-weight: 500;
+  color: color-mix(in srgb, var(--lectum-media-foreground) 80%, transparent);
 }
 .caption {
   display: flex;
@@ -223,72 +265,185 @@
 }
 .progress {
   position: absolute;
-  z-index: 6;
-  left: 12px;
-  right: 12px;
+  z-index: 3;
+  left: 0;
+  right: 0;
   bottom: var(--bottom);
-  width: calc(100% - 24px);
-  height: 16px;
+  width: 100%;
+  height: 28px;
   margin: 0;
   padding: 0;
-  accent-color: var(--lectum-media-foreground);
+}
+.progress:has(.progressInput:focus-visible) {
+  outline: 2px solid var(--lectum-media-foreground);
+  outline-offset: -2px;
+}
+.progressTrack {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--lectum-media-foreground) 34%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--lectum-media-foreground) 28%, transparent);
+  transition: height 150ms ease-out;
+}
+.progress[data-seeking] .progressTrack {
+  height: 6px;
+}
+.progressFill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  background: color-mix(in srgb, var(--lectum-media-foreground) 96%, transparent);
+}
+.progressInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  appearance: none;
+  touch-action: none;
   cursor: pointer;
+}
+.progressInput::-webkit-slider-thumb {
+  appearance: none;
+  width: 0;
+  height: 0;
+}
+.progressInput::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  border: 0;
 }
 .reading {
   position: absolute;
   z-index: 7;
-  left: 0;
-  right: 0;
-  padding: 16px;
+  left: 18px;
+  right: 18px;
+  background: transparent;
+  text-shadow: 0 1px 4px color-mix(in srgb, var(--lectum-media-background) 40%, transparent);
+}
+.readingShade {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
   background: linear-gradient(
-    color-mix(in srgb, var(--lectum-media-background) 87%, transparent) 75%,
-    color-mix(in srgb, var(--lectum-media-background) 53%, transparent)
+    180deg,
+    color-mix(in srgb, var(--lectum-media-background) 13%, transparent) 10%,
+    color-mix(in srgb, var(--lectum-media-background) 33%, transparent) 35%,
+    color-mix(in srgb, var(--lectum-media-background) 93%, transparent) 100%
+  );
+}
+.readingShade[data-panel="parent"] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--lectum-media-background) 87%, transparent) 0%,
+    color-mix(in srgb, var(--lectum-media-background) 73%, transparent) 32%,
+    color-mix(in srgb, var(--lectum-media-background) 47%, transparent) 48%,
+    transparent 72%
   );
 }
 .parent {
-  top: calc(max(16px, env(safe-area-inset-top)) + 48px);
-  max-height: 43%;
-  border-radius: 0;
+  top: calc(max(16px, env(safe-area-inset-top)) + 61px);
+  animation: readingDown 220ms ease-out;
 }
 .expandedCaption {
-  bottom: calc(var(--bottom) + 20px);
-  max-height: 42%;
-  padding-right: 72px;
+  bottom: var(--info-bottom);
+  animation: readingUp 220ms ease-out;
+}
+.readingHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.readingHeading > div {
+  min-width: 0;
+  flex: 1;
 }
 .scrollText {
   overflow-y: auto;
-  max-height: 28dvh;
+  max-height: calc(var(--viewer-height, 100dvh) * 0.37);
   overscroll-behavior: contain;
+  touch-action: pan-y;
   scrollbar-width: none;
-  mask-image: linear-gradient(var(--lectum-media-background) calc(100% - 20px), transparent);
-  padding-bottom: 24px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.7;
+}
+.parent .scrollText {
+  max-height: calc(var(--viewer-height, 100dvh) * 0.43);
+}
+.scrollText[data-has-more] {
+  mask-image: linear-gradient(var(--lectum-media-background) calc(100% - 40px), transparent);
+}
+.scrollText > div {
+  padding-bottom: 25px;
 }
 .scrollText::-webkit-scrollbar {
   display: none;
 }
 .reading h2 {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
-  line-height: 1.4;
-  margin-bottom: 8px;
+  line-height: 1.45;
+  margin: 6px 0 15px;
 }
 .community {
-  font-size: 11px;
+  font-size: 12px;
   color: color-mix(in srgb, var(--lectum-media-foreground) 70%, transparent);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .collapse {
   color: var(--lectum-media-foreground);
   background: none;
   border: 0;
-  margin-top: 6px;
+  padding: 8px;
+  min-height: 44px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 400;
+}
+.discussionLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 2px;
   font-size: 12px;
   font-weight: 600;
+}
+@keyframes readingDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes readingUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reading {
+    animation: none;
+  }
 }
 .center {
   position: absolute;
@@ -344,12 +499,16 @@
   background: color-mix(in srgb, var(--lectum-media-foreground) 13%, transparent);
   border-radius: 50%;
 }
-@media (min-width: 768px) {
-  .navigation {
-    display: flex;
-  }
-}
 @media (min-width: 391px) {
+  .stage {
+    --info-bottom: calc(var(--bottom) + 24px);
+  }
+  .identity {
+    left: 20px;
+  }
+  .rail {
+    gap: 8px;
+  }
   .name {
     font-size: 18px;
     line-height: 22px;
@@ -366,7 +525,7 @@
     width: 18px;
     height: 18px;
   }
-  .contact {
+  .contactGlyph {
     width: 34px;
     height: 34px;
   }
@@ -384,10 +543,142 @@
   }
 }
 @media (max-height: 550px) {
-  .rail {
-    gap: 13px;
-  }
   .caption {
     margin-top: 5px;
+  }
+}
+@media (min-width: 1024px) {
+  .dialog {
+    --desktop-card-top: 10px;
+    --desktop-card-gap: 6px;
+    --desktop-card-height: min(900px, calc(100dvh - 82px));
+    --desktop-card-width: min(506px, calc(56.25dvh - 46.125px));
+    --desktop-slide-height: calc(
+      var(--desktop-card-top) +
+      var(--desktop-card-height) +
+      var(--desktop-card-gap)
+    );
+    background: var(--lectum-surface-muted);
+  }
+  .feed {
+    scroll-padding-top: 0;
+  }
+  /* Short desktop slides still need enough scroll range to align the final page. */
+  .feed::after {
+    content: "";
+    display: block;
+    height: max(0px, calc(var(--viewer-height, 100dvh) - var(--desktop-slide-height)));
+  }
+  .slide {
+    height: var(--desktop-slide-height);
+    overflow: visible;
+  }
+  .stage {
+    --bottom: 0px;
+    --viewer-height: var(--desktop-card-height);
+    top: var(--desktop-card-top);
+    width: var(--desktop-card-width);
+    max-width: none;
+    height: var(--desktop-card-height);
+    border-radius: 22px;
+    overflow: visible;
+  }
+  .player,
+  .shade,
+  .readingShade {
+    border-radius: 22px;
+    overflow: hidden;
+  }
+  .progress {
+    border-radius: 0 0 22px 22px;
+    overflow: hidden;
+  }
+  .rail {
+    position: fixed;
+    left: calc(50% + var(--desktop-card-width) / 2 + 28px);
+    right: auto;
+    top: 50%;
+    bottom: auto;
+    width: 68px;
+    gap: 12px;
+    transform: translateY(-35%);
+  }
+  .action {
+    isolation: isolate;
+    height: 61px;
+    padding-top: 10px;
+    justify-content: flex-start;
+    gap: 14px;
+    color: var(--lectum-muted);
+  }
+  .action::before,
+  .contactGlyph {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--lectum-border);
+    border-radius: 50%;
+    background: var(--lectum-surface);
+  }
+  .action::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 2px;
+    z-index: -1;
+  }
+  .contactGlyph {
+    color: var(--lectum-success);
+  }
+  .contact svg {
+    width: 20px;
+    height: 20px;
+  }
+  .identity {
+    right: 20px;
+  }
+  .slide[aria-hidden="true"] .stage > :not(.player),
+  .slide[aria-hidden="true"] > .status {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .dialog > .status,
+  .slide > .status {
+    color: var(--foreground);
+  }
+  .navigation {
+    display: flex;
+    top: 50%;
+    right: clamp(24px, 3vw, 54px);
+    transform: translateY(-50%);
+    align-items: center;
+    gap: 20px;
+  }
+  .navigation button {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: transparent;
+    color: color-mix(in srgb, var(--foreground) 80%, transparent);
+    transition:
+      background 200ms ease-out,
+      color 200ms ease-out,
+      opacity 200ms ease-out,
+      transform 200ms ease-out;
+  }
+  .navigation button:hover:not(:disabled) {
+    transform: scale(1.05);
+    background: color-mix(in srgb, var(--lectum-surface-muted) 70%, transparent);
+    color: var(--foreground);
+  }
+  .navigation button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--lectum-primary) 25%, transparent);
+  }
+  .navigation button:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+  .navigation button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
   }
 }

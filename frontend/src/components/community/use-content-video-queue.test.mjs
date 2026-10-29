@@ -638,6 +638,32 @@ describe("content video queue mounted in React", {
     assert.equal((await page.evaluate(snapshot)).items.length, 0);
   });
 
+  test("select bounds native scroll indices and loads only near the active tail", async () => {
+    await page.evaluate(() => {
+      responses["p:1"] = response(
+        Array.from({ length: 5 }, (_, i) => video("p", String(i))),
+        1,
+        2,
+      );
+      responses["p:2"] = response([video("p", "5")], 2, 2);
+      mount({ postId: "p" });
+    });
+    await wait(() => queue.items.length === 5);
+    await page.evaluate(() => action("select", 2));
+    assert.equal((await page.evaluate(snapshot)).index, 2);
+    assert.equal(await page.evaluate(() => calls.length), 1);
+    await page.evaluate(() => action("select", NaN));
+    assert.equal((await page.evaluate(snapshot)).index, 2);
+    await page.evaluate(() => action("select", 99));
+    await wait(() => queue.ended);
+    assert.equal((await page.evaluate(snapshot)).index, 5);
+    assert.equal(await page.evaluate(() => calls.length), 2);
+    await page.evaluate(() => action("select", 99));
+    assert.equal((await page.evaluate(snapshot)).index, 5);
+    await page.evaluate(() => action("select", -10));
+    assert.equal((await page.evaluate(snapshot)).index, 0);
+  });
+
   test("unmount cancels source waiting and ignores late network completion", async () => {
     await page.evaluate(() => {
       requestVideos = async (id, query) => {

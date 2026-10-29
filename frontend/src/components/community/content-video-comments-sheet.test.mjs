@@ -23,6 +23,9 @@ const { ReplyComposer } = await import(
 const { ReplyBranchFooter } = await import(
   "../../app/app/community/[slug]/post/[id]/components/reply-branch-footer.tsx"
 );
+const { getContentVideoCommentReplies, getContentVideoCommentTarget } = await import(
+  "./content-video-comments-scope.ts"
+);
 const source = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const postSource = (path) => source(`../../app/app/community/[slug]/post/[id]/${path}`);
 
@@ -118,4 +121,54 @@ test("nested reply menus remain inside native dialog top layer", () => {
   assert.match(menu, /triggerRef.current\?\.closest\("dialog"\) \?\? document.body/);
   assert.match(menu, /createPortal\(/);
   assert.match(menu, /portalHost,/);
+});
+
+const reply = (id, replies = []) => ({ id, replies, replies_count: replies.length });
+
+test("reply video comments exclude the video, ancestors and other branches at every depth", () => {
+  const deep = reply("deep", [reply("deep-child")]);
+  const child = reply("child", [reply("grandchild", [deep])]);
+  const video = reply("video", [child, reply("second-child")]);
+  const ancestor = reply("ancestor", [video, reply("sibling")]);
+  assert.equal(getContentVideoCommentReplies("video", video), video.replies);
+  assert.deepEqual(getContentVideoCommentReplies("video", video, "deep"), [deep]);
+  assert.equal(getContentVideoCommentReplies("video", video, "child")[0], child);
+  for (const outside of ["video", "ancestor", "sibling", "other-post"]) {
+    assert.deepEqual(getContentVideoCommentReplies("video", video, outside), []);
+  }
+  assert.deepEqual(getContentVideoCommentReplies("video", ancestor), []);
+  assert.deepEqual(getContentVideoCommentReplies("video", undefined), []);
+  assert.deepEqual(getContentVideoCommentReplies("video", reply("video")), []);
+});
+
+test("composer targets the video by default and returns to it after nested reply cancellation", () => {
+  assert.equal(getContentVideoCommentTarget("video", null), "video");
+  assert.equal(getContentVideoCommentTarget("video", { id: "deep-child" }), "deep-child");
+  assert.equal(getContentVideoCommentTarget("video", null), "video");
+  assert.equal(getContentVideoCommentTarget(undefined, null), null);
+  assert.equal(getContentVideoCommentTarget(undefined, { id: "post-child" }), "post-child");
+  const sheet = source("./content-video-comments-sheet.tsx");
+  assert.match(
+    sheet,
+    /getContentVideoCommentTarget\(replyId, controller.activeMobileReplyTarget\)/,
+  );
+  assert.match(
+    sheet,
+    /onCancelContext=\{\(\) => \{\s*controller.setReplyError\(null\);\s*controller.setMobileReplyTarget\(null\);/,
+  );
+});
+
+test("sheet cannot escape the video scope through post focus, paging or continuation", () => {
+  const sheet = source("./content-video-comments-sheet.tsx");
+  assert.doesNotMatch(sheet, /initialFocusReplyId: replyId/);
+  assert.match(sheet, /onOpenThread: replyId \? undefined : openThread/);
+  assert.match(
+    sheet,
+    /getContentVideoCommentReplies\(videoReplyId, threadQuery.data\?\.reply, threadId\)/,
+  );
+  assert.match(sheet, /if \(findReplyInTree\(replies, id\)\) onOpenThread\(id\)/);
+  assert.match(sheet, /!queryReplyId && \(controller.hasMoreReplies/);
+  assert.match(sheet, /videoReply\.replies_count \?\? videoReply\.replies\.length/);
+  assert.doesNotMatch(sheet, /countReplyTreeDescendants|descendants_count/);
+  assert.match(sheet, /videoReply\?\.author \?\? post.author/);
 });
