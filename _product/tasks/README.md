@@ -712,6 +712,7 @@ ou cortesia manual.
 | 285 | [TASK-285 - Content video reels and pending refinements](TASK-285-content-video-reels.md) | In progress | 284 |
 | 286 | [TASK-286 - Compact video contact and inline mute](TASK-286-video-contact-and-mute.md) | In progress | 285 |
 | 287 | [TASK-287 - Content reels parity and scoped comments](TASK-287-content-reels-parity.md) | Implemented locally; visual approval pending | 285, 286 |
+| 288 | [TASK-288 - Feed audio recovery](TASK-288-feed-audio-recovery.md) | Implemented locally; iOS confirmation pending | 286, 287 |
 
 ## Ordem operacional recomendada sem bloqueios
 

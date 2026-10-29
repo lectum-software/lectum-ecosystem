@@ -75,7 +75,7 @@ export const CommunityWhatsAppCta = ({
       >
         <span className="flex min-h-[34px] min-w-0 max-w-full items-center justify-center gap-[7px] rounded-full bg-whatsapp-contact px-4 py-[7px] shadow-sm">
           <PsychologistWhatsAppButtonContent
-            iconClassName="h-[17px] w-[17px] text-media-foreground"
+            iconClassName="h-[15px] w-[15px] text-media-foreground"
             label={actionLabel}
             labelClassName="text-left text-[13px] font-semibold leading-5 text-media-foreground"
           />

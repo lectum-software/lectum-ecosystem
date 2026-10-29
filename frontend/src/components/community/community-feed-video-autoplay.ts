@@ -173,6 +173,11 @@ const activateAutoplayItem = (nextId: string, options: { alreadyPlaying?: boolea
     return;
   }
 
+  // A browser denial applies to this activation, not every future visit to the video.
+  if (activeVideoId !== nextId) {
+    item.blockedSoundRevision = null;
+    item.blockedPlaybackRevision = null;
+  }
   activeVideoId = nextId;
   item.pausedByUser = false;
   pauseInactiveAutoplayItems(nextId);
@@ -278,6 +283,18 @@ export const setCommunityFeedVideoSoundEnabled = (soundEnabled: boolean) => {
   if (!documentHasUserAttention()) return;
   setVideoSoundEnabledByUser(soundEnabled);
   updateVideoSoundPreference();
+
+  const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
+  if (
+    soundEnabled &&
+    activeItem?.isIntersecting &&
+    activeItem.intersectionRatio >= EXIT_INTERSECTION_RATIO &&
+    !activeItem.pausedByUser &&
+    !activeItem.video.ended
+  ) {
+    // Keep play inside the volume-control gesture, including recovery from autoplay denial.
+    void playAutoplayItem(activeItem);
+  }
 };
 
 export const subscribeCommunityFeedVideoSoundPreference = (listener: SoundPreferenceListener) => {
@@ -416,6 +433,7 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
 
   const enforceSoundPreference = () => applySoundPreferenceToVideo(item);
   const handlePlay = () => {
+    if (video.paused || video.ended) return;
     enforceSoundPreference();
     if (!isCommunityAutoplayContextActive()) {
       item.pausedByUser = false;
@@ -433,6 +451,7 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
     }
   };
   const handlePause = () => {
+    if (!video.paused) return;
     item.playAttempt += 1;
     if (wasVideoPauseRequestedByFocusGuard(video)) {
       item.suppressNextPause = false;
