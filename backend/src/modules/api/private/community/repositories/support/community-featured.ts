@@ -41,7 +41,7 @@ export const featuredPostScore = (
     metrics.upvotes.all * 3 + metrics.comments.all + metrics.shares_count * 2,
   );
   const complement = Math.min(10, Math.log2(1 + engagement));
-  const penalty = Math.max(0, metrics.penalty) + Math.max(0, post.downvotes_count) * 0.6;
+  const penalty = Math.max(0, metrics.penalty);
   return Math.max(
     0,
     professionalActivityScore(post.replies, now) +

@@ -25,6 +25,7 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { ContentVideoPost } from "@/components/community/content-video-context";
 import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
@@ -263,7 +264,13 @@ export const ProfessionalReplyPreview = ({
   );
 };
 
-export const PostCard = ({
+export const PostCard = (props: Parameters<typeof PostCardContent>[0]) => (
+  <ContentVideoPost postId={props.post.id}>
+    <PostCardContent {...props} />
+  </ContentVideoPost>
+);
+
+const PostCardContent = ({
   onOpen,
   onShare,
   post,

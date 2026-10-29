@@ -3,6 +3,8 @@ import { getApiErrorStatus } from "@/api/errors";
 import { callEndpoint } from "@/api/generator";
 import type {
   CreatePostReplyPayload,
+  PostContentVideosQuery,
+  PostContentVideosResponse,
   PostDeleteResponse,
   PostDetailResponse,
   PostMuteResponse,
@@ -83,6 +85,15 @@ export const getPostReplies = async (id: string, query: PostRepliesQuery = {}) =
   });
 
   return handleReq<PostRepliesResponse>(handle);
+};
+
+export const getPostContentVideos = async (id: string, query: PostContentVideosQuery = {}) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/content-videos",
+    params: { id },
+    query,
+  });
+  return handleReq<PostContentVideosResponse>(handle);
 };
 
 export const getPostReplyThread = async (id: string, replyId: string) => {

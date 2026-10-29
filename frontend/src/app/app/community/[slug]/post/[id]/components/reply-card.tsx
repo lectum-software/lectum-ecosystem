@@ -136,6 +136,7 @@ export const ReplyCard = ({
   onCancelInlineReplyTarget,
   onInlineReplyDraftChange,
   onDeleteReply,
+  onOpenThread,
   onReply,
   onReportReply,
   onShare,
@@ -165,6 +166,7 @@ export const ReplyCard = ({
   onCancelInlineReplyTarget: (replyId: string) => void;
   onInlineReplyDraftChange?: (hasDraft: boolean) => void;
   onDeleteReply: (reply: PostReply) => void;
+  onOpenThread?: (replyId: string) => void;
   onReply: (reply: PostReply) => void;
   onReportReply: (reply: PostReply, trigger: HTMLButtonElement | null) => void;
   onShare: (reply: PostReply) => void;
@@ -213,11 +215,22 @@ export const ReplyCard = ({
   });
   const [collapsedFocusId, setCollapsedFocusId] = useState<string | null>();
   const restoreRootFocus = useRef(false);
+  const articleRef = useRef<HTMLElement>(null);
   const suppressDescendantFocus =
     suppressFocusExpansion || collapsedFocusId === (focusReplyId ?? null);
   useLayoutEffect(() => {
     if (!restoreRootFocus.current || branchVisibility?.count !== 0) return;
     restoreRootFocus.current = false;
+    const article = articleRef.current;
+    const sheetScroller = article?.closest<HTMLElement>("[data-content-video-comment-branch]");
+    if (article && sheetScroller) {
+      article
+        .querySelector<HTMLElement>(`[id="reply-focus-${CSS.escape(reply.id)}"]`)
+        ?.focus({ preventScroll: true });
+      sheetScroller.scrollTop +=
+        article.getBoundingClientRect().top - sheetScroller.getBoundingClientRect().top - 16;
+      return;
+    }
     restoreCollapsedReplyFocus(reply.id);
   }, [branchVisibility, reply.id]);
   const visualMaxDepth =
@@ -338,6 +351,7 @@ export const ReplyCard = ({
 
   return (
     <article
+      ref={articleRef}
       className="relative rounded-[20px] py-0.5 text-foreground dark:text-foreground"
       id={`reply-${reply.id}`}
       data-reply-branch-id={reply.id}
@@ -592,6 +606,7 @@ export const ReplyCard = ({
                 onCancelInlineReplyTarget={onCancelInlineReplyTarget}
                 onInlineReplyDraftChange={onInlineReplyDraftChange}
                 onDeleteReply={onDeleteReply}
+                onOpenThread={onOpenThread}
                 onReply={onReply}
                 onReportReply={onReportReply}
                 onShare={onShare}
@@ -622,6 +637,7 @@ export const ReplyCard = ({
         depth={depth}
         onCollapse={collapseTree}
         onExpand={updateVisibleBranch}
+        onOpenThread={onOpenThread ? () => onOpenThread(reply.id) : undefined}
         replyId={reply.id}
         threadHref={threadHref}
         visibleCount={effectiveVisibleChildCount}

@@ -215,8 +215,6 @@ export type ProfilePublicationCandidate =
 
 export const PROFILE_PUBLICATION_UPVOTE_WEIGHT = 3;
 
-export const PROFILE_PUBLICATION_DOWNVOTE_WEIGHT = 0.6;
-
 export const PROFILE_PUBLICATION_COMMENT_WEIGHT = 5;
 
 export const PROFILE_PUBLICATION_PSYCHOLOGIST_REPLY_WEIGHT = 15;
@@ -238,10 +236,7 @@ export const isProfessionalReplyVideoPreviewCandidate = (reply: ProfileProfessio
 
 export const selectHighlightedProfileReplyPreview = (replies: ProfileProfessionalReplyResult[]) =>
   replies.filter(isProfessionalReplyVideoPreviewCandidate).sort((a, b) => {
-    const scoreDiff =
-      b.upvotes_count -
-      b.downvotes_count * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT -
-      (a.upvotes_count - a.downvotes_count * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT);
+    const scoreDiff = b.upvotes_count - a.upvotes_count;
     if (scoreDiff !== 0) return scoreDiff;
 
     const videoDiff =

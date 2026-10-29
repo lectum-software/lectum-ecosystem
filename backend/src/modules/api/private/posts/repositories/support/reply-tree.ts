@@ -7,7 +7,6 @@ import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranki
 import {
   isProfessionalVerified,
   type MentorRankingSignals,
-  REPLY_DOWNVOTE_RANKING_WEIGHT,
   type ReplyBaseResult,
   type ReplyTreeResult,
   replyBaseSelect,
@@ -39,10 +38,8 @@ export const rankingPositionForReply = (
 ) => rankingSignals.get(item.author.id)?.position ?? Number.POSITIVE_INFINITY;
 
 export const replyVoteRankingScore = ({
-  downvotes_count,
   upvotes_count,
-}: Pick<ReplyBaseResult, "downvotes_count" | "upvotes_count">) =>
-  upvotes_count - downvotes_count * REPLY_DOWNVOTE_RANKING_WEIGHT;
+}: Pick<ReplyBaseResult, "downvotes_count" | "upvotes_count">) => upvotes_count;
 
 export const compareReplySiblingsByRelevance = (
   a: ReplyBaseResult,

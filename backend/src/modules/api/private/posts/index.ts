@@ -4,6 +4,7 @@ import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { createMultipartChunkMiddleware } from "@/config/multer/multipart-chunk";
 import { uploadConcurrencyMiddleware } from "@/config/multer/upload-concurrency";
 import privateAuth from "@/modules/api/middlewares/_auth";
+import { contentVideos } from "./use-cases/content-videos-controller";
 import {
   abortReplyMediaMultipartUpload,
   authorizeReplyMediaUpload,
@@ -57,6 +58,7 @@ import {
   updateReplyValidator,
   voteValidator,
 } from "./validator";
+import { contentVideosValidator } from "./validator/content-videos";
 
 const routes = Router();
 
@@ -67,6 +69,7 @@ const replyMediaMultipartChunkMiddleware = createMultipartChunkMiddleware({
 
 routes.get("/mine", privateAuth, listValidator, mine);
 routes.get("/saved", privateAuth, listValidator, saved);
+routes.get("/:id/content-videos", contentVideosValidator, contentVideos);
 routes.get("/:id/replies", repliesValidator, replies);
 routes.get("/:id/replies/:replyId/thread", replySaveValidator, replyThread);
 routes.post(

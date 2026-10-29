@@ -376,10 +376,7 @@ export const mentorBadgePosition = (badge?: string | null) => {
 export const newestReplyFirst = (a: PostReply, b: PostReply) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
-export const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
-
-export const replyVoteRankingScore = (reply: PostReply) =>
-  reply.upvotes_count - reply.downvotes_count * REPLY_DOWNVOTE_RANKING_WEIGHT;
+export const replyVoteRankingScore = (reply: PostReply) => reply.upvotes_count;
 
 export const compareReplySiblingsByRelevance = (a: PostReply, b: PostReply) => {
   const voteScoreDiff = replyVoteRankingScore(b) - replyVoteRankingScore(a);

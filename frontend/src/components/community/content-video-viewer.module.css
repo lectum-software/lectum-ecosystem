@@ -1,0 +1,393 @@
+.dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  width: 100%;
+  height: 100dvh;
+  background: var(--lectum-media-background);
+  color: var(--lectum-media-foreground);
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.stage {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  min-width: 0;
+  height: 100%;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: var(--lectum-media-background);
+  isolation: isolate;
+  --bottom: max(8px, env(safe-area-inset-bottom));
+}
+.player {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+.shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--lectum-media-background) 40%, transparent) 0%,
+    transparent 22%,
+    transparent 52%,
+    color-mix(in srgb, var(--lectum-media-background) 60%, transparent) 100%
+  );
+  z-index: 2;
+}
+.top {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: 16px;
+  right: 14px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.contextButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--lectum-media-foreground);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  background: transparent;
+  min-height: 44px;
+}
+.contextButton svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+}
+.contextChanged {
+  animation: contextChange 900ms ease-out 1;
+}
+@keyframes contextChange {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contextChanged {
+    animation: none;
+  }
+}
+.close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--lectum-media-background) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lectum-media-foreground) 21%, transparent);
+  color: var(--lectum-media-foreground);
+}
+.close svg {
+  width: 18px;
+  height: 18px;
+}
+.rail {
+  position: absolute;
+  right: 16px;
+  bottom: calc(var(--bottom) + 20px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+.action {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--lectum-media-foreground);
+  line-height: 1;
+  min-width: 36px;
+}
+.action::before {
+  content: "";
+  position: absolute;
+  inset: -7px -4px;
+  min-height: 44px;
+}
+.action svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.action span {
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 600;
+}
+.action[aria-pressed="true"] {
+  color: var(--lectum-primary);
+}
+.contact {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--lectum-success);
+  color: var(--lectum-media-foreground);
+  border: 0;
+}
+.contact svg {
+  width: 15px;
+  height: 15px;
+}
+.identity {
+  position: absolute;
+  z-index: 4;
+  left: 16px;
+  right: 76px;
+  bottom: calc(var(--bottom) + 20px);
+  text-shadow: 0 1px 4px color-mix(in srgb, var(--lectum-media-background) 53%, transparent);
+}
+.author {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.name {
+  color: var(--lectum-media-foreground);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 21px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+.badge {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.role {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.caption {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0;
+  color: var(--lectum-media-foreground);
+  background: none;
+  border: 0;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 17px;
+}
+.caption span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.caption b {
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.progress {
+  position: absolute;
+  z-index: 6;
+  left: 12px;
+  right: 12px;
+  bottom: var(--bottom);
+  width: calc(100% - 24px);
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--lectum-media-foreground);
+  cursor: pointer;
+}
+.reading {
+  position: absolute;
+  z-index: 7;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(
+    color-mix(in srgb, var(--lectum-media-background) 87%, transparent) 75%,
+    color-mix(in srgb, var(--lectum-media-background) 53%, transparent)
+  );
+}
+.parent {
+  top: calc(max(16px, env(safe-area-inset-top)) + 48px);
+  max-height: 43%;
+  border-radius: 0;
+}
+.expandedCaption {
+  bottom: calc(var(--bottom) + 20px);
+  max-height: 42%;
+  padding-right: 72px;
+}
+.scrollText {
+  overflow-y: auto;
+  max-height: 28dvh;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  mask-image: linear-gradient(var(--lectum-media-background) calc(100% - 20px), transparent);
+  padding-bottom: 24px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+.scrollText::-webkit-scrollbar {
+  display: none;
+}
+.reading h2 {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.community {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--lectum-media-foreground) 70%, transparent);
+  margin-bottom: 8px;
+}
+.collapse {
+  color: var(--lectum-media-foreground);
+  background: none;
+  border: 0;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--lectum-media-background) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lectum-media-foreground) 35%, transparent);
+  color: var(--lectum-media-foreground);
+}
+.center svg {
+  width: 20px;
+  height: 20px;
+}
+.status {
+  position: absolute;
+  z-index: 8;
+  top: 40%;
+  left: 24px;
+  right: 24px;
+  text-align: center;
+  font-size: 14px;
+}
+.status button {
+  display: block;
+  margin: 16px auto;
+  padding: 10px 16px;
+  border: 1px solid color-mix(in srgb, var(--lectum-media-foreground) 53%, transparent);
+  border-radius: 8px;
+  background: var(--lectum-media-background);
+  color: var(--lectum-media-foreground);
+}
+.navigation {
+  position: absolute;
+  right: 12px;
+  top: 45%;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 6;
+}
+.navigation button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--lectum-media-foreground) 13%, transparent);
+  border-radius: 50%;
+}
+@media (min-width: 768px) {
+  .navigation {
+    display: flex;
+  }
+}
+@media (min-width: 391px) {
+  .name {
+    font-size: 18px;
+    line-height: 22px;
+  }
+  .role {
+    font-size: 12px;
+  }
+}
+@media (max-width: 359px) {
+  .rail {
+    right: 12px;
+  }
+  .action svg {
+    width: 18px;
+    height: 18px;
+  }
+  .contact {
+    width: 34px;
+    height: 34px;
+  }
+  .contact svg {
+    width: 14px;
+    height: 14px;
+  }
+  .badge {
+    width: 12px;
+    height: 12px;
+  }
+  .identity {
+    left: 12px;
+    right: 66px;
+  }
+}
+@media (max-height: 550px) {
+  .rail {
+    gap: 13px;
+  }
+  .caption {
+    margin-top: 5px;
+  }
+}

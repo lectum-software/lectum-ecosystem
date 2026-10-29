@@ -7,6 +7,7 @@ import type {
 } from "@/api/generator/types/directory";
 import { documentHasUserAttention } from "@/components/analytics/attention";
 import { useCommunityVideoAutoplay } from "@/components/community/community-feed-video-autoplay";
+import { CommunityWhatsAppCta } from "@/components/community/community-whatsapp-cta";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { useAppSelector } from "@/hooks/redux";
 import { resolvePublicMediaUrl } from "@/utils/media";
@@ -17,6 +18,7 @@ import {
   createVideoSessionKey,
   getPsychologistDisplayName,
   PRESENTATION_VIDEO_RETENTION_BUCKETS,
+  toPsychologistWhatsAppIdentity,
 } from "../modules/support";
 
 const MAX_TRACKED_SECONDS = 24 * 60 * 60;
@@ -372,6 +374,20 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
           data-presentation-video="true"
         >
           <VerticalVideoPlayer
+            bottomOverlay={
+              !profile.read_only && profile.whatsapp_url ? (
+                <CommunityWhatsAppCta
+                  overVideo
+                  psychologist={toPsychologistWhatsAppIdentity(profile)}
+                  trackingContext={{
+                    pageKind: "psychologist_profile",
+                    targetId: profile.id,
+                    targetType: "psychologist",
+                  }}
+                />
+              ) : null
+            }
+            bottomOverlayExpandedOnly
             className="rounded-[18px] border-0"
             controlsVariant="persistent"
             fullscreenVariant="content"

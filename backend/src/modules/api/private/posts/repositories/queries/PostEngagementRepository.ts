@@ -212,6 +212,8 @@ export class PostEngagementRepository extends PostRepositoryContext {
   }
 
   async vote(data: IPostVoteDTO): Promise<PostMutationResult<PostVoteResponse>> {
+    if (data.b.value !== 1) return { kind: "invalid_vote_value" };
+
     const post = await findPublishedPost(data.p.id);
     if (!post) return { kind: "not_found" };
 
@@ -265,7 +267,7 @@ export class PostEngagementRepository extends PostRepositoryContext {
       const oldValue = existing && !existing.deleted ? normalizeVoteValue(existing.value) : null;
       const nextValue: CurrentVote = oldValue === value ? null : value;
       const upDelta = (nextValue === 1 ? 1 : 0) - (oldValue === 1 ? 1 : 0);
-      const downDelta = (nextValue === -1 ? 1 : 0) - (oldValue === -1 ? 1 : 0);
+      const downDelta = oldValue === -1 ? -1 : 0;
 
       if (existing) {
         await transaction.post_vote.update({

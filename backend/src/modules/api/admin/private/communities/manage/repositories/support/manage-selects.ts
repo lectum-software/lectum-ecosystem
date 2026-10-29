@@ -3,7 +3,7 @@ import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitle
 
 export const TOP_MENTOR_UPVOTE_WEIGHT = 4;
 
-export const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
+export const TOP_MENTOR_DOWNVOTE_WEIGHT = 0;
 
 export const TOP_MENTOR_COMMENT_WEIGHT = 3;
 
@@ -552,14 +552,15 @@ export const adminCommunityMentorFormula = () => ({
   comment_weight: TOP_MENTOR_COMMENT_WEIGHT,
   community_whatsapp_weight: TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
   description:
-    "score = (cobertura de respostas × 10) + (respostas publicadas × 3) + (vídeo-respostas × 4) + (upvotes × 4) - (downvotes × 3) + (comentários recebidos × 3) + (compartilhamentos × 3) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 3) + (posts publicados × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
+    "score = (cobertura de respostas × 10) + (respostas publicadas × 3) + (vídeo-respostas × 4) + (upvotes × 4) + (comentários recebidos × 3) + (compartilhamentos × 3) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 3) + (posts publicados × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
   downvote_weight: TOP_MENTOR_DOWNVOTE_WEIGHT,
   notes: [
     "A lista administrativa inclui todos os psicólogos participantes da comunidade, inclusive com score zero.",
     "A indicação de subida/queda compara a posição atual com o período anterior equivalente de 30 dias.",
     "Cobertura de respostas conta no máximo 1 ponto de cobertura por post de paciente respondido pelo psicólogo no período.",
     "Respostas publicadas e vídeo-respostas também pontuam para reconhecer contribuição visível recente.",
-    "Upvotes, downvotes, salvamentos e compartilhamentos feitos pelo próprio psicólogo no próprio conteúdo não entram no score.",
+    "Upvotes, salvamentos e compartilhamentos feitos pelo próprio psicólogo no próprio conteúdo não entram no score.",
+    "Downvotes históricos não afetam o score nem os desempates.",
     "Cliques de WhatsApp entram somente quando a origem por comunidade puder ser identificada e funcionam como bônus.",
   ],
   post_weight: TOP_MENTOR_POST_WEIGHT,
@@ -603,8 +604,7 @@ export const adminCommunityMentorScore = (metrics: AdminCommunityMentorMetrics) 
     metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
     metrics.video_replies_published * TOP_MENTOR_VIDEO_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
-  const penaltyPoints =
-    metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
+  const penaltyPoints = metrics.removed_posts_penalty;
 
   return positivePoints - penaltyPoints;
 };

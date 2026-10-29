@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Bookmark, MessageCircle, Share2 } from "lucide-react";
+import { ArrowUp, Bookmark, MessageCircle, Share2 } from "lucide-react";
 import type { MouseEventHandler, ReactNode } from "react";
 import {
   PostActionButton,
@@ -66,7 +66,7 @@ export type CommunityActionBarProps = {
   voteLabel?: string;
   votePresentation?: VotePresentation;
   showUpvoteText?: boolean;
-  onVote?: (value: 1 | -1) => void;
+  onVote?: (value: 1) => void;
 };
 
 const actionBarClassName = (size: CommunityActionSize, spacing: CommunityActionSpacing) =>
@@ -101,13 +101,6 @@ const clusteredVoteControlClassName = (
 
   return size === "md" ? "h-9" : "h-8";
 };
-
-const separatorClassName = (size: CommunityActionSize, presentation: VotePresentation) =>
-  cn(
-    "w-px bg-surface-muted dark:bg-border",
-    presentation === "inline" && "hidden",
-    size === "xs" ? "h-4" : "h-5",
-  );
 
 const textOnlyReplyClassName = (size: CommunityActionSize) =>
   cn(
@@ -146,7 +139,6 @@ export const CommunityActionBar = ({
   share,
   showUpvoteText = true,
   size = "sm",
-  downvotesCount,
   upvotesCount,
   voteLabel = "Marcar como útil",
   votePresentation = "cluster",
@@ -286,30 +278,6 @@ export const CommunityActionBar = ({
             >
               {showUpvoteText ? "Útil" : null}
             </PostActionMetric>
-          )}
-          <span className={separatorClassName(size, votePresentation)} aria-hidden="true" />
-          {canVote && onVote ? (
-            <VoteActionButton
-              className={clusteredVoteControlClassName(size, votePresentation)}
-              count={downvotesCount}
-              currentVote={currentVote}
-              disabled={disabled}
-              icon={ArrowDown}
-              label="Dar downvote"
-              onVote={onVote}
-              showPositiveDelta={false}
-              size={size}
-              value={-1}
-              variant={votePresentation === "inline" ? "ghost" : "default"}
-            />
-          ) : (
-            <PostActionMetric
-              className={clusteredVoteControlClassName(size, votePresentation)}
-              count={downvotesCount}
-              icon={ArrowDown}
-              label="Dar downvote"
-              size={size}
-            />
           )}
         </div>
 

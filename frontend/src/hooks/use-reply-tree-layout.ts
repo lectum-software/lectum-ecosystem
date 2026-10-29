@@ -11,6 +11,7 @@ export const useReplyTreeLayout = (
   maxDepth: number,
   focusReplyId?: string | null,
   threadHrefBase?: string,
+  onOpenThread?: (replyId: string) => void,
 ) => {
   const ref = useRef<HTMLElement>(null);
   const router = useRouter();
@@ -46,10 +47,14 @@ export const useReplyTreeLayout = (
     if (!measured || !focusReplyId || !threadHrefBase) return;
     const root = findFocusedReplyContinuation(replies, focusReplyId, depth);
     if (!root) return;
+    if (onOpenThread) {
+      onOpenThread(root);
+      return;
+    }
     router.replace(
       `${threadHrefBase}/${encodeURIComponent(root)}?focusReplyId=${encodeURIComponent(focusReplyId)}#reply-${encodeURIComponent(focusReplyId)}`,
       { scroll: false },
     );
-  }, [depth, focusReplyId, measured, replies, router, threadHrefBase]);
+  }, [depth, focusReplyId, measured, onOpenThread, replies, router, threadHrefBase]);
   return { ref, depth };
 };

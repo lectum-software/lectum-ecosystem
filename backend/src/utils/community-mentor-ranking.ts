@@ -63,7 +63,6 @@ export const getCommunityMentorWhatsappClickCounts = async (
 };
 
 const TOP_MENTOR_UPVOTE_WEIGHT = 4;
-const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
 const TOP_MENTOR_COMMENT_WEIGHT = 3;
 const TOP_MENTOR_SHARE_WEIGHT = 3;
 const TOP_MENTOR_SAVE_WEIGHT = 2;
@@ -128,8 +127,7 @@ const topMentorScore = (metrics: TopMentorMutableMetrics) => {
     metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
     metrics.video_replies_published * TOP_MENTOR_VIDEO_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
-  const penaltyPoints =
-    metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
+  const penaltyPoints = metrics.removed_posts_penalty;
 
   return positivePoints - penaltyPoints;
 };
@@ -137,7 +135,6 @@ const topMentorScore = (metrics: TopMentorMutableMetrics) => {
 const hasTopMentorRankingSignal = (metrics: TopMentorMutableMetrics) => {
   return (
     metrics.upvotes_received > 0 ||
-    metrics.downvotes_received > 0 ||
     metrics.comments_received > 0 ||
     metrics.shares_received > 0 ||
     metrics.saves_received > 0 ||
@@ -624,9 +621,6 @@ export const getCommunityMentorRankingSignals = async (
 
       const postDiff = b.metrics.posts_published - a.metrics.posts_published;
       if (postDiff !== 0) return postDiff;
-
-      const downvoteDiff = a.metrics.downvotes_received - b.metrics.downvotes_received;
-      if (downvoteDiff !== 0) return downvoteDiff;
 
       const removedPostDiff = a.metrics.removed_posts - b.metrics.removed_posts;
       if (removedPostDiff !== 0) return removedPostDiff;

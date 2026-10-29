@@ -121,7 +121,7 @@ export const vote = async (data: IPostVoteDTO) => {
   const unauthorized = ensureCommunityActor(data);
   if (unauthorized) return unauthorized;
 
-  if (data.b.value !== 1 && data.b.value !== -1) {
+  if (data.b.value !== 1) {
     return invalidVoteValue();
   }
 

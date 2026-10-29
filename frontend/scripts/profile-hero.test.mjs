@@ -17,7 +17,10 @@ const bridges = new Map(
 );
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    return nextResolve(bridges.get(specifier) ?? specifier, context);
+    const resolved =
+      bridges.get(specifier) ??
+      (specifier === "next/navigation" ? "next/navigation.js" : specifier);
+    return nextResolve(resolved, context);
   },
 });
 const { ProfileHero } = await import("../src/app/app/psychologist/[id]/components/hero.tsx");

@@ -711,3 +711,4 @@ Formato recomendado:
 - [ADR-0647 — Observação segura do transporte de assinaturas](0647-observacao-segura-do-transporte-de-assinaturas.md)
 
 - [ADR-0648 — Backend Node 24 com validação da imagem final](0648-backend-node24-runtime.md)
+- [ADR-0650 — Content video reels](0650-content-video-reels.md)

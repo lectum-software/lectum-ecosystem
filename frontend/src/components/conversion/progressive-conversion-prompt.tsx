@@ -10,6 +10,9 @@ import {
   Sparkles,
   UserPlus,
 } from "lucide-react";
+import { useRef } from "react";
+import { createPortal } from "react-dom";
+import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
   type ConversionPromptState,
@@ -33,6 +36,8 @@ export const ProgressiveConversionPrompt = ({
   startSignup,
   startLogin,
 }: Props) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const portalHost = useModalPortalHost(!isAuthenticated && Boolean(prompt), overlayRef);
   if (isAuthenticated || !prompt) return null;
   const actionPromptType = prompt?.intent?.type;
   const isActionPrompt = isActionPromptType(actionPromptType);
@@ -97,13 +102,22 @@ export const ProgressiveConversionPrompt = ({
                     ? "Crie uma conta gratuita ou faça login para marcar conteúdos como úteis ou dar downvote. Isso mantém a votação segura e evita duplicidade."
                     : "Publique gratuitamente nas comunidades da Lectum e receba respostas de psicólogos verificados.";
 
-  return (
+  const modal = (
     <div
       aria-describedby={MODAL_DESCRIPTION_ID}
       aria-labelledby={MODAL_TITLE_ID}
       aria-modal="true"
       className="fixed inset-0 z-[9999] flex min-h-dvh items-center justify-center bg-media-background/35 px-4 py-6 text-foreground backdrop-blur-[6px] sm:px-6"
       role="dialog"
+      ref={overlayRef}
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.stopPropagation();
+          closePrompt();
+        }
+      }}
     >
       <div className="w-full max-w-[430px] rounded-[32px] border border-media-foreground/80 bg-surface/95 p-5 text-center shadow-lectum-soft ring-1 ring-foreground/[0.03] supports-[backdrop-filter]:bg-surface/90 dark:border-media-foreground/10 dark:bg-surface/95 dark:shadow-lectum-soft sm:p-6">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[22px] bg-primary-soft text-primary shadow-lectum-soft">
@@ -160,4 +174,5 @@ export const ProgressiveConversionPrompt = ({
       </div>
     </div>
   );
+  return portalHost ? createPortal(modal, portalHost) : modal;
 };

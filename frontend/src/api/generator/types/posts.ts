@@ -1,5 +1,41 @@
 import type { Community, CommunityAuthor, CommunityPostMediaItem } from "./community";
 
+export type PostContentVideo = {
+  id: string;
+  post_id: string;
+  reply_id: string | null;
+  media_item_id: string | null;
+  media_url: string;
+  thumbnail_url: string | null;
+  content: string;
+  title: string | null;
+  author: CommunityAuthor;
+  upvotes_count: number;
+  current_user_vote: 1 | -1 | null;
+  saved: boolean;
+  replies_count: number;
+  responding_to: { id: string; title: string | null; content: string } | null;
+  community: Community;
+};
+
+export type PostContentVideosQuery = {
+  page?: number;
+  limit?: number;
+  /** Initial request only; continuations inherit the snapshot's focus. */
+  focusReplyId?: string;
+  /** Pass next_cursor on every continuation; do not continue by page alone. */
+  cursor?: string;
+};
+
+export type PostContentVideosResponse = {
+  data: PostContentVideo[];
+  page: number;
+  pages: number;
+  count: number;
+  /** Stable-order continuation. Null means finished; HTTP 410 means reopen the queue. */
+  next_cursor: string | null;
+};
+
 export type PostDetail = {
   id: string;
   title: string;

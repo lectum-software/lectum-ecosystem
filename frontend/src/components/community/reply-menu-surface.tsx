@@ -24,11 +24,16 @@ export const ReplyMenuSurface = ({
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
+  const [portalHost, setPortalHost] = useState<Element | null>(null);
+  useLayoutEffect(() => {
+    setPortalHost(triggerRef.current?.closest("dialog") ?? document.body);
+  }, [triggerRef]);
   const [position, setPosition] = useState<CSSProperties>({ visibility: "hidden", width });
   useLayoutEffect(() => {
     closeRef.current = onClose;
   }, [onClose]);
   useLayoutEffect(() => {
+    if (!portalHost) return;
     const menu = menuRef.current;
     const trigger = triggerRef.current;
     if (!menu || !trigger) return;
@@ -102,9 +107,9 @@ export const ReplyMenuSurface = ({
       window.visualViewport?.removeEventListener("resize", update);
       window.visualViewport?.removeEventListener("scroll", update);
     };
-  }, [triggerRef, width]);
+  }, [portalHost, triggerRef, width]);
 
-  if (typeof document === "undefined") return null;
+  if (!portalHost) return null;
   return createPortal(
     <div className="fixed inset-0 z-[900]" data-comment-collapse-ignore="true">
       <button
@@ -135,6 +140,6 @@ export const ReplyMenuSurface = ({
         {children}
       </div>
     </div>,
-    document.body,
+    portalHost,
   );
 };

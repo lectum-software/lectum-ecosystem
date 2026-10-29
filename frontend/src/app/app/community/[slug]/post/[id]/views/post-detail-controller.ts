@@ -57,19 +57,27 @@ import type { ReplyComposerForm } from "../use-form";
 
 export const usePostDetailController = ({
   initialFocusReplyId = null,
+  postId: explicitPostId,
+  embedded = false,
+  onOpenThread,
 }: {
   initialFocusReplyId?: string | null;
+  postId?: string;
+  embedded?: boolean;
+  onOpenThread?: (replyId: string) => void;
 } = {}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
-  const postId = typeof params.id === "string" ? params.id : "";
+  const postId = explicitPostId ?? (typeof params.id === "string" ? params.id : "");
   const focusReplyIdFromUrl =
-    searchParams.get("focusReplyId")?.trim() || initialFocusReplyId?.trim() || null;
-  const isMobile = useIsPostDetailMobile();
+    (!embedded && searchParams.get("focusReplyId")?.trim()) || initialFocusReplyId?.trim() || null;
+  const mobileViewport = useIsPostDetailMobile();
+  const isMobile = embedded || mobileViewport;
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
-  const { snapshot: treeReturn } = useReplyTreeReturnSnapshot(currentUserId);
+  const { snapshot: routeTreeReturn } = useReplyTreeReturnSnapshot(currentUserId);
+  const treeReturn = embedded ? null : routeTreeReturn;
   const conversion = useProgressiveConversion();
   const [loadedReplyPages, setLoadedReplyPages] = useState(() => createReplyPageRange(1));
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
@@ -155,16 +163,20 @@ export const usePostDetailController = ({
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
   const resetReplyFocusHighlight = useReplyFocusHighlight(
-    activeFocusReplyId,
+    embedded ? null : activeFocusReplyId,
     isRepliesFetching ||
       Boolean(focusLookupReplyId) ||
       Boolean(treeReturn && activeFocusReplyId === focusReplyIdFromUrl),
   );
-  const resetReplyComposerFocusHighlight = useReplyFocusHighlight(composerFocusReplyId, false, {
-    focusKey: composerFocusRequestKey,
-    scrollMode: "composer-start",
-    viewportFollowMs: FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_MS,
-  });
+  const resetReplyComposerFocusHighlight = useReplyFocusHighlight(
+    embedded ? null : composerFocusReplyId,
+    false,
+    {
+      focusKey: composerFocusRequestKey,
+      scrollMode: "composer-start",
+      viewportFollowMs: FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_MS,
+    },
+  );
 
   useEffect(() => {
     if (!postId) return;
@@ -184,14 +196,14 @@ export const usePostDetailController = ({
     if (!focusLookupReplyId || !focusReplyLookupQuery.data?.page) return;
 
     const continuationRoot =
-      focusLookupReplyId === focusReplyIdFromUrl
+      embedded || focusLookupReplyId === focusReplyIdFromUrl
         ? findFocusedReplyContinuation(
             focusReplyLookupQuery.data.data,
             focusLookupReplyId,
             MAX_REPLY_TREE_DEPTH,
           )
         : null;
-    if (continuationRoot && post) {
+    if (continuationRoot && post && !embedded) {
       router.replace(
         publicCommunityFocusedReplyThreadHref(
           post.community.slug,
@@ -206,6 +218,7 @@ export const usePostDetailController = ({
 
     const focusPage = focusReplyLookupQuery.data.page;
     const syncTimer = window.setTimeout(() => {
+      if (embedded && continuationRoot) onOpenThread?.(continuationRoot);
       setLoadedReplyPages((currentPages) => {
         if (focusPage <= (currentPages[currentPages.length - 1] ?? 1)) {
           return currentPages;
@@ -217,7 +230,15 @@ export const usePostDetailController = ({
     }, 0);
 
     return () => window.clearTimeout(syncTimer);
-  }, [focusLookupReplyId, focusReplyIdFromUrl, focusReplyLookupQuery.data, post, router]);
+  }, [
+    embedded,
+    focusLookupReplyId,
+    focusReplyIdFromUrl,
+    focusReplyLookupQuery.data,
+    onOpenThread,
+    post,
+    router,
+  ]);
 
   const requestNextRepliesPage = useCallback(() => {
     setLoadedReplyPages((currentPages) => {
@@ -598,6 +619,10 @@ export const usePostDetailController = ({
     reportMutation,
     reportReplyMutation,
     reportTarget,
+    requestNextRepliesPage,
+    retryReplies: () => {
+      for (const query of replyPageQueries) void query.refetch();
+    },
     router,
     saveMutation,
     setInlineReplyDraftState,

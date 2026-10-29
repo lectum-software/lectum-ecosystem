@@ -143,6 +143,7 @@ export const resolveMutationResult = <T>(
   if (result.kind === "not_found") return notFound();
   if (result.kind === "invalid_parent") return invalidParent();
   if (result.kind === "invalid_target") return invalidTarget();
+  if (result.kind === "invalid_vote_value") return invalidVoteValue();
   if (result.kind === "invalid_media") return invalidMedia();
   if (result.kind === "invalid_content") return invalidReplyContent();
   if (result.kind === "media_not_allowed") return mediaNotAllowed();

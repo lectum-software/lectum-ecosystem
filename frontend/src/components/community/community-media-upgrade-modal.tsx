@@ -2,6 +2,9 @@
 
 import { ArrowRight, Camera, X } from "lucide-react";
 import Link from "next/link";
+import { useRef } from "react";
+import { createPortal } from "react-dom";
+import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
@@ -17,15 +20,26 @@ type CommunityMediaUpgradeModalProps = {
 };
 
 export const CommunityMediaUpgradeModal = ({ open, onClose }: CommunityMediaUpgradeModalProps) => {
+  const overlayRef = useRef<HTMLElement>(null);
+  const portalHost = useModalPortalHost(open, overlayRef);
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[120] flex items-end justify-center bg-foreground/35 p-3 backdrop-blur-sm sm:items-center sm:p-6">
+  const modal = (
+    <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-foreground/35 p-3 backdrop-blur-sm sm:items-center sm:p-6">
       <section
         aria-labelledby="community-media-upgrade-title"
         aria-modal="true"
         className="relative w-full max-w-[24rem] rounded-[1.75rem] border border-border bg-surface p-5 text-foreground shadow-[var(--lectum-shadow)] sm:p-6"
         role="dialog"
+        ref={overlayRef}
+        tabIndex={-1}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            onClose();
+          }
+        }}
       >
         <button
           aria-label="Fechar aviso de upload de mídia"
@@ -69,4 +83,5 @@ export const CommunityMediaUpgradeModal = ({ open, onClose }: CommunityMediaUpgr
       </section>
     </div>
   );
+  return portalHost ? createPortal(modal, portalHost) : modal;
 };

@@ -19,11 +19,11 @@ type VoteActionButtonProps = {
   disabled?: boolean;
   icon: LucideIcon;
   label: string;
-  onVote: (value: 1 | -1) => void;
+  onVote: (value: 1) => void;
   showPositiveDelta?: boolean;
   showUpvoteText?: boolean;
   size?: "xs" | "sm" | "md";
-  value: 1 | -1;
+  value: 1;
   variant?: "default" | "ghost";
 };
 
