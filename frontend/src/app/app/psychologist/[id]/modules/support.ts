@@ -106,6 +106,7 @@ export const targetAudienceLabel: Record<string, string> = {
 };
 
 export const normalizeTab = (value: string | null): ProfileTab => {
+  if (value === "depoimentos") return "avaliacoes";
   if (value === "sobre") return "geral";
 
   return PROFILE_TABS.includes(value as ProfileTab) ? (value as ProfileTab) : "geral";

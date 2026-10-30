@@ -1,6 +1,6 @@
 # TASK-290 - Depoimentos da comunidade
 
-Status: validada localmente, versao 0.1.746. Sem push/deploy.
+Status: validada localmente, versao 0.1.747. Sem push/deploy.
 
 ## Escopo aprovado
 
@@ -20,6 +20,30 @@ Referencia visual: previa local aprovada em .tmp/depoimentos-preview; PROTO-INVE
 - [x] Testes de permissao, assinatura, unicidade, visibilidade, edicao, resposta e agrupamento; checks/builds e QA local.
 
 ## Seguranca e rollout
+
+### Refinamento visual solicitado em 30/10
+
+- [x] Convite azul no perfil e na modal, mantendo convite discreto junto as respostas.
+- [x] Quantidade de depoimentos com badge azul e peso reforcado no titulo e na aba.
+- [x] URL publica usa tab=depoimentos; links tab=avaliacoes continuam funcionais e
+  sao normalizados sem perder outros parametros ou provocar rolagem.
+- [x] Modal e formulario sobem em 320ms, respeitando prefers-reduced-motion.
+- [x] Galeria somente leitura das telas reais autenticadas, sem exigir login.
+
+Previa separada do novo header/CTA em .tmp/profile-cta-preview/index.html; nenhuma
+dessas mudancas de proposta foi aplicada ao produto. Galeria da implementacao em
+.tmp/depoimentos-implemented-preview/index.html, com capturas reais 390/1440px de
+contas temporarias removidas ao final. QA autenticado confirmou nova URL, azul,
+animacao, movimento reduzido e fluxos de gestao existentes; nenhuma conta real usada.
+
+Validacao do refinamento: Biome/lint/typecheck aprovados; todas as suites do check
+frontend aprovadas apos mover a animacao para a fundacao global (o loader SSR nao
+carrega CSS modules). 15 testes focados de depoimentos passaram. Build frontend
+0.1.747 aprovado em copia isolada dos fontes, um worker e cache desabilitado.
+Gates raiz de versao, segredos, encoding, ADRs, tasks, source-safety, env, tamanho
+e ciclos aprovados. Galeria verificada em 24 selecoes de telas/tamanhos; proposta
+header/CTA validada em 320, 390 e 1440px. Evidencias: .tmp/testimonials-refinement-*,
+.tmp/task290-browser-results.json e design-qa.md nas duas pastas de previa.
 
 Preservar rotas/contratos antigos de forma aditiva, sem renomear tabelas ou remover campos neste rollout. Nao acessar dados remotos em testes. Ajustes de reels previamente commitados permanecem intactos. Publicacao depende de autorizacao posterior.
 

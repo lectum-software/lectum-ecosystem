@@ -2,7 +2,7 @@
 
 import { MessageCircle, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { type ComponentProps, useEffect, useId, useRef, useState } from "react";
 import { useInfiniteDirectoryPsychologistReviews } from "@/api/callers/directory";
 import { useReviewEligibility } from "@/api/callers/reviews";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -76,7 +76,7 @@ const OpenTestimonialComposer = ({
       <section
         data-psychologists-scroll-lock="true"
         style={viewport}
-        className="fixed inset-x-0 bottom-0 mx-auto flex max-h-[90dvh] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
+        className="lectum-testimonial-sheet-enter fixed inset-x-0 bottom-0 mx-auto flex max-h-[90dvh] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
       >
         <div className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-border-strong" />
         <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-2">
@@ -129,10 +129,12 @@ export const TestimonialInvitation = ({
   psychologistId,
   className,
   allowGuest = false,
+  variant = "outline",
 }: {
   psychologistId: string;
   className?: string;
   allowGuest?: boolean;
+  variant?: ComponentProps<typeof Button>["variant"];
 }) => {
   const user = useAppSelector((state) => state.user);
   const hasToken = useAuthTokenPresence();
@@ -140,7 +142,7 @@ export const TestimonialInvitation = ({
   const eligibility = useReviewEligibility(psychologistId, hasToken && user?.role === "paciente");
   if (!hasToken)
     return allowGuest ? (
-      <Button asChild variant="outline" className={className}>
+      <Button asChild variant={variant} className={className}>
         <Link
           href={`/auth/login?redirect=${encodeURIComponent(`/app/avaliacoes/nova?psychologist_id=${psychologistId}`)}`}
         >
@@ -153,7 +155,7 @@ export const TestimonialInvitation = ({
     <>
       <Button
         className={className}
-        variant="outline"
+        variant={variant}
         onClick={(event) => {
           event.stopPropagation();
           setOpen(true);
@@ -200,7 +202,7 @@ const OpenTestimonials = ({
       <section
         data-psychologists-scroll-lock="true"
         style={viewport}
-        className="fixed inset-x-0 bottom-0 mx-auto flex h-[82dvh] max-h-[calc(100dvh-1rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
+        className="lectum-testimonial-sheet-enter fixed inset-x-0 bottom-0 mx-auto flex h-[82dvh] max-h-[calc(100dvh-1rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
       >
         <div className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-full bg-border-strong" />
         <header className="flex items-center justify-between gap-3 border-b border-border p-4">
@@ -252,6 +254,7 @@ const OpenTestimonials = ({
           <TestimonialInvitation
             psychologistId={psychologistId}
             className="w-full rounded-full"
+            variant="default"
             allowGuest
           />
         </footer>

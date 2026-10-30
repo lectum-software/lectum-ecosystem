@@ -66,3 +66,16 @@ na task antes de concluir. Nenhum teste deve escrever em bancos remotos.
 O teste de edicao cobre payload restrito a rating/comment; destinatario nao pode
 ser alterado. As duas folhas bloqueiam a rolagem do feed de psicologos por tras,
 preservando o profissional selecionado e o rascunho.
+
+## Refinamento de apresentacao em 30/10
+
+A URL publica passa a usar tab=depoimentos, mantendo avaliacoes como chave interna
+e alias de entrada para compatibilidade. Links antigos sao substituidos no
+historico com preservacao dos demais parametros, sem salto de rolagem.
+O convite do perfil e da modal usa o botao primario existente; outros convites
+mantem a variante discreta. Contagem publica ganha destaque sem introduzir media.
+A animacao de entrada usa classe CSS exclusiva das folhas de depoimento na
+fundacao global, sem alterar o Modal compartilhado nem exigir loader CSS nos
+testes SSR existentes. Movimento reduzido elimina a animacao.
+Previa de areas autenticadas usa capturas reais de contas locais temporarias,
+nao endpoints simulados nem bypass de autenticacao no produto.

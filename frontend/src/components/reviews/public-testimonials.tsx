@@ -21,10 +21,15 @@ export const PublicTestimonials = ({
 }: ComponentProps<typeof ReviewsTab> & { readOnly?: boolean; onRetry?: () => void }) => (
   <section className="grid gap-3 px-3 py-4 sm:px-4">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-base font-bold">
-        Depoimentos <span className="font-normal text-muted">{summary.rating_count}</span>
+      <h2 className="flex items-center gap-2 text-base font-bold">
+        Depoimentos
+        <span className="inline-flex min-h-7 min-w-7 items-center justify-center rounded-full bg-primary-soft px-2 text-base font-extrabold tabular-nums text-primary">
+          {summary.rating_count.toLocaleString("pt-BR")}
+        </span>
       </h2>
-      {!readOnly ? <TestimonialInvitation psychologistId={profileId} allowGuest /> : null}
+      {!readOnly ? (
+        <TestimonialInvitation psychologistId={profileId} variant="default" allowGuest />
+      ) : null}
     </div>
     {isLoading ? <LoadingState label="Carregando depoimentos" /> : null}
     {isError ? (

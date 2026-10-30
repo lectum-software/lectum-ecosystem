@@ -72,6 +72,12 @@ export const PsychologistProfileLogic = () => {
 
   const urlParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const activeTab = useMemo(() => normalizeTab(urlParams.get("tab")), [urlParams]);
+  useEffect(() => {
+    if (urlParams.get("tab") !== "avaliacoes") return;
+    const next = new URLSearchParams(searchParamsString);
+    next.set("tab", "depoimentos");
+    router.replace(`/psicologos/${id}?${next.toString()}`, { scroll: false });
+  }, [id, router, searchParamsString, urlParams]);
   const infiniteListQuery = useMemo(() => ({ limit: PAGE_LIMIT }), []);
 
   const profileQuery = useDirectoryPsychologist(id);
@@ -237,7 +243,7 @@ export const PsychologistProfileLogic = () => {
 
       navigateWithParams((next) => {
         if (tab === "geral") next.delete("tab");
-        else next.set("tab", tab);
+        else next.set("tab", tab === "avaliacoes" ? "depoimentos" : tab);
         next.delete("postsPage");
         next.delete("reviewsPage");
       }, options?.history ?? "replace");

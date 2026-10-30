@@ -19,6 +19,37 @@ const base = {
   author: { name: "Ana P.", initials: "AP" },
 };
 
+test("perfil aceita a URL de depoimentos e preserva links antigos", async () => {
+  const { normalizeTab } = await import("../../app/app/psychologist/[id]/modules/support.ts");
+  assert.equal(normalizeTab("depoimentos"), "avaliacoes");
+  assert.equal(normalizeTab("avaliacoes"), "avaliacoes");
+  assert.equal(normalizeTab("publicacoes"), "publicacoes");
+  const profile = readFileSync(
+    new URL("../../app/app/psychologist/[id]/psychologist-profile.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(profile.includes('tab === "avaliacoes" ? "depoimentos" : tab'));
+  assert.ok(profile.includes('next.set("tab", "depoimentos")'));
+});
+
+test("convite publico usa botao primario e contagem destacada", () => {
+  const source = readFileSync(new URL("./public-testimonials.tsx", import.meta.url), "utf8");
+  assert.match(source, /TestimonialInvitation[^>]+variant="default"/);
+  assert.match(source, /font-extrabold tabular-nums text-primary/);
+  const sheet = readFileSync(new URL("./testimonials-sheet.tsx", import.meta.url), "utf8");
+  assert.match(sheet, /variant=\{variant\}/);
+});
+
+test("modal de depoimentos sobe e respeita movimento reduzido", () => {
+  const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /translateY\(100%\)/);
+  assert.match(css, /translateY\(0\)/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(css, /animation: none/);
+  const sheet = readFileSync(new URL("./testimonials-sheet.tsx", import.meta.url), "utf8");
+  assert.equal((sheet.match(/lectum-testimonial-sheet-enter/g) || []).length, 2);
+});
+
 test("editar envia somente campos permitidos mesmo recebendo os valores do formulario de criacao", async () => {
   const { default: api } = await import("../../api/index.ts");
   const { updatePatientReview } = await import("../../api/req/reviews/index.ts");
