@@ -94,6 +94,7 @@ export const useCreatePostReply = (callbacks?: {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["posts", "create-reply"],
     mutationFn: ({ id, body }: { id: string; body: CreatePostReplyPayload }) =>
       api.createPostReply(id, body),
     onSuccess: (data, variables) => {
@@ -251,6 +252,7 @@ export const useDeleteReply = (callbacks?: {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["posts", "delete-reply"],
     mutationFn: ({ postId, replyId }: { postId: string; replyId: string }) =>
       api.deleteReply(postId, replyId),
     onSuccess: (data, variables) => {

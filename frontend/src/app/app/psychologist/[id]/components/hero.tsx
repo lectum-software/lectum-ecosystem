@@ -133,7 +133,7 @@ export const ProfileHero = ({
 
   return (
     <header
-      className="overflow-hidden rounded-b-[28px] bg-surface pb-[18px] shadow-none dark:bg-surface"
+      className="relative z-[1] overflow-hidden rounded-b-[28px] bg-surface pb-[18px] shadow-lectum-soft dark:bg-surface"
       data-profile-hero="true"
     >
       <div className="relative text-primary-foreground">

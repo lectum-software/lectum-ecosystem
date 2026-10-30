@@ -1,9 +1,10 @@
-import { msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 import { notifyPostSaved } from "@/main/notification/domain-events";
 import type {
   IPostDeleteDTO,
   IPostMuteDTO,
   IPostReplyDeleteDTO,
+  IPostReplyProfileVisibilityDTO,
   IPostReplySaveDTO,
   IPostSaveDTO,
 } from "../../DTOs/IPostDTO";
@@ -14,6 +15,17 @@ import {
   resolveMutationResult,
   resolveOwnerPostMutationResult,
 } from "./post-support";
+
+export const setReplyProfileVisibility = async (data: IPostReplyProfileVisibilityDTO) => {
+  if (!data.auth.id || data.auth.role !== "psicologo") {
+    return { status: 403, ...error("role_not_authorized", {}) };
+  }
+  if (typeof data.b?.hidden !== "boolean") {
+    return { status: 400, ...error("invalid_structure", {}) };
+  }
+  const result = await new PostRepository().setReplyProfileVisibility(data);
+  return resolveMutationResult(result, 200, "update");
+};
 
 export const save = async (data: IPostSaveDTO) => {
   const unauthorized = ensureCommunityActor(data);

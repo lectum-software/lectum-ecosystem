@@ -1187,6 +1187,7 @@ model community_post_media {
 model post_reply {
   id                   String                        @id @default(cuid())
   deleted              Boolean                       @default(false)
+  hidden_from_profile  Boolean                       @default(false)
   deletedAt            DateTime?                     @map("deleted_at")
   updatedAt            DateTime                      @default(now()) @updatedAt @map("updated_at")
   createdAt            DateTime                      @default(now()) @map("created_at")

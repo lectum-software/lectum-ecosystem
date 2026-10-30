@@ -21,14 +21,27 @@ const OwnTestimonial = ({ review }: { review: PatientReview }) => {
   const [editing, setEditing] = useState(false);
   return (
     <div>
-      <p className="mb-2 text-xs text-muted">
-        Depoimento para{" "}
-        <Link className="font-semibold text-primary" href={`/psicologos/${review.psychologist_id}`}>
-          {review.psychologist_name}
-        </Link>
-      </p>
       <TestimonialCard
+        context={
+          <>
+            Depoimento para{" "}
+            <Link
+              className="font-semibold text-primary"
+              href={`/psicologos/${review.psychologist_id}`}
+            >
+              {review.psychologist_name}
+            </Link>
+          </>
+        }
         review={{ ...review, author: { name: user?.name || "Você" } }}
+        ownAuthorAvatar={user?.avatar}
+        professional={{
+          id: review.psychologist_id,
+          name: review.psychologist_name,
+          avatar: review.psychologist_avatar,
+          gender: review.psychologist_gender,
+          verified: review.psychologist_verified,
+        }}
         responseName={review.psychologist_name}
         actions={
           <div className="flex">
@@ -64,7 +77,7 @@ export const PatientTestimonials = () => {
         <AppPageHeader
           backHref="/app/perfil"
           backLabel="Voltar para perfil"
-          title="Meus depoimentos"
+          title="Meus Depoimentos"
         />
         {query.isLoading ? <LoadingState label="Carregando depoimentos" /> : null}
         {query.isError ? (
@@ -82,9 +95,11 @@ export const PatientTestimonials = () => {
             </Button>
           </div>
         ) : null}
-        {items.map((review) => (
-          <OwnTestimonial key={review.id} review={review} />
-        ))}
+        <div className="grid gap-3">
+          {items.map((review) => (
+            <OwnTestimonial key={review.id} review={review} />
+          ))}
+        </div>
         {query.hasNextPage ? (
           <Button
             variant="ghost"

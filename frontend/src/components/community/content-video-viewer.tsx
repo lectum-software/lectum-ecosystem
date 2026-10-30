@@ -8,6 +8,7 @@ import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { useModalScrollLock } from "@/hooks/use-modal-scroll-lock";
 import { type ContentVideoSourceEntry, useContentVideoSource } from "./content-video-context";
 import { ContentVideoCreatePost } from "./content-video-create-post";
+import { useContentVideoDiscussionChanges } from "./content-video-interaction-refresh";
 import { ContentVideoSlide } from "./content-video-slide";
 import styles from "./content-video-viewer.module.css";
 import { contentVideoKey, useContentVideoQueue } from "./use-content-video-queue";
@@ -28,6 +29,7 @@ export const ContentVideoViewer = ({
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const conversion = useProgressiveConversion();
   const queue = useContentVideoQueue(initial, source);
+  useContentVideoDiscussionChanges(queue.invalidateDiscussion);
   const root = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
@@ -149,6 +151,7 @@ export const ContentVideoViewer = ({
               <ContentVideoSlide
                 item={video}
                 active={index === queue.index}
+                interactionRevision={queue.staleInteractions[contentVideoKey(video)] ?? 0}
                 initialTime={index === 0 ? initialTime : 0}
                 changedDiscussion={index > 0 && queue.items[index - 1]?.post_id !== video.post_id}
                 onNext={next}
@@ -168,7 +171,9 @@ export const ContentVideoViewer = ({
                   setCreatePostOpen(true);
                 }}
                 closeRef={closeRef}
-                onInteraction={(patch) => queue.updateItem(contentVideoKey(video), patch)}
+                onInteraction={(patch, revision) =>
+                  queue.updateItem(contentVideoKey(video), patch, revision)
+                }
                 onPanelChange={setPanelOpen}
                 onSeekingChange={setSeeking}
               />

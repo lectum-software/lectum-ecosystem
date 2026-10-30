@@ -11,7 +11,7 @@ const { buildAuthRouteWithRedirect, resolveAuthRedirect, resolveAuthReturnTo } =
 
 const source = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
-for (const path of ["./testimonials-sheet.tsx", "./new-testimonial-page.tsx"]) {
+for (const path of ["./testimonial-invitation-action.tsx", "./new-testimonial-page.tsx"]) {
   test(`${path} preserves the encoded testimonial destination through login and signup`, () => {
     const ast = ts.createSourceFile(
       path,
@@ -91,10 +91,7 @@ test("creation requires patient eligibility and preserves existing-testimonial m
 });
 
 test("video reply invitations remain outside media player markup", () => {
-  for (const path of [
-    "../../app/app/community/[slug]/post/[id]/components/reply-card.tsx",
-    "../community/community-post-card-reply-preview.tsx",
-  ]) {
+  for (const path of ["../../app/app/community/[slug]/post/[id]/components/reply-card.tsx"]) {
     const content = source(path);
     const ast = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     let invitations = 0;
@@ -104,7 +101,7 @@ test("video reply invitations remain outside media player markup", () => {
         : ts.isJsxSelfClosingElement(node)
           ? node.tagName.getText(ast)
           : null;
-      if (tag === "TestimonialInvitation") {
+      if (tag === "TestimonialInvitation" || tag === "PostTestimonialInvitation") {
         invitations += 1;
         assert.equal(insideMedia, false);
       }
@@ -112,9 +109,11 @@ test("video reply invitations remain outside media player markup", () => {
     };
     visit(ast);
     assert.equal(invitations, 1, "one invitation declaration per response surface");
-    assert.match(content, /reply\.media_type === "video"/);
-    assert.match(content, /psychologistId=\{reply\.author\.id\}/);
   }
+  assert.doesNotMatch(
+    source("../community/community-post-card-reply-preview.tsx"),
+    /TestimonialInvitation/,
+  );
 });
 
 test("active deletion and confirmation labels use depoimento", () => {

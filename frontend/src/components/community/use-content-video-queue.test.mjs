@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { after, afterEach, before, beforeEach, describe, test } from "node:test";
 import ts from "typescript";
+import { registerQueueInteractionCases } from "./content-video-queue-interaction-cases.mjs";
 
 const require = createRequire(import.meta.url);
 const domRequire = createRequire(require.resolve("react-dom/client"));
@@ -15,6 +16,10 @@ const modules = {
   "react-dom/client": productionModule("react-dom", "react-dom-client.production.js"),
   scheduler: productionModule("scheduler", "scheduler.production.js", domRequire),
   "@/api/req/posts": "exports.getPostContentVideos = (...args) => window.requestVideos(...args);",
+  "./content-video-queue-interactions": ts.transpileModule(
+    readFileSync(new URL("./content-video-queue-interactions.ts", import.meta.url), "utf8"),
+    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
+  ).outputText,
   "@/api/errors": ts.transpileModule(
     readFileSync(new URL("../../api/errors.ts", import.meta.url), "utf8"),
     { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
@@ -82,6 +87,7 @@ const harness = `
   window.snapshot = () => ({
     items: window.queue.items, index: window.queue.index, ended: window.queue.ended,
     error: window.queue.error, expired: window.queue.expired, loading: window.queue.loading,
+    staleInteractions: window.queue.staleInteractions,
   });
   window.unmount = () => flushSync(() => root.unmount());
   window.key = contentVideoKey;
@@ -112,6 +118,7 @@ describe("content video queue mounted in React", {
     assert.deepEqual(errors, []);
   });
   const wait = (predicate) => page.waitForFunction(predicate, undefined, { timeout: 5000 });
+  registerQueueInteractionCases({ getPage: () => page, wait, snapshot });
 
   test("keeps distinct post media, falls back to id and deduplicates across pages", async () => {
     await page.evaluate(() => {
@@ -443,30 +450,6 @@ describe("content video queue mounted in React", {
       ["p", "4"],
       ["q", undefined],
     ]);
-  });
-
-  test("updateItem persists vote/save after next/previous and only patches the matching media", async () => {
-    await page.evaluate(() => {
-      responses["p:1"] = response([video("p", "a"), video("p", "b")]);
-      mount({ postId: "p" });
-    });
-    await wait(() => queue.items.length === 2);
-    await page.evaluate(() => {
-      action("updateItem", key(queue.items[0]), {
-        saved: true,
-        current_user_vote: 1,
-        upvotes_count: 8,
-      });
-      action("next");
-      action("previous");
-    });
-    const state = await page.evaluate(snapshot);
-    assert.equal(state.index, 0);
-    assert.equal(state.items[0].saved, true);
-    assert.equal(state.items[0].current_user_vote, 1);
-    assert.equal(state.items[0].upvotes_count, 8);
-    assert.equal(state.items[1].saved, false);
-    assert.equal(state.items[1].upvotes_count, 0);
   });
 
   test("feed skips empty discussions and repeated entries without looping back", async () => {

@@ -25,6 +25,7 @@ import {
   save,
   saved,
   saveReply,
+  setReplyProfileVisibility,
   share,
   show,
   startRenderShareArtifactJob,
@@ -59,6 +60,7 @@ import {
   voteValidator,
 } from "./validator";
 import { contentVideosValidator } from "./validator/content-videos";
+import { replyProfileVisibilityValidator } from "./validator/reply-profile-visibility";
 
 const routes = Router();
 
@@ -168,6 +170,12 @@ routes.delete("/:id/replies/:replyId/save", privateAuth, replySaveValidator, uns
 routes.post("/:id/replies/:replyId/share", replyShareValidator, share);
 routes.post("/:id/replies/:replyId/report", privateAuth, replyReportValidator, report);
 routes.put("/:id/replies/:replyId", privateAuth, updateReplyValidator, updateReply);
+routes.put(
+  "/:id/replies/:replyId/profile-visibility",
+  privateAuth,
+  replyProfileVisibilityValidator,
+  setReplyProfileVisibility,
+);
 routes.delete("/:id/replies/:replyId", privateAuth, replySaveValidator, deleteReply);
 routes.post("/:id/vote", privateAuth, voteValidator, vote);
 routes.post("/:id/save", privateAuth, saveValidator, save);

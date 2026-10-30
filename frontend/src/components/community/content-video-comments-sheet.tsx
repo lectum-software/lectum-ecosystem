@@ -18,11 +18,13 @@ import { usePostDetailController } from "@/app/app/community/[slug]/post/[id]/vi
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Modal } from "@/components/ui/modal";
+import { useSheetDragDismiss } from "@/hooks/use-sheet-drag-dismiss";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
   getContentVideoCommentReplies,
   getContentVideoCommentTarget,
+  getContentVideoReplyCommentCount,
 } from "./content-video-comments-scope";
 
 export type ContentVideoCommentsSheetProps = {
@@ -140,6 +142,7 @@ const DiscussionBranch = ({
         onSubmitReply={controller.submitReply}
         onVote={controller.handleVoteReply}
         postId={post.id}
+        postAuthorId={post.author.id}
         postSourceText={post.title}
         replies={replies}
         replyApiError={controller.replyError}
@@ -194,6 +197,10 @@ const OpenContentVideoCommentsSheet = ({
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const reportReturnFocusRef = useRef<HTMLButtonElement | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
+  const [composerSubmitting, setComposerSubmitting] = useState(false);
+  const updateComposerState = useCallback((state: { submitting: boolean }) => {
+    setComposerSubmitting(state.submitting);
+  }, []);
   const [threads, setThreads] = useState<string[]>([""]);
   const [dismissedFocusReplyId, setDismissedFocusReplyId] = useState<string | null>(null);
   const openThread = useCallback((id: string) => {
@@ -210,12 +217,12 @@ const OpenContentVideoCommentsSheet = ({
   const videoQuery = usePostReplyThread(postId, replyId ?? "", Boolean(replyId && post));
   const videoReply = videoQuery.data?.reply;
   const commentCount = replyId
-    ? videoReply
-      ? (videoReply.replies_count ?? videoReply.replies.length)
-      : undefined
+    ? getContentVideoReplyCommentCount(replyId, videoReply)
     : post?.replies_count;
   const submitting =
-    controller.createReplyMutation.isPending || controller.uploadReplyMediaMutation.isPending;
+    composerSubmitting ||
+    controller.createReplyMutation.isPending ||
+    controller.uploadReplyMediaMutation.isPending;
   const currentThread = threads[threads.length - 1];
 
   useEffect(() => {
@@ -238,9 +245,11 @@ const OpenContentVideoCommentsSheet = ({
   }, []);
 
   const requestClose = () => {
-    if (submitting || (hasDraft && !confirmDiscardReplyDraft())) return;
+    if (submitting || (hasDraft && !confirmDiscardReplyDraft())) return false;
     onClose();
+    return true;
   };
+  const drag = useSheetDragDismiss({ open: true, disabled: submitting, onClose: requestClose });
 
   return (
     <Modal
@@ -254,44 +263,49 @@ const OpenContentVideoCommentsSheet = ({
     >
       <section
         className="fixed inset-x-0 bottom-0 mx-auto flex h-[82dvh] max-h-[calc(100dvh-1rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
-        style={viewport ? { bottom: viewport.bottom, maxHeight: viewport.height } : undefined}
+        style={{
+          ...drag.sheetStyle,
+          ...(viewport ? { bottom: viewport.bottom, maxHeight: viewport.height } : {}),
+        }}
         data-content-video-comments-sheet="true"
       >
-        <div
-          aria-hidden="true"
-          className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-border-strong"
-        />
-        <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
-          {currentThread ? (
-            <Button
-              aria-label="Voltar na discussão"
-              className="h-9 w-9 shrink-0 p-0"
-              onClick={() => {
-                setDismissedFocusReplyId(controller.activeFocusReplyId);
-                setThreads((current) => current.slice(0, -1));
-              }}
-              variant="ghost"
+        <div className="shrink-0" data-sheet-drag-handle="true" {...drag.handleProps}>
+          <div
+            aria-hidden="true"
+            className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-border-strong"
+          />
+          <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
+            {currentThread ? (
+              <Button
+                aria-label="Voltar na discussão"
+                className="h-9 w-9 shrink-0 p-0"
+                onClick={() => {
+                  setDismissedFocusReplyId(controller.activeFocusReplyId);
+                  setThreads((current) => current.slice(0, -1));
+                }}
+                variant="ghost"
+                type="button"
+              >
+                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+              </Button>
+            ) : null}
+            <h2 className="min-w-0 flex-1 text-sm font-bold" id={titleId}>
+              {commentCount !== undefined
+                ? `${commentCount} ${commentCount === 1 ? "comentário" : "comentários"}`
+                : "Comentários"}
+            </h2>
+            <button
+              aria-label="Fechar comentários"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-0 text-foreground hover:bg-surface-muted disabled:opacity-50"
+              disabled={submitting}
+              onClick={requestClose}
+              ref={closeRef}
               type="button"
             >
-              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-            </Button>
-          ) : null}
-          <h2 className="min-w-0 flex-1 text-sm font-bold" id={titleId}>
-            {commentCount !== undefined
-              ? `${commentCount} ${commentCount === 1 ? "comentário" : "comentários"}`
-              : "Comentários"}
-          </h2>
-          <button
-            aria-label="Fechar comentários"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-0 text-foreground hover:bg-surface-muted disabled:opacity-50"
-            disabled={submitting}
-            onClick={requestClose}
-            ref={closeRef}
-            type="button"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </header>
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </header>
+        </div>
 
         {controller.postQuery.isPending ? (
           <div className="grid flex-1 place-items-center">
@@ -349,6 +363,7 @@ const OpenContentVideoCommentsSheet = ({
                 controller.setMobileReplyTarget(null);
               }}
               onDraftStateChange={setHasDraft}
+              onStateChange={updateComposerState}
               onSubmit={(values, mediaFile, operation) =>
                 controller.submitReply(
                   values,

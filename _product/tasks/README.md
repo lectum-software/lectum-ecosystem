@@ -1,4 +1,8 @@
-Validada localmente em 0.1.753: [TASK-293 - Controles e comentarios nos reels](TASK-293-reels-controls.md), ADR-0658. Checks das quatro aplicacoes, builds frontend/backend e 11 cenarios reais aprovados. Publicacao autorizada; promocao e deploy manual pendentes.
+Validado localmente em 0.1.756: [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md), ADR-0660. Ajustes da aprovacao individual, checks/builds e QA real mobile/desktop aprovados. Publicacao do lote autorizada; promocao por PR e deploy ainda pendentes. Corrida preexistente de telemetria documentada, fora do escopo visual.
+
+Validado localmente em 0.1.755: [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md), ADR-0659. Checks, builds, 40 cenarios funcionais e QA visual aprovados; fixtures limpos. Ressalva de telemetria documentada na task. Sem push/deploy.
+
+Validado localmente em 0.1.754: [TASK-294 - Refinamentos de reels e perfil](TASK-294-reels-compact-controls.md), ADR-0657/0658. Checks, build frontend e QA mobile/desktop aprovados. Sem novo push/deploy. TASK-293 publicada em 0.1.753, frontend/backend e health/ready conferidos em 30/10/2026.
 
 Validado localmente em 0.1.737: TASK-32 / ADR-0648 — backend Node 24.22.1, imagem Linux amd64 e observação do corpo HTTP com privacidade. Patch qs 6.16.1 independente em backend/video; checks, quatro builds, cinco auditorias e PostgreSQL efêmero aprovados (limites no ADR). Commit local; sem push/deploy. Não é correção de recusa de risco.
 
@@ -720,6 +724,9 @@ ou cortesia manual.
 | 291 | [TASK-291 - Header do perfil e contato nos videos](TASK-291-profile-header-and-video-contact.md) | Implementation and local validation | 290 |
 | 292 | [TASK-292 - Refinamento visual do perfil](TASK-292-profile-visual-refinement.md) | Implementation and local validation | 291 |
 | 293 | [TASK-293 - Controles e comentarios nos reels](TASK-293-reels-controls.md) | Implementation and local validation | 292 |
+| 294 | [TASK-294 - Refinamentos de reels e perfil](TASK-294-reels-compact-controls.md) | Implementation and local validation | 293 |
+| 295 | [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md) | Implementation and local validation | 294 |
+| 296 | [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md) | Implementation and local validation | 295 |
 
 ## Ordem operacional recomendada sem bloqueios
 

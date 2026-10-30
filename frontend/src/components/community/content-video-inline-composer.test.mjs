@@ -56,8 +56,26 @@ test("real reels composer retains camera, field and real file input without a fi
   const guidanceClass = html.match(/<p class="([^"]*)">Comente com respeito e empatia/)?.[1];
   assert.ok(guidanceClass);
   assert.match(guidanceClass, /text-media-foreground\/70/);
+  assert.match(guidanceClass, /\bhidden\b/);
+  assert.match(guidanceClass, /group-has-\[\[role=textbox\]:focus\]\/reels:block/);
   assert.doesNotMatch(guidanceClass, /sr-only/);
   assert.doesNotMatch(html, /data-fixed-bottom-recovery="true"|fixed inset-x-0 bottom-0/);
+});
+
+test("post composer guidance remains visible outside reels", () => {
+  const html = renderComposer({ appearance: "default" });
+  const guidanceClass = html.match(/<p class="([^"]*)">Comente com respeito e empatia/)?.[1];
+  assert.ok(guidanceClass);
+  assert.doesNotMatch(guidanceClass, /hidden|group-has/);
+});
+
+test("reels pointer submit preserves focus until click without changing keyboard activation", () => {
+  const submit = source(
+    "../../app/app/community/[slug]/post/[id]/components/reply-composer-submit-button.tsx",
+  );
+  assert.match(submit, /onClick=\{onClick\}/);
+  assert.match(submit, /appearance === "reels" && event.button === 0\) event.preventDefault\(\)/);
+  assert.doesNotMatch(submit, /onKeyDown|onMouseDown/);
 });
 
 test("reels honors actual patient media permissions", () => {

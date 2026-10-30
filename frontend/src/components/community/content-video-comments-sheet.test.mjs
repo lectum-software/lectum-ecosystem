@@ -23,11 +23,33 @@ const { ReplyComposer } = await import(
 const { ReplyBranchFooter } = await import(
   "../../app/app/community/[slug]/post/[id]/components/reply-branch-footer.tsx"
 );
-const { getContentVideoCommentReplies, getContentVideoCommentTarget } = await import(
-  "./content-video-comments-scope.ts"
-);
+const {
+  getContentVideoCommentReplies,
+  getContentVideoCommentTarget,
+  getContentVideoReplyCommentCount,
+} = await import("./content-video-comments-scope.ts");
 const source = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const postSource = (path) => source(`../../app/app/community/[slug]/post/[id]/${path}`);
+
+test("sheet drag stays on the header and delegates to the draft/pending close guard", () => {
+  const sheet = source("./content-video-comments-sheet.tsx");
+  assert.match(
+    sheet,
+    /useSheetDragDismiss\(\{ open: true, disabled: submitting, onClose: requestClose \}\)/,
+  );
+  assert.match(
+    sheet,
+    /if \(submitting \|\| \(hasDraft && !confirmDiscardReplyDraft\(\)\)\) return/,
+  );
+  assert.match(sheet, /data-sheet-drag-handle="true" \{\.\.\.drag.handleProps\}/);
+  assert.match(sheet, /\.\.\.drag.sheetStyle/);
+  assert.match(sheet, /bottom: viewport.bottom, maxHeight: viewport.height/);
+  assert.match(sheet, /composerSubmitting \|\|/);
+  assert.match(sheet, /onStateChange=\{updateComposerState\}/);
+  assert.match(sheet, /postAuthorId=\{post.author.id\}/);
+  assert.equal((sheet.match(/\.\.\.drag.handleProps/g) ?? []).length, 1);
+  assert.doesNotMatch(sheet, /window.scrollTo|document.body.style|dialog.close\(/);
+});
 
 test("sheet uses the real post controller, tree and composer with no parallel editor", () => {
   const sheet = source("./content-video-comments-sheet.tsx");
@@ -125,6 +147,29 @@ test("nested reply menus remain inside native dialog top layer", () => {
 
 const reply = (id, replies = []) => ({ id, replies, replies_count: replies.length });
 
+test("video comment total includes nested replies but never another video's descendants", () => {
+  const child = reply("comment", [reply("nested-response")]);
+  const video = { ...reply("video", [child]), descendants_count: 2 };
+  const sibling = { ...reply("other-video", [reply("other-comment")]), descendants_count: 30 };
+  const postRoot = { ...reply("ancestor", [video, sibling]), descendants_count: 34 };
+  assert.equal(getContentVideoReplyCommentCount("video", video), 2);
+  assert.equal(video.replies_count, 1, "direct-child pagination count is unchanged");
+  assert.equal(getContentVideoReplyCommentCount("video", sibling), undefined);
+  assert.equal(getContentVideoReplyCommentCount("video", postRoot), undefined);
+  assert.equal(getContentVideoReplyCommentCount("video", undefined), undefined);
+  assert.equal(
+    getContentVideoReplyCommentCount("video", { ...video, replies: [], descendants_count: 24 }),
+    24,
+    "total is independent of hydrated tree depth and pagination",
+  );
+  assert.equal(getContentVideoReplyCommentCount("video", { ...video, descendants_count: 0 }), 0);
+  assert.equal(
+    getContentVideoReplyCommentCount("video", { ...video, descendants_count: undefined }),
+    1,
+    "old backend uses its known count instead of summing a partial tree",
+  );
+});
+
 test("reply video comments exclude the video, ancestors and other branches at every depth", () => {
   const deep = reply("deep", [reply("deep-child")]);
   const child = reply("child", [reply("grandchild", [deep])]);
@@ -168,7 +213,7 @@ test("sheet cannot escape the video scope through post focus, paging or continua
   );
   assert.match(sheet, /if \(findReplyInTree\(replies, id\)\) onOpenThread\(id\)/);
   assert.match(sheet, /!queryReplyId && \(controller.hasMoreReplies/);
-  assert.match(sheet, /videoReply\.replies_count \?\? videoReply\.replies\.length/);
-  assert.doesNotMatch(sheet, /countReplyTreeDescendants|descendants_count/);
+  assert.match(sheet, /getContentVideoReplyCommentCount\(replyId, videoReply\)/);
+  assert.doesNotMatch(sheet, /countReplyTreeDescendants/);
   assert.match(sheet, /videoReply\?\.author \?\? post.author/);
 });

@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.753",
+  "version": "0.1.756",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -8,8 +8,8 @@
     "build": "next build --webpack && node scripts/remove-production-source-maps.mjs",
     "start": "next start",
     "lint": "eslint --max-warnings=0",
-    "test:testimonials": "node --test src/components/reviews/testimonials.test.mjs src/components/reviews/new-testimonial-page.test.mjs",
-    "test:profile-reply-actions": "node --experimental-strip-types --test src/components/community/profile-reply-actions.test.mjs",
+    "test:testimonials": "node --test src/components/reviews/testimonials.test.mjs src/components/reviews/new-testimonial-page.test.mjs src/components/reviews/testimonial-sheet-close.test.mjs src/components/reviews/testimonial-sheet-layout.test.mjs src/components/community/testimonial-invitation-policy.test.mjs src/hooks/use-sheet-drag-dismiss.test.mjs",
+    "test:profile-reply-actions": "node --experimental-strip-types --test src/components/community/profile-reply-actions.test.mjs src/components/community/reply-profile-visibility-action.test.mjs src/api/callers/posts/reply-profile-visibility-cache.test.mjs",
     "test:directory-relations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/api/callers/patient/directory-relation-cache.test.mjs",
     "test:infinite-lists": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/infinite-list.test.mjs",
     "test:community-recommendations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/community/community-recommendations.test.mjs scripts/post-community-options.test.mjs",

@@ -36,3 +36,18 @@ real. Header e texto de leitura ficam em componentes pequenos, preservando
 o limite de tamanho de fontes. Publicar backend antes do frontend. Admin e
 Video nao precisam de deploy. Rollback por artefatos anteriores e sem perda
 de dados, pois os contratos sao aditivos.
+
+## Refinamento TASK-294
+
+Na variante reels, a orientacao de respeito acompanha somente o foco real
+do textbox via CSS :has(:focus). Rascunhos, selecao de midia e botoes nao
+disparam essa dica; demais composers preservam a mensagem atual. A coluna
+mobile reduz padding/gap sem reduzir alvos de toque abaixo de 44px. Sua
+altura maxima respeita a faixa superior; overflow contido permite acessar
+todas as acoes com teclado aberto, sem cobrir voltar/contexto/criar post.
+Desktop preserva a coluna externa e sua geometria. Nao inferir teclado por
+user-agent nem modificar os controles funcionais de foco/rascunho.
+
+No enviar de reels, pointerdown primario preserva o foco do textbox ate o
+click. Assim a dica nao recolhe e desloca o alvo entre pressionar e soltar,
+evitando perder o primeiro envio. Teclado e onClick existentes permanecem.

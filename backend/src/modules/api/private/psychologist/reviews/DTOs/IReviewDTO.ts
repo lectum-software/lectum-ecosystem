@@ -26,6 +26,7 @@ export type PsychologistReviewSummary = {
 };
 
 export type PsychologistReviewsResponse = PaginationResponse<PsychologistReviewItem> & {
+  visibility_counts: { visible: number; hidden: number; all: number };
   access: {
     can_receive_reviews: boolean;
     mode: "full" | "preview";

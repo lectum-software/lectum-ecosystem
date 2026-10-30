@@ -1,9 +1,12 @@
+import prisma from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import type {
   IPostReplyDeleteDTO,
+  IPostReplyProfileVisibilityDTO,
   IPostReplySaveDTO,
   PostMutationResult,
   PostReplyDeleteResponse,
+  PostReplyProfileVisibilityResponse,
   PostSaveResponse,
 } from "../../DTOs/IPostDTO";
 import { findPublishedPost, findPublishedReply } from "../support/reply-tree";
@@ -11,6 +14,36 @@ import { findPublishedPost, findPublishedReply } from "../support/reply-tree";
 import { PostRepositoryContext } from "./PostRepositoryContext";
 
 export class PostReplyStateRepository extends PostRepositoryContext {
+  async setReplyProfileVisibility(
+    data: IPostReplyProfileVisibilityDTO,
+  ): Promise<PostMutationResult<PostReplyProfileVisibilityResponse>> {
+    if (!data.auth.id || data.auth.role !== "psicologo") return { kind: "forbidden" };
+    const result = await prisma.post_reply.updateMany({
+      where: {
+        id: data.p.replyId,
+        post_id: data.p.id,
+        author_id: data.auth.id,
+        deleted: false,
+        author: { role: "psicologo", active: true, deleted: false },
+        post: {
+          deleted: false,
+          status: "publicado",
+          community: { active: true, deleted: false },
+        },
+      },
+      data: { hidden_from_profile: data.b.hidden },
+    });
+    if (!result.count) return { kind: "not_found" };
+    return {
+      kind: "ok",
+      data: {
+        post_id: data.p.id,
+        reply_id: data.p.replyId,
+        hidden_from_profile: data.b.hidden,
+      },
+    };
+  }
+
   async saveReply(data: IPostReplySaveDTO): Promise<PostMutationResult<PostSaveResponse>> {
     const reply = await findPublishedReply(data.p.id, data.p.replyId);
     if (!reply) return { kind: "not_found" };

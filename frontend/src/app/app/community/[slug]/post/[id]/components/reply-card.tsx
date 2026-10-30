@@ -20,13 +20,13 @@ import {
 import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
+import { PostTestimonialInvitation } from "@/components/community/post-testimonial-invitation";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
 } from "@/components/community/social-video-preview-action";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { TestimonialInvitation } from "@/components/reviews/testimonials-sheet";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
@@ -73,6 +73,7 @@ export const ReplyVoteBar = ({
   onVote,
   reply,
   savePending,
+  postAuthorId,
 }: {
   currentVote: 1 | -1 | null;
   disabled?: boolean;
@@ -82,11 +83,13 @@ export const ReplyVoteBar = ({
   onVote: (value: 1 | -1) => void;
   reply: PostReply;
   savePending?: boolean;
+  postAuthorId?: string | null;
 }) => {
   const inlineSecondaryActions = hasInlineReplySecondaryActions(reply);
   return (
     <CommunityActionBar
-      className="mt-3 overflow-x-auto [&>div:last-child:empty]:hidden"
+      className="mt-3 overflow-x-auto [&>div:last-child:empty]:hidden [&>div:last-child]:sm:ml-auto"
+      endSlot={<PostTestimonialInvitation postAuthorId={postAuthorId} reply={reply} />}
       beforeSaveSlot={
         reply.author.role === "psicologo" && reply.author.whatsapp_url && !reply.media_url ? (
           <CommunityWhatsAppCta
@@ -146,6 +149,7 @@ export const ReplyCard = ({
   focusReplyId,
   maxInlineDepth = MAX_REPLY_TREE_DEPTH,
   postId,
+  postAuthorId,
   postSourceText,
   professionalThread,
   reply,
@@ -181,6 +185,7 @@ export const ReplyCard = ({
   maxInlineDepth?: number;
   onVote: (replyId: string, value: 1 | -1) => void;
   postId: string;
+  postAuthorId?: string | null;
   postSourceText: string;
   professionalThread?: boolean;
   reply: PostReply;
@@ -542,13 +547,8 @@ export const ReplyCard = ({
               onVote={(value) => onVote(reply.id, value)}
               reply={reply}
               savePending={saveReplyMutation.isPending}
+              postAuthorId={postAuthorId}
             />
-            {isProfessional && reply.author.id && hasReplyMedia && reply.media_type === "video" ? (
-              <TestimonialInvitation
-                psychologistId={reply.author.id}
-                className="mt-3 max-w-full rounded-full"
-              />
-            ) : null}
           </div>
 
           {isOwnReply && editModalOpen ? (
@@ -620,6 +620,7 @@ export const ReplyCard = ({
                 onSubmitReply={onSubmitReply}
                 onVote={onVote}
                 postId={postId}
+                postAuthorId={postAuthorId}
                 postSourceText={postSourceText}
                 professionalThread={highlightedProfessionalThread}
                 reply={child}

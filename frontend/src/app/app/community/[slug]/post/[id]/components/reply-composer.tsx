@@ -537,7 +537,7 @@ export const ReplyComposer = ({
                     : "pb-[var(--lectum-bottom-fixed-padding)]",
                 ),
           isReels &&
-            "rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none dark:bg-transparent",
+            "group/reels rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none dark:bg-transparent",
         )}
         data-reply-composer-appearance={appearance}
         onBlur={(event) => {
@@ -651,7 +651,8 @@ export const ReplyComposer = ({
           className={cn(
             "text-[11px] font-medium leading-4 text-subtle",
             "pr-[3.25rem]",
-            isReels && "text-media-foreground/70",
+            isReels &&
+              "hidden text-media-foreground/70 group-has-[[role=textbox]:focus]/reels:block",
           )}
         >
           {COMMENT_GUIDANCE_MESSAGE}

@@ -1,6 +1,8 @@
 import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
-import test from "node:test";
+import { createRequire } from "node:module";
+import test, { after, afterEach, before, beforeEach, describe } from "node:test";
+import { fileURLToPath } from "node:url";
 import { createElement, createRef, Fragment, StrictMode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -20,6 +22,160 @@ const { PostReportModal } = await import(
 const { postReportSchema, toPostReportPayload } = await import(
   "../../app/app/community/[slug]/post/[id]/use-form.tsx"
 );
+
+describe("native Modal close veto in Chrome", {
+  skip: !process.env.PLAYWRIGHT_MODULE && "Set PLAYWRIGHT_MODULE to an installed Playwright",
+}, () => {
+  let browser;
+  let page;
+  let harness;
+  let errors;
+  before(async () => {
+    const require = createRequire(import.meta.url);
+    const backendRequire = createRequire(
+      new URL("../../../../backend/package.json", import.meta.url),
+    );
+    const { build } = createRequire(backendRequire.resolve("tsx/package.json"))("esbuild");
+    harness = await build({
+      stdin: {
+        contents: `
+          import React, { useRef, useState } from 'react';
+          import { createRoot } from 'react-dom/client';
+          import { flushSync } from 'react-dom';
+          import { Modal } from './src/components/ui/modal';
+          let props = { dismissible: true, dismissOnBackdrop: true };
+          window.closeRequests = 0;
+          window.closeResult = false;
+          window.nativeCloseEvents = 0;
+          document.addEventListener('close', () => window.nativeCloseEvents++, true);
+          function Harness(options) {
+            const [open, setOpen] = useState(true);
+            const initialFocusRef = useRef(null);
+            const returnFocusRef = useRef(document.getElementById('opener'));
+            window.setOpen = value => flushSync(() => setOpen(value));
+            return <Modal {...options} open={open} labelledBy="title"
+              initialFocusRef={initialFocusRef} returnFocusRef={returnFocusRef}
+              onClose={() => {
+                window.closeRequests++;
+                if (window.closeResult !== false) setOpen(false);
+                return window.closeResult;
+              }}>
+              <section><h2 id="title">Draft</h2>
+                <textarea id="editor" ref={initialFocusRef} defaultValue="Unsaved draft"/>
+              </section>
+            </Modal>;
+          }
+          const root = createRoot(document.getElementById('root'));
+          window.update = patch => {
+            props = { ...props, ...patch };
+            flushSync(() => root.render(<React.StrictMode><Harness {...props}/></React.StrictMode>));
+          };
+          window.update({});
+        `,
+        resolveDir: fileURLToPath(new URL("../../../", import.meta.url)),
+        loader: "jsx",
+      },
+      bundle: true,
+      write: false,
+      platform: "browser",
+      define: { "process.env.NODE_ENV": '"production"' },
+    });
+    const { chromium } = require(process.env.PLAYWRIGHT_MODULE);
+    browser = await chromium.launch({ channel: "chrome", headless: true });
+  });
+  after(async () => browser?.close());
+  beforeEach(async () => {
+    page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    errors = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.setContent(`<style>
+      body{margin:0}dialog{margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;border:0;padding:0}
+      section{margin:100px 20px;padding:20px;background:white}
+      </style><button id="opener">Open</button><div id="root"></div>`);
+    await page.locator("#opener").focus();
+    await page.addScriptTag({ content: harness.outputFiles[0].text });
+    await page.locator("dialog[open]").waitFor();
+  });
+  afterEach(async () => {
+    await page?.close();
+    assert.deepEqual(errors, []);
+  });
+  const dismiss = async (kind) => {
+    if (kind === "Escape") {
+      // Refresh native CloseWatcher user activation as an actual draft interaction would.
+      if (await page.locator("dialog[open]").count()) await page.locator("#editor").click();
+      await page.keyboard.press("Escape");
+    } else await page.mouse.click(5, 5);
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+  };
+  const requests = () => page.evaluate(() => window.closeRequests);
+  const settleClose = () => page.waitForFunction(() => window.nativeCloseEvents === 1);
+
+  for (const kind of ["Escape", "backdrop"]) {
+    test(`${kind}: repeated false permits retry; true blocks duplicates and preserves focus lifecycle`, async () => {
+      for (let count = 1; count <= 2; count++) {
+        await page.locator("#editor").focus();
+        await dismiss(kind);
+        assert.equal(await requests(), count);
+        assert.equal(await page.locator("dialog").evaluate((dialog) => dialog.open), true);
+        assert.equal(await page.evaluate(() => document.body.style.overflow), "hidden");
+        assert.equal(await page.locator("#editor").inputValue(), "Unsaved draft");
+        if (kind === "Escape") {
+          assert.equal(await page.evaluate(() => document.activeElement.id), "editor");
+        }
+      }
+      await page.evaluate(() => {
+        window.closeResult = true;
+      });
+      await dismiss(kind);
+      await settleClose();
+      assert.equal(await requests(), 3);
+      if (kind === "Escape") {
+        assert.equal(await page.evaluate(() => document.activeElement.id), "opener");
+      }
+      assert.equal(await page.evaluate(() => document.body.style.overflow), "");
+      await dismiss("Escape");
+      await dismiss("backdrop");
+      assert.equal(await requests(), 3);
+      await page.evaluate(() => {
+        window.closeResult = false;
+        window.setOpen(true);
+      });
+      await dismiss(kind);
+      assert.equal(await requests(), 4);
+      assert.equal(await page.locator("dialog").evaluate((dialog) => dialog.open), true);
+    });
+  }
+
+  test("legacy void close stays deduplicated through the native close event", async () => {
+    await page.evaluate(() => {
+      window.closeResult = undefined;
+    });
+    await dismiss("Escape");
+    await dismiss("Escape");
+    await dismiss("backdrop");
+    assert.equal(await requests(), 1);
+    await settleClose();
+    assert.equal(await requests(), 1);
+  });
+
+  test("dismissible and backdrop guards still block requests without consuming the retry", async () => {
+    await page.evaluate(() => window.update({ dismissible: false }));
+    await dismiss("Escape");
+    await dismiss("backdrop");
+    assert.equal(await requests(), 0);
+    await page.evaluate(() => window.update({ dismissible: true, dismissOnBackdrop: false }));
+    await dismiss("backdrop");
+    assert.equal(await requests(), 0);
+    await dismiss("Escape");
+    assert.equal(await requests(), 1);
+    await page.evaluate(() => window.update({ dismissOnBackdrop: true }));
+    await dismiss("backdrop");
+    assert.equal(await requests(), 2);
+  });
+});
 
 const report = (props = {}) =>
   createElement(PostReportModal, {

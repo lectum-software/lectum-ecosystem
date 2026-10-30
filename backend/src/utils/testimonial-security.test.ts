@@ -48,6 +48,93 @@ const psychologist = (paid = true) => ({
   psychologist_profile: { subscriptions: paid ? [{ id: "subscription", source: "paid" }] : [] },
 });
 
+for (const visibility of [undefined, "visible", "hidden", "all"] as const) {
+  for (const empty of [false, true]) {
+    test(`visibility totals preserve owner scope and filters across pages (${visibility}, empty=${empty})`, async (t) => {
+      const now = new Date("2026-10-30T12:00:00.000Z");
+      t.mock.timers.enable({ apis: ["Date"], now });
+      const periodStart = new Date(now);
+      periodStart.setDate(periodStart.getDate() - 7);
+      const baseWhere = {
+        psychologist_id: "professional",
+        deleted: false,
+        author: { active: true, deleted: false },
+        status: undefined,
+        rating: 5,
+        createdAt: { gte: periodStart },
+      };
+      const status =
+        visibility === "all"
+          ? undefined
+          : visibility === "hidden"
+            ? { in: ["oculta_profissional", "oculta"] }
+            : "publicada";
+      const expected = empty
+        ? { visible: 0, hidden: 0, all: 0 }
+        : { visible: 23, hidden: 7, all: 30 };
+      const selectedCount = expected[visibility ?? "visible"];
+      stub(
+        t,
+        prisma.professional_review,
+        "findMany",
+        async (args: { where: unknown; take: number; skip: number }) => {
+          assert.deepEqual(args.where, { ...baseWhere, status });
+          assert.equal(args.take, 20);
+          assert.equal(args.skip, 40);
+          return [];
+        },
+      );
+      stub(t, prisma.professional_review, "count", async ({ where }: { where: unknown }) => {
+        assert.deepEqual(where, { ...baseWhere, status });
+        return selectedCount;
+      });
+      stub(t, prisma.professional_review, "aggregate", async ({ where }: { where: unknown }) => {
+        assert.deepEqual(where, visibleTestimonialsWhere("professional"));
+        return { _count: { _all: expected.visible } };
+      });
+      let visibilityQueries = 0;
+      stub(
+        t,
+        prisma.professional_review,
+        "groupBy",
+        async (args: { by: string[]; where: unknown; _count: unknown }) => {
+          if (args.by[0] === "rating") {
+            assert.deepEqual(args.where, visibleTestimonialsWhere("professional"));
+            return [];
+          }
+          visibilityQueries++;
+          assert.deepEqual(args, {
+            by: ["status"],
+            where: baseWhere,
+            _count: { _all: true },
+          });
+          return empty
+            ? []
+            : [
+                { status: "publicada", _count: { _all: 23 } },
+                { status: "oculta_profissional", _count: { _all: 5 } },
+                { status: "oculta", _count: { _all: 2 } },
+              ];
+        },
+      );
+      const result = await new ProfessionalRepository().index(
+        {
+          auth: { id: "professional", role: "psicologo" },
+          q: { visibility, page: 3, limit: 20, rating: 5, period: "7d" },
+        },
+        { canReceiveReviews: false },
+      );
+      assert.deepEqual(result.visibility_counts, expected);
+      assert.deepEqual(result.data, []);
+      assert.equal(result.count, selectedCount);
+      assert.equal(result.pages, Math.ceil(selectedCount / 20));
+      assert.equal(result.summary.rating_count, expected.visible);
+      assert.deepEqual(result.access, { can_receive_reviews: false, mode: "full" });
+      assert.equal(visibilityQueries, 1);
+    });
+  }
+}
+
 test("testimonial payload accepts every individual star and trims required text", () => {
   for (const rating of [1, 2, 3, 4, 5]) {
     assert.deepEqual(payload.parse({ rating, comment: "  Acolhedor.  " }), {

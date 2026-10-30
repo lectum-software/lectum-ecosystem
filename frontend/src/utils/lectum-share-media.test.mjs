@@ -104,7 +104,10 @@ test("exibicao, previa e cache respeitam a ausencia da caixinha", () => {
   const media = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   assert.match(dialog, /!target\.hideSourceCard \? \(/);
   assert.doesNotMatch(card, /ProfileReplyVideoQuestion|videoOverlay=/);
-  assert.match(card, /<ProfileReplyQuestion content=\{post.content\}/);
+  assert.match(
+    card,
+    /<ProfileReplyContext key=\{primaryReply.id\} post=\{post\} reply=\{primaryReply\}/,
+  );
   assert.match(media, /target\.hideSourceCard === true/);
   assert.match(media, /target\.professional\.verified/);
   assert.doesNotMatch(dialog, /Respondendo (?:a )?outro v[ií]deo/i);

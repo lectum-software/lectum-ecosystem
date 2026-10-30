@@ -24,7 +24,7 @@ export const Modal = ({
   dismissible?: boolean;
   initialFocusRef: RefObject<HTMLElement | null>;
   labelledBy: string;
-  onClose: () => void;
+  onClose: (() => void) | (() => boolean);
   open: boolean;
   returnFocusRef: RefObject<HTMLElement | null>;
 }) => {
@@ -73,7 +73,7 @@ export const Modal = ({
   const requestClose = () => {
     if (!open || !dismissible || closeRequestedRef.current) return;
     closeRequestedRef.current = true;
-    onClose();
+    if (onClose() === false) closeRequestedRef.current = false;
   };
 
   return (

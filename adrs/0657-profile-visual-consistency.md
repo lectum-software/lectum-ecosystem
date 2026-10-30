@@ -60,3 +60,21 @@ RelationshipButton existente evita divergencia entre seguir e favoritar,
 sem mudar variantes compact/hero legadas ou recommendation da comunidade.
 Preservar regras e callbacks; selected continua check azul ou coracao vermelho.
 Implementacao local, sem autorizacao de publicacao deste complemento.
+
+## Refinamento TASK-294
+
+A nova comparacao pede a mesma divisao visual da comunidade: restaurar
+shadow-lectum-soft no proprio hero arredondado, sem borda adicional nem
+sombra em wrapper quadrado. Isto substitui a retirada de sombra anterior.
+
+Abas alteram apenas consultas client-side. Usar a History API integrada ao
+useSearchParams do Next evita esperar RSC para selecionar a aba, mantendo
+query, hash, replace/push e voltar/avancar. Conteudo entra com fade de 160ms;
+prefers-reduced-motion desabilita animacao e rolagem suave.
+O efeito fica em CSS Module local, sem depender de utilitarios de animacao
+que nao existem no CSS gerado desta aplicacao.
+
+No sticky, a largura visual do texto truncado e medida com a fonte computada
+Manrope ja herdada. Ajustar por grafemas, apos carregamento de fontes e resize,
+evita espaco residual entre ellipsis e selo. Nome completo segue acessivel;
+selo e contato nao encolhem. Nenhuma fonte ou dependencia nova.

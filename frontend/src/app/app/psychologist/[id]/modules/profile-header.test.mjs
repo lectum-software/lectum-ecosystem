@@ -1,8 +1,9 @@
 import "../../../../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { registerHooks } from "node:module";
+import { createRequire, registerHooks } from "node:module";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { Children, createElement, isValidElement } from "react";
 
 const bridges = new Map(
@@ -225,7 +226,7 @@ test("sticky name truncates at 15px while the verified badge stays outside the t
   });
   assert.match(verified, /Ana Lima<\/span><svg[^>]*aria-label="Perfil verificado"/);
   assert.match(verified, /h-4 w-4 shrink-0/);
-  assert.match(verified, /-ml-1 flex min-w-0 flex-1 items-center gap-1/);
+  assert.match(verified, /-ml-1 flex min-w-0 flex-1 items-center gap-0\.5/);
 });
 
 test("hero and sticky share the configured WhatsApp name and normalized fallback", () => {
@@ -338,4 +339,152 @@ test("presentation contact reveal retains playback analytics and expanded-only c
   assert.match(source, /videoLabelExpanded=\{contactExpanded\}/);
   assert.match(source, /onVideoElementReady=\{handlePlayerReady\}/);
   assert.match(source, /bottomOverlayExpandedOnly/);
+});
+
+test("measured sticky names keep complete graphemes and no trailing gap before the badge", async () => {
+  const { fitProfileName } = await import("./profile-name.ts");
+  const measure = (value) =>
+    Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value)).length *
+    10;
+  assert.equal(fitProfileName("Ana Lima", 100, measure), "Ana Lima");
+  assert.equal(fitProfileName("Ana Lima", 40, measure), "Ana…");
+  assert.equal(fitProfileName("Ana Lima", 50, measure), "Ana…");
+  assert.equal(fitProfileName("A\u0301lvaro Silva", 40, measure), "A\u0301lv…");
+  assert.equal(
+    fitProfileName("Alessandra Ianhez de Camargo", 230, measure),
+    "Alessandra Ianhez de C…",
+  );
+  const source = readFileSync(
+    new URL("../components/profile-sticky-identity.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /getComputedStyle\(label\)/);
+  assert.match(source, /style.fontFamily/);
+  assert.match(source, /document.fonts.ready/);
+  assert.match(source, /new ResizeObserver/);
+  assert.match(source, /observer.disconnect\(\)/);
+  assert.match(source, /className="sr-only">\{name\}/);
+});
+
+test("profile tab history updates immediately and preserves unrelated query, hash and history mode", async () => {
+  const { updateProfileSearchParams } = await import("./profile-tab-navigation.ts");
+  const previousWindow = globalThis.window;
+  const calls = [];
+  const location = {
+    href: "https://lectum.test/psicologos/ana?ref=feed&tab=geral#profile-content",
+  };
+  const write = (mode) => (state, _unused, href) => {
+    calls.push({ mode, state, href });
+    location.href = new URL(href, location.href).href;
+  };
+  globalThis.window = {
+    location,
+    history: { replaceState: write("replace"), pushState: write("push") },
+  };
+  try {
+    updateProfileSearchParams((query) => query.set("tab", "publicacoes"));
+    assert.equal(new URL(location.href).searchParams.get("tab"), "publicacoes");
+    updateProfileSearchParams((query) => query.set("tab", "depoimentos"), "push");
+    updateProfileSearchParams((query) => query.set("tab", "depoimentos"), "push");
+    assert.deepEqual(
+      calls.map(({ mode }) => mode),
+      ["replace", "push"],
+    );
+    assert.equal(new URL(location.href).searchParams.get("ref"), "feed");
+    assert.equal(new URL(location.href).hash, "#profile-content");
+    assert.equal(calls[1].state, null);
+    updateProfileSearchParams((query) => query.delete("tab"));
+    assert.equal(new URL(location.href).search, "?ref=feed");
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+  }
+});
+
+test("profile tabs render real query loading states and reduce motion without route round trips", () => {
+  const source = readFileSync(new URL("../psychologist-profile.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /router.replace\(|router.push\(href/);
+  assert.match(source, /updateProfileSearchParams/);
+  assert.match(source, /next.delete\("postsPage"\)/);
+  assert.match(source, /next.delete\("reviewsPage"\)/);
+  assert.match(source, /isLoading=\{publications.isLoading\}/);
+  assert.match(source, /isLoading=\{profileReviews.isLoading\}/);
+  assert.match(source, /className=\{profileContentStyles.panel\}/);
+  assert.match(source, /key=\{activeTab\}/);
+  const tabs = renderToTabs();
+  assert.match(tabs, /motion-reduce:transition-none/);
+  const support = readFileSync(new URL("./support.ts", import.meta.url), "utf8");
+  assert.match(support, /prefers-reduced-motion: reduce/);
+  assert.match(support, /\? "auto" : "smooth"/);
+});
+
+function renderToTabs() {
+  return renderRelations({
+    children: createElement(ProfileTabs, { activeTab: "geral", reviewCount: 0, onTabChange() {} }),
+  });
+}
+
+test("compiled profile CSS animates the real panel class and disables motion in Chrome", async (t) => {
+  const require = createRequire(import.meta.url);
+  let chromium;
+  try {
+    ({ chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright"));
+  } catch {
+    t.skip("Playwright is unavailable");
+    return;
+  }
+  const backendRequire = createRequire(
+    new URL("../../../../../../../backend/package.json", import.meta.url),
+  );
+  const { build } = createRequire(backendRequire.resolve("tsx/package.json"))("esbuild");
+  const result = await build({
+    stdin: {
+      contents:
+        'import styles from "../components/profile-content.module.css"; document.getElementById("panel").className = styles.panel;',
+      resolveDir: fileURLToPath(new URL(".", import.meta.url)),
+      loader: "js",
+    },
+    bundle: true,
+    write: false,
+    outdir: "profile-animation-test",
+  });
+  const css = result.outputFiles.find((file) => file.path.endsWith(".css")).text;
+  const script = result.outputFiles.find((file) => file.path.endsWith(".js")).text;
+  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  try {
+    for (const width of [320, 390, 1440]) {
+      for (const reducedMotion of ["no-preference", "reduce"]) {
+        const page = await browser.newPage({ viewport: { width, height: 844 }, reducedMotion });
+        await page.setContent('<section id="panel">Conteudo do perfil</section>');
+        await page.addStyleTag({ content: css });
+        await page.addScriptTag({ content: script });
+        const actual = await page.locator("#panel").evaluate((panel) => {
+          const style = getComputedStyle(panel);
+          const animation = panel.getAnimations()[0];
+          if (animation) {
+            animation.pause();
+            animation.currentTime = 80;
+          }
+          return {
+            name: style.animationName,
+            duration: style.animationDuration,
+            opacity: Number(style.opacity),
+            frames: animation?.effect.getKeyframes().map((frame) => Number(frame.opacity)),
+          };
+        });
+        if (reducedMotion === "reduce") {
+          assert.equal(actual.name, "none");
+          assert.equal(actual.opacity, 1);
+        } else {
+          assert.notEqual(actual.name, "none");
+          assert.equal(actual.duration, "0.16s");
+          assert.deepEqual(actual.frames, [0.6, 1]);
+          assert.ok(actual.opacity > 0.6 && actual.opacity < 1);
+        }
+        await page.close();
+      }
+    }
+  } finally {
+    await browser.close();
+  }
 });

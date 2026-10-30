@@ -87,6 +87,7 @@ export class PostListRepository extends PostRepositoryContext {
             orderBy: [{ createdAt: "desc" }, { id: "desc" }],
             select: {
               id: true,
+              hidden_from_profile: true,
               title: true,
               content: true,
               media_url: true,
@@ -326,6 +327,9 @@ export class PostListRepository extends PostRepositoryContext {
       ),
       reply: {
         id: reply.id,
+        ...(data.auth.role === "psicologo"
+          ? { hidden_from_profile: reply.hidden_from_profile }
+          : {}),
         title: reply.title,
         content: reply.content,
         media_url: reply.media_url,

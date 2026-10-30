@@ -78,10 +78,16 @@ test("unverified profiles retain their full name without a badge", () => {
   assert.ok(!html.includes('aria-label="Perfil verificado"'));
 });
 
-test("profile hero keeps rounded bottom corners without a shadow", () => {
+test("profile hero shares the community rounded soft shadow without a square wrapper shadow", () => {
   const html = renderHero("Ana Lima");
-  assert.match(html, /<header[^>]*rounded-b-\[28px\][^>]*shadow-none/);
-  assert.doesNotMatch(html.match(/<header[^>]*>/)?.[0] ?? "", /shadow-lectum-soft/);
+  assert.match(html, /<header[^>]*rounded-b-\[28px\][^>]*shadow-lectum-soft/);
+  const header = html.match(/<header[^>]*>/)?.[0] ?? "";
+  assert.doesNotMatch(header, /shadow-none| border(?: |")/);
+  const community = readFileSync(
+    new URL("../src/app/app/community/[slug]/components/community-header.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(community, /rounded-b-\[28px\] bg-surface pb-5 shadow-lectum-soft dark:bg-surface/);
 });
 
 test("profile shows inline blue plus Favoritar until selected, then only an accessible heart", () => {

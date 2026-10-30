@@ -22,6 +22,7 @@ import {
   saved as savedService,
   saveReply as saveReplyService,
   save as saveService,
+  setReplyProfileVisibility as setReplyProfileVisibilityService,
   share as shareService,
   show as showService,
   startRenderShareArtifactJob as startRenderShareArtifactJobService,
@@ -36,6 +37,19 @@ import {
   vote as voteService,
 } from "./services";
 import { isRenderShareArtifactJobFileResult } from "./services/share-render";
+
+export const setReplyProfileVisibility = async (req: Request, res: Response) => {
+  try {
+    return send(
+      res,
+      await setReplyProfileVisibilityService(
+        req as unknown as Parameters<typeof setReplyProfileVisibilityService>[0],
+      ),
+    );
+  } catch (err) {
+    return error500(res, "post_reply_profile_visibility", err);
+  }
+};
 
 export const mine = async (req: Request, res: Response) => {
   try {

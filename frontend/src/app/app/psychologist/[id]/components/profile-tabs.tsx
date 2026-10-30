@@ -29,7 +29,7 @@ export const ProfileTabs = ({
             aria-controls="profile-content"
             aria-selected={active}
             className={cn(
-              "relative inline-flex h-[44px] min-w-0 flex-1 cursor-pointer items-center justify-center gap-[3px] bg-transparent px-0 before:pointer-events-none before:absolute before:inset-x-3 before:bottom-0 before:h-[2px] before:rounded-full before:content-[''] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20",
+              "relative inline-flex h-[44px] min-w-0 flex-1 cursor-pointer items-center justify-center gap-[3px] bg-transparent px-0 before:pointer-events-none before:absolute before:inset-x-3 before:bottom-0 before:h-[2px] before:rounded-full before:content-[''] transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20",
               active ? "text-foreground before:bg-foreground" : "text-muted hover:text-foreground",
             )}
             id={`profile-tab-${tab.value}`}

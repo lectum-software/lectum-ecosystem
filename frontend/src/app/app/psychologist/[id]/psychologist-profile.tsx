@@ -31,10 +31,12 @@ import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { navigateBackToPersistedOrigin } from "@/utils/persisted-origin-navigation";
 import { getRememberedPsychologistsFeedHref } from "@/utils/psychologists-feed-return-memory";
 import { AboutTab } from "./components/about";
+import profileContentStyles from "./components/profile-content.module.css";
 import { ProfileHeader } from "./components/profile-header";
 import { ProfileTabs } from "./components/profile-tabs";
 import { PostsTab } from "./components/publications";
 import { InactivePublicProfileState } from "./components/shared";
+import { updateProfileSearchParams } from "./modules/profile-tab-navigation";
 import {
   currentAnalyticsPath,
   EMPTY_PUBLICATIONS_SUMMARY,
@@ -45,7 +47,6 @@ import {
   normalizeTab,
   PAGE_LIMIT,
   type ProfileTab,
-  type ProfileTabHistoryMode,
   type ProfileTabNavigationOptions,
   profilePublicationHref,
   resolveErrorMessage,
@@ -73,10 +74,8 @@ export const PsychologistProfileLogic = () => {
   const activeTab = useMemo(() => normalizeTab(urlParams.get("tab")), [urlParams]);
   useEffect(() => {
     if (urlParams.get("tab") !== "avaliacoes") return;
-    const next = new URLSearchParams(searchParamsString);
-    next.set("tab", "depoimentos");
-    router.replace(`/psicologos/${id}?${next.toString()}`, { scroll: false });
-  }, [id, router, searchParamsString, urlParams]);
+    updateProfileSearchParams((next) => next.set("tab", "depoimentos"));
+  }, [urlParams]);
   const infiniteListQuery = useMemo(() => ({ limit: PAGE_LIMIT }), []);
 
   const profileQuery = useDirectoryPsychologist(id);
@@ -203,30 +202,6 @@ export const PsychologistProfileLogic = () => {
     trackProfileTabOpen(activeTab);
   }, [activeTab, id, loadedProfileId, trackProfileTabOpen]);
 
-  const navigateWithParams = useCallback(
-    (mutate: (next: URLSearchParams) => void, historyMode: ProfileTabHistoryMode = "replace") => {
-      const next = new URLSearchParams(searchParamsString);
-      mutate(next);
-      const queryString = next.toString();
-      const href = `/psicologos/${id}${queryString ? `?${queryString}` : ""}`;
-
-      if (
-        typeof window !== "undefined" &&
-        `${window.location.pathname}${window.location.search}` === href
-      ) {
-        return;
-      }
-
-      if (historyMode === "replace") {
-        router.replace(href, { scroll: false });
-        return;
-      }
-
-      router.push(href, { scroll: false });
-    },
-    [id, router, searchParamsString],
-  );
-
   const setActiveTab = useCallback(
     (tab: ProfileTab, options?: ProfileTabNavigationOptions) => {
       if (tab === activeTab) {
@@ -240,14 +215,14 @@ export const PsychologistProfileLogic = () => {
         setPendingScrollTab(null);
       }
 
-      navigateWithParams((next) => {
+      updateProfileSearchParams((next) => {
         if (tab === "geral") next.delete("tab");
         else next.set("tab", tab === "avaliacoes" ? "depoimentos" : tab);
         next.delete("postsPage");
         next.delete("reviewsPage");
       }, options?.history ?? "replace");
     },
-    [activeTab, navigateWithParams],
+    [activeTab],
   );
 
   useEffect(() => {
@@ -497,7 +472,8 @@ export const PsychologistProfileLogic = () => {
                 />
 
                 <div
-                  className="grid gap-0"
+                  className={profileContentStyles.panel}
+                  key={activeTab}
                   id="profile-content"
                   role="tabpanel"
                   aria-labelledby={`profile-tab-${activeTab}`}

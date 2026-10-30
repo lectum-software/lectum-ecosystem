@@ -44,6 +44,7 @@ export const RepliesList = ({
   onVote,
   focusReplyId,
   postId,
+  postAuthorId,
   postSourceText,
   replies,
   replyApiError,
@@ -80,6 +81,7 @@ export const RepliesList = ({
   onVote: (replyId: string, value: 1 | -1) => void;
   focusReplyId?: string | null;
   postId: string;
+  postAuthorId?: string | null;
   postSourceText: string;
   replies: PostReply[];
   replyApiError?: string | null;
@@ -171,6 +173,7 @@ export const RepliesList = ({
                     onSubmitReply={onSubmitReply}
                     onVote={onVote}
                     postId={postId}
+                    postAuthorId={postAuthorId}
                     postSourceText={postSourceText}
                     professionalThread={professionalTree}
                     reply={reply}

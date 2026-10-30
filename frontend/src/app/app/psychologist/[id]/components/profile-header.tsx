@@ -3,10 +3,10 @@
 import { ChevronLeft } from "lucide-react";
 import { type ComponentProps, useEffect, useRef, useState } from "react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
-import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { getPsychologistDisplayName } from "../modules/support";
 import { ProfileHero } from "./hero";
+import { ProfileStickyIdentity } from "./profile-sticky-identity";
 import { WhatsAppCta } from "./whatsapp-cta";
 
 export const ProfileStickyBar = ({
@@ -40,18 +40,7 @@ export const ProfileStickyBar = ({
         >
           <ChevronLeft className="h-5 w-5 translate-x-1" aria-hidden="true" />
         </button>
-        <span className="-ml-1 flex min-w-0 flex-1 items-center gap-1" data-profile-sticky-identity>
-          <span
-            className="min-w-0 truncate text-[15px] font-semibold leading-[20px] text-foreground"
-            data-profile-sticky-name
-            title={displayName}
-          >
-            {displayName}
-          </span>
-          {profile.verified ? (
-            <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-4 w-4 shrink-0" />
-          ) : null}
-        </span>
+        <ProfileStickyIdentity name={displayName} verified={Boolean(profile.verified)} />
         <WhatsAppCta compact profile={profile} />
       </div>
     </div>

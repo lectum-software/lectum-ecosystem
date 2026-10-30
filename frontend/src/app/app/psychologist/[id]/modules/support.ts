@@ -183,7 +183,10 @@ export const scrollProfileContentIntoView = () => {
     document.querySelector("[data-profile-sticky-bar]")?.getBoundingClientRect().height ?? 0;
   const top = Math.max(0, contentNode.getBoundingClientRect().top + window.scrollY - headerOffset);
 
-  window.scrollTo({ behavior: "smooth", top });
+  window.scrollTo({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    top,
+  });
 };
 
 export const translateLanguage = (language: string) => {
