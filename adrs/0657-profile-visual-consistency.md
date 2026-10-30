@@ -51,3 +51,12 @@ Nome do header fixo em uma linha com ellipsis; selo compartilhado em irmao
 flex shrink-0 para permanecer visivel. Aproximar texto e chevron sem reduzir
 o alvo de 44px. Contadores com primary-soft e tipografia identica nas duas
 abas. Nenhuma alteracao nos blocos abaixo do menu ou nas regras de contato.
+
+## Controles de relacionamento nos headers
+
+Previa aprovada usa fonte 13px/600, icone 20px e gap 8px; superficie azul
+sem borda ou sombra, com alvo 44px. Adicionar variante header ao componente
+RelationshipButton existente evita divergencia entre seguir e favoritar,
+sem mudar variantes compact/hero legadas ou recommendation da comunidade.
+Preservar regras e callbacks; selected continua check azul ou coracao vermelho.
+Implementacao local, sem autorizacao de publicacao deste complemento.

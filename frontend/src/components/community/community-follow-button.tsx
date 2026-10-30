@@ -2,6 +2,7 @@
 
 import { Check, Loader2, Plus } from "lucide-react";
 import type { ButtonHTMLAttributes } from "react";
+import { RelationshipButton } from "@/components/ui/relationship-button";
 import { cn } from "@/lib/utils";
 
 type CommunityFollowButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
@@ -50,49 +51,48 @@ export const CommunityFollowButton = ({
   if (size === "hero") {
     return (
       <span className="group relative inline-flex shrink-0">
-        <button
+        <RelationshipButton
           {...props}
           type="button"
+          size="header"
           aria-label={following ? "Seguindo comunidade. Deixar de seguir" : "Seguir comunidade"}
           aria-busy={pending}
           aria-pressed={following}
           className={cn(
-            "inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-full border shadow-sm transition-[width,gap,background-color,border-color,color] duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-            following
-              ? "w-10 gap-0 border-primary/25 bg-primary-soft text-primary"
-              : "w-[112px] gap-2 border-border bg-surface text-muted hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface-muted",
+            "transition-colors duration-200 motion-reduce:transition-none hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-60",
+            following ? "w-[44px] gap-0" : "w-auto",
             className,
           )}
           disabled={disabled || pending}
         >
-          <span className="relative h-5 w-5 shrink-0" aria-hidden="true">
+          <span className="relative h-[20px] w-[20px] shrink-0" aria-hidden="true">
             <Plus
               className={cn(
-                "absolute inset-0 h-5 w-5 transition-[opacity,transform] duration-200 motion-reduce:transition-none",
+                "absolute inset-0 h-[20px] w-[20px] transition-[opacity,transform] duration-200 motion-reduce:transition-none",
                 following || pending ? "scale-75 opacity-0" : "scale-100 opacity-100",
               )}
             />
             <Check
               className={cn(
-                "absolute inset-0 h-5 w-5 transition-[opacity,transform] duration-200 motion-reduce:transition-none",
+                "absolute inset-0 h-[20px] w-[20px] transition-[opacity,transform] duration-200 motion-reduce:transition-none",
                 following && !pending ? "scale-100 opacity-100" : "scale-75 opacity-0",
               )}
             />
             {pending ? (
-              <Loader2 className="absolute inset-0 h-5 w-5 animate-spin motion-reduce:animate-none" />
+              <Loader2 className="absolute inset-0 h-[20px] w-[20px] animate-spin motion-reduce:animate-none" />
             ) : null}
           </span>
           <span
             aria-hidden="true"
             className={cn(
               "overflow-hidden whitespace-nowrap transition-[width,opacity] duration-200 motion-reduce:transition-none",
-              following ? "w-0 opacity-0" : "w-[56px] opacity-100",
+              following ? "w-0 opacity-0" : "w-auto opacity-100",
             )}
             style={{ fontSize: 13, fontWeight: 600 }}
           >
             Seguir
           </span>
-        </button>
+        </RelationshipButton>
         {following ? (
           <span
             aria-hidden="true"

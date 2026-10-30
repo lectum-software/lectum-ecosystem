@@ -55,6 +55,11 @@
   --lectum-rating: #facc15;
   --lectum-media-background: #000000;
   --lectum-media-foreground: #ffffff;
+  --lectum-media-control: color-mix(
+    in srgb,
+    var(--lectum-media-background) 85%,
+    var(--lectum-media-foreground)
+  );
   --lectum-top-mentor-gold: #9c7924;
   --lectum-top-mentor-bronze: #a8703a;
   --lectum-whatsapp: #25d366;
@@ -309,6 +314,7 @@ span:empty + [data-original-post-community] {
   --color-rating: var(--lectum-rating);
   --color-media-background: var(--lectum-media-background);
   --color-media-foreground: var(--lectum-media-foreground);
+  --color-media-control: var(--lectum-media-control);
   --color-top-mentor-gold: var(--lectum-top-mentor-gold);
   --color-top-mentor-bronze: var(--lectum-top-mentor-bronze);
   --color-whatsapp: var(--lectum-whatsapp);

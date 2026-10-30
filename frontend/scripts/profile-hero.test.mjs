@@ -33,6 +33,7 @@ const { ProfileTabs } = await import(
 const { CommunityFollowButton } = await import(
   "../src/components/community/community-follow-button.tsx"
 );
+const { RelationshipButton } = await import("../src/components/ui/relationship-button.tsx");
 const { renderRelations } = await import(
   "../src/components/community/community-relations-test-renderer.mjs"
 );
@@ -104,15 +105,16 @@ test("profile shows inline blue plus Favoritar until selected, then only an acce
     assert.match(favorite, /text-primary/);
     assert.doesNotMatch(favorite, /rounded-full|shadow-sm|border-favorite|bg-favorite/);
     assert.match(favorite, /stroke-width="2"/);
-    assert.match(favorite, /style="font-size:11px;font-weight:600"/);
+    assert.match(favorite, /style="font-size:13px;font-weight:600"/);
     if (active) {
       assert.match(favorite, /fill-current text-favorite/);
     } else {
       assert.doesNotMatch(favorite, /text-favorite/);
     }
-    assert.match(follow, /h-10/);
-    assert.match(follow, /rounded-full/);
-    assert.match(follow, /shadow-sm/);
+    assert.match(follow, /h-\[44px\]/);
+    assert.match(follow, /border-0/);
+    assert.match(follow, /shadow-none/);
+    assert.doesNotMatch(follow, /rounded-full|shadow-sm|bg-primary-soft/);
     assert.match(follow, /motion-reduce:transition-none/);
     assert.match(follow, /style="font-size:13px;font-weight:600"/);
     for (const html of [favorite, follow])
@@ -123,14 +125,15 @@ test("profile shows inline blue plus Favoritar until selected, then only an acce
       assert.match(favorite, /fill-current/);
       assert.match(favorite, /aria-label="Remover Ana Lima dos favoritos"/);
       assert.doesNotMatch(favorite, /<span|lucide-plus/);
-      assert.match(follow, /w-10 gap-0 border-primary\/25 bg-primary-soft text-primary/);
+      assert.match(follow, /w-\[44px\] gap-0/);
       assert.match(follow, /lucide-check[^>]*scale-100 opacity-100/);
       assert.match(follow, /w-0 opacity-0/);
     } else {
       assert.match(favorite, /lucide-plus/);
       assert.match(favorite, />Favoritar<\/span>/);
       assert.doesNotMatch(favorite, /lucide-heart/);
-      assert.match(follow, /w-\[112px\] gap-2 border-border bg-surface/);
+      assert.match(follow, /gap-\[8px\]/);
+      assert.match(favorite, /gap-\[8px\]/);
       assert.match(follow, /lucide-plus[^>]*scale-100 opacity-100/);
       assert.match(follow, />Seguir<\/span>/);
     }
@@ -173,8 +176,37 @@ test("community hero keeps both pending states stable and blocks repeated reques
     assert.match(html, /motion-reduce:animate-none/);
     assert.match(html, /lucide-check[^>]*opacity-0/);
     assert.match(html, /lucide-plus[^>]*opacity-0/);
-    assert.match(html, following ? /w-10 gap-0/ : /w-\[112px\] gap-2/);
+    assert.match(html, following ? /w-\[44px\] gap-0/ : /gap-\[8px\]/);
   }
+});
+
+test("header relationship variant preserves legacy sizes and delegates the community action", () => {
+  for (const [size, fontSize, height] of [
+    ["compact", 11, "h-5"],
+    ["hero", 13, "h-10"],
+    ["header", 13, "h-[44px]"],
+  ]) {
+    const element = RelationshipButton({ size });
+    assert.equal(element.props.style.fontSize, fontSize);
+    assert.ok(element.props.className.includes(height));
+  }
+  let calls = 0;
+  const onClick = () => {
+    calls += 1;
+  };
+  for (const following of [false, true]) {
+    const wrapper = CommunityFollowButton({ size: "hero", following, onClick });
+    const control = wrapper.props.children[0];
+    assert.equal(control.type, RelationshipButton);
+    assert.equal(control.props.size, "header");
+    assert.equal(control.props.onClick, onClick);
+    control.props.onClick();
+    const html = renderToStaticMarkup(wrapper);
+    assert.match(html, /h-\[20px\] w-\[20px\]/);
+    assert.match(html, /bg-transparent/);
+    assert.match(html, /text-primary/);
+  }
+  assert.equal(calls, 2);
 });
 
 test("sticky contact preserves the hero accessible name independently of favorite state", () => {

@@ -29,6 +29,7 @@ export type CreatePostErrorResolution = {
 
 export type UseCreateCommunityPostControllerOptions = {
   onCloseComplete?: () => void;
+  scrollManagedExternally?: boolean;
 };
 
 export const classifyUploadedCommunityMedia = (
@@ -496,4 +497,5 @@ export const getCreatePostInitialEditorFocusDelays = () =>
 export type CreateCommunityPostLogicProps = {
   asModalSlot?: boolean;
   onCloseComplete?: () => void;
+  scrollManagedExternally?: boolean;
 };

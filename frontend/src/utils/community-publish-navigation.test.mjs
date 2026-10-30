@@ -10,6 +10,60 @@ const { getNavigation, getMobileNavigationActiveHref, shouldShowMobileNavigation
   await import("../templates/private/navigation.tsx");
 const readSource = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
+test("externally managed creation never snapshots, changes or restores document scroll", async () => {
+  const { lockCreatePostDocumentScroll } = await import(
+    "../app/app/community/[slug]/post/new/modules/create-post-document-scroll.ts"
+  );
+  // The real external path and its cleanup run without any browser globals.
+  assert.equal(typeof globalThis.document, "undefined");
+  const restore = lockCreatePostDocumentScroll(true);
+  assert.doesNotThrow(() => restore());
+});
+
+test("creation forwards external scroll ownership while retaining focus, Escape and timer cleanup", () => {
+  const base = "../app/app/community/[slug]/post/new/";
+  const view = readSource(`${base}views/create-community-post.tsx`);
+  const controller = readSource(`${base}hooks/use-create-community-post-controller.ts`);
+  const support = readSource(`${base}modules/create-post-support.ts`);
+  const scroll = readSource(`${base}modules/create-post-document-scroll.ts`);
+  assert.match(view, /scrollManagedExternally = false/);
+  assert.match(
+    view,
+    /useCreateCommunityPostController\(\{ onCloseComplete, scrollManagedExternally \}\)/,
+  );
+  assert.equal((support.match(/scrollManagedExternally\?: boolean/g) ?? []).length, 2);
+  assert.match(controller, /scrollManagedExternally = false/);
+  assert.match(controller, /lockCreatePostDocumentScroll\(scrollManagedExternally\)/);
+  assert.match(controller, /restoreDocumentScroll\(\)/);
+  assert.doesNotMatch(controller, /document\.(body|documentElement)\.style|window.scrollTo\(/);
+  assert.match(controller, /window.cancelAnimationFrame\(frame\)/);
+  assert.match(controller, /window.clearTimeout\(timer\)/);
+  assert.match(controller, /window.clearTimeout\(closeTimerRef.current\)/);
+  assert.match(controller, /focusEditorElement\("create-post-title"\)/);
+  assert.match(controller, /addEventListener\("keydown", handleEscape\)/);
+  assert.match(controller, /removeEventListener\("keydown", handleEscape\)/);
+  assert.match(scroll, /scrollManagedExternally = false/);
+  assert.ok(
+    scroll.indexOf("if (scrollManagedExternally) return") < scroll.indexOf("window.scrollX"),
+  );
+  assert.match(scroll, /Object.assign\(document.body.style, previousBodyStyle\)/);
+  assert.match(scroll, /Object.assign\(document.documentElement.style, previousDocumentStyle\)/);
+  assert.match(scroll, /window.scrollTo\(lockedScrollX, lockedScrollY\)/);
+});
+
+test("media upgrade restores editor focus only on close, never behind the open dialog", () => {
+  const view = readSource("../app/app/community/[slug]/post/new/views/create-community-post.tsx");
+  const deniedMedia = view.match(/if \(!mediaPermission.canAttach\) \{([\s\S]*?)\}/)?.[1];
+  assert.ok(deniedMedia);
+  assert.match(deniedMedia, /setMediaUpgradeModalOpen\(true\);\s*return;/);
+  assert.doesNotMatch(deniedMedia, /focusLastEditor|\.focus\(/);
+  const closeUpgrade = view.match(
+    /<CommunityMediaUpgradeModal\s+onClose=\{\(\) => \{([\s\S]*?)\}\}/,
+  )?.[1];
+  assert.ok(closeUpgrade);
+  assert.match(closeUpgrade, /setMediaUpgradeModalOpen\(false\);\s*focusLastEditor\(\);/);
+});
+
 test("publication tip persists across surfaces, reloads and login without mixing account history", () => {
   const previousWindow = globalThis.window;
   const storage = new Map();

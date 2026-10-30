@@ -33,6 +33,7 @@ import {
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
+import { lockCreatePostDocumentScroll } from "../modules/create-post-document-scroll";
 import {
   CREATE_POST_PROFILE_RETURN_PARAM,
   classifyUploadedCommunityMedia,
@@ -60,6 +61,7 @@ import { useCreatePostProfileReturn } from "./use-create-post-profile-return";
 
 export const useCreateCommunityPostController = ({
   onCloseComplete,
+  scrollManagedExternally = false,
 }: UseCreateCommunityPostControllerOptions = {}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -399,17 +401,7 @@ export const useCreateCommunityPostController = ({
     const focusTimers = getCreatePostInitialEditorFocusDelays().map((delay) =>
       window.setTimeout(focusTitle, delay),
     );
-    const lockedScrollX = window.scrollX;
-    const lockedScrollY = window.scrollY;
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousBodyPosition = document.body.style.position;
-    const previousBodyTop = document.body.style.top;
-    const previousBodyRight = document.body.style.right;
-    const previousBodyLeft = document.body.style.left;
-    const previousBodyWidth = document.body.style.width;
-    const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
-    const previousDocumentOverflow = document.documentElement.style.overflow;
-    const previousDocumentOverscrollBehavior = document.documentElement.style.overscrollBehavior;
+    const restoreDocumentScroll = lockCreatePostDocumentScroll(scrollManagedExternally);
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -417,15 +409,6 @@ export const useCreateCommunityPostController = ({
       }
     };
 
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${lockedScrollY}px`;
-    document.body.style.right = "0";
-    document.body.style.left = "0";
-    document.body.style.width = "100%";
-    document.body.style.overscrollBehavior = "none";
-    document.documentElement.style.overflow = "hidden";
-    document.documentElement.style.overscrollBehavior = "none";
     window.addEventListener("keydown", handleEscape);
 
     return () => {
@@ -435,19 +418,10 @@ export const useCreateCommunityPostController = ({
         window.clearTimeout(timer);
       });
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-      document.body.style.overflow = previousBodyOverflow;
-      document.body.style.position = previousBodyPosition;
-      document.body.style.top = previousBodyTop;
-      document.body.style.right = previousBodyRight;
-      document.body.style.left = previousBodyLeft;
-      document.body.style.width = previousBodyWidth;
-      document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
-      document.documentElement.style.overflow = previousDocumentOverflow;
-      document.documentElement.style.overscrollBehavior = previousDocumentOverscrollBehavior;
       window.removeEventListener("keydown", handleEscape);
-      window.scrollTo(lockedScrollX, lockedScrollY);
+      restoreDocumentScroll();
     };
-  }, [focusEditorElement, handleClose]);
+  }, [focusEditorElement, handleClose, scrollManagedExternally]);
 
   useEffect(() => {
     return () => {

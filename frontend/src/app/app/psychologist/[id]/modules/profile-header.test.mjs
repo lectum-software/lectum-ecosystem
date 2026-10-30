@@ -108,7 +108,7 @@ test("favorite is blue plus and text before selection, only an accessible red he
   }
 });
 
-test("profile favorite delegates compact typography and the real action to RelationshipButton", () => {
+test("profile favorite delegates header typography and the real action to RelationshipButton", () => {
   let calls = 0;
   const onToggleFavorite = () => {
     calls += 1;
@@ -120,11 +120,11 @@ test("profile favorite delegates compact typography and the real action to Relat
       onToggleFavorite,
     });
     assert.equal(element.type, RelationshipButton);
-    assert.equal(element.props.size, "compact");
+    assert.equal(element.props.size, "header");
     assert.equal(element.props.onClick, onToggleFavorite);
     assert.equal(element.props["aria-pressed"], favorited);
     const button = RelationshipButton(element.props);
-    assert.equal(button.props.style.fontSize, 11);
+    assert.equal(button.props.style.fontSize, 13);
     assert.equal(button.props.style.fontWeight, 600);
     assert.match(button.props.className, /h-\[44px\]/);
     assert.doesNotMatch(button.props.className, /(?:^| )h-5(?: |$)/);

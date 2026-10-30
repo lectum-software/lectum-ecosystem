@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import { anonymousDisplayNameForAuthor } from "@/utils/anonymous-author";
 import type { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
+import { publicProfessionalExperience } from "@/utils/professional-experience-tag";
 import { isProfessionalFavoriteAvailable } from "@/utils/professional-favorite-availability";
 import {
   buildProfessionalFullDisplayName,
@@ -44,6 +45,9 @@ export const communitySelect = {
 } satisfies Prisma.communitySelect;
 
 export const professionalProfileSelect = {
+  crp_registration_date: true,
+  show_experience_tag: true,
+  updatedAt: true,
   deleted: true,
   professional_first_name: true,
   professional_last_name: true,
@@ -59,6 +63,8 @@ export const professionalProfileSelect = {
     select: {
       id: true,
       source: true,
+      createdAt: true,
+      grant_started_at: true,
     },
   },
 } satisfies Prisma.psychologist_profileSelect;
@@ -367,6 +373,10 @@ export const toAuthorResponse = (
         : displayName,
     avatar: shouldHideIdentity ? null : author.avatar,
     favorite_available: isAvailableProfessional,
+    ...publicProfessionalExperience(
+      profile,
+      isAvailableProfessional && isProfessionalVerified(profile),
+    ),
     role: author.role,
     type_label: isDeletedAuthor
       ? isPsychologist

@@ -1,11 +1,170 @@
+import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
+import { createRequire, registerHooks } from "node:module";
 import test from "node:test";
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
-const viewer = read("./content-video-viewer.tsx") + read("./content-video-slide.tsx");
+const viewer = [
+  "./content-video-viewer.tsx",
+  "./content-video-slide.tsx",
+  "./content-video-header.tsx",
+  "./content-video-reading-text.tsx",
+]
+  .map(read)
+  .join("\n");
 const css = read("./content-video-viewer.module.css");
+
+test("reel header reuses the real create form and keeps explicit navigation labels", () => {
+  const header = read("./content-video-header.tsx");
+  const create = read("./content-video-create-post.tsx");
+  assert.match(header, /aria-label="Voltar"/);
+  assert.match(header, /aria-label="Criar publicação"/);
+  assert.match(header, /<ChevronLeft aria-hidden/);
+  assert.match(header, /<Plus aria-hidden/);
+  assert.match(create, /import\("@\/app\/app\/community\/\[slug\]\/post\/new\/logic"\)/);
+  assert.match(create, /<CreateCommunityPostLogic onCloseComplete=\{onClose\}/);
+  assert.doesNotMatch(create, /<form|<textarea/);
+  assert.match(viewer, /inert=\{createPostOpen\}/);
+  assert.match(viewer, /confirmDiscardReplyDraft\(\)/);
+  assert.match(viewer, /closeRef\.current\?\.click\(\)/);
+});
+
+test("mobile action spacing matches the directory while retaining touch targets", () => {
+  assert.match(css, /\.rail \{[^}]*width: 44px;/s);
+  assert.match(css, /\.action \{[^}]*min-height: 44px;/s);
+  assert.match(
+    read("./content-video-controls.module.css"),
+    /\.create svg \{\s*width: 32px;\s*height: 32px;/,
+  );
+});
+
+const linkUrl = import.meta.resolve("next/link.js");
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    const target =
+      specifier === "next/link"
+        ? `data:text/javascript,${encodeURIComponent(`import Link from ${JSON.stringify(linkUrl)}; export default Link.default ?? Link;`)}`
+        : specifier === "next/navigation"
+          ? "next/navigation.js"
+          : specifier;
+    return nextResolve(target, context);
+  },
+  load(url, context, nextLoad) {
+    if (url.endsWith("/content-video-viewer.module.css")) {
+      const classes = Object.fromEntries(
+        [...css.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((match) => [match[1], match[1]]),
+      );
+      return {
+        format: "module",
+        shortCircuit: true,
+        source: `export default ${JSON.stringify(classes)};`,
+      };
+    }
+    return nextLoad(url, context);
+  },
+});
+const { createElement } = await import("react");
+const { ContentVideoAuthor } = await import("./content-video-author.tsx");
+const { renderRelations } = await import("./community-relations-test-renderer.mjs");
+const renderAuthor = (overrides = {}) =>
+  renderRelations({
+    children: createElement(ContentVideoAuthor, {
+      author: {
+        id: "ana",
+        name: "Ana Lima",
+        role: "psicologo",
+        type_label: "Psicóloga",
+        favorite_available: false,
+        ...overrides,
+      },
+      onClose: () => {},
+    }),
+  });
+const roleText = (overrides) =>
+  renderAuthor(overrides).match(/<div class="role">(.*?)<\/div>/s)?.[1];
+
+test("reel author keeps its base label and uses the existing experience formatter", () => {
+  for (const type_label of ["Psicóloga", "Psicólogo", "Psicólogo(a)"]) {
+    assert.equal(
+      roleText({ type_label, formation_years: 14, show_experience_tag: true }),
+      `${type_label} • 14 anos exp.`,
+    );
+    assert.equal(
+      roleText({ type_label, formation_years: 1, show_experience_tag: true }),
+      `${type_label} • 1 ano exp.`,
+    );
+  }
+});
+
+test("hidden, missing, malformed and old-backend experience renders only the base label", () => {
+  for (const overrides of [
+    {},
+    { formation_years: 14 },
+    { formation_years: 14, show_experience_tag: false },
+    { formation_years: 14, show_experience_tag: null },
+    ...[undefined, null, 0, -1, NaN, Infinity, 1.5, "14"].map((formation_years) => ({
+      formation_years,
+      show_experience_tag: true,
+    })),
+  ])
+    assert.equal(roleText(overrides), "Psicóloga");
+});
+
+test("experience metadata cannot override patient or anonymous role labels", () => {
+  for (const type_label of ["Paciente", "Membro Anônimo"]) {
+    assert.equal(
+      roleText({ role: "paciente", type_label, formation_years: 14, show_experience_tag: true }),
+      type_label,
+    );
+  }
+});
+
+test("reel experience stays below the author and inside mobile and desktop bounds", async (t) => {
+  const require = createRequire(import.meta.url);
+  let chromium;
+  try {
+    ({ chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright"));
+  } catch {
+    t.skip("Playwright is unavailable");
+    return;
+  }
+  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  try {
+    for (const width of [320, 390, 1440]) {
+      const page = await browser.newPage({ viewport: { width, height: 844 } });
+      await page.setContent(`<style>
+        *{box-sizing:border-box}body{margin:0;font-family:Arial}
+        ${css}
+        .test-stage{position:relative;width:${width < 1024 ? width : 506}px;height:700px;
+          background:var(--lectum-media-background);--info-bottom:24px;--lectum-media-foreground:white;--lectum-media-background:black}
+      </style><div class="test-stage"><div class="identity">${renderAuthor({
+        name: "Alessandra Ianhez de Camargo",
+        formation_years: 14,
+        show_experience_tag: true,
+        verified: true,
+      })}</div></div>`);
+      const result = await page.locator(".role").evaluate((element) => {
+        const role = element.getBoundingClientRect();
+        const author = element.previousElementSibling.getBoundingClientRect();
+        const parent = element.parentElement.getBoundingClientRect();
+        return {
+          text: element.textContent,
+          top: role.top,
+          authorBottom: author.bottom,
+          within: role.left >= parent.left && role.right <= parent.right,
+          fits: element.scrollWidth <= element.clientWidth,
+        };
+      });
+      assert.equal(result.text, "Psicóloga • 14 anos exp.");
+      assert.ok(result.top >= result.authorBottom);
+      assert.ok(result.within && result.fits);
+      await page.close();
+    }
+  } finally {
+    await browser.close();
+  }
+});
 
 test("the author uses one profile link and keeps its controls attached to the final word", () => {
   const author = read("./content-video-author.tsx");
@@ -210,7 +369,7 @@ test("late media readiness cannot restart playback behind a reading panel", () =
   assert.match(viewer, /await playVideoWithActiveDocument\(video\);\s*if \(!eligible\(\)\)/);
   assert.match(
     viewer,
-    /onPlay: \(event\) => \{\s*if \(!activeRef.current \|\| panelRef.current \|\| seekingRef.current\)\s*event.currentTarget.pause\(\)/,
+    /onPlay: \(event\) => \{\s*if \(\s*!activeRef.current \|\|\s*panelRef.current \|\|\s*seekingRef.current \|\|\s*composerBusyRef.current \|\|\s*createPostOpenRef.current\s*\)\s*event.currentTarget.pause\(\)/,
   );
   assert.match(
     viewer,
@@ -326,7 +485,7 @@ test("desktop keeps the action rail outside while clipping only visual card laye
   assert.match(css, /\.action \{[^}]*width: 44px;/s);
   assert.match(
     desktopCss,
-    /\.slide\[aria-hidden="true"\] \.stage > :not\(\.player\),[^}]*visibility: hidden;/s,
+    /\.slide\[aria-hidden="true"\] \.stage > div > :not\(\.player\),[^}]*visibility: hidden;/s,
   );
   assert.doesNotMatch(
     desktopCss,

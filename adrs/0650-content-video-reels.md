@@ -46,3 +46,25 @@ The user's production Dokploy screenshot confirms Replicas = 1. No infrastructur
 setting was changed. A future replica increase requires the snapshot-storage
 decision above. Local browser QA uses development frontend mode because production
 origin/CSP guards intentionally reject localhost APIs; those guards are unchanged.
+
+## Content author experience (2026-10-30)
+
+Content-video and community/post feed authors expose optional `formation_years`
+and `show_experience_tag`. Existing author selections fetch the CRP registration
+date, visibility preference and entitlement timestamps in bulk; no profile query
+per reel is added. The initial/focused item uses the same content-video serializer.
+
+Only active, nondeleted psychologists with a published presentation profile and
+verified professional entitlement can expose experience. Reuse the directory's
+visibility resolver: a free-profile default before entitlement can become visible,
+while an explicit opt-out after entitlement stays hidden. Missing visibility
+evidence fails closed. Hidden/ineligible authors return null years, so other API
+consumers cannot recover hidden experience from this new metadata. Registration
+dates and entitlement timestamps stay internal.
+
+The reel keeps `type_label` (including gender and patient labels), appending the
+existing singular/plural experience formatter only for an explicitly enabled flag
+and positive integer years. Old backend responses retain the base label without
+inventing zero years. No CSS, schema, dependency or configuration change is needed.
+Backend deployment is required to supply the fields; frontend may deploy first
+with the safe base-label fallback. Rollback either application independently.

@@ -3,7 +3,6 @@
 import {
   type ChangeEvent,
   type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
   type RefObject,
   useCallback,
   useEffect,
@@ -41,23 +40,25 @@ import {
   COMMENT_GUIDANCE_MESSAGE,
   confirmDiscardReplyDraft,
   POST_DETAIL_MOBILE_QUERY,
-  POST_REPLY_CANCEL_DRAG_THRESHOLD,
   type ReplyMediaPermission,
   type ReplyTarget,
 } from "../modules/reply-support";
 import { type ReplyComposerForm, useReplyComposerForm } from "../use-form";
+import { useReplyComposerCancelGesture } from "./reply-composer-cancel-gesture";
 import { findReplyComposerInput } from "./reply-composer-dom";
 import { ReplyComposerSubmitButton } from "./reply-composer-submit-button";
 import { useReplyComposerKeyboardOffset } from "./use-reply-composer-keyboard-offset";
 
 export const ReplyComposer = ({
   apiError,
+  appearance = "default",
   autoFocus = false,
   disabled,
   formRef,
   mediaPermission,
   onCancelContext,
   onComposerActiveChange,
+  onStateChange,
   onDraftStateChange,
   onSubmit,
   replyToName,
@@ -65,12 +66,14 @@ export const ReplyComposer = ({
   variant = "main",
 }: {
   apiError?: string | null;
+  appearance?: "default" | "reels";
   autoFocus?: boolean;
   disabled?: boolean;
   formRef?: RefObject<HTMLElement | null>;
   mediaPermission: ReplyMediaPermission;
   onCancelContext?: () => void;
   onComposerActiveChange?: (active: boolean) => void;
+  onStateChange?: (state: { busy: boolean; hasDraft: boolean; submitting: boolean }) => void;
   onDraftStateChange?: (hasDraft: boolean) => void;
   onSubmit: (
     values: ReplyComposerForm,
@@ -84,8 +87,6 @@ export const ReplyComposer = ({
   const form = useReplyComposerForm();
   const { formProps, hook } = form;
   const [composerActive, setComposerActive] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [draggingToCancel, setDraggingToCancel] = useState(false);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [mediaUpgradeModalOpen, setMediaUpgradeModalOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
@@ -104,12 +105,6 @@ export const ReplyComposer = ({
   const lastUserScrollIntentAtRef = useRef(0);
   const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const mediaPickerActiveRef = useRef(false);
-  const cancelDragRef = useRef<{
-    dragging: boolean;
-    pointerId: number;
-    startX: number;
-    startY: number;
-  } | null>(null);
   // RHF pode atualizar um erro mantendo a referência de errors; não memorizar esse valor.
   // A seleção nova pode ser inválida; não esconder esse motivo atrás do upload anterior.
   const firstError = Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
@@ -123,6 +118,25 @@ export const ReplyComposer = ({
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
   const isEmbedded = variant === "embedded";
+  const isReels = appearance === "reels";
+  const {
+    dragOffset,
+    draggingToCancel,
+    resetCancelDrag,
+    handleCancelPointerDown,
+    handleCancelPointerMove,
+    handleCancelPointerEnd,
+  } = useReplyComposerCancelGesture({
+    enabled: !isReels && composerActive && !disabled && !hook.formState.isSubmitting,
+    onCancel: () => cancelComposer(),
+  });
+  const interactionLocked = Boolean(disabled || hook.formState.isSubmitting || isPreparingVideo);
+  const busy =
+    composerActive ||
+    hasDiscardableDraft ||
+    mediaPickerActive ||
+    mediaUpgradeModalOpen ||
+    hook.formState.isSubmitting;
   const keyboardOffset = useReplyComposerKeyboardOffset({
     composerActive,
     composerRef: composerFormNodeRef,
@@ -130,7 +144,7 @@ export const ReplyComposer = ({
   });
   const shouldShowMediaTriggerInField =
     !selectedMedia && (mediaPickerActive || mediaPermission.showControl);
-  const shouldShowGuidance = composerActive || hasDraft || Boolean(selectedMedia);
+  const shouldShowGuidance = !isReels && (composerActive || hasDraft || Boolean(selectedMedia));
   const shouldUseKeyboardSafeArea = composerActive && keyboardOffset > 0;
   usePwaBottomRecovery(
     composerFormNodeRef,
@@ -145,13 +159,16 @@ export const ReplyComposer = ({
   const composerContentField = useMemo(
     () => ({
       ...formProps.fields[0],
+      ...(isReels ? { disabled: interactionLocked } : {}),
       inputClassName: cn(
         formProps.fields[0].inputClassName,
         "border-0 bg-transparent px-3.5 shadow-none focus:border-transparent focus:ring-0 dark:bg-transparent",
         shouldShowMediaTriggerInField && "pl-12",
+        isReels &&
+          "text-media-foreground caret-media-foreground placeholder:text-media-foreground/70 empty:before:text-media-foreground/70 dark:text-media-foreground",
       ),
     }),
-    [formProps.fields, shouldShowMediaTriggerInField],
+    [formProps.fields, interactionLocked, isReels, shouldShowMediaTriggerInField],
   );
   const composerStyle = useMemo(() => {
     const style: CSSProperties = {};
@@ -263,12 +280,6 @@ export const ReplyComposer = ({
     [],
   );
 
-  const resetCancelDrag = useCallback(() => {
-    cancelDragRef.current = null;
-    setDragOffset(0);
-    setDraggingToCancel(false);
-  }, []);
-
   const dismissComposerKeyboard = useCallback(() => {
     const activeElement = document.activeElement;
     const inputNode = findReplyComposerInput(composerFormNodeRef.current);
@@ -297,13 +308,6 @@ export const ReplyComposer = ({
     onCancelContext?.();
   };
 
-  const canUseMobileCancelGesture = () =>
-    composerActive &&
-    !disabled &&
-    !hook.formState.isSubmitting &&
-    typeof window !== "undefined" &&
-    window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches;
-
   useEffect(() => {
     if (!autoFocus || !autoFocusTargetId) return;
 
@@ -318,6 +322,35 @@ export const ReplyComposer = ({
   useEffect(() => {
     onDraftStateChange?.(hasDiscardableDraft);
   }, [hasDiscardableDraft, onDraftStateChange]);
+
+  useEffect(() => {
+    onStateChange?.({
+      busy,
+      hasDraft: hasDiscardableDraft,
+      submitting: isPreparingVideo || hook.formState.isSubmitting,
+    });
+  }, [busy, hasDiscardableDraft, hook.formState.isSubmitting, isPreparingVideo, onStateChange]);
+
+  useEffect(() => {
+    if (!isReels || mediaPickerActive || mediaUpgradeModalOpen || selectedMedia || isPreparingVideo)
+      return;
+    const node = composerFormNodeRef.current;
+    updateComposerActive(Boolean(node?.contains(document.activeElement)));
+  }, [
+    isReels,
+    mediaPickerActive,
+    mediaUpgradeModalOpen,
+    selectedMedia,
+    isPreparingVideo,
+    updateComposerActive,
+  ]);
+
+  useEffect(() => {
+    if (!isReels) return;
+    const input = fileInputRef.current;
+    input?.addEventListener("cancel", endMediaPickerInteraction);
+    return () => input?.removeEventListener("cancel", endMediaPickerInteraction);
+  }, [endMediaPickerInteraction, isReels]);
 
   useEffect(() => {
     return () => onComposerActiveChange?.(false);
@@ -448,60 +481,6 @@ export const ReplyComposer = ({
     scheduleSelectedMediaPreviewPreparation(previewUrl, type);
   };
 
-  const handleCancelPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
-    if (event.pointerType !== "touch" || !canUseMobileCancelGesture()) return;
-
-    cancelDragRef.current = {
-      dragging: false,
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-    };
-  };
-
-  const handleCancelPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-    const gesture = cancelDragRef.current;
-    if (!gesture || gesture.pointerId !== event.pointerId) return;
-
-    const deltaX = event.clientX - gesture.startX;
-    const deltaY = event.clientY - gesture.startY;
-
-    if (!gesture.dragging) {
-      if (deltaY < 10 || Math.abs(deltaY) < Math.abs(deltaX) * 1.2) return;
-
-      gesture.dragging = true;
-      setDraggingToCancel(true);
-
-      if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.setPointerCapture(event.pointerId);
-      }
-    }
-
-    if (gesture.dragging) {
-      event.preventDefault();
-      setDragOffset(Math.min(96, Math.max(0, deltaY * 0.72)));
-    }
-  };
-
-  const handleCancelPointerEnd = (event: ReactPointerEvent<HTMLElement>) => {
-    const gesture = cancelDragRef.current;
-    if (!gesture || gesture.pointerId !== event.pointerId) return;
-
-    const shouldCancel =
-      gesture.dragging && event.clientY - gesture.startY >= POST_REPLY_CANCEL_DRAG_THRESHOLD;
-
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-
-    if (shouldCancel) {
-      cancelComposer();
-      return;
-    }
-
-    resetCancelDrag();
-  };
-
   const submitComposer = () => {
     if (needsReadableFile) return;
     if (disabled || hook.formState.isSubmitting || isPreparingVideo || preparingVideoRef.current)
@@ -521,6 +500,7 @@ export const ReplyComposer = ({
 
       try {
         await onSubmit(values, selectedMedia?.file ?? null, videoUploadOperation);
+        if (isReels) dismissComposerKeyboard();
         hook.reset({ content: "" });
         clearSelectedMedia();
         endMediaPickerInteraction();
@@ -556,11 +536,18 @@ export const ReplyComposer = ({
                     ? "pb-[var(--lectum-bottom-nav-padding)]"
                     : "pb-[var(--lectum-bottom-fixed-padding)]",
                 ),
+          isReels &&
+            "rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none dark:bg-transparent",
         )}
+        data-reply-composer-appearance={appearance}
         onBlur={(event) => {
           const nextTarget = event.relatedTarget;
           if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
           if (mediaPickerActiveRef.current) return;
+          if (isReels) {
+            updateComposerActive(false);
+            return;
+          }
           if (Date.now() - composerInternalPointerAtRef.current < 600) return;
           updateComposerActive(false);
           resetCancelDrag();
@@ -568,6 +555,7 @@ export const ReplyComposer = ({
         onFocusCapture={(event) => {
           const target = event.target;
           if (
+            !isReels &&
             target instanceof HTMLElement &&
             target.closest("[data-reply-media-trigger='true']")
           ) {
@@ -592,6 +580,7 @@ export const ReplyComposer = ({
           accept={REPLY_MEDIA_ACCEPT}
           className="hidden"
           onChange={handleMediaChange}
+          disabled={isReels ? interactionLocked : undefined}
           ref={fileInputRef}
           type="file"
         />
@@ -602,13 +591,19 @@ export const ReplyComposer = ({
         ) : null}
 
         <div className="flex items-end gap-2">
-          <div className="relative grid min-w-0 flex-1 rounded-[24px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
+          <div
+            className={cn(
+              "relative grid min-w-0 flex-1 rounded-[24px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface",
+              isReels &&
+                "border-transparent bg-media-control/92 text-media-foreground dark:bg-media-control/92 [&_[data-reply-media-trigger]]:text-media-foreground",
+            )}
+          >
             {shouldShowMediaTriggerInField ? (
               <ReplyMediaAttachmentControl
                 className="absolute top-1/2 left-1 z-10 -translate-y-1/2"
                 composerMode="trigger"
                 renderInput={false}
-                disabled={disabled || hook.formState.isSubmitting}
+                disabled={isReels ? interactionLocked : disabled || hook.formState.isSubmitting}
                 fileInputRef={fileInputRef}
                 isUploading={disabled && Boolean(selectedMedia)}
                 mediaPermission={mediaPermission}
@@ -625,7 +620,7 @@ export const ReplyComposer = ({
                 className="px-3.5 pb-3 pt-0"
                 composerMode="preview"
                 renderInput={false}
-                disabled={disabled || hook.formState.isSubmitting}
+                disabled={isReels ? interactionLocked : disabled || hook.formState.isSubmitting}
                 fileInputRef={fileInputRef}
                 isUploading={disabled && Boolean(selectedMedia)}
                 mediaPermission={mediaPermission}
@@ -639,6 +634,7 @@ export const ReplyComposer = ({
             ) : null}
           </div>
           <ReplyComposerSubmitButton
+            appearance={appearance}
             disabled={
               Boolean(disabled) ||
               hook.formState.isSubmitting ||
@@ -647,11 +643,17 @@ export const ReplyComposer = ({
               needsReadableFile
             }
             onClick={submitComposer}
-            loading={Boolean(disabled && ready)}
+            loading={Boolean(disabled && ready) || (isReels && hook.formState.isSubmitting)}
           />
         </div>
 
-        <p className={cn("text-[11px] font-medium leading-4 text-subtle", "pr-[3.25rem]")}>
+        <p
+          className={cn(
+            "text-[11px] font-medium leading-4 text-subtle",
+            "pr-[3.25rem]",
+            isReels && "text-media-foreground/70",
+          )}
+        >
           {COMMENT_GUIDANCE_MESSAGE}
         </p>
 

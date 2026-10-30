@@ -85,6 +85,9 @@ export const communityRuleSelect = {
 } satisfies Prisma.community_ruleSelect;
 
 export const professionalProfileSelect = {
+  crp_registration_date: true,
+  show_experience_tag: true,
+  updatedAt: true,
   deleted: true,
   professional_first_name: true,
   professional_last_name: true,
@@ -100,6 +103,8 @@ export const professionalProfileSelect = {
     select: {
       id: true,
       source: true,
+      createdAt: true,
+      grant_started_at: true,
     },
   },
 } satisfies Prisma.psychologist_profileSelect;

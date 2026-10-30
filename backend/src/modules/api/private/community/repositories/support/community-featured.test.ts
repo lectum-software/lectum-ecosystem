@@ -54,6 +54,9 @@ const reply = (id: string, days = 7): ProfessionalReplyResult => ({
     psychologist_profile: {
       deleted: false,
       cfp_verified_at: daysAgo(400),
+      crp_registration_date: null,
+      show_experience_tag: false,
+      updatedAt: new Date("2026-08-14T12:00:00Z"),
       crp_status: "aprovado",
       crp: null,
       professional_first_name: null,
@@ -62,7 +65,14 @@ const reply = (id: string, days = 7): ProfessionalReplyResult => ({
       published: true,
       whatsapp: null,
       video_url: "/public/files/profile/video.mp4",
-      subscriptions: [{ id: "subscription", source: "admin_grant" }],
+      subscriptions: [
+        {
+          id: "subscription",
+          source: "admin_grant",
+          createdAt: new Date("2026-08-13T12:00:00Z"),
+          grant_started_at: null,
+        },
+      ],
     },
   },
 });

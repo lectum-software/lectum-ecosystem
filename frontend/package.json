@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.751",
+  "version": "0.1.753",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -28,7 +28,7 @@
     "biome:fix": "biome check --write .",
     "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:profile-reply-actions && pnpm test:profile-hero && pnpm test:feed-header && pnpm test:favorite-slot && pnpm test:fixed-bottom && pnpm test:reply-tip && pnpm test:signout && pnpm test:auth-navigation && pnpm test:directory-relations && pnpm test:community-recommendations && pnpm test:infinite-lists && pnpm test:reply-focus && pnpm test:whatsapp-week && pnpm test:content-videos && pnpm test:video-contact && pnpm test:testimonials",
     "test:video-contact": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/components/community/content-video-audio.test.mjs src/components/psychologists/whatsapp-contact-color.test.mjs src/components/community/community-post-controls.test.mjs src/components/community/use-video-contact-reveal.test.mjs",
-    "test:content-videos": "node --test src/components/community/community-upvote-only.test.mjs src/components/community/content-video-comments-sheet.test.mjs src/components/community/content-video-interaction-refresh.test.mjs src/components/community/use-content-video-queue.test.mjs src/components/ui/vertical-video-player-viewport.test.mjs src/hooks/use-modal-portal-host.test.mjs src/components/community/content-video-viewer-layout.test.mjs src/components/community/use-content-video-scroll.test.mjs"
+    "test:content-videos": "node --test src/components/community/community-upvote-only.test.mjs src/components/community/content-video-comments-sheet.test.mjs src/components/community/content-video-inline-composer.test.mjs src/components/community/content-video-interaction-refresh.test.mjs src/components/community/use-content-video-queue.test.mjs src/components/ui/vertical-video-player-viewport.test.mjs src/hooks/use-modal-portal-host.test.mjs src/components/community/content-video-viewer-layout.test.mjs src/components/community/use-content-video-scroll.test.mjs"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",

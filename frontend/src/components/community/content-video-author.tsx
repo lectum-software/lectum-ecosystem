@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { CommunityAuthor } from "@/api/generator/types/community";
+import { formatExperienceLabel } from "@/app/app/psychologist/[id]/modules/support";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import styles from "./content-video-viewer.module.css";
@@ -28,6 +29,15 @@ export const ContentVideoAuthor = ({
         <FeedFavoriteButton author={author} />
       </span>
     </div>
-    <div className={styles.role}>{author.type_label}</div>
+    <div className={styles.role}>
+      {author.type_label}
+      {author.role === "psicologo" &&
+      author.show_experience_tag === true &&
+      typeof author.formation_years === "number" &&
+      Number.isInteger(author.formation_years) &&
+      author.formation_years > 0
+        ? ` • ${formatExperienceLabel(author.formation_years)}`
+        : null}
+    </div>
   </>
 );

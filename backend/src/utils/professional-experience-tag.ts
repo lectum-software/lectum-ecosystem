@@ -1,3 +1,5 @@
+import { crpExperienceYears } from "./professional-experience";
+
 type ExperienceTagPlan = {
   slug?: string | null;
 };
@@ -65,4 +67,37 @@ export const resolveProfessionalExperienceTagVisibility = ({
   if (profileUpdatedAt === null || entitlementStartedAt === null) return true;
 
   return profileUpdatedAt <= entitlementStartedAt;
+};
+
+export const publicProfessionalExperience = (
+  profile:
+    | (ExperienceTagProfile & {
+        crp_registration_date?: Date | string | null;
+        subscriptions?: ExperienceTagSubscription[];
+      })
+    | null
+    | undefined,
+  eligible: boolean,
+) => {
+  const subscription = profile?.subscriptions?.[0];
+  // Sparse legacy authors must not inherit the resolver's permissive defaults.
+  const hasVisibilityEvidence =
+    typeof profile?.show_experience_tag === "boolean" &&
+    (profile.show_experience_tag ||
+      (toTimestamp(profile.updatedAt) !== null && getEntitlementStartedAt(subscription) !== null));
+  const showExperienceTag = Boolean(
+    eligible &&
+      profile &&
+      hasVisibilityEvidence &&
+      resolveProfessionalExperienceTagVisibility({
+        profile,
+        subscription,
+        hasProfessionalEntitlement: Boolean(profile.subscriptions?.length),
+      }),
+  );
+
+  return {
+    formation_years: showExperienceTag ? crpExperienceYears(profile?.crp_registration_date) : null,
+    show_experience_tag: showExperienceTag,
+  };
 };

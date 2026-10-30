@@ -77,6 +77,8 @@ export type PostAuthorDTO = {
   favorite_available: boolean;
   role: string | null;
   type_label: string;
+  formation_years?: number | null;
+  show_experience_tag?: boolean;
   anonymous: boolean;
   crp: string | null;
   verified: boolean;

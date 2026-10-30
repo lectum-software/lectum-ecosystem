@@ -83,3 +83,18 @@ overrides exclusivos de demonstracao no header/menu. Conteudo inferior
 da previa continua demonstrativo e nao integra o produto.
 Producao anterior 0.1.748 e health/ready 200 conferidos antes da promocao.
 Rollback: restaurar o deployment anterior do frontend; nenhuma mudanca de dados.
+
+## Padronizacao local de Seguir e Favoritar
+
+Previa relationship-buttons-preview aprovada pelo usuario em 30/10/2026.
+Implementar somente localmente: Manrope 13px/600, icones 20px, gap 8px,
+alvo de toque 44px, azul sem borda/fundo/sombra. Selecionados: check azul
+ou coracao vermelho em area 44x44. Variante header no RelationshipButton
+compartilhada pelos dois controles; preservar compact, hero legado e
+recommendation. Estado pending, permissao, nomes acessiveis e handlers
+existentes preservados. Sem alteracao abaixo do menu, API ou dados.
+Validacao 0.1.752: frontend check completo, gates raiz e build aprovados.
+Browser Chromium em 320/390/1200px com componentes reais e CSS/fontes do
+build: estados inicial, selecionado e pending, medidas, cores e ausencia
+de overflow conferidos. Copia do build com 837 fontes identicas ao produto.
+Publicacao expressamente adiada pelo usuario. Sem push ou deploy.
