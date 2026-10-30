@@ -31,3 +31,9 @@ Mudanca restrita ao perfil, sem alteracao de contato, analytics ou permissao.
 Validar fonte computada, dimensoes, nomes longos, teclado e scroll no browser.
 Chromium emulado nao substitui verificacao final em Safari fisico.
 Publicacao depende de nova autorizacao; nenhum deploy automatico.
+
+## Refinamento de 30/10/2026
+
+A pedido do usuario, remover a sombra do hero preservando suas quinas
+inferiores de 28px. O header fixo continua condicionado ao WhatsApp disponivel:
+o perfil de teste sem numero nao deve apresentar acao de contato ficticia.

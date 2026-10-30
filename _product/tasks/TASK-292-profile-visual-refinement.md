@@ -12,7 +12,7 @@ Sem mudancas de API, dados, notificacoes ou regras dos depoimentos.
 
 ## Aceite
 
-- [x] Header com quinas inferiores de 28px e sombra da comunidade.
+- [x] Header com quinas inferiores de 28px; sombra removida no refinamento solicitado.
 - [x] Favoritar com tipografia compacta do feed, coracao sem texto quando marcado.
 - [x] Texto do CTA sem recorte e altura externa preservada em 44px.
 - [x] Header fixo proporcional: nome 15px, icone 18px e verde visual de 34px.
@@ -46,3 +46,14 @@ Validacao em Chromium; nao foi executada em iPhone/Safari fisico.
 
 Somente commit local em homolog; nenhum push ou deploy nesta rodada.
 Sem variavel nova, migration, pacote novo ou alteracao em Admin/Video.
+
+## Refinamento posterior
+
+Usuario pediu remover a sombra na quina. Mantido raio 28px e removida
+somente a sombra do hero. Perfil local indicado nao possui whatsapp_url;
+por isso nao apresenta CTA ou header fixo, conforme regra existente.
+Nao cadastrar numero ficticio, modificar o banco ou liberar contato indisponivel.
+Complemento validado em 0.1.750: frontend check completo, gates raiz e build
+aprovados. Browser local em 390/1440px confirmou raio de 28px sem sombra
+visivel e header fixo oculto no perfil sem contato. Fontes da copia de build
+conferidas por hash (837 arquivos, zero diferencas). Sem push/deploy.
