@@ -29,7 +29,7 @@ export const ProfileTabs = ({
             aria-controls="profile-content"
             aria-selected={active}
             className={cn(
-              "relative inline-flex h-[44px] min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 bg-transparent px-1 before:pointer-events-none before:absolute before:inset-x-3 before:bottom-0 before:h-[2px] before:rounded-full before:content-[''] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20",
+              "relative inline-flex h-[44px] min-w-0 flex-1 cursor-pointer items-center justify-center gap-[3px] bg-transparent px-0 before:pointer-events-none before:absolute before:inset-x-3 before:bottom-0 before:h-[2px] before:rounded-full before:content-[''] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20",
               active ? "text-foreground before:bg-foreground" : "text-muted hover:text-foreground",
             )}
             id={`profile-tab-${tab.value}`}
@@ -55,12 +55,12 @@ export const ProfileTabs = ({
             tabIndex={active ? 0 : -1}
             type="button"
           >
-            <span className="min-w-0 truncate text-[13px] font-semibold leading-5">
+            <span className="min-w-0 truncate text-[13px] font-semibold leading-5 max-[359px]:text-[12px]">
               {tab.label}
             </span>
             {tab.value !== "geral" ? (
               <span
-                className="max-w-[40%] shrink-0 truncate text-[11px] font-medium leading-5 tabular-nums text-subtle"
+                className="h-[18px] min-w-[18px] max-w-[40%] shrink-0 truncate rounded-[5px] bg-primary-soft px-1 text-center text-[11px] font-semibold leading-[18px] tabular-nums text-primary"
                 title={count?.toLocaleString("pt-BR")}
               >
                 {count === undefined ? "…" : count.toLocaleString("pt-BR")}

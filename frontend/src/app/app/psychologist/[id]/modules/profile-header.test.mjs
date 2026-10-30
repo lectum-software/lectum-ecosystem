@@ -87,7 +87,7 @@ test("benefits retain original icons and only enabled conditions", () => {
   assert.match(html, /text-\[13px\] sm:text-\[13px\]/);
 });
 
-test("favorite is plus and text before selection, only an accessible blue heart after", () => {
+test("favorite is blue plus and text before selection, only an accessible red heart after", () => {
   const idle = render(ProfileFavoriteButton);
   assert.match(idle, /lucide-plus/);
   assert.match(idle, /h-\[44px\]/);
@@ -97,7 +97,8 @@ test("favorite is plus and text before selection, only an accessible blue heart 
   assert.match(selected, /aria-label="Remover Ana Lima dos favoritos"/);
   assert.match(selected, /aria-pressed="true"/);
   assert.match(selected, /lucide-heart/);
-  assert.match(selected, /fill-current/);
+  assert.match(selected, /fill-current text-favorite/);
+  assert.doesNotMatch(idle, /text-favorite/);
   assert.match(selected, /h-\[44px\]/);
   assert.match(selected, /w-\[44px\]/);
   assert.match(selected, /text-primary/);
@@ -212,14 +213,19 @@ test("sticky WhatsApp label has 13px text and 20px line height", () => {
   assert.match(labelClasses, /text-\[13px\] font-semibold leading-\[20px\]/);
 });
 
-test("sticky name wraps at 15px semibold with 20px line height", () => {
+test("sticky name truncates at 15px while the verified badge stays outside the truncation", () => {
   const bar = render(ProfileStickyBar, { visible: true });
   const nameClasses = bar.match(/<span class="([^"]+)" data-profile-sticky-name/)?.[1];
   assert.ok(nameClasses);
-  assert.match(
-    nameClasses,
-    /line-clamp-2 min-w-0 flex-1 break-words text-\[15px\] font-semibold leading-\[20px\]/,
-  );
+  assert.match(nameClasses, /min-w-0 truncate text-\[15px\] font-semibold leading-\[20px\]/);
+  assert.doesNotMatch(bar, /Perfil verificado/);
+  const verified = render(ProfileStickyBar, {
+    visible: true,
+    profile: { ...profile, verified: true },
+  });
+  assert.match(verified, /Ana Lima<\/span><svg[^>]*aria-label="Perfil verificado"/);
+  assert.match(verified, /h-4 w-4 shrink-0/);
+  assert.match(verified, /-ml-1 flex min-w-0 flex-1 items-center gap-1/);
 });
 
 test("hero and sticky share the configured WhatsApp name and normalized fallback", () => {
@@ -305,6 +311,9 @@ test("tabs retain roving focus with matching publication and testimonial counter
   assert.equal((html.match(/before:bg-foreground/g) ?? []).length, 1);
   assert.equal((html.match(/<span[^>]*text-\[13px\] font-semibold/g) ?? []).length, 3);
   assert.match(counters[0][1], /text-\[11px\]/);
+  assert.match(counters[0][1], /bg-primary-soft/);
+  assert.match(counters[0][1], /font-semibold/);
+  assert.match(counters[0][1], /h-\[18px\] min-w-\[18px\]/);
 });
 
 test("sticky observes contact rather than favorite and cleans up scrolling observers", () => {

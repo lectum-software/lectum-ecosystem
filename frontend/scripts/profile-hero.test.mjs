@@ -105,6 +105,11 @@ test("profile shows inline blue plus Favoritar until selected, then only an acce
     assert.doesNotMatch(favorite, /rounded-full|shadow-sm|border-favorite|bg-favorite/);
     assert.match(favorite, /stroke-width="2"/);
     assert.match(favorite, /style="font-size:11px;font-weight:600"/);
+    if (active) {
+      assert.match(favorite, /fill-current text-favorite/);
+    } else {
+      assert.doesNotMatch(favorite, /text-favorite/);
+    }
     assert.match(follow, /h-10/);
     assert.match(follow, /rounded-full/);
     assert.match(follow, /shadow-sm/);
@@ -186,14 +191,15 @@ test("sticky contact preserves the hero accessible name independently of favorit
     assert.equal(sticky.match(label)?.[1], hero.match(label)?.[1]);
     assert.match(sticky, /aria-hidden="false"/);
     assert.doesNotMatch(sticky, /inert=""/);
-    assert.match(sticky, /line-clamp-2 min-w-0 flex-1 break-words/);
+    assert.match(sticky, /min-w-0 truncate text-\[15px\]/);
     assert.match(sticky, /Amanda Miranda Gomes de Azevedo/);
     assert.match(sticky, /data-profile-whatsapp-cta="sticky"/);
     assert.match(sticky, /<span[^>]*>WhatsApp<\/span>/);
     assert.match(sticky, /aria-label="Voltar"/);
     assert.match(sticky, /lucide-chevron-left/);
     assert.equal((sticky.match(/<button/g) ?? []).length, 2);
-    assert.doesNotMatch(sticky, /Favoritar|data-profile-avatar|Perfil verificado/);
+    assert.doesNotMatch(sticky, /Favoritar|data-profile-avatar/);
+    assert.match(sticky, /aria-label="Perfil verificado"/);
   }
 });
 

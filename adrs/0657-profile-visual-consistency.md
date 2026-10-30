@@ -37,3 +37,17 @@ Publicacao depende de nova autorizacao; nenhum deploy automatico.
 A pedido do usuario, remover a sombra do hero preservando suas quinas
 inferiores de 28px. O header fixo continua condicionado ao WhatsApp disponivel:
 o perfil de teste sem numero nao deve apresentar acao de contato ficticia.
+
+## Favorito consistente
+
+Reutilizar FavoriteHeart no estado selecionado do perfil: vermelho do token
+compartilhado com o feed, sem cor local nova. Manter RelationshipButton azul
+antes da selecao, nome acessivel, permissao, pending e acao existentes.
+Sem mudar duracao ou persistencia da confirmacao do feed.
+
+## Integracao da previa
+
+Nome do header fixo em uma linha com ellipsis; selo compartilhado em irmao
+flex shrink-0 para permanecer visivel. Aproximar texto e chevron sem reduzir
+o alvo de 44px. Contadores com primary-soft e tipografia identica nas duas
+abas. Nenhuma alteracao nos blocos abaixo do menu ou nas regras de contato.

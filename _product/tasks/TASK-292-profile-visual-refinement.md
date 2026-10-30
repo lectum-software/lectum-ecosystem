@@ -1,6 +1,6 @@
 # TASK-292 - Refinamento visual do perfil
 
-Status: implementacao e validacao local concluidas. Sem autorizacao de publicacao deste ajuste.
+Status: publicacao autorizada em 30/10/2026; integracao e validacao final concluidas, aguardando promocao.
 
 ## Referencias e escopo
 
@@ -57,3 +57,29 @@ Complemento validado em 0.1.750: frontend check completo, gates raiz e build
 aprovados. Browser local em 390/1440px confirmou raio de 28px sem sombra
 visivel e header fixo oculto no perfil sem contato. Fontes da copia de build
 conferidas por hash (837 arquivos, zero diferencas). Sem push/deploy.
+
+## Cor de favorito
+
+Reutilizar FavoriteHeart ativo no perfil, com token vermelho text-favorite
+ja usado na confirmacao do feed. Estado inicial segue + Favoritar azul.
+Nao alterar o desaparecimento da confirmacao no feed nem o toggle do perfil.
+Complemento de favorito validado: frontend check, gates raiz e build aprovados.
+
+## Integracao da previa aprovada
+
+Integrar em 0.1.751 o selo verificado fora do nome truncado no header fixo,
+aproximar nome e chevron preservando alvo de 44px e usar fundo primary-soft
+nos dois contadores de abas. Preservar todos os blocos abaixo do menu.
+Usuario confirmou novamente autodeploys desligados em 30/10/2026.
+Somente frontend requer deploy; sem migration, variavel ou contrato novo.
+
+Validacao final 0.1.751: frontend check completo, testes focados apos ajuste
+de fonte em 320px, Biome, gates raiz e build aprovados. Browser Chromium
+320/390/1440px usando SSR real dos componentes e CSS/fontes do build:
+coracao vermelho, contadores legiveis, selo preservado com nome longo,
+alvo de voltar 44px, contato e header condicionado a rolagem conferidos.
+Previa somente leitura nao dispara HTTP, contatos ou mutacoes. CSS sem
+overrides exclusivos de demonstracao no header/menu. Conteudo inferior
+da previa continua demonstrativo e nao integra o produto.
+Producao anterior 0.1.748 e health/ready 200 conferidos antes da promocao.
+Rollback: restaurar o deployment anterior do frontend; nenhuma mudanca de dados.

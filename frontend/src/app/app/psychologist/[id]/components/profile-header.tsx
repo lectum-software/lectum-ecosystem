@@ -3,6 +3,7 @@
 import { ChevronLeft } from "lucide-react";
 import { type ComponentProps, useEffect, useRef, useState } from "react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { getPsychologistDisplayName } from "../modules/support";
 import { ProfileHero } from "./hero";
@@ -27,7 +28,7 @@ export const ProfileStickyBar = ({
         inert={!showContact}
         data-profile-sticky-bar
         className={cn(
-          "flex h-[56px] min-w-0 items-center gap-2 border-b border-border bg-surface px-3 shadow-sm lg:px-8",
+          "flex h-[56px] min-w-0 items-center gap-1 border-b border-border bg-surface pr-3 shadow-sm lg:pr-8",
           showContact ? "pointer-events-auto visible" : "invisible",
         )}
       >
@@ -37,14 +38,19 @@ export const ProfileStickyBar = ({
           onClick={onBack}
           type="button"
         >
-          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          <ChevronLeft className="h-5 w-5 translate-x-1" aria-hidden="true" />
         </button>
-        <span
-          className="line-clamp-2 min-w-0 flex-1 break-words text-[15px] font-semibold leading-[20px] text-foreground"
-          data-profile-sticky-name
-          title={displayName}
-        >
-          {displayName}
+        <span className="-ml-1 flex min-w-0 flex-1 items-center gap-1" data-profile-sticky-identity>
+          <span
+            className="min-w-0 truncate text-[15px] font-semibold leading-[20px] text-foreground"
+            data-profile-sticky-name
+            title={displayName}
+          >
+            {displayName}
+          </span>
+          {profile.verified ? (
+            <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-4 w-4 shrink-0" />
+          ) : null}
         </span>
         <WhatsAppCta compact profile={profile} />
       </div>

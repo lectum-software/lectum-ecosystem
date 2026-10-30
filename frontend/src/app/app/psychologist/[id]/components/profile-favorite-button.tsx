@@ -1,7 +1,8 @@
 "use client";
 
-import { Heart, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
+import { FavoriteHeart } from "@/components/ui/favorite-heart";
 import { RelationshipButton } from "@/components/ui/relationship-button";
 import { cn } from "@/lib/utils";
 import { getPsychologistDisplayName } from "../modules/support";
@@ -43,7 +44,7 @@ export const ProfileFavoriteButton = ({
       type="button"
     >
       {displayedFavorited ? (
-        <Heart aria-hidden="true" className="h-3.5 w-3.5 shrink-0 fill-current" />
+        <FavoriteHeart active className="h-3.5 w-3.5 shrink-0" />
       ) : (
         <>
           <Plus aria-hidden="true" className="h-3 w-3 shrink-0" />
