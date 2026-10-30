@@ -22,6 +22,10 @@ export const ReplyComposerSubmitButton = ({
     )}
     disabled={disabled}
     onClick={onClick}
+    onPointerDown={(event) => {
+      // Keep the focused field and send target in place until the click submits.
+      if (appearance === "reels" && event.button === 0) event.preventDefault();
+    }}
     type="button"
   >
     {loading ? (

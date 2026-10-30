@@ -1,6 +1,6 @@
 # TASK-293 - Controles e comentarios nos reels
 
-Status: validada localmente em 0.1.753; publicacao autorizada em 30/10/2026, aguardando promocao e deploy manual.
+Status: publicada em 0.1.753 pelo PR #146, merge a1172c2, em 30/10/2026.
 
 ## Referencias e escopo
 
@@ -19,7 +19,7 @@ Inclui a padronizacao de Seguir/Favoritar ja validada localmente em 0.1.752.
 - [x] Experiencia opcional respeita a configuracao efetiva do profissional.
 - [x] Revisao independente sem achados pendentes e QA com API/banco local reais.
 - [x] Checks completos e build final do lote.
-- [ ] Promocao revisada homolog para main e smoke dos deployments.
+- [x] Promocao revisada homolog para main e smoke dos deployments.
 
 ## Seguranca e publicacao
 
@@ -58,3 +58,9 @@ arquivos fonte comparados, nenhuma diferenca em relacao ao checkout.
 Admin e Video sem mudancas funcionais; Video conserva 13 skips de integracao.
 Logs de validacao em .tmp/task293-*-check*.log e .tmp/task293-*-build*.log.
 Sem migration, efeitos externos ou alteracao de configuracao produtiva.
+
+Deploys manuais feitos pelo usuario: frontend/backend retornam 0.1.753 e
+health/ready HTTP 200 no smoke de 30/10/2026 16:38 UTC. Capturas do usuario
+mostram controles e composer em iPhone. Sem escritas de teste em producao;
+QA autenticado permanece restrito ao ambiente local. Refinamentos visuais
+posteriores de foco e espacamento acompanhados separadamente na TASK-294.

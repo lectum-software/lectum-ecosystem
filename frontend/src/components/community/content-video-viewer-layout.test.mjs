@@ -30,7 +30,7 @@ test("reel header reuses the real create form and keeps explicit navigation labe
   assert.match(viewer, /closeRef\.current\?\.click\(\)/);
 });
 
-test("mobile action spacing matches the directory while retaining touch targets", () => {
+test("compact mobile actions retain touch targets and the larger create icon", () => {
   assert.match(css, /\.rail \{[^}]*width: 44px;/s);
   assert.match(css, /\.action \{[^}]*min-height: 44px;/s);
   assert.match(
@@ -257,18 +257,15 @@ test("action sizing stays balanced and author controls follow the last name", as
           }),
         };
       });
-      assert.ok(
-        Math.max(...result.gaps) - Math.min(...result.gaps) <= 2,
-        `${width}: ${JSON.stringify(result)}`,
-      );
       if (width < 1024) {
-        // Directory: hit box minus icon height plus its rail gap.
-        const directoryGap = width < 360 ? 40 - 18 + 6 : 44 - 20 + (width <= 390 ? 6 : 8);
-        assert.equal(result.gaps[0], directoryGap);
+        // Compact visible spacing while every action retains a 44px hit target.
+        assert.equal(result.gaps[0], 14);
         assert.ok(
-          result.gaps.every((gap) => Math.abs(gap - directoryGap) <= 2),
+          result.gaps.every((gap) => gap >= 14 && gap <= 29),
           `${width}: icon and count form one item: ${JSON.stringify(result.gaps)}`,
         );
+      } else {
+        assert.ok(Math.max(...result.gaps) - Math.min(...result.gaps) <= 2);
       }
       assert.ok(
         result.beside && result.contained,
@@ -294,6 +291,24 @@ test("action sizing stays balanced and author controls follow the last name", as
         "800",
       );
       assert.equal(await upvote.locator("span").innerText(), "1000");
+      if (width < 1024) {
+        const compact = await page.evaluate(() => {
+          document.querySelector(".test-stage").style.height = "260px";
+          const rail = document.querySelector(".rail");
+          const top = rail.getBoundingClientRect().top;
+          rail.scrollTop = rail.scrollHeight;
+          const last = rail.lastElementChild.getBoundingClientRect();
+          return {
+            top,
+            scrollable: rail.scrollHeight > rail.clientHeight,
+            reachable: last.bottom <= rail.getBoundingClientRect().bottom + 1,
+            heights: [...rail.children].map((el) => el.getBoundingClientRect().height),
+          };
+        });
+        assert.ok(compact.top >= 72, "keyboard rail must stay below the header controls");
+        assert.ok(compact.scrollable && compact.reachable);
+        assert.ok(compact.heights.every((height) => height >= 44));
+      }
       await page.close();
     }
   } finally {
