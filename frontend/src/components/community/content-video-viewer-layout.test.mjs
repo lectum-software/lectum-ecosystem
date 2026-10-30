@@ -7,8 +7,26 @@ const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
 const viewer = read("./content-video-viewer.tsx") + read("./content-video-slide.tsx");
 const css = read("./content-video-viewer.module.css");
 
-test("visible action gaps are equal and long author names keep favorite beside them", async (t) => {
+test("the author uses one profile link and keeps its controls attached to the final word", () => {
+  const author = read("./content-video-author.tsx");
+  assert.match(
+    author,
+    /styles.name[\s\S]*?<\/Link>[\s\S]*?\{"\\u2060"\}[\s\S]*?styles.authorActions/,
+  );
+  assert.match(css, /\.author \{[^}]*white-space: nowrap;/s);
+  assert.match(css, /\.name \{[^}]*white-space: normal;/s);
+  assert.match(css, /\.authorActions:not\(:empty\) \{[^}]*display: inline-flex;/s);
+  assert.match(viewer, /<Share2 className=\{styles.shareIcon\} aria-hidden \/>/);
+});
+
+test("action sizing stays balanced and author controls follow the last name", async (t) => {
   const require = createRequire(import.meta.url);
+  const { createElement } = require("react");
+  const { renderToStaticMarkup } = require("react-dom/server");
+  const { ArrowUp, MessageCircle, Bookmark, Share2 } = require("lucide-react");
+  const icons = [ArrowUp, MessageCircle, Bookmark, Share2].map((icon, index) =>
+    renderToStaticMarkup(createElement(icon, { className: index === 3 ? "shareIcon" : undefined })),
+  );
   let chromium;
   try {
     ({ chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright"));
@@ -28,14 +46,13 @@ test("visible action gaps are equal and long author names keep favorite beside t
         .favorite{flex:none;white-space:nowrap;font-size:12px;border:0;padding:0}
       </style><div class="test-stage">
         <div class="identity"><div class="author">
-          <a class="name">Alessandra Ianhez de Camargo</a><svg class="badge"></svg>
-          <button class="favorite">+ Favoritar</button>
+          <a class="name">Alessandra Ianhez de Camargo</a>&NoBreak;<span class="authorActions"><svg class="badge"></svg><button class="favorite">+ Favoritar</button></span>
         </div></div>
         <div class="rail">
-          <button class="action" aria-pressed="false"><svg></svg><span>1000</span></button>
-          <button class="action"><svg></svg><span>1000</span></button>
-          <button class="action"><svg></svg></button>
-          <button class="action"><svg></svg></button>
+          <button class="action" aria-pressed="false">${icons[0]}<span>1000</span></button>
+          <button class="action">${icons[1]}<span>1000</span></button>
+          <button class="action">${icons[2]}</button>
+          <button class="action">${icons[3]}</button>
           <button class="contact"><i class="contactGlyph"><svg></svg></i></button>
         </div>
       </div>`);
@@ -52,28 +69,61 @@ test("visible action gaps are equal and long author names keep favorite beside t
             bottom: text ? text.getBoundingClientRect().bottom : desktop ? top + 40 : rect.bottom,
           };
         });
-        const name = document.querySelector(".name").getBoundingClientRect();
+        const nameElement = document.querySelector(".name");
+        const range = document.createRange();
+        range.setStart(nameElement.firstChild, nameElement.textContent.lastIndexOf(" ") + 1);
+        range.setEnd(nameElement.firstChild, nameElement.textContent.length);
+        const name = range.getBoundingClientRect();
+        const badge = document.querySelector(".badge").getBoundingClientRect();
         const favorite = document.querySelector(".favorite").getBoundingClientRect();
         const author = document.querySelector(".author").getBoundingClientRect();
         return {
+          name: name.toJSON(),
+          badge: badge.toJSON(),
+          favorite: favorite.toJSON(),
           gaps: visible.slice(1).map((item, index) => item.top - visible[index].bottom),
           touchHeights: actions.map((button) => button.getBoundingClientRect().height),
           beside:
-            favorite.top < name.bottom && favorite.bottom > name.top && favorite.left > name.right,
+            favorite.top < name.bottom &&
+            favorite.bottom > name.top &&
+            badge.left >= name.right &&
+            badge.left - name.right < 8 &&
+            favorite.left >= badge.right &&
+            favorite.left - badge.right < 8,
           contained: favorite.right <= author.right + 1 && name.left >= author.left,
-          iconWidth: actions[0].querySelector("svg").getBoundingClientRect().width,
+          iconSizes: actions.slice(0, 4).map((action) => {
+            const icon = action.querySelector("svg");
+            const rect = icon.getBoundingClientRect();
+            return { width: rect.width, height: rect.height, box: getComputedStyle(icon).width };
+          }),
         };
       });
       assert.ok(
-        Math.max(...result.gaps) - Math.min(...result.gaps) < 1,
+        Math.max(...result.gaps) - Math.min(...result.gaps) <= 2,
         `${width}: ${JSON.stringify(result)}`,
       );
+      if (width < 1024) {
+        // Directory: hit box minus icon height plus its rail gap.
+        const directoryGap = width < 360 ? 40 - 18 + 6 : 44 - 20 + (width <= 390 ? 6 : 8);
+        assert.equal(result.gaps[0], directoryGap);
+        assert.ok(
+          result.gaps.every((gap) => Math.abs(gap - directoryGap) <= 2),
+          `${width}: icon and count form one item: ${JSON.stringify(result.gaps)}`,
+        );
+      }
       assert.ok(
         result.beside && result.contained,
-        `${width}: favorite must stay beside the complete wrapping name`,
+        `${width}: badge and favorite must immediately follow the last name: ${JSON.stringify(result)}`,
       );
       assert.ok(result.touchHeights.every((height) => height >= (width < 1024 ? 44 : 40)));
-      assert.equal(result.iconWidth, width < 359 ? 18 : 20);
+      const size = width < 359 ? 18 : 20;
+      for (const icon of result.iconSizes.slice(0, 3)) {
+        assert.equal(icon.width, size);
+        assert.equal(icon.height, size);
+      }
+      assert.ok(result.iconSizes.every((icon) => icon.box === `${size}px`));
+      assert.ok(Math.abs(result.iconSizes[3].width - size * 0.9) < 0.1);
+      assert.ok(Math.abs(result.iconSizes[3].height - size * 0.9) < 0.1);
       const upvote = page.locator(".rail > button").first();
       assert.equal(
         await upvote.locator("span").evaluate((el) => getComputedStyle(el).fontWeight),

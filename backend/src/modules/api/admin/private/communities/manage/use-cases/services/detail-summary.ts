@@ -159,7 +159,7 @@ export const buildMentors = (
       crp: normalizeStoredCrp(profile?.crp),
       id: reply.author.id,
       name: reply.author.name,
-      rating_avg: Number(profile?.rating_avg ?? 0),
+      rating_avg: 0,
       replies_count: 0,
       upvotes_count: 0,
       verified: Boolean(

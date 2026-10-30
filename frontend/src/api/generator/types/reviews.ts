@@ -21,7 +21,13 @@ export type PatientReviewsResponse = {
   pages: number;
   count: number;
 };
-export type ReviewEligibilityReason = "eligible" | "not_found" | "already_reviewed" | "own_profile";
+export type ReviewEligibilityReason =
+  | "eligible"
+  | "not_found"
+  | "already_reviewed"
+  | "own_profile"
+  | "professional_plan_required"
+  | "patient_required";
 export type ReviewEligibilityResponse = {
   psychologist_id: string;
   psychologist_name: string;

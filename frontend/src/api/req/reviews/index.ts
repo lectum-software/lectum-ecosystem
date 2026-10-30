@@ -34,3 +34,13 @@ export const deletePatientReview = async (id: string) => {
   });
   return handleReq<CreatePatientReviewResponse>(handle);
 };
+
+export const updatePatientReview = async (id: string, body: { rating: number; comment: string }) =>
+  handleReq<CreatePatientReviewResponse>(
+    callEndpoint({
+      route: "/api/private/user/reviews/:id",
+      method: "PUT",
+      params: { id },
+      body: { rating: body.rating, comment: body.comment },
+    }),
+  );

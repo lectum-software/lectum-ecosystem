@@ -15,6 +15,7 @@ import type { PostListPost } from "@/api/generator/types/posts";
 import type { ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { PublicTestimonials as ReviewsTab } from "@/components/reviews/public-testimonials";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
@@ -33,9 +34,7 @@ import { AboutTab } from "./components/about";
 import { ProfileHeader } from "./components/profile-header";
 import { ProfileTabs } from "./components/profile-tabs";
 import { PostsTab } from "./components/publications";
-import { ReviewsTab } from "./components/reviews";
 import { InactivePublicProfileState } from "./components/shared";
-import { WhatsAppCta } from "./components/whatsapp-cta";
 import {
   currentAnalyticsPath,
   EMPTY_PUBLICATIONS_SUMMARY,
@@ -72,6 +71,12 @@ export const PsychologistProfileLogic = () => {
 
   const urlParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const activeTab = useMemo(() => normalizeTab(urlParams.get("tab")), [urlParams]);
+  useEffect(() => {
+    if (urlParams.get("tab") !== "avaliacoes") return;
+    const next = new URLSearchParams(searchParamsString);
+    next.set("tab", "depoimentos");
+    router.replace(`/psicologos/${id}?${next.toString()}`, { scroll: false });
+  }, [id, router, searchParamsString, urlParams]);
   const infiniteListQuery = useMemo(() => ({ limit: PAGE_LIMIT }), []);
 
   const profileQuery = useDirectoryPsychologist(id);
@@ -237,7 +242,7 @@ export const PsychologistProfileLogic = () => {
 
       navigateWithParams((next) => {
         if (tab === "geral") next.delete("tab");
-        else next.set("tab", tab);
+        else next.set("tab", tab === "avaliacoes" ? "depoimentos" : tab);
         next.delete("postsPage");
         next.delete("reviewsPage");
       }, options?.history ?? "replace");
@@ -419,7 +424,7 @@ export const PsychologistProfileLogic = () => {
     >
       <div className="-mx-5 overflow-x-clip bg-background">
         <section className="mx-auto grid w-screen max-w-[430px] bg-background sm:max-w-[430px] lg:max-w-[760px]">
-          <div className="grid gap-0 pb-[calc(var(--lectum-mobile-nav-aware-fab-bottom)+4rem)] lg:pb-10">
+          <div className="grid gap-0 pb-10">
             {shareFeedback ? (
               <div className="mx-3 pt-3">
                 <InlineAlert title="Link copiado" variant="success">
@@ -516,6 +521,8 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                   {activeTab === "avaliacoes" ? (
                     <ReviewsTab
+                      onRetry={() => void profileReviews.refetch()}
+                      readOnly={isReadOnly}
                       showOwnReviewsLink={
                         conversion.isAuthenticated && canEditProfile && !shouldHidePublicReviews
                       }
@@ -534,8 +541,6 @@ export const PsychologistProfileLogic = () => {
                     />
                   ) : null}
                 </div>
-
-                {!isReadOnly ? <WhatsAppCta profile={profile} /> : null}
               </>
             ) : null}
           </div>

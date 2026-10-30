@@ -8,7 +8,6 @@ const fixture = (
     author?: string;
     deleted?: boolean;
     count?: number;
-    average?: number | null;
     changed?: number;
     failAggregate?: boolean;
   } = {},
@@ -36,13 +35,14 @@ const fixture = (
         calls.update = args;
         return { count: options.changed ?? 1 };
       },
-      aggregate: async ({ where }: { where: unknown }) => {
+      count: async ({ where }: { where: unknown }) => {
         assert.deepEqual(where, {
           psychologist_id: "professional",
           deleted: false,
           status: "publicada",
+          author: { active: true, deleted: false },
         });
-        return { _avg: { rating: options.average ?? null }, _count: { _all: options.count ?? 0 } };
+        return options.count ?? 0;
       },
     },
     psychologist_profile: {
@@ -55,18 +55,18 @@ const fixture = (
   return { tx, calls };
 };
 
-test("author removal recalculates only published, non-deleted ratings", async () => {
-  const { tx, calls } = fixture({ average: 4.3333, count: 3 });
+test("author removal counts only public testimonials from active authors without averaging", async () => {
+  const { tx, calls } = fixture({ count: 3 });
   const result = await deleteOwnReview(tx, "author", "review");
   assert.deepEqual(result, {
     review_id: "review",
     psychologist_id: "professional",
-    rating_avg: 433,
+    rating_avg: 0,
     rating_count: 3,
   });
   assert.deepEqual(calls.profile, {
     where: { user_id: "professional" },
-    data: { rating_avg: 433, rating_count: 3 },
+    data: { rating_avg: 0, rating_count: 3 },
   });
 });
 

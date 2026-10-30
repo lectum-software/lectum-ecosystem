@@ -1,13 +1,33 @@
 import { error, msg } from "@/helpers/translate";
 import { notifyNewProfessionalReview } from "@/main/notification/domain-events";
+import type { IPendingReviewDTO } from "../DTOs/IPendingReviewDTO";
 import type {
   IReviewDeleteDTO,
   IReviewEligibilityDTO,
   IReviewIndexDTO,
   IReviewStoreDTO,
+  IReviewUpdateDTO,
   ReviewEligibilityResponse,
 } from "../DTOs/IReviewDTO";
+import { PendingReviewRepository } from "../repositories/PendingReviewRepository";
 import { ReviewRepository } from "../repositories/ReviewRepository";
+import { testimonialPayload } from "../validator";
+
+export const pending = async (data: IPendingReviewDTO) => {
+  if (data.auth.role !== "paciente" || !data.auth.id) {
+    return { status: 403, ...error("role_not_authorized", {}) };
+  }
+  const result = await new PendingReviewRepository().index(data);
+  return { status: 200, ...msg("index", {}), data: result };
+};
+
+export const update = async (data: IReviewUpdateDTO) => {
+  const parsed = testimonialPayload.safeParse(data.b);
+  if (!parsed.success) return { status: 400, ...error("invalid_structure", {}) };
+  const result = await new ReviewRepository().update({ ...data, b: parsed.data });
+  if (!result) return { status: 404, ...error("not_found", {}) };
+  return { status: 200, ...msg("update", {}), data: result };
+};
 
 export const destroy = async (data: IReviewDeleteDTO) => {
   const repository = new ReviewRepository();
@@ -17,6 +37,10 @@ export const destroy = async (data: IReviewDeleteDTO) => {
 };
 
 const eligibilityError = (result: ReviewEligibilityResponse) => {
+  if (result.reason === "professional_plan_required")
+    return { status: 403, ...error("professional_reviews_professional_plan", {}), data: result };
+  if (result.reason === "patient_required")
+    return { status: 403, ...error("role_not_authorized", {}), data: result };
   if (result.reason === "not_found")
     return { status: 404, ...error("not_found", { model: "psychologist_profile" }), data: result };
   if (result.reason === "already_reviewed")
@@ -39,8 +63,11 @@ export const eligibility = async (data: IReviewEligibilityDTO) => {
 };
 
 export const store = async (data: IReviewStoreDTO) => {
+  if (data.auth.role !== "paciente") return { status: 403, ...error("role_not_authorized", {}) };
+  const parsed = testimonialPayload.safeParse(data.b);
+  if (!parsed.success) return { status: 400, ...error("invalid_structure", {}) };
   const repository = new ReviewRepository();
-  const res = await repository.create(data);
+  const res = await repository.create({ ...data, b: { ...data.b, ...parsed.data } });
   if ("eligible" in res) return eligibilityError(res);
   await notifyNewProfessionalReview({
     actorId: data.auth.id!,

@@ -54,6 +54,12 @@ const PATIENT_NEW_POST_DESCRIPTION =
 const NOTIFICATION_ICON_TONE = "bg-primary-soft text-primary";
 
 const LABELS: Record<string, NotificationView> = {
+  depoimentos_pendentes: {
+    title: "Como você se sentiu com os psicólogos que responderam você?",
+    description: "Deixe um depoimento sobre quem acolheu você na Lectum.",
+    icon: MessageSquare,
+    tone: NOTIFICATION_ICON_TONE,
+  },
   weekly_whatsapp_report: {
     title: "Pacientes adquiridos",
     description: "Quantas agendaram uma consulta?",
@@ -61,8 +67,8 @@ const LABELS: Record<string, NotificationView> = {
     tone: NOTIFICATION_ICON_TONE,
   },
   nova_avaliacao: {
-    title: "Nova avaliação recebida",
-    description: "Clique para ver a avaliação no seu perfil.",
+    title: "Novo depoimento recebido",
+    description: "Clique para ver o depoimento no seu perfil.",
     icon: Star,
     tone: NOTIFICATION_ICON_TONE,
   },
@@ -221,7 +227,7 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
   if (actor && item.message_key === "nova_avaliacao") {
     return (
       <>
-        <ActorName actor={actor} /> avaliou seu perfil.
+        <ActorName actor={actor} /> deixou um depoimento para você.
       </>
     );
   }

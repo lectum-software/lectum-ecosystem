@@ -716,3 +716,5 @@ Formato recomendado:
 - [ADR-0652 — Content reels parity and descendant-scoped comments](0652-content-reels-parity-and-scoped-comments.md)
 - [ADR-0653 — Feed audio recovery](0653-feed-audio-recovery.md)
 - [ADR-0654 — Reels sound and action spacing](0654-reels-sound-and-action-spacing.md)
+- [ADR-0655 — Depoimentos da comunidade sem media publica](0655-community-testimonials.md)
+- [ADR-0656 — Header compacto e CTA integral nos videos](0656-profile-header-and-video-contact.md)

@@ -19,9 +19,20 @@ placeholders; give each mobile action equal vertical padding and retain minimum
 touch height. Desktop action circles retain their size; labeled actions include
 their actual label height. Keep original icon dimensions.
 
-Keep author, verification badge and Favorite in one flex row. Only the name may
-wrap within its shrinking item, without truncating the complete name or pushing
-Favorite onto a row of its own.
+Follow-up after release 0.1.744: use an inline author name instead of a separate
+flex column. Allow wrapping only inside the name; a word joiner attaches its final
+word to the inline badge/Favorite group. Preserve one full-name profile link and
+the independent favorite button, including the expanded caption header.
+Upvote, comments and save retain identical 20px boxes (18px below 359px). Reduce
+only the share glyph optically to 90% within its unchanged box and touch target.
+This follow-up is local only until separately authorized for publication.
+
+The user superseded the proposed 24px mobile gap with the directory reference:
+28px below 360px, 30px through 390px and 32px above 390px. Measure from the bottom
+of the whole icon/count group to the next visible action, including the WhatsApp
+disc. Keep 13px internal vertical padding and use 2/4/6px rail gaps so even tiny
+screens retain 44px touch targets. The share optical adjustment adds at most 1px
+per adjacent edge. Desktop spacing and the directory itself remain unchanged.
 
 ## Consequences
 

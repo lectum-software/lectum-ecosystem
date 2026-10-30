@@ -1,4 +1,5 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import { refreshTestimonialCount } from "@/utils/testimonial-summary";
 
 export const deleteOwnReview = async (
   tx: Prisma.TransactionClient,
@@ -19,16 +20,9 @@ export const deleteOwnReview = async (
   });
   if (!removed.count) return null;
 
-  const aggregate = await tx.professional_review.aggregate({
-    where: { psychologist_id: review.psychologist_id, deleted: false, status: "publicada" },
-    _avg: { rating: true },
-    _count: { _all: true },
-  });
-  const rating_avg = Math.round((aggregate._avg.rating || 0) * 100);
-  const rating_count = aggregate._count._all;
-  await tx.psychologist_profile.update({
-    where: { user_id: review.psychologist_id },
-    data: { rating_avg, rating_count },
-  });
-  return { review_id: reviewId, psychologist_id: review.psychologist_id, rating_avg, rating_count };
+  return {
+    review_id: reviewId,
+    psychologist_id: review.psychologist_id,
+    ...(await refreshTestimonialCount(tx, review.psychologist_id)),
+  };
 };

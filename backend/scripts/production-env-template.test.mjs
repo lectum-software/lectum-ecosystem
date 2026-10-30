@@ -74,6 +74,7 @@ test("origens, limites e modos apontam para producao, sem dev/reset/backfill/san
     "SWAGGER",
     "SWAGGER_DEBUG",
     "NOTIFICATION_CAMPAIGNS_SCHEDULER_ENABLED",
+    "TESTIMONIAL_INVITATIONS_ENABLED",
     "BILLING_DUNNING_SCHEDULER_ENABLED",
   ])
     assert.equal(env[key], "false");

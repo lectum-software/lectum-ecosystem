@@ -10,6 +10,7 @@ import {
 } from "@/utils/professional-name";
 import { normalizeStoredCrp, parseStoredCrp } from "@/utils/professional-registry";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { visibleTestimonialsWhere } from "@/utils/testimonial-summary";
 import type {
   DirectoryPsychologistPost,
   DirectoryPsychologistPostsResponse,
@@ -237,8 +238,10 @@ export class ProfileRepository implements IProfileRepository {
       subscription: profile.subscriptions[0] ?? null,
       hasProfessionalEntitlement: profile.subscriptions.length > 0,
     });
-    const reviewsPubliclyVisible = profile.subscriptions.length > 0;
-    const canExposeReviewMetrics = reviewsPubliclyVisible || viewerId === item.id;
+    const reviewsPubliclyVisible = true;
+    const testimonialCount = await prisma.professional_review.count({
+      where: visibleTestimonialsWhere(item.id),
+    });
 
     return {
       id: item.id,
@@ -263,8 +266,8 @@ export class ProfileRepository implements IProfileRepository {
         institution: trimToNull(profile.academic_institution),
         graduation_year: trimToNull(profile.academic_graduation_year),
       }),
-      rating_avg: canExposeReviewMetrics ? profile.rating_avg : 0,
-      rating_count: canExposeReviewMetrics ? profile.rating_count : 0,
+      rating_avg: 0,
+      rating_count: testimonialCount,
       reviews_publicly_visible: reviewsPubliclyVisible,
       verified: isProfessionalVerified(profile),
       available_today: hasAvailableToday(profile.available_days),
@@ -550,6 +553,7 @@ export class ProfileRepository implements IProfileRepository {
         user_id: data.p.id,
         deleted: false,
         published: true,
+        user: { active: true, deleted: false, role: "psicologo" },
         video_url: {
           not: null,
         },
@@ -558,9 +562,6 @@ export class ProfileRepository implements IProfileRepository {
             video_url: "",
           },
         ],
-        subscriptions: {
-          some: activeProfessionalEntitlementWhere(),
-        },
       },
       select: {
         id: true,
@@ -582,17 +583,9 @@ export class ProfileRepository implements IProfileRepository {
       };
     }
 
-    const where: Prisma.professional_reviewWhereInput = {
-      psychologist_id: data.p.id,
-      deleted: false,
-      status: "publicada",
-      author: {
-        active: true,
-        deleted: false,
-      },
-    };
+    const where: Prisma.professional_reviewWhereInput = visibleTestimonialsWhere(data.p.id);
 
-    const [items, count, profile, distributionRows, highlightedReview] = await Promise.all([
+    const [items, count, distributionRows, highlightedReview] = await Promise.all([
       prisma.professional_review.findMany({
         where,
         take: pagination.limit,
@@ -601,25 +594,6 @@ export class ProfileRepository implements IProfileRepository {
         select: profileReviewSelect,
       }),
       prisma.professional_review.count({ where }),
-      prisma.psychologist_profile.findFirst({
-        where: {
-          user_id: data.p.id,
-          deleted: false,
-          published: true,
-          video_url: {
-            not: null,
-          },
-          NOT: [
-            {
-              video_url: "",
-            },
-          ],
-        },
-        select: {
-          rating_avg: true,
-          rating_count: true,
-        },
-      }),
       prisma.professional_review.groupBy({
         by: ["rating"],
         where,
@@ -651,8 +625,8 @@ export class ProfileRepository implements IProfileRepository {
     return {
       data: items.map(toReviewResponse),
       summary: {
-        rating_avg: profile?.rating_avg ?? 0,
-        rating_count: profile?.rating_count ?? count,
+        rating_avg: 0,
+        rating_count: count,
         distribution,
       },
       highlighted_review: highlightedReview ? toReviewResponse(highlightedReview) : null,

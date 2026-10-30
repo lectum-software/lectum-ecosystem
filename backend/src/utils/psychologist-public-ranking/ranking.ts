@@ -4,7 +4,6 @@ import {
   CONTROLLED_RANDOMIZATION_RANGE,
   calculateCompletenessScore,
   calculateRecencyScore,
-  calculateWeightedRatingScore,
   calculateWhatsappConversionScore,
   clampScore,
   DEFAULT_NEW_VIDEO_SCORE,
@@ -31,6 +30,7 @@ export const calculateRanking = (
   context: RankingContext,
 ): PsychologistRanking => {
   const psychologistId = candidate.user.id;
+  const publicTestimonialCount = context.publicTestimonialCounts.get(psychologistId) ?? 0;
   const isVerified = isVerifiedProfessionalEntitlement(candidate);
   const videoStats = context.videoStats.get(psychologistId) ?? {
     latestAt: null,
@@ -67,9 +67,8 @@ export const calculateRanking = (
       ),
       context.now,
     ),
-    review_count: scoreByTarget(candidate.rating_count, REVIEW_COUNT_SCORE_TARGET),
+    review_count: scoreByTarget(publicTestimonialCount, REVIEW_COUNT_SCORE_TARGET),
     video: videoStats.score,
-    weighted_rating: calculateWeightedRatingScore(candidate.rating_avg, candidate.rating_count),
     whatsapp: calculateWhatsappConversionScore(whatsappClicks, videoStats.qualifiedViews),
   };
   const baseScore =
@@ -77,7 +76,6 @@ export const calculateRanking = (
     components.whatsapp * psychologistPublicRankingWeights.whatsapp +
     components.favorites * psychologistPublicRankingWeights.favorites +
     components.review_count * psychologistPublicRankingWeights.reviewCount +
-    components.weighted_rating * psychologistPublicRankingWeights.weightedRating +
     components.completeness * psychologistPublicRankingWeights.completeness +
     components.recency * psychologistPublicRankingWeights.recency;
   const randomUnit = hashToUnit(
@@ -86,6 +84,7 @@ export const calculateRanking = (
   const multiplier = 1 + (randomUnit - 0.5) * CONTROLLED_RANDOMIZATION_RANGE;
 
   return {
+    publicTestimonialCount,
     baseScore: clampScore(baseScore),
     components,
     isProfessionalColdStart,
@@ -110,12 +109,8 @@ export const compareRankedPsychologistCandidates = <T extends PsychologistRankin
     return b.ranking.baseScore - a.ranking.baseScore;
   }
 
-  if (b.item.rating_count !== a.item.rating_count) {
-    return b.item.rating_count - a.item.rating_count;
-  }
-
-  if (b.item.rating_avg !== a.item.rating_avg) {
-    return b.item.rating_avg - a.item.rating_avg;
+  if (b.ranking.publicTestimonialCount !== a.ranking.publicTestimonialCount) {
+    return b.ranking.publicTestimonialCount - a.ranking.publicTestimonialCount;
   }
 
   return b.item.createdAt.getTime() - a.item.createdAt.getTime();
@@ -172,7 +167,11 @@ export const rankPsychologistCandidates = async <T extends PsychologistRankingCa
   const rankedCandidates = candidates
     .map(
       (item): RankedPsychologistCandidate<T> => ({
-        item,
+        item: {
+          ...item,
+          rating_avg: 0,
+          rating_count: context.publicTestimonialCounts.get(item.user.id) ?? 0,
+        },
         ranking: calculateRanking(item, context),
       }),
     )

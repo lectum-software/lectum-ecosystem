@@ -38,8 +38,8 @@ test("avaliacao preserva imagem e descricao do perfil com titulo e destino propr
     fallback: { title: "Perfil", description: "Perfil" },
   });
   const review = await resolvePsychologistReviewSeoMetadata("psy-1");
-  assert.deepEqual(review.title, { absolute: "Avalie Nome do Profissional" });
-  assert.equal(review.openGraph.title, "Avalie Nome do Profissional");
+  assert.deepEqual(review.title, { absolute: "Deixe um depoimento para Nome do Profissional" });
+  assert.equal(review.openGraph.title, "Deixe um depoimento para Nome do Profissional");
   assert.equal(review.twitter.title, review.openGraph.title);
   assert.equal(review.openGraph.images[0].url, profile.openGraph.images[0].url);
   assert.equal(review.openGraph.images[0].width, 1200);
@@ -59,7 +59,7 @@ test("avaliacao sem perfil valido usa fallback seguro e mantem destino codificad
   });
   for (const id of [undefined, "missing&other=value"]) {
     const metadata = await resolvePsychologistReviewSeoMetadata(id);
-    assert.equal(metadata.openGraph.title, "Avalie seu psicólogo | Lectum");
+    assert.equal(metadata.openGraph.title, "Deixar depoimento | Lectum");
     const url = new URL(metadata.openGraph.url);
     assert.equal(url.searchParams.get("psychologist_id"), id ?? null);
     assert.equal(url.searchParams.has("other"), false);

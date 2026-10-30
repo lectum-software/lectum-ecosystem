@@ -105,13 +105,13 @@ export type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height"
 export const getSubinfo = (psychologist: PsychologistCardItem) => {
   const role = getPsychologistTitle(psychologist.gender);
   const years = psychologist.formation_years ?? 10;
-  const rating = formatRating(psychologist.rating_avg, psychologist.rating_count);
+  const testimonials = `${psychologist.rating_count} ${psychologist.rating_count === 1 ? "depoimento" : "depoimentos"}`;
 
   if (psychologist.show_experience_tag === false) {
-    return `${role} • ★ ${rating}`;
+    return `${role} • ${testimonials}`;
   }
 
-  return `${role} • ${years} ANOS EXP • ★ ${rating}`;
+  return `${role} • ${years} ANOS EXP • ${testimonials}`;
 };
 
 export const buildBenefitTags = (psychologist: PsychologistCardItem) => {

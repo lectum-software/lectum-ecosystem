@@ -1,21 +1,17 @@
 "use client";
 
-import { Heart, Share2, Star } from "lucide-react";
+import { Heart, Share2 } from "lucide-react";
 import Image from "next/image";
 import {
   getPsychologistWhatsappDisplayName,
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import { TestimonialsButton } from "@/components/reviews/testimonials-sheet";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-import {
-  formatDisplayName,
-  formatProfileTitle,
-  formatRating,
-  getInitials,
-} from "../../modules/profile-format";
+import { formatDisplayName, formatProfileTitle, getInitials } from "../../modules/profile-format";
 import type { PsychologistsViewModel } from "../types";
 import type { PsychologistSlideView } from "./slide-model";
 
@@ -141,25 +137,6 @@ export const PsychologistSlideDetails = ({
                 psychologist.formation_years,
                 psychologist.show_experience_tag,
               )}
-            </span>
-            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-media-foreground/10 px-1 py-0 text-rating shadow-none backdrop-blur-[1px]">
-              <Star
-                aria-hidden="true"
-                className="fill-rating opacity-85"
-                style={{
-                  height: `${metrics.ratingIconSize}px`,
-                  width: `${metrics.ratingIconSize}px`,
-                }}
-              />
-              <span
-                style={{
-                  fontSize: `${metrics.ratingTextSize}px`,
-                  fontWeight: 600,
-                  lineHeight: `${metrics.ratingLineHeight}px`,
-                }}
-              >
-                {formatRating(psychologist.rating_avg, psychologist.rating_count)}
-              </span>
             </span>
           </div>
         </div>
@@ -309,6 +286,15 @@ export const PsychologistSlideDetails = ({
             </button>
           </div>
 
+          <TestimonialsButton
+            actionPadding={(metrics.actionHitSize - metrics.actionStandaloneIconSize) / 2}
+            psychologistId={psychologist.id}
+            name={displayName}
+            count={psychologist.rating_count}
+            disabled={slideShouldHideChrome || !isActiveSlide}
+            iconSize={metrics.actionStandaloneIconSize}
+            className="grid min-h-11 min-w-11 justify-items-center gap-1 text-primary-foreground"
+          />
           <div className="grid justify-items-center text-center">
             <button
               aria-label={`Compartilhar perfil de ${displayName}`}

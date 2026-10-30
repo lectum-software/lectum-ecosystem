@@ -59,7 +59,6 @@ const buildPersonalFullName = (profile: AdminPsychologistDetailRecord) =>
     lastName: normalizeProfessionalNamePart(profile.professional_last_name),
   }) || "Psicólogo";
 
-const ratingAverage = (value: number) => Math.round((value / 100) * 10) / 10;
 const roundScore = (value: number) => Math.round(value * 1000) / 10;
 
 const subscriptionActiveAt = (
@@ -395,7 +394,7 @@ const buildMetrics = (input: {
     label: "Avaliação média",
     source: "psychologist_profile.rating_avg/rating_count",
     unit: "decimal",
-    value: ratingAverage(input.profile.rating_avg),
+    value: 0,
   },
   {
     id: "favorites",
@@ -494,7 +493,7 @@ const buildDetail = async (
       plan_slug: currentSubscription.plan_slug,
       public_profile_url: `/psicologos/${userId}`,
       published: profile.published,
-      rating_avg: ratingAverage(profile.rating_avg),
+      rating_avg: 0,
       rating_count: profile.rating_count,
       status,
       status_label: STATUS_LABELS[status],

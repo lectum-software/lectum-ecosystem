@@ -27,7 +27,6 @@ import type { PostContentVideo } from "@/api/generator/types/posts";
 import { useContentVideoWatchTracking } from "@/components/analytics/content-video-watch-tracker";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
-import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
@@ -45,10 +44,10 @@ import {
   publicCommunityPostHref,
 } from "@/utils/public-routes";
 import { toCommunityWhatsAppIdentity } from "./community-whatsapp-cta";
+import { ContentVideoAuthor } from "./content-video-author";
 import { ContentVideoCommentsSheet } from "./content-video-comments-sheet";
 import { refreshContentVideoInteraction } from "./content-video-interaction-refresh";
 import styles from "./content-video-viewer.module.css";
-import { FeedFavoriteButton } from "./feed-favorite-button";
 
 type Panel = "caption" | "parent" | "comments" | null;
 
@@ -279,20 +278,7 @@ export const ContentVideoSlide = ({
     setTime(next);
   };
 
-  const author = (
-    <>
-      <div className={styles.author}>
-        <Link className={styles.name} href={`/psicologos/${item.author.id}`} onClick={onClose}>
-          {getCommunityAuthorDisplayName(item.author)}
-        </Link>
-        {item.author.verified ? (
-          <VerifiedBadgeIcon className={styles.badge} aria-label="Perfil verificado" />
-        ) : null}
-        <FeedFavoriteButton author={item.author} />
-      </div>
-      <div className={styles.role}>{item.author.type_label}</div>
-    </>
-  );
+  const author = <ContentVideoAuthor author={item.author} onClose={onClose} />;
 
   return (
     <fieldset
@@ -536,7 +522,7 @@ export const ContentVideoSlide = ({
                 });
               }}
             >
-              <Share2 aria-hidden />
+              <Share2 className={styles.shareIcon} aria-hidden />
             </button>
             {item.author.whatsapp_url ? (
               <PsychologistWhatsAppRedirectButton

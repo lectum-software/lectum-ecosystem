@@ -68,9 +68,9 @@ export const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTR
   [
     "/app/avaliacoes/nova",
     {
-      title: "Avalie seu psicólogo",
+      title: "Deixe seu depoimento",
       description:
-        "Compartilhe sua experiência com este profissional. Crie uma conta gratuita ou faça login para enviar sua avaliação.",
+        "Compartilhe sua experiência com este profissional. Crie uma conta gratuita ou faça login para publicar seu depoimento.",
     },
   ],
   ["/app/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],

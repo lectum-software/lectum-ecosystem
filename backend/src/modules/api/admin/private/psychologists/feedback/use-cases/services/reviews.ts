@@ -280,8 +280,6 @@ export const showAdminPsychologistReviews = async (
   const pages = Math.max(1, Math.ceil(count / query.limit));
   const page = Math.min(query.page, pages);
   const dataSlice = filtered.slice((page - 1) * query.limit, page * query.limit);
-  const ratingSum = reviews.reduce((total, review) => total + review.rating, 0);
-  const ratingAvg = reviews.length > 0 ? Math.round((ratingSum / reviews.length) * 10) / 10 : 0;
   const statusOptions = statusOptionsFromReviews(reviews);
 
   const response: AdminPsychologistReviewsDTO = {
@@ -314,7 +312,7 @@ export const showAdminPsychologistReviews = async (
     source: "professional_review",
     summary: {
       distribution: distributionFromReviews(reviews),
-      rating_avg: ratingAvg,
+      rating_avg: 0,
       rating_count: reviews.length,
       statuses: statusOptions,
     },

@@ -33,6 +33,16 @@ const { ProfileTabs } = await import(
 const { CommunityFollowButton } = await import(
   "../src/components/community/community-follow-button.tsx"
 );
+const { renderRelations } = await import(
+  "../src/components/community/community-relations-test-renderer.mjs"
+);
+const renderContact = (Component, props) =>
+  renderRelations({ children: createElement(Component, props) });
+const contactProfile = {
+  id: "profile-hero-test",
+  name: "Amanda Miranda Gomes de Azevedo",
+  whatsapp_url: "https://wa.me/5511999999999",
+};
 
 export function renderHero(name, verified = true) {
   return renderToStaticMarkup(
@@ -67,7 +77,7 @@ test("unverified profiles retain their full name without a badge", () => {
   assert.ok(!html.includes('aria-label="Perfil verificado"'));
 });
 
-test("profile shows outline plus Favoritar until selected, then the production circle", () => {
+test("profile shows inline blue plus Favoritar until selected, then only an accessible heart", () => {
   for (const active of [false, true]) {
     const favorite = renderToStaticMarkup(
       createElement(ProfileHero, {
@@ -83,11 +93,11 @@ test("profile shows outline plus Favoritar until selected, then the production c
     const follow = renderToStaticMarkup(
       createElement(CommunityFollowButton, { following: active, size: "hero" }),
     );
-    assert.match(favorite, /h-10/);
-    assert.match(favorite, /rounded-full/);
-    assert.match(favorite, /lucide-heart/);
+    assert.match(favorite, /h-\[44px\]/);
+    assert.match(favorite, /bg-transparent/);
+    assert.match(favorite, /text-primary/);
+    assert.doesNotMatch(favorite, /rounded-full|shadow-sm|border-favorite|bg-favorite/);
     assert.match(favorite, /stroke-width="2"/);
-    assert.match(favorite, /motion-reduce:transition-none/);
     assert.match(follow, /h-10/);
     assert.match(follow, /rounded-full/);
     assert.match(follow, /shadow-sm/);
@@ -96,20 +106,18 @@ test("profile shows outline plus Favoritar until selected, then the production c
     for (const html of [favorite, follow])
       assert.match(html, new RegExp(`aria-pressed="${active}"`));
     if (active) {
-      assert.match(favorite, /w-10 gap-0 border-favorite-border bg-favorite-soft/);
-      assert.match(favorite, /w-0 opacity-0/);
+      assert.match(favorite, /w-\[44px\]/);
       assert.match(favorite, /lucide-heart/);
       assert.match(favorite, /fill-current/);
-      assert.match(favorite, /text-favorite/);
+      assert.match(favorite, /aria-label="Remover Ana Lima dos favoritos"/);
+      assert.doesNotMatch(favorite, /<span|lucide-plus/);
       assert.match(follow, /w-10 gap-0 border-primary\/25 bg-primary-soft text-primary/);
       assert.match(follow, /lucide-check[^>]*scale-100 opacity-100/);
       assert.match(follow, /w-0 opacity-0/);
     } else {
-      assert.match(favorite, /w-\[112px\] gap-2/);
-      assert.match(favorite, /w-\[56px\] opacity-100/);
-      assert.match(favorite, /style="font-size:13px;font-weight:600">Favoritar<\/span>/);
-      assert.match(favorite, /fill-none/);
-      assert.match(favorite, /border-border bg-surface/);
+      assert.match(favorite, /lucide-plus/);
+      assert.match(favorite, />Favoritar<\/span>/);
+      assert.doesNotMatch(favorite, /lucide-heart/);
       assert.match(follow, /w-\[112px\] gap-2 border-border bg-surface/);
       assert.match(follow, /lucide-plus[^>]*scale-100 opacity-100/);
       assert.match(follow, />Seguir<\/span>/);
@@ -157,57 +165,61 @@ test("community hero keeps both pending states stable and blocks repeated reques
   }
 });
 
-test("sticky profile action preserves hero appearance, state and accessible name", () => {
+test("sticky contact preserves the hero accessible name independently of favorite state", () => {
   for (const favorited of [false, true]) {
     const props = {
       canFavorite: true,
       favoritePending: false,
-      profile: { name: "Amanda Miranda Gomes de Azevedo", verified: true, favorited },
+      profile: { ...contactProfile, verified: true, favorited },
     };
-    const sticky = renderToStaticMarkup(
-      createElement(ProfileStickyBar, { ...props, visible: true }),
-    );
-    const hero = renderToStaticMarkup(createElement(ProfileHero, props));
-    const action = /<button[^>]*aria-busy=.*?<\/button>/s;
-    assert.equal(sticky.match(action)?.[0], hero.match(action)?.[0]);
+    const sticky = renderContact(ProfileStickyBar, { ...props, visible: true });
+    const hero = renderContact(ProfileHero, props);
+    const label = /aria-label="(Chamar [^"]+ no WhatsApp)"/;
+    assert.equal(sticky.match(label)?.[1], "Chamar Amanda no WhatsApp");
+    assert.equal(sticky.match(label)?.[1], hero.match(label)?.[1]);
     assert.match(sticky, /aria-hidden="false"/);
     assert.doesNotMatch(sticky, /inert=""/);
-    assert.match(sticky, /truncate text-sm font-bold/);
-    assert.match(sticky, /Perfil verificado/);
-    assert.match(sticky, /h-4 w-4 shrink-0/);
-    assert.match(sticky, /h-9 w-9 rounded-full/);
+    assert.match(sticky, /line-clamp-2 min-w-0 flex-1 break-words/);
+    assert.match(sticky, /Amanda Miranda Gomes de Azevedo/);
+    assert.match(sticky, /data-profile-whatsapp-cta="sticky"/);
+    assert.match(sticky, /<span>WhatsApp<\/span>/);
+    assert.equal((sticky.match(/<button/g) ?? []).length, 1);
+    assert.doesNotMatch(sticky, /Favoritar|data-profile-avatar|Perfil verificado/);
   }
 });
 
-test("hidden sticky action cannot receive focus and own profile omits it", () => {
+test("hidden sticky contact is inert; unavailable and read-only profiles omit contact", () => {
   const props = {
     canFavorite: true,
     favoritePending: true,
-    profile: { name: "Ana Lima", verified: false, favorited: false },
+    profile: { ...contactProfile, name: "Ana Lima" },
   };
-  const hidden = renderToStaticMarkup(
-    createElement(ProfileStickyBar, { ...props, visible: false }),
-  );
+  const hidden = renderContact(ProfileStickyBar, { ...props, visible: false });
   assert.match(hidden, /aria-hidden="true" inert=""/);
   assert.match(hidden, /invisible/);
-  assert.match(hidden, /aria-busy="true"/);
-  assert.match(hidden, /disabled=""/);
-  const own = renderToStaticMarkup(
-    createElement(ProfileStickyBar, { ...props, canFavorite: false, visible: true }),
-  );
-  assert.doesNotMatch(own, /<button|Perfil verificado/);
+  assert.match(hidden, /data-profile-whatsapp-cta="sticky"/);
+  for (const override of [{ whatsapp_url: null }, { read_only: true }]) {
+    const unavailable = renderContact(ProfileStickyBar, {
+      ...props,
+      profile: { ...props.profile, ...override },
+      visible: true,
+    });
+    assert.doesNotMatch(unavailable, /<button/);
+    assert.match(unavailable, /aria-hidden="true" inert=""/);
+  }
+  const own = renderContact(ProfileStickyBar, { ...props, canFavorite: false, visible: true });
+  assert.match(own, /data-profile-whatsapp-cta="sticky"/);
   assert.match(own, /Ana Lima/);
 });
 
-test("profile header starts hidden, observes original action and cleans up", () => {
-  const html = renderToStaticMarkup(
-    createElement(ProfileHeader, {
-      canFavorite: true,
-      favoritePending: false,
-      profile: { name: "Ana Lima", favorited: false },
-    }),
-  );
-  assert.match(html, /data-profile-favorite-anchor/);
+test("profile header starts hidden, observes header contact and cleans up", () => {
+  const html = renderContact(ProfileHeader, {
+    canFavorite: true,
+    favoritePending: false,
+    profile: { ...contactProfile, name: "Ana Lima", favorited: false },
+  });
+  assert.match(html, /data-profile-contact-anchor/);
+  assert.doesNotMatch(html, /data-profile-favorite-anchor/);
   assert.match(html, /aria-hidden="true" inert=""/);
   const source = readFileSync(
     new URL("../src/app/app/psychologist/[id]/components/profile-header.tsx", import.meta.url),
@@ -216,6 +228,9 @@ test("profile header starts hidden, observes original action and cleans up", () 
   assert.match(source, /anchor.getBoundingClientRect\(\).bottom <= 0/);
   assert.match(source, /observer.observe\(anchor\)/);
   assert.match(source, /observer.disconnect\(\)/);
+  assert.match(source, /contactAnchorRef=\{anchorRef\}/);
+  assert.match(source, /removeEventListener\("scroll", update, true\)/);
+  assert.match(source, /removeEventListener\("resize", update\)/);
 });
 
 test("profile tabs keep navigation but no longer stick on scroll", () => {
@@ -224,5 +239,9 @@ test("profile tabs keep navigation but no longer stick on scroll", () => {
   );
   assert.match(html, /role="tablist"/);
   assert.match(html, /aria-selected="true"[^>]*id="profile-tab-publicacoes"/);
+  assert.match(html, /h-\[44px\]/);
+  assert.match(html, /before:inset-y-\[6px\]/);
+  assert.match(html, /rounded-\[12px\] px-\[10px\]/);
+  assert.match(html, /before:rounded-\[12px\]/);
   assert.doesNotMatch(html, /sticky|top-0/);
 });

@@ -1,0 +1,235 @@
+import "../../../../../../scripts/register-source-modules.mjs";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { registerHooks } from "node:module";
+import test from "node:test";
+import { createElement } from "react";
+
+const bridges = new Map(
+  ["image", "link"].map((name) => {
+    const url = import.meta.resolve(`next/${name}.js`);
+    return [
+      `next/${name}`,
+      `data:text/javascript,${encodeURIComponent(`import actual from ${JSON.stringify(url)}; export default actual.default ?? actual;`)}`,
+    ];
+  }),
+);
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    return nextResolve(
+      bridges.get(specifier) ??
+        (specifier === "next/navigation" ? "next/navigation.js" : specifier),
+      context,
+    );
+  },
+});
+
+const { renderRelations } = await import(
+  "../../../../../components/community/community-relations-test-renderer.mjs"
+);
+const { ProfileHero } = await import("../components/hero.tsx");
+const { ProfileHeader, ProfileStickyBar } = await import("../components/profile-header.tsx");
+const { ProfileFavoriteButton } = await import("../components/profile-favorite-button.tsx");
+const { ProfileTabs } = await import("../components/profile-tabs.tsx");
+const { WhatsAppCta } = await import("../components/whatsapp-cta.tsx");
+const { buildBenefitTags, formatExperienceLabel } = await import("./support.ts");
+const { getCurrentInteractionPath } = await import("../../../../../utils/analytics-path.ts");
+const profile = {
+  id: "profile-header-test",
+  name: "Ana Lima",
+  crp: "06/123456",
+  headline: "Atendimento com escuta e acolhimento.",
+  formation_years: 4,
+  whatsapp_url: "https://wa.me/5511999999999",
+  social_value: true,
+  discount_first_session: true,
+  accepts_insurance: true,
+};
+const props = {
+  profile,
+  canFavorite: true,
+  canEditProfile: false,
+  favoritePending: false,
+};
+const render = (Component, overrides = {}) =>
+  renderRelations({ children: createElement(Component, { ...props, ...overrides }) });
+
+test("experience uses real years, singular and missing values", () => {
+  assert.equal(formatExperienceLabel(4), "4 anos exp.");
+  assert.equal(formatExperienceLabel(1), "1 ano exp.");
+  for (const years of [null, undefined, 0, -1]) assert.equal(formatExperienceLabel(years), null);
+  const html = render(ProfileHero);
+  assert.match(html, /4 anos exp\./);
+  assert.doesNotMatch(html, /lucide-star|depoimentos|de experiência/);
+  assert.doesNotMatch(
+    render(ProfileHero, { profile: { ...profile, show_experience_tag: false } }),
+    /4 anos exp\./,
+  );
+});
+
+test("benefits retain original icons and only enabled conditions", () => {
+  assert.deepEqual(
+    buildBenefitTags(profile).map((tag) => tag.label),
+    ["Valor social", "Desconto 1ª sessão", "Aceita convênios"],
+  );
+  assert.deepEqual(buildBenefitTags({}), []);
+  const html = render(ProfileHero);
+  assert.match(html, /lucide-heart-handshake/);
+  assert.match(html, /lucide-badge-percent/);
+  assert.match(html, /lucide-shield-check/);
+  assert.match(html, /text-\[13px\] sm:text-\[13px\]/);
+});
+
+test("favorite is plus and text before selection, only an accessible blue heart after", () => {
+  const idle = render(ProfileFavoriteButton);
+  assert.match(idle, /lucide-plus/);
+  assert.match(idle, /h-\[44px\]/);
+  assert.match(idle, />Favoritar<\/span>/);
+  assert.doesNotMatch(idle, /lucide-heart/);
+  const selected = render(ProfileFavoriteButton, { profile: { ...profile, favorited: true } });
+  assert.match(selected, /aria-label="Remover Ana Lima dos favoritos"/);
+  assert.match(selected, /aria-pressed="true"/);
+  assert.match(selected, /lucide-heart/);
+  assert.match(selected, /fill-current/);
+  assert.match(selected, /h-\[44px\]/);
+  assert.match(selected, /w-\[44px\]/);
+  assert.match(selected, /text-primary/);
+  assert.doesNotMatch(selected, /<span|lucide-plus|bg-favorite-soft|border-favorite/);
+  for (const overrides of [{ favoritePending: true }, { canFavorite: false }]) {
+    assert.match(render(ProfileFavoriteButton, overrides), /disabled=""/);
+  }
+});
+
+test("header contains full width contact and sticky has name plus WhatsApp icon and text", () => {
+  const hero = render(ProfileHero);
+  assert.match(hero, /data-profile-contact-anchor/);
+  assert.match(hero, /data-profile-whatsapp-cta="hero"/);
+  assert.match(hero, /Chamar no WhatsApp/);
+  assert.match(hero, /w-full min-w-0 gap-2/);
+  const sticky = render(ProfileStickyBar, { visible: true });
+  assert.match(sticky, /aria-label="Chamar Ana no WhatsApp"/);
+  assert.match(sticky, /data-profile-whatsapp-cta="sticky"/);
+  assert.match(sticky, /aria-hidden="false"/);
+  assert.match(sticky, /Ana Lima/);
+  assert.equal((sticky.match(/<button/g) ?? []).length, 1);
+  assert.doesNotMatch(sticky, /Favoritar|data-profile-avatar|Chamar no WhatsApp</);
+  assert.match(sticky, /<span>WhatsApp<\/span>/);
+  const initial = render(ProfileHeader);
+  assert.match(initial, /aria-hidden="true" inert=""/);
+  assert.doesNotMatch(initial, /fixed inset-x|fixed right/);
+});
+
+test("read-only and missing contact profiles expose no contact button", () => {
+  for (const overrides of [{ read_only: true }, { whatsapp_url: null }]) {
+    const restrictedProfile = { ...profile, ...overrides };
+    assert.equal(render(WhatsAppCta, { profile: restrictedProfile }), "");
+    assert.doesNotMatch(
+      render(ProfileHero, { profile: restrictedProfile }),
+      /data-profile-contact-anchor/,
+    );
+    const sticky = render(ProfileStickyBar, { profile: restrictedProfile, visible: true });
+    assert.match(sticky, /aria-hidden="true" inert=""/);
+    assert.doesNotMatch(sticky, /<button/);
+  }
+});
+
+test("hero and sticky share the configured WhatsApp name and normalized fallback", () => {
+  for (const [whatsappName, expected] of [
+    ["Dra. Ana Maria", "Ana Maria"],
+    ["   ", "Ana"],
+    [null, "Ana"],
+  ]) {
+    const namedProfile = {
+      ...profile,
+      name: "Dra. Ana Lima",
+      whatsapp_name: whatsappName,
+    };
+    for (const compact of [false, true]) {
+      const html = render(WhatsAppCta, { profile: namedProfile, compact });
+      assert.match(html, /h-\[44px\]/);
+      assert.ok(html.includes(`aria-label="Chamar ${expected} no WhatsApp"`));
+    }
+    const sticky = render(ProfileStickyBar, { profile: namedProfile, visible: true });
+    assert.match(sticky, /title="Ana Lima">Ana Lima<\/span>/);
+  }
+});
+
+test("compact contact keeps profile attribution and the shared click-time route", () => {
+  const hero = WhatsAppCta({ profile });
+  const sticky = WhatsAppCta({ profile, compact: true });
+  assert.equal(sticky.type, hero.type);
+  assert.deepEqual(sticky.props.psychologist, hero.props.psychologist);
+  assert.deepEqual(sticky.props.trackingContext, {
+    pageKind: "psychologist_profile",
+    targetId: profile.id,
+    targetType: "psychologist",
+  });
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  try {
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {
+        location: {
+          pathname: "/psicologos/profile-header-test",
+          search: "?tab=depoimentos&token=private-test-value",
+        },
+      },
+    });
+    assert.equal(getCurrentInteractionPath(), "/psicologos/profile-header-test");
+  } finally {
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else delete globalThis.window;
+  }
+  const redirectSource = readFileSync(
+    new URL(
+      "../../../../../components/psychologists/psychologist-whatsapp-redirect-button.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(
+    redirectSource,
+    /getCurrentInteractionPath\(\) \?\? trackingContext\?\.path \?\? "\/"/,
+  );
+});
+
+test("tabs retain roving focus with matching publication and testimonial counters", () => {
+  const html = render(ProfileTabs, {
+    activeTab: "avaliacoes",
+    publicationCount: 7,
+    reviewCount: 2,
+  });
+  assert.match(html, /aria-selected="true"[^>]*id="profile-tab-avaliacoes"/);
+  assert.equal((html.match(/tabindex="0"/g) ?? []).length, 1);
+  const counters = [...html.matchAll(/<span class="([^"]+)" title="(?:7|2)">/g)];
+  assert.equal(counters.length, 2);
+  assert.equal(counters[0][1], counters[1][1]);
+  assert.match(html, /h-\[44px\]/);
+  assert.match(html, /before:inset-y-\[6px\]/);
+  assert.match(html, /rounded-\[12px\] px-\[10px\] text-\[13px\]/);
+  assert.match(html, /before:rounded-\[12px\]/);
+});
+
+test("sticky observes contact rather than favorite and cleans up scrolling observers", () => {
+  const source = readFileSync(new URL("../components/profile-header.tsx", import.meta.url), "utf8");
+  assert.match(source, /contactAnchorRef=\{anchorRef\}/);
+  assert.match(source, /anchor.getBoundingClientRect\(\).bottom <= 0/);
+  assert.match(source, /observer.disconnect\(\)/);
+  assert.match(source, /removeEventListener\("scroll", update, true\)/);
+  assert.doesNotMatch(source, /favoriteAnchorRef/);
+});
+
+test("presentation contact reveal retains playback analytics and expanded-only contact", () => {
+  const source = readFileSync(
+    new URL("../components/presentation-video.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /useVideoContactReveal\(/);
+  assert.match(source, /videoSrc && !profile.read_only && profile.whatsapp_url/);
+  assert.match(source, /handleContactVideoReady\(video\)/);
+  assert.match(source, /handleVideoReady\(video\)/);
+  assert.match(source, /handleAutoplayVideoReady\(video\)/);
+  assert.match(source, /videoLabelExpanded=\{contactExpanded\}/);
+  assert.match(source, /onVideoElementReady=\{handlePlayerReady\}/);
+  assert.match(source, /bottomOverlayExpandedOnly/);
+});

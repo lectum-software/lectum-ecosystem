@@ -1,5 +1,6 @@
 import prisma from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { getPublicTestimonialCounts } from "@/utils/testimonial-summary";
 import {
   profileBaseSelect,
   psychologistIdsWhere,
@@ -26,7 +27,7 @@ export class AdminPsychologistsListProfilesRepository {
   }
 
   async listPsychologistProfiles() {
-    return prisma.psychologist_profile.findMany({
+    const profiles = await prisma.psychologist_profile.findMany({
       orderBy: {
         createdAt: "desc",
       },
@@ -84,6 +85,15 @@ export class AdminPsychologistsListProfilesRepository {
         },
       },
     });
+    const counts = await getPublicTestimonialCounts(
+      prisma,
+      profiles.map((profile) => profile.user.id),
+    );
+    return profiles.map((profile) => ({
+      ...profile,
+      rating_avg: 0,
+      rating_count: counts.get(profile.user.id) ?? 0,
+    }));
   }
 
   async listPublicRankingCandidates() {

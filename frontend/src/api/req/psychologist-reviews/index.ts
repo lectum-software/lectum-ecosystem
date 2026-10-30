@@ -24,3 +24,22 @@ export const respondPsychologistReview = async (
   });
   return handleReq<RespondPsychologistReviewResponse>({ ...handle, showSuccess: true });
 };
+
+export const setReviewVisibility = async (id: string, hidden: boolean) =>
+  handleReq<{ psychologist_id: string }>(
+    callEndpoint({
+      route: "/api/private/psychologist/reviews/:id/visibility",
+      method: "PUT",
+      params: { id },
+      body: { hidden },
+    }),
+  );
+
+export const deleteReviewResponse = async (id: string) =>
+  handleReq<{ psychologist_id: string }>(
+    callEndpoint({
+      route: "/api/private/psychologist/reviews/:id/response",
+      method: "DELETE",
+      params: { id },
+    }),
+  );

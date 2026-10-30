@@ -1,4 +1,5 @@
 export type PsychologistReviewsQuery = {
+  visibility?: "visible" | "hidden" | "all";
   page?: number;
   limit?: number;
   rating?: number;
@@ -11,6 +12,7 @@ export type PsychologistReviewAuthor = {
 };
 
 export type PsychologistReview = {
+  status?: string;
   id: string;
   rating: number;
   comment: string | null;
