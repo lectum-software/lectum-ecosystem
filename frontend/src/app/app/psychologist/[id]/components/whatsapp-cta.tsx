@@ -27,10 +27,10 @@ export const WhatsAppCta = ({
       aria-label={label}
       data-profile-whatsapp-cta={compact ? "sticky" : "hero"}
       className={cn(
-        "inline-flex h-[44px] shrink-0 items-center justify-center rounded-full bg-whatsapp-contact text-primary-foreground transition-colors hover:bg-whatsapp-contact/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-whatsapp-contact focus-visible:ring-offset-2",
+        "inline-flex h-[44px] shrink-0 items-center justify-center rounded-full text-primary-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-whatsapp-contact focus-visible:ring-offset-2",
         compact
-          ? "gap-2 px-3 text-[11px] font-semibold"
-          : "w-full min-w-0 gap-2 px-3 text-sm font-semibold",
+          ? "relative isolate gap-1.5 bg-transparent px-3 before:pointer-events-none before:absolute before:inset-x-0 before:inset-y-[5px] before:-z-10 before:rounded-full before:bg-whatsapp-contact before:content-[''] hover:before:bg-whatsapp-contact/90"
+          : "w-full min-w-0 gap-2 bg-whatsapp-contact px-3 hover:bg-whatsapp-contact/90",
       )}
       psychologist={whatsappIdentity}
       title={label}
@@ -42,13 +42,18 @@ export const WhatsAppCta = ({
     >
       {compact ? (
         <>
-          <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
-          <span>WhatsApp</span>
+          <WhatsAppIcon
+            className="h-[18px] w-[18px] shrink-0 overflow-visible"
+            viewBox="-0.75 -0.75 21.5 21.5"
+            aria-hidden="true"
+          />
+          <span className="py-[2px] text-[13px] font-semibold leading-[20px]">WhatsApp</span>
         </>
       ) : (
         <PsychologistWhatsAppButtonContent
           iconClassName="h-[18px] w-[18px]"
           label="Chamar no WhatsApp"
+          labelClassName="py-[2px] text-[14px] font-semibold leading-[22px]"
         />
       )}
     </PsychologistWhatsAppRedirectButton>
