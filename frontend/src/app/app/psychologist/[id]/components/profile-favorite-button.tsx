@@ -34,20 +34,20 @@ export const ProfileFavoriteButton = ({
       aria-label={label}
       aria-pressed={displayedFavorited}
       className={cn(
-        "h-[44px] gap-1 border-0 bg-transparent px-0 text-primary transition-colors hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-60",
-        displayedFavorited ? "w-[44px]" : "w-auto",
+        "text-primary transition-colors hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-60",
+        displayedFavorited ? "w-[44px] gap-0" : "w-auto",
       )}
       disabled={favoritePending || !canFavorite}
       onClick={onToggleFavorite}
-      size="compact"
+      size="header"
       title={label}
       type="button"
     >
       {displayedFavorited ? (
-        <FavoriteHeart active className="h-3.5 w-3.5 shrink-0" />
+        <FavoriteHeart active className="h-[20px] w-[20px] shrink-0" />
       ) : (
         <>
-          <Plus aria-hidden="true" className="h-3 w-3 shrink-0" />
+          <Plus aria-hidden="true" className="h-[20px] w-[20px] shrink-0" />
           <span aria-hidden="true">Favoritar</span>
         </>
       )}

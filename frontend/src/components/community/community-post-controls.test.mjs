@@ -398,7 +398,8 @@ test("community header changes Seguir into a persistent accessible circular chec
   assert.match(render(true), /lucide-check[^>]*scale-100 opacity-100/);
   assert.match(render(true), /aria-pressed="true"/);
   assert.match(render(true), /aria-label="Seguindo comunidade. Deixar de seguir"/);
-  assert.match(render(true), /w-10 gap-0 border-primary\/25 bg-primary-soft text-primary/);
+  assert.match(render(true), /w-\[44px\] gap-0/);
+  assert.match(render(true), /border-0/);
   assert.match(render(true), /group-hover:opacity-100 group-focus-within:opacity-100/);
   assert.match(render(true), /w-0 opacity-0/);
   assert.match(render(true), /rounded-full/);
