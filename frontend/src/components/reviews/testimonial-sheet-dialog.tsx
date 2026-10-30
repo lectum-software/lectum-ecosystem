@@ -17,10 +17,7 @@ import { flattenListPages } from "@/utils/infinite-list";
 import { TestimonialCard } from "./testimonial-card";
 import { TestimonialForm } from "./testimonial-form";
 import { TestimonialInvitationAction } from "./testimonial-invitation-action";
-import {
-  TESTIMONIAL_DESCRIPTION,
-  TestimonialProfessionalIdentity,
-} from "./testimonial-professional";
+import { TestimonialProfessionalIdentity } from "./testimonial-professional";
 
 const useSheetViewport = () => {
   const [viewport, setViewport] = useState<{ bottom: number; maxHeight: number }>();
@@ -134,13 +131,13 @@ export const TestimonialSheetDialog = ({
       labelledBy={titleId}
       initialFocusRef={closeRef}
       returnFocusRef={returnRef}
-      className="overflow-hidden p-0 backdrop:bg-media-background/35 backdrop:backdrop-blur-none"
+      className="min-w-0 overflow-hidden whitespace-normal p-0 backdrop:bg-media-background/35 backdrop:backdrop-blur-none"
     >
       <section
         data-testimonials-sheet
         data-psychologists-scroll-lock="true"
         style={{ ...viewport, ...drag.sheetStyle }}
-        className="lectum-testimonial-sheet-enter fixed inset-x-0 bottom-0 mx-auto flex h-[82dvh] max-h-[calc(100dvh-1rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
+        className="lectum-testimonial-sheet-enter fixed inset-x-0 bottom-0 mx-auto flex h-[82dvh] max-h-[calc(100dvh-1rem)] w-full min-w-0 max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
       >
         <div {...drag.handleProps} className="shrink-0" data-testimonials-drag-handle>
           <div className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-border-strong" />
@@ -181,18 +178,15 @@ export const TestimonialSheetDialog = ({
             </button>
           </header>
         </div>
-        <div className="shrink-0 border-b border-border px-4 py-4">
+        <div className="shrink-0 px-4 py-4">
           <TestimonialProfessionalIdentity professional={professional.data} fallbackName={name} />
-          {view === "list" ? (
-            <p className="mt-3 text-xs leading-5 text-muted">{TESTIMONIAL_DESCRIPTION}</p>
-          ) : null}
         </div>
         {/* Keep the list mounted so returning from the form retains its scroll and query pages. */}
         {initialView === "list" ? (
           <div
             hidden={view !== "list"}
             data-testimonials-list
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-background px-4 py-3"
           >
             {query.isLoading ? <LoadingState label="Carregando depoimentos" /> : null}
             {query.isError ? (
@@ -206,7 +200,7 @@ export const TestimonialSheetDialog = ({
             {!query.isLoading && !query.isError && !items.length ? (
               <p className="py-10 text-center text-sm text-muted">Ainda não há depoimentos.</p>
             ) : null}
-            <div className="divide-y divide-border">
+            <div className="grid gap-3">
               {items.map((review) => (
                 <TestimonialCard
                   key={review.id}
@@ -229,21 +223,19 @@ export const TestimonialSheetDialog = ({
           </div>
         ) : null}
         {view === "compose" ? (
-          <div
-            data-testimonials-compose
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-[max(20px,env(safe-area-inset-bottom))]"
-          >
+          <div data-testimonials-compose className="flex min-h-0 flex-1 flex-col">
             {canCompose ? (
               <TestimonialForm
                 psychologistId={psychologistId}
                 initial={initial}
                 onSuccess={complete}
                 onStateChange={setFormState}
+                sheetLayout
               />
             ) : eligibility.isLoading ? (
               <LoadingState label="Carregando depoimento" />
             ) : (
-              <div role="status" className="text-sm leading-6 text-muted">
+              <div role="status" className="overflow-y-auto px-4 pb-4 text-sm leading-6 text-muted">
                 <p>
                   {eligibility.isError
                     ? "Não foi possível verificar a disponibilidade agora."

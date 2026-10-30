@@ -88,8 +88,7 @@ test("Chrome: testimonial close restores focus before parent removal and preserv
     "@/api/callers/reviews": "export const useReviewEligibility=()=>({data:{eligible:true}});",
     "@/hooks/redux": "export const useAppSelector=()=>({role:'paciente'});",
     "@/hooks/use-auth-token-presence": "export const useAuthTokenPresence=()=>true;",
-    "./testimonial-professional": `export const TESTIMONIAL_DESCRIPTION='Depoimentos';
-      export const TestimonialProfessionalIdentity=()=>null;`,
+    "./testimonial-professional": "export const TestimonialProfessionalIdentity=()=>null;",
     "./testimonial-card": "export const TestimonialCard=()=>null;",
     "./testimonial-invitation-action": `import React from 'react';
       export const TestimonialInvitationAction=({onCompose})=><button onClick={e=>onCompose(e.currentTarget)}>Compose</button>;`,

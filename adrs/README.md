@@ -721,3 +721,4 @@ Formato recomendado:
 - [ADR-0657 — Consistencia visual do perfil com Lectum](0657-profile-visual-consistency.md)
 - [ADR-0658 — Controles reais e comentarios inline nos reels](0658-reels-inline-controls.md)
 - [ADR-0659 — Depoimentos como comentarios e totais de gestao](0659-testimonial-comment-layout-and-management-counts.md)
+- [ADR-0660 — Ajustes de depoimentos apos aprovacao visual](0660-testimonial-review-layout.md)

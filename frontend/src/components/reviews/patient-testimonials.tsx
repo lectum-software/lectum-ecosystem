@@ -21,14 +21,20 @@ const OwnTestimonial = ({ review }: { review: PatientReview }) => {
   const [editing, setEditing] = useState(false);
   return (
     <div>
-      <p className="mb-2 text-xs text-muted">
-        Depoimento para{" "}
-        <Link className="font-semibold text-primary" href={`/psicologos/${review.psychologist_id}`}>
-          {review.psychologist_name}
-        </Link>
-      </p>
       <TestimonialCard
+        context={
+          <>
+            Depoimento para{" "}
+            <Link
+              className="font-semibold text-primary"
+              href={`/psicologos/${review.psychologist_id}`}
+            >
+              {review.psychologist_name}
+            </Link>
+          </>
+        }
         review={{ ...review, author: { name: user?.name || "Você" } }}
+        ownAuthorAvatar={user?.avatar}
         professional={{
           id: review.psychologist_id,
           name: review.psychologist_name,
@@ -89,7 +95,7 @@ export const PatientTestimonials = () => {
             </Button>
           </div>
         ) : null}
-        <div className="divide-y divide-border">
+        <div className="grid gap-3">
           {items.map((review) => (
             <OwnTestimonial key={review.id} review={review} />
           ))}

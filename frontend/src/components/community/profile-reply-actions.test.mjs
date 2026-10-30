@@ -10,6 +10,7 @@ import { publicationInteractionData } from "./community-post-card-support.ts";
 test("publication card guards include native dialogs, not only explicit ARIA roles", () => {
   for (const file of [
     "./community-post-card-support.ts",
+    "../../app/app/community/[slug]/modules/feed-support.ts",
     "../../app/app/posts/mine/modules/support.ts",
     "../../app/app/posts/saved/modules/support.ts",
   ]) {

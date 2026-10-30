@@ -26,7 +26,7 @@ export const PostTestimonialInvitation = ({
   return <TestimonialInvitation psychologistId={reply.author.id} appearance="inline" />;
 };
 
-export const renderPostTestimonialSlot = (
+export const renderReplyTestimonialSlot = (
   post: Pick<PostDetail, "author">,
   reply: PostProfessionalReply | null | undefined,
   existing: ReactNode,

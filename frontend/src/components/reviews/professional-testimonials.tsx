@@ -20,7 +20,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { flattenListPages } from "@/utils/infinite-list";
 import { TestimonialCard } from "./testimonial-card";
-import { TESTIMONIAL_DESCRIPTION, type TestimonialProfessional } from "./testimonial-professional";
+import type { TestimonialProfessional } from "./testimonial-professional";
 import { useTestimonialMutation } from "./use-testimonial-mutation";
 
 const ManagedTestimonial = ({
@@ -174,7 +174,6 @@ export const ProfessionalTestimonials = () => {
           backLabel="Voltar para perfil"
           title="Meus Depoimentos"
         />
-        <p className="text-sm leading-6 text-muted">{TESTIMONIAL_DESCRIPTION}</p>
         {data?.access.can_receive_reviews === false ? (
           <InlineAlert title="Recebimento de novos depoimentos pausado" variant="warning">
             <p>
@@ -186,12 +185,6 @@ export const ProfessionalTestimonials = () => {
             </Link>
           </InlineAlert>
         ) : null}
-        <p className="text-sm text-muted">
-          {data?.summary.rating_count ?? 0}{" "}
-          {data?.summary.rating_count === 1
-            ? "depoimento visível no perfil"
-            : "depoimentos visíveis no perfil"}
-        </p>
         <div
           className="flex border-b border-border"
           role="tablist"
@@ -250,7 +243,7 @@ export const ProfessionalTestimonials = () => {
         {!query.isLoading && !query.isError && !items.length ? (
           <p className="py-10 text-center text-muted">Nenhum depoimento nesta lista.</p>
         ) : null}
-        <div className="divide-y divide-border">
+        <div className="grid gap-3">
           {items.map((review) => (
             <ManagedTestimonial key={review.id} review={review} professional={professional.data} />
           ))}

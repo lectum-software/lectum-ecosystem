@@ -9,7 +9,7 @@ import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 
-export type TestimonialInvitationAppearance = "outline" | "inline";
+export type TestimonialInvitationAppearance = "outline" | "inline" | "profile";
 export type TestimonialInvitationOptions = {
   psychologistId: string;
   className?: string;
@@ -31,10 +31,12 @@ export const TestimonialInvitationAction = ({
   const eligibility = useReviewEligibility(psychologistId, hasToken && user?.role === "paciente");
   const inline = appearance === "inline";
   const classes = cn(
-    "min-h-[44px] min-w-[44px] shrink-0 gap-1.5 rounded-full bg-transparent font-semibold shadow-none",
+    "min-h-[44px] min-w-[44px] shrink-0 gap-1.5 rounded-full font-semibold shadow-none",
     inline
-      ? "border-0 px-2 text-muted hover:bg-surface-muted hover:text-foreground"
-      : "border border-foreground px-4 text-foreground hover:bg-foreground/5",
+      ? "border-0 bg-transparent px-2 text-muted hover:bg-surface-muted hover:text-foreground"
+      : appearance === "profile"
+        ? "h-11 bg-primary px-3 text-xs text-primary-foreground hover:bg-primary-hover"
+        : "border border-border bg-transparent px-4 text-muted hover:bg-surface-muted hover:text-foreground",
     className,
   );
   const content = (
@@ -47,7 +49,11 @@ export const TestimonialInvitationAction = ({
   );
   if (!hasToken)
     return allowGuest ? (
-      <Button asChild variant={inline ? "ghost" : variant} className={classes}>
+      <Button
+        asChild
+        variant={inline ? "ghost" : appearance === "profile" ? "default" : variant}
+        className={classes}
+      >
         <Link
           aria-label="Deixar depoimento"
           title="Deixar depoimento"
@@ -63,7 +69,7 @@ export const TestimonialInvitationAction = ({
     <Button
       type="button"
       className={classes}
-      variant={inline ? "ghost" : variant}
+      variant={inline ? "ghost" : appearance === "profile" ? "default" : variant}
       aria-label="Deixar depoimento"
       title="Deixar depoimento"
       onPointerDown={(event) => event.stopPropagation()}

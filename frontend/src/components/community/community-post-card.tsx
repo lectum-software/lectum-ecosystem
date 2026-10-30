@@ -52,7 +52,7 @@ import {
   publicationInteractionData,
 } from "./community-post-card-support";
 import { ContentVideoPost } from "./content-video-context";
-import { renderPostTestimonialSlot } from "./post-testimonial-invitation";
+import { renderReplyTestimonialSlot } from "./post-testimonial-invitation";
 export const CommunityPostCard = (props: CommunityPostCardProps) => (
   <ContentVideoPost postId={props.post.id} hideInlineContact={props.profilePublicationMode}>
     <CommunityPostCardContent {...props} />
@@ -131,7 +131,6 @@ const CommunityPostCardContent = ({
     primaryReply || !showHighlightedProfessionalReply || !isOriginalPostByPatient
       ? null
       : post.highlighted_professional_reply;
-  const testimonialReply = primaryReply ?? highlightedProfessionalReply;
   const isReplyContribution = contributionType === "reply";
   const focusedReplyId =
     profilePublicationMode && isReplyContribution ? (primaryReply?.id ?? undefined) : undefined;
@@ -662,7 +661,7 @@ const CommunityPostCardContent = ({
             actionBarBeforeSaveSlot ??
             (shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta)
           }
-          endSlot={renderPostTestimonialSlot(post, testimonialReply, footerExtra)}
+          endSlot={renderReplyTestimonialSlot(post, primaryReply, footerExtra)}
           onVote={interactiveActions ? handleVote : undefined}
           save={{
             active: saveAction.active,

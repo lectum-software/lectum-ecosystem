@@ -1,7 +1,7 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPatientReview, updatePatientReview } from "@/api/req/reviews";
 import { useReviewForm } from "@/app/app/reviews/new/use-form";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -14,12 +14,15 @@ export const TestimonialForm = ({
   initial,
   onSuccess,
   onStateChange,
+  sheetLayout = false,
 }: {
   psychologistId: string;
   initial?: { id: string; rating: number; comment: string | null };
   onSuccess: () => void;
   onStateChange?: (state: { dirty: boolean; submitting: boolean }) => void;
+  sheetLayout?: boolean;
 }) => {
+  const formId = useId();
   const [initialSnapshot] = useState(initial);
   const submittingRef = useRef(false);
   const { Form, formProps, hook } = useReviewForm(psychologistId);
@@ -44,71 +47,91 @@ export const TestimonialForm = ({
     onStateChange?.({ dirty, submitting: mutation.isPending });
   }, [dirty, mutation.isPending, onStateChange]);
   return (
-    <div aria-busy={mutation.isPending}>
-      <p className="text-sm font-medium leading-6">
-        Como foi sua experiência com as respostas e os conteúdos deste psicólogo?
-      </p>
-      <fieldset disabled={mutation.isPending} className="my-4 flex justify-center gap-2">
-        <legend className="sr-only">Nota em estrelas</legend>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <label
-            key={n}
-            className="relative grid size-11 cursor-pointer place-items-center rounded-full text-rating has-focus-visible:ring-2 has-focus-visible:ring-primary"
-          >
-            <input
-              type="radio"
-              name="testimonial-rating"
-              value={n}
-              checked={rating === n}
-              aria-label={`${n} estrelas`}
-              className="sr-only"
-              onChange={() => hook.setValue("rating", String(n), { shouldValidate: true })}
-            />
-            <Star aria-hidden className={cn("size-7", rating >= n && "fill-current")} />
-          </label>
-        ))}
-      </fieldset>
-      <fieldset disabled={mutation.isPending} className="min-w-0">
-        <Form
-          {...formProps}
-          className="grid gap-3"
-          onSubmit={(event) => {
-            void hook.handleSubmit((values) => {
-              if (submittingRef.current) return;
-              submittingRef.current = true;
-              mutation.mutate(
-                {
-                  ...values,
-                  rating: Number(values.rating),
-                  comment: values.comment.trim(),
-                },
-                {
-                  onSettled: () => {
-                    submittingRef.current = false;
+    <div
+      aria-busy={mutation.isPending}
+      className={sheetLayout ? "flex min-h-0 flex-1 flex-col" : undefined}
+    >
+      <div
+        className={
+          sheetLayout ? "min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-2" : undefined
+        }
+      >
+        <p className="text-sm font-medium leading-6">
+          Como foi sua experiência com as respostas e os conteúdos deste psicólogo?
+        </p>
+        <fieldset disabled={mutation.isPending} className="my-4 flex justify-center gap-2">
+          <legend className="sr-only">Nota em estrelas</legend>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <label
+              key={n}
+              className="relative grid size-11 cursor-pointer place-items-center rounded-full text-rating has-focus-visible:ring-2 has-focus-visible:ring-primary"
+            >
+              <input
+                type="radio"
+                name="testimonial-rating"
+                value={n}
+                checked={rating === n}
+                aria-label={`${n} estrelas`}
+                className="sr-only"
+                onChange={() => hook.setValue("rating", String(n), { shouldValidate: true })}
+              />
+              <Star aria-hidden className={cn("size-7", rating >= n && "fill-current")} />
+            </label>
+          ))}
+        </fieldset>
+        <fieldset disabled={mutation.isPending} className="min-w-0">
+          <Form
+            {...formProps}
+            id={formId}
+            className="grid gap-3"
+            onSubmit={(event) => {
+              void hook.handleSubmit((values) => {
+                if (submittingRef.current) return;
+                submittingRef.current = true;
+                mutation.mutate(
+                  {
+                    ...values,
+                    rating: Number(values.rating),
+                    comment: values.comment.trim(),
                   },
-                },
-              );
-            })(event);
-          }}
-        >
-          {mutation.isError ? (
-            <InlineAlert title="Não foi possível salvar" variant="error">
-              Tente novamente. Seu texto foi mantido.
-            </InlineAlert>
-          ) : null}
-          <Button
-            type="submit"
-            disabled={mutation.isPending || !rating || !comment.trim()}
-            className="w-full rounded-full"
+                  {
+                    onSettled: () => {
+                      submittingRef.current = false;
+                    },
+                  },
+                );
+              })(event);
+            }}
           >
-            {mutation.isPending
-              ? "Salvando..."
-              : initial
-                ? "Salvar depoimento"
-                : "Publicar depoimento"}
-          </Button>
-        </Form>
-      </fieldset>
+            {mutation.isError ? (
+              <InlineAlert title="Não foi possível salvar" variant="error">
+                Tente novamente. Seu texto foi mantido.
+              </InlineAlert>
+            ) : null}
+          </Form>
+        </fieldset>
+      </div>
+      <div
+        className={
+          sheetLayout
+            ? "shrink-0 bg-surface px-4 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]"
+            : "mt-3"
+        }
+        data-testimonial-submit
+      >
+        <Button
+          type="submit"
+          form={formId}
+          disabled={mutation.isPending || !rating || !comment.trim()}
+          className="h-11 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary-hover"
+        >
+          {mutation.isPending
+            ? "Salvando..."
+            : initial
+              ? "Salvar depoimento"
+              : "Publicar depoimento"}
+        </Button>
+      </div>
     </div>
   );
 };

@@ -32,7 +32,6 @@ import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { MoreProfessionalReplies } from "@/components/community/more-professional-replies";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
-import { renderPostTestimonialSlot } from "@/components/community/post-testimonial-invitation";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
@@ -607,7 +606,6 @@ const PostCardContent = ({
           label: "Comentar no post",
         }}
         beforeSaveSlot={hasPostMedia ? null : authorWhatsappCta}
-        endSlot={renderPostTestimonialSlot(post, highlightedReply, null)}
         currentVote={voteSnapshot.currentVote}
         disabled={voteMutation.isPending}
         onVote={handleVote}

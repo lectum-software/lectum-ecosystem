@@ -13,17 +13,20 @@ import ts from "typescript";
 
 const imageUrl = import.meta.resolve("next/image.js");
 const imageBridge = `data:text/javascript,${encodeURIComponent(`import Image from ${JSON.stringify(imageUrl)}; export default Image.default ?? Image;`)}`;
+const linkUrl = import.meta.resolve("next/link.js");
+const linkBridge = `data:text/javascript,${encodeURIComponent(`import Link from ${JSON.stringify(linkUrl)}; export default Link.default ?? Link;`)}`;
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    return nextResolve(specifier === "next/image" ? imageBridge : specifier, context);
+    return nextResolve(
+      specifier === "next/image" ? imageBridge : specifier === "next/link" ? linkBridge : specifier,
+      context,
+    );
   },
 });
 
 const { TestimonialCard } = await import("./testimonial-card.tsx");
 const { TestimonialForm } = await import("./testimonial-form.tsx");
-const { TestimonialProfessionalIdentity, TESTIMONIAL_DESCRIPTION } = await import(
-  "./testimonial-professional.tsx"
-);
+const { TestimonialProfessionalIdentity } = await import("./testimonial-professional.tsx");
 const { reviewFormSchema } = await import("../../app/app/reviews/new/use-form.tsx");
 const base = {
   id: "testimonial-local",
@@ -47,9 +50,10 @@ test("perfil aceita a URL de depoimentos e preserva links antigos", async () => 
   assert.ok(profile.includes('next.set("tab", "depoimentos")'));
 });
 
-test("convite publico usa outline transparente e acao inline acessivel de 44px", () => {
+test("convite do perfil usa azul compacto e o da modal cinza transparente sem mudar inline", () => {
   const source = readFileSync(new URL("./public-testimonials.tsx", import.meta.url), "utf8");
   assert.doesNotMatch(source, /variant="default"|font-extrabold tabular-nums text-primary/);
+  assert.match(source, /appearance="profile"/);
   const action = readFileSync(
     new URL("./testimonial-invitation-action.tsx", import.meta.url),
     "utf8",
@@ -58,7 +62,9 @@ test("convite publico usa outline transparente e acao inline acessivel de 44px",
   assert.match(action, /min-h-\[44px\] min-w-\[44px\]/);
   assert.doesNotMatch(action, /min-[hw]-11/);
   assert.match(action, /bg-transparent/);
-  assert.match(action, /border border-foreground px-4 text-foreground/);
+  assert.match(action, /border border-border bg-transparent px-4 text-muted/);
+  assert.match(action, /h-11 bg-primary px-3 text-xs text-primary-foreground/);
+  assert.doesNotMatch(action, /border-foreground/);
   assert.match(action, /ReviewsIcon aria-hidden className="size-5/);
   assert.match(action, /className=\{inline \? "max-sm:sr-only" : undefined\}/);
   assert.doesNotMatch(action, /max-width:360px/);
@@ -224,7 +230,117 @@ test("identidade profissional preserva nome, genero, selo e anonimato do autor",
     }),
   );
   assert.doesNotMatch(unverified, /Perfil verificado/);
-  assert.equal(TESTIMONIAL_DESCRIPTION, "Relatos sobre experiências com este psicólogo na Lectum");
+});
+
+test("depoimentos usam blocos separados e removem textos redundantes sem perder os totais", () => {
+  for (const file of [
+    "public-testimonials.tsx",
+    "patient-testimonials.tsx",
+    "professional-testimonials.tsx",
+    "testimonial-sheet-dialog.tsx",
+  ]) {
+    const source = readFileSync(new URL(`./${file}`, import.meta.url), "utf8");
+    assert.match(source, /grid gap-3/);
+    assert.doesNotMatch(
+      source,
+      /TESTIMONIAL_DESCRIPTION|Relatos sobre experiências|depoimentos visíveis no perfil|divide-y divide-border/,
+    );
+  }
+  const html = renderToStaticMarkup(createElement(TestimonialCard, { review: base }));
+  assert.match(html, /<article class="min-w-0 rounded-lg bg-surface p-4"/);
+  const professional = readFileSync(
+    new URL("./professional-testimonials.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(professional, /data\?\.visibility_counts\?\.\[id\]/);
+});
+
+test("resposta liga o avatar do pai ao avatar filho com geometria da arvore de comentarios", () => {
+  const card = readFileSync(new URL("./testimonial-card.tsx", import.meta.url), "utf8");
+  const tree = readFileSync(
+    new URL("../../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
+    "utf8",
+  );
+  for (const token of [
+    "grid-cols-[2rem_minmax(0,1fr)]",
+    "sm:grid-cols-[2.25rem_minmax(0,1fr)]",
+    "top-10 left-4",
+    "border-l-[1.5px]",
+    "rounded-bl-[8px]",
+    "h-[12.75px]",
+    "sm:pl-[22px]",
+  ]) {
+    assert.ok(tree.includes(token), token);
+    assert.ok(card.includes(token), token);
+  }
+  const html = renderToStaticMarkup(
+    createElement(TestimonialCard, {
+      review: { ...base, response: "Obrigada.", responded_at: base.created_at },
+    }),
+  );
+  assert.match(html, /data-testimonial-stem/);
+  assert.match(html, /data-testimonial-curve/);
+  assert.match(html, /-bottom-3 top-10/);
+  assert.match(html, /relative z-10 mt-3 ml-4/);
+  const withoutResponse = renderToStaticMarkup(createElement(TestimonialCard, { review: base }));
+  assert.doesNotMatch(withoutResponse, /data-testimonial-stem|data-testimonial-curve/);
+});
+
+test("identidade publica mantem nome abreviado e iniciais sem aproveitar foto privada extra", () => {
+  const review = {
+    ...base,
+    author: { ...base.author, avatar: "/public/files/private-avatar.jpg", id: "private-author" },
+  };
+  const html = renderToStaticMarkup(createElement(TestimonialCard, { review }));
+  assert.match(html, /Ana P\./);
+  assert.match(html, />AP</);
+  assert.doesNotMatch(html, /private-avatar|private-author/);
+  const own = renderToStaticMarkup(
+    createElement(TestimonialCard, {
+      review: base,
+      ownAuthorAvatar: "/public/files/own-avatar.jpg",
+    }),
+  );
+  assert.match(own, /own-avatar.jpg/);
+  for (const file of [
+    "public-testimonials.tsx",
+    "professional-testimonials.tsx",
+    "testimonial-sheet-dialog.tsx",
+  ]) {
+    assert.doesNotMatch(
+      readFileSync(new URL(`./${file}`, import.meta.url), "utf8"),
+      /ownAuthorAvatar/,
+    );
+  }
+});
+
+test("composer associa publicar ao formulario fora da rolagem e junto da safe area", () => {
+  const query = new QueryClient();
+  try {
+    const html = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: query },
+        createElement(TestimonialForm, {
+          psychologistId: "profissional",
+          onSuccess() {},
+          sheetLayout: true,
+        }),
+      ),
+    );
+    const formId = html.match(/<form[^>]*\sid="([^"]+)"/)[1];
+    const submit = html.match(/<button[^>]*type="submit"[^>]*>/)[0];
+    assert.ok(submit.includes(`form="${formId}"`));
+    assert.ok(html.indexOf("</form>") < html.indexOf("data-testimonial-submit"));
+    assert.match(html, /min-h-0 flex-1 overflow-y-auto overscroll-contain/);
+    assert.match(html, /pb-\[max\(12px,env\(safe-area-inset-bottom\)\)\]/);
+    assert.match(submit, /bg-primary text-primary-foreground/);
+    const sheet = readFileSync(new URL("./testimonial-sheet-dialog.tsx", import.meta.url), "utf8");
+    assert.match(sheet, /className="shrink-0 px-4 py-4"/);
+    assert.match(sheet, /onStateChange=\{setFormState\}\s+sheetLayout/);
+  } finally {
+    query.clear();
+  }
 });
 
 test("depoimento mostra autor, texto e nota individual sem média", () => {
