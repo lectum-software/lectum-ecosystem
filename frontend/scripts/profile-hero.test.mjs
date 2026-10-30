@@ -77,6 +77,11 @@ test("unverified profiles retain their full name without a badge", () => {
   assert.ok(!html.includes('aria-label="Perfil verificado"'));
 });
 
+test("profile hero restores the community rounded bottom and shadow", () => {
+  const html = renderHero("Ana Lima");
+  assert.match(html, /<header[^>]*rounded-b-\[28px\][^>]*shadow-lectum-soft/);
+});
+
 test("profile shows inline blue plus Favoritar until selected, then only an accessible heart", () => {
   for (const active of [false, true]) {
     const favorite = renderToStaticMarkup(
@@ -98,6 +103,7 @@ test("profile shows inline blue plus Favoritar until selected, then only an acce
     assert.match(favorite, /text-primary/);
     assert.doesNotMatch(favorite, /rounded-full|shadow-sm|border-favorite|bg-favorite/);
     assert.match(favorite, /stroke-width="2"/);
+    assert.match(favorite, /style="font-size:11px;font-weight:600"/);
     assert.match(follow, /h-10/);
     assert.match(follow, /rounded-full/);
     assert.match(follow, /shadow-sm/);
@@ -182,8 +188,10 @@ test("sticky contact preserves the hero accessible name independently of favorit
     assert.match(sticky, /line-clamp-2 min-w-0 flex-1 break-words/);
     assert.match(sticky, /Amanda Miranda Gomes de Azevedo/);
     assert.match(sticky, /data-profile-whatsapp-cta="sticky"/);
-    assert.match(sticky, /<span>WhatsApp<\/span>/);
-    assert.equal((sticky.match(/<button/g) ?? []).length, 1);
+    assert.match(sticky, /<span[^>]*>WhatsApp<\/span>/);
+    assert.match(sticky, /aria-label="Voltar"/);
+    assert.match(sticky, /lucide-chevron-left/);
+    assert.equal((sticky.match(/<button/g) ?? []).length, 2);
     assert.doesNotMatch(sticky, /Favoritar|data-profile-avatar|Perfil verificado/);
   }
 });
@@ -204,7 +212,8 @@ test("hidden sticky contact is inert; unavailable and read-only profiles omit co
       profile: { ...props.profile, ...override },
       visible: true,
     });
-    assert.doesNotMatch(unavailable, /<button/);
+    assert.doesNotMatch(unavailable, /data-profile-whatsapp-cta/);
+    assert.match(unavailable, /aria-label="Voltar"/);
     assert.match(unavailable, /aria-hidden="true" inert=""/);
   }
   const own = renderContact(ProfileStickyBar, { ...props, canFavorite: false, visible: true });
@@ -231,6 +240,7 @@ test("profile header starts hidden, observes header contact and cleans up", () =
   assert.match(source, /contactAnchorRef=\{anchorRef\}/);
   assert.match(source, /removeEventListener\("scroll", update, true\)/);
   assert.match(source, /removeEventListener\("resize", update\)/);
+  assert.match(source, /<ProfileStickyBar onBack=\{props.onBack\}/);
 });
 
 test("profile tabs keep navigation but no longer stick on scroll", () => {
@@ -240,8 +250,10 @@ test("profile tabs keep navigation but no longer stick on scroll", () => {
   assert.match(html, /role="tablist"/);
   assert.match(html, /aria-selected="true"[^>]*id="profile-tab-publicacoes"/);
   assert.match(html, /h-\[44px\]/);
-  assert.match(html, /before:inset-y-\[6px\]/);
-  assert.match(html, /rounded-\[12px\] px-\[10px\]/);
-  assert.match(html, /before:rounded-\[12px\]/);
+  assert.match(html, /min-w-0 flex-1/);
+  assert.match(html, /items-center justify-center/);
+  assert.match(html, /before:bottom-0 before:h-\[2px\]/);
+  assert.equal((html.match(/before:bg-foreground/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /shadow-|before:bg-surface|rounded-\[12px\]/);
   assert.doesNotMatch(html, /sticky|top-0/);
 });

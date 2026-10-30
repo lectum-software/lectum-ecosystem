@@ -2,6 +2,7 @@
 
 import { Heart, Plus } from "lucide-react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
+import { RelationshipButton } from "@/components/ui/relationship-button";
 import { cn } from "@/lib/utils";
 import { getPsychologistDisplayName } from "../modules/support";
 
@@ -27,16 +28,17 @@ export const ProfileFavoriteButton = ({
     (displayedFavorited ? `Remover ${displayName} dos favoritos` : `Favoritar ${displayName}`);
 
   return (
-    <button
+    <RelationshipButton
       aria-busy={favoritePending}
       aria-label={label}
       aria-pressed={displayedFavorited}
       className={cn(
-        "inline-flex h-[44px] shrink-0 items-center justify-center gap-1 bg-transparent text-xs font-semibold text-primary transition-colors hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-        displayedFavorited ? "w-[44px]" : "px-0",
+        "h-[44px] gap-1 border-0 bg-transparent px-0 text-primary transition-colors hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-60",
+        displayedFavorited ? "w-[44px]" : "w-auto",
       )}
       disabled={favoritePending || !canFavorite}
       onClick={onToggleFavorite}
+      size="compact"
       title={label}
       type="button"
     >
@@ -44,10 +46,10 @@ export const ProfileFavoriteButton = ({
         <Heart aria-hidden="true" className="h-3.5 w-3.5 shrink-0 fill-current" />
       ) : (
         <>
-          <Plus aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+          <Plus aria-hidden="true" className="h-3 w-3 shrink-0" />
           <span aria-hidden="true">Favoritar</span>
         </>
       )}
-    </button>
+    </RelationshipButton>
   );
 };
