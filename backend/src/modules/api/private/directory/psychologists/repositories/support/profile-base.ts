@@ -104,6 +104,7 @@ export const profilePostSelect = {
   replies: {
     where: {
       deleted: false,
+      hidden_from_profile: false,
       parent_reply_id: null,
       author: {
         role: "psicologo",
@@ -131,6 +132,7 @@ export const profilePostSelect = {
       parent_reply: {
         select: {
           content: true,
+          deleted: true,
         },
       },
       author: {
@@ -155,6 +157,7 @@ export const profileReplySelect = {
   parent_reply: {
     select: {
       content: true,
+      deleted: true,
     },
   },
   post: {

@@ -5,6 +5,7 @@ import type {
   IPostMuteDTO,
   IPostRepliesDTO,
   IPostReplyDeleteDTO,
+  IPostReplyProfileVisibilityDTO,
   IPostReplySaveDTO,
   IPostReplyThreadDTO,
   IPostReportDTO,
@@ -23,6 +24,7 @@ import type {
   PostRepliesResponse,
   PostReplyDeleteResponse,
   PostReplyDTO,
+  PostReplyProfileVisibilityResponse,
   PostReportResponse,
   PostSaveResponse,
   PostShareResponse,
@@ -30,6 +32,9 @@ import type {
 } from "../../DTOs/IPostDTO";
 
 export interface IPostRepository {
+  setReplyProfileVisibility(
+    data: IPostReplyProfileVisibilityDTO,
+  ): Promise<PostMutationResult<PostReplyProfileVisibilityResponse>>;
   canAttachReplyMedia(userId: string): Promise<boolean>;
   exists(id: string): Promise<boolean>;
   mine(data: IPostMineDTO): Promise<PostListResponse>;

@@ -166,19 +166,23 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
   ): Promise<PsychologistReviewsResponse> {
     const pagination = normalizePagination(data.q);
     const periodStart = resolvePeriodStart(data.q.period);
-    const where: Prisma.professional_reviewWhereInput = {
+    const visibilityWhere: Prisma.professional_reviewWhereInput = {
       ...summaryWhere(data.auth.id!),
+      status: undefined,
+      ...(data.q.rating ? { rating: data.q.rating } : {}),
+      ...(periodStart ? { createdAt: { gte: periodStart } } : {}),
+    };
+    const where: Prisma.professional_reviewWhereInput = {
+      ...visibilityWhere,
       status:
         data.q.visibility === "all"
           ? undefined
           : data.q.visibility === "hidden"
             ? { in: ["oculta_profissional", "oculta"] }
             : "publicada",
-      ...(data.q.rating ? { rating: data.q.rating } : {}),
-      ...(periodStart ? { createdAt: { gte: periodStart } } : {}),
     };
 
-    const [items, count, totals, distributionRows] = await Promise.all([
+    const [items, count, totals, distributionRows, visibilityRows] = await Promise.all([
       prisma.professional_review.findMany({
         where,
         take: pagination.limit,
@@ -202,9 +206,23 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
         where: summaryWhere(data.auth.id!),
         _count: { rating: true },
       }),
+      prisma.professional_review.groupBy({
+        by: ["status"],
+        where: visibilityWhere,
+        _count: { _all: true },
+      }),
     ]);
 
+    const visibilityCounts = { visible: 0, hidden: 0, all: 0 };
+    for (const row of visibilityRows) {
+      visibilityCounts.all += row._count._all;
+      if (row.status === "publicada") visibilityCounts.visible += row._count._all;
+      if (row.status === "oculta_profissional" || row.status === "oculta")
+        visibilityCounts.hidden += row._count._all;
+    }
+
     return {
+      visibility_counts: visibilityCounts,
       access: {
         can_receive_reviews: options.canReceiveReviews ?? true,
         mode: "full",

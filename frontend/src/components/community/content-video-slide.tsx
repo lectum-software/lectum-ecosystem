@@ -35,7 +35,11 @@ import {
   ContentVideoInlineComposer,
   type ContentVideoInlineComposerState,
 } from "./content-video-inline-composer";
-import { refreshContentVideoInteraction } from "./content-video-interaction-refresh";
+import {
+  isContentVideoInteractionBlocking,
+  useContentVideoInteractionSync,
+} from "./content-video-interaction-refresh";
+import { ContentVideoInteractionStatus } from "./content-video-interaction-status";
 import { ReadingText } from "./content-video-reading-text";
 import styles from "./content-video-viewer.module.css";
 
@@ -44,6 +48,7 @@ type Panel = "caption" | "parent" | "comments" | null;
 export const ContentVideoSlide = ({
   item,
   active,
+  interactionRevision = 0,
   initialTime,
   changedDiscussion,
   onNext,
@@ -58,6 +63,7 @@ export const ContentVideoSlide = ({
 }: {
   item: PostContentVideo;
   active: boolean;
+  interactionRevision?: number;
   initialTime: number;
   changedDiscussion: boolean;
   onNext: () => void;
@@ -66,7 +72,7 @@ export const ContentVideoSlide = ({
   createPostOpen: boolean;
   onCreatePost: () => void;
   closeRef: RefObject<HTMLButtonElement | null>;
-  onInteraction: (patch: Partial<PostContentVideo>) => void;
+  onInteraction: (patch: Partial<PostContentVideo>, revalidatedRevision?: number) => void;
   onPanelChange: (open: boolean) => void;
   onSeekingChange: (seeking: boolean) => void;
 }) => {
@@ -97,15 +103,26 @@ export const ContentVideoSlide = ({
   const seekPointer = useRef<number | null>(null);
   const { current_user_vote: vote, upvotes_count: upvotes, saved } = item;
   const queryClient = useQueryClient();
-  const [interactionSync, setInteractionSync] = useState<"idle" | "pending" | "error">("idle");
-  const syncController = useRef<AbortController | null>(null);
-  const syncingInteractions = interactionSync !== "idle";
   const [actionError, setActionError] = useState(false);
   const [composerState, setComposerState] = useState<ContentVideoInlineComposerState>({
     busy: false,
     hasDraft: false,
     submitting: false,
   });
+  const { interactionSync, refreshAfterSubmit, refreshInteractions } =
+    useContentVideoInteractionSync(
+      queryClient,
+      item,
+      onInteraction,
+      active && !panel && !composerState.busy,
+      interactionRevision,
+    );
+  const unavailable = interactionSync === "unavailable";
+  const syncingInteractions = isContentVideoInteractionBlocking(interactionSync);
+  useLayoutEffect(() => {
+    activeRef.current = active && !unavailable;
+    if (unavailable) videoRef.current?.pause();
+  }, [active, unavailable]);
   const composerBusyRef = useRef(false);
   const createPostOpenRef = useRef(createPostOpen);
   useLayoutEffect(() => {
@@ -142,23 +159,6 @@ export const ContentVideoSlide = ({
   const href = item.reply_id
     ? publicCommunityPostFocusedReplyHref(item.community.slug, item.post_id, item.reply_id)
     : publicCommunityPostHref(item.community.slug, item.post_id);
-
-  useEffect(() => () => syncController.current?.abort(), []);
-
-  const refreshInteractions = async () => {
-    syncController.current?.abort();
-    const controller = new AbortController();
-    syncController.current = controller;
-    setInteractionSync("pending");
-    try {
-      const patch = await refreshContentVideoInteraction(queryClient, item, controller.signal);
-      if (controller.signal.aborted) return;
-      onInteraction(patch);
-      setInteractionSync("idle");
-    } catch {
-      if (!controller.signal.aborted) setInteractionSync("error");
-    }
-  };
 
   const ready = useCallback(
     (video: HTMLVideoElement | null) => {
@@ -231,7 +231,7 @@ export const ContentVideoSlide = ({
       video?.pause();
     }
     setPanel(next);
-    if (closingComments) void refreshInteractions();
+    if (closingComments && !interactionRevision) void refreshInteractions();
     if (!next && resumeAfterPanel.current) {
       resumeAfterPanel.current = false;
       window.requestAnimationFrame(() => {
@@ -421,7 +421,7 @@ export const ContentVideoSlide = ({
                 className={styles.action}
                 aria-label="Marcar como útil"
                 aria-pressed={vote === 1}
-                disabled={voteMutation.isPending || syncingInteractions}
+                disabled={voteMutation.isPending || syncingInteractions || unavailable}
                 type="button"
                 onClick={() => {
                   setActionError(false);
@@ -458,18 +458,20 @@ export const ContentVideoSlide = ({
               <button
                 className={styles.action}
                 aria-label="Abrir comentários"
-                disabled={syncingInteractions}
+                disabled={syncingInteractions || unavailable}
                 type="button"
                 onClick={() => changePanel("comments")}
               >
                 <MessageCircle aria-hidden />
-                <span>{item.replies_count}</span>
+                <span>{item.descendants_count ?? item.replies_count}</span>
               </button>
               <button
                 className={styles.action}
                 aria-label={saved ? "Remover dos salvos" : "Salvar vídeo"}
                 aria-pressed={saved}
-                disabled={postSave.isPending || replySave.isPending || syncingInteractions}
+                disabled={
+                  postSave.isPending || replySave.isPending || syncingInteractions || unavailable
+                }
                 type="button"
                 onClick={() => {
                   setActionError(false);
@@ -647,39 +649,27 @@ export const ContentVideoSlide = ({
           />
         </div>
         {interactionSync !== "idle" ? (
-          <div role={interactionSync === "error" ? "alert" : "status"} className={styles.status}>
-            {interactionSync === "pending"
-              ? "Atualizando interações..."
-              : "Não foi possível atualizar as interações."}
-            {interactionSync === "error" ? (
-              <button type="button" onClick={() => void refreshInteractions()}>
-                Tentar novamente
-              </button>
-            ) : null}
-          </div>
+          <ContentVideoInteractionStatus
+            state={interactionSync}
+            className={styles.status}
+            onRetry={() => void refreshInteractions()}
+          />
         ) : actionError ? (
           <p role="alert" className={styles.status}>
             Não foi possível atualizar. Tente novamente.
           </p>
         ) : null}
       </div>
-      <div className={controls.composerSlot} inert={Boolean(panel) || createPostOpen}>
+      <div
+        className={controls.composerSlot}
+        inert={Boolean(panel) || createPostOpen || unavailable}
+      >
         <ContentVideoInlineComposer
           item={item}
-          active={active}
+          active={active && !unavailable}
           onBusyChange={onComposerBusyChange}
           onStateChange={setComposerState}
-          onSubmitted={async () => {
-            syncController.current?.abort();
-            const controller = new AbortController();
-            syncController.current = controller;
-            const patch = await refreshContentVideoInteraction(
-              queryClient,
-              item,
-              controller.signal,
-            );
-            onInteraction(patch);
-          }}
+          onSubmitted={refreshAfterSubmit}
         />
       </div>
       <ContentVideoCommentsSheet

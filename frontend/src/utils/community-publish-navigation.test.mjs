@@ -225,14 +225,14 @@ test("both profile roles share the publications menu label and its original dest
   assert.doesNotMatch(profile, /Meus posts? e (respostas|comentários)/);
 });
 
-test("both profile roles use Meus depoimentos and professional entry follows Editar perfil", () => {
+test("both profile roles use Meus Depoimentos and professional entry follows Editar perfil", () => {
   const profile = readSource("../app/app/profile/logic.tsx");
   const accountRows = profile.slice(
     profile.indexOf("const accountRows: ProfileRow[] ="),
     profile.indexOf("const communityRows: ProfileRow[] ="),
   );
   assert.doesNotMatch(accountRows, /Avaliações feitas/);
-  assert.equal([...accountRows.matchAll(/label: "Meus depoimentos"/g)].length, 2);
+  assert.equal([...accountRows.matchAll(/label: "Meus Depoimentos"/g)].length, 2);
   assert.ok(
     accountRows.indexOf('label: "Editar perfil"') <
       accountRows.indexOf('href: "/app/profissional/avaliacoes"'),

@@ -15,7 +15,6 @@ import {
 import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
-import { TestimonialInvitation } from "@/components/reviews/testimonials-sheet";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import {
@@ -61,16 +60,6 @@ export const ProfessionalReplyPreview = ({
   const profileHref = `/psicologos/${reply.author.id}`;
   const authorDisplayName = getCommunityAuthorDisplayName(reply.author);
   const featuredBadge = reply.author.featured_badge;
-  const testimonialInvitation =
-    reply.author.role === "psicologo" &&
-    reply.author.id &&
-    reply.media_url &&
-    reply.media_type === "video" ? (
-      <TestimonialInvitation
-        psychologistId={reply.author.id}
-        className="mt-3 max-w-full rounded-full"
-      />
-    ) : null;
   const whatsappCta =
     showWhatsappCta && reply.author.whatsapp_url ? (
       <CommunityWhatsAppCta
@@ -179,7 +168,6 @@ export const ProfessionalReplyPreview = ({
           ) : whatsappCta ? (
             <div className="mt-3 flex justify-end">{whatsappCta}</div>
           ) : null}
-          {testimonialInvitation}
         </div>
       </div>
     );
@@ -272,7 +260,6 @@ export const ProfessionalReplyPreview = ({
       ) : (
         whatsappCta
       )}
-      {testimonialInvitation}
     </div>
   );
 };

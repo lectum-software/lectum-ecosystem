@@ -1,14 +1,29 @@
 import "../../../scripts/register-source-modules.mjs";
+import "./testimonial-sheet-close.test.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
+import { registerHooks } from "node:module";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import ts from "typescript";
+
+const imageUrl = import.meta.resolve("next/image.js");
+const imageBridge = `data:text/javascript,${encodeURIComponent(`import Image from ${JSON.stringify(imageUrl)}; export default Image.default ?? Image;`)}`;
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    return nextResolve(specifier === "next/image" ? imageBridge : specifier, context);
+  },
+});
 
 const { TestimonialCard } = await import("./testimonial-card.tsx");
 const { TestimonialForm } = await import("./testimonial-form.tsx");
+const { TestimonialProfessionalIdentity, TESTIMONIAL_DESCRIPTION } = await import(
+  "./testimonial-professional.tsx"
+);
 const { reviewFormSchema } = await import("../../app/app/reviews/new/use-form.tsx");
 const base = {
   id: "testimonial-local",
@@ -32,12 +47,24 @@ test("perfil aceita a URL de depoimentos e preserva links antigos", async () => 
   assert.ok(profile.includes('next.set("tab", "depoimentos")'));
 });
 
-test("convite publico usa botao primario e contagem destacada", () => {
+test("convite publico usa outline transparente e acao inline acessivel de 44px", () => {
   const source = readFileSync(new URL("./public-testimonials.tsx", import.meta.url), "utf8");
-  assert.match(source, /TestimonialInvitation[^>]+variant="default"/);
-  assert.match(source, /font-extrabold tabular-nums text-primary/);
-  const sheet = readFileSync(new URL("./testimonials-sheet.tsx", import.meta.url), "utf8");
-  assert.match(sheet, /variant=\{variant\}/);
+  assert.doesNotMatch(source, /variant="default"|font-extrabold tabular-nums text-primary/);
+  const action = readFileSync(
+    new URL("./testimonial-invitation-action.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(action, /variant = "outline"/);
+  assert.match(action, /min-h-\[44px\] min-w-\[44px\]/);
+  assert.doesNotMatch(action, /min-[hw]-11/);
+  assert.match(action, /bg-transparent/);
+  assert.match(action, /border border-foreground px-4 text-foreground/);
+  assert.match(action, /ReviewsIcon aria-hidden className="size-5/);
+  assert.match(action, /className=\{inline \? "max-sm:sr-only" : undefined\}/);
+  assert.doesNotMatch(action, /max-width:360px/);
+  assert.match(action, /aria-label="Deixar depoimento"/);
+  assert.match(action, /title="Deixar depoimento"/);
+  assert.match(action, /user\?\.role !== "paciente" \|\| !eligibility.data\?\.eligible/);
 });
 
 test("modal de depoimentos sobe e respeita movimento reduzido", () => {
@@ -46,8 +73,8 @@ test("modal de depoimentos sobe e respeita movimento reduzido", () => {
   assert.match(css, /translateY\(0\)/);
   assert.match(css, /prefers-reduced-motion: reduce/);
   assert.match(css, /animation: none/);
-  const sheet = readFileSync(new URL("./testimonials-sheet.tsx", import.meta.url), "utf8");
-  assert.equal((sheet.match(/lectum-testimonial-sheet-enter/g) || []).length, 2);
+  const sheet = readFileSync(new URL("./testimonial-sheet-dialog.tsx", import.meta.url), "utf8");
+  assert.equal((sheet.match(/lectum-testimonial-sheet-enter/g) || []).length, 1);
 });
 
 test("editar envia somente campos permitidos mesmo recebendo os valores do formulario de criacao", async () => {
@@ -84,8 +111,120 @@ test("editar envia somente campos permitidos mesmo recebendo os valores do formu
 });
 
 test("lista e formulario bloqueiam a navegacao do feed durante a rolagem da modal", () => {
-  const source = readFileSync(new URL("./testimonials-sheet.tsx", import.meta.url), "utf8");
-  assert.equal((source.match(/data-psychologists-scroll-lock="true"/g) || []).length, 2);
+  const source = readFileSync(new URL("./testimonial-sheet-dialog.tsx", import.meta.url), "utf8");
+  assert.equal((source.match(/data-psychologists-scroll-lock="true"/g) || []).length, 1);
+  assert.equal((source.match(/<Modal\s/g) || []).length, 1);
+  assert.match(source, /hidden=\{view !== "list"\}/);
+  assert.match(source, /invitationRef.current\?\.isConnected/);
+  assert.match(source, /<div \{\.\.\.drag.handleProps\} className="shrink-0"/);
+  assert.match(source, /disabled: formState.submitting/);
+  assert.match(source, /onClose: requestClose/);
+});
+
+test("guard de descarte preserva o formulario ao cancelar e bloqueia saida durante envio", () => {
+  const source = readFileSync(new URL("./testimonial-sheet-dialog.tsx", import.meta.url), "utf8");
+  const ast = ts.createSourceFile(
+    "sheet.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  let expression;
+  const visit = (node) => {
+    if (ts.isVariableDeclaration(node) && node.name.getText(ast) === "canLeave")
+      expression = node.initializer.getText(ast);
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  assert.ok(expression);
+  for (const [dirty, submitting, confirmed, expected, expectedPrompts] of [
+    [false, false, false, true, 0],
+    [true, false, false, false, 1],
+    [true, false, true, true, 1],
+    [true, true, true, false, 0],
+    [false, true, true, false, 0],
+  ]) {
+    let prompts = 0;
+    const canLeave = runInNewContext(`(${expression})`, {
+      formState: { dirty, submitting },
+      window: {
+        confirm: () => {
+          prompts += 1;
+          return confirmed;
+        },
+      },
+    });
+    assert.equal(canLeave(), expected);
+    assert.equal(prompts, expectedPrompts);
+  }
+  assert.match(source, /if \(!canLeave\(\)\) return;/);
+  assert.match(source, /if \(!canLeave\(\)\) return false;\s*setOpen\(false\);\s*return true;/);
+});
+
+test("contadores usam totais do servidor, preservam zero e nao inventam total no backend antigo", () => {
+  const source = readFileSync(new URL("./professional-testimonials.tsx", import.meta.url), "utf8");
+  const ast = ts.createSourceFile(
+    "reviews.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  let expression;
+  const visit = (node) => {
+    if (
+      ts.isJsxExpression(node) &&
+      node.expression?.getText(ast).includes("data?.visibility_counts")
+    )
+      expression = node.expression.getText(ast);
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  assert.ok(expression);
+  const evaluate = (data, id, filter = "visible") =>
+    runInNewContext(expression, { data, id, filter });
+  const data = { count: 80, visibility_counts: { visible: 80, hidden: 0, all: 80 }, items: [base] };
+  assert.equal(evaluate(data, "visible"), "80");
+  assert.equal(evaluate(data, "hidden"), "0");
+  assert.equal(evaluate(data, "all"), "80");
+  assert.equal(evaluate({ count: 80 }, "visible"), "80");
+  assert.equal(evaluate({ count: 80 }, "hidden"), "…");
+  assert.equal(evaluate(undefined, "all"), "…");
+});
+
+test("identidade profissional preserva nome, genero, selo e anonimato do autor", () => {
+  const professional = {
+    id: "professional",
+    name: "Alessandra Camargo",
+    gender: "feminino",
+    verified: true,
+    avatar: "/public/files/professional-avatar.jpg",
+  };
+  const html = renderToStaticMarkup(
+    createElement(TestimonialCard, {
+      review: { ...base, response: "Obrigada pelo relato." },
+      professional,
+    }),
+  );
+  assert.match(html, /Ana P\./);
+  assert.match(html, />AP</);
+  assert.match(html, /Alessandra Camargo/);
+  assert.match(html, /Psicóloga/);
+  assert.match(html, /Perfil verificado/);
+  assert.match(html, /professional-avatar/);
+  const unknown = renderToStaticMarkup(
+    createElement(TestimonialProfessionalIdentity, { fallbackName: "Nome recebido" }),
+  );
+  assert.match(unknown, /Nome recebido/);
+  assert.doesNotMatch(unknown, /Perfil verificado|<img/);
+  const unverified = renderToStaticMarkup(
+    createElement(TestimonialProfessionalIdentity, {
+      professional: { ...professional, verified: false },
+    }),
+  );
+  assert.doesNotMatch(unverified, /Perfil verificado/);
+  assert.equal(TESTIMONIAL_DESCRIPTION, "Relatos sobre experiências com este psicólogo na Lectum");
 });
 
 test("depoimento mostra autor, texto e nota individual sem média", () => {

@@ -741,6 +741,7 @@ Complemento 2026-07-26: posts raiz de pacientes classificados como `block` ou `s
 | `media_url` / `media_type` | `String?` | mídia opcional em respostas; `media_type` inicialmente `"video"` ou `"image"` |
 | `thumbnail_url` | `String?` | miniatura estatica opcional para respostas com `media_type="video"`; usada em Open Graph de threads e gerada no navegador pelo mesmo fluxo de upload |
 | `edited_at` | `DateTime?` | preenchido quando o autor edita texto ou midia do comentario/resposta; usado como metadado publico `editado`, sem historico completo no MVP |
+| `hidden_from_profile` | `Boolean @default(false)` | TASK-295: profissional autor pode ocultar/reexibir apenas nas publicacoes do perfil; discussao/reels permanecem disponiveis. Flag retornada somente na propria lista privada de respostas. |
 | `upvotes_count` / `downvotes_count` | `Int @default(0)` | denormalizados para ranking de respostas e prévia profissional; downvote usa penalidade leve no score, sem exibir contagem pública |
 | `@@index([post_id, parent_reply_id, createdAt])`, `@@index([author_id])` | | paginação por âncora (TASK-26) e seleção por autor |
 

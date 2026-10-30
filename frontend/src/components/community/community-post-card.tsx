@@ -18,7 +18,7 @@ import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
-import { ProfileReplyQuestion } from "@/components/community/profile-reply-question";
+import { ProfileReplyContext } from "@/components/community/profile-reply-context";
 import {
   canShowSocialVideoPreviewAction,
   createReplySocialPreviewTarget,
@@ -52,6 +52,7 @@ import {
   publicationInteractionData,
 } from "./community-post-card-support";
 import { ContentVideoPost } from "./content-video-context";
+import { renderPostTestimonialSlot } from "./post-testimonial-invitation";
 export const CommunityPostCard = (props: CommunityPostCardProps) => (
   <ContentVideoPost postId={props.post.id} hideInlineContact={props.profilePublicationMode}>
     <CommunityPostCardContent {...props} />
@@ -130,6 +131,7 @@ const CommunityPostCardContent = ({
     primaryReply || !showHighlightedProfessionalReply || !isOriginalPostByPatient
       ? null
       : post.highlighted_professional_reply;
+  const testimonialReply = primaryReply ?? highlightedProfessionalReply;
   const isReplyContribution = contributionType === "reply";
   const focusedReplyId =
     profilePublicationMode && isReplyContribution ? (primaryReply?.id ?? undefined) : undefined;
@@ -455,7 +457,7 @@ const CommunityPostCardContent = ({
         <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
       {primaryReply ? (
-        <ProfileReplyQuestion content={post.content} key={post.id} title={post.title} />
+        <ProfileReplyContext key={primaryReply.id} post={post} reply={primaryReply} />
       ) : null}
       <div
         className={primaryReply ? replySurfaceClass : "contents"}
@@ -627,7 +629,6 @@ const CommunityPostCardContent = ({
           )}
           {highlightedReplyAfterActions ? null : professionalPreview}
         </div>
-
         <CommunityActionBar
           className={
             hasPostStyleReplyActions
@@ -661,7 +662,7 @@ const CommunityPostCardContent = ({
             actionBarBeforeSaveSlot ??
             (shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta)
           }
-          endSlot={footerExtra}
+          endSlot={renderPostTestimonialSlot(post, testimonialReply, footerExtra)}
           onVote={interactiveActions ? handleVote : undefined}
           save={{
             active: saveAction.active,

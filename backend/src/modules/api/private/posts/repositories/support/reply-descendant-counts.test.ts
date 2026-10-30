@@ -18,6 +18,26 @@ test("counts all levels without including the root or unrelated branches", () =>
   assert.equal(counts.get("other"), 0);
 });
 
+test("video comment plus its answer totals two, isolated from sibling videos", () => {
+  const rows = [
+    { id: "video", parent_reply_id: null },
+    { id: "comment", parent_reply_id: "video" },
+    { id: "answer", parent_reply_id: "comment" },
+    { id: "other-video", parent_reply_id: null },
+    { id: "other-comment", parent_reply_id: "other-video" },
+  ];
+  const counts = countReplyDescendants(rows);
+  assert.equal(counts.get("video"), 2);
+  assert.equal(counts.get("comment"), 1);
+  assert.equal(counts.get("other-video"), 1);
+  assert.equal(counts.get("answer"), 0);
+  assert.equal(rows.filter((row) => row.parent_reply_id === "video").length, 1);
+  // Excluded moderation roots cannot expose surviving descendants in a video's total.
+  const afterRemoval = countReplyDescendants(rows.filter((row) => row.id !== "comment"));
+  assert.equal(afterRemoval.get("video"), 0);
+  assert.equal(afterRemoval.get("other-video"), 1);
+});
+
 test("does not reconnect descendants across excluded/deleted parents", () => {
   const counts = countReplyDescendants([
     { id: "root", parent_reply_id: null },

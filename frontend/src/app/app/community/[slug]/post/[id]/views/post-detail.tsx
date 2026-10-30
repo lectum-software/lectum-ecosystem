@@ -425,6 +425,7 @@ export const PostDetailLogic = ({
                 onVote={handleVoteReply}
                 postId={post.id}
                 postSourceText={post.title}
+                postAuthorId={post.author.id}
                 replies={replies}
                 replyApiError={replyError}
                 replyComposerTargetId={

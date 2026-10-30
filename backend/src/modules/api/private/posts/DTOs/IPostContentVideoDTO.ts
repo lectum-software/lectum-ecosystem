@@ -30,6 +30,8 @@ export type PostContentVideo = {
   current_user_vote: 1 | -1 | null;
   saved: boolean;
   replies_count: number;
+  /** All visible descendants, excluding the video reply itself; post videos keep the post total. */
+  descendants_count: number;
   responding_to: { id: string; title: string | null; content: string } | null;
   community: PostCommunityDTO;
 };

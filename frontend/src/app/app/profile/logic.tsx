@@ -23,6 +23,7 @@ import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import { LoadingState } from "@/components/ui/loading-state";
+import { ReviewsIcon } from "@/components/ui/reviews-icon";
 import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useSignOut } from "@/hooks/cookies/signout";
@@ -261,7 +262,7 @@ export const ProfileLogic = () => {
     },
     ...(isPsychologist
       ? [
-          { href: "/app/profissional/avaliacoes", icon: MessagesSquare, label: "Meus depoimentos" },
+          { href: "/app/profissional/avaliacoes", icon: ReviewsIcon, label: "Meus Depoimentos" },
           { href: "/app/profissional/estatisticas", icon: BarChart3, label: "Meus Analytics" },
           {
             href: "/app/profissional/assinatura",
@@ -269,7 +270,7 @@ export const ProfileLogic = () => {
             label: "Minha Assinatura",
           },
         ]
-      : [{ href: "/app/avaliacoes", icon: MessagesSquare, label: "Meus depoimentos" }]),
+      : [{ href: "/app/avaliacoes", icon: ReviewsIcon, label: "Meus Depoimentos" }]),
     { href: "/app/configuracoes/conta", icon: Lock, label: "E-mail e senha" },
     { href: "/app/ajuda", icon: CircleHelp, label: "Ajuda e feedback" },
     {

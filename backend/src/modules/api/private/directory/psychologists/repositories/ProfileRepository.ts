@@ -306,6 +306,7 @@ export class ProfileRepository implements IProfileRepository {
     const repliesWhere: Prisma.post_replyWhereInput = {
       author_id: data.p.id,
       deleted: false,
+      hidden_from_profile: false,
       post: {
         deleted: false,
         status: "publicado",

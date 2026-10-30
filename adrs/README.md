@@ -720,3 +720,4 @@ Formato recomendado:
 - [ADR-0656 — Header compacto e CTA integral nos videos](0656-profile-header-and-video-contact.md)
 - [ADR-0657 — Consistencia visual do perfil com Lectum](0657-profile-visual-consistency.md)
 - [ADR-0658 — Controles reais e comentarios inline nos reels](0658-reels-inline-controls.md)
+- [ADR-0659 — Depoimentos como comentarios e totais de gestao](0659-testimonial-comment-layout-and-management-counts.md)

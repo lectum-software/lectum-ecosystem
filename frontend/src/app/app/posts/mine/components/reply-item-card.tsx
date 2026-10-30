@@ -206,6 +206,7 @@ export const ReplyItemCard = ({
           </p>
         </div>
         <ReplyOwnerActionMenu
+          allowProfileVisibility
           className="-mt-2 -mr-1"
           onDeleted={onChanged}
           onUpdated={onChanged}

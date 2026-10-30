@@ -469,6 +469,7 @@ export const PostReplyThreadLogic = ({
               onVote={handleVoteThreadReply}
               postId={post.id}
               postSourceText={post.title}
+              postAuthorId={post.author.id}
               replies={[rootReply]}
               replyApiError={replyError}
               replyComposerTargetId={

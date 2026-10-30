@@ -27,6 +27,7 @@ import {
   toCommunityResponse,
   toPostMediaItemsResponse,
 } from "../support/post-response";
+import { countReplyDescendants } from "../support/reply-descendant-counts";
 
 type Client = Pick<
   Prisma.TransactionClient,
@@ -94,6 +95,7 @@ export class PostContentVideoRepository implements IPostContentVideoRepository {
     });
     // Never truncate the tree: that would silently omit videos or hide their ancestors.
     if (nodes.length > MAX_DISCUSSION_INDEX_NODES) throw new ContentVideoCursorError("capacity");
+    const descendantCounts = countReplyDescendants(nodes);
     const authors = await this.client.user.findMany({
       where: {
         id: { in: [...new Set([post.author.id, ...nodes.map((node) => node.author_id)])] },
@@ -268,6 +270,7 @@ export class PostContentVideoRepository implements IPostContentVideoRepository {
         current_user_vote: voteMap.get(candidate.reply_id ?? post.id) ?? null,
         saved: reply ? savedIds.has(reply.id) : Boolean(postSave),
         replies_count: reply ? reply._count.replies : post.replies_count,
+        descendants_count: reply ? (descendantCounts.get(reply.id) ?? 0) : post.replies_count,
         responding_to: reply
           ? {
               id: reply.parent_reply?.id ?? post.id,

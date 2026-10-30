@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Bell,
   BellOff,
+  EyeOff,
   Loader2,
   MoreHorizontal,
   Pencil,
@@ -13,6 +14,7 @@ import {
 import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDeleteReply, useMutePost, usePostReplyThread } from "@/api/callers/posts";
+import { useReplyProfileVisibility } from "@/api/callers/posts/reply-profile-visibility";
 import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostListPost, UserPostReply } from "@/api/generator/types/posts";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
@@ -25,6 +27,10 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { hasProfessionalVideoDescendant } from "./reply-delete-preflight";
 import { getReplyOwnerActionCopy } from "./reply-owner-action-copy";
 import {
+  canManageReplyProfileVisibility,
+  ReplyProfileVisibilityAction,
+} from "./reply-profile-visibility-action";
+import {
   type ReplySecondaryActions,
   ReplySecondaryMenuActions,
 } from "./reply-secondary-menu-actions";
@@ -34,6 +40,7 @@ type OwnerActionReply = Pick<
   | "author"
   | "content"
   | "id"
+  | "hidden_from_profile"
   | "media_type"
   | "media_url"
   | "parent_content"
@@ -45,6 +52,7 @@ type OwnerActionReply = Pick<
 type OwnerActionPost = Pick<PostListPost, "id" | "muted_by_current_user" | "title">;
 
 type ReplyOwnerActionMenuProps = {
+  allowProfileVisibility?: boolean;
   className?: string;
   onEdit?: () => void;
   onDeleted?: () => void;
@@ -178,6 +186,7 @@ const ReplyActionModal = ({
 };
 
 export const ReplyOwnerActionMenu = ({
+  allowProfileVisibility = false,
   className,
   onEdit,
   onDeleted,
@@ -195,6 +204,7 @@ export const ReplyOwnerActionMenu = ({
   const [actionError, setActionError] = useState<string | null>(null);
   const muteMutation = useMutePost();
   const deleteMutation = useDeleteReply();
+  const visibilityMutation = useReplyProfileVisibility();
   const deletePreflight = usePostReplyThread(post.id, reply.id, false);
   const isOwnReply = Boolean(currentUser?.id && reply.author.id === currentUser.id);
   const isPsychologistReply = reply.author.role === "psicologo";
@@ -209,6 +219,26 @@ export const ReplyOwnerActionMenu = ({
   });
 
   if (!isOwnReply) return null;
+
+  const canManageProfileVisibility = canManageReplyProfileVisibility({
+    allowProfileVisibility,
+    author: reply.author,
+    currentUser,
+  });
+  const hiddenFromProfile = reply.hidden_from_profile === true;
+  const handleVisibilityToggle = (hidden: boolean) => {
+    setActionError(null);
+    visibilityMutation.mutate(
+      { postId: post.id, replyId: reply.id, hidden },
+      {
+        onSuccess: () => {
+          setMenuOpen(false);
+          onUpdated?.();
+        },
+        onError: (error) => setActionError(errorMessageFromUnknown(error)),
+      },
+    );
+  };
 
   const handleMuteToggle = (event?: MouseEvent<HTMLButtonElement>) => {
     event?.stopPropagation();
@@ -277,10 +307,24 @@ export const ReplyOwnerActionMenu = ({
     );
   };
 
-  const busy = muteMutation.isPending || deleteMutation.isPending || deletePreflight.isFetching;
+  const busy =
+    muteMutation.isPending ||
+    deleteMutation.isPending ||
+    deletePreflight.isFetching ||
+    visibilityMutation.isPending;
 
   return (
-    <div className={cn("relative shrink-0", className)}>
+    <div className={cn("relative flex shrink-0 items-center gap-1", className)}>
+      {canManageProfileVisibility && hiddenFromProfile ? (
+        <span
+          aria-label="Oculta do perfil público"
+          role="img"
+          title="Oculta do perfil público"
+          className="grid h-8 w-6 place-items-center text-muted"
+        >
+          <EyeOff className="h-4 w-4" aria-hidden="true" />
+        </span>
+      ) : null}
       <button
         aria-expanded={menuOpen}
         aria-haspopup="menu"
@@ -300,6 +344,14 @@ export const ReplyOwnerActionMenu = ({
         <ReplyMenuSurface triggerRef={triggerRef} onClose={() => setMenuOpen(false)}>
           {secondaryActions ? (
             <ReplySecondaryMenuActions {...secondaryActions} onClose={() => setMenuOpen(false)} />
+          ) : null}
+          {canManageProfileVisibility ? (
+            <ReplyProfileVisibilityAction
+              disabled={busy}
+              hidden={hiddenFromProfile}
+              onToggle={handleVisibilityToggle}
+              pending={visibilityMutation.isPending}
+            />
           ) : null}
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"

@@ -172,6 +172,7 @@ export type PostListPostDTO = PostDetailDTO & {
 };
 
 export type PostListReplyDTO = {
+  hidden_from_profile?: boolean;
   id: string;
   title: string | null;
   content: string;
@@ -486,4 +487,14 @@ export type IPostReplySaveDTO = {
 export type IPostReplyDeleteDTO = {
   p: PostReplyParams;
   auth: user;
+};
+
+export type IPostReplyProfileVisibilityDTO = IPostReplyDeleteDTO & {
+  b: { hidden: boolean };
+};
+
+export type PostReplyProfileVisibilityResponse = {
+  post_id: string;
+  reply_id: string;
+  hidden_from_profile: boolean;
 };

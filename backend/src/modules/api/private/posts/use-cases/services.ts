@@ -29,6 +29,7 @@ export {
   mute,
   save,
   saveReply,
+  setReplyProfileVisibility,
   unmute,
   unsave,
   unsaveReply,

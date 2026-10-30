@@ -41,8 +41,12 @@ const modules = {
   "@/utils/public-routes":
     "exports.publicCommunityPostFocusedReplyHref = exports.publicCommunityPostHref = () => '/post';",
   "./community-whatsapp-cta": "exports.toCommunityWhatsAppIdentity = () => null;",
-  "./content-video-interaction-refresh":
-    "exports.refreshContentVideoInteraction = async () => ({});",
+  "./content-video-interaction-refresh": `exports.refreshContentVideoInteraction = async () => ({});
+     exports.isContentVideoInteractionBlocking = state => state === 'pending' || state === 'error';
+     exports.useContentVideoInteractionSync = () => ({
+       interactionSync: 'idle', refreshAfterSubmit: async () => {}, refreshInteractions: async () => {},
+     });`,
+  "./content-video-interaction-status": "exports.ContentVideoInteractionStatus = () => null;",
   "./content-video-comments-sheet": "exports.ContentVideoCommentsSheet = () => null;",
   "./content-video-header": source("./content-video-header.tsx"),
   "./content-video-reading-text": source("./content-video-reading-text.tsx"),

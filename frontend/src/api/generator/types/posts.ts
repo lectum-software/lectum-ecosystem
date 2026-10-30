@@ -14,6 +14,8 @@ export type PostContentVideo = {
   current_user_vote: 1 | -1 | null;
   saved: boolean;
   replies_count: number;
+  /** All visible descendants of this video; replies_count retains its direct-child meaning. */
+  descendants_count?: number;
   responding_to: { id: string; title: string | null; content: string } | null;
   community: Community;
 };
@@ -119,6 +121,8 @@ export type PostListPost = PostDetail & {
 };
 
 export type UserPostReply = {
+  /** Owner-only profile visibility; absent from older APIs and public lists. */
+  hidden_from_profile?: boolean;
   id: string;
   title: string | null;
   content: string;

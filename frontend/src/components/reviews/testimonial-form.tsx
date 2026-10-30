@@ -1,7 +1,7 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPatientReview, updatePatientReview } from "@/api/req/reviews";
 import { useReviewForm } from "@/app/app/reviews/new/use-form";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -20,15 +20,17 @@ export const TestimonialForm = ({
   onSuccess: () => void;
   onStateChange?: (state: { dirty: boolean; submitting: boolean }) => void;
 }) => {
+  const [initialSnapshot] = useState(initial);
+  const submittingRef = useRef(false);
   const { Form, formProps, hook } = useReviewForm(psychologistId);
   const { reset } = hook;
   useEffect(() => {
     reset({
       psychologist_id: psychologistId,
-      rating: initial ? String(initial.rating) : "",
-      comment: initial?.comment || "",
+      rating: initialSnapshot ? String(initialSnapshot.rating) : "",
+      comment: initialSnapshot?.comment || "",
     });
-  }, [initial, psychologistId, reset]);
+  }, [initialSnapshot, psychologistId, reset]);
   const mutation = useTestimonialMutation(
     (body: { psychologist_id: string; rating: number; comment: string }) =>
       initial ? updatePatientReview(initial.id, body) : createPatientReview(body),
@@ -36,16 +38,17 @@ export const TestimonialForm = ({
   );
   const rating = Number(hook.watch("rating") || 0);
   const comment = hook.watch("comment") || "";
-  const dirty = rating !== (initial?.rating ?? 0) || comment !== (initial?.comment ?? "");
+  const dirty =
+    rating !== (initialSnapshot?.rating ?? 0) || comment !== (initialSnapshot?.comment ?? "");
   useEffect(() => {
     onStateChange?.({ dirty, submitting: mutation.isPending });
   }, [dirty, mutation.isPending, onStateChange]);
   return (
-    <div>
-      <p className="text-base font-semibold">
+    <div aria-busy={mutation.isPending}>
+      <p className="text-sm font-medium leading-6">
         Como foi sua experiência com as respostas e os conteúdos deste psicólogo?
       </p>
-      <fieldset className="my-4 flex justify-center gap-2">
+      <fieldset disabled={mutation.isPending} className="my-4 flex justify-center gap-2">
         <legend className="sr-only">Nota em estrelas</legend>
         {[1, 2, 3, 4, 5].map((n) => (
           <label
@@ -65,34 +68,47 @@ export const TestimonialForm = ({
           </label>
         ))}
       </fieldset>
-      <Form
-        {...formProps}
-        className="grid gap-3"
-        onSubmit={hook.handleSubmit((values) =>
-          mutation.mutate({
-            ...values,
-            rating: Number(values.rating),
-            comment: values.comment.trim(),
-          }),
-        )}
-      >
-        {mutation.isError ? (
-          <InlineAlert title="Não foi possível salvar" variant="error">
-            Tente novamente. Seu texto foi mantido.
-          </InlineAlert>
-        ) : null}
-        <Button
-          type="submit"
-          disabled={mutation.isPending || !rating || !comment.trim()}
-          className="w-full rounded-full"
+      <fieldset disabled={mutation.isPending} className="min-w-0">
+        <Form
+          {...formProps}
+          className="grid gap-3"
+          onSubmit={(event) => {
+            void hook.handleSubmit((values) => {
+              if (submittingRef.current) return;
+              submittingRef.current = true;
+              mutation.mutate(
+                {
+                  ...values,
+                  rating: Number(values.rating),
+                  comment: values.comment.trim(),
+                },
+                {
+                  onSettled: () => {
+                    submittingRef.current = false;
+                  },
+                },
+              );
+            })(event);
+          }}
         >
-          {mutation.isPending
-            ? "Salvando..."
-            : initial
-              ? "Salvar depoimento"
-              : "Publicar depoimento"}
-        </Button>
-      </Form>
+          {mutation.isError ? (
+            <InlineAlert title="Não foi possível salvar" variant="error">
+              Tente novamente. Seu texto foi mantido.
+            </InlineAlert>
+          ) : null}
+          <Button
+            type="submit"
+            disabled={mutation.isPending || !rating || !comment.trim()}
+            className="w-full rounded-full"
+          >
+            {mutation.isPending
+              ? "Salvando..."
+              : initial
+                ? "Salvar depoimento"
+                : "Publicar depoimento"}
+          </Button>
+        </Form>
+      </fieldset>
     </div>
   );
 };

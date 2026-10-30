@@ -140,7 +140,10 @@ export const toHighlightedProfessionalReply = (
     created_at: reply.createdAt,
     edited_at: reply.edited_at,
     parent_reply_id: reply.parent_reply_id,
-    parent_content: reply.parent_reply?.content ?? null,
+    parent_content:
+      reply.parent_reply_id && reply.parent_reply && !reply.parent_reply.deleted
+        ? reply.parent_reply.content
+        : null,
     saved: savedReplyIds?.has(reply.id) ?? false,
     author,
   };

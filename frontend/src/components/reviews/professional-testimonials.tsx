@@ -3,6 +3,7 @@
 import { Eye, EyeOff, Pencil, Reply, Send, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useDirectoryPsychologist } from "@/api/callers/directory";
 import { useInfinitePsychologistReviews } from "@/api/callers/psychologist-reviews";
 import type { PsychologistReview } from "@/api/generator/types/psychologist-reviews";
 import {
@@ -14,13 +15,21 @@ import { useReviewResponseForm } from "@/app/app/professional/reviews/use-form";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { flattenListPages } from "@/utils/infinite-list";
 import { TestimonialCard } from "./testimonial-card";
+import { TESTIMONIAL_DESCRIPTION, type TestimonialProfessional } from "./testimonial-professional";
 import { useTestimonialMutation } from "./use-testimonial-mutation";
 
-const ManagedTestimonial = ({ review }: { review: PsychologistReview }) => {
+const ManagedTestimonial = ({
+  review,
+  professional,
+}: {
+  review: PsychologistReview;
+  professional?: TestimonialProfessional;
+}) => {
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { Form, formProps, hook } = useReviewResponseForm(review.response || "");
@@ -44,6 +53,7 @@ const ManagedTestimonial = ({ review }: { review: PsychologistReview }) => {
     <TestimonialCard
       review={review}
       responseName="Sua resposta"
+      professional={professional}
       actions={
         review.status !== "oculta" ? (
           <Button
@@ -150,6 +160,8 @@ const ManagedTestimonial = ({ review }: { review: PsychologistReview }) => {
 };
 
 export const ProfessionalTestimonials = () => {
+  const user = useAppSelector((state) => state.user);
+  const professional = useDirectoryPsychologist(user?.role === "psicologo" ? (user.id ?? "") : "");
   const [filter, setFilter] = useState<"visible" | "hidden" | "all">("visible");
   const query = useInfinitePsychologistReviews({ limit: 20, visibility: filter });
   const data = query.data?.pages[0];
@@ -160,8 +172,9 @@ export const ProfessionalTestimonials = () => {
         <AppPageHeader
           backHref="/app/perfil"
           backLabel="Voltar para perfil"
-          title="Meus depoimentos"
+          title="Meus Depoimentos"
         />
+        <p className="text-sm leading-6 text-muted">{TESTIMONIAL_DESCRIPTION}</p>
         {data?.access.can_receive_reviews === false ? (
           <InlineAlert title="Recebimento de novos depoimentos pausado" variant="warning">
             <p>
@@ -190,16 +203,39 @@ export const ProfessionalTestimonials = () => {
               ["hidden", "Ocultos"],
               ["all", "Todos"],
             ] as const
-          ).map(([id, label]) => (
+          ).map(([id, label], index, tabs) => (
             <button
               type="button"
               role="tab"
               aria-selected={filter === id}
               key={id}
               onClick={() => setFilter(id)}
+              id={`managed-testimonials-tab-${id}`}
+              tabIndex={filter === id ? 0 : -1}
+              onKeyDown={(event) => {
+                const nextIndex =
+                  event.key === "ArrowRight"
+                    ? (index + 1) % tabs.length
+                    : event.key === "ArrowLeft"
+                      ? (index + tabs.length - 1) % tabs.length
+                      : event.key === "Home"
+                        ? 0
+                        : event.key === "End"
+                          ? tabs.length - 1
+                          : null;
+                if (nextIndex === null) return;
+                event.preventDefault();
+                setFilter(tabs[nextIndex][0]);
+                document.getElementById(`managed-testimonials-tab-${tabs[nextIndex][0]}`)?.focus();
+              }}
               className={`flex-1 border-b-2 p-3 text-sm ${filter === id ? "border-primary font-bold text-primary" : "border-transparent text-muted"}`}
             >
               {label}
+              <span className="ml-1.5 text-xs tabular-nums text-muted">
+                {(
+                  data?.visibility_counts?.[id] ?? (filter === id ? data?.count : undefined)
+                )?.toLocaleString("pt-BR") ?? "…"}
+              </span>
             </button>
           ))}
         </div>
@@ -214,9 +250,11 @@ export const ProfessionalTestimonials = () => {
         {!query.isLoading && !query.isError && !items.length ? (
           <p className="py-10 text-center text-muted">Nenhum depoimento nesta lista.</p>
         ) : null}
-        {items.map((review) => (
-          <ManagedTestimonial key={review.id} review={review} />
-        ))}
+        <div className="divide-y divide-border">
+          {items.map((review) => (
+            <ManagedTestimonial key={review.id} review={review} professional={professional.data} />
+          ))}
+        </div>
         {query.hasNextPage ? (
           <Button
             variant="ghost"

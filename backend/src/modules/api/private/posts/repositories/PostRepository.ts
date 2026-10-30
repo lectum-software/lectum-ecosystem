@@ -25,6 +25,12 @@ export class PostRepository implements IPostRepository {
 
   private readonly shareArtifactRepository = new PostShareArtifactRepository();
 
+  setReplyProfileVisibility(
+    ...args: Parameters<PostReplyStateRepository["setReplyProfileVisibility"]>
+  ): ReturnType<PostReplyStateRepository["setReplyProfileVisibility"]> {
+    return this.replyStateRepository.setReplyProfileVisibility(...args);
+  }
+
   exists(
     ...args: Parameters<PostCoreRepository["exists"]>
   ): ReturnType<PostCoreRepository["exists"]> {

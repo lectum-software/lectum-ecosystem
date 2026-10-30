@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getApiErrorHttpStatus } from "@/api/errors";
 import type { PostContentVideo } from "@/api/generator/types/posts";
 import { getPostContentVideos } from "@/api/req/posts";
 import type { ContentVideoSource, ContentVideoSourceEntry } from "./content-video-context";
+import {
+  appendContentVideoPage,
+  type ContentVideoInteractionState,
+  contentVideoKey,
+  invalidateContentVideoDiscussion,
+  updateContentVideoInteractionState,
+} from "./content-video-queue-interactions";
 
-export const contentVideoKey = (
-  item: Pick<PostContentVideo, "id" | "post_id" | "reply_id" | "media_item_id">,
-) =>
-  `${item.post_id}:${item.reply_id ? `reply:${item.reply_id}` : `post:${item.media_item_id ?? item.id}`}`;
+export { contentVideoKey } from "./content-video-queue-interactions";
 
 const sourceKey = (source: ContentVideoSource | null) =>
   JSON.stringify([source?.mode, source?.hasNextPage, source?.entries]);
@@ -33,7 +37,16 @@ export const useContentVideoQueue = (
   useEffect(() => {
     sourceRef.current = source;
   }, [source]);
-  const [items, setItems] = useState<PostContentVideo[]>([]);
+  const [interactionState, setInteractionState] = useState<ContentVideoInteractionState>({
+    items: [],
+    revision: 0,
+    staleInteractions: {},
+  });
+  const { items, staleInteractions } = interactionState;
+  const interactionStateRef = useRef(interactionState);
+  useLayoutEffect(() => {
+    interactionStateRef.current = interactionState;
+  }, [interactionState]);
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -135,6 +148,7 @@ export const useContentVideoQueue = (
         state.nextCursor = undefined;
         state.done = false;
       }
+      const requestedRevision = interactionStateRef.current.revision;
       const result = await getPostContentVideos(state.entry.postId, {
         limit: 20,
         ...(state.nextCursor
@@ -182,7 +196,7 @@ export const useContentVideoQueue = (
         state.visited.add(
           `${state.entry.postId}:${scope?.mode === "profile" ? (state.entry.replyId ?? "post") : "discussion"}`,
         );
-      setItems((previous) => [...previous, ...added]);
+      setInteractionState((previous) => appendContentVideoPage(previous, added, requestedRevision));
       progressed = true;
     } catch (cause) {
       if (!signal.aborted) {
@@ -221,6 +235,9 @@ export const useContentVideoQueue = (
 
   return {
     items,
+    staleInteractions,
+    invalidateDiscussion: (postId: string) =>
+      setInteractionState((previous) => invalidateContentVideoDiscussion(previous, postId)),
     index,
     loading,
     error,
@@ -246,16 +263,20 @@ export const useContentVideoQueue = (
         seen: new Set<string>(),
         visited: new Set<string>(),
       };
-      setItems([]);
+      setInteractionState((previous) => ({
+        items: [],
+        revision: previous.revision + 1,
+        staleInteractions: {},
+      }));
       setIndex(0);
       setEnded(false);
       setExpired(false);
       setError(false);
       setRevision((value) => value + 1);
     },
-    updateItem: (key: string, patch: Partial<PostContentVideo>) =>
-      setItems((previous) =>
-        previous.map((item) => (contentVideoKey(item) === key ? { ...item, ...patch } : item)),
+    updateItem: (key: string, patch: Partial<PostContentVideo>, revalidatedRevision?: number) =>
+      setInteractionState((previous) =>
+        updateContentVideoInteractionState(previous, key, patch, revalidatedRevision),
       ),
   };
 };

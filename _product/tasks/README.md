@@ -1,3 +1,5 @@
+Validado localmente em 0.1.755: [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md), ADR-0659. Checks, builds, 40 cenarios funcionais e QA visual aprovados; fixtures limpos. Ressalva de telemetria documentada na task. Sem push/deploy.
+
 Validado localmente em 0.1.754: [TASK-294 - Refinamentos de reels e perfil](TASK-294-reels-compact-controls.md), ADR-0657/0658. Checks, build frontend e QA mobile/desktop aprovados. Sem novo push/deploy. TASK-293 publicada em 0.1.753, frontend/backend e health/ready conferidos em 30/10/2026.
 
 Validado localmente em 0.1.737: TASK-32 / ADR-0648 — backend Node 24.22.1, imagem Linux amd64 e observação do corpo HTTP com privacidade. Patch qs 6.16.1 independente em backend/video; checks, quatro builds, cinco auditorias e PostgreSQL efêmero aprovados (limites no ADR). Commit local; sem push/deploy. Não é correção de recusa de risco.
@@ -721,6 +723,7 @@ ou cortesia manual.
 | 292 | [TASK-292 - Refinamento visual do perfil](TASK-292-profile-visual-refinement.md) | Implementation and local validation | 291 |
 | 293 | [TASK-293 - Controles e comentarios nos reels](TASK-293-reels-controls.md) | Implementation and local validation | 292 |
 | 294 | [TASK-294 - Refinamentos de reels e perfil](TASK-294-reels-compact-controls.md) | Implementation and local validation | 293 |
+| 295 | [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md) | Implementation and local validation | 294 |
 
 ## Ordem operacional recomendada sem bloqueios
 
