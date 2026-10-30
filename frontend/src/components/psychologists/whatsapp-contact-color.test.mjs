@@ -15,10 +15,10 @@ test("WhatsApp contact green has one theme-independent definition", () => {
 const surfaces = [
   ["feed overlay", "../community/community-whatsapp-cta.tsx", "bg-whatsapp-contact", 1],
   [
-    "profile mobile and desktop",
+    "shared profile hero and sticky contact",
     "../../app/app/psychologist/[id]/components/whatsapp-cta.tsx",
     "bg-whatsapp-contact",
-    2,
+    1,
   ],
   [
     "directory mobile",
@@ -51,6 +51,17 @@ for (const [name, path, token, minimum] of surfaces) {
     }
   });
 }
+
+test("profile hero and sticky reuse the same contact surface", () => {
+  assert.match(
+    source("../../app/app/psychologist/[id]/components/hero.tsx"),
+    /<WhatsAppCta profile=\{profile\}/,
+  );
+  assert.match(
+    source("../../app/app/psychologist/[id]/components/profile-header.tsx"),
+    /<WhatsAppCta compact profile=\{profile\}/,
+  );
+});
 
 test("reels mobile fill and desktop glyph use the same contact token", () => {
   const css = source("../community/content-video-viewer.module.css");

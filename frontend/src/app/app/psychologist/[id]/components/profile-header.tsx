@@ -1,42 +1,40 @@
 "use client";
 
 import { type ComponentProps, useEffect, useRef, useState } from "react";
-import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
 import { cn } from "@/lib/utils";
 import { getPsychologistDisplayName } from "../modules/support";
-import { ProfileAvatar, ProfileHero } from "./hero";
-import { ProfileFavoriteButton, type ProfileFavoriteProps } from "./profile-favorite-button";
+import { ProfileHero } from "./hero";
+import { WhatsAppCta } from "./whatsapp-cta";
 
 export const ProfileStickyBar = ({
   visible,
-  ...favoriteProps
-}: ProfileFavoriteProps & { visible: boolean }) => {
-  const { profile, canFavorite } = favoriteProps;
+  profile,
+}: {
+  visible: boolean;
+  profile: DirectoryPsychologistProfile;
+}) => {
   const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
+  const showContact = visible && Boolean(profile.whatsapp_url) && !profile.read_only;
 
   return (
     <div className="pointer-events-none sticky top-0 z-30 h-0 min-w-0">
       <div
-        aria-hidden={!visible}
-        inert={!visible}
+        aria-hidden={!showContact}
+        inert={!showContact}
         data-profile-sticky-bar
         className={cn(
-          "flex h-16 min-w-0 items-center gap-3 border-b border-border bg-surface px-5 shadow-sm",
-          visible ? "pointer-events-auto visible" : "invisible",
+          "flex h-16 min-w-0 items-center gap-3 border-b border-border bg-surface px-[18px] shadow-sm lg:px-8",
+          showContact ? "pointer-events-auto visible" : "invisible",
         )}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <ProfileAvatar compact profile={profile} />
-          <div className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate text-sm font-bold text-foreground" title={displayName}>
-              {displayName}
-            </span>
-            {profile.verified ? (
-              <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-4 w-4 shrink-0" />
-            ) : null}
-          </div>
-        </div>
-        {canFavorite ? <ProfileFavoriteButton {...favoriteProps} /> : null}
+        <span
+          className="line-clamp-2 min-w-0 flex-1 break-words text-xs font-bold text-foreground lg:text-sm"
+          title={displayName}
+        >
+          {displayName}
+        </span>
+        <WhatsAppCta compact profile={profile} />
       </div>
     </div>
   );
@@ -45,23 +43,30 @@ export const ProfileStickyBar = ({
 export const ProfileHeader = (props: ComponentProps<typeof ProfileHero>) => {
   const anchorRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const hasContact = Boolean(props.profile.whatsapp_url) && !props.profile.read_only;
 
   useEffect(() => {
     const anchor = anchorRef.current;
-    if (!anchor) return;
+    if (!anchor || !hasContact) return;
 
-    // Only hand off the action after its original button has left the top of the viewport.
+    // A button below the viewport must not activate the sticky contact.
     const update = () => setVisible(anchor.getBoundingClientRect().bottom <= 0);
     update();
-    const observer = new IntersectionObserver(update, { threshold: 0 });
+    const observer = new IntersectionObserver(update, { threshold: [0, 1] });
     observer.observe(anchor);
-    return () => observer.disconnect();
-  }, []);
+    window.addEventListener("scroll", update, { passive: true, capture: true });
+    window.addEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [hasContact]);
 
   return (
     <>
-      <ProfileStickyBar {...props} visible={visible} />
-      <ProfileHero {...props} favoriteAnchorRef={anchorRef} />
+      <ProfileStickyBar profile={props.profile} visible={visible} />
+      <ProfileHero {...props} contactAnchorRef={anchorRef} />
     </>
   );
 };

@@ -144,7 +144,7 @@ export const TestimonialInvitation = ({
     return allowGuest ? (
       <Button asChild variant={variant} className={className}>
         <Link
-          href={`/auth/login?redirect=${encodeURIComponent(`/app/avaliacoes/nova?psychologist_id=${psychologistId}`)}`}
+          href={`/auth/login?redirectTo=${encodeURIComponent(`/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(psychologistId)}`)}`}
         >
           Deixar depoimento
         </Link>

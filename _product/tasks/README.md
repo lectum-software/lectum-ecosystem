@@ -1,3 +1,5 @@
+Em preparacao para producao: [TASK-291 - Header do perfil e contato nos videos](TASK-291-profile-header-and-video-contact.md), ADR-0656. Inclui os ajustes locais de reels e depoimentos das TASK-289/290; publicacao autorizada em 30/10/2026, backend antes do frontend.
+
 Validado localmente em 0.1.737: TASK-32 / ADR-0648 — backend Node 24.22.1, imagem Linux amd64 e observação do corpo HTTP com privacidade. Patch qs 6.16.1 independente em backend/video; checks, quatro builds, cinco auditorias e PostgreSQL efêmero aprovados (limites no ADR). Commit local; sem push/deploy. Não é correção de recusa de risco.
 
 Publicado em 28/10: TASK-32 / ADR-0647, integração 0.1.736 pelo PR #137. Preserva PR #136; diagnóstico sem mudança de cobrança. Check integral, quatro builds, smoke local e smoke produtivo backend/frontend/admin aprovados; evidências no PR #137.
@@ -715,6 +717,7 @@ ou cortesia manual.
 | 288 | [TASK-288 - Feed audio recovery](TASK-288-feed-audio-recovery.md) | Implemented locally; iOS confirmation pending | 286, 287 |
 | 289 | [TASK-289 - Reels sound and action spacing](TASK-289-reels-audio-and-action-spacing.md) | Validated locally; publication authorized | 287, 288 |
 | 290 | [TASK-290 - Depoimentos da comunidade](TASK-290-community-testimonials.md) | Validated locally; pending publication | 289 |
+| 291 | [TASK-291 - Header do perfil e contato nos videos](TASK-291-profile-header-and-video-contact.md) | Implementation and local validation | 290 |
 
 ## Ordem operacional recomendada sem bloqueios
 

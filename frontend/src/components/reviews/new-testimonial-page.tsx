@@ -70,7 +70,7 @@ export const NewTestimonialPage = () => {
             action={
               <Button asChild>
                 <Link
-                  href={`/auth/login?redirect=${encodeURIComponent(`/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(psychologistId)}`)}`}
+                  href={`/auth/login?redirectTo=${encodeURIComponent(`/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(psychologistId)}`)}`}
                 >
                   Entrar
                 </Link>

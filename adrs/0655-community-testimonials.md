@@ -51,9 +51,13 @@ respondem; uma futura cadencia agrupada exigira decisao de produto separada.
 
 ## Producao e rollout
 
-Sem migration, dependencia ou env nova. Endpoints de edicao, visibilidade,
+Sem migration ou dependencia nova. Endpoints de edicao, visibilidade,
 exclusao de resposta e pendentes sao aditivos. Publicar backend antes do frontend
 para disponibilizar as novas acoes. Admin e Video nao exigem deploy desta task.
+Revisao de rollout em 30/10: TESTIMONIAL_INVITATIONS_ENABLED e opcional e false
+por padrao. O backend nao cria convites enquanto a nova rota frontend estiver
+indisponivel. Ativar explicitamente depois da publicacao do frontend; desativar
+antes de um rollback frontend. Nenhum backfill/campanha retroativa e executado.
 Frontend antigo recebe media zero e nao exibe relatos ocultos pelo profissional.
 Rollback de frontend e possivel; rollback de backend nao desfaz status salvos e
 deve preservar a filtragem somente publicada. Nao executar campanhas/backfills.

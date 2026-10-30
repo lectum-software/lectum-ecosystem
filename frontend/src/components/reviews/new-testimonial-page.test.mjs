@@ -1,9 +1,71 @@
+import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "typescript";
 
+const { buildAuthRouteWithRedirect, resolveAuthRedirect, resolveAuthReturnTo } = await import(
+  "../../utils/auth-redirect.ts"
+);
+
 const source = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
+
+for (const path of ["./testimonials-sheet.tsx", "./new-testimonial-page.tsx"]) {
+  test(`${path} preserves the encoded testimonial destination through login and signup`, () => {
+    const ast = ts.createSourceFile(
+      path,
+      source(path),
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
+    const links = [];
+    const visit = (node) => {
+      if (
+        ts.isJsxAttribute(node) &&
+        node.name.getText(ast) === "href" &&
+        node.initializer &&
+        ts.isJsxExpression(node.initializer) &&
+        node.initializer.expression?.getText(ast).includes("/auth/login?")
+      ) {
+        links.push(node.initializer.expression.getText(ast));
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(ast);
+    assert.equal(links.length, 1);
+    for (const psychologistId of [
+      "0fac59ed-4327-4e29-829b-b6d90da12dad",
+      "profile with spaces & extra=value",
+    ]) {
+      const href = runInNewContext(links[0], { psychologistId, encodeURIComponent });
+      const login = new URL(href, "https://lectum.local");
+      assert.equal(login.pathname, "/auth/login");
+      assert.deepEqual([...login.searchParams.keys()], ["redirectTo"]);
+      const target = resolveAuthReturnTo(
+        login.searchParams.get("redirectTo"),
+        login.searchParams.get("callbackUrl"),
+      );
+      assert.equal(
+        target,
+        `/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(psychologistId)}`,
+      );
+      const destination = new URL(target, login.origin);
+      assert.equal(destination.searchParams.get("psychologist_id"), psychologistId);
+      assert.deepEqual([...destination.searchParams.keys()], ["psychologist_id"]);
+      assert.equal(
+        resolveAuthRedirect({ role: "paciente", confirmed: true }, target, "/psicologos"),
+        target,
+      );
+      const signup = new URL(
+        buildAuthRouteWithRedirect("/auth/profile-selection", target),
+        login.origin,
+      );
+      assert.equal(signup.searchParams.get("redirectTo"), target);
+    }
+  });
+}
 
 test("both creation routes use the new wrapper without importing legacy logic", () => {
   for (const path of [

@@ -49,6 +49,15 @@ Preservar rotas/contratos antigos de forma aditiva, sem renomear tabelas ou remo
 
 ## Pendente de refinamento
 
+### Atualizacao de rollout 0.1.748
+
+Publicacao autorizada em 30/10/2026. A proposta de header/CTA acima foi aprovada
+e implementada na TASK-291. Nas abas, os dois contadores agora usam o mesmo
+estilo simples; o destaque no titulo da secao Depoimentos permanece.
+O rollout adiciona TESTIMONIAL_INVITATIONS_ENABLED, opcional e false por padrao.
+Ativar somente depois do frontend novo publicado; sem campanha retroativa.
+Isso substitui, para esta versao, a anotacao historica de ausencia de env nova.
+
 Cadencia temporal de notificacoes nao foi fixada pelo usuario. Implementacao deve evitar disparos repetidos e registrar a politica escolhida sem disparar campanhas retroativas.
 
 ## Evidencias locais

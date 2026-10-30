@@ -163,6 +163,9 @@ test("profile presentation uses the existing contact identity and profile tracki
   );
   assert.match(profile, /!profile\.read_only && profile\.whatsapp_url/);
   assert.match(profile, /<CommunityWhatsAppCta\s+overVideo/);
+  assert.match(profile, /videoLabelExpanded=\{contactExpanded\}/);
+  assert.match(profile, /useVideoContactReveal\(/);
+  assert.match(profile, /handleContactVideoReady\(video\)/);
   assert.match(profile, /bottomOverlayExpandedOnly/);
   assert.match(profile, /fullscreenVariant="content"/);
   assert.doesNotMatch(profile, /ContentVideoScope|ContentVideoHost|onContentClick=/);
@@ -208,8 +211,8 @@ test("CTA remains within visible mobile bounds with safe areas and controls", {
         const bounds = await page.locator("[data-lectum-video-bottom-overlay]").boundingBox();
         assert.ok(bounds.x >= 24 && bounds.x + bounds.width <= size.width - 24);
         assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= size.height - 34);
-        const gap = size.width >= 640 ? 15 : 11.25;
-        const expectedBottom = controls ? 34 + 11.25 + 67.5 : 34 + gap;
+        assert.equal(bounds.width, size.width - 48, "contact spans the entire safe video width");
+        const expectedBottom = controls ? 34 + 11.25 + 67.5 : 34;
         assert.ok(Math.abs(size.height - bounds.y - bounds.height - expectedBottom) < 1);
         const root = await page.locator("[data-lectum-video-player-root]").boundingBox();
         assert.equal(root.height, size.height, "inline minHeight must not exceed viewport");

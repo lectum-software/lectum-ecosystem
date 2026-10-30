@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, MessageCircle, PencilLine, Share2 } from "lucide-react";
+import { ArrowLeft, PencilLine, Share2 } from "lucide-react";
 import Image from "next/image";
 import { type Ref, useState } from "react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
@@ -19,6 +19,7 @@ import {
 
 import { ExpandableAboutText } from "./about";
 import { ProfileFavoriteButton } from "./profile-favorite-button";
+import { WhatsAppCta } from "./whatsapp-cta";
 
 export const ProfileAvatar = ({
   profile,
@@ -104,7 +105,7 @@ export const ProfileHero = ({
   canEditProfile,
   favoriteDisabledReason,
   favoritePending,
-  favoriteAnchorRef,
+  contactAnchorRef,
   onBack,
   onEditProfile,
   onShareProfile,
@@ -115,7 +116,7 @@ export const ProfileHero = ({
   canEditProfile: boolean;
   favoriteDisabledReason?: string | null;
   favoritePending: boolean;
-  favoriteAnchorRef?: Ref<HTMLDivElement>;
+  contactAnchorRef?: Ref<HTMLDivElement>;
   onBack: () => void;
   onEditProfile: () => void;
   onShareProfile: () => void;
@@ -132,7 +133,7 @@ export const ProfileHero = ({
 
   return (
     <header
-      className="overflow-hidden rounded-b-[28px] border-b border-border bg-surface pb-5 shadow-none dark:border-border dark:bg-surface"
+      className="overflow-hidden bg-surface pb-[18px] shadow-none dark:bg-surface"
       data-profile-hero="true"
     >
       <div className="relative text-primary-foreground">
@@ -172,11 +173,11 @@ export const ProfileHero = ({
         </div>
       </div>
 
-      <div className="relative px-5">
+      <div className="relative px-[18px] max-[359px]:px-[14px] lg:px-8">
         <div className="-mt-8 flex items-start justify-between gap-4">
           <ProfileAvatar profile={profile} />
 
-          <div className="mt-10 shrink-0" ref={favoriteAnchorRef} data-profile-favorite-anchor>
+          <div className="mt-8 shrink-0">
             <ProfileFavoriteButton
               canFavorite={canFavorite}
               favoriteDisabledReason={favoriteDisabledReason}
@@ -203,15 +204,16 @@ export const ProfileHero = ({
           </h1>
 
           <div className="grid gap-1">
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-muted">
+            <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs font-medium text-muted">
               {getPsychologistTitle(profile.gender)}
               <span aria-hidden="true">•</span>
               <span>{formattedCrp}</span>
-              <span aria-hidden="true">•</span>
-              <span className="inline-flex items-center gap-1 text-muted">
-                <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                {profile.rating_count} {profile.rating_count === 1 ? "depoimento" : "depoimentos"}
-              </span>
+              {experienceLabel ? (
+                <>
+                  <span aria-hidden="true">•</span>
+                  <span className="whitespace-nowrap">{experienceLabel}</span>
+                </>
+              ) : null}
             </p>
 
             {profile.available_today ? (
@@ -230,27 +232,28 @@ export const ProfileHero = ({
 
           {shortBio ? (
             <div data-profile-hero-short-bio="headline">
-              <ExpandableAboutText containerClassName="mt-0.5 max-w-2xl" text={shortBio} />
+              <ExpandableAboutText
+                containerClassName="mt-1 max-w-2xl"
+                textClassName="text-[13px] sm:text-[13px]"
+                text={shortBio}
+              />
             </div>
           ) : null}
 
-          {experienceLabel ? (
-            <p className="text-[12.5px] font-semibold leading-5 text-muted dark:text-muted">
-              {experienceLabel}
-            </p>
-          ) : null}
-
           {benefitTags.length > 0 ? (
-            <div className="mt-1.5 flex flex-wrap gap-2" data-profile-benefit-tags="true">
+            <div
+              className="mt-1 flex items-center justify-start gap-2.5 overflow-x-auto text-[11px] font-extrabold text-muted max-[359px]:text-[9px] lg:text-xs"
+              data-profile-benefit-tags="true"
+            >
               {benefitTags.map((tag) => {
                 const Icon = tag.icon;
 
                 return (
                   <span
-                    className="inline-flex min-h-7 max-w-full items-center gap-1.5 rounded-full border border-border bg-transparent px-2.5 py-1 text-[11.5px] font-semibold leading-none text-primary dark:border-primary/35 dark:text-primary"
+                    className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
                     key={tag.label}
                   >
-                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
                     <span className="whitespace-nowrap">{tag.label}</span>
                   </span>
                 );
@@ -258,6 +261,11 @@ export const ProfileHero = ({
             </div>
           ) : null}
         </div>
+        {profile.whatsapp_url && !profile.read_only ? (
+          <div className="mt-[17px]" ref={contactAnchorRef} data-profile-contact-anchor>
+            <WhatsAppCta profile={profile} />
+          </div>
+        ) : null}
       </div>
     </header>
   );

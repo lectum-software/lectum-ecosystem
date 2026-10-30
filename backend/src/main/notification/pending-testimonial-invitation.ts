@@ -9,11 +9,15 @@ export type PendingTestimonialInvitation = {
   replyId: string;
 };
 
+export const isTestimonialInvitationsEnabled = () =>
+  process.env.TESTIMONIAL_INVITATIONS_ENABLED === "true";
+
 // The caller owns the Serializable transaction. The primary key is the concurrency guard.
 export const createPendingTestimonialInvitation = async (
   tx: Prisma.TransactionClient,
   params: PendingTestimonialInvitation,
 ) => {
+  if (!isTestimonialInvitationsEnabled()) return false;
   const id = `testimonial-invite-${createHash("sha256").update(params.patientId).digest("hex").slice(0, 32)}`;
   const patient = await tx.user.findFirst({
     where: { id: params.patientId, role: "paciente", active: true, deleted: false },

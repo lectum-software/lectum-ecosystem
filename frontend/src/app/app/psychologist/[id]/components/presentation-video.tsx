@@ -8,6 +8,7 @@ import type {
 import { documentHasUserAttention } from "@/components/analytics/attention";
 import { useCommunityVideoAutoplay } from "@/components/community/community-feed-video-autoplay";
 import { CommunityWhatsAppCta } from "@/components/community/community-whatsapp-cta";
+import { useVideoContactReveal } from "@/components/community/use-video-contact-reveal";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { useAppSelector } from "@/hooks/redux";
 import { resolvePublicMediaUrl } from "@/utils/media";
@@ -45,6 +46,10 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
   const sessionKeyRef = useRef<string | null>(null);
   const watchedSecondsRef = useRef<Set<number>>(new Set());
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
+  const { handleVideoReady: handleContactVideoReady, expanded: contactExpanded } =
+    useVideoContactReveal(
+      videoSrc && !profile.read_only && profile.whatsapp_url ? `${profile.id}:${videoSrc}` : null,
+    );
   const {
     handleVideoElementReady: handleAutoplayVideoReady,
     onSoundEnabledChange,
@@ -358,10 +363,11 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
 
   const handlePlayerReady = useCallback(
     (video: HTMLVideoElement | null) => {
+      handleContactVideoReady(video);
       handleVideoReady(video);
       handleAutoplayVideoReady(video);
     },
-    [handleAutoplayVideoReady, handleVideoReady],
+    [handleAutoplayVideoReady, handleContactVideoReady, handleVideoReady],
   );
 
   if (!videoSrc) return null;
@@ -378,6 +384,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
               !profile.read_only && profile.whatsapp_url ? (
                 <CommunityWhatsAppCta
                   overVideo
+                  videoLabelExpanded={contactExpanded}
                   psychologist={toPsychologistWhatsAppIdentity(profile)}
                   trackingContext={{
                     pageKind: "psychologist_profile",

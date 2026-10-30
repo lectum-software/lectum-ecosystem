@@ -1,11 +1,24 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { afterEach, beforeEach, test } from "node:test";
 import type { Prisma } from "@/external/generated/prisma/client";
 import { pendingReviewProfessionalsWhere } from "@/modules/api/private/patient/reviews/repositories/pending-review-policy";
-import { createPendingTestimonialInvitation } from "./pending-testimonial-invitation";
+import {
+  createPendingTestimonialInvitation,
+  isTestimonialInvitationsEnabled,
+} from "./pending-testimonial-invitation";
 import { isChannelAllowed } from "./preferences";
 
 const params = { patientId: "patient", actorId: "professional", replyId: "reply" };
+let previousInvitationsEnabled: string | undefined;
+beforeEach(() => {
+  previousInvitationsEnabled = process.env.TESTIMONIAL_INVITATIONS_ENABLED;
+  process.env.TESTIMONIAL_INVITATIONS_ENABLED = "true";
+});
+afterEach(() => {
+  if (previousInvitationsEnabled === undefined) delete process.env.TESTIMONIAL_INVITATIONS_ENABLED;
+  else process.env.TESTIMONIAL_INVITATIONS_ENABLED = previousInvitationsEnabled;
+});
+
 const fixture = (
   options: { patient?: boolean; eligible?: boolean; prefs?: unknown; failDelivery?: boolean } = {},
 ) => {
@@ -49,6 +62,36 @@ const fixture = (
   } as unknown as Prisma.TransactionClient;
   return { tx, rows, deliveries, reads };
 };
+
+test("invitations default off and reject every value except exact true before database access", async () => {
+  const tx = new Proxy({} as Prisma.TransactionClient, {
+    get: () => {
+      throw new Error("Disabled invitations must not access the database");
+    },
+  });
+  for (const value of [undefined, "", "false", "0", "1", "yes", "TRUE", " true ", "invalid"]) {
+    if (value === undefined) delete process.env.TESTIMONIAL_INVITATIONS_ENABLED;
+    else process.env.TESTIMONIAL_INVITATIONS_ENABLED = value;
+    assert.equal(isTestimonialInvitationsEnabled(), false);
+    assert.equal(await createPendingTestimonialInvitation(tx, params), false);
+  }
+});
+
+test("enabling invitations after a disabled reply preserves the first grouped delivery", async () => {
+  const f = fixture();
+  process.env.TESTIMONIAL_INVITATIONS_ENABLED = "false";
+  assert.equal(await createPendingTestimonialInvitation(f.tx, params), false);
+  assert.equal(f.reads.length, 0);
+  assert.equal(f.rows.size, 0);
+  assert.equal(f.deliveries.length, 0);
+
+  process.env.TESTIMONIAL_INVITATIONS_ENABLED = "true";
+  assert.equal(isTestimonialInvitationsEnabled(), true);
+  assert.equal(await createPendingTestimonialInvitation(f.tx, params), true);
+  assert.equal(await createPendingTestimonialInvitation(f.tx, params), false);
+  assert.equal(f.rows.size, 1);
+  assert.equal(f.deliveries.length, 1);
+});
 
 test("one group and one delivery for concurrent replies from multiple professionals", async () => {
   const f = fixture();

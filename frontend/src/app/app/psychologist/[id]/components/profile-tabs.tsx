@@ -14,10 +14,13 @@ export const ProfileTabs = ({
   publicationCount?: number;
   reviewCount: number;
 }) => (
-  <div className="bg-background px-5 pt-3" data-profile-tabs="true">
+  <div
+    className="overflow-x-auto bg-background px-[14px] pt-2 pb-1.5 max-[359px]:px-2 lg:px-8"
+    data-profile-tabs="true"
+  >
     <div
       aria-label="Seções do perfil profissional"
-      className="grid grid-cols-3 items-center gap-1.5 py-1"
+      className="flex w-max min-w-full items-center gap-1"
       role="tablist"
     >
       {tabs.map((tab, index) => {
@@ -29,10 +32,10 @@ export const ProfileTabs = ({
             aria-controls="profile-content"
             aria-selected={active}
             className={cn(
-              "inline-flex h-8 min-h-8 min-w-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-1.5 text-xs font-bold leading-none tracking-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+              "relative isolate inline-flex h-[44px] shrink-0 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-[12px] px-[10px] text-[13px] font-bold leading-5 tracking-normal before:pointer-events-none before:absolute before:inset-x-0 before:inset-y-[6px] before:-z-10 before:rounded-[12px] before:content-[''] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
               active
-                ? "border-border/80 bg-surface text-foreground shadow-lectum-tab dark:border-border/70 dark:shadow-none"
-                : "border-transparent bg-transparent text-muted hover:text-foreground",
+                ? "text-foreground before:bg-surface before:shadow-lectum-tab dark:before:shadow-none"
+                : "text-muted hover:text-foreground",
             )}
             id={`profile-tab-${tab.value}`}
             key={tab.value}
@@ -57,14 +60,10 @@ export const ProfileTabs = ({
             tabIndex={active ? 0 : -1}
             type="button"
           >
-            <span className="whitespace-nowrap text-xs font-bold leading-none">{tab.label}</span>
+            <span>{tab.label}</span>
             {tab.value !== "geral" ? (
               <span
-                className={cn(
-                  "min-w-0 truncate text-xs font-bold leading-none tabular-nums text-primary-strong",
-                  tab.value === "avaliacoes" &&
-                    "inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-primary-soft px-1 font-extrabold text-primary",
-                )}
+                className="text-[11px] font-bold leading-none tabular-nums text-subtle"
                 title={count?.toLocaleString("pt-BR")}
               >
                 {count === undefined ? "…" : count.toLocaleString("pt-BR")}

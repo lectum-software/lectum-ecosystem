@@ -7,6 +7,7 @@ import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { notify } from "./index";
 import {
   createPendingTestimonialInvitation,
+  isTestimonialInvitationsEnabled,
   type PendingTestimonialInvitation,
 } from "./pending-testimonial-invitation";
 import { shouldReceiveNewPostNotification } from "./preferences";
@@ -242,6 +243,7 @@ export const notifyNewCommunityPost = async (params: {
 };
 
 export const notifyPendingTestimonials = async (params: PendingTestimonialInvitation) => {
+  if (!isTestimonialInvitationsEnabled()) return;
   try {
     // One durable group per patient, including after read/soft-delete. Never re-alert on updates.
     const created = await withSerializableTransaction((tx) =>

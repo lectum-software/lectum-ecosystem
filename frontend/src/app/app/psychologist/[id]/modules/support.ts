@@ -131,7 +131,7 @@ export const formatHeroRating = (ratingAvg: number) => {
 export const formatExperienceLabel = (years?: number | null) => {
   if (!years || years <= 0) return null;
 
-  return `${years} ${years === 1 ? "ano" : "anos"} de experiência`;
+  return `${years} ${years === 1 ? "ano" : "anos"} exp.`;
 };
 
 export const getPsychologistTitle = (gender?: string | null) => {
@@ -202,16 +202,16 @@ export const buildBenefitTags = (profile: DirectoryPsychologistProfile) => {
     label: string;
   }> = [];
 
-  if (profile.accepts_insurance) {
-    tags.push({ icon: ShieldCheck, label: "Aceita convênios" });
-  }
-
   if (profile.social_value) {
     tags.push({ icon: HeartHandshake, label: "Valor social" });
   }
 
   if (profile.discount_first_session) {
     tags.push({ icon: BadgePercent, label: "Desconto 1ª sessão" });
+  }
+
+  if (profile.accepts_insurance) {
+    tags.push({ icon: ShieldCheck, label: "Aceita convênios" });
   }
 
   return tags;

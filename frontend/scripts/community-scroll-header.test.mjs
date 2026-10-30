@@ -69,6 +69,7 @@ for (const following of [false, true]) {
       assert.match(html, new RegExp(`aria-busy="${membershipPending}"`));
       assert.equal(html.includes('disabled=""'), membershipPending);
       assert.match(html, following ? /Seguindo comunidade. Deixar de seguir/ : /Seguir comunidade/);
+      assert.doesNotMatch(html, /data-profile-whatsapp-cta|>WhatsApp<\/span>/);
     });
   }
 }
