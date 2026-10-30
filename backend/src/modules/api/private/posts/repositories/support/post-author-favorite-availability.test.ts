@@ -25,6 +25,9 @@ const professionalAuthor = ({
   name: "Tulio Rezende",
   psychologist_profile: {
     cfp_verified_at: new Date("2026-01-01T00:00:00.000Z"),
+    crp_registration_date: null,
+    show_experience_tag: false,
+    updatedAt: new Date("2026-08-14T12:00:00Z"),
     crp: "06/123456",
     crp_status: "verificado",
     deleted: false,
@@ -32,7 +35,14 @@ const professionalAuthor = ({
     professional_first_name: "Tulio",
     professional_last_name: "Rezende",
     published: true,
-    subscriptions: [{ id: "subscription", source: "admin_grant" }],
+    subscriptions: [
+      {
+        id: "subscription",
+        source: "admin_grant",
+        createdAt: new Date("2026-08-13T12:00:00Z"),
+        grant_started_at: null,
+      },
+    ],
     video_url: "/public/files/profile/video.mp4",
     whatsapp: null,
     ...profile,

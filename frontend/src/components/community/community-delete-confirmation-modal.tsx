@@ -1,8 +1,9 @@
 "use client";
 
 import { Loader2, Trash2, X } from "lucide-react";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 
@@ -29,17 +30,22 @@ export const CommunityDeleteConfirmationModal = ({
   pending,
   title,
 }: CommunityDeleteConfirmationModalProps) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const portalHost = useModalPortalHost(open, overlayRef);
   useEffect(() => {
-    if (!open) return;
+    if (!open || portalHost) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (!pending) onClose();
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
 
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, open]);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [onClose, open, pending, portalHost]);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -48,8 +54,16 @@ export const CommunityDeleteConfirmationModal = ({
       aria-labelledby="community-delete-confirmation-title"
       aria-modal="true"
       className="fixed inset-0 isolate z-[1000] grid place-items-center overflow-y-auto bg-foreground/55 px-4 py-6 text-foreground backdrop-blur-md dark:bg-background/75"
+      ref={overlayRef}
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (!pending) onClose();
+      }}
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (!pending && event.target === event.currentTarget) onClose();
       }}
       role="dialog"
     >
@@ -110,6 +124,6 @@ export const CommunityDeleteConfirmationModal = ({
         </div>
       </section>
     </div>,
-    document.body,
+    portalHost ?? document.body,
   );
 };

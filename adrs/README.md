@@ -719,3 +719,4 @@ Formato recomendado:
 - [ADR-0655 — Depoimentos da comunidade sem media publica](0655-community-testimonials.md)
 - [ADR-0656 — Header compacto e CTA integral nos videos](0656-profile-header-and-video-contact.md)
 - [ADR-0657 — Consistencia visual do perfil com Lectum](0657-profile-visual-consistency.md)
+- [ADR-0658 — Controles reais e comentarios inline nos reels](0658-reels-inline-controls.md)

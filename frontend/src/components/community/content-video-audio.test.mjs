@@ -44,6 +44,17 @@ const modules = {
   "./content-video-interaction-refresh":
     "exports.refreshContentVideoInteraction = async () => ({});",
   "./content-video-comments-sheet": "exports.ContentVideoCommentsSheet = () => null;",
+  "./content-video-header": source("./content-video-header.tsx"),
+  "./content-video-reading-text": source("./content-video-reading-text.tsx"),
+  "./content-video-inline-composer": `exports.ContentVideoInlineComposer = props => {
+    window.setComposerBusy = busy => require('react-dom').flushSync(() => {
+      props.onBusyChange(busy);
+      props.onStateChange({busy, hasDraft:busy, submitting:false});
+    });
+    return null;
+  };`,
+  "@/app/app/community/[slug]/post/[id]/modules/reply-support":
+    "exports.confirmDiscardReplyDraft = () => true;",
   "./feed-favorite-button": "exports.FeedFavoriteButton = () => null;",
   "./content-video-author": "exports.ContentVideoAuthor = () => null;",
   "@/components/psychologists/psychologist-whatsapp-redirect-button":
@@ -54,6 +65,8 @@ const modules = {
   "next/link":
     "exports.default = ({children}) => require('react').createElement('span', null, children);",
   "./content-video-viewer.module.css":
+    "exports.default = new Proxy({}, { get: (_, name) => name });",
+  "./content-video-controls.module.css":
     "exports.default = new Proxy({}, { get: (_, name) => name });",
   "@/components/ui/vertical-video-player": `
     const React = require('react');
@@ -112,9 +125,10 @@ const harness = `
   };
   const item = {id:'v',post_id:'p',media_url:'/video',content:'caption',title:'title',
     author:{id:'a',name:'Author'},community:{slug:'c'},upvotes_count:0,replies_count:0,saved:false};
-  let root; let active = true;
+  let root; let active = true; let creating = false;
   const render = () => flushSync(() => root.render(React.createElement(ContentVideoSlide, {
     item,active,initialTime:0,changedDiscussion:false,closeRef:{current:null},
+    createPostOpen:creating,onCreatePost:()=>{},
     onNext:()=>{},onPrevious:()=>{},onClose:()=>{},onInteraction:()=>{},onPanelChange:()=>{},onSeekingChange:()=>{}
   })));
   window.mount = (enabled, initialActive = true) => {
@@ -122,6 +136,7 @@ const harness = `
     root = createRoot(document.getElementById('root')); render();
   };
   window.activate = value => {active = value; render();};
+  window.openCreate = value => {creating = value; render();};
   window.chooseSound = value => flushSync(() => sound.setVideoSoundEnabledByUser(value));
   window.mediaEvent = name => flushSync(() => document.querySelector('video').dispatchEvent(new Event(name)));
   window.surface = () => flushSync(() => document.querySelector('[data-surface]').click());
@@ -155,6 +170,20 @@ describe("reels audio with the actual mounted slide", {
     assert.deepEqual(errors, []);
   });
   const state = () => page.evaluate(() => snapshot());
+
+  test("editing and creating prevent late media events from restarting playback", async () => {
+    await page.evaluate(() => mount(true));
+    await page.waitForFunction(() => !snapshot().paused);
+    await page.evaluate(() => setComposerBusy(true));
+    await page.evaluate(() => mediaEvent("loadedmetadata"));
+    assert.equal((await state()).paused, true);
+    await page.evaluate(() => {
+      setComposerBusy(false);
+      openCreate(true);
+      mediaEvent("canplay");
+    });
+    assert.equal((await state()).paused, true);
+  });
 
   for (const error of ["AbortError", "NotSupportedError"]) {
     test(`${error} during source attachment never revokes sound`, async () => {

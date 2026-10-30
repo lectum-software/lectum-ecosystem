@@ -2,10 +2,12 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { useExpandedVideoViewport } from "@/components/ui/vertical-video-player-content-expansion";
 import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { useModalScrollLock } from "@/hooks/use-modal-scroll-lock";
 import { type ContentVideoSourceEntry, useContentVideoSource } from "./content-video-context";
+import { ContentVideoCreatePost } from "./content-video-create-post";
 import { ContentVideoSlide } from "./content-video-slide";
 import styles from "./content-video-viewer.module.css";
 import { contentVideoKey, useContentVideoQueue } from "./use-content-video-queue";
@@ -23,6 +25,8 @@ export const ContentVideoViewer = ({
   const source = useContentVideoSource();
   const [panelOpen, setPanelOpen] = useState(false);
   const [seeking, setSeeking] = useState(false);
+  const [createPostOpen, setCreatePostOpen] = useState(false);
+  const conversion = useProgressiveConversion();
   const queue = useContentVideoQueue(initial, source);
   const root = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
@@ -31,7 +35,7 @@ export const ContentVideoViewer = ({
   const { feedRef, onScroll, scrollTo } = useContentVideoScroll({
     index: queue.index,
     count: Math.max(1, queue.items.length + (queue.ended ? 0 : 1)),
-    locked: panelOpen || seeking,
+    locked: panelOpen || seeking || createPostOpen,
     onSelect: queue.select,
   });
   const next = () => scrollTo(queue.index + 1);
@@ -85,7 +89,13 @@ export const ContentVideoViewer = ({
       }
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => {
+        if (createPostOpen) return;
         if (event.defaultPrevented || !root.current?.contains(event.target as Node)) return;
+        if (
+          event.key !== "Tab" &&
+          (event.target as HTMLElement).closest("textarea,[contenteditable],select")
+        )
+          return;
         if (!panelOpen && !seeking && !(event.target instanceof HTMLInputElement)) {
           if (event.key === "ArrowDown") {
             event.preventDefault();
@@ -97,12 +107,12 @@ export const ContentVideoViewer = ({
         }
         if (event.key === "Escape") {
           event.preventDefault();
-          onClose();
+          closeRef.current?.click();
         }
         if (event.key !== "Tab") return;
         const nodes = Array.from(
           root.current.querySelectorAll<HTMLElement>(
-            'button:not(:disabled),a[href],input:not(:disabled),[tabindex="0"]',
+            'button:not(:disabled),a[href],input:not(:disabled),textarea:not(:disabled),select:not(:disabled),[contenteditable],[tabindex="0"]',
           ),
         ).filter((node) => !node.closest("[inert]") && node.getClientRects().length > 0);
         const first = nodes[0];
@@ -124,7 +134,8 @@ export const ContentVideoViewer = ({
         ref={feedRef}
         className={styles.feed}
         onScroll={onScroll}
-        data-locked={panelOpen || seeking || undefined}
+        data-locked={panelOpen || seeking || createPostOpen || undefined}
+        inert={createPostOpen}
       >
         {queue.items.map((video, index) => (
           <div
@@ -143,6 +154,19 @@ export const ContentVideoViewer = ({
                 onNext={next}
                 onPrevious={previous}
                 onClose={onClose}
+                createPostOpen={createPostOpen}
+                onCreatePost={() => {
+                  if (!conversion.isAuthenticated) {
+                    conversion.requestConversion("trigger_comentar", {
+                      intent: {
+                        type: "create_post",
+                        returnTo: `/comunidades/${encodeURIComponent(video.community.slug)}/publicacao/nova`,
+                      },
+                    });
+                    return;
+                  }
+                  setCreatePostOpen(true);
+                }}
                 closeRef={closeRef}
                 onInteraction={(patch) => queue.updateItem(contentVideoKey(video), patch)}
                 onPanelChange={setPanelOpen}
@@ -189,11 +213,11 @@ export const ContentVideoViewer = ({
           </button>
         </div>
       ) : null}
-      <div className={styles.navigation}>
+      <div className={styles.navigation} inert={createPostOpen}>
         <button
           type="button"
           aria-label="Vídeo anterior"
-          disabled={panelOpen || seeking || queue.index === 0}
+          disabled={panelOpen || seeking || createPostOpen || queue.index === 0}
           onClick={previous}
         >
           <ArrowUp className="h-7 w-7" aria-hidden="true" strokeWidth={2.3} />
@@ -201,12 +225,31 @@ export const ContentVideoViewer = ({
         <button
           type="button"
           aria-label="Próximo vídeo"
-          disabled={panelOpen || seeking || (queue.ended && queue.index >= queue.items.length - 1)}
+          disabled={
+            panelOpen ||
+            seeking ||
+            createPostOpen ||
+            (queue.ended && queue.index >= queue.items.length - 1)
+          }
           onClick={next}
         >
           <ArrowDown className="h-7 w-7" aria-hidden="true" strokeWidth={2.3} />
         </button>
       </div>
+      {createPostOpen ? (
+        <ContentVideoCreatePost
+          onClose={() => {
+            setCreatePostOpen(false);
+            requestAnimationFrame(() =>
+              root.current
+                ?.querySelector<HTMLButtonElement>(
+                  '[data-reels-active="true"] [data-reels-create-post]',
+                )
+                ?.focus(),
+            );
+          }}
+        />
+      ) : null}
     </div>,
     document.body,
   );

@@ -1,4 +1,5 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import { publicProfessionalExperience } from "@/utils/professional-experience-tag";
 import { isProfessionalFavoriteAvailable } from "@/utils/professional-favorite-availability";
 import {
   buildProfessionalFullDisplayName,
@@ -135,6 +136,10 @@ export const toAuthorResponse = (
         : displayName,
     avatar: shouldHideIdentity ? null : author.avatar,
     favorite_available: isAvailableProfessional,
+    ...publicProfessionalExperience(
+      profile,
+      isAvailableProfessional && isProfessionalVerified(profile),
+    ),
     role: author.role,
     type_label: isDeletedAuthor
       ? isPsychologist

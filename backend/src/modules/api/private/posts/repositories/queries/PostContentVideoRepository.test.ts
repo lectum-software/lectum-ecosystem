@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
+import { crpExperienceYears } from "@/utils/professional-experience";
 import type { IPostContentVideosDTO } from "../../DTOs/IPostContentVideoDTO";
 import type { AuthorResult, PostResult, ReplyBaseResult } from "../support/post-response";
 import type * as Repository from "./PostContentVideoRepository";
@@ -27,9 +28,19 @@ const author: AuthorResult = {
     crp: "06/123456",
     crp_status: "aprovado",
     cfp_verified_at: null,
+    crp_registration_date: new Date("2012-01-01T12:00:00Z"),
+    show_experience_tag: true,
+    updatedAt: new Date("2026-08-14T12:00:00Z"),
     whatsapp: null,
     video_url: "https://media.example/presentation.mp4",
-    subscriptions: [{ id: "subscription", source: "admin_grant" }],
+    subscriptions: [
+      {
+        id: "subscription",
+        source: "admin_grant",
+        createdAt: new Date("2026-08-13T12:00:00Z"),
+        grant_started_at: null,
+      },
+    ],
   },
 };
 const now = new Date("2026-10-28T10:00:00Z");
@@ -91,27 +102,30 @@ const harness = (
     eligible?: string[];
     assets?: Array<{ id: string; owner_id: string; context_id: string; purpose: string }>;
     anonymous?: boolean;
+    author?: AuthorResult;
   } = {},
 ) => {
   const calls: Array<{ model: string; query: Query }> = [];
-  const rows = options.replies ?? [
-    reply("root"),
-    reply("deep", {
-      parent_reply_id: "root",
-      parent_reply: {
-        id: "root",
-        content: "Full parent ".repeat(700),
-        title: "Parent",
-        deleted: false,
-      },
-    }),
-  ];
+  const rows =
+    options.replies ??
+    [
+      reply("root"),
+      reply("deep", {
+        parent_reply_id: "root",
+        parent_reply: {
+          id: "root",
+          content: "Full parent ".repeat(700),
+          title: "Parent",
+          deleted: false,
+        },
+      }),
+    ].map((row) => (options.author ? { ...row, author: options.author } : row));
   const capture = (model: string, query: Query) => calls.push({ model, query });
   const client = {
     community_post: {
       findFirst: async (q: Query) => {
         capture("post", q);
-        return options.missing ? null : post;
+        return options.missing ? null : options.author ? { ...post, author: options.author } : post;
       },
     },
     post_reply: {
@@ -181,6 +195,47 @@ test("published/active community gate fails closed before loading discussion", a
     status: "publicado",
     community: { active: true, deleted: false },
   });
+});
+
+test("initial and focused videos carry public experience without per-author queries", async () => {
+  for (const focusReplyId of [undefined, "deep"]) {
+    const { calls, list } = harness({ anonymous: true });
+    const result = await list({ focusReplyId });
+    assert.ok(result?.data.length);
+    for (const item of result.data) {
+      assert.equal(item.author.show_experience_tag, true);
+      assert.equal(
+        item.author.formation_years,
+        crpExperienceYears(author.psychologist_profile!.crp_registration_date),
+      );
+      assert.equal(item.author.type_label, "Psicóloga");
+    }
+    assert.equal(calls.filter((call) => call.model === "authors").length, 1);
+    for (const call of calls.filter((call) => call.query.select?.author)) {
+      const selection = call.query.select!.author as {
+        select: { psychologist_profile: { select: Record<string, unknown> } };
+      };
+      assert.equal(selection.select.psychologist_profile.select.crp_registration_date, true);
+      assert.equal(selection.select.psychologist_profile.select.show_experience_tag, true);
+      assert.equal(selection.select.psychologist_profile.select.updatedAt, true);
+    }
+  }
+});
+
+test("hidden experience is absent from every content-video author payload", async () => {
+  const hiddenAuthor = {
+    ...author,
+    psychologist_profile: { ...author.psychologist_profile!, show_experience_tag: false },
+  };
+  for (const anonymous of [true, false]) {
+    const { list } = harness({ author: hiddenAuthor, anonymous });
+    const result = await list();
+    assert.ok(result?.data.length);
+    for (const item of result.data) {
+      assert.equal(item.author.show_experience_tag, false);
+      assert.equal(item.author.formation_years, null);
+    }
+  }
 });
 
 test("returns original then all depths with full parent context and viewer state", async () => {

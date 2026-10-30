@@ -41,6 +41,8 @@
   }
 }
 .stage {
+  display: flex;
+  flex-direction: column;
   position: relative;
   width: 100%;
   max-width: 520px;
@@ -51,7 +53,7 @@
   border: 0;
   background: var(--lectum-media-background);
   isolation: isolate;
-  --bottom: env(safe-area-inset-bottom, 0px);
+  --bottom: 0px;
   --info-bottom: calc(var(--bottom) + 22px);
 }
 .player {
@@ -80,14 +82,15 @@
   position: absolute;
   top: max(16px, env(safe-area-inset-top));
   left: 16px;
-  right: 14px;
+  right: 16px;
   z-index: 5;
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 0;
 }
 .contextButton {
+  justify-content: center;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -120,22 +123,6 @@
   .contextChanged {
     animation: none;
   }
-}
-.close {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  margin-left: auto;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--lectum-media-background) 40%, transparent);
-  border: 1px solid color-mix(in srgb, var(--lectum-media-foreground) 21%, transparent);
-  color: var(--lectum-media-foreground);
-}
-.close svg {
-  width: 18px;
-  height: 18px;
 }
 .rail {
   position: absolute;
@@ -523,6 +510,10 @@
   }
 }
 @media (max-width: 359px) {
+  .top {
+    left: 12px;
+    right: 12px;
+  }
   .rail {
     right: 12px;
     gap: 2px;
@@ -651,7 +642,7 @@
   .identity {
     right: 20px;
   }
-  .slide[aria-hidden="true"] .stage > :not(.player),
+  .slide[aria-hidden="true"] .stage > div > :not(.player),
   .slide[aria-hidden="true"] > .status {
     visibility: hidden;
     pointer-events: none;

@@ -48,6 +48,7 @@ test("tree overlays use the modal host and consume Escape before the native shee
     "../components/community/reply-owner-action-menu.tsx",
     "../components/community/lectum-share-download-dialog.tsx",
     "../components/community/community-media-upgrade-modal.tsx",
+    "../components/community/community-delete-confirmation-modal.tsx",
     "../components/conversion/progressive-conversion-prompt.tsx",
   ]) {
     const source = readFileSync(new URL(path, import.meta.url), "utf8");
@@ -57,4 +58,22 @@ test("tree overlays use the modal host and consume Escape before the native shee
     assert.match(source, /event\.preventDefault\(\)/, path);
     assert.match(source, /event\.stopPropagation\(\)/, path);
   }
+});
+
+test("delete confirmation keeps focus and Escape in the native host and blocks pending dismissal", () => {
+  const source = readFileSync(
+    new URL("../components/community/community-delete-confirmation-modal.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /useModalPortalHost\(open, overlayRef\)/);
+  assert.match(source, /portalHost \?\? document.body/);
+  assert.match(source, /ref=\{overlayRef\}/);
+  assert.match(source, /tabIndex=\{-1\}/);
+  assert.match(source, /if \(!open \|\| portalHost\) return/);
+  assert.match(
+    source,
+    /event.preventDefault\(\);\s*event.stopPropagation\(\);\s*if \(!pending\) onClose\(\)/,
+  );
+  assert.match(source, /if \(!pending && event.target === event.currentTarget\) onClose\(\)/);
+  assert.match(source, /removeEventListener\("keydown", handleKeyDown, true\)/);
 });

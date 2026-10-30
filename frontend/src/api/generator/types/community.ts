@@ -77,6 +77,8 @@ export type CommunityAuthor = {
   role: string | null;
   favorite_available?: boolean;
   type_label: string;
+  formation_years?: number | null;
+  show_experience_tag?: boolean;
   anonymous?: boolean | null;
   crp: string | null;
   verified: boolean;

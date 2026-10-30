@@ -1,4 +1,4 @@
-Validada localmente: [TASK-292 - Refinamento visual do perfil](TASK-292-profile-visual-refinement.md), ADR-0657. Sem push ou deploy nesta rodada.
+Validada localmente em 0.1.753: [TASK-293 - Controles e comentarios nos reels](TASK-293-reels-controls.md), ADR-0658. Checks das quatro aplicacoes, builds frontend/backend e 11 cenarios reais aprovados. Publicacao autorizada; promocao e deploy manual pendentes.
 
 Validado localmente em 0.1.737: TASK-32 / ADR-0648 — backend Node 24.22.1, imagem Linux amd64 e observação do corpo HTTP com privacidade. Patch qs 6.16.1 independente em backend/video; checks, quatro builds, cinco auditorias e PostgreSQL efêmero aprovados (limites no ADR). Commit local; sem push/deploy. Não é correção de recusa de risco.
 
@@ -719,6 +719,7 @@ ou cortesia manual.
 | 290 | [TASK-290 - Depoimentos da comunidade](TASK-290-community-testimonials.md) | Validated locally; pending publication | 289 |
 | 291 | [TASK-291 - Header do perfil e contato nos videos](TASK-291-profile-header-and-video-contact.md) | Implementation and local validation | 290 |
 | 292 | [TASK-292 - Refinamento visual do perfil](TASK-292-profile-visual-refinement.md) | Implementation and local validation | 291 |
+| 293 | [TASK-293 - Controles e comentarios nos reels](TASK-293-reels-controls.md) | Implementation and local validation | 292 |
 
 ## Ordem operacional recomendada sem bloqueios
 

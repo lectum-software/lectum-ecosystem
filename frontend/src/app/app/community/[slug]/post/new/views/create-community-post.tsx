@@ -39,14 +39,17 @@ import {
 import { AnonymousPostSwitch } from "./anonymous-post-switch";
 import { ProfileUpdateConfirmation } from "./profile-update-confirmation";
 
-export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPostLogicProps) => {
+export const CreateCommunityPostLogic = ({
+  onCloseComplete,
+  scrollManagedExternally = false,
+}: CreateCommunityPostLogicProps) => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const touchScrollStateRef = useRef<CreatePostModalTouchScrollState>({
     startX: 0,
     startY: 0,
     target: null,
   });
-  const controller = useCreateCommunityPostController({ onCloseComplete });
+  const controller = useCreateCommunityPostController({ onCloseComplete, scrollManagedExternally });
   const {
     clearCorrectedFormErrorsSoon,
     cancelActiveVideoUpload,
@@ -411,7 +414,6 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
         onClick={() => {
           if (!mediaPermission.canAttach) {
             setMediaUpgradeModalOpen(true);
-            focusLastEditor();
             return;
           }
 
@@ -618,7 +620,10 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     <>
       {sheet}
       <CommunityMediaUpgradeModal
-        onClose={() => setMediaUpgradeModalOpen(false)}
+        onClose={() => {
+          setMediaUpgradeModalOpen(false);
+          focusLastEditor();
+        }}
         open={mediaUpgradeModalOpen}
       />
       <CommunityDeleteConfirmationModal

@@ -133,6 +133,8 @@ export type CommunityAuthorDTO = {
   role: string | null;
   favorite_available?: boolean;
   type_label: string;
+  formation_years?: number | null;
+  show_experience_tag?: boolean;
   crp: string | null;
   verified: boolean;
   featured_badge: string | null;
