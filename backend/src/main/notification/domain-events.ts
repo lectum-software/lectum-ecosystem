@@ -1,7 +1,14 @@
 import { createHash } from "node:crypto";
 import prisma from "@/infra/database/prisma";
+import { notification as emitNotification } from "@/main/socket/events/notification";
 import { filterPostMutedRecipients } from "@/utils/post-notification-mute";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { notify } from "./index";
+import {
+  createPendingTestimonialInvitation,
+  type PendingTestimonialInvitation,
+} from "./pending-testimonial-invitation";
 import { shouldReceiveNewPostNotification } from "./preferences";
 
 type MessageKey =
@@ -234,6 +241,18 @@ export const notifyNewCommunityPost = async (params: {
   });
 };
 
+export const notifyPendingTestimonials = async (params: PendingTestimonialInvitation) => {
+  try {
+    // One durable group per patient, including after read/soft-delete. Never re-alert on updates.
+    const created = await withSerializableTransaction((tx) =>
+      createPendingTestimonialInvitation(tx, params),
+    );
+    if (created) await emitNotification([params.patientId]);
+  } catch (error) {
+    console.error("[TESTIMONIAL INVITATION]", toSafeErrorLog(error, "TestimonialInvitationError"));
+  }
+};
+
 export const notifyNewPostReply = async (params: {
   actorId: string;
   parentReplyId?: string | null;
@@ -298,6 +317,15 @@ export const notifyNewPostReply = async (params: {
       reply_id: params.replyId,
     },
   });
+
+  // Triggered only by new replies, never by browsing or a retroactive campaign.
+  if (recipientIds.includes(recipientId)) {
+    await notifyPendingTestimonials({
+      actorId: params.actorId,
+      patientId: recipientId,
+      replyId: params.replyId,
+    });
+  }
 };
 
 export const notifyPostVote = async (params: {

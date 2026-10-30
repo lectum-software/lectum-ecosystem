@@ -1,4 +1,10 @@
+import { z } from "zod";
 import { type IValidatorRequest, validator } from "@/utils/validator";
+
+export const testimonialPayload = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().min(1).max(1000),
+});
 
 export const indexSchema: IValidatorRequest = {
   query: [
@@ -44,3 +50,7 @@ export const indexValidator = validator(indexSchema);
 export const eligibilityValidator = validator(eligibilitySchema);
 export const deleteValidator = validator(eligibilitySchema);
 export const storeValidator = validator(storeSchema);
+export const updateValidator = validator({
+  params: eligibilitySchema.params,
+  body: storeSchema.body?.filter((field) => field.key !== "psychologist_id"),
+});

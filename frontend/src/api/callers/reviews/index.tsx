@@ -43,6 +43,7 @@ export const useDeletePatientReview = (onSuccess: () => void) => {
         }),
         queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() }),
         queryClient.invalidateQueries({ queryKey: keys.psychologistReviews.root() }),
+        queryClient.invalidateQueries({ queryKey: ["testimonial-pending"] }),
       ]);
       onSuccess();
     },

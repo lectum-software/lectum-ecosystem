@@ -1,6 +1,8 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { refreshTestimonialCount } from "@/utils/testimonial-summary";
 import type {
   IPsychologistReviewIndexDTO,
   IPsychologistReviewRespondDTO,
@@ -88,6 +90,7 @@ const toDistribution = (rows: Array<{ rating: number; _count: { rating: number }
 };
 
 const toReviewItem = (item: {
+  status: string;
   id: string;
   rating: number;
   comment: string | null;
@@ -96,6 +99,7 @@ const toReviewItem = (item: {
   createdAt: Date;
   author: { name: string };
 }): PsychologistReviewItem => ({
+  status: item.status,
   id: item.id,
   rating: item.rating,
   comment: item.comment,
@@ -122,7 +126,6 @@ const getSummary = async (
   const [aggregate, distributionRows] = await Promise.all([
     client.professional_review.aggregate({
       where: summaryWhere(psychologistId),
-      _avg: { rating: true },
       _count: { _all: true },
     }),
     client.professional_review.groupBy({
@@ -133,7 +136,7 @@ const getSummary = async (
   ]);
 
   return {
-    rating_avg: Math.round((aggregate._avg.rating || 0) * 100),
+    rating_avg: 0,
     rating_count: aggregate._count._all,
     distribution: toDistribution(distributionRows),
   };
@@ -165,11 +168,17 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
     const periodStart = resolvePeriodStart(data.q.period);
     const where: Prisma.professional_reviewWhereInput = {
       ...summaryWhere(data.auth.id!),
+      status:
+        data.q.visibility === "all"
+          ? undefined
+          : data.q.visibility === "hidden"
+            ? { in: ["oculta_profissional", "oculta"] }
+            : "publicada",
       ...(data.q.rating ? { rating: data.q.rating } : {}),
       ...(periodStart ? { createdAt: { gte: periodStart } } : {}),
     };
 
-    const [items, count, profile, distributionRows] = await Promise.all([
+    const [items, count, totals, distributionRows] = await Promise.all([
       prisma.professional_review.findMany({
         where,
         take: pagination.limit,
@@ -177,6 +186,7 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
+          status: true,
           rating: true,
           comment: true,
           response: true,
@@ -186,10 +196,7 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
         },
       }),
       prisma.professional_review.count({ where }),
-      prisma.psychologist_profile.findFirst({
-        where: { user_id: data.auth.id!, deleted: false },
-        select: { rating_avg: true, rating_count: true },
-      }),
+      getSummary(prisma, data.auth.id!),
       prisma.professional_review.groupBy({
         by: ["rating"],
         where: summaryWhere(data.auth.id!),
@@ -200,12 +207,12 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
     return {
       access: {
         can_receive_reviews: options.canReceiveReviews ?? true,
-        mode: options.canReceiveReviews === false ? "preview" : "full",
+        mode: "full",
       },
       data: items.map(toReviewItem),
       summary: {
-        rating_avg: profile?.rating_avg ?? 0,
-        rating_count: profile?.rating_count ?? 0,
+        rating_avg: 0,
+        rating_count: totals.rating_count,
         distribution: toDistribution(distributionRows),
       },
       page: pagination.page,
@@ -225,7 +232,6 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
           id: data.p.id,
           psychologist_id: data.auth.id!,
           deleted: false,
-          status: "publicada",
         },
         select: { id: true },
       });
@@ -240,6 +246,7 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
         },
         select: {
           id: true,
+          status: true,
           rating: true,
           comment: true,
           response: true,
@@ -265,5 +272,29 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
         summary,
       };
     });
+  }
+
+  async setVisibility(userId: string, reviewId: string, hidden: boolean) {
+    return withSerializableTransaction(async (tx) => {
+      const result = await tx.professional_review.updateMany({
+        where: {
+          id: reviewId,
+          psychologist_id: userId,
+          deleted: false,
+          status: { in: ["publicada", "oculta_profissional"] },
+        },
+        data: { status: hidden ? "oculta_profissional" : "publicada" },
+      });
+      if (!result.count) return null;
+      return { psychologist_id: userId, ...(await refreshTestimonialCount(tx, userId)) };
+    });
+  }
+
+  async removeResponse(userId: string, reviewId: string) {
+    const result = await prisma.professional_review.updateMany({
+      where: { id: reviewId, psychologist_id: userId, deleted: false },
+      data: { response: null, responded_at: null },
+    });
+    return result.count ? { psychologist_id: userId } : null;
   }
 }

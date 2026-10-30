@@ -1,4 +1,4 @@
-import { ProfessionalReviewsLogic } from "@/app/app/professional/reviews/logic";
+import { ProfessionalTestimonials as ProfessionalReviewsLogic } from "@/components/reviews/professional-testimonials";
 
 export default function ProfessionalReviewsPage() {
   return <ProfessionalReviewsLogic />;

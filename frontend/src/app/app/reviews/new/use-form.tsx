@@ -26,7 +26,8 @@ export const useReviewForm = (psychologistId: string) => {
       name: "comment",
       field: "textarea",
       label: "Seu depoimento",
-      placeholder: "Seu depoimento ajudará outros pacientes a encontrarem o profissional ideal",
+      placeholder:
+        "Conte como você se sentiu com este psicólogo, se ele foi respeitoso e acolhedor.",
       inputClassName: "min-h-32 resize-none",
     },
   ];

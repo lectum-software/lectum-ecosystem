@@ -120,7 +120,7 @@ const getPlanDescription = (subscription?: ProfessionalSubscription | null) => {
   }
 
   if (subscription?.plan?.slug === "profissional") {
-    return "Perfil verificado, prioridade na busca, avaliações, analytics e destaque nas comunidades.";
+    return "Perfil verificado, prioridade na busca, depoimentos, analytics e destaque nas comunidades.";
   }
 
   if (subscription?.plan?.slug === "gratuito") {

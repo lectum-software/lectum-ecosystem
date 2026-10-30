@@ -26,6 +26,7 @@ import {
   createSocialVideoPreviewOverlayAction,
 } from "@/components/community/social-video-preview-action";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { TestimonialInvitation } from "@/components/reviews/testimonials-sheet";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
@@ -542,6 +543,12 @@ export const ReplyCard = ({
               reply={reply}
               savePending={saveReplyMutation.isPending}
             />
+            {isProfessional && reply.author.id && hasReplyMedia && reply.media_type === "video" ? (
+              <TestimonialInvitation
+                psychologistId={reply.author.id}
+                className="mt-3 max-w-full rounded-full"
+              />
+            ) : null}
           </div>
 
           {isOwnReply && editModalOpen ? (

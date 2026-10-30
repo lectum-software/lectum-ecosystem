@@ -50,7 +50,7 @@ export const SummaryCard = ({
           <p className="mt-2 text-sm leading-6 text-muted">
             {isCourtesyRenewal
               ? "Cadastre o cartão agora para manter os benefícios profissionais quando a cortesia terminar."
-              : "Assinatura mensal com perfil verificado, prioridade na busca, avaliações, analytics e destaque nas comunidades."}
+              : "Assinatura mensal com perfil verificado, prioridade na busca, depoimentos, analytics e destaque nas comunidades."}
           </p>
         </div>
       </div>

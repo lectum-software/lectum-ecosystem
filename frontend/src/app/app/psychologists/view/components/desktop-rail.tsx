@@ -6,6 +6,7 @@ import {
   getPsychologistWhatsappDisplayName,
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import { TestimonialsButton } from "@/components/reviews/testimonials-sheet";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -278,6 +279,15 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
             <span className="text-[10px] font-bold text-muted">Favoritar</span>
           </div>
 
+          <TestimonialsButton
+            desktop
+            psychologistId={desktopActionPsychologist.id}
+            name={desktopActionDisplayName}
+            count={desktopActionPsychologist.rating_count}
+            disabled={isDesktopActionRailHidden}
+            iconSize={20}
+            className="grid min-h-11 w-[68px] justify-items-center gap-1 text-muted"
+          />
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
             <button
               aria-label={`Compartilhar perfil de ${desktopActionDisplayName}`}

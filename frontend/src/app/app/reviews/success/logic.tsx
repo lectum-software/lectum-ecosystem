@@ -37,7 +37,7 @@ const ReviewSuccessProfessionalAvatar = ({
   name?: string | null;
 }) => {
   const avatarSrc = resolvePublicMediaUrl(avatar ?? null);
-  const displayName = name?.trim() || "profissional avaliado";
+  const displayName = name?.trim() || "psicólogo";
 
   return (
     <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-primary">
@@ -79,7 +79,7 @@ export const ReviewsSuccessLogic = () => {
             <CheckCircle2 className="h-20 w-20" aria-hidden />
           </span>
           <div>
-            <h1 className="text-3xl font-extrabold text-foreground">Avaliação enviada!</h1>
+            <h1 className="text-3xl font-extrabold text-foreground">Depoimento publicado!</h1>
             <p className="mt-4 text-base leading-7 text-muted">
               Obrigado por compartilhar. Seu depoimento valoriza o trabalho do profissional e ajuda
               outros pacientes.
@@ -91,11 +91,11 @@ export const ReviewsSuccessLogic = () => {
               name={professional?.psychologist_name}
             />
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase text-primary">AVALIAÇÃO CONCLUÍDA</p>
+              <p className="text-xs font-bold uppercase text-primary">DEPOIMENTO PUBLICADO</p>
               <p className="mt-1 inline-flex max-w-full items-center gap-1.5 font-semibold text-foreground">
                 <span className="min-w-0 truncate">
                   {professional?.psychologist_name ??
-                    (eligibility.isLoading ? "Carregando profissional" : "Profissional avaliado")}
+                    (eligibility.isLoading ? "Carregando profissional" : "Psicólogo")}
                 </span>
                 {professional?.psychologist_verified ? (
                   <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-4 w-4" />

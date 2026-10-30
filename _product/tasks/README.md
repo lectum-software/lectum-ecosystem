@@ -714,6 +714,7 @@ ou cortesia manual.
 | 287 | [TASK-287 - Content reels parity and scoped comments](TASK-287-content-reels-parity.md) | Implemented locally; visual approval pending | 285, 286 |
 | 288 | [TASK-288 - Feed audio recovery](TASK-288-feed-audio-recovery.md) | Implemented locally; iOS confirmation pending | 286, 287 |
 | 289 | [TASK-289 - Reels sound and action spacing](TASK-289-reels-audio-and-action-spacing.md) | Validated locally; publication authorized | 287, 288 |
+| 290 | [TASK-290 - Depoimentos da comunidade](TASK-290-community-testimonials.md) | Validated locally; pending publication | 289 |
 
 ## Ordem operacional recomendada sem bloqueios
 

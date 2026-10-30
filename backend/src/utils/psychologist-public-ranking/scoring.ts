@@ -20,10 +20,6 @@ export const FAVORITES_SCORE_TARGET = 20;
 
 export const REVIEW_COUNT_SCORE_TARGET = 30;
 
-export const RATING_PRIOR_COUNT = 5;
-
-export const RATING_PRIOR_SCORE = 0.8;
-
 export const RECENCY_WINDOW_DAYS = 90;
 
 export const CONTROLLED_RANDOMIZATION_RANGE = 0.08;
@@ -42,8 +38,8 @@ export const psychologistPublicRankingWeights = {
   video: 0.25,
   whatsapp: 0.25,
   favorites: 0.15,
-  reviewCount: 0.12,
-  weightedRating: 0.12,
+  // Preserve the former total testimonial weight; individual stars are not ranked.
+  reviewCount: 0.24,
   completeness: 0.07,
   recency: 0.04,
 } as const;
@@ -77,6 +73,7 @@ export type VideoRankingStats = {
 };
 
 export type RankingContext = {
+  publicTestimonialCounts: Map<string, number>;
   favoriteCounts: Map<string, number>;
   latestActivityAt: Map<string, Date>;
   now: Date;
@@ -108,7 +105,7 @@ export type PsychologistRankingCandidate = {
   modality: string | null;
   professional_address_city: string | null;
   professional_address_state: string | null;
-  rating_avg: number;
+  rating_avg?: number;
   rating_count: number;
   subscriptions: {
     createdAt?: Date | string | null;
@@ -136,11 +133,11 @@ export type PsychologistRankingComponents = {
   recency: number;
   review_count: number;
   video: number;
-  weighted_rating: number;
   whatsapp: number;
 };
 
 export type PsychologistRanking = {
+  publicTestimonialCount: number;
   baseScore: number;
   components: PsychologistRankingComponents;
   isProfessionalColdStart: boolean;
@@ -259,17 +256,6 @@ export const calculateWhatsappConversionScore = (clicks: number, qualifiedViews:
   const numerator = clicks + WHATSAPP_CTR_SMOOTHING_CLICKS;
 
   return clampScore(numerator / denominator);
-};
-
-export const calculateWeightedRatingScore = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0 || ratingAvg <= 0) return 0;
-
-  const normalizedRating = clampScore(ratingAvg / 500);
-
-  return clampScore(
-    (normalizedRating * ratingCount + RATING_PRIOR_SCORE * RATING_PRIOR_COUNT) /
-      (ratingCount + RATING_PRIOR_COUNT),
-  );
 };
 
 export const calculateCompletenessScore = (candidate: PsychologistRankingCandidate) => {

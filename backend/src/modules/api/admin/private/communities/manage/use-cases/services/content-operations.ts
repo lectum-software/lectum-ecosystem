@@ -415,7 +415,7 @@ export const listRanking = async (data: IAdminCommunityRankingDTO): Promise<Reso
           id: item.member.user.id,
           name,
           profile_url: `/psicologos/${item.member.user.id}`,
-          rating_avg: Number(profile?.rating_avg ?? 0),
+          rating_avg: 0,
           rating_count: Number(profile?.rating_count ?? 0),
           verified: verifiedMentor(item.member),
         },

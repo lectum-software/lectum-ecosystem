@@ -9,6 +9,7 @@ export type PsychologistReviewAuthor = {
 };
 
 export type PsychologistReviewItem = {
+  status: string;
   id: string;
   rating: number;
   comment: string | null;
@@ -44,6 +45,7 @@ export interface IPsychologistReviewIndexDTO {
     page?: number;
     period?: PsychologistReviewQueryPeriod;
     rating?: number;
+    visibility?: "visible" | "hidden" | "all";
   };
   auth: user;
 }

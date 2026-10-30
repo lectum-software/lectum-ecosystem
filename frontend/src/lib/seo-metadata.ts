@@ -534,7 +534,7 @@ export const resolvePsychologistReviewSeoMetadata = async (id?: string): Promise
   const canonical = id
     ? `/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(id)}`
     : "/app/avaliacoes/nova";
-  const title = seo ? `Avalie ${seo.name}` : "Avalie seu psicólogo | Lectum";
+  const title = seo ? `Deixe um depoimento para ${seo.name}` : "Deixar depoimento | Lectum";
   const description =
     seo?.description ?? "Compartilhe sua experiência com seu psicólogo na Lectum.";
   const squareImage =

@@ -15,6 +15,7 @@ import type { PostListPost } from "@/api/generator/types/posts";
 import type { ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { PublicTestimonials as ReviewsTab } from "@/components/reviews/public-testimonials";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
@@ -33,7 +34,6 @@ import { AboutTab } from "./components/about";
 import { ProfileHeader } from "./components/profile-header";
 import { ProfileTabs } from "./components/profile-tabs";
 import { PostsTab } from "./components/publications";
-import { ReviewsTab } from "./components/reviews";
 import { InactivePublicProfileState } from "./components/shared";
 import { WhatsAppCta } from "./components/whatsapp-cta";
 import {
@@ -516,6 +516,8 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                   {activeTab === "avaliacoes" ? (
                     <ReviewsTab
+                      onRetry={() => void profileReviews.refetch()}
+                      readOnly={isReadOnly}
                       showOwnReviewsLink={
                         conversion.isAuthenticated && canEditProfile && !shouldHidePublicReviews
                       }

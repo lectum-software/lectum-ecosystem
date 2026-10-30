@@ -7,10 +7,12 @@ import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
 } from "@/utils/subscription-entitlement";
+import { refreshTestimonialCount } from "@/utils/testimonial-summary";
 import type {
   CreateReviewResponse,
   IReviewIndexDTO,
   IReviewStoreDTO,
+  IReviewUpdateDTO,
   PatientReviewsResponse,
   ReviewEligibilityResponse,
 } from "../DTOs/IReviewDTO";
@@ -27,6 +29,28 @@ const normalizePagination = (query: IReviewIndexDTO["q"] = {}) => {
 };
 
 export class ReviewRepository implements IReviewRepository {
+  async update(data: IReviewUpdateDTO): Promise<CreateReviewResponse | null> {
+    return withSerializableTransaction(async (tx) => {
+      const where = { id: data.p.id, author_id: data.auth.id!, deleted: false };
+      const existing = await tx.professional_review.findFirst({
+        where,
+        select: { psychologist_id: true },
+      });
+      if (!existing) return null;
+      await tx.professional_review.updateMany({
+        where,
+        data: {
+          rating: data.b.rating,
+          comment: data.b.comment.trim(),
+        },
+      });
+      return {
+        review_id: data.p.id,
+        psychologist_id: existing.psychologist_id,
+        ...(await refreshTestimonialCount(tx, existing.psychologist_id)),
+      };
+    });
+  }
   async remove(authorId: string, reviewId: string): Promise<CreateReviewResponse | null> {
     return withSerializableTransaction((tx) => deleteOwnReview(tx, authorId, reviewId));
   }
@@ -190,6 +214,14 @@ export class ReviewRepository implements IReviewRepository {
       };
     }
 
+    if (!psychologist.psychologist_profile?.subscriptions.length) {
+      return { ...base, eligible: false, reason: "professional_plan_required" };
+    }
+    const author = await prisma.user.findFirst({
+      where: { id: authorId, role: "paciente", active: true, deleted: false },
+      select: { id: true },
+    });
+    if (!author) return { ...base, eligible: false, reason: "patient_required" };
     return { ...base, eligible: true, reason: "eligible", contact_request_id: null };
   }
 
@@ -201,6 +233,18 @@ export class ReviewRepository implements IReviewRepository {
     if (!eligible.eligible) return eligible;
 
     return withSerializableTransaction(async (tx) => {
+      const canReceive = await tx.psychologist_profile.findFirst({
+        where: {
+          user_id: psychologistId,
+          deleted: false,
+          published: true,
+          subscriptions: { some: activeProfessionalEntitlementWhere() },
+          user: { active: true, deleted: false, role: "psicologo" },
+        },
+        select: { id: true },
+      });
+      if (!canReceive)
+        return { ...eligible, eligible: false, reason: "professional_plan_required" as const };
       const existing = await tx.professional_review.findUnique({
         where: {
           psychologist_id_author_id: {
@@ -245,25 +289,12 @@ export class ReviewRepository implements IReviewRepository {
             select: { id: true },
           });
 
-      const aggregate = await tx.professional_review.aggregate({
-        where: { psychologist_id: psychologistId, deleted: false, status: "publicada" },
-        _avg: { rating: true },
-        _count: { _all: true },
-      });
-
-      const ratingCount = aggregate._count._all;
-      const ratingAvg = Math.round((aggregate._avg.rating || 0) * 100);
-
-      await tx.psychologist_profile.update({
-        where: { user_id: psychologistId },
-        data: { rating_avg: ratingAvg, rating_count: ratingCount },
-      });
+      const summary = await refreshTestimonialCount(tx, psychologistId);
 
       return {
         review_id: review.id,
         psychologist_id: psychologistId,
-        rating_avg: ratingAvg,
-        rating_count: ratingCount,
+        ...summary,
       };
     });
   }

@@ -59,7 +59,7 @@ export const currentAnalyticsPath = getCurrentAnalyticsPath;
 export const tabs: Array<{ label: string; value: ProfileTab }> = [
   { label: "Sobre", value: "geral" },
   { label: "Publicações", value: "publicacoes" },
-  { label: "Avaliações", value: "avaliacoes" },
+  { label: "Depoimentos", value: "avaliacoes" },
 ];
 
 export const PROFILE_CARD_SURFACE =

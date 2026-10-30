@@ -1,4 +1,5 @@
 import prisma from "@/infra/database/prisma";
+import { visibleTestimonialsWhere } from "@/utils/testimonial-summary";
 
 import {
   calculateVideoScoreWithLearningWindow,
@@ -37,6 +38,7 @@ export const getRankingContext = async (
 
   if (psychologistIds.length === 0) {
     return {
+      publicTestimonialCounts: new Map(),
       favoriteCounts: new Map(),
       latestActivityAt,
       now,
@@ -90,13 +92,7 @@ export const getRankingContext = async (
       }),
       prisma.professional_review.groupBy({
         by: ["psychologist_id"],
-        where: {
-          deleted: false,
-          psychologist_id: {
-            in: psychologistIds,
-          },
-          status: "publicada",
-        },
+        where: visibleTestimonialsWhere({ in: psychologistIds }),
         _count: {
           _all: true,
         },
@@ -213,6 +209,7 @@ export const getRankingContext = async (
   }
 
   return {
+    publicTestimonialCounts: mapGroupCounts(reviewGroups),
     favoriteCounts: mapGroupCounts(favoriteGroups),
     latestActivityAt,
     now,

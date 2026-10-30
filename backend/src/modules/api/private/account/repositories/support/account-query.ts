@@ -1,4 +1,5 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import { visibleTestimonialsWhere } from "@/utils/testimonial-summary";
 
 export const GOOGLE_DELETE_REAUTH_TTL_MS = 10 * 60 * 1000;
 
@@ -32,22 +33,8 @@ export const recalculatePsychologistRating = async (
   tx: Prisma.TransactionClient,
   psychologistId: string,
 ) => {
-  const aggregate = await tx.professional_review.aggregate({
-    where: {
-      psychologist_id: psychologistId,
-      deleted: false,
-      status: "publicada",
-      author: {
-        active: true,
-        deleted: false,
-      },
-    },
-    _avg: {
-      rating: true,
-    },
-    _count: {
-      _all: true,
-    },
+  const count = await tx.professional_review.count({
+    where: visibleTestimonialsWhere(psychologistId),
   });
 
   await tx.psychologist_profile.updateMany({
@@ -56,8 +43,8 @@ export const recalculatePsychologistRating = async (
       deleted: false,
     },
     data: {
-      rating_avg: Math.round((aggregate._avg.rating || 0) * 100),
-      rating_count: aggregate._count._all,
+      rating_avg: 0,
+      rating_count: count,
     },
   });
 };

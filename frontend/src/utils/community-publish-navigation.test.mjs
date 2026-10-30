@@ -171,15 +171,22 @@ test("both profile roles share the publications menu label and its original dest
   assert.doesNotMatch(profile, /Meus posts? e (respostas|comentários)/);
 });
 
-test("psychologist profile menu omits reviews made while patient keeps reviews entry", () => {
+test("both profile roles use Meus depoimentos and professional entry follows Editar perfil", () => {
   const profile = readSource("../app/app/profile/logic.tsx");
   const accountRows = profile.slice(
     profile.indexOf("const accountRows: ProfileRow[] ="),
     profile.indexOf("const communityRows: ProfileRow[] ="),
   );
   assert.doesNotMatch(accountRows, /Avaliações feitas/);
-  assert.match(accountRows, /label: "Minhas Avaliações"/);
-  assert.match(accountRows, /label: "Avaliações"/);
+  assert.equal([...accountRows.matchAll(/label: "Meus depoimentos"/g)].length, 2);
+  assert.ok(
+    accountRows.indexOf('label: "Editar perfil"') <
+      accountRows.indexOf('href: "/app/profissional/avaliacoes"'),
+  );
+  assert.ok(
+    accountRows.indexOf('href: "/app/profissional/avaliacoes"') <
+      accountRows.indexOf('href: "/app/profissional/estatisticas"'),
+  );
 });
 
 test("both profile roles share the publications page header", () => {

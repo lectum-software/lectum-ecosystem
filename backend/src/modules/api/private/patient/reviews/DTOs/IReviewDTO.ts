@@ -1,7 +1,13 @@
 import type { user } from "@/interfaces/objects";
 import type { PaginationResponse } from "@/interfaces/pagination";
 
-export type ReviewEligibilityReason = "eligible" | "not_found" | "already_reviewed" | "own_profile";
+export type ReviewEligibilityReason =
+  | "eligible"
+  | "not_found"
+  | "already_reviewed"
+  | "own_profile"
+  | "professional_plan_required"
+  | "patient_required";
 
 export type PatientReviewItem = {
   id: string;
@@ -61,4 +67,8 @@ export interface IReviewStoreDTO {
 export interface IReviewDeleteDTO {
   p: { id: string };
   auth: user;
+}
+
+export interface IReviewUpdateDTO extends IReviewDeleteDTO {
+  b: { rating: number; comment: string };
 }

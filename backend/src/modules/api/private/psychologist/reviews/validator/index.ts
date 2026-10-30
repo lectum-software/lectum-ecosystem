@@ -23,6 +23,7 @@ export const indexSchema: IValidatorRequest = {
       optional: true,
     },
     { key: "period", coerse: "string", method: "string", max: 8, optional: true },
+    { key: "visibility", coerse: "string", method: "string", max: 8, optional: true },
   ],
 };
 
@@ -33,3 +34,8 @@ export const respondSchema: IValidatorRequest = {
 
 export const indexValidator = validator(indexSchema);
 export const respondValidator = validator(respondSchema);
+export const reviewIdValidator = validator({ params: respondSchema.params });
+export const visibilityValidator = validator({
+  params: respondSchema.params,
+  body: [{ key: "hidden", coerse: "boolean", method: "boolean" }],
+});

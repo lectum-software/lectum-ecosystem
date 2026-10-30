@@ -40,8 +40,6 @@ import {
 
 export const roundScore = (value: number) => Math.round(value * 1000) / 10;
 
-export const ratingAverage = (value: number) => Math.round((value / 100) * 10) / 10;
-
 export const profileActiveDaysUntil = (profileCreatedAt: Date, date: Date) => {
   const createdAt = startOfDate(profileCreatedAt);
   const until = startOfDate(date);
@@ -217,7 +215,7 @@ export const buildItem = (
     published: profile.published,
     ranking_position: ranking?.position ?? null,
     ranking_score: ranking?.score ?? null,
-    rating_avg: ratingAverage(profile.rating_avg),
+    rating_avg: 0,
     rating_count: profile.rating_count,
     social_value: profile.social_value,
     state: profile.professional_address_state,
@@ -289,7 +287,6 @@ export const sortItems = (
     }
 
     if (sort === "rating") {
-      if (right.rating_avg !== left.rating_avg) return right.rating_avg - left.rating_avg;
       if (right.rating_count !== left.rating_count) return right.rating_count - left.rating_count;
     }
 

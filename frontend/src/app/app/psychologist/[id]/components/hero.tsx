@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, PencilLine, Share2, Star } from "lucide-react";
+import { ArrowLeft, MessageCircle, PencilLine, Share2 } from "lucide-react";
 import Image from "next/image";
 import { type Ref, useState } from "react";
 import type { DirectoryPsychologistProfile } from "@/api/generator/types/directory";
@@ -12,7 +12,6 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import {
   buildBenefitTags,
   formatExperienceLabel,
-  formatHeroRating,
   getInitials,
   getPsychologistDisplayName,
   getPsychologistTitle,
@@ -209,9 +208,9 @@ export const ProfileHero = ({
               <span aria-hidden="true">•</span>
               <span>{formattedCrp}</span>
               <span aria-hidden="true">•</span>
-              <span className="inline-flex items-center gap-1 font-extrabold text-warning">
-                <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
-                {formatHeroRating(profile.rating_avg)}
+              <span className="inline-flex items-center gap-1 text-muted">
+                <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                {profile.rating_count} {profile.rating_count === 1 ? "depoimento" : "depoimentos"}
               </span>
             </p>
 

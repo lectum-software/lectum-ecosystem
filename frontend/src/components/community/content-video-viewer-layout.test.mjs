@@ -46,7 +46,7 @@ test("action sizing stays balanced and author controls follow the last name", as
         .favorite{flex:none;white-space:nowrap;font-size:12px;border:0;padding:0}
       </style><div class="test-stage">
         <div class="identity"><div class="author">
-          <a class="name">Alessandra Ianhez de Camargo</a>&#8288;<span class="authorActions"><svg class="badge"></svg><button class="favorite">+ Favoritar</button></span>
+          <a class="name">Alessandra Ianhez de Camargo</a>&NoBreak;<span class="authorActions"><svg class="badge"></svg><button class="favorite">+ Favoritar</button></span>
         </div></div>
         <div class="rail">
           <button class="action" aria-pressed="false">${icons[0]}<span>1000</span></button>

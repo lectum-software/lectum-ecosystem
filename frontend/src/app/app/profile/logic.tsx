@@ -15,7 +15,6 @@ import {
   MessagesSquare,
   Moon,
   Smartphone,
-  Star,
   TriangleAlert,
   UsersRound,
 } from "lucide-react";
@@ -167,8 +166,8 @@ const ProfessionalUpgradeCard = () => (
           Upgrade para o Plano Profissional
         </span>
         <span className="mt-1 block text-xs leading-5 text-muted">
-          Receba avaliações, aumente sua visibilidade nas buscas e desbloqueie recursos exclusivos
-          para fortalecer sua presença na Lectum.
+          Receba depoimentos da comunidade, aumente sua visibilidade nas buscas e desbloqueie
+          recursos exclusivos para fortalecer sua presença na Lectum.
         </span>
       </span>
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface/90 text-primary shadow-sm transition group-hover:translate-x-0.5 group-hover:bg-surface dark:bg-surface">
@@ -262,15 +261,15 @@ export const ProfileLogic = () => {
     },
     ...(isPsychologist
       ? [
+          { href: "/app/profissional/avaliacoes", icon: MessagesSquare, label: "Meus depoimentos" },
           { href: "/app/profissional/estatisticas", icon: BarChart3, label: "Meus Analytics" },
-          { href: "/app/profissional/avaliacoes", icon: Star, label: "Minhas Avaliações" },
           {
             href: "/app/profissional/assinatura",
             icon: BadgeCheck,
             label: "Minha Assinatura",
           },
         ]
-      : [{ href: "/app/avaliacoes", icon: Star, label: "Avaliações" }]),
+      : [{ href: "/app/avaliacoes", icon: MessagesSquare, label: "Meus depoimentos" }]),
     { href: "/app/configuracoes/conta", icon: Lock, label: "E-mail e senha" },
     { href: "/app/ajuda", icon: CircleHelp, label: "Ajuda e feedback" },
     {

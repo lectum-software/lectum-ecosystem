@@ -55,7 +55,7 @@ const professionalBenefitGroups: BenefitGroup[] = [
     title: "Mais credibilidade",
     items: [
       "Crie seu perfil profissional com selo de verificado",
-      "Receba avaliações e depoimentos de pacientes",
+      "Receba depoimentos da comunidade",
     ],
   },
   {

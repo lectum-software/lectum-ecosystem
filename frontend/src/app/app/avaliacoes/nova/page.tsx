@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ReviewsNewLogic } from "@/app/app/reviews/new/logic";
+import { NewTestimonialPage as ReviewsNewLogic } from "@/components/reviews/new-testimonial-page";
 import { resolvePsychologistReviewSeoMetadata } from "@/lib/seo-metadata";
 
 export const generateMetadata = async ({

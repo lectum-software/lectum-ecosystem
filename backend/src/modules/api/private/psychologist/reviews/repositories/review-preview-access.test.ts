@@ -13,9 +13,13 @@ test("minhas avaliações mantém dados reais mesmo sem entitlement profissional
   );
   assert.doesNotMatch(serviceSource, /buildPreviewResponse/);
   assert.match(repositorySource, /data: items\.map\(toReviewItem\),/);
-  assert.match(
-    repositorySource,
-    /mode: options\.canReceiveReviews === false \? "preview" : "full",/,
-  );
+  assert.match(repositorySource, /mode: "full",/);
   assert.match(repositorySource, /can_receive_reviews: options\.canReceiveReviews \?\? true,/);
+});
+
+test("downgrade does not prohibit responding or visibility management", () => {
+  const respondSource = serviceSource.slice(serviceSource.indexOf("export const respond ="));
+  assert.doesNotMatch(respondSource, /ensureProfessionalEntitlement/);
+  assert.match(respondSource, /ensurePsychologist\(data\)/);
+  assert.doesNotMatch(repositorySource, /\b_avg:/);
 });
