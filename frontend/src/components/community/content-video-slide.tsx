@@ -9,7 +9,6 @@ import { confirmDiscardReplyDraft } from "@/app/app/community/[slug]/post/[id]/m
 import { useContentVideoWatchTracking } from "@/components/analytics/content-video-watch-tracker";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
-import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { playVideoWithActiveDocument } from "@/lib/video-playback";
@@ -39,6 +38,7 @@ import {
   useContentVideoInteractionSync,
 } from "./content-video-interaction-refresh";
 import { ContentVideoInteractionStatus } from "./content-video-interaction-status";
+import { ContentVideoPlayer } from "./content-video-player";
 import { ReadingText } from "./content-video-reading-text";
 import styles from "./content-video-viewer.module.css";
 import { useContentVideoProgress } from "./use-content-video-progress";
@@ -198,7 +198,7 @@ export const ContentVideoSlide = ({
       },
     });
     if (!eligible()) {
-      video.pause();
+      if (videoRef.current === video) video.pause();
       return;
     }
     if (attempt !== audioAttempt.current || revision !== getVideoSoundPreferenceRevision()) return;
@@ -207,7 +207,7 @@ export const ContentVideoSlide = ({
       video.muted = true;
       setMuted(true);
       await playVideoWithActiveDocument(video);
-      if (!eligible()) video.pause();
+      if (!eligible() && videoRef.current === video) video.pause();
     }
   }, []);
 
@@ -343,19 +343,19 @@ export const ContentVideoSlide = ({
       }}
     >
       <div className={controls.videoViewport}>
-        <VerticalVideoPlayer
+        <ContentVideoPlayer
+          active={active && !unavailable}
+          mediaKey={item.id}
           className={styles.player}
-          controls={false}
-          fit="cover"
           onContentClick={togglePlayback}
-          onSoundEnabledChange={setVideoSoundEnabledByUser}
           onVideoElementReady={ready}
           src={resolvePublicMediaUrl(item.media_url) ?? item.media_url}
           title={item.title || "Vídeo de conteúdo"}
           videoProps={{
             loop: false,
-            onEnded: () => {
+            onEnded: (event) => {
               if (
+                event.currentTarget.ended &&
                 activeRef.current &&
                 !panelRef.current &&
                 !seekingRef.current &&

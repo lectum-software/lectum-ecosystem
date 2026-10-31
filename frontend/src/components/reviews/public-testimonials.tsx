@@ -58,6 +58,7 @@ export const PublicTestimonials = ({
       {isEmpty ? (
         <div data-testimonial-empty>
           <EmptyState
+            className="rounded-[26px]"
             icon={ReviewsIcon}
             title="Ainda não há depoimentos"
             description={
@@ -73,7 +74,10 @@ export const PublicTestimonials = ({
           />
         </div>
       ) : null}
-      <div className="divide-y divide-border bg-surface px-4" data-testimonial-list>
+      <div
+        className="overflow-hidden rounded-[26px] divide-y divide-border bg-surface px-4"
+        data-testimonial-list
+      >
         {reviews.map((review) => (
           <TestimonialCard key={review.id} review={review} professional={professional} />
         ))}

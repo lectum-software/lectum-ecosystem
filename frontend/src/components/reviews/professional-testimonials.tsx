@@ -13,9 +13,11 @@ import {
 } from "@/api/req/psychologist-reviews";
 import { useReviewResponseForm } from "@/app/app/professional/reviews/use-form";
 import { AppPageHeader } from "@/components/ui/app-page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { profileSectionTabStyles as styles } from "@/components/ui/profile-section-tab-styles";
+import { ReviewsIcon } from "@/components/ui/reviews-icon";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -239,9 +241,18 @@ export const ProfessionalTestimonials = () => {
           </InlineAlert>
         ) : null}
         {!query.isLoading && !query.isError && !items.length ? (
-          <p className="py-10 text-center text-muted">Nenhum depoimento nesta lista.</p>
+          <div data-testimonial-empty>
+            <EmptyState
+              className="rounded-[26px]"
+              icon={ReviewsIcon}
+              title="Nenhum depoimento nesta lista."
+            />
+          </div>
         ) : null}
-        <div className="divide-y divide-border bg-surface px-4" data-testimonial-list>
+        <div
+          className="overflow-hidden rounded-[26px] divide-y divide-border bg-surface px-4"
+          data-testimonial-list
+        >
           {items.map((review) => (
             <ManagedTestimonial key={review.id} review={review} professional={professional.data} />
           ))}

@@ -92,6 +92,7 @@ export const PatientTestimonials = () => {
         {!query.isLoading && !query.isError && !items.length ? (
           <div data-testimonial-empty>
             <EmptyState
+              className="rounded-[26px]"
               icon={ReviewsIcon}
               title="Você ainda não publicou depoimentos"
               description="Compartilhe sua experiência com os psicólogos com quem você já interagiu."
@@ -103,7 +104,10 @@ export const PatientTestimonials = () => {
             />
           </div>
         ) : null}
-        <div className="divide-y divide-border bg-surface px-4" data-testimonial-list>
+        <div
+          className="overflow-hidden rounded-[26px] divide-y divide-border bg-surface px-4"
+          data-testimonial-list
+        >
           {items.map((review) => (
             <OwnTestimonial key={review.id} review={review} />
           ))}

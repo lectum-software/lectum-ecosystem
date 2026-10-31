@@ -13,6 +13,7 @@ import {
 } from "./content-video-context";
 import { ContentVideoCreatePost } from "./content-video-create-post";
 import { useContentVideoDiscussionChanges } from "./content-video-interaction-refresh";
+import { ContentVideoPlayerProvider } from "./content-video-player";
 import { ContentVideoSlide } from "./content-video-slide";
 import styles from "./content-video-viewer.module.css";
 import { contentVideoKey, useContentVideoQueue } from "./use-content-video-queue";
@@ -75,203 +76,205 @@ export const ContentVideoViewer = ({
   }, [focusPageKey]);
 
   return createPortal(
-    <div
-      ref={root}
-      className={styles.dialog}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Vídeos de conteúdo"
-      tabIndex={-1}
-      style={
-        {
-          "--viewer-height": viewport ? `${viewport.height}px` : "100dvh",
-          ...(viewport
-            ? {
-                top: viewport.top,
-                left: viewport.left,
-                width: viewport.width,
-                height: viewport.height,
-              }
-            : {}),
-        } as CSSProperties
-      }
-      onClick={(event) => event.stopPropagation()}
-      onKeyDown={(event) => {
-        if (createPostOpen) return;
-        if (event.defaultPrevented || !root.current?.contains(event.target as Node)) return;
-        if (
-          event.key !== "Tab" &&
-          (event.target as HTMLElement).closest("textarea,[contenteditable],select")
-        )
-          return;
-        if (!panelOpen && !seeking && !(event.target instanceof HTMLInputElement)) {
-          if (event.key === "ArrowDown") {
-            event.preventDefault();
-            next();
-          } else if (event.key === "ArrowUp") {
-            event.preventDefault();
-            previous();
-          }
-        }
-        if (event.key === "Escape") {
-          event.preventDefault();
-          closeRef.current?.click();
-        }
-        if (event.key !== "Tab") return;
-        const nodes = Array.from(
-          root.current.querySelectorAll<HTMLElement>(
-            'button:not(:disabled),a[href],input:not(:disabled),textarea:not(:disabled),select:not(:disabled),[contenteditable],[tabindex="0"]',
-          ),
-        ).filter((node) => !node.closest("[inert]") && node.getClientRects().length > 0);
-        const first = nodes[0];
-        const last = nodes.at(-1);
-        if (
-          event.shiftKey &&
-          (document.activeElement === first || document.activeElement === root.current)
-        ) {
-          event.preventDefault();
-          last?.focus();
-        }
-        if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first?.focus();
-        }
-      }}
-    >
+    <ContentVideoPlayerProvider>
       <div
-        ref={feedRef}
-        className={styles.feed}
-        onScroll={onScroll}
-        data-locked={panelOpen || seeking || createPostOpen || undefined}
-        inert={createPostOpen}
+        ref={root}
+        className={styles.dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Vídeos de conteúdo"
+        tabIndex={-1}
+        style={
+          {
+            "--viewer-height": viewport ? `${viewport.height}px` : "100dvh",
+            ...(viewport
+              ? {
+                  top: viewport.top,
+                  left: viewport.left,
+                  width: viewport.width,
+                  height: viewport.height,
+                }
+              : {}),
+          } as CSSProperties
+        }
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => {
+          if (createPostOpen) return;
+          if (event.defaultPrevented || !root.current?.contains(event.target as Node)) return;
+          if (
+            event.key !== "Tab" &&
+            (event.target as HTMLElement).closest("textarea,[contenteditable],select")
+          )
+            return;
+          if (!panelOpen && !seeking && !(event.target instanceof HTMLInputElement)) {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              next();
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              previous();
+            }
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            closeRef.current?.click();
+          }
+          if (event.key !== "Tab") return;
+          const nodes = Array.from(
+            root.current.querySelectorAll<HTMLElement>(
+              'button:not(:disabled),a[href],input:not(:disabled),textarea:not(:disabled),select:not(:disabled),[contenteditable],[tabindex="0"]',
+            ),
+          ).filter((node) => !node.closest("[inert]") && node.getClientRects().length > 0);
+          const first = nodes[0];
+          const last = nodes.at(-1);
+          if (
+            event.shiftKey &&
+            (document.activeElement === first || document.activeElement === root.current)
+          ) {
+            event.preventDefault();
+            last?.focus();
+          }
+          if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }}
       >
-        {queue.items.map((video, index) => (
-          <div
-            key={contentVideoKey(video)}
-            className={styles.slide}
-            data-content-video-slide-index={index}
-            inert={index !== queue.index}
-            aria-hidden={index !== queue.index}
-          >
-            {Math.abs(index - queue.index) <= 1 ? (
-              <ContentVideoSlide
-                item={video}
-                active={index === queue.index}
-                interactionRevision={queue.staleInteractions[contentVideoKey(video)] ?? 0}
-                initialTime={index === 0 ? initialTime : 0}
-                changedDiscussion={index > 0 && queue.items[index - 1]?.post_id !== video.post_id}
-                onNext={next}
-                onPrevious={previous}
-                onClose={onClose}
-                onNavigate={(time) =>
-                  onNavigate({
-                    initial: {
-                      postId: video.post_id,
-                      replyId: video.reply_id,
-                      mediaUrl: video.media_url,
-                    },
-                    initialTime: time,
-                  })
-                }
-                createPostOpen={createPostOpen}
-                onCreatePost={() => {
-                  if (!conversion.isAuthenticated) {
-                    conversion.requestConversion("trigger_comentar", {
-                      intent: {
-                        type: "create_post",
-                        returnTo: `/comunidades/${encodeURIComponent(video.community.slug)}/publicacao/nova`,
+        <div
+          ref={feedRef}
+          className={styles.feed}
+          onScroll={onScroll}
+          data-locked={panelOpen || seeking || createPostOpen || undefined}
+          inert={createPostOpen}
+        >
+          {queue.items.map((video, index) => (
+            <div
+              key={contentVideoKey(video)}
+              className={styles.slide}
+              data-content-video-slide-index={index}
+              inert={index !== queue.index}
+              aria-hidden={index !== queue.index}
+            >
+              {Math.abs(index - queue.index) <= 1 ? (
+                <ContentVideoSlide
+                  item={video}
+                  active={index === queue.index}
+                  interactionRevision={queue.staleInteractions[contentVideoKey(video)] ?? 0}
+                  initialTime={index === 0 ? initialTime : 0}
+                  changedDiscussion={index > 0 && queue.items[index - 1]?.post_id !== video.post_id}
+                  onNext={next}
+                  onPrevious={previous}
+                  onClose={onClose}
+                  onNavigate={(time) =>
+                    onNavigate({
+                      initial: {
+                        postId: video.post_id,
+                        replyId: video.reply_id,
+                        mediaUrl: video.media_url,
                       },
-                    });
-                    return;
+                      initialTime: time,
+                    })
                   }
-                  setCreatePostOpen(true);
-                }}
-                closeRef={closeRef}
-                onInteraction={(patch, revision) =>
-                  queue.updateItem(contentVideoKey(video), patch, revision)
-                }
-                onPanelChange={setPanelOpen}
-                onSeekingChange={setSeeking}
-              />
-            ) : null}
-          </div>
-        ))}
-        {!queue.ended || queue.items.length === 0 ? (
-          <div
-            key={`loading:${queue.items.length}`}
-            className={styles.slide}
-            data-content-video-slide-index={queue.items.length}
-            inert={queue.index !== queue.items.length}
-            aria-hidden={queue.index !== queue.items.length}
-          >
-            <div className={styles.status} role="status">
-              {queue.error ? (
-                <>
-                  {queue.expired
-                    ? "Esta sequência expirou."
-                    : "Não foi possível carregar os vídeos."}
-                  <button type="button" onClick={() => void queue.retry()}>
-                    {queue.expired ? "Reabrir sequência" : "Tentar novamente"}
-                  </button>
-                </>
-              ) : queue.ended ? (
-                "Não há outros vídeos nesta sequência."
-              ) : (
-                "Carregando vídeo..."
-              )}
-              <button type="button" onClick={onClose}>
-                Fechar
-              </button>
+                  createPostOpen={createPostOpen}
+                  onCreatePost={() => {
+                    if (!conversion.isAuthenticated) {
+                      conversion.requestConversion("trigger_comentar", {
+                        intent: {
+                          type: "create_post",
+                          returnTo: `/comunidades/${encodeURIComponent(video.community.slug)}/publicacao/nova`,
+                        },
+                      });
+                      return;
+                    }
+                    setCreatePostOpen(true);
+                  }}
+                  closeRef={closeRef}
+                  onInteraction={(patch, revision) =>
+                    queue.updateItem(contentVideoKey(video), patch, revision)
+                  }
+                  onPanelChange={setPanelOpen}
+                  onSeekingChange={setSeeking}
+                />
+              ) : null}
             </div>
+          ))}
+          {!queue.ended || queue.items.length === 0 ? (
+            <div
+              key={`loading:${queue.items.length}`}
+              className={styles.slide}
+              data-content-video-slide-index={queue.items.length}
+              inert={queue.index !== queue.items.length}
+              aria-hidden={queue.index !== queue.items.length}
+            >
+              <div className={styles.status} role="status">
+                {queue.error ? (
+                  <>
+                    {queue.expired
+                      ? "Esta sequência expirou."
+                      : "Não foi possível carregar os vídeos."}
+                    <button type="button" onClick={() => void queue.retry()}>
+                      {queue.expired ? "Reabrir sequência" : "Tentar novamente"}
+                    </button>
+                  </>
+                ) : queue.ended ? (
+                  "Não há outros vídeos nesta sequência."
+                ) : (
+                  "Carregando vídeo..."
+                )}
+                <button type="button" onClick={onClose}>
+                  Fechar
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+        {item && queue.error ? (
+          <div className={styles.status} role="alert">
+            {queue.expired ? "Esta sequência expirou." : "Não foi possível carregar a sequência."}
+            <button type="button" onClick={() => void queue.retry()}>
+              {queue.expired ? "Reabrir sequência" : "Tentar novamente"}
+            </button>
           </div>
         ) : null}
-      </div>
-      {item && queue.error ? (
-        <div className={styles.status} role="alert">
-          {queue.expired ? "Esta sequência expirou." : "Não foi possível carregar a sequência."}
-          <button type="button" onClick={() => void queue.retry()}>
-            {queue.expired ? "Reabrir sequência" : "Tentar novamente"}
+        <div className={styles.navigation} inert={createPostOpen}>
+          <button
+            type="button"
+            aria-label="Vídeo anterior"
+            disabled={panelOpen || seeking || createPostOpen || queue.index === 0}
+            onClick={previous}
+          >
+            <ArrowUp className="h-7 w-7" aria-hidden="true" strokeWidth={2.3} />
+          </button>
+          <button
+            type="button"
+            aria-label="Próximo vídeo"
+            disabled={
+              panelOpen ||
+              seeking ||
+              createPostOpen ||
+              (queue.ended && queue.index >= queue.items.length - 1)
+            }
+            onClick={next}
+          >
+            <ArrowDown className="h-7 w-7" aria-hidden="true" strokeWidth={2.3} />
           </button>
         </div>
-      ) : null}
-      <div className={styles.navigation} inert={createPostOpen}>
-        <button
-          type="button"
-          aria-label="Vídeo anterior"
-          disabled={panelOpen || seeking || createPostOpen || queue.index === 0}
-          onClick={previous}
-        >
-          <ArrowUp className="h-7 w-7" aria-hidden="true" strokeWidth={2.3} />
-        </button>
-        <button
-          type="button"
-          aria-label="Próximo vídeo"
-          disabled={
-            panelOpen ||
-            seeking ||
-            createPostOpen ||
-            (queue.ended && queue.index >= queue.items.length - 1)
-          }
-          onClick={next}
-        >
-          <ArrowDown className="h-7 w-7" aria-hidden="true" strokeWidth={2.3} />
-        </button>
+        {createPostOpen ? (
+          <ContentVideoCreatePost
+            onClose={() => {
+              setCreatePostOpen(false);
+              requestAnimationFrame(() =>
+                root.current
+                  ?.querySelector<HTMLButtonElement>(
+                    '[data-reels-active="true"] [data-reels-create-post]',
+                  )
+                  ?.focus(),
+              );
+            }}
+          />
+        ) : null}
       </div>
-      {createPostOpen ? (
-        <ContentVideoCreatePost
-          onClose={() => {
-            setCreatePostOpen(false);
-            requestAnimationFrame(() =>
-              root.current
-                ?.querySelector<HTMLButtonElement>(
-                  '[data-reels-active="true"] [data-reels-create-post]',
-                )
-                ?.focus(),
-            );
-          }}
-        />
-      ) : null}
-    </div>,
+    </ContentVideoPlayerProvider>,
     document.body,
   );
 };

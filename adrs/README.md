@@ -726,3 +726,4 @@ Formato recomendado:
 - [ADR-0662 — Apresentacao de reviews sem arvore de comentarios](0662-testimonial-review-layout.md)
 - [ADR-0663 — Continuidade dos reels entre comunidades](0663-reels-community-continuation.md)
 - [ADR-0664 — Convites de depoimento por janela de 24 horas](0664-testimonial-invitation-windows.md)
+- [ADR-0665 — Elemento de midia persistente nos reels](0665-reels-persistent-media-element.md)

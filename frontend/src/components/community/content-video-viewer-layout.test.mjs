@@ -338,8 +338,9 @@ test("reels upvote shows only its count with accessible semantics and no tooltip
 test("expanded content fills its viewport using the directory cover fit", () => {
   const directory = read("../../app/app/psychologists/view/components/slide.tsx");
   assert.match(directory, /fit="cover"/);
-  assert.match(viewer, /fit="cover"/);
-  assert.doesNotMatch(viewer, /fit="contain"/);
+  const player = read("./content-video-player.tsx");
+  assert.match(player, /h-full w-full bg-media-background object-cover/);
+  assert.doesNotMatch(player, /object-contain/);
 });
 
 test("progress has a full-width custom track and an accessible invisible input", () => {
@@ -389,7 +390,10 @@ test("late media readiness cannot restart playback behind a reading panel", () =
     viewer,
     /!panelRef.current &&\s*!seekingRef.current &&\s*videoRef.current === video/,
   );
-  assert.match(viewer, /await playVideoWithActiveDocument\(video\);\s*if \(!eligible\(\)\)/);
+  assert.match(
+    viewer,
+    /await playVideoWithActiveDocument\(video\);\s*if \(!eligible\(\) && videoRef.current === video\)/,
+  );
   assert.match(
     viewer,
     /onPlay: \(event\) => \{\s*if \(\s*!activeRef.current \|\|\s*panelRef.current \|\|\s*seekingRef.current \|\|\s*composerBusyRef.current \|\|\s*createPostOpenRef.current\s*\)\s*event.currentTarget.pause\(\)/,
@@ -420,7 +424,8 @@ test("sound follows the shared preference and explicit user changes update it", 
     slide,
     /attempt !== audioAttempt.current \|\| revision !== getVideoSoundPreferenceRevision\(\)/,
   );
-  assert.match(slide, /onSoundEnabledChange=\{setVideoSoundEnabledByUser\}/);
+  assert.match(slide, /<ContentVideoPlayer\s+active=\{active && !unavailable\}/);
+  assert.match(read("./content-video-viewer.tsx"), /<ContentVideoPlayerProvider>/);
   assert.match(
     slide,
     /aria-label="Ativar som do vídeo"\s*onClick=\{\(\) => \{\s*setVideoSoundEnabledByUser\(true\);/,

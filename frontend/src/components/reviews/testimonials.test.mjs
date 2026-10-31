@@ -55,7 +55,7 @@ test("perfil vazio convida em um unico bloco e nao confunde loading ou erro com 
   assert.match(empty, /data-testimonial-empty/);
   assert.match(empty, /bg-surface/);
   assert.match(empty, /border-dashed/);
-  assert.match(empty, /lectum-card-radius/);
+  assert.match(empty, /rounded-\[26px\]/);
   assert.match(empty, /lucide-message-circle/);
   assert.match(empty, /lucide-star/);
   assert.match(empty, /text-base font-semibold text-foreground/);
@@ -68,8 +68,17 @@ test("perfil vazio convida em um unico bloco e nao confunde loading ou erro com 
   assert.doesNotMatch(render({ isError: true }), /data-testimonial-empty/);
   assert.doesNotMatch(render({ readOnly: true }), /aria-label="Deixar depoimento"|Seja a primeira/);
   const populated = render({ reviews: [base], summary: { rating_count: 1 } });
+  assert.match(populated, /overflow-hidden rounded-\[26px\][^"]*" data-testimonial-list/);
   assert.doesNotMatch(populated, /data-testimonial-empty/);
   assert.equal((populated.match(/aria-label="Deixar depoimento"/g) ?? []).length, 1);
+});
+
+test("listas e vazios dos dois perfis usam os cantos dos blocos do perfil", () => {
+  for (const file of ["patient-testimonials.tsx", "professional-testimonials.tsx"]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.match(source, /overflow-hidden rounded-\[26px\][^"]*"\s+data-testimonial-list/);
+    assert.match(source, /<EmptyState\s+className="rounded-\[26px\]"/);
+  }
 });
 
 test("icone de depoimentos usa balao circular e estrela preenchida com a cor herdada", () => {
