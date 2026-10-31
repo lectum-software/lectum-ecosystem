@@ -307,6 +307,40 @@ test("identidade profissional preserva nome, genero, selo e identifica o autor",
   assert.doesNotMatch(unverified, /Perfil verificado/);
 });
 
+test("nome do profissional na modal usa o mesmo peso do feed sem reforcar cargo ou resposta compacta", () => {
+  const professional = { id: "local", name: "Marina Almeida", gender: "feminino", verified: true };
+  const html = renderToStaticMarkup(
+    createElement(TestimonialProfessionalIdentity, { professional }),
+  );
+  assert.match(html, /text-sm font-black leading-5/);
+  assert.match(html, /text-xs leading-5 text-muted/);
+  const compact = renderToStaticMarkup(
+    createElement(TestimonialProfessionalIdentity, { professional, compact: true }),
+  );
+  assert.match(compact, /text-xs font-bold leading-tight/);
+  const feed = readFileSync(
+    new URL("../community/community-post-card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(feed, /text-sm font-black leading-tight text-foreground/);
+});
+
+test("depoimentos do paciente preservam reviews compartilhados, destinatario, acoes e vazio padrao", () => {
+  const source = readFileSync(new URL("./patient-testimonials.tsx", import.meta.url), "utf8");
+  assert.match(source, /<TestimonialCard/);
+  assert.match(source, /Depoimento para/);
+  assert.match(source, /ownAuthorAvatar=\{user\?\.avatar\}/);
+  assert.match(source, /aria-label="Editar depoimento"/);
+  assert.match(source, /<DeleteReviewButton reviewId=\{review\.id\}/);
+  assert.match(source, /flex shrink-0 items-center/);
+  assert.match(source, /!query\.isLoading && !query\.isError && !items\.length/);
+  assert.match(source, /<EmptyState/);
+  assert.match(source, /icon=\{ReviewsIcon\}/);
+  assert.match(source, /Explorar psicólogos/);
+  assert.match(source, /query\.fetchNextPage\(\)/);
+  assert.doesNotMatch(source, /role="tab"|rating_avg|data-testimonial-stem/);
+});
+
 test("depoimentos usam lista branca com divisorias sem perder os totais", () => {
   for (const file of [
     "public-testimonials.tsx",
@@ -470,7 +504,7 @@ test("formulário real tem placeholder aprovado, cinco estrelas e nenhum consent
   assert.equal((html.match(/type="radio"/g) || []).length, 5);
   assert.match(html, /<form/);
   assert.match(html, /name="comment"/);
-  assert.match(html, /Seu nome e sua foto de perfil aparecerão junto ao depoimento/);
+  assert.doesNotMatch(html, /Seu nome e sua foto de perfil aparecerão junto ao depoimento/);
   assert.doesNotMatch(html, /Escolha sua nota|Concordo em publicar|type="checkbox"/);
   query.clear();
 });

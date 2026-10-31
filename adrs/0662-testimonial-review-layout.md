@@ -3,6 +3,7 @@
 Status: aceito.
 Data: 2026-10-31.
 Task: TASK-298.
+Complemento: TASK-299.
 
 ## Contexto
 
@@ -41,6 +42,17 @@ fonte independente. Relato e resposta usam text-sm leading-6 como o feed e
 comentarios. Manter a hierarquia de review: autor semibold e identidade compacta
 do profissional text-xs font-bold, como comentarios aninhados. EmptyState fornece
 o titulo text-base semibold da familia de estados vazios.
+
+Na TASK-299, a identificacao principal do destinatario ao escrever/editar passa
+de semibold (600) para font-black (900), igual ao nome no feed, por aprovacao
+explicita. Cargo/data e identificacao compacta das respostas nao mudam.
+
+Meus Depoimentos do paciente reutiliza a mesma lista e TestimonialCard, incluindo
+recuo e fundo cinza da resposta. Preserva a identificacao do destinatario por
+relato e as acoes laterais de editar/excluir; o vazio passa a usar EmptyState,
+assim como o perfil. Nao adiciona filtros de visibilidade exclusivos do psicologo.
+Por solicitacao explicita, o formulario deixa de exibir o aviso de nome/foto;
+a autoria identificada permanece inalterada.
 
 ## Consequencias
 

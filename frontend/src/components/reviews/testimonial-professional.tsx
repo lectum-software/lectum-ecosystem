@@ -83,7 +83,7 @@ export const TestimonialProfessionalIdentity = ({
       </span>
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1">
-          <span className="min-w-0 break-words text-sm font-semibold leading-5">{name}</span>
+          <span className="min-w-0 break-words text-sm font-black leading-5">{name}</span>
           {professional?.verified ? (
             <VerifiedBadgeIcon aria-label="Perfil verificado" className="size-4 shrink-0" />
           ) : null}
