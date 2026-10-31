@@ -1,3 +1,5 @@
+Validado localmente em 0.1.758: [TASK-298 - Reviews identificados e abas do perfil](TASK-298-testimonial-review-layout.md), ADR-0662. Reviews identificados, resposta cinza recuada, abas compartilhadas e vazio padronizado. Checks/builds frontend/backend e QA de componentes em 320/390/1440 aprovados. Sem push/deploy.
+
 Validado localmente em 0.1.757: [TASK-297 - Reels e refinamentos de depoimentos](TASK-297-reels-silent-comment-refresh.md), ADR-0661. Avisos de contagem removidos, acoes laterais, icone circular com estrela, tipografia revisada, contadores neutros e convite compacto com estado vazio branco. Check/build frontend e QA em 320/390/1440 aprovados. Sem push/deploy deste lote.
 
 Publicado em 0.1.756: [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md), ADR-0660. PR #147 integrado; frontend e backend confirmados em producao por /version e /ping, com /health e /ready HTTP 200 em 30/10/2026. Corrida preexistente de telemetria documentada, fora do escopo visual.
@@ -730,6 +732,7 @@ ou cortesia manual.
 | 295 | [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md) | Implementation and local validation | 294 |
 | 296 | [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md) | Implementation and local validation | 295 |
 | 297 | [TASK-297 - Atualizacao silenciosa da contagem nos reels](TASK-297-reels-silent-comment-refresh.md) | Implementation and local validation | 296 |
+| 298 | [TASK-298 - Depoimentos com apresentacao de reviews](TASK-298-testimonial-review-layout.md) | Implementation and local validation | 297 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -9,6 +9,7 @@ export type PsychologistReviewsQuery = {
 export type PsychologistReviewAuthor = {
   initials: string;
   name: string;
+  avatar?: string | null;
 };
 
 export type PsychologistReview = {

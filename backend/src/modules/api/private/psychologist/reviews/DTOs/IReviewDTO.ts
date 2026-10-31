@@ -6,6 +6,7 @@ export type PsychologistReviewQueryPeriod = "all" | "7d" | "30d" | "90d";
 export type PsychologistReviewAuthor = {
   initials: string;
   name: string;
+  avatar?: string | null;
 };
 
 export type PsychologistReviewItem = {

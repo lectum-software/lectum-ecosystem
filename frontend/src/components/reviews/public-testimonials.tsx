@@ -3,7 +3,9 @@
 import type { ComponentProps } from "react";
 import { useDirectoryPsychologist } from "@/api/callers/directory";
 import type { ReviewsTab } from "@/app/app/psychologist/[id]/components/reviews";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { ReviewsIcon } from "@/components/ui/reviews-icon";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { TestimonialCard } from "./testimonial-card";
 import type { TestimonialProfessional } from "./testimonial-professional";
@@ -54,23 +56,24 @@ export const PublicTestimonials = ({
         </div>
       ) : null}
       {isEmpty ? (
-        <div
-          className="grid justify-items-center gap-2 rounded-lg bg-surface px-5 py-6 text-center"
-          data-testimonial-empty
-        >
-          <h3 className="text-sm font-semibold text-foreground">Ainda não há depoimentos</h3>
-          {!readOnly ? (
-            <>
-              <p className="max-w-sm text-sm leading-6 text-muted">
-                Já interagiu com este psicólogo? Seja a primeira pessoa a compartilhar sua
-                experiência.
-              </p>
-              <TestimonialInvitation psychologistId={profileId} appearance="profile" allowGuest />
-            </>
-          ) : null}
+        <div data-testimonial-empty>
+          <EmptyState
+            icon={ReviewsIcon}
+            title="Ainda não há depoimentos"
+            description={
+              !readOnly
+                ? "Já interagiu com este psicólogo? Seja a primeira pessoa a compartilhar sua experiência."
+                : undefined
+            }
+            action={
+              !readOnly ? (
+                <TestimonialInvitation psychologistId={profileId} appearance="profile" allowGuest />
+              ) : undefined
+            }
+          />
         </div>
       ) : null}
-      <div className="grid gap-3">
+      <div className="divide-y divide-border bg-surface px-4" data-testimonial-list>
         {reviews.map((review) => (
           <TestimonialCard key={review.id} review={review} professional={professional} />
         ))}

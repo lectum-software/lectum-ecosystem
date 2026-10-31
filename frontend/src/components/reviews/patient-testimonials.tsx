@@ -95,7 +95,7 @@ export const PatientTestimonials = () => {
             </Button>
           </div>
         ) : null}
-        <div className="grid gap-3">
+        <div className="divide-y divide-border bg-surface px-4" data-testimonial-list>
           {items.map((review) => (
             <OwnTestimonial key={review.id} review={review} />
           ))}

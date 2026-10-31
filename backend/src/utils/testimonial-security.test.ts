@@ -385,7 +385,7 @@ for (const owner of [true, false]) {
             response: data.response,
             responded_at: data.responded_at,
             createdAt: new Date(),
-            author: { name: "Patient Name" },
+            author: { name: "Patient Name", avatar: "/public/files/avatar/patient.jpg" },
           };
         },
         aggregate: async () => ({ _count: { _all: 0 } }),
@@ -404,6 +404,13 @@ for (const owner of [true, false]) {
       b: { response: " Obrigado pelo relato " },
     });
     assert.equal(Boolean(result), owner);
+    if (result) {
+      assert.deepEqual(result.review.author, {
+        name: "Patient Name",
+        initials: "PN",
+        avatar: "/public/files/avatar/patient.jpg",
+      });
+    }
     assert.equal(writes, owner ? 1 : 0);
   });
 }

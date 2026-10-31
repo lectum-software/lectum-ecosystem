@@ -110,6 +110,9 @@ export const TestimonialForm = ({
             ) : null}
           </Form>
         </fieldset>
+        <p className="pb-2 text-xs leading-5 text-muted">
+          Seu nome e sua foto de perfil aparecerão junto ao depoimento.
+        </p>
       </div>
       <div
         className={

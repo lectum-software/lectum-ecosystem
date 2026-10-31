@@ -2,11 +2,11 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { toTestimonialAuthor } from "@/utils/testimonial-author";
 import { refreshTestimonialCount } from "@/utils/testimonial-summary";
 import type {
   IPsychologistReviewIndexDTO,
   IPsychologistReviewRespondDTO,
-  PsychologistReviewAuthor,
   PsychologistReviewItem,
   PsychologistReviewResponseResult,
   PsychologistReviewSummary,
@@ -25,29 +25,6 @@ const normalizePagination = (query: IPsychologistReviewIndexDTO["q"] = {}) => {
     page,
     limit,
     skip: (page - 1) * limit,
-  };
-};
-
-const toSafeAuthor = (name: string): PsychologistReviewAuthor => {
-  const parts = name.split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) {
-    return {
-      initials: "P",
-      name: "Paciente",
-    };
-  }
-
-  const firstName = parts[0];
-  const lastInitial = parts.length > 1 ? `${parts[parts.length - 1][0].toUpperCase()}.` : "";
-  const initials =
-    parts.length > 1
-      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-      : firstName.slice(0, 2).toUpperCase();
-
-  return {
-    initials,
-    name: [firstName, lastInitial].filter(Boolean).join(" "),
   };
 };
 
@@ -97,7 +74,7 @@ const toReviewItem = (item: {
   response: string | null;
   responded_at: Date | null;
   createdAt: Date;
-  author: { name: string };
+  author: { name: string; avatar: string | null };
 }): PsychologistReviewItem => ({
   status: item.status,
   id: item.id,
@@ -106,7 +83,7 @@ const toReviewItem = (item: {
   response: item.response,
   responded_at: item.responded_at,
   created_at: item.createdAt,
-  author: toSafeAuthor(item.author.name),
+  author: toTestimonialAuthor(item.author),
 });
 
 const summaryWhere = (psychologistId: string): Prisma.professional_reviewWhereInput => ({
@@ -196,7 +173,7 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
           response: true,
           responded_at: true,
           createdAt: true,
-          author: { select: { name: true } },
+          author: { select: { name: true, avatar: true } },
         },
       }),
       prisma.professional_review.count({ where }),
@@ -270,7 +247,7 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
           response: true,
           responded_at: true,
           createdAt: true,
-          author: { select: { name: true } },
+          author: { select: { name: true, avatar: true } },
         },
       });
 

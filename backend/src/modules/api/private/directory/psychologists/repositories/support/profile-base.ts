@@ -4,11 +4,11 @@ import {
   isVerifiedProfessionalEntitlement,
   verifiedProfessionalProfileWhere,
 } from "@/utils/subscription-entitlement";
+import { toTestimonialAuthor } from "@/utils/testimonial-author";
 import { buildLectumWhatsappUrl, type LectumWhatsappMessageSource } from "@/utils/whatsapp-contact";
 import type {
   DirectoryProfileCatalogItem,
   DirectoryPsychologistAcademicFormation,
-  DirectoryReviewAuthor,
   IProfileListDTO,
 } from "../../DTOs/IProfileDTO";
 
@@ -178,6 +178,7 @@ export const profileReviewSelect = {
   author: {
     select: {
       name: true,
+      avatar: true,
     },
   },
 } satisfies Prisma.professional_reviewSelect;
@@ -466,29 +467,6 @@ export const isCatalogItem = (
   return Boolean(value?.id && value.name && value.slug);
 };
 
-export const toSafeAuthor = (name: string): DirectoryReviewAuthor => {
-  const parts = name.split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) {
-    return {
-      initials: "P",
-      name: "Paciente",
-    };
-  }
-
-  const firstName = parts[0];
-  const lastInitial = parts.length > 1 ? `${parts[parts.length - 1][0].toUpperCase()}.` : "";
-  const initials =
-    parts.length > 1
-      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-      : firstName.slice(0, 2).toUpperCase();
-
-  return {
-    initials,
-    name: [firstName, lastInitial].filter(Boolean).join(" "),
-  };
-};
-
 export const toReviewResponse = (item: ProfileReviewResult) => ({
   id: item.id,
   rating: item.rating,
@@ -496,5 +474,5 @@ export const toReviewResponse = (item: ProfileReviewResult) => ({
   response: item.response,
   responded_at: item.responded_at,
   created_at: item.createdAt,
-  author: toSafeAuthor(item.author.name),
+  author: toTestimonialAuthor(item.author),
 });
