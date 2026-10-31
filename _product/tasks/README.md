@@ -1,3 +1,5 @@
+Validado localmente em 0.1.760: [TASK-300 - Continuidade e controles dos reels](TASK-300-reels-continuation.md), ADR-0663. Transicao entre comunidades, progresso suave, retorno ao video e controles ampliados. Sem push/deploy.
+
 Validado localmente em 0.1.759: [TASK-299 - Identificacao profissional e depoimentos do paciente](TASK-299-testimonial-professional-weight.md), ADR-0662. Peso do nome igual ao feed, tela do paciente no layout de reviews e aviso de autoria removido. Check/build e 24 cenarios visuais aprovados. Sem push/deploy.
 
 Validado localmente em 0.1.758: [TASK-298 - Reviews identificados e abas do perfil](TASK-298-testimonial-review-layout.md), ADR-0662. Reviews identificados, resposta cinza recuada, abas compartilhadas e vazio padronizado. Checks/builds frontend/backend e QA de componentes em 320/390/1440 aprovados. Sem push/deploy.
@@ -736,6 +738,7 @@ ou cortesia manual.
 | 297 | [TASK-297 - Atualizacao silenciosa da contagem nos reels](TASK-297-reels-silent-comment-refresh.md) | Implementation and local validation | 296 |
 | 298 | [TASK-298 - Depoimentos com apresentacao de reviews](TASK-298-testimonial-review-layout.md) | Implementation and local validation | 297 |
 | 299 | [TASK-299 - Identificacao profissional e depoimentos do paciente](TASK-299-testimonial-professional-weight.md) | Implementation and local validation | 298 |
+| 300 | [TASK-300 - Continuidade e controles dos reels](TASK-300-reels-continuation.md) | Done | 299 |
 
 ## Ordem operacional recomendada sem bloqueios
 

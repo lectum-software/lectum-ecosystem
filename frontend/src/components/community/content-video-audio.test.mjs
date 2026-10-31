@@ -49,6 +49,8 @@ const modules = {
   "./content-video-interaction-status": "exports.ContentVideoInteractionStatus = () => null;",
   "./content-video-comments-sheet": "exports.ContentVideoCommentsSheet = () => null;",
   "./content-video-header": source("./content-video-header.tsx"),
+  "./use-content-video-progress": source("./use-content-video-progress.ts"),
+  "./content-video-history": source("./content-video-history.ts"),
   "./content-video-reading-text": source("./content-video-reading-text.tsx"),
   "./content-video-inline-composer": `exports.ContentVideoInlineComposer = props => {
     window.setComposerBusy = busy => require('react-dom').flushSync(() => {
@@ -112,7 +114,7 @@ const harness = `
     if (video.prepared) return;
     video.prepared = true; video.testPaused = true;
     Object.defineProperty(video, 'paused', {get: () => video.testPaused});
-    Object.defineProperty(video, 'duration', {get: () => 60});
+    Object.defineProperty(video, 'duration', {configurable: true, get: () => 60});
     video.pause = () => {
       if (video.testPaused) return;
       video.testPaused = true;
@@ -130,10 +132,12 @@ const harness = `
   const item = {id:'v',post_id:'p',media_url:'/video',content:'caption',title:'title',
     author:{id:'a',name:'Author'},community:{slug:'c'},upvotes_count:0,replies_count:0,saved:false};
   let root; let active = true; let creating = false;
+  window.nextCalls = 0;
+  window.historyTools = require('./content-video-history');
   const render = () => flushSync(() => root.render(React.createElement(ContentVideoSlide, {
     item,active,initialTime:0,changedDiscussion:false,closeRef:{current:null},
     createPostOpen:creating,onCreatePost:()=>{},
-    onNext:()=>{},onPrevious:()=>{},onClose:()=>{},onInteraction:()=>{},onPanelChange:()=>{},onSeekingChange:()=>{}
+    onNext:()=>{window.nextCalls++},onNavigate:()=>{},onPrevious:()=>{},onClose:()=>{},onInteraction:()=>{},onPanelChange:()=>{},onSeekingChange:()=>{}
   })));
   window.mount = (enabled, initialActive = true) => {
     sound.setVideoSoundEnabledByUser(enabled); active = initialActive;
@@ -174,6 +178,106 @@ describe("reels audio with the actual mounted slide", {
     assert.deepEqual(errors, []);
   });
   const state = () => page.evaluate(() => snapshot());
+
+  test("advances on ended only for the active unobstructed video", async () => {
+    await page.evaluate(() => mount(false));
+    await page.evaluate(() => mediaEvent("ended"));
+    assert.equal(await page.evaluate(() => nextCalls), 1);
+    assert.equal(await page.locator("video").evaluate((video) => video.loop), false);
+    await page.evaluate(() => {
+      setComposerBusy(true);
+      mediaEvent("ended");
+    });
+    await page.evaluate(() => {
+      setComposerBusy(false);
+      openCreate(true);
+      mediaEvent("ended");
+    });
+    await page.evaluate(() => {
+      openCreate(false);
+      activate(false);
+      mediaEvent("ended");
+    });
+    assert.equal(await page.evaluate(() => nextCalls), 1);
+  });
+
+  test("progress draws between timeupdate events and stays still while paused", async () => {
+    await page.evaluate(() => {
+      mount(false);
+      const video = document.querySelector("video");
+      Object.defineProperty(video, "duration", { configurable: true, value: 10 });
+      video.currentTime = 2;
+      mediaEvent("loadedmetadata");
+    });
+    await page.waitForFunction(
+      () => document.querySelector(".progressFill").style.transform === "scaleX(0.2)",
+    );
+    await page.evaluate(() => {
+      document.querySelector("video").currentTime = 4;
+    });
+    await page.waitForFunction(
+      () => document.querySelector(".progressFill").style.transform === "scaleX(0.4)",
+    );
+    await page.evaluate(() => surface());
+    await page.waitForFunction(() => snapshot().paused);
+    await page.evaluate(() => {
+      document.querySelector("video").currentTime = 7;
+    });
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    assert.equal(
+      await page.locator(".progressFill").evaluate((el) => el.style.transform),
+      "scaleX(0.4)",
+    );
+    await page.evaluate(() => mediaEvent("timeupdate"));
+    await page.waitForFunction(
+      () => document.querySelector(".progressFill").style.transform === "scaleX(0.7)",
+    );
+  });
+
+  test("history restores the same reel and time on Back, preserving Next state and account scope", async () => {
+    await page.route("**/*", (route) =>
+      route.fulfill({ contentType: "text/html", body: '<div id="root"></div>' }),
+    );
+    await page.goto("http://lectum.test/community");
+    await page.addScriptTag({ content: harness });
+    await page.evaluate(() => {
+      history.replaceState({ __NA: true, tree: "preserved" }, "");
+      historyTools.saveContentVideoHistory(
+        { initial: { postId: "post", replyId: "reply", mediaUrl: "/clip" }, initialTime: 12.5 },
+        "feed",
+        "user",
+      );
+      history.pushState({}, "", "/profile");
+    });
+    assert.equal(
+      await page.evaluate(() => historyTools.readContentVideoHistory("feed", "user")),
+      null,
+    );
+    await page.goBack();
+    await page.waitForFunction(() => location.pathname === "/community");
+    const restored = await page.evaluate(() =>
+      historyTools.readContentVideoHistory("feed", "user"),
+    );
+    assert.equal(restored.initial.replyId, "reply");
+    assert.equal(restored.initialTime, 12.5);
+    assert.equal(await page.evaluate(() => history.state.tree), "preserved");
+    assert.equal(
+      await page.evaluate(() => historyTools.readContentVideoHistory("root", "user")),
+      null,
+    );
+    assert.equal(
+      await page.evaluate(() => historyTools.readContentVideoHistory("feed", "other")),
+      null,
+    );
+    await page.evaluate(() => historyTools.clearContentVideoHistory());
+    assert.equal(
+      await page.evaluate(() => historyTools.readContentVideoHistory("feed", "user")),
+      null,
+    );
+    assert.equal(await page.evaluate(() => history.state.__NA), true);
+  });
 
   test("editing and creating prevent late media events from restarting playback", async () => {
     await page.evaluate(() => mount(true));

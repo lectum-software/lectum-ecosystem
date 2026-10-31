@@ -17,7 +17,7 @@ export const ContentVideoAuthor = ({
 }) => (
   <>
     <div className={styles.author}>
-      <Link className={styles.name} href={`/psicologos/${author.id}`} onClick={onClose}>
+      <Link className={styles.name} href={`/psicologos/${author.id}`} onNavigate={onClose}>
         {getCommunityAuthorDisplayName(author)}
       </Link>
       {/* Keep the final name word attached to its inline controls. */}

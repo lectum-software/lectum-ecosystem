@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { getApiErrorHttpStatus } from "@/api/errors";
 import type { PostContentVideo } from "@/api/generator/types/posts";
 import { getPostContentVideos } from "@/api/req/posts";
+import { createContentVideoCommunityContinuation } from "./content-video-community-continuation";
 import type { ContentVideoSource, ContentVideoSourceEntry } from "./content-video-context";
 import {
   appendContentVideoPage,
@@ -63,6 +64,9 @@ export const useContentVideoQueue = (
     visited: new Set<string>(),
   });
   const busy = useRef(false);
+  const continuation = useRef<ReturnType<typeof createContentVideoCommunityContinuation> | null>(
+    null,
+  );
   const lifecycle = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -79,6 +83,7 @@ export const useContentVideoQueue = (
     setError(false);
     const state = cursor.current;
     let progressed = false;
+    let requestedVideo = false;
     const finish = () => {
       setEnded(true);
       setIndex((value) => Math.min(value, Math.max(0, state.seen.size - 1)));
@@ -95,16 +100,18 @@ export const useContentVideoQueue = (
             entry.postId === state.entry.postId &&
             (scope.mode !== "profile" || (entry.replyId ?? null) === (state.entry.replyId ?? null)),
         );
-        const next = scope.entries
-          .slice(Math.max(0, position + 1))
-          .find(
-            (entry) =>
-              !state.visited.has(
-                `${entry.postId}:${scope.mode === "profile" ? (entry.replyId ?? "post") : "discussion"}`,
-              ),
-          );
+        let next = continuation.current
+          ? undefined
+          : scope.entries
+              .slice(Math.max(0, position + 1))
+              .find(
+                (entry) =>
+                  !state.visited.has(
+                    `${entry.postId}:${scope.mode === "profile" ? (entry.replyId ?? "post") : "discussion"}`,
+                  ),
+              );
         if (!next) {
-          if (scope.hasNextPage && scope.onLoadMore) {
+          if (!continuation.current && scope.hasNextPage && scope.onLoadMore) {
             const before = sourceKey(scope);
             const deadline = Date.now() + 15_000;
             let callback = scope.onLoadMore;
@@ -140,8 +147,23 @@ export const useContentVideoQueue = (
                 );
               } else pending = undefined;
             }
-          } else finish();
-          return;
+            return;
+          }
+          if (scope.mode !== "feed") {
+            finish();
+            return;
+          }
+          continuation.current ??= createContentVideoCommunityContinuation(
+            interactionStateRef.current.items.at(-1)?.community.slug,
+          );
+          const discovered = await continuation.current.next(signal, state.visited);
+          if (signal.aborted) return;
+          if (!discovered.entry) {
+            if (discovered.ended) finish();
+            else progressed = true;
+            return;
+          }
+          next = discovered.entry;
         }
         state.entry = next;
         state.page = 1;
@@ -149,6 +171,7 @@ export const useContentVideoQueue = (
         state.done = false;
       }
       const requestedRevision = interactionStateRef.current.revision;
+      requestedVideo = true;
       const result = await getPostContentVideos(state.entry.postId, {
         limit: 20,
         ...(state.nextCursor
@@ -200,6 +223,16 @@ export const useContentVideoQueue = (
       progressed = true;
     } catch (cause) {
       if (!signal.aborted) {
+        if (
+          requestedVideo &&
+          continuation.current &&
+          [403, 404].includes(getApiErrorHttpStatus(cause) ?? 0)
+        ) {
+          state.visited.add(`${state.entry.postId}:discussion`);
+          state.done = true;
+          progressed = true;
+          return;
+        }
         setError(true);
         if (getApiErrorHttpStatus(cause) === 410) setExpired(true);
       }
@@ -263,6 +296,7 @@ export const useContentVideoQueue = (
         seen: new Set<string>(),
         visited: new Set<string>(),
       };
+      continuation.current = null;
       setInteractionState((previous) => ({
         items: [],
         revision: previous.revision + 1,

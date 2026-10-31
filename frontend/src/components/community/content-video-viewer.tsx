@@ -6,7 +6,11 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { useExpandedVideoViewport } from "@/components/ui/vertical-video-player-content-expansion";
 import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { useModalScrollLock } from "@/hooks/use-modal-scroll-lock";
-import { type ContentVideoSourceEntry, useContentVideoSource } from "./content-video-context";
+import {
+  type ContentVideoRequest,
+  type ContentVideoSourceEntry,
+  useContentVideoSource,
+} from "./content-video-context";
 import { ContentVideoCreatePost } from "./content-video-create-post";
 import { useContentVideoDiscussionChanges } from "./content-video-interaction-refresh";
 import { ContentVideoSlide } from "./content-video-slide";
@@ -18,10 +22,12 @@ export const ContentVideoViewer = ({
   initial,
   initialTime = 0,
   onClose,
+  onNavigate,
 }: {
   initial: ContentVideoSourceEntry;
   initialTime?: number;
   onClose: () => void;
+  onNavigate: (request: ContentVideoRequest) => void;
 }) => {
   const source = useContentVideoSource();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -157,6 +163,16 @@ export const ContentVideoViewer = ({
                 onNext={next}
                 onPrevious={previous}
                 onClose={onClose}
+                onNavigate={(time) =>
+                  onNavigate({
+                    initial: {
+                      postId: video.post_id,
+                      replyId: video.reply_id,
+                      mediaUrl: video.media_url,
+                    },
+                    initialTime: time,
+                  })
+                }
                 createPostOpen={createPostOpen}
                 onCreatePost={() => {
                   if (!conversion.isAuthenticated) {

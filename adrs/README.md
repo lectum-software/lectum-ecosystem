@@ -724,3 +724,4 @@ Formato recomendado:
 - [ADR-0660 — Ajustes de depoimentos apos aprovacao visual](0660-testimonial-review-layout.md)
 - [ADR-0661 — Revalidacao silenciosa apos comentario nos reels](0661-reels-silent-comment-count-refresh.md)
 - [ADR-0662 — Apresentacao de reviews sem arvore de comentarios](0662-testimonial-review-layout.md)
+- [ADR-0663 — Continuidade dos reels entre comunidades](0663-reels-community-continuation.md)

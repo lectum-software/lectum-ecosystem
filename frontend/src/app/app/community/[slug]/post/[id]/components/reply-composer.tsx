@@ -595,7 +595,7 @@ export const ReplyComposer = ({
             className={cn(
               "relative grid min-w-0 flex-1 rounded-[24px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface",
               isReels &&
-                "border-transparent bg-media-control/92 text-media-foreground dark:bg-media-control/92 [&_[data-reply-media-trigger]]:text-media-foreground",
+                "border-transparent bg-media-control/92 text-media-foreground dark:bg-media-control/92 [&_[data-reply-media-trigger]]:border-media-foreground/30 [&_[data-reply-media-trigger]]:bg-media-control [&_[data-reply-media-trigger]]:text-media-foreground [&_[data-reply-media-trigger]]:opacity-100",
             )}
           >
             {shouldShowMediaTriggerInField ? (
