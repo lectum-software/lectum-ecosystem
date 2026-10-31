@@ -1,3 +1,5 @@
+Validado localmente em 0.1.763: [TASK-303 - Refinamentos de publicacoes, depoimentos e reels](TASK-303-profile-reels-refinements.md), ADR-0666. Nove ajustes, incluindo expansor de comunidades e ocultacao de respostas pelo perfil. Check integral, builds frontend/backend e QA real em 320/390/1440 aprovados. Ressalvas de telemetria local e Safari/iPhone fisico registradas. Sem push/deploy.
+
 Validado localmente em 0.1.762: [TASK-302 - Audio continuo dos reels e cantos dos depoimentos](TASK-302-reels-audio-continuity.md), ADR-0665. Player persistente e blocos de reviews com raio de 26px. Check/build frontend, guardas, QA visual e API/MP4 reais locais em 320/390/1440 aprovados. Safari/iPhone fisico ainda requer conferencia. Sem push/deploy; header de comunidades continua somente previa.
 
 Validado localmente em 0.1.761: [TASK-301 - Convites de depoimento em janelas e menus](TASK-301-testimonial-invitation-windows.md), ADR-0664. Convites por respostas em video, janela fixa de 24h, push/in-app e menus padronizados. Migracao, checks/builds, integracao PostgreSQL e smoke autenticado local aprovados. Flags produtivas nao alteradas; sem push/deploy. Header de comunidades permanece somente previa.
@@ -745,6 +747,7 @@ ou cortesia manual.
 | 300 | [TASK-300 - Continuidade e controles dos reels](TASK-300-reels-continuation.md) | Done | 299 |
 | 301 | [TASK-301 - Convites de depoimento em janelas e menus](TASK-301-testimonial-invitation-windows.md) | Done | 300 |
 | 302 | [TASK-302 - Audio continuo dos reels e cantos dos depoimentos](TASK-302-reels-audio-continuity.md) | Done | 301 |
+| 303 | [TASK-303 - Refinamentos de publicacoes, depoimentos e reels](TASK-303-profile-reels-refinements.md) | Done | 302 |
 
 ## Ordem operacional recomendada sem bloqueios
 

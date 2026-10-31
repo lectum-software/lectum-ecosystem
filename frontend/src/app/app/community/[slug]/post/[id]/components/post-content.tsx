@@ -275,9 +275,10 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
   const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
   const displayThumbnailUrl = singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const shouldShowPostCarousel = postImageMediaItems.length > 1;
+  const hasVideoContact = displayMediaType === "video" && Boolean(displayMediaUrl);
   const authorWhatsappCta = showAuthorWhatsapp ? (
     <CommunityWhatsAppCta
-      attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
+      attached={hasVideoContact}
       psychologist={toCommunityWhatsAppIdentity(post.author)}
       stopPropagation
       trackingContext={{
@@ -315,12 +316,7 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
         text={post.content}
       />
       {shouldShowPostCarousel ? (
-        <PostMediaCarousel
-          alt={post.title}
-          footer={authorWhatsappCta}
-          frameVariant="detail"
-          items={postImageMediaItems}
-        />
+        <PostMediaCarousel alt={post.title} frameVariant="detail" items={postImageMediaItems} />
       ) : (
         <CommunityMediaBlock
           alt={post.title}
@@ -329,7 +325,7 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
           }
           className="mt-3"
           enableCommunityAutoplay
-          footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
+          footer={hasVideoContact ? authorWhatsappCta : undefined}
           mediaType={displayMediaType}
           mediaUrl={displayMediaUrl}
           overlayAction={postOverlayAction}
@@ -530,8 +526,7 @@ export const PostVoteBar = ({
     beforeSaveSlot={
       post.author.role === "psicologo" &&
       post.author.whatsapp_url &&
-      !post.media_url &&
-      !(post.media_items ?? []).length ? (
+      !(post.media_type === "video" && post.media_url) ? (
         <CommunityWhatsAppCta
           psychologist={toCommunityWhatsAppIdentity(post.author)}
           stopPropagation

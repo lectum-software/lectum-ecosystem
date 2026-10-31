@@ -9,7 +9,7 @@ import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 
-export type TestimonialInvitationAppearance = "outline" | "inline" | "profile";
+export type TestimonialInvitationAppearance = "outline" | "inline" | "profile" | "empty";
 export type TestimonialInvitationOptions = {
   psychologistId: string;
   className?: string;
@@ -36,14 +36,18 @@ export const TestimonialInvitationAction = ({
       ? "border-0 bg-transparent px-2 text-muted hover:bg-surface-muted hover:text-foreground"
       : appearance === "profile"
         ? "relative isolate h-11 border-0 bg-transparent px-2.5 text-xs text-primary-foreground before:absolute before:inset-x-0 before:inset-y-[6px] before:-z-10 before:rounded-full before:bg-primary before:content-[''] hover:bg-transparent hover:before:bg-primary-hover"
-        : "border border-border bg-transparent px-4 text-muted hover:bg-surface-muted hover:text-foreground",
+        : appearance === "empty"
+          ? "h-12 gap-2 rounded-[var(--lectum-control-radius)] border-0 bg-primary px-5 text-sm text-primary-foreground shadow-[var(--lectum-shadow-soft)] hover:bg-primary-hover"
+          : "border border-border bg-transparent px-4 text-muted hover:bg-surface-muted hover:text-foreground",
     className,
   );
   const content = (
     <>
       <ReviewsIcon
         aria-hidden
-        className={appearance === "profile" ? "size-4 shrink-0" : "size-5 shrink-0"}
+        className={
+          appearance === "profile" || appearance === "empty" ? "size-4 shrink-0" : "size-5 shrink-0"
+        }
       />
       <span
         className={cn(
@@ -60,7 +64,13 @@ export const TestimonialInvitationAction = ({
     return allowGuest ? (
       <Button
         asChild
-        variant={inline ? "ghost" : appearance === "profile" ? "default" : variant}
+        variant={
+          inline
+            ? "ghost"
+            : appearance === "profile" || appearance === "empty"
+              ? "default"
+              : variant
+        }
         className={classes}
       >
         <Link
@@ -78,7 +88,9 @@ export const TestimonialInvitationAction = ({
     <Button
       type="button"
       className={classes}
-      variant={inline ? "ghost" : appearance === "profile" ? "default" : variant}
+      variant={
+        inline ? "ghost" : appearance === "profile" || appearance === "empty" ? "default" : variant
+      }
       aria-label="Deixar depoimento"
       title="Deixar depoimento"
       onPointerDown={(event) => event.stopPropagation()}

@@ -1,4 +1,5 @@
 import "../../../scripts/register-source-modules.mjs";
+import "./profile-refinements.test.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";

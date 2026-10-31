@@ -161,8 +161,8 @@
   justify-content: center;
 }
 .action svg {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 .action span {
   font-size: 12px;
@@ -189,8 +189,8 @@
 .contactGlyph {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--lectum-whatsapp-contact);
 }

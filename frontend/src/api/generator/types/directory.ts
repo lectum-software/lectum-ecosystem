@@ -175,6 +175,8 @@ export type DirectoryPsychologistParticipationCommunity = Omit<
   DirectoryPsychologistTopMentorCommunity,
   "badge" | "position"
 > & {
+  posts_count?: number;
+  replies_count?: number;
   position: number | null;
   badge: string | null;
 };

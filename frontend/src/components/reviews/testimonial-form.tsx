@@ -56,7 +56,7 @@ export const TestimonialForm = ({
           sheetLayout ? "min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-2" : undefined
         }
       >
-        <p className="text-sm font-medium leading-6">
+        <p className="text-left text-sm font-medium leading-6">
           Como foi sua experiência com as respostas e os conteúdos deste psicólogo?
         </p>
         <fieldset disabled={mutation.isPending} className="my-4 flex justify-center gap-2">

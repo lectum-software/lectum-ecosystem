@@ -47,7 +47,6 @@ test("tree overlays use the modal host and consume Escape before the native shee
     "../components/community/reply-edit-modal.tsx",
     "../components/community/reply-owner-action-menu.tsx",
     "../components/community/lectum-share-download-dialog.tsx",
-    "../components/community/community-media-upgrade-modal.tsx",
     "../components/community/community-delete-confirmation-modal.tsx",
     "../components/conversion/progressive-conversion-prompt.tsx",
   ]) {
@@ -58,6 +57,19 @@ test("tree overlays use the modal host and consume Escape before the native shee
     assert.match(source, /event\.preventDefault\(\)/, path);
     assert.match(source, /event\.stopPropagation\(\)/, path);
   }
+});
+
+test("media upgrade owns a native top layer instead of sharing the reels stacking context", () => {
+  const upgrade = readFileSync(
+    new URL("../components/community/community-media-upgrade-modal.tsx", import.meta.url),
+    "utf8",
+  );
+  const modal = readFileSync(new URL("../components/ui/modal.tsx", import.meta.url), "utf8");
+  assert.match(upgrade, /<Modal/);
+  assert.match(upgrade, /initialFocusRef=\{titleRef\}/);
+  assert.match(modal, /dialog.showModal\(\)/);
+  assert.match(modal, /onKeyDown=\{\(event\) => event.stopPropagation\(\)\}/);
+  assert.match(modal, /useModalMediaSuspension\(open, dialogRef\)/);
 });
 
 test("delete confirmation keeps focus and Escape in the native host and blocks pending dismissal", () => {

@@ -124,6 +124,7 @@ const CommunityPostCardContent = ({
         } as const)
       : undefined;
   const shouldShowPostCarousel = !primaryReply && postImageMediaItems.length > 1;
+  const hasVideoContact = displayMediaType === "video" && Boolean(displayMediaUrl);
   const displayFeaturedBadge =
     primaryReply?.author.featured_badge ?? displayAuthor.featured_badge ?? post.featured_badge;
   const isOriginalPostByPatient = post.author.role === "paciente";
@@ -169,7 +170,7 @@ const CommunityPostCardContent = ({
   const authorWhatsappCta =
     showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
       <CommunityWhatsAppCta
-        attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
+        attached={hasVideoContact}
         size={hasCompactReplyActions ? "xs" : "sm"}
         psychologist={toCommunityWhatsAppIdentity(displayAuthor)}
         stopPropagation
@@ -610,7 +611,6 @@ const CommunityPostCardContent = ({
           {shouldShowPostCarousel ? (
             <PostMediaCarousel
               alt={displayTitle ?? "Mídia da publicação"}
-              footer={authorWhatsappCta}
               items={postImageMediaItems}
             />
           ) : (
@@ -618,7 +618,7 @@ const CommunityPostCardContent = ({
               alt={displayTitle ?? "Mídia da publicação"}
               analyticsTarget={displayMediaAnalyticsTarget}
               enableCommunityAutoplay={profilePublicationMode}
-              footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
+              footer={hasVideoContact ? authorWhatsappCta : undefined}
               mediaType={displayMediaType}
               mediaUrl={displayMediaUrl}
               overlayAction={displayMediaOverlayAction}
@@ -657,10 +657,7 @@ const CommunityPostCardContent = ({
               ? voteSnapshot.downvotes
               : undefined
           }
-          beforeSaveSlot={
-            actionBarBeforeSaveSlot ??
-            (shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta)
-          }
+          beforeSaveSlot={actionBarBeforeSaveSlot ?? (hasVideoContact ? null : authorWhatsappCta)}
           endSlot={renderReplyTestimonialSlot(post, primaryReply, footerExtra)}
           onVote={interactiveActions ? handleVote : undefined}
           save={{

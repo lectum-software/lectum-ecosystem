@@ -68,7 +68,7 @@ export const PublicTestimonials = ({
             }
             action={
               !readOnly ? (
-                <TestimonialInvitation psychologistId={profileId} appearance="profile" allowGuest />
+                <TestimonialInvitation psychologistId={profileId} appearance="empty" allowGuest />
               ) : undefined
             }
           />
