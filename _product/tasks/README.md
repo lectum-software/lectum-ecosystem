@@ -1,3 +1,5 @@
+Validado localmente em 0.1.761: [TASK-301 - Convites de depoimento em janelas e menus](TASK-301-testimonial-invitation-windows.md), ADR-0664. Convites por respostas em video, janela fixa de 24h, push/in-app e menus padronizados. Migracao, checks/builds, integracao PostgreSQL e smoke autenticado local aprovados. Flags produtivas nao alteradas; sem push/deploy. Header de comunidades permanece somente previa.
+
 Validado localmente em 0.1.760: [TASK-300 - Continuidade e controles dos reels](TASK-300-reels-continuation.md), ADR-0663. Transicao entre comunidades, progresso suave, retorno ao video e controles ampliados. Sem push/deploy.
 
 Validado localmente em 0.1.759: [TASK-299 - Identificacao profissional e depoimentos do paciente](TASK-299-testimonial-professional-weight.md), ADR-0662. Peso do nome igual ao feed, tela do paciente no layout de reviews e aviso de autoria removido. Check/build e 24 cenarios visuais aprovados. Sem push/deploy.
@@ -735,10 +737,11 @@ ou cortesia manual.
 | 294 | [TASK-294 - Refinamentos de reels e perfil](TASK-294-reels-compact-controls.md) | Implementation and local validation | 293 |
 | 295 | [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md) | Implementation and local validation | 294 |
 | 296 | [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md) | Implementation and local validation | 295 |
-| 297 | [TASK-297 - Atualizacao silenciosa da contagem nos reels](TASK-297-reels-silent-comment-refresh.md) | Implementation and local validation | 296 |
-| 298 | [TASK-298 - Depoimentos com apresentacao de reviews](TASK-298-testimonial-review-layout.md) | Implementation and local validation | 297 |
-| 299 | [TASK-299 - Identificacao profissional e depoimentos do paciente](TASK-299-testimonial-professional-weight.md) | Implementation and local validation | 298 |
+| 297 | [TASK-297 - Atualizacao silenciosa da contagem nos reels](TASK-297-reels-silent-comment-refresh.md) | Done | 296 |
+| 298 | [TASK-298 - Depoimentos com apresentacao de reviews](TASK-298-testimonial-review-layout.md) | Done | 297 |
+| 299 | [TASK-299 - Identificacao profissional e depoimentos do paciente](TASK-299-testimonial-professional-weight.md) | Done | 298 |
 | 300 | [TASK-300 - Continuidade e controles dos reels](TASK-300-reels-continuation.md) | Done | 299 |
+| 301 | [TASK-301 - Convites de depoimento em janelas e menus](TASK-301-testimonial-invitation-windows.md) | Done | 300 |
 
 ## Ordem operacional recomendada sem bloqueios
 

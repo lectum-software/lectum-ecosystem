@@ -2,6 +2,7 @@ import { isWebPushConfigured } from "@/config/webPush";
 import { captureOperationalError } from "@/infra/observability/sentry";
 import { runWeeklyWhatsappReports } from "@/modules/whatsapp-reports/scheduler";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
+import { runTestimonialInvitations } from "../testimonial-invitation-scheduler";
 import { processEveningDigest, processLunchDigest } from "./community";
 import { processProfessionalDailyDigest } from "./professional";
 import {
@@ -14,6 +15,7 @@ import { processPatientEngagementDigest, processPsychologistNewPostsDigest } fro
 
 export const runNotificationDigestScheduler = async (now = new Date()) => {
   await runWeeklyWhatsappReports(now);
+  await runTestimonialInvitations(now);
   if (!isWebPushConfigured()) return;
 
   const parts = getZonedDateParts(now);

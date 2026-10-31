@@ -26,6 +26,12 @@ Validacao: frontend check e build completos; 32 cenarios de fila e 23 de layout,
 mais testes de progresso/historico e camera. Chrome com API controlada nos testes;
 nao substitui smoke de navegacao com dados reais no preparo da publicacao.
 
+Complemento local na TASK-301: Chrome com API/PostgreSQL e MP4 reais, sem endpoints
+simulados. Perfil -> voltar restaurou o reel e o tempo; termino natural avancou
+apos esgotar a comunidade original. Camera da conta gratuita visivel, branco em
+fundo escuro. Registros temporarios de teste removidos ao final. Evidencias em
+.tmp/task301-reels-results.json e .tmp/task301-reels-*-390.png.
+
 ## Decisao
 
 ADR-0663. Descoberta usa o catalogo e posts existentes, sem novo endpoint.

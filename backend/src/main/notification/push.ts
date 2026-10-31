@@ -73,6 +73,7 @@ const getPushStatusCode = (error: unknown) => {
 };
 
 export const sendWebPushToSubscriptions = async (params: {
+  action?: "leave_testimonial";
   body: string;
   redirect?: string | null;
   subscriptions: PushSubscriptionRecord[];
@@ -128,6 +129,9 @@ export const sendWebPushToSubscriptions = async (params: {
     notification: {
       body: params.body,
       title: params.title,
+      ...(params.action === "leave_testimonial"
+        ? { actions: [{ action: "leave_testimonial", title: "Deixar depoimento" }] }
+        : {}),
     },
   });
 

@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import prisma from "@/infra/database/prisma";
-import { notification as emitNotification } from "@/main/socket/events/notification";
 import { filterPostMutedRecipients } from "@/utils/post-notification-mute";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
@@ -245,11 +244,8 @@ export const notifyNewCommunityPost = async (params: {
 export const notifyPendingTestimonials = async (params: PendingTestimonialInvitation) => {
   if (!isTestimonialInvitationsEnabled()) return;
   try {
-    // One durable group per patient, including after read/soft-delete. Never re-alert on updates.
-    const created = await withSerializableTransaction((tx) =>
-      createPendingTestimonialInvitation(tx, params),
-    );
-    if (created) await emitNotification([params.patientId]);
+    // Enqueue only. The scheduler emits once the fixed 24-hour window closes.
+    await withSerializableTransaction((tx) => createPendingTestimonialInvitation(tx, params));
   } catch (error) {
     console.error("[TESTIMONIAL INVITATION]", toSafeErrorLog(error, "TestimonialInvitationError"));
   }

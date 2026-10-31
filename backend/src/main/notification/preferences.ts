@@ -115,9 +115,9 @@ export const isChannelAllowed = (
   key: string,
   channel: keyof Pick<NotificationPreferenceEntry, "email" | "in_app" | "push">,
 ): boolean => {
-  // Grouped testimonial invitations inherit reply opt-outs and never send email or push.
+  // Inherit reply opt-outs per channel; invitations never send email.
   if (key === "depoimentos_pendentes") {
-    return channel === "in_app" && isChannelAllowed(prefs, "nova_resposta", "in_app");
+    return channel !== "email" && isChannelAllowed(prefs, "nova_resposta", channel);
   }
   // Billing notices are transactional; browser permission is enforced by push delivery.
   if (key === "billing_subscription_status") return true;

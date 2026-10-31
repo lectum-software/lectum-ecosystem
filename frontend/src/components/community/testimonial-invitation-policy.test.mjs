@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import "./testimonial-push.test.mjs";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import ts from "typescript";

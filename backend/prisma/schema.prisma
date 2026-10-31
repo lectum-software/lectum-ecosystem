@@ -11,6 +11,9 @@ datasource db {
 }
 
 model user {
+  testimonial_batches testimonial_invitation_batch[]
+  testimonial_invitations testimonial_invitation_member[] @relation("testimonial_professional")
+  testimonial_requests testimonial_invitation_member[] @relation("testimonial_patient")
   feedbacks user_feedback[]
   legal_acceptances legal_acceptance[]
 
@@ -1494,6 +1497,40 @@ model notification_subscription {
 
   @@index([user_id, device_id])
   @@map("notification_subscriptions")
+}
+
+model testimonial_invitation_batch {
+  id String @id @default(cuid())
+  patient_id String
+  window_start DateTime
+  window_end DateTime
+  status String @default("pending")
+  push_status String @default("pending")
+  push_claimed_at DateTime?
+  notification_id String?
+  patient user @relation(fields: [patient_id], references: [id], onDelete: Cascade)
+  members testimonial_invitation_member[]
+
+  @@index([status, window_end])
+  @@index([patient_id, window_end])
+  @@index([push_status])
+  @@map("testimonial_invitation_batches")
+}
+
+model testimonial_invitation_member {
+  id String @id @default(cuid())
+  batch_id String
+  patient_id String
+  psychologist_id String
+  reply_id String
+  included Boolean @default(false)
+  batch testimonial_invitation_batch @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  patient user @relation("testimonial_patient", fields: [patient_id], references: [id], onDelete: Cascade)
+  psychologist user @relation("testimonial_professional", fields: [psychologist_id], references: [id], onDelete: Cascade)
+
+  @@unique([patient_id, psychologist_id])
+  @@index([batch_id])
+  @@map("testimonial_invitation_members")
 }
 
 model notification {

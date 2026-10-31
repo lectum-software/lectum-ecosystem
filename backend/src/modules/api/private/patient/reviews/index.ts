@@ -4,13 +4,14 @@ import {
   deleteValidator,
   eligibilityValidator,
   indexValidator,
+  pendingValidator,
   storeValidator,
   updateValidator,
 } from "./validator";
 
 const routes = Router();
 
-routes.get("/pending", indexValidator, pending);
+routes.get("/pending", pendingValidator, pending);
 
 routes.get("", indexValidator, index);
 routes.post("", storeValidator, store);

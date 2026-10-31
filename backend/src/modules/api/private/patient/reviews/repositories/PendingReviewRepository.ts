@@ -1,4 +1,5 @@
 import prisma from "@/infra/database/prisma";
+import { eligibleVideoProfessionalWhere } from "@/main/notification/pending-testimonial-invitation";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
@@ -17,6 +18,23 @@ export class PendingReviewRepository {
     });
     if (!patient) return { data: [], count: 0, page, pages: 0 };
     const where = pendingReviewProfessionalsWhere(patient.id);
+    if (data.q.batch) {
+      const members = await prisma.testimonial_invitation_member.findMany({
+        where: {
+          patient_id: patient.id,
+          included: true,
+          batch: { id: data.q.batch, patient_id: patient.id, status: "completed" },
+        },
+        select: { psychologist_id: true, reply_id: true },
+      });
+      if (!members.length) return { data: [], count: 0, page, pages: 0 };
+      where.OR = members.map((member) => ({
+        AND: [
+          { id: member.psychologist_id },
+          eligibleVideoProfessionalWhere(patient.id, member.reply_id),
+        ],
+      }));
+    }
     const [items, count] = await prisma.$transaction(
       [
         prisma.user.findMany({

@@ -1,6 +1,6 @@
 {
   "name": "admin",
-  "version": "0.1.760",
+  "version": "0.1.761",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack --port 3002",
