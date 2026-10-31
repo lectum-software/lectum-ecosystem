@@ -125,11 +125,13 @@ export const TestimonialForm = ({
           disabled={mutation.isPending || !rating || !comment.trim()}
           className="h-11 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary-hover"
         >
-          {mutation.isPending
-            ? "Salvando..."
-            : initial
-              ? "Salvar depoimento"
-              : "Publicar depoimento"}
+          <span className="text-sm font-semibold leading-5">
+            {mutation.isPending
+              ? "Salvando..."
+              : initial
+                ? "Salvar depoimento"
+                : "Publicar depoimento"}
+          </span>
         </Button>
       </div>
     </div>

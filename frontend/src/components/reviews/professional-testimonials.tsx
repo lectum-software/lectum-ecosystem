@@ -69,7 +69,7 @@ const ManagedTestimonial = ({
         ) : null
       }
       responseActions={
-        <div className="mt-2 flex gap-2">
+        <div className="flex shrink-0">
           <Button
             variant="ghost"
             className="h-10 w-10 p-0"
@@ -223,7 +223,9 @@ export const ProfessionalTestimonials = () => {
               }}
               className={`flex-1 border-b-2 p-3 text-sm ${filter === id ? "border-primary font-bold text-primary" : "border-transparent text-muted"}`}
             >
-              {label}
+              <span className={`text-sm ${filter === id ? "font-semibold" : "font-medium"}`}>
+                {label}
+              </span>
               <span className="ml-1.5 text-xs tabular-nums text-muted">
                 {(
                   data?.visibility_counts?.[id] ?? (filter === id ? data?.count : undefined)

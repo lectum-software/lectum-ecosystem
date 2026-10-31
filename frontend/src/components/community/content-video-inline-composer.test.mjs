@@ -164,14 +164,15 @@ test("focus, media preparation, picker, dirty draft and upload report independen
   assert.match(inline, /onPointerDown=\{\(event\) => event.stopPropagation\(\)\}/);
 });
 
-test("load retries retain mounted composer; count retries do not publish twice", () => {
+test("load retries retain mounted composer; count refresh stays silent and never republishes", () => {
   assert.match(inline, /controller.postQuery.refetch\(\)/);
-  assert.match(inline, /onClick=\{\(\) => void refreshAfterSubmit\(\)\}/);
   const refreshStart = inline.indexOf("const refreshAfterSubmit");
   const refresh = inline.slice(refreshStart, inline.indexOf("  return (", refreshStart));
   assert.match(refresh, /await onSubmitted\(\)/);
   assert.match(refresh, /catch/);
   assert.doesNotMatch(refresh, /submitReply/);
+  assert.doesNotMatch(inline, /Comentário enviado|Atualizar contagem|refreshFailed|setRefreshing/);
+  assert.match(inline, /apiError=\{controller.postError \|\| controller.replyError\}/);
   assert.match(inline, /max-h-\[min\(44dvh,320px\)\]/);
 });
 

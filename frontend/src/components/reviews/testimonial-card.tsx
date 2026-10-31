@@ -99,17 +99,21 @@ export const TestimonialCard = ({
           data-testimonial-curve
           className="pointer-events-none absolute top-0 left-0 z-0 h-[12.75px] w-[18.75px] -translate-x-[0.75px] rounded-bl-[8px] border-b-[1.5px] border-l-[1.5px] border-border-strong sm:w-[22.75px]"
         />
-        <TestimonialProfessionalIdentity
-          professional={professional}
-          fallbackName={responseName}
-          compact
-          date={review.responded_at}
-        />
+        <div className="flex items-start justify-between gap-2" data-testimonial-response-header>
+          <div className="min-w-0 flex-1">
+            <TestimonialProfessionalIdentity
+              professional={professional}
+              fallbackName={responseName}
+              compact
+              date={review.responded_at}
+            />
+          </div>
+          {responseActions}
+        </div>
         <div className="min-w-0 pl-[34px]">
           <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted">
             {review.response}
           </p>
-          {responseActions}
         </div>
       </div>
     ) : null}

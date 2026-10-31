@@ -25,6 +25,7 @@ registerHooks({
 });
 
 const { TestimonialCard } = await import("./testimonial-card.tsx");
+const { ReviewsIcon } = await import("../ui/reviews-icon.tsx");
 const { TestimonialForm } = await import("./testimonial-form.tsx");
 const { TestimonialProfessionalIdentity } = await import("./testimonial-professional.tsx");
 const { reviewFormSchema } = await import("../../app/app/reviews/new/use-form.tsx");
@@ -36,6 +37,69 @@ const base = {
   created_at: "2026-10-29T12:00:00Z",
   author: { name: "Ana P.", initials: "AP" },
 };
+
+test("perfil vazio convida em um unico bloco e nao confunde loading ou erro com ausencia", async () => {
+  const { PublicTestimonials } = await import("./public-testimonials.tsx");
+  const { renderRelations } = await import("../community/community-relations-test-renderer.mjs");
+  const render = (options = {}) =>
+    renderRelations({
+      children: createElement(PublicTestimonials, {
+        profileId: "local-professional",
+        reviews: [],
+        summary: { rating_count: 0 },
+        professional: { id: "local-professional", name: "Ana", verified: true },
+        ...options,
+      }),
+    });
+  const empty = render();
+  assert.match(empty, /data-testimonial-empty/);
+  assert.match(empty, /bg-surface/);
+  assert.match(empty, /Seja a primeira pessoa/);
+  assert.equal((empty.match(/aria-label="Deixar depoimento"/g) ?? []).length, 1);
+  assert.doesNotMatch(render({ isLoading: true }), /data-testimonial-empty/);
+  assert.doesNotMatch(render({ isError: true }), /data-testimonial-empty/);
+  assert.doesNotMatch(render({ readOnly: true }), /aria-label="Deixar depoimento"|Seja a primeira/);
+  const populated = render({ reviews: [base], summary: { rating_count: 1 } });
+  assert.doesNotMatch(populated, /data-testimonial-empty/);
+  assert.equal((populated.match(/aria-label="Deixar depoimento"/g) ?? []).length, 1);
+});
+
+test("icone de depoimentos usa balao circular e estrela preenchida com a cor herdada", () => {
+  const html = renderToStaticMarkup(
+    createElement(ReviewsIcon, {
+      className: "size-5",
+      "aria-hidden": true,
+      style: { width: 28, height: 28 },
+    }),
+  );
+  assert.match(html, /lucide-message-circle/);
+  assert.match(html, /lucide-star/);
+  assert.match(html, /fill="none"/);
+  assert.match(html, /fill="currentColor"/);
+  assert.match(html, /stroke="currentColor"/);
+  assert.match(html, /width:28px;height:28px/);
+  assert.doesNotMatch(html, /M9\.08,14\.25/);
+});
+
+test("acoes da resposta ficam no header lateral, antes do texto", () => {
+  const html = renderToStaticMarkup(
+    createElement(TestimonialCard, {
+      review: { ...base, response: "Resposta preservada" },
+      responseActions: createElement(
+        "button",
+        { type: "button", "data-test-response-action": true },
+        "Editar resposta",
+      ),
+    }),
+  );
+  const header = html.indexOf("data-testimonial-response-header");
+  const action = html.indexOf("data-test-response-action");
+  const body = html.indexOf("Resposta preservada");
+  assert.ok(header > 0 && action > header && action < body);
+  assert.match(html, /flex items-start justify-between gap-2/);
+  assert.match(html, /data-testimonial-stem/);
+  assert.match(html, /data-testimonial-curve/);
+});
 
 test("perfil aceita a URL de depoimentos e preserva links antigos", async () => {
   const { normalizeTab } = await import("../../app/app/psychologist/[id]/modules/support.ts");
@@ -63,10 +127,13 @@ test("convite do perfil usa azul compacto e o da modal cinza transparente sem mu
   assert.doesNotMatch(action, /min-[hw]-11/);
   assert.match(action, /bg-transparent/);
   assert.match(action, /border border-border bg-transparent px-4 text-muted/);
-  assert.match(action, /h-11 bg-primary px-3 text-xs text-primary-foreground/);
+  assert.match(action, /h-11 border-0 bg-transparent px-2.5 text-xs text-primary-foreground/);
+  assert.match(action, /before:inset-y-\[6px\]/);
+  assert.match(action, /before:bg-primary/);
+  assert.match(action, /text-sm font-semibold leading-5/);
   assert.doesNotMatch(action, /border-foreground/);
-  assert.match(action, /ReviewsIcon aria-hidden className="size-5/);
-  assert.match(action, /className=\{inline \? "max-sm:sr-only" : undefined\}/);
+  assert.match(action, /size-4 shrink-0/);
+  assert.match(action, /inline && "max-sm:sr-only"/);
   assert.doesNotMatch(action, /max-width:360px/);
   assert.match(action, /aria-label="Deixar depoimento"/);
   assert.match(action, /title="Deixar depoimento"/);

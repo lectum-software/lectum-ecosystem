@@ -60,7 +60,7 @@ export const ProfileTabs = ({
             </span>
             {tab.value !== "geral" ? (
               <span
-                className="h-[18px] min-w-[18px] max-w-[40%] shrink-0 truncate rounded-[5px] bg-primary-soft px-1 text-center text-[11px] font-semibold leading-[18px] tabular-nums text-primary"
+                className="h-[18px] min-w-[18px] max-w-[40%] shrink-0 truncate rounded-[5px] bg-surface-muted px-1 text-center text-[11px] font-semibold leading-[18px] tabular-nums text-muted"
                 title={count?.toLocaleString("pt-BR")}
               >
                 {count === undefined ? "…" : count.toLocaleString("pt-BR")}

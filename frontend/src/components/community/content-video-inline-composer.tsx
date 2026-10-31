@@ -43,8 +43,6 @@ const ActiveContentVideoInlineComposer = ({
   });
   const { hasDraft } = composerState;
   const [submitting, setSubmitting] = useState(false);
-  const [refreshFailed, setRefreshFailed] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const submittingRef = useRef(false);
   const mountedRef = useRef(false);
   const callbacksRef = useRef({ onBusyChange, onDraftStateChange, onStateChange });
@@ -78,14 +76,10 @@ const ActiveContentVideoInlineComposer = ({
   }, []);
 
   const refreshAfterSubmit = async () => {
-    setRefreshing(true);
-    setRefreshFailed(false);
     try {
       await onSubmitted();
     } catch {
-      if (mountedRef.current) setRefreshFailed(true);
-    } finally {
-      if (mountedRef.current) setRefreshing(false);
+      // Count revalidation is silent; the comment has already been published.
     }
   };
 
@@ -159,21 +153,6 @@ const ActiveContentVideoInlineComposer = ({
           <RotateCcw aria-hidden="true" className="h-4 w-4" />
           Tentar novamente
         </Button>
-      ) : null}
-      {refreshFailed ? (
-        <div className="py-2 text-xs text-media-foreground" role="status">
-          <p>Comentário enviado. Não foi possível atualizar a contagem.</p>
-          <Button
-            className="min-h-11 text-media-foreground hover:bg-media-foreground/10 hover:text-media-foreground"
-            disabled={refreshing}
-            onClick={() => void refreshAfterSubmit()}
-            type="button"
-            variant="ghost"
-          >
-            <RotateCcw aria-hidden="true" className="h-4 w-4" />
-            Atualizar contagem
-          </Button>
-        </div>
       ) : null}
     </div>
   );

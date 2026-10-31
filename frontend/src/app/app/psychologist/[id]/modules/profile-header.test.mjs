@@ -312,7 +312,11 @@ test("tabs retain roving focus with matching publication and testimonial counter
   assert.equal((html.match(/before:bg-foreground/g) ?? []).length, 1);
   assert.equal((html.match(/<span[^>]*text-\[13px\] font-semibold/g) ?? []).length, 3);
   assert.match(counters[0][1], /text-\[11px\]/);
-  assert.match(counters[0][1], /bg-primary-soft/);
+  for (const [, classes] of counters) {
+    assert.match(classes, /bg-surface-muted/);
+    assert.match(classes, /text-muted/);
+    assert.doesNotMatch(classes, /bg-primary-soft|text-primary/);
+  }
   assert.match(counters[0][1], /font-semibold/);
   assert.match(counters[0][1], /h-\[18px\] min-w-\[18px\]/);
 });

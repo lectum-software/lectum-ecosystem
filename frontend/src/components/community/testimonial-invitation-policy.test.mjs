@@ -149,7 +149,7 @@ test("actual reply controls and profile primary reply retain the eligible direct
 test("inline invitation keeps a 44px target and mobile icon-only presentation", () => {
   const source = read("../reviews/testimonial-invitation-action.tsx");
   assert.match(source, /min-h-\[44px\] min-w-\[44px\]/);
-  assert.match(source, /inline \? "max-sm:sr-only" : undefined/);
+  assert.match(source, /inline && "max-sm:sr-only"/);
   assert.match(source, /inline \? "Depoimento" : "Deixar depoimento"/);
   assert.match(source, /aria-label="Deixar depoimento"/);
 });

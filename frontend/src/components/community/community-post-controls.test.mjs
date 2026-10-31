@@ -491,7 +491,7 @@ test("video contact is a full-width bar with a white label and directional green
   assert.match(html, /scale-x-100/);
   assert.match(html, /data-contact-expanded="true"/);
   assert.match(html, /motion-reduce:transition-none/);
-  assert.match(html, /text-\[13px\] font-normal leading-5/);
+  assert.match(html, /text-\[13px\] font-semibold leading-5/);
   assert.match(html, /duration-\[900ms\]/);
   assert.match(html, /h-\[18px\] w-\[18px\]/);
   assert.match(html, /viewBox="-0.75 -0.75 21.5 21.5"/);

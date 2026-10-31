@@ -1,4 +1,6 @@
-Validado localmente em 0.1.756: [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md), ADR-0660. Ajustes da aprovacao individual, checks/builds e QA real mobile/desktop aprovados. Publicacao do lote autorizada; promocao por PR e deploy ainda pendentes. Corrida preexistente de telemetria documentada, fora do escopo visual.
+Validado localmente em 0.1.757: [TASK-297 - Reels e refinamentos de depoimentos](TASK-297-reels-silent-comment-refresh.md), ADR-0661. Avisos de contagem removidos, acoes laterais, icone circular com estrela, tipografia revisada, contadores neutros e convite compacto com estado vazio branco. Check/build frontend e QA em 320/390/1440 aprovados. Sem push/deploy deste lote.
+
+Publicado em 0.1.756: [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md), ADR-0660. PR #147 integrado; frontend e backend confirmados em producao por /version e /ping, com /health e /ready HTTP 200 em 30/10/2026. Corrida preexistente de telemetria documentada, fora do escopo visual.
 
 Validado localmente em 0.1.755: [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md), ADR-0659. Checks, builds, 40 cenarios funcionais e QA visual aprovados; fixtures limpos. Ressalva de telemetria documentada na task. Sem push/deploy.
 
@@ -727,6 +729,7 @@ ou cortesia manual.
 | 294 | [TASK-294 - Refinamentos de reels e perfil](TASK-294-reels-compact-controls.md) | Implementation and local validation | 293 |
 | 295 | [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md) | Implementation and local validation | 294 |
 | 296 | [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md) | Implementation and local validation | 295 |
+| 297 | [TASK-297 - Atualizacao silenciosa da contagem nos reels](TASK-297-reels-silent-comment-refresh.md) | Implementation and local validation | 296 |
 
 ## Ordem operacional recomendada sem bloqueios
 

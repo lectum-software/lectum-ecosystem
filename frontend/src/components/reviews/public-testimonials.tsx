@@ -28,6 +28,7 @@ export const PublicTestimonials = ({
 }) => {
   const profileQuery = useDirectoryPsychologist(suppliedProfessional ? "" : profileId);
   const professional = suppliedProfessional ?? profileQuery.data;
+  const isEmpty = !isLoading && !isError && reviews.length === 0;
   return (
     <section className="grid gap-3 bg-background px-4 py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -37,7 +38,7 @@ export const PublicTestimonials = ({
             {summary.rating_count.toLocaleString("pt-BR")}
           </span>
         </h2>
-        {!readOnly ? (
+        {!readOnly && !isEmpty ? (
           <TestimonialInvitation psychologistId={profileId} appearance="profile" allowGuest />
         ) : null}
       </div>
@@ -52,8 +53,22 @@ export const PublicTestimonials = ({
           ) : null}
         </div>
       ) : null}
-      {!isLoading && !isError && !reviews.length ? (
-        <p className="py-10 text-center text-muted">Ainda não há depoimentos.</p>
+      {isEmpty ? (
+        <div
+          className="grid justify-items-center gap-2 rounded-lg bg-surface px-5 py-6 text-center"
+          data-testimonial-empty
+        >
+          <h3 className="text-sm font-semibold text-foreground">Ainda não há depoimentos</h3>
+          {!readOnly ? (
+            <>
+              <p className="max-w-sm text-sm leading-6 text-muted">
+                Já interagiu com este psicólogo? Seja a primeira pessoa a compartilhar sua
+                experiência.
+              </p>
+              <TestimonialInvitation psychologistId={profileId} appearance="profile" allowGuest />
+            </>
+          ) : null}
+        </div>
       ) : null}
       <div className="grid gap-3">
         {reviews.map((review) => (

@@ -91,7 +91,7 @@ export const CommunityWhatsAppCta = ({
         />
         <span
           aria-hidden="true"
-          className="min-w-0 flex-1 truncate text-[13px] font-normal leading-5 text-media-foreground"
+          className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-5 text-media-foreground"
         >
           {actionLabel}
         </span>
