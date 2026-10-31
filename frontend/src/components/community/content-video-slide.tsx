@@ -1,5 +1,4 @@
 "use client";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowUp, Bookmark, MessageCircle, Play, Share2, VolumeX } from "lucide-react";
 import Link from "next/link";
@@ -10,7 +9,6 @@ import { confirmDiscardReplyDraft } from "@/app/app/community/[slug]/post/[id]/m
 import { useContentVideoWatchTracking } from "@/components/analytics/content-video-watch-tracker";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
-import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { playVideoWithActiveDocument } from "@/lib/video-playback";
@@ -40,11 +38,12 @@ import {
   useContentVideoInteractionSync,
 } from "./content-video-interaction-refresh";
 import { ContentVideoInteractionStatus } from "./content-video-interaction-status";
+import { ContentVideoPlayer } from "./content-video-player";
 import { ReadingText } from "./content-video-reading-text";
 import styles from "./content-video-viewer.module.css";
+import { useContentVideoProgress } from "./use-content-video-progress";
 
 type Panel = "caption" | "parent" | "comments" | null;
-
 export const ContentVideoSlide = ({
   item,
   active,
@@ -54,6 +53,7 @@ export const ContentVideoSlide = ({
   onNext,
   onPrevious,
   onClose,
+  onNavigate,
   createPostOpen,
   onCreatePost,
   closeRef,
@@ -69,6 +69,7 @@ export const ContentVideoSlide = ({
   onNext: () => void;
   onPrevious: () => void;
   onClose: () => void;
+  onNavigate: (time: number) => void;
   createPostOpen: boolean;
   onCreatePost: () => void;
   closeRef: RefObject<HTMLButtonElement | null>;
@@ -100,6 +101,12 @@ export const ContentVideoSlide = ({
   const [duration, setDuration] = useState(0);
   const [seeking, setSeeking] = useState(false);
   const seekingRef = useRef(false);
+  const progressFill = useContentVideoProgress(
+    videoRef,
+    active && !paused && !seeking,
+    time,
+    duration,
+  );
   const seekPointer = useRef<number | null>(null);
   const { current_user_vote: vote, upvotes_count: upvotes, saved } = item;
   const queryClient = useQueryClient();
@@ -191,7 +198,7 @@ export const ContentVideoSlide = ({
       },
     });
     if (!eligible()) {
-      video.pause();
+      if (videoRef.current === video) video.pause();
       return;
     }
     if (attempt !== audioAttempt.current || revision !== getVideoSoundPreferenceRevision()) return;
@@ -200,7 +207,7 @@ export const ContentVideoSlide = ({
       video.muted = true;
       setMuted(true);
       await playVideoWithActiveDocument(video);
-      if (!eligible()) video.pause();
+      if (!eligible() && videoRef.current === video) video.pause();
     }
   }, []);
 
@@ -264,8 +271,8 @@ export const ContentVideoSlide = ({
     setTime(next);
   };
 
-  const author = <ContentVideoAuthor author={item.author} onClose={onClose} />;
-
+  const navigate = () => onNavigate(videoRef.current?.currentTime ?? time);
+  const author = <ContentVideoAuthor author={item.author} onClose={navigate} />;
   return (
     <fieldset
       className={styles.stage}
@@ -336,17 +343,29 @@ export const ContentVideoSlide = ({
       }}
     >
       <div className={controls.videoViewport}>
-        <VerticalVideoPlayer
+        <ContentVideoPlayer
+          active={active && !unavailable}
+          mediaKey={item.id}
           className={styles.player}
-          controls={false}
-          fit="cover"
           onContentClick={togglePlayback}
-          onSoundEnabledChange={setVideoSoundEnabledByUser}
           onVideoElementReady={ready}
           src={resolvePublicMediaUrl(item.media_url) ?? item.media_url}
           title={item.title || "Vídeo de conteúdo"}
           videoProps={{
-            loop: true,
+            loop: false,
+            onEnded: (event) => {
+              if (
+                event.currentTarget.ended &&
+                activeRef.current &&
+                !panelRef.current &&
+                !seekingRef.current &&
+                !composerBusyRef.current &&
+                !createPostOpenRef.current &&
+                !syncingInteractions &&
+                !composerState.hasDraft
+              )
+                onNext();
+            },
             muted,
             onLoadedMetadata: (event) => {
               const video = event.currentTarget;
@@ -515,7 +534,7 @@ export const ContentVideoSlide = ({
                   });
                 }}
               >
-                <Share2 className={styles.shareIcon} aria-hidden />
+                <Share2 aria-hidden />
               </button>
               {item.author.whatsapp_url ? (
                 <PsychologistWhatsAppRedirectButton
@@ -563,7 +582,7 @@ export const ContentVideoSlide = ({
               {item.responding_to.title ? <h2>{item.responding_to.title}</h2> : null}
               {item.responding_to.content}
             </ReadingText>
-            <Link className={styles.discussionLink} href={href} onClick={onClose}>
+            <Link className={styles.discussionLink} href={href} onNavigate={navigate}>
               Ver discussão completa
             </Link>
           </div>
@@ -581,12 +600,7 @@ export const ContentVideoSlide = ({
         ) : null}
         <div className={styles.progress} data-seeking={seeking || undefined}>
           <div className={styles.progressTrack} aria-hidden="true">
-            <span
-              className={styles.progressFill}
-              style={{
-                transform: `scaleX(${duration ? Math.min(1, Math.max(0, time / duration)) : 0})`,
-              }}
-            />
+            <span ref={progressFill} className={styles.progressFill} />
           </div>
           <input
             className={styles.progressInput}

@@ -236,7 +236,7 @@ export const ProfileLogic = () => {
             disabled: pwaInstall.isInstalling,
             hideChevron: true,
             icon: Smartphone,
-            label: "Instalar aplicativo",
+            label: "Instalar Aplicativo",
             onClick: pwaInstall.onInstall,
             trailing: (
               <span className="shrink-0 text-sm font-extrabold text-primary">
@@ -249,7 +249,7 @@ export const ProfileLogic = () => {
     {
       href: isPsychologist ? "/app/profissional/perfil/configurar" : "/app/perfil/editar",
       icon: Edit3,
-      label: "Editar perfil",
+      label: "Editar Perfil",
       trailing: showProfileActivationAlert ? (
         <span
           className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-danger/10 text-danger"
@@ -271,12 +271,12 @@ export const ProfileLogic = () => {
           },
         ]
       : [{ href: "/app/avaliacoes", icon: ReviewsIcon, label: "Meus Depoimentos" }]),
-    { href: "/app/configuracoes/conta", icon: Lock, label: "E-mail e senha" },
-    { href: "/app/ajuda", icon: CircleHelp, label: "Ajuda e feedback" },
+    { href: "/app/configuracoes/conta", icon: Lock, label: "E-mail e Senha" },
+    { href: "/app/ajuda", icon: CircleHelp, label: "Ajuda e Feedback" },
     {
       hideChevron: true,
       icon: Moon,
-      label: "Ativar modo escuro",
+      label: "Ativar Modo Escuro",
       trailing: <ThemeSwitch />,
     },
   ];
@@ -285,12 +285,12 @@ export const ProfileLogic = () => {
     {
       href: "/app/publicacoes/minhas",
       icon: MessagesSquare,
-      label: "Minhas publicações",
+      label: "Minhas Publicações",
     },
     { href: "/app/favoritos", icon: Heart, label: "Favoritos" },
     { href: "/app/publicacoes/salvas", icon: Bookmark, label: "Salvos" },
-    { href: "/app/comunidades-seguidas", icon: UsersRound, label: "Comunidades seguidas" },
-    { href: "/comunidades", icon: Compass, label: "Explorar comunidades" },
+    { href: "/app/comunidades-seguidas", icon: UsersRound, label: "Comunidades Seguidas" },
+    { href: "/comunidades", icon: Compass, label: "Explorar Comunidades" },
   ];
 
   return (
@@ -341,7 +341,7 @@ export const ProfileLogic = () => {
 
         <Button className="w-full" onClick={() => out()} type="button" variant="outline">
           <LogOut className="h-4 w-4" aria-hidden="true" />
-          Sair da conta
+          Sair da Conta
         </Button>
 
         {pwaInstall.dialog}

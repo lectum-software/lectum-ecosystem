@@ -2,6 +2,7 @@ import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire, registerHooks } from "node:module";
+import path from "node:path";
 import test from "node:test";
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
@@ -14,6 +15,7 @@ const viewer = [
   .map(read)
   .join("\n");
 const css = read("./content-video-viewer.module.css");
+const tokens = read("../../app/globals.css").match(/:root \{[^}]+\}/s)[0];
 
 test("reel header reuses the real create form and keeps explicit navigation labels", () => {
   const header = read("./content-video-header.tsx");
@@ -134,7 +136,8 @@ test("reel experience stays below the author and inside mobile and desktop bound
     for (const width of [320, 390, 1440]) {
       const page = await browser.newPage({ viewport: { width, height: 844 } });
       await page.setContent(`<style>
-        *{box-sizing:border-box}body{margin:0;font-family:Arial}
+        ${tokens}
+        *{box-sizing:border-box}body{margin:0;font-family:Arial;background:var(--lectum-media-background)}
         ${css}
         .test-stage{position:relative;width:${width < 1024 ? width : 506}px;height:700px;
           background:var(--lectum-media-background);--info-bottom:24px;--lectum-media-foreground:white;--lectum-media-background:black}
@@ -175,7 +178,7 @@ test("the author uses one profile link and keeps its controls attached to the fi
   assert.match(css, /\.author \{[^}]*white-space: nowrap;/s);
   assert.match(css, /\.name \{[^}]*white-space: normal;/s);
   assert.match(css, /\.authorActions:not\(:empty\) \{[^}]*display: inline-flex;/s);
-  assert.match(viewer, /<Share2 className=\{styles.shareIcon\} aria-hidden \/>/);
+  assert.match(viewer, /<Share2 aria-hidden \/>/);
 });
 
 test("action sizing stays balanced and author controls follow the last name", async (t) => {
@@ -198,7 +201,8 @@ test("action sizing stays balanced and author controls follow the last name", as
     for (const width of [320, 390, 430, 1440]) {
       const page = await browser.newPage({ viewport: { width, height: 844 } });
       await page.setContent(`<style>
-        *{box-sizing:border-box}body{margin:0;font-family:Arial}
+        ${tokens}
+        *{box-sizing:border-box}body{margin:0;font-family:Arial;background:var(--lectum-media-background)}
         ${css}
         .test-stage{position:relative;width:${width < 1024 ? width : 506}px;height:700px;
           --info-bottom:24px;--desktop-card-width:506px}
@@ -259,9 +263,9 @@ test("action sizing stays balanced and author controls follow the last name", as
       });
       if (width < 1024) {
         // Compact visible spacing while every action retains a 44px hit target.
-        assert.equal(result.gaps[0], 14);
+        assert.equal(result.gaps[0], 20);
         assert.ok(
-          result.gaps.every((gap) => gap >= 14 && gap <= 29),
+          result.gaps.every((gap) => gap >= 20 && gap <= 32),
           `${width}: icon and count form one item: ${JSON.stringify(result.gaps)}`,
         );
       } else {
@@ -272,14 +276,18 @@ test("action sizing stays balanced and author controls follow the last name", as
         `${width}: badge and favorite must immediately follow the last name: ${JSON.stringify(result)}`,
       );
       assert.ok(result.touchHeights.every((height) => height >= (width < 1024 ? 44 : 40)));
-      const size = width < 359 ? 18 : 20;
+      const size = width < 359 ? 26 : width < 1024 ? 28 : 24;
       for (const icon of result.iconSizes.slice(0, 3)) {
         assert.equal(icon.width, size);
         assert.equal(icon.height, size);
       }
       assert.ok(result.iconSizes.every((icon) => icon.box === `${size}px`));
-      assert.ok(Math.abs(result.iconSizes[3].width - size * 0.9) < 0.1);
-      assert.ok(Math.abs(result.iconSizes[3].height - size * 0.9) < 0.1);
+      assert.equal(result.iconSizes[3].width, size);
+      assert.equal(result.iconSizes[3].height, size);
+      if (process.env.LECTUM_QA_SCREENSHOTS)
+        await page.screenshot({
+          path: path.join(process.env.LECTUM_QA_SCREENSHOTS, `task300-controls-${width}.png`),
+        });
       const upvote = page.locator(".rail > button").first();
       assert.equal(
         await upvote.locator("span").evaluate((el) => getComputedStyle(el).fontWeight),
@@ -330,8 +338,9 @@ test("reels upvote shows only its count with accessible semantics and no tooltip
 test("expanded content fills its viewport using the directory cover fit", () => {
   const directory = read("../../app/app/psychologists/view/components/slide.tsx");
   assert.match(directory, /fit="cover"/);
-  assert.match(viewer, /fit="cover"/);
-  assert.doesNotMatch(viewer, /fit="contain"/);
+  const player = read("./content-video-player.tsx");
+  assert.match(player, /h-full w-full bg-media-background object-cover/);
+  assert.doesNotMatch(player, /object-contain/);
 });
 
 test("progress has a full-width custom track and an accessible invisible input", () => {
@@ -370,7 +379,7 @@ test("caption collapse stays beside author and parent has a discussion destinati
     viewer,
     /className=\{styles.readingHeading\}>[\s\S]*?\{author\}[\s\S]*?styles.collapse[\s\S]*?<ReadingText>\{item.content\}/,
   );
-  assert.match(viewer, /className=\{styles.discussionLink\} href=\{href\} onClick=\{onClose\}/);
+  assert.match(viewer, /className=\{styles.discussionLink\} href=\{href\} onNavigate=\{navigate\}/);
   assert.match(viewer, /item.responding_to.id === item.post_id/);
   assert.match(viewer, /resumeAfterPanel.current = Boolean\(video && !video.paused\)/);
 });
@@ -381,7 +390,10 @@ test("late media readiness cannot restart playback behind a reading panel", () =
     viewer,
     /!panelRef.current &&\s*!seekingRef.current &&\s*videoRef.current === video/,
   );
-  assert.match(viewer, /await playVideoWithActiveDocument\(video\);\s*if \(!eligible\(\)\)/);
+  assert.match(
+    viewer,
+    /await playVideoWithActiveDocument\(video\);\s*if \(!eligible\(\) && videoRef.current === video\)/,
+  );
   assert.match(
     viewer,
     /onPlay: \(event\) => \{\s*if \(\s*!activeRef.current \|\|\s*panelRef.current \|\|\s*seekingRef.current \|\|\s*composerBusyRef.current \|\|\s*createPostOpenRef.current\s*\)\s*event.currentTarget.pause\(\)/,
@@ -412,7 +424,8 @@ test("sound follows the shared preference and explicit user changes update it", 
     slide,
     /attempt !== audioAttempt.current \|\| revision !== getVideoSoundPreferenceRevision\(\)/,
   );
-  assert.match(slide, /onSoundEnabledChange=\{setVideoSoundEnabledByUser\}/);
+  assert.match(slide, /<ContentVideoPlayer\s+active=\{active && !unavailable\}/);
+  assert.match(read("./content-video-viewer.tsx"), /<ContentVideoPlayerProvider>/);
   assert.match(
     slide,
     /aria-label="Ativar som do vídeo"\s*onClick=\{\(\) => \{\s*setVideoSoundEnabledByUser\(true\);/,

@@ -211,7 +211,7 @@ test("create action replaces favorites in the mobile center and desktop sidebar"
   assert.doesNotMatch(template, /autoHideNavigation|setIsNavigationVisible|-top-3/);
   assert.match(template, /intent: \{ returnTo: centerAction.href, type: "create_post" \}/);
   const profile = readSource("../app/app/profile/logic.tsx");
-  assert.match(profile, /Minhas publicações[\s\S]*label: "Favoritos"[\s\S]*label: "Salvos"/);
+  assert.match(profile, /Minhas Publicações[\s\S]*label: "Favoritos"[\s\S]*label: "Salvos"/);
   const psychologists = readSource("../app/app/psychologists/view/index.tsx");
   assert.match(psychologists, /navigationHidden=\{metrics.isDesktopLayout \? false : isUiHidden\}/);
 });
@@ -220,7 +220,7 @@ test("both profile roles share the publications menu label and its original dest
   const profile = readSource("../app/app/profile/logic.tsx");
   assert.match(
     profile,
-    /const communityRows: ProfileRow\[\] = \[\s*\{\s*href: "\/app\/publicacoes\/minhas",\s*icon: MessagesSquare,\s*label: "Minhas publicações",\s*\}/,
+    /const communityRows: ProfileRow\[\] = \[\s*\{\s*href: "\/app\/publicacoes\/minhas",\s*icon: MessagesSquare,\s*label: "Minhas Publicações",\s*\}/,
   );
   assert.doesNotMatch(profile, /Meus posts? e (respostas|comentários)/);
 });
@@ -234,7 +234,7 @@ test("both profile roles use Meus Depoimentos and professional entry follows Edi
   assert.doesNotMatch(accountRows, /Avaliações feitas/);
   assert.equal([...accountRows.matchAll(/label: "Meus Depoimentos"/g)].length, 2);
   assert.ok(
-    accountRows.indexOf('label: "Editar perfil"') <
+    accountRows.indexOf('label: "Editar Perfil"') <
       accountRows.indexOf('href: "/app/profissional/avaliacoes"'),
   );
   assert.ok(

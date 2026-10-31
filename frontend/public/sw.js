@@ -86,6 +86,10 @@ self.addEventListener("push", (event) => {
         body: safeNotificationText(notification.body, DEFAULT_NOTIFICATION_BODY),
         icon: "/icon.png",
         badge: "/icon.png",
+        ...(Array.isArray(notification.actions) &&
+        notification.actions.some((item) => item?.action === "leave_testimonial")
+          ? { actions: [{ action: "leave_testimonial", title: "Deixar depoimento" }] }
+          : {}),
         data: { redirect },
       })
       .catch(() => undefined),

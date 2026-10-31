@@ -42,7 +42,7 @@ export const TestimonialProfessionalIdentity = ({
         </div>
         <div className="grid min-w-0 gap-0.5 px-0.5 py-0.5">
           <div className="flex min-w-0 items-center gap-1">
-            <span className="min-w-0 truncate text-xs font-bold leading-tight">{name}</span>
+            <span className="min-w-0 break-words text-xs font-bold leading-tight">{name}</span>
             {professional?.verified ? (
               <VerifiedBadgeIcon aria-label="Perfil verificado" className="size-2.5 shrink-0" />
             ) : null}
@@ -50,7 +50,11 @@ export const TestimonialProfessionalIdentity = ({
           <p className="text-[10px] font-semibold leading-tight text-muted">
             {professional ? getPsychologistTitle(professional.gender) : null}
             {professional && date ? " • " : null}
-            {date ? <time dateTime={date}>{formatCommunityPostTime(date)}</time> : null}
+            {date ? (
+              <time className="inline-block whitespace-nowrap" dateTime={date}>
+                {formatCommunityPostTime(date)}
+              </time>
+            ) : null}
           </p>
         </div>
       </div>
@@ -79,7 +83,7 @@ export const TestimonialProfessionalIdentity = ({
       </span>
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1">
-          <span className="min-w-0 break-words text-sm font-semibold leading-5">{name}</span>
+          <span className="min-w-0 break-words text-sm font-black leading-5">{name}</span>
           {professional?.verified ? (
             <VerifiedBadgeIcon aria-label="Perfil verificado" className="size-4 shrink-0" />
           ) : null}

@@ -3,7 +3,7 @@ import type { PaginationResponse } from "@/interfaces/pagination";
 
 export interface IPendingReviewDTO {
   auth: user;
-  q: { page?: number; limit?: number };
+  q: { page?: number; limit?: number; batch?: string };
 }
 
 export type PendingReviewProfessional = {

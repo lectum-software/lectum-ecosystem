@@ -25,6 +25,7 @@ registerHooks({
 });
 
 const { TestimonialCard } = await import("./testimonial-card.tsx");
+const { ReviewsIcon } = await import("../ui/reviews-icon.tsx");
 const { TestimonialForm } = await import("./testimonial-form.tsx");
 const { TestimonialProfessionalIdentity } = await import("./testimonial-professional.tsx");
 const { reviewFormSchema } = await import("../../app/app/reviews/new/use-form.tsx");
@@ -34,8 +35,88 @@ const base = {
   comment: "Senti respeito e acolhimento.",
   response: null,
   created_at: "2026-10-29T12:00:00Z",
-  author: { name: "Ana P.", initials: "AP" },
+  author: { name: "Ana Pereira", initials: "AP" },
 };
+
+test("perfil vazio convida em um unico bloco e nao confunde loading ou erro com ausencia", async () => {
+  const { PublicTestimonials } = await import("./public-testimonials.tsx");
+  const { renderRelations } = await import("../community/community-relations-test-renderer.mjs");
+  const render = (options = {}) =>
+    renderRelations({
+      children: createElement(PublicTestimonials, {
+        profileId: "local-professional",
+        reviews: [],
+        summary: { rating_count: 0 },
+        professional: { id: "local-professional", name: "Ana", verified: true },
+        ...options,
+      }),
+    });
+  const empty = render();
+  assert.match(empty, /data-testimonial-empty/);
+  assert.match(empty, /bg-surface/);
+  assert.match(empty, /border-dashed/);
+  assert.match(empty, /rounded-\[26px\]/);
+  assert.match(empty, /lucide-message-circle/);
+  assert.match(empty, /lucide-star/);
+  assert.match(empty, /text-base font-semibold text-foreground/);
+  const emptyStateClass = empty.match(/data-testimonial-empty[^>]*><section class="([^"]*)"/)?.[1];
+  assert.ok(emptyStateClass);
+  assert.doesNotMatch(emptyStateClass, /min-h-\[/);
+  assert.match(empty, /Seja a primeira pessoa/);
+  assert.equal((empty.match(/aria-label="Deixar depoimento"/g) ?? []).length, 1);
+  assert.doesNotMatch(render({ isLoading: true }), /data-testimonial-empty/);
+  assert.doesNotMatch(render({ isError: true }), /data-testimonial-empty/);
+  assert.doesNotMatch(render({ readOnly: true }), /aria-label="Deixar depoimento"|Seja a primeira/);
+  const populated = render({ reviews: [base], summary: { rating_count: 1 } });
+  assert.match(populated, /overflow-hidden rounded-\[26px\][^"]*" data-testimonial-list/);
+  assert.doesNotMatch(populated, /data-testimonial-empty/);
+  assert.equal((populated.match(/aria-label="Deixar depoimento"/g) ?? []).length, 1);
+});
+
+test("listas e vazios dos dois perfis usam os cantos dos blocos do perfil", () => {
+  for (const file of ["patient-testimonials.tsx", "professional-testimonials.tsx"]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.match(source, /overflow-hidden rounded-\[26px\][^"]*"\s+data-testimonial-list/);
+    assert.match(source, /<EmptyState\s+className="rounded-\[26px\]"/);
+  }
+});
+
+test("icone de depoimentos usa balao circular e estrela preenchida com a cor herdada", () => {
+  const html = renderToStaticMarkup(
+    createElement(ReviewsIcon, {
+      className: "size-5",
+      "aria-hidden": true,
+      style: { width: 28, height: 28 },
+    }),
+  );
+  assert.match(html, /lucide-message-circle/);
+  assert.match(html, /lucide-star/);
+  assert.match(html, /fill="none"/);
+  assert.match(html, /fill="currentColor"/);
+  assert.match(html, /stroke="currentColor"/);
+  assert.match(html, /width:28px;height:28px/);
+  assert.doesNotMatch(html, /M9\.08,14\.25/);
+});
+
+test("acoes da resposta ficam no header lateral, antes do texto", () => {
+  const html = renderToStaticMarkup(
+    createElement(TestimonialCard, {
+      review: { ...base, response: "Resposta preservada" },
+      responseActions: createElement(
+        "button",
+        { type: "button", "data-test-response-action": true },
+        "Editar resposta",
+      ),
+    }),
+  );
+  const header = html.indexOf("data-testimonial-response-header");
+  const action = html.indexOf("data-test-response-action");
+  const body = html.indexOf("Resposta preservada");
+  assert.ok(header > 0 && action > header && action < body);
+  assert.match(html, /flex items-start justify-between gap-2/);
+  assert.match(html, /data-testimonial-response/);
+  assert.doesNotMatch(html, /data-testimonial-stem|data-testimonial-curve/);
+});
 
 test("perfil aceita a URL de depoimentos e preserva links antigos", async () => {
   const { normalizeTab } = await import("../../app/app/psychologist/[id]/modules/support.ts");
@@ -63,10 +144,13 @@ test("convite do perfil usa azul compacto e o da modal cinza transparente sem mu
   assert.doesNotMatch(action, /min-[hw]-11/);
   assert.match(action, /bg-transparent/);
   assert.match(action, /border border-border bg-transparent px-4 text-muted/);
-  assert.match(action, /h-11 bg-primary px-3 text-xs text-primary-foreground/);
+  assert.match(action, /h-11 border-0 bg-transparent px-2.5 text-xs text-primary-foreground/);
+  assert.match(action, /before:inset-y-\[6px\]/);
+  assert.match(action, /before:bg-primary/);
+  assert.match(action, /text-sm font-semibold leading-5/);
   assert.doesNotMatch(action, /border-foreground/);
-  assert.match(action, /ReviewsIcon aria-hidden className="size-5/);
-  assert.match(action, /className=\{inline \? "max-sm:sr-only" : undefined\}/);
+  assert.match(action, /size-4 shrink-0/);
+  assert.match(action, /inline && "max-sm:sr-only"/);
   assert.doesNotMatch(action, /max-width:360px/);
   assert.match(action, /aria-label="Deixar depoimento"/);
   assert.match(action, /title="Deixar depoimento"/);
@@ -199,7 +283,7 @@ test("contadores usam totais do servidor, preservam zero e nao inventam total no
   assert.equal(evaluate(undefined, "all"), "…");
 });
 
-test("identidade profissional preserva nome, genero, selo e anonimato do autor", () => {
+test("identidade profissional preserva nome, genero, selo e identifica o autor", () => {
   const professional = {
     id: "professional",
     name: "Alessandra Camargo",
@@ -213,7 +297,7 @@ test("identidade profissional preserva nome, genero, selo e anonimato do autor",
       professional,
     }),
   );
-  assert.match(html, /Ana P\./);
+  assert.match(html, /Ana Pereira/);
   assert.match(html, />AP</);
   assert.match(html, /Alessandra Camargo/);
   assert.match(html, /Psicóloga/);
@@ -232,7 +316,41 @@ test("identidade profissional preserva nome, genero, selo e anonimato do autor",
   assert.doesNotMatch(unverified, /Perfil verificado/);
 });
 
-test("depoimentos usam blocos separados e removem textos redundantes sem perder os totais", () => {
+test("nome do profissional na modal usa o mesmo peso do feed sem reforcar cargo ou resposta compacta", () => {
+  const professional = { id: "local", name: "Marina Almeida", gender: "feminino", verified: true };
+  const html = renderToStaticMarkup(
+    createElement(TestimonialProfessionalIdentity, { professional }),
+  );
+  assert.match(html, /text-sm font-black leading-5/);
+  assert.match(html, /text-xs leading-5 text-muted/);
+  const compact = renderToStaticMarkup(
+    createElement(TestimonialProfessionalIdentity, { professional, compact: true }),
+  );
+  assert.match(compact, /text-xs font-bold leading-tight/);
+  const feed = readFileSync(
+    new URL("../community/community-post-card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(feed, /text-sm font-black leading-tight text-foreground/);
+});
+
+test("depoimentos do paciente preservam reviews compartilhados, destinatario, acoes e vazio padrao", () => {
+  const source = readFileSync(new URL("./patient-testimonials.tsx", import.meta.url), "utf8");
+  assert.match(source, /<TestimonialCard/);
+  assert.match(source, /Depoimento para/);
+  assert.match(source, /ownAuthorAvatar=\{user\?\.avatar\}/);
+  assert.match(source, /aria-label="Editar depoimento"/);
+  assert.match(source, /<DeleteReviewButton reviewId=\{review\.id\}/);
+  assert.match(source, /flex shrink-0 items-center/);
+  assert.match(source, /!query\.isLoading && !query\.isError && !items\.length/);
+  assert.match(source, /<EmptyState/);
+  assert.match(source, /icon=\{ReviewsIcon\}/);
+  assert.match(source, /Explorar psicólogos/);
+  assert.match(source, /query\.fetchNextPage\(\)/);
+  assert.doesNotMatch(source, /role="tab"|rating_avg|data-testimonial-stem/);
+});
+
+test("depoimentos usam lista branca com divisorias sem perder os totais", () => {
   for (const file of [
     "public-testimonials.tsx",
     "patient-testimonials.tsx",
@@ -240,14 +358,20 @@ test("depoimentos usam blocos separados e removem textos redundantes sem perder 
     "testimonial-sheet-dialog.tsx",
   ]) {
     const source = readFileSync(new URL(`./${file}`, import.meta.url), "utf8");
-    assert.match(source, /grid gap-3/);
+    assert.match(source, /divide-y divide-border/);
+    assert.match(source, /data-testimonial-list/);
     assert.doesNotMatch(
       source,
-      /TESTIMONIAL_DESCRIPTION|Relatos sobre experiências|depoimentos visíveis no perfil|divide-y divide-border/,
+      /TESTIMONIAL_DESCRIPTION|Relatos sobre experiências|depoimentos visíveis no perfil|rating_avg|distribution/,
     );
   }
   const html = renderToStaticMarkup(createElement(TestimonialCard, { review: base }));
-  assert.match(html, /<article class="min-w-0 rounded-lg bg-surface p-4"/);
+  assert.match(html, /<article class="min-w-0 bg-surface py-5"/);
+  assert.match(html, /data-testimonial-rating-meta/);
+  const rating = html.indexOf('aria-label="4 de 5 estrelas"');
+  const date = html.indexOf("<time");
+  const comment = html.indexOf(base.comment);
+  assert.ok(rating < date && date < comment);
   const professional = readFileSync(
     new URL("./professional-testimonials.tsx", import.meta.url),
     "utf8",
@@ -255,46 +379,42 @@ test("depoimentos usam blocos separados e removem textos redundantes sem perder 
   assert.match(professional, /data\?\.visibility_counts\?\.\[id\]/);
 });
 
-test("resposta liga o avatar do pai ao avatar filho com geometria da arvore de comentarios", () => {
+test("resposta profissional e identificada sem arvore ou recuos adicionais de comentario", () => {
   const card = readFileSync(new URL("./testimonial-card.tsx", import.meta.url), "utf8");
-  const tree = readFileSync(
-    new URL("../../app/app/community/[slug]/post/[id]/components/reply-card.tsx", import.meta.url),
-    "utf8",
-  );
-  for (const token of [
-    "grid-cols-[2rem_minmax(0,1fr)]",
-    "sm:grid-cols-[2.25rem_minmax(0,1fr)]",
-    "top-10 left-4",
-    "border-l-[1.5px]",
-    "rounded-bl-[8px]",
-    "h-[12.75px]",
-    "sm:pl-[22px]",
-  ]) {
-    assert.ok(tree.includes(token), token);
-    assert.ok(card.includes(token), token);
-  }
+  assert.doesNotMatch(card, /data-testimonial-stem|data-testimonial-curve|border-l-\[/);
+  assert.match(card, /ml-11/);
+  assert.doesNotMatch(card, /pl-\[2\.125rem\]/);
   const html = renderToStaticMarkup(
     createElement(TestimonialCard, {
       review: { ...base, response: "Obrigada.", responded_at: base.created_at },
     }),
   );
-  assert.match(html, /data-testimonial-stem/);
-  assert.match(html, /data-testimonial-curve/);
-  assert.match(html, /-bottom-3 top-10/);
-  assert.match(html, /relative z-10 mt-3 ml-4/);
+  assert.match(html, /data-testimonial-response/);
+  assert.match(html, /Resposta do profissional/);
+  assert.match(html, /rounded-md bg-surface-muted p-3/);
+  assert.doesNotMatch(html, /border-t|shadow-/);
+  assert.match(html, /Obrigada\./);
   const withoutResponse = renderToStaticMarkup(createElement(TestimonialCard, { review: base }));
-  assert.doesNotMatch(withoutResponse, /data-testimonial-stem|data-testimonial-curve/);
+  assert.doesNotMatch(withoutResponse, /data-testimonial-response|Resposta do profissional/);
 });
 
-test("identidade publica mantem nome abreviado e iniciais sem aproveitar foto privada extra", () => {
+test("review exibe nome e foto de perfil sem expor id ou dados extras do autor", () => {
   const review = {
     ...base,
-    author: { ...base.author, avatar: "/public/files/private-avatar.jpg", id: "private-author" },
+    author: {
+      ...base.author,
+      avatar: "/public/files/review-avatar.jpg",
+      id: "private-author",
+      email: "private@example.test",
+    },
   };
   const html = renderToStaticMarkup(createElement(TestimonialCard, { review }));
-  assert.match(html, /Ana P\./);
-  assert.match(html, />AP</);
-  assert.doesNotMatch(html, /private-avatar|private-author/);
+  assert.match(html, /Ana Pereira/);
+  assert.match(html, /review-avatar.jpg/);
+  assert.doesNotMatch(html, /private-author|private@example.test/);
+  const withoutPhoto = renderToStaticMarkup(createElement(TestimonialCard, { review: base }));
+  assert.match(withoutPhoto, /Ana Pereira/);
+  assert.match(withoutPhoto, />AP</);
   const own = renderToStaticMarkup(
     createElement(TestimonialCard, {
       review: base,
@@ -336,7 +456,10 @@ test("composer associa publicar ao formulario fora da rolagem e junto da safe ar
     assert.match(html, /pb-\[max\(12px,env\(safe-area-inset-bottom\)\)\]/);
     assert.match(submit, /bg-primary text-primary-foreground/);
     const sheet = readFileSync(new URL("./testimonial-sheet-dialog.tsx", import.meta.url), "utf8");
-    assert.match(sheet, /className="shrink-0 px-4 py-4"/);
+    assert.match(
+      sheet,
+      /view === "compose" \? \(\s*<div className="shrink-0 px-4 py-4" data-testimonials-recipient>/,
+    );
     assert.match(sheet, /onStateChange=\{setFormState\}\s+sheetLayout/);
   } finally {
     query.clear();
@@ -345,7 +468,7 @@ test("composer associa publicar ao formulario fora da rolagem e junto da safe ar
 
 test("depoimento mostra autor, texto e nota individual sem média", () => {
   const html = renderToStaticMarkup(createElement(TestimonialCard, { review: base }));
-  assert.match(html, /Ana P\./);
+  assert.match(html, /Ana Pereira/);
   assert.match(html, /Senti respeito e acolhimento/);
   assert.match(html, /aria-label="4 de 5 estrelas"/);
   assert.doesNotMatch(html, /média|Avaliações|Responder|<form/);
@@ -390,6 +513,7 @@ test("formulário real tem placeholder aprovado, cinco estrelas e nenhum consent
   assert.equal((html.match(/type="radio"/g) || []).length, 5);
   assert.match(html, /<form/);
   assert.match(html, /name="comment"/);
+  assert.doesNotMatch(html, /Seu nome e sua foto de perfil aparecerão junto ao depoimento/);
   assert.doesNotMatch(html, /Escolha sua nota|Concordo em publicar|type="checkbox"/);
   query.clear();
 });

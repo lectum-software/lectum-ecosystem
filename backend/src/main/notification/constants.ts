@@ -30,8 +30,8 @@ const resolveBillingNoticeStage = (data: Record<string, unknown>) => {
 
 export const messages = {
   depoimentos_pendentes: (_data: Record<string, unknown>) => ({
-    title: "Como você se sentiu com os psicólogos que responderam você?",
-    body: "Deixe um depoimento sobre quem acolheu você na Lectum.",
+    title: "Recebeu acolhimento? Retribua com um relato",
+    body: "Conte como foi sua experiência e ajude a valorizar o trabalho de quem respondeu você.",
   }),
   nova_avaliacao: (data: Record<string, unknown>) => {
     const props = withNotificationName(data);

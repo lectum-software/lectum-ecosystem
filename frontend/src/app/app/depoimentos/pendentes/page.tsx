@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function PendingTestimonialsPage() {
-  return <PendingTestimonialsLogic />;
+export default async function PendingTestimonialsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ batch?: string }>;
+}) {
+  const { batch } = await searchParams;
+  return <PendingTestimonialsLogic batch={typeof batch === "string" ? batch : undefined} />;
 }

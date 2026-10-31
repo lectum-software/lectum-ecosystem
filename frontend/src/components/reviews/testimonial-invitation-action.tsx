@@ -35,14 +35,23 @@ export const TestimonialInvitationAction = ({
     inline
       ? "border-0 bg-transparent px-2 text-muted hover:bg-surface-muted hover:text-foreground"
       : appearance === "profile"
-        ? "h-11 bg-primary px-3 text-xs text-primary-foreground hover:bg-primary-hover"
+        ? "relative isolate h-11 border-0 bg-transparent px-2.5 text-xs text-primary-foreground before:absolute before:inset-x-0 before:inset-y-[6px] before:-z-10 before:rounded-full before:bg-primary before:content-[''] hover:bg-transparent hover:before:bg-primary-hover"
         : "border border-border bg-transparent px-4 text-muted hover:bg-surface-muted hover:text-foreground",
     className,
   );
   const content = (
     <>
-      <ReviewsIcon aria-hidden className="size-5 shrink-0" />
-      <span className={inline ? "max-sm:sr-only" : undefined}>
+      <ReviewsIcon
+        aria-hidden
+        className={appearance === "profile" ? "size-4 shrink-0" : "size-5 shrink-0"}
+      />
+      <span
+        className={cn(
+          "text-sm font-semibold leading-5",
+          inline && "max-sm:sr-only",
+          appearance === "profile" && "text-xs leading-4",
+        )}
+      >
         {inline ? "Depoimento" : "Deixar depoimento"}
       </span>
     </>

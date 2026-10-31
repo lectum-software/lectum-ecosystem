@@ -55,8 +55,9 @@ const NOTIFICATION_ICON_TONE = "bg-primary-soft text-primary";
 
 const LABELS: Record<string, NotificationView> = {
   depoimentos_pendentes: {
-    title: "Como você se sentiu com os psicólogos que responderam você?",
-    description: "Deixe um depoimento sobre quem acolheu você na Lectum.",
+    title: "Recebeu acolhimento? Retribua com um relato",
+    description:
+      "Conte como foi sua experiência e ajude a valorizar o trabalho de quem respondeu você.",
     icon: MessageSquare,
     tone: NOTIFICATION_ICON_TONE,
   },

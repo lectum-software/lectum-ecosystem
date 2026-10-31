@@ -16,12 +16,12 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { flattenListPages, nextListPage } from "@/utils/infinite-list";
 
-export const PendingTestimonialsLogic = () => {
+export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
   const user = useAppSelector((state) => state.user);
   const isPatient = user?.role === "paciente";
   const query = useInfiniteQuery({
-    queryKey: ["testimonial-pending", user?.id],
-    queryFn: ({ pageParam }) => getPendingTestimonials(pageParam),
+    queryKey: ["testimonial-pending", user?.id, batch],
+    queryFn: ({ pageParam }) => getPendingTestimonials(pageParam, batch),
     initialPageParam: 1,
     getNextPageParam: nextListPage,
     enabled: isPatient,

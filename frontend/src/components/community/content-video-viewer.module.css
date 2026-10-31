@@ -132,7 +132,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
   width: 44px;
   max-height: calc(100% - max(16px, env(safe-area-inset-top)) - 56px - var(--info-bottom));
   overflow-y: auto;
@@ -161,15 +161,12 @@
   justify-content: center;
 }
 .action svg {
-  width: 20px;
-  height: 20px;
-}
-.action .shareIcon {
-  transform: scale(0.9);
+  width: 28px;
+  height: 28px;
 }
 .action span {
-  font-size: 10px;
-  line-height: 13px;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: var(--action-count-weight, 600);
 }
 .action[aria-pressed="true"] {
@@ -192,14 +189,14 @@
 .contactGlyph {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--lectum-whatsapp-contact);
 }
 .contact svg {
-  width: 15px;
-  height: 15px;
+  width: 22px;
+  height: 22px;
 }
 .identity {
   position: absolute;
@@ -523,19 +520,18 @@
   }
   .rail {
     right: 12px;
-    gap: 2px;
   }
   .action svg {
-    width: 18px;
-    height: 18px;
+    width: 26px;
+    height: 26px;
   }
   .contactGlyph {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
   }
   .contact svg {
-    width: 14px;
-    height: 14px;
+    width: 20px;
+    height: 20px;
   }
   .badge {
     width: 12px;
@@ -613,13 +609,17 @@
     isolation: isolate;
     min-height: 40px;
     height: 40px;
-    padding: 10px 0 0;
+    padding: 8px 0 0;
     justify-content: flex-start;
-    gap: 14px;
+    gap: 10px;
     color: var(--lectum-muted);
   }
   .action:has(span) {
-    height: 57px;
+    height: 58px;
+  }
+  .action svg {
+    width: 24px;
+    height: 24px;
   }
   .contact {
     min-height: 40px;

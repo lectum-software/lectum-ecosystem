@@ -1,8 +1,10 @@
 import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { registerHooks } from "node:module";
+import { createRequire, registerHooks } from "node:module";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -86,6 +88,89 @@ test("reels honors actual patient media permissions", () => {
   assert.match(html, /role="textbox"/);
 });
 
+test("free professional camera remains visible with dark background and retains upgrade gating", () => {
+  const html = renderComposer({
+    mediaPermission: { canAttach: false, showControl: true, reason: "plan_required" },
+  });
+  assert.match(html, /data-reply-media-trigger="true"/);
+  assert.match(html, /lucide-camera/);
+  assert.match(composer, /\[&_\[data-reply-media-trigger\]\]:bg-media-control/);
+  assert.match(composer, /\[&_\[data-reply-media-trigger\]\]:text-media-foreground/);
+  assert.match(composer, /\[&_\[data-reply-media-trigger\]\]:opacity-100/);
+  const control = source("./reply-media-attachment-control.tsx");
+  assert.match(control, /!mediaPermission.canAttach/);
+  assert.match(control, /onPermissionDenied/);
+});
+
+test("free professional camera has visible computed contrast at mobile and desktop widths", async (t) => {
+  if (!process.env.PLAYWRIGHT_MODULE) return t.skip("Chrome harness not configured");
+  const require = createRequire(import.meta.url);
+  const { chromium } = require(process.env.PLAYWRIGHT_MODULE);
+  const postcss = createRequire(require.resolve("@tailwindcss/postcss"));
+  const { compile } = postcss("@tailwindcss/node");
+  const { Scanner } = postcss("@tailwindcss/oxide");
+  const globals = new URL("../../app/globals.css", import.meta.url);
+  const html = renderComposer({
+    mediaPermission: { canAttach: false, showControl: true, reason: "plan_required" },
+  });
+  const compiler = await compile(readFileSync(globals, "utf8"), {
+    base: path.dirname(fileURLToPath(globals)),
+    onDependency() {},
+  });
+  const css = compiler.build(
+    new Scanner({ sources: [] }).scanFiles([
+      { content: html, extension: "html" },
+      { content: composer, extension: "tsx" },
+    ]),
+  );
+  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  try {
+    for (const width of [320, 390, 1440]) {
+      const page = await browser.newPage({ viewport: { width, height: 400 } });
+      await page.setContent(
+        `<style>${css}body{margin:0;background:var(--lectum-media-background);padding:12px}main{max-width:506px;margin:auto}</style><main>${html}</main>`,
+      );
+      const result = await page.locator("[data-reply-media-trigger]").evaluate((button) => {
+        const style = getComputedStyle(button),
+          svg = button.querySelector("svg");
+        return {
+          color: style.color,
+          background: style.backgroundColor,
+          opacity: style.opacity,
+          disabled: button.disabled,
+          iconWidth: svg.getBoundingClientRect().width,
+          expectedColor: getComputedStyle(document.documentElement)
+            .getPropertyValue("--lectum-media-foreground")
+            .trim(),
+        };
+      });
+      assert.notEqual(result.background, result.color);
+      assert.ok(result.expectedColor);
+      assert.equal(
+        await page.locator("[data-reply-media-trigger]").evaluate((button) => {
+          const probe = document.createElement("span");
+          probe.style.color = "var(--lectum-media-foreground)";
+          button.append(probe);
+          const color = getComputedStyle(probe).color;
+          probe.remove();
+          return color;
+        }),
+        result.color,
+      );
+      assert.equal(result.opacity, "1");
+      assert.equal(result.disabled, false);
+      assert.ok(result.iconWidth >= 14);
+      if (process.env.LECTUM_QA_SCREENSHOTS)
+        await page.screenshot({
+          path: path.join(process.env.LECTUM_QA_SCREENSHOTS, `task300-camera-${width}.png`),
+        });
+      await page.close();
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
 test("pending reels disables editing, native picker, media trigger and send", () => {
   const html = renderComposer({ disabled: true });
   assert.match(html, /contentEditable="false"/i);
@@ -164,14 +249,15 @@ test("focus, media preparation, picker, dirty draft and upload report independen
   assert.match(inline, /onPointerDown=\{\(event\) => event.stopPropagation\(\)\}/);
 });
 
-test("load retries retain mounted composer; count retries do not publish twice", () => {
+test("load retries retain mounted composer; count refresh stays silent and never republishes", () => {
   assert.match(inline, /controller.postQuery.refetch\(\)/);
-  assert.match(inline, /onClick=\{\(\) => void refreshAfterSubmit\(\)\}/);
   const refreshStart = inline.indexOf("const refreshAfterSubmit");
   const refresh = inline.slice(refreshStart, inline.indexOf("  return (", refreshStart));
   assert.match(refresh, /await onSubmitted\(\)/);
   assert.match(refresh, /catch/);
   assert.doesNotMatch(refresh, /submitReply/);
+  assert.doesNotMatch(inline, /Comentário enviado|Atualizar contagem|refreshFailed|setRefreshing/);
+  assert.match(inline, /apiError=\{controller.postError \|\| controller.replyError\}/);
   assert.match(inline, /max-h-\[min\(44dvh,320px\)\]/);
 });
 

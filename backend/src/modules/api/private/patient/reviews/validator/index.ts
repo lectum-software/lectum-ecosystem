@@ -47,6 +47,12 @@ export const storeSchema: IValidatorRequest = {
 };
 
 export const indexValidator = validator(indexSchema);
+export const pendingValidator = validator({
+  query: [
+    ...(indexSchema.query ?? []),
+    { key: "batch", coerse: "string", method: "string", max: 100, optional: true },
+  ],
+});
 export const eligibilityValidator = validator(eligibilitySchema);
 export const deleteValidator = validator(eligibilitySchema);
 export const storeValidator = validator(storeSchema);

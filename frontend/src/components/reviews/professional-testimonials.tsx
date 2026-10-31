@@ -13,9 +13,13 @@ import {
 } from "@/api/req/psychologist-reviews";
 import { useReviewResponseForm } from "@/app/app/professional/reviews/use-form";
 import { AppPageHeader } from "@/components/ui/app-page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { profileSectionTabStyles as styles } from "@/components/ui/profile-section-tab-styles";
+import { ReviewsIcon } from "@/components/ui/reviews-icon";
 import { useAppSelector } from "@/hooks/redux";
+import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { flattenListPages } from "@/utils/infinite-list";
@@ -69,7 +73,7 @@ const ManagedTestimonial = ({
         ) : null
       }
       responseActions={
-        <div className="mt-2 flex gap-2">
+        <div className="flex shrink-0">
           <Button
             variant="ghost"
             className="h-10 w-10 p-0"
@@ -101,7 +105,7 @@ const ManagedTestimonial = ({
         <p className="mt-3 text-xs text-muted">Não exibido no perfil público</p>
       ) : null}
       {editing ? (
-        <div className="ml-5 mt-3 border-l border-border pl-7">
+        <div className="ml-11 mt-3">
           <Form
             {...formProps}
             className="grid gap-1"
@@ -185,11 +189,7 @@ export const ProfessionalTestimonials = () => {
             </Link>
           </InlineAlert>
         ) : null}
-        <div
-          className="flex border-b border-border"
-          role="tablist"
-          aria-label="Filtrar depoimentos"
-        >
+        <div className={styles.list} role="tablist" aria-label="Filtrar depoimentos">
           {(
             [
               ["visible", "Visíveis"],
@@ -221,10 +221,10 @@ export const ProfessionalTestimonials = () => {
                 setFilter(tabs[nextIndex][0]);
                 document.getElementById(`managed-testimonials-tab-${tabs[nextIndex][0]}`)?.focus();
               }}
-              className={`flex-1 border-b-2 p-3 text-sm ${filter === id ? "border-primary font-bold text-primary" : "border-transparent text-muted"}`}
+              className={cn(styles.button, filter === id ? styles.active : styles.inactive)}
             >
-              {label}
-              <span className="ml-1.5 text-xs tabular-nums text-muted">
+              <span className={styles.label}>{label}</span>
+              <span className={styles.count}>
                 {(
                   data?.visibility_counts?.[id] ?? (filter === id ? data?.count : undefined)
                 )?.toLocaleString("pt-BR") ?? "…"}
@@ -241,9 +241,18 @@ export const ProfessionalTestimonials = () => {
           </InlineAlert>
         ) : null}
         {!query.isLoading && !query.isError && !items.length ? (
-          <p className="py-10 text-center text-muted">Nenhum depoimento nesta lista.</p>
+          <div data-testimonial-empty>
+            <EmptyState
+              className="rounded-[26px]"
+              icon={ReviewsIcon}
+              title="Nenhum depoimento nesta lista."
+            />
+          </div>
         ) : null}
-        <div className="grid gap-3">
+        <div
+          className="overflow-hidden rounded-[26px] divide-y divide-border bg-surface px-4"
+          data-testimonial-list
+        >
           {items.map((review) => (
             <ManagedTestimonial key={review.id} review={review} professional={professional.data} />
           ))}

@@ -91,6 +91,7 @@ export type DirectoryPsychologistParticipationSummary = {
 export type DirectoryReviewAuthor = {
   initials: string;
   name: string;
+  avatar?: string | null;
 };
 
 export type DirectoryPsychologistReview = {

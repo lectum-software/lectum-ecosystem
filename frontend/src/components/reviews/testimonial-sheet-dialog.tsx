@@ -178,15 +178,17 @@ export const TestimonialSheetDialog = ({
             </button>
           </header>
         </div>
-        <div className="shrink-0 px-4 py-4">
-          <TestimonialProfessionalIdentity professional={professional.data} fallbackName={name} />
-        </div>
+        {view === "compose" ? (
+          <div className="shrink-0 px-4 py-4" data-testimonials-recipient>
+            <TestimonialProfessionalIdentity professional={professional.data} fallbackName={name} />
+          </div>
+        ) : null}
         {/* Keep the list mounted so returning from the form retains its scroll and query pages. */}
         {initialView === "list" ? (
           <div
             hidden={view !== "list"}
             data-testimonials-list
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-background px-4 py-3"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-surface px-4"
           >
             {query.isLoading ? <LoadingState label="Carregando depoimentos" /> : null}
             {query.isError ? (
@@ -200,7 +202,7 @@ export const TestimonialSheetDialog = ({
             {!query.isLoading && !query.isError && !items.length ? (
               <p className="py-10 text-center text-sm text-muted">Ainda não há depoimentos.</p>
             ) : null}
-            <div className="grid gap-3">
+            <div className="divide-y divide-border" data-testimonial-list>
               {items.map((review) => (
                 <TestimonialCard
                   key={review.id}

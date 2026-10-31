@@ -1,9 +1,9 @@
 "use client";
 
-import { CornerUpLeft, FileText } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type { UserPostsType } from "@/api/generator/types/posts";
 import { AppPageHeader } from "@/components/ui/app-page-header";
+import { profileSectionTabStyles as styles } from "@/components/ui/profile-section-tab-styles";
 import { cn } from "@/lib/utils";
 import { analyticsReturnHref } from "@/utils/analytics-return";
 
@@ -23,38 +23,46 @@ export const FilterTabs = ({
   value: UserPostsType;
 }) => {
   const tabs = [
-    { icon: FileText, label: "Posts", value: "posts" as const },
-    { icon: CornerUpLeft, label: interactionCopy.plural, value: "replies" as const },
+    { label: "Posts", value: "posts" as const },
+    { label: interactionCopy.plural, value: "replies" as const },
   ];
 
   return (
     <nav aria-label={interactionCopy.filterAriaLabel}>
-      <div className="grid grid-cols-2 items-center gap-1.5 py-1" role="tablist">
-        {tabs.map((item) => {
+      <div className={styles.list} role="tablist" aria-label={interactionCopy.filterAriaLabel}>
+        {tabs.map((item, index) => {
           const active = item.value === value;
           const count = counts?.[item.value];
-          const Icon = item.icon;
           return (
             <button
               key={item.value}
               aria-selected={active}
-              className={cn(
-                "inline-flex h-8 min-h-8 min-w-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-1.5 text-xs font-bold leading-none tracking-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-65",
-                active
-                  ? "border-border/80 bg-surface text-foreground shadow-lectum-tab dark:border-border/70 dark:shadow-none"
-                  : "border-transparent bg-transparent text-muted hover:text-foreground",
-              )}
+              className={cn(styles.button, active ? styles.active : styles.inactive)}
               disabled={disabled}
               onClick={() => onChange(item.value)}
+              id={`my-publications-tab-${item.value}`}
+              tabIndex={active ? 0 : -1}
+              onKeyDown={(event) => {
+                const nextIndex =
+                  event.key === "ArrowRight"
+                    ? (index + 1) % tabs.length
+                    : event.key === "ArrowLeft"
+                      ? (index + tabs.length - 1) % tabs.length
+                      : event.key === "Home"
+                        ? 0
+                        : event.key === "End"
+                          ? tabs.length - 1
+                          : null;
+                if (nextIndex === null || disabled) return;
+                event.preventDefault();
+                document.getElementById(`my-publications-tab-${tabs[nextIndex].value}`)?.focus();
+                onChange(tabs[nextIndex].value);
+              }}
               role="tab"
               type="button"
             >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="whitespace-nowrap text-xs font-bold leading-none">{item.label}</span>
-              <span
-                className="min-w-0 truncate text-xs font-bold leading-none tabular-nums text-primary-strong"
-                title={count?.toLocaleString("pt-BR")}
-              >
+              <span className={styles.label}>{item.label}</span>
+              <span className={styles.count} title={count?.toLocaleString("pt-BR")}>
                 {typeof count === "number" ? count.toLocaleString("pt-BR") : "\u2026"}
               </span>
             </button>

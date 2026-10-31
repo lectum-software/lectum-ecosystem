@@ -491,7 +491,7 @@ test("video contact is a full-width bar with a white label and directional green
   assert.match(html, /scale-x-100/);
   assert.match(html, /data-contact-expanded="true"/);
   assert.match(html, /motion-reduce:transition-none/);
-  assert.match(html, /text-\[13px\] font-normal leading-5/);
+  assert.match(html, /text-\[13px\] font-semibold leading-5/);
   assert.match(html, /duration-\[900ms\]/);
   assert.match(html, /h-\[18px\] w-\[18px\]/);
   assert.match(html, /viewBox="-0.75 -0.75 21.5 21.5"/);
@@ -601,7 +601,7 @@ const { FilterTabs: MyPublicationTabs } = await import(
 const { getInteractionCopy: publicationInteractionCopy } = await import(
   "../../app/app/posts/mine/modules/support.ts"
 );
-test("my publications pills preserve role labels and real counters after the label", () => {
+test("my publications use profile underline tabs with role labels and real neutral counters", () => {
   for (const professional of [true, false]) {
     const copy = publicationInteractionCopy(professional);
     const html = renderToStaticMarkup(
@@ -612,12 +612,11 @@ test("my publications pills preserve role labels and real counters after the lab
         onChange() {},
       }),
     );
-    assert.match(html, /grid-cols-2/);
-    assert.match(html, /shadow-lectum-tab/);
+    assert.match(html, /before:bg-foreground/);
+    assert.match(html, /bg-surface-muted/);
+    assert.doesNotMatch(html, /shadow-lectum-tab|text-primary-strong|<svg/);
     assert.match(html, /aria-selected="true"/);
-    assert.ok(
-      html.includes('<span class="whitespace-nowrap text-xs font-bold leading-none">Posts</span>'),
-    );
+    assert.match(html, /text-\[13px\] font-semibold/);
     assert.ok(html.indexOf(">Posts<") < html.indexOf(">12<"));
     assert.ok(html.includes(copy.plural));
     assert.match(html, />0</);

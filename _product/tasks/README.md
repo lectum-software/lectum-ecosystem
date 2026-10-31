@@ -1,4 +1,16 @@
-Validado localmente em 0.1.756: [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md), ADR-0660. Ajustes da aprovacao individual, checks/builds e QA real mobile/desktop aprovados. Publicacao do lote autorizada; promocao por PR e deploy ainda pendentes. Corrida preexistente de telemetria documentada, fora do escopo visual.
+Validado localmente em 0.1.762: [TASK-302 - Audio continuo dos reels e cantos dos depoimentos](TASK-302-reels-audio-continuity.md), ADR-0665. Player persistente e blocos de reviews com raio de 26px. Check/build frontend, guardas, QA visual e API/MP4 reais locais em 320/390/1440 aprovados. Safari/iPhone fisico ainda requer conferencia. Sem push/deploy; header de comunidades continua somente previa.
+
+Validado localmente em 0.1.761: [TASK-301 - Convites de depoimento em janelas e menus](TASK-301-testimonial-invitation-windows.md), ADR-0664. Convites por respostas em video, janela fixa de 24h, push/in-app e menus padronizados. Migracao, checks/builds, integracao PostgreSQL e smoke autenticado local aprovados. Flags produtivas nao alteradas; sem push/deploy. Header de comunidades permanece somente previa.
+
+Validado localmente em 0.1.760: [TASK-300 - Continuidade e controles dos reels](TASK-300-reels-continuation.md), ADR-0663. Transicao entre comunidades, progresso suave, retorno ao video e controles ampliados. Sem push/deploy.
+
+Validado localmente em 0.1.759: [TASK-299 - Identificacao profissional e depoimentos do paciente](TASK-299-testimonial-professional-weight.md), ADR-0662. Peso do nome igual ao feed, tela do paciente no layout de reviews e aviso de autoria removido. Check/build e 24 cenarios visuais aprovados. Sem push/deploy.
+
+Validado localmente em 0.1.758: [TASK-298 - Reviews identificados e abas do perfil](TASK-298-testimonial-review-layout.md), ADR-0662. Reviews identificados, resposta cinza recuada, abas compartilhadas e vazio padronizado. Checks/builds frontend/backend e QA de componentes em 320/390/1440 aprovados. Sem push/deploy.
+
+Validado localmente em 0.1.757: [TASK-297 - Reels e refinamentos de depoimentos](TASK-297-reels-silent-comment-refresh.md), ADR-0661. Avisos de contagem removidos, acoes laterais, icone circular com estrela, tipografia revisada, contadores neutros e convite compacto com estado vazio branco. Check/build frontend e QA em 320/390/1440 aprovados. Sem push/deploy deste lote.
+
+Publicado em 0.1.756: [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md), ADR-0660. PR #147 integrado; frontend e backend confirmados em producao por /version e /ping, com /health e /ready HTTP 200 em 30/10/2026. Corrida preexistente de telemetria documentada, fora do escopo visual.
 
 Validado localmente em 0.1.755: [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md), ADR-0659. Checks, builds, 40 cenarios funcionais e QA visual aprovados; fixtures limpos. Ressalva de telemetria documentada na task. Sem push/deploy.
 
@@ -727,6 +739,12 @@ ou cortesia manual.
 | 294 | [TASK-294 - Refinamentos de reels e perfil](TASK-294-reels-compact-controls.md) | Implementation and local validation | 293 |
 | 295 | [TASK-295 - Experiencia de depoimentos](TASK-295-testimonial-experience.md) | Implementation and local validation | 294 |
 | 296 | [TASK-296 - Revisao visual de depoimentos](TASK-296-testimonial-layout-review.md) | Implementation and local validation | 295 |
+| 297 | [TASK-297 - Atualizacao silenciosa da contagem nos reels](TASK-297-reels-silent-comment-refresh.md) | Done | 296 |
+| 298 | [TASK-298 - Depoimentos com apresentacao de reviews](TASK-298-testimonial-review-layout.md) | Done | 297 |
+| 299 | [TASK-299 - Identificacao profissional e depoimentos do paciente](TASK-299-testimonial-professional-weight.md) | Done | 298 |
+| 300 | [TASK-300 - Continuidade e controles dos reels](TASK-300-reels-continuation.md) | Done | 299 |
+| 301 | [TASK-301 - Convites de depoimento em janelas e menus](TASK-301-testimonial-invitation-windows.md) | Done | 300 |
+| 302 | [TASK-302 - Audio continuo dos reels e cantos dos depoimentos](TASK-302-reels-audio-continuity.md) | Done | 301 |
 
 ## Ordem operacional recomendada sem bloqueios
 

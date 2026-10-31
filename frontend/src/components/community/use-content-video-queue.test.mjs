@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { after, afterEach, before, beforeEach, describe, test } from "node:test";
 import ts from "typescript";
+import { registerCommunityContinuationCases } from "./content-video-community-continuation-cases.mjs";
 import { registerQueueInteractionCases } from "./content-video-queue-interaction-cases.mjs";
 
 const require = createRequire(import.meta.url);
@@ -16,6 +17,14 @@ const modules = {
   "react-dom/client": productionModule("react-dom", "react-dom-client.production.js"),
   scheduler: productionModule("scheduler", "scheduler.production.js", domRequire),
   "@/api/req/posts": "exports.getPostContentVideos = (...args) => window.requestVideos(...args);",
+  "@/api/req/community": `
+    exports.getCommunities = (...args) => window.requestCommunities(...args);
+    exports.getCommunityPosts = (...args) => window.requestCommunityPosts(...args);
+  `,
+  "./content-video-community-continuation": ts.transpileModule(
+    readFileSync(new URL("./content-video-community-continuation.ts", import.meta.url), "utf8"),
+    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
+  ).outputText,
   "./content-video-queue-interactions": ts.transpileModule(
     readFileSync(new URL("./content-video-queue-interactions.ts", import.meta.url), "utf8"),
     { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
@@ -55,6 +64,18 @@ const harness = `
   let root;
   let initial;
   window.calls = [];
+  window.communityCalls = [];
+  window.communityResponses = {};
+  window.requestCommunities = async query => {
+    communityCalls.push({ kind: 'catalog', ...query });
+    return communityResponses['catalog:' + query.page] ?? { data: [], page: query.page, pages: 0 };
+  };
+  window.requestCommunityPosts = async (slug, query) => {
+    communityCalls.push({ kind: 'posts', slug, ...query });
+    const result = communityResponses[slug + ':' + query.page];
+    if (!result) throw new Error('Unexpected community request: ' + slug);
+    return result;
+  };
   window.responses = {};
   window.requestVideos = async (id, query) => {
     window.calls.push({ id, ...query });
@@ -119,6 +140,7 @@ describe("content video queue mounted in React", {
   });
   const wait = (predicate) => page.waitForFunction(predicate, undefined, { timeout: 5000 });
   registerQueueInteractionCases({ getPage: () => page, wait, snapshot });
+  registerCommunityContinuationCases({ getPage: () => page, wait, snapshot });
 
   test("keeps distinct post media, falls back to id and deduplicates across pages", async () => {
     await page.evaluate(() => {

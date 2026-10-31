@@ -198,6 +198,7 @@ export type DirectoryPsychologistProfilePostsResponse = {
 export type DirectoryPsychologistReviewAuthor = {
   initials: string;
   name: string;
+  avatar?: string | null;
 };
 
 export type DirectoryPsychologistProfileReview = {

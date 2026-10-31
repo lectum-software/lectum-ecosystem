@@ -77,9 +77,11 @@ test("video bar fills left to right without shifting content and honors reduced 
       return `--color-${name}: ${value};`;
     })
     .join(" ");
-  const css = (await compile(`@theme { --spacing: 0.25rem; ${theme} } @tailwind utilities;`)).build(
-    candidates,
-  );
+  const css = (
+    await compile(
+      `@theme { --spacing: 0.25rem; --font-weight-semibold: 600; ${theme} } @tailwind utilities;`,
+    )
+  ).build(candidates);
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   try {
     for (const width of [320, 390, 1440]) {
@@ -113,7 +115,7 @@ test("video bar fills left to right without shifting content and honors reduced 
         await button.evaluate((el) => getComputedStyle(el).backgroundColor),
         colors.background,
       );
-      assert.equal(await label.evaluate((el) => getComputedStyle(el).fontWeight), "400");
+      assert.equal(await label.evaluate((el) => getComputedStyle(el).fontWeight), "600");
       assert.equal(await fill.evaluate((el) => getComputedStyle(el).scale), "0 1");
       const middle = await fill.evaluate((el) => {
         el.classList.replace("scale-x-0", "scale-x-100");
