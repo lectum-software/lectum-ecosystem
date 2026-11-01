@@ -268,7 +268,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
               type="button"
             >
               <Heart
-                className="h-5 w-5"
+                className="size-[22px]"
                 aria-hidden="true"
                 style={{
                   color: desktopActionIsFavorited ? "var(--lectum-danger)" : "var(--lectum-muted)",
@@ -285,7 +285,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
             name={desktopActionDisplayName}
             count={desktopActionPsychologist.rating_count}
             disabled={isDesktopActionRailHidden}
-            iconSize={20}
+            iconSize={22}
             className="grid min-h-11 w-[68px] justify-items-center gap-1 text-muted"
           />
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
@@ -300,7 +300,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
               tabIndex={isDesktopActionRailHidden ? -1 : undefined}
               type="button"
             >
-              <Share2 className="h-5 w-5" aria-hidden="true" />
+              <Share2 className="size-[22px]" aria-hidden="true" />
             </button>
             <span className="text-[10px] font-bold text-muted">Compartilhar</span>
           </div>

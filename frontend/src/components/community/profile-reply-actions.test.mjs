@@ -317,9 +317,11 @@ test("profile video replies use saved-post controls while other replies stay com
     /showUpvoteText=\{hasCompactReplyActions \? false : actionBarShowUpvoteText\}/,
   );
   assert.match(source, /size=\{hasCompactReplyActions \? "xs" : "sm"\}/);
-  for (const counter of ["saveAction.count", "shareCount"]) {
-    assert.ok(source.includes(`count: primaryReply ? undefined : ${counter}`));
-  }
+  assert.match(
+    source,
+    /count: primaryReply \|\| compactProfilePostActions \? undefined : saveAction.count/,
+  );
+  assert.match(source, /count: primaryReply \? undefined : shareCount/);
 });
 
 test("profile reply media uses community spacing without an empty text block", () => {

@@ -51,13 +51,13 @@ export const ProfileStickyIdentity = ({ name, verified }: { name: string; verifi
 
   return (
     <span
-      className="-ml-1 flex min-w-0 flex-1 items-center gap-0.5"
+      className="-ml-1 flex min-w-0 flex-1 items-center gap-1"
       data-profile-sticky-identity
       ref={containerRef}
     >
       <span className="sr-only">{name}</span>
       <span
-        className="min-w-0 truncate text-[15px] font-semibold leading-[20px] text-foreground"
+        className="min-w-0 truncate text-base font-black leading-tight text-foreground"
         data-profile-sticky-name
         ref={nameRef}
         aria-hidden="true"

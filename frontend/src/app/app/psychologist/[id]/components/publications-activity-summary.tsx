@@ -28,7 +28,12 @@ const Medal = ({ rank }: { rank: number }) => (
 );
 
 const activityText = (posts: number, replies: number) =>
-  `${posts} ${posts === 1 ? "post" : "posts"} e ${replies} ${replies === 1 ? "resposta" : "respostas"}`;
+  [
+    posts > 0 ? `${posts} ${posts === 1 ? "post" : "posts"}` : null,
+    replies > 0 ? `${replies} ${replies === 1 ? "resposta" : "respostas"}` : null,
+  ]
+    .filter(Boolean)
+    .join(" e ");
 
 export const PublicationsActivitySummary = ({
   summary,
@@ -46,7 +51,8 @@ export const PublicationsActivitySummary = ({
       ),
     [summary.participation_communities, summary.top_mentor_communities],
   );
-  const medals = communities.filter((community) => mentorRank(community)).slice(0, 3);
+  const medals = [...new Set(communities.map(mentorRank).filter((rank) => rank !== null))];
+  const totalActivity = activityText(summary.posts_count, summary.replies_count);
   const scrollable = communities.length > 3;
 
   useLayoutEffect(() => {
@@ -80,9 +86,9 @@ export const PublicationsActivitySummary = ({
             aria-hidden="true"
             style={{ width: 24 + (medals.length - 1) * 16 }}
           >
-            {medals.map((community, index) => (
-              <span key={community.id} style={{ left: index * 16, zIndex: medals.length - index }}>
-                <Medal rank={mentorRank(community) as number} />
+            {medals.map((rank, index) => (
+              <span key={rank} style={{ left: index * 16, zIndex: medals.length - index }}>
+                <Medal rank={rank} />
               </span>
             ))}
           </span>
@@ -97,9 +103,9 @@ export const PublicationsActivitySummary = ({
               ? `Participa em ${communities.length} ${communities.length === 1 ? "comunidade" : "comunidades"}`
               : "Ainda sem participação em comunidades"}
           </span>
-          <span className={styles.description}>
-            {activityText(summary.posts_count, summary.replies_count)} no total
-          </span>
+          {totalActivity ? (
+            <span className={styles.description}>{totalActivity} no total</span>
+          ) : null}
         </span>
         {communities.length ? (
           <ChevronDown
@@ -121,6 +127,11 @@ export const PublicationsActivitySummary = ({
             {communities.map((community) => {
               const avatar = resolvePublicMediaUrl(community.avatar_url);
               const rank = mentorRank(community);
+              const activity =
+                typeof community.posts_count === "number" &&
+                typeof community.replies_count === "number"
+                  ? activityText(community.posts_count, community.replies_count)
+                  : "";
               return (
                 <li key={community.id}>
                   <Link href={`/comunidades/${community.slug}`} className={styles.community}>
@@ -152,12 +163,7 @@ export const PublicationsActivitySummary = ({
                     </span>
                     <span className={styles.info}>
                       <span className={styles.name}>{community.name}</span>
-                      {typeof community.posts_count === "number" &&
-                      typeof community.replies_count === "number" ? (
-                        <span className={styles.counts}>
-                          {activityText(community.posts_count, community.replies_count)}
-                        </span>
-                      ) : null}
+                      {activity ? <span className={styles.counts}>{activity}</span> : null}
                       {rank ? (
                         <span className={styles.mentor}>Top {rank} Mentor nesta comunidade</span>
                       ) : null}

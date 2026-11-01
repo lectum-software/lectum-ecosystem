@@ -83,6 +83,103 @@ test("summary supports zero communities and older APIs without inventing per-com
   }
 });
 
+test("summary deduplicates header medals but preserves each community rank", () => {
+  for (const [ranks, expected] of [
+    [
+      [1, 1, 2],
+      ["gold", "silver"],
+    ],
+    [
+      [2, 2, 3],
+      ["silver", "bronze"],
+    ],
+    [
+      [3, 1, 1, 1, 2, 3],
+      ["gold", "silver", "bronze"],
+    ],
+    [[2, 2], ["silver"]],
+  ]) {
+    const communities = ranks.map((position, index) => ({
+      id: `${index}`,
+      slug: `c-${index}`,
+      name: `Comunidade ${index}`,
+      position,
+      badge: `TOP #${position} MENTOR`,
+      posts_count: 1,
+      replies_count: 0,
+    }));
+    const html = renderToStaticMarkup(
+      createElement(PublicationsActivitySummary, {
+        summary: {
+          posts_count: ranks.length,
+          replies_count: 0,
+          participation_communities: communities,
+        },
+      }),
+    );
+    const header = html.split("</button>")[0];
+    assert.deepEqual(
+      [...header.matchAll(/src="\/images\/community\/top-mentor\/(gold|silver|bronze)\.svg/g)].map(
+        (match) => match[1],
+      ),
+      expected,
+    );
+    assert.equal((html.match(/Top .*? Mentor nesta comunidade/g) || []).length, ranks.length);
+    assert.match(html, new RegExp(`Participa em ${ranks.length} comunidades`));
+  }
+});
+
+test("activity counts omit zeros with correct singular, plural and empty states", () => {
+  for (const [posts, replies, expected] of [
+    [0, 4, "4 respostas"],
+    [0, 18, "18 respostas"],
+    [0, 1, "1 resposta"],
+    [3, 0, "3 posts"],
+    [1, 0, "1 post"],
+    [1, 1, "1 post e 1 resposta"],
+    [4, 2, "4 posts e 2 respostas"],
+    [0, 0, ""],
+  ]) {
+    const html = renderToStaticMarkup(
+      createElement(PublicationsActivitySummary, {
+        summary: {
+          posts_count: posts,
+          replies_count: replies,
+          participation_communities: [
+            {
+              id: "a",
+              slug: "a",
+              name: "Comunidade",
+              position: null,
+              badge: null,
+              posts_count: posts,
+              replies_count: replies,
+            },
+          ],
+        },
+      }),
+    );
+    assert.doesNotMatch(html, /0 posts|0 respostas/);
+    if (expected) {
+      assert.ok(html.includes(`<span class="counts">${expected}</span>`));
+      assert.ok(html.includes(`${expected} no total`));
+    } else {
+      assert.doesNotMatch(html, /class="counts"|class="description"|no total/);
+    }
+  }
+});
+
+test("community avatars have no decorative frame and keep their image size", () => {
+  const css = source(
+    "../../app/app/psychologist/[id]/components/publications-activity-summary.module.css",
+  );
+  const avatar = css.match(/\.avatar \{([^}]+)\}/)?.[1];
+  assert.ok(avatar);
+  assert.doesNotMatch(avatar, /outline|border|padding|background/);
+  assert.match(avatar, /width: 48px/);
+  assert.match(css, /\.community:focus-visible/);
+});
+
 test("direct profile hide action appears only for the professional owner and only on replies", () => {
   const post = {
     id: "p",
@@ -140,4 +237,41 @@ test("approved wiring preserves feed reuse, static initial focus and native top-
     assert.match(source(file), /attached=\{hasVideoContact\}/);
     assert.match(source(file), /footer=\{hasVideoContact \? authorWhatsappCta : undefined\}/);
   }
+});
+
+test("video actions share a compact scale without reducing mobile touch targets", () => {
+  const css = source("./content-video-viewer.module.css");
+  for (const [, block] of css.matchAll(/\.action svg \{([^}]+)\}/g)) {
+    assert.match(block, /width: 22px/);
+    assert.match(block, /height: 22px/);
+  }
+  for (const [, block] of css.matchAll(/\.contact svg \{([^}]+)\}/g)) {
+    assert.match(block, /width: 20px/);
+    assert.match(block, /height: 20px/);
+  }
+  const metrics = source("../../app/app/psychologists/modules/viewport.ts");
+  assert.match(metrics, /actionHitSize = 44/);
+  assert.match(metrics, /actionPrimaryButtonSize = 36/);
+  assert.match(metrics, /actionIconSize: 20/);
+  assert.match(metrics, /actionStandaloneIconSize: 22/);
+  const desktop = source("../../app/app/psychologists/view/components/desktop-rail.tsx");
+  assert.match(desktop, /iconSize=\{22\}/);
+  assert.equal((desktop.match(/size-\[22px\]/g) || []).length, 2);
+});
+
+test("profile post actions stay scoped and sticky identity follows feed typography", () => {
+  const card = source("./community-post-card.tsx");
+  assert.match(card, /profilePublicationMode && !isReplyContribution && !hasVideoContact/);
+  assert.match(card, /showWhatsappCta &&\s*!compactProfilePostActions/);
+  assert.match(card, /allowWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url/);
+  assert.match(
+    card,
+    /count: primaryReply \|\| compactProfilePostActions \? undefined : saveAction.count/,
+  );
+  const identity = source("../../app/app/psychologist/[id]/components/profile-sticky-identity.tsx");
+  assert.match(identity, /items-center gap-1/);
+  assert.match(identity, /text-base font-black leading-tight text-foreground/);
+  assert.match(identity, /h-4 w-4 shrink-0/);
+  assert.match(identity, /fitProfileName/);
+  assert.match(card, /text-sm font-black leading-tight text-foreground/);
 });

@@ -133,6 +133,8 @@ const CommunityPostCardContent = ({
       ? null
       : post.highlighted_professional_reply;
   const isReplyContribution = contributionType === "reply";
+  const compactProfilePostActions =
+    profilePublicationMode && !isReplyContribution && !hasVideoContact;
   const focusedReplyId =
     profilePublicationMode && isReplyContribution ? (primaryReply?.id ?? undefined) : undefined;
   const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
@@ -167,8 +169,9 @@ const CommunityPostCardContent = ({
       } as const)
     : null;
   const setAttentionElement = useContentAttentionTracking(attentionTrackingTarget);
+  const allowWhatsappCta = showWhatsappCta && !compactProfilePostActions;
   const authorWhatsappCta =
-    showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
+    allowWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
       <CommunityWhatsAppCta
         attached={hasVideoContact}
         size={hasCompactReplyActions ? "xs" : "sm"}
@@ -662,7 +665,7 @@ const CommunityPostCardContent = ({
           onVote={interactiveActions ? handleVote : undefined}
           save={{
             active: saveAction.active,
-            count: primaryReply ? undefined : saveAction.count,
+            count: primaryReply || compactProfilePostActions ? undefined : saveAction.count,
             disabled: saveAction.disabled,
             label: saveAction.label,
             onClick: saveAction.onClick,

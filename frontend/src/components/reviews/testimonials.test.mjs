@@ -28,6 +28,7 @@ const { TestimonialCard } = await import("./testimonial-card.tsx");
 const { ReviewsIcon } = await import("../ui/reviews-icon.tsx");
 const { TestimonialForm } = await import("./testimonial-form.tsx");
 const { TestimonialProfessionalIdentity } = await import("./testimonial-professional.tsx");
+const { getOwnTestimonialProfessional } = await import("./testimonial-professional.tsx");
 const { reviewFormSchema } = await import("../../app/app/reviews/new/use-form.tsx");
 const base = {
   id: "testimonial-local",
@@ -37,6 +38,66 @@ const base = {
   created_at: "2026-10-29T12:00:00Z",
   author: { name: "Ana Pereira", initials: "AP" },
 };
+
+test("own response uses private professional identity, including unpublished profiles", () => {
+  const account = { id: "owner", role: "psicologo", name: "Conta", avatar: "/account.jpg" };
+  const profile = {
+    user: { id: "owner", name: "Marina Almeida", avatar: "/public/files/portrait.jpg" },
+    profile: { gender: "feminino", published: false, crp_status: "aprovado" },
+    plan: { is_free: false, is_courtesy: false },
+  };
+  const identity = getOwnTestimonialProfessional(account, profile);
+  assert.deepEqual(identity, {
+    id: "owner",
+    name: "Marina Almeida",
+    avatar: "/public/files/portrait.jpg",
+    gender: "feminino",
+    verified: true,
+  });
+  const html = renderToStaticMarkup(
+    createElement(TestimonialCard, {
+      review: { ...base, response: "Obrigada.", responded_at: base.created_at },
+      professional: identity,
+      responseActions: createElement("button", { type: "button", "aria-label": "Editar resposta" }),
+    }),
+  );
+  assert.match(html, /Marina Almeida/);
+  assert.match(html, /portrait.jpg/);
+  assert.match(html, /Psicóloga/);
+  assert.match(html, /Perfil verificado/);
+  assert.match(html, /aria-label="Editar resposta"/);
+  assert.doesNotMatch(html, /Sua resposta/);
+  assert.match(html, /flex flex-wrap items-start justify-between gap-2/);
+  assert.match(html, /min-w-0 flex-1 basis-40/);
+  for (const [plan, details, verified] of [
+    [{ is_free: true }, { crp_status: "aprovado" }, false],
+    [{ is_free: false }, { crp_status: "pendente" }, false],
+    [{ is_free: false }, { cfp_verified_at: "2026-10-31" }, true],
+    [{ is_free: false, is_courtesy: true }, {}, true],
+  ])
+    assert.equal(
+      getOwnTestimonialProfessional(account, { ...profile, plan, profile: details }).verified,
+      verified,
+    );
+  assert.equal(getOwnTestimonialProfessional(account).name, "Conta");
+  assert.equal(getOwnTestimonialProfessional(account).verified, false);
+  assert.equal(
+    getOwnTestimonialProfessional(account, { ...profile, user: { id: "other", name: "Outro" } })
+      .name,
+    "Conta",
+  );
+  assert.equal(getOwnTestimonialProfessional(null, profile), undefined);
+  assert.equal(getOwnTestimonialProfessional({ ...account, role: "paciente" }, profile), undefined);
+  assert.equal(
+    getOwnTestimonialProfessional(account, { ...profile, user: { ...profile.user, avatar: null } })
+      .avatar,
+    null,
+  );
+  const source = readFileSync(new URL("./professional-testimonials.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /responseName="Sua resposta"|useDirectoryPsychologist/);
+  assert.match(source, /usePsychologistFreeProfile/);
+  assert.match(source, /aria-label="Excluir resposta"/);
+});
 
 test("perfil vazio convida em um unico bloco e nao confunde loading ou erro com ausencia", async () => {
   const { PublicTestimonials } = await import("./public-testimonials.tsx");

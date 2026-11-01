@@ -214,11 +214,11 @@ test("sticky WhatsApp label has 13px text and 20px line height", () => {
   assert.match(labelClasses, /text-\[13px\] font-semibold leading-\[20px\]/);
 });
 
-test("sticky name truncates at 15px while the verified badge stays outside the truncation", () => {
+test("sticky name follows feed weight with larger type and badge outside truncation", () => {
   const bar = render(ProfileStickyBar, { visible: true });
   const nameClasses = bar.match(/<span class="([^"]+)" data-profile-sticky-name/)?.[1];
   assert.ok(nameClasses);
-  assert.match(nameClasses, /min-w-0 truncate text-\[15px\] font-semibold leading-\[20px\]/);
+  assert.match(nameClasses, /min-w-0 truncate text-base font-black leading-tight/);
   assert.doesNotMatch(bar, /Perfil verificado/);
   const verified = render(ProfileStickyBar, {
     visible: true,
@@ -226,7 +226,7 @@ test("sticky name truncates at 15px while the verified badge stays outside the t
   });
   assert.match(verified, /Ana Lima<\/span><svg[^>]*aria-label="Perfil verificado"/);
   assert.match(verified, /h-4 w-4 shrink-0/);
-  assert.match(verified, /-ml-1 flex min-w-0 flex-1 items-center gap-0\.5/);
+  assert.match(verified, /-ml-1 flex min-w-0 flex-1 items-center gap-1/);
 });
 
 test("hero and sticky share the configured WhatsApp name and normalized fallback", () => {
