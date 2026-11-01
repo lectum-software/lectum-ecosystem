@@ -28,7 +28,8 @@ test("reel header reuses the real create form and keeps explicit navigation labe
   assert.match(create, /<CreateCommunityPostLogic onCloseComplete=\{onClose\}/);
   assert.doesNotMatch(create, /<form|<textarea/);
   assert.match(viewer, /inert=\{createPostOpen\}/);
-  assert.match(viewer, /confirmDiscardReplyDraft\(\)/);
+  assert.match(viewer, /const canLeave = \(\) => !composerState.submitting;/);
+  assert.doesNotMatch(viewer, /confirmDiscardReplyDraft|!composerState.hasDraft/);
   assert.match(viewer, /closeRef\.current\?\.click\(\)/);
 });
 

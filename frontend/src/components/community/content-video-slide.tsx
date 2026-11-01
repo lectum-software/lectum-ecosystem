@@ -5,7 +5,6 @@ import Link from "next/link";
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSavePost, useSaveReply, useVotePost } from "@/api/callers/posts";
 import type { PostContentVideo } from "@/api/generator/types/posts";
-import { confirmDiscardReplyDraft } from "@/app/app/community/[slug]/post/[id]/modules/reply-support";
 import { useContentVideoWatchTracking } from "@/components/analytics/content-video-watch-tracker";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -144,8 +143,7 @@ export const ContentVideoSlide = ({
     if (active)
       onPanelChange(Boolean(panel) || syncingInteractions || composerState.busy || createPostOpen);
   }, [active, panel, syncingInteractions, composerState.busy, createPostOpen, onPanelChange]);
-  const canLeave = () =>
-    !composerState.submitting && (!composerState.hasDraft || confirmDiscardReplyDraft());
+  const canLeave = () => !composerState.submitting;
   const requestClose = () => {
     if (canLeave()) onClose();
   };
@@ -361,8 +359,7 @@ export const ContentVideoSlide = ({
                 !seekingRef.current &&
                 !composerBusyRef.current &&
                 !createPostOpenRef.current &&
-                !syncingInteractions &&
-                !composerState.hasDraft
+                !syncingInteractions
               )
                 onNext();
             },

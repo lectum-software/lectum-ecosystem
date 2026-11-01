@@ -31,17 +31,18 @@ const {
 const source = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const postSource = (path) => source(`../../app/app/community/[slug]/post/[id]/${path}`);
 
-test("sheet drag stays on the header and delegates to the draft/pending close guard", () => {
+test("sheet drag blurs and silently discards drafts but protects pending operations", () => {
   const sheet = source("./content-video-comments-sheet.tsx");
   assert.match(
     sheet,
     /useSheetDragDismiss\(\{ open: true, disabled: submitting, onClose: requestClose \}\)/,
   );
-  assert.match(
-    sheet,
-    /if \(submitting \|\| \(hasDraft && !confirmDiscardReplyDraft\(\)\)\) return/,
-  );
+  assert.match(sheet, /if \(submitting\) return false/);
   assert.match(sheet, /data-sheet-drag-handle="true" \{\.\.\.drag.handleProps\}/);
+  assert.match(sheet, /sheetRef.current\?\.contains\(focused\)\) focused.blur\(\)/);
+  assert.match(sheet, /dismissible=\{!submitting\}/);
+  assert.match(sheet, /confirmDiscard=\{false\}/);
+  assert.doesNotMatch(sheet, /confirmDiscardReplyDraft/);
   assert.match(sheet, /\.\.\.drag.sheetStyle/);
   assert.match(sheet, /bottom: viewport.bottom, maxHeight: viewport.height/);
   assert.match(sheet, /composerSubmitting \|\|/);

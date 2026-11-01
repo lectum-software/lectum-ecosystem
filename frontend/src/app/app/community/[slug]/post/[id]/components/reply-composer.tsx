@@ -47,12 +47,14 @@ import { type ReplyComposerForm, useReplyComposerForm } from "../use-form";
 import { useReplyComposerCancelGesture } from "./reply-composer-cancel-gesture";
 import { findReplyComposerInput } from "./reply-composer-dom";
 import { ReplyComposerSubmitButton } from "./reply-composer-submit-button";
+import { useReelsComposerFocus } from "./use-reels-composer-focus";
 import { useReplyComposerKeyboardOffset } from "./use-reply-composer-keyboard-offset";
 
 export const ReplyComposer = ({
   apiError,
   appearance = "default",
   autoFocus = false,
+  confirmDiscard = true,
   disabled,
   formRef,
   mediaPermission,
@@ -68,6 +70,7 @@ export const ReplyComposer = ({
   apiError?: string | null;
   appearance?: "default" | "reels";
   autoFocus?: boolean;
+  confirmDiscard?: boolean;
   disabled?: boolean;
   formRef?: RefObject<HTMLElement | null>;
   mediaPermission: ReplyMediaPermission;
@@ -133,7 +136,8 @@ export const ReplyComposer = ({
   const interactionLocked = Boolean(disabled || hook.formState.isSubmitting || isPreparingVideo);
   const busy =
     composerActive ||
-    hasDiscardableDraft ||
+    (!isReels && hasDiscardableDraft) ||
+    isPreparingVideo ||
     mediaPickerActive ||
     mediaUpgradeModalOpen ||
     hook.formState.isSubmitting;
@@ -297,7 +301,7 @@ export const ReplyComposer = ({
   }, [resetCancelDrag, updateComposerActive]);
 
   const cancelComposer = () => {
-    if (hasDiscardableDraft && !confirmDiscardReplyDraft()) return;
+    if (confirmDiscard && !isReels && hasDiscardableDraft && !confirmDiscardReplyDraft()) return;
 
     dismissComposerKeyboard();
 
@@ -331,19 +335,13 @@ export const ReplyComposer = ({
     });
   }, [busy, hasDiscardableDraft, hook.formState.isSubmitting, isPreparingVideo, onStateChange]);
 
-  useEffect(() => {
-    if (!isReels || mediaPickerActive || mediaUpgradeModalOpen || selectedMedia || isPreparingVideo)
-      return;
-    const node = composerFormNodeRef.current;
-    updateComposerActive(Boolean(node?.contains(document.activeElement)));
-  }, [
-    isReels,
-    mediaPickerActive,
-    mediaUpgradeModalOpen,
-    selectedMedia,
-    isPreparingVideo,
-    updateComposerActive,
-  ]);
+  useReelsComposerFocus({
+    enabled: isReels,
+    locked: interactionLocked || mediaPickerActive || mediaUpgradeModalOpen,
+    composerRef: composerFormNodeRef,
+    onDismiss: dismissComposerKeyboard,
+    onActiveChange: updateComposerActive,
+  });
 
   useEffect(() => {
     if (!isReels) return;
