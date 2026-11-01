@@ -727,3 +727,5 @@ Formato recomendado:
 - [ADR-0663 — Continuidade dos reels entre comunidades](0663-reels-community-continuation.md)
 - [ADR-0664 — Convites de depoimento por janela de 24 horas](0664-testimonial-invitation-windows.md)
 - [ADR-0665 — Elemento de midia persistente nos reels](0665-reels-persistent-media-element.md)
+- [ADR-0666 — Refinamentos de publicacoes, depoimentos e reels](0666-profile-reels-refinements.md)
+- [ADR-0667 — Concorrencia de sessoes de analytics](0667-analytics-session-concurrency.md)

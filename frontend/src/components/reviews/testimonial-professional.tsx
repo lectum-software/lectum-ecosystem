@@ -61,7 +61,7 @@ export const TestimonialProfessionalIdentity = ({
     );
   }
   return (
-    <div className="flex min-w-0 items-center gap-2.5" data-testimonial-professional>
+    <div className="flex min-w-0 items-center gap-2.5 text-left" data-testimonial-professional>
       <span
         className={cn(
           "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-muted",
@@ -81,7 +81,7 @@ export const TestimonialProfessionalIdentity = ({
           <UserRound aria-hidden className={compact ? "size-4" : "size-5"} />
         )}
       </span>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1">
           <span className="min-w-0 break-words text-sm font-black leading-5">{name}</span>
           {professional?.verified ? (

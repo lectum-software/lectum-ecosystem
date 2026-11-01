@@ -22,6 +22,7 @@ import {
   createLectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { myPostsTabHref, resolveMyPostsTab } from "@/utils/my-posts-tab";
+import { PostCard } from "../../community/[slug]/components/post-card";
 import { FilterTabs, MyPostsHeader } from "./components/header";
 import { InfiniteMyPostsLoader } from "./components/infinite-loader";
 import { ReplyItemCard } from "./components/reply-item-card";
@@ -196,6 +197,19 @@ export const MyPostsLogic = () => {
                     key={item.id}
                     onChanged={handleReplyChanged}
                     onShare={sharePost}
+                  />
+                ) : !isPsychologist ? (
+                  <PostCard
+                    key={item.id}
+                    post={item.post}
+                    onShare={sharePost}
+                    authorActions={
+                      <PostOwnerActionMenu
+                        className="-mt-2 -mr-1"
+                        onDeleted={handlePostDeleted}
+                        post={item.post}
+                      />
+                    }
                   />
                 ) : (
                   <CommunityPostCard

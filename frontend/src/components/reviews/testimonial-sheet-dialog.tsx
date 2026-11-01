@@ -137,7 +137,7 @@ export const TestimonialSheetDialog = ({
         data-testimonials-sheet
         data-psychologists-scroll-lock="true"
         style={{ ...viewport, ...drag.sheetStyle }}
-        className="lectum-testimonial-sheet-enter fixed inset-x-0 bottom-0 mx-auto flex h-[82dvh] max-h-[calc(100dvh-1rem)] w-full min-w-0 max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
+        className="lectum-testimonial-sheet-enter fixed inset-x-0 bottom-0 mx-auto flex h-[82dvh] max-h-[calc(100dvh-1rem)] w-full min-w-0 max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-left text-foreground shadow-lectum-soft"
       >
         <div {...drag.handleProps} className="shrink-0" data-testimonials-drag-handle>
           <div className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-border-strong" />

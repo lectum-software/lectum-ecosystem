@@ -329,6 +329,8 @@ export const getProfileParticipationCommunities = async ({
         position: ranking?.position ?? null,
         badge: topMentorCommunity?.badge ?? null,
         score: ranking?.score ?? 0,
+        posts_count: item.postsCount,
+        replies_count: item.repliesCount,
         activityCount: item.postsCount + item.repliesCount,
         lastActivityAt: item.lastActivityAt,
       };

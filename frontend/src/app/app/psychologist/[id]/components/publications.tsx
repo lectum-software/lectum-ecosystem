@@ -1,25 +1,22 @@
 "use client";
 
-import { CornerUpLeft, FileText, type LucideIcon } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { FileText } from "lucide-react";
 import type {
-  DirectoryPsychologistParticipationCommunity,
   DirectoryPsychologistParticipationSummary,
   DirectoryPsychologistProfilePost,
 } from "@/api/generator/types/directory";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { ContentVideoScope } from "@/components/community/content-video-host";
-import { MentorBadge } from "@/components/community/mentor-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { HorizontalScrollControls } from "@/components/ui/horizontal-scroll-controls";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { cn } from "@/lib/utils";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { ProfileReplyVisibilityButton } from "./profile-reply-visibility-button";
+import { PublicationsActivitySummary } from "./publications-activity-summary";
 
-import { formatPublicationMetric, getInitials, resolveErrorMessage } from "../modules/support";
+export { PublicationsActivitySummary } from "./publications-activity-summary";
+
+import { resolveErrorMessage } from "../modules/support";
 
 import {
   InfiniteProfileListLoader,
@@ -46,131 +43,14 @@ export const ProfileCommunityPostCard = ({
     openPostOnCardClick={!readOnly && post.contribution_type !== "reply"}
     showWhatsappCta={!readOnly}
     post={post}
+    authorHeaderExtra={
+      !readOnly && post.contribution_type === "reply" ? (
+        <ProfileReplyVisibilityButton post={post} />
+      ) : undefined
+    }
     profilePublicationMode
   />
 );
-
-export const PublicationCommunityAvatar = ({
-  community,
-}: {
-  community: DirectoryPsychologistParticipationCommunity;
-}) => {
-  const avatarSrc = resolvePublicMediaUrl(community.avatar_url);
-  const avatarIsPublicMedia = isPublicMediaUrl(community.avatar_url);
-
-  return (
-    <span
-      className="relative grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full border-[3px] border-media-foreground text-[18px] font-extrabold ring-1 ring-border"
-      data-top-mentor-avatar="true"
-      style={{
-        background:
-          community.visual_soft_color ||
-          community.visual_gradient_color ||
-          "linear-gradient(135deg, var(--lectum-primary-soft) 0%, var(--lectum-surface-muted) 100%)",
-        color:
-          community.visual_text_color ||
-          community.visual_primary_dark_color ||
-          "var(--lectum-primary-hover)",
-      }}
-    >
-      {avatarSrc ? (
-        <Image
-          alt={`Comunidade ${community.name}`}
-          className="object-cover"
-          fill
-          sizes="72px"
-          src={avatarSrc}
-          unoptimized={avatarIsPublicMedia}
-        />
-      ) : (
-        getInitials(community.name)
-      )}
-    </span>
-  );
-};
-
-export const PublicationParticipationCommunity = ({
-  community,
-}: {
-  community: DirectoryPsychologistParticipationCommunity;
-}) => (
-  <Link
-    className="group flex w-[156px] min-w-[156px] snap-start flex-col items-center rounded-[16px] px-1 py-1.5 text-center no-underline transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:w-[164px] sm:min-w-[164px]"
-    data-participation-community="true"
-    href={`/comunidades/${community.slug}`}
-  >
-    <span className="relative flex h-[72px] w-[72px] shrink-0 justify-center">
-      <PublicationCommunityAvatar community={community} />
-      {community.badge ? (
-        <span className="absolute -bottom-1 -right-2 flex">
-          <MentorBadge badge={community.badge} size="avatar" />
-        </span>
-      ) : null}
-    </span>
-    <span className="mt-2 line-clamp-2 w-full max-w-[150px] text-center text-[12px] font-extrabold leading-[1.18] text-muted transition group-hover:text-foreground sm:max-w-[158px]">
-      {community.name}
-    </span>
-  </Link>
-);
-
-export const PublicationMetric = ({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: number;
-}) => (
-  <span className="inline-flex min-w-0 items-center gap-2 text-[13px] font-bold leading-none text-muted">
-    <Icon className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-    <span className="whitespace-nowrap">
-      <strong className="font-extrabold text-foreground">{formatPublicationMetric(value)}</strong>{" "}
-      {label}
-    </span>
-  </span>
-);
-
-export const PublicationsActivitySummary = ({
-  summary,
-}: {
-  summary: DirectoryPsychologistParticipationSummary;
-}) => {
-  const participationCommunities: DirectoryPsychologistParticipationCommunity[] =
-    summary.participation_communities ?? summary.top_mentor_communities ?? [];
-  const hasParticipationCommunities = participationCommunities.length > 0;
-
-  return (
-    <section
-      className="overflow-hidden rounded-[24px] border border-border bg-surface/95 px-3 py-4 sm:px-5"
-      data-publications-summary="true"
-    >
-      {hasParticipationCommunities ? (
-        <div className="grid gap-2.5">
-          <p className="px-1 text-[13px] font-extrabold leading-none text-muted">Publica em:</p>
-          <HorizontalScrollControls label="Comunidades em que publica">
-            <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-center-safe sm:gap-4">
-              {participationCommunities.map((community) => (
-                <PublicationParticipationCommunity community={community} key={community.id} />
-              ))}
-            </div>
-          </HorizontalScrollControls>
-        </div>
-      ) : null}
-
-      <div
-        className={cn(
-          "flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5",
-          hasParticipationCommunities && "mt-3.5 border-border border-t pt-3.5",
-        )}
-      >
-        <PublicationMetric icon={FileText} label="Posts" value={summary.posts_count} />
-        <span className="hidden h-5 w-px bg-surface-muted sm:block" aria-hidden="true" />
-        <PublicationMetric icon={CornerUpLeft} label="Respostas" value={summary.replies_count} />
-      </div>
-    </section>
-  );
-};
 
 export const PostsPreviewSection = ({
   canInteract,

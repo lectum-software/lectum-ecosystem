@@ -41,7 +41,12 @@ export const Modal = ({
     if (open) {
       // Replayed effects and rerenders must not refocus an already open dialog.
       if (dialog.open) return;
-      sessionRef.current = { href: window.location.href, returnTarget: returnFocusRef.current };
+      sessionRef.current = {
+        href: window.location.href,
+        returnTarget:
+          returnFocusRef.current ??
+          (document.activeElement instanceof HTMLElement ? document.activeElement : null),
+      };
       closeRequestedRef.current = false;
       dialog.showModal();
       initialFocusRef.current?.focus({ preventScroll: true });
@@ -89,6 +94,7 @@ export const Modal = ({
         event.preventDefault();
         requestClose();
       }}
+      onKeyDown={(event) => event.stopPropagation()}
       onClose={(event) => {
         // A queued close from the previous opening must not close a reopened dialog.
         if (!event.currentTarget.open) requestClose();

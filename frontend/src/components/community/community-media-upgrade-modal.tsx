@@ -2,9 +2,8 @@
 
 import { ArrowRight, Camera, X } from "lucide-react";
 import Link from "next/link";
-import { useRef } from "react";
-import { createPortal } from "react-dom";
-import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
+import { useId, useRef } from "react";
+import { Modal } from "@/components/ui/modal";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
@@ -20,68 +19,63 @@ type CommunityMediaUpgradeModalProps = {
 };
 
 export const CommunityMediaUpgradeModal = ({ open, onClose }: CommunityMediaUpgradeModalProps) => {
-  const overlayRef = useRef<HTMLElement>(null);
-  const portalHost = useModalPortalHost(open, overlayRef);
-  if (!open) return null;
-
-  const modal = (
-    <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-foreground/35 p-3 backdrop-blur-sm sm:items-center sm:p-6">
-      <section
-        aria-labelledby="community-media-upgrade-title"
-        aria-modal="true"
-        className="relative w-full max-w-[24rem] rounded-[1.75rem] border border-border bg-surface p-5 text-foreground shadow-[var(--lectum-shadow)] sm:p-6"
-        role="dialog"
-        ref={overlayRef}
-        tabIndex={-1}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            event.preventDefault();
-            event.stopPropagation();
-            onClose();
-          }
-        }}
-      >
-        <button
-          aria-label="Fechar aviso de upload de mídia"
-          className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
-          onClick={onClose}
-          type="button"
-        >
-          <X className="h-4 w-4" aria-hidden="true" />
-        </button>
-
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-muted text-primary">
-          <Camera className="h-5 w-5" aria-hidden="true" />
-        </span>
-
-        <h2
-          className="mt-4 pr-8 text-xl font-black leading-tight tracking-[-0.03em] text-foreground"
-          id="community-media-upgrade-title"
-        >
-          {COMMUNITY_MEDIA_UPGRADE_TITLE}
-        </h2>
-        <p className="mt-3 text-sm font-semibold leading-6 text-muted">
-          {COMMUNITY_MEDIA_UPGRADE_DESCRIPTION}
-        </p>
-
-        <div className="mt-6 grid gap-2 sm:grid-cols-[1fr_auto]">
-          <Button asChild className="h-12 rounded-full font-black">
-            <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout} onClick={onClose}>
-              Fazer upgrade
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </Button>
-          <Button
-            className="h-12 rounded-full border-border bg-surface px-5 font-bold text-muted shadow-none hover:bg-surface-muted hover:text-foreground"
+  const titleId = useId();
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const returnFocusRef = useRef<HTMLElement>(null);
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      labelledBy={titleId}
+      initialFocusRef={titleRef}
+      returnFocusRef={returnFocusRef}
+      className="p-3 open:items-end sm:p-6 sm:open:items-center"
+    >
+      {open ? (
+        <section className="relative w-full max-w-[24rem] rounded-[1.75rem] border border-border bg-surface p-5 text-foreground shadow-[var(--lectum-shadow)] sm:p-6">
+          <button
+            aria-label="Fechar aviso de upload de mídia"
+            className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
             onClick={onClose}
             type="button"
-            variant="outline"
           >
-            Fechar
-          </Button>
-        </div>
-      </section>
-    </div>
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-muted text-primary">
+            <Camera className="h-5 w-5" aria-hidden="true" />
+          </span>
+
+          <h2
+            className="mt-4 pr-8 text-xl font-black leading-tight text-foreground outline-none"
+            id={titleId}
+            ref={titleRef}
+            tabIndex={-1}
+          >
+            {COMMUNITY_MEDIA_UPGRADE_TITLE}
+          </h2>
+          <p className="mt-3 text-sm font-semibold leading-6 text-muted">
+            {COMMUNITY_MEDIA_UPGRADE_DESCRIPTION}
+          </p>
+
+          <div className="mt-6 grid gap-2 sm:grid-cols-[1fr_auto]">
+            <Button asChild className="h-12 rounded-full font-black">
+              <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout} onClick={onClose}>
+                Fazer upgrade
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+            <Button
+              className="h-12 rounded-full border-border bg-surface px-5 font-bold text-muted shadow-none hover:bg-surface-muted hover:text-foreground"
+              onClick={onClose}
+              type="button"
+              variant="outline"
+            >
+              Fechar
+            </Button>
+          </div>
+        </section>
+      ) : null}
+    </Modal>
   );
-  return portalHost ? createPortal(modal, portalHost) : modal;
 };

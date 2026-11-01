@@ -193,7 +193,7 @@ const OpenContentVideoCommentsSheet = ({
   onClose,
 }: Omit<ContentVideoCommentsSheetProps, "open">) => {
   const titleId = useId();
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const reportReturnFocusRef = useRef<HTMLButtonElement | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
@@ -255,7 +255,7 @@ const OpenContentVideoCommentsSheet = ({
     <Modal
       className="z-[1200] overflow-hidden p-0 backdrop:bg-media-background/35 backdrop:backdrop-blur-none"
       dismissible={!hasDraft && !submitting}
-      initialFocusRef={closeRef}
+      initialFocusRef={titleRef}
       labelledBy={titleId}
       onClose={requestClose}
       open
@@ -289,17 +289,21 @@ const OpenContentVideoCommentsSheet = ({
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
               </Button>
             ) : null}
-            <h2 className="min-w-0 flex-1 text-sm font-bold" id={titleId}>
+            <h2
+              className="min-w-0 flex-1 text-sm font-bold outline-none"
+              id={titleId}
+              ref={titleRef}
+              tabIndex={-1}
+            >
               {commentCount !== undefined
                 ? `${commentCount} ${commentCount === 1 ? "comentário" : "comentários"}`
                 : "Comentários"}
             </h2>
             <button
               aria-label="Fechar comentários"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-0 text-foreground hover:bg-surface-muted disabled:opacity-50"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-0 text-foreground hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:opacity-50"
               disabled={submitting}
               onClick={requestClose}
-              ref={closeRef}
               type="button"
             >
               <X className="h-5 w-5" aria-hidden="true" />

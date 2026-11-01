@@ -232,3 +232,39 @@ test("private own replies remain in the list with their visibility flag", async 
   assert.equal(result.data[0].reply?.hidden_from_profile, true);
   assert.equal(result.data[0].reply?.content, "Still in discussion");
 });
+
+test("participation exposes separate public post and reply counts per community", async (t) => {
+  stub(t, prisma.user, "findMany", async () => []);
+  const { getProfileParticipationCommunities } = await import(
+    "@/modules/api/private/directory/psychologists/repositories/support/profile-query"
+  );
+  type Input = Parameters<typeof getProfileParticipationCommunities>[0];
+  const community = (id: string) => ({ id, name: id, slug: id, avatar_url: null });
+  const posts = ["a", "a", "b"].map((id) => ({
+    community: community(id),
+    createdAt: new Date(0),
+  })) as Input["posts"];
+  const replies = ["a", "b", "b", "c"].map((id) => ({
+    post: { community: community(id) },
+    createdAt: new Date(0),
+  })) as Input["replies"];
+  const result = await getProfileParticipationCommunities({
+    psychologistId: "owner",
+    posts,
+    replies,
+    topMentorCommunities: [],
+  });
+  assert.deepEqual(
+    Object.fromEntries(result.map((item) => [item.id, [item.posts_count, item.replies_count]])),
+    { a: [2, 1], b: [1, 2], c: [0, 1] },
+  );
+  assert.equal(
+    result.reduce((total, item) => total + item.posts_count, 0),
+    posts.length,
+  );
+  assert.equal(
+    result.reduce((total, item) => total + item.replies_count, 0),
+    replies.length,
+  );
+  assert.ok(result.every((item) => item.badge === null));
+});

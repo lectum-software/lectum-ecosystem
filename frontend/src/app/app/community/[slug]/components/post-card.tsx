@@ -271,6 +271,7 @@ export const PostCard = (props: Parameters<typeof PostCardContent>[0]) => (
 );
 
 const PostCardContent = ({
+  authorActions,
   onOpen,
   onShare,
   post,
@@ -278,6 +279,7 @@ const PostCardContent = ({
   saveActionOverride,
   showCommunityHeader = true,
 }: {
+  authorActions?: ReactNode;
   onOpen?: () => void;
   onShare: (post: CommunityPost) => void;
   post: CommunityPost;
@@ -314,11 +316,12 @@ const PostCardContent = ({
   const postDetailHref = communityPostDetailHref(post);
   const highlightedReply = post.highlighted_professional_reply;
   const hasPostMedia = Boolean(post.media_url || (post.media_items ?? []).length > 0);
+  const hasVideoContact = post.media_type === "video" && Boolean(post.media_url);
   const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
   const authorWhatsappCta =
     isPsychologistPost && post.author.whatsapp_url ? (
       <CommunityWhatsAppCta
-        attached={hasPostMedia}
+        attached={hasVideoContact}
         psychologist={toCommunityWhatsAppIdentity(post.author)}
         stopPropagation
         trackingContext={{
@@ -513,7 +516,7 @@ const PostCardContent = ({
     <div className="mt-4 grid gap-3">
       <PostMedia
         enableFeedAutoplay
-        footer={hasPostMedia ? authorWhatsappCta : undefined}
+        footer={hasVideoContact ? authorWhatsappCta : undefined}
         overlayAction={postOverlayAction}
         post={post}
       />
@@ -574,6 +577,7 @@ const PostCardContent = ({
               </p>
             )}
           </div>
+          {authorActions}
           {post.muted_by_current_user ? (
             <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
               <PostMutedBadge />
@@ -605,7 +609,7 @@ const PostCardContent = ({
           href: postDetailHref,
           label: "Comentar no post",
         }}
-        beforeSaveSlot={hasPostMedia ? null : authorWhatsappCta}
+        beforeSaveSlot={hasVideoContact ? null : authorWhatsappCta}
         currentVote={voteSnapshot.currentVote}
         disabled={voteMutation.isPending}
         onVote={handleVote}
