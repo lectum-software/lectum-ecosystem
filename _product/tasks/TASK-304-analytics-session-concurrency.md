@@ -23,4 +23,6 @@ QA final: Chrome real, API e PostgreSQL locais, 320/390/1440 px, ocultar/restaur
 
 ## Publicacao
 
+Complemento 0.1.765: o pre-push da 0.1.764 bloqueou o envio porque a flag opt-in nao estava classificada na cobertura do template production. ANALYTICS_SESSION_INTEGRATION foi adicionada a lista de exclusoes justificadas, junto das configuracoes exclusivamente locais. Os cinco testes do template passaram. Nenhum hook foi ignorado; a tentativa reprovada foi encerrada e a validacao integral sera repetida. Sem alteracao adicional de runtime.
+
 Sem migration, dependencia ou env de runtime nova. Backend antes do frontend. Nao mudar flags de convites, cron, autodeploys ou segredos. Rollback de codigo para a versao anterior, sem desfazer dados. Gates de homologacao confirmados desligados pelo usuario durante a publicacao. iPhone fisico continua fora da validacao automatizada.

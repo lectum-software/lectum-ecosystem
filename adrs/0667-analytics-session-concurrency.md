@@ -14,4 +14,6 @@ O primeiro insert vence; chamadas concorrentes aguardam a mesma linha. A vincula
 
 ## Consequencias
 
+A flag ANALYTICS_SESSION_INTEGRATION e documentada no exemplo local e explicitamente excluida pelo teste do template de producao. Nao configurar essa flag nos provedores; ela so habilita o teste que exige banco local dev/test.
+
 Tres operacoes pequenas por sessao, serializadas somente na linha disputada. Falhas reais de banco continuam propagadas e sanitizadas na fronteira HTTP. Sem migration/configuracao/dependencia nova. Testes reais cobrem criacao concorrente, disputa de autoria, chamada anonima, metadados e vinculacao. Rollback do backend restaura a implementacao anterior sem alterar esquema ou dados.
