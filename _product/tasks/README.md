@@ -1,3 +1,5 @@
+Validado localmente em 0.1.769: [TASK-307 - Dicas de uso respeitam a modal de acesso](TASK-307-onboarding-conversion-gate.md), ADR-0668. Dica de publicar reutiliza a acao protegida antes de fechar, oferecendo criar conta, login ou continuar explorando. Check integral, build e QA real em 320/390/1440 aprovados; detalhes e limitacao do smoke compilado na task. Sem push/deploy.
+
 Release local 0.1.768: complemento da [TASK-306](TASK-306-own-testimonial-video-icons.md), ADR-0666. Primeiro push bloqueado pelo limite de 700 linhas do post; condicao do CTA simplificada sem mudar comportamento. Gate de tamanho, nove testes focais, build e QA real em 320/390/1440 aprovados. Publicacao autorizada somente para Frontend; hooks e PR ainda devem concluir antes do deploy.
 
 Validado localmente em 0.1.767: [TASK-306 - Identidade na resposta e escala dos controles de video](TASK-306-own-testimonial-video-icons.md), ADR-0666. Identidade propria nos depoimentos, icones de reels/diretorio padronizados, acoes de posts do perfil simplificadas e header alinhado ao feed. Check/build frontend e QA real em 320/390/1440 aprovados. Sem push/deploy; iPhone fisico nao validado.
@@ -759,6 +761,7 @@ ou cortesia manual.
 | 304 | [TASK-304 - Concorrencia de sessoes de analytics](TASK-304-analytics-session-concurrency.md) | Done | 303 |
 | 305 | [TASK-305 - Selos, avatares e contagens do expansor](TASK-305-community-summary-polish.md) | Done | 304 |
 | 306 | [TASK-306 - Identidade na resposta e escala dos controles de video](TASK-306-own-testimonial-video-icons.md) | Done | 305 |
+| 307 | [TASK-307 - Dicas de uso respeitam a modal de acesso](TASK-307-onboarding-conversion-gate.md) | Done | 306 |
 
 ## Ordem operacional recomendada sem bloqueios
 

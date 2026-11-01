@@ -35,7 +35,7 @@ export const CommunityPublishOnboarding = ({
   variant,
 }: {
   createPostHref: string;
-  onCreatePostClick?: (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => void;
+  onCreatePostClick: (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => void;
   variant: CommunityPublishOnboardingVariant;
 }) => {
   const { dismiss, isVisible } = useCommunityPublishTip();
@@ -48,8 +48,9 @@ export const CommunityPublishOnboarding = ({
 
   const activateCreatePost = useCallback(
     (event: ReactMouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+      onCreatePostClick(event, createPostHref);
       dismiss();
-      onCreatePostClick?.(event, createPostHref);
     },
     [createPostHref, dismiss, onCreatePostClick],
   );
@@ -74,9 +75,10 @@ export const CommunityPublishOnboarding = ({
       dismiss();
     };
 
-    document.addEventListener("click", handleCreatePostAnchorClick, true);
+    // Let React handle the protected action before dismissing (and unmounting) its link.
+    document.addEventListener("click", handleCreatePostAnchorClick);
 
-    return () => document.removeEventListener("click", handleCreatePostAnchorClick, true);
+    return () => document.removeEventListener("click", handleCreatePostAnchorClick);
   }, [createPostHref, dismiss]);
 
   useEffect(() => {

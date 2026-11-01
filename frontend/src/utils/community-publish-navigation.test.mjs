@@ -10,6 +10,42 @@ const { getNavigation, getMobileNavigationActiveHref, shouldShowMobileNavigation
   await import("../templates/private/navigation.tsx");
 const readSource = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
+test("publish tip cancels native navigation and delegates before dismissing its link", () => {
+  const source = readSource("../app/app/community/[slug]/components/publish-onboarding.tsx");
+  assert.match(
+    source,
+    /onCreatePostClick: \(event: ReactMouseEvent<HTMLAnchorElement>, href: string\) => void/,
+  );
+  assert.match(
+    source,
+    /event\.preventDefault\(\);\s*onCreatePostClick\(event, createPostHref\);\s*dismiss\(\);/,
+  );
+  assert.match(source, /onClick=\{activateCreatePost\}/);
+  assert.match(source, /document\.addEventListener\("click", handleCreatePostAnchorClick\)/);
+  assert.match(source, /document\.removeEventListener\("click", handleCreatePostAnchorClick\)/);
+  assert.doesNotMatch(source, /handleCreatePostAnchorClick,\s*(true|\{\s*capture:\s*true)/);
+});
+
+test("usage tips do not introduce direct authentication navigation", () => {
+  const paths = [
+    "../app/app/community/[slug]/components/publish-onboarding.tsx",
+    "../app/app/community/[slug]/components/reply-onboarding.tsx",
+    "../components/onboarding/actionable-coach-mark.tsx",
+    "../app/app/psychologists/modules/onboarding.tsx",
+  ];
+  for (const path of paths) {
+    assert.doesNotMatch(readSource(path), /\/auth\/(login|register|profile-selection)/, path);
+  }
+  for (const view of ["community-feed", "community-detail"]) {
+    const source = readSource(`../app/app/community/[slug]/views/${view}.tsx`);
+    assert.match(source, /onCreatePostClick=\{handleCreatePostClick\}/);
+    assert.match(
+      source,
+      /conversion\.requestConversion\("trigger_comentar",\s*\{\s*intent: \{\s*returnTo: href,\s*type: "create_post",?\s*\}/,
+    );
+  }
+});
+
 test("externally managed creation never snapshots, changes or restores document scroll", async () => {
   const { lockCreatePostDocumentScroll } = await import(
     "../app/app/community/[slug]/post/new/modules/create-post-document-scroll.ts"
