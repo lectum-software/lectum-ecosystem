@@ -21,3 +21,7 @@ Complementos TASK-306: ocultar WhatsApp e contador de salvos apenas nos posts se
 Refinamento TASK-305: o cabecalho agrega posicoes distintas de mentor (Top 1/2/3), sem deduplicar comunidades ou seus selos individuais. O formatador compartilhado omite parcelas de atividade zeradas no resumo e nas linhas; ambos zero omitem a linha inteira. Remover apenas a moldura decorativa dos avatares, mantendo imagem em 48px, medalha na quina e indicadores de foco dos links. Sem mudanca de API ou ranking.
 
 Sem mudanca de banco, dependencia ou configuracao. Deploy futuro backend antes de frontend; campos novos tolerados como opcionais pelo consumidor. Nenhuma publicacao remota nesta task. Regressao deve cobrir dono/visitante, erros de mutacao, listas, modais sobre reels e teclado. Capturas locais nao substituem teste de Safari em iPhone fisico.
+# Complemento de release TASK-306 (0.1.768)
+
+O gate source-size permanece com limite de 700 linhas. A permissao de exibir WhatsApp no post fica nomeada antes do JSX, preservando exatamente as condicoes de escopo sem ampliar o componente ou alterar o contrato. Publicacao deste lote restrita ao Frontend; manifests dos demais apps nao exigem deploy funcional.
+

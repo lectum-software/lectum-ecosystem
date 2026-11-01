@@ -27,3 +27,10 @@ Complementa ADR-0666. Identidade do proprietario vem do perfil privado ja existe
 - check:version aprovado nos cinco manifests. Bump unico de 0.1.766 para 0.1.767.
 - Check frontend integral e build webpack final aprovados; limpeza de source maps executada, sem mapas inline ou arquivos de mapa remanescentes. Logs .tmp/task306-check-final.log e .tmp/task306-build-verified.log.
 - Safari/iPhone fisico nao validado. Sem push/deploy.
+
+## Complemento de release - 0.1.768
+
+- Usuario autorizou publicacao em 01/11/2026 e confirmou gatilhos desligados nos provedores. Publicar somente Frontend; demais apps possuem apenas bump de manifest.
+- Primeiro pre-push bloqueado por source-size: CommunityPostCard tinha 701 linhas para limite de 700. Checks de frontend/backend/admin/video aprovados, mas nada enviado.
+- Condicao de exibicao do WhatsApp nomeada antes do JSX, mantendo a mesma expressao booleana e sem afrouxar o limite. Teste focal confere a conexao entre condicao e CTA.
+- source-size, ciclos, ADRs, check:version e nove testes focais aprovados. Build webpack 0.1.768 e QA real repetidos em 320/390/1440 com errors vazio e cleaned true; logs .tmp/task306-release-build.log e .tmp/task306-release-browser.log. Limpeza de source maps concluida. Hooks completos serao repetidos no push; sem migracao ou variavel nova.

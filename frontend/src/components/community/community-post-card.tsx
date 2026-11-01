@@ -169,11 +169,9 @@ const CommunityPostCardContent = ({
       } as const)
     : null;
   const setAttentionElement = useContentAttentionTracking(attentionTrackingTarget);
+  const allowWhatsappCta = showWhatsappCta && !compactProfilePostActions;
   const authorWhatsappCta =
-    showWhatsappCta &&
-    !compactProfilePostActions &&
-    isPsychologistPost &&
-    displayAuthor.whatsapp_url ? (
+    allowWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
       <CommunityWhatsAppCta
         attached={hasVideoContact}
         size={hasCompactReplyActions ? "xs" : "sm"}

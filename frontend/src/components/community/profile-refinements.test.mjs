@@ -263,6 +263,7 @@ test("profile post actions stay scoped and sticky identity follows feed typograp
   const card = source("./community-post-card.tsx");
   assert.match(card, /profilePublicationMode && !isReplyContribution && !hasVideoContact/);
   assert.match(card, /showWhatsappCta &&\s*!compactProfilePostActions/);
+  assert.match(card, /allowWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url/);
   assert.match(
     card,
     /count: primaryReply \|\| compactProfilePostActions \? undefined : saveAction.count/,
