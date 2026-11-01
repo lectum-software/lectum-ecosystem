@@ -111,13 +111,9 @@
 }
 .avatar {
   position: relative;
-  width: 54px;
-  height: 54px;
+  width: 48px;
+  height: 48px;
   flex: none;
-  padding: 3px;
-  border-radius: 14px;
-  background: var(--lectum-surface);
-  outline: 1px solid var(--lectum-border-strong, var(--lectum-border));
 }
 .avatarImage {
   position: relative;

@@ -14,4 +14,6 @@ Posts do paciente em Minhas publicacoes reutilizam a apresentacao do feed, mante
 
 ## Consequencias
 
+Refinamento TASK-305: o cabecalho agrega posicoes distintas de mentor (Top 1/2/3), sem deduplicar comunidades ou seus selos individuais. O formatador compartilhado omite parcelas de atividade zeradas no resumo e nas linhas; ambos zero omitem a linha inteira. Remover apenas a moldura decorativa dos avatares, mantendo imagem em 48px, medalha na quina e indicadores de foco dos links. Sem mudanca de API ou ranking.
+
 Sem mudanca de banco, dependencia ou configuracao. Deploy futuro backend antes de frontend; campos novos tolerados como opcionais pelo consumidor. Nenhuma publicacao remota nesta task. Regressao deve cobrir dono/visitante, erros de mutacao, listas, modais sobre reels e teclado. Capturas locais nao substituem teste de Safari em iPhone fisico.

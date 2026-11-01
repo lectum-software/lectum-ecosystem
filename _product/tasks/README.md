@@ -1,3 +1,5 @@
+Validado localmente em 0.1.766: [TASK-305 - Selos, avatares e contagens do expansor](TASK-305-community-summary-polish.md), ADR-0666. Ranks unicos no cabecalho, avatares sem moldura e contagens sem parcelas zeradas, inclusive no total. Sete testes focais, check/build frontend e QA real em 320/390/1440 aprovados. Sem push/deploy; iPhone fisico nao validado.
+
 Lote local 0.1.765: [TASK-304 - Concorrencia de sessoes de analytics](TASK-304-analytics-session-concurrency.md), ADR-0667. Correcao do P2034 com autoria atomica, integracao PostgreSQL e QA em 320/390/1440 sem HTTP 500 ou pageerror. Complemento classifica a flag do teste como excluida de producao; cinco testes do template aprovados. Publicacao depende da repeticao integral dos hooks e PR revisado; iPhone fisico permanece pendente.
 
 Validado localmente em 0.1.763: [TASK-303 - Refinamentos de publicacoes, depoimentos e reels](TASK-303-profile-reels-refinements.md), ADR-0666. Nove ajustes, incluindo expansor de comunidades e ocultacao de respostas pelo perfil. Check integral, builds frontend/backend e QA real em 320/390/1440 aprovados. Ressalva de telemetria tratada pela TASK-304; Safari/iPhone fisico ainda nao validado.
@@ -751,6 +753,7 @@ ou cortesia manual.
 | 302 | [TASK-302 - Audio continuo dos reels e cantos dos depoimentos](TASK-302-reels-audio-continuity.md) | Done | 301 |
 | 303 | [TASK-303 - Refinamentos de publicacoes, depoimentos e reels](TASK-303-profile-reels-refinements.md) | Done | 302 |
 | 304 | [TASK-304 - Concorrencia de sessoes de analytics](TASK-304-analytics-session-concurrency.md) | Done | 303 |
+| 305 | [TASK-305 - Selos, avatares e contagens do expansor](TASK-305-community-summary-polish.md) | Done | 304 |
 
 ## Ordem operacional recomendada sem bloqueios
 
