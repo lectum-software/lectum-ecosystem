@@ -229,7 +229,7 @@ test("sticky contact preserves the hero accessible name independently of favorit
     assert.equal(sticky.match(label)?.[1], hero.match(label)?.[1]);
     assert.match(sticky, /aria-hidden="false"/);
     assert.doesNotMatch(sticky, /inert=""/);
-    assert.match(sticky, /min-w-0 truncate text-\[15px\]/);
+    assert.match(sticky, /min-w-0 truncate text-base font-black leading-tight/);
     assert.match(sticky, /Amanda Miranda Gomes de Azevedo/);
     assert.match(sticky, /data-profile-whatsapp-cta="sticky"/);
     assert.match(sticky, /<span[^>]*>WhatsApp<\/span>/);

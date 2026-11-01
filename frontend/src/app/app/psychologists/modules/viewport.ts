@@ -44,20 +44,20 @@ export const useViewportMetrics = () => {
     const isDesktop = width >= 1024;
     const isCompact = effectiveWidth <= 390;
     const isTiny = effectiveWidth < 360;
-    const actionHitSize = isTiny ? 40 : 44;
+    const actionHitSize = 44;
     const actionButtonSize = isTiny ? 30 : 32;
-    const actionPrimaryButtonSize = isTiny ? 34 : 36;
+    const actionPrimaryButtonSize = 36;
 
     return {
       actionButtonSize,
       actionAvatarSize: actionButtonSize,
       actionGap: isCompact ? 6 : 8,
       actionHitSize,
-      actionIconSize: isTiny ? 14 : 15,
+      actionIconSize: 20,
       actionPrimaryButtonSize,
       actionRightPadding: isTiny ? 12 : 16,
       actionRailWidth: actionHitSize,
-      actionStandaloneIconSize: isTiny ? 18 : 20,
+      actionStandaloneIconSize: 22,
       availableBadgeTextSize: isTiny ? 10 : 11,
       bioBottomOffset: isDesktop ? 24 : isCompact ? 22 : 24,
       ratingIconSize: isCompact ? 9 : 10,

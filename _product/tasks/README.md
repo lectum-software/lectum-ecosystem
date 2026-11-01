@@ -1,3 +1,5 @@
+Validado localmente em 0.1.767: [TASK-306 - Identidade na resposta e escala dos controles de video](TASK-306-own-testimonial-video-icons.md), ADR-0666. Identidade propria nos depoimentos, icones de reels/diretorio padronizados, acoes de posts do perfil simplificadas e header alinhado ao feed. Check/build frontend e QA real em 320/390/1440 aprovados. Sem push/deploy; iPhone fisico nao validado.
+
 Validado localmente em 0.1.766: [TASK-305 - Selos, avatares e contagens do expansor](TASK-305-community-summary-polish.md), ADR-0666. Ranks unicos no cabecalho, avatares sem moldura e contagens sem parcelas zeradas, inclusive no total. Sete testes focais, check/build frontend e QA real em 320/390/1440 aprovados. Sem push/deploy; iPhone fisico nao validado.
 
 Lote local 0.1.765: [TASK-304 - Concorrencia de sessoes de analytics](TASK-304-analytics-session-concurrency.md), ADR-0667. Correcao do P2034 com autoria atomica, integracao PostgreSQL e QA em 320/390/1440 sem HTTP 500 ou pageerror. Complemento classifica a flag do teste como excluida de producao; cinco testes do template aprovados. Publicacao depende da repeticao integral dos hooks e PR revisado; iPhone fisico permanece pendente.
@@ -754,6 +756,7 @@ ou cortesia manual.
 | 303 | [TASK-303 - Refinamentos de publicacoes, depoimentos e reels](TASK-303-profile-reels-refinements.md) | Done | 302 |
 | 304 | [TASK-304 - Concorrencia de sessoes de analytics](TASK-304-analytics-session-concurrency.md) | Done | 303 |
 | 305 | [TASK-305 - Selos, avatares e contagens do expansor](TASK-305-community-summary-polish.md) | Done | 304 |
+| 306 | [TASK-306 - Identidade na resposta e escala dos controles de video](TASK-306-own-testimonial-video-icons.md) | Done | 305 |
 
 ## Ordem operacional recomendada sem bloqueios
 

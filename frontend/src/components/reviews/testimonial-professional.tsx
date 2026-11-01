@@ -3,6 +3,8 @@
 import { UserRound } from "lucide-react";
 import Image from "next/image";
 import type { DirectoryPsychologist } from "@/api/generator/types/directory";
+import type { FreeProfessionalProfile } from "@/api/generator/types/free-profile";
+import type { user } from "@/api/generator/types/user";
 import { getPsychologistTitle } from "@/app/app/psychologist/[id]/modules/support";
 import { AuthorAvatar } from "@/components/community/community-post-card-author";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -15,6 +17,27 @@ export type TestimonialProfessional = Pick<
   DirectoryPsychologist,
   "id" | "name" | "avatar" | "gender" | "verified"
 >;
+
+export const getOwnTestimonialProfessional = (
+  account: user | null,
+  privateProfile?: FreeProfessionalProfile,
+): TestimonialProfessional | undefined => {
+  if (account?.role !== "psicologo" || !account.id) return undefined;
+  const ownProfile = privateProfile?.user.id === account.id ? privateProfile : undefined;
+  return {
+    id: account.id,
+    name: ownProfile?.user.name || account.name || "Psicólogo",
+    avatar: ownProfile ? ownProfile.user.avatar : (account.avatar ?? null),
+    gender: ownProfile?.profile.gender ?? null,
+    verified: Boolean(
+      ownProfile &&
+        !ownProfile.plan.is_free &&
+        (ownProfile.profile.crp_status === "aprovado" ||
+          ownProfile.profile.cfp_verified_at ||
+          ownProfile.plan.is_courtesy),
+    ),
+  };
+};
 
 export const TestimonialProfessionalIdentity = ({
   professional,

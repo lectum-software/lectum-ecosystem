@@ -238,3 +238,39 @@ test("approved wiring preserves feed reuse, static initial focus and native top-
     assert.match(source(file), /footer=\{hasVideoContact \? authorWhatsappCta : undefined\}/);
   }
 });
+
+test("video actions share a compact scale without reducing mobile touch targets", () => {
+  const css = source("./content-video-viewer.module.css");
+  for (const [, block] of css.matchAll(/\.action svg \{([^}]+)\}/g)) {
+    assert.match(block, /width: 22px/);
+    assert.match(block, /height: 22px/);
+  }
+  for (const [, block] of css.matchAll(/\.contact svg \{([^}]+)\}/g)) {
+    assert.match(block, /width: 20px/);
+    assert.match(block, /height: 20px/);
+  }
+  const metrics = source("../../app/app/psychologists/modules/viewport.ts");
+  assert.match(metrics, /actionHitSize = 44/);
+  assert.match(metrics, /actionPrimaryButtonSize = 36/);
+  assert.match(metrics, /actionIconSize: 20/);
+  assert.match(metrics, /actionStandaloneIconSize: 22/);
+  const desktop = source("../../app/app/psychologists/view/components/desktop-rail.tsx");
+  assert.match(desktop, /iconSize=\{22\}/);
+  assert.equal((desktop.match(/size-\[22px\]/g) || []).length, 2);
+});
+
+test("profile post actions stay scoped and sticky identity follows feed typography", () => {
+  const card = source("./community-post-card.tsx");
+  assert.match(card, /profilePublicationMode && !isReplyContribution && !hasVideoContact/);
+  assert.match(card, /showWhatsappCta &&\s*!compactProfilePostActions/);
+  assert.match(
+    card,
+    /count: primaryReply \|\| compactProfilePostActions \? undefined : saveAction.count/,
+  );
+  const identity = source("../../app/app/psychologist/[id]/components/profile-sticky-identity.tsx");
+  assert.match(identity, /items-center gap-1/);
+  assert.match(identity, /text-base font-black leading-tight text-foreground/);
+  assert.match(identity, /h-4 w-4 shrink-0/);
+  assert.match(identity, /fitProfileName/);
+  assert.match(card, /text-sm font-black leading-tight text-foreground/);
+});

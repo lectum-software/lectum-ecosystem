@@ -3,7 +3,7 @@
 import { Eye, EyeOff, Pencil, Reply, Send, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useDirectoryPsychologist } from "@/api/callers/directory";
+import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import { useInfinitePsychologistReviews } from "@/api/callers/psychologist-reviews";
 import type { PsychologistReview } from "@/api/generator/types/psychologist-reviews";
 import {
@@ -24,7 +24,10 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { flattenListPages } from "@/utils/infinite-list";
 import { TestimonialCard } from "./testimonial-card";
-import type { TestimonialProfessional } from "./testimonial-professional";
+import {
+  getOwnTestimonialProfessional,
+  type TestimonialProfessional,
+} from "./testimonial-professional";
 import { useTestimonialMutation } from "./use-testimonial-mutation";
 
 const ManagedTestimonial = ({
@@ -56,7 +59,6 @@ const ManagedTestimonial = ({
   return (
     <TestimonialCard
       review={review}
-      responseName="Sua resposta"
       professional={professional}
       actions={
         review.status !== "oculta" ? (
@@ -73,7 +75,7 @@ const ManagedTestimonial = ({
         ) : null
       }
       responseActions={
-        <div className="flex shrink-0">
+        <div className="ml-auto flex shrink-0">
           <Button
             variant="ghost"
             className="h-10 w-10 p-0"
@@ -165,7 +167,8 @@ const ManagedTestimonial = ({
 
 export const ProfessionalTestimonials = () => {
   const user = useAppSelector((state) => state.user);
-  const professional = useDirectoryPsychologist(user?.role === "psicologo" ? (user.id ?? "") : "");
+  const { profile } = usePsychologistFreeProfile({ enabled: user?.role === "psicologo" });
+  const professional = getOwnTestimonialProfessional(user, profile.data);
   const [filter, setFilter] = useState<"visible" | "hidden" | "all">("visible");
   const query = useInfinitePsychologistReviews({ limit: 20, visibility: filter });
   const data = query.data?.pages[0];
@@ -254,7 +257,7 @@ export const ProfessionalTestimonials = () => {
           data-testimonial-list
         >
           {items.map((review) => (
-            <ManagedTestimonial key={review.id} review={review} professional={professional.data} />
+            <ManagedTestimonial key={review.id} review={review} professional={professional} />
           ))}
         </div>
         {query.hasNextPage ? (
