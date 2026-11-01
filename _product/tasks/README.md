@@ -1,4 +1,6 @@
-Validado localmente em 0.1.763: [TASK-303 - Refinamentos de publicacoes, depoimentos e reels](TASK-303-profile-reels-refinements.md), ADR-0666. Nove ajustes, incluindo expansor de comunidades e ocultacao de respostas pelo perfil. Check integral, builds frontend/backend e QA real em 320/390/1440 aprovados. Ressalvas de telemetria local e Safari/iPhone fisico registradas. Sem push/deploy.
+Validado localmente em 0.1.764: [TASK-304 - Concorrencia de sessoes de analytics](TASK-304-analytics-session-concurrency.md), ADR-0667. Correcao do P2034 reproduzido na promocao da TASK-303, com autoria atomica e teste PostgreSQL real. Builds backend/frontend e repeticao do QA em 320/390/1440 aprovados sem HTTP 500 ou pageerror. Publicacao depende dos hooks e PR revisado; iPhone fisico permanece pendente.
+
+Validado localmente em 0.1.763: [TASK-303 - Refinamentos de publicacoes, depoimentos e reels](TASK-303-profile-reels-refinements.md), ADR-0666. Nove ajustes, incluindo expansor de comunidades e ocultacao de respostas pelo perfil. Check integral, builds frontend/backend e QA real em 320/390/1440 aprovados. Ressalva de telemetria tratada pela TASK-304; Safari/iPhone fisico ainda nao validado.
 
 Validado localmente em 0.1.762: [TASK-302 - Audio continuo dos reels e cantos dos depoimentos](TASK-302-reels-audio-continuity.md), ADR-0665. Player persistente e blocos de reviews com raio de 26px. Check/build frontend, guardas, QA visual e API/MP4 reais locais em 320/390/1440 aprovados. Safari/iPhone fisico ainda requer conferencia. Sem push/deploy; header de comunidades continua somente previa.
 
@@ -748,6 +750,7 @@ ou cortesia manual.
 | 301 | [TASK-301 - Convites de depoimento em janelas e menus](TASK-301-testimonial-invitation-windows.md) | Done | 300 |
 | 302 | [TASK-302 - Audio continuo dos reels e cantos dos depoimentos](TASK-302-reels-audio-continuity.md) | Done | 301 |
 | 303 | [TASK-303 - Refinamentos de publicacoes, depoimentos e reels](TASK-303-profile-reels-refinements.md) | Done | 302 |
+| 304 | [TASK-304 - Concorrencia de sessoes de analytics](TASK-304-analytics-session-concurrency.md) | Done | 303 |
 
 ## Ordem operacional recomendada sem bloqueios
 

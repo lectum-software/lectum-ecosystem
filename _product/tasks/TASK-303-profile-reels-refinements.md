@@ -38,3 +38,5 @@ Safari/iPhone fisico nao testado. A suite geral mantem skips de integracoes opci
 O navegador de QA bloqueou conexoes externas, inclusive injecoes locais do AdGuard. O indicador de desenvolvimento do Next foi ocultado somente no roteiro de QA porque interceptava o botao de camera; nenhum componente da aplicacao foi ocultado.
 
 Ocorreram HTTP 500 no QA e logs sanitizados de `page-view-tracking` e `visitor-location-capture`. A causa nao foi confirmada. Analytics nao foi alterado nesta task; os fluxos funcionais passaram, mas isso nao confirma saude completa da telemetria. Investigar separadamente antes de promover como lote sem ressalvas.
+
+Atualizacao na preparacao da publicacao: TASK-304 / 0.1.764 reproduziu P2034, corrigiu a concorrencia preservando autoria e repetiu o QA real em 320/390/1440 sem HTTP 500 ou erros de JavaScript. Builds backend/frontend aprovados. Mantida a ressalva de iPhone fisico.
