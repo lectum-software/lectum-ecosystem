@@ -733,3 +733,4 @@ Formato recomendado:
 - [ADR-0669 — Foco e rascunho independentes na navegacao dos reels](0669-reels-comment-focus-dismiss.md)
 - [ADR-0670 — Exclusao de conteudo e renovacao separada da vigencia](0670-account-content-and-subscription-end.md)
 - [ADR-0671 — Aceite explicito durante cadastro](0671-registration-legal-acceptance.md)
+- [ADR-0672 — Integridade da ativacao dos documentos legais](0672-legal-publication-readiness.md)

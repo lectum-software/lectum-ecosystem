@@ -33,6 +33,7 @@ export type RegisterPatientPayload = {
 };
 
 export type RegisterPsychologistPayload = {
+  promotional_authorized: boolean;
   legal_document_ids: string[];
   privacy_acknowledged: boolean;
   birthdate: string;

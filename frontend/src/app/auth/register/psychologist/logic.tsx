@@ -99,6 +99,7 @@ export const RegisterPsychologistLogic = () => {
       terms_accepted: true,
       legal_document_ids: documents.map((document) => document.id),
       privacy_acknowledged: data.legal_accepted,
+      promotional_authorized: data.legal_accepted,
       terms_version: LEGACY_TERMS_VERSION,
       adult_confirmed: true,
       birthdate,
@@ -133,6 +134,7 @@ export const RegisterPsychologistLogic = () => {
         terms_accepted: "true",
         legal_document_ids: documents.map((document) => document.id).join(","),
         privacy_acknowledged: String(values.legal_accepted),
+        promotional_authorized: String(values.legal_accepted),
         terms_version: LEGACY_TERMS_VERSION,
         adult_confirmed: "true",
       });
@@ -164,6 +166,7 @@ export const RegisterPsychologistLogic = () => {
       {adultReviewOpen ? (
         <AdultDeclarationModal
           documents={documents}
+          legalReady={legalReady}
           onClose={() => setAdultReviewOpen(false)}
           onSubmit={handleGoogleRegister}
         />
@@ -187,7 +190,7 @@ export const RegisterPsychologistLogic = () => {
 
             <Button
               className="mt-5 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
-              disabled={isPending || !legalReady}
+              disabled={isPending}
               onClick={() => setAdultReviewOpen(true)}
               type="button"
               variant="outline"
@@ -207,22 +210,6 @@ export const RegisterPsychologistLogic = () => {
             ) : null}
 
             <DividerWithLabel className="my-5">ou</DividerWithLabel>
-            {!legalReady ? (
-              <InlineAlert className="mb-4" variant="info">
-                {legal.isPending
-                  ? "Carregando os documentos para o cadastro..."
-                  : "Os documentos para o cadastro estão indisponíveis. Tente novamente em instantes."}
-                {!legal.isPending ? (
-                  <button
-                    className="ml-1 font-semibold underline"
-                    type="button"
-                    onClick={() => void legal.refetch()}
-                  >
-                    Tentar novamente
-                  </button>
-                ) : null}
-              </InlineAlert>
-            ) : null}
 
             <button
               aria-controls={PSYCHOLOGIST_EMAIL_FORM_ID}

@@ -35,6 +35,7 @@ export const schema: IValidatorRequest = {
         .optional(),
     },
     { key: "privacy_acknowledged", custom: z.boolean().optional() },
+    { key: "promotional_authorized", custom: z.boolean().optional() },
     { key: "adult_confirmed", custom: z.boolean().optional() },
     { key: "birthdate", custom: adultBirthdateSchema.optional() },
     //*

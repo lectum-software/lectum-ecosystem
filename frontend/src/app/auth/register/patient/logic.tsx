@@ -158,6 +158,7 @@ export const RegisterPatientLogic = () => {
       {adultReviewOpen ? (
         <AdultDeclarationModal
           documents={documents}
+          legalReady={legalReady}
           onClose={() => setAdultReviewOpen(false)}
           onSubmit={handleGoogleRegister}
         />
@@ -176,7 +177,7 @@ export const RegisterPatientLogic = () => {
 
             <Button
               className="mt-5 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
-              disabled={isPending || !legalReady}
+              disabled={isPending}
               onClick={() => setAdultReviewOpen(true)}
               type="button"
               variant="outline"
@@ -196,22 +197,6 @@ export const RegisterPatientLogic = () => {
             ) : null}
 
             <DividerWithLabel className="my-5">ou</DividerWithLabel>
-            {!legalReady ? (
-              <InlineAlert className="mb-4" variant="info">
-                {legal.isPending
-                  ? "Carregando os documentos para o cadastro..."
-                  : "Os documentos para o cadastro estão indisponíveis. Tente novamente em instantes."}
-                {!legal.isPending ? (
-                  <button
-                    className="ml-1 font-semibold underline"
-                    type="button"
-                    onClick={() => void legal.refetch()}
-                  >
-                    Tentar novamente
-                  </button>
-                ) : null}
-              </InlineAlert>
-            ) : null}
 
             <button
               aria-controls={PATIENT_EMAIL_FORM_ID}

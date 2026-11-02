@@ -52,6 +52,7 @@ export class StoreRepository implements IStoreRepository {
         terms_accepted,
         legal_document_ids,
         privacy_acknowledged,
+        promotional_authorized,
         adult_confirmed,
         birthdate,
         terms_version,
@@ -130,6 +131,7 @@ export class StoreRepository implements IStoreRepository {
         legal_document_ids,
         terms_accepted,
         privacy_acknowledged,
+        promotional_authorized,
         adult_confirmed,
       });
       if (adult_confirmed === true) {

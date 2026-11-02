@@ -5,6 +5,8 @@ import { deleteAccountContent } from "../src/modules/account-deletion/content";
 import { resolveCancellationState } from "../src/modules/billing/cancellation-period";
 import { restoreFreePlanAfterProfessionalCancellation } from "../src/modules/billing/free-subscription";
 import { acceptRegistrationLegal } from "../src/modules/legal/registration";
+import { LegalReadRepository } from "../src/modules/legal/repositories/LegalReadRepository";
+import { acceptLegalInTransaction } from "../src/modules/legal/repositories/LegalWriteRepository";
 import { assertDisposableLocalDatabaseTarget } from "../src/utils/local-database-safety";
 import { activeProfessionalEntitlementWhere } from "../src/utils/subscription-entitlement";
 
@@ -134,6 +136,33 @@ async function main() {
             ?.plan?.slug,
           "gratuito",
         );
+        assert.equal(await tx.legal_document_version.count({ where: { status: "published" } }), 0);
+        await acceptRegistrationLegal(tx, owner.id, {});
+        assert.equal(
+          (await new LegalReadRepository().status(owner.id, tx)).adult_previously_confirmed,
+          false,
+        );
+        assert.equal(await tx.legal_acceptance.count({ where: { user_id: owner.id } }), 0);
+        const legacyAdult = await tx.user_background.create({
+          data: {
+            user_id: owner.id,
+            type: "adult_declaration",
+            data: {
+              minimum_age: 18,
+              source: "registration",
+              declared_at: new Date().toISOString(),
+            },
+          },
+        });
+        assert.equal(
+          (await new LegalReadRepository().status(owner.id, tx)).adult_previously_confirmed,
+          true,
+        );
+        assert.equal(
+          (await new LegalReadRepository().status(other.id, tx)).adult_previously_confirmed,
+          false,
+        );
+        await tx.user_background.delete({ where: { id: legacyAdult.id } });
         const docs = [];
         for (const kind of ["terms", "privacy"]) {
           const last = await tx.legal_document_version.aggregate({
@@ -159,6 +188,7 @@ async function main() {
           );
         }
         const input = {
+          promotional_authorized: true,
           legal_document_ids: docs.map((doc) => doc.id),
           terms_accepted: true,
           privacy_acknowledged: true,
@@ -168,18 +198,62 @@ async function main() {
           acceptRegistrationLegal(tx, owner.id, { ...input, privacy_acknowledged: false }),
           /legal_acceptance_required/,
         );
+        const { legal_document_ids: _ids, ...withoutDocuments } = input;
+        await acceptRegistrationLegal(tx, owner.id, withoutDocuments);
+        assert.equal(await tx.legal_acceptance.count({ where: { user_id: owner.id } }), 0);
         await assert.rejects(
           acceptRegistrationLegal(tx, owner.id, { ...input, legal_document_ids: ["old", "old"] }),
           /legal_documents_changed/,
         );
         await acceptRegistrationLegal(tx, owner.id, input);
+        assert.equal(
+          (await new LegalReadRepository().status(owner.id, tx)).adult_previously_confirmed,
+          true,
+        );
         const accepted = await tx.legal_acceptance.findMany({ where: { user_id: owner.id } });
         assert.equal(accepted.length, 2);
+        assert.equal(
+          accepted.find(
+            (item) => item.document_id === docs.find((doc) => doc.kind === "privacy")?.id,
+          )?.action,
+          "privacy_acknowledge_and_promotional_authorize",
+        );
+        await assert.rejects(
+          acceptRegistrationLegal(tx, owner.id, { ...input, promotional_authorized: false }),
+          /legal_acceptance_required/,
+        );
+        await assert.rejects(
+          acceptRegistrationLegal(tx, other.id, input),
+          /legal_acceptance_required/,
+        );
+        assert.equal(await tx.legal_acceptance.count({ where: { user_id: other.id } }), 0);
+        await acceptRegistrationLegal(tx, other.id, { ...input, promotional_authorized: false });
+        assert.equal(
+          (await tx.legal_acceptance.findMany({ where: { user_id: other.id } })).find(
+            (item) => item.document_id === docs.find((doc) => doc.kind === "privacy")?.id,
+          )?.action,
+          "privacy_acknowledge",
+        );
         await acceptRegistrationLegal(tx, owner.id, input);
         assert.deepEqual(
           await tx.legal_acceptance.findMany({ where: { user_id: owner.id } }),
           accepted,
         );
+        const existingProfessional = await tx.user.create({
+          data: { name: prefix, email: `existing-${prefix}@example.invalid`, role: "psicologo" },
+        });
+        const existingInput = { ...input, document_ids: input.legal_document_ids };
+        const { promotional_authorized: _promotion, ...olderClientInput } = input;
+        await acceptRegistrationLegal(tx, existingProfessional.id, olderClientInput);
+        const historical = await tx.legal_acceptance.findMany({
+          where: { user_id: existingProfessional.id },
+        });
+        await acceptLegalInTransaction(tx, existingProfessional.id, existingInput);
+        assert.deepEqual(
+          await tx.legal_acceptance.findMany({ where: { user_id: existingProfessional.id } }),
+          historical,
+        );
+        assert.ok(historical.some((item) => item.action === "privacy_acknowledge"));
         await deleteAccountContent(tx, owner.id, new Date());
         const removedPost = await tx.community_post.findUniqueOrThrow({ where: { id: post.id } });
         assert.equal(removedPost.content, "Conteúdo removido");

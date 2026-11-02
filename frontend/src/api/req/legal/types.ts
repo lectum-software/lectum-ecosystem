@@ -19,6 +19,7 @@ export const currentLegalSchema = z.object({
 });
 
 export const legalStatusSchema = currentLegalSchema.extend({
+  adult_previously_confirmed: z.boolean().optional().default(false),
   pending_document_ids: z.array(legalDocumentIdSchema),
   acceptances: z.array(
     z.object({ document_id: legalDocumentIdSchema, accepted_at: z.iso.datetime({ offset: true }) }),

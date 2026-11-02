@@ -13,6 +13,20 @@ before(() => {
 });
 
 describe("Google OAuth state", () => {
+  it("preserva autorizacao explicita sem presumir autorizacao ausente", () => {
+    for (const promotional of [undefined, "false", "true"]) {
+      const { nonce, state } = createGoogleOAuthState("device_identifier_123", {
+        role: "psicologo",
+        intent: "register",
+        legal_document_ids: "terms-version,privacy-version",
+        promotional_authorized: promotional,
+      });
+      const query = verifyGoogleOAuthState(state, nonce)?.query;
+      assert.equal(query?.promotional_authorized, promotional);
+      assert.equal(query?.legal_document_ids, "terms-version,privacy-version");
+      assert.equal(verifyGoogleOAuthState(state, "another-browser"), null);
+    }
+  });
   it("preserva nascimento cifrado e vinculado ao navegador sem expor a data no state", () => {
     for (const role of ["paciente", "psicologo"]) {
       const { nonce, state } = createGoogleOAuthState("device_identifier_123", {

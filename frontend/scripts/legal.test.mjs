@@ -53,6 +53,21 @@ const { registerPsychologistSchema, LEGACY_TERMS_VERSION: psychologistLegacy } =
   "../src/app/auth/register/psychologist/use-form.tsx"
 );
 const { default: keys } = await import("../src/api/cache/keys.ts");
+const { registrationLegalField } = await import("../src/components/legal/registration-field.tsx");
+
+test("checkbox usa somente o texto simplificado com links nos dois documentos", () => {
+  for (const disabled of [false, true]) {
+    const field = registrationLegalField([], disabled);
+    assert.equal(field.name, "legal_accepted");
+    const html = renderToStaticMarkup(createElement(Fragment, null, field.checkboxLabel));
+    assert.match(html, /Política de Privacidade/);
+    assert.equal(
+      html.replace(/<[^>]+>/g, ""),
+      "Li e aceito os Termos de Uso e a Política de Privacidade",
+    );
+    assert.doesNotMatch(html, /Também autorizo|anúncios pagos|sem remuneração/);
+  }
+});
 
 // Literal inputs exercise real parsers/renderers only. No mocked HTTP, session, provider or DB.
 // These are NOT approved legal copy or evidence of publication/integration.
@@ -162,6 +177,12 @@ test("validação real recusa corpo vazio, kind inválido e publicação ausente
 test("modal só tem conjunto pendente quando ambos publicados e configured", () => {
   const status = { ...current, pending_document_ids: [documents[0].id], acceptances: [] };
   assert.equal(legalStatusSchema.safeParse(status).success, true);
+  assert.equal(legalStatusSchema.parse(status).adult_previously_confirmed, false);
+  assert.equal(
+    legalStatusSchema.parse({ ...status, adult_previously_confirmed: true })
+      .adult_previously_confirmed,
+    true,
+  );
   assert.deepEqual(pendingLegalSet(status)?.documents, documents);
   for (const input of [
     null,
@@ -279,6 +300,43 @@ test("modal real: duas declarações legais mais checkbox 18+, todos desmarcados
   assert.doesNotMatch(html, /marketing|LGPD/);
 });
 
+test("modal omite maioridade ja registrada sem marcar os novos aceites", () => {
+  const html = renderToStaticMarkup(
+    createElement(LegalAcceptanceModal, {
+      documents,
+      adultPreviouslyConfirmed: true,
+      onClose() {},
+      async onSubmit() {},
+    }),
+  );
+  assert.equal((html.match(/type="checkbox"/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /Declaro que tenho 18 anos|name="adult_confirmed"/);
+  assert.doesNotMatch(html, /\schecked(?:=|\s|>)/);
+});
+
+test("paginas legais omitem navegacao decorativa e permalink, mantendo retorno da versao historica", () => {
+  const template = source("../src/templates/legal/index.tsx");
+  assert.doesNotMatch(template, /<header|<Logo|<LegalLinks|Entrar na Lectum/);
+  assert.doesNotMatch(template, /Link permanente desta versão|legalDocumentHref/);
+  assert.match(template, /href=\{LEGAL_PATHS\[kind\]\}/);
+  assert.match(template, /Consultar versão atual/);
+});
+
+test("modal Google sem documentos permite visualizar o aceite sem enviar cadastro", () => {
+  const html = renderToStaticMarkup(
+    createElement(AdultDeclarationModal, {
+      documents: [],
+      onClose() {},
+      async onSubmit() {},
+    }),
+  );
+  assert.match(html, /type="checkbox"/);
+  assert.match(html, /Li e aceito os/);
+  assert.match(html, /<\/a> e a /);
+  assert.doesNotMatch(html, /estou ciente da/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*type="submit"/);
+});
+
 test("modal Google real mostra uma autodeclaração vazia e IDs RHF únicos", () => {
   const modal = () =>
     createElement(AdultDeclarationModal, { documents, onClose() {}, async onSubmit() {} });
@@ -315,6 +373,10 @@ for (const role of ["patient", "psychologist"]) {
     assert.match(manual, /adult_confirmed: true/);
     assert.match(manual, /const birthdate = toBirthdateIso\(data.birthdate\)/);
     const all = tree.getFullText();
+    assert.doesNotMatch(all, /Os documentos para o cadastro estão indisponíveis/);
+    assert.match(all, /disabled=\{isPending\}\s+onClick=\{\(\) => setAdultReviewOpen\(true\)\}/);
+    assert.match(all, /legalReady=\{legalReady\}/);
+    assert.match(body, /!legalReady/);
     assert.match(all, /onClick=\{\(\) => setAdultReviewOpen\(true\)\}/);
     assert.doesNotMatch(all, /Ao continuar, você aceita/);
     assert.doesNotMatch(all, /LegalLinks/);

@@ -6,6 +6,7 @@ export type LegalKind = (typeof LEGAL_KINDS)[number];
 export type LegalDraft = { kind: LegalKind; title: string; body: string; change_summary: string };
 export type LegalEdit = Omit<LegalDraft, "kind"> & { revision: number };
 export type LegalAccept = {
+  promotional_authorized?: boolean;
   document_ids: string[];
   terms_accepted: boolean;
   privacy_acknowledged: boolean;
@@ -37,7 +38,8 @@ export const documentHash = (draft: Omit<LegalDraft, "kind">) =>
     .update(JSON.stringify(normalizeDraft(draft)))
     .digest("hex");
 export const hasLegalPlaceholders = (text: string) =>
-  /\[[A-ZÀ-Ý][A-ZÀ-Ý0-9_ /()-]{1,100}\]/u.test(text);
+  /\[[A-ZÀ-Ý][A-ZÀ-Ý0-9_ /()-]{1,100}\]/u.test(text) ||
+  /\[\s*(?:pendente|a confirmar|a preencher|TODO)\s*:/iu.test(text);
 export const canPublishDocument = (draft: Omit<LegalDraft, "kind">) => {
   const value = normalizeDraft(draft);
   return (
@@ -45,7 +47,9 @@ export const canPublishDocument = (draft: Omit<LegalDraft, "kind">) => {
     value.body.length >= 1000 &&
     value.change_summary.length >= 10 &&
     !hasLegalPlaceholders(`${value.title}\n${value.body}\n${value.change_summary}`) &&
-    !/^\s*#{0,6}\s*(?:minuta|rascunho)\b/imu.test(value.body)
+    !/^\s*(?:>\s*)*(?:#{1,6}\s*)?(?:\*\*|__)?(?:minuta|rascunho|cláusula proposta)\b/imu.test(
+      value.body,
+    )
   );
 };
 export const isCompleteLegalBundle = (docs: Pick<legal_document_version, "kind">[]) =>

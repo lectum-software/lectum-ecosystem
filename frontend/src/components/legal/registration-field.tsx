@@ -27,7 +27,7 @@ export const registrationLegalField = (documents: FullPublishedDoc[], disabled =
         <Link className={linkClass} href={href("terms")} target="_blank" rel="noopener noreferrer">
           Termos de Uso
         </Link>{" "}
-        e estou ciente da{" "}
+        e a{" "}
         <Link
           className={linkClass}
           href={href("privacy")}
@@ -36,7 +36,6 @@ export const registrationLegalField = (documents: FullPublishedDoc[], disabled =
         >
           Política de Privacidade
         </Link>
-        .
       </>
     ),
   };

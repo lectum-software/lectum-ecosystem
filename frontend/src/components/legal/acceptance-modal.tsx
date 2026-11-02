@@ -12,17 +12,19 @@ import { type LegalAcceptanceForm, useLegalAcceptanceForm } from "./use-form";
 export const LegalAcceptanceModal = ({
   documents,
   disabled = false,
+  adultPreviouslyConfirmed = false,
   error,
   onClose,
   onSubmit,
 }: {
   documents: FullPublishedDoc[];
   disabled?: boolean;
+  adultPreviouslyConfirmed?: boolean;
   error?: string | null;
   onClose: () => void;
   onSubmit: (values: LegalAcceptanceForm) => Promise<void>;
 }) => {
-  const { Form, formProps, hook } = useLegalAcceptanceForm(documents);
+  const { Form, formProps, hook } = useLegalAcceptanceForm(documents, adultPreviouslyConfirmed);
   const id = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement>(null);

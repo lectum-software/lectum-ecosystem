@@ -36,6 +36,7 @@ const ALLOWED_QUERY_KEYS = new Set([
   "terms_version",
   "legal_document_ids",
   "privacy_acknowledged",
+  "promotional_authorized",
 ]);
 
 type GoogleOAuthStatePayload = {

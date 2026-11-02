@@ -771,6 +771,7 @@ ou cortesia manual.
 | 308 | [TASK-308 - Desfocar comentarios e liberar navegacao dos reels](TASK-308-reels-comment-dismiss.md) | Done | 307 |
 | 309 | [TASK-309 - Exclusao de conteudo e vigencia](TASK-309-account-content-and-subscription-end.md) | Done | 308 |
 | 310 | [TASK-310 - Aceite no cadastro e data](TASK-310-registration-legal-acceptance.md) | Done | 309 |
+| 311 | [TASK-311 - Preparacao da publicacao legal](TASK-311-legal-publication-readiness.md) | In progress | 310 |
 
 ## Ordem operacional recomendada sem bloqueios
 

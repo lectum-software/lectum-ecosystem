@@ -33,7 +33,9 @@ export const AdultDeclarationModal = ({
   onClose,
   onSubmit,
   documents,
+  legalReady = false,
 }: {
+  legalReady?: boolean;
   documents: FullPublishedDoc[];
   onClose: () => void;
   onSubmit: (values: AdultDeclarationForm) => Promise<void>;
@@ -81,7 +83,7 @@ export const AdultDeclarationModal = ({
                 Cancelar
               </button>
             </Button>
-            <Button disabled={hook.formState.isSubmitting} type="submit">
+            <Button disabled={!legalReady || hook.formState.isSubmitting} type="submit">
               Continuar com Google
             </Button>
           </div>

@@ -12,6 +12,7 @@ import {
   legalDraftSchema,
   legalReviewSchema,
 } from "../src/app/(admin)/configuracoes/documentos-legais/modules/legal-policy.ts";
+import { LEGAL_DRAFT_TEMPLATES } from "../src/modules/legal/draft-templates.ts";
 
 // Unit and source-contract tests only. No request, database, auth or provider is mocked.
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
@@ -20,6 +21,21 @@ const validInput = {
   body: "a".repeat(1000),
   change_summary: "Revisão inicial",
 };
+
+test("templates locais correspondem às minutas atuais e não podem ser publicados", () => {
+  for (const [kind, file] of [
+    ["terms", "termos-de-servico-v0.3.md"],
+    ["privacy", "politica-de-privacidade-v0.3.md"],
+  ]) {
+    const template = LEGAL_DRAFT_TEMPLATES[kind];
+    assert.equal(
+      template.body,
+      read(`../../_product/legal/${file}`).replace(/\r\n?/g, "\n").trim(),
+    );
+    assert.ok(getLegalPublishBlock({ ...template, status: "draft" }));
+    assert.match(template.body, /69\.638\.797\/0001-53/);
+  }
+});
 
 test("rascunho aceita conteúdo incompleto sem permitir campos vazios ou excesso", () => {
   assert.equal(legalDraftSchema.safeParse({ ...validInput, body: "a" }).success, true);
@@ -118,7 +134,7 @@ test("guarda bloqueia linhas Minuta/Rascunho e headings Markdown como canPublish
           status: "draft",
           body: `${validInput.body}${separator}${heading}${separator}Texto.`,
         }),
-        /linhas iniciadas por Minuta ou Rascunho/,
+        /avisos de minuta, rascunho ou cláusula proposta/,
       );
     }
   }
@@ -140,6 +156,24 @@ test("guarda bloqueia linhas Minuta/Rascunho e headings Markdown como canPublish
         [field]: "Minuta de trabalho revisada",
       }),
       null,
+    );
+  }
+});
+
+test("notas internas e avisos formatados impedem publicação", () => {
+  for (const note of [
+    "[PENDENTE: confirmar prazo.]",
+    "[TODO: revisar os dados]",
+    "> MINUTA v0.3, sem vigência.",
+    "> **Rascunho** em revisão.",
+    "**Cláusula proposta de autorização**, não validada.",
+  ]) {
+    assert.ok(
+      getLegalPublishBlock({
+        ...validInput,
+        status: "draft",
+        body: `${validInput.body}\n${note}`,
+      }),
     );
   }
 });

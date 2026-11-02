@@ -401,6 +401,7 @@ if (isGoogleOAuthConfigured()) {
                   terms_accepted: termsAccepted,
                   legal_document_ids: state?.query.legal_document_ids?.split(","),
                   privacy_acknowledged: state?.query.privacy_acknowledged === "true",
+                  promotional_authorized: state?.query.promotional_authorized === "true",
                   adult_confirmed: adultConfirmed,
                   birthdate: state?.query.birthdate,
                   terms_version: termsVersion,

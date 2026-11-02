@@ -37,7 +37,10 @@ export const toLegalAcceptancePayload = (
   };
 };
 
-export const useLegalAcceptanceForm = (documents: FullPublishedDoc[]) => {
+export const useLegalAcceptanceForm = (
+  documents: FullPublishedDoc[],
+  adultPreviouslyConfirmed = false,
+) => {
   const name = (kind: FullPublishedDoc["kind"]) => {
     const document = documents.find((entry) => entry.kind === kind);
     return `${LEGAL_TITLES[kind]} — versão ${document?.version ?? ""}`;
@@ -58,8 +61,14 @@ export const useLegalAcceptanceForm = (documents: FullPublishedDoc[]) => {
     { name: "adult_confirmed", field: "checkbox", label: ADULT_DECLARATION, className: "w-full" },
   ];
   return useFormList<LegalAcceptanceForm>({
-    fields,
+    fields: adultPreviouslyConfirmed
+      ? fields.filter((field) => field.name !== "adult_confirmed")
+      : fields,
     schema: legalAcceptanceSchema,
-    defaultValues: { terms_accepted: false, privacy_acknowledged: false, adult_confirmed: false },
+    defaultValues: {
+      terms_accepted: false,
+      privacy_acknowledged: false,
+      adult_confirmed: adultPreviouslyConfirmed,
+    },
   });
 };
