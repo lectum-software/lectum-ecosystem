@@ -1,4 +1,6 @@
-Validado localmente em 0.1.771: [TASK-309 - Exclusao de conteudo e vigencia](TASK-309-account-content-and-subscription-end.md), ADR-0670. Migration, check integral, builds e QA real em 320/390/1440 aprovados. Fila externa validada sem acessar provedores; limpeza fisica e iPhone pendentes. Sem push/deploy. TASK-310 preparada para commit separado.
+Validado localmente em 0.1.772: [TASK-310 - Aceite no cadastro e data](TASK-310-registration-legal-acceptance.md), ADR-0671. Checkbox em email/Google, aceite atomico versionado e data pessoal no topo dos documentos. Check integral, builds e QA real em 320/390/1440 aprovados. Documentos juridicos revisados/publicados sao pre-requisito para liberar o frontend. Sem push/deploy.
+
+Validado localmente em 0.1.771: [TASK-309 - Exclusao de conteudo e vigencia](TASK-309-account-content-and-subscription-end.md), ADR-0670. Migration, check integral, builds e QA real em 320/390/1440 aprovados. Fila externa validada sem acessar provedores; limpeza fisica e iPhone pendentes. Sem push/deploy.
 
 Validado localmente em 0.1.770: [TASK-308 - Desfocar comentarios e liberar navegacao dos reels](TASK-308-reels-comment-dismiss.md), ADR-0669. Minimizar desfoca; navegar descarta rascunho sem confirmacao, mantendo protecao de envio. Check integral, build e QA real em 320/390/1440 aprovados. Teclado iPhone fisico ainda pendente. Sem push/deploy.
 
@@ -768,7 +770,8 @@ ou cortesia manual.
 | 307 | [TASK-307 - Dicas de uso respeitam a modal de acesso](TASK-307-onboarding-conversion-gate.md) | Done | 306 |
 | 308 | [TASK-308 - Desfocar comentarios e liberar navegacao dos reels](TASK-308-reels-comment-dismiss.md) | Done | 307 |
 | 309 | [TASK-309 - Exclusao de conteudo e vigencia](TASK-309-account-content-and-subscription-end.md) | Done | 308 |
-| 310 | [TASK-310 - Aceite no cadastro e data](TASK-310-registration-legal-acceptance.md) | In Progress | 309 |
+| 310 | [TASK-310 - Aceite no cadastro e data](TASK-310-registration-legal-acceptance.md) | Done | 309 |
+| 311 | [TASK-311 - Preparacao da publicacao legal](TASK-311-legal-publication-readiness.md) | In progress | 310 |
 
 ## Ordem operacional recomendada sem bloqueios
 

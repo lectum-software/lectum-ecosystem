@@ -1,10 +1,9 @@
 import Link from "next/link";
 import type { FullPublishedDoc, LegalKind } from "@/api/req/legal/types";
+import { LegalAcceptanceStatus } from "@/components/legal/acceptance-status";
 import { LegalDocumentBody } from "@/components/legal/document-body";
-import { LegalLinks } from "@/components/legal/links";
-import { LEGAL_PATHS, LEGAL_TITLES, legalDocumentHref } from "@/components/legal/policy";
+import { LEGAL_PATHS, LEGAL_TITLES } from "@/components/legal/policy";
 import { InlineAlert } from "@/components/ui/inline-alert";
-import { Logo } from "@/components/ui/logo";
 import { PublicTemplate } from "@/templates/public";
 
 export const LegalTemplate = ({
@@ -18,21 +17,11 @@ export const LegalTemplate = ({
 }) => (
   <PublicTemplate>
     <main className="mx-auto min-h-dvh w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <Link aria-label="Página inicial da Lectum" href="/">
-          <Logo className="w-[132px]" />
-        </Link>
-        <Link
-          className="text-sm font-semibold text-primary underline underline-offset-4"
-          href="/auth/login"
-        >
-          Entrar na Lectum
-        </Link>
-      </header>
       <article className="min-w-0 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-lectum-soft sm:p-8">
         <h1 className="break-words text-2xl font-extrabold leading-tight sm:text-3xl">
           {document?.title ?? LEGAL_TITLES[kind]}
         </h1>
+        {document ? <LegalAcceptanceStatus document={document} /> : null}
         {document ? (
           <>
             <p className="mt-3 text-sm text-muted">
@@ -49,13 +38,15 @@ export const LegalTemplate = ({
                 ? "Você está lendo a versão identificada neste link, que pode não ser a atual."
                 : "Documento publicado. A leitura desta página não registra aceite."}
             </p>
-            <Link
-              className="mt-3 inline-block text-xs text-primary underline underline-offset-4"
-              href={versionRequested ? LEGAL_PATHS[kind] : legalDocumentHref(document)}
-              prefetch={false}
-            >
-              {versionRequested ? "Consultar versão atual" : "Link permanente desta versão"}
-            </Link>
+            {versionRequested ? (
+              <Link
+                className="mt-3 inline-block text-xs text-primary underline underline-offset-4"
+                href={LEGAL_PATHS[kind]}
+                prefetch={false}
+              >
+                Consultar versão atual
+              </Link>
+            ) : null}
             {document.change_summary.trim() ? (
               <section
                 aria-label="Resumo das alterações"
@@ -79,7 +70,6 @@ export const LegalTemplate = ({
           </InlineAlert>
         )}
       </article>
-      <LegalLinks className="mt-6" />
     </main>
   </PublicTemplate>
 );

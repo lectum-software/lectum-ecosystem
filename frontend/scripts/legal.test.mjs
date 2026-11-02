@@ -53,6 +53,21 @@ const { registerPsychologistSchema, LEGACY_TERMS_VERSION: psychologistLegacy } =
   "../src/app/auth/register/psychologist/use-form.tsx"
 );
 const { default: keys } = await import("../src/api/cache/keys.ts");
+const { registrationLegalField } = await import("../src/components/legal/registration-field.tsx");
+
+test("checkbox usa somente o texto simplificado com links nos dois documentos", () => {
+  for (const disabled of [false, true]) {
+    const field = registrationLegalField([], disabled);
+    assert.equal(field.name, "legal_accepted");
+    const html = renderToStaticMarkup(createElement(Fragment, null, field.checkboxLabel));
+    assert.match(html, /Política de Privacidade/);
+    assert.equal(
+      html.replace(/<[^>]+>/g, ""),
+      "Li e aceito os Termos de Uso e a Política de Privacidade",
+    );
+    assert.doesNotMatch(html, /Também autorizo|anúncios pagos|sem remuneração/);
+  }
+});
 
 // Literal inputs exercise real parsers/renderers only. No mocked HTTP, session, provider or DB.
 // These are NOT approved legal copy or evidence of publication/integration.
@@ -95,6 +110,7 @@ for (const [label, schema, name] of [
       email: "unit@example.test",
       password: "Unit-test-password",
       password_confirm: "Unit-test-password",
+      legal_accepted: true,
     };
     for (const value of [undefined, false, "true", 1, "31/02/2000", "01/01/2020"]) {
       assert.equal(schema.safeParse({ ...input, birthdate: value }).success, false);
@@ -102,6 +118,12 @@ for (const [label, schema, name] of [
     const parsed = schema.parse({ ...input, birthdate: "01/01/1990" });
     assert.equal(parsed.birthdate, "01/01/1990");
     assert.equal("terms_accepted" in parsed, false);
+    for (const legal_accepted of [false, undefined, "true", 1]) {
+      assert.equal(
+        schema.safeParse({ ...input, birthdate: "01/01/1990", legal_accepted }).success,
+        false,
+      );
+    }
   });
 }
 
@@ -114,7 +136,11 @@ test("maioridade no Google e aceite formal nunca aceitam false, string, ausênci
       false,
     );
   }
-  assert.equal(adultDeclarationSchema.safeParse({ birthdate: "01/01/1990" }).success, true);
+  assert.equal(adultDeclarationSchema.safeParse({ birthdate: "01/01/1990" }).success, false);
+  assert.equal(
+    adultDeclarationSchema.safeParse({ birthdate: "01/01/1990", legal_accepted: true }).success,
+    true,
+  );
 });
 
 test("cada declaração jurídica exige true independente", () => {
@@ -151,6 +177,12 @@ test("validação real recusa corpo vazio, kind inválido e publicação ausente
 test("modal só tem conjunto pendente quando ambos publicados e configured", () => {
   const status = { ...current, pending_document_ids: [documents[0].id], acceptances: [] };
   assert.equal(legalStatusSchema.safeParse(status).success, true);
+  assert.equal(legalStatusSchema.parse(status).adult_previously_confirmed, false);
+  assert.equal(
+    legalStatusSchema.parse({ ...status, adult_previously_confirmed: true })
+      .adult_previously_confirmed,
+    true,
+  );
   assert.deepEqual(pendingLegalSet(status)?.documents, documents);
   for (const input of [
     null,
@@ -268,10 +300,51 @@ test("modal real: duas declarações legais mais checkbox 18+, todos desmarcados
   assert.doesNotMatch(html, /marketing|LGPD/);
 });
 
+test("modal omite maioridade ja registrada sem marcar os novos aceites", () => {
+  const html = renderToStaticMarkup(
+    createElement(LegalAcceptanceModal, {
+      documents,
+      adultPreviouslyConfirmed: true,
+      onClose() {},
+      async onSubmit() {},
+    }),
+  );
+  assert.equal((html.match(/type="checkbox"/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /Declaro que tenho 18 anos|name="adult_confirmed"/);
+  assert.doesNotMatch(html, /\schecked(?:=|\s|>)/);
+});
+
+test("paginas legais omitem navegacao decorativa e permalink, mantendo retorno da versao historica", () => {
+  const template = source("../src/templates/legal/index.tsx");
+  assert.doesNotMatch(template, /<header|<Logo|<LegalLinks|Entrar na Lectum/);
+  assert.doesNotMatch(template, /Link permanente desta versão|legalDocumentHref/);
+  assert.match(template, /href=\{LEGAL_PATHS\[kind\]\}/);
+  assert.match(template, /Consultar versão atual/);
+});
+
+test("modal Google sem documentos permite visualizar o aceite sem enviar cadastro", () => {
+  const html = renderToStaticMarkup(
+    createElement(AdultDeclarationModal, {
+      documents: [],
+      onClose() {},
+      async onSubmit() {},
+    }),
+  );
+  assert.match(html, /type="checkbox"/);
+  assert.match(html, /Li e aceito os/);
+  assert.match(html, /<\/a> e a /);
+  assert.doesNotMatch(html, /estou ciente da/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*type="submit"/);
+});
+
 test("modal Google real mostra uma autodeclaração vazia e IDs RHF únicos", () => {
-  const modal = () => createElement(AdultDeclarationModal, { onClose() {}, async onSubmit() {} });
+  const modal = () =>
+    createElement(AdultDeclarationModal, { documents, onClose() {}, async onSubmit() {} });
   const html = renderToStaticMarkup(createElement(Fragment, null, modal(), modal()));
   assert.equal((html.match(/name="birthdate"/g) ?? []).length, 2);
+  assert.equal((html.match(/type="checkbox"/g) ?? []).length, 2);
+  assert.match(html, /version=parser-input-terms/);
+  assert.match(html, /version=parser-input-privacy/);
   assert.match(html, /inputMode="numeric"/);
   assert.doesNotMatch(html, /\schecked(?:=|\s|>)/);
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
@@ -290,17 +363,25 @@ for (const role of ["patient", "psychologist"]) {
     assert.match(body, /adult_confirmed: "true"/);
     assert.match(body, /prepareGoogleRegistration/);
     assert.match(body, /const birthdate = toBirthdateIso\(values.birthdate\)/);
-    assert.doesNotMatch(body, /setValue|current\.documents|document_ids/);
+    assert.doesNotMatch(body, /setValue/);
+    assert.match(body, /!values\.legal_accepted/);
+    assert.match(body, /legal_document_ids: documents\.map/);
+    assert.match(body, /privacy_acknowledged: String\(values\.legal_accepted\)/);
     const manual = declarations
       .find((node) => node.name.getText(tree) === "handleSubmit")
       .initializer.getText(tree);
     assert.match(manual, /adult_confirmed: true/);
     assert.match(manual, /const birthdate = toBirthdateIso\(data.birthdate\)/);
     const all = tree.getFullText();
+    assert.doesNotMatch(all, /Os documentos para o cadastro estão indisponíveis/);
+    assert.match(all, /disabled=\{isPending\}\s+onClick=\{\(\) => setAdultReviewOpen\(true\)\}/);
+    assert.match(all, /legalReady=\{legalReady\}/);
+    assert.match(body, /!legalReady/);
     assert.match(all, /onClick=\{\(\) => setAdultReviewOpen\(true\)\}/);
     assert.doesNotMatch(all, /Ao continuar, você aceita/);
-    assert.match(all, /import \{ LegalLinks \} from "@\/components\/legal\/links"/);
-    assert.match(all, /<footer[\s\S]*<LegalLinks className="mb-3" newTab \/>/);
+    assert.doesNotMatch(all, /LegalLinks/);
+    assert.match(manual, /!data\.legal_accepted/);
+    assert.match(manual, /legal_document_ids: documents\.map/);
     assert.doesNotMatch(all, /LegalRegistrationNotice|documentos publicados/);
   });
 }
@@ -342,3 +423,4 @@ test("contratos SSR/rollout/cache: públicos no-store, privado por usuário, pol
   }
 });
 import "../src/utils/birthdate.test.mjs";
+import "../src/components/legal/acceptance-status-text.test.mjs";

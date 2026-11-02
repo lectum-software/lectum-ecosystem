@@ -25,8 +25,9 @@ export const LegalAcceptanceRequest = ({ userId }: { userId: string }) => {
     <LegalAcceptanceModal
       disabled={accept.isPending || status.isFetching}
       documents={pending.documents}
+      adultPreviouslyConfirmed={status.data?.adult_previously_confirmed === true}
       error={review.error}
-      key={`${userId}:${pending.key}:${review.epoch}`}
+      key={`${userId}:${pending.key}:${review.epoch}:${status.data?.adult_previously_confirmed === true}`}
       onClose={() => legalDismissalStore.dismiss(userId, pending.key)}
       onSubmit={async (values) => {
         if (submitting.current || accept.isPending || status.isFetching) return;

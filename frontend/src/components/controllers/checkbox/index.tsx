@@ -11,6 +11,7 @@ export function CheckboxController<FormType extends FieldValues>({
   className,
   inputClassName,
   label,
+  checkboxLabel,
   required,
   tooltip,
   description,
@@ -55,7 +56,7 @@ export function CheckboxController<FormType extends FieldValues>({
                 type="checkbox"
               />
               <span className="flex-1 text-xs font-normal leading-5">
-                {label}
+                {checkboxLabel ?? label}
                 {required ? <span className="text-danger"> *</span> : null}
                 {tooltip ? <span className="sr-only"> {tooltip}</span> : null}
               </span>

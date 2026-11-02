@@ -128,6 +128,26 @@ test("legal publication rejects Minuta/Rascunho headings anywhere, case-insensit
   }
 });
 
+test("legal publication rejects editorial notes and formatted draft warnings", () => {
+  for (const note of [
+    "[PENDENTE: confirmar os países de armazenamento.]",
+    "[a confirmar: prazo de descarte]",
+    "[TODO: preencher informação]",
+    "> MINUTA v0.3, sem vigência.",
+    "> **Rascunho** para revisão.",
+    "**Cláusula proposta de autorização**, ainda não validada.",
+  ]) {
+    assert.equal(canPublishDocument({ ...draft, body: `${draft.body}\n${note}` }), false);
+  }
+  assert.equal(
+    canPublishDocument({
+      ...draft,
+      body: `${draft.body}\nConsulte [seus direitos](https://example.com).`,
+    }),
+    true,
+  );
+});
+
 test("legal publication enforces normalized title/body/summary minimum lengths inclusively", () => {
   const minimum = { title: "T".repeat(5), body: "B".repeat(1000), change_summary: "S".repeat(10) };
   assert.equal(canPublishDocument(minimum), true);

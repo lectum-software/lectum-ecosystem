@@ -33,6 +33,7 @@ export type Field<FormType extends FieldValues> = {
   name: FieldPath<FormType>;
   field: FieldType;
   label?: string;
+  checkboxLabel?: ReactNode;
   placeholder?: string;
   prefix?: string;
   leadingIcon?: "search";

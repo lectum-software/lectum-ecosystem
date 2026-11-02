@@ -27,6 +27,15 @@ export const schema: IValidatorRequest = {
   ],
 
   body: [
+    {
+      key: "legal_document_ids",
+      custom: z
+        .array(z.string().regex(/^[a-zA-Z0-9_-]{1,160}$/))
+        .length(2)
+        .optional(),
+    },
+    { key: "privacy_acknowledged", custom: z.boolean().optional() },
+    { key: "promotional_authorized", custom: z.boolean().optional() },
     { key: "adult_confirmed", custom: z.boolean().optional() },
     { key: "birthdate", custom: adultBirthdateSchema.optional() },
     //*

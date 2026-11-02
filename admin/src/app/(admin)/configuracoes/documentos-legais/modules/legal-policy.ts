@@ -46,11 +46,17 @@ export const getLegalPublishBlock = (document: AdminLegalDocument) => {
   const { title, change_summary } = parsed.data;
   const body = parsed.data.body.replace(/\r\n?/g, "\n").trim();
   if (body.length < 1000) return "A publicação exige conteúdo com pelo menos 1.000 caracteres.";
-  if (/\[[A-ZÀ-Ý][A-ZÀ-Ý0-9_ /()-]{1,100}\]/u.test(`${title}\n${body}\n${change_summary}`)) {
-    return "Preencha os marcadores em maiúsculas entre colchetes, como [CNPJ], antes de publicar.";
+  const text = `${title}\n${body}\n${change_summary}`;
+  if (
+    /\[[A-ZÀ-Ý][A-ZÀ-Ý0-9_ /()-]{1,100}\]/u.test(text) ||
+    /\[\s*(?:pendente|a confirmar|a preencher|TODO)\s*:/iu.test(text)
+  ) {
+    return "Resolva os campos pendentes e retire as notas internas antes de publicar.";
   }
-  if (/^\s*#{0,6}\s*(?:minuta|rascunho)\b/imu.test(body)) {
-    return "Revise o texto e remova as linhas iniciadas por Minuta ou Rascunho antes de publicar.";
+  if (
+    /^\s*(?:>\s*)*(?:#{1,6}\s*)?(?:\*\*|__)?(?:minuta|rascunho|cláusula proposta)\b/imu.test(body)
+  ) {
+    return "Conclua a revisão e retire os avisos de minuta, rascunho ou cláusula proposta antes de publicar.";
   }
   return null;
 };

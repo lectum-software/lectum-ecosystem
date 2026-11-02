@@ -59,12 +59,25 @@ export class LegalReadRepository {
       configured: isCompleteLegalBundle(current),
     };
   }
-  async status(userId: string) {
-    const docs = await currentDocuments();
-    const acceptances = await prisma.legal_acceptance.findMany({
-      where: { user_id: userId, document_id: { in: docs.map((doc) => doc.id) } },
-      select: { document_id: true, accepted_at: true },
+  async status(userId: string, db: Prisma.TransactionClient = prisma) {
+    const docs = await currentDocuments(db);
+    const acceptances = await db.legal_acceptance.findMany({
+      where: { user_id: userId },
+      select: { document_id: true, accepted_at: true, adult_confirmed: true },
     });
+    const adultPreviouslyConfirmed =
+      acceptances.some((a) => a.adult_confirmed === true) ||
+      (await db.user_background.findFirst({
+        where: {
+          user_id: userId,
+          type: "adult_declaration",
+          AND: [
+            { data: { path: ["minimum_age"], equals: 18 } },
+            { data: { path: ["source"], equals: "registration" } },
+          ],
+        },
+        select: { id: true },
+      })) !== null;
     return {
       configured: isCompleteLegalBundle(docs),
       documents: docs.map(publicDocument),
@@ -73,7 +86,11 @@ export class LegalReadRepository {
             .filter((doc) => !acceptances.some((a) => a.document_id === doc.id))
             .map((doc) => doc.id)
         : [],
-      acceptances: acceptances.map((a) => ({ ...a, accepted_at: a.accepted_at.toISOString() })),
+      adult_previously_confirmed: adultPreviouslyConfirmed,
+      acceptances: acceptances.map((a) => ({
+        document_id: a.document_id,
+        accepted_at: a.accepted_at.toISOString(),
+      })),
     };
   }
   async acceptances(documentId: string, page: number) {

@@ -1,13 +1,19 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { z } from "zod";
+import type { FullPublishedDoc } from "@/api/req/legal/types";
 import { Modal } from "@/components/ui/modal";
 import { type Field, useFormList } from "@/hooks/form";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { adultBirthdateSchema } from "@/utils/birthdate";
+import { legalSetKey } from "./policy";
+import { registrationLegalField, registrationLegalSchema } from "./registration-field";
 
-export const adultDeclarationSchema = z.object({ birthdate: adultBirthdateSchema });
+export const adultDeclarationSchema = z.object({
+  birthdate: adultBirthdateSchema,
+  legal_accepted: registrationLegalSchema,
+});
 export type AdultDeclarationForm = z.infer<typeof adultDeclarationSchema>;
 const fields: Field<AdultDeclarationForm>[] = [
   {
@@ -26,15 +32,27 @@ const fields: Field<AdultDeclarationForm>[] = [
 export const AdultDeclarationModal = ({
   onClose,
   onSubmit,
+  documents,
+  legalReady = false,
 }: {
+  legalReady?: boolean;
+  documents: FullPublishedDoc[];
   onClose: () => void;
   onSubmit: (values: AdultDeclarationForm) => Promise<void>;
 }) => {
   const { Form, formProps, hook } = useFormList<AdultDeclarationForm>({
-    fields,
+    fields: [...fields, registrationLegalField(documents)],
     schema: adultDeclarationSchema,
-    defaultValues: { birthdate: "" },
+    defaultValues: { birthdate: "", legal_accepted: false },
   });
+  const documentKey = legalSetKey(documents);
+  const { resetField } = hook;
+  const previousDocumentKey = useRef(documentKey);
+  useEffect(() => {
+    if (previousDocumentKey.current === documentKey) return;
+    previousDocumentKey.current = documentKey;
+    resetField("legal_accepted");
+  }, [documentKey, resetField]);
   const id = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement>(null);
@@ -65,7 +83,7 @@ export const AdultDeclarationModal = ({
                 Cancelar
               </button>
             </Button>
-            <Button disabled={hook.formState.isSubmitting} type="submit">
+            <Button disabled={!legalReady || hook.formState.isSubmitting} type="submit">
               Continuar com Google
             </Button>
           </div>
