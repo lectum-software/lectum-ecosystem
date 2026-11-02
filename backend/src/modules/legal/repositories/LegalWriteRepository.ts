@@ -57,6 +57,31 @@ const createDraft = async (tx: Prisma.TransactionClient, adminId: string, draft:
   await audit(tx, adminId, doc.id, "draft_created", doc.version, doc.content_hash);
   return doc.id;
 };
+export const acceptLegalInTransaction = async (
+  tx: Prisma.TransactionClient,
+  userId: string,
+  input: LegalAccept,
+) => {
+  if (input.adult_confirmed !== true) throw new LegalError("adult_declaration_required", 422);
+  if (input.terms_accepted !== true || input.privacy_acknowledged !== true)
+    throw new LegalError("legal_acceptance_required", 422);
+  await lockKind(tx, "terms");
+  await lockKind(tx, "privacy");
+  const documents = await currentDocuments(tx);
+  if (!isCurrentDocumentSet(input.document_ids, documents))
+    throw new LegalError("legal_documents_changed");
+  await tx.legal_acceptance.createMany({
+    data: documents.map((doc) => ({
+      user_id: userId,
+      document_id: doc.id,
+      document_hash: doc.content_hash,
+      action: doc.kind === "terms" ? "terms_accept" : "privacy_acknowledge",
+      adult_confirmed: true,
+    })),
+    skipDuplicates: true,
+  });
+};
+
 export class LegalWriteRepository {
   async create(adminId: string, draft: LegalDraft) {
     const id = await prisma.$transaction((tx) => createDraft(tx, adminId, draft));
@@ -119,26 +144,7 @@ export class LegalWriteRepository {
     return new LegalReadRepository().detail(id);
   }
   async accept(userId: string, input: LegalAccept) {
-    if (input.adult_confirmed !== true) throw new LegalError("adult_declaration_required", 422);
-    if (input.terms_accepted !== true || input.privacy_acknowledged !== true)
-      throw new LegalError("legal_acceptance_required", 422);
-    await prisma.$transaction(async (tx) => {
-      await lockKind(tx, "terms");
-      await lockKind(tx, "privacy");
-      const documents = await currentDocuments(tx);
-      if (!isCurrentDocumentSet(input.document_ids, documents))
-        throw new LegalError("legal_documents_changed");
-      await tx.legal_acceptance.createMany({
-        data: documents.map((doc) => ({
-          user_id: userId,
-          document_id: doc.id,
-          document_hash: doc.content_hash,
-          action: doc.kind === "terms" ? "terms_accept" : "privacy_acknowledge",
-          adult_confirmed: true,
-        })),
-        skipDuplicates: true,
-      });
-    });
+    await prisma.$transaction((tx) => acceptLegalInTransaction(tx, userId, input));
     return new LegalReadRepository().status(userId);
   }
 }

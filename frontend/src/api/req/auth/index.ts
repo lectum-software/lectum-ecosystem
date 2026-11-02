@@ -17,6 +17,8 @@ export type ResetPasswordPayload = {
 };
 
 export type RegisterPatientPayload = {
+  legal_document_ids: string[];
+  privacy_acknowledged: boolean;
   birthdate: string;
   name: string;
   email: string;
@@ -31,6 +33,8 @@ export type RegisterPatientPayload = {
 };
 
 export type RegisterPsychologistPayload = {
+  legal_document_ids: string[];
+  privacy_acknowledged: boolean;
   birthdate: string;
   name: string;
   professional_first_name: string;

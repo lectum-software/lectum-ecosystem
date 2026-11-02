@@ -1,4 +1,9 @@
 import { z } from "zod";
+import type { FullPublishedDoc } from "@/api/req/legal/types";
+import {
+  registrationLegalField,
+  registrationLegalSchema,
+} from "@/components/legal/registration-field";
 import { type Field, useFormList } from "@/hooks/form";
 import { adultBirthdateSchema } from "@/utils/birthdate";
 
@@ -24,6 +29,7 @@ export const registerPsychologistSchema = z
       .max(128, "Use no m\u00e1ximo 128 caracteres"),
     password_confirm: z.string().min(1, "Confirme sua senha"),
     birthdate: adultBirthdateSchema,
+    legal_accepted: registrationLegalSchema,
   })
   .superRefine((data, ctx) => {
     if (data.password !== data.password_confirm) {
@@ -98,9 +104,9 @@ const fields = [
   },
 ] satisfies Field<RegisterPsychologistForm>[];
 
-export const useForm = () => {
+export const useForm = (documents: FullPublishedDoc[] = [], legalReady = false) => {
   return useFormList<RegisterPsychologistForm>({
-    fields,
+    fields: [...fields, registrationLegalField(documents, !legalReady)],
     schema: registerPsychologistSchema,
     defaultValues: {
       professional_first_name: "",
@@ -109,6 +115,7 @@ export const useForm = () => {
       password: "",
       password_confirm: "",
       birthdate: "",
+      legal_accepted: false,
     },
   });
 };

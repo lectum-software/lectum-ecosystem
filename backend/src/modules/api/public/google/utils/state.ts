@@ -34,6 +34,8 @@ const ALLOWED_QUERY_KEYS = new Set([
   "role",
   "terms_accepted",
   "terms_version",
+  "legal_document_ids",
+  "privacy_acknowledged",
 ]);
 
 type GoogleOAuthStatePayload = {
@@ -89,7 +91,12 @@ const sanitizeGoogleQuery = (query: Record<string, unknown>) => {
       continue;
     }
 
-    const maxLength = key === "link_token" || key === "delete_token" ? 4096 : 256;
+    const maxLength =
+      key === "link_token" || key === "delete_token"
+        ? 4096
+        : key === "legal_document_ids"
+          ? 321
+          : 256;
     if (normalized.length <= maxLength) sanitized[key] = normalized;
   }
 

@@ -4,9 +4,10 @@ import { ArrowRight, ChevronDown, Loader2, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { useCurrentLegal } from "@/api/callers/legal";
 import { prepareGoogleRegistration } from "@/api/req/auth";
 import { resolveRegisterErrorMessage } from "@/app/auth/register/error-message";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
@@ -14,7 +15,7 @@ import {
   type AdultDeclarationForm,
   AdultDeclarationModal,
 } from "@/components/legal/adult-declaration-modal";
-import { LegalLinks } from "@/components/legal/links";
+import { hasCompleteLegalSet, legalSetKey } from "@/components/legal/policy";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
@@ -38,7 +39,18 @@ export const RegisterPsychologistLogic = () => {
     searchParams.get("callbackUrl"),
   );
   const loginHref = buildAuthRouteWithRedirect("/auth/login?role=psicologo", redirectTo);
-  const { Form, formProps, hook } = useForm();
+  const legal = useCurrentLegal();
+  const legalReady = !legal.isError && hasCompleteLegalSet(legal.data);
+  const documents = legal.data?.documents ?? [];
+  const documentKey = legalSetKey(documents);
+  const { Form, formProps, hook } = useForm(documents, legalReady);
+  const { resetField } = hook;
+  const previousDocumentKey = useRef(documentKey);
+  useEffect(() => {
+    if (previousDocumentKey.current === documentKey) return;
+    previousDocumentKey.current = documentKey;
+    resetField("legal_accepted");
+  }, [documentKey, resetField]);
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
   const [adultReviewOpen, setAdultReviewOpen] = useState(false);
@@ -53,6 +65,7 @@ export const RegisterPsychologistLogic = () => {
           setter(data);
         },
         onError: (error) => {
+          void legal.refetch();
           setApiError(resolveRegisterErrorMessage(error, "psychologist"));
         },
       },
@@ -62,7 +75,12 @@ export const RegisterPsychologistLogic = () => {
   const isPending = registerPsychologist.isPending || googlePending;
 
   const handleSubmit = (data: RegisterPsychologistForm) => {
-    if (!adultBirthdateSchema.safeParse(data.birthdate).success) return;
+    if (
+      !legalReady ||
+      !data.legal_accepted ||
+      !adultBirthdateSchema.safeParse(data.birthdate).success
+    )
+      return;
     const birthdate = toBirthdateIso(data.birthdate);
     if (!birthdate) return;
     setApiError(null);
@@ -79,6 +97,8 @@ export const RegisterPsychologistLogic = () => {
       password_confirm: data.password_confirm,
       role: "psicologo",
       terms_accepted: true,
+      legal_document_ids: documents.map((document) => document.id),
+      privacy_acknowledged: data.legal_accepted,
       terms_version: LEGACY_TERMS_VERSION,
       adult_confirmed: true,
       birthdate,
@@ -92,7 +112,12 @@ export const RegisterPsychologistLogic = () => {
   };
 
   const handleGoogleRegister = async (values: AdultDeclarationForm) => {
-    if (!adultBirthdateSchema.safeParse(values.birthdate).success) return;
+    if (
+      !legalReady ||
+      !values.legal_accepted ||
+      !adultBirthdateSchema.safeParse(values.birthdate).success
+    )
+      return;
     const birthdate = toBirthdateIso(values.birthdate);
     if (!birthdate) return;
     setAdultReviewOpen(false);
@@ -106,6 +131,8 @@ export const RegisterPsychologistLogic = () => {
         intent: "register",
         role: "psicologo",
         terms_accepted: "true",
+        legal_document_ids: documents.map((document) => document.id).join(","),
+        privacy_acknowledged: String(values.legal_accepted),
         terms_version: LEGACY_TERMS_VERSION,
         adult_confirmed: "true",
       });
@@ -136,6 +163,7 @@ export const RegisterPsychologistLogic = () => {
     <main className="min-h-dvh bg-background text-foreground">
       {adultReviewOpen ? (
         <AdultDeclarationModal
+          documents={documents}
           onClose={() => setAdultReviewOpen(false)}
           onSubmit={handleGoogleRegister}
         />
@@ -159,7 +187,7 @@ export const RegisterPsychologistLogic = () => {
 
             <Button
               className="mt-5 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
-              disabled={isPending}
+              disabled={isPending || !legalReady}
               onClick={() => setAdultReviewOpen(true)}
               type="button"
               variant="outline"
@@ -179,6 +207,22 @@ export const RegisterPsychologistLogic = () => {
             ) : null}
 
             <DividerWithLabel className="my-5">ou</DividerWithLabel>
+            {!legalReady ? (
+              <InlineAlert className="mb-4" variant="info">
+                {legal.isPending
+                  ? "Carregando os documentos para o cadastro..."
+                  : "Os documentos para o cadastro estão indisponíveis. Tente novamente em instantes."}
+                {!legal.isPending ? (
+                  <button
+                    className="ml-1 font-semibold underline"
+                    type="button"
+                    onClick={() => void legal.refetch()}
+                  >
+                    Tentar novamente
+                  </button>
+                ) : null}
+              </InlineAlert>
+            ) : null}
 
             <button
               aria-controls={PSYCHOLOGIST_EMAIL_FORM_ID}
@@ -210,7 +254,7 @@ export const RegisterPsychologistLogic = () => {
                 >
                   <Button
                     className="mt-2 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
-                    disabled={isPending}
+                    disabled={isPending || !legalReady}
                     type="submit"
                   >
                     {registerPsychologist.isPending ? (
@@ -235,7 +279,7 @@ export const RegisterPsychologistLogic = () => {
         </section>
 
         <footer className="mt-auto pb-1 pt-6 text-center text-[11px] leading-5 text-subtle sm:text-xs">
-          <LegalLinks className="mb-3" newTab />© 2026 Lectum. Todos os direitos reservados.
+          © 2026 Lectum. Todos os direitos reservados.
         </footer>
       </div>
     </main>

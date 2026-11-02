@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { FullPublishedDoc, LegalKind } from "@/api/req/legal/types";
+import { LegalAcceptanceStatus } from "@/components/legal/acceptance-status";
 import { LegalDocumentBody } from "@/components/legal/document-body";
 import { LegalLinks } from "@/components/legal/links";
 import { LEGAL_PATHS, LEGAL_TITLES, legalDocumentHref } from "@/components/legal/policy";
@@ -33,6 +34,7 @@ export const LegalTemplate = ({
         <h1 className="break-words text-2xl font-extrabold leading-tight sm:text-3xl">
           {document?.title ?? LEGAL_TITLES[kind]}
         </h1>
+        {document ? <LegalAcceptanceStatus document={document} /> : null}
         {document ? (
           <>
             <p className="mt-3 text-sm text-muted">

@@ -12,7 +12,7 @@ import {
   PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
-import { assertAdultRegistration } from "@/modules/legal/registration";
+import { acceptRegistrationLegal, assertAdultRegistration } from "@/modules/legal/registration";
 //
 import { loginInclude } from "@/query/login";
 import { withInvalidatedRecovery } from "@/utils/account-credentials";
@@ -144,6 +144,8 @@ export class LoginRepository implements ILoginRepository {
         professional_first_name,
         professional_last_name,
         terms_accepted,
+        legal_document_ids,
+        privacy_acknowledged,
         adult_confirmed,
         birthdate,
         terms_version,
@@ -224,6 +226,12 @@ export class LoginRepository implements ILoginRepository {
         });
       }
 
+      await acceptRegistrationLegal(tx, user.id, {
+        legal_document_ids,
+        terms_accepted,
+        privacy_acknowledged,
+        adult_confirmed,
+      });
       if (adult_confirmed === true) {
         await tx.user_background.create({
           data: {

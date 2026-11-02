@@ -62,7 +62,7 @@ export class LegalReadRepository {
   async status(userId: string) {
     const docs = await currentDocuments();
     const acceptances = await prisma.legal_acceptance.findMany({
-      where: { user_id: userId, document_id: { in: docs.map((doc) => doc.id) } },
+      where: { user_id: userId },
       select: { document_id: true, accepted_at: true },
     });
     return {

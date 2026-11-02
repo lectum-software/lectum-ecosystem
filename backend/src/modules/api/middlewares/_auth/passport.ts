@@ -399,6 +399,8 @@ if (isGoogleOAuthConfigured()) {
                   provider: "google",
                   role,
                   terms_accepted: termsAccepted,
+                  legal_document_ids: state?.query.legal_document_ids?.split(","),
+                  privacy_acknowledged: state?.query.privacy_acknowledged === "true",
                   adult_confirmed: adultConfirmed,
                   birthdate: state?.query.birthdate,
                   terms_version: termsVersion,
