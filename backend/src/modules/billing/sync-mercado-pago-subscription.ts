@@ -197,7 +197,10 @@ export const syncMercadoPagoSubscriptionRecord = async ({
   const gatewaySubscription =
     receivedGatewaySubscription ??
     (await gateway.getSubscription(localSubscription.gateway_subscription_id));
-  const status = resolveLocalSubscriptionStatus(gatewaySubscription);
+  const status =
+    localSubscription.status === "cancelada"
+      ? "cancelada"
+      : resolveLocalSubscriptionStatus(gatewaySubscription);
   const now = new Date();
   const billingDunning = buildBillingDunningUpdate({
     now,
@@ -223,7 +226,7 @@ export const syncMercadoPagoSubscriptionRecord = async ({
         : null,
   });
 
-  if (noticeStage && current?.id) {
+  if (noticeStage && current?.id && current.status === status) {
     await sendBillingDunningNotice({
       stage: noticeStage,
       subscriptionId: current.id,

@@ -1,5 +1,6 @@
 import type { user } from "@/api/generator/types";
 import { readStorageItem, removeStorageItem, writeStorageItem } from "@/utils/browser-storage";
+import { hasSubscriptionBenefits } from "@/utils/subscription-period";
 
 const TWO_DAYS_MS = 1000 * 60 * 60 * 24 * 2;
 const SEVEN_DAYS_MS = 1000 * 60 * 60 * 24 * 7;
@@ -15,7 +16,9 @@ type PromptRegistrationUser =
 const hasActiveProfessionalSubscription = (
   profile: NonNullable<user["psychologist_profile"]> | null | undefined,
 ) => {
-  return Boolean(profile?.subscriptions?.some((subscription) => subscription.status === "ativa"));
+  return Boolean(
+    profile?.subscriptions?.some((subscription) => hasSubscriptionBenefits(subscription)),
+  );
 };
 
 export const hasCompletedRegistrationForPrompts = (user: PromptRegistrationUser) => {

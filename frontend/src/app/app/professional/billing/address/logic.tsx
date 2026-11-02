@@ -76,22 +76,12 @@ const getCityValueForState = (state: string | null, city?: string | null) => {
   return cityOption ? String(cityOption.value) : null;
 };
 
-const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
-  if (!currentPeriodEnd) return true;
-
-  const periodEnd = new Date(currentPeriodEnd);
-
-  return !Number.isNaN(periodEnd.getTime()) && periodEnd > new Date();
-};
-
 const isActiveProfessional = (subscription?: ProfessionalSubscription | null) =>
-  subscription?.status === "ativa" &&
-  subscription.plan?.slug === "profissional" &&
-  isCurrentPeriodValid(subscription.current_period_end);
+  subscription?.plan?.slug === "profissional" && hasSubscriptionBenefits(subscription);
 
 const shouldLeavePaidAddressStep = (subscription?: ProfessionalSubscription | null) =>
   !subscription ||
-  subscription.status === "cancelada" ||
+  (subscription.status === "cancelada" && !hasSubscriptionBenefits(subscription)) ||
   (subscription.status === "ativa" && subscription.plan?.slug === "gratuito");
 
 const AddressHeader = () => (
@@ -141,7 +131,7 @@ export const ProfessionalBillingAddressLogic = () => {
   const activeCourtesy = isAdministrativeCourtesySubscription(current);
   const currentIsError = billing.current.isError;
   const userWithCurrentSubscription =
-    user && current?.status === "ativa" && user.psychologist_profile
+    user && current && hasSubscriptionBenefits(current) && user.psychologist_profile
       ? {
           ...user,
           psychologist_profile: {
@@ -341,3 +331,5 @@ export const ProfessionalBillingAddressLogic = () => {
     </PrivateTemplate>
   );
 };
+
+import { hasSubscriptionBenefits } from "@/utils/subscription-period";

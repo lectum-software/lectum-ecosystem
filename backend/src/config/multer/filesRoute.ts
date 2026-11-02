@@ -3,6 +3,7 @@ import type { Application, Request, Response } from "express";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
+import { isAccountMediaRemoved } from "@/modules/account-deletion/media-cleanup";
 import { videoStreamImportObjectKey } from "@/utils/video-stream-import-source";
 
 const getRequestedFile = (file?: string | string[]) => {
@@ -93,6 +94,7 @@ const headFile = async (
   }
 
   try {
+    if (await isAccountMediaRemoved(file)) return sendNotFound(res);
     const command = new HeadObjectCommand({
       Bucket: PUBLIC_BUCKET,
       Key: file,
@@ -125,6 +127,7 @@ const streamFile = async (
   }
 
   try {
+    if (await isAccountMediaRemoved(file)) return sendNotFound(res);
     const range = normalizeRangeHeader(req.headers.range);
     const command = new GetObjectCommand({
       Bucket: PUBLIC_BUCKET,

@@ -11,6 +11,11 @@ export const activeSubscriptionPeriodWhere = (): Prisma.professional_subscriptio
         OR: [{ current_period_end: null }, { current_period_end: { gt: now } }],
       },
       {
+        status: "cancelada",
+        source: "mercadopago",
+        current_period_end: { gt: now },
+      },
+      {
         billing_downgraded_at: null,
         billing_grace_ends_at: { gt: now },
         status: "inadimplente",

@@ -1356,3 +1356,9 @@ PostDetailDTO.has_psychologist_video_reply?: boolean deriva de respostas ativas 
 `contact_request.visitor_key` opcional guarda o hash do identificador aleatorio de navegador ja usado pelo Analytics, nunca IP/fingerprint novo. Conta autenticada tem precedencia. Eventos legados anonimos sem identidade nao permitem deduplicacao retroativa.
 
 `professional_whatsapp_week`: profissional, inicio/fim exclusivo da semana, liberacao, pessoas estimadas, quantidade informada opcional, data de resposta/abertura automatica, notificacao unica opcional e estado de entrega push. Unicidade profissional/semana. Datas em UTC, limites de calendario America/Sao_Paulo. Resposta pertence a semana, nao ao dia de envio. Analytics agrega semanas encerradas dentro do periodo; semana corrente informada entra quando o periodo inclui agora. Nao distribui respostas semanais por dia. TASK-263: registros manuais podem existir sem notificacao; semana atual e quatro anteriores editaveis, antigas somente consulta.
+## 2026-11-02 - Exclusao de conta e aceite no cadastro (TASK-309/310)
+
+- `account_media_deletions`: fila duravel sem FK de conta, com hash unico de provider/namespace/chave, tentativas, lease/backoff, conclusao e codigo de erro sanitizado. Nao armazena credenciais nem URL assinada.
+- Exclusao remove texto/referencias de midia atomicamente; ancestrais necessarios para respostas de terceiros recebem marcador neutro. Limpeza externa apos commit, idempotente e restrita ao namespace validado; sem backfill.
+- Assinatura Mercado Pago cancelada conserva `current_period_end`; entitlement somente ate esse instante. Cancelamentos de planos pendentes/inadimplentes nao criam periodo pago.
+- Cadastro novo aceita IDs de documentos de forma aditiva e grava `legal_acceptance` na transacao de criacao. Clientes antigos nao geram aceite presumido. Data exibida corresponde ao documento exato, nunca a criacao da conta.

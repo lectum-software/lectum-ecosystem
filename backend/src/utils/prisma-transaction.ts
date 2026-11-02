@@ -9,12 +9,14 @@ const DEFAULT_MAX_ATTEMPTS = 3;
 export const withSerializableTransaction = async <T>(
   callback: (transaction: Prisma.TransactionClient) => Promise<T>,
   maxAttempts = DEFAULT_MAX_ATTEMPTS,
+  options: { maxWait?: number; timeout?: number } = {},
 ): Promise<T> => {
   const attempts = Math.max(1, Math.min(5, Math.trunc(maxAttempts)));
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       return await prisma.$transaction(callback, {
+        ...options,
         isolationLevel: "Serializable",
       });
     } catch (error) {

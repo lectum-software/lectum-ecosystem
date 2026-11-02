@@ -189,3 +189,4 @@ test("checkout e cartão capturam a sessão opcional dentro do submit e preserva
     assert.match(source, /advancedFraudPrevention: true/);
   }
 });
+import "./subscription-period.test.mjs";

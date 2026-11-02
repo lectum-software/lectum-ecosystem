@@ -4,9 +4,11 @@ import type {
   professional_subscription,
   psychologist_profile,
 } from "@/interfaces/objects";
+import { resolveCancellationState } from "@/modules/billing/cancellation-period";
 import type { BillingDunningUpdate } from "@/modules/billing/dunning";
 import { restoreFreePlanAfterProfessionalCancellation } from "@/modules/billing/free-subscription";
 import type { BillingSubscriptionStatus } from "@/modules/billing/payment-gateway";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { IAddressDTO } from "../DTOs/IAddressDTO";
 import type { IAddressRepository } from "./interfaces/IAddressRepository";
@@ -86,24 +88,28 @@ export class AddressRepository implements IAddressRepository {
     billingDunning?: BillingDunningUpdate;
     currentPeriodEnd?: Date | null;
   }): Promise<professional_subscription | null> {
-    return prisma.$transaction(async (tx) => {
+    return withSerializableTransaction(async (tx) => {
+      const current = await tx.professional_subscription.findUnique({
+        where: { id: data.subscriptionId },
+      });
+      if (!current || current.deleted) return null;
+      const next = resolveCancellationState(current, data);
       const updated = await tx.professional_subscription.update({
         where: {
           id: data.subscriptionId,
         },
         data: {
-          status: data.status,
           ...data.billingDunning,
+          ...next,
           gateway: "mercadopago",
           gateway_subscription_id: data.gatewaySubscriptionId,
-          current_period_end: data.currentPeriodEnd ?? null,
         },
         include: {
           plan: true,
         },
       });
 
-      if (data.status !== "cancelada" || updated.plan?.slug === "gratuito") {
+      if (updated.status !== "cancelada" || updated.plan?.slug === "gratuito") {
         return updated;
       }
 

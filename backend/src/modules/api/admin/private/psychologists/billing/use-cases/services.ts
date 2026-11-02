@@ -471,7 +471,9 @@ export const cancelSubscription = async (
   }
 
   try {
-    const gatewayResult = await getPaymentGateway().cancelSubscription({
+    const gateway = getPaymentGateway();
+    await prepareCancellation(subscription, gateway);
+    const gatewayResult = await gateway.cancelSubscription({
       gatewaySubscriptionId: subscription.gateway_subscription_id,
     });
 
@@ -549,3 +551,5 @@ export const cancelSubscription = async (
     };
   }
 };
+
+import { prepareCancellation } from "@/modules/billing/prepare-cancellation";

@@ -10,6 +10,10 @@ import {
   stopNotificationDigestScheduler,
 } from "@/main/notification/digests";
 import { soc } from "@/main/socket/state";
+import {
+  startAccountMediaCleanup,
+  stopAccountMediaCleanup,
+} from "@/modules/account-deletion/media-cleanup";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import app from "./app";
 import { env } from "./environment";
@@ -19,6 +23,7 @@ const server = app.listen(env.PORT, () => {
   startNotificationDigestScheduler();
   startNotificationCampaignScheduler();
   startBillingDunningScheduler();
+  startAccountMediaCleanup();
 });
 
 let shuttingDown = false;
@@ -30,6 +35,7 @@ const shutdown = async () => {
   stopNotificationCampaignScheduler();
   stopNotificationDigestScheduler();
   stopBillingDunningScheduler();
+  stopAccountMediaCleanup();
   soc?.disconnectSockets(true);
 
   const forceCloseTimer = setTimeout(() => {

@@ -3,6 +3,7 @@ import {
   getPaymentGateway,
   isPaymentGatewayConfigurationError,
 } from "@/modules/billing/payment-gateway";
+import { prepareCancellation } from "@/modules/billing/prepare-cancellation";
 import type { ISubscriptionDTO } from "../DTOs/ISubscriptionDTO";
 import { SubscriptionRepository } from "../repositories/SubscriptionRepository";
 
@@ -87,6 +88,7 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
 
   try {
     const gateway = getPaymentGateway();
+    await prepareCancellation(subscription, gateway);
     const gatewayResult = await gateway.cancelSubscription({
       gatewaySubscriptionId: subscription.gateway_subscription_id,
     });

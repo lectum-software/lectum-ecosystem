@@ -1,8 +1,11 @@
 import { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription, user } from "@/interfaces/objects";
+import { deleteAccountContent } from "@/modules/account-deletion/content";
+import { drainAccountMediaDeletions } from "@/modules/account-deletion/media-cleanup";
 import { loginInclude } from "@/query/login";
 import { log } from "@/utils/logs";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import {
   deleteAccountSession,
   deleteAllAccountSessions,
@@ -17,6 +20,7 @@ import {
   markDeleted,
   recalculatePsychologistRating,
 } from "./support/account-query";
+import { deleteBillingDetails } from "./support/delete-billing-details";
 import { buildLogoutSubscriptionFilter } from "./support/logout-subscription";
 
 export class AccountRepository implements IAccountRepository {
@@ -181,7 +185,12 @@ export class AccountRepository implements IAccountRepository {
     const anonymizedEmail = `deleted-${userId}@deleted.lectum.local`;
     const anonymizedName = getDeletedAuthorName(user.role);
 
-    await prisma.$transaction(async (tx) => {
+    const deleteInTransaction = async (tx: Prisma.TransactionClient) => {
+      const account = await tx.user.findUnique({
+        where: { id: userId },
+        select: { deleted: true },
+      });
+      if (!account || account.deleted) return;
       const memberships = await tx.community_member.groupBy({
         by: ["community_id"],
         where: {
@@ -228,6 +237,8 @@ export class AccountRepository implements IAccountRepository {
             .filter((psychologistId) => psychologistId !== userId),
         ),
       ];
+
+      await deleteAccountContent(tx, userId, now);
 
       await tx.user.update({
         where: {
@@ -341,7 +352,7 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: markDeleted(now),
+        data: { ...markDeleted(now), phone: "[deleted]" },
       });
 
       await tx.patient_profile.updateMany({
@@ -349,40 +360,19 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: markDeleted(now),
-      });
-
-      await tx.billing_address.updateMany({
-        where: {
-          user_id: userId,
-          deleted: false,
-        },
         data: {
           ...markDeleted(now),
-          city: "[deleted]",
-          complement: null,
-          district: "[deleted]",
-          number: "[deleted]",
-          state: "[deleted]",
-          street: "[deleted]",
-          zip: "[deleted]",
+          phone: null,
+          bio: null,
+          birthdate: null,
+          city: null,
+          state: null,
+          goal: null,
+          gender: null,
         },
       });
 
-      await tx.payment_method.updateMany({
-        where: {
-          user_id: userId,
-          deleted: false,
-        },
-        data: {
-          ...markDeleted(now),
-          brand: null,
-          exp_month: null,
-          exp_year: null,
-          gateway_token: "[deleted]",
-          last4: null,
-        },
-      });
+      await deleteBillingDetails(tx, userId, now);
 
       const psychologistProfile = await tx.psychologist_profile.findUnique({
         where: {
@@ -420,6 +410,7 @@ export class AccountRepository implements IAccountRepository {
             accepts_insurance: false,
             available_days: [],
             bio: null,
+            birthdate: null,
             cfp_verified_at: null,
             cover_image_url: null,
             cpf: null,
@@ -441,6 +432,8 @@ export class AccountRepository implements IAccountRepository {
             professional_address_street: null,
             professional_address_zip: null,
             published: false,
+            professional_first_name: null,
+            professional_last_name: null,
             race_color: null,
             rating_avg: 0,
             rating_count: 0,
@@ -684,6 +677,10 @@ export class AccountRepository implements IAccountRepository {
         },
         data: markDeleted(now),
       });
-    }, ACCOUNT_DELETE_TRANSACTION_OPTIONS);
+    };
+    await withSerializableTransaction(deleteInTransaction, 3, ACCOUNT_DELETE_TRANSACTION_OPTIONS);
+
+    // The durable queue survives a provider outage; account deletion remains final.
+    void drainAccountMediaDeletions(userId).catch(() => undefined);
   }
 }

@@ -1,5 +1,6 @@
 import type { user } from "@/api/generator/types";
 import type { ProfessionalSubscription } from "@/api/generator/types/billing";
+import { hasSubscriptionBenefits } from "./subscription-period";
 
 export const PSYCHOLOGIST_ONBOARDING_PATHS = {
   plans: "/app/profissional/assinatura/planos",
@@ -10,13 +11,21 @@ export const PSYCHOLOGIST_ONBOARDING_PATHS = {
   profileSetup: "/app/profissional/perfil/configurar",
 } as const;
 
-type SubscriptionValue = Pick<ProfessionalSubscription, "status" | "plan" | "source">;
+type SubscriptionValue = Pick<
+  ProfessionalSubscription,
+  | "status"
+  | "plan"
+  | "source"
+  | "current_period_end"
+  | "billing_grace_ends_at"
+  | "billing_downgraded_at"
+>;
 type SubscriptionLike = SubscriptionValue | null | undefined;
 
 type PsychologistProfileLike = NonNullable<user["psychologist_profile"]>;
 
 const isActiveSubscription = (subscription: SubscriptionLike): subscription is SubscriptionValue =>
-  subscription?.status === "ativa";
+  Boolean(subscription && hasSubscriptionBenefits(subscription));
 
 export const isProfessionalSubscriptionActive = (subscription: SubscriptionLike) => {
   if (!isActiveSubscription(subscription)) return false;

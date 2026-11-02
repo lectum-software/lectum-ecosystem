@@ -109,7 +109,12 @@ const matchesSubscriptionWhere = (
   }
 
   const hasActivePeriodConstraint = Array.isArray(where.OR);
-  if (hasActivePeriodConstraint && item.status !== "ativa") return false;
+  if (hasActivePeriodConstraint) {
+    const futureEnd = Boolean(item.current_period_end && item.current_period_end > new Date());
+    const active = item.status === "ativa" && (!item.current_period_end || futureEnd);
+    const canceledPaid = item.status === "cancelada" && item.source === "mercadopago" && futureEnd;
+    if (!active && !canceledPaid) return false;
+  }
 
   return true;
 };
@@ -122,6 +127,44 @@ const sortByUpdatedAndCreatedDesc = (items: SubscriptionRecord[]) =>
 
     return (right.createdAt?.getTime() ?? 0) - (left.createdAt?.getTime() ?? 0);
   });
+
+test("cancelamento conserva plano e catalogos ate o fim do periodo pago", async () => {
+  const paid = subscription({
+    id: "paid",
+    plan: plan("profissional"),
+    source: "mercadopago",
+    status: "cancelada",
+  });
+  paid.current_period_end = new Date(Date.now() + 86400000);
+  const { client, state } = makeClient({
+    subscriptions: [paid],
+    specialties: [relation("a"), relation("b"), relation("c"), relation("d")],
+  });
+  const result = await restoreFreePlanAfterProfessionalCancellation({
+    psychologistId: "psy-1",
+    tx: client,
+  });
+  assert.equal(result?.id, paid.id);
+  assert.equal(state.createdCount, 0);
+  assert.equal(state.specialties.filter((item) => !item.deleted).length, 4);
+});
+
+test("periodo cancelado vencido retorna ao gratuito", async () => {
+  const paid = subscription({
+    id: "paid",
+    plan: plan("profissional"),
+    source: "mercadopago",
+    status: "cancelada",
+  });
+  paid.current_period_end = new Date(Date.now() - 1000);
+  const { client, state } = makeClient({ subscriptions: [paid] });
+  const result = await restoreFreePlanAfterProfessionalCancellation({
+    psychologistId: "psy-1",
+    tx: client,
+  });
+  assert.equal(result?.plan?.slug, "gratuito");
+  assert.equal(state.createdCount, 1);
+});
 
 const makeClient = ({
   approaches = [],
