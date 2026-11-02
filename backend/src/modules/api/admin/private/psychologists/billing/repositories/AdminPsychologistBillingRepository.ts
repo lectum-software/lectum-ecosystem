@@ -425,7 +425,7 @@ export class AdminPsychologistBillingRepository {
     gatewaySubscriptionId: string;
     subscription: AdminPsychologistBillingSubscription;
   }): Promise<professional_subscription> {
-    return prisma.$transaction(async (tx) => {
+    return withSerializableTransaction(async (tx) => {
       const current = await tx.professional_subscription.findUnique({
         where: {
           id: input.subscription.id,
@@ -470,10 +470,9 @@ export class AdminPsychologistBillingRepository {
           id: current.id,
         },
         data: {
-          current_period_end: null,
           gateway: "mercadopago",
           gateway_subscription_id: input.gatewaySubscriptionId,
-          status: "cancelada",
+          ...resolveCancellationState(current, { status: "cancelada" }),
         },
         include: {
           plan: true,
@@ -518,3 +517,6 @@ export type {
   AdminPsychologistBillingRecord,
   AdminPsychologistBillingSubscription,
 } from "./support/billing-query";
+
+import { resolveCancellationState } from "@/modules/billing/cancellation-period";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";

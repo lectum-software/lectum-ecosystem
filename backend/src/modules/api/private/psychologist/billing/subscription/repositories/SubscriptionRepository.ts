@@ -1,5 +1,6 @@
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { payment_method, professional_subscription } from "@/interfaces/objects";
+import { resolveCancellationState } from "@/modules/billing/cancellation-period";
 import { resolveEffectiveBillingSubscription } from "@/modules/billing/effective-subscription";
 import {
   cancelledProfessionalGatewaySubscriptionWhere,
@@ -11,6 +12,7 @@ import {
   buildPaymentHistoryItemsForSubscription,
   mergeGatewaySummaryPaymentHistory,
 } from "@/modules/billing/payment-history";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 
 import {
   actionableProfessionalGatewaySubscriptionWhere,
@@ -210,16 +212,18 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     cancelled: professional_subscription;
     current: professional_subscription;
   }> {
-    return prisma.$transaction(async (tx) => {
+    return withSerializableTransaction(async (tx) => {
+      const existing = await tx.professional_subscription.findUniqueOrThrow({
+        where: { id: data.subscriptionId, deleted: false },
+      });
       const cancelled = await tx.professional_subscription.update({
         where: {
           id: data.subscriptionId,
         },
         data: {
-          status: "cancelada",
+          ...resolveCancellationState(existing, { status: "cancelada" }),
           gateway: "mercadopago",
           gateway_subscription_id: data.gatewaySubscriptionId,
-          current_period_end: null,
         },
         include: {
           plan: true,

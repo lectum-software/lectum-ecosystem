@@ -731,3 +731,5 @@ Formato recomendado:
 - [ADR-0667 — Concorrencia de sessoes de analytics](0667-analytics-session-concurrency.md)
 - [ADR-0668 — Dicas reutilizam a acao protegida antes de fechar](0668-onboarding-action-auth-gate.md)
 - [ADR-0669 — Foco e rascunho independentes na navegacao dos reels](0669-reels-comment-focus-dismiss.md)
+- [ADR-0670 — Exclusao de conteudo e renovacao separada da vigencia](0670-account-content-and-subscription-end.md)
+- [ADR-0671 — Aceite explicito durante cadastro](0671-registration-legal-acceptance.md)

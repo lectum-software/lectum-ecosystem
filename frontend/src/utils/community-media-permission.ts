@@ -1,4 +1,5 @@
 import type { user } from "@/api/generator/types/user";
+import { hasSubscriptionBenefits } from "./subscription-period";
 
 export type CommunityMediaPermission = {
   canAttach: boolean;
@@ -13,7 +14,7 @@ export const hasActiveProfessionalMediaPlan = (userData?: user | null) =>
   Boolean(
     userData?.psychologist_profile?.subscriptions?.some(
       (subscription) =>
-        subscription.status === "ativa" &&
+        hasSubscriptionBenefits(subscription) &&
         subscription.plan?.active !== false &&
         subscription.plan?.slug !== "gratuito",
     ),
@@ -23,7 +24,7 @@ export const hasActiveProfessionalCourtesyGrant = (userData?: user | null) =>
   Boolean(
     userData?.psychologist_profile?.subscriptions?.some(
       (subscription) =>
-        subscription.status === "ativa" &&
+        hasSubscriptionBenefits(subscription) &&
         subscription.source === "admin_grant" &&
         subscription.plan?.active !== false &&
         subscription.plan?.slug !== "gratuito",

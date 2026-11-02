@@ -1148,6 +1148,24 @@ model video_asset {
 }
 
 // Operational retention is independent from user/content lifetime; never cascade it.
+model account_media_deletion {
+  id                String    @id @default(cuid())
+  identity_hash     String    @unique
+  owner_id          String
+  provider          String
+  storage_namespace String
+  object_key        String
+  attempts          Int       @default(0)
+  available_at      DateTime  @default(now())
+  completed_at      DateTime?
+  error_code        String?
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([completed_at, available_at])
+  @@index([owner_id])
+  @@map("account_media_deletions")
+}
+
 model video_retention_record {
   id                String    @id @default(cuid())
   deleted           Boolean   @default(false)

@@ -199,7 +199,6 @@ const freeSubscriptionRestoreData = {
 } satisfies Prisma.professional_subscriptionUpdateInput;
 
 export const restoreFreePlanAfterProfessionalCancellation = async ({
-  cancelledSubscriptionId,
   psychologistId,
   tx,
 }: {
@@ -210,7 +209,6 @@ export const restoreFreePlanAfterProfessionalCancellation = async ({
   const activeProfessional = await tx.professional_subscription.findFirst({
     where: {
       ...activeProfessionalEntitlementWhere(),
-      ...(cancelledSubscriptionId ? { id: { not: cancelledSubscriptionId } } : {}),
       psychologist_id: psychologistId,
     },
     include: includePlan,

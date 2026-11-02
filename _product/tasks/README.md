@@ -1,3 +1,5 @@
+Validado localmente em 0.1.771: [TASK-309 - Exclusao de conteudo e vigencia](TASK-309-account-content-and-subscription-end.md), ADR-0670. Migration, check integral, builds e QA real em 320/390/1440 aprovados. Fila externa validada sem acessar provedores; limpeza fisica e iPhone pendentes. Sem push/deploy. TASK-310 preparada para commit separado.
+
 Validado localmente em 0.1.770: [TASK-308 - Desfocar comentarios e liberar navegacao dos reels](TASK-308-reels-comment-dismiss.md), ADR-0669. Minimizar desfoca; navegar descarta rascunho sem confirmacao, mantendo protecao de envio. Check integral, build e QA real em 320/390/1440 aprovados. Teclado iPhone fisico ainda pendente. Sem push/deploy.
 
 Validado localmente em 0.1.769: [TASK-307 - Dicas de uso respeitam a modal de acesso](TASK-307-onboarding-conversion-gate.md), ADR-0668. Dica de publicar reutiliza a acao protegida antes de fechar, oferecendo criar conta, login ou continuar explorando. Check integral, build e QA real em 320/390/1440 aprovados; detalhes e limitacao do smoke compilado na task. Sem push/deploy.
@@ -765,6 +767,8 @@ ou cortesia manual.
 | 306 | [TASK-306 - Identidade na resposta e escala dos controles de video](TASK-306-own-testimonial-video-icons.md) | Done | 305 |
 | 307 | [TASK-307 - Dicas de uso respeitam a modal de acesso](TASK-307-onboarding-conversion-gate.md) | Done | 306 |
 | 308 | [TASK-308 - Desfocar comentarios e liberar navegacao dos reels](TASK-308-reels-comment-dismiss.md) | Done | 307 |
+| 309 | [TASK-309 - Exclusao de conteudo e vigencia](TASK-309-account-content-and-subscription-end.md) | Done | 308 |
+| 310 | [TASK-310 - Aceite no cadastro e data](TASK-310-registration-legal-acceptance.md) | In Progress | 309 |
 
 ## Ordem operacional recomendada sem bloqueios
 

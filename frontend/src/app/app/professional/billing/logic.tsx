@@ -253,7 +253,7 @@ export const ProfessionalBillingLogic = () => {
       cancelSubscription: {
         onSuccess: () => {
           setShowCancelConfirm(false);
-          toast.success("Assinatura cancelada com sucesso");
+          toast.success("Renovação da assinatura cancelada");
         },
       },
     },
@@ -286,6 +286,11 @@ export const ProfessionalBillingLogic = () => {
     : subscription?.plan?.name || "Plano não encontrado";
   const canManageCard = Boolean(hasGatewayBilling && subscription?.status !== "cancelada");
   const canCancelSubscription = Boolean(hasGatewayBilling && subscription?.status === "ativa");
+  const isCanceledWithBenefits = Boolean(
+    subscription?.status === "cancelada" &&
+      subscription.current_period_end &&
+      isFutureDate(subscription.current_period_end),
+  );
   const priceTitle = isCourtesy ? "Valor da cortesia" : "Valor recorrente";
   const billingGraceEndsAt = subscription?.billing_grace_ends_at ?? null;
   const billingDowngradedAt = subscription?.billing_downgraded_at ?? null;
@@ -299,7 +304,9 @@ export const ProfessionalBillingLogic = () => {
     ? "Regularizar até"
     : isCourtesy
       ? "Expiração da cortesia"
-      : "Próxima renovação";
+      : subscription?.status === "cancelada"
+        ? "Término do Plano Profissional"
+        : "Próxima renovação";
   const periodDate = isBillingDunningGrace ? billingGraceEndsAt : subscription?.current_period_end;
   const priceLabel = useMemo(
     () => (isCourtesy ? "Sem cobrança" : `${formatPrice(subscription?.plan?.price_cents)} / mês`),
@@ -370,7 +377,13 @@ export const ProfessionalBillingLogic = () => {
                     <VerifiedBadgeIcon className="h-8 w-8" aria-hidden="true" />
                   </span>
                   <StatusBadge
-                    label={isCourtesy ? "Cortesia ativa" : undefined}
+                    label={
+                      isCanceledWithBenefits
+                        ? "Ativa, sem renovação"
+                        : isCourtesy
+                          ? "Cortesia ativa"
+                          : undefined
+                    }
                     status={subscription.status}
                   />
                 </div>
@@ -465,8 +478,8 @@ export const ProfessionalBillingLogic = () => {
                             Cancelar assinatura agora?
                           </p>
                           <p className="mt-1 text-xs leading-5 text-muted">
-                            Todos os benefícios do Plano Profissional serão desativados após a
-                            confirmação.
+                            A renovação será cancelada. Os benefícios do Plano Profissional
+                            permanecem até {formatDate(subscription.current_period_end)}.
                           </p>
                         </div>
                         <div className="grid gap-2 sm:grid-cols-2">
@@ -502,7 +515,7 @@ export const ProfessionalBillingLogic = () => {
                   )
                 ) : null}
 
-                {!canManageCard ? (
+                {!canManageCard && subscription.status !== "cancelada" ? (
                   <InlineAlert title="Alteração de cartão indisponível" variant="warning">
                     A troca de cartão exige uma assinatura profissional ativa com método de
                     pagamento cadastrado. Assinaturas gratuitas ou de cortesia não possuem cartão
@@ -537,8 +550,10 @@ export const ProfessionalBillingLogic = () => {
                 ) : null}
 
                 {subscription.status === "cancelada" ? (
-                  <InlineAlert title="Assinatura cancelada" variant="warning">
-                    Escolha um novo plano para retomar os recursos profissionais da Lectum.
+                  <InlineAlert title="Renovação cancelada" variant="info">
+                    {isCanceledWithBenefits
+                      ? `Seu plano Profissional permanece ativo até ${formatDate(subscription.current_period_end)}. A renovação foi cancelada e não haverá nova cobrança desta assinatura.`
+                      : "O período contratado terminou. Escolha um novo plano para retomar os recursos profissionais."}
                   </InlineAlert>
                 ) : null}
 

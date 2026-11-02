@@ -1,7 +1,9 @@
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription, psychologist_profile } from "@/interfaces/objects";
+import { resolveCancellationState } from "@/modules/billing/cancellation-period";
 import type { BillingDunningUpdate } from "@/modules/billing/dunning";
 import { restoreFreePlanAfterProfessionalCancellation } from "@/modules/billing/free-subscription";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import type { ISyncRepository } from "./interfaces/ISyncRepository";
 
 export class SyncRepository implements ISyncRepository {
@@ -55,24 +57,28 @@ export class SyncRepository implements ISyncRepository {
     billingDunning?: BillingDunningUpdate;
     currentPeriodEnd?: Date | null;
   }): Promise<professional_subscription | null> {
-    const subscription = await prisma.$transaction(async (tx) => {
+    const subscription = await withSerializableTransaction(async (tx) => {
+      const current = await tx.professional_subscription.findUnique({
+        where: { id: data.subscriptionId },
+      });
+      if (!current || current.deleted) return null;
+      const next = resolveCancellationState(current, data);
       const updated = await tx.professional_subscription.update({
         where: {
           id: data.subscriptionId,
         },
         data: {
-          status: data.status,
           ...data.billingDunning,
+          ...next,
           gateway: "mercadopago",
           gateway_subscription_id: data.gatewaySubscriptionId,
-          current_period_end: data.currentPeriodEnd ?? null,
         },
         include: {
           plan: true,
         },
       });
 
-      if (data.status !== "cancelada" || updated.plan?.slug === "gratuito") {
+      if (updated.status !== "cancelada" || updated.plan?.slug === "gratuito") {
         return updated;
       }
 
@@ -85,6 +91,7 @@ export class SyncRepository implements ISyncRepository {
       );
     });
 
+    if (!subscription) return null;
     const entitlementStartedAt = subscription.grant_started_at ?? subscription.createdAt ?? null;
 
     if (
