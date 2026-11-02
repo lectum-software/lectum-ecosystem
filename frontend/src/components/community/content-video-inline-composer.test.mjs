@@ -229,12 +229,13 @@ test("real submit targets the video reply and preserves conversion drafts", () =
   assert.doesNotMatch(inline, /\bfetch\(|<textarea|contentEditable|useCreatePostReply/);
 });
 
-test("focus, media preparation, picker, dirty draft and upload report independent state", () => {
+test("reels draft does not lock navigation after blur; preparation and upload still do", () => {
   assert.match(
     composer,
-    /const busy =[\s\S]*composerActive \|\|[\s\S]*hasDiscardableDraft \|\|[\s\S]*mediaPickerActive \|\|[\s\S]*mediaUpgradeModalOpen \|\|[\s\S]*hook.formState.isSubmitting;/,
+    /const busy =[\s\S]*composerActive \|\|[\s\S]*\(!isReels && hasDiscardableDraft\) \|\|[\s\S]*isPreparingVideo \|\|[\s\S]*mediaPickerActive \|\|[\s\S]*mediaUpgradeModalOpen \|\|[\s\S]*hook.formState.isSubmitting;/,
   );
   assert.match(composer, /submitting: isPreparingVideo \|\| hook.formState.isSubmitting/);
+  assert.match(inline, /const busy = composerState.busy \|\| publishing;/);
   assert.match(composer, /addEventListener\("cancel", endMediaPickerInteraction\)/);
   assert.match(
     inline,

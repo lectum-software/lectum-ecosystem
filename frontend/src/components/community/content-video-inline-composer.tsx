@@ -19,9 +19,9 @@ export type ContentVideoInlineComposerState = {
 export type ContentVideoInlineComposerProps = {
   item: PostContentVideo;
   active: boolean;
-  /** Pause playback and lock swipe while focus, draft, picker or submission is active. */
+  /** Pause playback and lock swipe for focus, picker, preparation or submission. */
   onBusyChange: (busy: boolean) => void;
-  /** Confirm dismissal in the parent before deactivating/unmounting a dirty composer. */
+  /** Drafts are local to the active video and silently discarded on unmount. */
   onDraftStateChange?: (hasDraft: boolean) => void;
   onStateChange?: (state: ContentVideoInlineComposerState) => void;
   onSubmitted: () => void | Promise<void>;
@@ -49,7 +49,7 @@ const ActiveContentVideoInlineComposer = ({
   const mutationPending =
     controller.createReplyMutation.isPending || controller.uploadReplyMediaMutation.isPending;
   const publishing = composerState.submitting || submitting || mutationPending;
-  const busy = composerState.busy || hasDraft || publishing;
+  const busy = composerState.busy || publishing;
   const unavailable = !controller.post || Boolean(controller.postError);
   const replyTarget = item.reply_id
     ? { id: item.reply_id, name: getCommunityAuthorDisplayName(item.author) }

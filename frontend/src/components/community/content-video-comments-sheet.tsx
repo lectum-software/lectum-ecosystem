@@ -9,7 +9,6 @@ import {
   ReplyComposer,
 } from "@/app/app/community/[slug]/post/[id]/components/reply-composer";
 import {
-  confirmDiscardReplyDraft,
   findReplyInTree,
   resolvePostError,
 } from "@/app/app/community/[slug]/post/[id]/modules/reply-support";
@@ -196,7 +195,7 @@ const OpenContentVideoCommentsSheet = ({
   const titleRef = useRef<HTMLHeadingElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const reportReturnFocusRef = useRef<HTMLButtonElement | null>(null);
-  const [hasDraft, setHasDraft] = useState(false);
+  const sheetRef = useRef<HTMLElement>(null);
   const [composerSubmitting, setComposerSubmitting] = useState(false);
   const updateComposerState = useCallback((state: { submitting: boolean }) => {
     setComposerSubmitting(state.submitting);
@@ -245,7 +244,9 @@ const OpenContentVideoCommentsSheet = ({
   }, []);
 
   const requestClose = () => {
-    if (submitting || (hasDraft && !confirmDiscardReplyDraft())) return false;
+    if (submitting) return false;
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && sheetRef.current?.contains(focused)) focused.blur();
     onClose();
     return true;
   };
@@ -254,7 +255,7 @@ const OpenContentVideoCommentsSheet = ({
   return (
     <Modal
       className="z-[1200] overflow-hidden p-0 backdrop:bg-media-background/35 backdrop:backdrop-blur-none"
-      dismissible={!hasDraft && !submitting}
+      dismissible={!submitting}
       initialFocusRef={titleRef}
       labelledBy={titleId}
       onClose={requestClose}
@@ -262,6 +263,7 @@ const OpenContentVideoCommentsSheet = ({
       returnFocusRef={returnFocusRef}
     >
       <section
+        ref={sheetRef}
         className="fixed inset-x-0 bottom-0 mx-auto flex h-[82dvh] max-h-[calc(100dvh-1rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[24px] bg-surface text-foreground shadow-lectum-soft"
         style={{
           ...drag.sheetStyle,
@@ -357,6 +359,7 @@ const OpenContentVideoCommentsSheet = ({
               />
             ))}
             <ReplyComposer
+              confirmDiscard={false}
               apiError={controller.replyError}
               autoFocus={Boolean(controller.activeMobileReplyTarget)}
               disabled={submitting || Boolean(replyId && (!videoReply || videoQuery.isError))}
@@ -366,7 +369,6 @@ const OpenContentVideoCommentsSheet = ({
                 controller.setReplyError(null);
                 controller.setMobileReplyTarget(null);
               }}
-              onDraftStateChange={setHasDraft}
               onStateChange={updateComposerState}
               onSubmit={(values, mediaFile, operation) =>
                 controller.submitReply(
