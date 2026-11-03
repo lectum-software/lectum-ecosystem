@@ -55,6 +55,7 @@ import apiPrivateNotificationClick from "@/modules/api/private/notification/clic
 import apiPrivateNotificationIndex from "@/modules/api/private/notification/index";
 import apiPrivateNotificationSeen from "@/modules/api/private/notification/seen";
 import apiPrivateNotificationUpdate from "@/modules/api/private/notification/update";
+import apiPrivateVerificationVideo from "@/modules/api/private/notification/verification-video";
 import apiPrivateNotificationPreferenceShow from "@/modules/api/private/notification_preference/show";
 import apiPrivateNotificationPreferenceUpdate from "@/modules/api/private/notification_preference/update";
 import apiPrivateNotificationSubscriptionKey from "@/modules/api/private/notification_subscription/key";
@@ -321,6 +322,7 @@ mountRoleGuardedRoute(
 mountRoute("/api/private/directory/psychologists", apiPrivateDirectoryPsychologists);
 mountRoute("/api/private/notification/clean", apiPrivateNotificationClean);
 mountRoute("/api/private/notification/seen", apiPrivateNotificationSeen);
+mountRoute("/api/private/notification/verification-video", apiPrivateVerificationVideo);
 mountRoute("/api/private/notification", apiPrivateNotificationClick);
 mountRoute("/api/private/notification/index", apiPrivateNotificationIndex);
 mountRoute("/api/private/notification/update", apiPrivateNotificationUpdate);

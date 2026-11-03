@@ -657,6 +657,7 @@ export const VerticalVideoPlayer = ({
       ) : null}
       {usesPersistentControls ? (
         <VerticalVideoPlayerPersistentControls
+          videoRef={videoRef}
           currentTime={currentTime}
           duration={duration}
           fullscreenActive={isContentExpanded}

@@ -21,14 +21,15 @@ import type { ComponentType, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNotification } from "@/api/callers/notification";
 import type { notification as ApiNotification } from "@/api/generator/types";
+import { VerificationVideoNotification } from "@/components/notifications/verification-video-notification";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
+import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -424,11 +425,7 @@ const NotificationsHeaderActions = ({
 
 export const NotificationsLogic = () => {
   const sessionRole = useAppSelector((state) => state.user?.role);
-  const [hasAuthToken] = useState(() => {
-    if (typeof window === "undefined") return false;
-
-    return Boolean(getToken());
-  });
+  const hasAuthToken = useAuthTokenPresence();
   const hasMarkedNotificationsSeenRef = useRef(false);
   const { index, update, clean, seen } = useNotification({ enabledIndex: hasAuthToken });
   const items = useMemo(
@@ -524,70 +521,71 @@ export const NotificationsLogic = () => {
   };
 
   return (
-    <PrivateTemplate>
+    <PrivateTemplate allowAnonymous>
       <section className="mx-auto w-full max-w-[430px] py-5 md:max-w-2xl md:px-5 md:py-8">
         <SecondaryPageHeader
           action={
-            <NotificationsHeaderActions
-              hasNotifications={items.length > 0}
-              isMarkingAllRead={clean.isPending}
-              onMarkAllRead={() => clean.mutate()}
-            />
+            hasAuthToken ? (
+              <NotificationsHeaderActions
+                hasNotifications={items.length > 0}
+                isMarkingAllRead={clean.isPending}
+                onMarkAllRead={() => clean.mutate()}
+              />
+            ) : undefined
           }
           className="mb-4 px-5 md:px-0"
           title="Notificações"
         />
 
-        {index.isLoading ? (
-          <LoadingState className="py-10" />
-        ) : index.isError && !index.data ? (
-          <EmptyState
-            description="Não foi possível carregar suas notificações agora. Tente novamente em instantes."
-            icon={Bell}
-            title="Erro ao carregar"
-          />
-        ) : items.length === 0 ? (
-          <EmptyState
-            description="Novas notificações aparecerão aqui."
-            icon={Bell}
-            title="Nenhuma notificação"
-          />
-        ) : (
-          <div className="grid gap-8 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-sm">
-            {groups.today.length > 0 ? (
-              <section aria-labelledby="notifications-today">
-                <h2
-                  className="mb-2 px-3 text-sm font-extrabold text-foreground"
-                  id="notifications-today"
-                >
-                  Hoje
-                </h2>
-                <ul>{groups.today.map(renderItem)}</ul>
-              </section>
-            ) : null}
+        <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-sm">
+          <VerificationVideoNotification />
 
-            {groups.previous.length > 0 ? (
-              <section aria-labelledby="notifications-previous">
-                <h2
-                  className="mb-2 px-3 text-sm font-extrabold text-foreground"
-                  id="notifications-previous"
-                >
-                  Anteriores
-                </h2>
-                <ul>{groups.previous.map(renderItem)}</ul>
-              </section>
-            ) : null}
-          </div>
-        )}
+          {!hasAuthToken ? null : index.isLoading ? (
+            <LoadingState className="py-10" />
+          ) : index.isError && !index.data ? (
+            <EmptyState
+              description="Não foi possível carregar suas notificações agora. Tente novamente em instantes."
+              icon={Bell}
+              title="Erro ao carregar"
+            />
+          ) : items.length === 0 ? null : (
+            <div className="grid gap-8">
+              {groups.today.length > 0 ? (
+                <section aria-labelledby="notifications-today">
+                  <h2
+                    className="mb-2 px-3 text-sm font-extrabold text-foreground"
+                    id="notifications-today"
+                  >
+                    Hoje
+                  </h2>
+                  <ul>{groups.today.map(renderItem)}</ul>
+                </section>
+              ) : null}
 
-        <InfiniteListLoader
-          hasNextPage={index.hasNextPage}
-          isFetching={index.isFetching && !index.isLoading}
-          isError={index.isError}
-          label="Carregando notificações"
-          onLoadMore={index.fetchNextPage}
-          onRetry={index.isFetchNextPageError ? index.fetchNextPage : index.refetch}
-        />
+              {groups.previous.length > 0 ? (
+                <section aria-labelledby="notifications-previous">
+                  <h2
+                    className="mb-2 px-3 text-sm font-extrabold text-foreground"
+                    id="notifications-previous"
+                  >
+                    Anteriores
+                  </h2>
+                  <ul>{groups.previous.map(renderItem)}</ul>
+                </section>
+              ) : null}
+            </div>
+          )}
+        </div>
+        {hasAuthToken ? (
+          <InfiniteListLoader
+            hasNextPage={index.hasNextPage}
+            isFetching={index.isFetching && !index.isLoading}
+            isError={index.isError}
+            label="Carregando notificações"
+            onLoadMore={index.fetchNextPage}
+            onRetry={index.isFetchNextPageError ? index.fetchNextPage : index.refetch}
+          />
+        ) : null}
       </section>
     </PrivateTemplate>
   );
