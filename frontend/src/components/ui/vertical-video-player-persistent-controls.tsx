@@ -77,6 +77,18 @@ export const VerticalVideoPlayerPersistentControls = ({
     </div>
   );
 
+  if (layout === "progress") {
+    return (
+      <div
+        className="absolute inset-x-0 bottom-0 z-[2] px-4 text-primary-foreground"
+        data-lectum-video-player-controls="true"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))" }}
+      >
+        {progressSlider}
+      </div>
+    );
+  }
+
   if (layout === "media") {
     return (
       <div

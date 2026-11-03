@@ -10,7 +10,7 @@ export type VideoFit = "contain" | "cover";
 
 export type ControlsVariant = "native" | "minimal" | "persistent";
 export type FullscreenVariant = "default" | "content";
-export type PersistentControlsLayout = "stacked" | "media";
+export type PersistentControlsLayout = "stacked" | "media" | "progress";
 export type PersistentControlsVisibility = "auto" | "always";
 export type MutedControlVisibility = "default" | "when-hidden";
 

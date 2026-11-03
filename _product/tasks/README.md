@@ -772,6 +772,7 @@ ou cortesia manual.
 | 309 | [TASK-309 - Exclusao de conteudo e vigencia](TASK-309-account-content-and-subscription-end.md) | Done | 308 |
 | 310 | [TASK-310 - Aceite no cadastro e data](TASK-310-registration-legal-acceptance.md) | Done | 309 |
 | 311 | [TASK-311 - Preparacao da publicacao legal](TASK-311-legal-publication-readiness.md) | In progress | 310 |
+| 312 | [TASK-312 - Aviso sobre o selo verificado](TASK-312-verification-video-notification.md) | Done | 311 |
 
 ## Ordem operacional recomendada sem bloqueios
 

@@ -14,6 +14,7 @@ import { ContentVideoHost } from "@/components/community/content-video-host";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LegalAcceptanceRequest } from "@/components/legal/acceptance-request";
 import { canPromptLegalOnPath } from "@/components/legal/policy";
+import { useVerificationVideo } from "@/components/notifications/use-verification-video";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Logo, LogoIcon } from "@/components/ui/logo";
 import { PageShell } from "@/components/ui/page-shell";
@@ -95,7 +96,9 @@ const PrivateTemplateContent = ({
   const bottomNavigationRef = useRef<HTMLElement | null>(null);
 
   const { hidrate } = useAuth({ enableHidrate: hasToken });
-  const { hasUnread: hasUnreadNotifications } = useUnreadNotificationStatus(hasToken);
+  const { hasUnread } = useUnreadNotificationStatus(hasToken);
+  const { watched: verificationVideoWatched } = useVerificationVideo();
+  const hasUnreadNotifications = (hasToken && hasUnread) || !verificationVideoWatched;
 
   useEffect(() => {
     if (hidrate.data?.id) {

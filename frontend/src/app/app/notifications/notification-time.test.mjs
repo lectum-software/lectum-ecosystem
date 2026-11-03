@@ -68,3 +68,4 @@ test("a tela usa o módulo temporal sem redefinir as funções extraídas", () =
   assert.match(source, /useMemo\(\(\) => groupNotifications\(items\), \[items\]\)/);
   assert.equal(source.match(/getRelativeTime\(item.createdAt\)/g)?.length, 2);
 });
+import "../../../components/notifications/verification-video-policy.test.mjs";
