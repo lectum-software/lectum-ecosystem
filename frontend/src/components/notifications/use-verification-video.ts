@@ -46,6 +46,19 @@ export const useVerificationVideo = () => {
       return handleReq<{ watched: boolean }>(callEndpoint({ route, method: "POST" }));
     },
     retry: 2,
+    onMutate: async (ownerId) => {
+      const key = ["verification-video", VERIFICATION_VIDEO.id, ownerId];
+      await client.cancelQueries({ queryKey: key });
+      const previous = client.getQueryData<{ watched: boolean }>(key);
+      client.setQueryData(key, { watched: true });
+      return { previous };
+    },
+    onError: (_error, ownerId, context) => {
+      client.setQueryData(
+        ["verification-video", VERIFICATION_VIDEO.id, ownerId],
+        context?.previous ?? { watched: false },
+      );
+    },
     onSuccess: (data, ownerId) =>
       client.setQueryData(["verification-video", VERIFICATION_VIDEO.id, ownerId], data),
   });

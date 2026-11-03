@@ -1,8 +1,10 @@
 import { Maximize2, Minimize2, Pause, Play, Volume2, VolumeX } from "lucide-react";
-import type { KeyboardEventHandler, PointerEventHandler, Ref } from "react";
+import type { KeyboardEventHandler, PointerEventHandler, Ref, RefObject } from "react";
+import { useContentVideoProgress } from "../community/use-content-video-progress";
 import { formatVideoTime, type PersistentControlsLayout } from "./vertical-video-player-support";
 
 type VerticalVideoPlayerPersistentControlsProps = {
+  videoRef: RefObject<HTMLVideoElement | null>;
   currentTime: number;
   duration: number;
   hidden?: boolean;
@@ -24,6 +26,7 @@ type VerticalVideoPlayerPersistentControlsProps = {
 };
 
 export const VerticalVideoPlayerPersistentControls = ({
+  videoRef,
   currentTime,
   duration,
   hidden = false,
@@ -43,6 +46,12 @@ export const VerticalVideoPlayerPersistentControls = ({
   progressTrackRef,
   title,
 }: VerticalVideoPlayerPersistentControlsProps) => {
+  const progressFill = useContentVideoProgress(
+    videoRef,
+    layout === "progress" && !isPaused,
+    currentTime,
+    duration,
+  );
   const progressSlider = (
     <div
       aria-label={`Progresso do vídeo: ${title}`}
@@ -80,11 +89,31 @@ export const VerticalVideoPlayerPersistentControls = ({
   if (layout === "progress") {
     return (
       <div
-        className="absolute inset-x-0 bottom-0 z-[2] px-4 text-primary-foreground"
+        className="absolute inset-x-0 z-[3] h-7 w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-media-foreground"
         data-lectum-video-player-controls="true"
-        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))" }}
+        style={{ bottom: "env(safe-area-inset-bottom, 0px)", touchAction: "none" }}
+        aria-label={`Progresso do vídeo: ${title}`}
+        aria-valuemax={Math.round(duration)}
+        aria-valuemin={0}
+        aria-valuenow={Math.round(currentTime)}
+        role="slider"
+        tabIndex={0}
+        ref={progressTrackRef}
+        onKeyDown={onProgressKeyDown}
+        onPointerCancel={onProgressPointerEnd}
+        onPointerDown={onProgressPointerDown}
+        onPointerMove={onProgressPointerMove}
+        onPointerUp={onProgressPointerEnd}
       >
-        {progressSlider}
+        <div
+          className="absolute bottom-0 h-1 w-full overflow-hidden bg-media-foreground/35"
+          aria-hidden="true"
+        >
+          <span
+            className="block h-full w-full origin-left bg-media-foreground"
+            ref={progressFill}
+          />
+        </div>
       </div>
     );
   }

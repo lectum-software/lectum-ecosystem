@@ -1,12 +1,13 @@
 "use client";
 
-import { BadgeCheck, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Modal } from "@/components/ui/modal";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
 import { useVerificationVideo } from "./use-verification-video";
-import { hasWatchedVerificationVideo, VERIFICATION_VIDEO } from "./verification-video-policy";
+import { VERIFICATION_VIDEO } from "./verification-video-policy";
 
 export const VerificationVideoNotification = () => {
   const [open, setOpen] = useState(false);
@@ -15,14 +16,6 @@ export const VerificationVideoNotification = () => {
   const closeRef = useRef<HTMLButtonElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const { watched, markWatched } = useVerificationVideo();
-  const lastSaveAttempt = useRef(0);
-  const checkWatched = (video: HTMLVideoElement) => {
-    if (watched || document.visibilityState !== "visible") return;
-    if (!hasWatchedVerificationVideo(video.played, video.duration)) return;
-    if (Date.now() - lastSaveAttempt.current < 30_000) return;
-    lastSaveAttempt.current = Date.now();
-    markWatched();
-  };
 
   return (
     <>
@@ -31,11 +24,12 @@ export const VerificationVideoNotification = () => {
         onClick={() => {
           setFailed(false);
           setOpen(true);
+          markWatched();
         }}
         ref={triggerRef}
         type="button"
       >
-        <BadgeCheck aria-hidden="true" className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
+        <VerifiedBadgeIcon aria-hidden="true" className="mt-0.5 h-6 w-6 shrink-0" />
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-semibold leading-5">
             {VERIFICATION_VIDEO.title}
@@ -44,7 +38,7 @@ export const VerificationVideoNotification = () => {
         </span>
         {!watched ? (
           <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary">
-            <span className="sr-only">Vídeo ainda não assistido</span>
+            <span className="sr-only">Notificação não lida</span>
           </span>
         ) : null}
       </button>
@@ -80,8 +74,7 @@ export const VerificationVideoNotification = () => {
               disablePictureInPicture: true,
               disableRemotePlayback: true,
               onError: () => setFailed(true),
-              onTimeUpdate: (event) => checkWatched(event.currentTarget),
-              onEnded: (event) => checkWatched(event.currentTarget),
+              onEnded: () => setOpen(false),
             }}
           />
         ) : null}

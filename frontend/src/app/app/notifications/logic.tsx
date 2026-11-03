@@ -537,44 +537,45 @@ export const NotificationsLogic = () => {
           title="Notificações"
         />
 
-        <VerificationVideoNotification />
+        <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-sm">
+          <VerificationVideoNotification />
 
-        {!hasAuthToken ? null : index.isLoading ? (
-          <LoadingState className="py-10" />
-        ) : index.isError && !index.data ? (
-          <EmptyState
-            description="Não foi possível carregar suas notificações agora. Tente novamente em instantes."
-            icon={Bell}
-            title="Erro ao carregar"
-          />
-        ) : items.length === 0 ? null : (
-          <div className="grid gap-8 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-sm">
-            {groups.today.length > 0 ? (
-              <section aria-labelledby="notifications-today">
-                <h2
-                  className="mb-2 px-3 text-sm font-extrabold text-foreground"
-                  id="notifications-today"
-                >
-                  Hoje
-                </h2>
-                <ul>{groups.today.map(renderItem)}</ul>
-              </section>
-            ) : null}
+          {!hasAuthToken ? null : index.isLoading ? (
+            <LoadingState className="py-10" />
+          ) : index.isError && !index.data ? (
+            <EmptyState
+              description="Não foi possível carregar suas notificações agora. Tente novamente em instantes."
+              icon={Bell}
+              title="Erro ao carregar"
+            />
+          ) : items.length === 0 ? null : (
+            <div className="grid gap-8">
+              {groups.today.length > 0 ? (
+                <section aria-labelledby="notifications-today">
+                  <h2
+                    className="mb-2 px-3 text-sm font-extrabold text-foreground"
+                    id="notifications-today"
+                  >
+                    Hoje
+                  </h2>
+                  <ul>{groups.today.map(renderItem)}</ul>
+                </section>
+              ) : null}
 
-            {groups.previous.length > 0 ? (
-              <section aria-labelledby="notifications-previous">
-                <h2
-                  className="mb-2 px-3 text-sm font-extrabold text-foreground"
-                  id="notifications-previous"
-                >
-                  Anteriores
-                </h2>
-                <ul>{groups.previous.map(renderItem)}</ul>
-              </section>
-            ) : null}
-          </div>
-        )}
-
+              {groups.previous.length > 0 ? (
+                <section aria-labelledby="notifications-previous">
+                  <h2
+                    className="mb-2 px-3 text-sm font-extrabold text-foreground"
+                    id="notifications-previous"
+                  >
+                    Anteriores
+                  </h2>
+                  <ul>{groups.previous.map(renderItem)}</ul>
+                </section>
+              ) : null}
+            </div>
+          )}
+        </div>
         {hasAuthToken ? (
           <InfiniteListLoader
             hasNextPage={index.hasNextPage}
