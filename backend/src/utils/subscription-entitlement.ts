@@ -68,6 +68,7 @@ export const activeProfessionalCourtesyEntitlementWhere =
   });
 
 export const professionalRegistryApprovalWhere = (): Prisma.psychologist_profileWhereInput => ({
+  crp_status: { not: "rejeitado" },
   OR: [
     {
       crp_status: "aprovado",
@@ -104,6 +105,7 @@ export type ProfessionalVerificationProfile = {
 export const hasProfessionalRegistryApproval = (
   profile?: ProfessionalVerificationProfile | null,
 ) => {
+  if (profile?.crp_status === "rejeitado") return false;
   const subscriptions = profile?.subscriptions ?? [];
   const hasCrpStatusApproval = profile?.crp_status === "aprovado";
   const hasAutomaticEvidence = Boolean(profile?.cfp_verified_at);

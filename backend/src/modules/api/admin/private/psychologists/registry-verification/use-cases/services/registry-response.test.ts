@@ -149,7 +149,7 @@ test("resumo de rejeição não apaga evidência automática legada", () => {
   assert.equal(profile.cfp_verified_at, cfpVerifiedAt);
 });
 
-for (const crpStatus of ["pendente", "rejeitado"]) {
+for (const crpStatus of ["pendente"]) {
   test(`cortesia ativa mantém ativação manual com status cadastral ${crpStatus}`, () => {
     const profile = makeProfile({ crp_status: crpStatus });
     profile.subscriptions[0].source = "admin_grant";
@@ -173,6 +173,27 @@ test("histórico de aprovação não promove cadastro atualmente pendente", () =
   assert.equal(summary.approval_label, "Pendente");
 });
 
+test("historico preserva aprovacao antiga depois de doze tentativas posteriores", () => {
+  const approval = manualCheck(true);
+  const profile = makeProfile({
+    crp_status: "pendente",
+    registry_checks: [
+      ...Array.from({ length: 12 }, (_, index) => ({
+        ...manualCheck(false),
+        id: `unit-automatic-${index}`,
+        provider: "infosimples",
+      })),
+      approval,
+    ],
+  });
+  profile.subscriptions[0].source = "admin_grant";
+  const response = buildResponse(profile);
+  assert.equal(response.latest_attempts.length, 13);
+  assert.equal(response.latest_attempts.at(-1)?.id, approval.id);
+  assert.equal(response.summary.source, "admin_grant");
+  assert.equal(response.summary.status, "aprovado");
+});
+
 test("plano gratuito rejeitado continua sem ações de revisão manual", () => {
   const profile = makeProfile({ subscriptions: [] });
   const response = buildResponse(profile);
@@ -181,4 +202,22 @@ test("plano gratuito rejeitado continua sem ações de revisão manual", () => {
   assert.equal(response.summary.plan_type, "gratuito");
   assert.equal(response.actions.can_approve_manually, false);
   assert.equal(response.actions.can_reject_manually, false);
+});
+
+test("reprovacao explicita permanece mesmo com cortesia ativa", () => {
+  const profile = makeProfile();
+  profile.subscriptions[0].source = "admin_grant";
+  assert.equal(buildResponse(profile).summary.status, "rejeitado");
+});
+
+test("aprovacao persistida pela cortesia permanece sem assinatura vigente", () => {
+  const profile = makeProfile({
+    crp_status: "aprovado",
+    subscriptions: [],
+    registry_checks: [manualCheck(true)],
+  });
+  const response = buildResponse(profile);
+  assert.equal(response.summary.status, "aprovado");
+  assert.equal(response.summary.source, "manual_admin");
+  assert.equal(response.summary.plan_type, "gratuito");
 });

@@ -46,10 +46,7 @@ export const RegistryVerificationCard = ({ id }: { id: string }) => {
   const registry = query.data;
   if (!registry) return null;
 
-  const emptyAttemptsText =
-    registry.summary.plan_type === "cortesia" && registry.summary.source === "admin_grant"
-      ? "Aprovação manual via Cortesia."
-      : "Nenhuma tentativa automática ou decisão manual registrada.";
+  const emptyAttemptsText = "Nenhuma tentativa automática ou decisão manual registrada.";
 
   return (
     <CardShell className="p-5">
@@ -83,14 +80,19 @@ export const RegistryVerificationCard = ({ id }: { id: string }) => {
       <FiscalIdentityForm id={id} />
 
       <div className="mt-5">
-        <h3 className="text-sm font-bold text-foreground">Últimas tentativas</h3>
+        <h3 className="text-sm font-bold text-foreground">Histórico de verificações</h3>
+        {registry.summary.source === "admin_grant" ? (
+          <p className="mt-3 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+            Ativação manual por cortesia concedida pelo administrador.
+          </p>
+        ) : null}
         {registry.latest_attempts.length === 0 ? (
           <p className="mt-3 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
             {emptyAttemptsText}
           </p>
         ) : (
           <ul className="mt-3 space-y-3">
-            {registry.latest_attempts.slice(0, 4).map((attempt) => (
+            {registry.latest_attempts.map((attempt) => (
               <RegistryAttemptItem attempt={attempt} key={attempt.id} />
             ))}
           </ul>

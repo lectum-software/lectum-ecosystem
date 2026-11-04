@@ -311,7 +311,8 @@ const buildIntegrations = (
 ): AdminPsychologistIntegrationStatus[] => {
   const registryCheck = profile.registry_checks[0] ?? null;
   const hasSubscription = Boolean(subscription.id && subscription.status === STATUS_ACTIVE);
-  const hasManualActivation = hasSubscription && subscription.source === "admin_grant";
+  const hasManualActivation =
+    profile.crp_status !== "rejeitado" && hasSubscription && subscription.source === "admin_grant";
   const hasMercadoPago = Boolean(
     subscription.gateway_label === "Mercado Pago" ||
       subscription.payment_method?.gateway === "mercadopago",

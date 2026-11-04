@@ -4,6 +4,9 @@ import test from "node:test";
 
 const {
   getPaidSubscriptionNextPath,
+  getPsychologistPaidOnboardingRequirementPath,
+  getPsychologistRegistrationEntryPath,
+  getAfterPhoneVerificationPath,
   isPaidRegistryVerificationComplete,
   PSYCHOLOGIST_ONBOARDING_PATHS: paths,
 } = await import("./psychologist-onboarding.ts");
@@ -35,7 +38,7 @@ test("dados faltantes seguem endereco, WhatsApp e registro nesta ordem", () => {
     paths.cfp,
   );
 });
-test("aprovacao automatica ou manual dispensa nova consulta; cortesia sozinha nao", () => {
+test("aprovacao automatica, manual ou cortesia ativa dispensa nova consulta", () => {
   assert.equal(isPaidRegistryVerificationComplete({ cfp_verified_at: "2026-01-01" }), true);
   assert.equal(isPaidRegistryVerificationComplete({ crp_status: "aprovado" }), true);
   assert.equal(isPaidRegistryVerificationComplete({}), false);
@@ -45,7 +48,52 @@ test("aprovacao automatica ou manual dispensa nova consulta; cortesia sozinha na
       { ...subscription, source: "admin_grant" },
       false,
     ),
-    paths.cfp,
+    paths.completion,
+  );
+});
+
+test("cortesia ativa nao reabre verificacao no acesso normal ou apos WhatsApp", () => {
+  const granted = {
+    role: "psicologo",
+    psychologist_profile: {
+      whatsapp: "5511999999999",
+      crp_status: "pendente",
+      cfp_verified_at: null,
+      subscriptions: [{ ...subscription, source: "admin_grant" }],
+    },
+  };
+  assert.equal(getPsychologistPaidOnboardingRequirementPath(granted), null);
+  assert.equal(getPsychologistRegistrationEntryPath(granted, "/app"), "/app");
+  assert.equal(getAfterPhoneVerificationPath(granted), paths.profileSetup);
+});
+
+test("sem aprovacao persistida, assinatura antiga isolada nao comprova verificacao", () => {
+  for (const invalid of [
+    { ...subscription, source: "admin_grant", status: "inativa" },
+    { ...subscription, source: "admin_grant", current_period_end: "2000-01-01" },
+    subscription,
+  ])
+    assert.equal(isPaidRegistryVerificationComplete({}, invalid), false);
+});
+test("aprovacao da cortesia persiste apos vencimento e no novo upgrade", () => {
+  const expired = {
+    ...subscription,
+    source: "admin_grant",
+    status: "cancelada",
+    current_period_end: "2000-01-01",
+  };
+  assert.equal(isPaidRegistryVerificationComplete(user.psychologist_profile, expired), true);
+  assert.equal(isPaidRegistryVerificationComplete(user.psychologist_profile, null), true);
+  assert.equal(getPaidSubscriptionNextPath(user, expired, true), paths.plans);
+  assert.equal(getPaidSubscriptionNextPath(user, subscription, true), paths.completion);
+});
+test("reprovacao posterior prevalece sobre cortesia e evidencia automatica antiga", () => {
+  assert.equal(
+    isPaidRegistryVerificationComplete(
+      { crp_status: "rejeitado", cfp_verified_at: "2026-01-01" },
+      { ...subscription, source: "admin_grant" },
+    ),
+    false,
   );
 });
 test("assinatura pendente, expirada ou ausente nao libera beneficios", () => {

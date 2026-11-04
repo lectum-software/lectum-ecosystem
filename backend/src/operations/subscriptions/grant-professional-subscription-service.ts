@@ -2,7 +2,7 @@ import prisma from "@/infra/database/prisma";
 import { fiscalIdentityInputSchema } from "@/modules/billing/invoices/fiscal-identity";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";
-import { normalizeCrpRegistrationNumber } from "@/utils/professional-registry";
+import { normalizeCrpRegistrationNumber, parseStoredCrp } from "@/utils/professional-registry";
 
 const SOURCE_ADMIN_GRANT = "admin_grant";
 
@@ -314,7 +314,8 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
       cpf?: string | null;
       crp?: string | null;
       crp_registration_date?: Date;
-    } = {};
+      crp_status: string;
+    } = { crp_status: "aprovado" };
 
     if (args.registrationDate) {
       profileUpdateData.crp_registration_date = args.registrationDate;
@@ -370,6 +371,31 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
       },
       include: {
         plan: true,
+      },
+    });
+
+    const approvedProfile = await tx.psychologist_profile.findUniqueOrThrow({
+      where: { id: target.profileId },
+      select: { cpf: true, crp: true },
+    });
+    const registry = parseStoredCrp(approvedProfile.crp);
+    await tx.professional_registry_check.create({
+      data: {
+        psychologist_id: target.profileId,
+        provider: "manual_admin",
+        checked_at: now,
+        cpf: approvedProfile.cpf,
+        registro: registry.crp_number,
+        uf: registry.crp_region,
+        found: true,
+        raw: {
+          source: "manual_admin",
+          decision: "approved",
+          origin: "admin_grant",
+          subscription_id: subscription.id,
+          admin: { name: args.actor.trim() },
+          notes: "Aprovacao administrativa por cortesia, independente da validade do plano.",
+        },
       },
     });
 
