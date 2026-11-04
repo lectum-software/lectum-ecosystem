@@ -2,6 +2,7 @@
 
 import { ArrowLeft, CheckCircle2, Loader2, UserRound } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistWhatsappVerification } from "@/api/callers/psychologist-whatsapp-verification";
@@ -101,6 +102,7 @@ const SavedConfirmation = ({ nextHref, phone }: { nextHref: string; phone: strin
 );
 
 export const WhatsappVerificationLogic = () => {
+  const router = useRouter();
   const user = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
   const [savedPhone, setSavedPhone] = useState<string | null>(null);
@@ -120,6 +122,8 @@ export const WhatsappVerificationLogic = () => {
           setApiError(null);
           setSavedPhone(data.phone);
           toast.success("WhatsApp salvo com sucesso");
+          if (activeProfessionalSubscription)
+            router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.completion);
         },
         onError: (error) => setApiError(resolveApiError(error)),
       },

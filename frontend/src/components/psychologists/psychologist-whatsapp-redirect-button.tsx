@@ -5,8 +5,10 @@ import Image from "next/image";
 import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 import { useImportantActionTracking } from "@/api/callers/analytics";
 import { useDirectoryPsychologistContactClick } from "@/api/callers/directory";
+import { getApiErrorStatus } from "@/api/errors";
 import type { DisplayMode, ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
@@ -25,7 +27,6 @@ import {
 } from "@/utils/professional-name";
 
 export const WHATSAPP_REDIRECT_MIN_DELAY_MS = 900;
-const TRACKING_WAIT_LIMIT_MS = 1400;
 export const WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS = 2300;
 
 export type PsychologistWhatsAppIdentity = {
@@ -72,8 +73,6 @@ type PsychologistWhatsAppRedirectModalProps = {
 };
 
 type NavigatorWithStandalone = Navigator & { standalone?: boolean };
-
-const delay = (ms: number) => new Promise<null>((resolve) => window.setTimeout(resolve, ms, null));
 
 const getDisplayMode = (): DisplayMode => {
   if (typeof window === "undefined") return "unknown";
@@ -387,7 +386,6 @@ export const PsychologistWhatsAppRedirectButton = ({
     setRedirectUrl(fallbackUrl);
     setManualFallbackVisible(false);
     setIsTransitionOpen(true);
-    setTimer(() => setManualFallbackVisible(true), WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS);
 
     const startedAt = performance.now();
     const analyticsIdentity = getOrCreateAnalyticsIdentity();
@@ -412,13 +410,21 @@ export const PsychologistWhatsAppRedirectButton = ({
         });
     }
 
-    const trackedUrlPromise = tracking
-      .mutateAsync()
-      .then((data) => preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url, psychologist))
-      .catch(() => fallbackUrl);
-
-    const nextUrl =
-      (await Promise.race([trackedUrlPromise, delay(TRACKING_WAIT_LIMIT_MS)])) ?? fallbackUrl;
+    let nextUrl: string;
+    try {
+      const data = await tracking.mutateAsync();
+      nextUrl = preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url, psychologist);
+    } catch (error) {
+      setIsTransitionOpen(false);
+      const status = getApiErrorStatus(error);
+      toast.error(
+        status === 403 || status === 404
+          ? "Este profissional não está disponível para contato no momento."
+          : "Não foi possível verificar a disponibilidade. Tente novamente.",
+      );
+      return;
+    }
+    setTimer(() => setManualFallbackVisible(true), WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS);
 
     setRedirectUrl(nextUrl);
 

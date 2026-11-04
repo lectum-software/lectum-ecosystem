@@ -16,7 +16,9 @@ test("opening acknowledges the notice independently of playback", () => {
     new URL("./verification-video-notification.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(source, /setOpen\(true\);\s+markWatched\(\);/);
+  assert.match(source, /flushSync\(\(\) => setOpen\(true\)\)/);
+  assert.match(source, /markWatched\(\)/);
+  assert.match(source, /video\.play\(\)/);
   assert.doesNotMatch(source, /checkWatched|onTimeUpdate/);
   assert.match(source, /onEnded: \(\) => setOpen\(false\)/);
 });

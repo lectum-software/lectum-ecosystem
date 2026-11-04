@@ -1,16 +1,20 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Plus } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import keys from "@/api/cache/keys";
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
+import { getPsychologistBillingCurrent } from "@/api/req/psychologist-billing";
 import { WhatsappWeekPrompt } from "@/components/analytics/whatsapp-week-prompt";
 import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
 import { ContentVideoHost } from "@/components/community/content-video-host";
+import { FollowBeforePublishDialog } from "@/components/community/follow-before-publish";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LegalAcceptanceRequest } from "@/components/legal/acceptance-request";
 import { canPromptLegalOnPath } from "@/components/legal/policy";
@@ -30,7 +34,11 @@ import { buildAuthRouteWithRedirect } from "@/utils/auth-redirect";
 import { COMMUNITY_CREATE_POST_HREF } from "@/utils/community";
 import { markCommunityPublishTipSeen } from "@/utils/community-publish-tip";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
-import { getPsychologistPaidOnboardingRequirementPath } from "@/utils/psychologist-onboarding";
+import {
+  getPaidSubscriptionNextPath,
+  getPsychologistPaidOnboardingRequirementPath,
+  PSYCHOLOGIST_ONBOARDING_PATHS,
+} from "@/utils/psychologist-onboarding";
 
 import {
   canStayDuringPaidOnboarding,
@@ -107,6 +115,16 @@ const PrivateTemplateContent = ({
   }, [dispatch, hidrate.data]);
 
   const sessionUser = hasToken && !hidrate.isError ? (hidrate.data ?? storedUser) : null;
+  const profileRequirement = getPsychologistPaidOnboardingRequirementPath(sessionUser);
+  const addressCheck = useQuery({
+    queryKey: keys.psychologistBilling.current(),
+    queryFn: getPsychologistBillingCurrent,
+    enabled: Boolean(
+      hasToken && profileRequirement === PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress,
+    ),
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
   const shouldShowNavigation = showNavigation ?? showHeader;
   const normalizedPathname = normalizePathname(pathname);
@@ -192,12 +210,30 @@ const PrivateTemplateContent = ({
     if (!hasToken || isSessionLoading || shouldShowSessionError) return;
     if (sessionUser?.need_reset) return;
 
-    const requiredPath = getPsychologistPaidOnboardingRequirementPath(sessionUser);
+    let requiredPath: string | null = profileRequirement;
+    if (requiredPath === PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress) {
+      if (addressCheck.isPending || addressCheck.isFetching) return;
+      if (addressCheck.data?.billing_address_complete) {
+        const next = getPaidSubscriptionNextPath(sessionUser, addressCheck.data.current, true);
+        requiredPath = next === PSYCHOLOGIST_ONBOARDING_PATHS.completion ? null : next;
+      }
+    }
 
     if (!requiredPath || canStayDuringPaidOnboarding(normalizedPathname, requiredPath)) return;
 
     router.replace(requiredPath);
-  }, [hasToken, isSessionLoading, normalizedPathname, router, sessionUser, shouldShowSessionError]);
+  }, [
+    hasToken,
+    isSessionLoading,
+    normalizedPathname,
+    router,
+    sessionUser,
+    shouldShowSessionError,
+    profileRequirement,
+    addressCheck.isPending,
+    addressCheck.isFetching,
+    addressCheck.data,
+  ]);
 
   useEffect(() => {
     if (!shouldRedirectToNeedReset) return;
@@ -572,6 +608,7 @@ const PrivateTemplateContent = ({
           onCloseComplete={() => setCreatePostModalOpen(false)}
         />
       ) : null}
+      <FollowBeforePublishDialog />
       {sessionUser?.id && !sessionUser.need_reset && canPromptLegalOnPath(normalizedPathname) ? (
         <LegalAcceptanceRequest key={sessionUser.id} userId={sessionUser.id} />
       ) : null}

@@ -18,6 +18,7 @@ export default async (data: ICurrentDTO) => {
     ...msg("show", {}),
     data: {
       current,
+      billing_address_complete: await repository.hasBillingAddress(data.auth.id!),
       capabilities: { device_session_id: true, device_session_id_dotted: true },
     },
   };

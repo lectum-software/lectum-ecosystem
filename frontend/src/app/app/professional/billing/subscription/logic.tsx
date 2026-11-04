@@ -55,7 +55,7 @@ const professionalBenefitGroups: BenefitGroup[] = [
     title: "Mais credibilidade",
     items: [
       "Crie seu perfil profissional com selo de verificado",
-      "Receba depoimentos da comunidade",
+      "Receba avaliações da comunidade",
     ],
   },
   {
@@ -122,11 +122,13 @@ export const ProfessionalBillingSubscriptionView = ({
   isError,
   isLoading,
   subscription,
+  paymentHistory,
 }: {
   error?: unknown;
   isError: boolean;
   isLoading: boolean;
   subscription: ProfessionalSubscription | null;
+  paymentHistory?: import("react").ReactNode;
 }) => {
   const isCourtesy =
     subscription?.source === "admin_grant" &&
@@ -282,6 +284,7 @@ export const ProfessionalBillingSubscriptionView = ({
             )}
           </div>
         ) : null}
+        {paymentHistory}
       </section>
 
       {shouldShowUpgradeCta ? (

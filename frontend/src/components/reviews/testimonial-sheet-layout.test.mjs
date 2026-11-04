@@ -123,9 +123,9 @@ test("Chrome: actual action bar and directory sheet wrap composer text within mo
               await page.addScriptTag({ content: bundle.outputFiles[0].text });
               if (origin === "directory")
                 await page
-                  .getByRole("button", { name: "Abrir depoimentos de Profissional Exemplo" })
+                  .getByRole("button", { name: "Abrir avaliações de Profissional Exemplo" })
                   .click();
-              await page.getByRole("button", { name: "Deixar depoimento", exact: true }).click();
+              await page.getByRole("button", { name: "Deixar avaliação", exact: true }).click();
               const question = page.getByText(
                 "Como foi sua experiência com as respostas e os conteúdos deste psicólogo?",
                 { exact: true },

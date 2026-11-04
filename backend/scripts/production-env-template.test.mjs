@@ -140,6 +140,9 @@ test("todas as envs canonicas estao cobertas ou excluidas com justificativa expl
     "UPLOAD_LIMIT_PSYCHOLOGIST_VIDEO_MULTIPART_CHUNK_MB",
     // Comprador sandbox nunca pertence a configuracao de producao.
     "MERCADO_PAGO_SANDBOX_PAYER_EMAIL",
+    // SendNF test permanece exclusivamente local.
+    "SENDNF_TEST_ENABLED",
+    "SENDNF_TEST_ISSUANCE_ENABLED",
     // Reset exclusivamente local, proibido em ambiente publicado.
     "LECTUM_CONFIRM_DB_RESET",
     "LECTUM_RESET_R2_PREFIX",

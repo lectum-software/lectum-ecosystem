@@ -8,7 +8,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 
 const premiumReviewBenefits = [
   "Receba avaliações de pacientes",
-  "Exiba depoimentos no seu perfil",
+  "Exiba avaliações no seu perfil",
   "Fortaleça sua reputação profissional",
   "Aumente sua credibilidade na plataforma",
 ];
@@ -29,9 +29,9 @@ export const PremiumReviewsState = () => (
         Desbloqueie avaliações de pacientes
       </h2>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-muted md:text-base md:leading-7">
-        Ao fazer upgrade para o Plano Profissional, seus pacientes poderão registrar avaliações e
-        depoimentos sobre seus atendimentos. As avaliações recebidas aparecerão aqui e ajudarão a
-        fortalecer sua credibilidade na Lectum.
+        Ao fazer upgrade para o Plano Profissional, seus pacientes poderão registrar avaliações
+        sobre seus atendimentos. As avaliações recebidas aparecerão aqui e ajudarão a fortalecer sua
+        credibilidade na Lectum.
       </p>
     </div>
 
@@ -81,7 +81,7 @@ export const ReviewsLinkCard = ({ link, locked }: { link: string; locked?: boole
             Link da minha página de avaliações
           </h2>
           <p className="mt-1 text-sm leading-5 text-muted">
-            Compartilhe com pacientes e fortaleça sua autoridade com depoimentos reais.
+            Compartilhe com pacientes e fortaleça sua autoridade com avaliações reais.
           </p>
         </div>
       </div>

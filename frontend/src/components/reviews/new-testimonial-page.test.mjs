@@ -119,8 +119,8 @@ test("video reply invitations remain outside media player markup", () => {
 test("active deletion and confirmation labels use depoimento", () => {
   const deletion = source("./delete-review-button.tsx");
   const success = source("../../app/app/reviews/success/logic.tsx");
-  assert.match(deletion, /Excluir meu depoimento/);
-  assert.match(success, /Depoimento publicado!/);
-  assert.doesNotMatch(deletion, /Avalia|avalia/);
-  assert.doesNotMatch(success, /AVALIAÇÃO|Avaliação|avaliado/);
+  assert.match(deletion, /Excluir minha avaliação/);
+  assert.match(success, /Avaliação publicada!/);
+  assert.doesNotMatch(deletion, /Depoimento|depoimento/);
+  assert.doesNotMatch(success, /DEPOIMENTO|Depoimento|depoimento/);
 });

@@ -17,6 +17,13 @@ export type BillingPaymentHistoryItem = {
   occurred_at: Date | null;
   gateway: string;
   external_id: string;
+  invoice?: {
+    id: string;
+    status: string;
+    number: string | null;
+    mode: "test" | "live";
+    downloadable: boolean;
+  };
 };
 
 export interface ISubscriptionRepository {

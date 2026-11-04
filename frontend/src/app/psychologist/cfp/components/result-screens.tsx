@@ -13,14 +13,9 @@ import type { CfpSearchResponse } from "@/api/generator/types";
 import { formatCpf } from "@/components/controllers/utils";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import {
-  cfpErrorTitle,
-  nextStepHref,
-  type ResolvedApiError,
-  shouldShowCfpSupportGuidance,
-  supportLinkProps,
-} from "../modules/support";
-import { CfpHero, PageFrame, PremiumPanel, SupportGuidance } from "./cfp-layout";
+import { nextStepHref, type ResolvedApiError, supportLinkProps } from "../modules/support";
+import { CfpErrorFeedback } from "./cfp-error-feedback";
+import { CfpHero, PageFrame, PremiumPanel } from "./cfp-layout";
 import { ResultCard } from "./result-card";
 
 export { ResultCard, ResultField } from "./result-card";
@@ -98,13 +93,13 @@ export const AlreadyVerifiedScreen = ({
       <div className="mt-8 rounded-[24px] border border-success/20 bg-success/10 px-5 py-5 text-center text-success">
         <CheckCircle2 className="mx-auto h-8 w-8" aria-hidden="true" />
         <p className="mt-3 text-sm font-semibold">
-          Próximo passo: configurar seu perfil profissional para aparecer na Lectum.
+          Seu registro está confirmado. Continue para conferir os benefícios da assinatura.
         </p>
       </div>
 
       <Button asChild className="mt-7 h-14 w-full rounded-full text-base">
         <Link href={nextStepHref}>
-          Configurar perfil
+          Continuar
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </Button>
@@ -158,14 +153,7 @@ export const ResultsScreen = ({
           </InlineAlert>
         ) : null}
 
-        {apiError ? (
-          <InlineAlert className="mt-5" title={cfpErrorTitle} variant="error">
-            <div className="grid gap-3">
-              <p>{apiError.message}</p>
-              {shouldShowCfpSupportGuidance(apiError) ? <SupportGuidance /> : null}
-            </div>
-          </InlineAlert>
-        ) : null}
+        <CfpErrorFeedback className="mt-5" error={apiError} />
 
         <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
           <Button

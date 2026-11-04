@@ -773,6 +773,7 @@ ou cortesia manual.
 | 310 | [TASK-310 - Aceite no cadastro e data](TASK-310-registration-legal-acceptance.md) | Done | 309 |
 | 311 | [TASK-311 - Preparacao da publicacao legal](TASK-311-legal-publication-readiness.md) | In progress | 310 |
 | 312 | [TASK-312 - Aviso sobre o selo verificado](TASK-312-verification-video-notification.md) | Done | 311 |
+| 313 | [TASK-313 - Contato, notificacoes e publicacao](TASK-313-community-interaction-refinements.md) | In progress | 312 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -2819,3 +2820,4 @@ Check global frontend segue bloqueado pela formatacao preexistente de
 mentor-author-ranking.test.mjs; lint e Biome dos arquivos alterados aprovados.
 
 Refinamento WhatsApp aprovado em 11/10 (ADR-0599): ordem votos, comentario, WhatsApp, salvar, compartilhar substitui a posicao anterior depois de Compartilhar. Desenho de 16px com alvo de toque preservado. Implementado; check frontend completo e build aprovados (.tmp/oct11-whatsapp-position-check.log e .tmp/oct11-whatsapp-position-build.log). Visual do refinamento pendente; browser automatizado indisponivel. Sem commit/push/deploy deste ajuste.
+Em consolidacao para publicacao autorizada: [TASK-313 - Contato, notificacoes e publicacao](TASK-313-community-interaction-refinements.md), junto das alteracoes locais de SendNF e upgrade. SEO de outro chat excluido. Migracao e ledger aprovados em PostgreSQL local isolado; gates completos e rollout ainda pendentes.

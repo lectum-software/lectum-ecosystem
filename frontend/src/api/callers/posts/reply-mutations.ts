@@ -22,6 +22,8 @@ import type {
   UpdatePostReplyPayload,
 } from "@/api/generator/types/posts";
 import * as api from "@/api/req/posts";
+import { ensurePublicationFollowing } from "@/components/community/follow-before-publish";
+import { useAppSelector } from "@/hooks/redux";
 import {
   type MediaPreparationPurpose,
   type MediaUploadProgress,
@@ -92,11 +94,20 @@ export const useCreatePostReply = (callbacks?: {
   onError?: (error: unknown) => void;
 }) => {
   const queryClient = useQueryClient();
+  const role = useAppSelector((state) => state.user?.role);
+  const prepare = async (id: string) => {
+    if (role !== "psicologo") return;
+    const detail = await api.getPostDetail(id);
+    await ensurePublicationFollowing(detail.post.community.slug, true);
+    void queryClient.invalidateQueries({ queryKey: keys.community.root() });
+  };
 
-  return useMutation({
+  const mutation = useMutation({
     mutationKey: ["posts", "create-reply"],
-    mutationFn: ({ id, body }: { id: string; body: CreatePostReplyPayload }) =>
-      api.createPostReply(id, body),
+    mutationFn: async ({ id, body }: { id: string; body: CreatePostReplyPayload }) => {
+      await prepare(id);
+      return api.createPostReply(id, body);
+    },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: ["posts", variables.id, "replies"] });
@@ -107,6 +118,7 @@ export const useCreatePostReply = (callbacks?: {
     },
     onError: callbacks?.onError,
   });
+  return { ...mutation, prepare };
 };
 
 export const useUploadPostReplyMedia = (callbacks?: { onError?: (error: unknown) => void }) => {

@@ -1,6 +1,7 @@
 import { prisma } from "@/external/prisma/client";
 import { captureOperationalError, flushSentry } from "@/infra/observability/sentry";
 import { startBillingDunningScheduler, stopBillingDunningScheduler } from "@/main/billing/dunning";
+import { startInvoiceScheduler, stopInvoiceScheduler } from "@/main/billing/invoices";
 import {
   startNotificationCampaignScheduler,
   stopNotificationCampaignScheduler,
@@ -23,6 +24,7 @@ const server = app.listen(env.PORT, () => {
   startNotificationDigestScheduler();
   startNotificationCampaignScheduler();
   startBillingDunningScheduler();
+  startInvoiceScheduler();
   startAccountMediaCleanup();
 });
 
@@ -35,6 +37,7 @@ const shutdown = async () => {
   stopNotificationCampaignScheduler();
   stopNotificationDigestScheduler();
   stopBillingDunningScheduler();
+  stopInvoiceScheduler();
   stopAccountMediaCleanup();
   soc?.disconnectSockets(true);
 

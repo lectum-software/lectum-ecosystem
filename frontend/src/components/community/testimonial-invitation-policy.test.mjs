@@ -80,7 +80,7 @@ test("reply action retains server eligibility and passes original owner through 
   assert.match(feed, /profilePublicationMode && contributionType === "reply"/);
   assert.match(feed, /renderReplyTestimonialSlot\(post, primaryReply, footerExtra\)/);
   const menu = read("../../app/app/profile/logic.tsx");
-  assert.equal((menu.match(/label: "Meus Depoimentos"/g) || []).length, 2);
+  assert.equal((menu.match(/label: "Minhas Avaliações"/g) || []).length, 2);
 });
 
 test("original post toolbars never receive the highlighted reply invitation", () => {
@@ -151,8 +151,8 @@ test("inline invitation keeps a 44px target and mobile icon-only presentation", 
   const source = read("../reviews/testimonial-invitation-action.tsx");
   assert.match(source, /min-h-\[44px\] min-w-\[44px\]/);
   assert.match(source, /inline && "max-sm:sr-only"/);
-  assert.match(source, /inline \? "Depoimento" : "Deixar depoimento"/);
-  assert.match(source, /aria-label="Deixar depoimento"/);
+  assert.match(source, /inline \? "Avaliação" : "Deixar avaliação"/);
+  assert.match(source, /aria-label="Deixar avaliação"/);
 });
 
 test("directory mobile and desktop retain TestimonialsButton with the shared ReviewsIcon", () => {

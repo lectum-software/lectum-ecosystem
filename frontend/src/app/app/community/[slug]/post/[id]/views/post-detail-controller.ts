@@ -450,6 +450,7 @@ export const usePostDetailController = ({
     }
 
     const createdReply = await submitReplyWithOptionalMedia({
+      beforeUpload: () => createReplyMutation.prepare(post.id),
       createReply: createReplyMutation.mutateAsync,
       mediaFile,
       parentReplyId,

@@ -15,37 +15,22 @@ export const observeVideoContact = (
   if (progress.revealed) return () => {};
   let visible = false;
   let lastAt = performance.now();
-  let lastPosition = video.currentTime;
   let wasEligible = false;
   let disposed = false;
-  const eligible = () =>
-    visible &&
-    !video.paused &&
-    !video.ended &&
-    !video.seeking &&
-    video.readyState >= 2 &&
-    documentHasUserAttention() &&
-    !isVideoBlockedByModal(video);
+  const eligible = () => visible && documentHasUserAttention() && !isVideoBlockedByModal(video);
   const resetSample = () => {
     lastAt = performance.now();
-    lastPosition = video.currentTime;
     wasEligible = eligible();
   };
-  // Count observed playback, not time since mounting or jumps along the seek bar.
+  // The contact button, not playback progress, owns the attention timer.
   const sample = () => {
     if (disposed) return;
     const now = performance.now();
-    const position = video.currentTime;
     const active = eligible();
-    if (active && wasEligible && position > lastPosition) {
-      progress.watchedMs += Math.min(
-        Math.max(0, now - lastAt),
-        ((position - lastPosition) / Math.max(0.1, Math.abs(video.playbackRate))) * 1000,
-        250,
-      );
+    if (active && wasEligible) {
+      progress.watchedMs += Math.min(Math.max(0, now - lastAt), 250);
     }
     lastAt = now;
-    lastPosition = position;
     wasEligible = active;
     if (progress.watchedMs >= REVEAL_AFTER_MS) {
       progress.revealed = true;
@@ -75,7 +60,10 @@ export const observeVideoContact = (
   document.addEventListener("visibilitychange", resetSample);
   window.addEventListener("blur", resetSample);
   window.addEventListener("focus", resetSample);
-  observer.observe(video);
+  const contact = video
+    .closest("[data-lectum-video-player-root]")
+    ?.querySelector("[data-community-video-contact]");
+  if (contact) observer.observe(contact);
   return cleanup;
 };
 

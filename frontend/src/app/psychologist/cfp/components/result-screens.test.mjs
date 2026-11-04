@@ -6,6 +6,39 @@ import { renderToStaticMarkup } from "react-dom/server";
 import "../../../../../scripts/register-source-modules.mjs";
 
 const { ResultCard } = await import("./result-card.tsx");
+const { CfpErrorFeedback } = await import("./cfp-error-feedback.tsx");
+const { resolveApiError, cfpProviderUnavailableMessage, supportHref } = await import(
+  "../modules/support.ts"
+);
+
+test("shared verification errors preserve provider message and WhatsApp support", () => {
+  for (const code of [
+    "cfp_provider_unavailable",
+    "cfp_provider_error",
+    "cfp_provider_rate_limited",
+  ]) {
+    const error = resolveApiError({ data: { code, status: 503 } });
+    const html = renderToStaticMarkup(createElement(CfpErrorFeedback, { error }));
+    assert.ok(html.includes(cfpProviderUnavailableMessage));
+    assert.ok(html.includes(supportHref));
+    assert.match(html, /Fale com o suporte pelo WhatsApp/);
+    assert.match(html, /rel="noopener noreferrer"/);
+    assert.doesNotMatch(html, /Configurar perfil|Valida\u00e7\u00e3o conclu\u00edda/);
+  }
+  assert.equal(renderToStaticMarkup(createElement(CfpErrorFeedback, { error: null })), "");
+});
+
+test("upgrade verification route shares the search and confirmation error component", () => {
+  const route = readFileSync(
+    new URL("../../../app/profissional/cfp/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const logic = readFileSync(new URL("../logic.tsx", import.meta.url), "utf8");
+  const results = readFileSync(new URL("./result-screens.tsx", import.meta.url), "utf8");
+  assert.match(route, /<PsychologistCfpLogic/);
+  assert.match(logic, /<CfpErrorFeedback error=\{apiError\}/);
+  assert.match(results, /<CfpErrorFeedback className="mt-5" error=\{apiError\}/);
+});
 // Props de apresentação sem identidade/registro; não simula busca ou aprovação CFP.
 const result = {
   key: "presentation-only",

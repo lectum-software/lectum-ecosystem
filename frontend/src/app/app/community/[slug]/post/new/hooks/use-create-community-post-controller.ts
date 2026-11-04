@@ -18,6 +18,7 @@ import {
   useUploadCommunityPostMedia,
 } from "@/api/callers/community";
 import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
+import { ensurePublicationFollowing } from "@/components/community/follow-before-publish";
 import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { useEditorKeyboardOffset } from "@/hooks/use-editor-keyboard-offset";
@@ -549,6 +550,15 @@ export const useCreateCommunityPostController = ({
       if (generation !== selectedMediaPreviewGenerationRef.current) return;
       if (isPreparingVideo || preparingVideoRef.current || isSubmitting) return;
       let stagedStreamVideoReference: string | null = null;
+
+      try {
+        await ensurePublicationFollowing(values.community_slug);
+      } catch {
+        toast.error(
+          "Publicação não enviada. Seu conteúdo foi mantido; tente novamente quando quiser.",
+        );
+        return;
+      }
 
       try {
         const mediaFiles = mediaPermission.canAttach ? selectedMediaItems : [];

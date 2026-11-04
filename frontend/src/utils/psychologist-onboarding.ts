@@ -8,6 +8,7 @@ export const PSYCHOLOGIST_ONBOARDING_PATHS = {
   phone: "/app/profissional/whatsapp/verificar",
   billingAddress: "/app/profissional/assinatura/endereco",
   cfp: "/app/profissional/cfp",
+  completion: "/app/profissional/assinatura/concluir",
   profileSetup: "/app/profissional/perfil/configurar",
 } as const;
 
@@ -38,13 +39,7 @@ export const isAdministrativeCourtesySubscription = (subscription: SubscriptionL
 
 export const isPaidRegistryVerificationComplete = (
   profile: Pick<PsychologistProfileLike, "cfp_verified_at" | "crp_status"> | null | undefined,
-  subscription: SubscriptionLike,
-) =>
-  Boolean(
-    profile?.crp_status === "aprovado" ||
-      profile?.cfp_verified_at ||
-      subscription?.source === "admin_grant",
-  );
+) => Boolean(profile?.crp_status === "aprovado" || profile?.cfp_verified_at);
 
 export const getActiveProfessionalSubscription = (
   profile: Pick<PsychologistProfileLike, "subscriptions"> | null | undefined,
@@ -62,11 +57,7 @@ export const getAfterPhoneVerificationPath = (
   const profile = data.psychologist_profile;
   const activeProfessional = getActiveProfessionalSubscription(profile);
 
-  if (
-    profile &&
-    activeProfessional &&
-    !isPaidRegistryVerificationComplete(profile, activeProfessional)
-  ) {
+  if (profile && activeProfessional && !isPaidRegistryVerificationComplete(profile)) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 
@@ -74,6 +65,27 @@ export const getAfterPhoneVerificationPath = (
 };
 
 export const getAfterPlanSelectionPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.phone;
+
+// The billing endpoint is authoritative; a public profile address is not a billing address.
+export const getPaidSubscriptionNextPath = (
+  data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
+  subscription: ProfessionalSubscription | null | undefined,
+  billingAddressComplete: boolean | undefined,
+) => {
+  if (data?.role !== "psicologo" || !isProfessionalSubscriptionActive(subscription)) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.plans;
+  }
+  const end = subscription?.current_period_end;
+  if (end && !(new Date(end).getTime() > Date.now())) return PSYCHOLOGIST_ONBOARDING_PATHS.plans;
+  if (!isAdministrativeCourtesySubscription(subscription) && billingAddressComplete !== true) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress;
+  }
+  if (!data.psychologist_profile?.whatsapp?.trim()) return PSYCHOLOGIST_ONBOARDING_PATHS.phone;
+  if (!isPaidRegistryVerificationComplete(data.psychologist_profile)) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
+  }
+  return PSYCHOLOGIST_ONBOARDING_PATHS.completion;
+};
 
 const hasBillingAddress = (profile: PsychologistProfileLike) =>
   Boolean(
@@ -103,7 +115,7 @@ export const getPsychologistPaidOnboardingRequirementPath = (
     return PSYCHOLOGIST_ONBOARDING_PATHS.phone;
   }
 
-  if (!isPaidRegistryVerificationComplete(profile, activeProfessional)) {
+  if (!isPaidRegistryVerificationComplete(profile)) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 

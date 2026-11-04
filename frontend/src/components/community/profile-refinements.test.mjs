@@ -180,7 +180,7 @@ test("community avatars have no decorative frame and keep their image size", () 
   assert.match(css, /\.community:focus-visible/);
 });
 
-test("direct profile hide action appears only for the professional owner and only on replies", () => {
+test("profile reply owner menu appears only for the professional owner", () => {
   const post = {
     id: "p",
     contribution_type: "reply",
@@ -208,7 +208,8 @@ test("direct profile hide action appears only for the professional owner and onl
         ),
       ),
     );
-    assert.equal(html.includes('aria-label="Ocultar do perfil público"'), visible);
+    assert.equal(html.includes('aria-label="Mais ações"'), visible);
+    assert.equal(html.includes('aria-label="Ocultar do perfil público"'), false);
     client.clear();
   }
 });

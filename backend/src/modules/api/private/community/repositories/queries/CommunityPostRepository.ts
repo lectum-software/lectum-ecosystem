@@ -1,7 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { canAssociateVideoAssetReferences } from "@/modules/video-assets/association-guard";
-import { ensureCommunityMembership } from "@/utils/community-membership";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
@@ -151,11 +150,11 @@ export class CommunityPostRepository extends CommunityRepositoryContext {
       )
         return null;
 
-      await ensureCommunityMembership({
-        client: transaction,
-        communityId: community.id,
-        userId: data.auth.id!,
+      const member = await transaction.community_member.findFirst({
+        where: { community_id: community.id, user_id: data.auth.id!, deleted: false },
+        select: { id: true },
       });
+      if (!member) return null;
 
       return transaction.community_post.create({
         data: {

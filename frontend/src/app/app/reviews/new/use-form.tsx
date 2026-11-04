@@ -10,10 +10,10 @@ export const reviewFormSchema = z.object({
       message: "Selecione uma nota para o profissional.",
     }),
   comment: z
-    .string({ error: "Escreva um depoimento sobre sua experiência." })
-    .max(1000, "Use até 1000 caracteres no depoimento.")
+    .string({ error: "Escreva uma avaliação sobre sua experiência." })
+    .max(1000, "Use até 1000 caracteres na avaliação.")
     .refine((value) => value.trim().length > 0, {
-      message: "Escreva um depoimento sobre sua experiência.",
+      message: "Escreva uma avaliação sobre sua experiência.",
     }),
 });
 export type ReviewFormValues = z.infer<typeof reviewFormSchema>;
@@ -25,7 +25,7 @@ export const useReviewForm = (psychologistId: string) => {
     {
       name: "comment",
       field: "textarea",
-      label: "Seu depoimento",
+      label: "Sua avaliação",
       placeholder:
         "Conte como você se sentiu com este psicólogo, se ele foi respeitoso e acolhedor.",
       inputClassName: "min-h-32 resize-none",

@@ -124,14 +124,14 @@ test("perfil vazio convida em um unico bloco e nao confunde loading ou erro com 
   assert.ok(emptyStateClass);
   assert.doesNotMatch(emptyStateClass, /min-h-\[/);
   assert.match(empty, /Seja a primeira pessoa/);
-  assert.equal((empty.match(/aria-label="Deixar depoimento"/g) ?? []).length, 1);
+  assert.equal((empty.match(/aria-label="Deixar avaliação"/g) ?? []).length, 1);
   assert.doesNotMatch(render({ isLoading: true }), /data-testimonial-empty/);
   assert.doesNotMatch(render({ isError: true }), /data-testimonial-empty/);
-  assert.doesNotMatch(render({ readOnly: true }), /aria-label="Deixar depoimento"|Seja a primeira/);
+  assert.doesNotMatch(render({ readOnly: true }), /aria-label="Deixar avaliação"|Seja a primeira/);
   const populated = render({ reviews: [base], summary: { rating_count: 1 } });
   assert.match(populated, /overflow-hidden rounded-\[26px\][^"]*" data-testimonial-list/);
   assert.doesNotMatch(populated, /data-testimonial-empty/);
-  assert.equal((populated.match(/aria-label="Deixar depoimento"/g) ?? []).length, 1);
+  assert.equal((populated.match(/aria-label="Deixar avaliação"/g) ?? []).length, 1);
 });
 
 test("listas e vazios dos dois perfis usam os cantos dos blocos do perfil", () => {
@@ -213,8 +213,8 @@ test("convite do perfil usa azul compacto e o da modal cinza transparente sem mu
   assert.match(action, /size-4 shrink-0/);
   assert.match(action, /inline && "max-sm:sr-only"/);
   assert.doesNotMatch(action, /max-width:360px/);
-  assert.match(action, /aria-label="Deixar depoimento"/);
-  assert.match(action, /title="Deixar depoimento"/);
+  assert.match(action, /aria-label="Deixar avaliação"/);
+  assert.match(action, /title="Deixar avaliação"/);
   assert.match(action, /user\?\.role !== "paciente" \|\| !eligibility.data\?\.eligible/);
 });
 
@@ -398,9 +398,9 @@ test("nome do profissional na modal usa o mesmo peso do feed sem reforcar cargo 
 test("depoimentos do paciente preservam reviews compartilhados, destinatario, acoes e vazio padrao", () => {
   const source = readFileSync(new URL("./patient-testimonials.tsx", import.meta.url), "utf8");
   assert.match(source, /<TestimonialCard/);
-  assert.match(source, /Depoimento para/);
+  assert.match(source, /Avaliação para/);
   assert.match(source, /ownAuthorAvatar=\{user\?\.avatar\}/);
-  assert.match(source, /aria-label="Editar depoimento"/);
+  assert.match(source, /aria-label="Editar avaliação"/);
   assert.match(source, /<DeleteReviewButton reviewId=\{review\.id\}/);
   assert.match(source, /flex shrink-0 items-center/);
   assert.match(source, /!query\.isLoading && !query\.isError && !items\.length/);

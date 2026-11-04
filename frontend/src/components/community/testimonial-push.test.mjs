@@ -52,7 +52,7 @@ test("testimonial push exposes only the approved action and retains the batch de
     { action: "external", title: "untrusted" },
   ]);
   assert.equal(shown[0].options.actions.length, 1);
-  assert.equal(shown[0].options.actions[0].title, "Deixar depoimento");
+  assert.equal(shown[0].options.actions[0].title, "Deixar avaliação");
   for (const action of ["leave_testimonial", ""]) {
     handlers.notificationclick({
       action,
@@ -88,6 +88,6 @@ test("patient and professional share title-cased profile menu labels", () => {
     "Ativar Modo Escuro",
   ])
     assert.ok(source.includes(`label: "${label}"`), label);
-  assert.equal((source.match(/label: "Meus Depoimentos"/g) ?? []).length, 2);
+  assert.equal((source.match(/label: "Minhas Avaliações"/g) ?? []).length, 2);
   assert.ok(source.includes("Sair da Conta"));
 });

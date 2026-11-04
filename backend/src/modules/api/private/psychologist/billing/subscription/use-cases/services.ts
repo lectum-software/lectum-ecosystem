@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { withInvoiceHistory } from "@/modules/billing/invoices/history";
 import {
   getPaymentGateway,
   isPaymentGatewayConfigurationError,
@@ -54,7 +55,7 @@ export const showSubscription = async (data: ISubscriptionDTO) => {
       current: subscription,
       subscription,
       payment_method: paymentMethod,
-      payment_history: paymentHistory,
+      payment_history: await withInvoiceHistory(data.auth.id!, paymentHistory),
     },
   };
 };

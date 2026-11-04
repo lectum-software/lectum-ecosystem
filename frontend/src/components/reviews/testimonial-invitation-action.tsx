@@ -56,7 +56,7 @@ export const TestimonialInvitationAction = ({
           appearance === "profile" && "text-xs leading-4",
         )}
       >
-        {inline ? "Depoimento" : "Deixar depoimento"}
+        {inline ? "Avaliação" : "Deixar avaliação"}
       </span>
     </>
   );
@@ -74,8 +74,8 @@ export const TestimonialInvitationAction = ({
         className={classes}
       >
         <Link
-          aria-label="Deixar depoimento"
-          title="Deixar depoimento"
+          aria-label="Deixar avaliação"
+          title="Deixar avaliação"
           onClick={(event) => event.stopPropagation()}
           href={`/auth/login?redirectTo=${encodeURIComponent(`/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(psychologistId)}`)}`}
         >
@@ -91,8 +91,8 @@ export const TestimonialInvitationAction = ({
       variant={
         inline ? "ghost" : appearance === "profile" || appearance === "empty" ? "default" : variant
       }
-      aria-label="Deixar depoimento"
-      title="Deixar depoimento"
+      aria-label="Deixar avaliação"
+      title="Deixar avaliação"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
         event.stopPropagation();

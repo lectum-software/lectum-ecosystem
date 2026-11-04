@@ -69,8 +69,8 @@ const LABELS: Record<string, NotificationView> = {
     tone: NOTIFICATION_ICON_TONE,
   },
   nova_avaliacao: {
-    title: "Novo depoimento recebido",
-    description: "Clique para ver o depoimento no seu perfil.",
+    title: "Nova avaliação recebida",
+    description: "Clique para ver a avaliação no seu perfil.",
     icon: Star,
     tone: NOTIFICATION_ICON_TONE,
   },
@@ -229,7 +229,7 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
   if (actor && item.message_key === "nova_avaliacao") {
     return (
       <>
-        <ActorName actor={actor} /> deixou um depoimento para você.
+        <ActorName actor={actor} /> deixou uma avaliação para você.
       </>
     );
   }
@@ -538,8 +538,6 @@ export const NotificationsLogic = () => {
         />
 
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-sm">
-          <VerificationVideoNotification />
-
           {!hasAuthToken ? null : index.isLoading ? (
             <LoadingState className="py-10" />
           ) : index.isError && !index.data ? (
@@ -575,6 +573,9 @@ export const NotificationsLogic = () => {
               ) : null}
             </div>
           )}
+          {!hasAuthToken || (!index.isLoading && !index.isError && !index.hasNextPage) ? (
+            <VerificationVideoNotification />
+          ) : null}
         </div>
         {hasAuthToken ? (
           <InfiniteListLoader

@@ -187,6 +187,7 @@ describe("visible playback contact reveal", () => {
       readyState: 4,
       playbackRate: 1,
       currentTime: 0,
+      closest: () => ({ querySelector: () => video }),
       ownerDocument: document,
     });
     cleanup = observeVideoContact(video, progress, () => calls++);
@@ -221,18 +222,21 @@ describe("visible playback contact reveal", () => {
     advance(5000);
     assert.equal(calls, 1);
   });
-  test("pauses and stalled playback do not consume the remaining delay", () => {
+  test("visible contact counts even when playback pauses or stalls", () => {
     advance(1000);
     video.paused = true;
     video.dispatchEvent(new Event("pause"));
-    advance(5000);
-    video.paused = false;
-    video.dispatchEvent(new Event("playing"));
-    advance(5000, false);
-    assert.equal(calls, 0);
     advance(1900);
     assert.equal(calls, 0);
     advance(200);
+    assert.equal(calls, 1);
+  });
+  test("buffering does not prevent visible contact from filling", () => {
+    video.paused = false;
+    video.dispatchEvent(new Event("playing"));
+    advance(2900, false);
+    assert.equal(calls, 0);
+    advance(200, false);
     assert.equal(calls, 1);
   });
   test("offscreen and hidden-tab playback never count", () => {
@@ -266,12 +270,12 @@ describe("visible playback contact reveal", () => {
     video.seeking = true;
     video.dispatchEvent(new Event("seeking"));
     video.currentTime = 50;
-    advance(5000);
+    advance(100);
     video.seeking = false;
     video.dispatchEvent(new Event("seeked"));
-    advance(1900);
+    advance(1700);
     assert.equal(calls, 0);
-    advance(200);
+    advance(300);
     assert.equal(calls, 1);
   });
   test("double speed still requires three seconds of viewer attention", () => {
@@ -281,18 +285,18 @@ describe("visible playback contact reveal", () => {
     advance(1500);
     assert.equal(calls, 1);
   });
-  test("less than half visible and buffering cannot fill the contact bar", () => {
+  test("less than half visible does not count, visible buffering does", () => {
     observer.callback([{ isIntersecting: true, intersectionRatio: 0.49 }]);
     advance(5000);
     assert.equal(progress.watchedMs, 0);
     show(true);
     video.readyState = 1;
     video.dispatchEvent(new Event("waiting"));
-    advance(5000);
-    assert.equal(progress.watchedMs, 0);
+    advance(1000);
+    assert.ok(progress.watchedMs > 0);
     video.readyState = 4;
     video.dispatchEvent(new Event("playing"));
-    advance(2900);
+    advance(1900);
     assert.equal(calls, 0);
     advance(200);
     assert.equal(calls, 1);

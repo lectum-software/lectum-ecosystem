@@ -27,6 +27,7 @@ type ReplyCreateInput = {
 };
 
 export type SubmitReplyWithOptionalMediaInput = {
+  beforeUpload?: () => Promise<void>;
   createReply: (input: ReplyCreateInput) => Promise<PostReply>;
   mediaFile?: File | null;
   parentReplyId?: string | null;
@@ -109,6 +110,7 @@ const uploadBestEffortVideoThumbnail = async ({
 };
 
 export const submitReplyWithOptionalMedia = async ({
+  beforeUpload,
   createReply,
   mediaFile,
   parentReplyId,
@@ -119,6 +121,13 @@ export const submitReplyWithOptionalMedia = async ({
   videoUploadOperation,
 }: SubmitReplyWithOptionalMediaInput) => {
   setReplyError(null);
+  try {
+    await beforeUpload?.();
+  } catch (error) {
+    videoUploadOperation?.complete();
+    setReplyError(resolveReplyPublishError(error));
+    throw error;
+  }
   let stagedStreamVideoReference: string | null = null;
 
   let uploadResult: {

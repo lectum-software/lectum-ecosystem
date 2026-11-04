@@ -4,7 +4,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const layoutSource = readFileSync(
-  fileURLToPath(new URL("./cfp-layout.tsx", import.meta.url)),
+  fileURLToPath(new URL("./cfp-error-feedback.tsx", import.meta.url)),
   "utf8",
 );
 const supportModuleSource = readFileSync(

@@ -10,6 +10,7 @@ import {
   activeFreeSubscriptionWhere,
   activeProfessionalEntitlementWhere,
 } from "@/utils/subscription-entitlement";
+import { isBillingAddressReady } from "./billing-address-ready";
 import type { ICurrentRepository } from "./interfaces/ICurrentRepository";
 
 export class CurrentRepository implements ICurrentRepository {
@@ -82,6 +83,14 @@ export class CurrentRepository implements ICurrentRepository {
         activeFree,
       }) ?? this.restoreFreeAfterLatestCancelledProfessional(profile.id)
     );
+  }
+
+  async hasBillingAddress(userId: string): Promise<boolean> {
+    const address = await prisma.billing_address.findFirst({
+      where: { user_id: userId, deleted: false },
+      orderBy: { updatedAt: "desc" },
+    });
+    return isBillingAddressReady(address);
   }
 
   private async restoreFreeAfterLatestCancelledProfessional(

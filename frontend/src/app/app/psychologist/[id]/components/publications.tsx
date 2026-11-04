@@ -42,6 +42,7 @@ export const ProfileCommunityPostCard = ({
     onShare={onShare}
     openPostOnCardClick={!readOnly && post.contribution_type !== "reply"}
     showWhatsappCta={!readOnly}
+    showOwnerActions={!readOnly}
     post={post}
     authorHeaderExtra={
       !readOnly && post.contribution_type === "reply" ? (

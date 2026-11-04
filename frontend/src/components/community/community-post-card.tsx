@@ -8,16 +8,14 @@ import { useSavePost, useSaveReply, useVotePost } from "@/api/callers/posts";
 import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
-import {
-  CommunityWhatsAppCta,
-  toCommunityWhatsAppIdentity,
-} from "@/components/community/community-whatsapp-cta";
+import { PostCardContact } from "@/components/community/community-post-card-contact";
 import { FeedFavoriteButton } from "@/components/community/feed-favorite-button";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
+import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { ProfileReplyContext } from "@/components/community/profile-reply-context";
 import {
   canShowSocialVideoPreviewAction,
@@ -80,6 +78,7 @@ const CommunityPostCardContent = ({
   profilePublicationMode = false,
   saveActionOverride,
   showAuthorHeader = true,
+  showOwnerActions = true,
   showCommunityHeader = true,
   showHighlightedProfessionalReply = true,
   showProfessionalEngagementCounters = false,
@@ -158,10 +157,6 @@ const CommunityPostCardContent = ({
   const psychologistProfileHref = isPsychologistPost
     ? `/psicologos/${displayAuthor.id}`
     : undefined;
-  const whatsappTrackingTarget =
-    isReplyContribution && primaryReply
-      ? { targetId: primaryReply.id, targetType: "post_reply" }
-      : { targetId: post.id, targetType: "community_post" };
   const attentionTrackingTarget = isPsychologistPost
     ? ({
         targetId: isReplyContribution && primaryReply ? primaryReply.id : post.id,
@@ -172,16 +167,12 @@ const CommunityPostCardContent = ({
   const allowWhatsappCta = showWhatsappCta && !compactProfilePostActions;
   const authorWhatsappCta =
     allowWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
-      <CommunityWhatsAppCta
+      <PostCardContact
+        post={post}
+        primaryReply={primaryReply}
         attached={hasVideoContact}
-        size={hasCompactReplyActions ? "xs" : "sm"}
-        psychologist={toCommunityWhatsAppIdentity(displayAuthor)}
-        stopPropagation
-        trackingContext={{
-          pageKind: "community_post",
-          path: postDetailHref(post, focusedReplyId),
-          ...whatsappTrackingTarget,
-        }}
+        compact={hasCompactReplyActions}
+        focusedReplyId={focusedReplyId}
       />
     ) : null;
   const voteMutation = useVotePost(post.id);
@@ -469,7 +460,9 @@ const CommunityPostCardContent = ({
         {showAuthorHeader ? (
           <div
             className={cn(
-              authorHeaderExtra ? "relative z-30 flex items-start gap-3" : "flex items-start gap-3",
+              authorHeaderExtra || currentUser?.id === post.author.id
+                ? "relative z-30 flex items-start gap-3"
+                : "flex items-start gap-3",
               primaryReply ? (showDisplayText ? "mb-2" : "mb-0") : "mb-3",
             )}
           >
@@ -560,7 +553,13 @@ const CommunityPostCardContent = ({
                 </p>
               )}
             </div>
-            {authorHeaderExtra}
+            {authorHeaderExtra ??
+              (showOwnerActions &&
+              !primaryReply &&
+              currentUser?.role === "psicologo" &&
+              currentUser.id === post.author.id ? (
+                <PostOwnerActionMenu post={post} />
+              ) : null)}
           </div>
         ) : null}
         {showDisplayText ? (

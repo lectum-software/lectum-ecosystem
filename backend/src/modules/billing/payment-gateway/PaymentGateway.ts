@@ -92,6 +92,10 @@ export type VerifyWebhookSignatureInput = {
 };
 
 export interface PaymentGateway {
+  getInvoicePayment(
+    resourceType: "payment" | "subscription_authorized_payment",
+    resourceId: string,
+  ): Promise<GatewayInvoicePayment>;
   createSubscriptionPlan(
     input: GatewaySubscriptionPlanInput,
   ): Promise<GatewaySubscriptionPlanResult>;
@@ -109,3 +113,15 @@ export interface PaymentGateway {
   verifyWebhookSignature(input: VerifyWebhookSignatureInput): boolean;
   parseWebhookEvent(body: unknown): GatewayWebhookEvent | null;
 }
+
+export type GatewayInvoicePayment = {
+  paymentId: string;
+  subscriptionId: string;
+  externalReference: string | null;
+  amountCents: number;
+  refundedCents: number;
+  currency: string;
+  status: string;
+  liveMode: boolean;
+  paidAt: Date | null;
+};

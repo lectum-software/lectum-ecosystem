@@ -1,4 +1,5 @@
 import { msg } from "@/helpers/translate";
+import prisma from "@/infra/database/prisma";
 import { notifyNewPostReply } from "@/main/notification/domain-events";
 import { type ModerationResult, moderatePatientText } from "@/utils/content-moderation";
 import {
@@ -92,6 +93,21 @@ export const replyThread = async (data: IPostReplyThreadDTO) => {
 export const createReply = async (data: IPostCreateReplyDTO) => {
   const unauthorized = ensureCommunityActor(data);
   if (unauthorized) return unauthorized;
+  if (data.auth.role === "psicologo") {
+    const post = await findModerationPostContext(data.p.id);
+    if (!post) return notFound();
+    const membership = await prisma.community_member.findFirst({
+      where: { community_id: post.community_id, user_id: data.auth.id!, deleted: false },
+      select: { id: true },
+    });
+    if (!membership)
+      return {
+        status: 422,
+        error: "Siga esta comunidade antes de responder.",
+        code: "community_follow_required",
+        success: false,
+      };
+  }
 
   const repository = new PostRepository();
   const content = String(data.b.content ?? "").trim();

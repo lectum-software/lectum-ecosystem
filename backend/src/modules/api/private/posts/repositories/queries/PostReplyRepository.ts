@@ -305,11 +305,23 @@ export class PostReplyRepository extends PostRepositoryContext {
           if (!parent) return { kind: "invalid_parent" };
         }
 
-        await ensureCommunityMembership({
-          client: transaction,
-          communityId: currentPost.community_id,
-          userId: data.auth.id!,
-        });
+        if (data.auth.role === "psicologo") {
+          const member = await transaction.community_member.findFirst({
+            where: {
+              community_id: currentPost.community_id,
+              user_id: data.auth.id!,
+              deleted: false,
+            },
+            select: { id: true },
+          });
+          if (!member) return { kind: "forbidden" };
+        } else {
+          await ensureCommunityMembership({
+            client: transaction,
+            communityId: currentPost.community_id,
+            userId: data.auth.id!,
+          });
+        }
 
         const created = await transaction.post_reply.create({
           data: {

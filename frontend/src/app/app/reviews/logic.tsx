@@ -105,7 +105,7 @@ const ReviewCard = ({ review }: { review: PatientReview }) => (
       </p>
     ) : (
       <p className="rounded-2xl bg-background px-4 py-3 text-sm text-subtle">
-        Avaliação sem depoimento textual.
+        Avaliação sem comentário textual.
       </p>
     )}
 

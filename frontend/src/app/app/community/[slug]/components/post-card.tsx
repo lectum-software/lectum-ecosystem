@@ -32,6 +32,7 @@ import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { MoreProfessionalReplies } from "@/components/community/more-professional-replies";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
+import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
@@ -577,7 +578,10 @@ const PostCardContent = ({
               </p>
             )}
           </div>
-          {authorActions}
+          {authorActions ??
+            (currentUser?.role === "psicologo" && currentUser.id === post.author.id ? (
+              <PostOwnerActionMenu post={post} />
+            ) : null)}
           {post.muted_by_current_user ? (
             <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
               <PostMutedBadge />

@@ -15,6 +15,7 @@ import type {
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import * as api from "@/api/req/community";
+import { ensurePublicationFollowing } from "@/components/community/follow-before-publish";
 import { useAppSelector } from "@/hooks/redux";
 import { nextListPage } from "@/utils/infinite-list";
 import {
@@ -229,8 +230,10 @@ export const useCreateCommunityPost = (callbacks?: {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slug, body }: { slug: string; body: CreateCommunityPostPayload }) =>
-      api.createCommunityPost(slug, body),
+    mutationFn: async ({ slug, body }: { slug: string; body: CreateCommunityPostPayload }) => {
+      await ensurePublicationFollowing(slug);
+      return api.createCommunityPost(slug, body);
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
       invalidateDirectoryPsychologistQueries(queryClient);

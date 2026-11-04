@@ -186,7 +186,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
     if (showPaymentSuccessBadge) {
       const redirectTimeout = window.setTimeout(() => {
-        router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
+        router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.completion);
       }, PAYMENT_SUCCESS_REDIRECT_DELAY_MS);
 
       return () => {
@@ -194,7 +194,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
       };
     }
 
-    router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
+    router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.completion);
   }, [
     activeCourtesy,
     activeProfessional,
@@ -360,14 +360,14 @@ export const ProfessionalBillingCheckoutLogic = () => {
           {showPaymentSuccessBadge ? (
             <div className="grid justify-items-center gap-5 text-center">
               <PaymentSuccessBadge />
-              <LoadingState label="Redirecionando para endereço" />
+              <LoadingState label="Verificando sua próxima etapa" />
             </div>
           ) : (
             <LoadingState
               label={
                 activeCourtesy
                   ? "Redirecionando para sua próxima etapa"
-                  : "Redirecionando para endereço"
+                  : "Verificando sua próxima etapa"
               }
             />
           )}

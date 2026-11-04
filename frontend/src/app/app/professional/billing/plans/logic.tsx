@@ -106,7 +106,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "Receba depoimentos da comunidade",
+        label: "Receba avaliações da comunidade",
       },
       {
         included: true,
