@@ -129,8 +129,8 @@ export const TestimonialForm = ({
             {mutation.isPending
               ? "Salvando..."
               : initial
-                ? "Salvar depoimento"
-                : "Publicar depoimento"}
+                ? "Salvar avaliação"
+                : "Publicar avaliação"}
           </span>
         </Button>
       </div>

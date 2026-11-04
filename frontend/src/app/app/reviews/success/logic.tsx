@@ -79,9 +79,9 @@ export const ReviewsSuccessLogic = () => {
             <CheckCircle2 className="h-20 w-20" aria-hidden />
           </span>
           <div>
-            <h1 className="text-3xl font-extrabold text-foreground">Depoimento publicado!</h1>
+            <h1 className="text-3xl font-extrabold text-foreground">Avaliação publicada!</h1>
             <p className="mt-4 text-base leading-7 text-muted">
-              Obrigado por compartilhar. Seu depoimento valoriza o trabalho do profissional e ajuda
+              Obrigado por compartilhar. Sua avaliação valoriza o trabalho do profissional e ajuda
               outros pacientes.
             </p>
           </div>
@@ -91,7 +91,7 @@ export const ReviewsSuccessLogic = () => {
               name={professional?.psychologist_name}
             />
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase text-primary">DEPOIMENTO PUBLICADO</p>
+              <p className="text-xs font-bold uppercase text-primary">AVALIAÇÃO PUBLICADA</p>
               <p className="mt-1 inline-flex max-w-full items-center gap-1.5 font-semibold text-foreground">
                 <span className="min-w-0 truncate">
                   {professional?.psychologist_name ??

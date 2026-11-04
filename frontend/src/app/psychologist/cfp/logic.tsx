@@ -12,7 +12,8 @@ import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { CfpHero, PageFrame, PremiumPanel, SupportGuidance } from "./components/cfp-layout";
+import { CfpErrorFeedback } from "./components/cfp-error-feedback";
+import { CfpHero, PageFrame, PremiumPanel } from "./components/cfp-layout";
 import {
   AlreadyVerifiedScreen,
   LoadingScreen,
@@ -20,13 +21,7 @@ import {
   ResultsScreen,
   SessionMissingScreen,
 } from "./components/result-screens";
-import {
-  cfpErrorTitle,
-  nextStepHref,
-  type ResolvedApiError,
-  resolveApiError,
-  shouldShowCfpSupportGuidance,
-} from "./modules/support";
+import { nextStepHref, type ResolvedApiError, resolveApiError } from "./modules/support";
 import { type CfpSearchForm, useForm } from "./use-form";
 
 export const PsychologistCfpLogic = () => {
@@ -168,14 +163,7 @@ export const PsychologistCfpLogic = () => {
         ) : null}
 
         <Form className="mt-8 grid gap-5" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
-          {apiError ? (
-            <InlineAlert title={cfpErrorTitle} variant="error">
-              <div className="grid gap-3">
-                <p>{apiError.message}</p>
-                {shouldShowCfpSupportGuidance(apiError) ? <SupportGuidance /> : null}
-              </div>
-            </InlineAlert>
-          ) : null}
+          <CfpErrorFeedback error={apiError} />
 
           <Button
             className="h-14 w-full rounded-full text-base shadow-[var(--lectum-shadow-soft)]"

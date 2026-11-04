@@ -214,7 +214,7 @@ const ReviewCard = ({
     {review.comment ? (
       <p className="mt-4 text-sm leading-6 text-muted">{review.comment}</p>
     ) : (
-      <p className="mt-4 text-sm text-subtle">Avaliação sem depoimento textual.</p>
+      <p className="mt-4 text-sm text-subtle">Avaliação sem comentário textual.</p>
     )}
 
     <div className="mt-5">
@@ -282,7 +282,7 @@ export const ProfessionalReviewsLogic = () => {
             className="rounded-[var(--lectum-card-radius)] bg-surface"
             icon={UserRound}
             title="Nenhuma avaliação recebida"
-            description="Quando pacientes com contato registrado avaliarem seu perfil, os depoimentos aparecerão aqui."
+            description="Quando pacientes com contato registrado avaliarem seu perfil, as avaliações aparecerão aqui."
           />
         ) : null}
 
@@ -292,7 +292,7 @@ export const ProfessionalReviewsLogic = () => {
               id="professional-reviews-list-title"
               className="text-lg font-extrabold tracking-[-0.02em] text-foreground"
             >
-              Depoimentos Recentes
+              Avaliações Recentes
             </h2>
 
             {displayItems.map((review) => (

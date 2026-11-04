@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
@@ -20,10 +21,18 @@ export const VerificationVideoNotification = () => {
   return (
     <>
       <button
-        className="mb-4 flex w-full items-start gap-4 border-b border-border px-5 py-4 text-left transition hover:bg-primary-soft md:px-3"
+        className="flex w-full items-start gap-4 px-5 py-4 text-left transition hover:bg-primary-soft md:px-3"
         onClick={() => {
           setFailed(false);
-          setOpen(true);
+          flushSync(() => setOpen(true));
+          const video = videoRef.current;
+          if (video) {
+            void video.play().catch(() => {
+              if (!video.isConnected) return;
+              video.muted = true;
+              void video.play().catch(() => setFailed(true));
+            });
+          }
           markWatched();
         }}
         ref={triggerRef}
@@ -58,8 +67,13 @@ export const VerificationVideoNotification = () => {
           <VerticalVideoPlayer
             className="h-dvh w-full rounded-none border-0"
             controlsVariant="persistent"
-            fit="contain"
+            fit="cover"
+            videoClassName="md:object-contain"
             onContentClick={() => {
+              if (videoRef.current?.muted) {
+                videoRef.current.muted = false;
+                return;
+              }
               void toggleVideoElementPlayback(videoRef.current);
             }}
             onVideoElementReady={(video) => {

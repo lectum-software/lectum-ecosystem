@@ -66,7 +66,7 @@ export const TestimonialsButton = ({
   return (
     <>
       <button
-        aria-label={`Abrir depoimentos de ${name}`}
+        aria-label={`Abrir avaliações de ${name}`}
         className={className || "grid min-h-11 min-w-11 justify-items-center gap-1"}
         disabled={disabled}
         style={actionPadding === undefined ? undefined : { paddingBlock: actionPadding }}

@@ -20,7 +20,7 @@ import {
   isAdministrativeCourtesySubscription,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
-import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+import { getProfileBillingAddress } from "@/utils/upgrade-address";
 import { CITY_OPTIONS_BY_STATE } from "../../profile/setup/brazil-cities";
 import {
   type BillingAddressForm,
@@ -110,16 +110,22 @@ export const ProfessionalBillingAddressLogic = () => {
   const state = useWatch({ control, name: "state" });
   const previousStateRef = useRef<string | undefined>(undefined);
   const AddressForm = billingAddressForm.Form;
+  const prefilledRef = useRef(false);
+  const { reset } = billingAddressForm.hook;
+
+  useEffect(() => {
+    if (prefilledRef.current || !user?.psychologist_profile) return;
+    prefilledRef.current = true;
+    const address = getProfileBillingAddress(user.psychologist_profile);
+    reset({ ...address, complement: address.complement ?? "" });
+  }, [reset, user]);
 
   const billing = usePsychologistBilling({
     callbacks: {
       address: {
-        onSuccess: (data) => {
+        onSuccess: () => {
           toast.success("Endereço de faturamento salvo");
-          router.push(
-            normalizeSafeInternalRedirect(data.next_path, PSYCHOLOGIST_ONBOARDING_PATHS.phone) ||
-              PSYCHOLOGIST_ONBOARDING_PATHS.phone,
-          );
+          router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.completion);
         },
         onError: (error) => toast.error(resolveApiError(error)),
       },
@@ -195,7 +201,7 @@ export const ProfessionalBillingAddressLogic = () => {
       name: "street" | "complement" | "district" | "city" | "state",
       value: string | null,
     ) => {
-      if (!value) return;
+      if (!value || getValues(name)?.trim()) return;
 
       setValue(name, value, AUTOFILLED_ADDRESS_FIELDS);
     };

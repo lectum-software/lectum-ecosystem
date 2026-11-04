@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import prisma from "@/infra/database/prisma";
 import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { notifyNewCommunityPost } from "@/main/notification/domain-events";
 import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
@@ -239,6 +240,21 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
 
   const repository = new CommunityRepository();
   const trimmedTitle = data.b.title.trim();
+  const membership = await prisma.community_member.findFirst({
+    where: {
+      user_id: data.auth.id,
+      deleted: false,
+      community: { slug: data.p.slug, active: true, deleted: false },
+    },
+    select: { id: true },
+  });
+  if (!membership)
+    return {
+      status: 422,
+      error: "Siga esta comunidade antes de publicar.",
+      code: "community_follow_required",
+      success: false,
+    };
   const trimmedContent = data.b.content.trim();
   let moderation: ModerationResult | null = null;
   let moderationCommunity: Awaited<ReturnType<typeof findModerationCommunityBySlug>> | null = null;

@@ -26,7 +26,7 @@ const OwnTestimonial = ({ review }: { review: PatientReview }) => {
       <TestimonialCard
         context={
           <>
-            Depoimento para{" "}
+            Avaliação para{" "}
             <Link
               className="font-semibold text-primary"
               href={`/psicologos/${review.psychologist_id}`}
@@ -50,8 +50,8 @@ const OwnTestimonial = ({ review }: { review: PatientReview }) => {
             <Button
               variant="ghost"
               className="h-9 w-9 shrink-0 p-0 text-muted"
-              aria-label="Editar depoimento"
-              title="Editar depoimento"
+              aria-label="Editar avaliação"
+              title="Editar avaliação"
               onClick={() => setEditing(true)}
             >
               <Pencil className="size-4" />
@@ -79,9 +79,9 @@ export const PatientTestimonials = () => {
         <AppPageHeader
           backHref="/app/perfil"
           backLabel="Voltar para perfil"
-          title="Meus Depoimentos"
+          title="Minhas Avaliações"
         />
-        {query.isLoading ? <LoadingState label="Carregando depoimentos" /> : null}
+        {query.isLoading ? <LoadingState label="Carregando avaliações" /> : null}
         {query.isError ? (
           <InlineAlert title="Não foi possível carregar" variant="error">
             <Button variant="ghost" onClick={() => query.refetch()}>
@@ -94,7 +94,7 @@ export const PatientTestimonials = () => {
             <EmptyState
               className="rounded-[26px]"
               icon={ReviewsIcon}
-              title="Você ainda não publicou depoimentos"
+              title="Você ainda não publicou avaliações"
               description="Compartilhe sua experiência com os psicólogos com quem você já interagiu."
               action={
                 <Button asChild className="h-9 px-4 text-sm" variant="outline">
@@ -118,7 +118,7 @@ export const PatientTestimonials = () => {
             disabled={query.isFetchingNextPage}
             onClick={() => query.fetchNextPage()}
           >
-            Ver mais depoimentos
+            Ver mais avaliações
           </Button>
         ) : null}
       </section>

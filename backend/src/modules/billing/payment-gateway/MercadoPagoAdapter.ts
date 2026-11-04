@@ -8,6 +8,7 @@ import { normalizeDeviceSessionId } from "./device-session";
 import { extractGatewayDiagnostics } from "./diagnostic";
 import type { PaymentGatewayErrorDetails } from "./error-log";
 import { buildCardUpdateIdempotencyKey } from "./idempotency";
+import { parseInvoicePayment, resolveAuthorizedPayment } from "./invoice-payment";
 import type {
   BillingSubscriptionStatus,
   GatewayAuthorizedPayment,
@@ -480,6 +481,37 @@ export class MercadoPagoAdapter implements PaymentGateway {
 
   verifyWebhookSignature(input: VerifyWebhookSignatureInput): boolean {
     return verifyMercadoPagoWebhookSignature({ ...input, secret: this.webhookSecret });
+  }
+
+  async getInvoicePayment(
+    resourceType: "payment" | "subscription_authorized_payment",
+    resourceId: string,
+  ) {
+    if (!/^[A-Za-z0-9_-]{1,100}$/.test(resourceId))
+      throw new Error("MERCADO_PAGO_RESOURCE_INVALID");
+    return this.runGatewayOperation("invoice_payment", async () => {
+      const read = async (path: string): Promise<unknown> => {
+        const response = await fetch(`https://api.mercadopago.com${path}`, {
+          headers: { Authorization: `Bearer ${this.accessToken}` },
+          signal: AbortSignal.timeout(MERCADO_PAGO_REQUEST_TIMEOUT_MS),
+          redirect: "error",
+        });
+        if (!response.ok) {
+          await response.body?.cancel();
+          throw Object.assign(new Error("MERCADO_PAGO_PAYMENT_READ_FAILED"), {
+            status: response.status,
+          });
+        }
+        return response.json();
+      };
+      const raw = await read(
+        resourceType === "payment"
+          ? `/authorized_payments/search?payment_id=${resourceId}&limit=2`
+          : `/authorized_payments/${resourceId}`,
+      );
+      const authorized = resolveAuthorizedPayment(raw, resourceType, resourceId);
+      return parseInvoicePayment(authorized, await read(`/v1/payments/${authorized.payment.id}`));
+    });
   }
 
   parseWebhookEvent(body: unknown): GatewayWebhookEvent | null {

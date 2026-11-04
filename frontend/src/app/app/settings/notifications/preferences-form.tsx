@@ -50,7 +50,7 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
     categories: [
       {
         key: "nova_avaliacao",
-        label: "Novos depoimentos",
+        label: "Novas avaliações",
         icon: Star,
       },
       {

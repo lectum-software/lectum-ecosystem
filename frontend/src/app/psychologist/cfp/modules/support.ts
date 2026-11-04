@@ -1,6 +1,6 @@
 import { getSafeApiErrorMessage } from "@/api/errors";
 
-export const nextStepHref = "/app/profissional/perfil/configurar";
+export const nextStepHref = "/app/profissional/assinatura/concluir";
 
 export const supportMessage =
   "Ol\u00e1, preciso de ajuda com a verifica\u00e7\u00e3o profissional na Lectum.";

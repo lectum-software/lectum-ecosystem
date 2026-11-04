@@ -167,7 +167,7 @@ const ProfessionalUpgradeCard = () => (
           Upgrade para o Plano Profissional
         </span>
         <span className="mt-1 block text-xs leading-5 text-muted">
-          Receba depoimentos da comunidade, aumente sua visibilidade nas buscas e desbloqueie
+          Receba avaliações da comunidade, aumente sua visibilidade nas buscas e desbloqueie
           recursos exclusivos para fortalecer sua presença na Lectum.
         </span>
       </span>
@@ -216,8 +216,7 @@ export const ProfileLogic = () => {
     user.psychologist_profile,
   );
   const hasVerifiedBadge = Boolean(
-    activeProfessionalSubscription &&
-      isPaidRegistryVerificationComplete(user.psychologist_profile, activeProfessionalSubscription),
+    activeProfessionalSubscription && isPaidRegistryVerificationComplete(user.psychologist_profile),
   );
   const showProfessionalUpgradeCard = Boolean(
     isPsychologist && (psychologistProfile.profile.data?.plan.is_free ?? !hasVerifiedBadge),
@@ -262,7 +261,7 @@ export const ProfileLogic = () => {
     },
     ...(isPsychologist
       ? [
-          { href: "/app/profissional/avaliacoes", icon: ReviewsIcon, label: "Meus Depoimentos" },
+          { href: "/app/profissional/avaliacoes", icon: ReviewsIcon, label: "Minhas Avaliações" },
           { href: "/app/profissional/estatisticas", icon: BarChart3, label: "Meus Analytics" },
           {
             href: "/app/profissional/assinatura",
@@ -270,7 +269,7 @@ export const ProfileLogic = () => {
             label: "Minha Assinatura",
           },
         ]
-      : [{ href: "/app/avaliacoes", icon: ReviewsIcon, label: "Meus Depoimentos" }]),
+      : [{ href: "/app/avaliacoes", icon: ReviewsIcon, label: "Minhas Avaliações" }]),
     { href: "/app/configuracoes/conta", icon: Lock, label: "E-mail e Senha" },
     { href: "/app/ajuda", icon: CircleHelp, label: "Ajuda e Feedback" },
     {

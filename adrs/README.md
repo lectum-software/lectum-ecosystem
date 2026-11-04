@@ -735,3 +735,4 @@ Formato recomendado:
 - [ADR-0671 — Aceite explicito durante cadastro](0671-registration-legal-acceptance.md)
 - [ADR-0672 — Integridade da ativacao dos documentos legais](0672-legal-publication-readiness.md)
 - [ADR-0673 — Aviso fixo sobre verificacao profissional](0673-verification-video-notification.md)
+- [ADR-0674 — Participacao explicita e contato verificado](0674-community-interaction-refinements.md)

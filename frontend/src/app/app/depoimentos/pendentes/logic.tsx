@@ -36,14 +36,14 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
         <AppPageHeader
           backHref="/app/notificacoes"
           backLabel="Voltar para notificações"
-          title="Deixar depoimentos"
+          title="Deixar avaliações"
         />
         {!user || (isPatient && query.isLoading) ? (
           <LoadingState label="Carregando psicólogos" />
         ) : null}
         {user && !isPatient ? (
           <InlineAlert title="Área de pacientes">
-            Entre com seu perfil de paciente para deixar depoimentos.
+            Entre com seu perfil de paciente para deixar avaliações.
           </InlineAlert>
         ) : null}
         {isPatient && query.isError && !query.data ? (
@@ -56,7 +56,7 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
         {isPatient && !query.isLoading && !query.isError && !items.length ? (
           <EmptyState
             icon={MessageSquare}
-            title="Nenhum depoimento pendente"
+            title="Nenhuma avaliação pendente"
             description="Quando um psicólogo elegível responder você, ele aparecerá aqui."
           />
         ) : null}
@@ -103,7 +103,7 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
                   <Link
                     href={`/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(item.psychologist_id)}`}
                   >
-                    Deixar depoimento
+                    Deixar avaliação
                   </Link>
                 </Button>
               </li>

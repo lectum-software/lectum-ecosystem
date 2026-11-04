@@ -19,12 +19,12 @@ import { TestimonialForm } from "./testimonial-form";
 
 const unavailableReason = (reason?: string) => {
   if (reason === "already_reviewed")
-    return "Você já deixou um depoimento para este psicólogo. Você pode editá-lo em Meus depoimentos.";
-  if (reason === "own_profile") return "Não é possível deixar um depoimento no próprio perfil.";
+    return "Você já deixou uma avaliação para este psicólogo. Você pode editá-la em Minhas avaliações.";
+  if (reason === "own_profile") return "Não é possível deixar uma avaliação no próprio perfil.";
   if (reason === "professional_plan_required")
-    return "Este psicólogo não está recebendo novos depoimentos no momento.";
-  if (reason === "patient_required") return "Somente pacientes podem publicar depoimentos.";
-  return "Este perfil não está disponível para receber depoimentos.";
+    return "Este psicólogo não está recebendo novas avaliações no momento.";
+  if (reason === "patient_required") return "Somente pacientes podem publicar avaliações.";
+  return "Este perfil não está disponível para receber avaliações.";
 };
 
 export const NewTestimonialPage = () => {
@@ -48,14 +48,14 @@ export const NewTestimonialPage = () => {
               <ArrowLeft className="size-5" />
             </Link>
           </Button>
-          <h1 className="text-xl font-bold">Deixar depoimento</h1>
+          <h1 className="text-xl font-bold">Deixar avaliação</h1>
         </header>
 
         {!psychologistId ? (
           <EmptyState
             icon={UserRound}
             title="Escolha um psicólogo"
-            description="Abra o perfil do psicólogo para deixar seu depoimento."
+            description="Abra o perfil do psicólogo para deixar sua avaliação."
             action={
               <Button asChild>
                 <Link href="/psicologos">Buscar psicólogos</Link>
@@ -65,7 +65,7 @@ export const NewTestimonialPage = () => {
         ) : !hasToken ? (
           <EmptyState
             icon={UserRound}
-            title="Entre para deixar seu depoimento"
+            title="Entre para deixar sua avaliação"
             description="Use sua conta de paciente para compartilhar sua experiência."
             action={
               <Button asChild>
@@ -139,8 +139,8 @@ export const NewTestimonialPage = () => {
             icon={MessageCircle}
             title={
               professional.reason === "already_reviewed"
-                ? "Depoimento já publicado"
-                : "Depoimento indisponível"
+                ? "Avaliação já publicada"
+                : "Avaliação indisponível"
             }
             description={unavailableReason(professional.reason)}
             action={
@@ -150,7 +150,7 @@ export const NewTestimonialPage = () => {
                     professional.reason === "already_reviewed" ? "/app/avaliacoes" : profileHref
                   }
                 >
-                  {professional.reason === "already_reviewed" ? "Meus depoimentos" : "Ver perfil"}
+                  {professional.reason === "already_reviewed" ? "Minhas avaliações" : "Ver perfil"}
                 </Link>
               </Button>
             }

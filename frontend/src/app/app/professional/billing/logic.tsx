@@ -26,6 +26,7 @@ import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { InvoiceAction } from "./components/invoice-action";
 import { ProfessionalBillingSubscriptionView } from "./subscription/logic";
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -120,7 +121,7 @@ const getPlanDescription = (subscription?: ProfessionalSubscription | null) => {
   }
 
   if (subscription?.plan?.slug === "profissional") {
-    return "Perfil verificado, prioridade na busca, depoimentos, analytics e destaque nas comunidades.";
+    return "Perfil verificado, prioridade na busca, avaliações, analytics e destaque nas comunidades.";
   }
 
   if (subscription?.plan?.slug === "gratuito") {
@@ -218,18 +219,25 @@ const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) =
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-extrabold text-foreground">
+              <p className="break-words text-sm font-extrabold text-foreground">
                 {item.title || "Assinatura mensal"}
               </p>
               <p className="mt-1 text-xs font-semibold text-muted">
                 {formatPaymentDate(item.occurred_at)}
               </p>
+              {item.invoice &&
+              !(item.invoice.status === "authorized" && item.invoice.downloadable) ? (
+                <InvoiceAction invoice={item.invoice} />
+              ) : null}
             </div>
             <div className="shrink-0 text-right">
               {item.amount_cents ? (
                 <p className="text-sm font-extrabold text-foreground">
                   {formatPrice(item.amount_cents)}
                 </p>
+              ) : null}
+              {item.invoice?.status === "authorized" && item.invoice.downloadable ? (
+                <InvoiceAction invoice={item.invoice} />
               ) : null}
             </div>
           </li>
@@ -332,6 +340,9 @@ export const ProfessionalBillingLogic = () => {
         isError={subscriptionQuery.isError}
         isLoading={subscriptionQuery.isLoading}
         subscription={subscription}
+        paymentHistory={
+          paymentHistory.length ? <PaymentHistoryCard items={paymentHistory} /> : null
+        }
       />
     );
   }
@@ -454,7 +465,7 @@ export const ProfessionalBillingLogic = () => {
               </div>
             </article>
 
-            {!isCourtesy ? (
+            {!isCourtesy || paymentHistory.length > 0 ? (
               <aside className="grid gap-4">
                 <PaymentHistoryCard items={paymentHistory} />
 

@@ -35,7 +35,7 @@ export const PublicTestimonials = ({
     <section className="grid gap-3 bg-background px-4 py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-base font-semibold">
-          Depoimentos
+          Avaliações
           <span className="text-sm font-medium tabular-nums text-muted">
             {summary.rating_count.toLocaleString("pt-BR")}
           </span>
@@ -44,10 +44,10 @@ export const PublicTestimonials = ({
           <TestimonialInvitation psychologistId={profileId} appearance="profile" allowGuest />
         ) : null}
       </div>
-      {isLoading ? <LoadingState label="Carregando depoimentos" /> : null}
+      {isLoading ? <LoadingState label="Carregando avaliações" /> : null}
       {isError ? (
         <div role="alert" className="text-sm text-danger">
-          <p>Não foi possível carregar os depoimentos.</p>
+          <p>Não foi possível carregar as avaliações.</p>
           {onRetry ? (
             <Button variant="ghost" onClick={onRetry}>
               Tentar novamente
@@ -60,7 +60,7 @@ export const PublicTestimonials = ({
           <EmptyState
             className="rounded-[26px]"
             icon={ReviewsIcon}
-            title="Ainda não há depoimentos"
+            title="Ainda não há avaliações"
             description={
               !readOnly
                 ? "Já interagiu com este psicólogo? Seja a primeira pessoa a compartilhar sua experiência."
@@ -84,7 +84,7 @@ export const PublicTestimonials = ({
       </div>
       {hasNextPage ? (
         <Button variant="ghost" disabled={isFetchingNextPage} onClick={onLoadMore}>
-          Ver mais depoimentos
+          Ver mais avaliações
         </Button>
       ) : null}
     </section>

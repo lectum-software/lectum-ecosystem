@@ -849,6 +849,55 @@ model payment_event {
   @@map("payment_events")
 }
 
+model billing_invoice_job {
+  id              String    @id @default(cuid())
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @default(now()) @updatedAt
+  resource_type   String
+  resource_id     String
+  event_id        String
+  attempts        Int       @default(0)
+  next_attempt_at DateTime  @default(now())
+  lease_token     String?
+  lease_until     DateTime?
+  completed_at    DateTime?
+  last_error_code String?
+
+  @@unique([resource_type, resource_id])
+  @@index([completed_at, next_attempt_at, lease_until])
+  @@map("billing_invoice_jobs")
+}
+
+model billing_invoice {
+  id               String    @id @default(cuid())
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @default(now()) @updatedAt
+  gateway          String    @default("mercadopago")
+  payment_id       String
+  mode             String    @default("test")
+  subscription_id  String
+  user_id          String
+  company_id       String
+  amount_cents     Int
+  currency         String    @default("BRL")
+  paid_at          DateTime
+  reference        String    @unique
+  request_snapshot Json
+  document_id      String?   @unique
+  status           String    @default("queued")
+  number           String?
+  attempts         Int       @default(0)
+  next_attempt_at  DateTime  @default(now())
+  lease_token      String?
+  lease_until      DateTime?
+  last_error_code  String?
+
+  @@unique([gateway, payment_id, mode])
+  @@index([user_id, paid_at])
+  @@index([next_attempt_at, lease_until])
+  @@map("billing_invoices")
+}
+
 model payment_method {
   id            String    @id @default(cuid())
   deleted       Boolean   @default(false)

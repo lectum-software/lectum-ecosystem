@@ -1,4 +1,6 @@
 import { error, msg } from "@/helpers/translate";
+import { getInvoiceConfig } from "@/modules/billing/invoices/config";
+import { InvoiceRepository } from "@/modules/billing/invoices/repository";
 import {
   observeAuthorizedPayment,
   shouldObserveAuthorizedPayment,
@@ -112,6 +114,16 @@ export default async ({ body, headers, query }: IWebhookDTO) => {
 
   if (shouldObserveAuthorizedPayment(event.type, paymentEvent.created)) {
     await observeAuthorizedPayment({ gateway, repository, resourceId: event.resourceId });
+  }
+
+  let invoiceConfig: ReturnType<typeof getInvoiceConfig> = null;
+  try {
+    invoiceConfig = getInvoiceConfig();
+  } catch {
+    console.error("[BILLING_INVOICES] Configuracao fiscal indisponivel.");
+  }
+  if (invoiceConfig) {
+    await new InvoiceRepository().enqueue(event);
   }
 
   if (isPreapprovalSubscriptionEvent(event.type)) {

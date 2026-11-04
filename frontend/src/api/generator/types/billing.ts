@@ -61,6 +61,7 @@ export type BillingPlansResponse = {
 
 export type BillingCurrentResponse = {
   current: ProfessionalSubscription | null;
+  billing_address_complete?: boolean;
   capabilities?: {
     device_session_id?: boolean;
     device_session_id_dotted?: boolean;
@@ -97,6 +98,13 @@ export type BillingPaymentHistoryItem = {
   occurred_at?: string | null;
   gateway: string;
   external_id: string;
+  invoice?: {
+    id: string;
+    status: string;
+    number: string | null;
+    mode: "test" | "live";
+    downloadable: boolean;
+  };
 };
 
 export type BillingSubscriptionResponse = {

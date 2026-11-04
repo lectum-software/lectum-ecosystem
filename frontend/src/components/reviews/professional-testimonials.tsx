@@ -179,12 +179,12 @@ export const ProfessionalTestimonials = () => {
         <AppPageHeader
           backHref="/app/perfil"
           backLabel="Voltar para perfil"
-          title="Meus Depoimentos"
+          title="Minhas Avaliações"
         />
         {data?.access.can_receive_reviews === false ? (
-          <InlineAlert title="Recebimento de novos depoimentos pausado" variant="warning">
+          <InlineAlert title="Recebimento de novas avaliações pausado" variant="warning">
             <p>
-              Seus depoimentos existentes continuam disponíveis. Você pode responder e gerenciar a
+              Suas avaliações existentes continuam disponíveis. Você pode responder e gerenciar a
               exibição deles.
             </p>
             <Link className="text-primary" href="/app/profissional/assinatura">
@@ -192,7 +192,7 @@ export const ProfessionalTestimonials = () => {
             </Link>
           </InlineAlert>
         ) : null}
-        <div className={styles.list} role="tablist" aria-label="Filtrar depoimentos">
+        <div className={styles.list} role="tablist" aria-label="Filtrar avaliações">
           {(
             [
               ["visible", "Visíveis"],
@@ -235,7 +235,7 @@ export const ProfessionalTestimonials = () => {
             </button>
           ))}
         </div>
-        {query.isLoading ? <LoadingState label="Carregando depoimentos" /> : null}
+        {query.isLoading ? <LoadingState label="Carregando avaliações" /> : null}
         {query.isError ? (
           <InlineAlert title="Não foi possível carregar" variant="error">
             <Button variant="ghost" onClick={() => query.refetch()}>
@@ -248,7 +248,7 @@ export const ProfessionalTestimonials = () => {
             <EmptyState
               className="rounded-[26px]"
               icon={ReviewsIcon}
-              title="Nenhum depoimento nesta lista."
+              title="Nenhuma avaliação nesta lista."
             />
           </div>
         ) : null}
@@ -266,7 +266,7 @@ export const ProfessionalTestimonials = () => {
             disabled={query.isFetchingNextPage}
             onClick={() => query.fetchNextPage()}
           >
-            Ver mais depoimentos
+            Ver mais avaliações
           </Button>
         ) : null}
       </section>

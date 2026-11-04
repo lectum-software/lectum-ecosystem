@@ -3,7 +3,6 @@
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
-import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { supportLinkProps } from "../modules/support";
 
@@ -19,14 +18,6 @@ export const SupportFooterLink = () => (
       Fale com o suporte
     </a>
   </p>
-);
-
-export const SupportGuidance = () => (
-  <div className="grid gap-3">
-    <Button asChild className="h-11 w-full rounded-full" variant="outline">
-      <a {...supportLinkProps}>{"Fale com o suporte pelo WhatsApp"}</a>
-    </Button>
-  </div>
 );
 
 export const PageFrame = ({ children }: { children: ReactNode }) => (

@@ -51,6 +51,7 @@ export type CommunityPostCardProps = {
     onClick?: MouseEventHandler<HTMLButtonElement>;
   };
   showAuthorHeader?: boolean;
+  showOwnerActions?: boolean;
   showCommunityHeader?: boolean;
   showHighlightedProfessionalReply?: boolean;
   showProfessionalEngagementCounters?: boolean;

@@ -41,7 +41,7 @@ test("exclusao do autor exige confirmacao e invalida os dados relacionados", () 
 test("bloco preserva textos, link e copia para plano liberado", () => {
   const html = renderToStaticMarkup(createElement(ReviewsLinkCard, { link, locked: false }));
   assert.match(html, /Link da minha página de avaliações/);
-  assert.match(html, /Compartilhe com pacientes e fortaleça sua autoridade com depoimentos reais/);
+  assert.match(html, /Compartilhe com pacientes e fortaleça sua autoridade com avaliações reais/);
   assert.match(
     html,
     /Incentive os pacientes a te avaliarem para aparecer nos primeiros resultados de busca/,

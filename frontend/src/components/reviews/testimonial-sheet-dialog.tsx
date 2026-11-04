@@ -92,7 +92,7 @@ export const TestimonialSheetDialog = ({
   const count = query.data?.pages[0]?.count;
   const canLeave = () =>
     !formState.submitting &&
-    (!formState.dirty || window.confirm("Descartar as alterações deste depoimento?"));
+    (!formState.dirty || window.confirm("Descartar as alterações desta avaliação?"));
   const requestClose = () => {
     if (!canLeave()) return false;
     setOpen(false);
@@ -148,7 +148,7 @@ export const TestimonialSheetDialog = ({
                 type="button"
                 onClick={returnToList}
                 disabled={formState.submitting}
-                aria-label="Voltar aos depoimentos"
+                aria-label="Voltar às avaliações"
                 className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-surface-muted"
               >
                 <ArrowLeft aria-hidden className="size-5" />
@@ -157,9 +157,9 @@ export const TestimonialSheetDialog = ({
             <h2 id={titleId} className="min-w-0 flex-1 pl-1 text-base font-semibold">
               {view === "compose"
                 ? initial
-                  ? "Editar depoimento"
-                  : "Deixar depoimento"
-                : "Depoimentos"}
+                  ? "Editar avaliação"
+                  : "Deixar avaliação"
+                : "Avaliações"}
               {view === "list" && count !== undefined ? (
                 <span className="ml-2 text-sm font-medium tabular-nums text-muted">
                   {count.toLocaleString("pt-BR")}
@@ -171,7 +171,7 @@ export const TestimonialSheetDialog = ({
               type="button"
               onClick={requestClose}
               disabled={formState.submitting}
-              aria-label="Fechar depoimentos"
+              aria-label="Fechar avaliações"
               className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-surface-muted"
             >
               <X aria-hidden className="size-5" />
@@ -190,17 +190,17 @@ export const TestimonialSheetDialog = ({
             data-testimonials-list
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-surface px-4"
           >
-            {query.isLoading ? <LoadingState label="Carregando depoimentos" /> : null}
+            {query.isLoading ? <LoadingState label="Carregando avaliações" /> : null}
             {query.isError ? (
               <div role="alert" className="py-5 text-sm">
-                <p>Não foi possível carregar os depoimentos.</p>
+                <p>Não foi possível carregar as avaliações.</p>
                 <Button variant="ghost" onClick={() => query.refetch()}>
                   Tentar novamente
                 </Button>
               </div>
             ) : null}
             {!query.isLoading && !query.isError && !items.length ? (
-              <p className="py-10 text-center text-sm text-muted">Ainda não há depoimentos.</p>
+              <p className="py-10 text-center text-sm text-muted">Ainda não há avaliações.</p>
             ) : null}
             <div className="divide-y divide-border" data-testimonial-list>
               {items.map((review) => (
@@ -219,7 +219,7 @@ export const TestimonialSheetDialog = ({
                 disabled={query.isFetchingNextPage || query.isFetching}
                 onClick={() => query.fetchNextPage()}
               >
-                Ver mais depoimentos
+                Ver mais avaliações
               </Button>
             ) : null}
           </div>
@@ -235,13 +235,13 @@ export const TestimonialSheetDialog = ({
                 sheetLayout
               />
             ) : eligibility.isLoading ? (
-              <LoadingState label="Carregando depoimento" />
+              <LoadingState label="Carregando avaliação" />
             ) : (
               <div role="status" className="overflow-y-auto px-4 pb-4 text-sm leading-6 text-muted">
                 <p>
                   {eligibility.isError
                     ? "Não foi possível verificar a disponibilidade agora."
-                    : "Este perfil não está disponível para receber um novo depoimento."}
+                    : "Este perfil não está disponível para receber uma nova avaliação."}
                 </p>
                 {eligibility.isError ? (
                   <Button variant="ghost" onClick={() => eligibility.refetch()}>

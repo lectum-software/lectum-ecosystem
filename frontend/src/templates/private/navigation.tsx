@@ -68,9 +68,9 @@ export const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTR
   [
     "/app/avaliacoes/nova",
     {
-      title: "Deixe seu depoimento",
+      title: "Deixe sua avaliação",
       description:
-        "Compartilhe sua experiência com este profissional. Crie uma conta gratuita ou faça login para publicar seu depoimento.",
+        "Compartilhe sua experiência com este profissional. Crie uma conta gratuita ou faça login para publicar sua avaliação.",
     },
   ],
   ["/app/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
@@ -229,6 +229,8 @@ export const isPathOrDescendant = (pathname: string, target: string) =>
   pathname === target || pathname.startsWith(`${target}/`);
 
 export const canStayDuringPaidOnboarding = (pathname: string, requiredPath: string) => {
+  // This route reloads the session and selects the first missing paid onboarding step.
+  if (pathname === PSYCHOLOGIST_ONBOARDING_PATHS.completion) return true;
   if (isPathOrDescendant(pathname, requiredPath)) return true;
 
   if (requiredPath === PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress) {

@@ -182,7 +182,7 @@ test("Chrome: testimonial close restores focus before parent removal and preserv
               await page.evaluate(() => window.setFormState({ dirty: true, submitting: false }));
               for (let index = 0; index < 2; index++) {
                 page.once("dialog", (dialog) => dialog.dismiss());
-                await page.getByRole("button", { name: "Fechar depoimentos" }).click();
+                await page.getByRole("button", { name: "Fechar avaliações" }).click();
                 assert.equal(await page.locator("dialog[open]").count(), 1);
                 assert.deepEqual(await page.evaluate(() => window.events), []);
               }
@@ -190,7 +190,7 @@ test("Chrome: testimonial close restores focus before parent removal and preserv
             }
             await page
               .getByRole("button", {
-                name: mode === "success" ? "Complete" : "Fechar depoimentos",
+                name: mode === "success" ? "Complete" : "Fechar avaliações",
                 exact: true,
               })
               .click();

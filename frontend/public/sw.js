@@ -88,7 +88,7 @@ self.addEventListener("push", (event) => {
         badge: "/icon.png",
         ...(Array.isArray(notification.actions) &&
         notification.actions.some((item) => item?.action === "leave_testimonial")
-          ? { actions: [{ action: "leave_testimonial", title: "Deixar depoimento" }] }
+          ? { actions: [{ action: "leave_testimonial", title: "Deixar avaliação" }] }
           : {}),
         data: { redirect },
       })

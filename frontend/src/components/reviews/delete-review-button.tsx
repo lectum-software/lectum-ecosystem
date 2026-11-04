@@ -20,7 +20,7 @@ export const DeleteReviewButton = ({
   const cancelRef = useRef<HTMLButtonElement>(null);
   const deletion = useDeletePatientReview(() => {
     setOpen(false);
-    toast.success("Depoimento exclu\u00eddo.");
+    toast.success("Avaliação excluída.");
     onDeleted?.();
   });
   const close = () => {
@@ -32,13 +32,13 @@ export const DeleteReviewButton = ({
     <>
       <Button
         asChild
-        aria-label="Excluir meu depoimento"
+        aria-label="Excluir minha avaliação"
         className="ml-auto h-9 w-9 shrink-0 p-0 text-muted hover:text-danger"
         onClick={() => {
           deletion.reset();
           setOpen(true);
         }}
-        title="Excluir meu depoimento"
+        title="Excluir minha avaliação"
         type="button"
         variant="ghost"
       >
@@ -58,11 +58,11 @@ export const DeleteReviewButton = ({
           className="w-full max-w-[430px] rounded-lg border border-border bg-surface p-5 shadow-lectum-soft"
         >
           <h2 className="text-xl font-bold" id={titleId}>
-            {"Excluir seu depoimento?"}
+            {"Excluir sua avaliação?"}
           </h2>
           <p className="mt-3 text-sm leading-6 text-muted">
             {
-              "Sua nota, seu depoimento e a resposta do profissional deixar\u00e3o de aparecer. Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita."
+              "Sua nota, sua avaliação e a resposta do profissional deixar\u00e3o de aparecer. Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita."
             }
           </p>
           {deletion.isError ? (
