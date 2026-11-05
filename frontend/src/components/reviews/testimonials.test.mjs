@@ -211,7 +211,7 @@ test("convite do perfil usa azul compacto e o da modal cinza transparente sem mu
   assert.match(action, /text-sm font-semibold leading-5/);
   assert.doesNotMatch(action, /border-foreground/);
   assert.match(action, /size-4 shrink-0/);
-  assert.match(action, /inline && "max-sm:sr-only"/);
+  assert.match(action, /inline && "sr-only"/);
   assert.doesNotMatch(action, /max-width:360px/);
   assert.match(action, /aria-label="Avaliar"/);
   assert.match(action, /title="Avaliar"/);

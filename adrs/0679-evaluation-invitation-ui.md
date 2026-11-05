@@ -14,9 +14,14 @@ CommunityMediaBlock aceita afterMedia separado do footer de contato: WhatsApp
 mantem seu comportamento sobre o video, enquanto Avaliar fica fora do player,
 alinhado pela largura real da midia. Posicoes desktop e mobile sao mutuamente
 exclusivas por breakpoint, preservando regras de elegibilidade e formulario.
+Refinamento aprovado: a acao inline apresenta somente o icone em todas as
+larguras, com tooltip e nome acessivel Avaliar; os demais botoes mantem texto.
 
-A lista de pendencias usa nome em largura flexivel e botao azul em linha propria,
-conforme o padrao existente de informar pacientes, sem nova abstracao de layout.
+A lista de pendencias usa nome com reticencias, selo sem compressao e botao azul
+compacto a direita, conforme refinamento solicitado. Abre TestimonialComposer
+compartilhado, sem navegar para a pagina de criacao. A modal fica fora dos itens
+da lista para sobreviver a invalidacao das pendencias apos publicar. Links diretos
+legados continuam funcionando; elegibilidade, descarte e foco usam a modal existente.
 
 ## Consequencias
 

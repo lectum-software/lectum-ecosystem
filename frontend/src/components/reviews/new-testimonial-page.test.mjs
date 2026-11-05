@@ -127,10 +127,13 @@ test("desktop invitations use the below-video slot, separate from mobile actions
   );
 });
 
-test("pending list keeps names above the blue evaluation action", () => {
+test("pending list truncates names beside the compact action and opens the shared modal", () => {
   const list = source("../../app/app/depoimentos/pendentes/logic.tsx");
-  assert.match(list, /grid min-w-0 flex-1 justify-items-start/);
-  assert.match(list, /mt-3 min-h-11 max-w-full whitespace-normal rounded-lg/);
+  assert.match(list, /<span className="truncate">\{item.name\}/);
+  assert.match(list, /h-8 min-h-8 shrink-0 rounded-lg/);
+  assert.match(list, /setSelectedPsychologistId\(item.psychologist_id\)/);
+  assert.match(list, /<TestimonialComposer/);
+  assert.doesNotMatch(list, /\/app\/avaliacoes\/nova/);
   assert.doesNotMatch(list, /variant="outline"|ml-15|Deixar avaliação/);
   const notifications = source("../../app/app/notifications/logic.tsx");
   assert.match(notifications, /depoimentos_pendentes: \{[\s\S]*?icon: ReviewsIcon/);

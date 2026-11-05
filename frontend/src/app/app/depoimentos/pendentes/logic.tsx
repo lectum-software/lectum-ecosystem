@@ -4,7 +4,9 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { getPendingTestimonials } from "@/api/req/pending-testimonials";
+import { TestimonialComposer } from "@/components/reviews/testimonials-sheet";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
@@ -19,6 +21,7 @@ import { flattenListPages, nextListPage } from "@/utils/infinite-list";
 
 export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
   const user = useAppSelector((state) => state.user);
+  const [selectedPsychologistId, setSelectedPsychologistId] = useState<string | null>(null);
   const isPatient = user?.role === "paciente";
   const query = useInfiniteQuery({
     queryKey: ["testimonial-pending", user?.id, batch],
@@ -64,45 +67,45 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
         {isPatient && items.length > 0 ? (
           <ul className="min-w-0 divide-y divide-border border-y border-border">
             {items.map((item) => (
-              <li key={item.psychologist_id} className="flex min-w-0 items-start gap-4 py-5">
+              <li key={item.psychologist_id} className="flex min-w-0 items-center gap-3 py-4">
                 <Link
                   href={`/psicologos/${encodeURIComponent(item.psychologist_id)}`}
                   aria-label={`Perfil de ${item.name}`}
-                  className="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-primary"
+                  className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-primary"
                 >
                   {item.avatar ? (
-                    <Image src={item.avatar} alt="" fill sizes="48px" className="object-cover" />
+                    <Image src={item.avatar} alt="" fill sizes="40px" className="object-cover" />
                   ) : (
                     <UserRound className="size-6" aria-hidden />
                   )}
                 </Link>
-                <div className="grid min-w-0 flex-1 justify-items-start">
+                <div className="min-w-0 flex-1">
                   <Link
-                    className="break-words font-semibold text-foreground"
+                    className="flex min-w-0 items-center gap-1 font-semibold text-foreground"
+                    title={item.name}
                     href={`/psicologos/${encodeURIComponent(item.psychologist_id)}`}
                   >
-                    {item.name}
+                    <span className="truncate">{item.name}</span>
                     {item.verified ? (
                       <VerifiedBadgeIcon
-                        className="ml-1 inline size-4"
+                        className="size-4 shrink-0"
                         aria-label="Perfil verificado"
                       />
                     ) : null}
                   </Link>
                   {item.headline ? (
-                    <p className="mt-1 break-words text-sm text-muted">{item.headline}</p>
+                    <p className="mt-1 truncate text-sm text-muted" title={item.headline}>
+                      {item.headline}
+                    </p>
                   ) : null}
-                  <Button
-                    asChild
-                    className="mt-3 min-h-11 max-w-full whitespace-normal rounded-lg px-4 py-2 text-center text-sm font-semibold shadow-none"
-                  >
-                    <Link
-                      href={`/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(item.psychologist_id)}`}
-                    >
-                      Avaliar
-                    </Link>
-                  </Button>
                 </div>
+                <Button
+                  type="button"
+                  onClick={() => setSelectedPsychologistId(item.psychologist_id)}
+                  className="h-8 min-h-8 shrink-0 rounded-lg px-3 py-1 text-sm font-semibold shadow-none"
+                >
+                  Avaliar
+                </Button>
               </li>
             ))}
           </ul>
@@ -118,6 +121,13 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
           />
         ) : null}
       </section>
+      {selectedPsychologistId ? (
+        <TestimonialComposer
+          psychologistId={selectedPsychologistId}
+          open
+          onClose={() => setSelectedPsychologistId(null)}
+        />
+      ) : null}
     </PrivateTemplate>
   );
 };

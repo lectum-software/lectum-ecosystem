@@ -147,10 +147,11 @@ test("actual reply controls and profile primary reply retain the eligible direct
   );
 });
 
-test("inline invitation keeps a 44px target and mobile icon-only presentation", () => {
+test("inline invitation keeps a 44px target and icon-only presentation at every width", () => {
   const source = read("../reviews/testimonial-invitation-action.tsx");
   assert.match(source, /min-h-\[44px\] min-w-\[44px\]/);
-  assert.match(source, /inline && "max-sm:sr-only"/);
+  assert.match(source, /inline && "sr-only"/);
+  assert.doesNotMatch(source, /max-sm:sr-only/);
   assert.match(source, />\s*Avaliar\s*<\/span>/);
   assert.match(source, /aria-label="Avaliar"/);
 });

@@ -52,7 +52,7 @@ export const TestimonialInvitationAction = ({
       <span
         className={cn(
           "text-sm font-semibold leading-5",
-          inline && "max-sm:sr-only",
+          inline && "sr-only",
           appearance === "profile" && "text-xs leading-4",
         )}
       >
