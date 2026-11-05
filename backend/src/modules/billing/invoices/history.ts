@@ -17,7 +17,7 @@ export async function withInvoiceHistory(
   const invoices = await new InvoiceRepository().listForUser(userId, config.companyId, config.mode);
   const rows: BillingPaymentHistoryItem[] = invoices.map((invoice) => ({
     id: `invoice:${invoice.id}`,
-    title: config.mode === "test" ? "Pagamento de teste" : "Pagamento confirmado",
+    title: config.mode === "test" ? "Pagamento de teste" : "Assinatura mensal",
     description:
       config.mode === "test" ? "Pagamento de teste, sem valor fiscal" : "Cobrança confirmada.",
     amount_cents: invoice.amount_cents,

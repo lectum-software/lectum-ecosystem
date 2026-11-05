@@ -93,7 +93,7 @@ export const AlreadyVerifiedScreen = ({
       <div className="mt-8 rounded-[24px] border border-success/20 bg-success/10 px-5 py-5 text-center text-success">
         <CheckCircle2 className="mx-auto h-8 w-8" aria-hidden="true" />
         <p className="mt-3 text-sm font-semibold">
-          Seu registro está confirmado. Continue para conferir os benefícios da assinatura.
+          Seu registro está confirmado. Continue para a próxima etapa.
         </p>
       </div>
 

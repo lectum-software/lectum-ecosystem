@@ -133,7 +133,7 @@ test("upgrade usa checkout de pagamento e texto aprovado", () => {
   const html = renderToStaticMarkup(createElement(PremiumAnalyticsBanner));
   assert.match(html, /Disponível para assinantes/);
   assert.match(html, /Assine o plano profissional para acompanhar seus resultados\./);
-  assert.match(html, /href="\/app\/profissional\/assinatura\/pagamento"/);
+  assert.match(html, /href="\/app\/profissional\/assinatura\/pagamento\?intent=upgrade"/);
 });
 
 test("contador de pacientes abre historico por link com chevron", () => {

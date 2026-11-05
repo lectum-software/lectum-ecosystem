@@ -11,7 +11,7 @@ const payment = (
   overrides: Partial<BillingPaymentHistoryItem> = {},
 ): BillingPaymentHistoryItem => ({
   id: "invoice:1",
-  title: "Pagamento confirmado",
+  title: "Assinatura mensal",
   description: "",
   amount_cents: 2990,
   status: "pago",

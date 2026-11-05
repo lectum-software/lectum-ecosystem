@@ -421,6 +421,7 @@ export class AdminPsychologistBillingRepository {
   }
 
   async cancelSubscription(input: {
+    immediate?: boolean;
     audit: AdminPsychologistBillingCancelAudit;
     gatewaySubscriptionId: string;
     subscription: AdminPsychologistBillingSubscription;
@@ -453,12 +454,15 @@ export class AdminPsychologistBillingRepository {
         throw new Error("admin_subscription_cancel_target_not_found");
       }
 
-      if (current.status === "cancelada") {
+      if (current.status === "cancelada" && !input.immediate) {
         throw new Error("admin_subscription_cancel_already_cancelled");
       }
 
       if (
         current.source !== "mercadopago" ||
+        current.gateway_subscription_id !== input.subscription.gateway_subscription_id ||
+        current.gateway_subscription_id !== input.gatewaySubscriptionId ||
+        current.plan.slug !== "profissional" ||
         (current.gateway && current.gateway !== "mercadopago") ||
         !current.gateway_subscription_id
       ) {
@@ -473,6 +477,16 @@ export class AdminPsychologistBillingRepository {
           gateway: "mercadopago",
           gateway_subscription_id: input.gatewaySubscriptionId,
           ...resolveCancellationState(current, { status: "cancelada" }),
+          ...(input.immediate
+            ? {
+                current_period_end:
+                  current.current_period_end && current.current_period_end < new Date()
+                    ? current.current_period_end
+                    : new Date(),
+                billing_grace_ends_at: null,
+                billing_downgraded_at: new Date(),
+              }
+            : {}),
         },
         include: {
           plan: true,
@@ -489,15 +503,23 @@ export class AdminPsychologistBillingRepository {
 
       await tx.admin_activity_log.create({
         data: {
-          action: "psychologist_subscription_cancelled",
+          action: input.immediate
+            ? "psychologist_subscription_terminated"
+            : "psychologist_subscription_cancelled",
           admin_id: input.audit.adminId,
           area: "financeiro",
           changed_fields: input.audit.changedFields as Prisma.InputJsonValue,
           domain: "psychologist_subscription",
           metadata: input.audit.metadata,
           reason: input.audit.reason,
-          safe_after: input.audit.safeAfter,
-          safe_before: input.audit.safeBefore,
+          safe_after: {
+            ...input.audit.safeAfter,
+            current_period_end: cancelledSubscription.current_period_end?.toISOString() ?? null,
+          },
+          safe_before: {
+            ...input.audit.safeBefore,
+            current_period_end: current.current_period_end?.toISOString() ?? null,
+          },
           source: "admin_panel",
           target_id: input.audit.targetId,
           target_type: "psychologist",

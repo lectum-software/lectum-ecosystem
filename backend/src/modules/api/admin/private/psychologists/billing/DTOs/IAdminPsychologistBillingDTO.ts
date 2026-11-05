@@ -4,6 +4,7 @@ import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologi
 
 export type AdminPsychologistBillingPlan = {
   can_cancel: boolean;
+  can_terminate_immediately: boolean;
   can_change_payment_method: false;
   current_period_end: Date | null;
   gateway: string | null;
@@ -84,6 +85,8 @@ export type AdminPsychologistBillingGrantBody = {
 };
 
 export type AdminPsychologistBillingCancelBody = {
+  mode?: "period_end" | "immediate";
+  subscription_id?: string;
   confirmation: string;
   reason: string;
 };

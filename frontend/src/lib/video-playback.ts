@@ -105,6 +105,8 @@ export const useActiveVideoPlaybackGuard = ({
     if (!shouldResumeAfterFocusRef.current) return;
 
     shouldResumeAfterFocusRef.current = false;
+    // The feed coordinator owns visibility, dwell time and manual-pause state.
+    if (video.getAttribute("data-lectum-community-video-autoplay") === "true") return;
     void playVideoWithActiveDocument(video);
   }, [enabled, pauseForInactiveFocus, videoRef, visibleEnough]);
 
@@ -190,7 +192,8 @@ export const useActiveVideoPlaybackGuard = ({
       (entries) => {
         const entry = entries.at(0);
         const nextVisibleEnough =
-          Boolean(entry?.isIntersecting) && (entry?.intersectionRatio ?? 0) >= minVisibleRatio;
+          video.getAttribute("data-lectum-community-video-autoplay") === "true" ||
+          (Boolean(entry?.isIntersecting) && (entry?.intersectionRatio ?? 0) >= minVisibleRatio);
 
         setVisibleEnough(nextVisibleEnough);
       },

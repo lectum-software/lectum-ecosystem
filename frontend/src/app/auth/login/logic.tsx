@@ -91,7 +91,7 @@ export const AuthLogic = () => {
           className="[&>div:first-child]:py-5 sm:[&>div:first-child]:py-6 [&>div:last-child]:py-3"
           footer={
             <span>
-              Não tem uma conta?{" "}
+              Para usuários e psicólogos.{" "}
               <a className="font-semibold text-primary hover:text-primary-hover" href={signupHref}>
                 Cadastre-se
               </a>

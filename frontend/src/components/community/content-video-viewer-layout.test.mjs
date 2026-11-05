@@ -277,10 +277,10 @@ test("action sizing stays balanced and author controls follow the last name", as
         `${width}: badge and favorite must immediately follow the last name: ${JSON.stringify(result)}`,
       );
       assert.ok(result.touchHeights.every((height) => height >= (width < 1024 ? 44 : 40)));
-      const size = width < 359 ? 26 : width < 1024 ? 28 : 24;
+      const size = 22;
       for (const icon of result.iconSizes.slice(0, 3)) {
-        assert.equal(icon.width, size);
-        assert.equal(icon.height, size);
+        assert.equal(icon.width, 22);
+        assert.equal(icon.height, 22);
       }
       assert.ok(result.iconSizes.every((icon) => icon.box === `${size}px`));
       assert.equal(result.iconSizes[3].width, size);

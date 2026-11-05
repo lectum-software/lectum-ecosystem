@@ -738,3 +738,4 @@ Formato recomendado:
 - [ADR-0674 — Participacao explicita e contato verificado](0674-community-interaction-refinements.md)
 - [ADR-0675 — Identidade fiscal na aprovacao manual](0675-manual-registry-fiscal-name.md)
 - [ADR-0676 — Composicao do historico fiscal](0676-payment-history-invoice.md)
+- [ADR-0677 — Conclusao de assinatura, reproducao e encerramento imediato](0677-subscription-media-and-signup.md)

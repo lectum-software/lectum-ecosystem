@@ -83,24 +83,7 @@ export const ProgressiveConversionPrompt = ({
                   : isVotePrompt
                     ? "Entre para votar"
                     : "Crie sua conta gratuita";
-  const promptDescription =
-    actionPromptType === "favorite_psychologist"
-      ? "Para salvar este psicólogo nos seus favoritos, crie uma conta gratuita ou faça login. Assim você pode voltar ao perfil quando quiser."
-      : actionPromptType === "follow_community"
-        ? "Crie uma conta gratuita ou faça login para seguir esta comunidade, acompanhar novos posts e participar das conversas da Lectum."
-        : actionPromptType === "create_post"
-          ? "Para criar um post, crie uma conta gratuita ou faça login. Você pode participar da comunidade da Lectum gratuitamente e acompanhar as respostas."
-          : actionPromptType === "save_post"
-            ? "Crie uma conta gratuita ou faça login para guardar este post e voltar à conversa quando quiser."
-            : actionPromptType === "save_reply"
-              ? "Crie uma conta gratuita ou faça login para guardar esta resposta e consultar depois."
-              : actionPromptType === "comment_post"
-                ? "Crie uma conta gratuita ou faça login para participar da conversa e acompanhar as respostas."
-                : actionPromptType === "reply_comment"
-                  ? "Crie uma conta gratuita ou faça login para responder e continuar a conversa com a comunidade."
-                  : isVotePrompt
-                    ? "Crie uma conta gratuita ou faça login para marcar conteúdos como úteis ou dar downvote. Isso mantém a votação segura e evita duplicidade."
-                    : "Publique gratuitamente nas comunidades da Lectum e receba respostas de psicólogos verificados.";
+  const promptDescription = "Crie sua conta para participar ou atuar como psicólogo.";
 
   const modal = (
     <div

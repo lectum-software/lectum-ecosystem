@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { fiscalIdentityInputSchema } from "@/modules/billing/invoices/fiscal-identity";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
@@ -78,6 +79,8 @@ export const grantSchema: IValidatorRequest = {
 export const cancelSchema: IValidatorRequest = {
   params: [psychologistParam],
   body: [
+    { key: "mode", custom: z.enum(["period_end", "immediate"]), optional: true },
+    { key: "subscription_id", custom: z.string().min(1).max(120), optional: true },
     {
       key: "confirmation",
       coerse: "string",

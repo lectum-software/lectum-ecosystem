@@ -152,7 +152,7 @@ export const PremiumAnalyticsBanner = () => (
         </p>
       </div>
       <Button asChild className="h-12 w-full rounded-full px-6 text-base md:w-auto">
-        <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}>
+        <Link href={`${PSYCHOLOGIST_ONBOARDING_PATHS.checkout}?intent=upgrade`}>
           Fazer upgrade
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>

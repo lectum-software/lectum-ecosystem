@@ -69,6 +69,7 @@ const hasExternalBilling = (subscription: AdminPsychologistBillingSubscription |
 
 const isAdminCancelableGatewaySubscription = (
   subscription: AdminPsychologistBillingSubscription | null,
+  immediate = false,
 ) =>
   Boolean(
     subscription &&
@@ -76,7 +77,10 @@ const isAdminCancelableGatewaySubscription = (
       (!subscription.gateway || subscription.gateway === "mercadopago") &&
       subscription.gateway_subscription_id &&
       subscription.plan.slug === "profissional" &&
-      subscription.status !== "cancelada",
+      (subscription.status !== "cancelada" ||
+        (immediate &&
+          subscription.current_period_end &&
+          subscription.current_period_end > new Date())),
   );
 
 const hasBlockingExternalSubscription = (profile: AdminPsychologistBillingRecord) =>
@@ -106,6 +110,7 @@ const buildPlan = (
   paymentMetrics: AdminPsychologistBillingPaymentMetrics,
 ): AdminPsychologistBillingPlan => ({
   can_cancel: isAdminCancelableGatewaySubscription(subscription),
+  can_terminate_immediately: isAdminCancelableGatewaySubscription(subscription, true),
   can_change_payment_method: false,
   current_period_end: subscription?.current_period_end ?? null,
   gateway: subscription?.gateway ?? null,
@@ -437,10 +442,17 @@ export const cancelSubscription = async (
     };
   }
 
-  if (data.b.confirmation?.trim().toUpperCase() !== SUBSCRIPTION_CANCEL_CONFIRMATION) {
+  const immediate = data.b.mode === "immediate";
+  const expectedConfirmation = immediate ? "ENCERRAR AGORA" : SUBSCRIPTION_CANCEL_CONFIRMATION;
+  if (data.b.confirmation?.trim().toUpperCase() !== expectedConfirmation) {
     return {
       status: 400,
-      ...error("admin_subscription_cancel_confirmation_invalid", {}),
+      ...error(
+        immediate
+          ? "admin_subscription_end_confirmation_invalid"
+          : "admin_subscription_cancel_confirmation_invalid",
+        {},
+      ),
     };
   }
 
@@ -461,7 +473,8 @@ export const cancelSubscription = async (
   const subscription = scheduledGatewaySubscription ?? currentSubscription;
 
   if (
-    !isAdminCancelableGatewaySubscription(subscription) ||
+    !isAdminCancelableGatewaySubscription(subscription, immediate) ||
+    (immediate && data.b.subscription_id !== subscription?.id) ||
     !subscription?.gateway_subscription_id
   ) {
     return {
@@ -472,10 +485,23 @@ export const cancelSubscription = async (
 
   try {
     const gateway = getPaymentGateway();
-    await prepareCancellation(subscription, gateway);
-    const gatewayResult = await gateway.cancelSubscription({
-      gatewaySubscriptionId: subscription.gateway_subscription_id,
-    });
+    if (!immediate) await prepareCancellation(subscription, gateway);
+    const remote = immediate
+      ? await gateway.getSubscription(subscription.gateway_subscription_id)
+      : null;
+    if (
+      remote &&
+      (remote.gateway_subscription_id !== subscription.gateway_subscription_id ||
+        remote.external_reference !== subscription.id)
+    ) {
+      throw new Error("admin_subscription_cancel_target_invalid");
+    }
+    const gatewayResult =
+      remote?.status === "cancelada"
+        ? remote
+        : await gateway.cancelSubscription({
+            gatewaySubscriptionId: subscription.gateway_subscription_id,
+          });
 
     if (gatewayResult.status !== "cancelada") {
       return {
@@ -485,20 +511,28 @@ export const cancelSubscription = async (
     }
 
     const cancelledSubscription = await repository.cancelSubscription({
+      immediate,
       audit: {
         adminId: responsibleAdminId,
-        changedFields: ["Assinatura", "Status", "Provedor de pagamento"],
+        changedFields: [
+          "Assinatura",
+          "Status",
+          "Provedor de pagamento",
+          ...(immediate ? ["Fim dos benefícios"] : []),
+        ],
         metadata: {
           gateway: "mercadopago",
           gateway_status: gatewayResult.gateway_status ?? null,
           plan_slug: subscription.plan.slug,
           subscription_id: subscription.id,
+          cancellation_mode: immediate ? "immediate" : "period_end",
         },
         reason,
         safeAfter: {
           Assinatura: planLabel(subscription),
           "Provedor de pagamento": "Mercado Pago",
           Status: "Cancelada",
+          Benefícios: immediate ? "Encerrados imediatamente" : "Mantidos até o fim do período pago",
         },
         safeBefore: {
           Assinatura: planLabel(subscription),

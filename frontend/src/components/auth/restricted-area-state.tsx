@@ -50,7 +50,9 @@ export const RestrictedAreaState = ({
           {copy.title}
         </h1>
         <p className="mt-3 max-w-[360px] text-balance text-sm leading-6 text-muted sm:text-base">
-          {copy.description}
+          {sessionUnavailable
+            ? copy.description
+            : "Crie sua conta para participar ou atuar como psicólogo."}
         </p>
 
         <div className="mt-7 grid w-full gap-3 sm:grid-cols-2">

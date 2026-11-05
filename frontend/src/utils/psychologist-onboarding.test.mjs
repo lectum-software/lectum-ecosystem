@@ -11,6 +11,34 @@ const {
   PSYCHOLOGIST_ONBOARDING_PATHS: paths,
 } = await import("./psychologist-onboarding.ts");
 const { getProfileBillingAddress } = await import("./upgrade-address.ts");
+const { rememberBillingCompletion, readBillingCompletion } = await import(
+  "./billing-completion-intent.ts"
+);
+
+test("completion intent is isolated by account, expires and preserves prior benefits", (t) => {
+  const storage = new Map();
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
+  Object.defineProperty(globalThis, "sessionStorage", {
+    configurable: true,
+    value: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, value),
+    },
+  });
+  t.after(() => {
+    if (previous) Object.defineProperty(globalThis, "sessionStorage", previous);
+    else delete globalThis.sessionStorage;
+  });
+  t.mock.timers.enable({ apis: ["Date"] });
+  rememberBillingCompletion("initial", "signup", {});
+  rememberBillingCompletion("upgrade", "upgrade", { verified_badge: true });
+  assert.equal(readBillingCompletion("initial").mode, "signup");
+  assert.equal(readBillingCompletion("upgrade").mode, "upgrade");
+  assert.equal(readBillingCompletion("upgrade").previousFeatures.verified_badge, true);
+  assert.equal(readBillingCompletion("other"), null);
+  t.mock.timers.tick(86400001);
+  assert.equal(readBillingCompletion("upgrade"), null);
+});
 
 const subscription = {
   status: "ativa",

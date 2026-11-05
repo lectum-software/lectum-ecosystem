@@ -89,12 +89,8 @@ export const useContentVideoQueue = (
       setIndex((value) => Math.min(value, Math.max(0, state.seen.size - 1)));
     };
     try {
-      const scope = sourceRef.current;
+      const scope = sourceRef.current ?? { mode: "discussion", entries: [] };
       if (state.done) {
-        if (!scope || scope.mode === "discussion") {
-          finish();
-          return;
-        }
         const position = scope.entries.findIndex(
           (entry) =>
             entry.postId === state.entry.postId &&
@@ -149,12 +145,14 @@ export const useContentVideoQueue = (
             }
             return;
           }
-          if (scope.mode !== "feed") {
+          if (scope.mode === "profile") {
             finish();
             return;
           }
           continuation.current ??= createContentVideoCommunityContinuation(
-            interactionStateRef.current.items.at(-1)?.community.slug,
+            scope.mode === "feed"
+              ? interactionStateRef.current.items.at(-1)?.community.slug
+              : undefined,
           );
           const discovered = await continuation.current.next(signal, state.visited);
           if (signal.aborted) return;

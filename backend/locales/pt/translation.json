@@ -159,6 +159,7 @@
     "billing_subscription_cancel_required": "É preciso ter uma assinatura profissional ativa para cancelar.",
     "billing_gateway_cancel_failed": "Não foi possível cancelar a assinatura agora. Tente novamente em instantes.",
     "admin_subscription_cancel_confirmation_invalid": "Digite CANCELAR ASSINATURA para confirmar o cancelamento.",
+    "admin_subscription_end_confirmation_invalid": "Digite ENCERRAR AGORA para confirmar o fim imediato dos benefícios.",
     "admin_subscription_cancel_reason_required": "Informe um motivo interno com pelo menos 10 caracteres.",
     "admin_subscription_cancel_unavailable": "Não existe assinatura profissional do Mercado Pago disponível para cancelamento administrativo.",
     "admin_subscription_cancel_gateway_config_error": "Não foi possível cancelar a assinatura agora. Tente novamente em instantes.",

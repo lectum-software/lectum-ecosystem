@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
+import { rememberBillingCompletion } from "@/utils/billing-completion-intent";
 import { getBillingMutationErrorMessage } from "@/utils/billing-error";
 import {
   getMercadoPagoDeviceSessionId,
@@ -152,6 +153,23 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const hasError = billing.plans.isError || billing.current.isError;
   const professionalPlan = billing.plans.data?.plans.find((plan) => plan.slug === "profissional");
   const current = billing.current.data?.current ?? null;
+  const currentHasError = billing.current.isError;
+  useEffect(() => {
+    if (!user?.id || isCurrentSubscriptionLoading || currentHasError || isCourtesyRenewal) return;
+    if (isActiveProfessional(current) || isPendingProfessional(current)) return;
+    rememberBillingCompletion(
+      user.id,
+      searchParams.get("intent") === "upgrade" ? "upgrade" : "signup",
+      current?.plan?.features ?? {},
+    );
+  }, [
+    user?.id,
+    isCurrentSubscriptionLoading,
+    currentHasError,
+    current,
+    isCourtesyRenewal,
+    searchParams,
+  ]);
   const activeProfessional = isActiveProfessional(current);
   const activeCourtesy = isAdministrativeCourtesySubscription(current);
   const courtesyRedirectPath = user

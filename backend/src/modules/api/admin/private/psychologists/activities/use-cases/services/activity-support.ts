@@ -259,6 +259,7 @@ export const adminLogType = (action: string): AdminPsychologistActivityType | nu
   if (action === "psychologist_report_upheld") return "report_upheld";
   if (action === "psychologist_report_content_removed") return "report_content_removed";
   if (action === "psychologist_subscription_cancelled") return "subscription_cancelled";
+  if (action === "psychologist_subscription_terminated") return "subscription_cancelled";
 
   return null;
 };
@@ -296,6 +297,7 @@ export const adminReportActionLabel = (action: string) => {
 export const adminSubscriptionActionLabel = (action: string) => {
   const labels: Record<string, string> = {
     psychologist_subscription_cancelled: "cancelou a assinatura profissional",
+    psychologist_subscription_terminated: "encerrou imediatamente os benefícios da assinatura",
   };
 
   return labels[action] ?? "atualizou a assinatura";
