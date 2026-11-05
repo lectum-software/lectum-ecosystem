@@ -106,6 +106,15 @@ const isValidCpf = (value: string) => {
 };
 
 const registryApproveBaseSchema = z.object({
+  full_name: z
+    .string()
+    .trim()
+    .min(3, "Informe o nome completo para emissão fiscal.")
+    .max(150)
+    .refine(
+      (value) => [...value].every((char) => char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127),
+      "Revise o nome informado.",
+    ),
   confirmation: z.string(),
   cpf: z
     .string()

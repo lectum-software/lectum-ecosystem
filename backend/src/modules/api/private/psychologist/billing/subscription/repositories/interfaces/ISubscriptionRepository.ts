@@ -17,6 +17,9 @@ export type BillingPaymentHistoryItem = {
   occurred_at: Date | null;
   gateway: string;
   external_id: string;
+  subscription_id?: string;
+  payment_id?: string;
+  summary_charged_quantity?: number;
   invoice?: {
     id: string;
     status: string;

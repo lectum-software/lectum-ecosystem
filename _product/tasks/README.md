@@ -774,6 +774,8 @@ ou cortesia manual.
 | 311 | [TASK-311 - Preparacao da publicacao legal](TASK-311-legal-publication-readiness.md) | In progress | 310 |
 | 312 | [TASK-312 - Aviso sobre o selo verificado](TASK-312-verification-video-notification.md) | Done | 311 |
 | 313 | [TASK-313 - Contato, notificacoes e publicacao](TASK-313-community-interaction-refinements.md) | In progress | 312 |
+| 314 | [TASK-314 - Nome fiscal na aprovacao manual](TASK-314-manual-registry-fiscal-name.md) | Done | 313 |
+| 315 | [TASK-315 - Historico de pagamentos sem duplicidade fiscal](TASK-315-payment-history-invoice.md) | Done | 314 |
 
 ## Ordem operacional recomendada sem bloqueios
 

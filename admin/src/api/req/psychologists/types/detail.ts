@@ -444,6 +444,7 @@ export type AdminPsychologistRegistryVerification = {
 };
 
 export type AdminPsychologistApproveRegistryVerificationInput = {
+  full_name: string;
   confirmation: string;
   cpf: string;
   crp: string;

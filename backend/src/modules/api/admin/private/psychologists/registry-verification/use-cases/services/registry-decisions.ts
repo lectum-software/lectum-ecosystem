@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { msg } from "@/helpers/translate";
+import { fiscalNameSchema } from "@/modules/billing/invoices/fiscal-identity";
 import type {
   IAdminPsychologistRegistryVerificationApproveDTO,
   IAdminPsychologistRegistryVerificationRejectDTO,
@@ -100,6 +101,8 @@ export const approveRegistryVerification = async (
 
   const cpf = onlyDigits(data.b.cpf);
   if (!isValidCpf(cpf)) return serviceError(400, "admin_registry_verification_cpf_invalid");
+  const fullName = fiscalNameSchema.safeParse(data.b.full_name);
+  if (!fullName.success) return serviceError(400, "admin_registry_verification_approval_invalid");
 
   const regionalCrp = trimOrNull(data.b.regional_crp);
   const registrationNumber = trimOrNull(data.b.crp);
@@ -128,8 +131,11 @@ export const approveRegistryVerification = async (
   if (!crp) return serviceError(400, "admin_registry_verification_approval_invalid");
 
   const actor = toActor(data.auth ?? data.admin);
+  if (!actor.id) return serviceError(403, "unauthorized");
   const decision = await repository.approveManual(profile.id, {
     expectedProfile: previous,
+    fullName: fullName.data,
+    actorId: actor.id,
     checkedAt,
     cpf,
     crp,

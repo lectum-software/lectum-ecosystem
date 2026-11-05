@@ -82,6 +82,7 @@ export type IAdminPsychologistRegistryVerificationApproveDTO = Request & {
   admin?: admin;
   auth?: admin;
   b: {
+    full_name: string;
     confirmation: string;
     cpf: string;
     crp: string;

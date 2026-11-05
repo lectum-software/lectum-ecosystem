@@ -17,6 +17,7 @@ export const showSchema: IValidatorRequest = {
 export const approveSchema: IValidatorRequest = {
   params: [psychologistParam],
   body: [
+    { key: "full_name", custom: fiscalNameSchema },
     { key: "regional_crp", coerse: "string", method: "string", min: 1, max: 120 },
     { key: "crp", coerse: "string", method: "string", min: 1, max: 40 },
     { key: "cpf", coerse: "string", method: "string", min: 11, max: 14 },
