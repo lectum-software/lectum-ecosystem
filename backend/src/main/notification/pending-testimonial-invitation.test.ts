@@ -83,7 +83,7 @@ test("each channel inherits reply preferences, without email", () => {
 
 test("approved invitation copy carries no identity or private reply content", () => {
   assert.deepEqual(messages.depoimentos_pendentes({}), {
-    title: "Recebeu acolhimento? Retribua com um relato",
+    title: "Recebeu acolhimento? Retribua com uma avaliação.",
     body: "Conte como foi sua experiência e ajude a valorizar o trabalho de quem respondeu você.",
   });
 });

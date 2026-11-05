@@ -155,11 +155,7 @@ export const TestimonialSheetDialog = ({
               </button>
             ) : null}
             <h2 id={titleId} className="min-w-0 flex-1 pl-1 text-base font-semibold">
-              {view === "compose"
-                ? initial
-                  ? "Editar avaliação"
-                  : "Deixar avaliação"
-                : "Avaliações"}
+              {view === "compose" ? (initial ? "Editar avaliação" : "Avaliar") : "Avaliações"}
               {view === "list" && count !== undefined ? (
                 <span className="ml-2 text-sm font-medium tabular-nums text-muted">
                   {count.toLocaleString("pt-BR")}

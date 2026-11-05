@@ -619,6 +619,11 @@ const CommunityPostCardContent = ({
             <CommunityMediaBlock
               alt={displayTitle ?? "Mídia da publicação"}
               analyticsTarget={displayMediaAnalyticsTarget}
+              afterMedia={
+                primaryReply
+                  ? renderReplyTestimonialSlot(post, primaryReply, null, "media")
+                  : undefined
+              }
               enableCommunityAutoplay={profilePublicationMode}
               footer={hasVideoContact ? authorWhatsappCta : undefined}
               mediaType={displayMediaType}

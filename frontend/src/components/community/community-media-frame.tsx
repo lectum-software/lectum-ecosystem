@@ -247,6 +247,7 @@ export type CommunityMediaOverlayAction = {
 
 type CommunityMediaBlockProps = {
   alt: string;
+  afterMedia?: ReactNode;
   analyticsTarget?: ContentVideoWatchTrackingTarget;
   className?: string;
   enableCommunityAutoplay?: boolean;
@@ -267,6 +268,7 @@ type CommunityMediaBlockProps = {
 
 export const CommunityMediaBlock = ({
   alt,
+  afterMedia,
   analyticsTarget,
   className,
   enableCommunityAutoplay = false,
@@ -510,6 +512,7 @@ export const CommunityMediaBlock = ({
           ) : null}
         </div>
         {hasFooter ? footer : null}
+        {afterMedia}
       </div>
     );
   }

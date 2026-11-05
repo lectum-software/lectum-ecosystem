@@ -125,7 +125,7 @@ test("Chrome: actual action bar and directory sheet wrap composer text within mo
                 await page
                   .getByRole("button", { name: "Abrir avaliações de Profissional Exemplo" })
                   .click();
-              await page.getByRole("button", { name: "Deixar avaliação", exact: true }).click();
+              await page.getByRole("button", { name: "Avaliar", exact: true }).click();
               const question = page.getByText(
                 "Como foi sua experiência com as respostas e os conteúdos deste psicólogo?",
                 { exact: true },

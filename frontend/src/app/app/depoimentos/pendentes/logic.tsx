@@ -1,7 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { MessageSquare, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { getPendingTestimonials } from "@/api/req/pending-testimonials";
@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { ReviewsIcon } from "@/components/ui/reviews-icon";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -32,18 +33,18 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
   const items = flattenListPages(query.data?.pages);
   return (
     <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>
-      <section className="mx-auto w-full max-w-2xl px-4 py-4 sm:px-6 sm:py-6">
+      <section className="mx-auto grid w-full max-w-[430px] min-w-0 gap-4 md:max-w-3xl">
         <AppPageHeader
           backHref="/app/notificacoes"
           backLabel="Voltar para notificações"
-          title="Deixar avaliações"
+          title="Avaliar"
         />
         {!user || (isPatient && query.isLoading) ? (
           <LoadingState label="Carregando psicólogos" />
         ) : null}
         {user && !isPatient ? (
           <InlineAlert title="Área de pacientes">
-            Entre com seu perfil de paciente para deixar avaliações.
+            Entre com seu perfil de usuário para avaliar.
           </InlineAlert>
         ) : null}
         {isPatient && query.isError && !query.data ? (
@@ -55,18 +56,15 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
         ) : null}
         {isPatient && !query.isLoading && !query.isError && !items.length ? (
           <EmptyState
-            icon={MessageSquare}
+            icon={ReviewsIcon}
             title="Nenhuma avaliação pendente"
             description="Quando um psicólogo elegível responder você, ele aparecerá aqui."
           />
         ) : null}
         {isPatient && items.length > 0 ? (
-          <ul className="mt-4 divide-y divide-border">
+          <ul className="min-w-0 divide-y divide-border border-y border-border">
             {items.map((item) => (
-              <li
-                key={item.psychologist_id}
-                className="flex flex-wrap items-center gap-3 py-5 sm:flex-nowrap sm:gap-4"
-              >
+              <li key={item.psychologist_id} className="flex min-w-0 items-start gap-4 py-5">
                 <Link
                   href={`/psicologos/${encodeURIComponent(item.psychologist_id)}`}
                   aria-label={`Perfil de ${item.name}`}
@@ -78,7 +76,7 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
                     <UserRound className="size-6" aria-hidden />
                   )}
                 </Link>
-                <div className="min-w-0 flex-1">
+                <div className="grid min-w-0 flex-1 justify-items-start">
                   <Link
                     className="break-words font-semibold text-foreground"
                     href={`/psicologos/${encodeURIComponent(item.psychologist_id)}`}
@@ -94,18 +92,17 @@ export const PendingTestimonialsLogic = ({ batch }: { batch?: string }) => {
                   {item.headline ? (
                     <p className="mt-1 break-words text-sm text-muted">{item.headline}</p>
                   ) : null}
-                </div>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="ml-15 min-h-11 max-w-full whitespace-normal sm:ml-0 sm:shrink-0"
-                >
-                  <Link
-                    href={`/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(item.psychologist_id)}`}
+                  <Button
+                    asChild
+                    className="mt-3 min-h-11 max-w-full whitespace-normal rounded-lg px-4 py-2 text-center text-sm font-semibold shadow-none"
                   >
-                    Deixar avaliação
-                  </Link>
-                </Button>
+                    <Link
+                      href={`/app/avaliacoes/nova?psychologist_id=${encodeURIComponent(item.psychologist_id)}`}
+                    >
+                      Avaliar
+                    </Link>
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

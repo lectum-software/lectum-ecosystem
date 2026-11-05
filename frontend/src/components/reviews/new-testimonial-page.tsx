@@ -48,7 +48,7 @@ export const NewTestimonialPage = () => {
               <ArrowLeft className="size-5" />
             </Link>
           </Button>
-          <h1 className="text-xl font-bold">Deixar avaliação</h1>
+          <h1 className="text-xl font-bold">Avaliar</h1>
         </header>
 
         {!psychologistId ? (

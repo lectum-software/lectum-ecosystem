@@ -520,6 +520,13 @@ export const ReplyCard = ({
           <div data-comment-collapse-ignore="true">
             <CommunityMediaBlock
               alt="Mídia da resposta"
+              afterMedia={
+                <PostTestimonialInvitation
+                  postAuthorId={postAuthorId}
+                  reply={reply}
+                  placement="media"
+                />
+              }
               analyticsTarget={
                 reply.media_type === "video"
                   ? { targetId: reply.id, targetType: "reply" }

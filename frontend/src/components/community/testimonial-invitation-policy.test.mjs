@@ -111,9 +111,9 @@ test("original post toolbars never receive the highlighted reply invitation", ()
     new URL("./post-testimonial-invitation.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(helper, /postAuthorId=\{post.author.id\} reply=\{reply\}/);
+  assert.match(helper, /postAuthorId=\{post.author.id\}\s+reply=\{reply\}/);
   assert.match(helper, /\{existing\}/);
-  assert.match(helper, /\{reply \? <PostTestimonialInvitation/);
+  assert.match(helper, /\{reply \? \(\s*<PostTestimonialInvitation/);
 });
 
 test("highlighted previews never invent an isolated invitation or another action bar", () => {
@@ -151,8 +151,8 @@ test("inline invitation keeps a 44px target and mobile icon-only presentation", 
   const source = read("../reviews/testimonial-invitation-action.tsx");
   assert.match(source, /min-h-\[44px\] min-w-\[44px\]/);
   assert.match(source, /inline && "max-sm:sr-only"/);
-  assert.match(source, /inline \? "Avaliação" : "Deixar avaliação"/);
-  assert.match(source, /aria-label="Deixar avaliação"/);
+  assert.match(source, />\s*Avaliar\s*<\/span>/);
+  assert.match(source, /aria-label="Avaliar"/);
 });
 
 test("directory mobile and desktop retain TestimonialsButton with the shared ReviewsIcon", () => {

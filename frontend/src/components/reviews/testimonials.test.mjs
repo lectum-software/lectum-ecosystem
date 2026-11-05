@@ -124,14 +124,14 @@ test("perfil vazio convida em um unico bloco e nao confunde loading ou erro com 
   assert.ok(emptyStateClass);
   assert.doesNotMatch(emptyStateClass, /min-h-\[/);
   assert.match(empty, /Seja a primeira pessoa/);
-  assert.equal((empty.match(/aria-label="Deixar avaliação"/g) ?? []).length, 1);
+  assert.equal((empty.match(/aria-label="Avaliar"/g) ?? []).length, 1);
   assert.doesNotMatch(render({ isLoading: true }), /data-testimonial-empty/);
   assert.doesNotMatch(render({ isError: true }), /data-testimonial-empty/);
-  assert.doesNotMatch(render({ readOnly: true }), /aria-label="Deixar avaliação"|Seja a primeira/);
+  assert.doesNotMatch(render({ readOnly: true }), /aria-label="Avaliar"|Seja a primeira/);
   const populated = render({ reviews: [base], summary: { rating_count: 1 } });
   assert.match(populated, /overflow-hidden rounded-\[26px\][^"]*" data-testimonial-list/);
   assert.doesNotMatch(populated, /data-testimonial-empty/);
-  assert.equal((populated.match(/aria-label="Deixar avaliação"/g) ?? []).length, 1);
+  assert.equal((populated.match(/aria-label="Avaliar"/g) ?? []).length, 1);
 });
 
 test("listas e vazios dos dois perfis usam os cantos dos blocos do perfil", () => {
@@ -213,8 +213,8 @@ test("convite do perfil usa azul compacto e o da modal cinza transparente sem mu
   assert.match(action, /size-4 shrink-0/);
   assert.match(action, /inline && "max-sm:sr-only"/);
   assert.doesNotMatch(action, /max-width:360px/);
-  assert.match(action, /aria-label="Deixar avaliação"/);
-  assert.match(action, /title="Deixar avaliação"/);
+  assert.match(action, /aria-label="Avaliar"/);
+  assert.match(action, /title="Avaliar"/);
   assert.match(action, /user\?\.role !== "paciente" \|\| !eligibility.data\?\.eligible/);
 });
 

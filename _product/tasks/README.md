@@ -778,6 +778,7 @@ ou cortesia manual.
 | 315 | [TASK-315 - Historico de pagamentos sem duplicidade fiscal](TASK-315-payment-history-invoice.md) | Done | 314 |
 | 316 | [TASK-316 - Assinatura, videos e convites de cadastro](TASK-316-subscription-media-and-signup.md) | Done | 315 |
 | 317 | [TASK-317 - Download fiscal, busca CRP e pergunta em video](TASK-317-invoice-crp-and-share-card.md) | Done | 316 |
+| 318 | [TASK-318 - Convites de avaliacao](TASK-318-evaluation-invitation-ui.md) | Done | 317 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -2825,3 +2826,5 @@ mentor-author-ranking.test.mjs; lint e Biome dos arquivos alterados aprovados.
 
 Refinamento WhatsApp aprovado em 11/10 (ADR-0599): ordem votos, comentario, WhatsApp, salvar, compartilhar substitui a posicao anterior depois de Compartilhar. Desenho de 16px com alvo de toque preservado. Implementado; check frontend completo e build aprovados (.tmp/oct11-whatsapp-position-check.log e .tmp/oct11-whatsapp-position-build.log). Visual do refinamento pendente; browser automatizado indisponivel. Sem commit/push/deploy deste ajuste.
 Em consolidacao para publicacao autorizada: [TASK-313 - Contato, notificacoes e publicacao](TASK-313-community-interaction-refinements.md), junto das alteracoes locais de SendNF e upgrade. SEO de outro chat excluido. Migracao e ledger aprovados em PostgreSQL local isolado; gates completos e rollout ainda pendentes.
+
+Refinamento local de 05/11: [TASK-318 - Convites de avaliacao](TASK-318-evaluation-invitation-ui.md).

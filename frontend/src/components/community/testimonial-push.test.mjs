@@ -34,7 +34,7 @@ test("testimonial push exposes only the approved action and retains the batch de
       data: {
         json: () => ({
           notification: {
-            title: "Recebeu acolhimento? Retribua com um relato",
+            title: "Recebeu acolhimento? Retribua com uma avaliação.",
             body: "Compartilhe sua experiência.",
             actions,
           },
@@ -52,7 +52,7 @@ test("testimonial push exposes only the approved action and retains the batch de
     { action: "external", title: "untrusted" },
   ]);
   assert.equal(shown[0].options.actions.length, 1);
-  assert.equal(shown[0].options.actions[0].title, "Deixar avaliação");
+  assert.equal(shown[0].options.actions[0].title, "Avaliar");
   for (const action of ["leave_testimonial", ""]) {
     handlers.notificationclick({
       action,

@@ -90,12 +90,12 @@ test("creation requires patient eligibility and preserves existing-testimonial m
   assert.doesNotMatch(page, /useCreatePatientReview|createPatientReview\(/);
 });
 
-test("video reply invitations remain outside media player markup", () => {
+test("desktop invitations use the below-video slot, separate from mobile actions", () => {
   for (const path of ["../../app/app/community/[slug]/post/[id]/components/reply-card.tsx"]) {
     const content = source(path);
     const ast = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     let invitations = 0;
-    const visit = (node, insideMedia = false) => {
+    const visit = (node, insideMedia = false, insideAfterMedia = false) => {
       const tag = ts.isJsxElement(node)
         ? node.openingElement.tagName.getText(ast)
         : ts.isJsxSelfClosingElement(node)
@@ -103,17 +103,38 @@ test("video reply invitations remain outside media player markup", () => {
           : null;
       if (tag === "TestimonialInvitation" || tag === "PostTestimonialInvitation") {
         invitations += 1;
-        assert.equal(insideMedia, false);
+        assert.ok(!insideMedia || insideAfterMedia, "never overlay the player");
       }
-      ts.forEachChild(node, (child) => visit(child, insideMedia || tag === "CommunityMediaBlock"));
+      ts.forEachChild(node, (child) =>
+        visit(
+          child,
+          insideMedia || tag === "CommunityMediaBlock",
+          insideAfterMedia || (ts.isJsxAttribute(node) && node.name.getText(ast) === "afterMedia"),
+        ),
+      );
     };
     visit(ast);
-    assert.equal(invitations, 1, "one invitation declaration per response surface");
+    assert.equal(invitations, 2, "separate responsive placements");
   }
+  const invitation = source("../community/post-testimonial-invitation.tsx");
+  assert.match(invitation, /hidden md:inline-flex md:justify-self-end/);
+  assert.match(invitation, /: "md:hidden"/);
+  const frame = source("../community/community-media-frame.tsx");
+  assert.match(frame, /<\/div>\s*\{hasFooter \? footer : null\}\s*\{afterMedia\}/);
   assert.doesNotMatch(
     source("../community/community-post-card-reply-preview.tsx"),
     /TestimonialInvitation/,
   );
+});
+
+test("pending list keeps names above the blue evaluation action", () => {
+  const list = source("../../app/app/depoimentos/pendentes/logic.tsx");
+  assert.match(list, /grid min-w-0 flex-1 justify-items-start/);
+  assert.match(list, /mt-3 min-h-11 max-w-full whitespace-normal rounded-lg/);
+  assert.doesNotMatch(list, /variant="outline"|ml-15|Deixar avaliação/);
+  const notifications = source("../../app/app/notifications/logic.tsx");
+  assert.match(notifications, /depoimentos_pendentes: \{[\s\S]*?icon: ReviewsIcon/);
+  assert.match(notifications, /Recebeu acolhimento\? Retribua com uma avaliação\./);
 });
 
 test("active deletion and confirmation labels use depoimento", () => {
