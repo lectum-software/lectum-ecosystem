@@ -103,6 +103,8 @@ export type AdminPsychologistRegistryVerificationPreviousRecord =
 export type AdminRegistryVerificationManualAudit = Prisma.InputJsonObject;
 
 export type ApproveManualRegistryVerificationArgs = {
+  fullName: string;
+  actorId: string;
   checkedAt: Date;
   expectedProfile: AdminPsychologistRegistryVerificationPreviousRecord;
   cpf: string;
@@ -187,6 +189,16 @@ export class AdminPsychologistRegistryVerificationRepository {
       });
 
       if (updated.count === 0) return null;
+
+      await tx.fiscal_identity_event.create({
+        data: {
+          psychologist_id: profileId,
+          full_name: args.fullName,
+          cpf: args.cpf,
+          source: "manual_admin",
+          actor_id: args.actorId,
+        },
+      });
 
       return tx.professional_registry_check.create({
         data: {

@@ -736,3 +736,5 @@ Formato recomendado:
 - [ADR-0672 — Integridade da ativacao dos documentos legais](0672-legal-publication-readiness.md)
 - [ADR-0673 — Aviso fixo sobre verificacao profissional](0673-verification-video-notification.md)
 - [ADR-0674 — Participacao explicita e contato verificado](0674-community-interaction-refinements.md)
+- [ADR-0675 — Identidade fiscal na aprovacao manual](0675-manual-registry-fiscal-name.md)
+- [ADR-0676 — Composicao do historico fiscal](0676-payment-history-invoice.md)

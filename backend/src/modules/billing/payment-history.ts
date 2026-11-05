@@ -99,18 +99,11 @@ const paymentHistoryDescription = (status: BillingPaymentHistoryStatus) => {
   return labels[status];
 };
 
-const dateKey = (date?: Date | null) => (date ? date.toISOString().slice(0, 10) : "sem-data");
-
 const dedupePaymentHistoryItems = (items: BillingPaymentHistoryItem[]) => {
   const deduped = new Map<string, BillingPaymentHistoryItem>();
 
   for (const item of items) {
-    const key =
-      item.status === "pago"
-        ? ["pago", dateKey(item.occurred_at), item.amount_cents ?? "sem-valor", item.title].join(
-            ":",
-          )
-        : item.id;
+    const key = item.payment_id ? JSON.stringify([item.gateway, item.payment_id]) : item.id;
 
     if (!deduped.has(key)) {
       deduped.set(key, item);
@@ -144,12 +137,14 @@ export const buildGatewaySummaryPaymentHistoryItem = (
     description:
       summary.charged_quantity === 1 ? "Cobrança confirmada." : "Última mensalidade confirmada.",
     external_id: summary.gateway_subscription_id,
+    subscription_id: subscription.id ?? undefined,
+    summary_charged_quantity: summary.charged_quantity,
     gateway: subscription.gateway ?? "mercadopago",
     id: `gateway-summary:${summary.gateway_subscription_id}:latest-paid-installment`,
     occurred_at: toDateOrNull(summary.last_charged_at),
     status: "pago",
     status_label: "Sucesso",
-    title: subscription.plan?.name?.trim() || "Plano profissional",
+    title: "Pagamento confirmado",
   };
 };
 
@@ -159,16 +154,18 @@ export const mergeGatewaySummaryPaymentHistory = (
 ) => {
   if (!gatewayItem) return localItems;
 
-  const gatewayDate = dateKey(gatewayItem.occurred_at);
-  const localWithoutGatewayDay =
-    gatewayDate !== "sem-data"
-      ? localItems.filter((item) => dateKey(item.occurred_at) !== gatewayDate)
-      : localItems.filter(
-          (item) =>
-            item.status !== gatewayItem.status || item.amount_cents !== gatewayItem.amount_cents,
-        );
-
-  return [gatewayItem, ...localWithoutGatewayDay].slice(0, MAX_PAYMENT_HISTORY_ITEMS);
+  const identified = localItems.filter(
+    (item) =>
+      item.payment_id &&
+      item.gateway === gatewayItem.gateway &&
+      item.subscription_id === gatewayItem.subscription_id,
+  );
+  if (
+    gatewayItem.summary_charged_quantity &&
+    identified.length >= gatewayItem.summary_charged_quantity
+  )
+    return localItems;
+  return [gatewayItem, ...localItems].slice(0, MAX_PAYMENT_HISTORY_ITEMS);
 };
 
 const buildPaymentHistoryItem = (
@@ -186,7 +183,7 @@ const buildPaymentHistoryItem = (
 
   return {
     id: event.id ?? [event.gateway ?? "mercadopago", event.external_id ?? type].join(":"),
-    title: subscription.plan?.name?.trim() || "Plano profissional",
+    title: "Pagamento confirmado",
     description: paymentHistoryDescription(status.status),
     amount_cents: amountCents,
     status: status.status,
@@ -194,7 +191,24 @@ const buildPaymentHistoryItem = (
     occurred_at: event.createdAt ?? null,
     gateway: event.gateway ?? "mercadopago",
     external_id: event.external_id ?? "",
+    subscription_id: subscription.id ?? undefined,
+    payment_id: paymentIdentity(event),
   };
+};
+
+const paymentIdentity = (event: payment_event): string | undefined => {
+  const payload = event.payload as Record<string, unknown> | null;
+  const payment = payload?.payment as Record<string, unknown> | undefined;
+  const data = payload?.data as Record<string, unknown> | undefined;
+  const value =
+    payment?.id ??
+    payload?.payment_id ??
+    (event.type === "payment" ? (data?.id ?? payload?.id) : undefined);
+  return typeof value === "string" && value.trim()
+    ? value.trim()
+    : typeof value === "number" && Number.isSafeInteger(value)
+      ? String(value)
+      : undefined;
 };
 
 export const buildPaymentHistoryItemsForSubscription = (

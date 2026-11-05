@@ -20,7 +20,7 @@ const subscription = {
 } satisfies professional_subscription;
 
 describe("buildPaymentHistoryItemsForSubscription", () => {
-  it("ignora updates de assinatura, deduplica cobranças aprovadas do mesmo dia e usa o plano na descrição", () => {
+  it("ignora updates de assinatura e preserva pagamentos distintos do mesmo dia e valor", () => {
     const events: payment_event[] = [
       {
         createdAt: new Date("2026-08-13T10:00:00.000Z"),
@@ -66,9 +66,9 @@ describe("buildPaymentHistoryItemsForSubscription", () => {
 
     const items = buildPaymentHistoryItemsForSubscription(events, subscription);
 
-    assert.equal(items.length, 1);
+    assert.equal(items.length, 2);
     assert.equal(items[0].id, "evt-payment-newest");
-    assert.equal(items[0].title, "Plano Profissional");
+    assert.equal(items[0].title, "Pagamento confirmado");
     assert.equal(items[0].amount_cents, 2990);
     assert.equal(items[0].status, "pago");
     assert.equal(items[0].status_label, "Sucesso");
@@ -168,7 +168,7 @@ describe("buildPaymentHistoryItemsForSubscription", () => {
     assert.equal(merged[0].occurred_at?.toISOString(), "2026-08-13T20:10:00.000Z");
   });
 
-  it("deduplica o resumo do gateway com o evento local confirmado do mesmo dia", () => {
+  it("preserva evento sem identidade em vez de deduplicar apenas pelo dia", () => {
     const localItems = buildPaymentHistoryItemsForSubscription(
       [
         {
@@ -198,7 +198,7 @@ describe("buildPaymentHistoryItemsForSubscription", () => {
 
     const merged = mergeGatewaySummaryPaymentHistory(localItems, gatewayItem);
 
-    assert.equal(merged.length, 1);
+    assert.equal(merged.length, 2);
     assert.equal(merged[0].id, "gateway-summary:preapproval-123:latest-paid-installment");
   });
 });

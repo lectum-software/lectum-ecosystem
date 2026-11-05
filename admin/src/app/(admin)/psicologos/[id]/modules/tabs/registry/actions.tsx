@@ -151,7 +151,7 @@ export const RegistryVerificationDialog = ({
       role="dialog"
       tabIndex={-1}
     >
-      <div className="w-full rounded-t-[32px] border border-border bg-surface p-5 shadow-admin sm:max-w-[54rem] sm:rounded-[32px] sm:p-7">
+      <div className="max-h-[90dvh] w-full overflow-y-auto rounded-t-[32px] border border-border bg-surface p-5 shadow-admin sm:max-w-[54rem] sm:rounded-[32px] sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
@@ -439,6 +439,7 @@ export const RegistryApproveForm = ({
   );
   const form = useForm<RegistryApproveFormValues>({
     defaultValues: {
+      full_name: "",
       confirmation: "",
       cpf: formatCpfInput(registry.identity.cpf),
       crp: identityDefaults.crp,
@@ -452,6 +453,7 @@ export const RegistryApproveForm = ({
 
   useEffect(() => {
     form.reset({
+      full_name: "",
       confirmation: "",
       cpf: formatCpfInput(registry.identity.cpf),
       crp: identityDefaults.crp,
@@ -464,6 +466,7 @@ export const RegistryApproveForm = ({
   const onSubmit: SubmitHandler<RegistryApproveFormValues> = async (values) => {
     try {
       await mutation.mutateAsync({
+        full_name: values.full_name.trim(),
         confirmation: values.confirmation.trim(),
         cpf: normalizeCpfInput(values.cpf),
         crp: normalizeCrpRegistrationDisplay(values.crp) || "",
@@ -482,6 +485,14 @@ export const RegistryApproveForm = ({
     <FormProvider {...form}>
       <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         <div className="grid gap-4">
+          <InputController<RegistryApproveFormValues>
+            autoComplete="off"
+            disabled={mutation.isPending}
+            label="Nome completo para emissão fiscal"
+            maxLength={150}
+            name="full_name"
+            required
+          />
           <InputController<RegistryApproveFormValues>
             autoComplete="off"
             disabled={mutation.isPending}
