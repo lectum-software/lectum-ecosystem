@@ -3,7 +3,24 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-const { selectCommunityFeedAutoplayCandidate } = await import("./community-feed-video-autoplay.ts");
+const { selectCommunityFeedAutoplayCandidate, effectiveVideoVisibility } = await import(
+  "./community-feed-video-autoplay.ts"
+);
+
+test("autoplay requires half the visible capacity, including oversized videos", () => {
+  assert.equal(effectiveVideoVisibility(300 * 400, 300, 1600, 390, 800), 0.5);
+  assert.equal(effectiveVideoVisibility(300 * 200, 300, 400, 390, 800), 0.5);
+  assert.equal(effectiveVideoVisibility(0, 0, 0, 390, 800), 0);
+  const candidate = { id: "boundary", distanceToViewportCenter: 0, order: 0, isIntersecting: true };
+  assert.equal(
+    selectCommunityFeedAutoplayCandidate([{ ...candidate, intersectionRatio: 0.49 }]),
+    null,
+  );
+  assert.equal(
+    selectCommunityFeedAutoplayCandidate([{ ...candidate, intersectionRatio: 0.5 }]),
+    "boundary",
+  );
+});
 
 test("autoplay do feed escolhe o video visivel mais central", () => {
   assert.equal(
@@ -237,6 +254,7 @@ test("feed de psicologos separa volume explicito de tap e protege retomadas", ()
 });
 
 test("feed preserves explicit sound and scopes browser denial to the current activation", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"] });
   const {
     registerCommunityFeedVideoAutoplay,
     setCommunityFeedVideoSoundEnabled,
@@ -287,6 +305,7 @@ test("feed preserves explicit sound and scopes browser denial to the current act
   });
   const targetWindow = Object.assign(new EventTarget(), {
     innerHeight: 844,
+    innerWidth: 390,
     setTimeout,
     requestAnimationFrame: (callback) => {
       frames.set(++frameId, callback);
@@ -321,22 +340,27 @@ test("feed preserves explicit sound and scopes browser denial to the current act
     cleanups.push(registerCommunityFeedVideoAutoplay(id, video));
     return video;
   };
-  const flush = async () => {
+  const flush = async (dwell = 500) => {
     const pending = [...frames.values()];
     frames.clear();
     for (const callback of pending) callback();
+    t.mock.timers.tick(dwell);
+    const afterDwell = [...frames.values()];
+    frames.clear();
+    for (const callback of afterDwell) callback();
     await new Promise(setImmediate);
   };
-  const show = async (selected) => {
+  const show = async (selected, dwell = 500) => {
     observer(
       [...videos].map((video) => ({
         target: video,
-        boundingClientRect: { top: 100, height: 600 },
+        boundingClientRect: { top: 100, height: 600, width: 300 },
+        intersectionRect: { width: 300, height: video === selected ? 600 : 0 },
         intersectionRatio: video === selected ? 1 : 0,
         isIntersecting: video === selected,
       })),
     );
-    await flush();
+    await flush(dwell);
   };
   t.after(() => {
     for (const cleanup of cleanups.reverse()) cleanup();
@@ -352,7 +376,9 @@ test("feed preserves explicit sound and scopes browser denial to the current act
   cleanups.push(
     subscribeCommunityFeedVideoSoundPreference((enabled) => notifications.push(enabled)),
   );
-  await show(first);
+  await show(first, 499);
+  assert.deepEqual(first.attempts, [], "do not autoplay before 500 ms of visibility");
+  await flush(1);
   assert.deepEqual(first.attempts, [true], "ignore stored opt-in and start autoplay muted");
   assert.equal(first.paused, false);
   assert.equal(getVideoSoundEnabled(), false, "every document starts without audio consent");

@@ -64,6 +64,7 @@ export type CourtesyConfirmationFormValues = z.infer<typeof courtesyConfirmation
 
 export const subscriptionCancelSchema = z
   .object({
+    mode: z.enum(["period_end", "immediate"]),
     confirmation: z.string(),
     reason: z
       .string()
@@ -72,10 +73,12 @@ export const subscriptionCancelSchema = z
       .max(500, "Use no maximo 500 caracteres."),
   })
   .superRefine((values, ctx) => {
-    if (values.confirmation.trim().toUpperCase() !== SUBSCRIPTION_CANCEL_CONFIRMATION) {
+    const expected =
+      values.mode === "immediate" ? "ENCERRAR AGORA" : SUBSCRIPTION_CANCEL_CONFIRMATION;
+    if (values.confirmation.trim().toUpperCase() !== expected) {
       ctx.addIssue({
         code: "custom",
-        message: `Digite ${SUBSCRIPTION_CANCEL_CONFIRMATION} para confirmar.`,
+        message: `Digite ${expected} para confirmar.`,
         path: ["confirmation"],
       });
     }

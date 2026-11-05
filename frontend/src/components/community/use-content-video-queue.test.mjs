@@ -225,6 +225,7 @@ describe("content video queue mounted in React", {
     await page.evaluate(() => {
       responses["p:1"] = response([video("p", "deep", "deep")], 1, 2);
       responses["p:2"] = response([video("p", "root")], 2, 2);
+      responses["other:1"] = response([]);
       mount(
         { postId: "p", replyId: "deep" },
         {
@@ -239,6 +240,7 @@ describe("content video queue mounted in React", {
     assert.deepEqual(await page.evaluate(() => calls), [
       { id: "p", limit: 20, focusReplyId: "deep" },
       { id: "p", limit: 20, cursor: "2" },
+      { id: "other", limit: 20 },
     ]);
     assert.equal(await page.evaluate(() => queue.items[0].reply_id), "deep");
   });
@@ -577,6 +579,7 @@ describe("content video queue mounted in React", {
       requestVideos = async (id, query) => {
         calls.push({ id, ...query });
         if (query.cursor) throw Object.assign(new Error("expired"), { httpStatus: 410 });
+        if (id === "other") return response([]);
         reopens++;
         return reopens === 1
           ? { ...response([video("p", "old", "selected")]), next_cursor: "expired-token" }
@@ -604,6 +607,7 @@ describe("content video queue mounted in React", {
       { id: "p", limit: 20, focusReplyId: "selected" },
       { id: "p", limit: 20, cursor: "expired-token" },
       { id: "p", limit: 20, focusReplyId: "selected" },
+      { id: "other", limit: 20 },
     ]);
   });
 

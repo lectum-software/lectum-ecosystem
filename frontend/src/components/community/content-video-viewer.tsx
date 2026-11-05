@@ -34,6 +34,7 @@ export const ContentVideoViewer = ({
   const [panelOpen, setPanelOpen] = useState(false);
   const [seeking, setSeeking] = useState(false);
   const [createPostOpen, setCreatePostOpen] = useState(false);
+  const [endedVideoKey, setEndedVideoKey] = useState<string | null>(null);
   const conversion = useProgressiveConversion();
   const queue = useContentVideoQueue(initial, source);
   useContentVideoDiscussionChanges(queue.invalidateDiscussion);
@@ -47,8 +48,19 @@ export const ContentVideoViewer = ({
     locked: panelOpen || seeking || createPostOpen,
     onSelect: queue.select,
   });
-  const next = () => scrollTo(queue.index + 1);
-  const previous = () => scrollTo(queue.index - 1);
+  const next = () => {
+    if (queue.ended && queue.index >= queue.items.length - 1) {
+      const last = queue.items[queue.index];
+      if (last) setEndedVideoKey(contentVideoKey(last));
+      return;
+    }
+    setEndedVideoKey(null);
+    scrollTo(queue.index + 1);
+  };
+  const previous = () => {
+    setEndedVideoKey(null);
+    scrollTo(queue.index - 1);
+  };
   useModalScrollLock(true);
   useModalMediaSuspension(true, root);
   useEffect(() => {
@@ -61,6 +73,21 @@ export const ContentVideoViewer = ({
   }, []);
   const item = queue.items[queue.index];
   const focusPageKey = item ? contentVideoKey(item) : `loading:${queue.index}`;
+  const reachedEnd = endedVideoKey === focusPageKey;
+  const [previousPostId, setPreviousPostId] = useState<string | null>(null);
+  const [newPost, setNewPost] = useState(false);
+  const currentPostId = item?.post_id;
+  if (currentPostId && previousPostId !== currentPostId) {
+    setEndedVideoKey(null);
+    const changed = previousPostId !== null;
+    setPreviousPostId(currentPostId);
+    setNewPost(changed && source?.mode !== "profile");
+  }
+  useEffect(() => {
+    if (!newPost || !currentPostId) return;
+    const timer = window.setTimeout(() => setNewPost(false), 2500);
+    return () => window.clearTimeout(timer);
+  }, [currentPostId, newPost]);
 
   useLayoutEffect(() => {
     void focusPageKey;
@@ -234,6 +261,18 @@ export const ContentVideoViewer = ({
             <button type="button" onClick={() => void queue.retry()}>
               {queue.expired ? "Reabrir sequência" : "Tentar novamente"}
             </button>
+          </div>
+        ) : null}
+        {!panelOpen && !createPostOpen && (newPost || reachedEnd) ? (
+          <div
+            className="pointer-events-none absolute left-1/2 top-[calc(env(safe-area-inset-top,0px)+76px)] z-[8] w-max max-w-[calc(100%-40px)] -translate-x-1/2 rounded-lg bg-media-background/30 px-3.5 py-2 text-center text-[13px] leading-normal text-media-foreground backdrop-blur-sm"
+            role="status"
+          >
+            {reachedEnd
+              ? source?.mode === "profile"
+                ? "Você viu todos os vídeos deste profissional"
+                : "Você viu todos os vídeos disponíveis"
+              : "Novo post"}
           </div>
         ) : null}
         <div className={styles.navigation} inert={createPostOpen}>

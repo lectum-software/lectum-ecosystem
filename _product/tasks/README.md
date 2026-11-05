@@ -776,6 +776,8 @@ ou cortesia manual.
 | 313 | [TASK-313 - Contato, notificacoes e publicacao](TASK-313-community-interaction-refinements.md) | In progress | 312 |
 | 314 | [TASK-314 - Nome fiscal na aprovacao manual](TASK-314-manual-registry-fiscal-name.md) | Done | 313 |
 | 315 | [TASK-315 - Historico de pagamentos sem duplicidade fiscal](TASK-315-payment-history-invoice.md) | Done | 314 |
+| 316 | [TASK-316 - Assinatura, videos e convites de cadastro](TASK-316-subscription-media-and-signup.md) | Done | 315 |
+| 317 | [TASK-317 - Download fiscal, busca CRP e pergunta em video](TASK-317-invoice-crp-and-share-card.md) | Done | 316 |
 
 ## Ordem operacional recomendada sem bloqueios
 

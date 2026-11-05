@@ -68,7 +68,7 @@ describe("buildPaymentHistoryItemsForSubscription", () => {
 
     assert.equal(items.length, 2);
     assert.equal(items[0].id, "evt-payment-newest");
-    assert.equal(items[0].title, "Pagamento confirmado");
+    assert.equal(items[0].title, "Assinatura mensal");
     assert.equal(items[0].amount_cents, 2990);
     assert.equal(items[0].status, "pago");
     assert.equal(items[0].status_label, "Sucesso");

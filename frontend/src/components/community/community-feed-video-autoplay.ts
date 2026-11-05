@@ -22,13 +22,26 @@ import {
   subscribeVideoSoundPreference,
 } from "@/lib/video-sound-preference";
 
-const MIN_AUTOPLAY_INTERSECTION_RATIO = 0.58;
-const EXIT_INTERSECTION_RATIO = 0.2;
-const INTERSECTION_THRESHOLDS = [0, 0.2, 0.35, 0.5, 0.58, 0.7, 0.85, 1];
+const MIN_AUTOPLAY_INTERSECTION_RATIO = 0.5;
+const EXIT_INTERSECTION_RATIO = 0.5;
+const AUTOPLAY_DWELL_MS = 500;
+const INTERSECTION_THRESHOLDS = Array.from({ length: 101 }, (_, index) => index / 100);
+
+export const effectiveVideoVisibility = (
+  visibleArea: number,
+  width: number,
+  height: number,
+  viewportWidth: number,
+  viewportHeight: number,
+) => {
+  const availableArea = Math.min(width, viewportWidth) * Math.min(height, viewportHeight);
+  return availableArea > 0 ? Math.min(1, visibleArea / availableArea) : 0;
+};
 
 type SoundPreferenceListener = (soundEnabled: boolean) => void;
 
 type FeedVideoAutoplayItem = {
+  visibleSince: number | null;
   blockedPlaybackRevision: number | null;
   blockedSoundRevision: number | null;
   distanceToViewportCenter: number;
@@ -55,6 +68,7 @@ let nextAutoplayOrder = 0;
 let activeVideoId: string | null = null;
 let autoplayObserver: IntersectionObserver | null = null;
 let autoplayEvaluationFrame: number | null = null;
+let autoplayDwellTimer: ReturnType<typeof setTimeout> | null = null;
 let modalMediaSuspensionListenerAttached = false;
 let visibilityListenerAttached = false;
 
@@ -159,6 +173,7 @@ const pauseInactiveAutoplayItems = (exceptId: string | null) => {
 
 const pauseAllAutoplayItems = () => {
   for (const item of autoplayItems.values()) {
+    item.visibleSince = null;
     pauseAutoplayItem(item);
   }
 };
@@ -210,8 +225,11 @@ export const selectCommunityFeedAutoplayCandidate = (
 
 const runAutoplayEvaluation = () => {
   autoplayEvaluationFrame = null;
+  if (autoplayDwellTimer !== null) clearTimeout(autoplayDwellTimer);
+  autoplayDwellTimer = null;
 
   if (!isCommunityAutoplayContextActive()) {
+    for (const item of autoplayItems.values()) item.visibleSince = null;
     pauseAllAutoplayItems();
     activeVideoId = null;
     return;
@@ -219,10 +237,10 @@ const runAutoplayEvaluation = () => {
 
   const activeItem = activeVideoId ? autoplayItems.get(activeVideoId) : null;
 
+  const now = Date.now();
   for (const item of autoplayItems.values()) {
-    if (!item.isIntersecting || item.intersectionRatio < EXIT_INTERSECTION_RATIO) {
-      item.pausedByUser = false;
-    }
+    const eligible = item.isIntersecting && item.intersectionRatio >= EXIT_INTERSECTION_RATIO;
+    item.visibleSince = eligible ? (item.visibleSince ?? now) : null;
   }
 
   if (
@@ -251,6 +269,14 @@ const runAutoplayEvaluation = () => {
   );
 
   if (!nextId) return;
+
+  const candidate = autoplayItems.get(nextId);
+  if (!candidate || candidate.visibleSince === null) return;
+  const remaining = AUTOPLAY_DWELL_MS - (now - candidate.visibleSince);
+  if (nextId !== activeVideoId && remaining > 0) {
+    autoplayDwellTimer = setTimeout(scheduleAutoplayEvaluation, remaining);
+    return;
+  }
 
   if (nextId === activeVideoId) {
     const item = autoplayItems.get(nextId);
@@ -383,7 +409,15 @@ const getAutoplayObserver = () => {
 
         const videoCenter = entry.boundingClientRect.top + entry.boundingClientRect.height / 2;
         item.distanceToViewportCenter = Math.abs(videoCenter - viewportCenter);
-        item.intersectionRatio = entry.intersectionRatio;
+        item.intersectionRatio = effectiveVideoVisibility(
+          entry.intersectionRect.width * entry.intersectionRect.height,
+          entry.boundingClientRect.width,
+          entry.boundingClientRect.height,
+          entry.rootBounds?.width ?? window.innerWidth,
+          entry.rootBounds?.height ?? window.innerHeight,
+        );
+        if (!entry.isIntersecting || item.intersectionRatio < EXIT_INTERSECTION_RATIO)
+          item.visibleSince = null;
         item.isIntersecting = entry.isIntersecting;
       }
 
@@ -402,6 +436,7 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
   ensureModalMediaSuspensionListener();
 
   const item: FeedVideoAutoplayItem = {
+    visibleSince: null,
     blockedPlaybackRevision: null,
     blockedSoundRevision: null,
     distanceToViewportCenter: Number.MAX_SAFE_INTEGER,
@@ -425,10 +460,8 @@ export const registerCommunityFeedVideoAutoplay = (id: string, video: HTMLVideoE
   if (observer) {
     observer.observe(video);
   } else {
-    item.distanceToViewportCenter = 0;
-    item.intersectionRatio = 1;
-    item.isIntersecting = true;
-    scheduleAutoplayEvaluation();
+    // Without visibility measurement, playback remains an explicit user action.
+    item.isIntersecting = false;
   }
 
   const enforceSoundPreference = () => applySoundPreferenceToVideo(item);

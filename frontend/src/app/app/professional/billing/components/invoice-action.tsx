@@ -33,11 +33,15 @@ export function InvoiceAction({
     if (busy || !canDownload) return;
     setBusy(true);
     try {
-      const blob = await downloadBillingInvoice(invoice.id);
+      const identifier = (invoice.number || invoice.id).replace(/[^A-Za-z0-9_-]/g, "-");
+      const { blob, filename } = await downloadBillingInvoice(
+        invoice.id,
+        `Lectum-Nota-Fiscal-${isTest ? "Teste-" : ""}${identifier}.pdf`,
+      );
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = isTest ? "nota-fiscal-teste.pdf" : "nota-fiscal.pdf";
+      link.download = filename;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
     } catch {
@@ -64,7 +68,7 @@ export function InvoiceAction({
           ) : (
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
           )}
-          Nota fiscal
+          <span className="font-semibold">Nota Fiscal</span>
         </button>
       ) : null}
     </div>

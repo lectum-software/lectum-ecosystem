@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, CreditCard, Gift, Loader2, Wallet, X } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
+import { FormProvider, type SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import {
   useAdminPsychologistCancelSubscription,
@@ -141,7 +141,9 @@ export const CurrentPlanCard = ({
         ) : null}
       </dl>
 
-      {plan.can_cancel ? <SubscriptionCancelAction billing={billing} id={id} /> : null}
+      {plan.can_cancel || plan.can_terminate_immediately ? (
+        <SubscriptionCancelAction billing={billing} id={id} />
+      ) : null}
     </CardShell>
   );
 };
@@ -157,6 +159,7 @@ const SubscriptionCancelAction = ({
   const mutation = useAdminPsychologistCancelSubscription(id);
   const form = useForm<SubscriptionCancelFormValues>({
     defaultValues: {
+      mode: "period_end",
       confirmation: "",
       reason: "",
     },
@@ -164,6 +167,8 @@ const SubscriptionCancelAction = ({
     resolver: zodResolver(subscriptionCancelSchema),
   });
   const plan = billing.plan;
+  const immediate = useWatch({ control: form.control, name: "mode" }) === "immediate";
+  const confirmation = immediate ? "ENCERRAR AGORA" : SUBSCRIPTION_CANCEL_CONFIRMATION;
   const planTitle = plan.plan_name || "Plano Profissional";
   const closeModal = () => {
     if (mutation.isPending) return;
@@ -179,10 +184,16 @@ const SubscriptionCancelAction = ({
   const onSubmit: SubmitHandler<SubscriptionCancelFormValues> = async (values) => {
     try {
       await mutation.mutateAsync({
+        mode: values.mode,
+        subscription_id: plan.id ?? undefined,
         confirmation: values.confirmation.trim().toUpperCase(),
         reason: values.reason.trim(),
       });
-      toast.success("Assinatura cancelada com sucesso.");
+      toast.success(
+        immediate
+          ? "Benefícios encerrados imediatamente."
+          : "Renovação cancelada. Benefícios mantidos até o fim do período pago.",
+      );
       form.reset();
       setOpen(false);
     } catch (error) {
@@ -207,7 +218,7 @@ const SubscriptionCancelAction = ({
               Confirmação forte
             </p>
             <h3 className="mt-1 text-xl font-bold text-foreground" id="subscription-cancel-title">
-              Cancelar assinatura
+              {immediate ? "Encerrar benefícios agora" : "Cancelar renovação"}
             </h3>
           </div>
           <button
@@ -222,9 +233,9 @@ const SubscriptionCancelAction = ({
         </div>
 
         <div className="mt-5 rounded-2xl border border-danger/25 bg-danger/5 p-4 text-sm font-bold leading-6 text-danger">
-          Esta ação cancela a recorrência no provedor de pagamento e remove o acesso ao Plano
-          Profissional após a confirmação. Use somente quando o cancelamento foi solicitado ou
-          aprovado internamente.
+          {immediate
+            ? "Impede novas cobranças e encerra os benefícios imediatamente. Não realiza estorno nem apaga a aprovação do registro profissional."
+            : "Impede novas cobranças e mantém os benefícios até o fim do período pago. Não realiza estorno."}
         </div>
 
         <dl className="mt-5 divide-y divide-border rounded-2xl border border-border bg-surface-muted px-4 text-sm">
@@ -247,9 +258,9 @@ const SubscriptionCancelAction = ({
             <InputController<SubscriptionCancelFormValues>
               autoComplete="off"
               disabled={mutation.isPending}
-              label={["Digite ", SUBSCRIPTION_CANCEL_CONFIRMATION, " para confirmar"].join("")}
+              label={["Digite ", confirmation, " para confirmar"].join("")}
               name="confirmation"
-              placeholder={SUBSCRIPTION_CANCEL_CONFIRMATION}
+              placeholder={confirmation}
               required
             />
 
@@ -272,7 +283,7 @@ const SubscriptionCancelAction = ({
                 ) : (
                   <AlertTriangle aria-hidden className="h-4 w-4" />
                 )}
-                Confirmar cancelamento
+                {immediate ? "Encerrar agora" : "Confirmar cancelamento"}
               </button>
             </div>
           </form>
@@ -284,22 +295,41 @@ const SubscriptionCancelAction = ({
   return (
     <>
       <div className="mt-5 rounded-3xl border border-danger/25 bg-danger/5 p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="w-full">
             <h3 className="text-sm font-black text-danger">Cancelar assinatura</h3>
             <p className="mt-1 text-sm font-bold leading-6 text-muted">
-              Cancela a recorrência no Mercado Pago e remove o Plano Profissional.
+              Cancele a renovação ou encerre os benefícios imediatamente.
             </p>
           </div>
-          <button
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
-            disabled={mutation.isPending}
-            onClick={() => setOpen(true)}
-            type="button"
-          >
-            <AlertTriangle aria-hidden className="h-4 w-4" />
-            Cancelar
-          </button>
+          {plan.can_cancel ? (
+            <button
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+              disabled={mutation.isPending}
+              onClick={() => {
+                form.reset({ mode: "period_end", confirmation: "", reason: "" });
+                setOpen(true);
+              }}
+              type="button"
+            >
+              <AlertTriangle aria-hidden className="h-4 w-4" />
+              Cancelar renovação
+            </button>
+          ) : null}
+          {plan.can_terminate_immediately ? (
+            <button
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-danger px-4 text-sm font-bold text-danger"
+              disabled={mutation.isPending}
+              onClick={() => {
+                form.reset({ mode: "immediate", confirmation: "", reason: "" });
+                setOpen(true);
+              }}
+              type="button"
+            >
+              <AlertTriangle aria-hidden className="h-4 w-4 shrink-0" />
+              Encerrar agora
+            </button>
+          ) : null}
         </div>
       </div>
 

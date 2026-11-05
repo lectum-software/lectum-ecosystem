@@ -12,11 +12,13 @@ import {
   getPsychologistBillingCurrent,
   savePsychologistBillingAddress,
 } from "@/api/req/psychologist-billing";
+import { CfpHero } from "@/app/psychologist/cfp/components/cfp-layout";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { readBillingCompletion } from "@/utils/billing-completion-intent";
 import {
   getPaidSubscriptionNextPath,
   PSYCHOLOGIST_ONBOARDING_PATHS as paths,
@@ -41,6 +43,8 @@ export const SubscriptionCompletionLogic = () => {
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<"loading" | "error" | "ready">("loading");
   const [features, setFeatures] = useState<SubscriptionPlanFeatures>({});
+  const [upgrade, setUpgrade] = useState(false);
+  const [previousFeatures, setPreviousFeatures] = useState<SubscriptionPlanFeatures>({});
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: attempt explicitly retries the failed request sequence.
   useEffect(() => {
@@ -75,6 +79,9 @@ export const SubscriptionCompletionLogic = () => {
           return;
         }
         setFeatures(billing.current?.plan?.features ?? {});
+        const intent = user.id ? readBillingCompletion(user.id) : null;
+        setUpgrade(intent?.mode === "upgrade");
+        setPreviousFeatures(intent?.previousFeatures ?? {});
         setStatus("ready");
       } catch {
         if (!cancelled) setStatus("error");
@@ -87,7 +94,7 @@ export const SubscriptionCompletionLogic = () => {
   }, [userId, queryClient, router, attempt]);
 
   return (
-    <PrivateTemplate showHeader={false}>
+    <PrivateTemplate showHeader={false} contentClassName="min-h-screen !max-w-none bg-surface">
       <section className="mx-auto grid w-full max-w-xl gap-6 px-2 py-8">
         {status === "loading" ? <LoadingState label="Verificando sua próxima etapa" /> : null}
         {status === "error" ? (
@@ -106,37 +113,43 @@ export const SubscriptionCompletionLogic = () => {
         ) : null}
         {status === "ready" ? (
           <>
-            <CheckCircle2 aria-hidden className="h-12 w-12 text-success" />
-            <header className="grid gap-3">
-              <h1 className="text-2xl font-bold text-foreground">
-                Seu Plano Profissional está ativo!
-              </h1>
-              <p className="text-base leading-7 text-muted">
-                Seu registro profissional está confirmado. Aproveite os benefícios da sua assinatura
-                e complete seu perfil quando quiser.
-              </p>
-            </header>
-            <ul className="grid gap-4">
-              {benefitLabels
-                .filter(([key]) => features[key] === true)
-                .map(([key, label]) => (
-                  <li key={key} className="flex items-start gap-3 text-foreground">
-                    <Check aria-hidden className="h-5 w-5 shrink-0 text-primary" />
-                    {label}
-                  </li>
-                ))}
-            </ul>
+            <CfpHero
+              icon={CheckCircle2}
+              variant="success"
+              eyebrow={upgrade ? "Upgrade concluído" : "Validação concluída"}
+              title={upgrade ? "Seu Plano Profissional está ativo!" : "Registro confirmado"}
+              description={
+                upgrade
+                  ? "Aproveite os novos benefícios do seu plano."
+                  : "Próximo passo: configurar seu perfil profissional para aparecer na Lectum."
+              }
+            />
+            {upgrade ? (
+              <ul className="grid gap-4">
+                {benefitLabels
+                  .filter(([key]) => features[key] === true && previousFeatures[key] !== true)
+                  .map(([key, label]) => (
+                    <li key={key} className="flex items-start gap-3 text-foreground">
+                      <Check aria-hidden className="h-5 w-5 shrink-0 text-primary" />
+                      {label}
+                    </li>
+                  ))}
+              </ul>
+            ) : null}
             <Button asChild className="h-12 w-full">
-              <Link href={paths.profileSetup}>
-                Completar meu perfil <ArrowRight aria-hidden className="h-4 w-4" />
+              <Link href={upgrade ? "/app/profissional/assinatura" : paths.profileSetup}>
+                {upgrade ? "Ir para Minha Assinatura" : "Configurar perfil"}{" "}
+                <ArrowRight aria-hidden className="h-4 w-4" />
               </Link>
             </Button>
-            <Link
-              className="text-center text-sm text-primary underline"
-              href="/app/profissional/assinatura"
-            >
-              Ir para Minha Assinatura
-            </Link>
+            {upgrade ? (
+              <Link
+                className="text-center text-sm text-primary underline"
+                href={paths.profileSetup}
+              >
+                Editar meu perfil
+              </Link>
+            ) : null}
           </>
         ) : null}
       </section>

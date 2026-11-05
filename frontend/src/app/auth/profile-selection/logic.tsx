@@ -12,14 +12,14 @@ const profileOptions = [
   {
     href: "/auth/register/patient",
     icon: UserRound,
-    title: "Sou Usuário/Paciente",
-    description: "Cadastre-se para publicar na comunidade, salvar favoritos e mais.",
+    title: "Sou usuário",
+    description: "Participe da comunidade e salve favoritos.",
   },
   {
     href: "/auth/register/psychologist",
     icon: BriefcaseBusiness,
     title: "Sou Psicólogo",
-    description: "Cadastre-se para se conectar com pacientes e crescer sua carreira.",
+    description: "Divulgue seu trabalho e atue como psicólogo.",
   },
 ];
 

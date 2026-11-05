@@ -144,7 +144,7 @@ export const buildGatewaySummaryPaymentHistoryItem = (
     occurred_at: toDateOrNull(summary.last_charged_at),
     status: "pago",
     status_label: "Sucesso",
-    title: "Pagamento confirmado",
+    title: "Assinatura mensal",
   };
 };
 
@@ -183,7 +183,7 @@ const buildPaymentHistoryItem = (
 
   return {
     id: event.id ?? [event.gateway ?? "mercadopago", event.external_id ?? type].join(":"),
-    title: "Pagamento confirmado",
+    title: "Assinatura mensal",
     description: paymentHistoryDescription(status.status),
     amount_cents: amountCents,
     status: status.status,

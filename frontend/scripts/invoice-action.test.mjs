@@ -30,7 +30,7 @@ test("authorized live invoice renders only its download action", () => {
   assert.ok(html.includes("text-[11px]"));
   assert.ok(html.includes("h-3.5 w-3.5"));
   assert.match(html, /justify-self-end/);
-  assert.match(html, />Nota fiscal<\/button>/);
+  assert.match(html, /<span class="font-semibold">Nota Fiscal<\/span>/);
   assert.doesNotMatch(html, /min-h-11/);
   assert.doesNotMatch(html, /<p>|Nota fiscal autorizada|sem valor fiscal|de teste/);
 });

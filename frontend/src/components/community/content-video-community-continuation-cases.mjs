@@ -2,6 +2,32 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 export const registerCommunityContinuationCases = ({ getPage, wait, snapshot }) => {
+  test("a post discussion discovers another post in its own community without repeating itself", async () => {
+    const page = getPage();
+    await page.evaluate(() => {
+      responses["p:1"] = response([{ ...video("p", "a"), community: { slug: "origin" } }]);
+      responses["q:1"] = response([video("q", "b")]);
+      communityResponses["catalog:1"] = {
+        data: [{ id: "origin", slug: "origin" }],
+        page: 1,
+        pages: 1,
+      };
+      communityResponses["origin:1"] = {
+        data: [
+          { id: "p", media_type: "video" },
+          { id: "q", media_type: "video" },
+        ],
+        page: 1,
+        pages: 1,
+      };
+      mount({ postId: "p" }, { mode: "discussion", entries: [{ postId: "p" }] });
+    });
+    await wait(() => queue.items.length === 2);
+    await page.evaluate(() => action("next"));
+    await wait(() => queue.index === 1 && queue.ended);
+    assert.deepEqual(await page.evaluate(() => queue.items.map((item) => item.id)), ["a", "b"]);
+    assert.deepEqual(await page.evaluate(() => calls.map((call) => call.id)), ["p", "q"]);
+  });
   test("finishes the source community before continuing through other communities", async () => {
     const page = getPage();
     await page.evaluate(() => {

@@ -65,5 +65,12 @@ export const wrapText = (value: string, maxLineLength: number) => {
   if (current) lines.push(current);
   if (lines.length === 0) lines.push("Conteúdo na Lectum");
 
-  return lines;
+  if (lines.length <= 3) return lines;
+  return [
+    ...lines.slice(0, 2),
+    `${Array.from(lines[2] ?? "")
+      .slice(0, maxLineLength - 3)
+      .join("")
+      .trimEnd()}...`,
+  ];
 };
