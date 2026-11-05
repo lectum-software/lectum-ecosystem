@@ -79,6 +79,7 @@ export const documentSchema = z.object({
     .optional()
     .transform((v) => (v == null ? null : String(v))),
   company_id: providerId.optional(),
+  authorized_at: z.string().nullable().optional(),
 });
 export type InvoiceDocument = z.infer<typeof documentSchema>;
 

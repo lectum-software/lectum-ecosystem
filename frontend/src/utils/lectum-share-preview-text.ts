@@ -21,9 +21,14 @@ export const wrapPreviewSourceText = (value: string, maxLineLength: number) => {
   if (current) lines.push(current);
   if (lines.length === 0) lines.push("Conte\u00fado na Lectum");
 
-  return lines;
+  if (lines.length <= 3) return lines;
+  return [
+    ...lines.slice(0, 2),
+    `${Array.from(lines[2])
+      .slice(0, maxLineLength - 3)
+      .join("")
+      .trimEnd()}...`,
+  ];
 };
 
-export const getPreviewSourceBodyHeight = (lineCount: number) =>
-  // The exported 1920px video adds 60px for each line beyond the first three.
-  `${13.85 + Math.max(0, lineCount - 3) * 3.125}cqh`;
+export const getPreviewSourceBodyHeight = () => "13.85cqh";

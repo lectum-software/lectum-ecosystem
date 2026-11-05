@@ -15,6 +15,7 @@ import type {
   BillingSyncResponse,
 } from "@/api/generator/types/billing";
 import { handleReq } from "@/api/handle";
+import { invoiceDownloadFilename } from "@/utils/invoice-filename";
 
 export const getPsychologistBillingPlans = async () => {
   const handle = callEndpoint({
@@ -24,7 +25,7 @@ export const getPsychologistBillingPlans = async () => {
   return handleReq<BillingPlansResponse>(handle);
 };
 
-export const downloadBillingInvoice = async (invoiceId: string) => {
+export const downloadBillingInvoice = async (invoiceId: string, fallbackFilename: string) => {
   const handle = callEndpoint({
     route: `/api/private/psychologist/billing/subscription/invoices/${encodeURIComponent(invoiceId)}/pdf`,
   });
@@ -35,7 +36,10 @@ export const downloadBillingInvoice = async (invoiceId: string) => {
   });
   if (!response.data?.size || !response.data.type.startsWith("application/pdf"))
     throw new Error("Nota indisponível");
-  return response.data;
+  return {
+    blob: response.data,
+    filename: invoiceDownloadFilename(response.headers["content-disposition"], fallbackFilename),
+  };
 };
 
 export const getPsychologistBillingCurrent = async () => {

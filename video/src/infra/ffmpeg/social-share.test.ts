@@ -318,7 +318,7 @@ describe("FFmpeg social share command", () => {
     assert.doesNotMatch(filter, /fjfkfkgmqmqkqmfkfifngofkgo/);
   });
 
-  it("mostra perguntas longas completas e expande somente o corpo branco", () => {
+  it("limita perguntas longas a tres linhas com reticencias", () => {
     const filter = buildSocialShareFilter(
       {
         ...metadata,
@@ -329,18 +329,16 @@ describe("FFmpeg social share command", () => {
     );
 
     assert.match(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=44/);
-    assert.match(filter, /drawtext=text='trouxer a sensacao de falta de':.*:y=509:fontsize=44/);
-    assert.match(filter, /drawtext=text='ar\?':.*:y=569:fontsize=44/);
+    assert.match(filter, /drawtext=text='trouxer a sensacao de falta\.\.\.':.*:y=509:fontsize=44/);
+    assert.doesNotMatch(filter, /drawtext=text='ar\?'/);
     assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=50/);
     assert.doesNotMatch(filter, /…/u);
-    assert.match(filter, /crop=iw:2:0:88,scale=iw:60:flags=neighbor/);
-    assert.match(filter, /crop=iw:32:0:ih-32\[card_bottom\]/);
-    assert.match(filter, /\[v0\]\[card_expanded\]overlay=x=110:y=250/);
+    assert.doesNotMatch(filter, /card_expanded/);
     assert.match(filter, /drawtext=text='Respondido na Lectum':.*:x=371:y=274:fontsize=38/);
     assert.match(filter, /drawtext=text='Ana Martins':.*:x=422:y=1400:fontsize=34/);
   });
 
-  it("preserva todo o texto nas quebras, inclusive palavras maiores que uma linha", () => {
+  it("limita tambem palavras maiores que uma linha", () => {
     for (const sourceText of [
       "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the",
       "Como compartilhar meus sentimentos sem medo de ser julgado? ".repeat(3),
@@ -348,22 +346,22 @@ describe("FFmpeg social share command", () => {
     ]) {
       const normalized = sourceText.trim().replace(/\s+/gu, " ");
       const lines = wrapText(normalized, 30);
-      assert.equal(lines.join("").replace(/\s/gu, ""), normalized.replace(/\s/gu, ""));
+      assert.ok(lines[2]?.endsWith("..."));
       assert.ok(lines.every((line) => line.length <= 30));
-      assert.ok(lines.length > 3);
+      assert.equal(lines.length, 3);
     }
   });
 
-  it("expande tambem o fundo portatil mantendo margem vertical e cantos", () => {
+  it("mantem o fundo portatil sem crescer com texto longo", () => {
     const filter = buildSocialShareFilter({ ...metadata, sourceText: "a".repeat(100) }, 30, {
       filterMode: "portable",
       fontFile: null,
       logoFile: null,
       verifiedBadgeFile: null,
     });
-    assert.match(filter, /drawbox=x=110:y=338:w=860:h=294:color=white@0\.98/);
+    assert.match(filter, /drawbox=x=110:y=338:w=860:h=234:color=white@0\.98/);
     assert.match(filter, /drawbox=x=110:y=282:w=860:h=56:color=0x308ce8@0\.98/);
-    assert.match(filter, /drawtext=text='aaaaaaaaaa':.*:y=569:fontsize=44/);
+    assert.match(filter, /drawtext=text='a{27}\.\.\.':.*:y=509:fontsize=44/);
   });
   it("centraliza verticalmente perguntas em tres linhas na caixinha branca", () => {
     const filter = buildSocialShareFilter(

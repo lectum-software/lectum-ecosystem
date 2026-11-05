@@ -113,30 +113,37 @@ test("exibicao, previa e cache respeitam a ausencia da caixinha", () => {
   assert.doesNotMatch(dialog, /Respondendo (?:a )?outro v[ií]deo/i);
 });
 
-test("previa preserva a pergunta completa e cresce somente depois de tres linhas", () => {
+test("previa limita a pergunta a tres linhas sem aumentar a caixa", () => {
   const question =
     "Como lidar com a ansiedade quando ela atrapalha o trabalho, os relacionamentos e os momentos de descanso?";
   const lines = wrapPreviewSourceText(question, 30);
   assert.deepEqual(lines, [
     "Como lidar com a ansiedade",
     "quando ela atrapalha o",
-    "trabalho, os relacionamentos e",
-    "os momentos de descanso?",
+    "trabalho, os relacionamento...",
   ]);
-  assert.equal(lines.join(" "), question);
-  assert.equal(getPreviewSourceBodyHeight(lines.length), "16.975cqh");
-  for (const lineCount of [1, 2, 3]) {
-    assert.equal(getPreviewSourceBodyHeight(lineCount), "13.85cqh");
+  assert.equal(getPreviewSourceBodyHeight(), "13.85cqh");
+});
+
+test("previa e exportacao aplicam as mesmas tres linhas", async () => {
+  const { wrapText } = await import("../../../video/src/infra/ffmpeg/social-share-text.ts");
+  for (const question of [
+    "Pergunta curta?",
+    "Estou com dificuldade de socializar e medo de julgamento por tudo que faço. Isso é normal?",
+    "Como lidar com a ansiedade? ".repeat(7).trim().slice(0, 180),
+    "a".repeat(100),
+  ]) {
+    assert.deepEqual(wrapPreviewSourceText(question, 30), wrapText(question, 30));
   }
 });
 
-test("previa preserva palavras longas, acentos e todo o limite de texto social", () => {
+test("previa preserva acentos e adiciona reticencias somente quando necessario", () => {
   const longWord = "a".repeat(65);
   assert.deepEqual(wrapPreviewSourceText(longWord, 30), ["a".repeat(30), "a".repeat(30), "aaaaa"]);
   const question = "Como lidar com a ansiedade? ".repeat(7).trim().slice(0, 180);
   const lines = wrapPreviewSourceText(question, 30);
-  assert.equal(lines.join(" "), question);
-  assert.ok(lines.length > 3);
+  assert.equal(lines.length, 3);
+  assert.ok(lines[2].endsWith("..."));
   assert.ok(lines.every((line) => line.length <= 30));
   assert.equal(
     wrapPreviewSourceText("  Como\n lidar com emo\u00e7\u00f5es?  ", 30).join(" "),
@@ -272,7 +279,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.doesNotMatch(dialogSource, /w-\[79\.7%\][^"]*drop-shadow-lg/);
   assert.match(dialogSource, /bg-primary/);
   assert.match(dialogSource, /h-\[4\.6cqh\]/);
-  assert.match(dialogSource, /height: getPreviewSourceBodyHeight\(sourceLines\.length\)/);
+  assert.match(dialogSource, /height: getPreviewSourceBodyHeight\(\)/);
   assert.doesNotMatch(dialogSource, /line-clamp-3/);
   assert.match(dialogSource, /px-\[6\.6cqw\]/);
   assert.match(dialogSource, /font-bold/);

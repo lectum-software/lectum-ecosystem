@@ -88,7 +88,7 @@ export const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTar
           </div>
           <div
             className="grid min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.6cqw]"
-            style={{ height: getPreviewSourceBodyHeight(sourceLines.length) }}
+            style={{ height: getPreviewSourceBodyHeight() }}
           >
             <p
               className={cn(

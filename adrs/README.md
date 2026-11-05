@@ -739,3 +739,4 @@ Formato recomendado:
 - [ADR-0675 — Identidade fiscal na aprovacao manual](0675-manual-registry-fiscal-name.md)
 - [ADR-0676 — Composicao do historico fiscal](0676-payment-history-invoice.md)
 - [ADR-0677 — Conclusao de assinatura, reproducao e encerramento imediato](0677-subscription-media-and-signup.md)
+- [ADR-0678 — Nomes fiscais e normalizacao de apresentacao](0678-invoice-crp-and-share-card.md)

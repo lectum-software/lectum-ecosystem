@@ -7,6 +7,7 @@ import {
   invoiceRequestSchema,
   parseProvider,
 } from "@/modules/billing/invoices/contracts";
+import { invoicePdfFilename } from "@/modules/billing/invoices/filename";
 import { InvoiceRepository } from "@/modules/billing/invoices/repository";
 import { SendNfAdapter } from "@/modules/billing/invoices/SendNfAdapter";
 import type { ISubscriptionDTO } from "../DTOs/ISubscriptionDTO";
@@ -32,7 +33,17 @@ export async function invoicePdf(data: ISubscriptionDTO & { params: { id: string
   );
   if (document.status !== "authorized")
     return { status: 409, ...error("billing_invoice_unavailable", {}) };
-  return { status: 200, pdf: await provider.pdf(invoice.document_id), mode: config.mode };
+  return {
+    status: 200,
+    pdf: await provider.pdf(invoice.document_id),
+    mode: config.mode,
+    filename: invoicePdfFilename({
+      mode: config.mode,
+      number: document.nfse_number ?? invoice.number,
+      paymentId: invoice.payment_id,
+      authorizedAt: document.authorized_at,
+    }),
+  };
 }
 
 export async function downloadInvoice(req: Request, res: Response) {
@@ -42,8 +53,9 @@ export async function downloadInvoice(req: Request, res: Response) {
     const result = await invoicePdf(req as unknown as Parameters<typeof invoicePdf>[0]);
     if ("pdf" in result)
       return res
+        .setHeader("Access-Control-Expose-Headers", "Content-Disposition")
         .type("application/pdf")
-        .attachment(result.mode === "test" ? "nota-fiscal-teste.pdf" : "nota-fiscal.pdf")
+        .attachment(result.filename)
         .send(result.pdf);
     return send(res, result);
   } catch {

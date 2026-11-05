@@ -32,7 +32,8 @@ const metadata = {
   professionalRoleLabel: "Psicólogo(a)",
   professionalVerified: true,
   responseText: null,
-  sourceText: "Teste local de dimensões",
+  sourceText:
+    "Estou com dificuldade de socializar e medo de julgamento por tudo que faço. Isso é normal?",
 };
 
 // Real local media/process tests only: no HTTP, queue, credentials or provider calls.
