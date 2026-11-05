@@ -30,7 +30,6 @@ const profileSelect = () =>
     registry_checks: {
       orderBy: [{ checked_at: "desc" as const }, { createdAt: "desc" as const }],
       select: registryCheckSelect,
-      take: 8,
       where: {
         deleted: false,
       },

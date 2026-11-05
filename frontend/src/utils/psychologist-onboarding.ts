@@ -39,7 +39,14 @@ export const isAdministrativeCourtesySubscription = (subscription: SubscriptionL
 
 export const isPaidRegistryVerificationComplete = (
   profile: Pick<PsychologistProfileLike, "cfp_verified_at" | "crp_status"> | null | undefined,
-) => Boolean(profile?.crp_status === "aprovado" || profile?.cfp_verified_at);
+  subscription?: SubscriptionLike,
+) =>
+  Boolean(
+    profile?.crp_status !== "rejeitado" &&
+      (profile?.crp_status === "aprovado" ||
+        profile?.cfp_verified_at ||
+        isAdministrativeCourtesySubscription(subscription)),
+  );
 
 export const getActiveProfessionalSubscription = (
   profile: Pick<PsychologistProfileLike, "subscriptions"> | null | undefined,
@@ -57,7 +64,11 @@ export const getAfterPhoneVerificationPath = (
   const profile = data.psychologist_profile;
   const activeProfessional = getActiveProfessionalSubscription(profile);
 
-  if (profile && activeProfessional && !isPaidRegistryVerificationComplete(profile)) {
+  if (
+    profile &&
+    activeProfessional &&
+    !isPaidRegistryVerificationComplete(profile, activeProfessional)
+  ) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 
@@ -81,7 +92,7 @@ export const getPaidSubscriptionNextPath = (
     return PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress;
   }
   if (!data.psychologist_profile?.whatsapp?.trim()) return PSYCHOLOGIST_ONBOARDING_PATHS.phone;
-  if (!isPaidRegistryVerificationComplete(data.psychologist_profile)) {
+  if (!isPaidRegistryVerificationComplete(data.psychologist_profile, subscription)) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
   return PSYCHOLOGIST_ONBOARDING_PATHS.completion;
@@ -115,7 +126,7 @@ export const getPsychologistPaidOnboardingRequirementPath = (
     return PSYCHOLOGIST_ONBOARDING_PATHS.phone;
   }
 
-  if (!isPaidRegistryVerificationComplete(profile)) {
+  if (!isPaidRegistryVerificationComplete(profile, activeProfessional)) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 

@@ -55,3 +55,41 @@ Previa de frontend: http://127.0.0.1:3112/app/notificacoes.
 Rollout fiscal desativado por padrao; piloto real e QA Android/Instagram
 permanecem pendentes e nao sao representados pelos testes locais.
 Parametros legados de URL (tab=depoimentos) preservados e cobertos por teste.
+
+## Correcao local apos release 0.1.776
+
+- [x] Restaurar reconhecimento de cortesia administrativa ativa no acesso normal,
+  login, retorno de WhatsApp, conclusao de assinatura e tela CFP.
+- [x] Preservar consulta obrigatoria em assinatura comum ainda nao verificada.
+- [x] Remover limites de oito/quatro tentativas no historico do Admin.
+- [x] Exibir ativacao por cortesia mesmo com tentativas automaticas posteriores.
+- [x] Testes focados: 19 de frontend e 12 de resumo/historico aprovados.
+- [x] Aprovacao permanente de novas cortesias com auditoria na mesma transacao.
+- [x] Migration de cortesias legadas aplicada apenas em banco local isolado.
+- [x] Integracao PostgreSQL real: vencimento sem beneficios, idempotencia,
+  falhas de API sem invalidacao e reprovacao manual preservada.
+- [x] Frontend atualizado: 21 testes focais aprovados.
+- [x] Builds de Backend, Frontend e Admin desta correcao aprovados.
+- [ ] Validacao visual autenticada desta correcao.
+- [ ] Publicacao desta correcao em producao.
+
+Sem consulta paga, alteracao de cadastro de cliente remoto ou emissao fiscal.
+SEO e demais alteracoes de outros chats permanecem fora do escopo.
+
+Check integral aprovado antes da extensao de permanencia da cortesia. Apos a
+extensao: backend com 1176 testes aprovados, um skip; 15 testes focais finais
+de verificacao e plano, mais 21 testes focais de frontend aprovados.
+Teste integrado executou a migration de forma idempotente e confirmou que o
+repositorio retorna a aprovacao manual mesmo apos doze falhas automaticas.
+Nenhum commit, push, merge ou deploy desta correcao foi realizado nesta etapa.
+
+## Promocao solicitada
+
+Usuario autorizou producao e reconfirmou autodeploys/previews bloqueados.
+Versao preparada: 0.1.777, sem SEO e sem mudancas funcionais no Video.
+Revisao da migration local autorizada; novo banco isolado criado sem apagar o
+anterior. Historico completo de migrations e teste de concorrencia aprovados.
+Navegador indisponivel em duas tentativas: conferencia visual autenticada segue
+pendente e nao e substituida por afirmacao de QA concluido.
+Produção antes da publicacao: Backend/Frontend 0.1.776, Admin 0.1.740,
+health ok e ready ready. Ordem: Backend/migration, Frontend, Admin.

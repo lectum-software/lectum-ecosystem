@@ -56,7 +56,11 @@ export const summarizeVerification = (
   let status_label = "Pendente";
   let source: AdminRegistryVerificationSource = "pendente";
 
-  if (manualApprovalIsCurrent) {
+  if (profile.crp_status === "rejeitado") {
+    status = "rejeitado";
+    source = latestManual ? "manual_admin" : "pendente";
+    status_label = "Rejeitado";
+  } else if (manualApprovalIsCurrent) {
     status = "aprovado";
     source = "manual_admin";
     status_label = "Aprovado manualmente";
@@ -77,10 +81,6 @@ export const summarizeVerification = (
       source = "api_automatica";
       status_label = "Aprovado";
     }
-  } else if (profile.crp_status === "rejeitado") {
-    status = "rejeitado";
-    source = latestManual ? "manual_admin" : "pendente";
-    status_label = "Rejeitado";
   } else if (latestStatus === "provider_rate_limited") {
     status = "limite_tentativas";
     source = "api_automatica";

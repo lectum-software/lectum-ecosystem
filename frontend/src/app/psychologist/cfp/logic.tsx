@@ -12,6 +12,10 @@ import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import {
+  getActiveProfessionalSubscription,
+  isPaidRegistryVerificationComplete,
+} from "@/utils/psychologist-onboarding";
 import { CfpErrorFeedback } from "./components/cfp-error-feedback";
 import { CfpHero, PageFrame, PremiumPanel } from "./components/cfp-layout";
 import {
@@ -125,17 +129,16 @@ export const PsychologistCfpLogic = () => {
   }
 
   if (
-    currentUser?.psychologist_profile?.crp_status === "aprovado" ||
-    currentUser?.psychologist_profile?.cfp_verified_at
+    isPaidRegistryVerificationComplete(
+      currentUser?.psychologist_profile,
+      getActiveProfessionalSubscription(currentUser?.psychologist_profile),
+    )
   ) {
-    const manualApproved = Boolean(
-      currentUser.psychologist_profile.crp_status === "aprovado" &&
-        !currentUser.psychologist_profile.cfp_verified_at,
-    );
+    const manualApproved = Boolean(!currentUser?.psychologist_profile?.cfp_verified_at);
 
     return (
       <AlreadyVerifiedScreen
-        cpf={currentUser.psychologist_profile.cpf}
+        cpf={currentUser?.psychologist_profile?.cpf}
         manualApproved={manualApproved}
       />
     );
