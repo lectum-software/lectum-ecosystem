@@ -16,7 +16,7 @@ test("caption timing rejects invalid, overlapping and oversized input", () => {
   }
 });
 
-test("ASS keeps accents, escapes commands and segments long speech within original times", () => {
+test("ASS keeps full cues and original times with one background per cue", () => {
   const result = buildSocialCaptionAss([
     {
       start: 1.25,
@@ -30,6 +30,8 @@ test("ASS keeps accents, escapes commands and segments long speech within origin
   assert.match(result, /0:00:01\.25/u);
   assert.match(result, /0:00:08\.50/u);
   const events = result.split("\n").filter((line) => line.startsWith("Dialogue:"));
-  assert.ok(events.length > 1);
-  assert.ok(events.every((line) => line.split(",").slice(9).join(",").length <= 72));
+  assert.equal(events.length, 1);
+  assert.ok(events[0]);
+  assert.ok(events[0].endsWith("Conteúdo profissional. ".repeat(8).trim()));
+  assert.match(result, /,4,0,8,2,150,150,480,1/);
 });

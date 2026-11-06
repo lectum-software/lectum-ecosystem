@@ -150,3 +150,19 @@ Eventos WebKit sao exercitados em Chromium: nao equivalem a validacao em iPhone
 fisico, que deve repetir o piloto apos publicacao. Nenhuma legenda foi regerada,
 nenhuma faixa remota foi apagada e nenhuma configuracao produtiva foi alterada.
 
+### Previa social e exportacao - 2026-11-06
+
+Previa e MP4 usam os tempos completos dos cues revisados, sem repartir o tempo
+proporcionalmente em blocos de 72 caracteres. A previa acompanha currentTime por
+animation frame, com cleanup; ASS preserva a precisao de centesimos do formato.
+O fundo da previa passa a inline-block. No libass, BorderStyle 4 e Shadow 8
+produzem um unico fundo translucido por evento, sem sobrepor caixas por linha.
+Referencia: https://github.com/libass/libass/wiki/Libass'-ASS-Extensions
+
+A previa social limita sua altura a 55dvh e recorta video e overlays no mesmo
+container arredondado; o arquivo exportado continua retangular. O editor remove
+o modo compacto dependente de scroll: somente a lista rola no mobile, mantendo
+o video centralizado no tamanho inicial. Desktop preserva o player sticky.
+Estas mudancas exigem frontend e Video numa futura publicacao autorizada;
+nao exigem nova geracao de transcricao nem alteracao da allowlist.
+

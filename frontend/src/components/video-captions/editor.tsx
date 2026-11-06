@@ -47,7 +47,6 @@ export function CaptionEditForm({
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [compact, setCompact] = useState(false);
   const [focusedCue, setFocusedCue] = useState<number | null>(null);
   const cueListRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -63,8 +62,7 @@ export function CaptionEditForm({
       const mobile = window.matchMedia("(max-width: 700px)").matches;
       const listBounds = list.getBoundingClientRect();
       const top =
-        (mobile ? listBounds.top : (headerRef.current?.getBoundingClientRect().bottom ?? 64)) +
-        (compact ? 12 : 16);
+        (mobile ? listBounds.top : (headerRef.current?.getBoundingClientRect().bottom ?? 64)) + 16;
       const bottom =
         (mobile ? Math.min(listBounds.bottom, window.innerHeight) : window.innerHeight) - 12;
       const bounds = cue.getBoundingClientRect();
@@ -85,7 +83,7 @@ export function CaptionEditForm({
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", revealActiveCue);
     };
-  }, [activeCue, compact]);
+  }, [activeCue]);
   useEffect(() => {
     if (!video) return;
     const update = () => {
@@ -162,7 +160,7 @@ export function CaptionEditForm({
         </button>
       </header>
       <div className={styles.body}>
-        <div className={styles.player} data-compact={compact}>
+        <div className={styles.player}>
           <div className={styles.frame}>
             <VerticalVideoPlayer
               src={source ?? `/api/private/video-assets/${document.asset_id}/playback`}
@@ -222,15 +220,7 @@ export function CaptionEditForm({
             </span>
           </div>
         </div>
-        <section
-          ref={cueListRef}
-          aria-label="Trechos da legenda"
-          className={styles.cueList}
-          onScroll={(event) => {
-            const top = event.currentTarget.scrollTop;
-            setCompact((current) => (current ? top > 4 : top > 48));
-          }}
-        >
+        <section ref={cueListRef} aria-label="Trechos da legenda" className={styles.cueList}>
           <div className={styles.info}>
             <strong>Português</strong>
             <span className={styles.badge} data-reviewed={document.reviewed}>

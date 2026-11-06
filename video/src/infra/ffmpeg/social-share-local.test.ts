@@ -114,6 +114,70 @@ describe("social share local FFmpeg output", () => {
     if (directory) await rm(directory, { force: true, recursive: true });
   });
 
+  it("multiline captions keep a single translucent background in decoded MP4", async (context) => {
+    if (unavailableReason) return context.skip(unavailableReason);
+    const inputPath = join(directory, "white.mp4");
+    await runManagedProcess({
+      command: config.ffmpegPath,
+      timeoutMs: 60_000,
+      args: [
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "color=white:size=1080x1920:rate=12:duration=0.5",
+        "-c:v",
+        "libx264",
+        inputPath,
+      ],
+    });
+    const outputPath = join(directory, "multiline.mp4");
+    await renderSocialShareVideo({
+      config,
+      source: { kind: "file", inputPath },
+      outputPath,
+      durationSeconds: 0.5,
+      onProgress: () => {},
+      metadata: {
+        ...metadata,
+        hideSourceCard: true,
+        overlayMode: "captions",
+        captionCues: [
+          {
+            start: 0,
+            end: 0.4,
+            text: "Uma dica para pensar com calma sobre o que acontece durante o dia e compreender melhor todos os sentimentos.",
+          },
+        ],
+      },
+    });
+    const pixelsPath = join(directory, "multiline.rgb");
+    await runManagedProcess({
+      command: config.ffmpegPath,
+      timeoutMs: 60_000,
+      args: [
+        "-y",
+        "-i",
+        outputPath,
+        "-frames:v",
+        "1",
+        "-vf",
+        "crop=1080:500:0:1000",
+        "-pix_fmt",
+        "rgb24",
+        "-f",
+        "rawvideo",
+        pixelsPath,
+      ],
+    });
+    const pixels = await readFile(pixelsPath);
+    assert.ok(pixels.filter((value) => value > 85 && value < 120).length > 1000);
+    assert.ok(
+      pixels.every((value) => value > 75),
+      "no double-alpha stripes between caption lines",
+    );
+  });
+
   for (const filterMode of ["standard", "portable"] as const) {
     it(`renders three overlay modes with real captions: ${filterMode}`, async (context) => {
       if (unavailableReason) return context.skip(unavailableReason);

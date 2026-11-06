@@ -150,21 +150,13 @@ export const LectumShareDownloadDialog = ({
   const [captionTime, setCaptionTime] = useState(0);
   const mode = selection ?? (caption?.cues.length ? "captions" : "identification");
   const cue = caption?.cues.find((cue) => captionTime >= cue.start && captionTime < cue.end);
-  const captionChunks =
-    Array.from(cue?.text ?? "", (character) => (character.charCodeAt(0) < 32 ? " " : character))
-      .join("")
-      .replace(/[\\{}]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .match(/.{1,72}(?:\s|$)|.{1,72}/gu) ?? [];
-  const captionText = cue
-    ? captionChunks[
-        Math.min(
-          captionChunks.length - 1,
-          Math.floor(((captionTime - cue.start) / (cue.end - cue.start)) * captionChunks.length),
-        )
-      ]
-    : "";
+  const captionText = Array.from(cue?.text ?? "", (character) =>
+    character.charCodeAt(0) < 32 ? " " : character,
+  )
+    .join("")
+    .replace(/[\\{}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   const [previousTarget, setPreviousTarget] = useState(target);
   if (target !== previousTarget) {
     setPreviousTarget(target);
@@ -182,6 +174,23 @@ export const LectumShareDownloadDialog = ({
     },
     [isPreviewMuted],
   );
+
+  useEffect(() => {
+    if (!open || !caption?.cues.length) return;
+    let frame = 0;
+    let previousCue = -2;
+    const update = () => {
+      const time = previewVideoRef.current?.currentTime ?? 0;
+      const index = caption.cues.findIndex((cue) => time >= cue.start && time < cue.end);
+      if (index !== previousCue) {
+        previousCue = index;
+        setCaptionTime(time);
+      }
+      frame = requestAnimationFrame(update);
+    };
+    frame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frame);
+  }, [open, caption]);
 
   useEffect(() => {
     if (!target || typeof document === "undefined") return;
@@ -344,7 +353,7 @@ export const LectumShareDownloadDialog = ({
         </div>
 
         <div className="flex min-h-0 flex-1 justify-center" data-share-preview-frame="true">
-          <div className="relative aspect-[9/16] h-full max-w-full overflow-hidden bg-media-background [container-type:size]">
+          <div className="relative aspect-[9/16] h-full max-h-[55dvh] max-w-full overflow-hidden rounded-2xl bg-media-background [container-type:size]">
             <VerticalVideoPlayer
               captions={null}
               className="absolute inset-0 h-full w-full rounded-none border-0 shadow-none"
@@ -358,7 +367,6 @@ export const LectumShareDownloadDialog = ({
               onVideoElementReady={handlePreviewVideoReady}
               videoProps={{
                 autoPlay: true,
-                onTimeUpdate: (event) => setCaptionTime(event.currentTarget.currentTime),
                 "data-lectum-share-preview-video": "true",
                 loop: true,
                 muted: isPreviewMuted,
@@ -371,7 +379,7 @@ export const LectumShareDownloadDialog = ({
                 className="pointer-events-none absolute bottom-[25%] left-[14%] z-[3] w-[72%] text-center text-[4.1cqw] font-bold leading-snug text-media-foreground"
               >
                 <span
-                  className="box-decoration-clone rounded px-1 py-0.5"
+                  className="inline-block max-w-full rounded-sm px-1 py-0.5 leading-normal [overflow-wrap:anywhere]"
                   style={{
                     background:
                       "color-mix(in srgb, var(--lectum-media-background) 60%, transparent)",

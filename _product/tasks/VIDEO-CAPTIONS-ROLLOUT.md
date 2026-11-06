@@ -329,3 +329,14 @@ correcao pontual. Mudancas restritas ao frontend; geracao, revisao e allowlist n
 - [x] 14 testes focados passaram, incluindo browser em 390/1440 px; captura do CC inspecionada.
 - [x] Validacao global `pnpm check` e build do frontend passaram em 0.1.785.
 - [ ] Publicar e repetir a validacao no iPhone fisico; nenhuma publicacao nesta etapa.
+
+## Previa social e editor fixo - 2026-11-06
+
+- [x] Previa social com cantos arredondados, recorte das sobreposicoes e altura limitada a 55dvh.
+- [x] Editor mantem video centralizado no tamanho inicial enquanto a lista de frases rola.
+- [x] Previa e ASS preservam os cues inteiros e seus tempos, sem subdivisao artificial por caracteres.
+- [x] Fundo unico por cue na previa e no MP4, sem caixas sobrepostas por linha.
+- [x] Checks globais e builds de frontend/Video passaram em 0.1.786.
+- [x] 16 testes focados e 3 renders FFmpeg passaram, incluindo pixels do fundo multiline.
+- [x] Modal real conferida em 320/390/844/1440 px; editor fixo em 320/390/1440 px.
+- [ ] Publicacao autorizada de frontend e Video; testar novamente no iPhone fisico.
