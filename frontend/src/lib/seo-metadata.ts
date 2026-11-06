@@ -93,6 +93,11 @@ type SeoMetadataOverrides = {
 type CommunityPostSeoShareTarget = "default" | "whatsapp";
 
 type PublicCommunityPostSeo = {
+  captions?:
+    | (import("@/components/video-captions/types").VideoCaptions & {
+        professional: { name: string; crp: string | null; profile_url: string } | null;
+      })
+    | null;
   canonical_url: string;
   description: string;
   media_type: string | null;
@@ -120,6 +125,7 @@ type PublicCommunitySeo = {
 };
 
 type PublicPsychologistSeo = {
+  captions?: PublicCommunityPostSeo["captions"];
   canonical_url: string;
   description: string;
   name: string;
@@ -360,7 +366,7 @@ export const resolvePrivateSeoMetadata = (
     },
   );
 
-const getPublicCommunityPostSeo = async ({
+export const getPublicCommunityPostSeo = async ({
   id,
   replyId,
   slug,

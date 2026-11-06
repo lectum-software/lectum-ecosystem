@@ -65,13 +65,27 @@ const decodeSigningKey = (value: string | undefined) => {
   }
 };
 
+export const getVideoStreamApiConfig = (env: NodeJS.ProcessEnv = process.env) => {
+  if (!isVideoStreamEnabled(env)) return null;
+  const accountId = safeIdentifier(env.CLOUDFLARE_STREAM_ACCOUNT_ID, 64);
+  const apiToken = env.CLOUDFLARE_STREAM_API_TOKEN?.trim() || null;
+  if (!accountId || !apiToken) return null;
+  return {
+    accountId,
+    apiToken,
+    requestTimeoutMs: parsePositiveInteger(
+      env.CLOUDFLARE_STREAM_REQUEST_TIMEOUT_MS,
+      DEFAULT_REQUEST_TIMEOUT_MS,
+      { max: 60_000, min: 1_000 },
+    ),
+  };
+};
+
 export const getVideoStreamConfig = (
   env: NodeJS.ProcessEnv = process.env,
 ): VideoStreamConfig | null => {
-  if (!isVideoStreamEnabled(env)) return null;
-
-  const accountId = safeIdentifier(env.CLOUDFLARE_STREAM_ACCOUNT_ID, 64);
-  const apiToken = env.CLOUDFLARE_STREAM_API_TOKEN?.trim() || null;
+  const api = getVideoStreamApiConfig(env);
+  if (!api) return null;
   const customerCode = safeIdentifier(env.CLOUDFLARE_STREAM_CUSTOMER_CODE, 128);
   const signingKeyId = safeIdentifier(env.CLOUDFLARE_STREAM_SIGNING_KEY_ID, 64);
   const signingKey = decodeSigningKey(env.CLOUDFLARE_STREAM_SIGNING_PRIVATE_KEY_BASE64);
@@ -79,8 +93,6 @@ export const getVideoStreamConfig = (
   const allowedOrigins = resolveAllowedOrigins(env);
 
   if (
-    !accountId ||
-    !apiToken ||
     !customerCode ||
     !signingKeyId ||
     !signingKey ||
@@ -91,19 +103,13 @@ export const getVideoStreamConfig = (
   }
 
   return {
-    accountId,
+    ...api,
     allowedOrigins,
-    apiToken,
     customerCode,
     playbackTtlSeconds: parsePositiveInteger(
       env.CLOUDFLARE_STREAM_PLAYBACK_TTL_SECONDS,
       DEFAULT_PLAYBACK_TTL_SECONDS,
       { max: 24 * 60 * 60, min: 60 },
-    ),
-    requestTimeoutMs: parsePositiveInteger(
-      env.CLOUDFLARE_STREAM_REQUEST_TIMEOUT_MS,
-      DEFAULT_REQUEST_TIMEOUT_MS,
-      { max: 60_000, min: 1_000 },
     ),
     signingKey,
     signingKeyId,

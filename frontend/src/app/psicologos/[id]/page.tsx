@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PsychologistProfileLogic } from "@/app/app/psychologist/[id]/logic";
 import { SITE_NAME } from "@/lib/seo";
-import { resolvePsychologistSeoMetadata } from "@/lib/seo-metadata";
+import { getPublicPsychologistSeo, resolvePsychologistSeoMetadata } from "@/lib/seo-metadata";
 import { publicPsychologistHref } from "@/utils/public-routes";
 
 type PsychologistProfilePageProps = {
@@ -26,6 +26,18 @@ export const generateMetadata = async ({
   });
 };
 
-export default function PsychologistProfilePage() {
-  return <PsychologistProfileLogic />;
+export default async function PsychologistProfilePage({ params }: PsychologistProfilePageProps) {
+  const { id } = await params;
+  const seo = await getPublicPsychologistSeo({ id });
+  return (
+    <>
+      <PsychologistProfileLogic />
+      {seo?.captions?.cues.length ? (
+        <section className="sr-only" aria-label="Transcrição do vídeo de apresentação">
+          <h2>Transcrição do vídeo de apresentação</h2>
+          <p>{seo.captions.cues.map((cue) => cue.text).join(" ")}</p>
+        </section>
+      ) : null}
+    </>
+  );
 }

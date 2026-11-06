@@ -15,6 +15,8 @@ import {
 } from "@/infra/video-stream";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { deletePublicProfileMedia } from "../profile-media/public-storage";
+import { localCaptionPreviewPlayback } from "./captions/local-preview";
+import { readCaptions } from "./captions/service";
 import { isR2MigrationAsset } from "./r2-migration/policy";
 import { VideoAssetRepository } from "./repository";
 import { shouldRetainCanceledVideo } from "./retention/policy";
@@ -306,9 +308,11 @@ export const cancelOwnedVideoAsset = async (
 
 const playbackResponse = async (asset: VideoAssetRecord) => {
   const provider = getVideoStreamProvider();
-  if (!provider || asset.provider !== "cloudflare_stream") return streamUnavailable();
+  if (asset.provider !== "cloudflare_stream") return streamUnavailable();
 
-  const playback = provider.createPlayback(asset.provider_uid);
+  const playback =
+    provider?.createPlayback(asset.provider_uid) ?? localCaptionPreviewPlayback(asset);
+  if (!playback) return streamUnavailable();
   return {
     allowSignedMediaUrls: true,
     status: 200,
@@ -317,6 +321,7 @@ const playbackResponse = async (asset: VideoAssetRecord) => {
       expires_at: playback.expiresAt.toISOString(),
       hls_url: playback.hlsUrl,
       thumbnail_url: playback.thumbnailUrl,
+      captions: await readCaptions(asset.id).catch(() => null),
     },
   };
 };

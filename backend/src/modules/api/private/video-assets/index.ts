@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { getLimiter } from "@/external/limiter";
+import captionRoutes from "./captions";
 import { cancelUpload, destroy, status, store, uploadEvent } from "./use-cases/controller";
 import { actionValidator, uploadEventValidator, uploadValidator } from "./validator";
 
 const routes = Router();
+routes.use(captionRoutes);
 
 routes.post("/uploads", uploadValidator, store);
 routes.post(

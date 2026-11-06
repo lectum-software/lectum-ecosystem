@@ -191,6 +191,7 @@ export const PostDetailLogic = ({
   initialFocusReplyId?: string | null;
 } = {}) => {
   const [floatingHeaderVisible, setFloatingHeaderVisible] = useState(false);
+  const [transcriptPostId, setTranscriptPostId] = useState<string | null>(null);
   const [replyComposerActive, setReplyComposerActive] = useState(false);
   const floatingHeaderInteractionUntilRef = useRef(0);
   const lastScrollYRef = useRef(0);
@@ -332,6 +333,7 @@ export const PostDetailLogic = ({
             />
             <article className="overflow-hidden bg-surface shadow-lectum-soft dark:bg-surface sm:mt-4 sm:rounded-[26px] sm:border sm:border-border">
               <PostHeader
+                onShowTranscript={() => setTranscriptPostId(post.id)}
                 onBack={handlePostBack}
                 onDeleted={() => router.replace(`/comunidades/${post.community.slug}`)}
                 onReport={(trigger) => {
@@ -341,7 +343,11 @@ export const PostDetailLogic = ({
                 }}
                 post={post}
               />
-              <PostBody post={post} />
+              <PostBody
+                post={post}
+                transcriptOpen={transcriptPostId === post.id}
+                onCloseTranscript={() => setTranscriptPostId(null)}
+              />
               <PostVoteBar
                 currentVote={post.current_user_vote}
                 disabled={voteMutation.isPending || saveMutation.isPending}

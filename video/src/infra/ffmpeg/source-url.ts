@@ -80,6 +80,16 @@ const hasAllowedVideoPath = (url: URL) => {
   const pathName = decodeURIComponent(url.pathname).toLowerCase();
 
   if (CLOUDFLARE_STREAM_SIGNED_HLS.test(url.toString())) return true;
+  // Local proof uses one explicitly authorized public Stream copy, never arbitrary HLS.
+  if (
+    process.env.NODE_ENV === "development" &&
+    process.env.HOST === "127.0.0.1" &&
+    process.env.VIDEO_CAPTIONS_LOCAL_PUBLIC_URL === url.toString() &&
+    /^https:\/\/customer-[a-z0-9]+\.cloudflarestream\.com\/[a-f0-9]{32}\/manifest\/video\.m3u8$/.test(
+      url.toString(),
+    )
+  )
+    return true;
   // A public playlist can delegate reads to private URLs or local files. Only the
   // trusted Stream manifest is allowed to reach FFmpeg's network demuxer.
   if (pathName.endsWith(".m3u8")) return false;

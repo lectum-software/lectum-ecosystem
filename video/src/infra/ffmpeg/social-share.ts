@@ -1,16 +1,18 @@
-import { stat } from "node:fs/promises";
+import { rm, stat, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import type { VideoServiceConfig } from "../../config/env.js";
 import {
   type SocialShareRenderMetadata,
   VideoProcessingError,
 } from "../../domain/jobs/contracts.js";
 import { lectumLogoMarkDrawBoxes, roundedRectDrawBoxes } from "./drawbox-art.js";
-import { drawText } from "./drawtext.js";
+import { drawText, quoteDrawTextValue } from "./drawtext.js";
 import {
   type ManagedProcessDiagnosticCode,
   ManagedProcessError,
   runManagedProcess,
 } from "./process.js";
+import { buildSocialCaptionAss, socialCaptionCuesSchema } from "./social-captions.js";
 import {
   resolveSocialShareAssetFile,
   resolveSocialShareFontFile,
@@ -56,6 +58,7 @@ type SocialShareSource =
 type SocialShareFilterMode = "portable" | "standard";
 
 type SocialShareRenderOptions = {
+  captionFile?: string | undefined;
   professionalNameLayout: { width: number; fontSize: number };
   cardBackgroundFile?: string | null;
   filterMode?: SocialShareFilterMode;
@@ -86,11 +89,16 @@ const NON_RETRYABLE_RENDER_DIAGNOSTICS = new Set<ManagedProcessDiagnosticCode>([
 ]);
 
 const filterChain = (inputLabel: string, filters: readonly string[], outputLabel: string) =>
-  `${inputLabel}${filters.join(",")}${outputLabel}`;
+  `${inputLabel}${filters.length ? filters.join(",") : "null"}${outputLabel}`;
 
 export const sanitizeSocialShareMetadata = (
   metadata: SocialShareRenderMetadata,
 ): SocialShareRenderMetadata => ({
+  overlayMode: metadata.overlayMode ?? "identification",
+  captionCues:
+    metadata.overlayMode === "captions"
+      ? socialCaptionCuesSchema.parse(metadata.captionCues)
+      : undefined,
   hideSourceCard: metadata.hideSourceCard === true,
   cardLabel: normalizeCardLabel(metadata.cardLabel),
   professionalName: normalizeProfessionalName(metadata.professionalName),
@@ -167,7 +175,10 @@ export const buildSocialShareFilter = (
     professional.nameY + Math.round((professional.nameFontSize - professional.badgeHeight) / 2);
   const hasCardBackgroundAsset = !sanitized.hideSourceCard && Boolean(cardBackgroundFile);
   const hasLogoAsset = !sanitized.hideSourceCard && Boolean(logoFile);
-  const hasVerifiedBadgeAsset = sanitized.professionalVerified && Boolean(verifiedBadgeFile);
+  const hasVerifiedBadgeAsset =
+    sanitized.overlayMode === "identification" &&
+    sanitized.professionalVerified &&
+    Boolean(verifiedBadgeFile);
   let nextAssetInputIndex = 1;
   const cardBackgroundInputIndex = hasCardBackgroundAsset ? nextAssetInputIndex++ : null;
   const logoInputIndex = hasLogoAsset ? nextAssetInputIndex++ : null;
@@ -219,47 +230,51 @@ export const buildSocialShareFilter = (
   ];
   const overlayFilters = [
     ...(sanitized.hideSourceCard ? [] : sourceCardFilters),
-    drawText({
-      color: "white",
-      fontFile,
-      fontSize: nameFontSize,
-      shadow: true,
-      text: sanitized.professionalName,
-      x: professionalTextX,
-      y: professional.nameY,
-    }),
-    ...(sanitized.professionalVerified
-      ? hasVerifiedBadgeAsset
-        ? []
-        : [
-            ...roundedRectDrawBoxes({
-              color: colors.verified,
-              height: professional.badgeHeight,
-              radius: Math.floor(professional.badgeHeight / 2),
-              sliceHeight: 3,
-              width: professional.badgeWidth,
-              x: verifiedBadgeX,
-              y: verifiedBadgeY,
-            }),
-            drawText({
-              color: "white",
-              fontFile,
-              fontSize: professional.checkMarkFontSize,
-              text: "\u2713",
-              x: verifiedBadgeX + 5,
-              y: verifiedBadgeY + 3,
-            }),
-          ]
+    ...(sanitized.overlayMode === "identification"
+      ? [
+          drawText({
+            color: "white",
+            fontFile,
+            fontSize: nameFontSize,
+            shadow: true,
+            text: sanitized.professionalName,
+            x: professionalTextX,
+            y: professional.nameY,
+          }),
+          ...(sanitized.professionalVerified
+            ? hasVerifiedBadgeAsset
+              ? []
+              : [
+                  ...roundedRectDrawBoxes({
+                    color: colors.verified,
+                    height: professional.badgeHeight,
+                    radius: Math.floor(professional.badgeHeight / 2),
+                    sliceHeight: 3,
+                    width: professional.badgeWidth,
+                    x: verifiedBadgeX,
+                    y: verifiedBadgeY,
+                  }),
+                  drawText({
+                    color: "white",
+                    fontFile,
+                    fontSize: professional.checkMarkFontSize,
+                    text: "\u2713",
+                    x: verifiedBadgeX + 5,
+                    y: verifiedBadgeY + 3,
+                  }),
+                ]
+            : []),
+          drawText({
+            color: "white@0.93",
+            fontFile: regularFontFile,
+            fontSize: professional.roleFontSize,
+            shadow: true,
+            text: sanitized.professionalRoleLabel,
+            x: professionalTextX,
+            y: professional.roleY,
+          }),
+        ]
       : []),
-    drawText({
-      color: "white@0.93",
-      fontFile: regularFontFile,
-      fontSize: professional.roleFontSize,
-      shadow: true,
-      text: sanitized.professionalRoleLabel,
-      x: professionalTextX,
-      y: professional.roleY,
-    }),
   ];
 
   const baseFilters =
@@ -299,7 +314,13 @@ export const buildSocialShareFilter = (
     );
   }
 
-  return overlayStages.join(";");
+  const graph = overlayStages.join(";");
+  if (sanitized.overlayMode !== "captions") return graph;
+  if (!options.captionFile) throw new VideoProcessingError("processing_failed");
+  const fonts = fontFile
+    ? `:fontsdir=${quoteDrawTextValue(dirname(fontFile).replaceAll("\\", "/"))}`
+    : "";
+  return `${graph.replaceAll("[v]", "[caption_base]")};[caption_base]subtitles=filename=${quoteDrawTextValue(options.captionFile.replaceAll("\\", "/"))}${fonts}[v]`;
 };
 
 export const buildSocialShareVideoArguments = (
@@ -328,7 +349,9 @@ export const buildSocialShareVideoArguments = (
       ? resolveSocialShareAssetFile(SOCIAL_SHARE_VERIFIED_BADGE_FILE_NAME)
       : options.verifiedBadgeFile;
   const verifiedBadgeFile =
-    sanitizedMetadata.professionalVerified && requestedVerifiedBadgeFile
+    sanitizedMetadata.overlayMode === "identification" &&
+    sanitizedMetadata.professionalVerified &&
+    requestedVerifiedBadgeFile
       ? requestedVerifiedBadgeFile
       : null;
   const inputArguments = (() => {
@@ -568,6 +591,8 @@ export const renderSocialShareVideo = async (input: {
     ? AbortSignal.any([input.signal, outputLimitController.signal])
     : outputLimitController.signal;
   let exceededOutputLimit = false;
+  const captionFile =
+    input.metadata.overlayMode === "captions" ? `${input.outputPath}.ass` : undefined;
 
   const outputMonitor = setInterval(() => {
     void stat(input.outputPath)
@@ -581,6 +606,12 @@ export const renderSocialShareVideo = async (input: {
   outputMonitor.unref();
 
   try {
+    if (captionFile) {
+      const cues = socialCaptionCuesSchema.parse(input.metadata.captionCues);
+      if (cues.some((cue) => cue.end > input.durationSeconds + 0.5))
+        throw new VideoProcessingError("invalid_video");
+      await writeFile(captionFile, buildSocialCaptionAss(cues), { mode: 0o600 });
+    }
     const resolvedFontFile = await resolveSocialShareFontFile();
     const resolvedRegularFontFile = await resolveSocialShareRegularFontFile();
     const resolvedCardBackgroundFile = resolveSocialShareAssetFile(
@@ -614,7 +645,11 @@ export const renderSocialShareVideo = async (input: {
           signal,
         });
         await runManagedProcess({
-          args: buildSocialShareVideoArguments(input, { ...variant, professionalNameLayout }),
+          args: buildSocialShareVideoArguments(input, {
+            ...variant,
+            professionalNameLayout,
+            captionFile,
+          }),
           command: input.config.ffmpegPath,
           maxStdoutBytes: 4_194_304,
           onStdout: progressParser,
@@ -648,5 +683,6 @@ export const renderSocialShareVideo = async (input: {
     throw new VideoProcessingError("processing_failed", { cause: error, retryable: true });
   } finally {
     clearInterval(outputMonitor);
+    if (captionFile) await rm(captionFile, { force: true });
   }
 };

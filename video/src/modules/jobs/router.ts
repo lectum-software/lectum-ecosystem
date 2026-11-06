@@ -22,7 +22,7 @@ export const createVideoJobsRouter = (dependencies: VideoJobControllerDependenci
   );
   router.post(
     "/social-share",
-    json({ limit: "16kb", strict: true }),
+    json({ limit: "4mb", strict: true }),
     startSocialShareRenderJob(dependencies),
   );
   router.get("/:id", showVideoJob(dependencies));

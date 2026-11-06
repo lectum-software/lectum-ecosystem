@@ -1161,6 +1161,7 @@ model community_post {
 }
 
 model video_asset {
+  caption                    video_caption?
   id                         String    @id @default(cuid())
   deleted                    Boolean   @default(false)
   deletedAt                  DateTime? @map("deleted_at")
@@ -1194,6 +1195,19 @@ model video_asset {
   @@index([status, deleted, updatedAt])
   @@index([context_id, purpose, deleted])
   @@map("video_assets")
+}
+
+model video_caption {
+  asset_id    String @id
+  state       String @default("inprogress")
+  language    String @default("pt")
+  cues        Json?
+  revision    Int @default(0)
+  reviewed_at DateTime?
+  updated_at  DateTime @default(now()) @updatedAt
+  asset       video_asset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+
+  @@map("video_captions")
 }
 
 // Operational retention is independent from user/content lifetime; never cascade it.

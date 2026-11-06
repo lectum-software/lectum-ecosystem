@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { VideoServiceConfig } from "../../config/env.js";
 import type { SocialShareRenderMetadata } from "../../domain/jobs/contracts.js";
 import { sendPublicError, sendSuccess } from "../../http/responses.js";
+import { socialCaptionCuesSchema } from "../../infra/ffmpeg/social-captions.js";
 import { sanitizeSocialShareMetadata } from "../../infra/ffmpeg/social-share.js";
 import {
   assertSafeRemoteVideoSourceUrl,
@@ -44,15 +45,19 @@ const JOB_OUTPUT_FILE_NAME = "lectum-video-comprimido.mp4";
 const SOCIAL_SHARE_OUTPUT_FILE_NAME = "lectum-video-redes-sociais.mp4";
 
 const socialShareRequestSchema = z.object({
-  metadata: z.object({
-    hideSourceCard: z.boolean().default(false),
-    cardLabel: z.string().trim().min(1).max(80),
-    professionalName: z.string().trim().min(1).max(90),
-    professionalRoleLabel: z.string().trim().min(1).max(48),
-    professionalVerified: z.boolean().default(false),
-    responseText: z.string().trim().max(180).nullable().optional(),
-    sourceText: z.string().trim().min(1).max(180),
-  }),
+  metadata: z
+    .object({
+      overlayMode: z.enum(["captions", "identification", "none"]).default("identification"),
+      captionCues: socialCaptionCuesSchema.optional(),
+      hideSourceCard: z.boolean().default(false),
+      cardLabel: z.string().trim().min(1).max(80),
+      professionalName: z.string().trim().min(1).max(90),
+      professionalRoleLabel: z.string().trim().min(1).max(48),
+      professionalVerified: z.boolean().default(false),
+      responseText: z.string().trim().max(180).nullable().optional(),
+      sourceText: z.string().trim().min(1).max(180),
+    })
+    .refine((value) => value.overlayMode !== "captions" || Boolean(value.captionCues?.length)),
   source_origin: z.string().trim().max(2_048).nullable().optional(),
   source_url: z.string().trim().min(1).max(4_096),
 });
@@ -210,6 +215,7 @@ export const startSocialShareRenderJob =
         sourceUrl,
       });
       enqueued = true;
+      response.setHeader("x-lectum-overlay-mode", parsed.data.metadata.overlayMode);
       sendSuccess(response, 202, await toPublicVideoJob(job));
     } catch (error) {
       if (enqueued) {

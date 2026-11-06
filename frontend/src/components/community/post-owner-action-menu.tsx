@@ -17,6 +17,8 @@ import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostDetail } from "@/api/generator/types/posts";
 import { PostEditModal } from "@/components/community/post-edit-modal";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import { EditCaptionMenuItem } from "@/components/video-captions/edit-menu-item";
+import { CaptionOverflowMenu, TranscriptMenuItem } from "@/components/video-captions/transcript";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -39,11 +41,34 @@ type OwnerActionPost = Pick<
 >;
 
 type PostOwnerActionMenuProps = {
+  onShowTranscript?: () => void;
   className?: string;
   onDeleted?: () => void;
   onUpdated?: () => void;
   post: OwnerActionPost;
 };
+
+export function PostHeaderActionMenu({
+  post,
+  showOwnerActions,
+  isReply,
+  displayAuthorId,
+  reference,
+}: {
+  post: OwnerActionPost;
+  showOwnerActions: boolean;
+  isReply: boolean;
+  displayAuthorId: string;
+  reference: string | null;
+}) {
+  const user = useAppSelector((state) => state.user);
+  const canEdit = showOwnerActions && user?.role === "psicologo";
+  return canEdit && !isReply && user.id === post.author.id ? (
+    <PostOwnerActionMenu post={post} />
+  ) : (
+    <CaptionOverflowMenu reference={reference} canEdit={canEdit && user.id === displayAuthorId} />
+  );
+}
 
 const errorMessageFromUnknown = (error: unknown) =>
   getSafeApiErrorMessage(error, "Não foi possível concluir a ação. Tente novamente.");
@@ -161,6 +186,7 @@ const PostActionModal = ({
 };
 
 export const PostOwnerActionMenu = ({
+  onShowTranscript,
   className,
   onDeleted,
   onUpdated,
@@ -298,6 +324,22 @@ export const PostOwnerActionMenu = ({
             <Pencil className="h-4 w-4" aria-hidden="true" />
             Editar
           </button>
+          {isPsychologistPost ? (
+            <EditCaptionMenuItem
+              reference={
+                post.media_items?.find((item) => item.media_type === "video")?.media_url ??
+                (post.media_type === "video" ? post.media_url : null)
+              }
+            />
+          ) : null}
+          <TranscriptMenuItem
+            reference={
+              post.media_items?.find((item) => item.media_type === "video")?.media_url ??
+              (post.media_type === "video" ? post.media_url : null)
+            }
+            onSelected={() => setMenuOpen(false)}
+            onOpen={onShowTranscript}
+          />
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
             disabled={busy}

@@ -10,6 +10,7 @@ import {
   type ReplySecondaryActions,
   ReplySecondaryMenuActions,
 } from "@/components/community/reply-secondary-menu-actions";
+import { TranscriptMenuItem } from "@/components/video-captions/transcript";
 
 export type ReplyOverflowMenuProps = {
   deletePending?: boolean;
@@ -75,6 +76,10 @@ export const ReplyOverflowMenu = ({
       </button>
       {menuOpen ? (
         <ReplyMenuSurface triggerRef={trigger} onClose={() => setMenuOpen(false)} width={224}>
+          <TranscriptMenuItem
+            reference={reply.media_type === "video" ? reply.media_url : null}
+            onSelected={() => setMenuOpen(false)}
+          />
           {secondaryActions ? (
             <ReplySecondaryMenuActions {...secondaryActions} onClose={() => setMenuOpen(false)} />
           ) : null}

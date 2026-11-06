@@ -428,6 +428,8 @@ export const shareReply = async (
 };
 
 type PostShareVideoArtifactRenderJobRequest = {
+  overlayMode?: "captions" | "identification" | "none";
+  captionRevision?: number;
   jobId?: string;
   postId: string;
   replyId?: string | null;
@@ -465,6 +467,8 @@ const renderJobFileRoute = (replyId?: string | null) =>
     : "/api/private/posts/:id/share-artifact/render-jobs/:jobId/file";
 
 export const startPostShareVideoArtifactRenderJob = async ({
+  overlayMode,
+  captionRevision,
   postId,
   replyId,
   signal,
@@ -472,6 +476,7 @@ export const startPostShareVideoArtifactRenderJob = async ({
 }: PostShareVideoArtifactRenderJobRequest) => {
   const handle = callEndpoint({
     route: renderJobRoute(replyId),
+    body: { overlayMode, captionRevision },
     method: "POST",
     params: { id: postId, replyId: replyId ?? undefined },
     config: { signal, timeout: timeoutMs },

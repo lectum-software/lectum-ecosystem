@@ -16,6 +16,7 @@ import { FeedFavoriteButton } from "@/components/community/feed-favorite-button"
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { CaptionOverflowMenu } from "@/components/video-captions/transcript";
 import { cn } from "@/lib/utils";
 import {
   formatCommunityPostTime as formatPostTimeLabel,
@@ -117,6 +118,10 @@ export const ProfessionalReplyPreview = ({
                   <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start feed-favorite-slot">
                     <FeedFavoriteButton author={reply.author} />
                   </span>
+                  <CaptionOverflowMenu
+                    reference={reply.media_type === "video" ? reply.media_url : null}
+                    authorId={reply.author.id}
+                  />
                 </span>
               </div>
               <Link
@@ -207,6 +212,10 @@ export const ProfessionalReplyPreview = ({
               <span className="ml-1 flex h-0 w-[66px] shrink-0 items-center justify-start feed-favorite-slot">
                 <FeedFavoriteButton author={reply.author} />
               </span>
+              <CaptionOverflowMenu
+                reference={reply.media_type === "video" ? reply.media_url : null}
+                authorId={reply.author.id}
+              />
             </span>
           </div>
           <Link

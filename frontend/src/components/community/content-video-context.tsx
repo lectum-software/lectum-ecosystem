@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, useContext } from "react";
+import { TranscriptScope } from "@/components/video-captions/transcript";
 
 export type ContentVideoSourceEntry = {
   postId: string;
@@ -41,7 +42,11 @@ export const ContentVideoPost = ({
   postId: string;
   hideInlineContact?: boolean;
   disabled?: boolean;
-}) => <PostContext.Provider value={post}>{children}</PostContext.Provider>;
+}) => (
+  <PostContext.Provider value={post}>
+    <TranscriptScope>{children}</TranscriptScope>
+  </PostContext.Provider>
+);
 
 export const useContentVideoSource = () => useContext(SourceContext);
 export const useContentVideoPost = () => useContext(PostContext);

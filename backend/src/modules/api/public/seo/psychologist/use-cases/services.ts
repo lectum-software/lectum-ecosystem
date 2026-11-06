@@ -2,6 +2,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
+import { readPublicCaptions } from "@/modules/video-assets/captions/service";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type { PublicPsychologistSeoDTO } from "../DTOs/IPublicPsychologistSeoDTO";
 
@@ -115,6 +116,7 @@ export const show = async ({ id }: PsychologistSeoParams): Promise<Resolve> => {
         select: {
           bio: true,
           headline: true,
+          video_url: true,
           professional_first_name: true,
           professional_last_name: true,
           updatedAt: true,
@@ -138,6 +140,7 @@ export const show = async ({ id }: PsychologistSeoParams): Promise<Resolve> => {
     compactDescription(profile.headline || profile.bio) ||
     "Perfil público de psicólogo na Lectum, com informações profissionais e participação em comunidades.";
   const data: PublicPsychologistSeoDTO = {
+    captions: await readPublicCaptions(profile.video_url).catch(() => null),
     canonical_url: `/psicologos/${psychologist.id}`,
     description,
     name,

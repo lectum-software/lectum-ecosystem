@@ -41,6 +41,7 @@ export const useVideoPlaybackSource = (
   }, [enabled, isStream, playback.data?.expires_at, refetchPlayback]);
 
   return {
+    captions: hasFreshPlayback ? playback.data?.captions : null,
     error: isStream && !hasFreshPlayback ? playback.error : null,
     isLoading: isStream && enabled && !playback.error && !hasFreshPlayback,
     isStream,

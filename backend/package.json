@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.782",
+  "version": "0.1.783",
   "packageManager": "pnpm@10.33.0",
   "private": true,
   "prisma": {
@@ -62,6 +62,7 @@
     "libphonenumber-js": "^1.13.4",
     "mercadopago": "^3.1.0",
     "multer": "2.5.0",
+    "node-webvtt": "1.9.4",
     "nodemailer": "10.1.4",
     "nodemailer-express-handlebars": "^7.0.0",
     "passport": "^0.7.0",

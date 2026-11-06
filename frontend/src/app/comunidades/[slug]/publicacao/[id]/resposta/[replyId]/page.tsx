@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PostReplyThreadLogic } from "@/app/app/community/[slug]/post/[id]/logic";
+import { PublicTranscript } from "@/components/video-captions/public-transcript";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";
 import { publicCommunityReplyThreadHref } from "@/utils/public-routes";
@@ -27,6 +28,12 @@ export const generateMetadata = async ({ params }: PostReplyThreadPageProps): Pr
   });
 };
 
-export default function PostReplyThreadPage() {
-  return <PostReplyThreadLogic forceBackToFeed />;
+export default async function PostReplyThreadPage({ params }: PostReplyThreadPageProps) {
+  const { id, slug, replyId } = await params;
+  return (
+    <>
+      <PostReplyThreadLogic forceBackToFeed />
+      <PublicTranscript id={id} slug={slug} replyId={replyId} />
+    </>
+  );
 }

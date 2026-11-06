@@ -120,76 +120,87 @@ export class ProfileVideoWatchRepository {
       completed,
     );
 
-    const existing = await prisma.profile_video_watch_session.findFirst({
-      where: {
-        psychologist_id: psychologistId,
-        session_key: data.b.session_key,
+    return prisma.$transaction(
+      async (transaction) => {
+        // Serialize the read/merge/write even when this session has no row yet.
+        const lockKey = JSON.stringify(["profile-video-watch", psychologistId, data.b.session_key]);
+        await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+        const existing = await transaction.profile_video_watch_session.findFirst({
+          where: {
+            psychologist_id: psychologistId,
+            session_key: data.b.session_key,
+          },
+        });
+
+        if (!existing) {
+          await transaction.profile_video_watch_session.create({
+            data: {
+              psychologist_id: psychologistId,
+              viewer_id: viewerId,
+              session_key: data.b.session_key,
+              origin_path: data.b.origin_path
+                ? sanitizeAnalyticsPathWithTrafficQuery(data.b.origin_path)
+                : null,
+              video_url: profile?.video_url ?? null,
+              duration_seconds: durationSeconds,
+              watched_seconds: watchedSeconds,
+              max_position_seconds: maxPositionSeconds,
+              replay_count: replayCount,
+              completed,
+              milestone_25: milestone25,
+              milestone_50: milestone50,
+              milestone_75: milestone75,
+              milestone_100: milestone100,
+              retention_buckets: retentionBuckets,
+              last_event_at: new Date(),
+            },
+          });
+
+          return { tracked: true };
+        }
+
+        const mergedMaxPositionSeconds = Math.max(
+          existing.max_position_seconds,
+          maxPositionSeconds,
+        );
+        const mergedDurationSeconds = Math.max(existing.duration_seconds, durationSeconds);
+        const mergedCompleted = existing.completed || completed;
+        const mergedRetentionBuckets = resolveRetentionBuckets(
+          mergedMaxPositionSeconds,
+          mergedDurationSeconds,
+          mergedCompleted,
+        );
+
+        await transaction.profile_video_watch_session.update({
+          where: {
+            id: existing.id,
+          },
+          data: {
+            deleted: false,
+            deletedAt: null,
+            viewer_id: existing.viewer_id ?? viewerId,
+            video_url: profile?.video_url ?? existing.video_url,
+            duration_seconds: mergedDurationSeconds,
+            watched_seconds: Math.max(existing.watched_seconds, watchedSeconds),
+            max_position_seconds: mergedMaxPositionSeconds,
+            replay_count: Math.max(existing.replay_count, replayCount),
+            completed: mergedCompleted,
+            milestone_25: existing.milestone_25 || milestone25,
+            milestone_50: existing.milestone_50 || milestone50,
+            milestone_75: existing.milestone_75 || milestone75,
+            milestone_100: existing.milestone_100 || milestone100,
+            retention_buckets: mergeRetentionBuckets(
+              normalizeRetentionBuckets(existing.retention_buckets),
+              retentionBuckets,
+              mergedRetentionBuckets,
+            ),
+            last_event_at: new Date(),
+          },
+        });
+
+        return { tracked: true };
       },
-    });
-
-    if (!existing) {
-      await prisma.profile_video_watch_session.create({
-        data: {
-          psychologist_id: psychologistId,
-          viewer_id: viewerId,
-          session_key: data.b.session_key,
-          origin_path: data.b.origin_path
-            ? sanitizeAnalyticsPathWithTrafficQuery(data.b.origin_path)
-            : null,
-          video_url: profile?.video_url ?? null,
-          duration_seconds: durationSeconds,
-          watched_seconds: watchedSeconds,
-          max_position_seconds: maxPositionSeconds,
-          replay_count: replayCount,
-          completed,
-          milestone_25: milestone25,
-          milestone_50: milestone50,
-          milestone_75: milestone75,
-          milestone_100: milestone100,
-          retention_buckets: retentionBuckets,
-          last_event_at: new Date(),
-        },
-      });
-
-      return { tracked: true };
-    }
-
-    const mergedMaxPositionSeconds = Math.max(existing.max_position_seconds, maxPositionSeconds);
-    const mergedDurationSeconds = Math.max(existing.duration_seconds, durationSeconds);
-    const mergedCompleted = existing.completed || completed;
-    const mergedRetentionBuckets = resolveRetentionBuckets(
-      mergedMaxPositionSeconds,
-      mergedDurationSeconds,
-      mergedCompleted,
+      { isolationLevel: "ReadCommitted" },
     );
-
-    await prisma.profile_video_watch_session.update({
-      where: {
-        id: existing.id,
-      },
-      data: {
-        deleted: false,
-        deletedAt: null,
-        viewer_id: existing.viewer_id ?? viewerId,
-        video_url: profile?.video_url ?? existing.video_url,
-        duration_seconds: mergedDurationSeconds,
-        watched_seconds: Math.max(existing.watched_seconds, watchedSeconds),
-        max_position_seconds: mergedMaxPositionSeconds,
-        replay_count: Math.max(existing.replay_count, replayCount),
-        completed: mergedCompleted,
-        milestone_25: existing.milestone_25 || milestone25,
-        milestone_50: existing.milestone_50 || milestone50,
-        milestone_75: existing.milestone_75 || milestone75,
-        milestone_100: existing.milestone_100 || milestone100,
-        retention_buckets: mergeRetentionBuckets(
-          normalizeRetentionBuckets(existing.retention_buckets),
-          retentionBuckets,
-          mergedRetentionBuckets,
-        ),
-        last_event_at: new Date(),
-      },
-    });
-
-    return { tracked: true };
   }
 }

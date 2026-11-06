@@ -399,6 +399,18 @@ export const replyReportSchema: IValidatorRequest = {
 };
 
 export const showValidator = validator(showSchema);
+const shareRenderOptions = [
+  { key: "overlayMode", method: "string", min: 1, max: 20, optional: true },
+  { key: "captionRevision", method: "numeric", int: true, min: 0, optional: true },
+] satisfies IValidatorRequest["body"];
+export const startShareRenderJobValidator = validator({
+  params: idParams,
+  body: shareRenderOptions,
+});
+export const startReplyShareRenderJobValidator = validator({
+  params: replyIdParams,
+  body: shareRenderOptions,
+});
 export const repliesValidator = validator(repliesSchema);
 export const listValidator = validator(listSchema);
 export const createReplyValidator = validator(createReplySchema);

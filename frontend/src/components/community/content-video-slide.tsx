@@ -340,7 +340,7 @@ export const ContentVideoSlide = ({
         suppressClick.current = true;
       }}
     >
-      <div className={controls.videoViewport}>
+      <div className={controls.videoViewport} data-lectum-caption-scope>
         <ContentVideoPlayer
           active={active && !unavailable}
           mediaKey={item.id}
@@ -552,7 +552,7 @@ export const ContentVideoSlide = ({
                 </PsychologistWhatsAppRedirectButton>
               ) : null}
             </div>
-            <div className={styles.identity}>
+            <div className={styles.identity} data-lectum-video-bottom-overlay="true">
               {author}
               {item.content ? (
                 <button

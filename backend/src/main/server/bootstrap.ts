@@ -15,6 +15,10 @@ import {
   startAccountMediaCleanup,
   stopAccountMediaCleanup,
 } from "@/modules/account-deletion/media-cleanup";
+import {
+  startAutomaticCaptions,
+  stopAutomaticCaptions,
+} from "@/modules/video-assets/captions/scheduler";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import app from "./app";
 import { env } from "./environment";
@@ -26,6 +30,7 @@ const server = app.listen(env.PORT, () => {
   startBillingDunningScheduler();
   startInvoiceScheduler();
   startAccountMediaCleanup();
+  startAutomaticCaptions();
 });
 
 let shuttingDown = false;
@@ -39,6 +44,7 @@ const shutdown = async () => {
   stopBillingDunningScheduler();
   stopInvoiceScheduler();
   stopAccountMediaCleanup();
+  stopAutomaticCaptions();
   soc?.disconnectSockets(true);
 
   const forceCloseTimer = setTimeout(() => {

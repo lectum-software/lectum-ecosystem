@@ -55,7 +55,7 @@ export const enqueueSocialShareJob = async (
       sourceOrigin: input.sourceOrigin,
       sourceUrl: input.sourceUrl,
     },
-    { jobId: input.jobId },
+    { jobId: input.jobId, sizeLimit: 4 * 1024 * 1024 },
   );
 
 export const activeVideoJobIds = async (queue: VideoQueue) => {

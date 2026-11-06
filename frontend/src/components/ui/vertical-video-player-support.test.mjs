@@ -188,7 +188,12 @@ test("Escape e botão de saída preservam a reprodução antes de desmontar o po
   );
   const player = readFileSync(new URL("./vertical-video-player.tsx", import.meta.url), "utf8");
   assert.match(player, /onBeforeClose: capturePlaybackSnapshot/);
-  assert.match(player, /onClick=\{closeInlineContentExpansion\}/);
+  assert.match(player, /onClose=\{closeInlineContentExpansion\}/);
+  const exitButton = readFileSync(
+    new URL("./vertical-video-exit-button.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(exitButton, /onClick=\{onClose\}/);
   assert.match(expansion, /beforeCloseRef\.current\?\.\(\);\s*setExpandedContentSource\(null\)/);
   assert.match(expansion, /if \(event\.key === "Escape"\) closeInlineContentExpansion\(\)/);
 });

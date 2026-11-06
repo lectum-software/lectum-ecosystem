@@ -19,6 +19,7 @@ import {
 import { useCommunityVideoAutoplay } from "@/components/community/community-feed-video-autoplay";
 import { CommunityWhatsAppCta } from "@/components/community/community-whatsapp-cta";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
+import { ScopedTranscriptPanel } from "@/components/video-captions/transcript";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { isVideoAssetReference } from "@/utils/video-stream";
@@ -512,6 +513,7 @@ export const CommunityMediaBlock = ({
           ) : null}
         </div>
         {hasFooter ? footer : null}
+        <ScopedTranscriptPanel reference={mediaUrl} />
         {afterMedia}
       </div>
     );
