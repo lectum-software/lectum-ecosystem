@@ -166,3 +166,23 @@ o video centralizado no tamanho inicial. Desktop preserva o player sticky.
 Estas mudancas exigem frontend e Video numa futura publicacao autorizada;
 nao exigem nova geracao de transcricao nem alteracao da allowlist.
 
+### Expansao global autorizada - 2026-11-06
+
+VIDEO_CAPTIONS_ALL_ENABLED=true habilita leitura/edicao para qualquer asset valido;
+VIDEO_CAPTIONS_AUTO_ENABLED=true continua sendo exigido para gerar automaticamente.
+Ausencia da chave global preserva o piloto, inclusive rejeicao de wildcard.
+O scheduler existente reconcilia a cada minuto. Globalmente seleciona videos
+Cloudflare prontos, nao excluidos, de profissionais nao excluidos, com duracao
+conhecida e finalidade de post/resposta/apresentacao. Midias privadas nao se
+tornam publicas: as autorizacoes existentes permanecem em todos os endpoints.
+
+Sincroniza ate 10 pendentes entre 1 minuto e 24 horas; inicia ate 2 sem registro
+por ciclo, dos mais antigos aos novos, com backpressure em 10 pendentes recentes.
+Limites sao por instancia; claim unico por asset permanece no banco, impedindo
+POST duplicado. Falha do provedor interrompe o lote; registros ready/revisados,
+error ou pendentes antigos nao sao regenerados automaticamente. Sao necessarios
+acompanhamento operacional e revisao de falhas antes de qualquer retry manual.
+Nao ha nova migracao. Rollback operacional: desligar automacao e/ou chave global,
+preservando dados e a allowlist do piloto. Publicar Video, Backend e Frontend em
+sequencia, validar saude e somente depois ativar a chave global no Backend.
+

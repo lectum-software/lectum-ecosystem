@@ -33,12 +33,16 @@ export const captionEditSchema = z
   })
   .strict();
 
-// An explicit per-video allowlist prevents a deploy from activating captions globally.
+export const allCaptionsEnabled = (env = process.env) => env.VIDEO_CAPTIONS_ALL_ENABLED === "true";
+
+// Global rollout requires a separate explicit switch; old deployments stay opt-in.
 export const captionsEnabledFor = (id: string, env = process.env) =>
-  (env.VIDEO_CAPTIONS_ASSET_IDS ?? "")
-    .split(",")
-    .map((value) => value.trim())
-    .includes(id) && /^[a-z0-9_-]{8,64}$/i.test(id);
+  /^[a-z0-9_-]{8,64}$/i.test(id) &&
+  (allCaptionsEnabled(env) ||
+    (env.VIDEO_CAPTIONS_ASSET_IDS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .includes(id));
 
 export const captionsFitDuration = (cues: CaptionCue[], duration: number | null) =>
   duration !== null && Number.isFinite(duration) && cues.every((cue) => cue.end <= duration + 0.1);

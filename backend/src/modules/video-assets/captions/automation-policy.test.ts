@@ -1,6 +1,31 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { automaticCaptionAction, automaticCaptionIds } from "./automation-policy";
+import {
+  automaticCaptionAction,
+  automaticCaptionCapacity,
+  automaticCaptionIds,
+  automaticCaptionsEnabled,
+} from "./automation-policy";
+
+test("global generation requires both switches and remains bounded", () => {
+  assert.equal(automaticCaptionsEnabled({ VIDEO_CAPTIONS_ALL_ENABLED: "true" }), false);
+  assert.equal(automaticCaptionsEnabled({ VIDEO_CAPTIONS_AUTO_ENABLED: "true" }), false);
+  assert.equal(
+    automaticCaptionsEnabled({
+      VIDEO_CAPTIONS_ALL_ENABLED: "true",
+      VIDEO_CAPTIONS_AUTO_ENABLED: "true",
+    }),
+    true,
+  );
+  for (const [pending, expected] of [
+    [0, 2],
+    [8, 2],
+    [9, 1],
+    [10, 0],
+    [20, 0],
+  ])
+    assert.equal(automaticCaptionCapacity(pending), expected);
+});
 
 test("automatic generation requires explicit bounded allowlist and independent opt-in", () => {
   assert.deepEqual(automaticCaptionIds({}), []);

@@ -1,6 +1,12 @@
 import prisma from "@/infra/database/prisma";
 import { getVideoStreamApiConfig } from "@/infra/video-stream";
-import { automaticCaptionAction, automaticCaptionIds } from "./automation-policy";
+import {
+  automaticCaptionAction,
+  automaticCaptionIds,
+  automaticCaptionsEnabled,
+} from "./automation-policy";
+import { runGlobalCaptions } from "./global-automation";
+import { allCaptionsEnabled } from "./policy";
 import { ownedCaptionAction } from "./service";
 
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -8,9 +14,13 @@ let running = false;
 
 export const runAutomaticCaptions = async () => {
   const ids = automaticCaptionIds();
-  if (running || !ids.length || !getVideoStreamApiConfig()) return;
+  if (running || !automaticCaptionsEnabled() || !getVideoStreamApiConfig()) return;
   running = true;
   try {
+    if (allCaptionsEnabled()) {
+      await runGlobalCaptions();
+      return;
+    }
     // Reconcile persisted state so a restart does not lose a ready-video event.
     for (const id of ids) {
       if (!automaticCaptionIds().includes(id)) break;
@@ -36,7 +46,7 @@ export const runAutomaticCaptions = async () => {
 };
 
 export const startAutomaticCaptions = () => {
-  if (timer || !automaticCaptionIds().length) return;
+  if (timer || !automaticCaptionsEnabled()) return;
   timer = setInterval(() => void runAutomaticCaptions(), 60_000);
   timer.unref();
 };
