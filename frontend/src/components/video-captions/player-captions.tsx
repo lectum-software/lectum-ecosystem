@@ -15,9 +15,11 @@ export function PlayerCaptions({
 }) {
   const [enabled, setEnabled] = useState(true);
   const [text, setText] = useState("");
-  const [position, setPosition] = useState({ bottom: 64, right: 12, top: 64, iconSize: 26 });
+  const [nativeFullscreen, setNativeFullscreen] = useState(false);
+  const [position, setPosition] = useState({ bottom: 64, right: 12, top: 12, iconSize: 26 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const trackRef = useRef<{ video: HTMLVideoElement; track: TextTrack } | null>(null);
+  const fullscreenVideoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     void version;
@@ -49,19 +51,50 @@ export function PlayerCaptions({
           .map((cue) => (cue as VTTCue).text)
           .join("\n"),
       );
+    let webkitFullscreen =
+      fullscreenVideoRef.current === video ||
+      Boolean(
+        (video as HTMLVideoElement & { webkitDisplayingFullscreen?: boolean })
+          .webkitDisplayingFullscreen,
+      );
     const mode = () => {
-      track.mode = enabled
-        ? document.fullscreenElement === video
-          ? "showing"
-          : "hidden"
-        : "disabled";
+      const fullscreen = document.fullscreenElement === video || webkitFullscreen;
+      setNativeFullscreen(fullscreen);
+      // HLS may add or auto-select provider captions after our own track is ready.
+      for (const other of Array.from(video.textTracks)) {
+        if (other !== track && (other.kind === "captions" || other.kind === "subtitles")) {
+          if (other.mode !== "disabled") other.mode = "disabled";
+        }
+      }
+      const nextMode = enabled ? (fullscreen ? "showing" : "hidden") : "disabled";
+      if (track.mode !== nextMode) track.mode = nextMode;
       update();
+    };
+    const enterFullscreen = () => {
+      fullscreenVideoRef.current = video;
+      webkitFullscreen = true;
+      mode();
+    };
+    const exitFullscreen = () => {
+      fullscreenVideoRef.current = null;
+      webkitFullscreen = false;
+      mode();
     };
     mode();
     track.addEventListener("cuechange", update);
+    video.textTracks.addEventListener("addtrack", mode);
+    video.textTracks.addEventListener("change", mode);
+    video.addEventListener("loadedmetadata", mode);
+    video.addEventListener("webkitbeginfullscreen", enterFullscreen);
+    video.addEventListener("webkitendfullscreen", exitFullscreen);
     document.addEventListener("fullscreenchange", mode);
     return () => {
       track.removeEventListener("cuechange", update);
+      video.textTracks.removeEventListener("addtrack", mode);
+      video.textTracks.removeEventListener("change", mode);
+      video.removeEventListener("loadedmetadata", mode);
+      video.removeEventListener("webkitbeginfullscreen", enterFullscreen);
+      video.removeEventListener("webkitendfullscreen", exitFullscreen);
       document.removeEventListener("fullscreenchange", mode);
       clear();
       track.mode = "disabled";
@@ -84,7 +117,9 @@ export function PlayerCaptions({
         anchor = parent.querySelector('button[aria-label="Abrir prévia para redes sociais"]');
         if (anchor) break;
       }
-      const rect = anchor?.getBoundingClientRect();
+      anchor ??= overlayScope.querySelector("[data-reels-create-post]");
+      const anchorBounds = anchor?.getBoundingClientRect();
+      const rect = anchorBounds?.width && anchorBounds.height ? anchorBounds : undefined;
       const overlayElement = overlayScope.querySelector(
         '[data-lectum-video-bottom-overlay="true"]',
       );
@@ -98,7 +133,7 @@ export function PlayerCaptions({
         iconSize: rect ? 32 : 26,
         bottom: overlay && overlay.height > 0 ? Math.max(64, bounds.bottom - overlay.top + 12) : 64,
         right: rect ? Math.max(0, bounds.right - rect.left - rect.width / 2 - 22) : 12,
-        top: rect ? Math.max(12, rect.bottom - bounds.top + 8) : 106,
+        top: rect ? Math.max(12, rect.bottom - bounds.top + 8) : 12,
       };
       setPosition((old) =>
         old.bottom === next.bottom &&
@@ -147,7 +182,7 @@ export function PlayerCaptions({
       >
         <CaptionIcon active={enabled} size={position.iconSize} />
       </button>
-      {enabled && text ? (
+      {enabled && !nativeFullscreen && text ? (
         <div
           className="pointer-events-none absolute inset-x-3 z-20 text-center text-sm leading-normal font-semibold text-media-foreground"
           data-lectum-captions="true"
@@ -156,7 +191,7 @@ export function PlayerCaptions({
             right: "var(--lectum-caption-right, 12px)",
           }}
         >
-          <span className="box-decoration-clone rounded-sm bg-media-background/55 px-1.5 py-1 whitespace-pre-line">
+          <span className="inline-block max-w-full rounded-sm bg-media-background/55 px-1.5 py-1 leading-normal whitespace-pre-line [overflow-wrap:anywhere]">
             {text}
           </span>
         </div>

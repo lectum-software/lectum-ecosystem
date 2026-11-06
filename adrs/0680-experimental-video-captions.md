@@ -120,3 +120,26 @@ Timer local de recuperacao passou em 64.4 s sem POST. Benchmark offline
 indicou 14.5 s por exportacao isolada e 26.4 s por trabalho com dois paralelos;
 isso nao substitui carga de fila nem medicao no servidor de producao.
 
+## Correcao de apresentacao apos piloto em 2026-11-06
+
+O iPhone mostrou captions do provedor e overlay Lectum simultaneamente.
+Quando existem cues Lectum, o player desativa as outras faixas captions/subtitles,
+inclusive faixas adicionadas ou selecionadas depois pelo HLS. Metadados nao mudam.
+Inline e tela ampliada da Lectum usam somente o overlay. Apenas fullscreen nativo
+do elemento video usa a faixa Lectum, com os mesmos cues; nunca os dois renderers.
+Eventos WebKit preservam esse estado durante rerenders e limpam listeners ao sair.
+
+CC passa ao canto superior direito, abaixo da acao social do dono ou do botao de
+criar no viewer ampliado. Ambos os estados usam o PNG contornado aprovado; nome
+acessivel e aria-pressed informam o estado, sem preenchimento solido.
+
+O texto usa um unico inline-block com fundo e padding externos, em vez de
+box-decoration-clone por linha. Isso elimina fundos invadindo linhas vizinhas,
+mantem o bloco continuo e permite quebra de palavras longas. A medicao do overlay
+inferior continua reservando espaco para contato e identidade.
+
+Testes usam React, video real do repositorio e CSS compilado pelo Tailwind instalado.
+Eventos WebKit sao exercitados em Chromium: nao equivalem a validacao em iPhone
+fisico, que deve repetir o piloto apos publicacao. Nenhuma legenda foi regerada,
+nenhuma faixa remota foi apagada e nenhuma configuracao produtiva foi alterada.
+
