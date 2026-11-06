@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pause, Play } from "lucide-react";
+import { ArrowLeft, Check, Pause, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
@@ -37,7 +37,7 @@ export function CaptionEditForm({
   const router = useRouter();
   const [document, setDocument] = useState(initial);
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState("");
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const handleVideoReady = useCallback((element: HTMLVideoElement | null) => {
@@ -222,10 +222,25 @@ export function CaptionEditForm({
         </div>
         <section ref={cueListRef} aria-label="Trechos da legenda" className={styles.cueList}>
           <div className={styles.info}>
-            <strong>Português</strong>
-            <span className={styles.badge} data-reviewed={document.reviewed}>
-              {document.reviewed ? "Revisada" : "Não revisada"}
-            </span>
+            <span className={styles.origin}>Gerada automaticamente</span>
+            {document.reviewed ? (
+              <span className={styles.badge} data-reviewed="true">
+                Revisada
+              </span>
+            ) : (
+              <button
+                type="submit"
+                form="caption-editor-form"
+                className={styles.reviewButton}
+                disabled={hook.formState.isSubmitting || isDirty}
+                title={
+                  isDirty ? "Salve as alterações para confirmar a revisão" : "Marcar como revisada"
+                }
+              >
+                <Check size={16} aria-hidden="true" />
+                <span>Marcar como revisada</span>
+              </button>
+            )}
           </div>
           <p className={styles.help}>As correções atualizam a legenda e a transcrição pública.</p>
           <Form
@@ -246,7 +261,7 @@ export function CaptionEditForm({
             onlyRead={hook.formState.isSubmitting}
             onSubmit={hook.handleSubmit(async (data) => {
               setError("");
-              setSaved(false);
+              setSaved("");
               try {
                 const updated = await save({
                   ...document,
@@ -256,7 +271,7 @@ export function CaptionEditForm({
                 hook.reset(
                   Object.fromEntries(updated.cues.map((cue, index) => [`cue${index}`, cue.text])),
                 );
-                setSaved(true);
+                setSaved(isDirty ? "Alterações salvas." : "Legenda marcada como revisada.");
               } catch {
                 setError(
                   "Não foi possível salvar. Reabra a legenda se ela foi alterada em outra janela.",
@@ -273,7 +288,7 @@ export function CaptionEditForm({
             {hook.formState.isSubmitting ? "Salvando…" : "Salvar"}
           </button>
           <p role="status" className={styles.saveState} data-error={Boolean(error)}>
-            {error || (isDirty ? "Alterações não salvas" : saved ? "Alterações salvas." : "")}
+            {error || (isDirty ? "Alterações não salvas" : saved)}
           </p>
         </section>
       </div>

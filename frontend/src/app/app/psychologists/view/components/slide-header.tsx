@@ -42,6 +42,7 @@ export const PsychologistSlideHeader = ({
           : "psychologists-ui-inert pointer-events-none opacity-0",
       )}
       data-psychologists-scroll-lock="true"
+      data-lectum-video-top-overlay="true"
       onMouseDown={stopInteractionPropagation}
       onPointerDown={(event) => {
         event.stopPropagation();

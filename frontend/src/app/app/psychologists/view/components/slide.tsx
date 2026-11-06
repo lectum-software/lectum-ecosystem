@@ -2,6 +2,7 @@
 
 import { Play, VolumeX, X } from "lucide-react";
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import type { DirectoryPsychologist } from "@/api/generator/types/directory";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
@@ -72,6 +73,7 @@ export const PsychologistSlide = ({
     slideVideoSrc,
     slidePosterSrc,
     slideShouldShowVideo,
+    slideShouldHideChrome,
     slideIsUiHidden,
     slideUsesNativeVideoControls,
     slideShouldRenderProgress,
@@ -94,7 +96,18 @@ export const PsychologistSlide = ({
       data-psychologists-slide-index={index}
     >
       <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-media-background">
-        <div className="relative h-full w-full overflow-hidden">
+        <div
+          className="relative h-full w-full overflow-hidden"
+          data-lectum-caption-scope
+          data-lectum-caption-directory
+          style={
+            {
+              "--lectum-caption-right": slideShouldHideChrome
+                ? "12px"
+                : `${metrics.actionRightPadding + metrics.actionRailWidth + 12}px`,
+            } as CSSProperties
+          }
+        >
           {shouldRenderGlobalControls ? (
             <PsychologistSlideHeader model={model} slide={slide} />
           ) : null}

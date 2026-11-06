@@ -73,7 +73,10 @@ export const PsychologistSlideDetails = ({
         gridTemplateColumns: `minmax(0, 1fr) ${metrics.actionRailWidth}px`,
       }}
     >
-      <div className="pointer-events-auto min-w-0">
+      <div
+        className="pointer-events-auto min-w-0"
+        data-lectum-video-bottom-overlay={slideShouldHideChrome ? undefined : "true"}
+      >
         {psychologist.available_today ? (
           <div
             className="mb-1.5 flex w-fit items-center gap-1.5 font-semibold text-success"

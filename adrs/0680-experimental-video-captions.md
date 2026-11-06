@@ -186,3 +186,18 @@ Nao ha nova migracao. Rollback operacional: desligar automacao e/ou chave global
 preservando dados e a allowlist do piloto. Publicar Video, Backend e Frontend em
 sequencia, validar saude e somente depois ativar a chave global no Backend.
 
+### Revisao sem edicao e geometria de leitura - 2026-11-06
+
+O editor oferece Marcar como revisada quando a legenda automatica ainda nao foi
+revisada e nao ha edicoes pendentes. Reutiliza o PUT autorizado, com a revisao
+atual e os mesmos cues; nao cria endpoint nem altera tempos. Se houver edicoes,
+Salvar continua sendo a confirmacao. O estado revisado so aparece apos sucesso.
+
+No diretorio, o bloco textual inferior e os cabecalhos mobile/desktop fornecem
+limites geometricos para legendas e CC. A descricao expandida dos reels tambem
+e um limite inferior, recalculado ao terminar a animacao. ResizeObserver acompanha
+mudancas de tamanho. O CC ativo vaza as letras usando a mascara do mesmo asset,
+sem pintar letras pretas. A previa social sem descricao usa altura ajustada ao
+conteudo em vez de reservar espaco vazio. Nenhuma mudanca em geracao, filas ou
+exportacao de video nesta etapa; somente frontend, com validacao local.
+

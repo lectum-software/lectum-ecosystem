@@ -136,7 +136,7 @@ for (const width of [390, 1440]) {
           body{margin:0;background:var(--lectum-muted)} #stage{position:relative;width:320px;height:570px;margin:20px}
           video{width:100%;height:100%;object-fit:cover}
           *{box-sizing:border-box} body{font-family:Arial,sans-serif}
-          </style><div id="stage"><video muted playsinline src="/clip.mp4"></video><div id="root" style="position:absolute;inset:0"></div></div>`,
+          </style><div id="stage" data-lectum-caption-scope><video muted playsinline src="/clip.mp4"></video><div id="root" style="position:absolute;inset:0"></div></div>`,
         });
       });
       await page.goto("http://caption.test/");
@@ -202,7 +202,44 @@ for (const width of [390, 1440]) {
           .locator("[data-caption-outline]")
           .evaluate((el) => getComputedStyle(el).backgroundColor),
       );
-      assert.equal(await cc.locator("[data-caption-letters]").count(), 1);
+      assert.equal(await cc.locator("[data-caption-letters]").count(), 0);
+      assert.match(
+        await cc
+          .locator("[data-caption-fill]")
+          .evaluate((el) => getComputedStyle(el).maskComposite),
+        /^exclude/,
+      );
+      await cc.evaluate((el) => {
+        el.style.backgroundColor = "green";
+      });
+      const pixels = await page.evaluate(
+        async (base64) => {
+          const image = new Image();
+          image.src = `data:image/png;base64,${base64}`;
+          await image.decode();
+          const canvas = document.createElement("canvas");
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const context = canvas.getContext("2d");
+          context.drawImage(image, 0, 0);
+          const rgba = context.getImageData(13, 17, 18, 10).data;
+          let green = 0,
+            white = 0,
+            black = 0;
+          for (let i = 0; i < rgba.length; i += 4) {
+            if (rgba[i] < 30 && rgba[i + 1] > 120 && rgba[i + 2] < 30) green++;
+            if (rgba[i] > 240 && rgba[i + 1] > 240 && rgba[i + 2] > 240) white++;
+            if (rgba[i] < 30 && rgba[i + 1] < 30 && rgba[i + 2] < 30) black++;
+          }
+          return { green, white, black };
+        },
+        (await cc.screenshot()).toString("base64"),
+      );
+      assert.ok(pixels.green >= 4 && pixels.white > 10, JSON.stringify(pixels));
+      assert.equal(pixels.black, 0, "CC letters reveal the background instead of painting black");
+      await cc.evaluate((el) => {
+        el.style.backgroundColor = "";
+      });
       await cc.click();
       assert.equal(await page.locator("[data-caption-fill]").count(), 0);
       assert.equal(await page.locator("[data-caption-letters]").count(), 0);
@@ -278,6 +315,19 @@ for (const width of [390, 1440]) {
       const captionBounds = await page.locator("[data-lectum-captions]").boundingBox();
       const overlayBounds = await page.locator("[data-lectum-video-bottom-overlay]").boundingBox();
       assert.ok(captionBounds.y + captionBounds.height <= overlayBounds.y - 12);
+      await page.evaluate(() => {
+        document.querySelector("#stage").setAttribute("data-lectum-caption-directory", "");
+        document.querySelector("[data-lectum-video-bottom-overlay]").style.height = "240px";
+      });
+      await page.waitForFunction(
+        () => document.querySelector("[aria-pressed]").style.top === "76px",
+      );
+      await page.waitForFunction(() =>
+        document.querySelector("[data-lectum-captions]").style.bottom.includes("252px"),
+      );
+      const raised = await page.locator("[data-lectum-captions]").boundingBox();
+      const expanded = await page.locator("[data-lectum-video-bottom-overlay]").boundingBox();
+      assert.ok(raised.y + raised.height <= expanded.y - 12);
       await page.evaluate(() => document.querySelector("#stage").requestFullscreen());
       assert.equal(
         await page.evaluate(() => video.textTracks[2].mode),

@@ -363,3 +363,21 @@ uso/custo do provedor. Nao basta usar '*' em VIDEO_CAPTIONS_ASSET_IDS.
 Sem migracao nova. Manter a lista do piloto para rollback da chave global.
 Lote limitado por instancia; a unicidade de video_caption impede geracao duplicada
 por asset. A geracao usa o provedor; o render de downloads continua no Video.
+
+## Refinamentos de leitura e revisao - 2026-11-06
+
+- [x] Editor substitui Portugues por Gerada automaticamente e permite Marcar como revisada sem alterar frases.
+- [x] Revisao reutiliza salvamento autorizado com controle de revisao; alteracoes pendentes exigem Salvar.
+- [x] CC ativo preserva referencia, preenchimento branco e letras vazadas transparentes.
+- [x] Diretorio mede bloco de identificacao e cabecalho para separar legendas, busca e CC.
+- [x] Descricao expandida dos reels participa do calculo de posicao das legendas.
+- [x] Previa sem descricao remove espaco excedente, preservando video arredondado e controles.
+- [x] Integracao local real confirmou revisao persistida sem alterar cues e restaurou dados de teste.
+- [x] Layout do editor em 320/390/1440 px e previa em 320/390/844/1440 px conferidos.
+- [x] Reels reais locais em 390/1440 px sem sobreposicao com descricao expandida.
+- [x] Diretorio local real em 390/1440 px: legenda acima da bio, CC abaixo da busca com filtros, espaco lateral reservado aos controles.
+- [x] Checks globais e build final do frontend passaram em 0.1.788; teste de pixels confirma letras vazadas no CC.
+- [ ] Validar esta versao no Safari/iPhone fisico antes de publicar.
+
+Referencia visual: capturas fornecidas pelo usuario. Builder indisponivel nesta sessao.
+Este lote permanece local; nao autoriza novo push, merge ou deploy.
