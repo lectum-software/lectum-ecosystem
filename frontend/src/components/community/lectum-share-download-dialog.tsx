@@ -321,6 +321,7 @@ export const LectumShareDownloadDialog = ({
             : "translate-y-[calc(100%+2rem)] duration-[300ms] ease-[cubic-bezier(0.4,0,1,1)]",
         )}
         data-lectum-share-download-sheet="true"
+        data-share-has-description={Boolean(descriptionText)}
         data-lectum-share-download-sheet-motion={sheetMotionState}
         data-lectum-share-download-sheet-state={open ? "open" : "closed"}
         data-post-card-ignore-click="true"
@@ -491,8 +492,22 @@ export const LectumShareDownloadDialog = ({
           contain: layout paint style;
           translate: 0 0;
         }
+        [data-lectum-share-download-sheet][data-share-has-description="false"] {
+          height: auto;
+          max-height: min(900px, calc(100dvh - env(safe-area-inset-top) - 1rem));
+        }
+        [data-share-has-description="false"] > [data-share-preview-frame] {
+          flex: 0 1 55dvh;
+          height: 55dvh;
+        }
 
         @media (min-width: 600px) and (max-height: 520px) {
+          [data-lectum-share-download-sheet][data-share-has-description="false"] {
+            height: min(900px, calc(100dvh - env(safe-area-inset-top) - 1rem));
+          }
+          [data-share-has-description="false"] > [data-share-preview-frame] {
+            height: 100%;
+          }
           [data-lectum-share-download-sheet] {
             display: grid;
             width: min(760px, calc(100vw - 32px));

@@ -100,7 +100,10 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
         onTouchStart={handleDesktopPageTouchStart}
         onWheelCapture={handleDesktopPageWheelCapture}
       >
-        <div className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-hidden bg-media-background lg:max-w-none lg:items-start lg:gap-0 lg:bg-transparent lg:px-8">
+        <div
+          data-lectum-caption-directory-viewport
+          className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-hidden bg-media-background lg:max-w-none lg:items-start lg:gap-0 lg:bg-transparent lg:px-8"
+        >
           <div className="relative z-20 h-full w-full overflow-hidden bg-media-background lg:h-[100dvh] lg:w-[var(--psychologists-desktop-card-width)] lg:shrink-0 lg:overflow-visible lg:bg-transparent">
             {showInitialLoading ? (
               <div className="grid h-full place-items-center bg-surface-muted px-4 text-foreground">
@@ -155,6 +158,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                   feedModeControlsVisibilityClass,
                 )}
                 data-psychologists-scroll-lock="true"
+                data-lectum-video-mobile-top-overlay="true"
                 onMouseDown={stopInteractionPropagation}
                 onPointerDown={(event) => {
                   event.stopPropagation();

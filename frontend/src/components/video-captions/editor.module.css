@@ -144,7 +144,35 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 8px;
-  font-size: 14px;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 12px;
+}
+.origin {
+  min-width: 0;
+  color: var(--lectum-muted);
+}
+.reviewButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 0;
+  color: var(--lectum-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.reviewButton svg {
+  flex-shrink: 0;
+}
+.reviewButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.reviewButton:focus-visible {
+  outline: 2px solid var(--lectum-primary);
+  outline-offset: 2px;
 }
 .badge {
   font-size: 11px;

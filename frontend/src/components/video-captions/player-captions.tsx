@@ -109,6 +109,7 @@ export function PlayerCaptions({
     const overlayScope = root.closest("[data-lectum-caption-scope]") ?? root;
     let frame = 0;
     let observedOverlay: Element | null = null;
+    let observedTop: Element | null = null;
     const measure = () => {
       const bounds = root.getBoundingClientRect();
       let parent: HTMLElement | null = root;
@@ -129,11 +130,28 @@ export function PlayerCaptions({
         observedOverlay = overlayElement;
       }
       const overlay = overlayElement?.getBoundingClientRect();
+      const mobileTop = overlayScope
+        .closest("[data-lectum-caption-directory-viewport]")
+        ?.querySelector("[data-lectum-video-mobile-top-overlay]");
+      const topElement = mobileTop?.getBoundingClientRect().height
+        ? mobileTop
+        : overlayScope.querySelector("[data-lectum-video-top-overlay]");
+      if (topElement !== observedTop) {
+        if (observedTop) resize.unobserve(observedTop);
+        if (topElement) resize.observe(topElement);
+        observedTop = topElement;
+      }
+      const topOverlay = topElement?.getBoundingClientRect();
+      const directoryTop = overlayScope.hasAttribute("data-lectum-caption-directory") ? 76 : 12;
       const next = {
         iconSize: rect ? 32 : 26,
         bottom: overlay && overlay.height > 0 ? Math.max(64, bounds.bottom - overlay.top + 12) : 64,
         right: rect ? Math.max(0, bounds.right - rect.left - rect.width / 2 - 22) : 12,
-        top: rect ? Math.max(12, rect.bottom - bounds.top + 8) : 12,
+        top: Math.max(
+          directoryTop,
+          rect ? rect.bottom - bounds.top + 8 : 12,
+          topOverlay?.height ? topOverlay.bottom - bounds.top + 8 : 12,
+        ),
       };
       setPosition((old) =>
         old.bottom === next.bottom &&
@@ -151,13 +169,20 @@ export function PlayerCaptions({
     const resize = new ResizeObserver(schedule);
     resize.observe(root);
     const mutation = new MutationObserver(schedule);
-    mutation.observe(overlayScope, { childList: true, subtree: true });
+    mutation.observe(overlayScope, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["data-lectum-video-bottom-overlay", "data-lectum-caption-directory"],
+    });
+    overlayScope.addEventListener("animationend", schedule);
     window.addEventListener("resize", schedule);
     measure();
     return () => {
       cancelAnimationFrame(frame);
       resize.disconnect();
       mutation.disconnect();
+      overlayScope.removeEventListener("animationend", schedule);
       window.removeEventListener("resize", schedule);
     };
   }, [version]);

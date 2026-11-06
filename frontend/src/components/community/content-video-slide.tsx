@@ -585,7 +585,11 @@ export const ContentVideoSlide = ({
           </div>
         ) : null}
         {panel === "caption" ? (
-          <div className={`${styles.reading} ${styles.expandedCaption}`} data-reels-reading>
+          <div
+            className={`${styles.reading} ${styles.expandedCaption}`}
+            data-reels-reading
+            data-lectum-video-bottom-overlay="true"
+          >
             <div className={styles.readingHeading}>
               <div>{author}</div>
               <button className={styles.collapse} onClick={() => changePanel(null)} type="button">
