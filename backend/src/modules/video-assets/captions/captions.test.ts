@@ -21,6 +21,14 @@ test("captions are opt-in per asset; wildcard does not activate anything", () =>
   );
 });
 
+test("global captions require exact explicit opt-in and still reject invalid IDs", () => {
+  assert.equal(captionsEnabledFor("anotherasset", { VIDEO_CAPTIONS_ALL_ENABLED: "true" }), true);
+  for (const value of [undefined, "false", "1", "TRUE", "*"])
+    assert.equal(captionsEnabledFor("anotherasset", { VIDEO_CAPTIONS_ALL_ENABLED: value }), false);
+  for (const id of ["", "*", "../private", "x".repeat(65)])
+    assert.equal(captionsEnabledFor(id, { VIDEO_CAPTIONS_ALL_ENABLED: "true" }), false);
+});
+
 test("provider states must be successful Portuguese caption responses", () => {
   for (const status of ["inprogress", "ready", "error"]) {
     assert.equal(

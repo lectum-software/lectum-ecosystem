@@ -76,6 +76,8 @@ test("origens, limites e modos apontam para producao, sem dev/reset/backfill/san
     "NOTIFICATION_CAMPAIGNS_SCHEDULER_ENABLED",
     "TESTIMONIAL_INVITATIONS_ENABLED",
     "BILLING_DUNNING_SCHEDULER_ENABLED",
+    "VIDEO_CAPTIONS_ALL_ENABLED",
+    "VIDEO_CAPTIONS_AUTO_ENABLED",
   ])
     assert.equal(env[key], "false");
   assert.equal(env.CLOUDFLARE_STREAM_ENABLED, "true");

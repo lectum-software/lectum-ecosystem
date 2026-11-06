@@ -74,7 +74,7 @@ test("embedding does not read another post's URL focus or restore its window scr
   assert.match(controller, /embedded \? null : activeFocusReplyId/);
   const tree = postSource("components/replies-list.tsx");
   assert.match(tree, /embedded \? null : routeSnapshot/);
-  assert.match(tree, /<ContentVideoPost postId=\{postId\} disabled=\{embedded\}>/);
+  assert.match(tree, /<ContentVideoPost postId=\{postId\} disabled=\{embedded\} allowTranscript>/);
   assert.match(tree, /enableCommunityAutoplay=\{!embedded\}/);
 });
 

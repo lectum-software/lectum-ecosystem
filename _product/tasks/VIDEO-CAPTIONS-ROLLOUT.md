@@ -318,3 +318,48 @@ O erro de analytics acima foi resolvido localmente; demais gates permanecem.
 
 Referencia visual: capturas do usuario nesta conversa. Builder nao utilizado nesta
 correcao pontual. Mudancas restritas ao frontend; geracao, revisao e allowlist nao mudam.
+
+## Refinamento do piloto - 2026-11-06
+
+- [x] CC ativo com interior branco e letras escuras usando a mesma mascara original.
+- [x] CC desativado preserva o contorno de referencia.
+- [x] Cards de listagem nao oferecem transcricao nem menu vazio para visitantes.
+- [x] Post aberto preserva transcricao; proprietario preserva edicao de legendas no feed.
+- [x] Legendas e controle CC independem da disponibilidade da transcricao.
+- [x] 14 testes focados passaram, incluindo browser em 390/1440 px; captura do CC inspecionada.
+- [x] Validacao global `pnpm check` e build do frontend passaram em 0.1.785.
+- [ ] Publicar e repetir a validacao no iPhone fisico; nenhuma publicacao nesta etapa.
+
+## Previa social e editor fixo - 2026-11-06
+
+- [x] Previa social com cantos arredondados, recorte das sobreposicoes e altura limitada a 55dvh.
+- [x] Editor mantem video centralizado no tamanho inicial enquanto a lista de frases rola.
+- [x] Previa e ASS preservam os cues inteiros e seus tempos, sem subdivisao artificial por caracteres.
+- [x] Fundo unico por cue na previa e no MP4, sem caixas sobrepostas por linha.
+- [x] Checks globais e builds de frontend/Video passaram em 0.1.786.
+- [x] 16 testes focados e 3 renders FFmpeg passaram, incluindo pixels do fundo multiline.
+- [x] Modal real conferida em 320/390/844/1440 px; editor fixo em 320/390/1440 px.
+- [ ] Publicacao autorizada de frontend e Video; testar novamente no iPhone fisico.
+
+## Liberacao global autorizada - 2026-11-06
+
+- Usuario autorizou liberar legendas para todos os videos e publicar as atualizacoes.
+- Usuario reconfirmou Autodeploy Backend/Video desligado e promocao manual Vercel frontend/admin.
+- [x] Chave VIDEO_CAPTIONS_ALL_ENABLED independente, false por padrao, preserva allowlist antiga.
+- [x] Reconciliacao global de videos prontos de profissionais, ate 2 novos por ciclo e pausa com 10 pendentes recentes.
+- [x] Preservar registros revisados/ready/error; nao repetir POST incerto; manter autorizacao de leitura/edicao.
+- [x] Checks completos do workspace e builds Backend/Video/Frontend em 0.1.787.
+- [x] Integracao PostgreSQL local real: elegibilidade, limite de lote, backpressure, sync e preservacao de revisada.
+- [x] Modelo production documenta as duas chaves desligadas por padrao; teste de cobertura passou.
+- [ ] PR revisado e merge sem push direto em main.
+- [ ] Publicar Video, depois Backend e Frontend; nao promover admin.
+- [ ] Ativar VIDEO_CAPTIONS_ALL_ENABLED=true com VIDEO_CAPTIONS_AUTO_ENABLED=true apos smoke.
+- [ ] Confirmar geracao e revisao em producao; iPhone fisico pendente.
+
+ALERTA DE DEPLOY: nova chave opcional VIDEO_CAPTIONS_ALL_ENABLED no Backend.
+Ausente/false preserva o piloto; true inclui videos antigos e novos prontos,
+inclusive midias ainda privadas (sem modificar sua visibilidade). Pode aumentar
+uso/custo do provedor. Nao basta usar '*' em VIDEO_CAPTIONS_ASSET_IDS.
+Sem migracao nova. Manter a lista do piloto para rollback da chave global.
+Lote limitado por instancia; a unicidade de video_caption impede geracao duplicada
+por asset. A geracao usa o provedor; o render de downloads continua no Video.

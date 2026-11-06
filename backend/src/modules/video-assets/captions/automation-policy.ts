@@ -1,3 +1,5 @@
+import { allCaptionsEnabled } from "./policy";
+
 export const automaticCaptionIds = (env = process.env) => {
   if (env.VIDEO_CAPTIONS_AUTO_ENABLED !== "true") return [];
   const ids = [
@@ -22,3 +24,10 @@ export const automaticCaptionAction = (
   const age = now - caption.updated_at.getTime();
   return age >= 60_000 && age <= 24 * 60 * 60 * 1000 ? "sync" : null;
 };
+
+export const automaticCaptionsEnabled = (env = process.env) =>
+  env.VIDEO_CAPTIONS_AUTO_ENABLED === "true" &&
+  (allCaptionsEnabled(env) || automaticCaptionIds(env).length > 0);
+
+export const automaticCaptionCapacity = (inProgress: number) =>
+  Math.max(0, Math.min(2, 10 - inProgress));

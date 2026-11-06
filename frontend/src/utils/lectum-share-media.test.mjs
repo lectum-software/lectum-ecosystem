@@ -31,6 +31,33 @@ const { LectumSharePreviewArt } = await import(
   "../components/community/lectum-share-download-dialog.tsx"
 );
 
+test("preview clips rounded corners and keeps full caption cues", () => {
+  const dialog = readFileSync(
+    new URL("../components/community/lectum-share-download-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(dialog, /max-h-\[55dvh\][^\n]*overflow-hidden rounded-2xl/);
+  assert.match(dialog, /inline-block max-w-full rounded-sm/);
+  assert.doesNotMatch(dialog, /box-decoration-clone|captionChunks/);
+  assert.match(dialog, /captionTime >= cue.start && captionTime < cue.end/);
+  assert.match(dialog, /cancelAnimationFrame\(frame\)/);
+});
+
+test("caption editor keeps its initial player layout while cues scroll", () => {
+  const editor = readFileSync(
+    new URL("../components/video-captions/editor.tsx", import.meta.url),
+    "utf8",
+  );
+  const css = readFileSync(
+    new URL("../components/video-captions/editor.module.css", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(editor, /setCompact|data-compact/);
+  assert.doesNotMatch(css, /data-compact/);
+  assert.match(css, /grid-template-rows: auto minmax\(0, 1fr\)/);
+  assert.match(css, /\.cueList\s*\{[^}]*overflow-y: auto/s);
+});
+
 test("previa renderizada remove toda a pergunta e mantem identificacao sem aviso substituto", () => {
   const target = {
     sourceText: "Pergunta original",

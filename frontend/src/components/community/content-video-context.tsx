@@ -36,15 +36,17 @@ export const ContentVideoScope = ({
 
 export const ContentVideoPost = ({
   children,
+  allowTranscript = false,
   ...post
 }: {
   children: ReactNode;
+  allowTranscript?: boolean;
   postId: string;
   hideInlineContact?: boolean;
   disabled?: boolean;
 }) => (
   <PostContext.Provider value={post}>
-    <TranscriptScope>{children}</TranscriptScope>
+    <TranscriptScope enabled={allowTranscript}>{children}</TranscriptScope>
   </PostContext.Provider>
 );
 

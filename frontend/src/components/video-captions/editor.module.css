@@ -256,28 +256,6 @@
   .frame {
     width: min(146px, 18dvh);
   }
-  .player[data-compact="true"] {
-    display: grid;
-    grid-template-columns: 54px minmax(0, 1fr);
-    gap: 16px;
-    align-items: center;
-    padding-bottom: 12px;
-  }
-  .player[data-compact="true"] .frame {
-    width: 54px;
-  }
-  .player[data-compact="true"] .controls {
-    display: grid;
-    grid-template-columns: 44px minmax(0, 1fr);
-    gap: 0 9px;
-    margin: 0;
-  }
-  .player[data-compact="true"] .time {
-    grid-column: 2;
-  }
-  .player[data-compact="true"] [data-lectum-captions] {
-    display: none;
-  }
   .cueList {
     min-height: 0;
     overflow-y: auto;
