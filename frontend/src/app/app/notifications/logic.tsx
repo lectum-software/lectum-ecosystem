@@ -25,6 +25,7 @@ import { VerificationVideoNotification } from "@/components/notifications/verifi
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
 import { LoadingState } from "@/components/ui/loading-state";
+import { ReviewsIcon } from "@/components/ui/reviews-icon";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -56,10 +57,10 @@ const NOTIFICATION_ICON_TONE = "bg-primary-soft text-primary";
 
 const LABELS: Record<string, NotificationView> = {
   depoimentos_pendentes: {
-    title: "Recebeu acolhimento? Retribua com um relato",
+    title: "Recebeu acolhimento? Retribua com uma avaliação.",
     description:
       "Conte como foi sua experiência e ajude a valorizar o trabalho de quem respondeu você.",
-    icon: MessageSquare,
+    icon: ReviewsIcon,
     tone: NOTIFICATION_ICON_TONE,
   },
   weekly_whatsapp_report: {

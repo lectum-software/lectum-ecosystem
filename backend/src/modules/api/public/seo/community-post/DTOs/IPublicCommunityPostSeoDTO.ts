@@ -1,6 +1,9 @@
 export type PublicCommunityPostSeoSource = "community_post" | "post_reply";
 
 export type PublicCommunityPostSeoDTO = {
+  captions?: Awaited<
+    ReturnType<typeof import("@/modules/video-assets/captions/service").readPublicCaptions>
+  >;
   canonical_url: string;
   community: {
     name: string;

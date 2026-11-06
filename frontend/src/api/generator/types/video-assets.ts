@@ -29,6 +29,7 @@ export type VideoAssetStatusResponse = {
 };
 
 export type VideoAssetPlaybackResponse = {
+  captions?: import("@/components/video-captions/types").VideoCaptions | null;
   expires_at: string;
   hls_url: string;
   thumbnail_url: string;

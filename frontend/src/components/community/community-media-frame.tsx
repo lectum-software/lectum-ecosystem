@@ -19,6 +19,7 @@ import {
 import { useCommunityVideoAutoplay } from "@/components/community/community-feed-video-autoplay";
 import { CommunityWhatsAppCta } from "@/components/community/community-whatsapp-cta";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
+import { ScopedTranscriptPanel } from "@/components/video-captions/transcript";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { isVideoAssetReference } from "@/utils/video-stream";
@@ -247,6 +248,7 @@ export type CommunityMediaOverlayAction = {
 
 type CommunityMediaBlockProps = {
   alt: string;
+  afterMedia?: ReactNode;
   analyticsTarget?: ContentVideoWatchTrackingTarget;
   className?: string;
   enableCommunityAutoplay?: boolean;
@@ -267,6 +269,7 @@ type CommunityMediaBlockProps = {
 
 export const CommunityMediaBlock = ({
   alt,
+  afterMedia,
   analyticsTarget,
   className,
   enableCommunityAutoplay = false,
@@ -510,6 +513,8 @@ export const CommunityMediaBlock = ({
           ) : null}
         </div>
         {hasFooter ? footer : null}
+        <ScopedTranscriptPanel reference={mediaUrl} />
+        {afterMedia}
       </div>
     );
   }

@@ -252,7 +252,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(hookSource, /Mantenha esta tela aberta enquanto o vídeo é preparado\./);
   assert.match(
     dialogHookSource,
-    /shareLectumTarget\(pendingTarget,[\s\S]*destination: "download"[\s\S]*signal: controller\.signal/,
+    /shareLectumTarget\(\s*\{ \.\.\.pendingTarget, overlayMode, captionRevision \},[\s\S]*destination: "download"[\s\S]*signal: controller\.signal/,
   );
   assert.match(dialogHookSource, /downloadAbortControllerRef/);
   assert.match(dialogHookSource, /downloadAbortControllerRef\.current\?\.abort\(\)/);
@@ -280,7 +280,8 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(dialogSource, /bg-primary/);
   assert.match(dialogSource, /h-\[4\.6cqh\]/);
   assert.match(dialogSource, /height: getPreviewSourceBodyHeight\(\)/);
-  assert.doesNotMatch(dialogSource, /line-clamp-3/);
+  assert.match(dialogSource, /line-clamp-3[^"]*text-sm leading-6/);
+  assert.match(dialogSource, /navigator\.clipboard\.writeText\(descriptionText\)/);
   assert.match(dialogSource, /px-\[6\.6cqw\]/);
   assert.match(dialogSource, /font-bold/);
   assert.match(dialogSource, /text-\[4\.65cqw\]/);

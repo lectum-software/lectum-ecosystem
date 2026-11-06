@@ -12,3 +12,12 @@ export const selectSharePostVideoMediaUrl = (post: SharePostVideoMediaCandidate)
 
   return post.media_type === "video" && post.media_url ? post.media_url : null;
 };
+
+import { z } from "zod";
+
+export const shareRenderCaptionOptions = z
+  .object({
+    overlayMode: z.enum(["captions", "identification", "none"]).default("identification"),
+    captionRevision: z.number().int().nonnegative().optional(),
+  })
+  .strict();

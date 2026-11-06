@@ -55,23 +55,29 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
     [clearCloseAnimationTimeout],
   );
 
-  const downloadPendingTarget = useCallback(async () => {
-    if (!pendingTarget || isSharing) return;
+  const downloadPendingTarget = useCallback(
+    async (overlayMode: "captions" | "identification" | "none", captionRevision?: number) => {
+      if (!pendingTarget || isSharing) return;
 
-    const controller = new AbortController();
-    downloadAbortControllerRef.current = controller;
-    const result = await shareLectumTarget(pendingTarget, {
-      destination: "download",
-      signal: controller.signal,
-    });
-    if (downloadAbortControllerRef.current === controller) {
-      downloadAbortControllerRef.current = null;
-    }
+      const controller = new AbortController();
+      downloadAbortControllerRef.current = controller;
+      const result = await shareLectumTarget(
+        { ...pendingTarget, overlayMode, captionRevision },
+        {
+          destination: "download",
+          signal: controller.signal,
+        },
+      );
+      if (downloadAbortControllerRef.current === controller) {
+        downloadAbortControllerRef.current = null;
+      }
 
-    if (result?.mode === "download") {
-      closeAfterAnimation();
-    }
-  }, [closeAfterAnimation, isSharing, pendingTarget, shareLectumTarget]);
+      if (result?.mode === "download") {
+        closeAfterAnimation();
+      }
+    },
+    [closeAfterAnimation, isSharing, pendingTarget, shareLectumTarget],
+  );
 
   useEffect(
     () => () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Minimize2, Pause, Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import {
   type MouseEvent,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -11,8 +11,10 @@ import {
   useRef,
   useState,
 } from "react";
+import { PlayerCaptions } from "@/components/video-captions/player-captions";
 import { cn } from "@/lib/utils";
 import { playVideoWithActiveDocument, useActiveVideoPlaybackGuard } from "@/lib/video-playback";
+import { VerticalVideoExitButton } from "./vertical-video-exit-button";
 import { VerticalVideoPlayerBottomOverlay } from "./vertical-video-player-bottom-overlay";
 import {
   useInlineContentVideoExpansion,
@@ -37,6 +39,7 @@ import {
 } from "./vertical-video-player-support";
 
 export const VerticalVideoPlayer = ({
+  captions,
   bottomOverlay,
   bottomOverlayExpandedOnly = false,
   className,
@@ -548,6 +551,7 @@ export const VerticalVideoPlayer = ({
   );
 
   const persistentProgressRatio = duration > 0 ? clampNumber(currentTime / duration, 0, 1) : 0;
+  const resolvedCaptions = captions === null ? null : (captions ?? playback.captions);
 
   return (
     <VerticalVideoPlayerShell
@@ -590,6 +594,14 @@ export const VerticalVideoPlayer = ({
         Seu navegador não suporta a reprodução de vídeo.
       </video>
       {overlay}
+      {resolvedCaptions ? (
+        <PlayerCaptions
+          key={src}
+          captions={resolvedCaptions}
+          videoRef={videoRef}
+          version={videoElementVersion}
+        />
+      ) : null}
       <VerticalVideoPlayerBottomOverlay
         visible={!bottomOverlayExpandedOnly || isContentExpanded}
         controlsVisible={usesPersistentControls && !persistentControlsHidden}
@@ -602,19 +614,7 @@ export const VerticalVideoPlayer = ({
         isLoading={playback.isLoading}
       />
       {isContentExpanded ? (
-        <button
-          aria-label={`Sair do vídeo ampliado: ${title}`}
-          className="absolute right-3 z-[3] grid h-11 w-11 place-items-center rounded-full border border-media-foreground/20 bg-media-background/40 text-primary-foreground shadow-lectum-soft backdrop-blur-md transition hover:bg-media-background/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 active:scale-95"
-          data-lectum-inline-video-exit="true"
-          onClick={closeInlineContentExpansion}
-          onPointerDown={(event) => event.stopPropagation()}
-          style={{
-            top: "calc(env(safe-area-inset-top) + 12px)",
-          }}
-          type="button"
-        >
-          <Minimize2 className="h-5 w-5" aria-hidden="true" strokeWidth={2.3} />
-        </button>
+        <VerticalVideoExitButton title={title} onClose={closeInlineContentExpansion} />
       ) : null}
       <button
         data-lectum-video-surface="true"

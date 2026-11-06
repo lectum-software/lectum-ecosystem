@@ -32,6 +32,8 @@ export type LectumShareMediaItem = {
 };
 
 export type LectumShareSocialTarget = LectumShareBaseTarget & {
+  overlayMode?: "captions" | "identification" | "none";
+  captionRevision?: number;
   hideSourceCard?: boolean;
   cardLabel: "Postado na Lectum" | "Respondido na Lectum";
   carouselCount: number;

@@ -1,8 +1,14 @@
 .videoViewport {
+  --lectum-caption-right: 64px;
   position: relative;
   flex: 1;
   min-height: 0;
   width: 100%;
+}
+@media (min-width: 1024px) {
+  .videoViewport {
+    --lectum-caption-right: 12px;
+  }
 }
 .composerSlot {
   flex-shrink: 0;

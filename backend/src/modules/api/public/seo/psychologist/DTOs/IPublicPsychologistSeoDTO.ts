@@ -1,4 +1,7 @@
 export type PublicPsychologistSeoDTO = {
+  captions?: Awaited<
+    ReturnType<typeof import("@/modules/video-assets/captions/service").readPublicCaptions>
+  >;
   canonical_url: string;
   description: string;
   name: string;

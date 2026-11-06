@@ -115,6 +115,61 @@ describe("social share local FFmpeg output", () => {
   });
 
   for (const filterMode of ["standard", "portable"] as const) {
+    it(`renders three overlay modes with real captions: ${filterMode}`, async (context) => {
+      if (unavailableReason) return context.skip(unavailableReason);
+      const decoded: Buffer[] = [];
+      for (const overlayMode of ["none", "identification", "captions"] as const) {
+        const outputPath = join(directory, `${overlayMode}-${filterMode}.mp4`);
+        const started = performance.now();
+        await renderSocialShareVideo({
+          config,
+          source: { kind: "file", inputPath: join(directory, "audio.mp4") },
+          outputPath,
+          durationSeconds: 0.5,
+          onProgress: () => {},
+          metadata: {
+            ...metadata,
+            hideSourceCard: true,
+            overlayMode,
+            captionCues: [{ start: 0, end: 0.4, text: "Atenção e saúde emocional." }],
+          },
+        });
+        const pixels = join(directory, `${overlayMode}-${filterMode}.rgb`);
+        await runManagedProcess({
+          command: config.ffmpegPath,
+          timeoutMs: 60000,
+          args: [
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-i",
+            outputPath,
+            "-frames:v",
+            "1",
+            "-vf",
+            "crop=1080:350:0:1150",
+            "-pix_fmt",
+            "rgb24",
+            "-f",
+            "rawvideo",
+            pixels,
+          ],
+        });
+        decoded.push(await readFile(pixels));
+        await assert.rejects(readFile(`${outputPath}.ass`));
+        if (!probeUnavailableReason) {
+          const probe = await probeVideo(config, outputPath);
+          assert.ok(probe);
+        }
+        context.diagnostic(
+          `${overlayMode}: ${Math.round(performance.now() - started)}ms; ${(await readFile(outputPath)).length} bytes`,
+        );
+      }
+      assert.notDeepEqual(decoded[0], decoded[1]);
+      assert.notDeepEqual(decoded[0], decoded[2]);
+      assert.notDeepEqual(decoded[1], decoded[2]);
+    });
     it(`MP4 sem caixinha preserva pixels do fundo e identificacao: ${filterMode}`, async (context) => {
       if (unavailableReason) return context.skip(unavailableReason);
       const fontFile =

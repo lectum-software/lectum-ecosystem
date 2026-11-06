@@ -55,6 +55,8 @@ import {
   shareRenderJobValidator,
   shareValidator,
   showValidator,
+  startReplyShareRenderJobValidator,
+  startShareRenderJobValidator,
   updatePostValidator,
   updateReplyValidator,
   voteValidator,
@@ -117,7 +119,7 @@ routes.get("/:id/share-artifact", showValidator, getShareArtifact);
 routes.post(
   "/:id/share-artifact/render-jobs",
   privateAuth,
-  showValidator,
+  startShareRenderJobValidator,
   startRenderShareArtifactJob,
 );
 routes.get(
@@ -138,7 +140,7 @@ routes.get("/:id/replies/:replyId/share-artifact", replySaveValidator, getShareA
 routes.post(
   "/:id/replies/:replyId/share-artifact/render-jobs",
   privateAuth,
-  replySaveValidator,
+  startReplyShareRenderJobValidator,
   startRenderShareArtifactJob,
 );
 routes.get(

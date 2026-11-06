@@ -40,6 +40,7 @@ import {
 import { useInteractionSnapshot } from "@/components/community/use-interaction-snapshot";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LoadingState } from "@/components/ui/loading-state";
+import { CaptionOverflowMenu } from "@/components/video-captions/transcript";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import {
@@ -211,7 +212,12 @@ export const ProfessionalReplyPreview = ({
           />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <AuthorIdentityLine
-              action={<FeedFavoriteButton author={reply.author} />}
+              action={
+                <>
+                  <FeedFavoriteButton author={reply.author} />
+                  <CaptionOverflowMenu reference={reply.media_url} authorId={reply.author.id} />
+                </>
+              }
               href={profileHref}
               name={getCommunityAuthorDisplayName(reply.author)}
               onClick={handleProfileNavigationClick}
@@ -581,7 +587,14 @@ const PostCardContent = ({
           {authorActions ??
             (currentUser?.role === "psicologo" && currentUser.id === post.author.id ? (
               <PostOwnerActionMenu post={post} />
-            ) : null)}
+            ) : (
+              <CaptionOverflowMenu
+                reference={
+                  post.media_items?.find((item) => item.media_type === "video")?.media_url ??
+                  (post.media_type === "video" ? post.media_url : null)
+                }
+              />
+            ))}
           {post.muted_by_current_user ? (
             <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
               <PostMutedBadge />

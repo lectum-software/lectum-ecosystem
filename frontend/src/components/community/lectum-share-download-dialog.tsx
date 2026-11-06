@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
+import { useVideoAssetPlayback } from "@/api/callers/video-assets";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
@@ -22,7 +23,7 @@ import {
 type LectumShareDownloadDialogProps = {
   disabled?: boolean;
   onClose: () => void;
-  onDownload: () => void;
+  onDownload: (mode: "captions" | "identification" | "none", revision?: number) => void;
   open: boolean;
   preparing?: boolean;
   target: LectumShareSocialTarget | null;
@@ -57,7 +58,13 @@ const applyPreviewMutedState = (video: HTMLVideoElement, muted: boolean) => {
   }
 };
 
-export const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
+export const LectumSharePreviewArt = ({
+  target,
+  showIdentification = true,
+}: {
+  target: LectumShareSocialTarget;
+  showIdentification?: boolean;
+}) => {
   const sourceText = target.sourceText.trim() || "Conteúdo na Lectum";
   const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 30), [sourceText]);
 
@@ -104,21 +111,23 @@ export const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTar
           </div>
         </div>
       ) : null}
-      <div className="absolute top-[69.35%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
-        <div className="inline-grid max-w-full justify-items-start text-left">
-          <div className="flex max-w-full items-center justify-start gap-[0.93cqw]">
-            <span className="min-w-0 truncate text-[2.95cqw] font-bold leading-none tracking-[-0.02em]">
-              {truncateLectumShareProfessionalTagName(target.professional.name)}
-            </span>
-            {target.professional.verified ? (
-              <VerifiedBadgeIcon className="h-[2.05cqw] w-[2.22cqw] min-h-2 min-w-2 shrink-0 text-primary" />
-            ) : null}
-          </div>
-          <div className="mt-[0.55cqw] max-w-full truncate text-[1.8cqw] font-medium leading-none text-primary-foreground/92">
-            {target.professional.roleLabel}
+      {showIdentification ? (
+        <div className="absolute top-[69.35%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
+          <div className="inline-grid max-w-full justify-items-start text-left">
+            <div className="flex max-w-full items-center justify-start gap-[0.93cqw]">
+              <span className="min-w-0 truncate text-[2.95cqw] font-bold leading-none tracking-[-0.02em]">
+                {truncateLectumShareProfessionalTagName(target.professional.name)}
+              </span>
+              {target.professional.verified ? (
+                <VerifiedBadgeIcon className="h-[2.05cqw] w-[2.22cqw] min-h-2 min-w-2 shrink-0 text-primary" />
+              ) : null}
+            </div>
+            <div className="mt-[0.55cqw] max-w-full truncate text-[1.8cqw] font-medium leading-none text-primary-foreground/92">
+              {target.professional.roleLabel}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 };
@@ -135,6 +144,33 @@ export const LectumShareDownloadDialog = ({
   const portalHost = useModalPortalHost(Boolean(target), overlayRef);
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isPreviewMuted, setIsPreviewMuted] = useState(false);
+  const playback = useVideoAssetPlayback(target?.mediaUrl, Boolean(target && open));
+  const caption = playback.data?.captions;
+  const [selection, setSelection] = useState<"captions" | "identification" | "none" | null>(null);
+  const [captionTime, setCaptionTime] = useState(0);
+  const mode = selection ?? (caption?.cues.length ? "captions" : "identification");
+  const cue = caption?.cues.find((cue) => captionTime >= cue.start && captionTime < cue.end);
+  const captionChunks =
+    Array.from(cue?.text ?? "", (character) => (character.charCodeAt(0) < 32 ? " " : character))
+      .join("")
+      .replace(/[\\{}]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .match(/.{1,72}(?:\s|$)|.{1,72}/gu) ?? [];
+  const captionText = cue
+    ? captionChunks[
+        Math.min(
+          captionChunks.length - 1,
+          Math.floor(((captionTime - cue.start) / (cue.end - cue.start)) * captionChunks.length),
+        )
+      ]
+    : "";
+  const [previousTarget, setPreviousTarget] = useState(target);
+  if (target !== previousTarget) {
+    setPreviousTarget(target);
+    setSelection(null);
+    setCaptionTime(0);
+  }
 
   const handlePreviewVideoReady = useCallback(
     (video: HTMLVideoElement | null) => {
@@ -231,7 +267,7 @@ export const LectumShareDownloadDialog = ({
 
   const handleDownload = () => {
     pausePreviewMediaBeforeDownload();
-    onDownload();
+    onDownload(mode, mode === "captions" ? caption?.revision : undefined);
   };
 
   const handlePreviewMuteToggle = () => {
@@ -270,7 +306,7 @@ export const LectumShareDownloadDialog = ({
         aria-labelledby="lectum-share-download-title"
         aria-modal="true"
         className={cn(
-          "relative z-10 grid max-h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] transform-gpu gap-3 overflow-y-auto overscroll-contain rounded-t-[2rem] border border-border bg-surface px-5 pt-5 pb-[calc(var(--lectum-bottom-fixed-padding)+1rem)] text-foreground shadow-[var(--lectum-shadow)] transition-transform will-change-transform sm:max-h-[min(760px,calc(100dvh-3rem))] sm:max-w-md sm:rounded-[2rem] sm:pb-5",
+          "relative z-10 flex h-[min(900px,calc(100dvh_-_env(safe-area-inset-top)_-_1rem))] w-full max-w-[560px] transform-gpu flex-col gap-3 overflow-hidden rounded-t-[2rem] border border-border bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] transition-transform will-change-transform sm:rounded-[2rem] sm:p-5 [&>button]:shrink-0 [&>fieldset]:shrink-0 [&>section]:shrink-0",
           sheetMotionState === "enter"
             ? "translate-y-0 duration-[340ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
             : "translate-y-[calc(100%+2rem)] duration-[300ms] ease-[cubic-bezier(0.4,0,1,1)]",
@@ -283,7 +319,7 @@ export const LectumShareDownloadDialog = ({
         ref={overlayRef}
         tabIndex={-1}
       >
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex shrink-0 items-start justify-between gap-4">
           <div className="min-w-0 pt-1">
             <h2
               className="text-base font-black leading-tight tracking-[-0.01em]"
@@ -307,9 +343,10 @@ export const LectumShareDownloadDialog = ({
           </button>
         </div>
 
-        <div className="mx-auto w-[min(58vw,220px)] min-w-[190px]">
-          <div className="relative aspect-[9/16] overflow-hidden bg-media-background [container-type:size]">
+        <div className="flex min-h-0 flex-1 justify-center" data-share-preview-frame="true">
+          <div className="relative aspect-[9/16] h-full max-w-full overflow-hidden bg-media-background [container-type:size]">
             <VerticalVideoPlayer
+              captions={null}
               className="absolute inset-0 h-full w-full rounded-none border-0 shadow-none"
               controls={false}
               fit="contain"
@@ -321,12 +358,29 @@ export const LectumShareDownloadDialog = ({
               onVideoElementReady={handlePreviewVideoReady}
               videoProps={{
                 autoPlay: true,
+                onTimeUpdate: (event) => setCaptionTime(event.currentTarget.currentTime),
                 "data-lectum-share-preview-video": "true",
                 loop: true,
                 muted: isPreviewMuted,
               }}
             />
-            <LectumSharePreviewArt target={target} />
+            <LectumSharePreviewArt target={target} showIdentification={mode === "identification"} />
+            {mode === "captions" && captionText ? (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-[25%] left-[14%] z-[3] w-[72%] text-center text-[4.1cqw] font-bold leading-snug text-media-foreground"
+              >
+                <span
+                  className="box-decoration-clone rounded px-1 py-0.5"
+                  style={{
+                    background:
+                      "color-mix(in srgb, var(--lectum-media-background) 60%, transparent)",
+                  }}
+                >
+                  {captionText.trim()}
+                </span>
+              </div>
+            ) : null}
             <button
               aria-label={
                 isPreviewMuted
@@ -355,8 +409,11 @@ export const LectumShareDownloadDialog = ({
         </div>
 
         {descriptionText ? (
-          <section className="flex items-start gap-3 px-1">
-            <p className="max-h-28 flex-1 overflow-y-auto whitespace-pre-line pr-1 text-muted-foreground text-sm leading-6">
+          <section className="flex items-start gap-3 border-b border-border/60 px-1 pb-3">
+            <p
+              className="line-clamp-3 flex-1 whitespace-pre-line pr-1 text-muted-foreground text-sm leading-6"
+              title={descriptionText}
+            >
               {descriptionText}
             </p>
             <div className="pt-0.5">
@@ -372,13 +429,47 @@ export const LectumShareDownloadDialog = ({
           </section>
         ) : null}
 
+        {caption?.cues.length ? (
+          <fieldset disabled={disabled} className="border-0 p-0">
+            <legend className="mb-2 text-sm font-semibold">Sobreposição no vídeo</legend>
+            <div className="grid grid-cols-3 rounded-lg border border-border bg-transparent p-1">
+              {(
+                [
+                  ["captions", "Legenda"],
+                  ["identification", "Identificação"],
+                  ["none", "Nenhum"],
+                ] as const
+              ).map(([value, label]) => (
+                <label
+                  key={value}
+                  className="relative min-w-0 cursor-pointer text-center text-xs font-semibold"
+                >
+                  <input
+                    type="radio"
+                    name="video-overlay-mode"
+                    value={value}
+                    checked={mode === value}
+                    disabled={value === "captions" && !caption?.cues.length}
+                    onChange={() => setSelection(value)}
+                    className="peer sr-only"
+                  />
+                  <span className="flex min-h-10 items-center justify-center rounded-md border border-transparent px-1 peer-checked:border-primary peer-checked:text-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-disabled:cursor-not-allowed peer-disabled:opacity-40">
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
         <button
           className={cn(
             "flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-primary-foreground text-sm font-black transition",
             "hover:translate-y-[-1px] hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
             "disabled:pointer-events-none disabled:opacity-65",
           )}
-          disabled={disabled}
+          disabled={
+            disabled || (mode === "captions" && !caption?.cues.length) || playback.isFetching
+          }
           onClick={handleDownload}
           type="button"
         >
@@ -391,6 +482,21 @@ export const LectumShareDownloadDialog = ({
           backface-visibility: hidden;
           contain: layout paint style;
           translate: 0 0;
+        }
+
+        @media (min-width: 600px) and (max-height: 520px) {
+          [data-lectum-share-download-sheet] {
+            display: grid;
+            width: min(760px, calc(100vw - 32px));
+            max-width: none;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+            grid-template-rows: auto auto auto auto;
+          }
+          [data-lectum-share-download-sheet] > div:first-child { grid-column: 2; grid-row: 1; }
+          [data-lectum-share-download-sheet] > [data-share-preview-frame] { grid-column: 1; grid-row: 1 / -1; }
+          [data-lectum-share-download-sheet] > section { grid-column: 2; grid-row: 2; }
+          [data-lectum-share-download-sheet] > fieldset { grid-column: 2; grid-row: 3; }
+          [data-lectum-share-download-sheet] > button { grid-column: 2; grid-row: 4; }
         }
 
         [data-lectum-share-download-sheet][data-lectum-share-download-sheet-motion="initial"] {

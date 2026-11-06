@@ -97,6 +97,8 @@ const safeFileName = (target: LectumShareSocialTarget, extension: "mp4") => {
 
 const createPreparedShareFileCacheKey = (target: LectumShareSocialTarget) =>
   JSON.stringify([
+    target.overlayMode ?? "identification",
+    target.captionRevision ?? null,
     target.kind,
     target.postId,
     target.replyId ?? "post",
@@ -289,6 +291,8 @@ const prepareLectumShareFileWithServerRenderJob = async (
       job = await retryTransientShareRenderRequest(
         () =>
           startPostShareVideoArtifactRenderJob({
+            overlayMode: target.overlayMode,
+            captionRevision: target.captionRevision,
             postId: target.postId,
             replyId: target.replyId,
             signal,

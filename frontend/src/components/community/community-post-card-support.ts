@@ -132,3 +132,16 @@ export const createPostCardNavigation = (enabled: boolean, navigate: () => void)
     navigate();
   },
 });
+export const postMediaAnalyticsTarget = (
+  mediaType: string | null | undefined,
+  targetId: string,
+  isReply: boolean,
+) =>
+  mediaType === "video"
+    ? { targetId, targetType: isReply ? ("reply" as const) : ("post" as const) }
+    : undefined;
+
+export const postAttentionTarget = (isPsychologist: boolean, postId: string, replyId?: string) =>
+  isPsychologist
+    ? { targetId: replyId ?? postId, targetType: replyId ? ("reply" as const) : ("post" as const) }
+    : null;

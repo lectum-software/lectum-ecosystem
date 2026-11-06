@@ -1,5 +1,4 @@
 "use client";
-
 import { Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,7 +14,7 @@ import { MentorAuthorMeta } from "@/components/community/mentor-author-meta";
 import { OriginalPostCommunityLink } from "@/components/community/original-post-community-link";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
-import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
+import { PostHeaderActionMenu } from "@/components/community/post-owner-action-menu";
 import { ProfileReplyContext } from "@/components/community/profile-reply-context";
 import {
   canShowSocialVideoPreviewAction,
@@ -46,7 +45,9 @@ import {
   type PostCardVoteSnapshot,
   type PostWithOptionalSortMetrics,
   type ProfileContributionPost,
+  postAttentionTarget,
   postDetailHref,
+  postMediaAnalyticsTarget,
   publicationInteractionData,
 } from "./community-post-card-support";
 import { ContentVideoPost } from "./content-video-context";
@@ -115,13 +116,11 @@ const CommunityPostCardContent = ({
   const hasCompactReplyActions = Boolean(primaryReply && !hasPostStyleReplyActions);
   const displayThumbnailUrl =
     primaryReply?.thumbnail_url ?? singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
-  const displayMediaAnalyticsTarget =
-    displayMediaType === "video"
-      ? ({
-          targetId: primaryReply?.id ?? post.id,
-          targetType: primaryReply ? "reply" : "post",
-        } as const)
-      : undefined;
+  const displayMediaAnalyticsTarget = postMediaAnalyticsTarget(
+    displayMediaType,
+    primaryReply?.id ?? post.id,
+    Boolean(primaryReply),
+  );
   const shouldShowPostCarousel = !primaryReply && postImageMediaItems.length > 1;
   const hasVideoContact = displayMediaType === "video" && Boolean(displayMediaUrl);
   const displayFeaturedBadge =
@@ -157,13 +156,9 @@ const CommunityPostCardContent = ({
   const psychologistProfileHref = isPsychologistPost
     ? `/psicologos/${displayAuthor.id}`
     : undefined;
-  const attentionTrackingTarget = isPsychologistPost
-    ? ({
-        targetId: isReplyContribution && primaryReply ? primaryReply.id : post.id,
-        targetType: isReplyContribution && primaryReply ? "reply" : "post",
-      } as const)
-    : null;
-  const setAttentionElement = useContentAttentionTracking(attentionTrackingTarget);
+  const setAttentionElement = useContentAttentionTracking(
+    postAttentionTarget(isPsychologistPost, post.id, focusedReplyId),
+  );
   const allowWhatsappCta = showWhatsappCta && !compactProfilePostActions;
   const authorWhatsappCta =
     allowWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
@@ -553,13 +548,15 @@ const CommunityPostCardContent = ({
                 </p>
               )}
             </div>
-            {authorHeaderExtra ??
-              (showOwnerActions &&
-              !primaryReply &&
-              currentUser?.role === "psicologo" &&
-              currentUser.id === post.author.id ? (
-                <PostOwnerActionMenu post={post} />
-              ) : null)}
+            {authorHeaderExtra ?? (
+              <PostHeaderActionMenu
+                post={post}
+                showOwnerActions={showOwnerActions}
+                isReply={Boolean(primaryReply)}
+                displayAuthorId={displayAuthor.id}
+                reference={displayMediaType === "video" ? displayMediaUrl : null}
+              />
+            )}
           </div>
         ) : null}
         {showDisplayText ? (
@@ -619,6 +616,11 @@ const CommunityPostCardContent = ({
             <CommunityMediaBlock
               alt={displayTitle ?? "Mídia da publicação"}
               analyticsTarget={displayMediaAnalyticsTarget}
+              afterMedia={
+                primaryReply
+                  ? renderReplyTestimonialSlot(post, primaryReply, null, "media")
+                  : undefined
+              }
               enableCommunityAutoplay={profilePublicationMode}
               footer={hasVideoContact ? authorWhatsappCta : undefined}
               mediaType={displayMediaType}

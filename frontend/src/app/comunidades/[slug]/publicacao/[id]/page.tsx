@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PostDetailLogic } from "@/app/app/community/[slug]/post/[id]/logic";
+import { PublicTranscript } from "@/components/video-captions/public-transcript";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";
 import {
@@ -44,6 +45,12 @@ export const generateMetadata = async ({
   });
 };
 
-export default function PostDetailPage() {
-  return <PostDetailLogic forceBackToFeed />;
+export default async function PostDetailPage({ params }: PostDetailPageProps) {
+  const { id, slug } = await params;
+  return (
+    <>
+      <PostDetailLogic forceBackToFeed />
+      <PublicTranscript id={id} slug={slug} />
+    </>
+  );
 }

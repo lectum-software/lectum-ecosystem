@@ -99,6 +99,10 @@ function createHarness(persistent = false) {
     ? {
         ...modules,
         "./content-video-player": source("./content-video-player.tsx"),
+        "@/components/video-captions/player-captions": source(
+          "../video-captions/player-captions.tsx",
+        ),
+        "./caption-icon": source("../video-captions/caption-icon.tsx"),
         "@/components/ui/vertical-video-player-stream":
           "exports.VerticalVideoStreamStatus = () => null;",
         "@/hooks/video-stream": source("../../hooks/video-stream/index.ts"),

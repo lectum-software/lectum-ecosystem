@@ -4,6 +4,8 @@ export const VIDEO_JOB_NAME = "compress";
 export type VideoJobOperation = "compress" | "social_share";
 
 export type SocialShareRenderMetadata = {
+  overlayMode?: "captions" | "identification" | "none";
+  captionCues?: { start: number; end: number; text: string }[] | undefined;
   hideSourceCard?: boolean;
   cardLabel: string;
   professionalName: string;

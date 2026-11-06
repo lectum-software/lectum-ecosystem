@@ -9,9 +9,11 @@ import {
   videoAssetIdFromReference,
 } from "@/infra/video-stream";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { readCaptions } from "@/modules/video-assets/captions/service";
 import { VideoAssetRepository } from "@/modules/video-assets/repository";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import { getPrimaryPublicWebOrigin, parsePublicHttpOrigin } from "@/utils/public-origin";
+import { localCaptionPreviewPlayback } from "../../../../../video-assets/captions/local-preview";
 import type {
   IPostRenderShareArtifactDTO,
   IPostRenderShareArtifactJobDTO,
@@ -28,7 +30,7 @@ import {
   resolveShareRenderJobId,
   SHARE_RENDER_JOB_ID_PATTERN,
 } from "./share-render-job-access";
-import { selectSharePostVideoMediaUrl } from "./share-render-media";
+import { selectSharePostVideoMediaUrl, shareRenderCaptionOptions } from "./share-render-media";
 import {
   resolveLegacyPostMediaSourceUrlForRender,
   type ShareRenderSource,
@@ -64,6 +66,8 @@ type VideoServiceEnvelope = {
 };
 
 export type ShareRenderTarget = {
+  overlayMode?: "captions" | "identification" | "none";
+  captionCues?: { start: number; end: number; text: string }[];
   hideSourceCard?: boolean;
   cardLabel: string;
   fileName: string;
@@ -371,7 +375,10 @@ const streamMediaSourceUrl = async (
   }
 
   const provider = getVideoStreamProvider();
-  if (!provider) return null;
+  if (!provider) {
+    const local = localCaptionPreviewPlayback(asset);
+    return local ? { sourceOrigin: null, sourceUrl: local.hlsUrl } : null;
+  }
 
   return {
     sourceOrigin: streamPlaybackRequestOrigin(),
@@ -525,6 +532,8 @@ export const startResolvedShareRenderArtifactJob = async (input: {
   const response = await requestVideoServiceForJobStart("/api/private/jobs/social-share", {
     body: JSON.stringify({
       metadata: {
+        overlayMode: target.overlayMode,
+        captionCues: target.captionCues,
         cardLabel: target.cardLabel,
         hideSourceCard: target.hideSourceCard,
         professionalName: target.professionalName,
@@ -541,6 +550,13 @@ export const startResolvedShareRenderArtifactJob = async (input: {
   });
 
   if (!response?.ok) return mapVideoServiceFailure(response);
+
+  if (
+    target.overlayMode &&
+    target.overlayMode !== "identification" &&
+    response.headers.get("x-lectum-overlay-mode") !== target.overlayMode
+  )
+    return renderUnavailable();
 
   const envelope = await readVideoServiceEnvelope(response);
   if (envelope?.success !== true || !isVideoJobData(envelope.data)) return renderUnavailable();
@@ -560,6 +576,16 @@ export const startRenderShareArtifactJob = async (
   const target = await resolveShareRenderTarget(data);
   if (!isResolvedTarget(target)) return target;
 
+  const options = shareRenderCaptionOptions.safeParse(data.b ?? {});
+  if (!options.success) return invalidRenderTarget();
+  target.overlayMode = options.data.overlayMode;
+  if (target.overlayMode === "captions") {
+    const id = videoAssetIdFromReference(target.mediaUrl);
+    const caption = id ? await readCaptions(id) : null;
+    if (!caption) return invalidRenderMedia();
+    if (options.data.captionRevision !== caption.revision) return invalidRenderTarget(409);
+    target.captionCues = caption.cues;
+  }
   return startResolvedShareRenderArtifactJob({ ownerId: data.auth.id ?? "", target });
 };
 

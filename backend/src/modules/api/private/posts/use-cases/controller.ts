@@ -288,6 +288,7 @@ export const renderShareArtifact = async (req: Request, res: Response) => {
 export const startRenderShareArtifactJob = async (req: Request, res: Response) => {
   try {
     const resolve = await startRenderShareArtifactJobService({
+      b: req.b,
       auth: req.auth,
       p: req.params as unknown as Parameters<typeof startRenderShareArtifactJobService>[0]["p"],
     });

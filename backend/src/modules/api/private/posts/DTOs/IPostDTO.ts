@@ -409,6 +409,7 @@ export type IPostRenderShareArtifactDTO = {
 };
 
 export type IPostRenderShareArtifactJobDTO = {
+  b?: unknown;
   p: PostParams & { jobId?: string; replyId?: string };
   auth: user;
   range?: string;

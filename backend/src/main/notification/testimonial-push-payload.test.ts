@@ -24,7 +24,7 @@ test("real push sender serializes the approved CTA without sending to any provid
   try {
     const { sendWebPushToSubscriptions } = await import("./push");
     const result = await sendWebPushToSubscriptions({
-      title: "Recebeu acolhimento? Retribua com um relato",
+      title: "Recebeu acolhimento? Retribua com uma avaliação.",
       body: "Compartilhe sua experiência.",
       action: "leave_testimonial",
       redirect: "/app/depoimentos/pendentes?batch=owned",

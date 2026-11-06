@@ -229,6 +229,7 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
     og_video_url: mediaPreview.ogVideoUrl,
     published_at: post.createdAt,
     source: "community_post",
+    captions: await readPublicCaptions(firstPostMedia(post)?.media_url).catch(() => null),
     title: `${title} | Lectum`,
     updated_at: post.edited_at ?? post.updatedAt ?? null,
   };
@@ -357,6 +358,7 @@ export const showReply = async ({ id, replyId, slug }: ReplySeoParams): Promise<
     og_video_url: replyMedia.ogVideoUrl ?? postMedia.ogVideoUrl,
     published_at: reply.createdAt,
     source: "post_reply",
+    captions: await readPublicCaptions(reply.media_url).catch(() => null),
     title: `${title} | Lectum`,
     updated_at: reply.edited_at ?? reply.updatedAt ?? null,
   };
@@ -367,3 +369,5 @@ export const showReply = async ({ id, replyId, slug }: ReplySeoParams): Promise<
     data,
   };
 };
+
+import { readPublicCaptions } from "@/modules/video-assets/captions/service";

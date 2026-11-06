@@ -9,7 +9,9 @@ import { canInvitePostAuthorToTestify } from "./testimonial-invitation-policy";
 export const PostTestimonialInvitation = ({
   postAuthorId,
   reply,
+  placement = "actions",
 }: {
+  placement?: "actions" | "media";
   postAuthorId?: string | null;
   reply: Pick<PostProfessionalReply, "parent_reply_id" | "media_url" | "media_type" | "author">;
 }) => {
@@ -23,16 +25,29 @@ export const PostTestimonialInvitation = ({
     })
   )
     return null;
-  return <TestimonialInvitation psychologistId={reply.author.id} appearance="inline" />;
+  return (
+    <TestimonialInvitation
+      psychologistId={reply.author.id}
+      appearance="inline"
+      className={placement === "media" ? "hidden md:inline-flex md:justify-self-end" : "md:hidden"}
+    />
+  );
 };
 
 export const renderReplyTestimonialSlot = (
   post: Pick<PostDetail, "author">,
   reply: PostProfessionalReply | null | undefined,
   existing: ReactNode,
+  placement: "actions" | "media" = "actions",
 ) => (
   <>
     {existing}
-    {reply ? <PostTestimonialInvitation postAuthorId={post.author.id} reply={reply} /> : null}
+    {reply ? (
+      <PostTestimonialInvitation
+        postAuthorId={post.author.id}
+        reply={reply}
+        placement={placement}
+      />
+    ) : null}
   </>
 );

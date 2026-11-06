@@ -13,6 +13,7 @@ import {
 import { createPortal } from "react-dom";
 import { VerticalVideoStreamStatus } from "@/components/ui/vertical-video-player-stream";
 import type { VerticalVideoPlayerProps } from "@/components/ui/vertical-video-player-support";
+import { PlayerCaptions } from "@/components/video-captions/player-captions";
 import { useAttachVideoSource, useVideoPlaybackSource } from "@/hooks/video-stream";
 import { useActiveVideoPlaybackGuard } from "@/lib/video-playback";
 
@@ -95,6 +96,14 @@ function PersistentMedia({ selection }: { selection: Selection }) {
         error={playback.error}
         isLoading={playback.isLoading}
       />
+      {playback.captions && slot ? (
+        <PlayerCaptions
+          key={props.src}
+          captions={playback.captions}
+          videoRef={videoRef}
+          version={revision}
+        />
+      ) : null}
     </>
   );
 }

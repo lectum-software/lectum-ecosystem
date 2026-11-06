@@ -30,7 +30,7 @@ const resolveBillingNoticeStage = (data: Record<string, unknown>) => {
 
 export const messages = {
   depoimentos_pendentes: (_data: Record<string, unknown>) => ({
-    title: "Recebeu acolhimento? Retribua com um relato",
+    title: "Recebeu acolhimento? Retribua com uma avaliação.",
     body: "Conte como foi sua experiência e ajude a valorizar o trabalho de quem respondeu você.",
   }),
   nova_avaliacao: (data: Record<string, unknown>) => {

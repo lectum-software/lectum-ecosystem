@@ -20,6 +20,8 @@ import type { PostListPost, UserPostReply } from "@/api/generator/types/posts";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { ReplyMenuSurface } from "@/components/community/reply-menu-surface";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import { EditCaptionMenuItem } from "@/components/video-captions/edit-menu-item";
+import { TranscriptMenuItem } from "@/components/video-captions/transcript";
 import { useAppSelector } from "@/hooks/redux";
 import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { cn } from "@/lib/utils";
@@ -369,6 +371,11 @@ export const ReplyOwnerActionMenu = ({
             <Pencil className="h-4 w-4" aria-hidden="true" />
             Editar
           </button>
+          <EditCaptionMenuItem reference={reply.media_url} />
+          <TranscriptMenuItem
+            reference={reply.media_type === "video" ? reply.media_url : null}
+            onSelected={() => setMenuOpen(false)}
+          />
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
             disabled={busy}

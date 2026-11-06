@@ -1,0 +1,341 @@
+.screen {
+  min-height: 100dvh;
+  background: var(--lectum-surface);
+  color: var(--foreground);
+  letter-spacing: 0;
+}
+.header {
+  height: 56px;
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--lectum-border);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--lectum-surface);
+}
+.header h1 {
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+}
+.header > button:last-child {
+  padding: 0;
+  font-size: 14px;
+}
+.body {
+  max-width: 1080px;
+  margin: auto;
+  padding: 16px 20px;
+}
+.player {
+  min-width: 0;
+}
+.cueList {
+  min-width: 0;
+}
+.frame {
+  width: 146px;
+  max-width: 100%;
+  aspect-ratio: 9 / 16;
+  margin: auto;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--lectum-media-background);
+}
+.frame button {
+  display: none;
+}
+.frame [data-lectum-captions] {
+  font-size: 10px;
+  --lectum-caption-bottom: 15%;
+  left: 5px;
+  right: 5px;
+  line-height: 1.5;
+}
+.frame [data-lectum-captions] span {
+  padding: 3px 5px;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 10px 0 14px;
+}
+.controls button {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--lectum-primary-soft);
+  color: var(--lectum-primary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.controls button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--lectum-primary) 16%, var(--lectum-surface));
+}
+.controls input {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.controls input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 99px;
+  background: linear-gradient(
+    to right,
+    var(--lectum-primary) var(--progress),
+    var(--lectum-border) var(--progress)
+  );
+}
+.controls input::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border: 2px solid var(--lectum-media-foreground);
+  border-radius: 50%;
+  background: var(--lectum-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--lectum-primary) 25%, transparent);
+}
+.controls input::-moz-range-track {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--lectum-border);
+}
+.controls input::-moz-range-progress {
+  height: 4px;
+  background: var(--lectum-primary);
+}
+.controls input::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--lectum-media-foreground);
+  border-radius: 50%;
+  background: var(--lectum-primary);
+}
+.controls :focus-visible {
+  outline: 2px solid var(--lectum-primary);
+  outline-offset: 3px;
+}
+.time {
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--lectum-muted);
+  white-space: nowrap;
+}
+.info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  font-size: 14px;
+}
+.badge {
+  font-size: 11px;
+  background: var(--lectum-warning-soft);
+  color: var(--lectum-warning);
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+.badge[data-reviewed="true"] {
+  background: var(--lectum-success-soft);
+  color: var(--lectum-success);
+}
+.help {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--lectum-muted);
+  margin: 0 0 8px;
+}
+.cue {
+  position: relative;
+  gap: 5px;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--lectum-border);
+  font-weight: 400;
+}
+.cue label {
+  font-size: 11px;
+  color: var(--lectum-muted);
+}
+.cue .input {
+  display: block;
+  min-height: 60px;
+  padding: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 8px;
+  box-shadow: none;
+  resize: vertical;
+  font-weight: 400;
+}
+.cue .input:focus {
+  box-shadow: none;
+}
+.active::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 20px;
+  left: -10px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--lectum-primary);
+}
+.active .input {
+  border-color: var(--lectum-primary);
+  background: color-mix(in srgb, var(--lectum-primary-soft) 40%, var(--lectum-surface));
+}
+.saveButton {
+  width: 100%;
+  min-height: 44px;
+  margin: 12px 0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--lectum-primary);
+  color: var(--lectum-primary-foreground);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.saveButton:focus-visible {
+  outline: 2px solid var(--lectum-primary);
+  outline-offset: 3px;
+}
+.saveState {
+  min-height: 34px;
+  font-size: 12px;
+  color: var(--lectum-muted);
+  border-top: 1px solid var(--lectum-border);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+.saveState[data-error="true"] {
+  color: var(--lectum-danger);
+}
+@media (max-width: 700px) {
+  .screen {
+    height: 100dvh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .header {
+    flex-shrink: 0;
+  }
+  .body {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .frame {
+    width: min(146px, 18dvh);
+  }
+  .player[data-compact="true"] {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    padding-bottom: 12px;
+  }
+  .player[data-compact="true"] .frame {
+    width: 54px;
+  }
+  .player[data-compact="true"] .controls {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 0 9px;
+    margin: 0;
+  }
+  .player[data-compact="true"] .time {
+    grid-column: 2;
+  }
+  .player[data-compact="true"] [data-lectum-captions] {
+    display: none;
+  }
+  .cueList {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    margin-left: -10px;
+    padding: 0 0 max(16px, env(safe-area-inset-bottom)) 10px;
+    scroll-padding-block: 8px;
+  }
+}
+@media (min-width: 701px) {
+  .header {
+    height: 64px;
+    padding: 0 16px;
+    grid-template-columns: 80px 1fr 80px;
+  }
+  .header h1 {
+    font-size: 18px;
+  }
+  .body {
+    padding: 32px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 48px;
+  }
+  .frame {
+    width: min(270px, calc(56.25dvh - 92.25px));
+  }
+  .player {
+    position: sticky;
+    top: 80px;
+    align-self: start;
+  }
+  .frame [data-lectum-captions] {
+    font-size: 14px;
+    --lectum-caption-bottom: 17%;
+    left: 10px;
+    right: 10px;
+  }
+  .controls {
+    gap: 14px;
+    margin: 16px 0 0;
+  }
+  .info {
+    padding-bottom: 12px;
+  }
+  .help {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+  .cue {
+    padding-top: 12px;
+  }
+  .cue .input {
+    min-height: 74px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  .active::before {
+    top: 12px;
+  }
+}

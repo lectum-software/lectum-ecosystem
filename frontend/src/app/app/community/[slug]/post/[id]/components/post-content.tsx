@@ -30,6 +30,7 @@ import {
   createSocialVideoPreviewOverlayAction,
 } from "@/components/community/social-video-preview-action";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { TranscriptMenuItem, TranscriptPanel } from "@/components/video-captions/transcript";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
@@ -125,11 +126,13 @@ export const AuthorAvatar = ({
 };
 
 export const PostHeader = ({
+  onShowTranscript,
   onBack,
   onDeleted,
   onReport,
   post,
 }: {
+  onShowTranscript?: () => void;
   onBack: () => void;
   onDeleted: () => void;
   onReport: (trigger: HTMLButtonElement | null) => void;
@@ -159,7 +162,11 @@ export const PostHeader = ({
         </Button>
         <h1 className="text-base font-black text-foreground dark:text-foreground">Post</h1>
         {isOwnPost ? (
-          <PostOwnerActionMenu onDeleted={onDeleted} post={post} />
+          <PostOwnerActionMenu
+            onDeleted={onDeleted}
+            post={post}
+            onShowTranscript={onShowTranscript}
+          />
         ) : (
           <div className="relative">
             <button
@@ -191,6 +198,15 @@ export const PostHeader = ({
                   <Flag className="h-4 w-4" aria-hidden="true" />
                   Denunciar post
                 </button>
+                {onShowTranscript ? (
+                  <TranscriptMenuItem
+                    reference={post.media_type === "video" ? post.media_url : null}
+                    onOpen={() => {
+                      setMenuOpen(false);
+                      onShowTranscript();
+                    }}
+                  />
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -260,7 +276,15 @@ export const PostHeader = ({
   );
 };
 
-export const PostBody = ({ post }: { post: PostDetail }) => {
+export const PostBody = ({
+  post,
+  transcriptOpen = false,
+  onCloseTranscript = () => {},
+}: {
+  post: PostDetail;
+  transcriptOpen?: boolean;
+  onCloseTranscript?: () => void;
+}) => {
   const currentUser = useAppSelector((state) => state.user);
   const { isDownloadingShareVideo, lectumDownloadDialog, openLectumDownloadDialog } =
     useLectumShareDownloadDialog();
@@ -334,6 +358,11 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
         />
       )}
 
+      <TranscriptPanel
+        reference={displayMediaType === "video" ? displayMediaUrl : null}
+        open={transcriptOpen}
+        onClose={onCloseTranscript}
+      />
       {lectumDownloadDialog}
     </div>
   );

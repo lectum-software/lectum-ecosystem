@@ -3,6 +3,7 @@ import { access } from "node:fs/promises";
 import { join } from "node:path";
 
 const SOCIAL_DRAW_TEXT_BOLD_FONT_FILE_CANDIDATES = [
+  ...(process.env.VIDEO_SOCIAL_BOLD_FONT_PATH ? [process.env.VIDEO_SOCIAL_BOLD_FONT_PATH] : []),
   "/usr/share/fonts/truetype/manrope/Manrope-Bold.ttf",
   "/usr/share/fonts/truetype/manrope/Manrope-ExtraBold.ttf",
   "/usr/share/fonts/truetype/manrope/Manrope-SemiBold.ttf",
@@ -11,6 +12,9 @@ const SOCIAL_DRAW_TEXT_BOLD_FONT_FILE_CANDIDATES = [
 ] as const;
 
 const SOCIAL_DRAW_TEXT_REGULAR_FONT_FILE_CANDIDATES = [
+  ...(process.env.VIDEO_SOCIAL_REGULAR_FONT_PATH
+    ? [process.env.VIDEO_SOCIAL_REGULAR_FONT_PATH]
+    : []),
   "/usr/share/fonts/truetype/manrope/Manrope-Medium.ttf",
   "/usr/share/fonts/truetype/manrope/Manrope-Regular.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
