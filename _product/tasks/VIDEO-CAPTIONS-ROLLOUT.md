@@ -299,3 +299,22 @@ fora de ordem preservando maximos e marcos. Exige opt-in e endereco loopback.
 legendas/CC/HTML preservados. Perfil temporario removido, conta e legenda do
 usuario comparadas sem diferenca, backend local original restaurado.
 O erro de analytics acima foi resolvido localmente; demais gates permanecem.
+
+## Ajustes visuais do piloto - 2026-11-06
+
+- [x] Suprimir captions duplicadas do provedor, incluindo faixas HLS tardias.
+- [x] Preservar somente o overlay Lectum na visualizacao ampliada do site.
+- [x] CC no topo direito, abaixo do Instagram para o dono; respeitar o botao + no viewer.
+- [x] Usar o icone contornado aprovado tanto ligado quanto desligado.
+- [x] Fundo unico continuo, sem sobreposicao entre linhas ou letras cobertas.
+- [x] Suite de video/contato: 98 testes passaram, sem skips, incluindo dois testes
+  de captions em 390/1440 px, troca de faixas, toggle, fullscreen, overlays e cleanup.
+- [x] Player Next real inspecionado localmente em 390/1440 px: oito combinacoes de
+  dono/visitante e contato/perfil, com capturas em .tmp/caption-previews/actual-fix-*.
+  Pagina temporaria removida antes do build; nenhum dado persistente criado.
+- [x] `pnpm --dir frontend check` com Playwright habilitado e
+  `pnpm --dir frontend build` passaram na versao local 0.1.784.
+- [ ] Repetir o teste no iPhone fisico depois da publicacao autorizada.
+
+Referencia visual: capturas do usuario nesta conversa. Builder nao utilizado nesta
+correcao pontual. Mudancas restritas ao frontend; geracao, revisao e allowlist nao mudam.
