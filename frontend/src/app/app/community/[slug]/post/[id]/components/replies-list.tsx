@@ -111,7 +111,7 @@ export const RepliesList = ({
   });
 
   return (
-    <ContentVideoPost postId={postId} disabled={embedded}>
+    <ContentVideoPost postId={postId} disabled={embedded} allowTranscript>
       <section
         className="grid gap-4"
         id="discussao"

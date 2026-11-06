@@ -131,7 +131,14 @@ Eventos WebKit preservam esse estado durante rerenders e limpam listeners ao sai
 
 CC passa ao canto superior direito, abaixo da acao social do dono ou do botao de
 criar no viewer ampliado. Ambos os estados usam o PNG contornado aprovado; nome
-acessivel e aria-pressed informam o estado, sem preenchimento solido.
+acessivel e aria-pressed informam o estado. Refinamento aprovado em 2026-11-06:
+o estado ativo preenche somente o interior de branco, com as letras escuras
+recortadas da mesma mascara; o estado inativo permanece contornado.
+
+Cards de listagem desabilitam a transcricao via TranscriptScope, mantendo CC e
+playback independentes. O post aberto continua permitindo transcricao. Menus
+sem acoes ficam ocultos para visitantes; editar legenda continua disponivel
+para o autor. A politica vale para ambas as implementacoes de cards de feed.
 
 O texto usa um unico inline-block com fundo e padding externos, em vez de
 box-decoration-clone por linha. Isso elimina fundos invadindo linhas vizinhas,

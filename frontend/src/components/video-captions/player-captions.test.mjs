@@ -74,6 +74,32 @@ window.unmount = () => root.render(null);
 mount();
 `;
 let browser;
+test("feed cards disable transcripts without changing discussion or caption controls", () => {
+  for (const file of [
+    "../community/community-post-card.tsx",
+    "../../app/app/community/[slug]/components/post-card.tsx",
+  ]) {
+    assert.doesNotMatch(readFileSync(new URL(file, import.meta.url), "utf8"), /allowTranscript/);
+  }
+  const context = readFileSync(
+    new URL("../community/content-video-context.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(context, /allowTranscript = false/);
+  const discussion = readFileSync(
+    new URL(
+      "../../app/app/community/[slug]/post/[id]/components/replies-list.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(discussion, /<ContentVideoPost[^>]*allowTranscript/);
+  assert.match(context, /TranscriptScope enabled=\{allowTranscript\}/);
+  const transcript = readFileSync(new URL("./transcript.tsx", import.meta.url), "utf8");
+  assert.match(transcript, /!scope\?\.enabled && !editable/);
+  assert.match(transcript, /!onOpen && !scope\?\.enabled/);
+  assert.match(transcript, /\{editable \?\s*(?:\(\s*)?<EditCaptionMenuItem/);
+});
 before(async () => {
   if (!process.env.PLAYWRIGHT_MODULE) return;
   const { chromium } = require(process.env.PLAYWRIGHT_MODULE);
@@ -166,13 +192,25 @@ for (const width of [390, 1440]) {
         provider.mode = "showing";
       });
       await page.waitForFunction(() => late.mode === "disabled" && provider.mode === "disabled");
-      const mask = await cc.locator("span").evaluate((el) => el.style.mask);
+      const mask = await cc.locator("[data-caption-outline]").evaluate((el) => el.style.mask);
+      assert.equal(await cc.locator("[data-caption-fill]").count(), 1);
+      assert.equal(
+        await cc
+          .locator("[data-caption-fill]")
+          .evaluate((el) => getComputedStyle(el).backgroundColor),
+        await cc
+          .locator("[data-caption-outline]")
+          .evaluate((el) => getComputedStyle(el).backgroundColor),
+      );
+      assert.equal(await cc.locator("[data-caption-letters]").count(), 1);
       await cc.click();
+      assert.equal(await page.locator("[data-caption-fill]").count(), 0);
+      assert.equal(await page.locator("[data-caption-letters]").count(), 0);
       assert.equal(await page.locator("[data-lectum-captions]").count(), 0);
       assert.equal(
         await page
           .getByRole("button", { name: "Ativar legendas" })
-          .locator("span")
+          .locator("[data-caption-outline]")
           .evaluate((el) => el.style.mask),
         mask,
       );

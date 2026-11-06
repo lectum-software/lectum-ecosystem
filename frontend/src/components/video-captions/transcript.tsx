@@ -8,14 +8,23 @@ import { useAppSelector } from "@/hooks/redux";
 import { EditCaptionMenuItem } from "./edit-menu-item";
 
 const TranscriptContext = createContext<{
+  enabled: boolean;
   reference: string | null;
   show: (reference: string | null) => void;
 } | null>(null);
 
-export function TranscriptScope({ children }: { children: ReactNode }) {
+export function TranscriptScope({
+  children,
+  enabled = true,
+}: {
+  children: ReactNode;
+  enabled?: boolean;
+}) {
   const [reference, show] = useState<string | null>(null);
   return (
-    <TranscriptContext.Provider value={{ reference, show }}>{children}</TranscriptContext.Provider>
+    <TranscriptContext.Provider value={{ reference, show, enabled }}>
+      {children}
+    </TranscriptContext.Provider>
   );
 }
 
@@ -24,7 +33,7 @@ export function ScopedTranscriptPanel({ reference }: { reference?: string | null
   return (
     <TranscriptPanel
       reference={reference}
-      open={Boolean(reference && scope?.reference === reference)}
+      open={Boolean(scope?.enabled && reference && scope.reference === reference)}
       onClose={() => scope?.show(null)}
     />
   );
@@ -44,7 +53,10 @@ export function CaptionOverflowMenu({
   const scope = useContext(TranscriptContext);
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  if (!scope || !playback.data?.captions?.cues.length) return null;
+  const editable = Boolean(
+    canEdit || (authorId && user?.id === authorId && user.role === "psicologo"),
+  );
+  if (!playback.data?.captions?.cues.length || (!scope?.enabled && !editable)) return null;
   return (
     <div className="pointer-events-auto relative z-10 shrink-0">
       <button
@@ -63,9 +75,7 @@ export function CaptionOverflowMenu({
       </button>
       {open ? (
         <ReplyMenuSurface triggerRef={trigger} onClose={() => setOpen(false)} width={224}>
-          {canEdit || (authorId && user?.id === authorId && user.role === "psicologo") ? (
-            <EditCaptionMenuItem reference={reference} />
-          ) : null}
+          {editable ? <EditCaptionMenuItem reference={reference} /> : null}
           <TranscriptMenuItem reference={reference} onSelected={() => setOpen(false)} />
         </ReplyMenuSurface>
       ) : null}
@@ -84,7 +94,7 @@ export function TranscriptMenuItem({
 }) {
   const playback = useVideoAssetPlayback(reference);
   const scope = useContext(TranscriptContext);
-  if (!playback.data?.captions?.cues.length || (!onOpen && !scope)) return null;
+  if (!playback.data?.captions?.cues.length || (!onOpen && !scope?.enabled)) return null;
   return (
     <button
       type="button"

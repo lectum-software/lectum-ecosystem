@@ -318,3 +318,14 @@ O erro de analytics acima foi resolvido localmente; demais gates permanecem.
 
 Referencia visual: capturas do usuario nesta conversa. Builder nao utilizado nesta
 correcao pontual. Mudancas restritas ao frontend; geracao, revisao e allowlist nao mudam.
+
+## Refinamento do piloto - 2026-11-06
+
+- [x] CC ativo com interior branco e letras escuras usando a mesma mascara original.
+- [x] CC desativado preserva o contorno de referencia.
+- [x] Cards de listagem nao oferecem transcricao nem menu vazio para visitantes.
+- [x] Post aberto preserva transcricao; proprietario preserva edicao de legendas no feed.
+- [x] Legendas e controle CC independem da disponibilidade da transcricao.
+- [x] 14 testes focados passaram, incluindo browser em 390/1440 px; captura do CC inspecionada.
+- [x] Validacao global `pnpm check` e build do frontend passaram em 0.1.785.
+- [ ] Publicar e repetir a validacao no iPhone fisico; nenhuma publicacao nesta etapa.
