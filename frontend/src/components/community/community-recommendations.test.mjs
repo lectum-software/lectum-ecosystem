@@ -49,7 +49,7 @@ const community = (slug, overrides = {}) => ({
   ...overrides,
 });
 
-test("recommendations exclude current, followed and duplicate communities", () => {
+test("community recommendations retain followed destinations but exclude current and duplicates", () => {
   const items = [
     community("current"),
     community("followed", { following: true }),
@@ -58,12 +58,24 @@ test("recommendations exclude current, followed and duplicate communities", () =
   ];
   assert.deepEqual(
     selectCommunityRecommendations(items, { slug: "current" }).map((item) => item.slug),
-    ["other"],
+    ["followed", "other"],
   );
   assert.deepEqual(
     selectCommunityRecommendations([community("followed", { following: true })]),
     [],
   );
+});
+
+test("community exit remains available when every community is followed", () => {
+  const items = [
+    community("current", { following: true }),
+    community("other", { following: true }),
+  ];
+  assert.deepEqual(
+    selectCommunityRecommendations(items, { slug: "current" }).map((item) => item.slug),
+    ["other"],
+  );
+  assert.deepEqual(selectCommunityRecommendations(items), []);
 });
 
 test("related category precedes popularity; ties have deterministic order", () => {

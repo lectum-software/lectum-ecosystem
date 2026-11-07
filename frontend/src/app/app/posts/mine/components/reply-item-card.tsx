@@ -9,6 +9,7 @@ import { AuthorIdentityLine } from "@/app/app/community/[slug]/components/feed-c
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import { AuthorAvatar } from "@/components/community/community-post-card-author";
+import { ContentVideoPost } from "@/components/community/content-video-context";
 import { OriginLink } from "@/components/community/reply-origin-link";
 import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
 import {
@@ -241,19 +242,23 @@ export const ReplyItemCard = ({
           className="relative z-10"
           data-post-card-ignore-click={reply.media_type === "video" ? "true" : undefined}
         >
-          <CommunityMediaBlock
-            alt={reply.title ?? `Mídia da ${interactionCopy.singular}`}
-            analyticsTarget={
-              reply.media_type === "video" ? { targetId: reply.id, targetType: "reply" } : undefined
-            }
-            className={cn(hasReplyText ? "mt-1" : undefined)}
-            mediaType={reply.media_type}
-            mediaUrl={reply.media_url}
-            overlayAction={replyOverlayAction}
-            roundedClassName="rounded-[18px]"
-            thumbnailUrl={reply.thumbnail_url}
-            variant="reply"
-          />
+          <ContentVideoPost postId={item.post.id} disabled={!isPsychologistReply} hideInlineContact>
+            <CommunityMediaBlock
+              alt={reply.title ?? `Mídia da ${interactionCopy.singular}`}
+              analyticsTarget={
+                reply.media_type === "video"
+                  ? { targetId: reply.id, targetType: "reply" }
+                  : undefined
+              }
+              className={cn(hasReplyText ? "mt-1" : undefined)}
+              mediaType={reply.media_type}
+              mediaUrl={reply.media_url}
+              overlayAction={replyOverlayAction}
+              roundedClassName="rounded-[18px]"
+              thumbnailUrl={reply.thumbnail_url}
+              variant="reply"
+            />
+          </ContentVideoPost>
         </div>
       ) : null}
 

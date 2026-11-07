@@ -742,3 +742,4 @@ Formato recomendado:
 - [ADR-0678 — Nomes fiscais e normalizacao de apresentacao](0678-invoice-crp-and-share-card.md)
 - [ADR-0679 — Apresentacao dos convites para avaliar](0679-evaluation-invitation-ui.md)
 - [ADR-0680 — Legendas experimentais por video](0680-experimental-video-captions.md)
+- [ADR-0681 — Busca por nome, atualizacao do cartao e saida de comunidades](0681-discovery-card-refresh.md)

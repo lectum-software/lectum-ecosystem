@@ -126,7 +126,7 @@ export const usePsychologistsFilterForm = ({
         field: "input",
         className: filterFieldClassName,
         label: "Pesquisa",
-        placeholder: "Buscar por nome ou CRP",
+        placeholder: "Buscar por nome",
         leadingIcon: "search",
         onChangeCallback: (value) => onSearchChange?.(String(value ?? "")),
         after: searchSuggestionsSlot,

@@ -19,7 +19,6 @@ import type {
   DirectoryPsychologistResponse,
   IIndexDTO,
 } from "../DTOs/IIndexDTO";
-import { findCrpProfileIds } from "./crp-search";
 import type { IIndexRepository } from "./interfaces/IIndexRepository";
 
 const DEFAULT_LIMIT = 20;
@@ -149,7 +148,6 @@ export class IndexRepository implements IIndexRepository {
   async index(props: IIndexDTO): Promise<DirectoryPsychologistResponse> {
     const pagination = normalizePagination(props.q);
     const search = props.q.search?.trim();
-    const crpProfileIds = await findCrpProfileIds(search);
     const viewerId = props.auth?.id;
     const viewerRelationWhere = viewerId
       ? {
@@ -283,25 +281,6 @@ export class IndexRepository implements IIndexRepository {
                 },
               },
             },
-            {
-              headline: {
-                contains: search,
-                mode: "insensitive",
-              },
-            },
-            {
-              bio: {
-                contains: search,
-                mode: "insensitive",
-              },
-            },
-            {
-              crp: {
-                contains: search,
-                mode: "insensitive",
-              },
-            },
-            { id: { in: crpProfileIds } },
           ]
         : undefined,
     };

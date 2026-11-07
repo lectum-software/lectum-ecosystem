@@ -25,6 +25,8 @@ export type VerticalVideoElementProps = Omit<
   VideoDataAttributes;
 
 export type VerticalVideoPlayerProps = {
+  expandOnClick?: boolean;
+  directoryCaptions?: boolean;
   captions?: import("@/components/video-captions/types").VideoCaptions | null;
   bottomOverlay?: ReactNode;
   bottomOverlayExpandedOnly?: boolean;

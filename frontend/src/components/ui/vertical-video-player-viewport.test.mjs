@@ -13,6 +13,70 @@ const { observeExpandedVideoViewport } = await import(
   "./vertical-video-player-content-expansion.ts"
 );
 const { VerticalVideoPlayerShell } = await import("./vertical-video-player-shell.tsx");
+const { VerticalVideoPlayerSurface } = await import("./vertical-video-player-surface.tsx");
+const { VerticalVideoExitButton } = await import("./vertical-video-exit-button.tsx");
+
+test("presentation click surface fills the preview and leaves immersive controls clickable", () => {
+  const props = {
+    title: "Presentation",
+    opensExpanded: true,
+    hidden: false,
+    hasContentAction: false,
+    persistent: false,
+    mediaLayout: false,
+    controls: false,
+    onClick() {},
+  };
+  const preview = renderToStaticMarkup(React.createElement(VerticalVideoPlayerSurface, props));
+  assert.match(preview, /Abrir vídeo: Presentation/);
+  assert.match(preview, /bottom:0/);
+  const expanded = renderToStaticMarkup(
+    React.createElement(VerticalVideoPlayerSurface, {
+      ...props,
+      opensExpanded: false,
+      persistent: true,
+      controls: true,
+    }),
+  );
+  assert.match(expanded, /5.25rem/);
+  const hidden = renderToStaticMarkup(
+    React.createElement(VerticalVideoPlayerSurface, {
+      ...props,
+      opensExpanded: false,
+      persistent: true,
+      hidden: true,
+    }),
+  );
+  assert.match(hidden, /Mostrar controles/);
+  assert.match(hidden, /bottom:0/);
+});
+
+test("immersive presentation closes from the left without changing legacy exit placement", () => {
+  const props = { title: "Presentation", onClose() {} };
+  assert.match(
+    renderToStaticMarkup(
+      React.createElement(VerticalVideoExitButton, { ...props, immersive: true }),
+    ),
+    /left-3/,
+  );
+  assert.match(
+    renderToStaticMarkup(React.createElement(VerticalVideoExitButton, props)),
+    /right-3/,
+  );
+});
+
+test("own publications use the paginated owner profile scope across both tabs", () => {
+  const scope = readFileSync(
+    new URL("../../app/app/posts/mine/components/video-scope.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(scope, /useInfiniteMyPosts\(\{ limit: PAGE_LIMIT, type: "all" \}, enabled\)/);
+  assert.match(scope, /mode="profile"/);
+  assert.match(scope, /item\.reply\?\.author\.id : item\.post\.author\.id\) === ownerId/);
+  assert.match(scope, /onLoadMore=\{loadMore\}/);
+  assert.match(scope, /isPending \|\| isError \? refetch\(\) : fetchNextPage\(\)/);
+  assert.match(scope, /if \(!enabled\) return children/);
+});
 
 const require = createRequire(import.meta.url);
 
@@ -168,6 +232,8 @@ test("profile presentation uses the existing contact identity and profile tracki
   assert.match(profile, /handleContactVideoReady\(video\)/);
   assert.match(profile, /bottomOverlayExpandedOnly/);
   assert.match(profile, /fullscreenVariant="content"/);
+  assert.match(profile, /expandOnClick/);
+  assert.match(profile, /persistentControlsVisibility="always"/);
   assert.doesNotMatch(profile, /ContentVideoScope|ContentVideoHost|onContentClick=/);
   for (const contract of [
     /toPsychologistWhatsAppIdentity\(profile\)/,

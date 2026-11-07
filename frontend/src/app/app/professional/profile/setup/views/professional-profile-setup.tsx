@@ -23,6 +23,7 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
+import { EditCaptionMenuItem } from "@/components/video-captions/edit-menu-item";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -242,6 +243,7 @@ export const ProfessionalProfileSetupLogic = () => {
                             className="absolute right-0 top-11 z-20 w-64 overflow-hidden rounded-2xl border border-border bg-surface text-left shadow-[var(--lectum-shadow-soft)]"
                             role="menu"
                           >
+                            <EditCaptionMenuItem reference={videoSrc} />
                             <button
                               className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
                               disabled={

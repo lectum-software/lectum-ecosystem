@@ -35,12 +35,12 @@ type FeatureRow = {
 const socialVideoBenefit: Pick<FeatureRow, "description" | "label" | "previewImage"> = {
   label: "Transforme suas respostas em vídeo em conteúdos para redes sociais",
   description:
-    "Ao responder postagens das comunidades com vídeo, a Lectum gera automaticamente uma versão personalizada com arte em formato de caixinha de pergunta e sua identificação profissional, pronta para publicar no Instagram, TikTok e demais redes sociais. Disponível de forma ilimitada para suas respostas em vídeo.",
+    "Ao responder postagens das comunidades com vídeo, a Lectum gera automaticamente uma versão personalizada com caixinha de pergunta e legenda automática, pronta para publicar no Instagram, TikTok e demais redes sociais. Disponível de forma ilimitada para suas respostas em vídeo.",
   previewImage: {
-    alt: "Exemplo de vídeo-resposta da Lectum com caixinha de pergunta e identificação profissional.",
-    height: 899,
-    src: "/images/billing/social-video-example.png",
-    width: 494,
+    alt: "Vídeo-resposta real da Lectum com caixinha de pergunta e legenda automática.",
+    height: 1178,
+    src: "/images/billing/social-video-captions-example.png",
+    width: 664,
   },
 };
 
@@ -183,7 +183,7 @@ const FeatureWithInfo = ({ feature }: { feature: FeatureRow }) => {
           {feature.previewImage ? (
             <Image
               alt={feature.previewImage.alt}
-              className="max-h-[360px] w-full rounded-xl border border-border object-cover object-top shadow-[var(--lectum-shadow-soft)]"
+              className="mx-auto h-auto max-h-[360px] w-auto max-w-full rounded-xl border border-border object-contain shadow-[var(--lectum-shadow-soft)]"
               height={feature.previewImage.height}
               sizes="(max-width: 767px) 280px, 320px"
               src={feature.previewImage.src}

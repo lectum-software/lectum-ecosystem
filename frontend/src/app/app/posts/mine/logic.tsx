@@ -26,6 +26,7 @@ import { PostCard } from "../../community/[slug]/components/post-card";
 import { FilterTabs, MyPostsHeader } from "./components/header";
 import { InfiniteMyPostsLoader } from "./components/infinite-loader";
 import { ReplyItemCard } from "./components/reply-item-card";
+import { MyPublicationsVideoScope } from "./components/video-scope";
 import { WhatsappMetric } from "./components/whatsapp-metric";
 import {
   type FilterTabCounts,
@@ -188,67 +189,73 @@ export const MyPostsLogic = () => {
           ) : null}
 
           {items.length > 0 ? (
-            <div className="grid gap-4">
-              {items.map((item) =>
-                item.type === "reply" ? (
-                  <ReplyItemCard
-                    interactionCopy={interactionCopy}
-                    item={item}
-                    key={item.id}
-                    onChanged={handleReplyChanged}
-                    onShare={sharePost}
-                  />
-                ) : !isPsychologist ? (
-                  <PostCard
-                    key={item.id}
-                    post={item.post}
-                    onShare={sharePost}
-                    authorActions={
-                      <PostOwnerActionMenu
-                        className="-mt-2 -mr-1"
-                        onDeleted={handlePostDeleted}
-                        post={item.post}
-                      />
-                    }
-                  />
-                ) : (
-                  <CommunityPostCard
-                    actionBarBeforeSaveSlot={
-                      <WhatsappMetric
-                        count={item.whatsapp_clicks_count}
-                        isPsychologist={isPsychologist}
-                      />
-                    }
-                    actionBarShowUpvoteText={false}
-                    actionBarVoteLabel="Marcar post como útil"
-                    actionBarVotePresentation="inline"
-                    communityContextTone="muted"
-                    communityHeaderIncludesTime
-                    desktopPlainLinks
-                    authorHeaderExtra={
-                      <div className="flex shrink-0 items-center gap-2">
+            <MyPublicationsVideoScope
+              enabled={isPsychologist}
+              ownerId={sessionUser?.id}
+              visibleItems={items}
+            >
+              <div className="grid gap-4">
+                {items.map((item) =>
+                  item.type === "reply" ? (
+                    <ReplyItemCard
+                      interactionCopy={interactionCopy}
+                      item={item}
+                      key={item.id}
+                      onChanged={handleReplyChanged}
+                      onShare={sharePost}
+                    />
+                  ) : !isPsychologist ? (
+                    <PostCard
+                      key={item.id}
+                      post={item.post}
+                      onShare={sharePost}
+                      authorActions={
                         <PostOwnerActionMenu
                           className="-mt-2 -mr-1"
                           onDeleted={handlePostDeleted}
                           post={item.post}
                         />
-                      </div>
-                    }
-                    highlightedReplyAfterActions
-                    hoverTone="neutral"
-                    interactiveActions
-                    key={item.id}
-                    onShare={sharePost}
-                    openPostOnCardClick
-                    post={item.post}
-                    showAuthorHeader
-                    showHighlightedProfessionalReply={!isPsychologist}
-                    showProfessionalEngagementCounters
-                    showWhatsappCta={false}
-                  />
-                ),
-              )}
-            </div>
+                      }
+                    />
+                  ) : (
+                    <CommunityPostCard
+                      actionBarBeforeSaveSlot={
+                        <WhatsappMetric
+                          count={item.whatsapp_clicks_count}
+                          isPsychologist={isPsychologist}
+                        />
+                      }
+                      actionBarShowUpvoteText={false}
+                      actionBarVoteLabel="Marcar post como útil"
+                      actionBarVotePresentation="inline"
+                      communityContextTone="muted"
+                      communityHeaderIncludesTime
+                      desktopPlainLinks
+                      authorHeaderExtra={
+                        <div className="flex shrink-0 items-center gap-2">
+                          <PostOwnerActionMenu
+                            className="-mt-2 -mr-1"
+                            onDeleted={handlePostDeleted}
+                            post={item.post}
+                          />
+                        </div>
+                      }
+                      highlightedReplyAfterActions
+                      hoverTone="neutral"
+                      interactiveActions
+                      key={item.id}
+                      onShare={sharePost}
+                      openPostOnCardClick
+                      post={item.post}
+                      showAuthorHeader
+                      showHighlightedProfessionalReply={!isPsychologist}
+                      showProfessionalEngagementCounters
+                      showWhatsappCta={false}
+                    />
+                  ),
+                )}
+              </div>
+            </MyPublicationsVideoScope>
           ) : null}
 
           {postsQuery.isFetching && !postsQuery.isFetchingNextPage && !postsQuery.isLoading ? (

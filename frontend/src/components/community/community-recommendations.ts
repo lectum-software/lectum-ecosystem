@@ -8,7 +8,9 @@ export const selectCommunityRecommendations = (
 ) => {
   const unique = new Map(communities.map((community) => [community.slug, community]));
   return [...unique.values()]
-    .filter((community) => community.slug !== current?.slug && !community.following)
+    .filter(
+      (community) => community.slug !== current?.slug && (Boolean(current) || !community.following),
+    )
     .sort((left, right) => {
       const related = (community: Community) =>
         Number(Boolean(current?.category && community.category === current.category));

@@ -9,6 +9,7 @@ import {
 import { TestimonialsButton } from "@/components/reviews/testimonials-sheet";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { DirectoryCaptionButton } from "@/components/video-captions/directory-button";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { formatDisplayName, formatProfileTitle, getInitials } from "../../modules/profile-format";
@@ -289,6 +290,11 @@ export const PsychologistSlideDetails = ({
             </button>
           </div>
 
+          <DirectoryCaptionButton
+            reference={psychologist.video_url}
+            muted={model.setup.isVideoMuted}
+            disabled={slideShouldHideChrome || !isActiveSlide}
+          />
           <TestimonialsButton
             actionPadding={(metrics.actionHitSize - metrics.actionStandaloneIconSize) / 2}
             psychologistId={psychologist.id}
