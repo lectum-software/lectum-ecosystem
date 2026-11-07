@@ -24,7 +24,16 @@ const classes = ["./player-captions.tsx", "./caption-icon.tsx"].flatMap((file) =
     ...readFileSync(new URL(file, import.meta.url), "utf8").matchAll(/className="([^"]+)"/g),
   ].flatMap((match) => match[1].split(/\s+/)),
 );
-const styles = build(classes);
+const styles = build([
+  ...classes,
+  "grid",
+  "h-11",
+  "w-11",
+  "place-items-center",
+  "p-0",
+  "border-0",
+  "text-media-foreground",
+]);
 const domRequire = createRequire(require.resolve("react-dom/client"));
 const production = (name, file, resolver = require) =>
   readFileSync(path.join(path.dirname(resolver.resolve(name)), "cjs", file), "utf8");
@@ -44,6 +53,7 @@ const modules = {
   "react-dom/client": production("react-dom", "react-dom-client.production.js"),
   scheduler: production("scheduler", "scheduler.production.js", domRequire),
   "./caption-icon": source("./caption-icon.tsx"),
+  "./directory-preference": source("./directory-preference.ts"),
   player: source("./player-captions.tsx"),
 };
 const bundle = `
@@ -65,15 +75,25 @@ window.provider = video.addTextTrack("subtitles", "Provider", "pt");
 provider.mode = "showing";
 window.metadata = video.addTextTrack("metadata", "Metadata");
 metadata.mode = "hidden";
-window.mount = () => root.render(React.createElement(PlayerCaptions, {
+window.mount = (options = {}) => root.render(React.createElement(PlayerCaptions, {
   videoRef:{current:video},
   captions:{asset_id:"test_asset",revision:1,reviewed:false,language:"pt",
-    cues:[{start:0,end:20,text:"Uma dica é pensar no que fez você considerar a terapia neste momento da sua vida."}]}
+    cues:[{start:0,end:20,text:"Uma dica é pensar no que fez você considerar a terapia neste momento da sua vida."}]},
+  ...options
 }));
 window.unmount = () => root.render(null);
 mount();
 `;
 let browser;
+test("empty social preview has a definite initial height instead of a shrinking flex basis", () => {
+  const source = readFileSync(
+    new URL("../community/lectum-share-download-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /flex: 0 0 auto;/);
+  assert.match(source, /height: max\(96px, min\(55svh,/);
+  assert.doesNotMatch(source, /flex: 0 1 55dvh/);
+});
 test("feed cards disable transcripts without changing discussion or caption controls", () => {
   for (const file of [
     "../community/community-post-card.tsx",
@@ -336,6 +356,58 @@ for (const width of [390, 1440]) {
       );
       assert.equal(await page.locator("[data-lectum-captions]").count(), 1);
       await page.evaluate(() => document.exitFullscreen());
+      await page.evaluate(() => {
+        document.querySelector("[data-lectum-video-bottom-overlay]").remove();
+        const controls = document.createElement("div");
+        controls.dataset.lectumVideoPlayerControls = "true";
+        controls.style.cssText =
+          "position:absolute;bottom:0;height:90px;width:100%;display:flex;align-items:end;justify-content:end";
+        const slot = document.createElement("span");
+        slot.id = "cc-slot";
+        const volume = document.createElement("button");
+        volume.id = "volume";
+        volume.textContent = "Volume";
+        volume.style.cssText = "height:44px;width:44px";
+        controls.append(slot, volume);
+        document.querySelector("#root").append(controls);
+        mount({ controlTarget: slot });
+      });
+      await page.locator("#cc-slot button").waitFor();
+      assert.equal(await page.locator("button[aria-pressed]").count(), 1);
+      const inlineCC = await page.locator("#cc-slot button").boundingBox();
+      const volume = await page.locator("#volume").boundingBox();
+      assert.ok(inlineCC.x + inlineCC.width <= volume.x);
+      assert.equal(inlineCC.y, volume.y);
+      await page.waitForFunction(() =>
+        document.querySelector("[data-lectum-captions]").style.bottom.includes("102px"),
+      );
+      await page.locator("#cc-slot button").click();
+      await page.locator("[data-lectum-captions]").waitFor({ state: "detached" });
+      assert.equal(await page.locator("[data-lectum-captions]").count(), 0);
+      await page.evaluate(() => mount());
+      await page.getByRole("button", { name: "Ativar legendas" }).waitFor();
+      assert.equal(await page.locator("#cc-slot button").count(), 0);
+      await page.evaluate(() =>
+        mount({ directory: true, controlTarget: document.querySelector("#cc-slot") }),
+      );
+      await page.getByRole("button", { name: "Desativar legendas" }).click();
+      assert.equal(
+        await page.evaluate(() => localStorage.getItem("lectum:directory-captions:v1")),
+        "false",
+      );
+      await page.evaluate(() => mount({ directory: true }));
+      await page.waitForFunction(() => !document.querySelector("button[aria-pressed]"));
+      assert.equal(await page.locator("[data-lectum-captions]").count(), 0);
+      await page.evaluate(() =>
+        mount({
+          directory: true,
+          controlTarget: document.querySelector("#cc-slot"),
+          controlHidden: true,
+        }),
+      );
+      await page.locator("#cc-slot button").waitFor();
+      assert.equal(await page.locator("#cc-slot button").isDisabled(), true);
+      assert.equal(await page.locator("#cc-slot button").getAttribute("tabindex"), "-1");
       await page.evaluate(() => unmount());
       await page.waitForFunction(() => video.textTracks[2].mode === "disabled");
       await page.evaluate(() => {

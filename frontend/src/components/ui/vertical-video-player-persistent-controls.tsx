@@ -4,6 +4,7 @@ import { useContentVideoProgress } from "../community/use-content-video-progress
 import { formatVideoTime, type PersistentControlsLayout } from "./vertical-video-player-support";
 
 type VerticalVideoPlayerPersistentControlsProps = {
+  captionControlRef?: Ref<HTMLSpanElement>;
   videoRef: RefObject<HTMLVideoElement | null>;
   currentTime: number;
   duration: number;
@@ -26,6 +27,7 @@ type VerticalVideoPlayerPersistentControlsProps = {
 };
 
 export const VerticalVideoPlayerPersistentControls = ({
+  captionControlRef,
   videoRef,
   currentTime,
   duration,
@@ -140,6 +142,7 @@ export const VerticalVideoPlayerPersistentControls = ({
               {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
             </span>
 
+            {captionControlRef ? <span ref={captionControlRef} /> : null}
             <button
               aria-label={isMuted ? `Ativar som do vídeo: ${title}` : `Mutar vídeo: ${title}`}
               className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95"
@@ -217,6 +220,7 @@ export const VerticalVideoPlayerPersistentControls = ({
             {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
           </span>
 
+          {captionControlRef ? <span ref={captionControlRef} /> : null}
           <button
             aria-label={isMuted ? `Ativar som do vídeo: ${title}` : `Mutar vídeo: ${title}`}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95"

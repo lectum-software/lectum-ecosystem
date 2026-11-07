@@ -381,3 +381,16 @@ por asset. A geracao usa o provedor; o render de downloads continua no Video.
 
 Referencia visual: capturas fornecidas pelo usuario. Builder indisponivel nesta sessao.
 Este lote permanece local; nao autoriza novo push, merge ou deploy.
+
+## Controles imersivos e estabilidade inicial - 2026-11-06
+
+- [x] CC no slot imediatamente anterior ao volume, sem segundo botao no topo do player imersivo.
+- [x] Transicao preserva a escolha da legenda; controles ocultos nao recebem foco.
+- [x] Previa sem descricao usa altura definida desde a montagem, sem flex-shrink com altura percentual circular.
+- [x] Navegador local: previa real estavel durante seis segundos em 320/390/844/1440 px; dados isolados restaurados.
+- [x] Testes de CC no navegador em 390/1440 px: posicao, alternancia, transicao e preferencia.
+- [x] Frontend check completo e verificacao de versoes locais passaram em 0.1.789.
+- [ ] Confirmar comportamento no Safari/iPhone fisico.
+- [ ] Concluir validacao do restante do lote de perfil e Minhas publicacoes.
+
+Sem publicacao neste ajuste. Referencia: gravacao do usuario de 23:25.

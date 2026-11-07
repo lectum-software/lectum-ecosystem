@@ -201,3 +201,17 @@ sem pintar letras pretas. A previa social sem descricao usa altura ajustada ao
 conteudo em vez de reservar espaco vazio. Nenhuma mudanca em geracao, filas ou
 exportacao de video nesta etapa; somente frontend, com validacao local.
 
+### Slot de CC e altura inicial da previa - 2026-11-06
+
+O player imersivo oferece um slot antes do volume. PlayerCaptions renderiza seu
+mesmo botao nesse slot via portal, preservando estado e evitando dois controles.
+Controles ocultos desabilitam foco e interacao. O limite inferior da legenda
+considera a barra de reproducao quando nao existe outro overlay inferior.
+
+Na previa sem descricao, altura automatica do sheet combinada com flex-shrink e
+altura percentual do video criava uma dependencia de dimensionamento suscetivel
+a recalcule de layout no navegador. A area de preview passa a ter altura definida,
+limitada pelo viewport pequeno e pelo espaco reservado aos controles, desde a
+primeira montagem. Nao depende de metadata, carregamento ou primeiro cue. O grid
+horizontal de telas baixas permanece. Validacao local nao substitui Safari real.
+

@@ -1,25 +1,49 @@
 "use client";
 
 import { type RefObject, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CaptionIcon } from "./caption-icon";
+import {
+  setDirectoryCaptionPreference,
+  useDirectoryCaptionPreference,
+} from "./directory-preference";
 import type { VideoCaptions } from "./types";
 
 export function PlayerCaptions({
   captions,
   videoRef,
   version = 0,
+  directory = false,
+  controlTarget = null,
+  controlHidden = false,
 }: {
   captions: VideoCaptions;
   videoRef: RefObject<HTMLVideoElement | null>;
   version?: number;
+  directory?: boolean;
+  controlTarget?: HTMLElement | null;
+  controlHidden?: boolean;
 }) {
-  const [enabled, setEnabled] = useState(true);
+  const [localEnabled, setEnabled] = useState(true);
+  const [muted, setMuted] = useState(true);
+  const preference = useDirectoryCaptionPreference();
+  const enabled = directory ? (preference ?? muted) : localEnabled;
   const [text, setText] = useState("");
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
   const [position, setPosition] = useState({ bottom: 64, right: 12, top: 12, iconSize: 26 });
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const anchorRef = useRef<HTMLSpanElement>(null);
   const trackRef = useRef<{ video: HTMLVideoElement; track: TextTrack } | null>(null);
   const fullscreenVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    void version;
+    const video = videoRef.current;
+    if (!directory || !video) return;
+    const update = () => setMuted(video.muted || video.volume === 0);
+    update();
+    video.addEventListener("volumechange", update);
+    return () => video.removeEventListener("volumechange", update);
+  }, [directory, version, videoRef]);
 
   useEffect(() => {
     void version;
@@ -103,9 +127,8 @@ export function PlayerCaptions({
 
   useEffect(() => {
     void version;
-    const button = buttonRef.current;
-    const root = button?.parentElement;
-    if (!button || !root) return;
+    const root = anchorRef.current?.parentElement;
+    if (!root) return;
     const overlayScope = root.closest("[data-lectum-caption-scope]") ?? root;
     let frame = 0;
     let observedOverlay: Element | null = null;
@@ -121,9 +144,13 @@ export function PlayerCaptions({
       anchor ??= overlayScope.querySelector("[data-reels-create-post]");
       const anchorBounds = anchor?.getBoundingClientRect();
       const rect = anchorBounds?.width && anchorBounds.height ? anchorBounds : undefined;
-      const overlayElement = overlayScope.querySelector(
-        '[data-lectum-video-bottom-overlay="true"]',
-      );
+      const overlayElement =
+        overlayScope.querySelector('[data-lectum-video-bottom-overlay="true"]') ??
+        (directory || controlTarget
+          ? root.querySelector(
+              '[data-lectum-video-player-controls="true"]:not([aria-hidden="true"])',
+            )
+          : null);
       if (overlayElement !== observedOverlay) {
         if (observedOverlay) resize.unobserve(observedOverlay);
         if (overlayElement) resize.observe(overlayElement);
@@ -173,7 +200,11 @@ export function PlayerCaptions({
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-lectum-video-bottom-overlay", "data-lectum-caption-directory"],
+      attributeFilter: [
+        "data-lectum-video-bottom-overlay",
+        "data-lectum-caption-directory",
+        "aria-hidden",
+      ],
     });
     overlayScope.addEventListener("animationend", schedule);
     window.addEventListener("resize", schedule);
@@ -185,28 +216,38 @@ export function PlayerCaptions({
       overlayScope.removeEventListener("animationend", schedule);
       window.removeEventListener("resize", schedule);
     };
-  }, [version]);
+  }, [version, directory, controlTarget]);
 
   if (!captions.cues.length) return null;
+  const button = (
+    <button
+      type="button"
+      aria-label={enabled ? "Desativar legendas" : "Ativar legendas"}
+      aria-pressed={enabled}
+      title={enabled ? "Desativar legendas" : "Ativar legendas"}
+      data-post-card-ignore-click="true"
+      className={`grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-media-foreground shadow-none focus-visible:outline-2 focus-visible:outline-media-foreground ${controlTarget ? "" : "pointer-events-auto absolute z-20"}`}
+      style={
+        controlTarget
+          ? undefined
+          : { top: position.top, right: position.right, width: 44, height: 44 }
+      }
+      disabled={Boolean(controlTarget && controlHidden)}
+      tabIndex={controlTarget && controlHidden ? -1 : undefined}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (directory) setDirectoryCaptionPreference(!enabled);
+        else setEnabled((value) => !value);
+      }}
+    >
+      <CaptionIcon active={enabled} size={controlTarget ? 26 : position.iconSize} />
+    </button>
+  );
   return (
     <>
-      <button
-        ref={buttonRef}
-        type="button"
-        aria-label={enabled ? "Desativar legendas" : "Ativar legendas"}
-        aria-pressed={enabled}
-        title={enabled ? "Desativar legendas" : "Ativar legendas"}
-        data-post-card-ignore-click="true"
-        className="pointer-events-auto absolute z-20 grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-media-foreground shadow-none focus-visible:outline-2 focus-visible:outline-media-foreground"
-        style={{ top: position.top, right: position.right, width: 44, height: 44 }}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => {
-          event.stopPropagation();
-          setEnabled((value) => !value);
-        }}
-      >
-        <CaptionIcon active={enabled} size={position.iconSize} />
-      </button>
+      <span ref={anchorRef} hidden aria-hidden="true" />
+      {controlTarget ? createPortal(button, controlTarget) : !directory ? button : null}
       {enabled && !nativeFullscreen && text ? (
         <div
           className="pointer-events-none absolute inset-x-3 z-20 text-center text-sm leading-normal font-semibold text-media-foreground"

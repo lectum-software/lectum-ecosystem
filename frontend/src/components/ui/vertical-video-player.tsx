@@ -40,6 +40,7 @@ import {
 
 export const VerticalVideoPlayer = ({
   captions,
+  directoryCaptions = false,
   bottomOverlay,
   bottomOverlayExpandedOnly = false,
   className,
@@ -63,6 +64,7 @@ export const VerticalVideoPlayer = ({
   videoProps,
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [captionControlTarget, setCaptionControlTarget] = useState<HTMLSpanElement | null>(null);
   const latestSourceRef = useRef(src);
   const isSeekingRef = useRef(false);
   const blobBackedVideoRef = useRef<{ source: string; url: string } | null>(null);
@@ -598,6 +600,9 @@ export const VerticalVideoPlayer = ({
         <PlayerCaptions
           key={src}
           captions={resolvedCaptions}
+          directory={directoryCaptions}
+          controlTarget={captionControlTarget}
+          controlHidden={persistentControlsHidden}
           videoRef={videoRef}
           version={videoElementVersion}
         />
@@ -657,6 +662,9 @@ export const VerticalVideoPlayer = ({
       ) : null}
       {usesPersistentControls ? (
         <VerticalVideoPlayerPersistentControls
+          captionControlRef={
+            directoryCaptions || isContentExpanded ? setCaptionControlTarget : undefined
+          }
           videoRef={videoRef}
           currentTime={currentTime}
           duration={duration}

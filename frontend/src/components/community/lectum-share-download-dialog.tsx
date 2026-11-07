@@ -497,8 +497,9 @@ export const LectumShareDownloadDialog = ({
           max-height: min(900px, calc(100dvh - env(safe-area-inset-top) - 1rem));
         }
         [data-share-has-description="false"] > [data-share-preview-frame] {
-          flex: 0 1 55dvh;
-          height: 55dvh;
+          /* A definite size avoids percentage-height/flex relayout during media loading. */
+          flex: 0 0 auto;
+          height: max(96px, min(55svh, calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 19rem)));
         }
 
         @media (min-width: 600px) and (max-height: 520px) {

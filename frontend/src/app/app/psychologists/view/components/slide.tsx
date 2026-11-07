@@ -113,6 +113,7 @@ export const PsychologistSlide = ({
           ) : null}
           {slideShouldShowVideo ? (
             <VerticalVideoPlayer
+              directoryCaptions
               className="h-full w-full rounded-none border-0 shadow-none"
               controls={slideUsesNativeVideoControls}
               controlsVariant={slideUsesNativeVideoControls ? "persistent" : "native"}
