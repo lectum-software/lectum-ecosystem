@@ -3,6 +3,19 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
+test("directory search promises and queries only the professional name", () => {
+  assert.match(read("./use-form.tsx"), /placeholder: "Buscar por nome"/);
+  assert.doesNotMatch(read("./use-form.tsx"), /nome ou CRP/);
+  const repository = read(
+    "../../../../../backend/src/modules/api/private/directory/psychologists/repositories/IndexRepository.ts",
+  );
+  const searchFilter = repository.slice(
+    repository.indexOf("OR: search"),
+    repository.indexOf("const [candidates"),
+  );
+  assert.match(searchFilter, /user:\s*{\s*name:/);
+  assert.doesNotMatch(searchFilter, /crp|headline|bio|crpProfileIds/);
+});
 test("count projection reuses the same complete filter mapping as apply", () => {
   const source = read("./hooks/use-psychologists-directory.tsx");
   assert.match(source, /toQuery\(normalizeFormValues\(filterDraft\), 1\)/);

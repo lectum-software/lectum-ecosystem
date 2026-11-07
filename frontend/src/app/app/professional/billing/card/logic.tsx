@@ -217,7 +217,10 @@ export const ProfessionalBillingCardLogic = () => {
 
   return (
     <PrivateTemplate showHeader={false}>
-      <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl">
+      <section
+        className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl"
+        data-lectum-pull-refresh-block={billing.paymentMethod.isPending ? "true" : undefined}
+      >
         <AppPageHeader
           backHref="/app/profissional/assinatura"
           backLabel="Voltar"

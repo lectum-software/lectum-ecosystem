@@ -9,6 +9,7 @@ import { LECTUM_APP_REFRESH_EVENT, requestLectumAppRefresh } from "@/utils/app-r
 import {
   getPullToRefreshSnapshot,
   hasBlockingPullToRefreshSurface,
+  isCardPullToRefreshRoute,
   isDocumentScrolledToTop,
   isPullToRefreshRouteEnabled,
   isScrollChainAtTop,
@@ -242,11 +243,19 @@ export function PullToRefresh() {
     };
 
     const handleTouchEnd = () => {
-      const shouldRefresh = isPullingRef.current && isReadyRef.current && !isRefreshingRef.current;
+      const shouldRefresh =
+        isPullingRef.current &&
+        isReadyRef.current &&
+        !isRefreshingRef.current &&
+        !hasBlockingPullToRefreshSurface();
 
       resetTracking();
 
       if (shouldRefresh) {
+        if (isCardPullToRefreshRoute(pathname)) {
+          window.location.reload();
+          return;
+        }
         requestLectumAppRefresh("pull");
         return;
       }
@@ -270,7 +279,7 @@ export function PullToRefresh() {
       window.removeEventListener("touchcancel", handleTouchCancel);
       resetTracking();
     };
-  }, [clearResetTimer, isEnabled, resetGesture, resetTracking, setGestureSafely]);
+  }, [clearResetTimer, isEnabled, pathname, resetGesture, resetTracking, setGestureSafely]);
 
   useEffect(() => {
     const handleRefreshRequest = () => {

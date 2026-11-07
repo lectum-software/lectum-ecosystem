@@ -32,6 +32,9 @@ test("habilita pull-to-refresh em rotas de leitura e descoberta", () => {
     "/app/notificacoes",
     "/app/favoritos",
     "/app/publicacoes/minhas",
+    "/app/profissional/assinatura/cartao",
+    "/app/profissional/assinatura/cartao/?status=success",
+    "/app/professional/billing/card",
     "https://lectum.local/psicologos?search=sono",
   ]) {
     assert.equal(isPullToRefreshRouteEnabled(pathname), true, pathname);

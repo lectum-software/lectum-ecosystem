@@ -56,8 +56,14 @@ const normalizePullToRefreshPathname = (pathname: string) => {
   }
 };
 
+export const isCardPullToRefreshRoute = (pathname: string) =>
+  ["/app/profissional/assinatura/cartao", "/app/professional/billing/card"].includes(
+    normalizePullToRefreshPathname(pathname),
+  );
+
 export const isPullToRefreshRouteEnabled = (pathname: string) => {
   const normalizedPathname = normalizePullToRefreshPathname(pathname);
+  if (isCardPullToRefreshRoute(normalizedPathname)) return true;
 
   if (normalizedPathname === "/llms.txt") return false;
 
