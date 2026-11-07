@@ -215,3 +215,21 @@ limitada pelo viewport pequeno e pelo espaco reservado aos controles, desde a
 primeira montagem. Nao depende de metadata, carregamento ou primeiro cue. O grid
 horizontal de telas baixas permanece. Validacao local nao substitui Safari real.
 
+### Continuidade entre publicacoes e perfil - 2026-11-07
+
+Minhas publicacoes reutiliza ContentVideoScope em modo profile e consulta todas
+as publicacoes proprias, independente da aba visivel. O filtro de autoria e o
+replyId especifico impedem incluir respostas de terceiros ou continuar no feed
+da comunidade. Erros e paginacao reutilizam a consulta existente.
+
+O video de apresentacao usa uma opcao expandOnClick no player existente: previa
+sem controles inline, expansao com controles stacked e fechar no canto esquerdo.
+A continuidade de tempo/audio e o slot de captions sao os mesmos do player,
+sem fullscreen nativo paralelo nem novo viewer. Os outros consumidores preservam
+o comportamento anterior por padrao. A area clicavel foi extraida para manter o
+player dentro do limite arquitetural, com testes de geometria e acessibilidade.
+
+O exemplo comercial do plano usa captura real aprovada da Marcella Sicala,
+com caixinha e legenda automatica. O enquadramento contain preserva a imagem
+inteira; a captura nao altera videos ou legendas da profissional em producao.
+

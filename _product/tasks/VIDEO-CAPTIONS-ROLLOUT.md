@@ -391,6 +391,23 @@ Este lote permanece local; nao autoriza novo push, merge ou deploy.
 - [x] Testes de CC no navegador em 390/1440 px: posicao, alternancia, transicao e preferencia.
 - [x] Frontend check completo e verificacao de versoes locais passaram em 0.1.789.
 - [ ] Confirmar comportamento no Safari/iPhone fisico.
-- [ ] Concluir validacao do restante do lote de perfil e Minhas publicacoes.
+- [x] Concluir validacao do restante do lote de perfil e Minhas publicacoes.
 
 Sem publicacao neste ajuste. Referencia: gravacao do usuario de 23:25.
+
+## Publicacoes proprias e apresentacao do perfil - 2026-11-07
+
+- [x] Minhas publicacoes abre videos no viewer existente sem controles inline.
+- [x] Sequencia usa escopo profile, apenas autoria propria, reunindo posts e respostas com paginacao independente da aba.
+- [x] Apresentacao abre por clique no modo imersivo, com fechar a esquerda, progresso e CC antes do volume.
+- [x] Navegador local real em 390/1440 px: resposta/resposta/post, retorno a aba, seek preservado, fechar/Escape e legendas acima dos controles.
+- [x] Dados temporarios de perfil, assinatura, relacoes e respostas restaurados ao final dos testes locais.
+- [x] Beneficio do plano Profissional substitui identificacao por legenda automatica.
+- [x] Imagem real da Marcella aprovada pelo usuario, capturada na previa local com pergunta e cues publicos; sem geracao artificial.
+- [x] Detalhe do beneficio conferido em 390/1440 px com imagem inteira, sem corte ou overflow horizontal.
+- [x] Doze regressoes focadas de geometria, captions e controles passaram com navegador, sem skips.
+- [x] Check global completo, build do frontend e sincronizacao dos cinco manifests em 0.1.790 passaram.
+- [ ] Safari/iPhone fisico e publicacao deste lote permanecem pendentes.
+
+Referencia visual: imagens e gravacao do usuario; Builder indisponivel.
+Nao houve push, merge nem deploy neste lote.

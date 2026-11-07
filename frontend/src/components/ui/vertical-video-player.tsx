@@ -37,10 +37,12 @@ import {
   type VerticalVideoPlayerProps,
   waitForVideoEvent,
 } from "./vertical-video-player-support";
+import { VerticalVideoPlayerSurface } from "./vertical-video-player-surface";
 
 export const VerticalVideoPlayer = ({
   captions,
   directoryCaptions = false,
+  expandOnClick = false,
   bottomOverlay,
   bottomOverlayExpandedOnly = false,
   className,
@@ -94,18 +96,12 @@ export const VerticalVideoPlayer = ({
     videoRef,
   });
   const effectiveSource = playback.source;
-  const usesMinimalControls = controls && controlsVariant === "minimal";
-  const usesPersistentControls = controls && controlsVariant === "persistent";
-  const usesMutedOverlayControl = mutedControlVisibility === "when-hidden";
-  const usesMediaPersistentControls =
-    usesPersistentControls && persistentControlsLayout === "media";
   const usesInlineContentExpansion = shouldUseInlineContentVideoExpansion({
     controlsEnabled: controls,
     controlsVariant,
     fullscreenVariant,
     persistentControlsLayout,
   });
-  const hasNativeControls = controls && !usesMinimalControls && !usesPersistentControls;
   const {
     controlsList: videoControlsList,
     disablePictureInPicture: videoDisablePictureInPicture,
@@ -118,9 +114,18 @@ export const VerticalVideoPlayer = ({
   const { closeInlineContentExpansion, handleInlineContentExpansion, isContentExpanded } =
     useInlineContentVideoExpansion({
       effectiveSource,
-      enabled: usesInlineContentExpansion,
+      enabled: expandOnClick || usesInlineContentExpansion,
       onBeforeClose: capturePlaybackSnapshot,
     });
+
+  const controlsEnabled = expandOnClick ? isContentExpanded : controls;
+  const usesMinimalControls = controlsEnabled && controlsVariant === "minimal";
+  const usesPersistentControls = controlsEnabled && controlsVariant === "persistent";
+  const usesMutedOverlayControl = !expandOnClick && mutedControlVisibility === "when-hidden";
+  const resolvedControlsLayout =
+    expandOnClick && isContentExpanded ? "stacked" : persistentControlsLayout;
+  const usesMediaPersistentControls = usesPersistentControls && resolvedControlsLayout === "media";
+  const hasNativeControls = controlsEnabled && !usesMinimalControls && !usesPersistentControls;
 
   useMobileContentFullscreenStyles({ fullscreenVariant, videoRef });
   useActiveVideoPlaybackGuard({ videoElementVersion, videoRef });
@@ -228,7 +233,8 @@ export const VerticalVideoPlayer = ({
     enabled: usesPersistentControls,
     fullscreenVariant,
     isPaused,
-    onContentClick,
+    onContentClick:
+      expandOnClick && !isContentExpanded ? handleInlineContentExpansionRequest : onContentClick,
     onFullscreenRequest: usesInlineContentExpansion
       ? handleInlineContentExpansionRequest
       : undefined,
@@ -531,17 +537,6 @@ export const VerticalVideoPlayer = ({
     [currentTime, duration, seekPersistentVideoToTime],
   );
 
-  const handleVideoContextMenu = useCallback(
-    (event: MouseEvent<HTMLVideoElement>) => {
-      if (usesMinimalControls) {
-        event.preventDefault();
-      }
-
-      onVideoContextMenu?.(event);
-    },
-    [onVideoContextMenu, usesMinimalControls],
-  );
-
   const handleVideoClick = useCallback(
     (event: MouseEvent<HTMLVideoElement>) => {
       onVideoClick?.(event);
@@ -586,7 +581,10 @@ export const VerticalVideoPlayer = ({
           videoDisableRemotePlayback ?? (usesMinimalControls || hasNativeControls)
         }
         onClick={handleVideoClick}
-        onContextMenu={handleVideoContextMenu}
+        onContextMenu={(event) => {
+          if (usesMinimalControls) event.preventDefault();
+          onVideoContextMenu?.(event);
+        }}
         playsInline
         poster={playback.poster || undefined}
         preload={preload}
@@ -601,6 +599,7 @@ export const VerticalVideoPlayer = ({
           key={src}
           captions={resolvedCaptions}
           directory={directoryCaptions}
+          hideToggle={expandOnClick && !isContentExpanded}
           controlTarget={captionControlTarget}
           controlHidden={persistentControlsHidden}
           videoRef={videoRef}
@@ -619,31 +618,21 @@ export const VerticalVideoPlayer = ({
         isLoading={playback.isLoading}
       />
       {isContentExpanded ? (
-        <VerticalVideoExitButton title={title} onClose={closeInlineContentExpansion} />
+        <VerticalVideoExitButton
+          title={title}
+          onClose={closeInlineContentExpansion}
+          immersive={expandOnClick}
+        />
       ) : null}
-      <button
-        data-lectum-video-surface="true"
-        aria-label={
-          persistentControlsHidden
-            ? `Mostrar controles do vídeo: ${title}`
-            : onContentClick
-              ? `Mostrar interface do vídeo: ${title}`
-              : `Alternar reprodução do vídeo: ${title}`
-        }
-        className="absolute inset-x-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/50"
+      <VerticalVideoPlayerSurface
+        title={title}
+        opensExpanded={expandOnClick && !isContentExpanded}
+        hidden={persistentControlsHidden}
+        hasContentAction={Boolean(onContentClick)}
+        persistent={usesPersistentControls}
+        mediaLayout={usesMediaPersistentControls}
+        controls={controlsEnabled}
         onClick={handleContentClick}
-        style={{
-          bottom: usesPersistentControls
-            ? persistentControlsHidden
-              ? 0
-              : usesMediaPersistentControls
-                ? "calc(var(--lectum-bottom-fixed-padding) + 4.5rem)"
-                : "calc(var(--lectum-bottom-fixed-padding) + 5.25rem)"
-            : controls
-              ? "max(64px, 20%)"
-              : 0,
-        }}
-        type="button"
       />
       {usesMediaPersistentControls && !persistentControlsHidden ? (
         <button
@@ -672,7 +661,7 @@ export const VerticalVideoPlayer = ({
           isMuted={isMuted}
           isPaused={isPaused}
           hidden={persistentControlsHidden}
-          layout={persistentControlsLayout}
+          layout={resolvedControlsLayout}
           onInteraction={handleControlsInteraction}
           onFullscreen={usesMediaPersistentControls ? handlePersistentFullscreen : undefined}
           onMuteToggle={handlePersistentMuteToggle}

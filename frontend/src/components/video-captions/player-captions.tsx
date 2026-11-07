@@ -16,6 +16,7 @@ export function PlayerCaptions({
   directory = false,
   controlTarget = null,
   controlHidden = false,
+  hideToggle = false,
 }: {
   captions: VideoCaptions;
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -23,6 +24,7 @@ export function PlayerCaptions({
   directory?: boolean;
   controlTarget?: HTMLElement | null;
   controlHidden?: boolean;
+  hideToggle?: boolean;
 }) {
   const [localEnabled, setEnabled] = useState(true);
   const [muted, setMuted] = useState(true);
@@ -247,7 +249,11 @@ export function PlayerCaptions({
   return (
     <>
       <span ref={anchorRef} hidden aria-hidden="true" />
-      {controlTarget ? createPortal(button, controlTarget) : !directory ? button : null}
+      {controlTarget
+        ? createPortal(button, controlTarget)
+        : !directory && !hideToggle
+          ? button
+          : null}
       {enabled && !nativeFullscreen && text ? (
         <div
           className="pointer-events-none absolute inset-x-3 z-20 text-center text-sm leading-normal font-semibold text-media-foreground"

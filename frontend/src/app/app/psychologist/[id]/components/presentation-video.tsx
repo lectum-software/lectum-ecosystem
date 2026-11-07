@@ -380,6 +380,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
           data-presentation-video="true"
         >
           <VerticalVideoPlayer
+            expandOnClick
             bottomOverlay={
               !profile.read_only && profile.whatsapp_url ? (
                 <CommunityWhatsAppCta
@@ -402,6 +403,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
             onSoundEnabledChange={onSoundEnabledChange}
             onVideoElementReady={handlePlayerReady}
             persistentControlsLayout="media"
+            persistentControlsVisibility="always"
             poster={posterSrc}
             src={videoSrc}
             title={`Vídeo de apresentação de ${displayName}`}

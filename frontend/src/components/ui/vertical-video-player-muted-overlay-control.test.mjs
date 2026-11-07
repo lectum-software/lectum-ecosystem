@@ -23,7 +23,10 @@ test("mute action consumes the click before enabling audio", () => {
 
 test("muted indicator stays independent from the disabled reels-entry controls", () => {
   const player = readFileSync(new URL("./vertical-video-player.tsx", import.meta.url), "utf8");
-  assert.match(player, /usesMutedOverlayControl = mutedControlVisibility === "when-hidden"/);
+  assert.match(
+    player,
+    /usesMutedOverlayControl = !expandOnClick && mutedControlVisibility === "when-hidden"/,
+  );
   assert.match(
     player,
     /!usesMinimalControls && !usesPersistentControls && !usesMutedOverlayControl/,
