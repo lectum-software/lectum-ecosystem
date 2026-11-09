@@ -414,6 +414,40 @@ Nao houve push, merge nem deploy neste lote.
 
 ## Pending video startup improvements (2026-11-08)
 
+Update: user authorized implementation and a production test after supplying the
+iPhone baseline. ADR-0682 defines the bounded scope; directory shared-player
+migration remains deferred so its measured preparation is preserved.
+
+### Startup production experiment
+
+- [x] Incoming poster overlay until decoded current-frame availability.
+- [x] Directory current/next auto preload, existing source activation preserved.
+- [x] Content standby promoted without source reload; one active plus one reserve.
+- [x] Standby has no analytics owner, playback callbacks or autoplay.
+- [x] Focused browser regressions, actual-media local smoke and frontend check/build.
+- [ ] Reviewed homolog-to-main PR and frontend-only production promotion.
+- [ ] Physical iPhone comparison on the same sequence and connection.
+
+Local validation: 26 player browser cases passed, including real MP4 decoding and
+standby promotion at 390px and 1440px. Frontend check and production build passed.
+The full application flow still requires its local backend; these browser cases
+exercise the actual media elements in an isolated component harness, not Safari.
+Existing loopback database configuration was found in another local checkout and
+used only in the validation process environment; no credentials were copied into
+the repository or printed. No production database was used.
+The initial backend check had three filesRoute.test.ts failures because the
+account_media_deletion lookup required an unavailable database. With the user's
+approval, a new portable PostgreSQL instance was bound to loopback, a new test
+database received all existing migrations, and all four route cases passed.
+Full pnpm check then passed under Node 24.22.1 with this isolated database.
+No backend route/test behavior was changed to bypass the database requirement.
+Additional player regressions confirm that failed preparation retries once at
+activation while healthy buffers are preserved. No retry loop on active renders.
+Admin and Video checks passed under Node 24.22.1; optional integration cases
+retain their existing skip conditions. The final recovery build and source-size
+guard passed. This batch is validated locally for the authorized frontend-only
+production experiment; PR, promotion and physical iPhone comparison remain gates.
+
 User approved keeping the following work queued, not implementing it yet:
 
 - [ ] Reuse one shared playback element in the psychologists directory, preserving

@@ -41,6 +41,7 @@ import { ContentVideoPlayer } from "./content-video-player";
 import { ReadingText } from "./content-video-reading-text";
 import styles from "./content-video-viewer.module.css";
 import { useContentVideoProgress } from "./use-content-video-progress";
+import { useContentVideoReady } from "./use-content-video-ready";
 
 type Panel = "caption" | "parent" | "comments" | null;
 export const ContentVideoSlide = ({
@@ -77,6 +78,7 @@ export const ContentVideoSlide = ({
   onSeekingChange: (seeking: boolean) => void;
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const pauseOwnedVideo = useCallback(() => videoRef.current?.pause(), []);
   const activeRef = useRef(active);
   const audioAttempt = useRef(0);
   const blockedSoundRevision = useRef<number | null>(null);
@@ -88,10 +90,10 @@ export const ContentVideoSlide = ({
     if (!active) videoRef.current?.pause();
     return () => {
       activeRef.current = false;
-      videoRef.current?.pause();
+      pauseOwnedVideo();
       audioAttempt.current += 1;
     };
-  }, [active]);
+  }, [active, pauseOwnedVideo]);
   const [panel, setPanel] = useState<Panel>(null);
   const panelRef = useRef<Panel>(null);
   const [paused, setPaused] = useState(false);
@@ -165,14 +167,6 @@ export const ContentVideoSlide = ({
     ? publicCommunityPostFocusedReplyHref(item.community.slug, item.post_id, item.reply_id)
     : publicCommunityPostHref(item.community.slug, item.post_id);
 
-  const ready = useCallback(
-    (video: HTMLVideoElement | null) => {
-      videoRef.current = video;
-      trackVideo(video);
-    },
-    [trackVideo],
-  );
-
   const play = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -208,7 +202,14 @@ export const ContentVideoSlide = ({
       if (!eligible() && videoRef.current === video) video.pause();
     }
   }, []);
-
+  const ready = useContentVideoReady({
+    videoRef,
+    trackVideo,
+    initialTime,
+    play,
+    setDuration,
+    setTime,
+  });
   useEffect(
     () =>
       subscribeVideoSoundPreference((enabled) => {
@@ -219,12 +220,11 @@ export const ContentVideoSlide = ({
       }),
     [play],
   );
-
   useEffect(() => {
     if (active) void play();
     else videoRef.current?.pause();
-    return () => videoRef.current?.pause();
-  }, [active, play]);
+    return pauseOwnedVideo;
+  }, [active, play, pauseOwnedVideo]);
 
   const changePanel = (next: Panel) => {
     if (syncingInteractions) return;

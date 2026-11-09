@@ -4,6 +4,42 @@ import { LoaderCircle } from "lucide-react";
 import { type RefObject, useEffect, useState } from "react";
 import { useAttachVideoSource, useVideoPlaybackSource } from "@/hooks/video-stream";
 import { isVideoAssetReference } from "@/utils/video-stream";
+import { VideoStartupCover } from "./video-startup-cover";
+
+export function VerticalVideoMediaStatus({
+  playback,
+  adaptivePlaybackFailed,
+  videoRef,
+  videoElementVersion,
+  contain,
+  showCover,
+}: {
+  playback: ReturnType<typeof useVideoPlaybackSource>;
+  adaptivePlaybackFailed: boolean;
+  videoRef: RefObject<HTMLVideoElement | null>;
+  videoElementVersion: number;
+  contain: boolean;
+  showCover: boolean;
+}) {
+  return (
+    <>
+      {showCover ? (
+        <VideoStartupCover
+          poster={playback.poster}
+          src={playback.source}
+          version={videoElementVersion}
+          videoRef={videoRef}
+          contain={contain}
+        />
+      ) : null}
+      <VerticalVideoStreamStatus
+        adaptivePlaybackFailed={adaptivePlaybackFailed}
+        error={playback.error}
+        isLoading={playback.isLoading}
+      />
+    </>
+  );
+}
 
 export const useVerticalVideoStream = ({
   poster,

@@ -399,9 +399,10 @@ test("late media readiness cannot restart playback behind a reading panel", () =
     viewer,
     /onPlay: \(event\) => \{\s*if \(\s*!activeRef.current \|\|\s*panelRef.current \|\|\s*seekingRef.current \|\|\s*composerBusyRef.current \|\|\s*createPostOpenRef.current\s*\)\s*event.currentTarget.pause\(\)/,
   );
+  assert.match(viewer, /return \(\) => \{\s*activeRef.current = false;\s*pauseOwnedVideo\(\)/);
   assert.match(
     viewer,
-    /return \(\) => \{\s*activeRef.current = false;\s*videoRef.current\?\.pause\(\)/,
+    /const pauseOwnedVideo = useCallback\(\(\) => videoRef.current\?\.pause\(\), \[\]\)/,
   );
 });
 
@@ -426,7 +427,7 @@ test("sound follows the shared preference and explicit user changes update it", 
     /attempt !== audioAttempt.current \|\| revision !== getVideoSoundPreferenceRevision\(\)/,
   );
   assert.match(slide, /<ContentVideoPlayer\s+active=\{active && !unavailable\}/);
-  assert.match(read("./content-video-viewer.tsx"), /<ContentVideoPlayerProvider>/);
+  assert.match(read("./content-video-viewer.tsx"), /<ContentVideoPlayerProvider\s+nextSource=/);
   assert.match(
     slide,
     /aria-label="Ativar som do vídeo"\s*onClick=\{\(\) => \{\s*setVideoSoundEnabledByUser\(true\);/,

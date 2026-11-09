@@ -6,6 +6,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { useExpandedVideoViewport } from "@/components/ui/vertical-video-player-content-expansion";
 import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { useModalScrollLock } from "@/hooks/use-modal-scroll-lock";
+import { resolvePublicMediaUrl } from "@/utils/media";
 import {
   type ContentVideoRequest,
   type ContentVideoSourceEntry,
@@ -103,7 +104,10 @@ export const ContentVideoViewer = ({
   }, [focusPageKey]);
 
   return createPortal(
-    <ContentVideoPlayerProvider>
+    <ContentVideoPlayerProvider
+      nextSource={resolvePublicMediaUrl(queue.items[queue.index + 1]?.media_url) ?? undefined}
+      nextAfterSource={resolvePublicMediaUrl(item?.media_url) ?? undefined}
+    >
       <div
         ref={root}
         className={styles.dialog}

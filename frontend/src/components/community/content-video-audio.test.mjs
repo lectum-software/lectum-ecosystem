@@ -1,216 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import path from "node:path";
 import { after, afterEach, before, beforeEach, describe, test } from "node:test";
-import ts from "typescript";
+import { createHarness } from "./content-video-browser-harness.mjs";
 
 const require = createRequire(import.meta.url);
-const domRequire = createRequire(require.resolve("react-dom/client"));
-const production = (name, file, resolver = require) =>
-  readFileSync(path.join(path.dirname(resolver.resolve(name)), "cjs", file), "utf8");
-const source = (file) =>
-  ts.transpileModule(readFileSync(new URL(file, import.meta.url), "utf8"), {
-    fileName: file,
-    compilerOptions: {
-      jsx: ts.JsxEmit.ReactJSX,
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-    },
-  }).outputText;
-const modules = {
-  react: production("react", "react.production.js"),
-  "react/jsx-runtime": production("react", "react-jsx-runtime.production.js"),
-  "react-dom": production("react-dom", "react-dom.production.js"),
-  "react-dom/client": production("react-dom", "react-dom-client.production.js"),
-  scheduler: production("scheduler", "scheduler.production.js", domRequire),
-  "@/lib/video-playback": source("../../lib/video-playback.ts"),
-  "@/lib/video-sound-preference": source("../../lib/video-sound-preference.ts"),
-  "@/components/analytics/attention":
-    "exports.documentHasUserAttention = () => window.attention; exports.subscribeDocumentAttention = () => () => {};",
-  "@/lib/modal-media-scope": "exports.isVideoBlockedByModal = () => window.blocked;",
-  "@tanstack/react-query": "exports.useQueryClient = () => ({});",
-  "@/api/callers/posts":
-    "exports.useVotePost = exports.useSavePost = exports.useSaveReply = () => ({});",
-  "@/components/analytics/content-video-watch-tracker": `exports.useContentVideoWatchTracking = () => {
-      const React=require('react'), current=React.useRef(null);
-      return React.useCallback(video => {
-        if (!video && current.current) window.trackingDetached.push(current.current.getAttribute('src'));
-        current.current=video;
-      }, []);
-    };`,
-  "@/components/conversion/progressive-conversion-provider":
-    "exports.useProgressiveConversion = () => ({});",
-  "@/hooks/use-lectum-direct-share": "exports.useLectumDirectShare = () => ({});",
-  "@/utils/community-display": "exports.getCommunityAuthorDisplayName = author => author.name;",
-  "@/utils/media": "exports.resolvePublicMediaUrl = url => url;",
-  "@/utils/public-routes":
-    "exports.publicCommunityPostFocusedReplyHref = exports.publicCommunityPostHref = () => '/post';",
-  "./community-whatsapp-cta": "exports.toCommunityWhatsAppIdentity = () => null;",
-  "./content-video-interaction-refresh": `exports.refreshContentVideoInteraction = async () => ({});
-     exports.isContentVideoInteractionBlocking = state => state === 'pending' || state === 'error';
-     exports.useContentVideoInteractionSync = () => ({
-       interactionSync: 'idle', refreshAfterSubmit: async () => {}, refreshInteractions: async () => {},
-     });`,
-  "./content-video-interaction-status": "exports.ContentVideoInteractionStatus = () => null;",
-  "./content-video-comments-sheet": "exports.ContentVideoCommentsSheet = () => null;",
-  "./content-video-header": source("./content-video-header.tsx"),
-  "./use-content-video-progress": source("./use-content-video-progress.ts"),
-  "./content-video-history": source("./content-video-history.ts"),
-  "./content-video-reading-text": source("./content-video-reading-text.tsx"),
-  "./content-video-inline-composer": `exports.ContentVideoInlineComposer = props => {
-    window.setComposerBusy = busy => require('react-dom').flushSync(() => {
-      props.onBusyChange(busy);
-      props.onStateChange({busy, hasDraft:busy, submitting:false});
-    });
-    return null;
-  };`,
-  "@/app/app/community/[slug]/post/[id]/modules/reply-support":
-    "exports.confirmDiscardReplyDraft = () => true;",
-  "./feed-favorite-button": "exports.FeedFavoriteButton = () => null;",
-  "./content-video-author": "exports.ContentVideoAuthor = () => null;",
-  "@/components/psychologists/psychologist-whatsapp-redirect-button":
-    "exports.PsychologistWhatsAppRedirectButton = () => null;",
-  "@/components/ui/verified-badge": "exports.VerifiedBadgeIcon = () => null;",
-  "@/components/ui/whatsapp-icon": "exports.WhatsAppIcon = () => null;",
-  "lucide-react": "module.exports = new Proxy({}, { get: () => () => null });",
-  "next/link":
-    "exports.default = ({children}) => require('react').createElement('span', null, children);",
-  "./content-video-viewer.module.css":
-    "exports.default = new Proxy({}, { get: (_, name) => name });",
-  "./content-video-controls.module.css":
-    "exports.default = new Proxy({}, { get: (_, name) => name });",
-  "./content-video-player": `
-    const React = require('react');
-    exports.ContentVideoPlayer = ({videoProps, onVideoElementReady, onContentClick}) => {
-      const ready = React.useCallback(node => {
-        if (node) window.prepareVideo(node);
-        onVideoElementReady(node);
-      }, [onVideoElementReady]);
-      return React.createElement(React.Fragment, null,
-        React.createElement('video', {...videoProps, ref: ready, preload: 'none'}),
-        React.createElement('button', {onClick: onContentClick, 'data-surface': true}, 'surface'));
-    };
-  `,
-  slide: source("./content-video-slide.tsx"),
-};
-function createHarness(persistent = false) {
-  const selectedModules = persistent
-    ? {
-        ...modules,
-        "./content-video-player": source("./content-video-player.tsx"),
-        "@/components/video-captions/player-captions": source(
-          "../video-captions/player-captions.tsx",
-        ),
-        "./caption-icon": source("../video-captions/caption-icon.tsx"),
-        "@/components/ui/vertical-video-player-stream":
-          "exports.VerticalVideoStreamStatus = () => null;",
-        "@/hooks/video-stream": source("../../hooks/video-stream/index.ts"),
-        "@/utils/video-stream": source("../../utils/video-stream.ts"),
-        "@/api/callers/video-assets": `
-    exports.useVideoAssetPlayback = source => {
-      require('react').useLayoutEffect(() => {
-        document.querySelectorAll('video').forEach(window.prepareVideo);
-      });
-      return {data:source ? {hls_url:'/stream.m3u8',expires_at:'2099-01-01T00:00:00Z'} : undefined,refetch:()=>{}};
-    };
-  `,
-        "hls.js": `exports.default = class Hls {
-          static isSupported() { return true; }
-          static Events = {MANIFEST_PARSED:'parsed', ERROR:'error'};
-          static ErrorTypes = {};
-          on() {} startLoad() {} stopLoad() {}
-          loadSource(source) { this.source=source; }
-          attachMedia(video) { this.video=video; video.src=this.source; window.hlsAttached=(window.hlsAttached||0)+1; }
-          destroy() { window.hlsDestroyed=(window.hlsDestroyed||0)+1; }
-        };`,
-      }
-    : modules;
-  const factories = Object.entries(selectedModules)
-    .map(
-      ([name, value]) =>
-        `${JSON.stringify(name)}: function(require, module, exports) {\n${value}\n}`,
-    )
-    .join(",\n");
-  // Mount the actual slide, shared preference and guarded play helper. Only media outcomes,
-  // application services and unrelated visual children are controlled by this harness.
-  return `
-  const factories = {${factories}}, cache = {};
-  function require(name) {
-    if (cache[name]) return cache[name].exports;
-    if (!factories[name]) throw new Error('Missing module ' + name);
-    const module = cache[name] = {exports: {}};
-    factories[name](require, module, module.exports);
-    return module.exports;
-  }
-  const React = require('react'), {createRoot} = require('react-dom/client');
-  const {flushSync} = require('react-dom');
-  const {ContentVideoSlide} = require('slide');
-  const {ContentVideoPlayerProvider} = require('./content-video-player');
-  const persistent = ${persistent};
-  if (persistent) window.IntersectionObserver = undefined;
-  const sound = require('@/lib/video-sound-preference');
-  window.attention = true; window.blocked = false;
-  window.trackingDetached = [];
-  window.attempts = []; window.outcomes = []; window.pending = [];
-  window.prepareVideo = video => {
-    if (video.prepared) return;
-    video.prepared = true; video.testPaused = true; video.testEnded = false;
-    video.load = () => { video.loads = (video.loads || 0) + 1; video.currentTime = 0; video.testEnded = false; };
-    Object.defineProperty(video, 'paused', {get: () => video.testPaused});
-    Object.defineProperty(video, 'ended', {get: () => video.testEnded});
-    Object.defineProperty(video, 'currentSrc', {get: () => video.getAttribute('src') || ''});
-    video.canPlayType = () => window.nativeHls ? 'probably' : '';
-    Object.defineProperty(video, 'duration', {configurable: true, get: () => 60});
-    video.pause = () => {
-      if (video.testPaused) return;
-      video.testPaused = true;
-      video.dispatchEvent(new Event('pause'));
-    };
-    video.play = () => {
-      attempts.push(video.muted);
-      const outcome = outcomes.shift();
-      if (outcome === 'pending') return new Promise((resolve, reject) => pending.push({resolve, reject, video}));
-      if (outcome) return Promise.reject(new DOMException(outcome, outcome));
-      video.testPaused = false; video.dispatchEvent(new Event('play'));
-      return Promise.resolve();
-    };
-  };
-  const item = {id:'v',post_id:'p',media_url:'/video',content:'caption',title:'title',
-    author:{id:'a',name:'Author'},community:{slug:'c'},upvotes_count:0,replies_count:0,saved:false};
-  let root; let active = true; let creating = false; let selected = 0;
-  window.nextCalls = 0;
-  window.historyTools = require('./content-video-history');
-  const slide = index => React.createElement(ContentVideoSlide, {
-    key:index,item:{...item,id:'v'+index,media_url:window.mediaSources?.[index] || item.media_url},active:active && index === selected,initialTime:0,changedDiscussion:false,closeRef:{current:null},
-    createPostOpen:creating,onCreatePost:()=>{},
-    onNext:()=>{window.nextCalls++},onNavigate:()=>{},onPrevious:()=>{},onClose:()=>{},onInteraction:()=>{},onPanelChange:()=>{},onSeekingChange:()=>{}
-  });
-  const render = () => flushSync(() => root.render(persistent
-    ? React.createElement(ContentVideoPlayerProvider, null, [0,1,2].map(slide)) : slide(0)));
-  window.select = index => {selected=index;render();};
-  window.mount = (enabled, initialActive = true) => {
-    sound.setVideoSoundEnabledByUser(enabled); active = initialActive;
-    root = createRoot(document.getElementById('root')); render();
-  };
-  window.activate = value => {active = value; render();};
-  window.openCreate = value => {creating = value; render();};
-  window.chooseSound = value => flushSync(() => sound.setVideoSoundEnabledByUser(value));
-  window.mediaEvent = name => flushSync(() => {
-    const video = document.querySelector('video');
-    if (name === 'ended') video.testEnded = true;
-    video.dispatchEvent(new Event(name));
-  });
-  window.surface = () => flushSync(() => document.querySelector('[data-surface]').click());
-  window.snapshot = () => ({muted:document.querySelector('video').muted,
-    paused:document.querySelector('video').paused, preference:sound.getVideoSoundEnabled(),attempts:[...attempts]});
-  window.finish = (index, error) => {
-    const request = pending[index];
-    if (error) request.reject(new DOMException(error, error));
-    else {request.video.testPaused=false;request.video.dispatchEvent(new Event('play'));request.resolve();}
-  };
-`;
-}
 const harness = createHarness();
 
 describe("reels audio with the actual mounted slide", {
@@ -445,6 +240,92 @@ describe("reels audio with the actual mounted slide", {
   });
 });
 
+describe("standby with real decoded local media", {
+  skip:
+    (!process.env.PLAYWRIGHT_MODULE || !process.env.VIDEO_TEST_FILE) &&
+    "Set Playwright and a real local MP4",
+}, () => {
+  let browser, server, origin;
+  before(async () => {
+    const bytes = readFileSync(process.env.VIDEO_TEST_FILE);
+    server = createServer((request, response) => {
+      if (!request.url.endsWith(".mp4")) {
+        response.writeHead(200, { "Content-Type": "text/html" });
+        response.end('<div id="root"></div>');
+        return;
+      }
+      const range = /^bytes=(\d+)-(\d*)$/.exec(request.headers.range || "");
+      const start = range ? Number(range[1]) : 0;
+      const end = range?.[2] ? Math.min(Number(range[2]), bytes.length - 1) : bytes.length - 1;
+      response.writeHead(range ? 206 : 200, {
+        "Content-Type": "video/mp4",
+        "Accept-Ranges": "bytes",
+        "Content-Length": end - start + 1,
+        ...(range ? { "Content-Range": `bytes ${start}-${end}/${bytes.length}` } : {}),
+      });
+      response.end(bytes.subarray(start, end + 1));
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    origin = `http://127.0.0.1:${server.address().port}`;
+    browser = await require(process.env.PLAYWRIGHT_MODULE).chromium.launch({
+      channel: "chrome",
+      headless: true,
+    });
+  });
+  after(async () => {
+    await browser?.close();
+    await new Promise((resolve) => server?.close(resolve));
+  });
+  for (const width of [390, 1440])
+    test(`actual playback and promotion at ${width}px`, async () => {
+      const page = await browser.newPage({ viewport: { width, height: 844 } });
+      try {
+        await page.goto(origin);
+        await page.addScriptTag({ content: createHarness(true, true) });
+        await page.evaluate(() => {
+          window.prewarm = true;
+          window.mediaSources = ["/first.mp4", "/second.mp4", "/third.mp4"];
+          mount(false);
+        });
+        await page.waitForFunction(
+          () => document.querySelector('[data-reels-active="true"] video')?.currentTime > 0.1,
+        );
+        await page.waitForFunction(
+          () => document.querySelector("[data-reels-prepared-player]")?.readyState >= 2,
+        );
+        await page.evaluate(() => {
+          window.standby = document.querySelector("[data-reels-prepared-player]");
+          window.standbyLoads = standby.loads;
+        });
+        assert.equal(await page.evaluate(() => standby.paused && standby.currentTime === 0), true);
+        await page.evaluate(() => select(1));
+        await page.waitForFunction(
+          () =>
+            document.querySelector('[data-reels-active="true"] video') === standby &&
+            standby.currentTime > 0.1,
+        );
+        assert.equal(
+          await page.evaluate(() => standby.loads),
+          await page.evaluate(() => standbyLoads),
+        );
+        assert.ok(await page.evaluate(() => standby.videoWidth > 0 && standby.videoHeight > 0));
+        assert.equal(await page.locator("video").count(), 2);
+        await page.evaluate(() => select(0));
+        await page.waitForFunction(
+          () => document.querySelector('[data-reels-active="true"] video')?.currentTime > 0.1,
+        );
+        assert.equal(
+          await page.evaluate(() =>
+            [...document.querySelectorAll("[data-reels-prepared-player]")].every((v) => v.paused),
+          ),
+          true,
+        );
+      } finally {
+        await page.close();
+      }
+    });
+});
+
 describe("persistent reel media ownership", {
   skip: !process.env.PLAYWRIGHT_MODULE && "Set PLAYWRIGHT_MODULE to an installed Playwright module",
 }, () => {
@@ -460,6 +341,7 @@ describe("persistent reel media ownership", {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.setContent('<div id="root"></div>');
     await page.addScriptTag({ content: createHarness(true) });
+    assert.deepEqual(errors, []);
     await page.evaluate(() => mount(false));
     await page.waitForFunction(() => document.querySelector("video")?.prepared);
   });
@@ -486,7 +368,7 @@ describe("persistent reel media ownership", {
       );
       assert.equal(await page.evaluate(() => snapshot().preference), true);
     }
-    assert.ok(await page.evaluate(() => originalVideo.loads >= 6));
+    assert.equal(await page.evaluate(() => originalVideo.loads), 2);
   });
 
   test("late play from the previous owner cannot pause or mute the new owner", async () => {
@@ -536,6 +418,164 @@ describe("persistent reel media ownership", {
   test("old tracking detaches before its source is cleared", async () => {
     await page.evaluate(() => select(1));
     assert.equal(await page.evaluate(() => trackingDetached[0]), "/video");
+  });
+
+  test("startup cover waits for current-frame data and resets on emptied", async () => {
+    await page.evaluate(() => {
+      const React = require("react");
+      const { VideoStartupCover } = require("@/components/ui/video-startup-cover");
+      const video = document.querySelector("video");
+      window.frameReady = 1;
+      Object.defineProperty(video, "readyState", {
+        configurable: true,
+        get: () => window.frameReady,
+      });
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+      const root = require("react-dom/client").createRoot(host);
+      require("react-dom").flushSync(() =>
+        root.render(
+          React.createElement(VideoStartupCover, {
+            poster: "/incoming.jpg",
+            src: "/video",
+            videoRef: { current: video },
+          }),
+        ),
+      );
+    });
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => mediaEvent("loadedmetadata"));
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => {
+      window.frameReady = 2;
+      mediaEvent("loadeddata");
+    });
+    await page.waitForFunction(() => !document.querySelector("[data-video-startup-cover]"));
+    await page.evaluate(() => {
+      window.frameReady = 0;
+      mediaEvent("emptied");
+    });
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    assert.equal(
+      await page.locator("[data-video-startup-cover]").getAttribute("data-poster"),
+      "/incoming.jpg",
+    );
+  });
+
+  test("one standby starts only after playing and is promoted without loading again", async () => {
+    await page.evaluate(() => {
+      window.prewarm = true;
+      window.mediaSources = ["/video", "/next.mp4", "/third.mp4"];
+      select(0);
+    });
+    assert.equal(await page.locator("video").count(), 1);
+    await page.evaluate(() => mediaEvent("playing"));
+    await page.waitForFunction(
+      () =>
+        document.querySelector("[data-reels-prepared-player]")?.getAttribute("src") === "/next.mp4",
+    );
+    await page.evaluate(() => {
+      window.standby = document.querySelector("[data-reels-prepared-player]");
+      window.standbyLoads = standby.loads;
+    });
+    assert.equal(await page.evaluate(() => standby.paused && standby.muted), true);
+    await page.evaluate(() => select(1));
+    await page.waitForFunction(
+      () => document.querySelector('[data-reels-active="true"] video') === standby,
+    );
+    assert.equal(await page.evaluate(() => standby.loads), await page.evaluate(() => standbyLoads));
+    await page.evaluate(() => mediaEvent("playing"));
+    await page.waitForFunction(
+      () =>
+        document.querySelector("[data-reels-prepared-player]")?.getAttribute("src") ===
+        "/third.mp4",
+    );
+    assert.equal(await page.locator("video").count(), 2);
+    assert.equal(
+      await page.evaluate(() => document.querySelector("[data-reels-prepared-player]").paused),
+      true,
+    );
+    assert.equal(
+      await page.evaluate(() => {
+        const media = [...document.querySelectorAll("video")];
+        unmount();
+        return media.every((video) => video.paused && !video.hasAttribute("src"));
+      }),
+      true,
+    );
+  });
+
+  test("failed standby metadata is retried once on activation", async () => {
+    await page.evaluate(() => {
+      window.prewarm = true;
+      window.nativeHls = true;
+      window.playbackFailure = "/api/public/video-assets/asset12345/playback";
+      window.mediaSources = ["/video", window.playbackFailure];
+      select(0);
+      mediaEvent("playing");
+    });
+    await page.waitForFunction(() => document.querySelector("[data-reels-prepared-player]"));
+    assert.equal(await page.evaluate(() => window.playbackRetries || 0), 0);
+    await page.evaluate(() => select(1));
+    await page.waitForFunction(
+      () =>
+        document.querySelector('[data-reels-active="true"] video')?.getAttribute("src") ===
+        "/stream.m3u8",
+    );
+    assert.equal(await page.evaluate(() => window.playbackRetries), 1);
+    await page.evaluate(() => select(1));
+    assert.equal(await page.evaluate(() => window.playbackRetries), 1);
+  });
+
+  test("failed native standby media reloads once on activation", async () => {
+    await page.evaluate(() => {
+      window.prewarm = true;
+      window.mediaSources = ["/video", "/next.mp4"];
+      select(0);
+      mediaEvent("playing");
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("[data-reels-prepared-player]")?.getAttribute("src") === "/next.mp4",
+    );
+    await page.evaluate(() => {
+      window.standby = document.querySelector("[data-reels-prepared-player]");
+      window.beforeRetry = standby.loads;
+      Object.defineProperty(standby, "error", { configurable: true, get: () => ({ code: 2 }) });
+      select(1);
+    });
+    await page.waitForFunction(() => standby.loads === beforeRetry + 1);
+    await page.evaluate(() => select(1));
+    assert.equal(
+      await page.evaluate(() => standby.loads),
+      await page.evaluate(() => beforeRetry + 1),
+    );
+  });
+
+  test("failed hls.js standby adapter restarts once on activation", async () => {
+    await page.evaluate(() => {
+      window.prewarm = true;
+      window.nativeHls = false;
+      window.mediaSources = ["/video", "/api/public/video-assets/asset12345/playback"];
+      select(0);
+      mediaEvent("playing");
+    });
+    await page.waitForFunction(
+      () => document.querySelector("[data-reels-prepared-player]")?.testHls,
+    );
+    await page.evaluate(() => {
+      window.standby = document.querySelector("[data-reels-prepared-player]");
+      window.beforeRetry = window.hlsAttached;
+      standby.testHls.handlers.error("error", { fatal: true, type: "fatal" });
+    });
+    await page.waitForFunction(() => window.hlsDestroyed >= 1);
+    await page.evaluate(() => select(1));
+    await page.waitForFunction(() => window.hlsAttached === beforeRetry + 1);
+    await page.evaluate(() => select(1));
+    assert.equal(
+      await page.evaluate(() => window.hlsAttached),
+      await page.evaluate(() => beforeRetry + 1),
+    );
   });
 
   for (const native of [true, false]) {
