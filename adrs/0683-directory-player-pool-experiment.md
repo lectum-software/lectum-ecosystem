@@ -110,3 +110,20 @@ and seeks alone never release it. Cleanup invalidates both callback paths.
 This fallback is evidence of playback progress, not proof of physical presentation;
 the new Safari recording remains the final acceptance gate. No publication in this
 change, no API/DB contract or new dependency.
+
+## Single activation owner and advancing frames
+
+The 0.1.798 recording improved the static-image case but still has a black interval
+after a visible incoming poster. The directory retained its legacy analytics effect
+that paused/reset/played all background videos, including the shared player's active
+element. Reels has no equivalent second controller. Exclude pooled mode from those
+media mutations while retaining progress/analytics state resets. The directory
+adapter applies user pause, seek, volume and rate to its owned element only.
+
+The common cover also accepted callbacks for paused prepared frames. Require an
+unpaused, non-seeking advancing frame timestamp (`metadata.mediaTime`), not merely
+an advancing playback clock, and two paints for that callback path;
+invalidate pending callbacks on pause/seek. This closes a reproducible lifecycle
+gap without increasing a timer. It does not establish that Safari will never show
+a compositor gap: physical iPhone acceptance is still required. Individual mode,
+the two-player limit and source/buffer preparation policy are unchanged.

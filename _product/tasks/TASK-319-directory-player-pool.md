@@ -108,4 +108,23 @@ as the default directory model.
   cancellation and prepared slot posters (27 tests with real-media checks).
 - [ ] Confirm visual behavior on a physical iPhone after authorized publication.
 
-This follow-up is local only. Production remains 0.1.797.
+Released as 0.1.798 via PR #168. The subsequent iPhone recording showed Julia
+moving again, but a roughly 0.4s black interval remained on Diana -> Rousel.
+All eleven warm directory selections reported readyState 4. Physical acceptance
+remains pending; the experiment must not become the default yet.
+
+## Follow-up: activation ownership and prepared-frame rejection (0.1.799)
+
+- [x] Compare directory activation with reels: the directory analytics effect was
+  still resetting/playing shared elements in addition to the shared engine.
+- [x] Keep legacy media control for individual mode only; pooled pause, volume,
+  rate and resume belong to its current owner's adapter, as in reels.
+- [x] Reject paused/non-advancing frame callbacks and invalidate queued callbacks
+  on seek/pause before revealing the startup cover.
+- [x] Full root check and final frontend production build passed. Browser coverage:
+  27 playback tests with real media, six directory policy/ownership contracts,
+  read-only mobile/desktop transitions, immersive pause/resume/audio and reels.
+- [ ] Confirm the remaining black interval on a physical iPhone after authorization.
+
+These are locally reproducible lifecycle defects, not proof of the exact Safari
+compositor cause. Production and the default directory mode remain unchanged.

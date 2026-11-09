@@ -85,9 +85,10 @@ export function VideoStartupCover({
       });
     };
     const restartProgress = () => {
+      if (revealed) return;
+      cancel();
       progressStart = video.currentTime;
-      cancelAnimationFrame(frame);
-      frame = 0;
+      reveal();
     };
     const reveal = () => {
       if (revealed) return;
@@ -95,10 +96,13 @@ export function VideoStartupCover({
       if (videoFrame !== null) return;
       const current = generation;
       if (typeof video.requestVideoFrameCallback === "function") {
-        videoFrame = video.requestVideoFrameCallback(() => {
+        videoFrame = video.requestVideoFrameCallback((_now, metadata) => {
           if (current !== generation) return;
           videoFrame = null;
-          if (video.readyState >= 2 && !video.seeking) finish();
+          // A queued standby frame can arrive after promotion. It must not
+          // uncover a paused/just-seeked player before playback advances.
+          if (canPresent() && metadata.mediaTime > progressStart) afterPaint();
+          else reveal();
         });
         return;
       }
