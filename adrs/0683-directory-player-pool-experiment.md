@@ -74,3 +74,20 @@ An overlay context exposes media/captions without duplicating the media lifecycl
 Keep the opt-in query flag and the individual-player default. No deployment is
 part of this change. Shared code does not establish equal iPhone performance;
 a physical-device retest remains necessary.
+
+## Presentation-gated cover (0.1.797)
+
+The 0.1.796 iPhone recording still shows blank transitions. Fourteen of fifteen
+incoming players were already ready at selection. Available first-frame samples
+improved from a 672 ms median to 444 ms, but separate sessions do not establish
+causation, and two transitions lack a frame sample.
+
+Keep the shared startup cover while parked. Pass active ownership and its revision
+from the common player into the cover, and wait for a new requestVideoFrameCallback
+after activation rather than treating loadeddata or playing as presentation.
+Cancel pending callbacks on source reset, ownership change and unmount; reject
+already queued callbacks from previous generations. Without this browser API,
+fall back to active playback plus two animation frames, not readiness alone.
+
+No layout, source-loading, buffer, API or deployment changes. A real iPhone retest
+is required before claiming the recorded flashes are resolved.

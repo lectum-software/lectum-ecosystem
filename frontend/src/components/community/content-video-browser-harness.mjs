@@ -98,6 +98,10 @@ export function createHarness(persistent = false, realMedia = false) {
     ? {
         ...modules,
         "./content-video-player": source("./content-video-player.tsx"),
+        "@/components/ui/persistent-feed-video-player": source(
+          "../ui/persistent-feed-video-player.tsx",
+        ),
+        "./persistent-feed-video-policy": source("../ui/persistent-feed-video-policy.ts"),
         "@/components/video-captions/player-captions": source(
           "../video-captions/player-captions.tsx",
         ),

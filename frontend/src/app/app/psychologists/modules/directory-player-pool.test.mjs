@@ -43,6 +43,8 @@ test("directory and reels use the same provider and media lifecycle", () => {
     /if \(destination && host\.parentNode !== destination\) destination\.appendChild\(host\)/,
   );
   assert.match(shared, /standby: !slot/);
+  assert.match(shared, /active=\{Boolean\(slot\)\}/);
+  assert.match(shared, /version=\{revision\}/);
   assert.match(shared, /owner\.current\?\.\(null\)/);
 });
 

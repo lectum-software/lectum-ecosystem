@@ -82,3 +82,15 @@ This correction does not change the default model or deploy automatically.
 
 The architecture is shared; page-specific actions and presentation stay separate.
 No new dependencies, backend contracts, environment variables or production changes.
+
+## Follow-up: presentation-gated cover (0.1.797)
+
+- [x] Keep the cover during standby and require a fresh presented frame on promotion.
+- [x] Reject queued callbacks from an older activation and reset on emptied/loadstart.
+- [x] Provide a playback-gated fallback when frame callbacks are unavailable.
+- [x] Update the browser harness to import the shared player rather than its old module.
+- [x] Mounted browser regression tests cover readiness, promotion, stale callbacks,
+  source reset and the fallback path.
+- [ ] Retest recorded blank transitions on a physical iPhone after authorized release.
+
+This follow-up remains local; production stays on 0.1.796 until separately released.
