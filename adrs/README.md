@@ -745,3 +745,4 @@ Formato recomendado:
 - [ADR-0681 — Busca por nome, atualizacao do cartao e saida de comunidades](0681-discovery-card-refresh.md)
 - [ADR-0682 — Capa de inicio e reserva limitada do proximo video](0682-video-startup-standby.md)
 - [ADR-0683 — Experimento de dois players no diretorio](0683-directory-player-pool-experiment.md)
+- [ADR-0684 — Caption presentation and controls](0684-caption-interface-refinements.md)

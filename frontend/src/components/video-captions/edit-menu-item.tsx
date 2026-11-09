@@ -13,7 +13,7 @@ export function EditCaptionMenuItem({ reference }: { reference?: string | null }
     <Link
       role="menuitem"
       href={`/app/videos/${id}/legendas`}
-      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-normal text-muted transition hover:bg-surface-muted hover:text-foreground"
+      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-normal text-foreground transition hover:bg-surface-muted"
       onClick={(event) => event.stopPropagation()}
     >
       <Captions className="h-4 w-4" aria-hidden="true" />

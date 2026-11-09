@@ -442,79 +442,83 @@ export const CommunityMediaBlock = ({
 
   if (normalizedMediaType === "video") {
     return (
-      <div className={frameClassName}>
-        <div className="relative w-full">
-          <VerticalVideoPlayer
-            bottomOverlay={visibleVideoContact}
-            className={cn(
-              "w-full border-border shadow-none",
-              videoMediaFrameAspectClassName[orientation],
-              mediaRoundedClassName,
-              viewportClassName,
-              videoClassName,
-            )}
-            controls={!canOpenReels}
-            controlsVariant="persistent"
-            fit="contain"
-            fullscreenVariant="content"
-            mutedControlVisibility={communityAutoplayEnabled ? "when-hidden" : "default"}
-            onSoundEnabledChange={
-              communityAutoplayEnabled ? handleCommunitySoundEnabledChange : undefined
-            }
-            onVideoElementReady={handleVideoReady}
-            onContentClick={
-              canOpenReels
-                ? () => {
-                    if (!reelsPostId || !analyticsTarget) return;
-                    launchVideo?.({
-                      initial: {
-                        postId: reelsPostId,
-                        mediaUrl,
-                        replyId:
-                          analyticsTarget.targetType === "reply" ? analyticsTarget.targetId : null,
-                      },
-                      initialTime: inlineVideoRef.current?.currentTime ?? 0,
-                    });
-                    inlineVideoRef.current?.pause();
-                  }
-                : undefined
-            }
-            overlay={videoOverlay}
-            persistentControlsLayout="media"
-            poster={resolvedPosterUrl}
-            src={resolvedUrl}
-            style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
-            title={alt}
-            videoProps={
-              communityAutoplayEnabled
-                ? {
-                    "data-lectum-community-video-autoplay": "true",
-                    "data-lectum-feed-video-autoplay": enableFeedAutoplay ? "true" : undefined,
-                    muted: !communitySoundEnabled,
-                  }
-                : undefined
-            }
-          />
-          {overlayAction ? (
-            <button
-              aria-label={overlayAction.ariaLabel}
-              className="absolute top-3 right-3 z-20 grid h-11 w-11 place-items-center rounded-full border border-media-foreground/25 bg-media-background/35 text-media-foreground backdrop-blur-md transition hover:bg-media-background/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 disabled:pointer-events-none disabled:opacity-60"
-              data-post-card-ignore-click="true"
-              disabled={overlayAction.disabled}
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                overlayAction.onClick(event);
-              }}
-              type="button"
-            >
-              {overlayAction.icon}
-            </button>
-          ) : null}
+      <div className="w-full min-w-0" data-video-transcript-layout>
+        <div className={frameClassName}>
+          <div className="relative w-full">
+            <VerticalVideoPlayer
+              bottomOverlay={visibleVideoContact}
+              className={cn(
+                "w-full border-border shadow-none",
+                videoMediaFrameAspectClassName[orientation],
+                mediaRoundedClassName,
+                viewportClassName,
+                videoClassName,
+              )}
+              controls={!canOpenReels}
+              controlsVariant="persistent"
+              fit="contain"
+              fullscreenVariant="content"
+              mutedControlVisibility={communityAutoplayEnabled ? "when-hidden" : "default"}
+              onSoundEnabledChange={
+                communityAutoplayEnabled ? handleCommunitySoundEnabledChange : undefined
+              }
+              onVideoElementReady={handleVideoReady}
+              onContentClick={
+                canOpenReels
+                  ? () => {
+                      if (!reelsPostId || !analyticsTarget) return;
+                      launchVideo?.({
+                        initial: {
+                          postId: reelsPostId,
+                          mediaUrl,
+                          replyId:
+                            analyticsTarget.targetType === "reply"
+                              ? analyticsTarget.targetId
+                              : null,
+                        },
+                        initialTime: inlineVideoRef.current?.currentTime ?? 0,
+                      });
+                      inlineVideoRef.current?.pause();
+                    }
+                  : undefined
+              }
+              overlay={videoOverlay}
+              persistentControlsLayout="media"
+              poster={resolvedPosterUrl}
+              src={resolvedUrl}
+              style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
+              title={alt}
+              videoProps={
+                communityAutoplayEnabled
+                  ? {
+                      "data-lectum-community-video-autoplay": "true",
+                      "data-lectum-feed-video-autoplay": enableFeedAutoplay ? "true" : undefined,
+                      muted: !communitySoundEnabled,
+                    }
+                  : undefined
+              }
+            />
+            {overlayAction ? (
+              <button
+                aria-label={overlayAction.ariaLabel}
+                className="absolute top-3 right-3 z-20 grid h-11 w-11 place-items-center rounded-full border border-media-foreground/25 bg-media-background/35 text-media-foreground backdrop-blur-md transition hover:bg-media-background/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 disabled:pointer-events-none disabled:opacity-60"
+                data-post-card-ignore-click="true"
+                disabled={overlayAction.disabled}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  overlayAction.onClick(event);
+                }}
+                type="button"
+              >
+                {overlayAction.icon}
+              </button>
+            ) : null}
+          </div>
+          {hasFooter ? footer : null}
         </div>
-        {hasFooter ? footer : null}
         <ScopedTranscriptPanel reference={mediaUrl} />
-        {afterMedia}
+        {afterMedia ? <div className={frameClassName}>{afterMedia}</div> : null}
       </div>
     );
   }

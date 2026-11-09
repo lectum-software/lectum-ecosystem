@@ -122,7 +122,7 @@ test("desktop invitations use the below-video slot, separate from mobile actions
   const frame = source("../community/community-media-frame.tsx");
   assert.match(
     frame,
-    /<\/div>\s*\{hasFooter \? footer : null\}\s*<ScopedTranscriptPanel reference=\{mediaUrl\} \/>\s*\{afterMedia\}/,
+    /<\/div>\s*\{hasFooter \? footer : null\}\s*<\/div>\s*<ScopedTranscriptPanel reference=\{mediaUrl\} \/>\s*\{afterMedia \? <div className=\{frameClassName\}>\{afterMedia\}<\/div> : null\}/,
   );
   assert.doesNotMatch(
     source("../community/community-post-card-reply-preview.tsx"),
