@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVideoAssetPlayback } from "@/api/callers/video-assets";
 import {
   documentHasUserAttention,
@@ -42,6 +42,7 @@ export const useVideoPlaybackSource = (
 
   return {
     captions: hasFreshPlayback ? playback.data?.captions : null,
+    refetch: refetchPlayback,
     error: isStream && !hasFreshPlayback ? playback.error : null,
     isLoading: isStream && enabled && !playback.error && !hasFreshPlayback,
     isStream,
@@ -57,15 +58,26 @@ export const useVideoPlaybackSource = (
 export const useAttachVideoSource = ({
   adaptive,
   source,
+  standby = false,
   videoElementVersion = 0,
   videoRef,
 }: {
   adaptive: boolean;
   source: string;
+  standby?: boolean;
   videoElementVersion?: number;
   videoRef: RefObject<HTMLVideoElement | null>;
 }) => {
   const [failedSource, setFailedSource] = useState<string | null>(null);
+  const standbyRef = useRef(standby);
+  const bufferConfig = useRef<{ maxBufferLength: number; maxMaxBufferLength: number } | null>(null);
+  useEffect(() => {
+    standbyRef.current = standby;
+    if (bufferConfig.current) {
+      bufferConfig.current.maxBufferLength = standby ? 3 : 30;
+      bufferConfig.current.maxMaxBufferLength = standby ? 6 : 60;
+    }
+  }, [standby]);
 
   useEffect(() => {
     // Reanexa HLS/native source quando o ref recebe outro elemento de video.
@@ -118,9 +130,10 @@ export const useAttachVideoSource = ({
         const player = new Hls({
           autoStartLoad: false,
           enableWorker: true,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
+          maxBufferLength: standbyRef.current ? 3 : 30,
+          maxMaxBufferLength: standbyRef.current ? 6 : 60,
         });
+        bufferConfig.current = player.config;
         syncLoading = () => {
           if (!active) return;
           if (documentHasUserAttention()) player.startLoad();
@@ -154,6 +167,7 @@ export const useAttachVideoSource = ({
 
     return () => {
       active = false;
+      bufferConfig.current = null;
       unsubscribeAttention();
       destroyPlayer?.();
       if (video.currentSrc) {

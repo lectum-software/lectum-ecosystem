@@ -233,3 +233,22 @@ O exemplo comercial do plano usa captura real aprovada da Marcella Sicala,
 com caixinha e legenda automatica. O enquadramento contain preserva a imagem
 inteira; a captura nao altera videos ou legendas da profissional em producao.
 
+## Medicao opt-in de inicio de video (2026-11-08)
+
+Antes da troca do player do diretorio, adicionar observacao passiva comum a reels
+e apresentacoes. Ativacao somente por `?videoDiagnostics=1` no carregamento inicial.
+Sem envio automatico, armazenamento persistente, URLs, IDs de usuarios/videos ou
+texto de legendas. Relatorio local limitado a 4000 eventos com IDs efemeros por
+elemento. Exportacao manual pelo compartilhamento de arquivo ou download.
+
+Eventos de selecao, midia e primeiro quadro observado nao alteram play/pause/src.
+Resource Timing fornece duracoes de respostas classificadas localmente; Safari
+pode omitir recursos HLS nativos. Ausencia desses eventos nao prova cache nem
+ausencia de rede. `stalled` nao equivale sozinho a interrupcao visivel; avaliar
+`waiting`/`playing`, seek e visibilidade. Primeiro quadro observado em video ja
+carregado nao e tempo de download. Nao armazenar relatorio entre recargas.
+
+Sem alteracao de backend, schema, variaveis de ambiente ou providers. Rollback:
+remover componente de diagnostico do layout; links comuns ja o deixam desligado.
+Nao publicar enquanto a instrumentacao estiver em validacao local.
+

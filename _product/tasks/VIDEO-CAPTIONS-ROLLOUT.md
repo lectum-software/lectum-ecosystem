@@ -411,3 +411,110 @@ Sem publicacao neste ajuste. Referencia: gravacao do usuario de 23:25.
 
 Referencia visual: imagens e gravacao do usuario; Builder indisponivel.
 Nao houve push, merge nem deploy neste lote.
+
+## Pending video startup improvements (2026-11-08)
+
+Update: user authorized implementation and a production test after supplying the
+iPhone baseline. ADR-0682 defines the bounded scope; directory shared-player
+migration remains deferred so its measured preparation is preserved.
+
+### Startup production experiment
+
+- [x] Incoming poster overlay until decoded current-frame availability.
+- [x] Directory current/next auto preload, existing source activation preserved.
+- [x] Content standby promoted without source reload; one active plus one reserve.
+- [x] Standby has no analytics owner, playback callbacks or autoplay.
+- [x] Focused browser regressions, actual-media local smoke and frontend check/build.
+- [ ] Reviewed homolog-to-main PR and frontend-only production promotion.
+- [ ] Physical iPhone comparison on the same sequence and connection.
+
+Local validation: 26 player browser cases passed, including real MP4 decoding and
+standby promotion at 390px and 1440px. Frontend check and production build passed.
+The full application flow still requires its local backend; these browser cases
+exercise the actual media elements in an isolated component harness, not Safari.
+Existing loopback database configuration was found in another local checkout and
+used only in the validation process environment; no credentials were copied into
+the repository or printed. No production database was used.
+The initial backend check had three filesRoute.test.ts failures because the
+account_media_deletion lookup required an unavailable database. With the user's
+approval, a new portable PostgreSQL instance was bound to loopback, a new test
+database received all existing migrations, and all four route cases passed.
+Full pnpm check then passed under Node 24.22.1 with this isolated database.
+No backend route/test behavior was changed to bypass the database requirement.
+Additional player regressions confirm that failed preparation retries once at
+activation while healthy buffers are preserved. No retry loop on active renders.
+Admin and Video checks passed under Node 24.22.1; optional integration cases
+retain their existing skip conditions. The final recovery build and source-size
+guard passed. This batch is validated locally for the authorized frontend-only
+production experiment; PR, promotion and physical iPhone comparison remain gates.
+
+User approved keeping the following work queued, not implementing it yet:
+
+- [ ] Reuse one shared playback element in the psychologists directory, preserving
+  captions, sound preference, immersive controls, playback position and analytics.
+- [ ] Investigate startup gaps shown in WhatsApp Video 2026-11-08 at 20.44.26.mp4.
+  Sampled frames show black video areas between visible images during reel changes.
+- [ ] Keep the incoming video's poster visible until its first rendered frame.
+  Do not present the previous video's image or captions as the new video's content.
+- [ ] Evaluate bounded preparation of the next source/poster and cautious media
+  preloading without competing with the active video on slow connections.
+- [ ] Measure startup and source reattachment before changing reset behavior;
+  the current reset protects against attributing old media events to a new reel.
+- [ ] Validate slow-network behavior and real iPhone/Safari before publication.
+
+Code inspection: directory and content use the same HLS attachment hook. Content
+reels already share a player, so that change alone will not fix their startup gap.
+Their poster is supplied by playback metadata, without an independent fallback in
+PersistentMedia. Actual network/decode timings have not yet been measured.
+
+### Startup investigation findings (2026-11-08)
+
+- Recording: seven black intervals in the central region, about 0.70-1.32s.
+  These are visual gaps, not network latency; adjacent gaps may be one transition.
+- Reels reuse an element but reset/attach sources on ownership changes. Queue
+  pagination prepares item data, not the next video's media.
+- Directory owns separate players with a 300px activation margin. Both surfaces
+  use the same HLS hook, preferring native HLS where available.
+- Isolated Edge observation: two load calls on reels entry; twenty video elements
+  in the directory, two starting loads. This does not prove concurrent decoding.
+- Automated scrolling did not confirm reel transitions, so this run cannot
+  establish transition timings or explain iPhone behavior conclusively.
+  Production version parity was not reverified during this run.
+- Plan for both surfaces: incoming poster until first rendered frame; bounded
+  next metadata/poster preparation; evaluate media prefetch without starving the
+  active video; profile redundant attachments while preserving event ownership.
+  Poster retention hides black gaps but does not itself accelerate loading.
+- Validate cold/warm startup and stalls on constrained bandwidth, then physical
+  iPhone native HLS. hls.js settings do not govern Safari native HLS.
+
+Analysis only: no player implementation, version bump, push or deployment.
+
+### Opt-in measurement implementation (2026-11-08)
+
+User approved measuring current players before changing their architecture.
+
+- [x] Passive observer for selection, media readiness, waits and first observed frame.
+- [x] Shared diagnostics for directory and content, without changing playback.
+- [x] Manual JSON export/share, no remote upload or persistent storage; 4000-event cap.
+- [x] Unit tests for timestamps, bounded memory, snapshots and passive implementation.
+- [x] Isolated browser test with the user's real recording: both surfaces, first
+  frame, selection change and no further events after stopping.
+- [x] Frontend check, production build and opt-in/export UI validation at
+  390x844 and 1440x900 passed (0.1.792). Default access has no diagnostic toolbar.
+- [ ] Global check stopped at backend Prisma generation: local DATABASE_URL
+  absent. No substitute database or production credentials were used. Frontend
+  checks completed first; remaining global stages are not claimed as passing.
+- [ ] Physical iPhone comparison before any player optimization.
+
+Test procedure: open a local/test URL with `?videoDiagnostics=1` on initial load.
+Record the screen, visit Psychologists and content reels, wait three seconds on
+each video, then stop and export with the two diagnostic icon buttons. Export
+before reloading: records are memory-only. Repeat separately on Wi-Fi/cellular
+and repeat the same sequence for warm-cache comparison. Note connection and test
+order separately; the report deliberately contains no device/user/video identity.
+
+Resource timings may be absent for native HLS on Safari. Selection is observed
+after React updates the DOM, not the instant a finger touches the screen. Media
+`stalled` is not automatically a visible stall; distinguish seeking, background
+tabs and pauses using accompanying events. No claim of precise network/decode
+attribution without those additional observations. No production publication.

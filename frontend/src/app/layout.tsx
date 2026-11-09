@@ -11,6 +11,7 @@ import { ProgressiveConversionBoundary } from "@/components/conversion/progressi
 import { MobileZoomGuard } from "@/components/mobile-zoom-guard";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
+import { VideoDiagnostics } from "@/components/video-diagnostics";
 import { absoluteUrl, getSiteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 import { Progress } from "@/providers/progress";
 import { Provider as Query } from "@/providers/query";
@@ -124,6 +125,7 @@ export default function RootLayout({
         >
           <Progress />
           <MobileZoomGuard />
+          <VideoDiagnostics />
           <Redux>
             <Query>
               <PullToRefresh />

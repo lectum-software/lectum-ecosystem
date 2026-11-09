@@ -26,7 +26,7 @@ import { VerticalVideoPlayerMutedOverlayControl } from "./vertical-video-player-
 import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
 import { useVideoPlaybackContinuity } from "./vertical-video-player-playback-continuity";
 import { VerticalVideoPlayerShell } from "./vertical-video-player-shell";
-import { useVerticalVideoStream, VerticalVideoStreamStatus } from "./vertical-video-player-stream";
+import { useVerticalVideoStream, VerticalVideoMediaStatus } from "./vertical-video-player-stream";
 import {
   type BlobBackedVideoRequest,
   clampNumber,
@@ -612,10 +612,10 @@ export const VerticalVideoPlayer = ({
       >
         {bottomOverlay}
       </VerticalVideoPlayerBottomOverlay>
-      <VerticalVideoStreamStatus
-        adaptivePlaybackFailed={adaptivePlaybackFailed}
-        error={playback.error}
-        isLoading={playback.isLoading}
+      <VerticalVideoMediaStatus
+        {...{ playback, adaptivePlaybackFailed, videoRef, videoElementVersion }}
+        contain={isContentExpanded || fit === "contain"}
+        showCover={directoryCaptions}
       />
       {isContentExpanded ? (
         <VerticalVideoExitButton

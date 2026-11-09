@@ -94,6 +94,7 @@ export const PsychologistSlide = ({
         isActiveSlide && shouldNudgeSwipeCard ? "psychologists-swipe-nudge" : null,
       )}
       data-psychologists-slide-index={index}
+      data-video-diagnostic-active={isActiveSlide ? "true" : undefined}
     >
       <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-media-background">
         <div
@@ -122,7 +123,11 @@ export const PsychologistSlide = ({
               fit="cover"
               onContentClick={slideUsesNativeVideoControls ? revealUiFromImmersiveVideo : undefined}
               poster={slidePosterSrc || undefined}
-              preload={isActiveSlide ? "auto" : "metadata"}
+              preload={
+                isActiveSlide || index === model.setup.activePsychologistIndex + 1
+                  ? "auto"
+                  : "metadata"
+              }
               src={slideVideoSrc ?? ""}
               title={`Vídeo de apresentação de ${slideDisplayName}`}
               videoClassName="h-full w-full bg-media-background object-cover"
