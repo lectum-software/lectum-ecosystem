@@ -67,3 +67,18 @@ removing DOM mutations during ordinary progress/control updates.
 - [ ] Retest black flashes on physical iPhone after an authorized deployment.
 
 This correction does not change the default model or deploy automatically.
+
+## Follow-up: reuse the reels engine (0.1.796)
+
+- [x] Extract the working reels player/provider into one shared UI implementation.
+- [x] Replace the independent directory pool with an adapter to that implementation.
+- [x] Preserve directory captions, immersive controls, progress and analytics.
+- [x] Shared source-policy regression tests and full frontend check pass.
+- [x] Real-media browser checks pass for reels opening and next-video playback.
+- [x] Directory immersive pause/resume, audio, seeking, exit and transition pass.
+- [x] Filter smoke preserves pooled mode; three active owners report metrics and
+  standby reports none. Requests are intercepted, not written to production.
+- [ ] Physical iPhone comparison after a separately authorized deployment.
+
+The architecture is shared; page-specific actions and presentation stay separate.
+No new dependencies, backend contracts, environment variables or production changes.

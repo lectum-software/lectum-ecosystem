@@ -103,7 +103,11 @@ export const PsychologistSlide = ({
             <PsychologistSlideHeader model={model} slide={slide} />
           ) : null}
           {slideShouldShowVideo ? (
-            <DirectorySlideVideo index={index} {...buildSlideVideoProps(model, slide)} />
+            <DirectorySlideVideo
+              index={index}
+              model={model}
+              {...buildSlideVideoProps(model, slide)}
+            />
           ) : slidePosterSrc ? (
             <Image
               alt={slideDisplayName}

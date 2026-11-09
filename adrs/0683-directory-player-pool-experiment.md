@@ -56,3 +56,21 @@ claiming this resolves the flashes or enabling the experiment by default.
 
 Baseline frontend is 0.1.793, deployment dpl_5sK9Tz7qWgn84VnrVi12aNZ5wvSH.
 Rollback by promoting that frontend deployment; no data rollback is required.
+
+## Shared reels engine (0.1.796)
+
+The user requested reuse of the working reels implementation, not another pool
+with similar behavior. Extract the reels provider and player into
+`components/ui/persistent-feed-video-player.tsx`; keep the community entry point
+as compatibility re-exports. Both surfaces now consume this implementation and
+the same source allocation policy. The shared placement effect is change-scoped
+and parent-identity guarded, superseding the directory-only reconciliation above.
+
+The directory adapter owns only page integration: active selection, controls,
+caption preference, progress and analytics. It hands off the active media element
+and requests playback on readiness; standby media remain paused and muted.
+An overlay context exposes media/captions without duplicating the media lifecycle.
+
+Keep the opt-in query flag and the individual-player default. No deployment is
+part of this change. Shared code does not establish equal iPhone performance;
+a physical-device retest remains necessary.
