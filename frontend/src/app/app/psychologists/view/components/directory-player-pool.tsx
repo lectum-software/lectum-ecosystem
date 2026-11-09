@@ -145,8 +145,9 @@ function DirectoryPlayerPool({
     hosts.forEach((host, i) => {
       const entry = pool[i];
       const valid = entry && entryFor(entry.index)?.key === entry.key;
-      const destination = valid ? slots.current.get(entry.index) : null;
-      (destination ?? parking.current)?.appendChild(host);
+      const destination = (valid ? slots.current.get(entry.index) : null) ?? parking.current;
+      // Keep the media element connected during progress/control updates.
+      if (destination && host.parentNode !== destination) destination.appendChild(host);
     });
   });
 

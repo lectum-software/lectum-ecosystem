@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { preserveDirectoryExperiment, selectDirectoryPool } from "./directory-player-pool.ts";
 
@@ -18,6 +19,18 @@ test("filters preserve only supported experiment settings", () => {
 });
 
 const entry = (index) => ({ key: `video:${index}`, index, src: `/video/${index}` });
+
+test("unchanged slide destinations never reinsert the media host", () => {
+  const source = readFileSync(
+    new URL("../view/components/directory-player-pool.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /if \(destination && host\.parentNode !== destination\) destination\.appendChild\(host\)/,
+  );
+  assert.equal((source.match(/appendChild\(host\)/g) ?? []).length, 1);
+});
 const a = entry(0),
   b = entry(1),
   c = entry(2);

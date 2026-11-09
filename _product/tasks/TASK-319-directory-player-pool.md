@@ -50,3 +50,20 @@ below. Do not mark the device gate complete from Chrome.
 - Final filter/analytics browser smoke passed with real read-only API responses.
 - Reviewed scope: frontend opt-in only. Backend, Admin and Video are not deployed.
 - Production deployment and rollback identifiers will be recorded in the PR.
+
+## Follow-up: stable host placement (0.1.795)
+
+The user supplied the 0.1.794 iPhone recording and report, then requested alignment
+with reels placement. Reconcile slide destinations without appending hosts already
+in the correct parent. This preserves callback-ref replacement handling while
+removing DOM mutations during ordinary progress/control updates.
+
+- [x] Regression contract protects the parent-identity guard.
+- [x] Full frontend check passed.
+- [x] Final frontend production build passed for 0.1.795.
+- [x] Real-media read-only Chrome smoke at 390x844 and 1440x900: three active videos
+  per viewport, at most two players, paused/muted standby, zero redundant host
+  insertions and no page errors. Five necessary placements per viewport.
+- [ ] Retest black flashes on physical iPhone after an authorized deployment.
+
+This correction does not change the default model or deploy automatically.
