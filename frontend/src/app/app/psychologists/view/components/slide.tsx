@@ -94,6 +94,7 @@ export const PsychologistSlide = ({
         isActiveSlide && shouldNudgeSwipeCard ? "psychologists-swipe-nudge" : null,
       )}
       data-psychologists-slide-index={index}
+      data-video-diagnostic-active={isActiveSlide ? "true" : undefined}
     >
       <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-media-background">
         <div
