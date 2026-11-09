@@ -111,7 +111,7 @@ export function createHarness(persistent = false, realMedia = false) {
           "exports.VerticalVideoStreamStatus = () => null;",
         "@/components/ui/video-startup-cover": source("../ui/video-startup-cover.tsx"),
         "next/image":
-          "exports.default = props => require('react').createElement('span', {'data-video-startup-cover':props['data-video-startup-cover'], 'data-poster':props.src});",
+          "exports.default = props => require('react').createElement('span', {'data-video-startup-cover':props['data-video-startup-cover'], 'data-video-slot-cover':props['data-video-slot-cover'], 'data-poster':props.src});",
         "@/hooks/video-stream": source("../../hooks/video-stream/index.ts"),
         "@/utils/video-stream": source("../../utils/video-stream.ts"),
         "@/api/callers/video-assets": `
@@ -122,7 +122,7 @@ export function createHarness(persistent = false, realMedia = false) {
       });
       const failed = source && window.playbackFailure === source;
       return {
-        data:source && !failed ? {hls_url:'/stream.m3u8',expires_at:'2099-01-01T00:00:00Z'} : undefined,
+        data:source && !failed ? {hls_url:'/stream.m3u8',thumbnail_url:'/prepared.jpg',expires_at:'2099-01-01T00:00:00Z'} : undefined,
         error:failed ? new Error('metadata unavailable') : null,
         refetch:()=>{ window.playbackRetries=(window.playbackRetries||0)+1; window.playbackFailure=null; render(); }
       };

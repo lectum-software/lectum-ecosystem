@@ -24,47 +24,92 @@ export function VideoStartupCover({
     void src;
     void version;
     const video = videoRef.current;
-    if (!video || !active) return;
+    if (!video || !active || !poster) return;
     let frame = 0;
     let videoFrame: number | null = null;
     let generation = 0;
+    let progressFrame = 0;
+    let progressStart = video.currentTime;
+    let revealed = false;
     const cancel = () => {
       generation += 1;
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(progressFrame);
+      progressFrame = 0;
       frame = 0;
       if (videoFrame !== null) video.cancelVideoFrameCallback(videoFrame);
       videoFrame = null;
     };
     const reset = () => {
       cancel();
+      revealed = false;
+      progressStart = video.currentTime;
       setReady(null);
     };
-    const reveal = () => {
-      if (videoFrame !== null || frame) return;
+    const canPresent = () =>
+      document.visibilityState !== "hidden" &&
+      !video.paused &&
+      !video.seeking &&
+      video.readyState >= 2;
+    const finish = () => {
+      cancel();
+      revealed = true;
+      setReady({ src, version });
+    };
+    const afterPaint = () => {
+      if (frame || revealed) return;
       const current = generation;
-      if (typeof video.requestVideoFrameCallback === "function") {
-        videoFrame = video.requestVideoFrameCallback(() => {
-          if (current !== generation) return;
-          videoFrame = null;
-          if (video.readyState >= 2) setReady({ src, version });
-        });
-        return;
-      }
-      // Older browsers cannot confirm presentation; wait for playback and two paints.
-      if (video.paused || video.readyState < 2) return;
       frame = requestAnimationFrame(() => {
         if (current !== generation) return;
         frame = requestAnimationFrame(() => {
           if (current !== generation) return;
           frame = 0;
-          if (!video.paused && video.readyState >= 2) setReady({ src, version });
+          if (canPresent()) finish();
         });
       });
+    };
+    // Safari can omit a frame callback after moving a prepared video. Require
+    // sustained playback progress, never just a timeout or a seek, before fallback.
+    const watchProgress = () => {
+      if (revealed || progressFrame || video.paused) return;
+      const current = generation;
+      progressFrame = requestAnimationFrame(() => {
+        if (current !== generation) return;
+        progressFrame = 0;
+        if (!canPresent() || video.currentTime < progressStart) {
+          progressStart = video.currentTime;
+        } else if (video.currentTime - progressStart >= 0.12) {
+          afterPaint();
+        }
+        watchProgress();
+      });
+    };
+    const restartProgress = () => {
+      progressStart = video.currentTime;
+      cancelAnimationFrame(frame);
+      frame = 0;
+    };
+    const reveal = () => {
+      if (revealed) return;
+      watchProgress();
+      if (videoFrame !== null) return;
+      const current = generation;
+      if (typeof video.requestVideoFrameCallback === "function") {
+        videoFrame = video.requestVideoFrameCallback(() => {
+          if (current !== generation) return;
+          videoFrame = null;
+          if (video.readyState >= 2 && !video.seeking) finish();
+        });
+        return;
+      }
     };
     video.addEventListener("emptied", reset);
     video.addEventListener("loadstart", reset);
     video.addEventListener("loadeddata", reveal);
     video.addEventListener("playing", reveal);
+    video.addEventListener("seeking", restartProgress);
+    video.addEventListener("seeked", restartProgress);
+    video.addEventListener("pause", restartProgress);
     reveal();
     return () => {
       cancel();
@@ -72,8 +117,11 @@ export function VideoStartupCover({
       video.removeEventListener("loadstart", reset);
       video.removeEventListener("loadeddata", reveal);
       video.removeEventListener("playing", reveal);
+      video.removeEventListener("seeking", restartProgress);
+      video.removeEventListener("seeked", restartProgress);
+      video.removeEventListener("pause", restartProgress);
     };
-  }, [src, version, videoRef, active]);
+  }, [src, version, videoRef, active, poster]);
 
   if ((active && ready?.src === src && ready.version === version) || !poster) return null;
   return (

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   createContext,
   type ReactNode,
@@ -119,19 +118,10 @@ function SharedDirectoryVideo({
   );
   return (
     <div className="relative h-full w-full" data-directory-player-slot={index}>
-      {props.poster ? (
-        <Image
-          alt=""
-          fill
-          unoptimized
-          sizes="(min-width: 768px) 430px, 100vw"
-          src={props.poster}
-          className="object-cover"
-        />
-      ) : null}
       <PersistentFeedVideo
         className="relative h-full w-full"
         src={props.src}
+        poster={props.poster}
         title={props.title}
         mediaKey={`${index}:${props.src}`}
         active={active}
