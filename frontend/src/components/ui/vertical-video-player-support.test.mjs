@@ -66,15 +66,15 @@ test("contact overlay is inside the expanded player and independent of hidden co
 
 test("feed imersivo de psicologos opta por controles sempre visiveis", () => {
   const slideSource = readFileSync(
-    new URL("../../app/app/psychologists/view/components/slide.tsx", import.meta.url),
+    new URL("../../app/app/psychologists/view/components/slide-video-props.ts", import.meta.url),
     "utf8",
   );
 
   assert.match(
     slideSource,
-    /controlsVariant=\{slideUsesNativeVideoControls \? "persistent" : "native"\}/,
+    /controlsVariant: slideUsesNativeVideoControls \? "persistent" : "native"/,
   );
-  assert.match(slideSource, /persistentControlsVisibility="always"/);
+  assert.match(slideSource, /persistentControlsVisibility: "always"/);
 });
 
 test("video de conteudo ampliado usa expansao inline sem fullscreen nativo", () => {

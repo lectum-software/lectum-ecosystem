@@ -1,7 +1,7 @@
 "use client";
 
 import { LoaderCircle } from "lucide-react";
-import { type RefObject, useEffect, useState } from "react";
+import { type RefObject, useEffect, useEffectEvent, useReducer, useState } from "react";
 import { useAttachVideoSource, useVideoPlaybackSource } from "@/hooks/video-stream";
 import { isVideoAssetReference } from "@/utils/video-stream";
 import { VideoStartupCover } from "./video-startup-cover";
@@ -42,11 +42,13 @@ export function VerticalVideoMediaStatus({
 }
 
 export const useVerticalVideoStream = ({
+  playbackMode = "visible",
   poster,
   src,
   videoElementVersion = 0,
   videoRef,
 }: {
+  playbackMode?: "visible" | "active" | "standby";
   poster?: string | null;
   src: string;
   videoElementVersion?: number;
@@ -54,19 +56,34 @@ export const useVerticalVideoStream = ({
 }) => {
   const isStreamReference = isVideoAssetReference(src);
   const [activeSource, setActiveSource] = useState<string | null>(null);
-  const playback = useVideoPlaybackSource(src, poster, !isStreamReference || activeSource === src);
+  const playback = useVideoPlaybackSource(
+    src,
+    poster,
+    playbackMode !== "visible" || !isStreamReference || activeSource === src,
+  );
+  const [retryVersion, retry] = useReducer((version: number) => version + 1, 0);
   const adaptivePlaybackFailed = useAttachVideoSource({
     adaptive: playback.isStream,
     source: playback.source,
-    videoElementVersion,
+    videoElementVersion: videoElementVersion + retryVersion,
+    standby: playbackMode === "standby",
     videoRef,
   });
+
+  const retryPrepared = useEffectEvent(() => {
+    if (playback.error) void playback.refetch();
+    if (adaptivePlaybackFailed) retry();
+    else if (videoRef.current?.error) videoRef.current.load();
+  });
+  useEffect(() => {
+    if (playbackMode === "active") retryPrepared();
+  }, [playbackMode]);
 
   useEffect(() => {
     // Reobserva o elemento quando o player expandido troca de container via portal.
     void videoElementVersion;
 
-    if (!isStreamReference) return;
+    if (!isStreamReference || playbackMode !== "visible") return;
 
     const video = videoRef.current;
     if (!video || typeof IntersectionObserver === "undefined") {
@@ -84,7 +101,7 @@ export const useVerticalVideoStream = ({
     );
     observer.observe(video);
     return () => observer.disconnect();
-  }, [isStreamReference, src, videoElementVersion, videoRef]);
+  }, [isStreamReference, src, videoElementVersion, videoRef, playbackMode]);
 
   return { adaptivePlaybackFailed, playback };
 };

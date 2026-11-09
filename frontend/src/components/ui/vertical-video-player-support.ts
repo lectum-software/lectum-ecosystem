@@ -25,6 +25,7 @@ export type VerticalVideoElementProps = Omit<
   VideoDataAttributes;
 
 export type VerticalVideoPlayerProps = {
+  playbackMode?: "visible" | "active" | "standby";
   expandOnClick?: boolean;
   directoryCaptions?: boolean;
   captions?: import("@/components/video-captions/types").VideoCaptions | null;

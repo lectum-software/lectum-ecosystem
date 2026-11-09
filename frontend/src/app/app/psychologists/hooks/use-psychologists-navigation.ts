@@ -4,6 +4,7 @@ import { type FormEvent, type WheelEvent as ReactWheelEvent, useCallback, useEff
 import { documentHasUserAttention } from "@/components/analytics/attention";
 import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import { rememberPsychologistsFeedReturnPosition } from "@/utils/psychologists-feed-return-memory";
+import { preserveDirectoryExperiment } from "../modules/directory-player-pool";
 import { buildFiltersParams } from "../modules/directory-url";
 import type { FilterFeatureKey, PsychologistFilterKey } from "../modules/filter-config";
 import { normalizeFormValues } from "../modules/profile-format";
@@ -204,7 +205,10 @@ export const usePsychologistsNavigation = ({
   const applyFilterValues = useCallback(
     (values: PsychologistsFilterForm) => {
       const normalizedValues = normalizeFormValues(values);
-      const next = buildFiltersParams(normalizedValues, 1);
+      const next = preserveDirectoryExperiment(
+        buildFiltersParams(normalizedValues, 1),
+        window.location.search,
+      );
 
       trackDirectoryFilterSearch(normalizedValues);
 

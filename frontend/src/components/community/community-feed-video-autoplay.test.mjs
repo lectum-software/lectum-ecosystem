@@ -235,7 +235,7 @@ test("feed de psicologos separa volume explicito de tap e protege retomadas", ()
     .split("const handleVideoAreaTap")[0];
   assert.doesNotMatch(areaTap, /playCurrentVideoWithSound/);
   assert.match(areaTap, /playCurrentVideo\(\)/);
-  assert.match(read(`${base}view/components/slide.tsx`), /autoPlay: false/);
+  assert.match(read(`${base}view/components/slide-video-props.ts`), /autoPlay: false/);
   const preference = read("../../lib/video-sound-preference.ts");
   assert.match(preference, /let soundEnabled = false/);
   assert.doesNotMatch(preference, /localStorage|sessionStorage/);
