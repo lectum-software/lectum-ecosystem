@@ -93,4 +93,19 @@ No new dependencies, backend contracts, environment variables or production chan
   source reset and the fallback path.
 - [ ] Retest recorded blank transitions on a physical iPhone after authorized release.
 
-This follow-up remains local; production stays on 0.1.796 until separately released.
+Released via PR #167 as 0.1.797. The subsequent iPhone test still showed a black
+incoming slot and a prolonged static image while captions advanced; not accepted
+as the default directory model.
+
+## Follow-up: incoming posters and callback recovery (0.1.798)
+
+- [x] Shared reel/directory slots subscribe to cached playback thumbnails even
+  before activation, without enabling additional playback requests or players.
+- [x] Forward the directory's optional custom cover as a fallback.
+- [x] Recover a missing frame callback only after visible, unpaused, non-seeking
+  playback advances, then wait two paints; reset progress on seek/source changes.
+- [x] Browser regressions cover missing callbacks, seek rejection, stale callback
+  cancellation and prepared slot posters (27 tests with real-media checks).
+- [ ] Confirm visual behavior on a physical iPhone after authorized publication.
+
+This follow-up is local only. Production remains 0.1.797.

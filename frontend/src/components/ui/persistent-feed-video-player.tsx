@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   createContext,
   type ReactNode,
@@ -30,7 +31,7 @@ export type FeedVideoOverlay = {
 };
 type PlayerProps = Pick<
   VerticalVideoPlayerProps,
-  "className" | "src" | "title" | "videoProps" | "onVideoElementReady" | "onContentClick"
+  "className" | "src" | "poster" | "title" | "videoProps" | "onVideoElementReady" | "onContentClick"
 > & {
   mediaKey: string;
   active: boolean;
@@ -58,7 +59,7 @@ function PersistentMedia({
   const { onVideoElementReady } = props;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const owner = useRef<typeof onVideoElementReady>(undefined);
-  const playback = useVideoPlaybackSource(props.src);
+  const playback = useVideoPlaybackSource(props.src, props.poster);
   const [retryVersion, retryAttachment] = useReducer((version: number) => version + 1, 0);
 
   // Clear the previous source before its events can be attributed to a new reel.
@@ -309,6 +310,8 @@ export function PersistentFeedVideoProvider({
 export function PersistentFeedVideo(props: PlayerProps) {
   const register = useContext(PlayerContext);
   const slot = useRef<HTMLDivElement | null>(null);
+  // Subscribe to prepared metadata without starting requests for every feed item.
+  const playback = useVideoPlaybackSource(props.src, props.poster, false);
   useLayoutEffect(() => {
     if (slot.current) register?.(slot.current, props.active ? props : null);
   });
@@ -321,6 +324,17 @@ export function PersistentFeedVideo(props: PlayerProps) {
 
   return (
     <div className={props.className} ref={slot}>
+      {playback.poster ? (
+        <Image
+          alt=""
+          fill
+          unoptimized
+          sizes="(min-width: 768px) 430px, 100vw"
+          src={playback.poster}
+          className="pointer-events-none object-cover"
+          data-video-slot-cover="true"
+        />
+      ) : null}
       <button
         type="button"
         data-lectum-video-surface="true"

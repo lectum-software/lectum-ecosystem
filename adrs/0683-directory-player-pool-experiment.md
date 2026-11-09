@@ -91,3 +91,22 @@ fall back to active playback plus two animation frames, not readiness alone.
 
 No layout, source-loading, buffer, API or deployment changes. A real iPhone retest
 is required before claiming the recorded flashes are resolved.
+
+## Incoming slot posters and recovery (0.1.798)
+
+The 0.1.797 iPhone recording still showed a black incoming slot during a scroll
+and a static image while captions advanced. Sharing the media engine alone did
+not establish equivalent presentation on both surfaces.
+
+Keep a thumbnail in each shared slot, using the disabled playback-query observer
+to reuse metadata fetched by active/standby playback. This adds no media players
+or metadata requests for distant slides. The directory forwards its custom poster
+as a fallback instead of owning a separate poster implementation.
+
+A fresh frame callback remains the preferred cover-release signal. If the browser
+does not deliver it, visible unpaused playback must advance at least 120 ms without
+a seek before a two-paint fallback releases the cover. Readiness, elapsed wall time,
+and seeks alone never release it. Cleanup invalidates both callback paths.
+This fallback is evidence of playback progress, not proof of physical presentation;
+the new Safari recording remains the final acceptance gate. No publication in this
+change, no API/DB contract or new dependency.
