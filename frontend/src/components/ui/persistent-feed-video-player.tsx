@@ -160,6 +160,8 @@ function PersistentMedia({
       />
       <VideoStartupCover
         key={playback.source}
+        active={Boolean(slot)}
+        version={revision}
         poster={playback.poster}
         src={playback.source}
         videoRef={videoRef}

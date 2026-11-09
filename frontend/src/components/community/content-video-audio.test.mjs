@@ -420,11 +420,18 @@ describe("persistent reel media ownership", {
     assert.equal(await page.evaluate(() => trackingDetached[0]), "/video");
   });
 
-  test("startup cover waits for current-frame data and resets on emptied", async () => {
+  test("startup cover waits for a presented frame and rejects stale promotion callbacks", async () => {
     await page.evaluate(() => {
       const React = require("react");
       const { VideoStartupCover } = require("@/components/ui/video-startup-cover");
-      const video = document.querySelector("video");
+      const video = document.createElement("video");
+      window.coverVideo = video;
+      window.coverEvent = (type) => video.dispatchEvent(new Event(type));
+      video.requestVideoFrameCallback = (callback) => {
+        window.presentFrame = callback;
+        return 1;
+      };
+      video.cancelVideoFrameCallback = () => {};
       window.frameReady = 1;
       Object.defineProperty(video, "readyState", {
         configurable: true,
@@ -433,33 +440,69 @@ describe("persistent reel media ownership", {
       const host = document.createElement("div");
       document.body.appendChild(host);
       const root = require("react-dom/client").createRoot(host);
-      require("react-dom").flushSync(() =>
-        root.render(
-          React.createElement(VideoStartupCover, {
-            poster: "/incoming.jpg",
-            src: "/video",
-            videoRef: { current: video },
-          }),
-        ),
-      );
+      const videoRef = { current: video };
+      window.renderCover = (active = true, version = 0) =>
+        require("react-dom").flushSync(() =>
+          root.render(
+            React.createElement(VideoStartupCover, {
+              poster: "/incoming.jpg",
+              src: "/video",
+              videoRef,
+              active,
+              version,
+            }),
+          ),
+        );
+      renderCover();
     });
     assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
-    await page.evaluate(() => mediaEvent("loadedmetadata"));
+    await page.evaluate(() => coverEvent("loadedmetadata"));
     assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
     await page.evaluate(() => {
       window.frameReady = 2;
-      mediaEvent("loadeddata");
+      coverEvent("loadeddata");
     });
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => require("react-dom").flushSync(() => presentFrame()));
     await page.waitForFunction(() => !document.querySelector("[data-video-startup-cover]"));
     await page.evaluate(() => {
+      renderCover(false, 0);
+      coverEvent("loadeddata");
+      renderCover(true, 1);
+      window.oldFrame = presentFrame;
+      renderCover(false, 0);
+      renderCover(true, 2);
+      require("react-dom").flushSync(() => oldFrame());
+    });
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => require("react-dom").flushSync(() => presentFrame()));
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 0);
+    await page.evaluate(() => {
       window.frameReady = 0;
-      mediaEvent("emptied");
+      coverEvent("emptied");
     });
     assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
     assert.equal(
       await page.locator("[data-video-startup-cover]").getAttribute("data-poster"),
       "/incoming.jpg",
     );
+    await page.evaluate(() => {
+      coverVideo.requestVideoFrameCallback = undefined;
+      window.frameReady = 4;
+      window.coverPaused = true;
+      Object.defineProperty(coverVideo, "paused", { get: () => coverPaused });
+      renderCover(true, 3);
+      coverEvent("loadeddata");
+    });
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => {
+      window.coverPaused = false;
+      coverEvent("playing");
+    });
+    await page.waitForFunction(() => !document.querySelector("[data-video-startup-cover]"));
   });
 
   test("one standby starts only after playing and is promoted without loading again", async () => {
