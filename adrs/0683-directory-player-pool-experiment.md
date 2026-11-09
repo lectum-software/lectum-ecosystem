@@ -42,5 +42,35 @@ Deploy frontend only, with `directoryPlayer=pooled` required. Default remains th
 individual-player model. Preserve both test flags when applying directory filters.
 No claims of iPhone performance improvement before comparing measurements.
 
+## iPhone follow-up
+
+The 0.1.794 report confirmed two reused media elements, but the recording showed
+black flashes. Warm first-observed-frame median was 672 ms versus 408.5 ms in the
+previous report; separate sessions do not establish causation. The directory
+layout effect reinserted hosts on every render, unlike the reels' change-scoped
+placement. Placement is now idempotent: append only when the actual parent differs.
+Keep reconciliation on each commit to handle callback-ref slot replacements, but
+never mutate an already correct host location. Preserve the existing standby,
+analytics and controls behavior. Physical iPhone retest is still required before
+claiming this resolves the flashes or enabling the experiment by default.
+
 Baseline frontend is 0.1.793, deployment dpl_5sK9Tz7qWgn84VnrVi12aNZ5wvSH.
 Rollback by promoting that frontend deployment; no data rollback is required.
+
+## Shared reels engine (0.1.796)
+
+The user requested reuse of the working reels implementation, not another pool
+with similar behavior. Extract the reels provider and player into
+`components/ui/persistent-feed-video-player.tsx`; keep the community entry point
+as compatibility re-exports. Both surfaces now consume this implementation and
+the same source allocation policy. The shared placement effect is change-scoped
+and parent-identity guarded, superseding the directory-only reconciliation above.
+
+The directory adapter owns only page integration: active selection, controls,
+caption preference, progress and analytics. It hands off the active media element
+and requests playback on readiness; standby media remain paused and muted.
+An overlay context exposes media/captions without duplicating the media lifecycle.
+
+Keep the opt-in query flag and the individual-player default. No deployment is
+part of this change. Shared code does not establish equal iPhone performance;
+a physical-device retest remains necessary.
