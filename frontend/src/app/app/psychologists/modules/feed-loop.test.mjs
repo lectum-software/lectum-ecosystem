@@ -150,3 +150,4 @@ test("slide de psicologos remove prefixo profissional do nome exibido", () => {
   assert.match(profileFormatSource, /normalizeProfessionalDisplayName\(name\)/);
   assert.match(slideModelSource, /const slideNameParts = splitNameForBadge\(psychologist\.name\)/);
 });
+import "./directory-player-pool.test.mjs";

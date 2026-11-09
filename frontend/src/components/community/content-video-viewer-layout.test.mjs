@@ -337,8 +337,8 @@ test("reels upvote shows only its count with accessible semantics and no tooltip
 });
 
 test("expanded content fills its viewport using the directory cover fit", () => {
-  const directory = read("../../app/app/psychologists/view/components/slide.tsx");
-  assert.match(directory, /fit="cover"/);
+  const directory = read("../../app/app/psychologists/view/components/slide-video-props.ts");
+  assert.match(directory, /fit: "cover"/);
   const player = read("./content-video-player.tsx");
   assert.match(player, /h-full w-full bg-media-background object-cover/);
   assert.doesNotMatch(player, /object-contain/);

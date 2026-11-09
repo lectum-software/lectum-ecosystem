@@ -58,6 +58,7 @@ export const VerticalVideoPlayer = ({
   persistentControlsLayout = "stacked",
   persistentControlsVisibility = "auto",
   poster,
+  playbackMode = "visible",
   preload = "metadata",
   src,
   style,
@@ -90,6 +91,7 @@ export const VerticalVideoPlayer = ({
       videoRef,
     });
   const { adaptivePlaybackFailed, playback } = useVerticalVideoStream({
+    playbackMode,
     poster,
     src,
     videoElementVersion,

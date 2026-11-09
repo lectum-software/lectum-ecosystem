@@ -744,3 +744,4 @@ Formato recomendado:
 - [ADR-0680 — Legendas experimentais por video](0680-experimental-video-captions.md)
 - [ADR-0681 — Busca por nome, atualizacao do cartao e saida de comunidades](0681-discovery-card-refresh.md)
 - [ADR-0682 — Capa de inicio e reserva limitada do proximo video](0682-video-startup-standby.md)
+- [ADR-0683 — Experimento de dois players no diretorio](0683-directory-player-pool-experiment.md)

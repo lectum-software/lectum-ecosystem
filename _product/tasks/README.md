@@ -779,6 +779,7 @@ ou cortesia manual.
 | 316 | [TASK-316 - Assinatura, videos e convites de cadastro](TASK-316-subscription-media-and-signup.md) | Done | 315 |
 | 317 | [TASK-317 - Download fiscal, busca CRP e pergunta em video](TASK-317-invoice-crp-and-share-card.md) | Done | 316 |
 | 318 | [TASK-318 - Convites de avaliacao](TASK-318-evaluation-invitation-ui.md) | Done | 317 |
+| 319 | [TASK-319 - Pool de players no diretorio](TASK-319-directory-player-pool.md) | In Progress | 318 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -2828,3 +2829,5 @@ Refinamento WhatsApp aprovado em 11/10 (ADR-0599): ordem votos, comentario, What
 Em consolidacao para publicacao autorizada: [TASK-313 - Contato, notificacoes e publicacao](TASK-313-community-interaction-refinements.md), junto das alteracoes locais de SendNF e upgrade. SEO de outro chat excluido. Migracao e ledger aprovados em PostgreSQL local isolado; gates completos e rollout ainda pendentes.
 
 Refinamento local de 05/11: [TASK-318 - Convites de avaliacao](TASK-318-evaluation-invitation-ui.md).
+
+Experimento local de 09/11: [TASK-319 - Pool de players no diretorio](TASK-319-directory-player-pool.md).

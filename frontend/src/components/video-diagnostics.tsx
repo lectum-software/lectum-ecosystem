@@ -15,11 +15,16 @@ const clientSnapshot = () => {
 
 export function VideoDiagnostics() {
   const session = useRef<ReturnType<typeof startVideoDiagnostics> | null>(null);
+  const requestedDirectoryPlayer = useRef("individual");
   const enabled = useSyncExternalStore(subscribe, clientSnapshot, serverSnapshot);
   const [stopped, setStopped] = useState(false);
 
   useEffect(() => {
     if (!enabled) return;
+    requestedDirectoryPlayer.current =
+      new URLSearchParams(window.location.search).get("directoryPlayer") === "pooled"
+        ? "pooled"
+        : "individual";
     session.current = startVideoDiagnostics();
     return () => {
       session.current?.stop();
@@ -31,7 +36,22 @@ export function VideoDiagnostics() {
   const exportReport = async () => {
     if (!session.current) return;
     const file = new File(
-      [JSON.stringify({ version: packageInfo.version, ...session.current.report() }, null, 2)],
+      [
+        JSON.stringify(
+          {
+            version: packageInfo.version,
+            directoryPlayerRequested: requestedDirectoryPlayer.current,
+            directoryPlayerAtExport: document.querySelector(
+              '[data-directory-player-model="pooled"]',
+            )
+              ? "pooled"
+              : "individual",
+            ...session.current.report(),
+          },
+          null,
+          2,
+        ),
+      ],
       "lectum-video-test.json",
       { type: "application/json" },
     );

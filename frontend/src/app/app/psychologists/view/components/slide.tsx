@@ -4,9 +4,7 @@ import { Play, VolumeX, X } from "lucide-react";
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import type { DirectoryPsychologist } from "@/api/generator/types/directory";
-import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
-import { setVideoSoundEnabledByUser } from "@/lib/video-sound-preference";
 import { isPublicMediaUrl } from "@/utils/media";
 import {
   MOBILE_BOTTOM_NAV_OFFSET,
@@ -15,9 +13,11 @@ import {
 } from "../../modules/onboarding";
 import { getInitials } from "../../modules/profile-format";
 import type { PsychologistsViewModel } from "../types";
+import { DirectorySlideVideo } from "./directory-player-pool";
 import { PsychologistSlideDetails } from "./slide-details";
 import { PsychologistSlideHeader } from "./slide-header";
 import { buildPsychologistSlideView } from "./slide-model";
+import { buildSlideVideoProps } from "./slide-video-props";
 
 export const PsychologistSlide = ({
   index,
@@ -36,22 +36,13 @@ export const PsychologistSlide = ({
     metrics,
     progressFillRef,
     progressTrackRef,
-    setIsVideoMuted,
-    setIsVideoPaused,
-    setIsVideoPlaybackFailed,
-    setVideoPlaybackRate,
-    setVideoVolume,
     shouldNudgeSwipeCard,
     videoProgress,
   } = model.setup;
   const { shouldRenderGlobalControls } = model.derived;
-  const { canSwipeBetweenPsychologists } = model.directory;
 
   const { stopInteractionPropagation } = model.navigation;
-  const { advanceToNextPsychologistVideo, handleImmersiveExit, revealUiFromImmersiveVideo } =
-    model.feed;
-
-  const { flushFeedVideoAnalytics, syncActiveVideoProgress } = model.analytics;
+  const { handleImmersiveExit } = model.feed;
 
   const {
     handleLongPressEnd,
@@ -70,7 +61,6 @@ export const PsychologistSlide = ({
   const slide = buildPsychologistSlideView({ index, model, psychologist });
   const {
     isActiveSlide,
-    slideVideoSrc,
     slidePosterSrc,
     slideShouldShowVideo,
     slideShouldHideChrome,
@@ -113,94 +103,7 @@ export const PsychologistSlide = ({
             <PsychologistSlideHeader model={model} slide={slide} />
           ) : null}
           {slideShouldShowVideo ? (
-            <VerticalVideoPlayer
-              directoryCaptions
-              className="h-full w-full rounded-none border-0 shadow-none"
-              controls={slideUsesNativeVideoControls}
-              controlsVariant={slideUsesNativeVideoControls ? "persistent" : "native"}
-              persistentControlsVisibility="always"
-              onSoundEnabledChange={setVideoSoundEnabledByUser}
-              fit="cover"
-              onContentClick={slideUsesNativeVideoControls ? revealUiFromImmersiveVideo : undefined}
-              poster={slidePosterSrc || undefined}
-              preload={
-                isActiveSlide || index === model.setup.activePsychologistIndex + 1
-                  ? "auto"
-                  : "metadata"
-              }
-              src={slideVideoSrc ?? ""}
-              title={`Vídeo de apresentação de ${slideDisplayName}`}
-              videoClassName="h-full w-full bg-media-background object-cover"
-              videoProps={{
-                "data-psychologist-id": psychologist.id,
-                "data-psychologists-background": "true",
-                "data-psychologists-slide-index": String(index),
-                autoPlay: false,
-                controlsList: "nodownload",
-                loop: !canSwipeBetweenPsychologists,
-                muted: isVideoMuted,
-                onDurationChange: (event) => {
-                  if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
-                },
-                onEnded: (event) => {
-                  if (!isActiveSlide) return;
-
-                  setIsVideoPaused(false);
-                  syncActiveVideoProgress(event.currentTarget);
-                  flushFeedVideoAnalytics(event.currentTarget, {
-                    completed: true,
-                    force: true,
-                  });
-                  advanceToNextPsychologistVideo();
-                },
-                onError: () => {
-                  if (isActiveSlide) setIsVideoPlaybackFailed(true);
-                },
-                onLoadedData: () => {
-                  if (!isActiveSlide) return;
-
-                  setIsVideoPlaybackFailed(false);
-                  setIsVideoPaused(false);
-                  syncActiveVideoProgress();
-                },
-                onLoadedMetadata: (event) => {
-                  if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
-                },
-                onPause: (event) => {
-                  if (!isActiveSlide) return;
-
-                  setIsVideoPaused(true);
-                  syncActiveVideoProgress();
-                  flushFeedVideoAnalytics(event.currentTarget, {
-                    force: true,
-                  });
-                },
-                onPlay: () => {
-                  if (!isActiveSlide) return;
-
-                  setIsVideoPaused(false);
-                  syncActiveVideoProgress();
-                },
-                onRateChange: (event) => {
-                  if (!isActiveSlide) return;
-
-                  setVideoPlaybackRate(event.currentTarget.playbackRate);
-                },
-                onTimeUpdate: (event) => {
-                  if (!isActiveSlide) return;
-
-                  syncActiveVideoProgress(event.currentTarget);
-                  flushFeedVideoAnalytics(event.currentTarget);
-                },
-                onVolumeChange: (event) => {
-                  if (!isActiveSlide) return;
-
-                  setIsVideoMuted(event.currentTarget.muted);
-                  setVideoVolume(event.currentTarget.volume);
-                },
-                tabIndex: slideUsesNativeVideoControls ? 0 : -1,
-              }}
-            />
+            <DirectorySlideVideo index={index} {...buildSlideVideoProps(model, slide)} />
           ) : slidePosterSrc ? (
             <Image
               alt={slideDisplayName}
