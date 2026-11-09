@@ -8,6 +8,7 @@ import {
 } from "@/components/analytics/attention";
 import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import { getCurrentInteractionPath } from "@/utils/analytics-path";
+import { useDirectoryPlayerPoolEnabled } from "../modules/directory-player-mode";
 import { resetVideoElementToStart } from "../modules/directory-url";
 import {
   clampNumber,
@@ -35,6 +36,7 @@ export const usePsychologistsVideoAnalytics = ({
   onboarding: PsychologistsOnboarding;
 }) => {
   const setup = usePsychologistsSetupContext();
+  const pooledPlayback = useDirectoryPlayerPoolEnabled();
   const {
     accountTipsUserId,
     actionAnchorRef,
@@ -393,13 +395,14 @@ export const usePsychologistsVideoAnalytics = ({
       ? DEFAULT_VIDEO_PLAYBACK_RATE
       : videoPlaybackRate;
     const nextVolume = clampNumber(videoVolume, 0, 1);
-    let activeVideo: HTMLVideoElement | null = null;
+    let activeVideo: HTMLVideoElement | null = pooledPlayback ? backgroundVideoRef.current : null;
 
     const videos = document.querySelectorAll<HTMLVideoElement>(
       PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR,
     );
 
-    for (const video of videos) {
+    // The shared reels engine owns pause/reset/play for pooled elements.
+    for (const video of pooledPlayback ? [] : videos) {
       const isActiveVideo =
         video.dataset.psychologistsSlideIndex === String(activePsychologistIndex);
       video.muted = isVideoMuted;
@@ -440,6 +443,8 @@ export const usePsychologistsVideoAnalytics = ({
 
     lastActiveVideoResetKeyRef.current = activeVideoResetKey;
 
+    if (pooledPlayback) return;
+
     if (!activeVideo || !activeVideoSource || isVideoPaused) {
       activeVideo?.pause();
       return;
@@ -450,6 +455,7 @@ export const usePsychologistsVideoAnalytics = ({
     });
   }, [
     activeVideoResetKey,
+    pooledPlayback,
     activeVideoSource,
     activePsychologistIndex,
     applyVideoProgressRatio,

@@ -14,11 +14,15 @@ export function registerStartupCoverTests(getPage) {
       window.coverVideo = video;
       window.coverEvent = (type) => video.dispatchEvent(new Event(type));
       video.requestVideoFrameCallback = (callback) => {
-        window.presentFrame = callback;
+        window.presentFrame = (mediaTime = coverTime) => callback(0, { mediaTime });
         return 1;
       };
       video.cancelVideoFrameCallback = () => {};
       window.frameReady = 1;
+      window.coverPaused = true;
+      window.coverTime = 0;
+      Object.defineProperty(video, "paused", { configurable: true, get: () => coverPaused });
+      Object.defineProperty(video, "currentTime", { configurable: true, get: () => coverTime });
       Object.defineProperty(video, "readyState", {
         configurable: true,
         get: () => window.frameReady,
@@ -50,6 +54,23 @@ export function registerStartupCoverTests(getPage) {
     });
     assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
     await page.evaluate(() => require("react-dom").flushSync(() => presentFrame()));
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => {
+      window.coverPaused = false;
+      coverEvent("playing");
+      require("react-dom").flushSync(() => presentFrame());
+    });
+    // The prepared frame at time zero is still not foreground playback.
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => {
+      window.coverTime = 0.04;
+      presentFrame(0);
+    });
+    // A queued standby callback stays stale even when currentTime has advanced.
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => {
+      presentFrame();
+    });
     await page.waitForFunction(() => !document.querySelector("[data-video-startup-cover]"));
     await page.evaluate(() => {
       renderCover(false, 0);
@@ -61,8 +82,11 @@ export function registerStartupCoverTests(getPage) {
       require("react-dom").flushSync(() => oldFrame());
     });
     assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
-    await page.evaluate(() => require("react-dom").flushSync(() => presentFrame()));
-    assert.equal(await page.locator("[data-video-startup-cover]").count(), 0);
+    await page.evaluate(() => {
+      window.coverTime = 0.08;
+      presentFrame();
+    });
+    await page.waitForFunction(() => !document.querySelector("[data-video-startup-cover]"));
     await page.evaluate(() => {
       window.frameReady = 0;
       coverEvent("emptied");

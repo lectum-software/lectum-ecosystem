@@ -5,9 +5,9 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useRef,
-  useSyncExternalStore,
 } from "react";
 import {
   PersistentFeedVideo,
@@ -16,16 +16,13 @@ import {
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import type { VerticalVideoPlayerProps } from "@/components/ui/vertical-video-player-support";
 import { playVideoWithActiveDocument } from "@/lib/video-playback";
+import { useDirectoryPlayerPoolEnabled } from "../../modules/directory-player-mode";
 import type { PsychologistFeedSlide } from "../../modules/feed-loop";
 import type { PsychologistsViewModel } from "../types";
 import { DirectoryPlayerOverlay } from "./directory-player-overlay";
 import { buildPsychologistSlideView } from "./slide-model";
 
 const Experiment = createContext(false);
-const subscribe = () => () => {};
-const serverSnapshot = () => false;
-const clientSnapshot = () =>
-  new URLSearchParams(window.location.search).get("directoryPlayer") === "pooled";
 
 export function DirectoryPlayerExperiment({
   children,
@@ -36,7 +33,7 @@ export function DirectoryPlayerExperiment({
   model: PsychologistsViewModel;
   slides: PsychologistFeedSlide[];
 }) {
-  const enabled = useSyncExternalStore(subscribe, clientSnapshot, serverSnapshot);
+  const enabled = useDirectoryPlayerPoolEnabled();
   const sourceAt = (index: number) => {
     const item = slides[index];
     if (!item) return undefined;
@@ -116,6 +113,25 @@ function SharedDirectoryVideo({
     },
     [index, play],
   );
+  const { isVideoMuted, videoVolume, videoPlaybackRate, isVideoPaused, isVideoProgressSeeking } =
+    model.setup;
+  useEffect(() => {
+    const video = owned.current;
+    if (!active || !video) return;
+    video.muted = isVideoMuted;
+    video.volume = videoVolume;
+    video.playbackRate = videoPlaybackRate;
+    if (isVideoPaused || isVideoProgressSeeking) video.pause();
+    else void play();
+  }, [
+    active,
+    isVideoMuted,
+    videoVolume,
+    videoPlaybackRate,
+    isVideoPaused,
+    isVideoProgressSeeking,
+    play,
+  ]);
   return (
     <div className="relative h-full w-full" data-directory-player-slot={index}>
       <PersistentFeedVideo

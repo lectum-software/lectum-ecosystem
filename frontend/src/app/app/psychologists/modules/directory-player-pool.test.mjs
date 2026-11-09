@@ -48,6 +48,26 @@ test("directory and reels use the same provider and media lifecycle", () => {
   assert.match(shared, /owner\.current\?\.\(null\)/);
 });
 
+test("legacy directory playback does not reset or start pooled elements", () => {
+  const analytics = readFileSync(
+    new URL("../hooks/use-psychologists-video-analytics.ts", import.meta.url),
+    "utf8",
+  );
+  const adapter = readFileSync(
+    new URL("../view/components/directory-player-pool.tsx", import.meta.url),
+    "utf8",
+  );
+  for (const source of [analytics, adapter])
+    assert.match(source, /useDirectoryPlayerPoolEnabled\(\)/);
+  assert.match(analytics, /for \(const video of pooledPlayback \? \[\] : videos\)/);
+  assert.match(
+    analytics,
+    /if \(pooledPlayback\) return;[\s\S]*playVideoWithActiveDocument\(activeVideo\)/,
+  );
+  assert.match(adapter, /if \(!active \|\| !video\) return;/);
+  assert.match(adapter, /if \(isVideoPaused \|\| isVideoProgressSeeking\) video\.pause\(\)/);
+});
+
 test("shared reels policy prepares only after active playback", () => {
   assert.deepEqual(selectFeedVideoSources(["", ""], "a", "b", false), ["a", ""]);
   assert.deepEqual(selectFeedVideoSources(["a", ""], "a", "b", true), ["a", "b"]);
