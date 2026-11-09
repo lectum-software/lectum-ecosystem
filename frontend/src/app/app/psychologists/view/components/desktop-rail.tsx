@@ -8,7 +8,6 @@ import {
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { TestimonialsButton } from "@/components/reviews/testimonials-sheet";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { DirectoryCaptionButton } from "@/components/video-captions/directory-button";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { formatDisplayName, formatProfileTitle, getInitials } from "../../modules/profile-format";
@@ -280,12 +279,6 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
             <span className="text-[10px] font-bold text-muted">Favoritar</span>
           </div>
 
-          <DirectoryCaptionButton
-            reference={desktopActionPsychologist.video_url}
-            muted={model.setup.isVideoMuted}
-            disabled={isDesktopActionRailHidden}
-            desktop
-          />
           <TestimonialsButton
             desktop
             psychologistId={desktopActionPsychologist.id}

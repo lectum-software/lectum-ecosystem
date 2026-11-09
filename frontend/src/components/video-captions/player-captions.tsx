@@ -27,25 +27,14 @@ export function PlayerCaptions({
   hideToggle?: boolean;
 }) {
   const [localEnabled, setEnabled] = useState(true);
-  const [muted, setMuted] = useState(true);
   const preference = useDirectoryCaptionPreference();
-  const enabled = directory ? (preference ?? muted) : localEnabled;
+  const enabled = directory ? (preference ?? true) : localEnabled;
   const [text, setText] = useState("");
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
   const [position, setPosition] = useState({ bottom: 64, right: 12, top: 12, iconSize: 26 });
   const anchorRef = useRef<HTMLSpanElement>(null);
   const trackRef = useRef<{ video: HTMLVideoElement; track: TextTrack } | null>(null);
   const fullscreenVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    void version;
-    const video = videoRef.current;
-    if (!directory || !video) return;
-    const update = () => setMuted(video.muted || video.volume === 0);
-    update();
-    video.addEventListener("volumechange", update);
-    return () => video.removeEventListener("volumechange", update);
-  }, [directory, version, videoRef]);
 
   useEffect(() => {
     void version;
