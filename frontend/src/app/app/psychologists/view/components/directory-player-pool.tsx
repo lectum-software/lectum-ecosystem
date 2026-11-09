@@ -87,10 +87,14 @@ function SharedDirectoryVideo({
     videoRef: owned,
     active,
     onMuted: model.setup.setIsVideoMuted,
+    commandsRef: model.setup.feedVideoCommandsRef,
     canPlay: () =>
       latest.current.setup.activePsychologistIndex === index &&
-      !latest.current.setup.isVideoPaused &&
-      !latest.current.setup.isVideoProgressSeeking,
+      !latest.current.setup.isFiltersOpen &&
+      !latest.current.setup.isFilterSheetOpen &&
+      (latest.current.setup.metrics.isDesktopLayout ||
+        !latest.current.setup.isSearchModeActiveRef.current) &&
+      !latest.current.setup.isVideoProgressSeekingRef.current,
   });
   const trackVideo = useCallback(
     (video: HTMLVideoElement | null) => {
@@ -122,25 +126,13 @@ function SharedDirectoryVideo({
     setDuration: syncProgress,
     setTime: syncProgress,
   });
-  const { isVideoMuted, videoVolume, videoPlaybackRate, isVideoPaused, isVideoProgressSeeking } =
-    model.setup;
+  const { videoVolume, videoPlaybackRate } = model.setup;
   useEffect(() => {
     const video = owned.current;
     if (!active || !video) return;
-    video.muted = isVideoMuted;
     video.volume = videoVolume;
     video.playbackRate = videoPlaybackRate;
-    if (isVideoPaused || isVideoProgressSeeking) video.pause();
-    else void play();
-  }, [
-    active,
-    isVideoMuted,
-    videoVolume,
-    videoPlaybackRate,
-    isVideoPaused,
-    isVideoProgressSeeking,
-    play,
-  ]);
+  }, [active, videoVolume, videoPlaybackRate]);
   return (
     <div className="relative h-full w-full" data-directory-player-slot={index}>
       <PersistentFeedVideo
@@ -153,6 +145,18 @@ function SharedDirectoryVideo({
         surface="directory"
         videoProps={{
           ...props.videoProps,
+          onLoadedData: (event) => {
+            props.videoProps?.onLoadedData?.(event);
+            if (active) model.setup.setIsVideoPaused(event.currentTarget.paused);
+          },
+          onPlay: (event) => {
+            if (
+              owned.current !== event.currentTarget ||
+              !model.setup.feedVideoCommandsRef.current?.canPlay()
+            )
+              event.currentTarget.pause();
+            else props.videoProps?.onPlay?.(event);
+          },
           onLoadedMetadata: (event) => {
             props.videoProps?.onLoadedMetadata?.(event);
             void play();

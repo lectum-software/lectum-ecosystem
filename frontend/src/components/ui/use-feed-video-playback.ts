@@ -8,27 +8,37 @@ import {
   subscribeVideoSoundPreference,
 } from "@/lib/video-sound-preference";
 
+export type FeedVideoCommands = {
+  play: () => Promise<void>;
+  pause: () => void;
+  canPlay: () => boolean;
+};
+
 /** One activation/audio policy for reels and presentation videos. */
 export function useFeedVideoPlayback({
   videoRef,
   active,
   canPlay,
   onMuted,
+  commandsRef,
 }: {
   videoRef: RefObject<HTMLVideoElement | null>;
   active: boolean;
   canPlay: () => boolean;
   onMuted: (muted: boolean) => void;
+  commandsRef?: RefObject<FeedVideoCommands | null>;
 }) {
   const latest = useRef({ active, canPlay, onMuted });
   const attemptRef = useRef(0);
   const blockedRevision = useRef<number | null>(null);
+  const manuallyPaused = useRef(false);
   useLayoutEffect(() => {
     latest.current = { active, canPlay, onMuted };
   });
   const pause = useCallback(() => videoRef.current?.pause(), [videoRef]);
   useLayoutEffect(() => {
     blockedRevision.current = null;
+    manuallyPaused.current = false;
     if (!active) pause();
     return () => {
       attemptRef.current += 1;
@@ -38,7 +48,10 @@ export function useFeedVideoPlayback({
   const play = useCallback(async () => {
     const video = videoRef.current;
     const eligible = () =>
-      latest.current.active && latest.current.canPlay() && videoRef.current === video;
+      latest.current.active &&
+      !manuallyPaused.current &&
+      latest.current.canPlay() &&
+      videoRef.current === video;
     if (!video || !eligible()) return;
     const attempt = ++attemptRef.current;
     const revision = getVideoSoundPreferenceRevision();
@@ -63,6 +76,25 @@ export function useFeedVideoPlayback({
       if (!eligible() && videoRef.current === video) video.pause();
     }
   }, [videoRef]);
+  useLayoutEffect(() => {
+    if (!active || !commandsRef) return;
+    const commands: FeedVideoCommands = {
+      canPlay: () => latest.current.active && !manuallyPaused.current && latest.current.canPlay(),
+      play: () => {
+        manuallyPaused.current = false;
+        return play();
+      },
+      pause: () => {
+        manuallyPaused.current = true;
+        attemptRef.current += 1;
+        pause();
+      },
+    };
+    commandsRef.current = commands;
+    return () => {
+      if (commandsRef.current === commands) commandsRef.current = null;
+    };
+  }, [active, commandsRef, pause, play]);
   useEffect(
     () =>
       subscribeVideoSoundPreference((enabled) => {

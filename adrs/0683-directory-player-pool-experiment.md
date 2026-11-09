@@ -148,3 +148,28 @@ buffer manager. Reels discussion/composer blocking remains its eligibility input
 Rollout remains opt-in and local until publication is authorized. Browser tests
 must cover both surfaces; physical Safari video is still the visual acceptance
 gate. Source sharing does not imply equal cold-start latency for different assets.
+
+## Distinct controls must use the same playback commands
+
+The user's immersive directory controls are intentional product differences, not
+a reason for an independent playback policy. For 0.1.801 the shared hook owns
+manual pause intent and exposes active-owner play/pause commands. Readiness and
+sound preference changes cannot clear that intent; explicit resume can. The
+directory's media event state remains observational, not a playback eligibility
+input. Old individual-mode commands remain gated as a rollback path.
+
+Mobile search and open filters are eligibility inputs, just as reading panels and
+composers are for reels. Search exit delegates to shared explicit resume only when
+the video was playing before search, preserving manual pause.
+
+Programmatic directory advancement delegates to the same native scroll controller
+as reels, including ended and arrow actions. Return restoration supplies a selected
+index rather than applying a second scroll algorithm in pooled mode. Full slide
+components are limited to the active item and its neighbors, with dimensionally
+equivalent shells preserving the scroll extent. Filters, circular pagination,
+captions and analytics retain their domain responsibilities.
+
+No provider, database or production setting changes are required. Validate manual
+versus technical pause, seek, immersive exit, automatic advancement, forward/back
+navigation and existing reels behavior before publication. Code reuse does not
+replace physical Safari acceptance and is not a promise of equal media latency.

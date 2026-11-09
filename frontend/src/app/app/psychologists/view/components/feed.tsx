@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useCallback } from "react";
+import { type ReactNode, useCallback, useLayoutEffect } from "react";
 import { useFeedVideoScroll } from "@/components/ui/use-feed-video-scroll";
 import { cn } from "@/lib/utils";
 import { useDirectoryPlayerPoolEnabled } from "../../modules/directory-player-mode";
@@ -26,14 +26,23 @@ export const PsychologistsFeed = ({ model }: { model: PsychologistsViewModel }) 
   return (
     <DirectoryPlayerExperiment model={model} slides={slides}>
       <FeedContainer pooled={pooled} model={model} count={slides.length}>
-        {slides.map(({ index, psychologist }) => (
-          <PsychologistSlide
-            index={index}
-            key={`${psychologist.id}:${index}`}
-            model={model}
-            psychologist={psychologist}
-          />
-        ))}
+        {slides.map(({ index, psychologist }) =>
+          pooled && Math.abs(index - model.setup.activePsychologistIndex) > 1 ? (
+            <section
+              key={`${psychologist.id}:${index}`}
+              data-psychologists-slide-index={index}
+              aria-hidden
+              className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden lg:h-[var(--psychologists-desktop-slide-height)] lg:overflow-visible"
+            />
+          ) : (
+            <PsychologistSlide
+              index={index}
+              key={`${psychologist.id}:${index}`}
+              model={model}
+              psychologist={psychologist}
+            />
+          ),
+        )}
       </FeedContainer>
     </DirectoryPlayerExperiment>
   );
@@ -94,7 +103,11 @@ function SharedFeedContainer({
     setActivePsychologistIndex,
     feedContainerRef: containerRef,
   } = setup;
-  const scroll = useFeedVideoScroll({
+  const {
+    feedRef: sharedRef,
+    onScroll,
+    scrollTo,
+  } = useFeedVideoScroll({
     index: activePsychologistIndex,
     count,
     locked: isSearchFocused || isFiltersOpen || isVideoProgressSeeking,
@@ -112,7 +125,14 @@ function SharedFeedContainer({
       setActivePsychologistIndex(index);
     },
   });
-  const sharedRef = scroll.feedRef;
+  const scrollRef = setup.feedVideoScrollRef;
+  useLayoutEffect(() => {
+    const commands = { scrollTo };
+    scrollRef.current = commands;
+    return () => {
+      if (scrollRef.current === commands) scrollRef.current = null;
+    };
+  });
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
       containerRef.current = node;
@@ -124,7 +144,7 @@ function SharedFeedContainer({
     <div
       ref={ref}
       className="psychologists-video-feed h-full w-full snap-y snap-mandatory overflow-y-auto overscroll-contain lg:h-[100dvh]"
-      onScroll={scroll.onScroll}
+      onScroll={onScroll}
       onPointerDownCapture={onboarding.registerSwipeHintInteraction}
       onWheelCapture={onboarding.registerSwipeHintInteraction}
     >

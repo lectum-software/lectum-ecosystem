@@ -21,6 +21,7 @@ import {
   resolvePsychologistsFeedReturnIndex,
   shouldRestorePsychologistsFeedReturnSnapshot,
 } from "@/utils/psychologists-feed-return-memory";
+import { useDirectoryPlayerPoolEnabled } from "../modules/directory-player-mode";
 import {
   clampPsychologistFeedSlideIndex,
   getPsychologistsFeedCycleCountForIndex,
@@ -46,9 +47,12 @@ export const usePsychologistsFeedNavigation = ({
   navigation: PsychologistsNavigation;
 }) => {
   const setup = usePsychologistsSetupContext();
+  const pooledPlayback = useDirectoryPlayerPoolEnabled();
   const {
     activePsychologistIndex,
     backgroundVideoRef,
+    feedVideoCommandsRef,
+    feedVideoScrollRef,
     desktopSearchControlsRef,
     desktopTouchStartYRef,
     feedContainerRef,
@@ -97,6 +101,10 @@ export const usePsychologistsFeedNavigation = ({
 
   const scrollFeedContainerToIndex = useCallback(
     (index: number, behavior: ScrollBehavior, fallbackTop?: number) => {
+      if (pooledPlayback) {
+        feedVideoScrollRef.current?.scrollTo(index);
+        return;
+      }
       const container = feedContainerRef.current;
       if (!container) return;
 
@@ -109,7 +117,7 @@ export const usePsychologistsFeedNavigation = ({
         top: targetSlide?.offsetTop ?? fallbackTop ?? index * container.clientHeight,
       });
     },
-    [feedContainerRef],
+    [feedContainerRef, feedVideoScrollRef, pooledPlayback],
   );
 
   useLayoutEffect(() => {
@@ -143,6 +151,10 @@ export const usePsychologistsFeedNavigation = ({
 
     hasRestoredFeedReturnRef.current = true;
     setActivePsychologistIndex(restoreIndex);
+    if (pooledPlayback) {
+      clearPsychologistsFeedReturnSnapshot();
+      return;
+    }
 
     const container = feedContainerRef.current;
     if (!container) {
@@ -165,15 +177,20 @@ export const usePsychologistsFeedNavigation = ({
     isSearchFocused,
     psychologists,
     setActivePsychologistIndex,
+    pooledPlayback,
   ]);
 
   const pauseVideoPlayback = useCallback(() => {
+    if (pooledPlayback) {
+      feedVideoCommandsRef.current?.pause();
+      return;
+    }
     const currentVideo = backgroundVideoRef.current;
     if (!currentVideo || !shouldShowVideo) return;
 
     currentVideo.pause();
     setIsVideoPaused(true);
-  }, [backgroundVideoRef, setIsVideoPaused, shouldShowVideo]);
+  }, [backgroundVideoRef, feedVideoCommandsRef, pooledPlayback, setIsVideoPaused, shouldShowVideo]);
 
   const unmuteAllVideos = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -186,6 +203,10 @@ export const usePsychologistsFeedNavigation = ({
   }, []);
 
   const playCurrentVideo = useCallback(() => {
+    if (pooledPlayback) {
+      void feedVideoCommandsRef.current?.play();
+      return;
+    }
     const currentVideo = backgroundVideoRef.current;
     if (!currentVideo || !shouldShowVideo) return;
 
@@ -194,7 +215,14 @@ export const usePsychologistsFeedNavigation = ({
     void playVideoWithActiveDocument(currentVideo).then((played) => {
       if (!played && documentHasUserAttention()) setIsVideoPaused(true);
     });
-  }, [backgroundVideoRef, setIsVideoPaused, shouldShowVideo, videoPlaybackRate]);
+  }, [
+    backgroundVideoRef,
+    feedVideoCommandsRef,
+    pooledPlayback,
+    setIsVideoPaused,
+    shouldShowVideo,
+    videoPlaybackRate,
+  ]);
 
   const unmuteCurrentVideo = useCallback(() => {
     setVideoSoundEnabledByUser(true);
@@ -213,6 +241,11 @@ export const usePsychologistsFeedNavigation = ({
   }, [backgroundVideoRef, setIsVideoMuted, setVideoVolume, unmuteAllVideos]);
 
   const playCurrentVideoWithSound = useCallback(() => {
+    if (pooledPlayback) {
+      setVideoSoundEnabledByUser(true);
+      void feedVideoCommandsRef.current?.play();
+      return;
+    }
     const currentVideo = backgroundVideoRef.current;
     if (!currentVideo || !shouldShowVideo) return;
 
@@ -231,6 +264,8 @@ export const usePsychologistsFeedNavigation = ({
     shouldShowVideo,
     unmuteCurrentVideo,
     videoPlaybackRate,
+    feedVideoCommandsRef,
+    pooledPlayback,
   ]);
 
   const stopVideoControlInteraction = useCallback(

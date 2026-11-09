@@ -395,7 +395,15 @@ test("late media readiness cannot restart playback behind a reading panel", () =
   );
   assert.match(
     viewer,
-    /onPlay: \(event\) => \{\s*if \(\s*!activeRef.current \|\|\s*panelRef.current \|\|\s*seekingRef.current \|\|\s*composerBusyRef.current \|\|\s*createPostOpenRef.current\s*\)\s*event.currentTarget.pause\(\)/,
+    /onPlay: \(event\) => \{\s*if \(!commandsRef.current\?\.canPlay\(\)\) event.currentTarget.pause\(\)/,
+  );
+  assert.match(
+    playback,
+    /canPlay: \(\) => latest.current.active && !manuallyPaused.current && latest.current.canPlay\(\)/,
+  );
+  assert.match(
+    viewer,
+    /canPlay: \(\) =>\s*!composerBusyRef.current &&\s*!createPostOpenRef.current &&\s*activeRef.current &&\s*!panelRef.current &&\s*!seekingRef.current/,
   );
   assert.match(viewer, /return \(\) => \{\s*activeRef.current = false;\s*pauseOwnedVideo\(\)/);
   assert.match(

@@ -156,3 +156,31 @@ the working controllers, not further parallel tuning.
 Default individual playback and all production services remain unchanged. This
 unifies playback mechanisms; profile actions and content discussions remain
 different product views. No claim of identical latency across media/network.
+
+## Follow-up: one command path, distinct immersive UI (0.1.801)
+
+- [x] Keep directory tap-to-immerse and its play/pause, audio and caption controls;
+  reels retain tap-to-pause.
+- [x] Move manual pause intent into the shared playback hook. Media pause events
+  update display state but do not become a user request to block future readiness.
+- [x] Route pooled directory resume, sound-enabled resume and long-press pause
+  through the active owner's shared commands, including immersive buttons and
+  resume after search. Search/filter eligibility blocks late readiness.
+- [x] Route arrows and ended advancement through the shared scroll controller;
+  restore the selected index through its existing external-index alignment.
+- [x] Mount full directory slides only at the active index and its neighbors,
+  retaining fixed-size snap shells for the remainder, as in reels.
+- [x] Focused mounted playback/scroll and ownership contracts: 47 passed, no skips.
+- [x] Real-media mobile/desktop transitions: six placements per viewport, no
+  redundant placements or page errors. Immersive pause/resume, readiness after
+  technical pause, audio, seek, exit, ended advancement and reverse navigation pass.
+- [x] Filter reset and analytics: three active owners, three reported owners,
+  zero standby reports; filtered feed retains pooled mode.
+- [x] Frontend production build and type validation passed.
+- [x] Complete repository-wide check; final frontend check repeated after search
+  integration. Final build passed. Real filter test rejects late readiness behind
+  the open panel and confirms playback after applying the search.
+- [ ] Physical Safari acceptance after separately authorized publication.
+
+No deployment or environment changes. Individual fallback stays unchanged.
+Rollback: keep the individual mode or restore the previous frontend deployment.

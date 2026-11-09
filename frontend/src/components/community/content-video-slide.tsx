@@ -8,7 +8,10 @@ import type { PostContentVideo } from "@/api/generator/types/posts";
 import { useContentVideoWatchTracking } from "@/components/analytics/content-video-watch-tracker";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
-import { useFeedVideoPlayback } from "@/components/ui/use-feed-video-playback";
+import {
+  type FeedVideoCommands,
+  useFeedVideoPlayback,
+} from "@/components/ui/use-feed-video-playback";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { getVideoSoundEnabled, setVideoSoundEnabledByUser } from "@/lib/video-sound-preference";
@@ -75,10 +78,9 @@ export const ContentVideoSlide = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const pauseOwnedVideo = useCallback(() => videoRef.current?.pause(), []);
   const activeRef = useRef(active);
-  const manuallyPaused = useRef(false);
+  const commandsRef = useRef<FeedVideoCommands | null>(null);
   useLayoutEffect(() => {
     activeRef.current = active;
-    manuallyPaused.current = false;
     if (!active) videoRef.current?.pause();
     return () => {
       activeRef.current = false;
@@ -162,8 +164,8 @@ export const ContentVideoSlide = ({
     videoRef,
     active,
     onMuted: setMuted,
+    commandsRef,
     canPlay: () =>
-      !manuallyPaused.current &&
       !composerBusyRef.current &&
       !createPostOpenRef.current &&
       activeRef.current &&
@@ -208,9 +210,8 @@ export const ContentVideoSlide = ({
       return;
     }
     const video = videoRef.current;
-    manuallyPaused.current = !video?.paused;
-    if (video?.paused) void play();
-    else video?.pause();
+    if (video?.paused) void commandsRef.current?.play();
+    else commandsRef.current?.pause();
   };
 
   const seekFromPointer = (input: HTMLInputElement, clientX: number) => {
@@ -328,15 +329,7 @@ export const ContentVideoSlide = ({
               if (event.currentTarget.paused) void play();
             },
             onPlay: (event) => {
-              if (
-                !activeRef.current ||
-                panelRef.current ||
-                seekingRef.current ||
-                composerBusyRef.current ||
-                createPostOpenRef.current
-              )
-                event.currentTarget.pause();
-              else if (manuallyPaused.current) event.currentTarget.pause();
+              if (!commandsRef.current?.canPlay()) event.currentTarget.pause();
               else setPaused(false);
             },
             onPause: () => setPaused(true),
