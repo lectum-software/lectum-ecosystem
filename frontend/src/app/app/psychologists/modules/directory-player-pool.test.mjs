@@ -65,7 +65,10 @@ test("legacy directory playback does not reset or start pooled elements", () => 
     /if \(pooledPlayback\) return;[\s\S]*playVideoWithActiveDocument\(activeVideo\)/,
   );
   assert.match(adapter, /if \(!active \|\| !video\) return;/);
-  assert.match(adapter, /if \(isVideoPaused \|\| isVideoProgressSeeking\) video\.pause\(\)/);
+  assert.doesNotMatch(adapter, /else void play\(\)/);
+  assert.doesNotMatch(adapter, /isVideoPaused/);
+  assert.match(adapter, /!latest.current.setup.isFiltersOpen/);
+  assert.match(adapter, /!latest.current.setup.isSearchModeActiveRef.current/);
 });
 
 test("shared reels policy prepares only after active playback", () => {
@@ -73,10 +76,50 @@ test("shared reels policy prepares only after active playback", () => {
   assert.deepEqual(selectFeedVideoSources(["a", ""], "a", "b", true), ["a", "b"]);
 });
 
+test("directory shares reels scroll selection and audio activation, not copied policies", () => {
+  const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
+  const adapter = read("../view/components/directory-player-pool.tsx");
+  const slide = read("../../../../components/community/content-video-slide.tsx");
+  for (const source of [adapter, slide]) {
+    assert.match(source, /useFeedVideoPlayback\(/);
+    assert.doesNotMatch(source, /playVideoWithActiveDocument|blockedSoundRevision/);
+  }
+  assert.match(read("../view/components/feed.tsx"), /useFeedVideoScroll\(/);
+  assert.match(
+    read("../../../../components/community/use-content-video-scroll.ts"),
+    /useFeedVideoScroll as useContentVideoScroll/,
+  );
+});
+
 test("shared policy promotes warm sources and reuses slots", () => {
   assert.deepEqual(selectFeedVideoSources(["a", "b"], "b", "c", false), ["a", "b"]);
   assert.deepEqual(selectFeedVideoSources(["a", "b"], "b", "c", true), ["c", "b"]);
   assert.deepEqual(selectFeedVideoSources(["c", "b"], "b", "c", true), ["c", "b"]);
+});
+
+test("directory controls and navigation delegate to shared commands", () => {
+  const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
+  const overlay = read("../view/components/directory-player-overlay.tsx");
+  assert.match(overlay, /feedVideoCommandsRef.current\?\.play\(\)/);
+  assert.match(overlay, /feedVideoCommandsRef.current\?\.pause\(\)/);
+  assert.doesNotMatch(overlay, /playVideoWithActiveDocument|video\?\.pause\(\)/);
+  const navigation = read("../hooks/use-psychologists-feed-navigation.ts");
+  const search = read("../hooks/use-psychologists-navigation.ts");
+  assert.match(
+    search,
+    /if \(pooledPlayback\) \{\s*void feedVideoCommandsRef.current\?\.play\(\);\s*return;/,
+  );
+  assert.match(
+    navigation,
+    /if \(pooledPlayback\) \{\s*void feedVideoCommandsRef.current\?\.play\(\);\s*return;/,
+  );
+  assert.match(
+    navigation,
+    /if \(pooledPlayback\) \{\s*feedVideoScrollRef.current\?\.scrollTo\(index\);\s*return;/,
+  );
+  const feed = read("../view/components/feed.tsx");
+  assert.match(feed, /Math.abs\(index - model.setup.activePsychologistIndex\) > 1/);
+  assert.match(feed, /const commands = \{ scrollTo \}/);
 });
 
 test("shared policy handles cold skips, duplicate next and no selection", () => {

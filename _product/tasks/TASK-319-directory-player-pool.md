@@ -128,3 +128,59 @@ remains pending; the experiment must not become the default yet.
 
 These are locally reproducible lifecycle defects, not proof of the exact Safari
 compositor cause. Production and the default directory mode remain unchanged.
+
+## Follow-up: shared reels controllers (0.1.800)
+
+The 0.1.799 physical test found warm media on all sixteen directory transitions,
+but did not establish visual equivalence with reels. The user requested reuse of
+the working controllers, not further parallel tuning.
+
+- [x] Extract the reels native scroll/selection/resize/lock controller and use it
+  for the pooled directory; preserve directory filtering and circular pagination.
+- [x] Extract the reels activation, sound preference and autoplay-denial policy;
+  both surfaces consume the same hook rather than copies.
+- [x] Share prepared-element handoff, metadata synchronization and startup scheduling.
+- [x] Disable legacy directory attention/audio mutations for pooled playback.
+- [x] Keep presentation controls, captions and owner-scoped analytics adapters.
+- [x] Focused regression suite: 45 passed, including mounted real media and directory
+  selection/lock/resize through the shared scroll controller.
+- [x] Read-only real-media mobile/desktop transitions: at most two players,
+  paused/muted standby, zero redundant placements, no page errors.
+- [x] Repository guards and frontend check passed; complete backend/admin/video
+  checks passed separately after correcting the isolated test database port.
+- [x] Frontend production build passed. Immersive pause/resume/audio/seek/exit,
+  reels transitions and directory search passed; three watched owners, three
+  reported owners, zero standby reports. Browser checks used read-only access.
+- [ ] Physical iPhone acceptance after separately authorized publication.
+
+Default individual playback and all production services remain unchanged. This
+unifies playback mechanisms; profile actions and content discussions remain
+different product views. No claim of identical latency across media/network.
+
+## Follow-up: one command path, distinct immersive UI (0.1.801)
+
+- [x] Keep directory tap-to-immerse and its play/pause, audio and caption controls;
+  reels retain tap-to-pause.
+- [x] Move manual pause intent into the shared playback hook. Media pause events
+  update display state but do not become a user request to block future readiness.
+- [x] Route pooled directory resume, sound-enabled resume and long-press pause
+  through the active owner's shared commands, including immersive buttons and
+  resume after search. Search/filter eligibility blocks late readiness.
+- [x] Route arrows and ended advancement through the shared scroll controller;
+  restore the selected index through its existing external-index alignment.
+- [x] Mount full directory slides only at the active index and its neighbors,
+  retaining fixed-size snap shells for the remainder, as in reels.
+- [x] Focused mounted playback/scroll and ownership contracts: 47 passed, no skips.
+- [x] Real-media mobile/desktop transitions: six placements per viewport, no
+  redundant placements or page errors. Immersive pause/resume, readiness after
+  technical pause, audio, seek, exit, ended advancement and reverse navigation pass.
+- [x] Filter reset and analytics: three active owners, three reported owners,
+  zero standby reports; filtered feed retains pooled mode.
+- [x] Frontend production build and type validation passed.
+- [x] Complete repository-wide check; final frontend check repeated after search
+  integration. Final build passed. Real filter test rejects late readiness behind
+  the open panel and confirms playback after applying the search.
+- [ ] Physical Safari acceptance after separately authorized publication.
+
+No deployment or environment changes. Individual fallback stays unchanged.
+Rollback: keep the individual mode or restore the previous frontend deployment.

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useFeedVideoMedia } from "@/components/ui/persistent-feed-video-player";
 import { VerticalVideoPlayerPersistentControls } from "@/components/ui/vertical-video-player-persistent-controls";
 import { PlayerCaptions } from "@/components/video-captions/player-captions";
-import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import { setVideoSoundEnabledByUser } from "@/lib/video-sound-preference";
 import type { PsychologistsViewModel } from "../types";
 
@@ -44,8 +43,8 @@ export function DirectoryPlayerOverlay({
           title={title}
           onPlayPause={() => {
             const video = videoRef.current;
-            if (video?.paused) void playVideoWithActiveDocument(video);
-            else video?.pause();
+            if (video?.paused) void model.setup.feedVideoCommandsRef.current?.play();
+            else model.setup.feedVideoCommandsRef.current?.pause();
           }}
           onMuteToggle={() => {
             const video = videoRef.current;

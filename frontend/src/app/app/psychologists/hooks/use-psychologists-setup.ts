@@ -6,6 +6,7 @@ import { useAccount } from "@/api/callers/account";
 import { useImportantActionTracking } from "@/api/callers/analytics";
 import { usePatient } from "@/api/callers/patient";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import type { FeedVideoCommands } from "@/components/ui/use-feed-video-playback";
 import { useAppSelector } from "@/hooks/redux";
 import { subscribeVideoSoundPreference } from "@/lib/video-sound-preference";
 import {
@@ -61,6 +62,8 @@ export const usePsychologistsSetup = () => {
   useEffect(() => subscribeVideoSoundPreference((enabled) => setIsVideoMuted(!enabled)), []);
 
   const [isVideoPaused, setIsVideoPaused] = useState(false);
+  const feedVideoCommandsRef = useRef<FeedVideoCommands | null>(null);
+  const feedVideoScrollRef = useRef<{ scrollTo: (index: number) => void } | null>(null);
 
   const [videoPlaybackRate, setVideoPlaybackRate] = useState(DEFAULT_VIDEO_PLAYBACK_RATE);
 
@@ -270,6 +273,8 @@ export const usePsychologistsSetup = () => {
     isUiHidden,
     isVideoMuted,
     isVideoPaused,
+    feedVideoCommandsRef,
+    feedVideoScrollRef,
     isVideoPlaybackFailed,
     isVideoProgressSeeking,
     isVideoProgressSeekingRef,

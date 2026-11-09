@@ -47,7 +47,6 @@ export const usePsychologistsVideoGestures = ({
     pointerStartRef,
     setIsLongPressing,
     setIsUiHidden,
-    setIsVideoPaused,
     suppressNextTapRef,
     tapTimeoutRef,
   } = setup;
@@ -154,8 +153,7 @@ export const usePsychologistsVideoGestures = ({
           tapTimeoutRef.current = null;
         }
 
-        currentVideo.pause();
-        setIsVideoPaused(true);
+        pauseVideoPlayback();
         setIsLongPressing(true);
       }, VIDEO_LONG_PRESS_DELAY_MS);
     },
@@ -167,8 +165,8 @@ export const usePsychologistsVideoGestures = ({
       isSearchFocused,
       longPressTimeoutRef,
       pointerStartRef,
+      pauseVideoPlayback,
       setIsLongPressing,
-      setIsVideoPaused,
       shouldShowVideo,
       suppressNextTapRef,
       tapTimeoutRef,

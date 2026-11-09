@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
+const playback = read("../ui/use-feed-video-playback.ts");
 const viewer = [
   "./content-video-viewer.tsx",
   "./content-video-slide.tsx",
@@ -387,17 +388,22 @@ test("caption collapse stays beside author and parent has a discussion destinati
 
 test("late media readiness cannot restart playback behind a reading panel", () => {
   assert.match(viewer, /panelRef.current = next;[\s\S]*?video\?\.pause\(\)/);
+  assert.match(viewer, /!panelRef.current &&\s*!seekingRef.current/);
   assert.match(
-    viewer,
-    /!panelRef.current &&\s*!seekingRef.current &&\s*videoRef.current === video/,
-  );
-  assert.match(
-    viewer,
+    playback,
     /await playVideoWithActiveDocument\(video\);\s*if \(!eligible\(\) && videoRef.current === video\)/,
   );
   assert.match(
     viewer,
-    /onPlay: \(event\) => \{\s*if \(\s*!activeRef.current \|\|\s*panelRef.current \|\|\s*seekingRef.current \|\|\s*composerBusyRef.current \|\|\s*createPostOpenRef.current\s*\)\s*event.currentTarget.pause\(\)/,
+    /onPlay: \(event\) => \{\s*if \(!commandsRef.current\?\.canPlay\(\)\) event.currentTarget.pause\(\)/,
+  );
+  assert.match(
+    playback,
+    /canPlay: \(\) => latest.current.active && !manuallyPaused.current && latest.current.canPlay\(\)/,
+  );
+  assert.match(
+    viewer,
+    /canPlay: \(\) =>\s*!composerBusyRef.current &&\s*!createPostOpenRef.current &&\s*activeRef.current &&\s*!panelRef.current &&\s*!seekingRef.current/,
   );
   assert.match(viewer, /return \(\) => \{\s*activeRef.current = false;\s*pauseOwnedVideo\(\)/);
   assert.match(
@@ -418,13 +424,14 @@ test("sound follows the shared preference and explicit user changes update it", 
   const slide = read("./content-video-slide.tsx");
   assert.match(slide, /useState\(\(\) => !getVideoSoundEnabled\(\)\)/);
   assert.match(
-    slide,
-    /useEffect\(\s*\(\) =>\s*subscribeVideoSoundPreference\(\(enabled\) => \{\s*audioAttempt.current \+= 1;\s*if \(videoRef.current\) videoRef.current.muted = !enabled;\s*setMuted\(!enabled\);\s*if \(enabled\) void play\(\);\s*\}\),\s*\[play\],\s*\)/,
+    playback,
+    /subscribeVideoSoundPreference\(\(enabled\) => \{\s*attemptRef.current \+= 1;\s*if \(videoRef.current\) videoRef.current.muted = !enabled;\s*latest.current.onMuted\(!enabled\);\s*if \(enabled\) void play\(\);/,
   );
-  assert.match(slide, /!started && autoplayBlocked && video.paused && !video.muted/);
+  assert.match(slide, /useFeedVideoPlayback\(/);
+  assert.match(playback, /!started && autoplayBlocked && video.paused && !video.muted/);
   assert.match(
-    slide,
-    /attempt !== audioAttempt.current \|\| revision !== getVideoSoundPreferenceRevision\(\)/,
+    playback,
+    /attempt !== attemptRef.current \|\| revision !== getVideoSoundPreferenceRevision\(\)/,
   );
   assert.match(slide, /<ContentVideoPlayer\s+active=\{active && !unavailable\}/);
   assert.match(read("./content-video-viewer.tsx"), /<ContentVideoPlayerProvider\s+nextSource=/);

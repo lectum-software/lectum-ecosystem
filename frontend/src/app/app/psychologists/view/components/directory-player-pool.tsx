@@ -13,9 +13,10 @@ import {
   PersistentFeedVideo,
   PersistentFeedVideoProvider,
 } from "@/components/ui/persistent-feed-video-player";
+import { useFeedVideoPlayback } from "@/components/ui/use-feed-video-playback";
+import { useFeedVideoReady } from "@/components/ui/use-feed-video-ready";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import type { VerticalVideoPlayerProps } from "@/components/ui/vertical-video-player-support";
-import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import { useDirectoryPlayerPoolEnabled } from "../../modules/directory-player-mode";
 import type { PsychologistFeedSlide } from "../../modules/feed-loop";
 import type { PsychologistsViewModel } from "../types";
@@ -78,60 +79,60 @@ function SharedDirectoryVideo({
   const active = index === model.setup.activePsychologistIndex;
   const latest = useRef(model);
   const owned = useRef<HTMLVideoElement | null>(null);
+  const tracking = useRef<{ video: HTMLVideoElement; model: PsychologistsViewModel } | null>(null);
   useLayoutEffect(() => {
     latest.current = model;
   });
-  const play = useCallback(async () => {
-    const video = owned.current;
-    const eligible = () =>
-      owned.current === video &&
+  const play = useFeedVideoPlayback({
+    videoRef: owned,
+    active,
+    onMuted: model.setup.setIsVideoMuted,
+    commandsRef: model.setup.feedVideoCommandsRef,
+    canPlay: () =>
       latest.current.setup.activePsychologistIndex === index &&
-      !latest.current.setup.isVideoPaused &&
-      !latest.current.setup.isVideoProgressSeeking;
-    if (!video || !eligible()) return;
-    await playVideoWithActiveDocument(video);
-    if (owned.current === video && !eligible()) video.pause();
-  }, [index]);
-  const ready = useCallback(
+      !latest.current.setup.isFiltersOpen &&
+      !latest.current.setup.isFilterSheetOpen &&
+      (latest.current.setup.metrics.isDesktopLayout ||
+        !latest.current.setup.isSearchModeActiveRef.current) &&
+      !latest.current.setup.isVideoProgressSeekingRef.current,
+  });
+  const trackVideo = useCallback(
     (video: HTMLVideoElement | null) => {
       const current = latest.current;
-      if (owned.current && owned.current !== video) {
-        current.analytics.flushFeedVideoAnalytics(owned.current, { force: true });
-        if (current.setup.backgroundVideoRef.current === owned.current)
+      const previous = tracking.current;
+      if (previous && previous.video !== video) {
+        previous.model.analytics.flushFeedVideoAnalytics(previous.video, { force: true });
+        if (current.setup.backgroundVideoRef.current === previous.video)
           current.setup.backgroundVideoRef.current = null;
       }
-      owned.current = video;
+      tracking.current = video ? { video, model: current } : null;
       if (!video || current.setup.activePsychologistIndex !== index) return;
       current.setup.backgroundVideoRef.current = video;
-      video.muted = current.setup.isVideoMuted;
       video.volume = current.setup.videoVolume;
       video.playbackRate = current.setup.videoPlaybackRate;
       current.analytics.syncActiveVideoProgress(video);
-      requestAnimationFrame(() => {
-        if (owned.current === video) void play();
-      });
     },
-    [index, play],
+    [index],
   );
-  const { isVideoMuted, videoVolume, videoPlaybackRate, isVideoPaused, isVideoProgressSeeking } =
-    model.setup;
+  const syncProgress = useCallback(
+    () => latest.current.analytics.syncActiveVideoProgress(owned.current),
+    [],
+  );
+  const ready = useFeedVideoReady({
+    videoRef: owned,
+    trackVideo,
+    initialTime: 0,
+    play,
+    setDuration: syncProgress,
+    setTime: syncProgress,
+  });
+  const { videoVolume, videoPlaybackRate } = model.setup;
   useEffect(() => {
     const video = owned.current;
     if (!active || !video) return;
-    video.muted = isVideoMuted;
     video.volume = videoVolume;
     video.playbackRate = videoPlaybackRate;
-    if (isVideoPaused || isVideoProgressSeeking) video.pause();
-    else void play();
-  }, [
-    active,
-    isVideoMuted,
-    videoVolume,
-    videoPlaybackRate,
-    isVideoPaused,
-    isVideoProgressSeeking,
-    play,
-  ]);
+  }, [active, videoVolume, videoPlaybackRate]);
   return (
     <div className="relative h-full w-full" data-directory-player-slot={index}>
       <PersistentFeedVideo
@@ -146,7 +147,19 @@ function SharedDirectoryVideo({
           ...props.videoProps,
           onLoadedData: (event) => {
             props.videoProps?.onLoadedData?.(event);
-            requestAnimationFrame(() => void play());
+            if (active) model.setup.setIsVideoPaused(event.currentTarget.paused);
+          },
+          onPlay: (event) => {
+            if (
+              owned.current !== event.currentTarget ||
+              !model.setup.feedVideoCommandsRef.current?.canPlay()
+            )
+              event.currentTarget.pause();
+            else props.videoProps?.onPlay?.(event);
+          },
+          onLoadedMetadata: (event) => {
+            props.videoProps?.onLoadedMetadata?.(event);
+            void play();
           },
           onCanPlay: () => {
             if (owned.current?.paused) void play();
