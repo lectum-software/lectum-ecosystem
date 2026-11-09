@@ -73,6 +73,21 @@ test("shared reels policy prepares only after active playback", () => {
   assert.deepEqual(selectFeedVideoSources(["a", ""], "a", "b", true), ["a", "b"]);
 });
 
+test("directory shares reels scroll selection and audio activation, not copied policies", () => {
+  const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
+  const adapter = read("../view/components/directory-player-pool.tsx");
+  const slide = read("../../../../components/community/content-video-slide.tsx");
+  for (const source of [adapter, slide]) {
+    assert.match(source, /useFeedVideoPlayback\(/);
+    assert.doesNotMatch(source, /playVideoWithActiveDocument|blockedSoundRevision/);
+  }
+  assert.match(read("../view/components/feed.tsx"), /useFeedVideoScroll\(/);
+  assert.match(
+    read("../../../../components/community/use-content-video-scroll.ts"),
+    /useFeedVideoScroll as useContentVideoScroll/,
+  );
+});
+
 test("shared policy promotes warm sources and reuses slots", () => {
   assert.deepEqual(selectFeedVideoSources(["a", "b"], "b", "c", false), ["a", "b"]);
   assert.deepEqual(selectFeedVideoSources(["a", "b"], "b", "c", true), ["c", "b"]);

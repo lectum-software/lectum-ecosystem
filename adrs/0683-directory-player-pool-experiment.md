@@ -127,3 +127,24 @@ invalidate pending callbacks on pause/seek. This closes a reproducible lifecycle
 gap without increasing a timer. It does not establish that Safari will never show
 a compositor gap: physical iPhone acceptance is still required. Individual mode,
 the two-player limit and source/buffer preparation policy are unchanged.
+
+## Share controllers rather than reproducing their configuration
+
+For 0.1.800, extract `useFeedVideoScroll`, `useFeedVideoPlayback` and
+`useFeedVideoReady` from the working reels path. Keep thin compatibility exports
+for the content viewer and consume the same implementations in the directory.
+Native scroll/snap selects the nearest rendered page using geometry relative to
+the feed (including desktop offsets); the same controller handles resize and
+interaction locks. Directory supplies its slide attribute, circular list updates
+and filter state. The provider, preparation policy and startup cover stay shared.
+
+The directory no longer maintains its own activation/audio-denial algorithm or
+prepared-element startup schedule. Legacy attention/autoplay and global mute
+effects apply only to individual playback. Shared-element detachment flushes the
+previous owner's analytics before source reassignment. Presentation volume/rate,
+seek controls and domain-specific metrics remain adapters, not another source or
+buffer manager. Reels discussion/composer blocking remains its eligibility input.
+
+Rollout remains opt-in and local until publication is authorized. Browser tests
+must cover both surfaces; physical Safari video is still the visual acceptance
+gate. Source sharing does not imply equal cold-start latency for different assets.

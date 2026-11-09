@@ -23,6 +23,7 @@ const modules = {
   "react-dom/client": production("react-dom", "react-dom-client.production.js"),
   scheduler: production("scheduler", "scheduler.production.js", domRequire),
   "@/lib/video-playback": source("../../lib/video-playback.ts"),
+  "@/components/ui/use-feed-video-playback": source("../ui/use-feed-video-playback.ts"),
   "@/lib/video-sound-preference": source("../../lib/video-sound-preference.ts"),
   "@/components/analytics/attention":
     "exports.documentHasUserAttention = () => window.attention; exports.subscribeDocumentAttention = () => () => {};",
@@ -53,6 +54,7 @@ const modules = {
   "./content-video-interaction-status": "exports.ContentVideoInteractionStatus = () => null;",
   "./content-video-comments-sheet": "exports.ContentVideoCommentsSheet = () => null;",
   "./use-content-video-ready": source("./use-content-video-ready.ts"),
+  "@/components/ui/use-feed-video-ready": source("../ui/use-feed-video-ready.ts"),
   "./content-video-header": source("./content-video-header.tsx"),
   "./use-content-video-progress": source("./use-content-video-progress.ts"),
   "./content-video-history": source("./content-video-history.ts"),
