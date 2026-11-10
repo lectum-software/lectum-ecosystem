@@ -243,6 +243,22 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
 
   const now = new Date();
   const subscription = await withSerializableTransaction(async (tx) => {
+    // Same row lock as Stripe checkout reservation: a grant cannot pass an in-flight checkout.
+    const lockedProfiles = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT p.id FROM psychologist_profiles p JOIN users u ON u.id = p.user_id
+      WHERE p.id = ${target.profileId} AND p.deleted = false AND u.deleted = false AND u.active = true
+      FOR UPDATE OF p`;
+    if (lockedProfiles.length !== 1) throw new Error("psychologist_profile_not_found_for_grant");
+    const openOperation = await tx.billing_operation.findFirst({
+      where: {
+        psychologist_id: target.profileId,
+        state: {
+          in: ["reserved", "creating", "requires_confirmation", "processing", "review_required"],
+        },
+      },
+      select: { id: true },
+    });
+    if (openOperation) throw new Error("external_billing_subscription_blocks_admin_grant");
     if (fiscalIdentity) {
       const latest = await tx.fiscal_identity_event.findFirst({
         where: { psychologist_id: target.profileId },

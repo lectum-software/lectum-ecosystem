@@ -4,6 +4,12 @@ import type {
   subscription_plan,
 } from "@/interfaces/objects";
 
+export type SelectFreeResult =
+  | { type: "selected"; current: professional_subscription }
+  | {
+      type: "profile_not_found" | "plan_not_found" | "entitlement_conflict" | "operation_conflict";
+    };
+
 export interface ISelectFreeRepository {
   findProfileByUserId(userId: string): Promise<Pick<psychologist_profile, "id" | "deleted"> | null>;
   findPlanBySlug(slug: "gratuito"): Promise<subscription_plan | null>;
@@ -11,8 +17,5 @@ export interface ISelectFreeRepository {
   findActiveProfessionalSubscription(
     psychologistId: string,
   ): Promise<professional_subscription | null>;
-  createFreeSubscription(
-    psychologistId: string,
-    planId: string,
-  ): Promise<professional_subscription>;
+  createFreeSubscription(psychologistId: string, planId: string): Promise<SelectFreeResult>;
 }

@@ -73,6 +73,7 @@ import apiPrivatePsychologistBillingCurrent from "@/modules/api/private/psycholo
 import apiPrivatePsychologistBillingPaymentMethodSession from "@/modules/api/private/psychologist/billing/payment-method/session";
 import apiPrivatePsychologistBillingPlans from "@/modules/api/private/psychologist/billing/plans";
 import apiPrivatePsychologistBillingSelectFree from "@/modules/api/private/psychologist/billing/select-free";
+import apiPrivatePsychologistBillingStripe from "@/modules/api/private/psychologist/billing/stripe";
 import apiPrivatePsychologistBillingSubscription from "@/modules/api/private/psychologist/billing/subscription";
 import apiPrivatePsychologistBillingSync from "@/modules/api/private/psychologist/billing/sync";
 import apiPrivatePsychologistCfp from "@/modules/api/private/psychologist/cfp";
@@ -89,6 +90,7 @@ import apiPublicAnalyticsPageView from "@/modules/api/public/analytics/page-view
 import apiPublicAuthLogin from "@/modules/api/public/auth/login";
 import apiPublicAuthRecovery from "@/modules/api/public/auth/recovery";
 import apiPublicAuthReset from "@/modules/api/public/auth/reset";
+import apiPublicStripeBillingWebhook from "@/modules/api/public/billing/stripe/webhook";
 import apiPublicBillingWebhook from "@/modules/api/public/billing/webhook";
 import apiPublicGoogleCallback from "@/modules/api/public/google/callback";
 import apiPublicGoogleLink from "@/modules/api/public/google/link";
@@ -187,6 +189,12 @@ mountRoute("/api/public/auth/login", apiPublicAuthLogin);
 mountRoute("/api/public/auth/recovery", apiPublicAuthRecovery);
 mountRoute("/api/public/auth/reset", apiPublicAuthReset);
 mountRoute("/api/public/billing/webhook", apiPublicBillingWebhook);
+mountRoute("/api/public/billing/stripe/webhook", apiPublicStripeBillingWebhook);
+mountRoleGuardedRoute(
+  "/api/private/psychologist/billing/stripe",
+  "psicologo",
+  apiPrivatePsychologistBillingStripe,
+);
 mountRoute("/api/public/google/callback", apiPublicGoogleCallback);
 mountRoute("/api/public/google/link", apiPublicGoogleLink);
 mountRoute("/api/public/google/login", apiPublicGoogleLogin);

@@ -162,7 +162,8 @@ export const formatDateTime = (value: string) => {
   }).format(date);
 };
 
-export const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
+export const formatMoney = (cents: number | null) =>
+  cents === null ? "Indisponível" : moneyFormatter.format(cents / 100);
 
 export const formatMaybeMoney = (cents: number | null) =>
   cents === null ? "Indisponível" : formatMoney(cents);

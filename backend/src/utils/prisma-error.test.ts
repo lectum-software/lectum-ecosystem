@@ -62,3 +62,45 @@ test("retry Serializable não repete resultado incerto, autenticação, timeout 
     assert.equal(isSerializableRetryableError(error), false);
   }
 });
+
+test("only P2010 with explicit PostgreSQL serialization SQLSTATE is retryable", () => {
+  assert.equal(isSerializableRetryableError({ code: "P2010", meta: { code: "40001" } }), true);
+  for (const error of [
+    { code: "P2010", meta: { code: "23505" } },
+    { code: "P2010", meta: { code: "40P01" } },
+    { code: "P2010", meta: { code: "42601" } },
+    { code: "P2010", meta: { code: 40001 } },
+    { code: "P2010", message: "40001", meta: {} },
+    { code: "P2010" },
+    { code: "P1001", meta: { code: "40001" } },
+    { code: "40001" },
+    null,
+  ])
+    assert.equal(isSerializableRetryableError(error), false);
+});
+
+test("existing Prisma and adapter-pg conflict handling is preserved", () => {
+  for (const code of ["P2002", "P2034"]) assert.equal(isSerializableRetryableError({ code }), true);
+  assert.equal(
+    isSerializableRetryableError({
+      name: "DriverAdapterError",
+      cause: { kind: "TransactionWriteConflict", originalCode: "40001" },
+    }),
+    true,
+  );
+});
+
+test("P2010 accepts the adapter-pg serialization envelope observed in the real row-lock regression", () => {
+  const wrapped = (kind: string, originalCode: unknown) => ({
+    code: "P2010",
+    meta: { driverAdapterError: { name: "DriverAdapterError", cause: { kind, originalCode } } },
+  });
+  assert.equal(isSerializableRetryableError(wrapped("TransactionWriteConflict", "40001")), true);
+  for (const error of [
+    wrapped("TransactionWriteConflict", "57014"),
+    wrapped("SocketTimeout", "40001"),
+    wrapped("TransactionWriteConflict", 40001),
+    { code: "P2010", meta: { driverAdapterError: new Error("40001") } },
+  ])
+    assert.equal(isSerializableRetryableError(error), false);
+});

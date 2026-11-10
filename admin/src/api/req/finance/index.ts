@@ -162,9 +162,9 @@ export type FinanceSubscriptionItem = {
   payment_method: FinancePaymentMethod | null;
   plan: {
     id: string;
-    interval: string;
+    interval: string | null;
     name: string;
-    price_cents: number;
+    price_cents: number | null;
     slug: string;
   };
   psychologist: {
@@ -202,6 +202,8 @@ export type FinanceChargeItem = {
 };
 
 export type FinanceListResponse<TItem, TSource extends string> = {
+  coverage_complete?: boolean;
+  coverage_note?: string;
   count: number;
   data: TItem[];
   page: number;
@@ -243,11 +245,13 @@ export type AdminFinanceDashboard = {
     format: "csv";
   };
   mrr: {
+    available?: boolean;
     description: string;
     source: AdminPublicSource<"active_paid_subscriptions">;
     value_cents: number;
   };
   latest_charges: {
+    coverage_complete?: boolean;
     items: FinanceChargeItem[];
     source: AdminPublicSource<"payment_event+gateway_subscription_summary+professional_subscription">;
     total: number;
@@ -259,6 +263,7 @@ export type AdminFinanceDashboard = {
   };
   period: FinancePeriod;
   series: {
+    unavailable_metrics?: string[];
     points: FinanceSeriesPoint[];
     source: AdminPublicSource<"payment_event+gateway_subscription_summary+professional_subscription">;
   };

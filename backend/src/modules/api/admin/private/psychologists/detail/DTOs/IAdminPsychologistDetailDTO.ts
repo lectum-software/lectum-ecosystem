@@ -32,7 +32,7 @@ export type AdminPsychologistDetailEvent = {
 
 export type AdminPsychologistIntegrationStatus = {
   checked_at: Date | null;
-  id: "email" | "mercado_pago" | "registry" | "subscription" | "whatsapp";
+  id: "email" | "mercado_pago" | "stripe" | "registry" | "subscription" | "whatsapp";
   label: string;
   source: string;
   status: "active" | "configured" | "missing" | "pending" | "synced" | "unavailable";

@@ -1,5 +1,9 @@
 import prisma from "@/infra/database/prisma";
 import { PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE } from "@/modules/api/public/analytics/helpers/signup-identity";
+import {
+  financialContractSelection,
+  withFinancialContractPlan,
+} from "@/modules/billing/subscription-financial-values";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { AdminPsychologistsDashboardDateRange } from "../../DTOs/IAdminPsychologistsDashboardDTO";
 import {
@@ -135,6 +139,7 @@ export class AdminPsychologistsDashboardDirectoryRepository {
                 },
               },
               select: {
+                ...financialContractSelection,
                 createdAt: true,
                 current_period_end: true,
                 gateway: true,
@@ -160,7 +165,11 @@ export class AdminPsychologistsDashboardDirectoryRepository {
           profiles.map((profile) => profile.id),
           range,
         );
-        return profiles.map((profile) => ({ ...profile, plan_history: histories.get(profile.id) }));
+        return profiles.map((profile) => ({
+          ...profile,
+          subscriptions: profile.subscriptions.map(withFinancialContractPlan),
+          plan_history: histories.get(profile.id),
+        }));
       },
       { isolationLevel: "RepeatableRead" },
     );

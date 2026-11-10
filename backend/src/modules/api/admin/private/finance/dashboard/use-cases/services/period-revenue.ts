@@ -5,6 +5,7 @@ import {
   toAmountCents,
 } from "@/modules/billing/payment-event-values";
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
+import { stripeFinancialCoverage } from "@/modules/billing/subscription-financial-values";
 import {
   addDays,
   endOfDate,
@@ -373,13 +374,18 @@ export const summarizeAverageLtv = (
 
   const totalMissingAmountCount = missingAmountCount + gatewayMissingAmountCount;
   const totalRevenueCents = revenueCents + gatewayRevenueCents;
-  const available = totalMissingAmountCount === 0;
+  const covered = stripeFinancialCoverage(subscriptions);
+  const available = totalMissingAmountCount === 0 && covered;
 
   return {
     available,
     linkedConfirmedPayments: linkedConfirmedPayments + gatewayLinkedConfirmedPayments,
     paidPsychologistCount,
-    unavailableReason: available ? null : "pagamento_confirmado_sem_valor_monetario_extraivel",
+    unavailableReason: available
+      ? null
+      : !covered
+        ? "stripe_financial_history_unavailable"
+        : "pagamento_confirmado_sem_valor_monetario_extraivel",
     valueCents:
       available && paidPsychologistCount > 0
         ? Math.round(totalRevenueCents / paidPsychologistCount)

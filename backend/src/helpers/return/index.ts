@@ -7,6 +7,7 @@ import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 import { applyUserAuthCookie } from "@/utils/user-auth-cookie";
 
 export type Resolve = {
+  allowBillingIntentSecret?: boolean;
   allowAuthTokens?: boolean;
   allowSignedMediaUrls?: boolean;
   status?: number;
@@ -23,6 +24,7 @@ export type Resolve = {
 export const send = (res: Response, resolve: Resolve) => {
   const cookieAwareResolve = applyUserAuthCookie(res.req, res, resolve);
   const {
+    allowBillingIntentSecret = false,
     allowAuthTokens = false,
     allowSignedMediaUrls = false,
     entity: _entity,
@@ -33,6 +35,15 @@ export const send = (res: Response, resolve: Resolve) => {
     ...publicResolve,
     data: sanitizePublicResponseData(
       sanitizeSensitiveData(cookieAwareResolve.data, {
+        allowBillingIntentSecret:
+          allowBillingIntentSecret === true &&
+          publicResolve.success === true &&
+          res.req.method === "POST" &&
+          res.req.auth?.role === "psicologo" &&
+          typeof res.req.auth.id === "string" &&
+          /^\/api\/private\/psychologist\/billing\/stripe\/(?:checkout|payment-method)(?:\/[A-Za-z0-9_-]{1,128}\/confirm)?\/?$/.test(
+            (res.req.originalUrl || res.req.path || "").split("?")[0],
+          ),
         allowSignedMediaUrls,
         removeAuthTokens: !allowAuthTokens,
       }),

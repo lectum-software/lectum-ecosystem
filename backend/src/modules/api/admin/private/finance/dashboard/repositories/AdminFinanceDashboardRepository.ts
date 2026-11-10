@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { financialContractSelection } from "@/modules/billing/subscription-financial-values";
 import type { AdminFinanceDateRange } from "../DTOs/IAdminFinanceDashboardDTO";
 
 const dateRangeWhere = (range: AdminFinanceDateRange) => ({
@@ -20,13 +21,20 @@ const paidPlanWhere = {
 
 const paidGatewaySubscriptionWhere = {
   deleted: false,
-  gateway: "mercadopago",
-  gateway_subscription_id: {
-    not: null,
-  },
-  plan: paidPlanWhere,
-  source: "mercadopago",
-};
+  gateway_subscription_id: { not: null },
+  AND: [
+    {
+      OR: [
+        { gateway: "mercadopago", source: "mercadopago", plan: paidPlanWhere },
+        {
+          gateway: "stripe",
+          source: "stripe",
+          plan: { active: true, deleted: false, slug: { not: "gratuito" } },
+        },
+      ],
+    },
+  ],
+} satisfies Prisma.professional_subscriptionWhereInput;
 
 const relationStatuses = ["ativa", "cancelada", "inadimplente"];
 
@@ -97,6 +105,7 @@ const paidSubscriptionRelationWhere = (
 };
 
 const subscriptionSelect = {
+  ...financialContractSelection,
   createdAt: true,
   current_period_end: true,
   gateway: true,
@@ -133,6 +142,8 @@ const subscriptionSelect = {
               exp_month: true,
               exp_year: true,
               gateway: true,
+              gateway_mode: true,
+              gateway_account_id: true,
               gateway_token: true,
               last4: true,
               updatedAt: true,
@@ -140,7 +151,7 @@ const subscriptionSelect = {
             take: 5,
             where: {
               deleted: false,
-              gateway: "mercadopago",
+              gateway: { in: ["mercadopago", "stripe"] },
             },
           },
         },
@@ -287,6 +298,7 @@ export class AdminFinanceDashboardRepository {
         },
       },
       select: {
+        ...financialContractSelection,
         createdAt: true,
         id: true,
         plan: {

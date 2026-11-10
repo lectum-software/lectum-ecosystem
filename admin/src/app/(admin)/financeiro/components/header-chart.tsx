@@ -169,24 +169,28 @@ export const CardsGrid = ({
 export const FinanceChart = ({
   points,
   visibleMetricKeys,
+  unavailableMetricKeys = [],
 }: {
   points: FinanceSeriesPoint[];
   visibleMetricKeys: FinanceMetricKey[];
+  unavailableMetricKeys?: string[];
 }) => {
   const width = 1120;
   const height = 280;
-  const series = visibleMetricKeys.map((key) => ({
-    color: FINANCE_METRIC_CONFIG[key].color,
-    key,
-    unit: CURRENCY_METRIC_KEYS.some((currencyKey) => currencyKey === key)
-      ? "currency_cents"
-      : "count",
-  }));
+  const series = visibleMetricKeys
+    .filter((key) => !unavailableMetricKeys.includes(key))
+    .map((key) => ({
+      color: FINANCE_METRIC_CONFIG[key].color,
+      key,
+      unit: CURRENCY_METRIC_KEYS.some((currencyKey) => currencyKey === key)
+        ? "currency_cents"
+        : "count",
+    }));
 
   if (series.length === 0) {
     return (
       <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
-        Selecione pelo menos um contador para visualizar a evolução.
+        Selecione um contador com dados disponíveis para visualizar a evolução.
       </div>
     );
   }
@@ -363,7 +367,9 @@ export const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">
-        {formatMoney(dashboard.mrr.value_cents)}
+        {dashboard.mrr.available === false
+          ? "Indisponível"
+          : formatMoney(dashboard.mrr.value_cents)}
       </p>
     </CardShell>
 

@@ -73,7 +73,7 @@ const isPreapprovalSubscriptionEvent = (type: string) =>
   (type.includes("preapproval") && !type.includes("plan"));
 
 export default async ({ body, headers, query }: IWebhookDTO) => {
-  const gateway = getPaymentGateway();
+  const gateway = getPaymentGateway("mercadopago");
   const dataId = getWebhookDataId(body, query);
 
   const signatureValid = gateway.verifyWebhookSignature({

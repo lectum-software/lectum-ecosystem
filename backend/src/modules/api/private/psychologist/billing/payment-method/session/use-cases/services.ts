@@ -11,6 +11,7 @@ import {
   logBillingFailure,
   logBillingResult,
 } from "@/modules/billing/payment-gateway/observability";
+import { subscriptionGatewayName } from "@/modules/billing/subscription-provider";
 import type { IPaymentMethodSessionDTO } from "../DTOs/IPaymentMethodSessionDTO";
 import { PaymentMethodSessionRepository } from "../repositories/PaymentMethodSessionRepository";
 
@@ -47,7 +48,10 @@ export default async (data: IPaymentMethodSessionDTO) => {
 
   const subscription = await repository.findManageableSubscription(profile.id!);
 
-  if (!subscription?.gateway_subscription_id) {
+  if (
+    !subscription?.gateway_subscription_id ||
+    subscriptionGatewayName(subscription) !== "mercadopago"
+  ) {
     return {
       status: 409,
       ...error("billing_payment_method_subscription_required", {}),
@@ -63,7 +67,7 @@ export default async (data: IPaymentMethodSessionDTO) => {
 
   let gatewayCompleted = false;
   try {
-    const gateway = getPaymentGateway();
+    const gateway = getPaymentGateway("mercadopago");
     logBillingAttempt(operationContext);
     const gatewayResult = await gateway.updateSubscriptionCard({
       gatewaySubscriptionId: subscription.gateway_subscription_id,

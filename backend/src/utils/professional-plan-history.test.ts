@@ -345,3 +345,25 @@ test("texto do plano dominante distingue histórico desconhecido de sem plano co
     "Sem plano",
   );
 });
+
+test("histórico Stripe sem snapshot contratado não usa preço mutável nem classifica como gratuito", () => {
+  const value = history({
+    plans: [plan(), paidPlan],
+    subscriptions: [
+      subscription(),
+      subscription({
+        id: 5n,
+        subscription_id: "stripe-contract",
+        plan_id: "paid-plan",
+        source: "stripe",
+        gateway: "stripe",
+        has_gateway_subscription_id: true,
+        status: "ativa",
+        current_period_end: instant(500),
+      }),
+    ],
+  });
+  assert.equal(isPlanHistoryKnownAt(value, instant(100)), false);
+  assert.equal(getPlanSegmentAt({ plan_history: value }, instant(100)), "unknown");
+  assert.deepEqual(professionalSubscriptionsAt(value, instant(100)), []);
+});

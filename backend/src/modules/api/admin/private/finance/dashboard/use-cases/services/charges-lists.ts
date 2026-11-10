@@ -1,6 +1,7 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import { stripeFinancialCoverage } from "@/modules/billing/subscription-financial-values";
 import type {
   AdminFinanceChargeItem,
   AdminFinanceDateRange,
@@ -53,7 +54,7 @@ export const fetchGatewayPaymentSummaries = async (
   if (eligibleSubscriptions.length === 0) return new Map();
 
   try {
-    const gateway = getPaymentGateway();
+    const gateway = getPaymentGateway("mercadopago");
     const settledSummaries = await Promise.allSettled(
       eligibleSubscriptions.map((subscription) =>
         gateway.getSubscriptionPaymentSummary(subscription.gateway_subscription_id!),
@@ -323,6 +324,13 @@ export const listAdminFinanceCharges = async (query: AdminFinanceQuery): Promise
     ...msg("index", {}),
     data: {
       ...page,
+      coverage_complete: stripeFinancialCoverage(paymentReferenceSubscriptions),
+      ...(!stripeFinancialCoverage(paymentReferenceSubscriptions)
+        ? {
+            coverage_note:
+              "Lista parcial: recebimentos Stripe ainda não conciliados. Os valores exibidos não representam o total recebido.",
+          }
+        : {}),
       period,
       source: "payment_event+gateway_subscription_summary+professional_subscription",
     },

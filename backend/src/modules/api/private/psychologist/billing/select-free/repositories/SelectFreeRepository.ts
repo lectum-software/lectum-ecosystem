@@ -5,11 +5,12 @@ import type {
   subscription_plan,
 } from "@/interfaces/objects";
 import { normalizeFreePlanProfileCatalogLimits } from "@/modules/billing/free-subscription";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import {
   activeFreeSubscriptionWhere,
   activeProfessionalEntitlementWhere,
 } from "@/utils/subscription-entitlement";
-import type { ISelectFreeRepository } from "./interfaces/ISelectFreeRepository";
+import type { ISelectFreeRepository, SelectFreeResult } from "./interfaces/ISelectFreeRepository";
 
 export class SelectFreeRepository implements ISelectFreeRepository {
   readonly profileRepository: ORM["psychologist_profile"];
@@ -93,15 +94,57 @@ export class SelectFreeRepository implements ISelectFreeRepository {
     });
   }
 
-  async createFreeSubscription(
-    psychologistId: string,
-    planId: string,
-  ): Promise<professional_subscription> {
-    return prisma.$transaction(async (tx) => {
+  async createFreeSubscription(psychologistId: string, planId: string): Promise<SelectFreeResult> {
+    return withSerializableTransaction(async (tx): Promise<SelectFreeResult> => {
+      // Same profile lock/MVCC version as checkout, courtesy and account deletion.
+      const profiles = await tx.$queryRaw<Array<{ user_id: string }>>`
+        UPDATE psychologist_profiles p SET updated_at = p.updated_at FROM users u
+        WHERE p.id = ${psychologistId} AND u.id = p.user_id
+        AND p.deleted = false AND u.deleted = false AND u.active = true
+        RETURNING p.user_id`;
+      if (profiles.length !== 1) return { type: "profile_not_found" };
+      const freePlan = await tx.subscription_plan.findFirst({
+        where: { id: planId, slug: "gratuito", active: true, deleted: false },
+      });
+      if (!freePlan) return { type: "plan_not_found" };
+      const entitlement = await tx.professional_subscription.findFirst({
+        where: { ...activeProfessionalEntitlementWhere(), psychologist_id: psychologistId },
+        select: { id: true },
+      });
+      if (entitlement) return { type: "entitlement_conflict" };
+      const pending = await tx.billing_operation.findFirst({
+        where: {
+          user_id: profiles[0].user_id,
+          state: {
+            in: ["reserved", "creating", "requires_confirmation", "processing", "review_required"],
+          },
+        },
+        select: { id: true },
+      });
+      const external = await tx.professional_subscription.findFirst({
+        where: {
+          psychologist_id: psychologistId,
+          deleted: false,
+          gateway_subscription_id: { not: null },
+          status: { in: ["ativa", "inadimplente", "inativa"] },
+        },
+        select: { id: true },
+      });
+      if (pending || external) return { type: "operation_conflict" };
+      const current = await tx.professional_subscription.findFirst({
+        where: { ...activeFreeSubscriptionWhere(), psychologist_id: psychologistId },
+        include: { plan: true },
+        orderBy: { createdAt: "desc" },
+      });
+      if (current) return { type: "selected", current };
+
       await tx.professional_subscription.updateMany({
         where: {
           psychologist_id: psychologistId,
           deleted: false,
+          // Selecting free is never a cancellation request to an external provider.
+          gateway: null,
+          gateway_subscription_id: null,
           status: {
             not: "cancelada",
           },
@@ -135,7 +178,7 @@ export class SelectFreeRepository implements ISelectFreeRepository {
         tx,
       });
 
-      return created;
+      return { type: "selected", current: created };
     });
   }
 }

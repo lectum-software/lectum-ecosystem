@@ -1,7 +1,10 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateToken";
-import { AccountRepository } from "@/modules/api/private/account/repositories/AccountRepository";
+import {
+  AccountBillingConflictError,
+  AccountRepository,
+} from "@/modules/api/private/account/repositories/AccountRepository";
 import { isValidSuspensionDurationDays, suspensionExpiresAtFromDays } from "@/utils/account-status";
 import { ADMIN_VIEW_AS_TOKEN_TTL_SECONDS, buildAdminViewAsDeviceId } from "@/utils/admin-view-as";
 import type {
@@ -140,7 +143,10 @@ export const deleteAdminPsychologistAccount = async (
   }
 
   const blockingSubscription = findDeleteBlockingSubscription(profile);
-  if (blockingSubscription) {
+  if (
+    blockingSubscription ||
+    (await new AccountRepository().hasOpenBillingOperation(profile.user.id))
+  ) {
     return {
       status: 409,
       ...error("account_delete_active_subscription", {}),
@@ -149,29 +155,35 @@ export const deleteAdminPsychologistAccount = async (
 
   const accountRepository = new AccountRepository();
 
-  await accountRepository.deleteOwnAccount(profile.user, {
-    adminId: admin.id,
-    changedFields: ["Status da conta", "Dados da conta", "Sessões", "Perfil público"],
-    metadata: {
-      deletion_mode: "soft_delete_anonymization",
-      previous_status: currentStatus,
-      revoked_sessions_count: profile.user.user_tokens.length,
-      status: "deleted",
-    },
-    reason: data.b.reason,
-    safeAfter: {
-      "Dados da conta": "Anonimizados",
-      "Perfil público": "Removido",
-      Sessões: "Encerradas",
-      "Status da conta": ACCOUNT_STATUS_LABELS.deleted,
-    },
-    safeBefore: {
-      "E-mail da conta": maskEmail(profile.user.email),
-      Sessões: `${profile.user.user_tokens.length} ativa(s)`,
-      "Status da conta": ACCOUNT_STATUS_LABELS[currentStatus],
-    },
-    targetId: profile.user.id,
-  });
+  try {
+    await accountRepository.deleteOwnAccount(profile.user, {
+      adminId: admin.id,
+      changedFields: ["Status da conta", "Dados da conta", "Sessões", "Perfil público"],
+      metadata: {
+        deletion_mode: "soft_delete_anonymization",
+        previous_status: currentStatus,
+        revoked_sessions_count: profile.user.user_tokens.length,
+        status: "deleted",
+      },
+      reason: data.b.reason,
+      safeAfter: {
+        "Dados da conta": "Anonimizados",
+        "Perfil público": "Removido",
+        Sessões: "Encerradas",
+        "Status da conta": ACCOUNT_STATUS_LABELS.deleted,
+      },
+      safeBefore: {
+        "E-mail da conta": maskEmail(profile.user.email),
+        Sessões: `${profile.user.user_tokens.length} ativa(s)`,
+        "Status da conta": ACCOUNT_STATUS_LABELS[currentStatus],
+      },
+      targetId: profile.user.id,
+    });
+  } catch (failure) {
+    if (failure instanceof AccountBillingConflictError)
+      return { status: 409, ...error("account_delete_active_subscription", {}) };
+    throw failure;
+  }
 
   const response: AdminPsychologistAccountDeleteDTO = {
     deleted: true,

@@ -291,6 +291,8 @@ export type PsychologistsDashboardConversionBucket = {
 };
 
 export type PsychologistsDashboardConversion = {
+  available?: boolean;
+  unknown_count?: number;
   average_days: number | null;
   buckets: PsychologistsDashboardConversionBucket[];
   cohort_from: string;
@@ -356,6 +358,7 @@ export type PsychologistsDashboardSignupMethod = {
 };
 
 export type PsychologistsDashboardConversionBySignupMethodItem = {
+  available?: boolean;
   average_days: number | null;
   conversion_rate: number | null;
   converted_paid_count: number;

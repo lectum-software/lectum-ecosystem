@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { financialContractSelection } from "@/modules/billing/subscription-financial-values";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 
 const catalogSelect = {
@@ -130,6 +131,8 @@ export const adminPsychologistDetailSelect = {
       },
     },
     select: {
+      ...financialContractSelection,
+      gateway_subscription_id: true,
       createdAt: true,
       current_period_end: true,
       gateway: true,
@@ -186,9 +189,12 @@ export const adminPsychologistDetailSelect = {
           exp_month: true,
           exp_year: true,
           gateway: true,
+          gateway_token: true,
+          gateway_mode: true,
+          gateway_account_id: true,
           last4: true,
         },
-        take: 1,
+        take: 20,
         where: {
           deleted: false,
         },

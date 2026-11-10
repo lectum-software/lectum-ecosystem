@@ -1,11 +1,12 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import type { FinancialContract } from "@/modules/billing/subscription-financial-values";
 import type { ProfessionalPlanHistory } from "@/utils/professional-plan-history";
 import type {
   AdminPsychologistsDashboardDateRange,
   AdminPsychologistsDashboardDirectoryFilters,
 } from "../../DTOs/IAdminPsychologistsDashboardDTO";
 
-export type AdminPsychologistSubscriptionRecord = {
+export type AdminPsychologistSubscriptionRecord = Omit<FinancialContract, "plan"> & {
   createdAt: Date;
   current_period_end: Date | null;
   gateway: string | null;
@@ -15,7 +16,7 @@ export type AdminPsychologistSubscriptionRecord = {
   id: string;
   plan: {
     name: string;
-    price_cents: number;
+    price_cents: number | null;
     slug: string;
   };
   source: string;

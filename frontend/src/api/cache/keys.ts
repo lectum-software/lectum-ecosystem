@@ -74,6 +74,10 @@ const keys = {
     ],
   },
   psychologistBilling: {
+    stripeConfig: (courtesyRenewal: boolean) => [
+      "psychologist_billing_stripe_config",
+      courtesyRenewal,
+    ],
     plans: () => ["psychologist_billing_plans"],
     current: () => ["psychologist_billing_current"],
     subscription: () => ["psychologist_billing_subscription"],

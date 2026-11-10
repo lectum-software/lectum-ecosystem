@@ -1,12 +1,49 @@
 # Packages e Política de Dependências
 
-Última consulta dos manifests/lockfiles: **2026-09-10**, com `pnpm audit --prod` separado na raiz, backend, frontend, admin e video.
-Após atualização focal da TASK-178: **zero vulnerabilidades conhecidas** nos cinco escopos.
-O baseline anterior tinha 8 ocorrências no backend e 4 em cada app Next; versões corrigidas e
+Última verificação dos manifests/lockfiles: **2026-11-09**, com `pnpm audit --prod` separado na raiz, backend, frontend, admin e video.
+Após remediação focal da TASK-323 / ADR-0687: **zero advisories conhecidos** nos cinco escopos.
+Historicamente, a TASK-178 tratou um baseline de 8 ocorrências no backend e 4 em cada app Next; versões corrigidas e
 limitações de evidência estão no ADR-0496. Isso não equivale à conclusão do pentest funcional. React Hook Form permanece como
 padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
+
+### Remediacao focal 2026-11-09 (TASK-323 / ADR-0687)
+
+Antes da instalacao, foram revisados registry, changelogs, engines e consumidores
+dos advisories encontrados no gate Stripe. Plano: follow-redirects 1.16.3 nos
+overrides existentes de backend/frontend/admin; express-handlebars 9.0.4 no backend;
+glob14.0.4 limitado aos dois plugins Sentry dos apps Next, mantendo Sentry10 e sem
+override isolado de minimatch11. Dependencias e lockfiles continuam por app.
+Aplicados os overrides/locks focais: follow-redirects1.16.3, express-handlebars9.0.4,
+glob14.0.4 e minimatch11.0.5 transitivo. Auditorias `--prod` dos cinco escopos
+retornaram zero advisories conhecidos em 09/11. Nove testes reais de transporte
+loopback/filesystem/template passaram; checks e builds backend/frontend/admin
+passaram. Sentry/Stripe diretos preservados. Isso nao garante ausencia de falhas
+desconhecidas nem substitui E2E/piloto. Detalhes e trade-offs em ADR-0687.
+
+### Stripe 2026-11-09 (TASK-323 / ADR-0687; implementacao parcial)
+
+Decisao de produto: Payment Element dentro da Lectum e novas adesoes Stripe,
+preservando MP para contratos legados. Apos autorizacao, packages abaixo foram
+instalados e fixados nos respectivos manifests/lockfiles; isso nao comprova
+integracao financeira funcionando.
+
+| App | Package adotado | Compatibilidade declarada verificada no registry | Uso |
+|---|---|---|---|
+| Backend | `stripe@23.1.0` | Node >=20; peer `@types/node` >=20; runtime do app >=24.22.1 <25 | SDK oficial, webhooks e operacoes server-side provider-aware |
+| Frontend | `@stripe/react-stripe-js@7.0.1` | React/ReactDOM >=16.8 <20; peer stripe-js >=10 <11; app declara React/ReactDOM 19.2.4 | Payment Element na tela existente |
+| Frontend | `@stripe/stripe-js@10.2.1` | Node >=12.16; atende ao peer do wrapper React | Carregamento oficial de Stripe.js e tokenizacao no browser |
+
+Metadados consultados em 09/11 antes da instalacao: registry oficial
+[stripe](https://registry.npmjs.org/stripe/23.1.0),
+[react-stripe-js](https://registry.npmjs.org/@stripe%2freact-stripe-js/7.0.1) e
+[stripe-js](https://registry.npmjs.org/@stripe%2fstripe-js/10.2.1).
+Versoes/lockfiles fixados por app na implementacao autorizada; builds backend e
+frontend locais aprovados. Auditorias e E2E real seguem gates antes de concluir. Nao
+instalar SDK Stripe em Admin/Video nem remover SDK MP necessario aos legados.
+Dependencia compativel no manifesto nao comprova runtime, aprovacao de pagamento
+ou emissao fiscal. [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md).
 
 ### Backend runtime 2026-10-28 (TASK-32 / ADR-0648)
 

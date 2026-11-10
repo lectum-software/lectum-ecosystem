@@ -128,6 +128,7 @@ test("todas as envs canonicas estao cobertas ou excluidas com justificativa expl
     // Integracao opt-in com PostgreSQL local dev/test; nao consumida pelo runtime.
     "ANALYTICS_SESSION_INTEGRATION",
     "PROFILE_WATCH_LOCAL_INTEGRATION",
+    "LECTUM_STRIPE_DB_TESTS",
     // Orquestrador exclusivamente local.
     "FRONTEND_PORT",
     "DEV_ADMIN_ENABLED",

@@ -173,10 +173,10 @@ test("live pilot authorizes only one payment and requires independent fiscal con
     SENDNF_LIVE_ISSUANCE_ENABLED: "true",
     SENDNF_LIVE_PAYMENT_ID: "456",
   };
-  assert.equal(canIssuePayment(getInvoiceConfig(pilot)!, "456"), false);
+  assert.equal(canIssuePayment(getInvoiceConfig(pilot)!, "456", "mercadopago"), false);
   const config = getInvoiceConfig({ ...pilot, SENDNF_FISCAL_SETTINGS_CONFIRMED: "true" })!;
-  assert.equal(canIssuePayment(config, "456"), true);
-  assert.equal(canIssuePayment(config, "457"), false);
+  assert.equal(canIssuePayment(config, "456", "mercadopago"), true);
+  assert.equal(canIssuePayment(config, "457", "mercadopago"), false);
   assert.throws(() =>
     getInvoiceConfig({
       ...pilot,
@@ -184,7 +184,7 @@ test("live pilot authorizes only one payment and requires independent fiscal con
       SENDNF_LIVE_PAYMENT_ID: "",
     }),
   );
-  assert.equal(canIssuePayment({ ...config, autoEnabled: true }, "457"), true);
+  assert.equal(canIssuePayment({ ...config, autoEnabled: true }, "457", "mercadopago"), true);
   assert.notEqual(invoiceReference("a", "456", "live"), invoiceReference("a", "456", "test"));
 });
 
@@ -202,6 +202,7 @@ test("live eligibility accepts only confirmed real payments after cutoff", () =>
     { status: "pending" },
     { paidAt: new Date("2025-01-01") },
     { paidAt: new Date("2999-01-01") },
+    { paidAt: new Date(Number.NaN) },
   ])
     assert.throws(() => assertEligiblePayment({ ...real, ...change }, config));
 });
@@ -247,6 +248,7 @@ test("invoice eligibility excludes live, refund, pending, historical and wrong c
     { refundedCents: 100 },
     { status: "pending" },
     { paidAt: null },
+    { paidAt: new Date(Number.NaN) },
     { currency: "USD" },
     { paidAt: new Date("2025-01-01") },
   ]) {
@@ -254,6 +256,37 @@ test("invoice eligibility excludes live, refund, pending, historical and wrong c
       assertEligiblePayment({ ...parsed, ...change }, getInvoiceConfig(settings)!),
     );
   }
+});
+
+test("fiscal cutoff uses the receipt transition and independently rejects invalid or future invoice facts", () => {
+  const parsed = parseInvoicePayment(
+    resolveAuthorizedPayment(authorized, "subscription_authorized_payment", "123"),
+    payment,
+  );
+  const paidAt = new Date("2026-01-02T12:00:00Z");
+  const config = { mode: "test" as const, paymentsFrom: new Date("2026-01-02T11:00:00Z") };
+  for (const invoicePaidAt of [
+    new Date("2026-01-02T10:00:00Z"),
+    new Date("2026-01-02T13:00:00Z"),
+  ]) {
+    const input = { ...parsed, paidAt, invoicePaidAt };
+    const before = { ...input };
+    assertEligiblePayment(input, config);
+    assert.deepEqual(input, before);
+    assert.throws(() =>
+      assertEligiblePayment(input, {
+        ...config,
+        paymentsFrom: new Date("2026-01-02T12:00:01Z"),
+      }),
+    );
+  }
+  for (const invoicePaidAt of [null, new Date(Number.NaN), new Date("2999-01-01")])
+    assert.throws(() => assertEligiblePayment({ ...parsed, paidAt, invoicePaidAt }, config));
+  assertEligiblePayment(
+    { ...parsed, paidAt, invoicePaidAt: paidAt },
+    { ...config, paymentsFrom: paidAt },
+  );
+  assertEligiblePayment(parsed, config); // MP has only its own date_approved, unchanged.
 });
 
 test("errors do not leak provider payload and backoff is bounded", () => {

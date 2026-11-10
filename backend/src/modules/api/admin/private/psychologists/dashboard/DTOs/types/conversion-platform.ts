@@ -18,6 +18,8 @@ export type AdminPsychologistsDashboardConversionBucket = {
 };
 
 export type AdminPsychologistsDashboardConversion = {
+  available?: boolean;
+  unknown_count?: number;
   average_days: number | null;
   buckets: AdminPsychologistsDashboardConversionBucket[];
   cohort_from: string;
@@ -83,6 +85,7 @@ export type AdminPsychologistsDashboardSignupMethod = {
 };
 
 export type AdminPsychologistsDashboardConversionBySignupMethodItem = {
+  available?: boolean;
   average_days: number | null;
   conversion_rate: number | null;
   converted_paid_count: number;

@@ -1,4 +1,8 @@
 import {
+  isStripeFinancialContract,
+  stripePaidPeriodAt,
+} from "@/modules/billing/subscription-financial-values";
+import {
   type AdminPsychologistWhatsappTrafficOriginSourceId,
   isPaidProfessionalSubscription,
 } from "@/utils/admin-psychologist-analytics";
@@ -20,6 +24,7 @@ export const profileCreatedUntil = (profile: AdminPsychologistProfileRecord, dat
   profile.user.createdAt <= date;
 
 const subscriptionActiveAt = (subscription: AdminPsychologistSubscriptionRecord, date: Date) => {
+  if (isStripeFinancialContract(subscription)) return stripePaidPeriodAt(subscription, date);
   if (subscription.status !== STATUS_ACTIVE) return false;
   if (subscription.createdAt > date) return false;
 

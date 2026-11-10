@@ -228,6 +228,13 @@ export interface professional_subscription extends PersistedObject {
   source?: "free_signup" | "mercadopago" | "admin_grant" | "legacy" | string | null;
   gateway?: string | null;
   gateway_subscription_id?: string | null;
+  gateway_mode?: string | null;
+  gateway_account_id?: string | null;
+  price_version_id?: string | null;
+  contracted_amount_cents?: number | null;
+  contracted_currency?: string | null;
+  contracted_interval?: string | null;
+  contracted_interval_count?: number | null;
   current_period_end?: Date | null;
   billing_issue_started_at?: Date | null;
   billing_grace_ends_at?: Date | null;

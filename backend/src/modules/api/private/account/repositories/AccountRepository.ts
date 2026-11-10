@@ -12,6 +12,7 @@ import {
   updateAccountAndClearSessions,
 } from "./account-session-store";
 import type { IAccountRepository } from "./interfaces/IAccountRepository";
+import { assertNoBlockingAccountBilling, hasOpenBillingOperation } from "./support/account-billing";
 import {
   ACCOUNT_DELETE_TRANSACTION_OPTIONS,
   type AccountDeletionAdminAudit,
@@ -22,6 +23,8 @@ import {
 } from "./support/account-query";
 import { deleteBillingDetails } from "./support/delete-billing-details";
 import { buildLogoutSubscriptionFilter } from "./support/logout-subscription";
+
+export { AccountBillingConflictError } from "./support/account-billing";
 
 export class AccountRepository implements IAccountRepository {
   readonly repository: ORM["user"];
@@ -123,6 +126,10 @@ export class AccountRepository implements IAccountRepository {
     return updateAccountAndClearSessions(userId, data);
   }
 
+  async hasOpenBillingOperation(userId: string): Promise<boolean> {
+    return hasOpenBillingOperation(userId);
+  }
+
   async findBlockingSubscription(userId: string): Promise<professional_subscription | null> {
     const profile = await prisma.psychologist_profile.findUnique({
       where: {
@@ -132,9 +139,10 @@ export class AccountRepository implements IAccountRepository {
         subscriptions: {
           where: {
             deleted: false,
-            status: {
-              in: ["ativa", "inadimplente"],
-            },
+            OR: [
+              { status: { in: ["ativa", "inadimplente"] } },
+              { status: "inativa", gateway_subscription_id: { not: null } },
+            ],
           },
           orderBy: {
             createdAt: "desc",
@@ -191,6 +199,7 @@ export class AccountRepository implements IAccountRepository {
         select: { deleted: true },
       });
       if (!account || account.deleted) return;
+      if (user.role === "psicologo") await assertNoBlockingAccountBilling(tx, userId);
       const memberships = await tx.community_member.groupBy({
         by: ["community_id"],
         where: {

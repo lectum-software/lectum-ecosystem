@@ -748,3 +748,5 @@ Formato recomendado:
 - [ADR-0684 — Caption presentation and controls](0684-caption-interface-refinements.md)
 - [ADR-0685 — Default bounded directory playback](0685-directory-bounded-playback-default.md)
 - [ADR-0686 — Video presentation and scroll cost](0686-video-presentation-and-scroll-cost.md)
+- [ADR-0687 — Stripe incorporado, contratos por gateway e preco versionado](0687-stripe-embedded-checkout.md)
+- [ADR-0688 — Stripe credito-only com cobranca controlada no servidor](0688-stripe-credit-only-server-collection.md)

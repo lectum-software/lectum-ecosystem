@@ -27,9 +27,10 @@ const accountProfileSelect = {
     },
     where: {
       deleted: false,
-      status: {
-        in: ["ativa", "inadimplente"],
-      },
+      OR: [
+        { status: { in: ["ativa", "inadimplente"] } },
+        { status: "inativa", gateway_subscription_id: { not: null } },
+      ],
     },
   },
   user_id: true,

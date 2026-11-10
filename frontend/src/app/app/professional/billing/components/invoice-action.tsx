@@ -13,6 +13,8 @@ const statusLabels: Record<string, string> = {
   pending: "Nota fiscal em processamento",
   processing: "Nota fiscal em processamento",
   authorized: "Nota fiscal aguardando disponibilização",
+  simulated: "Documento simulado — não emitido pelo governo",
+  authorization_unverified: "Autorização fiscal ainda não verificada",
   blocked: "Nota fiscal aguardando regularização",
   failed: "Emissão fiscal pendente",
   rejected: "Nota fiscal em revisão",

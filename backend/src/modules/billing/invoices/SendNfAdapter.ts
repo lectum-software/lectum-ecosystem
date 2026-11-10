@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { InvoiceError, type InvoiceMode, isInvoiceLiveRuntime } from "./config";
 import { documentSchema, type InvoiceRequest, parseProvider, providerId } from "./contracts";
+import { governmentTestTransmission } from "./government-test-transmission";
 
 const ORIGIN = "https://api.sendnf.com";
 const MAX_JSON_BYTES = 1024 * 1024;
@@ -89,12 +90,19 @@ export class SendNfAdapter {
   }
 
   async readiness() {
-    return parseProvider(
+    const readiness = parseProvider(
       z.object({
         nfse: z.object({ ready: z.boolean(), missing: z.array(z.string()).default([]) }),
+        government_test_transmission: z.unknown().optional(),
       }),
       await this.json(`/v1/companies/${this.companyId}/readiness`),
-    ).nfse;
+    );
+    return {
+      ...readiness.nfse,
+      governmentTestTransmission: governmentTestTransmission(
+        readiness.government_test_transmission,
+      ),
+    };
   }
 
   async productionStatus() {

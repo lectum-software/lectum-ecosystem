@@ -141,7 +141,8 @@ export const formatNextChargeDate = (item: FinanceSubscriptionItem) =>
 export const formatCancellationDate = (item: FinanceSubscriptionItem) =>
   formatNullableDate(item.cancelled_at ?? item.updated_at);
 
-export const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
+export const formatMoney = (cents: number | null) =>
+  cents === null ? "Indisponível" : moneyFormatter.format(cents / 100);
 
 export const formatNullableMoney = (cents: number | null) =>
   typeof cents === "number" ? formatMoney(cents) : "Valor indisponível";

@@ -2,9 +2,18 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type { admin } from "@/interfaces/objects";
 import {
-  getPaymentGateway,
+  getStripeGateway,
   isPaymentGatewayConfigurationError,
 } from "@/modules/billing/payment-gateway";
+import {
+  cancelPendingStripeCreditIntents,
+  prepareStripeCreditCancellation,
+} from "@/modules/billing/stripe/collection-cancellation";
+import {
+  getStoredSubscriptionGateway,
+  subscriptionGatewayName,
+  withContractedPlan,
+} from "@/modules/billing/subscription-provider";
 import {
   grantProfessionalSubscription,
   parseGrantCrpRegistrationDate,
@@ -25,6 +34,7 @@ import {
   AdminPsychologistBillingRepository,
   type AdminPsychologistBillingSubscription,
 } from "../repositories/AdminPsychologistBillingRepository";
+import { gatewayLabel, sourceLabel } from "./billing-labels";
 
 const COURTESY_PERIOD_OPTIONS = [
   { days: 30, label: "30 dias" },
@@ -73,8 +83,7 @@ const isAdminCancelableGatewaySubscription = (
 ) =>
   Boolean(
     subscription &&
-      subscription.source === "mercadopago" &&
-      (!subscription.gateway || subscription.gateway === "mercadopago") &&
+      subscriptionGatewayName(subscription) &&
       subscription.gateway_subscription_id &&
       subscription.plan.slug === "profissional" &&
       (subscription.status !== "cancelada" ||
@@ -85,22 +94,6 @@ const isAdminCancelableGatewaySubscription = (
 
 const hasBlockingExternalSubscription = (profile: AdminPsychologistBillingRecord) =>
   profile.subscriptions.some((subscription) => hasExternalBilling(subscription));
-
-const gatewayLabel = (subscription: AdminPsychologistBillingSubscription | null) => {
-  const value = (subscription?.gateway || subscription?.source || "").toLowerCase();
-  if (value.includes("mercadopago") || value.includes("mercado_pago")) return "Mercado Pago";
-
-  return subscription?.gateway || null;
-};
-
-const sourceLabel = (source?: string | null) => {
-  if (source === "admin_grant") return "Cortesia administrativa";
-  if (source === "mercadopago") return "Mercado Pago";
-  if (source === "free_signup") return "Cadastro gratuito";
-  if (source === "legacy") return "Legado";
-
-  return source ?? null;
-};
 
 const subscriptionStartedAt = (subscription: AdminPsychologistBillingSubscription | null) =>
   subscription?.grant_started_at ?? subscription?.createdAt ?? null;
@@ -121,16 +114,18 @@ const buildPlan = (
   granted_by: subscription?.granted_by ?? null,
   has_external_billing: hasExternalBilling(subscription),
   id: subscription?.id ?? null,
-  interval: subscription?.plan.interval ?? null,
+  interval: subscription ? withContractedPlan(subscription).plan.interval : null,
   is_courtesy: subscription?.source === "admin_grant",
-  is_paid: subscription?.source === "mercadopago" && (subscription.plan.price_cents ?? 0) > 0,
+  is_paid:
+    Boolean(subscriptionGatewayName(subscription)) &&
+    (subscription?.contracted_amount_cents ?? subscription?.plan.price_cents ?? 0) > 0,
   lifetime_value_available: paymentMetrics.lifetimeValueAvailable,
   lifetime_value_cents: paymentMetrics.lifetimeValueCents,
   lifetime_value_unavailable_reason: paymentMetrics.lifetimeValueUnavailableReason,
   paid_installments_count: paymentMetrics.paidInstallmentsCount,
   plan_name: subscription?.plan.name ?? null,
   plan_slug: subscription?.plan.slug ?? null,
-  price_cents: subscription?.plan.price_cents ?? null,
+  price_cents: subscription ? withContractedPlan(subscription).plan.price_cents : null,
   source: subscription?.source ?? null,
   source_label: sourceLabel(subscription?.source),
   started_at: subscriptionStartedAt(subscription),
@@ -274,15 +269,14 @@ export const showAdminPsychologistBilling = async (
       : null;
   const paymentSource = scheduledGatewaySubscription ?? currentSubscription;
   const canUsePaymentMethod = Boolean(
-    paymentSource?.source === "mercadopago" &&
-      paymentSource.gateway === "mercadopago" &&
-      paymentSource.status !== "cancelada",
+    subscriptionGatewayName(paymentSource) && paymentSource?.status !== "cancelada",
   );
   const [paymentMethod, paymentHistoryItems, paymentMetrics] = await Promise.all([
     canUsePaymentMethod
       ? repository.findPaymentMethod(
           profile.user.id,
           paymentSource?.gateway_subscription_id ?? null,
+          paymentSource,
         )
       : Promise.resolve(null),
     repository.showPaymentHistory(paymentSource),
@@ -484,8 +478,14 @@ export const cancelSubscription = async (
   }
 
   try {
-    const gateway = getPaymentGateway();
-    if (!immediate) await prepareCancellation(subscription, gateway);
+    const provider = subscriptionGatewayName(subscription)!;
+    const gateway = getStoredSubscriptionGateway(subscription);
+    if (provider === "stripe") {
+      const identity = getStripeGateway().identity;
+      if (await prepareStripeCreditCancellation(subscription.id!, identity))
+        await cancelPendingStripeCreditIntents(subscription.id!, identity);
+    }
+    if (!immediate && provider === "mercadopago") await prepareCancellation(subscription, gateway);
     const remote = immediate
       ? await gateway.getSubscription(subscription.gateway_subscription_id)
       : null;
@@ -497,11 +497,19 @@ export const cancelSubscription = async (
       throw new Error("admin_subscription_cancel_target_invalid");
     }
     const gatewayResult =
-      remote?.status === "cancelada"
+      remote?.status === "cancelada" &&
+      (provider !== "stripe" ||
+        remote.gateway_status === "canceled" ||
+        remote.gateway_status === "incomplete_expired")
         ? remote
-        : await gateway.cancelSubscription({
-            gatewaySubscriptionId: subscription.gateway_subscription_id,
-          });
+        : immediate && provider === "stripe"
+          ? await getStripeGateway().cancelImmediately({
+              subscriptionId: subscription.gateway_subscription_id,
+              reason: "administrative",
+            })
+          : await gateway.cancelSubscription({
+              gatewaySubscriptionId: subscription.gateway_subscription_id,
+            });
 
     if (gatewayResult.status !== "cancelada") {
       return {
@@ -521,7 +529,7 @@ export const cancelSubscription = async (
           ...(immediate ? ["Fim dos benefícios"] : []),
         ],
         metadata: {
-          gateway: "mercadopago",
+          gateway: provider,
           gateway_status: gatewayResult.gateway_status ?? null,
           plan_slug: subscription.plan.slug,
           subscription_id: subscription.id,
@@ -530,13 +538,13 @@ export const cancelSubscription = async (
         reason,
         safeAfter: {
           Assinatura: planLabel(subscription),
-          "Provedor de pagamento": "Mercado Pago",
+          "Provedor de pagamento": provider === "stripe" ? "Stripe" : "Mercado Pago",
           Status: "Cancelada",
           Benefícios: immediate ? "Encerrados imediatamente" : "Mantidos até o fim do período pago",
         },
         safeBefore: {
           Assinatura: planLabel(subscription),
-          "Provedor de pagamento": "Mercado Pago",
+          "Provedor de pagamento": provider === "stripe" ? "Stripe" : "Mercado Pago",
           Status: statusLabel(subscription.status),
         },
         targetId: profile.user.id,

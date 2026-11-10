@@ -42,7 +42,11 @@ export interface ISubscriptionRepository {
     cancelled: professional_subscription;
     current: professional_subscription;
   }>;
-  showPaymentMethod(userId: string, gatewayToken?: string | null): Promise<payment_method | null>;
+  showPaymentMethod(
+    userId: string,
+    gatewayToken?: string | null,
+    subscription?: professional_subscription | null,
+  ): Promise<payment_method | null>;
   showPaymentHistory(
     subscription: professional_subscription | null,
   ): Promise<BillingPaymentHistoryItem[]>;

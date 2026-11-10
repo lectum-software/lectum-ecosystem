@@ -16,6 +16,10 @@ import {
   stopAccountMediaCleanup,
 } from "@/modules/account-deletion/media-cleanup";
 import {
+  startStripeBillingScheduler,
+  stopStripeBillingScheduler,
+} from "@/modules/billing/stripe/scheduler";
+import {
   startAutomaticCaptions,
   stopAutomaticCaptions,
 } from "@/modules/video-assets/captions/scheduler";
@@ -28,6 +32,7 @@ const server = app.listen(env.PORT, () => {
   startNotificationDigestScheduler();
   startNotificationCampaignScheduler();
   startBillingDunningScheduler();
+  startStripeBillingScheduler();
   startInvoiceScheduler();
   startAccountMediaCleanup();
   startAutomaticCaptions();
@@ -42,6 +47,7 @@ const shutdown = async () => {
   stopNotificationCampaignScheduler();
   stopNotificationDigestScheduler();
   stopBillingDunningScheduler();
+  stopStripeBillingScheduler();
   stopInvoiceScheduler();
   stopAccountMediaCleanup();
   stopAutomaticCaptions();

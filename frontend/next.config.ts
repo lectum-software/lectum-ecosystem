@@ -24,6 +24,8 @@ const remotePatterns: RemotePattern[] = publicAssetSources.map((source) => ({
 }));
 const assetCspSources = publicAssetSources.map((source) => source.origin);
 const allowedDevOrigins = new Set<string>();
+const stripeScriptCspSources = ["https://js.stripe.com", "https://*.js.stripe.com"];
+const stripeFrameCspSources = [...stripeScriptCspSources, "https://hooks.stripe.com"];
 const mercadoPagoCoreCspSources = [
   "https://mercadopago.com",
   "https://*.mercadopago.com",
@@ -62,13 +64,13 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} ${mercadoPagoScriptCspSources.join(" ")}`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} ${mercadoPagoScriptCspSources.join(" ")} ${stripeScriptCspSources.join(" ")}`,
   `style-src 'self' 'unsafe-inline' ${mercadoPagoStaticCspSources.join(" ")}`,
   `font-src 'self' data: ${mercadoPagoStaticCspSources.join(" ")}`,
   `img-src 'self' data: blob: ${assetCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")}`,
   `media-src 'self' blob: ${assetCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")}`,
-  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${cepLookupCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")} ${cloudflareStreamUploadCspSources.join(" ")} ${sentryIngestOrigin ?? ""} https://*.mercadolibre.com`,
-  `frame-src ${mercadoPagoCoreCspSources.join(" ")} https://*.mercadolibre.com`,
+  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${cepLookupCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")} ${cloudflareStreamUploadCspSources.join(" ")} ${sentryIngestOrigin ?? ""} https://*.mercadolibre.com https://api.stripe.com`,
+  `frame-src ${mercadoPagoCoreCspSources.join(" ")} https://*.mercadolibre.com ${stripeFrameCspSources.join(" ")}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
 ].join("; ");
@@ -136,6 +138,11 @@ process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",")
   });
 
 const nextConfig: NextConfig = {
+  logging: {
+    // Stripe may append a client secret during bank authentication. Do not log
+    // the incoming callback before the proxy strips its query parameters.
+    incomingRequests: { ignore: [/^\/app\/profissional\/assinatura\/retorno(?:[/?]|$)/] },
+  },
   webpack(config) {
     if (process.env.LECTUM_LOW_DISK_MODE === "1") {
       config.cache = false;
@@ -403,6 +410,13 @@ const nextConfig: NextConfig = {
       {
         source: "/app/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/app/profissional/assinatura/retorno",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
       },
       {
         source: "/auth/:path*",
