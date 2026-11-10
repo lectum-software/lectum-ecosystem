@@ -13,9 +13,13 @@ de aceite e a fonte de verdade continuam na [TASK-320](TASK-320-stripe-embedded-
   protocolo18652759. Nao alegar credito-only integral sem essa prova. Atribuicao
   automatica de cartao no trial nao e impedida apenas pelo guard local.
 - Fiscal: chave SendNF test restrita instalada apenas localmente; consultas GET
-  passaram. ISS/descricao/codigos precisam confirmacao contabil. Suporte esclareceu
+  passaram. Codigo010501 e ISS2,01% constam como confirmados em26/10 no historico;
+  falta reconfirmar vigencia e recuperar a descricao fiscal aprovada, nao refazer
+  cadastro. Suporte esclareceu
   cnc_missing_in_test: cadastro governamental test ausente, sem regularizacao a
-  cargo da Lectum. Simulacao automatica nao tem opcao de desligar no provider.
+  cargo da Lectum. A documentacao atual passou a oferecer `simulation: "never"`
+  para rejeitar em vez de simular no modo test; esse parametro nao foi enviado,
+  validado externamente ou adotado pelo emissor nesta etapa.
   Documento simulado nao comprova autorizacao governamental. Nao emitir nem
   executar preview sem autorizacao; nenhuma alteracao cadastral compartilhada.
 - Customer/setup com resposta perdida, replay real apos corteTCP e eventos
@@ -32,6 +36,13 @@ Campos de autorizacao ausentes/contraditorios ficam nao verificados. O endpoint
 rele/classifica mesmo cache antigoauthorized; conciliacao preserva documento e
 referencia, sem nova emissao para "corrigir" um espelho. Historico MP relatado nao
 substitui E2E Stripe/SendNF nem confirma parametros fiscais atuais.
+
+O diagnostico `check-sendnf` separa `nfseReady` (cadastro) de
+`governmentTestTransmission` (ultima evidencia test informada pelo provider).
+`available` nao garante uma nova transmissao; `simulated` registra a limitacao
+governamental, e campo ausente/invalido retorna `unknown`. Motivo livre nunca e
+impresso. Essa leitura nao altera flags, nao faz preview e nao emite notas.
+Referencia: https://sendnf.com/desenvolvedores/api/ (revisada em10/11/2026).
 
 **Atencao de rollout fiscal (Backend/Frontend):** documento antigo legitimo
 sem os novos sinais explicitos pode ficar authorization_unverified e seu PDF

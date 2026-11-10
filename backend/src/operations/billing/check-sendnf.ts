@@ -27,6 +27,7 @@ async function main() {
     JSON.stringify({
       ...identity,
       nfseReady: readiness.ready,
+      governmentTestTransmission: readiness.governmentTestTransmission,
       production,
       ...(fiscal.result
         ? {

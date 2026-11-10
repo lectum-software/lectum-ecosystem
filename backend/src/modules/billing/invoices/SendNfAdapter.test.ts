@@ -61,6 +61,68 @@ function liveRuntime(t: TestContext) {
   });
 }
 
+test("readiness separates cadastral readiness from government test transmission", async (t) => {
+  const calls = transport(t, {
+    [`/v1/companies/${companyId}/readiness`]: {
+      nfse: { ready: true, missing: [] },
+      government_test_transmission: {
+        status: "simulated",
+        reason_code: "cnc_missing_in_test",
+        reason: "private provider reason",
+      },
+    },
+  });
+  const readiness = await new SendNfAdapter("nt_test_unit_test_only", companyId).readiness();
+  assert.deepEqual(readiness, {
+    ready: true,
+    missing: [],
+    governmentTestTransmission: {
+      status: "simulated",
+      reasonCode: "cnc_missing_in_test",
+      checkedAt: null,
+    },
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].init?.method, "GET");
+  assert.equal(calls[0].init?.body, undefined);
+  assert.equal(JSON.stringify(readiness).includes("private"), false);
+});
+
+test("readiness preserves core contract with absent or malformed new metadata", async (t) => {
+  let metadata: unknown;
+  t.mock.method(globalThis, "fetch", async (_input: string, init?: RequestInit) => {
+    assert.equal(init?.method, "GET");
+    return new Response(
+      JSON.stringify({
+        nfse: { ready: false, missing: ["certificate"] },
+        government_test_transmission: metadata,
+      }),
+    );
+  });
+  for (metadata of [undefined, null, "available", [], { status: "unsupported" }])
+    assert.deepEqual(await new SendNfAdapter("nt_test_unit_test_only", companyId).readiness(), {
+      ready: false,
+      missing: ["certificate"],
+      governmentTestTransmission: { status: "unknown", reasonCode: null, checkedAt: null },
+    });
+});
+
+test("government metadata cannot make invalid cadastral readiness pass", async (t) => {
+  let nfse: unknown;
+  t.mock.method(globalThis, "fetch", async (_input: string, init?: RequestInit) => {
+    assert.equal(init?.method, "GET");
+    return new Response(
+      JSON.stringify({ nfse, government_test_transmission: { status: "available" } }),
+    );
+  });
+  for (nfse of [undefined, null, {}, { ready: "true" }, { ready: true, missing: "certificate" }])
+    await assert.rejects(
+      new SendNfAdapter("nt_test_unit_test_only", companyId).readiness(),
+      (error: unknown) =>
+        error instanceof InvoiceError && error.code === "provider_contract_invalid",
+    );
+});
+
 test("production readiness recognizes explicit activation with only the waived test-note pending", async (t) => {
   transport(t, { "/v1/go-live": goLive });
   assert.deepEqual(await adapter().productionStatus(), { live: true });

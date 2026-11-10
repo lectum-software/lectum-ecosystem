@@ -249,6 +249,12 @@ separada; configuracao remota ja observada nao autoriza cobranca de validacao.
   - [x] Retorno historico sem vigencia foi para Minha assinatura/Plano Gratuito, sem onboarding pago ou nova tentativa; checkout vazio em320/390/1440px, SDK test BRL2990, zero inputs de cartao fora do iframe. Autenticacao temporaria da fixture restaurada; nao comprova signup/email/CFP nem Safari/iPhone fisico. Aprovacao visual solicitada, nao presumida.
 - [x] [Runbook operacional](STRIPE-OPERATIONS.md), monitoramento, rollout/rollback e limites do piloto definidos; comandos compilados e flags separados, nenhuma allowlist de usuario prometida, publicacao/piloto live continuam dependentes de autorizacao separada e demais gates.
 
+- [x] Complemento local de diagnostico SendNF: distinguir readiness cadastral da
+  observacao historica `government_test_transmission`, com estados/codigos seguros,
+  fallback desconhecido e nenhuma habilitacao/emissao. Contrato oficial revisado
+  em10/11 passou a documentar esse campo e a opcao `simulation: "never"`;
+  esta ultima sera apenas registrada, nao enviada nem ativada nesta etapa.
+
 ### Dependencias externas e autorizacoes separadas
 
 - [ ] Politica somente credito cobre setup/cortesia, recuperacao e renovacao no E2E completo.
@@ -1190,3 +1196,39 @@ Resultados desta rodada:
   dump0600 atualizado. Checkpoint local registra implementacao parcial validada;
   nenhuma publicacao, nota ou mudanca Radar/live. A task integral aguarda cortesia
   e validacao fiscal externa autorizada, sem promover simulacao a autorizacao real.
+
+
+### Revisao residual e readiness governamental SendNF — 10/11/2026
+
+- Usuario pediu concluir somente pendencias locais enquanto aguarda contabilidade,
+  sem emitir notas, alterar producao ou Radar SetupIntents. Revisao independente
+  Stripe nao encontrou novo P1/P2 no escopo ja validado; nao repetimos checkout,
+  3DS, dunning ou cobrancas sandbox para cobrir gates externos diferentes.
+- Confirmado no historico b509baa53: codigo010501 e ISS201 (2,01%) registrados como
+  confirmados com contador em26/10. Pendencia contabil reduzida a vigencia e texto
+  fiscal exato ja aprovado; empresa/certificado/rota existentes sao reutilizaveis.
+  Corte/lote/autorizacao de teste sao controles operacionais, nao novo cadastro.
+- A referencia oficial SendNF agora documenta government_test_transmission em
+  readiness e simulationnever na emissao. Esse contrato atual supera a informacao
+  anterior de inexistencia de opt-out; parametro de emissao apenas registrado,
+  nao implementado, enviado ou validado externamente. Nenhum POST/preview.
+- Adapter/CLI passam a distinguir cadastro pronto da ultima evidencia governamental
+  test. Campos opcionais novos toleram ausencia/erro; estados/motivos por allowlist,
+  checkedAt validado preserva o instante do provider, reason livre descartado.
+  Available nao garante a proxima emissao; worker/flags/politica ficam inalterados.
+- 33 testes focais passaram sem skips (contrato/politica, nao E2E fiscal). Revisao
+  independente do diff sem P1/P2. GET real restrito test validou identidade e
+  readiness:2HTTP200, zero nonGET/alteracoes de banco/provider. Cadastro readytrue;
+  evidencia governamental simulated/cnc_missing_in_test, checkedAt em04/11.
+  Evidencia privada sendnf-government-readiness-evidence-20261110.json sem PII.
+- Nenhuma env, migration, dependencia ou UI nova. Sem necessidade de alterar
+  parametros fiscais ou nota historica para conferir a resposta. Gate de emissao
+  externa permanece aberto; nao usar o diagnostico como aceite governamental.
+- Backend check aprovado: Prisma generate/TypeScript/Biome e1329 testes passaram,
+  14 testes opt-in nao executados nesta rodada; nenhuma persistencia foi alterada,
+  evidencias PostgreSQL anteriores preservadas. Gates raiz de env, tamanho, ciclos,
+  tasks, ADR e diff aprovados. Bump unico0.1.800→0.1.801 nos cinco manifests;
+  check:version e build backend aprovados. Commit somente local; sem push/deploy.
+- Smoke compilado0.1.801: health/ready/ping HTTP200 e no-store, sem credenciais
+  externas/schedulers; processo local encerrado graciosamente. Producao, Radar,
+  certificados, emissoes e notas existentes permaneceram intocados.

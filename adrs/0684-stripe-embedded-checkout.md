@@ -654,3 +654,23 @@ migration ou backfill presumido; clientes antigos degradam novos estados para
 pendencia. PDF exige releitura/classificacao atual mesmo se cache local antigo
 authorized. Nao promover documento simulado a prova fiscal nem disponibiliza-lo
 silenciosamente como NFS-e autorizada. Download de espelho nao faz parte desta etapa.
+
+### Diagnostico fiscal aditivo, sem emissao
+
+Na revisao de10/11 posterior a resposta de suporte, a referencia publica
+https://sendnf.com/desenvolvedores/api/ passou a documentar
+`government_test_transmission` em GET readiness e `simulation: "never"` no POST
+de NFS-e. A afirmacao anterior de ausencia de opt-out fica historica, superada
+pelo contrato publicado; nao houve envio desse parametro nem prova de sua
+execucao. Nunca ativar emissao para testar a novidade sem autorizacao separada.
+
+Ler a evidencia adicional no diagnostico existente, preservando ready/missing
+e o comportamento do worker. Status available descreve a ultima nota test,
+nao um probe atual nem garantia da proxima transmissao. Aceitar somente estados
+e motivos controlados, timestamp valido ou nulo; descartar reason livre e todo
+dado cadastral. Campo novo ausente/malformado permanece desconhecido, sem
+invalidar o readiness legado nem presumir autorizacao governamental.
+
+Sem env nova, package, migration, UI ou mudanca de politica de emissao. Impacto
+de futura publicacao restrito ao diagnostico aditivo backend/CLI; rollback pelo
+artefato anterior, sem mutacao de dados. Producao e Radar permanecem intocados.
