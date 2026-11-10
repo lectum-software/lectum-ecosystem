@@ -30,6 +30,11 @@ export function VideoStartupCover({
     let generation = 0;
     let progressFrame = 0;
     let progressStart = video.currentTime;
+    const presentedFrames = () => {
+      const quality = video.getVideoPlaybackQuality?.();
+      return quality ? quality.totalVideoFrames - quality.droppedVideoFrames : null;
+    };
+    let frameStart = presentedFrames();
     let revealed = false;
     const cancel = () => {
       generation += 1;
@@ -44,6 +49,7 @@ export function VideoStartupCover({
       cancel();
       revealed = false;
       progressStart = video.currentTime;
+      frameStart = presentedFrames();
       setReady(null);
     };
     const canPresent = () =>
@@ -68,8 +74,8 @@ export function VideoStartupCover({
         });
       });
     };
-    // Safari can omit a frame callback after moving a prepared video. Require
-    // sustained playback progress, never just a timeout or a seek, before fallback.
+    // A progressing media clock may be audio-only. Missing callbacks require
+    // new non-dropped frames, not just elapsed playback time.
     const watchProgress = () => {
       if (revealed || progressFrame || video.paused) return;
       const current = generation;
@@ -78,8 +84,16 @@ export function VideoStartupCover({
         progressFrame = 0;
         if (!canPresent() || video.currentTime < progressStart) {
           progressStart = video.currentTime;
+          frameStart = presentedFrames();
         } else if (video.currentTime - progressStart >= 0.12) {
-          afterPaint();
+          const frames = presentedFrames();
+          if (frames !== null && frameStart !== null) {
+            if (frames > frameStart) afterPaint();
+            else if (frames < frameStart) frameStart = frames;
+          } else if (typeof video.requestVideoFrameCallback !== "function") {
+            // Compatibility only for browsers exposing neither frame API.
+            afterPaint();
+          }
         }
         watchProgress();
       });
@@ -88,6 +102,7 @@ export function VideoStartupCover({
       if (revealed) return;
       cancel();
       progressStart = video.currentTime;
+      frameStart = presentedFrames();
       reveal();
     };
     const reveal = () => {

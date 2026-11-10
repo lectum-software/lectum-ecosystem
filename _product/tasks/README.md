@@ -782,6 +782,7 @@ ou cortesia manual.
 | 319 | [TASK-319 - Pool de players no diretorio](TASK-319-directory-player-pool.md) | In Progress | 318 |
 | 320 | [TASK-320 - Interface de legendas](TASK-320-caption-interface-refinements.md) | Done | 319 |
 | 321 | [TASK-321 - Bounded directory playback](TASK-321-directory-bounded-playback-default.md) | In Progress | 320 |
+| 322 | [TASK-322 - Video presentation and scroll cost](TASK-322-video-presentation-and-scroll-cost.md) | In Progress | 321 |
 
 ## Ordem operacional recomendada sem bloqueios
 
