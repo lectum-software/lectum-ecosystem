@@ -1,11 +1,11 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { isDirectoryPlayerPoolEnabled } from "./directory-player-pool";
 
 const subscribe = () => () => {};
-const serverSnapshot = () => false;
-const clientSnapshot = () =>
-  new URLSearchParams(window.location.search).get("directoryPlayer") === "pooled";
+const serverSnapshot = () => true;
+const clientSnapshot = () => isDirectoryPlayerPoolEnabled(window.location.search);
 
 export const useDirectoryPlayerPoolEnabled = () =>
   useSyncExternalStore(subscribe, clientSnapshot, serverSnapshot);

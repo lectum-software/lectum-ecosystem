@@ -746,3 +746,4 @@ Formato recomendado:
 - [ADR-0682 — Capa de inicio e reserva limitada do proximo video](0682-video-startup-standby.md)
 - [ADR-0683 — Experimento de dois players no diretorio](0683-directory-player-pool-experiment.md)
 - [ADR-0684 — Caption presentation and controls](0684-caption-interface-refinements.md)
+- [ADR-0685 — Default bounded directory playback](0685-directory-bounded-playback-default.md)

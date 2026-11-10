@@ -2,7 +2,28 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { selectFeedVideoSources } from "../../../../components/ui/persistent-feed-video-policy.ts";
-import { preserveDirectoryExperiment } from "./directory-player-pool.ts";
+import {
+  isDirectoryPlayerPoolEnabled,
+  preserveDirectoryExperiment,
+} from "./directory-player-pool.ts";
+
+test("normal directory access uses the reels pool; only explicit individual opts out", () => {
+  for (const search of ["", "?search=Ana", "?directoryPlayer=pooled", "?directoryPlayer=other"])
+    assert.equal(isDirectoryPlayerPoolEnabled(search), true);
+  assert.equal(isDirectoryPlayerPoolEnabled("?directoryPlayer=individual"), false);
+  const hook = readFileSync(new URL("./directory-player-mode.ts", import.meta.url), "utf8");
+  assert.match(hook, /const serverSnapshot = \(\) => true/);
+  assert.match(hook, /isDirectoryPlayerPoolEnabled\(window.location.search\)/);
+});
+
+test("filter navigation preserves the explicit rollback mode", () => {
+  const filtered = preserveDirectoryExperiment(
+    new URLSearchParams("search=Ana"),
+    "?directoryPlayer=individual&videoDiagnostics=1",
+  );
+  assert.equal(filtered.toString(), "search=Ana&directoryPlayer=individual&videoDiagnostics=1");
+  assert.equal(isDirectoryPlayerPoolEnabled(filtered.toString()), false);
+});
 
 test("filters preserve only supported experiment settings", () => {
   const filtered = preserveDirectoryExperiment(
