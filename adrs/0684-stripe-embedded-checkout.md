@@ -689,3 +689,27 @@ chave numerica de50digitos e public_query valido; outros status preservados.
 Nenhuma mudanca funcional, env, migration ou flag e necessaria. Priorizar com o
 fornecedor a confirmacao do contrato/implantacao do opt-out documentado, incluindo
 falha controlada em vez de sucesso simulado, sem solicitar intervencao na empresa.
+
+### Isolamento de novas emissoes Stripe live sem parar MP
+
+A inspeção autorizada de producao identificou SendNF global live/issue/auto e
+confirmacao fiscal ativos. Configurar Stripe ou desativar seu checkout/reconciliador
+nao e uma trava para jobs fiscais ja persistidos: a politica atual herdava auto
+global. Preservar processamento MP e adicionar opt-in exclusivo na criacao de
+novas NFS-e Stripe live, sem excluir scopes usados em historico/PDF/consultas.
+
+Adotar SENDNF_STRIPE_LIVE_ISSUANCE_ENABLED e SENDNF_STRIPE_LIVE_AUTO_ENABLED, ambos
+false por ausencia, e SENDNF_STRIPE_LIVE_PAYMENT_ID opcional para invoice in_.
+Exigir gate global de emissao/confirmacao e politica Stripe propria; auto/piloto
+MP nao autorizam nem limitam o piloto Stripe. Flags novas invalidas ou piloto
+invalido/missing quando necessario deixam Stripe fechado, sem derrubar config MP.
+Test usa a politica global existente. Documento com ID ja emitido continua apenas
+em reconciliacao/GET, mesmo com criacao Stripe pausada; manter snapshots e leases.
+
+Parametros contabeis vigentes e texto fiscal anterior foram confirmados pelo
+usuario; reutilizar configuracao existente, sem expor descricao/credenciais em
+documentacao. Opcao simulationnever confirmada pelo suporte sera tratada em etapa
+separada. Sem nova dependencia/schema/migration ou chamada externa nesta mudanca.
+Novas envs sao opcionais, nao impedem boot nem requerem configuracao para o MP.
+Rollback para codigo anterior ao guard nao e seguro com Stripe ativo; conter
+novas operacoes e fila Stripe antes, preservando banco, notas e servico MP.

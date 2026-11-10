@@ -60,6 +60,27 @@ const scopedGateway = (
   return { gateway: getPaymentGateway(scope.gateway), scope };
 };
 
+/** Pause only new issuance; existing documents remain available for reconciliation and PDF reads. */
+export async function deferInvoiceIssuance(
+  config: InvoiceConfig,
+  repository: Pick<InvoiceRepository, "finishInvoice">,
+  invoice: {
+    id: string;
+    gateway: string;
+    payment_id: string;
+    document_id: string | null;
+    lease_token: string;
+  },
+) {
+  if (invoice.document_id || canIssuePayment(config, invoice.payment_id, invoice.gateway))
+    return false;
+  await repository.finishInvoice(invoice.id, invoice.lease_token, {
+    status: "awaiting_activation",
+    next_attempt_at: retryDate(6),
+  });
+  return true;
+}
+
 async function processJob(config: InvoiceConfig, repository: InvoiceRepository) {
   const job = await repository.claimJob(invoiceGatewayScopes(config.mode));
   if (!job) return false;
@@ -191,13 +212,7 @@ async function processInvoice(
       // Do not silently issue legacy snapshots without billing evidence.
       if (!stored.billing_address || !request.taker.address)
         throw new InvoiceError("billing_address_snapshot_missing");
-      if (!canIssuePayment(config, invoice.payment_id)) {
-        await repository.finishInvoice(invoice.id, invoice.lease_token, {
-          status: "awaiting_activation",
-          next_attempt_at: retryDate(6),
-        });
-        return true;
-      }
+      if (await deferInvoiceIssuance(config, repository, invoice)) return true;
       const readiness = await provider.readiness();
       if (!readiness.ready) {
         await repository.finishInvoice(invoice.id, invoice.lease_token, {

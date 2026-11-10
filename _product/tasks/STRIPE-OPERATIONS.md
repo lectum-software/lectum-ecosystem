@@ -13,16 +13,18 @@ de aceite e a fonte de verdade continuam na [TASK-320](TASK-320-stripe-embedded-
   protocolo18652759. Nao alegar credito-only integral sem essa prova. Atribuicao
   automatica de cartao no trial nao e impedida apenas pelo guard local.
 - Fiscal: chave SendNF test restrita instalada apenas localmente; consultas GET
-  passaram. Codigo010501 e ISS2,01% constam como confirmados em26/10 no historico;
-  falta reconfirmar vigencia e recuperar a descricao fiscal aprovada, nao refazer
-  cadastro. Suporte esclareceu cnc_missing_in_test: cadastro governamental test
+  passaram. Usuario reconfirmou vigencia de codigo010501/ISS2,01% e reutilizacao
+  da descricao fiscal exata anterior, ja presente no backend publicado; nao
+  inventar nova redacao nem copiar dados fiscais para logs. Falta provisionar a
+  descricao no QA de forma segura e autorizar teste fiscal. Suporte esclareceu
+  cnc_missing_in_test: cadastro governamental test
   ausente, sem regularizacao a cargo da Lectum. Conforme complemento posterior,
   existe tentativa real de transmissao antes da recusa cadastral e do fallback
   simulado; nao confundir ausencia de autorizacao com ausencia de transmissao.
-  Ha divergencia aberta: documentacao/API OpenAPI citam `simulation: "never"`,
-  mas o suporte informou que ainda nao existe opt-out. Confirmar disponibilidade
-  efetiva/contrato antes de adotar; nao testar por emissao para resolver a duvida.
-  Esse parametro nao foi enviado, validado externamente ou adotado pelo emissor.
+  Suporte posteriormente confirmou `simulation: "never"` disponivel em test,
+  resolvendo a divergencia documental. Parametro nao foi enviado, validado em
+  emissao ou adotado pelo emissor nesta etapa; implementar/testar somente em
+  escopo separado autorizado.
   Documento simulado nao comprova autorizacao governamental. Nao emitir nem
   executar preview sem autorizacao; nenhuma alteracao cadastral compartilhada.
 - Customer/setup com resposta perdida, replay real apos corteTCP e eventos
@@ -71,6 +73,9 @@ arquivo local de QA para producao nem instalar chaves live em localhost.
 | `STRIPE_WEBHOOK_SECRET` | Segredo do listener/destino test exato | Segredo do endpoint live exato; nunca reutilizar o do CLI |
 | `BILLING_STRIPE_RECONCILIATION_ENABLED` | `false` fora do ensaio | Comecar `false`; habilitar somente apos inventario da inbox |
 | `BILLING_STRIPE_LEDGER_ENABLED` | `false` fora do ensaio | Comecar `false`; independente do fiscal e subordinado ao scheduler |
+| `SENDNF_STRIPE_LIVE_ISSUANCE_ENABLED` | `false`; nao altera modo test | `false` por padrao; opt-in exclusivo de novas NFS-e Stripe live |
+| `SENDNF_STRIPE_LIVE_AUTO_ENABLED` | `false`; nao altera modo test | Comecar `false`; automacao MP global nao autoriza Stripe |
+| `SENDNF_STRIPE_LIVE_PAYMENT_ID` | vazio; nao altera modo test | Invoice `in_...` de piloto separado, com emissao Stripe habilitada |
 
 Nao existe `NEXT_PUBLIC_STRIPE_*` consumida por esta implementacao: frontend
 recebe a chave publicavel pela configuracao autenticada do backend. Segredos
@@ -82,9 +87,22 @@ Live exige `NODE_ENV=production`, `BASE=https://api.lectum.com.br`, banco nao lo
 e nao identificado como dev/test/homolog. Nunca renomear destino/ambiente para
 contornar guard. Configuracao ausente/divergente bloqueia, nao cobra via MP.
 
-Todas as flags SendNF de habilitacao/emissao/auto permanecem false. Flags test
-nao sao um piloto limitado a um pagamento: antes de qualquer teste fiscal,
-inventariar corte e lote no banco isolado. Radar nao e configurado pelo runtime.
+No QA local as flags SendNF de habilitacao/emissao/auto permanecem false. Em
+producao foi observado MP/SendNF com live/issue/auto/confirmacao fiscal globais
+ativos: preserva-los, nunca aplicar defaults de QA por cima deles. Stripe live
+tem opt-in proprio apenas para novas emissoes; flags novas ausentes/invalidas
+impedem essas emissoes sem esconder documentos existentes nem parar MP. O gate
+global de emissao/confirmacao continua necessario, mas auto/piloto MP nao
+contornam nem limitam auto/piloto Stripe. Flags test nao sao um piloto limitado
+a um pagamento: inventariar corte e lote antes de teste autorizado. Radar nao e
+configurado pelo runtime.
+
+Configurar modo/conta Stripe pode ampliar o escopo do worker fiscal. Checkout,
+reconciliador e ledger OFF nao sao trava para jobs fiscais ja persistidos. Antes
+de ativar Stripe, todas as instancias backend precisam do guard acima; preparar
+env sem restart nao comprova runtime atualizado. Pausa de emissao Stripe mantem
+captura/snapshots e reconciliacao GET de documentos com ID existente. Piloto e
+automacao Stripe exigem autorizacao separada e inventario de pendencias.
 
 ### Permissoes a conferir no gateway
 
@@ -204,7 +222,8 @@ payload integral, PAN/CVV, client_secret, CPF, email, chave, assinatura ou stack
    [LOCAL-TO-PRODUCTION](LOCAL-TO-PRODUCTION.md), confirmar autodeploys homolog OFF
    nos provedores, checks locais e PR revisado homolog→main. Sem bypass de checks.
 2. Publicar backend expansivo/migrations com checkout disabled, reconciliacao,
-   ledger e fiscal OFF. Conferir migracoes e todas as instancias; nao editar
+   ledger e novas emissoes Stripe OFF; preservar fiscal MP existente. Conferir
+   guard por gateway, migracoes e todas as instancias; nao editar
    migration aplicada nem voltar worker antigo sobre fluxo Stripe ativo.
 3. Provisionar env/endpoint live separados e validar conta, permissoes, Price,
    versao e entrega; oferta inicialmente pausada. Inventariar inbox antes de
@@ -228,3 +247,7 @@ fallback, apagar filas/dados ou remover credenciais MP ainda necessarias.
 Se reversao binaria for indispensavel, conter novas operacoes e preservar inbox/
 ledger/migrations expansivas; revisar compatibilidade dos consumidores antes.
 Nao restaurar banco ou regredir schema para desfazer a integracao.
+Nao voltar a artefato anterior ao guard fiscal com pendencias Stripe: as novas
+envs seriam ignoradas e auto MP poderia autorizar Stripe. Preferir pausa pelo
+guard conservado; reversao antiga exige plano especifico para impedir essa
+emissao sem apagar filas ou interromper MP.

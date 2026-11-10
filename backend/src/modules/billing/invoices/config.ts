@@ -22,6 +22,11 @@ export type InvoiceConfig = {
   pilotPaymentId: string | null;
   serviceCode: string | null;
   issRate: number | null;
+  stripeLiveIssuance: {
+    enabled: boolean;
+    autoEnabled: boolean;
+    pilotPaymentId: string | null;
+  };
 };
 
 export type InvoiceMode = "test" | "live";
@@ -34,6 +39,21 @@ export const invoiceFeatureEnabled = (env = process.env) =>
 
 export const isInvoiceTestRuntime = (env = process.env) =>
   invoiceGatewayScopes("test", env).length > 0;
+
+const stripeLiveIssuancePolicy = (env: NodeJS.ProcessEnv): InvoiceConfig["stripeLiveIssuance"] => {
+  const enabled = env.SENDNF_STRIPE_LIVE_ISSUANCE_ENABLED ?? "false";
+  const autoEnabled = env.SENDNF_STRIPE_LIVE_AUTO_ENABLED ?? "false";
+  const pilotPaymentId = env.SENDNF_STRIPE_LIVE_PAYMENT_ID?.trim() || null;
+  // A malformed new Stripe opt-in must never disable the existing MP fiscal configuration.
+  if (
+    !["", "true", "false"].includes(enabled) ||
+    !["", "true", "false"].includes(autoEnabled) ||
+    (pilotPaymentId !== null && !/^in_[A-Za-z0-9]{1,100}$/.test(pilotPaymentId)) ||
+    (enabled === "true" && autoEnabled !== "true" && !pilotPaymentId)
+  )
+    return { enabled: false, autoEnabled: false, pilotPaymentId: null };
+  return { enabled: enabled === "true", autoEnabled: autoEnabled === "true", pilotPaymentId };
+};
 
 export function getInvoiceConfig(env = process.env): InvoiceConfig | null {
   if (!invoiceFeatureEnabled(env)) return null;
@@ -53,6 +73,9 @@ export function getInvoiceConfig(env = process.env): InvoiceConfig | null {
     (mode === "test"
       ? env.SENDNF_TEST_ISSUANCE_ENABLED === "true"
       : env.SENDNF_LIVE_ISSUANCE_ENABLED === "true");
+  const stripeLiveIssuance = stripeLiveIssuancePolicy(env);
+  const hasStripeLiveScope =
+    mode === "live" && invoiceGatewayScopes(mode, env).some((scope) => scope.gateway === "stripe");
   if (
     !new RegExp(`^nt_${mode}_[A-Za-z0-9_-]+$`).test(apiKey) ||
     !/^[A-Za-z0-9_-]{1,100}$/.test(companyId) ||
@@ -67,7 +90,7 @@ export function getInvoiceConfig(env = process.env): InvoiceConfig | null {
         !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(env.SENDNF_PAYMENTS_FROM ?? "") ||
         (pilotPaymentId !== null &&
           !/^(?:\d{1,100}|in_[A-Za-z0-9]{1,100})$/.test(pilotPaymentId)) ||
-        (issueEnabled && !autoEnabled && !pilotPaymentId)))
+        (issueEnabled && !autoEnabled && !pilotPaymentId && !hasStripeLiveScope)))
   )
     throw new InvoiceError("configuration_invalid");
   return {
@@ -82,11 +105,19 @@ export function getInvoiceConfig(env = process.env): InvoiceConfig | null {
     pilotPaymentId,
     serviceCode,
     issRate,
+    stripeLiveIssuance,
   };
 }
 
-export const canIssuePayment = (config: InvoiceConfig, paymentId: string) =>
-  config.issueEnabled && (config.autoEnabled || config.pilotPaymentId === paymentId);
+export const canIssuePayment = (config: InvoiceConfig, paymentId: string, gateway: string) => {
+  if (!config.issueEnabled || !["mercadopago", "stripe"].includes(gateway)) return false;
+  if (gateway === "stripe" && config.mode === "live") {
+    if (!/^in_[A-Za-z0-9]{1,100}$/.test(paymentId)) return false;
+    const policy = config.stripeLiveIssuance;
+    return policy.enabled && (policy.autoEnabled || policy.pilotPaymentId === paymentId);
+  }
+  return config.autoEnabled || config.pilotPaymentId === paymentId;
+};
 
 export const invoiceErrorCode = (error: unknown) =>
   error instanceof InvoiceError ? error.code : "operation_unavailable";

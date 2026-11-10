@@ -21,13 +21,16 @@ gates locais ja possuem evidencia executada. Nao devem ser tratados como trabalh
 inteiramente pendente nem repetidos sem regressao demonstrada.
 
 A task integral ainda nao esta concluida: cortesia credito-only depende do suporte
-Stripe e o E2E SendNF depende de parametros contabeis, capacidade de homologacao
-e autorizacao fiscal. As variantes tecnicas delimitadas de recuperacao/eventos
+Stripe e o E2E SendNF depende de provisionar localmente os parametros contabeis
+ja confirmados e obter autorizacao para teste fiscal, respeitando a limitacao
+de autorizacao governamental em homologacao. As variantes tecnicas delimitadas de recuperacao/eventos
 e o QA visual local foram encerrados em10/11. Registros cronologicos preservam
 bloqueios ja superados. Aprovacao visual do usuario e autorizacao de publicacao
 continuam requisitos de deploy, nao testes tecnicos a repetir. O commit local
 registra a implementacao parcial validada, nao aprova o rollout. Nenhum push/deploy
-autorizado nesta etapa; producao e Radar para SetupIntents permanecem intocados.
+autorizado nesta etapa; configuracao Stripe inativa foi preparada no Dokploy com
+autorizacao, sem restart/deploy e preservando MP/SendNF existentes. Radar para
+SetupIntents permanece intocado.
 
 ## Evidencia inicial e requisitos externos
 
@@ -170,6 +173,36 @@ autorizado nesta etapa; producao e Radar para SetupIntents permanecem intocados.
   escopo limitado e confirmacao de ambiente para alteracoes. Nao apresentar novos
   comandos como existentes antes de implementa-los.
 
+## Complemento de isolamento fiscal live por gateway — 10/11/2026
+
+- [x] Preservar MP/SendNF live automatico existente e bloquear novas emissoes
+  Stripe live por padrao, independentemente das flags fiscais globais herdadas.
+- [x] Stripe live exige autorizacao propria de emissao e auto/piloto; configuracao
+  nova ausente/invalida bloqueia apenas Stripe, sem invalidar MP. Captura/historico
+  e GET de documentos existentes permanecem disponiveis. Nenhum POST nesta etapa.
+- [x] Validar politicas locais e adiamento duravel em PostgreSQL isolado, sem
+  gateway externo, migration, alteracao de producao ou Radar SetupIntents.
+
+Observacao produtiva comunicada pelo orquestrador: SendNF live, emissao, automacao
+e confirmacao fiscal globais ja estavam true para o fluxo MP. Nao sobrescrever
+esses controles com defaults de QA. O usuario confirmou vigencia de010501/ISS2,01%
+e reutilizacao da descricao fiscal exata anterior (presente no backend publicado,
+nao copiada para docs/logs). Pendencia contabil anterior esta resolvida; ainda
+faltam provisionamento local seguro dessa descricao e teste fiscal autorizado.
+
+Env novas propostas backend-only, opcionais e inativas por padrao:
+SENDNF_STRIPE_LIVE_ISSUANCE_ENABLED=false, SENDNF_STRIPE_LIVE_AUTO_ENABLED=false e
+SENDNF_STRIPE_LIVE_PAYMENT_ID vazio. Primeiro publicar guard conservador; ativacao
+posterior apenas por autorizacao, inventario e piloto proprio Stripe. Reverter
+binario para versao sem guard exige conter antes os fluxos Stripe; nao desligar MP
+nem regredir banco. O suporte confirmou simulationnever disponivel em test, mas
+esse parametro fica para etapa separada; nenhuma emissao foi autorizada aqui.
+
+Validacao focal:29 testes de politica/contrato e2 testes PostgreSQL reais passaram
+sem skips. O helper utilizado pelo worker adia criacao Stripe para awaiting_activation,
+preserva snapshot/referencia, libera lease e nao altera MP/documento ja existente.
+A prova e local de guard/persistencia, nao E2E de emissao. Nenhum provider foi chamado.
+
 ## Apps, desenho e dependencias
 
 - Backend: factory, operacoes duraveis, inbox/conciliacao, catalogo/contratos e fiscal.
@@ -265,7 +298,8 @@ separada; configuracao remota ja observada nao autoriza cobranca de validacao.
   - [x] Painel SendNF inspecionado em Teste: empresa/checklist/chaves/aprovacoes existentes, sem alterar cadastro ou emitir; nota historica simulada identificada e excluida da prova fiscal.
   - [x] Chave SendNF test restrita a Lectum criada com autorizacao e instalada somente em arquivo local ignorado/0600; identidade/escopo/readiness/cadastro/aprovacao da empresa verificados por GET, politica da chave conferida no painel, chaves anteriores preservadas.
   - [x] Suporte esclareceu CNCtest ausente sem regularizacao Lectum; GET historico confirmou simulationtrue sob authorized. Classificador/worker/PDF conservadores e rotulos locais corrigidos, IDs preservados. Nao equivale a emissao/entrega fiscal.
-  - [ ] Usuario/contabilidade confirmar codigo/descricao/ISS aplicaveis, corte/lote/destinatario controlados e autorizar preview/emissao test. Segundo complemento do suporte, a tentativa governamental test ocorre, mas o CNC ausente impede a autorizacao e origina fallback simulado. Separar transmissao tentada, documento simulado e autorizacao do governo, sem usar live como atalho. Consulta de nota governamental existente depende de autorizacao separada antes do piloto.
+  - [x] Usuario reconfirmou vigencia de010501/ISS2,01% e reutilizacao da descricao fiscal exata anterior; configuracao publicada existente foi conferida em leitura pelo orquestrador, sem copiar valores sensiveis. Nao requer novo cadastro/certificado/rota.
+  - [ ] Provisionar descricao fiscal local com seguranca, definir corte/lote/destinatario controlados e autorizar preview/emissao test. Segundo complemento do suporte, a tentativa governamental test ocorre, mas o CNC ausente impede a autorizacao e origina fallback simulado. Separar transmissao tentada, documento simulado e autorizacao do governo, sem usar live como atalho. Consulta de nota governamental existente depende de autorizacao separada antes do piloto.
 
 Itens somente sao marcados com evidencia executada. Provas parciais de API sandbox
 abaixo nao equivalem ao E2E completo, publicacao ou piloto live. Nao usar mocks
@@ -1262,3 +1296,40 @@ Resultados desta rodada:
 - Tasks, ADR, encoding, diff e check:version aprovados; bump unico para0.1.802 nos
   cinco manifests. Sem alteracao de codigo funcional, builds/E2E nao repetidos.
   Commit documental local em homolog, sem push/deploy.
+
+
+### Preparacao live autorizada pelo Browser, sem ativacao — 10/11/2026
+
+- Usuario autorizou preparar/salvar configuracoes live sem deploy/restart, vendas,
+  emissao Stripe ou Radar SetupIntents. Autorizou separadamente criar chave live
+  restrita e armazena-la somente no Environment do backend, nunca em arquivo local.
+  Formulario tem11 permissoes (8read/3write: customers/subscriptions/setupintents);
+  criacao ainda depende do autenticador do usuario. Nao alegar chave criada/salva.
+- Conferidos via UI autenticada: conta live com Payments/Payouts ativos e sem
+  tarefas ativas; produto/preco existente ativo2990BRL/mensal, sem duplicacao.
+  WebMCP listou zero destinos live. Nenhum webhook foi criado/ativado antes do
+  novo backend; assinatura/entrega/processamento permanecem pendentes.
+- Dokploy backend produtivo: preservadas todas as115 variaveis originais, incluindo
+  MP e SendNF live/emissao/auto/confirmacao fiscal ja habilitados. Salvas6 novas
+  variaveis Stripe (gatewaydisabled, modo/conta/chavepublica live e dois jobsfalse),
+  depois3 controles fiscais Stripe opcionais false/false/vazio. Releitura apos
+  reload confirmou valores preparados e integridade do legado. Sem segredo live
+  Stripe ou webhook instalado; sem reinicio/deploy. `/ping` publicado segue0.1.791.
+- Leitura de nota live ja existente no painel: autorizada e chave50digitos visiveis,
+  sem aviso de simulacao; UI nao expoe explicitamente simulationfalse/publicquery.
+  Nao equivale a validacao do contrato API/PDF; gate continua aberto. Apenas troca
+  da visao test/live e volta a test, nenhuma emissao/alteracao de nota ou cadastro.
+- Conta Stripe live esta em RadarLite. UI oferece customrules no Plus por
+  R$0,35/transacao analisada, nao so aprovada; nenhuma contratacao ou ativacao.
+  Decisao de custo/politica somentecredito permanece externa. Nao ativamos Radar
+  para SetupIntents nesta rodada.
+- Evidencias locais redigidas: live-preparation-ui-evidence-20261110.json e
+  screenshots de revisao de permissoes, Environment mascarado e planos Radar.
+  Nenhum segredo em Git/arquivo; clipboard restaurado e conteudo env temporario
+  descartado. Abas mantidas para o usuario concluir autenticacao/revisar custos.
+- Isolamento fiscal local passou29 testes de politica e2PostgreSQL reais; revisao
+  independente corrigiu dependencias indevidas do piloto MP e da pausa Stripe.
+  Check backend:1337pass/15opt-in skips; Prisma/TS/Biome, build0.1.803 aprovados.
+  Smoke compilado local health/ready/ping200/no-store, processo encerrado
+  graciosamente, sem credenciais externas/schedulers. Sem UI/schema/package novo.
+  Bump unico0.1.802→0.1.803 e check:version aprovados; commit local, sem push/deploy.

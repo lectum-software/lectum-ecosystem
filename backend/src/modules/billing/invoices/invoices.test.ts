@@ -173,10 +173,10 @@ test("live pilot authorizes only one payment and requires independent fiscal con
     SENDNF_LIVE_ISSUANCE_ENABLED: "true",
     SENDNF_LIVE_PAYMENT_ID: "456",
   };
-  assert.equal(canIssuePayment(getInvoiceConfig(pilot)!, "456"), false);
+  assert.equal(canIssuePayment(getInvoiceConfig(pilot)!, "456", "mercadopago"), false);
   const config = getInvoiceConfig({ ...pilot, SENDNF_FISCAL_SETTINGS_CONFIRMED: "true" })!;
-  assert.equal(canIssuePayment(config, "456"), true);
-  assert.equal(canIssuePayment(config, "457"), false);
+  assert.equal(canIssuePayment(config, "456", "mercadopago"), true);
+  assert.equal(canIssuePayment(config, "457", "mercadopago"), false);
   assert.throws(() =>
     getInvoiceConfig({
       ...pilot,
@@ -184,7 +184,7 @@ test("live pilot authorizes only one payment and requires independent fiscal con
       SENDNF_LIVE_PAYMENT_ID: "",
     }),
   );
-  assert.equal(canIssuePayment({ ...config, autoEnabled: true }, "457"), true);
+  assert.equal(canIssuePayment({ ...config, autoEnabled: true }, "457", "mercadopago"), true);
   assert.notEqual(invoiceReference("a", "456", "live"), invoiceReference("a", "456", "test"));
 });
 
