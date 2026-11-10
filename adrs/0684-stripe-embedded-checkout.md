@@ -660,9 +660,10 @@ silenciosamente como NFS-e autorizada. Download de espelho nao faz parte desta e
 Na revisao de10/11 posterior a resposta de suporte, a referencia publica
 https://sendnf.com/desenvolvedores/api/ passou a documentar
 `government_test_transmission` em GET readiness e `simulation: "never"` no POST
-de NFS-e. A afirmacao anterior de ausencia de opt-out fica historica, superada
-pelo contrato publicado; nao houve envio desse parametro nem prova de sua
-execucao. Nunca ativar emissao para testar a novidade sem autorizacao separada.
+de NFS-e. Novo complemento do suporte informou ausencia de opt-out: manter a
+divergencia aberta, pois documentacao nao prova disponibilidade efetiva. Nao houve
+envio desse parametro nem prova de sua execucao. Nunca ativar emissao para
+esclarecer essa divergencia sem autorizacao separada.
 
 Ler a evidencia adicional no diagnostico existente, preservando ready/missing
 e o comportamento do worker. Status available descreve a ultima nota test,
@@ -674,3 +675,17 @@ invalidar o readiness legado nem presumir autorizacao governamental.
 Sem env nova, package, migration, UI ou mudanca de politica de emissao. Impacto
 de futura publicacao restrito ao diagnostico aditivo backend/CLI; rollback pelo
 artefato anterior, sem mutacao de dados. Producao e Radar permanecem intocados.
+
+### Complemento de suporte: transmissao tentada versus autorizacao
+
+O complemento recebido em10/11 esclarece que o fluxo test tenta transmitir ao
+governo e a recusa cadastral CNC leva ao fallback simulado. Corrigir a interpretacao
+anterior de ausencia de transmissao. Isso nao transforma um espelho em documento
+governamental autorizado nem valida um novo E2E Lectum/Stripe/SendNF. Readiness
+cadastral e sua observacao historica adicional nao consultam CNC em tempo real.
+
+Manter classificador atual: simulationtrue nao autoriza; simulationfalse exige
+chave numerica de50digitos e public_query valido; outros status preservados.
+Nenhuma mudanca funcional, env, migration ou flag e necessaria. Priorizar com o
+fornecedor a confirmacao do contrato/implantacao do opt-out documentado, incluindo
+falha controlada em vez de sucesso simulado, sem solicitar intervencao na empresa.

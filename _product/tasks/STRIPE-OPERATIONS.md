@@ -15,11 +15,14 @@ de aceite e a fonte de verdade continuam na [TASK-320](TASK-320-stripe-embedded-
 - Fiscal: chave SendNF test restrita instalada apenas localmente; consultas GET
   passaram. Codigo010501 e ISS2,01% constam como confirmados em26/10 no historico;
   falta reconfirmar vigencia e recuperar a descricao fiscal aprovada, nao refazer
-  cadastro. Suporte esclareceu
-  cnc_missing_in_test: cadastro governamental test ausente, sem regularizacao a
-  cargo da Lectum. A documentacao atual passou a oferecer `simulation: "never"`
-  para rejeitar em vez de simular no modo test; esse parametro nao foi enviado,
-  validado externamente ou adotado pelo emissor nesta etapa.
+  cadastro. Suporte esclareceu cnc_missing_in_test: cadastro governamental test
+  ausente, sem regularizacao a cargo da Lectum. Conforme complemento posterior,
+  existe tentativa real de transmissao antes da recusa cadastral e do fallback
+  simulado; nao confundir ausencia de autorizacao com ausencia de transmissao.
+  Ha divergencia aberta: documentacao/API OpenAPI citam `simulation: "never"`,
+  mas o suporte informou que ainda nao existe opt-out. Confirmar disponibilidade
+  efetiva/contrato antes de adotar; nao testar por emissao para resolver a duvida.
+  Esse parametro nao foi enviado, validado externamente ou adotado pelo emissor.
   Documento simulado nao comprova autorizacao governamental. Nao emitir nem
   executar preview sem autorizacao; nenhuma alteracao cadastral compartilhada.
 - Customer/setup com resposta perdida, replay real apos corteTCP e eventos
@@ -42,6 +45,7 @@ O diagnostico `check-sendnf` separa `nfseReady` (cadastro) de
 `available` nao garante uma nova transmissao; `simulated` registra a limitacao
 governamental, e campo ausente/invalido retorna `unknown`. Motivo livre nunca e
 impresso. Essa leitura nao altera flags, nao faz preview e nao emite notas.
+O campo auxiliar e historico: nao representa consulta atual ao CNC governamental.
 Referencia: https://sendnf.com/desenvolvedores/api/ (revisada em10/11/2026).
 
 **Atencao de rollout fiscal (Backend/Frontend):** documento antigo legitimo

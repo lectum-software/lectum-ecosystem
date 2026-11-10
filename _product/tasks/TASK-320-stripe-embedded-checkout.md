@@ -265,7 +265,7 @@ separada; configuracao remota ja observada nao autoriza cobranca de validacao.
   - [x] Painel SendNF inspecionado em Teste: empresa/checklist/chaves/aprovacoes existentes, sem alterar cadastro ou emitir; nota historica simulada identificada e excluida da prova fiscal.
   - [x] Chave SendNF test restrita a Lectum criada com autorizacao e instalada somente em arquivo local ignorado/0600; identidade/escopo/readiness/cadastro/aprovacao da empresa verificados por GET, politica da chave conferida no painel, chaves anteriores preservadas.
   - [x] Suporte esclareceu CNCtest ausente sem regularizacao Lectum; GET historico confirmou simulationtrue sob authorized. Classificador/worker/PDF conservadores e rotulos locais corrigidos, IDs preservados. Nao equivale a emissao/entrega fiscal.
-  - [ ] Usuario/contabilidade confirmar codigo/descricao/ISS aplicaveis, corte/lote/destinatario controlados e autorizar preview/emissao test. Transmissao governamental test nao esta disponivel para a empresa; separar integracao real com provider de documento simulado, sem afirmar autorizacao do governo ou usar live como atalho. Consulta de nota governamental existente depende de autorizacao separada antes do piloto.
+  - [ ] Usuario/contabilidade confirmar codigo/descricao/ISS aplicaveis, corte/lote/destinatario controlados e autorizar preview/emissao test. Segundo complemento do suporte, a tentativa governamental test ocorre, mas o CNC ausente impede a autorizacao e origina fallback simulado. Separar transmissao tentada, documento simulado e autorizacao do governo, sem usar live como atalho. Consulta de nota governamental existente depende de autorizacao separada antes do piloto.
 
 Itens somente sao marcados com evidencia executada. Provas parciais de API sandbox
 abaixo nao equivalem ao E2E completo, publicacao ou piloto live. Nao usar mocks
@@ -954,7 +954,9 @@ nao redirecionar cobrancas para MP. Nao ativar SendNF automaticamente.
 - Nota historica de04/11, SIM-9, tem banner explicito de simulacao, sem protocolo
   governamental. Linha do tempo document.simulated/cnc_missing_in_test. O painel
   informa que o ambiente de teste governamental nao esta configurado para esta
-  empresa/municipio: montou/validou a nota, mas ela nao foi gerada pelo governo.
+  empresa/municipio: montou/validou a nota, mas ela nao foi autorizada pelo governo.
+  Complemento posterior esclarece que houve tentativa de transmissao antes do
+  fallback; a simulacao nao permite concluir ausencia de contato com o governo.
   Nao considerar status authorized isolado como autorizacao fiscal homologada,
   nem usar esse documento anterior como E2E da nova integracao Stripe.
 - Separar provas: HTTP real Lectum/Stripe sandbox/SendNF test, persistencia/replay/
@@ -1147,8 +1149,10 @@ Resultados desta rodada:
 - Suporte informado pelo usuario esclareceu: cnc_missing_in_test e ausencia do
   cadastro no CNC governamental de homologacao, separado de producao; nao ha
   regularizacao Lectum nem alteracao cadastral necessaria. Readiness nao consulta
-  esse cadastro. Transmissao test passa a ocorrer quando governo reconhecer a
-  empresa; hoje nao existe opcao para impedir fallback simulado no provider.
+  esse cadastro. A interpretacao inicial de que so haveria transmissao quando o
+  governo reconhecesse a empresa foi corrigida pelo complemento posterior abaixo:
+  a tentativa ocorre antes da recusa e simulacao. O opt-out segue divergente
+  entre resposta do suporte e documentacao, sem prova de execucao.
 - Relato do operador de duas notas live autorizadas e do desenvolvedor de MP
   confirma historico do fluxo anterior, mas nao valida Stripe→SendNF nem substitui
   parametros contabeis atuais. Nao consultamos/mutamos live para confirmar o relato.
@@ -1209,9 +1213,10 @@ Resultados desta rodada:
   fiscal exato ja aprovado; empresa/certificado/rota existentes sao reutilizaveis.
   Corte/lote/autorizacao de teste sao controles operacionais, nao novo cadastro.
 - A referencia oficial SendNF agora documenta government_test_transmission em
-  readiness e simulationnever na emissao. Esse contrato atual supera a informacao
-  anterior de inexistencia de opt-out; parametro de emissao apenas registrado,
-  nao implementado, enviado ou validado externamente. Nenhum POST/preview.
+  readiness e simulationnever na emissao. A conclusao inicial de que isso superava
+  a resposta de suporte foi revista apos novo complemento: existe divergencia de
+  disponibilidade efetiva, nao resolvida por documentacao isolada. Parametro apenas
+  registrado, nao implementado, enviado ou validado externamente. Nenhum POST/preview.
 - Adapter/CLI passam a distinguir cadastro pronto da ultima evidencia governamental
   test. Campos opcionais novos toleram ausencia/erro; estados/motivos por allowlist,
   checkedAt validado preserva o instante do provider, reason livre descartado.
@@ -1232,3 +1237,28 @@ Resultados desta rodada:
 - Smoke compilado0.1.801: health/ready/ping HTTP200 e no-store, sem credenciais
   externas/schedulers; processo local encerrado graciosamente. Producao, Radar,
   certificados, emissoes e notas existentes permaneceram intocados.
+
+
+### Complemento SendNF e divergencia de disponibilidade — 10/11/2026
+
+- Usuario trouxe correcao do suporte: ha tentativa real de transmissao test, com
+  recusa cadastral CNC antes do fallback simulado. A ausencia de cadastro nao exige
+  regularizacao Lectum; autorizacao governamental podera ocorrer quando o CNCtest
+  reconhecer a empresa. Nao confundir tentativa, simulacao e autorizacao.
+- Codigo revisado independentemente: classificador e readiness historico continuam
+  compativeis. Demais recusas nao sao convertidas em autorizacao pelo app; permitir
+  tres motivos documentados no diagnostico apenas sanitiza a resposta, nao decide
+  fallback. Nenhuma alteracao funcional ou teste de cobranca/emissao necessario.
+- Referencia publica e OpenAPI reconsultados somente por GET continuam descrevendo
+  simulationnever; suporte mais recente afirma indisponibilidade. Retirar a
+  conclusao de que docs superam suporte: confirmacao de implantacao/contrato fica
+  pendente, sem inferir se a mensagem ou a documentacao esta desatualizada.
+- Sugerir prioridade ao fornecedor e esclarecer disponibilidade e retorno esperado,
+  sem autorizar emissao, alteracao cadastral ou intervencao produtiva. Opt-out e
+  controle adicional: nao criar novo gate obrigatorio da migracao por suposicao;
+  classificacao conservadora existente permanece, E2E fiscal autorizado separado.
+- Rodada documental apenas; nenhuma API privada, banco, nota, preview, cert/key,
+  flag, producao ou Radar foi alterado. Preservadas as evidencias tecnicas0.1.801.
+- Tasks, ADR, encoding, diff e check:version aprovados; bump unico para0.1.802 nos
+  cinco manifests. Sem alteracao de codigo funcional, builds/E2E nao repetidos.
+  Commit documental local em homolog, sem push/deploy.
