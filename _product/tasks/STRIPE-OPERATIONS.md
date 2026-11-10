@@ -11,7 +11,7 @@ de aceite e a fonte de verdade continuam na [TASK-320](TASK-320-stripe-embedded-
 O complemento de10/11 substitui a dependencia de regras pagas para novas assinaturas.
 SetupIntent independente coleta/autentica o cartao; backend aceita somente funding
 credit. Nova assinatura nasce sem default, tem coleta keep_as_draft conferida antes
-da atribuicao e cada fatura usa PI proprio manual. Browser somente autentica3DS;
+da atribuicao e cada fatura usa PI proprio manual. Browser somente autentica 3DS;
 confirmacao/reconfirmacao financeira depende do backend e de validacao fresca.
 Nao expor o segredo do PI automatico da fatura nem retomar a coleta automatica.
 
@@ -110,6 +110,7 @@ arquivo local de QA para producao nem instalar chaves live em localhost.
 | `STRIPE_PUBLISHABLE_KEY` | Mesma conta/modo da chave secreta | Mesma conta/modo live |
 | `STRIPE_WEBHOOK_SECRET` | Segredo do listener/destino test exato | Segredo do endpoint live exato; nunca reutilizar o do CLI |
 | `BILLING_STRIPE_RECONCILIATION_ENABLED` | `false` fora do ensaio | Comecar `false`; habilitar somente apos inventario da inbox |
+| `BILLING_STRIPE_COLLECTION_ENABLED` | `false` fora do ensaio financeiro autorizado | Comecar `false`; opt-in financeiro independente da conciliacao e do ledger |
 | `BILLING_STRIPE_LEDGER_ENABLED` | `false` fora do ensaio | Comecar `false`; independente do fiscal e subordinado ao scheduler |
 | `SENDNF_STRIPE_LIVE_ISSUANCE_ENABLED` | `false`; nao altera modo test | `false` por padrao; opt-in exclusivo de novas NFS-e Stripe live |
 | `SENDNF_STRIPE_LIVE_AUTO_ENABLED` | `false`; nao altera modo test | Comecar `false`; automacao MP global nao autoriza Stripe |
@@ -146,11 +147,24 @@ automacao Stripe exigem autorizacao separada e inventario de pendencias.
 
 O codigo le conta, Price/Product, Customer/search, Subscription/search, Invoice,
 InvoicePayment, PaymentIntent, Charge, Dispute, PaymentMethod e SetupIntent/list.
-Escreve Customer/create, Subscription/create/update/cancel e SetupIntent/create;
-confirmacao do Intent e feita pelo Stripe.js. Conferir acesso minimo real ao
-preparar a chave de cada ambiente, sem prometer paridade da chave live nao auditada.
+O desenho da ADR-0685 exige cinco areas de escrita: Customers (create),
+Subscriptions (create/update/cancel), Setup Intents (create), Payment Intents
+(create/confirm/cancel) e Invoices (finalize/attach payment). Os demais recursos
+ficam somente leitura; conferir no painel as dependencias de permissoes, inclusive
+Invoice Payments, sem ampliar acesso por conveniencia. O Stripe.js confirma o
+SetupIntent e autentica 3DS; confirmacao/reconfirmacao financeira do PaymentIntent
+manual ocorre exclusivamente no backend apos verificar novamente funding credit.
+Conferir acesso minimo real ao preparar a chave de cada ambiente, sem prometer
+paridade da chave live nao auditada nem reutilizar o formulario antigo com tres areas de escrita.
 O runtime nao cria Price/Product, refund ou disputa. `stripecli_session_write`
 pertence ao encaminhamento CLI local, nao ao endpoint produtivo de webhook.
+
+Preparacao inativa nao autoriza habilitar vendas, collector, reconciliacao, ledger
+ou emissao fiscal Stripe. Manter seus gates false/disabled e a oferta pausada;
+gravar Environment sem restart nao atualiza o processo em execucao. A habilitacao
+posterior exige backend/frontend compativeis, webhook verificado, oferta vinculada
+e monitoramento do worker. Nao contratar Radar Plus, habilitar Radar para
+SetupIntents ou retomar a coleta automatica das assinaturas como parte do rollout.
 
 ## 3. Webhook e processamento
 
@@ -172,7 +186,9 @@ recuperaveis por rodada. Alterar flag de processo requer configuracao/reinicio
 controlado; flag true nao inicializa retroativamente scheduler que nao iniciou.
 O webhook pode acumular inbox enquanto scheduler esta OFF. Recuperacao periodica
 de operacoes e GET-only no provider; evento assinado de SetupIntent pode atribuir
-cartao remotamente. Nao chamar todo o worker de somente leitura.
+cartao remotamente. O collector separado finaliza faturas e confirma pagamentos
+quando seu proprio opt-in esta true, mesmo com conciliacao OFF. Nao chamar todo o
+worker de somente leitura nem usar apenas a flag da conciliacao como trava financeira.
 
 ## 4. Comandos e inventario
 
@@ -194,7 +210,8 @@ IDs sao referencias operacionais, nao valores de chave. Nao passar segredo em ar
 - Plano profissional e admin valido devem existir. Revisao0 somente se oferta
   ausente; nao fazer seed. So aceita2990BRL/month/1 nesta etapa.
 - Enable exige segredo de webhook e reconciliador configurados; presenca nao
-  equivale a entrega/conciliacao E2E nem confirma regras de Radar.
+  equivale a entrega/conciliacao E2E ou prontidao do worker de cobranca. O collector
+  possui opt-in proprio; regras pagas de Radar nao sao gate deste desenho.
 
 Antes do dry-run, ler `billing_offers`/`billing_price_versions` no banco correto,
 em transacao READ ONLY, com filtro de gateway/conta/modo/plano. Conferir revisao,

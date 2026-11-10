@@ -1411,3 +1411,37 @@ Resultados desta rodada:
   Smoke compilado local health/ready/ping200/no-store, processo encerrado
   graciosamente, sem credenciais externas/schedulers. Sem UI/schema/package novo.
   Bump unico0.1.802→0.1.803 e check:version aprovados; commit local, sem push/deploy.
+
+### Preparacao live inativa apos ADR-0685 — 10/11/2026
+
+- Usuario autorizou preparar/salvar configuracoes live, sem deploy, restart,
+  ativacao de vendas, emissao Stripe ou cobrancas reais. Autorizou em seguida
+  criar a chave restrita com 11 permissoes (6read/5write) e guardar somente em
+  STRIPE_SECRET_KEY do Environment do backend no Dokploy, nunca local/Git.
+- [x] Conferida conta/modo/chave publicavel preparados; checkout disabled,
+  conciliacao/ledger false e gates fiscais Stripe false. Acrescentado somente
+  BILLING_STRIPE_COLLECTION_ENABLED=false; releitura apos reload confirmou125
+  variaveis e preservacao exata das124 anteriores. Nao alteramos fiscal MP legado,
+  que ja possuia controles globais ativos; preparar env nao muda processo corrente.
+- [x] Conferido produto live existente2990BRL/mensal, sem criar preco/produto ou
+  assinatura. Vinculo versionado da oferta local continua para rollout separado,
+  pausado, depois de publicar a operacao compativel; sem escrita no banco publicado.
+- [x] WebMCP de leitura confirmou zero destinos live. Formulario de webhook
+  preparado para a propria conta, snapshot, API2026-10-28.endive e16 eventos do
+  contrato, URL/api/public/billing/stripe/webhook. Nenhum destino foi criado:
+  UI nao ofereceu criacao inicialmente desativada. Nao criar ativo para tentar
+  desativar logo depois. STRIPE_WEBHOOK_SECRET continua pendente, sem valor ficticio.
+- [ ] Chave restrita live criada e salva: formulario revisado com Customers,
+  Subscriptions, Setup Intents, Payment Intents e Invoices em write; demais seis
+  em read. E-mail de verificacao avancou; autenticador do usuario ainda necessario.
+  Nao marcar criada/salva nem validar API live com chave alternativa.
+- [x] Runbook/ADR corrigidos: collector independente explicito, cinco areas write,
+  confirmacao financeira exclusivamente backend; nenhuma dependencia de Radar Plus.
+- Evidencias UI locais mascaradas: live-disabled-environment-20261110.jpg,
+  live-key-review-20261110.jpg e live-webhook-draft-20261110.jpg no diretorio privado
+  de QA. Nenhuma chave/OTP/env integral em artefatos/Git. Nao houve emissao, cobranca,
+  alteracao Radar, push, merge, deploy ou restart nesta preparacao.
+- Checkpoint documental0.1.805: tasks, ADRs, encoding, diff e check:version
+  aprovados; sem mudanca de codigo funcional/migration, sem repetir cobrancas
+  sandbox para esta preparacao. Bump unico nos cinco manifests. Commit local
+  registra explicitamente o bloqueio2FA, nao a conclusao de toda configuracao live.

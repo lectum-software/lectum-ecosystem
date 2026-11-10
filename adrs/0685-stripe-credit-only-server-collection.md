@@ -19,9 +19,10 @@ no servidor, e manter novas recorrencias `manual_credit_v1` com coleta pausada
 `auto_advance=false`; nenhuma atribuicao/cobranca ocorre antes de conferir a pausa.
 Cada fatura elegivel usa operacao duravel, PaymentIntent proprio de confirmacao
 manual e alocacao integral a invoice. O servidor valida o cartao antes de cada
-confirmacao. Browser pode autenticar 3DS (`handleNextAction`), mas nao confirmar
-financeiramente nem trocar o metodo fora da validacao. Nunca expor segredo do
-PaymentIntent automatico do pagamento padrao da invoice.
+confirmacao. Browser confirma o SetupIntent (`confirmSetup`) e pode autenticar 3DS
+(`handleNextAction`), mas nao confirmar financeiramente nem trocar o metodo fora
+da validacao. Confirmacao/reconfirmacao do PaymentIntent manual e exclusiva do
+backend. Nunca expor segredo do PaymentIntent automatico do pagamento padrao da invoice.
 
 Prova real de API no sandbox existente: criar assinatura incomplete sem default,
 pausar coleta, anexar PI manual pelo valor integral de2990 antes do sucesso,
@@ -49,6 +50,21 @@ Permissoes Payment Intents/Invoices write serao exigidas na ativacao; somente
 sandbox foi autorizado agora. Na chave test Payment Intents ja tinha escrita;
 apenas Invoices passou de read para write. Nao usar chave irrestrita como atalho.
 Nenhuma permissao, configuracao, venda, deploy ou cobranca live foi alterada.
+
+Para preparar a chave live futura, revisar cinco areas de escrita: Customers,
+Subscriptions, Setup Intents, Payment Intents e Invoices. Leituras de conta,
+catalogo, metodos, pagamentos, Invoice Payments e disputas continuam necessarias;
+dependencias da UI precisam de conferencia, sem chave irrestrita ou permissoes
+de CLI para o backend publicado. O formulario anterior com somente tres areas de escrita
+nao atende o collector. Esta decisao tecnica nao concede autorizacao operacional
+para ampliar a chave live, publicar ou ativar cobranca.
+
+Preparacao live deve manter checkout disabled e collection/reconciliation/ledger
+false, alem dos gates fiscais Stripe false. Collection e independente da
+reconciliacao: desativar somente esta nao impede cobrancas. Gravar configuracao
+sem restart nao atualiza o processo corrente. Rollout futuro exige ambos os apps
+compativeis, webhook, oferta e worker conferidos; nao depende de Radar Plus nem
+de Radar para SetupIntents e nao autoriza ativa-los.
 
 Rollback nunca retoma automaticamente a coleta no provider: manter contratos
 pausados ate reconciliacao autorizada; versao antiga nao pode receber novas vendas
