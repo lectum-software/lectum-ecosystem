@@ -109,9 +109,23 @@ e runtime ainda exigem rollout autorizado. Preparacao do Environment nao atualiz
 o processo em execucao e nao autoriza tentativa real. Nao reiniciar versao antiga
 com esse fluxo nem ativar webhook/worker antes do codigo compativel.
 
+### Webhook e oferta antes do deploy
+
+Preparacao posterior confirmou publicamente backend 0.1.791, cujo commit nao
+contem rota/operacao/schema Stripe. Sem deploy autorizado, manter formulario de
+webhook e referencias de Price conferidas, sem aplicar vinculo via SQL ou copiar
+codigo para container antigo. Estado do banco nao foi consultado nem presumido.
+Criacao inicialmente desativada nao e exposta na UI/WebMCP ou parametros oficiais
+V1/V2 consultados; nao abrir janela de entregas ativas para depois desativar.
+Destino/segredo e vinculo ficam para rollout coordenado, com vendas/collector/fiscal
+OFF. Dry-run de oferta usa lock no banco configurado apesar de nao gravar registros;
+inventario estritamente READ ONLY deve ser separado, conforme runbook.
+
 ## Fontes
 
 - https://docs.stripe.com/billing/subscriptions/pause-payment
 - https://docs.stripe.com/api/invoices/attach_payment
 - https://docs.stripe.com/api/payment_intents/confirm
 - https://docs.stripe.com/api/setup_intents
+- https://docs.stripe.com/api/webhook_endpoints/create
+- https://docs.stripe.com/api/v2/core/event-destinations/create

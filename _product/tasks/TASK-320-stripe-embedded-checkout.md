@@ -1465,3 +1465,31 @@ Resultados desta rodada:
 - Validacao documental 0.1.806: tasks, ADRs, encoding, diff e check:version aprovados;
   bump unico nos cinco manifests. Nenhuma mudanca funcional, migration ou dependencia;
   builds/E2E nao repetidos neste registro operacional. Commit somente local em homolog.
+
+### Preparacao de webhook e vinculo sem deploy — 10/11/2026
+
+- [x] Produto/preco existentes reconferidos no painel live: R$ 29,90/mes, BRL,
+  flat rate, padrao do produto ativo. Nenhum objeto remoto criado ou editado.
+  Referencias exatas e evidencia visual guardadas no diretorio privado de QA.
+- [x] Formulario de webhook conferido: propria conta, snapshot, API endive e
+  16 eventos. Mantido aberto sem clicar Create destination; nao e destino salvo.
+- [x] Impedimento de infraestrutura identificado: GET publico `/ping` retorna
+  0.1.791/HTTP 200/no-store. Git dessa versao nao possui SDK, rota webhook,
+  stripe-offer ou migration foundation. Nao consultamos o banco produtivo e nao
+  inferimos seu estado a partir do artefato. Nao copiamos codigo/SQL para contornar deploy.
+- [x] UI/WebMCP e referencias oficiais V1/V2 consultadas nao oferecem criacao
+  inicialmente desativada; criar inicia entrega. Runbook registra ordem segura
+  e inventario READ ONLY, distinguindo dry-run sem escrita de transacao com lock.
+- [ ] Vinculo live persistido: depende do codigo/schema compativeis publicados,
+  admin responsavel identificado e revisao atual conferida; aplicar com vendas
+  explicitamente desativadas. Nenhuma revisao/identidade foi inventada.
+- [ ] Destino/segredo de webhook: aguarda rollout coordenado autorizado. Nao
+  usar segredo ficticio, URL alternativa ou janela ativa seguida de desativacao.
+- Evidencias privadas: live-offer-reference-20261110.jpg,
+  live-webhook-prepared-20261110.jpg e live-webhook-offer-preparation-20261110.json.
+  Sem chave/OTP ou dados pessoais. Nenhuma nova alteracao de Environment, permissao,
+  Radar, venda, cobranca, nota, banco, deploy/restart ou push nesta rodada.
+- Validacao 0.1.807: cinco testes puros da politica de oferta aprovados, sem
+  provider/banco e sem usa-los como prova de vinculo live. Tasks, ADRs, encoding
+  e diff aprovados. Sem mudanca funcional/schema; builds/E2E nao repetidos.
+  Bump unico e check:version dos cinco manifests; commit documental local em homolog.

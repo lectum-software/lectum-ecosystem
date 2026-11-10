@@ -192,6 +192,44 @@ Eventos consumidos:
 - `setup_intent.succeeded`, `.setup_failed`, `.canceled`;
 - `charge.refunded`, `charge.dispute.created`, `.updated`, `.closed`.
 
+### Preparacao sem deploy: limite confirmado em 10/11/2026
+
+O `/ping` produtivo retornou HTTP 200, no-store e versao `0.1.791`. A revisao do
+commit dessa versao confirmou ausencia do SDK, rota webhook Stripe, operacao
+`stripe-offer` e migration de fundacao. Nao testar entrega real contra essa versao,
+nem copiar scripts/dependencias ou fazer INSERT manual para contornar publicacao.
+Isso nao presume o estado atual do banco: nao houve consulta privada nesta rodada.
+
+No painel live, formulario conferido com os 16 eventos acima, propria conta,
+payload snapshot e API endive. Continua apenas preenchido na aba, nao um destino
+persistido. UI/WebMCP nao oferecem criar inicialmente desativado; referencias
+oficiais de criacao V1/V2 tambem nao documentam esse parametro e retornam status
+enabled. Nao criar ativo para desativar logo depois ou usar URL ficticia. Logo,
+STRIPE_WEBHOOK_SECRET ainda nao existe para esse destino. Referencias:
+[V1](https://docs.stripe.com/api/webhook_endpoints/create) e
+[V2](https://docs.stripe.com/api/v2/core/event-destinations/create).
+
+Produto/preco live existentes conferidos: R$ 29,90 por mes, BRL, flat rate,
+preco padrao do produto ativo, sem duplicacao/edicao. Referencias exatas ficam
+no registro operacional privado de QA e na aba do preco, nao em nova env ficticia:
+o vinculo pertence a billing_offers/billing_price_versions, nao ao Environment.
+
+Quando houver autorizacao de publicacao, a ordem segura sera:
+
+1. Publicar codigo/schema compativeis, preservando todos os gates Stripe
+   false/disabled e controles MP/SendNF existentes. Conferir runtime e migrations.
+2. Inventariar plano, oferta, revisao e admin responsavel real. Nao presumir
+   revisao zero nem selecionar um admin qualquer para preencher a auditoria.
+3. Executar `stripe-offer` compilado sem `--apply`, com `--disable-sales` e
+   referencias exatas conferidas. Depois, aplicar somente o vinculo pausado e
+   reler `checkout_enabled=false`, revisao, conta/modo e versao do preco.
+4. Criar o webhook no rollout coordenado, guardar o segredo exato somente no
+   backend e carregar por reinicio/deploy autorizado. Verificar assinatura,
+   recebimento/inbox e conciliacao em etapas separadas; nao presumir que o
+   primeiro Save carregou o segredo no processo. Vendas/collector/fiscal continuam OFF.
+5. Habilitar qualquer processamento, venda ou piloto fiscal apenas mediante
+   autorizacao especifica e verificacoes correspondentes. Este roteiro nao a concede.
+
 Scheduler: primeira rodada apos30s, proximas apos60s, ate10 eventos e10 operacoes
 recuperaveis por rodada. Alterar flag de processo requer configuracao/reinicio
 controlado; flag true nao inicializa retroativamente scheduler que nao iniciou.
@@ -214,7 +252,9 @@ Obrigatorios: `--account`, `--mode test|live`, `--price`, `--expected-revision`,
 `--actor-admin-id`, `--reason initial_catalog|enable_checkout|pause_checkout|replace_offer`.
 IDs sao referencias operacionais, nao valores de chave. Nao passar segredo em argv.
 
-- Sem `--apply`: dry-run; faz GET Stripe e transacao/lock local, sem mudar registros.
+- Sem `--apply`: dry-run; faz GET Stripe e transacao/lock no banco configurado,
+  sem mudar registros. Usa SELECT FOR UPDATE no plano e pode obter lock temporario;
+  nao executar dentro de BEGIN READ ONLY nem chamar de consulta sem locks.
 - `--apply`: grava versao/oferta e auditoria, nunca modifica contratos remotos.
 - `--enable-sales`/`--disable-sales`: mutuamente exclusivos. Nova oferta/preco
   substituido fica pausado sem enable; mesmo preco pode preservar estado anterior.
@@ -228,6 +268,26 @@ Antes do dry-run, ler `billing_offers`/`billing_price_versions` no banco correto
 em transacao READ ONLY, com filtro de gateway/conta/modo/plano. Conferir revisao,
 checkout_enabled e valor/Price sem exportar dados pessoais. O comando nao e um
 editor irrestrito nem cria catalogo remoto.
+
+Se nao souber se a fundacao existe, comecar por este inventario READ ONLY (nao
+executado no banco publicado nesta preparacao). Se tabelas faltarem, parar; nao
+criar manualmente. Mesmo tabelas presentes nao substituem o codigo compativel:
+
+```sql
+BEGIN READ ONLY;
+SET LOCAL statement_timeout = '5s';
+SELECT
+  to_regclass('public.billing_offers') IS NOT NULL AS offers_present,
+  to_regclass('public.billing_price_versions') IS NOT NULL AS prices_present;
+SELECT migration_name, finished_at IS NOT NULL AS applied
+FROM _prisma_migrations
+WHERE migration_name LIKE '%stripe%'
+ORDER BY migration_name;
+SELECT id, slug, active, deleted
+FROM subscription_plans
+WHERE slug = 'profissional';
+COMMIT;
+```
 
 ### Ledger: `reconcile-stripe-ledger`
 
