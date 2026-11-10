@@ -60,14 +60,29 @@ export const useFeedVideoScroll = (options: FeedVideoScrollOptions) => {
       let nearest = index;
       let distance = Infinity;
       const attribute = latest.current.slideAttribute ?? "data-content-video-slide-index";
-      for (const slide of feed.querySelectorAll<HTMLElement>(`[${attribute}]`)) {
+      const slides = feed.querySelectorAll<HTMLElement>(`[${attribute}]`);
+      const top = feed.getBoundingClientRect().top + feed.clientTop;
+      // Slides are in vertical DOM order. Avoid measuring the entire growing
+      // feed on every scroll event while native momentum/snap is running.
+      let low = 0;
+      let high = slides.length - 1;
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+        const slide = slides[middle];
         const candidate = Number(slide.getAttribute(attribute));
-        if (!Number.isInteger(candidate) || candidate < 0 || candidate >= count) continue;
-        const delta = Math.abs(slideTop(feed, slide) - feed.scrollTop);
-        if (delta < distance) {
+        const offset = slide.getBoundingClientRect().top - top;
+        const delta = Math.abs(offset);
+        if (
+          Number.isInteger(candidate) &&
+          candidate >= 0 &&
+          candidate < count &&
+          (delta < distance || (delta === distance && candidate < nearest))
+        ) {
           nearest = candidate;
           distance = delta;
         }
+        if (offset < 0) low = middle + 1;
+        else high = middle - 1;
       }
       if (nearest !== reportedIndex.current) {
         reportedIndex.current = nearest;

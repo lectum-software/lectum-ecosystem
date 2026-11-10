@@ -114,6 +114,23 @@ describe("content video native scrolling mounted in React", {
   });
   const wait = (predicate) => page.waitForFunction(predicate, undefined, { timeout: 5000 });
 
+  test("long feeds do not measure every slide during a scroll event", async () => {
+    await page.evaluate(() => mount({ count: 1000 }));
+    const reads = await page.evaluate(() => {
+      window.slideReads = 0;
+      for (const slide of document.querySelectorAll("section")) {
+        const rect = slide.getBoundingClientRect.bind(slide);
+        slide.getBoundingClientRect = () => {
+          window.slideReads++;
+          return rect();
+        };
+      }
+      navigation.onScroll({ target: document.getElementById("feed") });
+      return window.slideReads;
+    });
+    assert.ok(reads <= 12, `expected logarithmic layout reads, got ${reads}`);
+  });
+
   test("wheel moves real pages and native snap selects the closest page", async () => {
     await page.evaluate(() => mount());
     await page.mouse.move(180, 350);

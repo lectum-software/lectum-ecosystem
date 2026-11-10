@@ -747,3 +747,4 @@ Formato recomendado:
 - [ADR-0683 — Experimento de dois players no diretorio](0683-directory-player-pool-experiment.md)
 - [ADR-0684 — Caption presentation and controls](0684-caption-interface-refinements.md)
 - [ADR-0685 — Default bounded directory playback](0685-directory-bounded-playback-default.md)
+- [ADR-0686 — Video presentation and scroll cost](0686-video-presentation-and-scroll-cost.md)
