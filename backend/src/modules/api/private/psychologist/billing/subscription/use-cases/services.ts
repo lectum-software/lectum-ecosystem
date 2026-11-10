@@ -5,6 +5,11 @@ import {
   isPaymentGatewayConfigurationError,
 } from "@/modules/billing/payment-gateway";
 import { prepareCancellation } from "@/modules/billing/prepare-cancellation";
+import {
+  cancelPendingStripeCreditIntents,
+  prepareStripeCreditCancellation,
+} from "@/modules/billing/stripe/collection-cancellation";
+import { StripeBillingError } from "@/modules/billing/stripe/policy";
 import { syncStripeSubscription } from "@/modules/billing/stripe/sync";
 import { assertStripeUserCancellationConfirmed } from "@/modules/billing/stripe/user-cancellation-policy";
 import {
@@ -99,6 +104,11 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
 
   try {
     const gateway = getStoredSubscriptionGateway(subscription);
+    if (subscriptionGatewayName(subscription) === "stripe") {
+      const identity = getStripeGateway().identity;
+      if (await prepareStripeCreditCancellation(subscription.id!, identity))
+        await cancelPendingStripeCreditIntents(subscription.id!, identity);
+    }
     if (subscriptionGatewayName(subscription) === "mercadopago")
       await prepareCancellation(subscription, gateway);
     const gatewayResult = await gateway.cancelSubscription({
@@ -146,6 +156,7 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
       },
     };
   } catch (err) {
+    if (err instanceof StripeBillingError) return { status: err.status, ...error(err.code, {}) };
     const configError = isPaymentGatewayConfigurationError(err);
 
     return {

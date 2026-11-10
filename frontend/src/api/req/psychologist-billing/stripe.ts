@@ -9,6 +9,7 @@ import type {
 import { handleReq } from "@/api/handle";
 
 const route = "/api/private/psychologist/billing/stripe";
+const flowVersion = "credit_only_v1";
 
 export const getStripeBillingConfig = async (courtesyRenewal: boolean) => {
   try {
@@ -34,21 +35,37 @@ export const getStripeBillingConfig = async (courtesyRenewal: boolean) => {
 
 export const createStripeBillingCheckout = (body: StripeBillingCheckoutPayload) =>
   handleReq<StripeBillingOperationResponse>({
-    ...callEndpoint({ route: `${route}/checkout`, method: "POST", body }),
+    ...callEndpoint({
+      route: `${route}/checkout`,
+      method: "POST",
+      body: { ...body, flow_version: flowVersion },
+    }),
     hideError: true,
   });
 
 export const createStripeBillingPaymentMethod = (body: { request_key: string }) =>
   handleReq<StripeBillingOperationResponse>({
-    ...callEndpoint({ route: `${route}/payment-method`, method: "POST", body }),
+    ...callEndpoint({
+      route: `${route}/payment-method`,
+      method: "POST",
+      body: { ...body, flow_version: flowVersion },
+    }),
     hideError: true,
   });
 
-export const confirmStripeBillingOperation = (kind: StripeBillingKind, id: string) =>
+export const confirmStripeBillingOperation = (
+  kind: StripeBillingKind,
+  id: string,
+  authorizePayment = false,
+) =>
   handleReq<StripeBillingOperationResponse>({
     ...callEndpoint({
       route: `${route}/${kind === "checkout" ? "checkout" : "payment-method"}/${encodeURIComponent(id)}/confirm`,
       method: "POST",
+      body: {
+        flow_version: flowVersion,
+        confirm_payment: kind === "checkout" && authorizePayment === true,
+      },
     }),
     hideError: true,
   });

@@ -188,7 +188,7 @@ const isAllowedBillingIntentSecret = (
   )
     return false;
   return (
-    (parent.type === "payment" && /^pi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+$/.test(value)) ||
+    (parent.type === "action" && /^pi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+$/.test(value)) ||
     (parent.type === "setup" && /^seti_[A-Za-z0-9]+_secret_[A-Za-z0-9]+$/.test(value))
   );
 };

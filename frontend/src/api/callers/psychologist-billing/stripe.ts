@@ -35,8 +35,15 @@ export const useStripeBillingOperations = () => {
     gcTime: 0,
   });
   const confirm = useMutation({
-    mutationFn: ({ kind, id }: { kind: StripeBillingKind; id: string }) =>
-      confirmStripeBillingOperation(kind, id),
+    mutationFn: ({
+      kind,
+      id,
+      authorizePayment = false,
+    }: {
+      kind: StripeBillingKind;
+      id: string;
+      authorizePayment?: boolean;
+    }) => confirmStripeBillingOperation(kind, id, authorizePayment),
     retry: false,
     gcTime: 0,
   });

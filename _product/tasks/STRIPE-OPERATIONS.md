@@ -6,12 +6,50 @@ de aceite e a fonte de verdade continuam na [TASK-320](TASK-320-stripe-embedded-
 
 ## 1. Limites atuais e gates
 
+### Fluxo vigente local: credito-only sem Radar Plus (ADR-0685)
+
+O complemento de10/11 substitui a dependencia de regras pagas para novas assinaturas.
+SetupIntent independente coleta/autentica o cartao; backend aceita somente funding
+credit. Nova assinatura nasce sem default, tem coleta keep_as_draft conferida antes
+da atribuicao e cada fatura usa PI proprio manual. Browser somente autentica3DS;
+confirmacao/reconfirmacao financeira depende do backend e de validacao fresca.
+Nao expor o segredo do PI automatico da fatura nem retomar a coleta automatica.
+
+`BILLING_STRIPE_COLLECTION_ENABLED=false` e opt-in independente, inclusive da
+conciliacao/ledger. Precisa de Payment Intents e Invoices write; somente a chave
+sandbox foi ampliada (Invoicesread para write, PI ja tinha write). Configuracao
+live/chaves/publicacao permanecem pendentes e intocadas nesta execucao.
+
+Renovacoes usam worker retomavel. Uma recusa definitiva nao inicia Smart Retries:
+fica aguardando cartao atualizado ou autenticacao/confirmacao explicita. Trocar
+cartao, montar tela, consultar status ou receber webhook nao confirma pendencia
+financeira silenciosamente. Retry de transporte ambiguo conserva PI/chave/corpo,
+janela limitada e sequencia duravel. Nao reaproveitar a evidencia antiga de dunning
+automatico como prova deste novo mecanismo; notificacoes/grace adicionais nao
+foram implementadas neste complemento. A monitoracao de faturas pendentes e a
+operacao do worker devem ser conferidas antes de liberar vendas.
+
+Cancelamento aplica fence duravel antes do provider, recusa enquanto existe lease
+financeiro e cancela PIs pendentes sem capturar/estornar. Marcador de cancelamento
+nao impede consulta/ledger nem apaga periodo realmente pago. Rollback nunca remove
+pausa automaticamente. Nenhum contrato legado e convertido implicitamente.
+
+Provas reais executadas: bloqueio de debito/pre-pago antes de Subscription/PI,
+checkout, cortesia sem captura, troca sem cobranca, renovacao/fim de cortesia com
+testclock passado avancado ate o presente, replay sem duplicata,3DS de setup e
+financeiro com interrupcao/retomada do mesmo PI. Confirmacao direta com chave
+publica e outro cartao credito foi especificamente recusada por PI manual, sem
+captura e sem depender do Radar. Unknown/ausencia de funding cobertos por testes
+de contrato conservadores, nao por um cartao desconhecido inventado no provider.
+Radar para SetupIntents continua OFF; protocolo18652759 deixa de ser bloqueio
+tecnico deste desenho, sem afirmar resposta sobre custos ou alterar seu plano.
+
 - Checkout incorporado, 3DS, recusas, renovacao, dunning e cancelamento tiveram
   provas reais no sandbox com PostgreSQL local. Nao repetir todo o lote para
   suprir uma pendencia diferente. Preservar evidencias e recorrencias encerradas.
-- Cortesia: Radar para SetupIntents continua OFF, aguardando suporte Stripe
-  protocolo18652759. Nao alegar credito-only integral sem essa prova. Atribuicao
-  automatica de cartao no trial nao e impedida apenas pelo guard local.
+- Evidencias anteriores de cortesia/Radar pertencem ao desenho da ADR-0684;
+  o complemento acima usa coleta independente e confirmacao manual. Nao ativar
+  Radar para SetupIntents nem contratar plano como parte desta migracao.
 - Fiscal: chave SendNF test restrita instalada apenas localmente; consultas GET
   passaram. Usuario reconfirmou vigencia de codigo010501/ISS2,01% e reutilizacao
   da descricao fiscal exata anterior, ja presente no backend publicado; nao

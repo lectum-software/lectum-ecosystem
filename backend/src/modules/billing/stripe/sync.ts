@@ -7,6 +7,7 @@ import {
   isOriginalCheckoutCaptureComplete,
   unresolvedTerminalCheckoutUpdate,
 } from "./checkout-completion";
+import { readPreservedCreditEntitlement } from "./credit-entitlement";
 import { FinancialLedgerRepository } from "./financial-ledger/repository";
 import {
   canonicalTerminal,
@@ -117,7 +118,14 @@ export const syncStripeSubscription = async (
     : null;
   if (!operation) throw new StripeBillingError("billing_operation_conflict");
   const now = new Date();
-  const state = resolveStripeEntitlement(remote, local, now);
+  const preservedPaidPeriod = await readPreservedCreditEntitlement(
+    gateway,
+    identity,
+    local,
+    remote,
+    now,
+  );
+  const state = preservedPaidPeriod ?? resolveStripeEntitlement(remote, local, now);
   const applied = await prisma.professional_subscription.updateMany({
     where: {
       id: local.id,
@@ -145,7 +153,7 @@ export const syncStripeSubscription = async (
     now,
   );
   const entitlementActive =
-    hasPaidCurrentPeriod(remote, now) &&
+    (hasPaidCurrentPeriod(remote, now) || Boolean(preservedPaidPeriod)) &&
     ["ativa", "cancelada"].includes(state.status) &&
     Boolean(state.currentPeriodEnd && state.currentPeriodEnd > now);
   const originalReceipt =

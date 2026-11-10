@@ -1427,3 +1427,20 @@ ensaio real de retry retornou alocacao posterior a invoice paga. Cada timestamp
 continua obrigatorio, valido e comparado individualmente ao cutoff/now. Periodo
 continua com fim maior que inicio. Nova migration troca apenas o CHECK de periodo,
 sem reescrever registros nem editar a migration aplicada da fundacao financeira.
+
+## 2026-11-10 - Cobranca Stripe credito-only controlada (TASK-320 / ADR-0685)
+
+- `professional_subscription.collection_policy String?`: opt-in imutavel de contratos
+  novos `manual_credit_v1`; null preserva historico e nunca autoriza conversao/cobranca.
+- `billing_operation.provider_setup_intent_id String?`: coleta independente anterior
+  a assinatura, distinta do PaymentIntent financeiro fixado em provider_intent_id.
+- `billing_operation.parent_operation_id String?`, `provider_invoice_id String?` e
+  `provider_payment_method_id String?`: operacao interna kind=collection por fatura,
+  com metodo autorizado e vinculo opcional ao checkout original. Reutiliza unicidade
+  gateway/modo/conta/usuario/request_key deterministica, lease e janela de replay.
+- `confirmation_sequence Int default0` e `confirmation_fingerprint String?`:
+  checkpoint de cada confirmacao manual, inclusive reconfirmacao posterior ao 3DS;
+  resposta ambigua exige consulta do mesmo objeto, nunca cobranca substituta.
+- Expansao aditiva, sem alterar dados anteriores; IDs nao sao segredos. Nao armazenar
+  client_secret, PAN, CVV, payload ou dados pessoais de cartao. Operacoes internas
+  nao aparecem como novas vendas ou operacoes de usuario no contrato legado.

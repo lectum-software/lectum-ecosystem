@@ -1,13 +1,91 @@
 # TASK-320 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
 
 Data: 2026-11-09
-Status: Implementacao tecnica validada local/sandbox; cortesia/Radar e fiscal aguardam requisitos externos; publicacao nao autorizada
+Status: Complemento credito-only sem Radar Plus validado local/sandbox; fiscal e publicacao permanecem separados
 Decisao: [ADR-0684](../../adrs/0684-stripe-embedded-checkout.md)
 Operacao: [Runbook Stripe](STRIPE-OPERATIONS.md)
 Base auditada: `homolog` em `820077ccd`, versao `0.1.799`
 Dependencias funcionais: TASK-02, TASK-31/32/33, TASK-56, TASK-142, TASK-313/314/315/317.
 
 ## Pedido e limite desta etapa
+
+### Complemento autorizado em 10/11: credito-only sem Radar Plus
+
+- Implementar e validar somente em `homolog`, localhost e sandbox existente, incluindo
+  cortesia, 3DS, troca de cartao e renovacoes. Nao ativar vendas publicadas, producao,
+  Radar para SetupIntents nem contratar plano. Nao efetuar cobranca real ou emissao fiscal.
+- A verificacao `funding === credit` precisa ocorrer no servidor antes de cada tentativa
+  financeira, inclusive renovacoes. Apenas validar a atribuicao do cartao e deixar
+  cobranca automatica externa nao comprova esse requisito.
+- Primeiro comprovar o contrato real de API: coleta independente com SetupIntent,
+  retencao de faturas sem cobranca automatica e confirmacao financeira controlada
+  pelo servidor. Nao devolver o segredo de um PaymentIntent automatico como atalho
+  para 3DS; se a API nao suportar o desenho, registrar o bloqueio antes de implementar.
+- Autorizadas somente permissoes de escrita Payment Intents/Invoices na chave sandbox.
+  Inspecao confirmou Payment Intents ja em escrita; apenas Invoices mudou de leitura
+  para escrita, com persistencia conferida no painel. Chave live intocada.
+- Impacto previsto: fluxo financeiro novo exige backend/frontend compativeis e
+  reconciliacao duravel, sem reutilizar contratos antigos de forma silenciosa. Rollout,
+  permissoes live e automacao produtiva exigem autorizacao posterior. Sem package novo.
+
+Criterios adicionais (nao substituem as evidencias historicas):
+
+- [x] Prova real de API da barreira de cobranca e do caminho 3DS sem bypass.
+- [x] Checkout/cortesia coletam e validam cartao antes de associar recorrencia.
+- [x] Debito, pre-pago e classificacao desconhecida/ausente sao recusados antes de cobrar.
+- [x] Troca, recuperacao e renovacoes respeitam a mesma barreira e idempotencia.
+- [x] Gates finais locais aprovados, sem push/deploy.
+
+Gates finais em0.1.804: `pnpm check` integral aprovado (incluindo backend1372testes,
+1356pass/16opt-inskips/zerofalhas), builds backend/frontend aprovados. Migration
+expansiva aplicada com `pnpm --dir backend db:migrate` no PostgreSQL isolado;
+reexecucao confirmou sem pendencia. Teste PG opt-in de collection/cancelamento
+executado separadamente, sem skip. Backend compilado health/ready/ping200/no-store
+e frontendcompilado version200/no-store/noindex em0.1.804; processos locais do
+ensaio encerrados, PostgreSQL preservado. Bump unico e cinco manifests sincronizados;
+registro em commit local deste complemento, sem publicacao.
+
+Evidencia do complemento (sem substituir as limitacoes historicas):
+
+- Sandbox existente, chaves test restritas, PostgreSQL isolado e servicos reais:
+  seis casos de checkoutcredito, debit/prepaid bloqueados antes de Sub/PI,
+  troca debit recusada mantendo cartao anterior, troca credit sem cobranca e
+  cortesia sem captura. Nenhum provider foi substituido por mock.
+- Relogio Stripe criado no passado e avancado ate instante ja passado no relogio
+  real: renovacao normal e primeiro debito apos cortesia passaram pelo worker;
+  invoices nasceram draft/auto_advancefalse, tres capturas/receipts test por PIs
+  manuais, PIs automaticos receberam zero. Dois replays nao duplicaram capturas.
+  Nao alteramos Date, cutoff ou guard de periodo futuro para fazer o teste passar.
+- Browser localhost:3DS do SetupIntent e do PI manual com cartao oficial de teste.
+  Interrupcao do desafio financeiro, nova aba e confirmacao explicita retomaram
+  o mesmo PI; sequencia3 concluiu exatamente uma captura2990/3DSauthenticated.
+  Navegacao prosseguiu ao endereco de faturamento, que nao foi preenchido.
+- Probe hostil com chave publica/clientsecret e outro cartao CREDIT valido:
+  GET200 de controle e confirm400 especificamente por confirmacao manual, sem
+  Charge/captura. A recusa nao dependeu do bloqueio Radar de debit/prepaid.
+- Funding unknown/ausente/inconsistente e seguranca de escopo cobertos por testes
+  de contrato/politica, nao por dados falsificados como resposta do provider.
+- QA visual mobile-first320/390/1440, sem overflow horizontal. Builder indisponivel;
+  proto local Finalizar Assinatura e UI existente usados. Build aprovado, navegador
+  funcional no dev local: build production corretamente recusa API HTTP loopback.
+  Aviso de eval de Reactdev/CSP nao e erro financeiro; nao relaxar CSP produtiva.
+- Fixtures locais usam autenticacao tecnica, sem validacao real de CFP/cadastro/email.
+  Cleanup revoga sessoes tecnicas e encerra somente contratos criados pelo ensaio;
+  customers, pagamentos e historico preservados. Nenhuma NFS-e, mudanca produtiva,
+  Radar SetupIntents ou plano pago. A limpeza da sessao visual local nao comprova
+  logout de uma sessao previamente revogada; esse fluxo nao pertence ao billing.
+- Evidencias privadas em `.codex/lectum-stripe-qa` no HOME: credit-only-product,
+  credit-adapter, credit-renewal, credit-public-confirm-bypass, credit-ui-final e
+  credit-responsive. Nao versionar IDs operacionais, segredos, credenciais ou capturas
+  de formularios preenchidos. Apenas imagens vazias/desafios de teste foram salvas.
+
+Trade-off operacional: worker novo fica false por padrao. Recusa definitiva aguarda
+acao explicita, nao Smart Retries. A evidencia antiga de dunning automatico nao
+valida retentativas/grace/notificacoes desta nova politica; decidir/evoluir essas
+funcionalidades separadamente antes de pressupor equivalencia. Cancelamento usa
+fence duravel; consulta de periodo pago permanece permitida apos marcar cancelamento.
+Cortesia/Radar deixa de ser bloqueio tecnico; suporte de custos nao foi presumido
+como respondido. SendNF e aprovacao/publicacao continuam fora deste complemento.
 
 O usuario autorizou implementar a integracao Stripe, escolheu formulario de cartao
 **dentro da Lectum** e confirmou **R$ 29,90 por mes**. Manter o Mercado Pago no

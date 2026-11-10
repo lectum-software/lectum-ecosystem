@@ -41,7 +41,9 @@ export const stripeBillingConfig = async (userId: string, intent: CheckoutIntent
     return base;
   const gateway = getStripeGateway();
   const identity = gateway.identity;
-  const pending = await repository.pending(userId, identity);
+  const pending =
+    (await repository.pending(userId, identity)) ??
+    (await repository.pendingCollection(userId, identity));
   const customer = await repository.customerForUser(userId, identity);
   const preserved = { ...base, pending_operation: stripeConfigPendingOperation(pending) };
   try {
@@ -65,8 +67,13 @@ export const stripeBillingConfig = async (userId: string, intent: CheckoutIntent
       : legacyPaymentMethodProvider,
     publishable_key: gateway.publicConfiguration.publishableKey,
   };
+  if (process.env.BILLING_STRIPE_COLLECTION_ENABLED !== "true") return maintenance;
   // A setup for an existing contract neither quotes a new price nor depends on a sales offer.
-  if (pending?.kind === "payment_method" || checkoutProvider !== "stripe") return maintenance;
+  if (
+    pending?.kind === "payment_method" ||
+    (checkoutProvider !== "stripe" && pending?.kind !== "collection")
+  )
+    return maintenance;
   try {
     await gateway.verifyCheckoutReadiness();
   } catch {
@@ -78,7 +85,7 @@ export const stripeBillingConfig = async (userId: string, intent: CheckoutIntent
     : configured?.price;
   if (!price) return maintenance;
   try {
-    await assertStripePrice(price, identity);
+    if (pending?.kind !== "collection") await assertStripePrice(price, identity);
   } catch {
     // An archived/unavailable sales price blocks only new checkout, not scoped card maintenance.
     return maintenance;
@@ -101,6 +108,7 @@ export const stripeBillingConfig = async (userId: string, intent: CheckoutIntent
     throw new StripeBillingError("billing_courtesy_unavailable");
   return {
     ...maintenance,
+    ...(pending?.kind === "collection" ? { checkout_provider: "stripe" } : {}),
     enabled: Boolean(configured || pending),
     quote: {
       revision:

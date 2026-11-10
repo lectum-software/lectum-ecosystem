@@ -1,15 +1,14 @@
 import { getNewSubscriptionGatewayName, getStripeGateway } from "../payment-gateway";
 import { unresolvedTerminalCheckoutUpdate } from "./checkout-completion";
-import { recoverStripeCheckout } from "./checkout-recovery";
+import { recoverCreditEnrollment, recoverCreditSubscription } from "./checkout-enrollment";
+import { collectStripeInvoice } from "./collection-service";
 import { currentOperationResponse } from "./operation-response";
 import {
   type CheckoutIntent,
   canonicalTerminal,
-  preserveStripeCardPolicyRejection,
   StripeBillingError,
   stripeCardPolicyPublicError,
   stripeOperationReference,
-  validDate,
 } from "./policy";
 import { TERMINAL_OPERATION_STATES } from "./recovery-policy";
 import { StripeBillingRepository } from "./repository";
@@ -22,7 +21,10 @@ export const beginStripeCheckout = async (input: {
   quoteRevision: string;
   intent: CheckoutIntent;
 }) => {
-  if (getNewSubscriptionGatewayName() !== "stripe")
+  if (
+    getNewSubscriptionGatewayName() !== "stripe" ||
+    process.env.BILLING_STRIPE_COLLECTION_ENABLED !== "true"
+  )
     throw new StripeBillingError("billing_checkout_disabled", 503);
   const gateway = getStripeGateway();
   await gateway.verifyCheckoutReadiness();
@@ -34,11 +36,31 @@ export const beginStripeCheckout = async (input: {
 export const confirmStripeCheckout = async (
   userId: string,
   operationId: string,
-  options: { allowReplay?: boolean; allowSetupAssignment?: boolean } = {},
+  options: { allowReplay?: boolean; allowSetupAssignment?: boolean; allowPayment?: boolean } = {},
 ) => {
   const gateway = getStripeGateway();
   const repository = new StripeBillingRepository();
-  let operation = await repository.operation(operationId, userId, gateway.identity);
+  const operation = await repository.operation(operationId, userId, gateway.identity);
+  if (
+    operation?.kind === "collection" &&
+    operation.subscription_id &&
+    operation.provider_invoice_id
+  ) {
+    const result = await collectStripeInvoice({
+      userId,
+      localSubscriptionId: operation.subscription_id,
+      invoiceId: operation.provider_invoice_id,
+      parentOperationId: operation.parent_operation_id ?? undefined,
+      allowConfirmation: options.allowPayment === true && options.allowSetupAssignment !== false,
+    });
+    if (operation.provider_subscription_id)
+      await syncStripeSubscription(operation.provider_subscription_id, operation.subscription_id);
+    return currentOperationResponse(
+      operation,
+      repository,
+      result.actionSecret ? { type: "action", client_secret: result.actionSecret } : null,
+    );
+  }
   if (operation?.kind !== "checkout")
     throw new StripeBillingError("billing_operation_not_found", 404);
   if (TERMINAL_OPERATION_STATES.includes(operation.state))
@@ -46,124 +68,125 @@ export const confirmStripeCheckout = async (
   const claim = await repository.claimOperation(operation);
   if (!claim) return currentOperationResponse(operation, repository);
   try {
-    // Resume the originally authorized request. Only an identical durable key/body inside the safe retention window can be replayed.
-    const reference = await recoverStripeCheckout(claim, repository, options.allowReplay !== false);
-    operation = (await repository.operation(operationId, userId, gateway.identity))!;
-    if (!operation || TERMINAL_OPERATION_STATES.includes(operation.state))
-      return currentOperationResponse(claim, repository);
-    let synchronized = await syncStripeSubscription(
-      reference.subscriptionId,
-      operation.subscription_id ?? undefined,
-    );
-    if (synchronized.operationCompleted) {
-      await repository.finishOperation(operation.id, claim.lease_token, {
-        state: "complete",
-        completed_at: new Date(),
-        last_error_code: null,
-      });
-      return currentOperationResponse(operation, repository);
-    }
-    if (canonicalTerminal(synchronized.remote)) {
-      const unresolved = unresolvedTerminalCheckoutUpdate(operation);
-      if (unresolved) await repository.finishOperation(operation.id, claim.lease_token, unresolved);
-      return currentOperationResponse(operation, repository);
-    }
+    // Read-only periodic reconciliation must never create or reconfirm a financial attempt.
     if (
-      operation.intent === "courtesy_renewal" &&
-      synchronized.remote.gatewayStatus === "trialing" &&
-      (operation.intent_kind !== "setup" || !operation.provider_intent_id)
+      options.allowSetupAssignment === false ||
+      process.env.BILLING_STRIPE_COLLECTION_ENABLED !== "true"
     ) {
-      // No native intent is not permission to silently reuse a previously saved card.
-      throw new StripeBillingError("billing_operation_review_required");
-    }
-    if (
-      options.allowSetupAssignment !== false &&
-      operation.intent === "courtesy_renewal" &&
-      operation.intent_kind === "setup" &&
-      operation.provider_intent_id &&
-      synchronized.remote.gatewayStatus === "trialing"
-    ) {
-      const setup = await gateway.retrieveSetup(operation.provider_intent_id);
-      if (setup.status === "succeeded") {
-        if (
-          synchronized.local.status === "cancelada" ||
-          synchronized.remote.cancelAtPeriodEnd ||
-          !validDate(operation.scheduled_start_at) ||
-          !validDate(synchronized.remote.trialEnd) ||
-          Math.floor(operation.scheduled_start_at.getTime() / 1_000) !==
-            Math.floor(synchronized.remote.trialEnd.getTime() / 1_000)
-        ) {
-          throw new StripeBillingError("billing_operation_conflict");
-        }
-        // The setup ID was durably pinned when the subscription was created/recovered. It never comes from the caller.
-        await gateway.applySubscriptionSetup({
-          attemptId: operation.id,
-          localSubscriptionId: operation.subscription_id!,
-          setupIntentId: operation.provider_intent_id,
-          customerId: reference.customerId,
-          subscriptionId: reference.subscriptionId,
-        });
-        synchronized = await syncStripeSubscription(
-          reference.subscriptionId,
-          operation.subscription_id!,
-          { verifiedCreditSetupId: operation.provider_intent_id },
+      if (operation.provider_subscription_id)
+        await syncStripeSubscription(
+          operation.provider_subscription_id,
+          operation.subscription_id ?? undefined,
         );
-      }
+      await repository.finishOperation(claim.id, claim.lease_token, {});
+      return currentOperationResponse(operation, repository);
     }
-    if (
-      synchronized.operationCompleted ||
-      (operation.intent === "courtesy_renewal" && synchronized.scheduled)
-    ) {
-      await repository.finishOperation(operation.id, claim.lease_token, {
+    const enrollment = await recoverCreditEnrollment(
+      claim,
+      repository,
+      options.allowReplay !== false,
+    );
+    if (enrollment.setup.status === "canceled") {
+      await repository.finishOperation(claim.id, claim.lease_token, {
+        state: "failed",
+        completed_at: new Date(),
+      });
+      return currentOperationResponse(operation, repository);
+    }
+    if (enrollment.setup.status !== "succeeded") {
+      await repository.finishOperation(claim.id, claim.lease_token, {
+        state: enrollment.setup.clientSecret ? "requires_confirmation" : "processing",
+        last_error_code: null,
+      });
+      return currentOperationResponse(
+        operation,
+        repository,
+        enrollment.setup.clientSecret
+          ? { type: "setup", client_secret: enrollment.setup.clientSecret }
+          : null,
+      );
+    }
+    const { remote } = await recoverCreditSubscription(claim, repository, enrollment);
+    if (canonicalTerminal(remote)) {
+      const unresolved = unresolvedTerminalCheckoutUpdate(operation);
+      if (unresolved) await repository.finishOperation(claim.id, claim.lease_token, unresolved);
+      return currentOperationResponse(operation, repository);
+    }
+    if (operation.intent === "courtesy_renewal") {
+      if (
+        !(
+          await repository.pinOperationReferences(claim, claim.lease_token, {
+            intentId: enrollment.setup.setupIntentId,
+            intentKind: "setup",
+          })
+        ).count
+      )
+        throw new StripeBillingError("billing_operation_pending");
+      const synchronized = await syncStripeSubscription(
+        remote.subscriptionId,
+        operation.subscription_id!,
+        {
+          verifiedCreditSetupId: enrollment.setup.setupIntentId,
+        },
+      );
+      if (!synchronized.scheduled) throw new StripeBillingError("billing_operation_pending");
+      await repository.finishOperation(claim.id, claim.lease_token, {
         state: "complete",
         completed_at: new Date(),
         last_error_code: null,
       });
       return currentOperationResponse(operation, repository);
     }
-    const embedded = await gateway.retrieveEmbeddedSubscription(reference.subscriptionId);
+    if (!remote.latestInvoiceId) throw new StripeBillingError("billing_operation_conflict");
+    await repository.pinOperationReferences(claim, claim.lease_token, { intentKind: "payment" });
+    const collected = await collectStripeInvoice({
+      userId,
+      localSubscriptionId: operation.subscription_id!,
+      invoiceId: remote.latestInvoiceId,
+      parentOperationId: operation.id,
+      allowConfirmation: options.allowPayment === true,
+    });
     if (
+      collected.intentId &&
       !(
-        await repository.pinOperationReferences(operation, claim.lease_token, {
-          intentId: embedded.intentId,
-          intentKind: embedded.intentKind,
+        await repository.pinOperationReferences(claim, claim.lease_token, {
+          intentId: collected.intentId,
+          intentKind: "payment",
         })
       ).count
     )
-      return currentOperationResponse(operation, repository);
-    const errorCode = preserveStripeCardPolicyRejection(claim.last_error_code, null);
-    await repository.finishOperation(operation.id, claim.lease_token, {
-      state: errorCode
-        ? "review_required"
-        : embedded.clientSecret
-          ? "requires_confirmation"
-          : "processing",
-      last_error_code: errorCode,
+      throw new StripeBillingError("billing_operation_pending");
+    await syncStripeSubscription(remote.subscriptionId, operation.subscription_id!);
+    await repository.finishOperation(claim.id, claim.lease_token, {
+      state: collected.state,
+      last_error_code:
+        (await repository.operation(collected.operationId, userId, gateway.identity))
+          ?.last_error_code ?? null,
+      ...(collected.state === "complete" ? { completed_at: new Date() } : {}),
     });
     return currentOperationResponse(
       operation,
       repository,
-      embedded.clientSecret && embedded.intentKind !== "none"
-        ? { type: embedded.intentKind, client_secret: embedded.clientSecret }
-        : null,
+      collected.actionSecret ? { type: "action", client_secret: collected.actionSecret } : null,
     );
   } catch (failure) {
     const cardPolicyError = stripeCardPolicyPublicError(failure);
+    const latest = await repository.operation(operation.id, userId, gateway.identity);
+    // No remote subscription/financial attempt exists yet: a denied setup is safely terminal.
+    const safeCardRejection = Boolean(
+      cardPolicyError && !latest?.provider_subscription_id && !latest?.provider_intent_id,
+    );
     await repository.finishOperation(claim.id, claim.lease_token, {
-      state: "review_required",
-      last_error_code: preserveStripeCardPolicyRejection(
-        claim.last_error_code,
-        cardPolicyError ? "card_credit_required" : "checkout_resume_unresolved",
-      ),
+      state: safeCardRejection ? "failed" : "review_required",
+      last_error_code: cardPolicyError ? "card_credit_required" : "checkout_resume_unresolved",
+      ...(safeCardRejection ? { completed_at: new Date() } : {}),
     });
-    const response = await currentOperationResponse(claim, repository);
-    if (response.operation.state === "review_required") {
-      if (cardPolicyError) throw cardPolicyError;
+    if (cardPolicyError && !safeCardRejection) throw cardPolicyError;
+    if (!cardPolicyError)
       console.warn("[BILLING_STRIPE] Operação aguardando conciliação.", {
         operation_ref: stripeOperationReference(claim.id),
         kind: "checkout",
       });
-    }
-    return response;
+    return currentOperationResponse(operation, repository);
   }
 };

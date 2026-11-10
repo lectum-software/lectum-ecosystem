@@ -18,6 +18,7 @@ import {
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
 import {
+  isStripeBillingActionPending,
   isStripeBillingQuoteValid,
   stripeCompletedOperationDestination,
 } from "@/utils/stripe-billing";
@@ -38,10 +39,12 @@ export const StripeCheckoutLogic = ({ config }: { config: StripeBillingConfig })
   const courtesy = quote?.intent === "courtesy_renewal";
   const alreadyActive =
     isProfessionalSubscriptionActive(current) && current?.source !== "admin_grant";
+  const resumingAction = isStripeBillingActionPending(config.pending_operation);
+  const redirectActive = alreadyActive && !resumingAction;
 
   useEffect(() => {
-    if (alreadyActive) router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.completion);
-  }, [alreadyActive, router]);
+    if (redirectActive) router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.completion);
+  }, [redirectActive, router]);
   useEffect(() => {
     if (
       !user?.id ||
@@ -88,14 +91,22 @@ export const StripeCheckoutLogic = ({ config }: { config: StripeBillingConfig })
     return true;
   };
 
-  if (billing.current.isPending || alreadyActive) return <BillingProviderState loading />;
+  if (billing.current.isPending || redirectActive) return <BillingProviderState loading />;
   if (billing.current.isError || !isStripeBillingQuoteValid(quote)) return <BillingProviderState />;
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl">
         <AppPageHeader
-          title={courtesy ? "Adicionar cartão de cobrança" : "Finalizar assinatura"}
-          backHref="/app/profissional/assinatura/planos"
+          title={
+            resumingAction
+              ? "Confirmar pagamento pendente"
+              : courtesy
+                ? "Adicionar cartão de cobrança"
+                : "Finalizar assinatura"
+          }
+          backHref={
+            resumingAction ? "/app/profissional/assinatura" : "/app/profissional/assinatura/planos"
+          }
           backLabel="Voltar"
         />
         <div className="grid gap-5 md:grid-cols-[0.9fr_1.1fr] md:items-start">
@@ -105,10 +116,18 @@ export const StripeCheckoutLogic = ({ config }: { config: StripeBillingConfig })
             renewalDate={quote.scheduled_start_at}
           />
           <div className="grid gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] md:p-6">
-            <h2 className="text-xl font-bold">Dados do cartão</h2>
+            <h2 className="text-xl font-bold">
+              {resumingAction ? "Autenticação do cartão" : "Dados do cartão"}
+            </h2>
             <p className="text-sm leading-6 text-muted">
-              Preencha os campos seguros abaixo para{" "}
-              {courtesy ? "preparar a cobrança futura" : "confirmar sua assinatura"}.
+              {resumingAction ? (
+                "Continue a autenticação do pagamento já iniciado. Esta etapa não cria outra assinatura."
+              ) : (
+                <>
+                  Preencha os campos seguros abaixo para{" "}
+                  {courtesy ? "preparar a cobrança futura" : "confirmar sua assinatura"}.
+                </>
+              )}
             </p>
             {config.pending_operation && config.pending_operation.kind !== "checkout" ? (
               <InlineAlert title="Uma alteração está em andamento">

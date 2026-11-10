@@ -6,7 +6,7 @@ import { send } from ".";
 
 const paymentSecret = "pi_exampleonly_secret_exampleonly";
 const setupSecret = "seti_exampleonly_secret_exampleonly";
-const payload = (type = "payment", secret = paymentSecret) => ({
+const payload = (type = "action", secret = paymentSecret) => ({
   operation: {
     id: "local-operation",
     confirmation: { type, client_secret: secret, secret: "never-returned" },
@@ -18,7 +18,7 @@ const payload = (type = "payment", secret = paymentSecret) => ({
 
 test("billing intent exception is opt-in and restricted to one DTO path and intent type", () => {
   for (const [type, secret] of [
-    ["payment", paymentSecret],
+    ["action", paymentSecret],
     ["setup", setupSecret],
   ]) {
     const data = payload(type, secret);
@@ -38,13 +38,13 @@ test("billing intent exception is opt-in and restricted to one DTO path and inte
     "sk_live_exampleonly",
     "x".repeat(513),
   ]) {
-    const sanitized = sanitizeSensitiveData(payload("payment", secret), {
+    const sanitized = sanitizeSensitiveData(payload("action", secret), {
       allowBillingIntentSecret: true,
     });
     assert.equal(Object.hasOwn(sanitized.operation.confirmation, "client_secret"), false);
   }
   assert.deepEqual(sanitizeSensitiveData([payload()], { allowBillingIntentSecret: true }), [
-    { operation: { id: "local-operation", confirmation: { type: "payment" } }, nested: {} },
+    { operation: { id: "local-operation", confirmation: { type: "action" } }, nested: {} },
   ]);
 });
 
@@ -60,7 +60,7 @@ test("billing intent exception never authorizes the same value in arbitrary sibl
     {
       operation: {
         id: "local-operation",
-        confirmation: { type: "payment", client_secret: paymentSecret },
+        confirmation: { type: "action", client_secret: paymentSecret },
       },
       nested: {},
       description: "[REDACTED]",
@@ -116,4 +116,11 @@ test("send only permits the narrow secret on authenticated Stripe operation POST
       server.close((error) => (error ? reject(error) : resolve())),
     );
   }
+});
+
+test("legacy automatic payment confirmation never receives a financial secret", () => {
+  const safe = sanitizeSensitiveData(payload("payment", paymentSecret), {
+    allowBillingIntentSecret: true,
+  });
+  assert.equal(Object.hasOwn(safe.operation.confirmation, "client_secret"), false);
 });

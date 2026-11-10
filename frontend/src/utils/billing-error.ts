@@ -11,6 +11,8 @@ const BILLING_FAILURE_MESSAGES: Record<BillingMutation, string> = {
 
 // Somente códigos públicos de domínio, nunca diagnósticos, hints ou texto do provedor.
 const BILLING_PUBLIC_ERROR_MESSAGES: Record<string, string> = {
+  billing_checkout_refresh_required:
+    "Atualize esta página para carregar a versão atual do formulário seguro.",
   billing_checkout_email_required: "E-mail da conta não encontrado para iniciar a assinatura.",
   billing_checkout_credit_card_only: "Use um cartão de crédito para assinar o Plano Profissional.",
   billing_courtesy_renewal_required:
@@ -37,11 +39,17 @@ const BILLING_PUBLIC_ERROR_MESSAGES: Record<string, string> = {
     "Este cartão não pode ser usado para esta assinatura. Use outro cartão de crédito.",
   billing_gateway_payment_pending:
     "Seu pagamento está em análise. Atualize o status em alguns instantes.",
-  billing_payment_method_credit_card_only:
-    "Use um cartão de crédito para atualizar o método de pagamento.",
+  billing_payment_method_credit_card_only: "Use um cartão de crédito para continuar.",
+  billing_payment_method_update_required:
+    "Atualize o cartão de crédito para continuar o pagamento pendente.",
   billing_payment_method_subscription_required:
     "É preciso ter uma assinatura profissional ativa com método de pagamento cadastrado para alterar o cartão.",
 };
+
+export const getBillingPublicErrorMessage = (code: unknown): string | null =>
+  typeof code === "string" && Object.hasOwn(BILLING_PUBLIC_ERROR_MESSAGES, code)
+    ? BILLING_PUBLIC_ERROR_MESSAGES[code]
+    : null;
 
 export const getBillingMutationErrorMessage = (error: unknown, operation: BillingMutation) => {
   const fallback = BILLING_FAILURE_MESSAGES[operation];
@@ -58,7 +66,5 @@ export const getBillingMutationErrorMessage = (error: unknown, operation: Billin
     return getSafeApiErrorMessage({ status }, fallback);
   }
 
-  return code && Object.hasOwn(BILLING_PUBLIC_ERROR_MESSAGES, code)
-    ? BILLING_PUBLIC_ERROR_MESSAGES[code]
-    : fallback;
+  return getBillingPublicErrorMessage(code) ?? fallback;
 };

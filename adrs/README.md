@@ -746,3 +746,4 @@ Formato recomendado:
 - [ADR-0682 — Capa de inicio e reserva limitada do proximo video](0682-video-startup-standby.md)
 - [ADR-0683 — Experimento de dois players no diretorio](0683-directory-player-pool-experiment.md)
 - [ADR-0684 — Stripe incorporado, contratos por gateway e preco versionado](0684-stripe-embedded-checkout.md)
+- [ADR-0685 — Stripe credito-only com cobranca controlada no servidor](0685-stripe-credit-only-server-collection.md)

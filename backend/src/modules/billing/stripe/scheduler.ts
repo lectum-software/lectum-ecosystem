@@ -1,3 +1,4 @@
+import { processStripeCollections, stripeCollectionsEnabled } from "./collection-service";
 import { processStripeFinancialReconciliations } from "./financial-ledger/service";
 import { processStripeInbox } from "./inbox";
 
@@ -14,12 +15,17 @@ const tick = async () => {
   } catch {
     console.warn("[BILLING_STRIPE] Conciliação indisponível.");
   } finally {
+    try {
+      if (stripeCollectionsEnabled()) await processStripeCollections();
+    } catch {
+      console.warn("[BILLING_STRIPE] Agenda de cobrança indisponível.");
+    }
     if (!stopped) timer = setTimeout(tick, 60_000);
   }
 };
 
 export const startStripeBillingScheduler = () => {
-  if (!stopped || !enabled()) return;
+  if (!stopped || (!enabled() && !stripeCollectionsEnabled())) return;
   stopped = false;
   timer = setTimeout(tick, 30_000);
 };

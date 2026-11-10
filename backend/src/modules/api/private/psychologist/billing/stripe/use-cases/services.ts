@@ -15,20 +15,28 @@ const userId = (data: IStripeBillingDTO) => {
     throw new StripeBillingError("role_not_authorized", 403);
   return data.auth.id;
 };
+const compatibleUser = (data: IStripeBillingDTO) => {
+  const id = userId(data);
+  if (data.b?.flow_version !== "credit_only_v1")
+    throw new StripeBillingError("billing_checkout_refresh_required", 409);
+  return id;
+};
 
 export const config = (data: IStripeBillingDTO) =>
   stripeBillingConfig(userId(data), data.q.intent ?? "subscription");
 export const checkout = (data: IStripeBillingDTO) =>
   beginStripeCheckout({
-    userId: userId(data),
+    userId: compatibleUser(data),
     email: data.auth.email!,
     requestKey: data.b.request_key!,
     quoteRevision: data.b.quote_revision!,
     intent: data.b.intent ?? "subscription",
   });
 export const checkoutConfirm = (data: IStripeBillingDTO) =>
-  confirmStripeCheckout(userId(data), data.p.id!);
+  confirmStripeCheckout(compatibleUser(data), data.p.id!, {
+    allowPayment: data.b?.confirm_payment === true,
+  });
 export const paymentMethod = (data: IStripeBillingDTO) =>
-  beginStripeCardUpdate(userId(data), data.b.request_key!);
+  beginStripeCardUpdate(compatibleUser(data), data.b.request_key!);
 export const paymentMethodConfirm = (data: IStripeBillingDTO) =>
-  confirmStripeCardUpdate(userId(data), data.p.id!);
+  confirmStripeCardUpdate(compatibleUser(data), data.p.id!);

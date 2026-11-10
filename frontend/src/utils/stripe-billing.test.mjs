@@ -3,12 +3,17 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   buildStripeBillingReturnUrl,
+  canRetryStripeBillingOperation,
   cleanStripeBillingReturnSearch,
   getStripeElementErrorMessage,
+  isStripeBillingActionPending,
   isStripeBillingQuoteValid,
   isStripePublishableKey,
+  readStripeBillingConfirmation,
   readStripeBillingReturn,
   STRIPE_BILLING_RETURN_PATH,
+  stripeBillingConfirmationKind,
+  stripeBillingOperationErrorCode,
   stripeCompletedOperationDestination,
   stripeInactiveBillingCopy,
 } from "./stripe-billing.ts";
@@ -192,29 +197,141 @@ test("provedores usam módulos lazy distintos e config é autoridade, sem env St
   const req = source("../api/req/psychologist-billing/stripe.ts");
   assert.match(req, /getApiErrorHttpStatus\(error\) === 404/);
   assert.doesNotMatch(req, /NEXT_PUBLIC_STRIPE|card_token|price_id|client_secret/);
+  assert.match(req, /const flowVersion = "credit_only_v1"/);
+  assert.equal(req.match(/flow_version: flowVersion/g)?.length, 3);
+  assert.match(req, /authorizePayment = false/);
+  assert.match(req, /confirm_payment: kind === "checkout" && authorizePayment === true/);
 });
 
-test("validação antecede begin, SDK confirma e backend verifica sem sucesso otimista", () => {
+test("somente setup e autenticação manual atravessam a política do cliente", () => {
+  const response = (type, client_secret, confirmation_kind = type) => ({
+    operation: {
+      id,
+      kind: "checkout",
+      state: "requires_confirmation",
+      confirmation_kind,
+      confirmation: { type, client_secret },
+    },
+  });
+  const setup = response("setup", "seti_contracttest_secret_transient");
+  const action = response("action", "pi_contracttest_secret_transient");
+  assert.deepEqual(readStripeBillingConfirmation(setup), setup.operation.confirmation);
+  assert.deepEqual(readStripeBillingConfirmation(action), action.operation.confirmation);
+  assert.equal(stripeBillingConfirmationKind("setup"), "setup");
+  assert.equal(stripeBillingConfirmationKind("action"), "action");
+  for (const value of ["payment", "unknown", null, undefined, {}, true])
+    assert.equal(stripeBillingConfirmationKind(value), null);
+  for (const invalid of [
+    null,
+    { operation: { state: "requires_confirmation", confirmation: null } },
+    response("payment", "pi_contracttest_secret_transient"),
+    response("setup", "pi_contracttest_secret_transient"),
+    response("action", "seti_contracttest_secret_transient"),
+    response("action", "pi_contracttest_secret_transient", "setup"),
+    response("setup", "seti_contracttest_secret_transient", "payment"),
+    response("setup", "seti_contracttest_secret_transient\n"),
+    response("setup", `seti_contracttest_secret_${"a".repeat(512)}`),
+    response("setup", "raw-provider-response"),
+    response("action", null),
+    { operation: { ...action.operation, state: "processing" } },
+    { operation: { ...action.operation, state: "complete" } },
+  ])
+    assert.equal(readStripeBillingConfirmation(invalid), null);
+});
+
+test("reinício explícito exige falha terminal confirmada pelo backend", () => {
+  assert.equal(canRetryStripeBillingOperation("failed"), true);
+  for (const state of [
+    "reserved",
+    "creating",
+    "requires_confirmation",
+    "processing",
+    "complete",
+    "review_required",
+    null,
+    undefined,
+    "unknown",
+  ])
+    assert.equal(canRetryStripeBillingOperation(state), false);
+});
+
+test("código público de troca necessária não transporta detalhe técnico", () => {
+  assert.equal(
+    stripeBillingOperationErrorCode("billing_payment_method_update_required"),
+    "billing_payment_method_update_required",
+  );
+  assert.equal(
+    stripeBillingOperationErrorCode("billing_payment_method_credit_card_only"),
+    "billing_payment_method_credit_card_only",
+  );
+  for (const value of [null, undefined, "decline_code", "unknown", {}, "constructor"])
+    assert.equal(stripeBillingOperationErrorCode(value), null);
+});
+
+test("pagamento pendente retoma autenticação sem exigir nova assinatura nem perder período vigente", () => {
+  const operation = {
+    id,
+    kind: "checkout",
+    state: "requires_confirmation",
+    confirmation_kind: "action",
+  };
+  assert.equal(isStripeBillingActionPending(operation), true);
+  assert.equal(isStripeBillingActionPending({ ...operation, state: "processing" }), true);
+  for (const value of [
+    null,
+    undefined,
+    { ...operation, kind: "payment_method" },
+    { ...operation, confirmation_kind: "setup" },
+    { ...operation, confirmation_kind: null },
+    { ...operation, state: "complete" },
+    { ...operation, state: "failed" },
+  ])
+    assert.equal(isStripeBillingActionPending(value), false);
+  const checkout = source("../app/app/professional/billing/checkout/stripe-logic.tsx");
+  assert.match(checkout, /const redirectActive = alreadyActive && !resumingAction/);
+  assert.match(checkout, /isStripeBillingActionPending\(config.pending_operation\)/);
+  assert.match(checkout, /Confirmar pagamento pendente/);
+});
+
+test("SDK só salva/autentica, servidor confirma cobrança e verifica benefícios", () => {
   const form = source("../app/app/professional/billing/components/stripe-payment-form.tsx");
   assert.ok(form.indexOf("await elements.submit()") < form.indexOf("await operation.begin()"));
   assert.ok(
-    form.indexOf("await stripe.confirmPayment(options)") < form.indexOf("await operation.verify()"),
+    form.indexOf("await stripe.confirmSetup(") < form.indexOf("await operation.verify(true)"),
   );
+  assert.ok(
+    form.indexOf("await operation.verify(true)") < form.indexOf("await stripe.handleNextAction("),
+  );
+  assert.ok(
+    form.indexOf("await stripe.handleNextAction(") <
+      form.lastIndexOf("await operation.verify(true)"),
+  );
+  assert.match(form, /readStripeBillingConfirmation\(result\)/);
+  assert.match(form, /readStripeBillingConfirmation\(verified\)/);
+  assert.match(form, /if \(!actionOnly && elements\)/);
+  assert.match(form, /confirmation_kind === "action"/);
   assert.match(form, /redirect: "if_required"/);
-  assert.match(form, /mode: "subscription", amount: config.quote.amount_due_now_cents/);
   assert.match(form, /mode: "setup"/);
+  assert.match(form, /isStripeBillingQuoteValid\(config.quote\)/);
   assert.match(form, /allowedPaymentMethodTypes: \["card"\]/);
   assert.match(form, /link: "never"/);
   assert.match(form, /submitLock.current/);
   assert.doesNotMatch(
     form,
-    /localStorage|sessionStorage|console\.|confirmed\.paymentIntent\.status|confirmed\.setupIntent\.status/,
+    /localStorage|sessionStorage|console\.|confirmPayment|handleCardPayment|mode: "subscription"|confirmed\.paymentIntent\.status|confirmed\.setupIntent\.status/,
   );
   const operation = source("../app/app/professional/billing/components/use-stripe-operation.ts");
   assert.match(operation, /requestKeyRef.current \?\?= crypto.randomUUID\(\)/);
   assert.match(operation, /mutation.reset\(\)/);
   assert.doesNotMatch(operation, /client_secret|setQueryData/);
   assert.match(operation, /pollCountRef.current >= 20/);
+  assert.match(operation, /async \(authorizePayment = false\)/);
+  assert.match(operation, /if \(operationRef.current\) return verify\(true\)/);
+  assert.equal(operation.match(/void verify\(\)/g)?.length, 2);
+  assert.match(form, /href="\/app\/profissional\/assinatura\/cartao"/);
+  assert.match(form, /Continuar pagamento/);
+  assert.match(operation, /canRetryStripeBillingOperation\(operationRef.current\?\.state\)/);
+  assert.match(form, /operation.retryFailed\(\)/);
 });
 
 test("scrub servidor precede auth redirect e retorno não carrega SDK de cobrança", () => {

@@ -9,7 +9,15 @@ import type {
   StripeBillingQuote,
 } from "@/api/generator/types/stripe-billing";
 import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
-import { getBillingMutationErrorMessage } from "@/utils/billing-error";
+import {
+  getBillingMutationErrorMessage,
+  getBillingPublicErrorMessage,
+} from "@/utils/billing-error";
+import {
+  canRetryStripeBillingOperation,
+  stripeBillingConfirmationKind,
+  stripeBillingOperationErrorCode,
+} from "@/utils/stripe-billing";
 
 export const useStripeOperation = ({
   kind,
@@ -52,9 +60,16 @@ export const useStripeOperation = ({
       if (!mountedRef.current) return;
       const { id, kind: resultKind, state } = result.operation;
       if (resultKind !== kind) throw new Error("Invalid billing operation");
-      const summary = { id, kind: resultKind, state };
+      const summary = {
+        id,
+        kind: resultKind,
+        state,
+        confirmation_kind: stripeBillingConfirmationKind(result.operation.confirmation_kind),
+        error_code: stripeBillingOperationErrorCode(result.operation.error_code),
+      };
       operationRef.current = summary;
       setOperation(summary);
+      setError(getBillingPublicErrorMessage(summary.error_code) ?? "");
       if (state === "complete") {
         const completed = await completionRef.current();
         if (!completed && mountedRef.current) {
@@ -67,36 +82,39 @@ export const useStripeOperation = ({
     [kind],
   );
 
-  const verify = useCallback(async () => {
-    const current = operationRef.current;
-    if (!current || inFlightRef.current) return null;
-    inFlightRef.current = true;
-    setBusy(true);
-    setError("");
-    const mutation = requestsRef.current.confirm;
-    try {
-      const result = await mutation.mutateAsync({ kind, id: current.id });
-      await accept(result);
-      return result;
-    } catch (failure) {
-      if (mountedRef.current && !isAdminViewAsReadOnlyError(failure)) {
-        setError(
-          getBillingMutationErrorMessage(
-            failure,
-            kind === "checkout" ? "checkout" : "payment-method",
-          ),
-        );
+  const verify = useCallback(
+    async (authorizePayment = false) => {
+      const current = operationRef.current;
+      if (!current || inFlightRef.current) return null;
+      inFlightRef.current = true;
+      setBusy(true);
+      setError("");
+      const mutation = requestsRef.current.confirm;
+      try {
+        const result = await mutation.mutateAsync({ kind, id: current.id, authorizePayment });
+        await accept(result);
+        return result;
+      } catch (failure) {
+        if (mountedRef.current && !isAdminViewAsReadOnlyError(failure)) {
+          setError(
+            getBillingMutationErrorMessage(
+              failure,
+              kind === "checkout" ? "checkout" : "payment-method",
+            ),
+          );
+        }
+        return null;
+      } finally {
+        mutation.reset();
+        inFlightRef.current = false;
+        if (mountedRef.current) setBusy(false);
       }
-      return null;
-    } finally {
-      mutation.reset();
-      inFlightRef.current = false;
-      if (mountedRef.current) setBusy(false);
-    }
-  }, [accept, kind]);
+    },
+    [accept, kind],
+  );
 
   const begin = useCallback(async () => {
-    if (operationRef.current) return verify();
+    if (operationRef.current) return verify(true);
     if (inFlightRef.current) return null;
     inFlightRef.current = true;
     setBusy(true);
@@ -138,6 +156,17 @@ export const useStripeOperation = ({
   }, [accept, kind, quote, verify]);
 
   const initialId = initialOperation?.id;
+  const retryFailed = useCallback(() => {
+    // Only a definitive server-side terminal failure allows a new operation/key.
+    if (inFlightRef.current || !canRetryStripeBillingOperation(operationRef.current?.state))
+      return false;
+    operationRef.current = null;
+    requestKeyRef.current = null;
+    pollCountRef.current = 0;
+    setOperation(null);
+    setError("");
+    return true;
+  }, []);
   useEffect(() => {
     if (!initialId || initialOperation?.kind !== kind) return;
     operationRef.current = initialOperation;
@@ -153,5 +182,5 @@ export const useStripeOperation = ({
     return () => clearTimeout(timer);
   }, [busy, error, operation, verify]);
 
-  return { operation, busy, error, begin, verify };
+  return { operation, busy, error, begin, verify, retryFailed };
 };

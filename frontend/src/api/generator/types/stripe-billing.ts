@@ -1,5 +1,9 @@
 export type BillingProvider = "stripe" | "mercadopago" | "disabled";
 export type StripeBillingKind = "checkout" | "payment_method";
+export type StripeBillingConfirmationKind = "setup" | "action";
+export type StripeBillingOperationErrorCode =
+  | "billing_payment_method_credit_card_only"
+  | "billing_payment_method_update_required";
 export type StripeBillingState =
   | "requires_confirmation"
   | "processing"
@@ -21,6 +25,9 @@ export type StripeBillingOperationSummary = {
   id: string;
   kind: StripeBillingKind;
   state: StripeBillingState;
+  /** Non-secret phase, including on reload; never a PaymentIntent confirmation permission. */
+  confirmation_kind?: StripeBillingConfirmationKind | null;
+  error_code?: StripeBillingOperationErrorCode | null;
 };
 
 export type StripeBillingConfig = {
@@ -34,7 +41,8 @@ export type StripeBillingConfig = {
 
 export type StripeBillingOperationResponse = {
   operation: StripeBillingOperationSummary & {
-    confirmation: { type: "payment" | "setup"; client_secret: string } | null;
+    // Legacy payment responses remain representable but must not be confirmed by this client.
+    confirmation: { type: "payment" | StripeBillingConfirmationKind; client_secret: string } | null;
   };
 };
 

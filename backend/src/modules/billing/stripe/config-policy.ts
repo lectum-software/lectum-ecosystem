@@ -4,6 +4,7 @@ import type {
   professional_subscription,
 } from "@/external/generated/prisma/client";
 import type { StripeIdentity, StripePlan } from "../payment-gateway/stripe-types";
+import { operationConfirmationKind } from "./operation-response";
 import { OPEN_OPERATION_STATES, publicOperationState } from "./policy";
 
 export type StripePriceSnapshot = {
@@ -111,8 +112,13 @@ export const hasScopedStripeCardMaintenance = (input: {
 };
 
 export const stripeConfigPendingOperation = (
-  pending: Pick<billing_operation, "id" | "kind" | "state"> | null,
+  pending: (Pick<billing_operation, "id" | "kind" | "state"> & Partial<billing_operation>) | null,
 ) =>
   pending && OPEN_OPERATION_STATES.includes(pending.state)
-    ? { id: pending.id, kind: pending.kind, state: publicOperationState(pending.state) }
+    ? {
+        id: pending.id,
+        kind: pending.kind === "collection" ? "checkout" : pending.kind,
+        state: publicOperationState(pending.state),
+        confirmation_kind: operationConfirmationKind(pending),
+      }
     : null;

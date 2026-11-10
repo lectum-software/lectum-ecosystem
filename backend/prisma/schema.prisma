@@ -719,6 +719,7 @@ model subscription_plan {
 }
 
 model professional_subscription {
+  collection_policy String?
   id                        String               @id @default(cuid())
   internal_id               Int                  @unique @default(autoincrement()) @map("internal_id")
   deleted                   Boolean              @default(false)
@@ -1845,6 +1846,12 @@ model billing_customer {
 
 // No PAN, token, client secret or provider payload is persisted here.
 model billing_operation {
+  provider_setup_intent_id    String?
+  parent_operation_id        String?
+  provider_invoice_id        String?
+  provider_payment_method_id String?
+  confirmation_sequence      Int       @default(0)
+  confirmation_fingerprint   String?
   id                       String    @id @default(cuid())
   user_id                  String
   psychologist_id          String
@@ -1875,6 +1882,8 @@ model billing_operation {
   @@unique([user_id, gateway, mode, account_id, request_key])
   @@index([user_id, gateway, mode, state])
   @@index([subscription_id])
+  @@index([parent_operation_id, kind])
+  @@index([provider_invoice_id, gateway, mode, account_id])
   @@index([provider_subscription_id, gateway, mode, account_id])
   @@index([next_attempt_at, lease_until])
   @@map("billing_operations")

@@ -79,6 +79,7 @@ test("maintenance and pending setup survive an archived checkout price, which re
     id: pending.id,
     kind: "payment_method",
     state: "requires_confirmation",
+    confirmation_kind: null,
   });
   for (const state of ["reserved", "creating", "processing", "review_required"]) {
     assert.ok(
@@ -87,6 +88,39 @@ test("maintenance and pending setup survive an archived checkout price, which re
     );
   }
   assert.equal(stripeConfigPendingOperation({ ...pending, state: "complete" }), null);
+});
+
+test("pending summaries distinguish standalone setup and server-controlled collection without returning secrets", () => {
+  assert.deepEqual(
+    stripeConfigPendingOperation({
+      ...pending,
+      kind: "checkout",
+      provider_setup_intent_id: "seti_saved",
+    }),
+    {
+      id: pending.id,
+      kind: "checkout",
+      state: "requires_confirmation",
+      confirmation_kind: "setup",
+    },
+  );
+  for (const provider_intent_id of [null, "pi_manual"]) {
+    const summary = stripeConfigPendingOperation({
+      ...pending,
+      kind: "collection",
+      intent_kind: "payment",
+      provider_intent_id,
+    });
+    assert.deepEqual(summary, {
+      id: pending.id,
+      kind: "checkout",
+      state: "requires_confirmation",
+      confirmation_kind: "action",
+    });
+    assert.equal(Object.hasOwn(summary ?? {}, "confirmation"), false);
+    assert.equal(Object.hasOwn(summary ?? {}, "client_secret"), false);
+  }
+  assert.equal(stripeConfigPendingOperation({ ...pending, state: "failed" }), null);
 });
 
 test("card maintenance never switches user, current contract, customer, gateway account or mode", () => {

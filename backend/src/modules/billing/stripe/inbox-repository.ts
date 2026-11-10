@@ -70,7 +70,11 @@ export class StripeInboxRepository {
     const operations = await prisma.billing_operation.findMany({
       where: {
         ...scope,
-        OR: [{ provider_intent_id: resourceId }, ...(attemptId ? [{ id: attemptId }] : [])],
+        OR: [
+          { provider_intent_id: resourceId },
+          { provider_setup_intent_id: resourceId },
+          ...(attemptId ? [{ id: attemptId }] : []),
+        ],
       },
       // More than one candidate is a conflict, never an arbitrary findFirst winner.
       take: 2,
@@ -97,6 +101,7 @@ export class StripeInboxRepository {
         gateway: "stripe",
         mode: identity.mode,
         account_id: identity.accountId,
+        kind: { in: ["checkout", "payment_method"] },
         state: { in: ["requires_confirmation", "processing", "review_required", "creating"] },
         next_attempt_at: { lte: now },
         OR: [{ lease_until: null }, { lease_until: { lte: now } }],

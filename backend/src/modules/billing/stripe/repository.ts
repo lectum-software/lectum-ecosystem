@@ -49,16 +49,29 @@ export class StripeBillingRepository {
       where: {
         user_id: userId,
         ...scope(identity),
-        ...(kind ? { kind } : {}),
+        kind: kind ?? { in: ["checkout", "payment_method"] },
         state: { in: OPEN_OPERATION_STATES },
       },
-      orderBy: { created_at: "asc" },
+      orderBy: [{ kind: "desc" }, { created_at: "asc" }],
     });
   }
 
   operation(id: string, userId: string, identity: StripeIdentity) {
     return prisma.billing_operation.findFirst({
       where: { id, user_id: userId, ...scope(identity) },
+    });
+  }
+
+  pendingCollection(userId: string, identity: StripeIdentity) {
+    return prisma.billing_operation.findFirst({
+      where: {
+        user_id: userId,
+        ...scope(identity),
+        kind: "collection",
+        state: "requires_confirmation",
+        intent_kind: "payment",
+      },
+      orderBy: { created_at: "asc" },
     });
   }
 
@@ -190,6 +203,7 @@ export class StripeBillingRepository {
           contracted_currency: price.currency,
           contracted_interval: price.interval,
           contracted_interval_count: price.interval_count,
+          collection_policy: "manual_credit_v1",
         },
       });
       return tx.billing_operation.create({
@@ -229,12 +243,29 @@ export class StripeBillingRepository {
         return existing;
       }
       const pending = await tx.billing_operation.findFirst({
-        where: { user_id: userId, ...identityWhere, state: { in: OPEN_OPERATION_STATES } },
+        where: {
+          user_id: userId,
+          ...identityWhere,
+          kind: { in: ["checkout", "payment_method"] },
+          state: { in: OPEN_OPERATION_STATES },
+        },
       });
       if (pending) {
-        if (pending.kind !== "payment_method")
-          throw new StripeBillingError("billing_operation_conflict");
-        return pending;
+        if (pending.kind === "payment_method") return pending;
+        const declined =
+          pending.kind === "checkout" &&
+          pending.provider_subscription_id &&
+          (!pending.lease_until || pending.lease_until <= new Date()) &&
+          (await tx.billing_operation.findFirst({
+            where: {
+              parent_operation_id: pending.id,
+              kind: "collection",
+              ...identityWhere,
+              last_error_code: { in: ["payment_method_required", "card_credit_required"] },
+              state: "requires_confirmation",
+            },
+          }));
+        if (!declined) throw new StripeBillingError("billing_operation_conflict");
       }
       const subscriptions = await tx.professional_subscription.findMany({
         where: {
@@ -347,6 +378,32 @@ export class StripeBillingRepository {
         ...(refs.intentId ? { provider_intent_id: refs.intentId } : {}),
         ...(refs.intentKind && refs.intentKind !== "none" ? { intent_kind: refs.intentKind } : {}),
       },
+    });
+  }
+
+  pinCheckoutSetup(operation: billing_operation, token: string, setupIntentId: string) {
+    return prisma.billing_operation.updateMany({
+      where: {
+        id: operation.id,
+        lease_token: token,
+        kind: "checkout",
+        state: { notIn: TERMINAL_OPERATION_STATES },
+        OR: [{ provider_setup_intent_id: null }, { provider_setup_intent_id: setupIntentId }],
+      },
+      data: { provider_setup_intent_id: setupIntentId },
+    });
+  }
+
+  pinCheckoutMethod(operation: billing_operation, token: string, paymentMethodId: string) {
+    return prisma.billing_operation.updateMany({
+      where: {
+        id: operation.id,
+        lease_token: token,
+        kind: "checkout",
+        state: { notIn: TERMINAL_OPERATION_STATES },
+        OR: [{ provider_payment_method_id: null }, { provider_payment_method_id: paymentMethodId }],
+      },
+      data: { provider_payment_method_id: paymentMethodId },
     });
   }
 

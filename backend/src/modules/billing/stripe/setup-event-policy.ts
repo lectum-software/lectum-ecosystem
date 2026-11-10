@@ -18,7 +18,8 @@ export type SetupEventCandidate = {
     | "intent_kind"
     | "provider_intent_id"
     | "provider_subscription_id"
-  >;
+  > &
+    Partial<Pick<billing_operation, "provider_setup_intent_id">>;
   customer: Pick<
     billing_customer,
     "id" | "user_id" | "gateway" | "mode" | "account_id" | "external_customer_id"
@@ -46,17 +47,25 @@ export const classifyStripeSetupEvent = (input: {
     return conflict;
   if (!candidates.length) return unresolved;
   const { operation, customer } = candidates[0];
+  const standaloneCheckout =
+    operation.kind === "checkout" &&
+    setup.attemptId === operation.id &&
+    setup.localSubscriptionId === operation.subscription_id &&
+    setup.subscriptionId === null;
+  const pinnedId = standaloneCheckout
+    ? operation.provider_setup_intent_id
+    : operation.provider_intent_id;
   if (
     operation.gateway !== "stripe" ||
     operation.mode !== identity.mode ||
     operation.account_id !== identity.accountId ||
     !(
       operation.kind === "payment_method" ||
+      standaloneCheckout ||
       (operation.kind === "checkout" && operation.intent === "courtesy_renewal")
     ) ||
-    (operation.intent_kind !== null && operation.intent_kind !== "setup") ||
-    (operation.provider_intent_id !== null &&
-      operation.provider_intent_id !== setup.setupIntentId) ||
+    (!standaloneCheckout && operation.intent_kind !== null && operation.intent_kind !== "setup") ||
+    (pinnedId != null && pinnedId !== setup.setupIntentId) ||
     (setup.attemptId !== null && setup.attemptId !== operation.id) ||
     (setup.localSubscriptionId && setup.localSubscriptionId !== operation.subscription_id) ||
     (setup.subscriptionId &&
@@ -77,8 +86,12 @@ export const classifyStripeSetupEvent = (input: {
     (customer.external_customer_id !== null && customer.external_customer_id !== setup.customerId)
   )
     return conflict;
-  if (!customer.external_customer_id || !operation.provider_subscription_id) return unresolved;
-  const pinned = operation.provider_intent_id === setup.setupIntentId;
+  if (
+    !customer.external_customer_id ||
+    (!standaloneCheckout && !operation.provider_subscription_id)
+  )
+    return unresolved;
+  const pinned = pinnedId === setup.setupIntentId;
   if (!pinned && setup.attemptId !== operation.id) return unresolved;
   if (TERMINAL_OPERATION_STATES.includes(operation.state)) {
     // A metadata pointer alone cannot attach a new event to an already finished operation.

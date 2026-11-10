@@ -23,6 +23,7 @@ import {
 } from "./stripe-card";
 import { initialPaidCheckoutIntent, initialUnpaidCheckoutIntent } from "./stripe-checkout-proof";
 import { readStripeConfiguration, STRIPE_API_VERSION } from "./stripe-config";
+import { stripeCreditApi } from "./stripe-credit-api";
 import { StripeGatewayError, stripeFailure } from "./stripe-error";
 import {
   listStripeFinancialInvoices,
@@ -72,6 +73,29 @@ export class StripeAdapter implements PaymentGateway {
   private identityCheck: Promise<void> | null = null;
   private identityExpiresAt = 0;
   private chargesReady = false;
+  private readonly credit = stripeCreditApi({
+    client: this.client,
+    identity: () => this.identity,
+    run: (action) => this.run(action),
+    ready: () => this.verifyCheckoutReadiness(),
+    key: (operation, reference) => this.key(operation, reference),
+    canonical: (subscription) => this.canonical(subscription),
+  });
+  createCheckoutSetup = this.credit.createCheckoutSetup;
+  findCheckoutSetup = this.credit.findCheckoutSetup;
+  readCheckoutSetupCredit = this.credit.readCheckoutSetupCredit;
+  createCreditSubscription = this.credit.createCreditSubscription;
+  findCreditSubscription = this.credit.findCreditSubscription;
+  ensureCreditCollectionHold = this.credit.ensureCreditCollectionHold;
+  assignCreditSubscriptionCard = this.credit.assignCreditSubscriptionCard;
+  getCreditCollectionInvoice = this.credit.getCreditCollectionInvoice;
+  finalizeCreditCollectionInvoice = this.credit.finalizeCreditCollectionInvoice;
+  createCreditInvoiceIntent = this.credit.createCreditInvoiceIntent;
+  findCreditInvoiceIntent = this.credit.findCreditInvoiceIntent;
+  readCreditInvoiceIntent = this.credit.readCreditInvoiceIntent;
+  attachCreditInvoiceIntent = this.credit.attachCreditInvoiceIntent;
+  confirmCreditInvoiceIntent = this.credit.confirmCreditInvoiceIntent;
+  cancelCreditInvoiceIntent = this.credit.cancelCreditInvoiceIntent;
 
   get identity() {
     return { accountId: this.config.accountId, mode: this.config.mode };

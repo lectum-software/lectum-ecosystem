@@ -1,7 +1,58 @@
-import type { StripeBillingKind, StripeBillingQuote } from "@/api/generator/types/stripe-billing";
+import type {
+  StripeBillingConfirmationKind,
+  StripeBillingKind,
+  StripeBillingOperationErrorCode,
+  StripeBillingOperationResponse,
+  StripeBillingOperationSummary,
+  StripeBillingQuote,
+} from "@/api/generator/types/stripe-billing";
 
 export const STRIPE_BILLING_RETURN_PATH = "/app/profissional/assinatura/retorno";
 const OPERATION_ID = /^[a-z0-9-]{16,64}$/i;
+
+export const stripeBillingConfirmationKind = (
+  value: unknown,
+): StripeBillingConfirmationKind | null => (value === "setup" || value === "action" ? value : null);
+
+export const canRetryStripeBillingOperation = (state: unknown) => state === "failed";
+
+export const stripeBillingOperationErrorCode = (
+  value: unknown,
+): StripeBillingOperationErrorCode | null =>
+  value === "billing_payment_method_credit_card_only" ||
+  value === "billing_payment_method_update_required"
+    ? value
+    : null;
+
+/** Only the scoped pending operation returned by the server bypasses the active-checkout redirect. */
+export const isStripeBillingActionPending = (operation?: StripeBillingOperationSummary | null) =>
+  operation?.kind === "checkout" &&
+  operation.confirmation_kind === "action" &&
+  operation.state !== "complete" &&
+  operation.state !== "failed";
+
+/** Financial confirmation belongs to the server. This client can only set up or authenticate. */
+export const readStripeBillingConfirmation = (result: StripeBillingOperationResponse | null) => {
+  const operation = result?.operation;
+  const confirmation = operation?.confirmation;
+  const kind = stripeBillingConfirmationKind(confirmation?.type);
+  if (
+    operation?.state !== "requires_confirmation" ||
+    !confirmation ||
+    !kind ||
+    (operation.confirmation_kind != null && operation.confirmation_kind !== kind) ||
+    typeof confirmation.client_secret !== "string" ||
+    confirmation.client_secret.length > 512 ||
+    /[^A-Za-z0-9_]/.test(confirmation.client_secret) ||
+    !(
+      kind === "setup"
+        ? /^seti_[A-Za-z0-9]+_secret_[A-Za-z0-9]+$/
+        : /^pi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+$/
+    ).test(confirmation.client_secret)
+  )
+    return null;
+  return { type: kind, client_secret: confirmation.client_secret };
+};
 
 /** An inactive Stripe projection does not prove that its original payment is still pending. */
 export const stripeInactiveBillingCopy = (

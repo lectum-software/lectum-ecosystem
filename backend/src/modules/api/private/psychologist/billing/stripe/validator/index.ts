@@ -13,19 +13,23 @@ const operationId = z
   .max(64)
   .regex(/^[A-Za-z0-9-]+$/);
 const intent = z.literal("courtesy_renewal");
+const flowVersion = { key: "flow_version", custom: z.literal("credit_only_v1"), optional: true };
 
 export const configValidator = validator({
   query: [{ key: "intent", custom: intent, optional: true }],
 });
 export const checkoutValidator = validator({
   body: [
+    flowVersion,
     { key: "request_key", custom: requestKey },
     { key: "quote_revision", custom: quoteRevision },
     { key: "intent", custom: intent, optional: true },
   ],
 });
-export const cardValidator = validator({ body: [{ key: "request_key", custom: requestKey }] });
+export const cardValidator = validator({
+  body: [flowVersion, { key: "request_key", custom: requestKey }],
+});
 export const confirmValidator = validator({
   params: [{ key: "id", custom: operationId }],
-  body: [],
+  body: [flowVersion, { key: "confirm_payment", custom: z.boolean(), optional: true }],
 });

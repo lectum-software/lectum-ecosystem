@@ -6,6 +6,10 @@ import {
   isPaymentGatewayConfigurationError,
 } from "@/modules/billing/payment-gateway";
 import {
+  cancelPendingStripeCreditIntents,
+  prepareStripeCreditCancellation,
+} from "@/modules/billing/stripe/collection-cancellation";
+import {
   getStoredSubscriptionGateway,
   subscriptionGatewayName,
   withContractedPlan,
@@ -476,6 +480,11 @@ export const cancelSubscription = async (
   try {
     const provider = subscriptionGatewayName(subscription)!;
     const gateway = getStoredSubscriptionGateway(subscription);
+    if (provider === "stripe") {
+      const identity = getStripeGateway().identity;
+      if (await prepareStripeCreditCancellation(subscription.id!, identity))
+        await cancelPendingStripeCreditIntents(subscription.id!, identity);
+    }
     if (!immediate && provider === "mercadopago") await prepareCancellation(subscription, gateway);
     const remote = immediate
       ? await gateway.getSubscription(subscription.gateway_subscription_id)

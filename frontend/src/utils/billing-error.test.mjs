@@ -12,9 +12,13 @@ registerHooks({
   },
 });
 
-const { getBillingMutationErrorMessage } = await import("./billing-error.ts");
+const { getBillingMutationErrorMessage, getBillingPublicErrorMessage } = await import(
+  "./billing-error.ts"
+);
 const { getSafeApiErrorMessage } = await import("../api/errors.ts");
 const messages = {
+  billing_checkout_refresh_required:
+    "Atualize esta página para carregar a versão atual do formulário seguro.",
   billing_gateway_checkout_failed:
     "Não foi possível concluir a assinatura agora. Verifique o status da assinatura e se houve cobrança antes de tentar novamente.",
   billing_gateway_payment_method_failed:
@@ -28,8 +32,9 @@ const messages = {
   billing_checkout_email_required: "E-mail da conta não encontrado para iniciar a assinatura.",
   billing_courtesy_renewal_required:
     "A cortesia profissional ativa precisa ter data de expiração para cadastrar o cartão de cobrança futura.",
-  billing_payment_method_credit_card_only:
-    "Use um cartão de crédito para atualizar o método de pagamento.",
+  billing_payment_method_credit_card_only: "Use um cartão de crédito para continuar.",
+  billing_payment_method_update_required:
+    "Atualize o cartão de crédito para continuar o pagamento pendente.",
   billing_payment_method_subscription_required:
     "É preciso ter uma assinatura profissional ativa com método de pagamento cadastrado para alterar o cartão.",
 };
@@ -40,6 +45,23 @@ const operations = [
   ["checkout", "billing_gateway_checkout_failed"],
   ["payment-method", "billing_gateway_payment_method_failed"],
 ];
+
+test("resposta terminal usa somente código público conhecido, sem mensagem do provider", () => {
+  assert.equal(
+    getBillingPublicErrorMessage("billing_payment_method_credit_card_only"),
+    "Use um cartão de crédito para continuar.",
+  );
+  for (const value of [
+    undefined,
+    null,
+    "unknown",
+    "constructor",
+    "__proto__",
+    {},
+    "raw-provider-response",
+  ])
+    assert.equal(getBillingPublicErrorMessage(value), null);
+});
 
 test("gateway sem classificação usa orientação cautelosa, não diagnóstico de rede ou cartão", () => {
   for (const [operation, code] of operations) {
@@ -131,10 +153,12 @@ test("401/403 preservam sessão e permissão e não confiam no body", () => {
 
 test("erros conhecidos de entrada mantêm orientação sem exibir body técnico", () => {
   for (const code of [
+    "billing_checkout_refresh_required",
     "billing_checkout_credit_card_only",
     "billing_checkout_email_required",
     "billing_courtesy_renewal_required",
     "billing_payment_method_credit_card_only",
+    "billing_payment_method_update_required",
     "billing_payment_method_subscription_required",
   ]) {
     assert.equal(

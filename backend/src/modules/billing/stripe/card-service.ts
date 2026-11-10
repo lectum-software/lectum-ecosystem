@@ -68,6 +68,28 @@ export const confirmStripeCardUpdate = async (
       });
       return currentOperationResponse(operation, repository);
     }
+    const contract = await prisma.professional_subscription.findFirst({
+      where: {
+        id: operation.subscription_id!,
+        gateway: "stripe",
+        gateway_mode: operation.mode,
+        gateway_account_id: operation.account_id,
+        deleted: false,
+        status: { not: "cancelada" },
+      },
+      select: { collection_policy: true },
+    });
+    if (
+      !contract ||
+      (contract.collection_policy !== null && contract.collection_policy !== "manual_credit_v1")
+    )
+      throw new StripeBillingError("billing_operation_conflict");
+    if (contract.collection_policy === "manual_credit_v1")
+      await gateway.ensureCreditCollectionHold({
+        subscriptionId: operation.provider_subscription_id!,
+        localSubscriptionId: operation.subscription_id!,
+        customerId,
+      });
     const previous = await prisma.payment_method.findFirst({
       where: cardProjectionWhere(userId, operation.provider_subscription_id!, gateway.identity),
       orderBy: { createdAt: "desc" },
@@ -103,14 +125,14 @@ export const confirmStripeCardUpdate = async (
   } catch (failure) {
     const cardPolicyError = stripeCardPolicyPublicError(failure);
     await repository.finishOperation(operation.id, claim.lease_token, {
-      state: "review_required",
+      state: cardPolicyError ? "failed" : "review_required",
+      ...(cardPolicyError ? { completed_at: new Date() } : {}),
       last_error_code: preserveStripeCardPolicyRejection(
         claim.last_error_code,
         cardPolicyError ? "card_credit_required" : "setup_resume_unresolved",
       ),
     });
     const response = await currentOperationResponse(operation, repository);
-    if (cardPolicyError && response.operation.state === "review_required") throw cardPolicyError;
     return response;
   }
 };
