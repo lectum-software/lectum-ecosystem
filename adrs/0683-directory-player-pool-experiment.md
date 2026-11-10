@@ -127,3 +127,49 @@ invalidate pending callbacks on pause/seek. This closes a reproducible lifecycle
 gap without increasing a timer. It does not establish that Safari will never show
 a compositor gap: physical iPhone acceptance is still required. Individual mode,
 the two-player limit and source/buffer preparation policy are unchanged.
+
+## Share controllers rather than reproducing their configuration
+
+For 0.1.800, extract `useFeedVideoScroll`, `useFeedVideoPlayback` and
+`useFeedVideoReady` from the working reels path. Keep thin compatibility exports
+for the content viewer and consume the same implementations in the directory.
+Native scroll/snap selects the nearest rendered page using geometry relative to
+the feed (including desktop offsets); the same controller handles resize and
+interaction locks. Directory supplies its slide attribute, circular list updates
+and filter state. The provider, preparation policy and startup cover stay shared.
+
+The directory no longer maintains its own activation/audio-denial algorithm or
+prepared-element startup schedule. Legacy attention/autoplay and global mute
+effects apply only to individual playback. Shared-element detachment flushes the
+previous owner's analytics before source reassignment. Presentation volume/rate,
+seek controls and domain-specific metrics remain adapters, not another source or
+buffer manager. Reels discussion/composer blocking remains its eligibility input.
+
+Rollout remains opt-in and local until publication is authorized. Browser tests
+must cover both surfaces; physical Safari video is still the visual acceptance
+gate. Source sharing does not imply equal cold-start latency for different assets.
+
+## Distinct controls must use the same playback commands
+
+The user's immersive directory controls are intentional product differences, not
+a reason for an independent playback policy. For 0.1.801 the shared hook owns
+manual pause intent and exposes active-owner play/pause commands. Readiness and
+sound preference changes cannot clear that intent; explicit resume can. The
+directory's media event state remains observational, not a playback eligibility
+input. Old individual-mode commands remain gated as a rollback path.
+
+Mobile search and open filters are eligibility inputs, just as reading panels and
+composers are for reels. Search exit delegates to shared explicit resume only when
+the video was playing before search, preserving manual pause.
+
+Programmatic directory advancement delegates to the same native scroll controller
+as reels, including ended and arrow actions. Return restoration supplies a selected
+index rather than applying a second scroll algorithm in pooled mode. Full slide
+components are limited to the active item and its neighbors, with dimensionally
+equivalent shells preserving the scroll extent. Filters, circular pagination,
+captions and analytics retain their domain responsibilities.
+
+No provider, database or production setting changes are required. Validate manual
+versus technical pause, seek, immersive exit, automatic advancement, forward/back
+navigation and existing reels behavior before publication. Code reuse does not
+replace physical Safari acceptance and is not a promise of equal media latency.

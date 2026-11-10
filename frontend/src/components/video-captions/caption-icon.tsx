@@ -16,12 +16,13 @@ export function CaptionIcon({ active, size = 32 }: { active: boolean; size?: num
           data-caption-fill="true"
           className="absolute inset-0 bg-media-foreground"
           style={{
-            clipPath: "inset(20% 16% round 12%)",
-            maskImage: "linear-gradient(currentColor, currentColor), url(/icons/close-caption.png)",
-            maskSize: "100% 100%, contain",
+            clipPath: "inset(18.75% 14.0625% round 7.8125%)",
+            maskImage:
+              "linear-gradient(currentColor, currentColor), linear-gradient(currentColor, currentColor), url(/icons/close-caption.png)",
+            maskSize: "100% 100%, 50% 40%, contain",
             maskPosition: "center",
             maskRepeat: "no-repeat",
-            maskComposite: "exclude",
+            maskComposite: "exclude, intersect",
           }}
         />
       )}

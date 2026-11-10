@@ -1,12 +1,12 @@
 # Stripe: operacao e publicacao controlada
 
-TASK-320 / ADR-0684. Atualizado em 10/11/2026. Este runbook **nao autoriza deploy,
+TASK-323 / ADR-0687. Atualizado em 10/11/2026. Este runbook **nao autoriza deploy,
 cobranca, emissao fiscal, reprocessamento remoto ou mudanca de Radar**. O estado
-de aceite e a fonte de verdade continuam na [TASK-320](TASK-320-stripe-embedded-checkout.md).
+de aceite e a fonte de verdade continuam na [TASK-323](TASK-323-stripe-embedded-checkout.md).
 
 ## 1. Limites atuais e gates
 
-### Fluxo vigente local: credito-only sem Radar Plus (ADR-0685)
+### Fluxo vigente local: credito-only sem Radar Plus (ADR-0688)
 
 O complemento de10/11 substitui a dependencia de regras pagas para novas assinaturas.
 SetupIntent independente coleta/autentica o cartao; backend aceita somente funding
@@ -58,7 +58,7 @@ tecnico deste desenho, sem afirmar resposta sobre custos ou alterar seu plano.
 - Checkout incorporado, 3DS, recusas, renovacao, dunning e cancelamento tiveram
   provas reais no sandbox com PostgreSQL local. Nao repetir todo o lote para
   suprir uma pendencia diferente. Preservar evidencias e recorrencias encerradas.
-- Evidencias anteriores de cortesia/Radar pertencem ao desenho da ADR-0684;
+- Evidencias anteriores de cortesia/Radar pertencem ao desenho da ADR-0687;
   o complemento acima usa coleta independente e confirmacao manual. Nao ativar
   Radar para SetupIntents nem contratar plano como parte desta migracao.
 - Fiscal: chave SendNF test restrita instalada apenas localmente; consultas GET
@@ -158,7 +158,7 @@ automacao Stripe exigem autorizacao separada e inventario de pendencias.
 
 O codigo le conta, Price/Product, Customer/search, Subscription/search, Invoice,
 InvoicePayment, PaymentIntent, Charge, Dispute, PaymentMethod e SetupIntent/list.
-O desenho da ADR-0685 exige cinco areas de escrita: Customers (create),
+O desenho da ADR-0688 exige cinco areas de escrita: Customers (create),
 Subscriptions (create/update/cancel), Setup Intents (create), Payment Intents
 (create/confirm/cancel) e Invoices (finalize/attach payment). Os demais recursos
 ficam somente leitura; conferir no painel as dependencias de permissoes, inclusive

@@ -325,7 +325,7 @@ export const usePsychologistsVideoAnalytics = ({
     const unsubscribeAttention = subscribeDocumentAttention(() => {
       // A feed mounted in background has no previous playback to resume.
       // Honor its autoplay intent only after attention returns, never manual pause.
-      if (documentHasUserAttention() && !isVideoPaused && activeVideoSource) {
+      if (!pooledPlayback && documentHasUserAttention() && !isVideoPaused && activeVideoSource) {
         void playVideoWithActiveDocument(backgroundVideoRef.current);
       }
     });
@@ -349,6 +349,7 @@ export const usePsychologistsVideoAnalytics = ({
     featuredPsychologistId,
     flushFeedVideoAnalytics,
     isVideoPaused,
+    pooledPlayback,
   ]);
 
   useEffect(() => {
@@ -518,9 +519,9 @@ export const usePsychologistsVideoAnalytics = ({
     document
       .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
       .forEach((video) => {
-        video.muted = isVideoMuted;
+        if (!pooledPlayback) video.muted = isVideoMuted;
       });
-  }, [isVideoMuted]);
+  }, [isVideoMuted, pooledPlayback]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

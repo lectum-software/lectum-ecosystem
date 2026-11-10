@@ -207,6 +207,19 @@ describe("reels audio with the actual mounted slide", {
     await page.evaluate(() => surface());
     assert.equal((await state()).paused, false);
   });
+
+  test("technical pause does not become user intent and readiness may resume it", async () => {
+    await page.evaluate(() => mount(false));
+    await page.waitForFunction(() => !snapshot().paused);
+    await page.evaluate(() => document.querySelector("video").pause());
+    await page.waitForFunction(() => snapshot().paused);
+    await page.evaluate(() => mediaEvent("canplay"));
+    await page.waitForFunction(() => !snapshot().paused);
+    await page.evaluate(() => surface());
+    await page.waitForFunction(() => snapshot().paused);
+    await page.evaluate(() => mediaEvent("canplay"));
+    assert.equal((await state()).paused, true);
+  });
   test("inactive and reading slides cannot play on late readiness", async () => {
     await page.evaluate(() => mount(true, false));
     assert.deepEqual((await state()).attempts, []);

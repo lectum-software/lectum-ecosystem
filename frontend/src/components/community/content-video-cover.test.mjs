@@ -21,6 +21,12 @@ export function registerStartupCoverTests(getPage) {
       window.frameReady = 1;
       window.coverPaused = true;
       window.coverTime = 0;
+      window.coverFrames = 0;
+      window.coverDroppedFrames = 0;
+      video.getVideoPlaybackQuality = () => ({
+        totalVideoFrames: coverFrames,
+        droppedVideoFrames: coverDroppedFrames,
+      });
       Object.defineProperty(video, "paused", { configurable: true, get: () => coverPaused });
       Object.defineProperty(video, "currentTime", { configurable: true, get: () => coverTime });
       Object.defineProperty(video, "readyState", {
@@ -115,6 +121,11 @@ export function registerStartupCoverTests(getPage) {
       coverEvent("playing");
       window.coverTime = 0.2;
     });
+    await page.waitForTimeout(200);
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => {
+      window.coverFrames += 1;
+    });
     await page.waitForFunction(() => !document.querySelector("[data-video-startup-cover]"));
     await page.evaluate(() => {
       coverVideo.requestVideoFrameCallback = (callback) => {
@@ -139,6 +150,17 @@ export function registerStartupCoverTests(getPage) {
     assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
     await page.evaluate(() => {
       window.coverTime = 20.2;
+    });
+    await page.waitForTimeout(200);
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => {
+      window.coverFrames += 3;
+      window.coverDroppedFrames += 3;
+    });
+    await page.waitForTimeout(200);
+    assert.equal(await page.locator("[data-video-startup-cover]").count(), 1);
+    await page.evaluate(() => {
+      window.coverFrames += 1;
     });
     await page.waitForFunction(() => !document.querySelector("[data-video-startup-cover]"));
     await page.evaluate(() => {

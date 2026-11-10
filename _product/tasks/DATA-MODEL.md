@@ -1110,11 +1110,11 @@ O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re
 
 ---
 
-## Complemento Stripe em implementacao (TASK-320, 2026-11-09)
+## Complemento Stripe em implementacao (TASK-323, 2026-11-09)
 
 Esta expansao e local/nao publicada. O legado Mercado Pago acima continua valido
 para seus contratos; nao ha migracao automatica de cartoes ou backfill de valores.
-Ver [TASK-320](TASK-320-stripe-embedded-checkout.md) e ADR-0684.
+Ver [TASK-323](TASK-323-stripe-embedded-checkout.md) e ADR-0687.
 
 - `professional_subscription`: source/gateway `stripe`, `gateway_mode`,
   `gateway_account_id`, `price_version_id` e snapshots opcionais
@@ -1418,7 +1418,7 @@ PostDetailDTO.has_psychologist_video_reply?: boolean deriva de respostas ativas 
 - Cadastro novo aceita IDs de documentos de forma aditiva e grava `legal_acceptance` na transacao de criacao. Clientes antigos nao geram aceite presumido. Data exibida corresponde ao documento exato, nunca a criacao da conta.
 
 
-## 2026-11-10 - Datas independentes de recebimentos Stripe (TASK-320 / ADR-0684)
+## 2026-11-10 - Datas independentes de recebimentos Stripe (TASK-323 / ADR-0687)
 
 `billing_financial_receipt.paid_at` registra a transicao paga da InvoicePayment;
 `invoice_paid_at` registra a transicao paga da invoice. Sao fatos distintos, ambos
@@ -1428,7 +1428,7 @@ continua obrigatorio, valido e comparado individualmente ao cutoff/now. Periodo
 continua com fim maior que inicio. Nova migration troca apenas o CHECK de periodo,
 sem reescrever registros nem editar a migration aplicada da fundacao financeira.
 
-## 2026-11-10 - Cobranca Stripe credito-only controlada (TASK-320 / ADR-0685)
+## 2026-11-10 - Cobranca Stripe credito-only controlada (TASK-323 / ADR-0688)
 
 - `professional_subscription.collection_policy String?`: opt-in imutavel de contratos
   novos `manual_credit_v1`; null preserva historico e nunca autoriza conversao/cobranca.

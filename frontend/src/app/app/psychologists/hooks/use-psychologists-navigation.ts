@@ -4,6 +4,7 @@ import { type FormEvent, type WheelEvent as ReactWheelEvent, useCallback, useEff
 import { documentHasUserAttention } from "@/components/analytics/attention";
 import { playVideoWithActiveDocument } from "@/lib/video-playback";
 import { rememberPsychologistsFeedReturnPosition } from "@/utils/psychologists-feed-return-memory";
+import { useDirectoryPlayerPoolEnabled } from "../modules/directory-player-mode";
 import { preserveDirectoryExperiment } from "../modules/directory-player-pool";
 import { buildFiltersParams } from "../modules/directory-url";
 import type { FilterFeatureKey, PsychologistFilterKey } from "../modules/filter-config";
@@ -21,9 +22,11 @@ export const usePsychologistsNavigation = ({
   onboarding: PsychologistsOnboarding;
 }) => {
   const setup = usePsychologistsSetupContext();
+  const pooledPlayback = useDirectoryPlayerPoolEnabled();
   const {
     activePsychologistIndex,
     backgroundVideoRef,
+    feedVideoCommandsRef,
     desktopFilterChipsRef,
     didLongPressRef,
     didMoveDuringPressRef,
@@ -274,6 +277,10 @@ export const usePsychologistsNavigation = ({
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo || !shouldShowVideo) return;
 
+      if (pooledPlayback) {
+        void feedVideoCommandsRef.current?.play();
+        return;
+      }
       setIsVideoPaused(false);
       void playVideoWithActiveDocument(currentVideo).then((played) => {
         if (!played && documentHasUserAttention()) setIsVideoPaused(true);
@@ -287,6 +294,8 @@ export const usePsychologistsNavigation = ({
       setIsVideoPaused,
       shouldResumeVideoAfterSearchRef,
       shouldShowVideo,
+      feedVideoCommandsRef,
+      pooledPlayback,
     ],
   );
 

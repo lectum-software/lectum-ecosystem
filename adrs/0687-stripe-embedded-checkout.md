@@ -1,8 +1,8 @@
-# ADR-0684 - Stripe incorporado, contratos por gateway e preco versionado
+# ADR-0687 - Stripe incorporado, contratos por gateway e preco versionado
 
 Data: 2026-11-09
 Status: Aceito; implementacao parcial e validacao externa pendentes
-Task: [TASK-320](../_product/tasks/TASK-320-stripe-embedded-checkout.md)
+Task: [TASK-323](../_product/tasks/TASK-323-stripe-embedded-checkout.md)
 
 ## Contexto
 
@@ -147,7 +147,7 @@ nessa preparacao externa relatada. Catalogo nao significa integracao implantada.
 
 ## Estado desta decisao
 
-Decisao em implementacao parcial. Criterios da TASK-320 sao marcados somente
+Decisao em implementacao parcial. Criterios da TASK-323 sao marcados somente
 conforme evidencia executada, sem declarar conclusao integral. A especificacao original evoluiu conforme o registro
 abaixo; nao houve bump, commit, push ou deploy.
 
@@ -200,7 +200,7 @@ Apply grava versao imutavel/oferta/auditoria atomicamente, sem alterar assinatur
 Habilitar vendas e explicito, exige webhook/reconciliador configurados e nao substitui
 E2E ou aprovacao de publicacao. Editor comercial Admin continua fora desta etapa.
 
-Detalhes, validacoes e pendencias constam da TASK-320. Nao houve bump/commit/push/
+Detalhes, validacoes e pendencias constam da TASK-323. Nao houve bump/commit/push/
 deploy, cobranca live ou nota fiscal nesta continuacao.
 
 
@@ -634,7 +634,7 @@ fallback gratuito real quando elegivel; preservar essa adicao e verificar
 imutabilidade dos fatos Stripe, nao apagar o fallback para fazer snapshot passar.
 Separar validacao tecnica visual de aprovacao visual do usuario para publicacao.
 
-Registrar implementacao validada em commit local sem declarar TASK-320 integral
+Registrar implementacao validada em commit local sem declarar TASK-323 integral
 concluida: gates externos de cortesia/Radar e fiscal permanecem pendentes. Nao
 publicar, ativar live ou liberar emissores com base apenas nesse checkpoint.
 

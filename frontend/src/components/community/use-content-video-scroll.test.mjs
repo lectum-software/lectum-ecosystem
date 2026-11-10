@@ -15,7 +15,7 @@ const modules = {
   "react-dom/client": productionModule("react-dom", "react-dom-client.production.js"),
   scheduler: productionModule("scheduler", "scheduler.production.js", domRequire),
   scroll: ts.transpileModule(
-    readFileSync(new URL("./use-content-video-scroll.ts", import.meta.url), "utf8"),
+    readFileSync(new URL("../ui/use-feed-video-scroll.ts", import.meta.url), "utf8"),
     { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
   ).outputText,
 };
@@ -37,7 +37,7 @@ const harness = `
   const React = require('react');
   const { createRoot } = require('react-dom/client');
   const { flushSync } = require('react-dom');
-  const { useContentVideoScroll } = require('scroll');
+  const { useFeedVideoScroll: useContentVideoScroll } = require('scroll');
   window.selections = [];
   window.renders = 0;
   let root;
@@ -48,7 +48,7 @@ const harness = `
     window.activeIndex = index;
     window.renders++;
     window.navigation = useContentVideoScroll({
-      index, count: options.count, locked: options.locked,
+      index, count: options.count, locked: options.locked, slideAttribute: options.slideAttribute,
       onSelect: value => { window.selections.push(value); setIndex(value); },
     });
     return React.createElement('div', {
@@ -59,7 +59,7 @@ const harness = `
         overflowAnchor: options.loadingTail ? 'none' : undefined },
     }, Array.from({ length: options.count }, (_, i) => React.createElement('section', {
       key: options.loadingTail && i === options.count - 1 ? 'loading:' + i : i,
-      'data-content-video-slide-index': i,
+      [options.slideAttribute ?? 'data-content-video-slide-index']: i,
       'data-loading-tail': options.loadingTail && i === options.count - 1 ? '' : undefined,
       style: { height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' },
     }, React.createElement('div', { className: 'nested', style: { height: 100, overflowY: 'auto' } },
@@ -101,7 +101,35 @@ describe("content video native scrolling mounted in React", {
     await page.close();
     assert.deepEqual(errors, []);
   });
+
+  test("directory slides use the same selection, lock and resize controller", async () => {
+    await page.evaluate(() => mount({ slideAttribute: "data-psychologists-slide-index" }));
+    await page.evaluate(() => navigation.scrollTo(2));
+    await page.waitForFunction(() => activeIndex === 2);
+    await page.evaluate(() => update({ locked: true }));
+    await page.evaluate(() => navigation.scrollTo(3));
+    assert.equal(await page.evaluate(() => activeIndex), 2);
+    await page.evaluate(() => update({ height: 400 }));
+    await page.waitForFunction(() => Math.abs(document.getElementById("feed").scrollTop - 800) < 2);
+  });
   const wait = (predicate) => page.waitForFunction(predicate, undefined, { timeout: 5000 });
+
+  test("long feeds do not measure every slide during a scroll event", async () => {
+    await page.evaluate(() => mount({ count: 1000 }));
+    const reads = await page.evaluate(() => {
+      window.slideReads = 0;
+      for (const slide of document.querySelectorAll("section")) {
+        const rect = slide.getBoundingClientRect.bind(slide);
+        slide.getBoundingClientRect = () => {
+          window.slideReads++;
+          return rect();
+        };
+      }
+      navigation.onScroll({ target: document.getElementById("feed") });
+      return window.slideReads;
+    });
+    assert.ok(reads <= 12, `expected logarithmic layout reads, got ${reads}`);
+  });
 
   test("wheel moves real pages and native snap selects the closest page", async () => {
     await page.evaluate(() => mount());

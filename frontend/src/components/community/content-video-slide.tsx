@@ -8,15 +8,13 @@ import type { PostContentVideo } from "@/api/generator/types/posts";
 import { useContentVideoWatchTracking } from "@/components/analytics/content-video-watch-tracker";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  type FeedVideoCommands,
+  useFeedVideoPlayback,
+} from "@/components/ui/use-feed-video-playback";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
-import { playVideoWithActiveDocument } from "@/lib/video-playback";
-import {
-  getVideoSoundEnabled,
-  getVideoSoundPreferenceRevision,
-  setVideoSoundEnabledByUser,
-  subscribeVideoSoundPreference,
-} from "@/lib/video-sound-preference";
+import { getVideoSoundEnabled, setVideoSoundEnabledByUser } from "@/lib/video-sound-preference";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import {
@@ -80,18 +78,13 @@ export const ContentVideoSlide = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const pauseOwnedVideo = useCallback(() => videoRef.current?.pause(), []);
   const activeRef = useRef(active);
-  const audioAttempt = useRef(0);
-  const blockedSoundRevision = useRef<number | null>(null);
-  const manuallyPaused = useRef(false);
+  const commandsRef = useRef<FeedVideoCommands | null>(null);
   useLayoutEffect(() => {
     activeRef.current = active;
-    blockedSoundRevision.current = null;
-    manuallyPaused.current = false;
     if (!active) videoRef.current?.pause();
     return () => {
       activeRef.current = false;
       pauseOwnedVideo();
-      audioAttempt.current += 1;
     };
   }, [active, pauseOwnedVideo]);
   const [panel, setPanel] = useState<Panel>(null);
@@ -167,41 +160,18 @@ export const ContentVideoSlide = ({
     ? publicCommunityPostFocusedReplyHref(item.community.slug, item.post_id, item.reply_id)
     : publicCommunityPostHref(item.community.slug, item.post_id);
 
-  const play = useCallback(async () => {
-    const video = videoRef.current;
-    if (!video) return;
-    const eligible = () =>
-      !manuallyPaused.current &&
+  const play = useFeedVideoPlayback({
+    videoRef,
+    active,
+    onMuted: setMuted,
+    commandsRef,
+    canPlay: () =>
       !composerBusyRef.current &&
       !createPostOpenRef.current &&
       activeRef.current &&
       !panelRef.current &&
-      !seekingRef.current &&
-      videoRef.current === video;
-    if (!eligible()) return;
-    const attempt = ++audioAttempt.current;
-    const revision = getVideoSoundPreferenceRevision();
-    video.muted = !getVideoSoundEnabled() || blockedSoundRevision.current === revision;
-    setMuted(video.muted);
-    let autoplayBlocked = false;
-    const started = await playVideoWithActiveDocument(video, {
-      onAutoplayBlocked: () => {
-        autoplayBlocked = true;
-      },
-    });
-    if (!eligible()) {
-      if (videoRef.current === video) video.pause();
-      return;
-    }
-    if (attempt !== audioAttempt.current || revision !== getVideoSoundPreferenceRevision()) return;
-    if (!started && autoplayBlocked && video.paused && !video.muted) {
-      blockedSoundRevision.current = revision;
-      video.muted = true;
-      setMuted(true);
-      await playVideoWithActiveDocument(video);
-      if (!eligible() && videoRef.current === video) video.pause();
-    }
-  }, []);
+      !seekingRef.current,
+  });
   const ready = useContentVideoReady({
     videoRef,
     trackVideo,
@@ -210,21 +180,6 @@ export const ContentVideoSlide = ({
     setDuration,
     setTime,
   });
-  useEffect(
-    () =>
-      subscribeVideoSoundPreference((enabled) => {
-        audioAttempt.current += 1;
-        if (videoRef.current) videoRef.current.muted = !enabled;
-        setMuted(!enabled);
-        if (enabled) void play();
-      }),
-    [play],
-  );
-  useEffect(() => {
-    if (active) void play();
-    else videoRef.current?.pause();
-    return pauseOwnedVideo;
-  }, [active, play, pauseOwnedVideo]);
 
   const changePanel = (next: Panel) => {
     if (syncingInteractions) return;
@@ -255,9 +210,8 @@ export const ContentVideoSlide = ({
       return;
     }
     const video = videoRef.current;
-    manuallyPaused.current = !video?.paused;
-    if (video?.paused) void play();
-    else video?.pause();
+    if (video?.paused) void commandsRef.current?.play();
+    else commandsRef.current?.pause();
   };
 
   const seekFromPointer = (input: HTMLInputElement, clientX: number) => {
@@ -375,15 +329,7 @@ export const ContentVideoSlide = ({
               if (event.currentTarget.paused) void play();
             },
             onPlay: (event) => {
-              if (
-                !activeRef.current ||
-                panelRef.current ||
-                seekingRef.current ||
-                composerBusyRef.current ||
-                createPostOpenRef.current
-              )
-                event.currentTarget.pause();
-              else if (manuallyPaused.current) event.currentTarget.pause();
+              if (!commandsRef.current?.canPlay()) event.currentTarget.pause();
               else setPaused(false);
             },
             onPause: () => setPaused(true),

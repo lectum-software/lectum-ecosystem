@@ -85,6 +85,36 @@ window.unmount = () => root.render(null);
 mount();
 `;
 let browser;
+
+test("directory CC stays immersive-only and edit caption uses normal foreground", () => {
+  for (const file of ["slide-details.tsx", "desktop-rail.tsx"]) {
+    const source = readFileSync(
+      new URL(`../../app/app/psychologists/view/components/${file}`, import.meta.url),
+      "utf8",
+    );
+    assert.doesNotMatch(source, /DirectoryCaptionButton/);
+  }
+  const overlay = readFileSync(
+    new URL(
+      "../../app/app/psychologists/view/components/directory-player-overlay.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(overlay, /controlTarget=\{isUiHidden \? captionTarget : null\}/);
+  const menu = readFileSync(new URL("./edit-menu-item.tsx", import.meta.url), "utf8");
+  assert.match(menu, /text-foreground/);
+  assert.doesNotMatch(menu, /text-muted/);
+});
+
+test("transcript sits outside the constrained video frame", () => {
+  const source = readFileSync(
+    new URL("../community/community-media-frame.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /className="w-full min-w-0" data-video-transcript-layout/);
+  assert.match(source, /\{hasFooter \? footer : null\}\s*<\/div>\s*<ScopedTranscriptPanel/);
+});
 test("empty social preview has a definite initial height instead of a shrinking flex basis", () => {
   const source = readFileSync(
     new URL("../community/lectum-share-download-dialog.tsx", import.meta.url),
@@ -229,6 +259,14 @@ for (const width of [390, 1440]) {
           .evaluate((el) => getComputedStyle(el).maskComposite),
         /^exclude/,
       );
+      assert.match(
+        await cc.locator("[data-caption-fill]").evaluate((el) => el.style.maskSize),
+        /50% 40%/,
+      );
+      assert.match(
+        await cc.locator("[data-caption-fill]").evaluate((el) => el.style.maskComposite),
+        /intersect/,
+      );
       await cc.evaluate((el) => {
         el.style.backgroundColor = "green";
       });
@@ -251,12 +289,22 @@ for (const width of [390, 1440]) {
             if (rgba[i] > 240 && rgba[i + 1] > 240 && rgba[i + 2] > 240) white++;
             if (rgba[i] < 30 && rgba[i + 1] < 30 && rgba[i + 2] < 30) black++;
           }
-          return { green, white, black };
+          const interior = [
+            [15, 16],
+            [28, 16],
+            [15, 27],
+            [28, 27],
+          ].map(([x, y]) => Array.from(context.getImageData(x, y, 1, 1).data));
+          return { green, white, black, interior };
         },
         (await cc.screenshot()).toString("base64"),
       );
       assert.ok(pixels.green >= 4 && pixels.white > 10, JSON.stringify(pixels));
       assert.equal(pixels.black, 0, "CC letters reveal the background instead of painting black");
+      assert.ok(
+        pixels.interior.every(([r, g, b]) => r > 230 && g > 230 && b > 230),
+        `Selected CC has no curved interior gaps: ${JSON.stringify(pixels.interior)}`,
+      );
       await cc.evaluate((el) => {
         el.style.backgroundColor = "";
       });
@@ -386,10 +434,15 @@ for (const width of [390, 1440]) {
       assert.equal(await page.locator("[data-lectum-captions]").count(), 0);
       await page.evaluate(() => mount());
       await page.getByRole("button", { name: "Ativar legendas" }).waitFor();
+      await page.locator("#cc-slot button").waitFor({ state: "detached" });
       assert.equal(await page.locator("#cc-slot button").count(), 0);
-      await page.evaluate(() =>
-        mount({ directory: true, controlTarget: document.querySelector("#cc-slot") }),
-      );
+      await page.evaluate(() => {
+        video.muted = false;
+        video.dispatchEvent(new Event("volumechange"));
+        mount({ directory: true, controlTarget: document.querySelector("#cc-slot") });
+      });
+      await page.getByRole("button", { name: "Desativar legendas" }).waitFor();
+      await page.locator("[data-lectum-captions]").waitFor();
       await page.getByRole("button", { name: "Desativar legendas" }).click();
       assert.equal(
         await page.evaluate(() => localStorage.getItem("lectum:directory-captions:v1")),

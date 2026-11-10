@@ -1,14 +1,14 @@
 # Packages e Política de Dependências
 
 Última verificação dos manifests/lockfiles: **2026-11-09**, com `pnpm audit --prod` separado na raiz, backend, frontend, admin e video.
-Após remediação focal da TASK-320 / ADR-0684: **zero advisories conhecidos** nos cinco escopos.
+Após remediação focal da TASK-323 / ADR-0687: **zero advisories conhecidos** nos cinco escopos.
 Historicamente, a TASK-178 tratou um baseline de 8 ocorrências no backend e 4 em cada app Next; versões corrigidas e
 limitações de evidência estão no ADR-0496. Isso não equivale à conclusão do pentest funcional. React Hook Form permanece como
 padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
 
-### Remediacao focal 2026-11-09 (TASK-320 / ADR-0684)
+### Remediacao focal 2026-11-09 (TASK-323 / ADR-0687)
 
 Antes da instalacao, foram revisados registry, changelogs, engines e consumidores
 dos advisories encontrados no gate Stripe. Plano: follow-redirects 1.16.3 nos
@@ -20,9 +20,9 @@ glob14.0.4 e minimatch11.0.5 transitivo. Auditorias `--prod` dos cinco escopos
 retornaram zero advisories conhecidos em 09/11. Nove testes reais de transporte
 loopback/filesystem/template passaram; checks e builds backend/frontend/admin
 passaram. Sentry/Stripe diretos preservados. Isso nao garante ausencia de falhas
-desconhecidas nem substitui E2E/piloto. Detalhes e trade-offs em ADR-0684.
+desconhecidas nem substitui E2E/piloto. Detalhes e trade-offs em ADR-0687.
 
-### Stripe 2026-11-09 (TASK-320 / ADR-0684; implementacao parcial)
+### Stripe 2026-11-09 (TASK-323 / ADR-0687; implementacao parcial)
 
 Decisao de produto: Payment Element dentro da Lectum e novas adesoes Stripe,
 preservando MP para contratos legados. Apos autorizacao, packages abaixo foram
@@ -43,7 +43,7 @@ Versoes/lockfiles fixados por app na implementacao autorizada; builds backend e
 frontend locais aprovados. Auditorias e E2E real seguem gates antes de concluir. Nao
 instalar SDK Stripe em Admin/Video nem remover SDK MP necessario aos legados.
 Dependencia compativel no manifesto nao comprova runtime, aprovacao de pagamento
-ou emissao fiscal. [ADR-0684](../../adrs/0684-stripe-embedded-checkout.md).
+ou emissao fiscal. [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md).
 
 ### Backend runtime 2026-10-28 (TASK-32 / ADR-0648)
 

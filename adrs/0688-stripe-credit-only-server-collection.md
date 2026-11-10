@@ -1,8 +1,8 @@
-# ADR-0685 - Stripe credito-only sem regras pagas do Radar
+# ADR-0688 - Stripe credito-only sem regras pagas do Radar
 
 Data: 2026-11-10
-Status: Aceita; implementada e validada local/sandbox; publicacao nao autorizada
-Task: [TASK-320](../_product/tasks/TASK-320-stripe-embedded-checkout.md)
+Status: Aceita; validada local/sandbox; deploy inativo autorizado, ainda nao executado; ativacao financeira/fiscal separada
+Task: [TASK-323](../_product/tasks/TASK-323-stripe-embedded-checkout.md)
 
 ## Contexto
 
@@ -120,6 +120,39 @@ V1/V2 consultados; nao abrir janela de entregas ativas para depois desativar.
 Destino/segredo e vinculo ficam para rollout coordenado, com vendas/collector/fiscal
 OFF. Dry-run de oferta usa lock no banco configurado apesar de nao gravar registros;
 inventario estritamente READ ONLY deve ser separado, conforme runbook.
+
+## Preparacao da publicacao inativa — 10/11/2026, 0.1.808
+
+A autorizacao posterior permite publicar o codigo compativel sem ativar vendas,
+collection, reconciliation, ledger ou emissao fiscal Stripe, e sem cobranca real
+ou alteracao de Radar. Nao confundir essa autorizacao com liberacao do checkout,
+do collector ou do piloto fiscal; os gates false/disabled permanecem obrigatorios.
+
+A integracao local preserva os cinco commits de `origin/homolog` ate `dea56b871`,
+ja presentes em `main`. Os numeros publicados de tasks/ADRs foram preservados;
+o conjunto Stripe foi renumerado para TASK-323 e ADRs 0687/0688. Check integral,
+quatro builds locais e smoke compilado backend/frontend/admin em 0.1.808 passaram.
+Migration loopback sem pendencia; nenhuma prova de migration produtiva presumida.
+
+Autodeploys e schedules de homolog do backend/video no Dokploy foram conferidos
+OFF/ausentes, assim como preview do backend. Vercel frontend/admin tiveram roots
+conferidas, Ignore Build Step em `Don't build anything` e autoassigndomains OFF.
+Essa conferencia externa habilita preparar publicacao controlada, nao comprova
+deploy nem promocao do dominio. Nao foi desligado ambiente ou excluido dado.
+
+Gate fiscal legado resolvido por transacao READ ONLY no banco do backend publicado
+0.1.791 e GETs SendNF: uma unica nota MP autorizada vinculada a Lectum, com escopo,
+empresa, referencia e total conferidos, simulation false, chave de 50 digitos,
+consulta publica HTTPS e sem marcador de simulacao. Isso comprova compatibilidade
+do documento existente com o novo classificador, nao E2E de emissao Stripe nem
+validacao de duas notas do painel remoto. Nenhuma escrita no provider ou emissao.
+
+Inventario READ ONLY solicitado pelo usuario identificou um unico admin apto e
+plano profissional ativo, sem registrar PII/ID. Tabelas de oferta/precos ainda
+inexistentes no banco publicado: migrations e vinculo pausado permanecem pendentes,
+assim como commit/PR/deploy, webhook e smoke produtivo. Neste checkpoint ainda
+nao houve push, merge concluido, deploy, cobranca ou nota. O estado fiscal MP
+existente permanece preservado, distinto do opt-in Stripe OFF.
 
 ## Fontes
 

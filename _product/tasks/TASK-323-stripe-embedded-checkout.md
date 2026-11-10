@@ -1,8 +1,8 @@
-# TASK-320 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
+# TASK-323 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
 
 Data: 2026-11-09
-Status: Complemento credito-only sem Radar Plus validado local/sandbox; fiscal e publicacao permanecem separados
-Decisao: [ADR-0684](../../adrs/0684-stripe-embedded-checkout.md)
+Status: Complemento credito-only validado local/sandbox; deploy inativo autorizado e ainda nao executado; ativacao financeira/fiscal separada
+Decisao: [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md)
 Operacao: [Runbook Stripe](STRIPE-OPERATIONS.md)
 Base auditada: `homolog` em `820077ccd`, versao `0.1.799`
 Dependencias funcionais: TASK-02, TASK-31/32/33, TASK-56, TASK-142, TASK-313/314/315/317.
@@ -208,7 +208,7 @@ SetupIntents permanece intocado.
   e cobertura/varredura retomavel por contrato, sem payload/PII ou inferencias de preco
   e datas. Refund/dispute inicialmente como estado observado, sem fabricar movimentos
   historicos. Metricas continuam indisponiveis quando a cobertura nao sustenta o total.
-  Migration expansiva/CLI dry-run e automacao desligada, conforme ADR-0684.
+  Migration expansiva/CLI dry-run e automacao desligada, conforme ADR-0687.
 
 ### 5. Ciclo de vida, cortesia e Admin
 
@@ -1183,7 +1183,7 @@ Resultados desta rodada:
   smoke compilado, check:tasks/check:adrs e diff-check aprovados. Evidencias privadas
   em root-check-operational-20261110.log, backend-build-operational-20261110.log e
   operational-smoke-evidence-20261110.json, sem segredos. Sem bump/commit/push/deploy:
-  TASK-320 segue parcial com gates residuais explicitados, nao apenas suporte externo.
+  TASK-323 segue parcial com gates residuais explicitados, nao apenas suporte externo.
 
 ### Recuperacao residual e browser local/sandbox — 10/11/2026
 
@@ -1276,7 +1276,7 @@ Resultados desta rodada:
   null. Access_key nao apresentou prefixoSIM nessa resposta; flag explicita e a
   prova primaria, nao exigir prefixoSIM como condicao de reconhecer simulacao.
 - Revisao encontrou que parser descartava simulation e worker/PDF tratavam
-  authorized sozinho como autorizacao. Corrigir dentro da TASK-320 antes do
+  authorized sozinho como autorizacao. Corrigir dentro da TASK-323 antes do
   checkpoint: classificador conservador, estados aditivos simulated e
   authorization_unverified, sem migration; campos ausentes nao equivalem a false.
   Preservar document_id ao persistir resposta, nunca reemitir para corrigir estado.
@@ -1415,7 +1415,7 @@ Resultados desta rodada:
   graciosamente, sem credenciais externas/schedulers. Sem UI/schema/package novo.
   Bump unico0.1.802→0.1.803 e check:version aprovados; commit local, sem push/deploy.
 
-### Preparacao live inativa apos ADR-0685 — 10/11/2026
+### Preparacao live inativa apos ADR-0688 — 10/11/2026
 
 - Usuario autorizou preparar/salvar configuracoes live, sem deploy, restart,
   ativacao de vendas, emissao Stripe ou cobrancas reais. Autorizou em seguida
@@ -1493,3 +1493,51 @@ Resultados desta rodada:
   provider/banco e sem usa-los como prova de vinculo live. Tasks, ADRs, encoding
   e diff aprovados. Sem mudanca funcional/schema; builds/E2E nao repetidos.
   Bump unico e check:version dos cinco manifests; commit documental local em homolog.
+
+
+### Pre-publicacao inativa e integracao remota — 10/11/2026, 0.1.808
+
+- [x] Usuario autorizou deploy inativo. Permanecem `BILLING_CHECKOUT_GATEWAY=disabled`,
+  `BILLING_STRIPE_COLLECTION_ENABLED=false`,
+  `BILLING_STRIPE_RECONCILIATION_ENABLED=false`,
+  `BILLING_STRIPE_LEDGER_ENABLED=false`,
+  `SENDNF_STRIPE_LIVE_ISSUANCE_ENABLED=false`,
+  `SENDNF_STRIPE_LIVE_AUTO_ENABLED=false` e piloto fiscal Stripe vazio.
+  Nao autoriza venda, cobranca real, emissao Stripe ou alteracao de Radar.
+  Configuracao e operacao fiscal MP legadas continuam preservadas.
+- [x] Fetch identificou cinco commits novos em `origin/homolog` ate `dea56b871`,
+  ja publicados em `main`. Incorporacao local preparada sem descartar nenhum dos
+  lados; conflitos de manifests e indices resolvidos. Tasks remotas 320/321/322 e
+  ADRs 0684/0685/0686 preservadas. Para evitar colisao, Stripe passa a TASK-323,
+  ADR-0687 (checkout incorporado) e ADR-0688 (credit-only), com links atualizados.
+  O merge ainda nao foi commitado neste checkpoint; nenhum merge produtivo realizado.
+- [x] `pnpm check` integral aprovado em 0.1.808 e builds locais independentes de
+  backend, frontend, admin e video aprovados. Bump unico ja executado nos cinco
+  manifests; nao repetir ao concluir o commit/merge local.
+- [x] `pnpm --dir backend db:migrate` executado no PostgreSQL loopback de QA:
+  sucesso, sem alteracoes pendentes. Nao equivale a migration aplicada em producao.
+- [x] Smoke compilado local: backend `/health`, `/ready` e `/ping` retornaram
+  HTTP 200/no-store, versao 0.1.808; frontend e admin `/version` retornaram 0.1.808.
+  Nao foi feita tentativa financeira live como smoke.
+- [x] Conferencia nos provedores: backend e video de homolog no Dokploy com
+  autodeploy OFF e sem schedules; preview do backend OFF. Vercel frontend/admin
+  com root directories corretos, Ignore Build Step em `Don't build anything` e
+  atribuicao automatica de dominios OFF. Este registro e evidencia de conferencia
+  externa, nao alegacao de que um arquivo do repositorio desligou os gatilhos.
+  A liberacao/promocao do artefato correto exige operacao coordenada posterior;
+  nenhum ambiente, banco ou volume foi removido para bloquear autodeploy.
+- [x] Gate fiscal legado conferido no backend publicado 0.1.791: transacao PostgreSQL
+  READ ONLY e GETs SendNF de identidade/documento encontraram uma unica nota MP
+  autorizada vinculada ao banco Lectum. Escopo, empresa, referencia e valor total
+  conferem; `simulation: false`, chave de 50 digitos, consulta publica HTTPS e
+  ausencia de marcador de simulacao comprovam compatibilidade com o classificador
+  novo. Nao registrar duas notas: a quantidade do painel remoto nao equivale a
+  documentos vinculados no app. Nenhuma escrita no provider ou nova emissao.
+- [x] A pedido do usuario, inventario READ ONLY identificou um unico admin apto
+  e plano profissional existente/ativo. Identidade operacional retida privadamente,
+  sem PII/ID no registro. Tabelas `billing_offers` e `billing_price_versions` ainda
+  nao existem nesse banco; nenhuma revisao ou registro de oferta foi inventado.
+  Migration produtiva e vinculo pausado continuam pendentes; nao houve apply.
+- [ ] Concluir commit de integracao, push autorizado, PR/checks/merge revisado,
+  deploy e smoke produtivo. Nao houve push, merge concluido ou deploy ate este
+  checkpoint; webhook/segredo e oferta live ainda nao estao concluidos.
