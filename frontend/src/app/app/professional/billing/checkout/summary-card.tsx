@@ -29,7 +29,7 @@ export const SummaryCard = ({
   renewalDate,
 }: {
   isCourtesyRenewal: boolean;
-  plan: SubscriptionPlan;
+  plan: Pick<SubscriptionPlan, "name" | "price_cents">;
   renewalDate?: string | null;
 }) => {
   const renewalDateLabel = formatDate(renewalDate);

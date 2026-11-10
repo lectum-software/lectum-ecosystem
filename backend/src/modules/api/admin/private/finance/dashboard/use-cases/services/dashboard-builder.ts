@@ -1,5 +1,11 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import {
+  financialContractValue,
+  stripeFinancialCoverage,
+  stripeFinancialScopeAvailable,
+  sumFinancialValues,
+} from "@/modules/billing/subscription-financial-values";
 import type {
   AdminFinanceChargeItem,
   AdminFinanceDashboard,
@@ -8,6 +14,7 @@ import type {
 } from "../../DTOs/IAdminFinanceDashboardDTO";
 import { AdminFinanceDashboardRepository } from "../../repositories/AdminFinanceDashboardRepository";
 import { buildChargeItems, fetchGatewayPaymentSummaries } from "./charges-lists";
+import { applyFinancialCoverage } from "./financial-coverage";
 import {
   type Bucket,
   buildBuckets,
@@ -60,7 +67,8 @@ export const buildSeries = async (
         confirmed_payments: revenue.confirmed_count,
         end_date: bucket.end_date,
         new_subscriptions: bucketNewSubscriptions.length,
-        new_subscriptions_revenue_cents: sumSubscriptionPlanRevenueCents(bucketNewSubscriptions),
+        new_subscriptions_revenue_cents:
+          sumSubscriptionPlanRevenueCents(bucketNewSubscriptions) ?? 0,
         revenue_cents: revenue.revenue_cents,
         start_date: bucket.start_date,
       };
@@ -177,18 +185,21 @@ export const buildAdminFinanceDashboard = async (
   const previousRevenue = summarizeChargeItemsRevenue(previousCharges);
   const revenueAvailable =
     currentRevenue.missing_amount_count === 0 && previousRevenue.missing_amount_count === 0;
-  const mrrCents = activeSubscriptions.reduce(
-    (sum, subscription) => sum + monthlyPriceCents(subscription),
-    0,
-  );
+  const mrrCents = stripeFinancialScopeAvailable(activeSubscriptions)
+    ? sumFinancialValues(activeSubscriptions.map(monthlyPriceCents))
+    : null;
   const currentNewSubscriptionCount = currentNewSubscriptionValues.length;
   const previousNewSubscriptionCount = previousNewSubscriptionValues.length;
-  const currentNewSubscriptionRevenueCents = sumSubscriptionPlanRevenueCents(
+  const currentNewSubscriptionRevenueCents = stripeFinancialScopeAvailable(
     currentNewSubscriptionValues,
-  );
-  const previousNewSubscriptionRevenueCents = sumSubscriptionPlanRevenueCents(
+  )
+    ? sumSubscriptionPlanRevenueCents(currentNewSubscriptionValues)
+    : null;
+  const previousNewSubscriptionRevenueCents = stripeFinancialScopeAvailable(
     previousNewSubscriptionValues,
-  );
+  )
+    ? sumSubscriptionPlanRevenueCents(previousNewSubscriptionValues)
+    : null;
   const currentChurnRatePercent = calculateChurnRatePercent(
     currentCancellationCount,
     currentChurnOpeningBaseCount,
@@ -202,7 +213,8 @@ export const buildAdminFinanceDashboard = async (
     cancelledLifetimeSubscriptions,
   );
   const nonMonthlyIntervals = activeSubscriptions.some(
-    (subscription) => !subscription.plan.interval.toLowerCase().includes("month"),
+    (subscription) =>
+      !financialContractValue(subscription).interval?.toLowerCase().includes("month"),
   );
   const buckets = buildBuckets(current, groupBy);
   const series = await buildSeries(
@@ -257,17 +269,20 @@ export const buildAdminFinanceDashboard = async (
         id: "active_subscriptions",
         label: "Assinaturas ativas",
         previous: previousActiveSubscriptionCount,
-        source: "professional_subscription.status=ativa + source=mercadopago",
+        source: "professional_subscription.status=ativa + gateway=mercadopago|stripe",
         unit: "count",
       }),
       new_subscriptions_revenue: metric({
-        current: currentNewSubscriptionRevenueCents,
+        current: currentNewSubscriptionRevenueCents ?? 0,
+        available:
+          currentNewSubscriptionRevenueCents !== null &&
+          previousNewSubscriptionRevenueCents !== null,
         description:
-          "Soma do valor cadastrado para os planos pagos iniciados no período, sem plano gratuito ou cortesia.",
+          "Soma dos valores contratados das assinaturas; não representa recebimentos confirmados.",
         id: "new_subscriptions_revenue",
         label: "Receita de novas assinaturas",
-        previous: previousNewSubscriptionRevenueCents,
-        source: "professional_subscription.createdAt + subscription_plan.price_cents",
+        previous: previousNewSubscriptionRevenueCents ?? 0,
+        source: "professional_subscription.createdAt + contracted_price_or_legacy_plan",
         unit: "currency_cents",
       }),
       new_subscriptions: metric({
@@ -277,7 +292,7 @@ export const buildAdminFinanceDashboard = async (
         id: "new_subscriptions",
         label: "Novas assinaturas",
         previous: previousNewSubscriptionCount,
-        source: "professional_subscription.createdAt + source=mercadopago",
+        source: "professional_subscription.createdAt + gateway=mercadopago|stripe",
         unit: "count",
       }),
       cancellations: metric({
@@ -299,7 +314,7 @@ export const buildAdminFinanceDashboard = async (
       "O churn considera cancelamentos confirmados e divide as saídas pela base paga no início do período, sem inferir cancelamento por ausência de renovação.",
       nonMonthlyIntervals
         ? "Há planos ativos com intervalo não mensal; o MRR converte o valor anual para a média mensal."
-        : "Todos os planos ativos usam o valor cadastrado na configuração do plano.",
+        : "Contratos Stripe usam o preço imutável contratado; contratos legados preservam a projeção anterior.",
     ],
     export: {
       available: true,
@@ -309,9 +324,11 @@ export const buildAdminFinanceDashboard = async (
       description:
         "Soma mensal dos planos pagos ativos ao final do período, sem plano gratuito ou cortesia.",
       source: "active_paid_subscriptions",
-      value_cents: mrrCents,
+      available: mrrCents !== null,
+      value_cents: mrrCents ?? 0,
     },
     latest_charges: {
+      coverage_complete: stripeFinancialCoverage(lifetimeSubscriptions),
       items: currentCharges.slice(0, tableTake),
       source: "payment_event+gateway_subscription_summary+professional_subscription",
       total: currentCharges.length,
@@ -338,6 +355,14 @@ export const buildAdminFinanceDashboard = async (
     unavailable,
   };
 
+  applyFinancialCoverage(dashboard, {
+    stripePaymentsCovered: stripeFinancialCoverage(lifetimeSubscriptions),
+    scopeAvailable: stripeFinancialScopeAvailable(paymentReferenceSubscriptions),
+    contractValuesAvailable:
+      mrrCents !== null &&
+      currentNewSubscriptionRevenueCents !== null &&
+      previousNewSubscriptionRevenueCents !== null,
+  });
   return {
     status: 200,
     ...msg("index", {}),

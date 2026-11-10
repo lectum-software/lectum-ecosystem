@@ -1,3 +1,5 @@
+Implementacao tecnica validada local/sandbox em 10/11: [TASK-320 - Checkout Stripe dentro da Lectum](TASK-320-stripe-embedded-checkout.md), [ADR-0684](../../adrs/0684-stripe-embedded-checkout.md), [runbook](STRIPE-OPERATIONS.md). Checkout/3DS/recusa, renovacao/dunning, cancelamento, ledger, recuperacao customer/setup apos crash e POST replay apos corteTCP comprovados. Eventos assinados duplicados/fora de ordem preservaram cancelamento/periodo/pins, sem cobranca adicional. QA visual320/390/1440 e retorno historico aprovados tecnicamente; autenticacao temporaria restaurada. Recorrencias e SetupIntent do ensaio encerrados, historico preservado. Restam gates externos: cortesia credito-only/Radar SetupIntents aguarda Stripe (protocolo18652759); SendNF esclareceu CNCtest ausente sem regularizacao Lectum; parser/worker/PDF agora distinguem simulacao de autorizacao, confirmado em GET real. Fiscal ainda aguarda parametros contabeis e preview/emissao test autorizados, sem afirmar transmissao governamental. Chave SendNF test restrita local, quatroGETs aprovados, nenhuma nota emitida. Checkpoint local0.1.800 de implementacao parcial validada; sem push/deploy, producao/Radar intocados. Aprovacao visual do usuario e publicacao exigem confirmacao separada. Editor comercial Admin e etapa subsequente.
+
 Validado localmente em 0.1.772: [TASK-310 - Aceite no cadastro e data](TASK-310-registration-legal-acceptance.md), ADR-0671. Checkbox em email/Google, aceite atomico versionado e data pessoal no topo dos documentos. Check integral, builds e QA real em 320/390/1440 aprovados. Documentos juridicos revisados/publicados sao pre-requisito para liberar o frontend. Sem push/deploy.
 
 Validado localmente em 0.1.771: [TASK-309 - Exclusao de conteudo e vigencia](TASK-309-account-content-and-subscription-end.md), ADR-0670. Migration, check integral, builds e QA real em 320/390/1440 aprovados. Fila externa validada sem acessar provedores; limpeza fisica e iPhone pendentes. Sem push/deploy.
@@ -780,6 +782,7 @@ ou cortesia manual.
 | 317 | [TASK-317 - Download fiscal, busca CRP e pergunta em video](TASK-317-invoice-crp-and-share-card.md) | Done | 316 |
 | 318 | [TASK-318 - Convites de avaliacao](TASK-318-evaluation-invitation-ui.md) | Done | 317 |
 | 319 | [TASK-319 - Pool de players no diretorio](TASK-319-directory-player-pool.md) | In Progress | 318 |
+| 320 | [TASK-320 - Checkout Stripe dentro da Lectum](TASK-320-stripe-embedded-checkout.md) | In Progress | 31, 32, 33, 56, 142, 313-317 |
 
 ## Ordem operacional recomendada sem bloqueios
 

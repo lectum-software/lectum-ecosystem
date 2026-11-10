@@ -80,6 +80,17 @@ export const documentSchema = z.object({
     .transform((v) => (v == null ? null : String(v))),
   company_id: providerId.optional(),
   authorized_at: z.string().nullable().optional(),
+  // New provider evidence is optional and fail-closed. Malformed evidence must not
+  // discard the document identity/reference of an issuance that already happened.
+  simulation: z.boolean().optional().catch(undefined),
+  access_key: z.string().max(256).nullable().optional().catch(null),
+  urls: z
+    .object({
+      public_query: z.string().max(2048).nullable().optional().catch(null),
+    })
+    .nullable()
+    .optional()
+    .catch(null),
 });
 export type InvoiceDocument = z.infer<typeof documentSchema>;
 
@@ -87,8 +98,16 @@ export const invoiceReference = (
   companyId: string,
   paymentId: string,
   mode: InvoiceMode = "test",
+  stripeAccountId?: string,
 ) =>
-  `lectum-${mode}-${createHash("sha256").update(`${companyId}:mercadopago:${paymentId}`).digest("hex").slice(0, 48)}`;
+  `lectum-${mode}-${createHash("sha256")
+    .update(
+      stripeAccountId
+        ? `${companyId}:stripe:${stripeAccountId}:${paymentId}`
+        : `${companyId}:mercadopago:${paymentId}`,
+    )
+    .digest("hex")
+    .slice(0, 48)}`;
 
 export function assertDocumentMatches(
   document: InvoiceDocument,

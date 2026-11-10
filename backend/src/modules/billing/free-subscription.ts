@@ -20,7 +20,7 @@ export const FREE_SUBSCRIPTION_SOURCE = "free_signup";
 export const cancelledProfessionalGatewaySubscriptionWhere =
   (): Prisma.professional_subscriptionWhereInput => ({
     deleted: false,
-    gateway: "mercadopago",
+    gateway: { in: ["mercadopago", "stripe"] },
     gateway_subscription_id: {
       not: null,
     },
@@ -31,7 +31,7 @@ export const cancelledProfessionalGatewaySubscriptionWhere =
         not: FREE_PLAN_SLUG,
       },
     },
-    source: "mercadopago",
+    source: { in: ["mercadopago", "stripe"] },
     status: "cancelada",
   });
 

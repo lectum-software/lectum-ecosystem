@@ -3,6 +3,11 @@ import {
   isPaymentGatewayConfigurationError,
   sanitizePaymentGatewayError,
 } from "@/modules/billing/payment-gateway";
+import { syncStripeSubscription } from "@/modules/billing/stripe/sync";
+import {
+  getStoredSubscriptionGateway,
+  subscriptionGatewayName,
+} from "@/modules/billing/subscription-provider";
 import { syncMercadoPagoSubscriptionRecord } from "@/modules/billing/sync-mercado-pago-subscription";
 import type { IAddressDTO } from "../DTOs/IAddressDTO";
 import { AddressRepository } from "../repositories/AddressRepository";
@@ -21,10 +26,12 @@ const refreshActiveProfessionalSubscription = async ({
   }
 
   try {
-    await syncMercadoPagoSubscriptionRecord({
-      localSubscription,
-      repository,
-    });
+    getStoredSubscriptionGateway(localSubscription);
+    if (subscriptionGatewayName(localSubscription) === "stripe") {
+      await syncStripeSubscription(localSubscription.gateway_subscription_id, localSubscription.id);
+    } else {
+      await syncMercadoPagoSubscriptionRecord({ localSubscription, repository });
+    }
   } catch (err) {
     console.error(
       "[BILLING] Falha na confirmação da assinatura externa.",

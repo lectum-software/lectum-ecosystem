@@ -159,7 +159,7 @@ test("lê a sessão corrente em cada chamada, sem guardar valor anterior", () =>
 test("checkout e cartão capturam a sessão opcional dentro do submit e preservam o SDK antifraude", () => {
   for (const route of ["checkout", "card"]) {
     const source = readFileSync(
-      new URL(`../app/app/professional/billing/${route}/logic.tsx`, import.meta.url),
+      new URL(`../app/app/professional/billing/${route}/mercado-pago-logic.tsx`, import.meta.url),
       "utf8",
     );
     const submit = source.slice(source.indexOf("const handleSubmit = useCallback("));

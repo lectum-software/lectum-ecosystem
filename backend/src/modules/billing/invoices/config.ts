@@ -1,4 +1,4 @@
-import { isDisposableRuntime } from "@/utils/runtime-config";
+import { invoiceGatewayScopes } from "./gateway-scope";
 
 export class InvoiceError extends Error {
   constructor(
@@ -26,39 +26,14 @@ export type InvoiceConfig = {
 
 export type InvoiceMode = "test" | "live";
 
-export function isInvoiceLiveRuntime(env = process.env) {
-  try {
-    const database = new URL(env.DATABASE_URL ?? "");
-    return (
-      env.NODE_ENV === "production" &&
-      env.MERCADO_PAGO_ENV === "production" &&
-      new URL(env.BASE ?? "").origin === "https://api.lectum.com.br" &&
-      ["postgres:", "postgresql:"].includes(database.protocol) &&
-      !["127.0.0.1", "localhost", "[::1]"].includes(database.hostname) &&
-      !/(homol|staging|(?:^|[_-])(dev|test|local)(?:[_-]|$))/i.test(database.pathname.slice(1))
-    );
-  } catch {
-    return false;
-  }
-}
+export const isInvoiceLiveRuntime = (env = process.env) =>
+  invoiceGatewayScopes("live", env).length > 0;
 
 export const invoiceFeatureEnabled = (env = process.env) =>
   env.SENDNF_TEST_ENABLED === "true" || env.SENDNF_LIVE_ENABLED === "true";
 
-export function isInvoiceTestRuntime(env = process.env) {
-  try {
-    const database = new URL(env.DATABASE_URL ?? "");
-    return (
-      isDisposableRuntime(env.NODE_ENV) &&
-      env.MERCADO_PAGO_ENV === "sandbox" &&
-      ["127.0.0.1", "localhost", "[::1]"].includes(database.hostname) &&
-      /(?:^|[_-])(dev|test|local)(?:[_-]|$)/.test(database.pathname.slice(1)) &&
-      !/(prod|homol|staging)/i.test(database.pathname)
-    );
-  } catch {
-    return false;
-  }
-}
+export const isInvoiceTestRuntime = (env = process.env) =>
+  invoiceGatewayScopes("test", env).length > 0;
 
 export function getInvoiceConfig(env = process.env): InvoiceConfig | null {
   if (!invoiceFeatureEnabled(env)) return null;
@@ -90,7 +65,8 @@ export function getInvoiceConfig(env = process.env): InvoiceConfig | null {
         issRate === null ||
         issRate > 500 ||
         !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(env.SENDNF_PAYMENTS_FROM ?? "") ||
-        (pilotPaymentId !== null && !/^\d{1,100}$/.test(pilotPaymentId)) ||
+        (pilotPaymentId !== null &&
+          !/^(?:\d{1,100}|in_[A-Za-z0-9]{1,100})$/.test(pilotPaymentId)) ||
         (issueEnabled && !autoEnabled && !pilotPaymentId)))
   )
     throw new InvoiceError("configuration_invalid");

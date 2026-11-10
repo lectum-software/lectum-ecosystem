@@ -1,4 +1,8 @@
 import prisma from "@/infra/database/prisma";
+import {
+  financialContractSelection,
+  withFinancialContractPlan,
+} from "@/modules/billing/subscription-financial-values";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import { getPublicTestimonialCounts } from "@/utils/testimonial-summary";
 import {
@@ -53,6 +57,8 @@ export class AdminPsychologistsListProfilesRepository {
             },
           },
           select: {
+            ...financialContractSelection,
+            gateway_subscription_id: true,
             createdAt: true,
             current_period_end: true,
             grant_started_at: true,
@@ -91,6 +97,7 @@ export class AdminPsychologistsListProfilesRepository {
     );
     return profiles.map((profile) => ({
       ...profile,
+      subscriptions: profile.subscriptions.map(withFinancialContractPlan),
       rating_avg: 0,
       rating_count: counts.get(profile.user.id) ?? 0,
     }));

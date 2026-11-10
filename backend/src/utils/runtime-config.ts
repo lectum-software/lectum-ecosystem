@@ -45,11 +45,21 @@ export const parsePositiveInteger = (
   return parsed;
 };
 
-export const isPublishedRuntime = (value: unknown = process.env.NODE_ENV) =>
-  typeof value === "string" && PUBLISHED_RUNTIME_ENVIRONMENT_SET.has(value.trim().toLowerCase());
+// No argument reads the process environment; an explicitly missing input is unknown.
+// This distinction keeps injected config objects from inheriting a permissive parent runtime.
+export const isPublishedRuntime = (...args: [value?: unknown]) => {
+  const value = args.length === 0 ? process.env.NODE_ENV : args[0];
+  return (
+    typeof value === "string" && PUBLISHED_RUNTIME_ENVIRONMENT_SET.has(value.trim().toLowerCase())
+  );
+};
 
-export const isDisposableRuntime = (value: unknown = process.env.NODE_ENV) =>
-  typeof value === "string" && DISPOSABLE_RUNTIME_ENVIRONMENT_SET.has(value.trim().toLowerCase());
+export const isDisposableRuntime = (...args: [value?: unknown]) => {
+  const value = args.length === 0 ? process.env.NODE_ENV : args[0];
+  return (
+    typeof value === "string" && DISPOSABLE_RUNTIME_ENVIRONMENT_SET.has(value.trim().toLowerCase())
+  );
+};
 
 // Mantido como alias para não quebrar consumidores existentes. Cookies e
 // origens precisam da mesma proteção em todos os ambientes publicados.

@@ -54,6 +54,7 @@ export type AdminDashboardDailyPoint = {
 };
 
 export type AdminDashboardFinancialPoint = {
+  available?: boolean;
   active_subscriptions: number;
   date: string;
   value_cents: number;
@@ -201,6 +202,7 @@ export type AdminDashboardSummary = {
     total: number;
   };
   financial: {
+    mrr_available?: boolean;
     confirmed_revenue_available: boolean;
     daily: AdminDashboardFinancialPoint[];
     label: string;

@@ -29,30 +29,30 @@ export default async (data: ISelectFreeDTO) => {
     };
   }
 
-  const activeProfessional = await repository.findActiveProfessionalSubscription(profile.id!);
-
-  if (activeProfessional) {
+  const result = await repository.createFreeSubscription(profile.id!, freePlan.id!);
+  if (result.type === "profile_not_found" || result.type === "plan_not_found") {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: result.type === "profile_not_found" ? "psychologist_profile" : "subscription_plan",
+      }),
+    };
+  }
+  if (result.type !== "selected") {
     return {
       status: 409,
-      ...error("professional_subscription_active", {}),
+      ...error(
+        result.type === "entitlement_conflict"
+          ? "professional_subscription_active"
+          : "billing_operation_conflict",
+        {},
+      ),
     };
   }
-
-  const current = await repository.findCurrentSubscription(profile.id!);
-
-  if (current?.plan?.slug === "gratuito" && current.status === "ativa") {
-    return {
-      status: 200,
-      ...msg("billing_free_selected", {}),
-      data: { current },
-    };
-  }
-
-  const next = await repository.createFreeSubscription(profile.id!, freePlan.id!);
 
   return {
     status: 200,
     ...msg("billing_free_selected", {}),
-    data: { current: next },
+    data: { current: result.current },
   };
 };

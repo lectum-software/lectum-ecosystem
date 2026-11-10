@@ -3,6 +3,7 @@ import type { payment_event, professional_subscription } from "@/interfaces/obje
 import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository";
 import { findPayloadValue, toAmountCents } from "@/modules/billing/payment-event-values";
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
+import { subscriptionGatewayName } from "@/modules/billing/subscription-provider";
 
 export {
   findPayloadValue,
@@ -86,18 +87,13 @@ export const isGatewaySubscription = (subscription: AdminPsychologistBillingSubs
 
 export const isMercadoPagoSubscription = (subscription: AdminPsychologistBillingSubscription) =>
   Boolean(
-    subscription.gateway_subscription_id &&
-      (subscription.source === "mercadopago" ||
-        subscription.gateway === "mercadopago" ||
-        !subscription.gateway),
+    subscription.gateway_subscription_id && subscriptionGatewayName(subscription) === "mercadopago",
   );
 
 export const isMercadoPagoPaymentHistorySource = (subscription: professional_subscription | null) =>
   Boolean(
     subscription?.gateway_subscription_id &&
-      (subscription.source === "mercadopago" ||
-        subscription.gateway === "mercadopago" ||
-        !subscription.gateway),
+      subscriptionGatewayName(subscription) === "mercadopago",
   );
 
 export const toDateOrNull = (value?: string | null) => {
@@ -163,6 +159,12 @@ export const billingSelect = {
       current_period_end: true,
       gateway: true,
       gateway_subscription_id: true,
+      gateway_mode: true,
+      gateway_account_id: true,
+      contracted_amount_cents: true,
+      contracted_currency: true,
+      contracted_interval: true,
+      contracted_interval_count: true,
       grant_notes: true,
       grant_reason: true,
       grant_started_at: true,

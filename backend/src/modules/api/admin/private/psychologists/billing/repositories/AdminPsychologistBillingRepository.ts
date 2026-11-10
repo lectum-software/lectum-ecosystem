@@ -4,7 +4,14 @@ import type { payment_method, professional_subscription } from "@/interfaces/obj
 import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository";
 import { SubscriptionRepository } from "@/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository";
 import { restoreFreePlanAfterProfessionalCancellation } from "@/modules/billing/free-subscription";
-import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import {
+  type GatewaySubscriptionPaymentSummary,
+  getPaymentGateway,
+} from "@/modules/billing/payment-gateway";
+import {
+  getStoredSubscriptionGateway,
+  subscriptionGatewayName,
+} from "@/modules/billing/subscription-provider";
 import {
   actionableProfessionalGatewaySubscriptionWhere,
   activeFreeSubscriptionWhere,
@@ -23,7 +30,6 @@ import {
   isConfirmedPaymentStatus,
   isGatewaySubscription,
   isMercadoPagoPaymentHistorySource,
-  isMercadoPagoSubscription,
   isPaymentEvent,
   PAYMENT_GATEWAY_FALLBACK,
   toPaymentMethodBrandLabel,
@@ -133,12 +139,12 @@ export class AdminPsychologistBillingRepository {
     return prisma.professional_subscription.findFirst({
       where: {
         deleted: false,
-        gateway: "mercadopago",
+        gateway: { in: ["mercadopago", "stripe"] },
         gateway_subscription_id: {
           not: null,
         },
         psychologist_id: psychologistId,
-        source: "mercadopago",
+        source: { in: ["mercadopago", "stripe"] },
         status: {
           in: ["inativa", "inadimplente"],
         },
@@ -160,30 +166,21 @@ export class AdminPsychologistBillingRepository {
   async findPaymentMethod(
     userId: string,
     gatewayToken?: string | null,
+    subscription?: professional_subscription | null,
   ): Promise<payment_method | null> {
-    const localPaymentMethod = await prisma.payment_method.findFirst({
-      where: {
-        deleted: false,
-        gateway: "mercadopago",
-        ...(gatewayToken ? { gateway_token: gatewayToken } : {}),
-        user_id: userId,
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-      select: {
-        brand: true,
-        exp_month: true,
-        exp_year: true,
-        gateway: true,
-        last4: true,
-      },
-    });
+    const localPaymentMethod = await new SubscriptionRepository().showPaymentMethod(
+      userId,
+      gatewayToken,
+      subscription,
+    );
+    if (subscription && subscriptionGatewayName(subscription) !== "mercadopago")
+      return localPaymentMethod;
 
     if (localPaymentMethod || !gatewayToken) return localPaymentMethod;
 
     try {
-      const gatewaySubscription = await getPaymentGateway().getSubscription(gatewayToken);
+      const gatewaySubscription =
+        await getPaymentGateway("mercadopago").getSubscription(gatewayToken);
       const raw = asRecord(gatewaySubscription.raw);
       const brand = toPaymentMethodBrandLabel(raw?.payment_method_id);
 
@@ -210,7 +207,7 @@ export class AdminPsychologistBillingRepository {
 
     if (subscription && isMercadoPagoPaymentHistorySource(subscription)) {
       try {
-        const gateway = getPaymentGateway();
+        const gateway = getPaymentGateway("mercadopago");
         const summary = await gateway.getSubscriptionPaymentSummary(
           subscription.gateway_subscription_id!,
         );
@@ -228,24 +225,24 @@ export class AdminPsychologistBillingRepository {
   private async summarizeGatewayPaymentMetrics(
     subscriptions: AdminPsychologistBillingSubscription[],
   ): Promise<AdminPsychologistBillingPaymentMetrics | null> {
-    const mercadoPagoSubscriptions = subscriptions.filter(isMercadoPagoSubscription);
+    const remoteSubscriptions = subscriptions.filter((subscription) =>
+      Boolean(subscription.gateway_subscription_id && subscriptionGatewayName(subscription)),
+    );
 
-    if (mercadoPagoSubscriptions.length === 0) return null;
+    if (remoteSubscriptions.length === 0) return null;
 
     try {
-      const gateway = getPaymentGateway();
       const summaries = await Promise.allSettled(
-        mercadoPagoSubscriptions.map((subscription) =>
-          gateway.getSubscriptionPaymentSummary(subscription.gateway_subscription_id!),
+        remoteSubscriptions.map(async (subscription) =>
+          getStoredSubscriptionGateway(subscription).getSubscriptionPaymentSummary(
+            subscription.gateway_subscription_id!,
+          ),
         ),
       );
       const fulfilledSummaries = summaries
         .filter(
-          (
-            summary,
-          ): summary is PromiseFulfilledResult<
-            Awaited<ReturnType<typeof gateway.getSubscriptionPaymentSummary>>
-          > => summary.status === "fulfilled",
+          (summary): summary is PromiseFulfilledResult<GatewaySubscriptionPaymentSummary> =>
+            summary.status === "fulfilled",
         )
         .map((summary) => summary.value);
 
@@ -311,6 +308,18 @@ export class AdminPsychologistBillingRepository {
     const gatewayMetrics = await this.summarizeGatewayPaymentMetrics(gatewaySubscriptions);
 
     if (gatewayMetrics) return gatewayMetrics;
+    if (
+      gatewaySubscriptions.some(
+        (subscription) => subscriptionGatewayName(subscription) === "stripe",
+      )
+    ) {
+      return {
+        lifetimeValueAvailable: false,
+        lifetimeValueCents: null,
+        lifetimeValueUnavailableReason: "O histórico de cobrança ainda não pôde ser conciliado.",
+        paidInstallmentsCount: 0,
+      };
+    }
 
     const gateways = uniqueStrings(
       gatewaySubscriptions.map((subscription) => subscription.gateway ?? PAYMENT_GATEWAY_FALLBACK),
@@ -459,11 +468,11 @@ export class AdminPsychologistBillingRepository {
       }
 
       if (
-        current.source !== "mercadopago" ||
+        !subscriptionGatewayName(current) ||
+        subscriptionGatewayName(current) !== subscriptionGatewayName(input.subscription) ||
         current.gateway_subscription_id !== input.subscription.gateway_subscription_id ||
         current.gateway_subscription_id !== input.gatewaySubscriptionId ||
         current.plan.slug !== "profissional" ||
-        (current.gateway && current.gateway !== "mercadopago") ||
         !current.gateway_subscription_id
       ) {
         throw new Error("admin_subscription_cancel_target_invalid");
@@ -474,7 +483,6 @@ export class AdminPsychologistBillingRepository {
           id: current.id,
         },
         data: {
-          gateway: "mercadopago",
           gateway_subscription_id: input.gatewaySubscriptionId,
           ...resolveCancellationState(current, { status: "cancelada" }),
           ...(input.immediate

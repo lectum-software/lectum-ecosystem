@@ -26,6 +26,7 @@ import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { stripeInactiveBillingCopy } from "@/utils/stripe-billing";
 import { InvoiceAction } from "./components/invoice-action";
 import { ProfessionalBillingSubscriptionView } from "./subscription/logic";
 
@@ -269,6 +270,7 @@ export const ProfessionalBillingLogic = () => {
   const subscriptionQuery = billing.subscription;
   const subscription =
     subscriptionQuery.data?.subscription ?? subscriptionQuery.data?.current ?? null;
+  const inactiveCopy = stripeInactiveBillingCopy(subscription);
   const paymentMethod = subscriptionQuery.data?.payment_method ?? null;
   const paymentHistory = subscriptionQuery.data?.payment_history ?? [];
   const isPaidPlan = subscription?.plan?.slug === "profissional";
@@ -280,8 +282,8 @@ export const ProfessionalBillingLogic = () => {
   );
   const hasGatewayBilling = Boolean(
     isPaidPlan &&
-      subscription?.source === "mercadopago" &&
-      subscription?.gateway === "mercadopago" &&
+      (subscription?.source === "mercadopago" || subscription?.source === "stripe") &&
+      subscription.gateway === subscription.source &&
       subscription?.gateway_subscription_id,
   );
   const visiblePaymentMethod = isCourtesy
@@ -393,7 +395,7 @@ export const ProfessionalBillingLogic = () => {
                         ? "Ativa, sem renovação"
                         : isCourtesy
                           ? "Cortesia ativa"
-                          : undefined
+                          : inactiveCopy?.label
                     }
                     status={subscription.status}
                   />
@@ -554,9 +556,12 @@ export const ProfessionalBillingLogic = () => {
                 ) : null}
 
                 {subscription.status === "inativa" && subscription.gateway_subscription_id ? (
-                  <InlineAlert title="Aguardando confirmação" variant="info">
-                    A assinatura já foi enviada para confirmação e será ativada quando o pagamento
-                    retornar com sucesso.
+                  <InlineAlert
+                    title={inactiveCopy?.title ?? "Aguardando confirmação"}
+                    variant="info"
+                  >
+                    {inactiveCopy?.message ??
+                      "A assinatura já foi enviada para confirmação e será ativada quando o pagamento retornar com sucesso."}
                   </InlineAlert>
                 ) : null}
 

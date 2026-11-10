@@ -193,7 +193,7 @@ export const syncMercadoPagoSubscriptionRecord = async ({
     return null;
   }
 
-  const gateway = getPaymentGateway();
+  const gateway = getPaymentGateway("mercadopago");
   const gatewaySubscription =
     receivedGatewaySubscription ??
     (await gateway.getSubscription(localSubscription.gateway_subscription_id));

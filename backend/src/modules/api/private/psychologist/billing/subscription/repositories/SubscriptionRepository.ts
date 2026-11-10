@@ -6,12 +6,16 @@ import {
   cancelledProfessionalGatewaySubscriptionWhere,
   restoreFreePlanAfterProfessionalCancellation,
 } from "@/modules/billing/free-subscription";
-import { getPaymentGateway } from "@/modules/billing/payment-gateway";
 import {
   buildGatewaySummaryPaymentHistoryItem,
   buildPaymentHistoryItemsForSubscription,
   mergeGatewaySummaryPaymentHistory,
 } from "@/modules/billing/payment-history";
+import {
+  getStoredSubscriptionGateway,
+  subscriptionGatewayName,
+  withContractedPlan,
+} from "@/modules/billing/subscription-provider";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 
 import {
@@ -31,13 +35,6 @@ export {
 } from "@/modules/billing/payment-history";
 
 const MAX_PAYMENT_EVENTS_TO_SCAN = 100;
-const isMercadoPagoPaymentHistorySource = (subscription: professional_subscription | null) =>
-  Boolean(
-    subscription?.gateway_subscription_id &&
-      (subscription.source === "mercadopago" ||
-        subscription.gateway === "mercadopago" ||
-        !subscription.gateway),
-  );
 
 export class SubscriptionRepository implements ISubscriptionRepository {
   readonly profileRepository: ORM["psychologist_profile"];
@@ -80,7 +77,7 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       },
     });
 
-    if (activeProfessional) return activeProfessional;
+    if (activeProfessional) return withContractedPlan(activeProfessional);
 
     const actionableGatewayProfessional = await this.subscriptionRepository.findFirst({
       where: {
@@ -95,7 +92,7 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       },
     });
 
-    if (actionableGatewayProfessional) return actionableGatewayProfessional;
+    if (actionableGatewayProfessional) return withContractedPlan(actionableGatewayProfessional);
 
     const activeFree = await this.subscriptionRepository.findFirst({
       where: {
@@ -154,9 +151,9 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       where: {
         psychologist_id: psychologistId,
         deleted: false,
-        status: "ativa",
-        source: "mercadopago",
-        gateway: "mercadopago",
+        status: { in: ["ativa", "inadimplente", "inativa"] },
+        source: { in: ["mercadopago", "stripe"] },
+        gateway: { in: ["mercadopago", "stripe"] },
         gateway_subscription_id: {
           not: null,
         },
@@ -182,8 +179,8 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       where: {
         psychologist_id: psychologistId,
         deleted: false,
-        source: "mercadopago",
-        gateway: "mercadopago",
+        source: { in: ["mercadopago", "stripe"] },
+        gateway: { in: ["mercadopago", "stripe"] },
         gateway_subscription_id: {
           not: null,
         },
@@ -216,13 +213,17 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       const existing = await tx.professional_subscription.findUniqueOrThrow({
         where: { id: data.subscriptionId, deleted: false },
       });
+      if (
+        !subscriptionGatewayName(existing) ||
+        existing.gateway_subscription_id !== data.gatewaySubscriptionId
+      )
+        throw new Error("BILLING_SUBSCRIPTION_GATEWAY_UNAVAILABLE");
       const cancelled = await tx.professional_subscription.update({
         where: {
           id: data.subscriptionId,
         },
         data: {
           ...resolveCancellationState(existing, { status: "cancelada" }),
-          gateway: "mercadopago",
           gateway_subscription_id: data.gatewaySubscriptionId,
         },
         include: {
@@ -246,11 +247,24 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   async showPaymentMethod(
     userId: string,
     gatewayToken?: string | null,
+    subscription?: professional_subscription | null,
   ): Promise<payment_method | null> {
+    const provider = subscription ? subscriptionGatewayName(subscription) : "mercadopago";
+    if (
+      !provider ||
+      (provider === "stripe" && (!subscription?.gateway_mode || !subscription.gateway_account_id))
+    )
+      return null;
     return this.paymentMethodRepository.findFirst({
       where: {
         user_id: userId,
-        gateway: "mercadopago",
+        gateway: provider,
+        ...(provider === "stripe"
+          ? {
+              gateway_mode: subscription!.gateway_mode,
+              gateway_account_id: subscription!.gateway_account_id,
+            }
+          : {}),
         ...(gatewayToken ? { gateway_token: gatewayToken } : {}),
         deleted: false,
       },
@@ -265,22 +279,27 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   ): Promise<BillingPaymentHistoryItem[]> {
     if (!subscription) return [];
 
-    const events = await this.paymentEventRepository.findMany({
-      where: {
-        gateway: subscription.gateway || "mercadopago",
-        deleted: false,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: MAX_PAYMENT_EVENTS_TO_SCAN,
-    });
+    const provider = subscriptionGatewayName(subscription);
+    if (!provider) return [];
+    const events =
+      provider === "mercadopago"
+        ? await this.paymentEventRepository.findMany({
+            where: {
+              gateway: subscription.gateway || "mercadopago",
+              deleted: false,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: MAX_PAYMENT_EVENTS_TO_SCAN,
+          })
+        : [];
 
     const localItems = buildPaymentHistoryItemsForSubscription(events, subscription);
 
-    if (isMercadoPagoPaymentHistorySource(subscription)) {
+    if (subscription.gateway_subscription_id) {
       try {
-        const gateway = getPaymentGateway();
+        const gateway = getStoredSubscriptionGateway(subscription);
         const summary = await gateway.getSubscriptionPaymentSummary(
           subscription.gateway_subscription_id!,
         );

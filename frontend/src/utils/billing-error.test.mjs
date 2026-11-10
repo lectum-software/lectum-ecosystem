@@ -164,7 +164,7 @@ test("somente os dois submits usam toast de domínio; admin view-as continua sil
     ["card", "payment-method"],
   ]) {
     const source = readFileSync(
-      new URL(`../app/app/professional/billing/${route}/logic.tsx`, import.meta.url),
+      new URL(`../app/app/professional/billing/${route}/mercado-pago-logic.tsx`, import.meta.url),
       "utf8",
     );
     assert.ok(

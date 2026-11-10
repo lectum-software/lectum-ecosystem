@@ -719,29 +719,36 @@ model subscription_plan {
 }
 
 model professional_subscription {
-  id                       String               @id @default(cuid())
-  internal_id              Int                  @unique @default(autoincrement()) @map("internal_id")
-  deleted                  Boolean              @default(false)
-  deletedAt                DateTime?            @map("deleted_at")
-  updatedAt                DateTime             @default(now()) @updatedAt @map("updated_at")
-  createdAt                DateTime             @default(now()) @map("created_at")
-  psychologist_id          String
-  plan_id                  String
-  status                   String               @default("inativa")
-  source                   String               @default("legacy")
-  gateway                  String?
-  gateway_subscription_id  String?
-  current_period_end       DateTime?
-  billing_issue_started_at DateTime?
-  billing_grace_ends_at    DateTime?
-  billing_downgraded_at    DateTime?
-  billing_last_notice_key  String?
-  grant_reason             String?
-  grant_notes              String?
-  granted_by               String?
-  grant_started_at         DateTime?
-  psychologist             psychologist_profile @relation("professional_subscription_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
-  plan                     subscription_plan    @relation("professional_subscription_plan", fields: [plan_id], references: [id])
+  id                        String               @id @default(cuid())
+  internal_id               Int                  @unique @default(autoincrement()) @map("internal_id")
+  deleted                   Boolean              @default(false)
+  deletedAt                 DateTime?            @map("deleted_at")
+  updatedAt                 DateTime             @default(now()) @updatedAt @map("updated_at")
+  createdAt                 DateTime             @default(now()) @map("created_at")
+  psychologist_id           String
+  plan_id                   String
+  status                    String               @default("inativa")
+  source                    String               @default("legacy")
+  gateway                   String?
+  gateway_subscription_id   String?
+  gateway_mode              String?
+  gateway_account_id        String?
+  price_version_id          String?
+  contracted_amount_cents   Int?
+  contracted_currency       String?
+  contracted_interval       String?
+  contracted_interval_count Int?
+  current_period_end        DateTime?
+  billing_issue_started_at  DateTime?
+  billing_grace_ends_at     DateTime?
+  billing_downgraded_at     DateTime?
+  billing_last_notice_key   String?
+  grant_reason              String?
+  grant_notes               String?
+  granted_by                String?
+  grant_started_at          DateTime?
+  psychologist              psychologist_profile @relation("professional_subscription_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  plan                      subscription_plan    @relation("professional_subscription_plan", fields: [plan_id], references: [id])
 
   @@index([psychologist_id, status])
   @@index([plan_id])
@@ -850,18 +857,22 @@ model payment_event {
 }
 
 model billing_invoice_job {
-  id              String    @id @default(cuid())
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @default(now()) @updatedAt
-  resource_type   String
-  resource_id     String
-  event_id        String
-  attempts        Int       @default(0)
-  next_attempt_at DateTime  @default(now())
-  lease_token     String?
-  lease_until     DateTime?
-  completed_at    DateTime?
-  last_error_code String?
+  gateway              String    @default("mercadopago")
+  mode                 String?
+  account_id           String?
+  provider_resource_id String?
+  id                   String    @id @default(cuid())
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @default(now()) @updatedAt
+  resource_type        String
+  resource_id          String
+  event_id             String
+  attempts             Int       @default(0)
+  next_attempt_at      DateTime  @default(now())
+  lease_token          String?
+  lease_until          DateTime?
+  completed_at         DateTime?
+  last_error_code      String?
 
   @@unique([resource_type, resource_id])
   @@index([completed_at, next_attempt_at, lease_until])
@@ -869,6 +880,7 @@ model billing_invoice_job {
 }
 
 model billing_invoice {
+  account_id       String?
   id               String    @id @default(cuid())
   created_at       DateTime  @default(now())
   updated_at       DateTime  @default(now()) @updatedAt
@@ -899,19 +911,21 @@ model billing_invoice {
 }
 
 model payment_method {
-  id            String    @id @default(cuid())
-  deleted       Boolean   @default(false)
-  deletedAt     DateTime? @map("deleted_at")
-  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  user_id       String
-  gateway       String
-  gateway_token String
-  brand         String?
-  last4         String?
-  exp_month     Int?
-  exp_year      Int?
-  user          user      @relation("payment_method_user", fields: [user_id], references: [id], onDelete: Cascade)
+  gateway_mode       String?
+  gateway_account_id String?
+  id                 String    @id @default(cuid())
+  deleted            Boolean   @default(false)
+  deletedAt          DateTime? @map("deleted_at")
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  user_id            String
+  gateway            String
+  gateway_token      String
+  brand              String?
+  last4              String?
+  exp_month          Int?
+  exp_year           Int?
+  user               user      @relation("payment_method_user", fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
   @@index([user_id, gateway])
@@ -1769,4 +1783,200 @@ model legal_acceptance {
   @@unique([user_id, document_id])
   @@index([document_id, accepted_at])
   @@map("legal_acceptances")
+}
+
+// Immutable catalog versions; business identity/entitlement remains on subscription_plan.
+model billing_price_version {
+  id                  String   @id @default(cuid())
+  plan_id             String
+  gateway             String
+  mode                String
+  account_id          String
+  external_product_id String
+  external_price_id   String
+  amount_cents        Int
+  currency            String
+  interval            String
+  interval_count      Int      @default(1)
+  created_at          DateTime @default(now())
+
+  @@unique([gateway, mode, account_id, external_price_id])
+  @@index([plan_id, gateway, mode])
+  @@map("billing_price_versions")
+}
+
+// Disabling checkout never disables an existing paid entitlement.
+model billing_offer {
+  id               String   @id @default(cuid())
+  plan_id          String
+  gateway          String
+  mode             String
+  account_id       String
+  price_version_id String
+  checkout_enabled Boolean  @default(false)
+  revision         Int      @default(1)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+
+  @@unique([plan_id, gateway, mode])
+  @@index([price_version_id])
+  @@map("billing_offers")
+}
+
+model billing_customer {
+  id                   String    @id @default(cuid())
+  user_id              String
+  gateway              String
+  mode                 String
+  account_id           String
+  external_customer_id String?
+  state                String    @default("reserved")
+  lease_token          String?
+  lease_until          DateTime?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @default(now()) @updatedAt
+
+  @@unique([user_id, gateway, mode, account_id])
+  @@unique([gateway, mode, account_id, external_customer_id])
+  @@map("billing_customers")
+  request_fingerprint String?
+
+}
+
+// No PAN, token, client secret or provider payload is persisted here.
+model billing_operation {
+  id                       String    @id @default(cuid())
+  user_id                  String
+  psychologist_id          String
+  subscription_id          String?
+  customer_id              String?
+  price_version_id         String?
+  gateway                  String
+  mode                     String
+  account_id               String
+  kind                     String
+  intent                   String?
+  request_key              String
+  state                    String    @default("reserved")
+  quote_revision           String?
+  scheduled_start_at       DateTime?
+  provider_subscription_id String?
+  provider_intent_id       String?
+  intent_kind              String?
+  lease_token              String?
+  lease_until              DateTime?
+  attempts                 Int       @default(0)
+  next_attempt_at          DateTime  @default(now())
+  last_error_code          String?
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @default(now()) @updatedAt
+  completed_at             DateTime?
+
+  @@unique([user_id, gateway, mode, account_id, request_key])
+  @@index([user_id, gateway, mode, state])
+  @@index([subscription_id])
+  @@index([provider_subscription_id, gateway, mode, account_id])
+  @@index([next_attempt_at, lease_until])
+  @@map("billing_operations")
+  request_fingerprint String?
+
+}
+
+// Signed event receipt and resumable processing are deliberately separate from payment_event legacy.
+model billing_gateway_event {
+  id                       String    @id @default(cuid())
+  gateway                  String
+  mode                     String
+  account_id               String
+  external_id              String
+  type                     String
+  resource_id              String
+  gateway_created_at       DateTime
+  provider_subscription_id String?
+  api_version              String?
+  received_at              DateTime  @default(now())
+  processed_at             DateTime?
+  state                    String    @default("pending")
+  attempts                 Int       @default(0)
+  next_attempt_at          DateTime  @default(now())
+  lease_token              String?
+  lease_until              DateTime?
+  last_error_code          String?
+
+  @@unique([gateway, mode, account_id, external_id])
+  @@index([state, next_attempt_at, lease_until])
+  @@map("billing_gateway_events")
+}
+
+// Independent financial facts: never a fiscal document, card secret or provider payload.
+model billing_financial_receipt {
+  id                       String   @id @default(cuid())
+  gateway                  String
+  mode                     String
+  account_id               String
+  subscription_id          String
+  psychologist_id          String
+  provider_subscription_id String
+  invoice_id               String
+  invoice_payment_id       String
+  payment_intent_id        String
+  charge_id                String
+  price_id                 String
+  price_version_id         String?
+  currency                 String
+  amount_paid_cents        Int
+  paid_at                  DateTime
+  invoice_paid_at          DateTime
+  period_start             DateTime
+  period_end               DateTime
+  immutable_hash           String
+  current_state            String
+  refunded_cents           Int      @default(0)
+  dispute_status           String   @default("none")
+  observed_at              DateTime
+  created_at               DateTime @default(now())
+  updated_at               DateTime @default(now()) @updatedAt
+
+  @@unique([gateway, mode, account_id, invoice_id, invoice_payment_id], map: "financial_receipt_invoice_payment_key")
+  @@unique([gateway, mode, account_id, invoice_payment_id], map: "financial_receipt_payment_scope_key")
+  @@index([gateway, mode, account_id, subscription_id, paid_at], map: "financial_receipt_subscription_paid_idx")
+  @@index([gateway, mode, account_id, charge_id], map: "financial_receipt_charge_idx")
+  @@map("billing_financial_receipts")
+}
+
+// Cursor is discovery only. Completeness requires the entire verified scan at the same revision.
+model billing_financial_reconciliation {
+  id                       String    @id @default(cuid())
+  gateway                  String
+  mode                     String
+  account_id               String
+  subscription_id          String
+  psychologist_id          String
+  provider_subscription_id String
+  state                    String    @default("pending")
+  requested_revision       Int       @default(1)
+  processed_revision       Int       @default(0)
+  cursor                   String?
+  scan_started_at          DateTime?
+  covered_from             DateTime?
+  covered_through          DateTime?
+  receipts_complete        Boolean   @default(false)
+  periods_complete         Boolean   @default(false)
+  adjustments_complete     Boolean   @default(false)
+  invoice_count            Int       @default(0)
+  receipt_count            Int       @default(0)
+  excluded_count           Int       @default(0)
+  last_event_id            String?
+  attempts                 Int       @default(0)
+  lease_token              String?
+  lease_until              DateTime?
+  next_attempt_at          DateTime  @default(now())
+  last_error_code          String?
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @default(now()) @updatedAt
+
+  @@unique([gateway, mode, account_id, subscription_id], map: "financial_reconciliation_subscription_key")
+  @@index([state, next_attempt_at, lease_until], map: "financial_reconciliation_due_idx")
+  @@index([gateway, mode, account_id, provider_subscription_id], map: "financial_reconciliation_provider_idx")
+  @@map("billing_financial_reconciliations")
 }

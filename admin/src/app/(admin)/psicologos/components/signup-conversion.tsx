@@ -267,7 +267,10 @@ export const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologi
                 },
                 {
                   label: "Assinaram",
-                  value: numberFormatter.format(conversion.converted_paid_count),
+                  value:
+                    conversion.available === false
+                      ? "Indisponível"
+                      : numberFormatter.format(conversion.converted_paid_count),
                 },
                 {
                   label: "Taxa paga",
@@ -297,6 +300,9 @@ export const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologi
                 </div>
               ))}
             </div>
+            {conversion.available === false ? (
+              <p className="mt-4 text-sm font-bold text-muted">{conversion.unavailable_reason}</p>
+            ) : null}
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               <div className="rounded-2xl border border-border/70 p-4">
                 <h3 className="text-sm font-black text-foreground">Distribuição por prazo</h3>
@@ -324,8 +330,10 @@ export const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologi
                         <div>
                           <p className="text-sm font-black text-foreground">{item.label}</p>
                           <p className="text-xs font-bold text-muted">
-                            {numberFormatter.format(item.converted_paid_count)} de{" "}
-                            {numberFormatter.format(item.registered_count)} assinaram
+                            {item.available === false
+                              ? "Indisponível"
+                              : numberFormatter.format(item.converted_paid_count)}{" "}
+                            de {numberFormatter.format(item.registered_count)} assinaram
                           </p>
                         </div>
                         <span className="text-sm font-black text-primary">

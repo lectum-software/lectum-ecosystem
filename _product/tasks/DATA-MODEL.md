@@ -1110,6 +1110,60 @@ O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re
 
 ---
 
+## Complemento Stripe em implementacao (TASK-320, 2026-11-09)
+
+Esta expansao e local/nao publicada. O legado Mercado Pago acima continua valido
+para seus contratos; nao ha migracao automatica de cartoes ou backfill de valores.
+Ver [TASK-320](TASK-320-stripe-embedded-checkout.md) e ADR-0684.
+
+- `professional_subscription`: source/gateway `stripe`, `gateway_mode`,
+  `gateway_account_id`, `price_version_id` e snapshots opcionais
+  `contracted_amount_cents/currency/interval/interval_count`. O contrato salva a
+  oferta aceita, nao consulta o preco atual para reinterpretar sua cobranca.
+- `billing_price_version`: versao imutavel por plano/gateway/conta/modo/Price;
+  produto, valor em centavos, moeda e recorrencia verificados no provider.
+- `billing_offer`: oferta vigente/revisao por plano/gateway/modo, com conta e
+  price_version referidos. `checkout_enabled=false` por padrao, independente de
+  `subscription_plan.active`, sem modificar beneficios ou contratos existentes.
+- `billing_customer`: vinculo unico usuario/gateway/modo/conta, referencia remota
+  opcional, estado/lease e fingerprint do pedido. Nenhum PAN/CVV ou client secret.
+- `billing_operation`: pedido duravel por usuario/gateway/modo/conta/request_key;
+  contrato/cliente/preco, consentimento/revisao/data de inicio, referencias remotas
+  pinadas, lease/tentativas/backoff e fingerprint opcional. Indices parciais impedem
+  checkouts/cartoes abertos equivalentes. Estados terminais nao sao rebaixados.
+- `billing_gateway_event`: inbox minima Stripe por gateway/modo/conta/evento, tipo,
+  recurso/assinatura/API version/data, lease/estado/tentativas. Sem payload bruto.
+- `payment_method`: conta/modo opcionais; para Stripe, token e referencia do contrato
+  e os demais campos sao somente exibicao. Dados reais do cartao ficam na Stripe.
+- `billing_invoice_job`: gateway com default MP, modo/conta/recurso remoto opcionais;
+  jobs Stripe usam invoice canonica e chave de dedupe isolada por conta/modo.
+  `billing_invoice.account_id` e opcional; referencias MP historicas nao mudam.
+- `billing_financial_receipt`: fato financeiro separado da nota fiscal, por
+  gateway/conta/modo/invoice/InvoicePayment, com referencias locais/remotas, valor,
+  moeda, paid_at e invoice_paid_at comprovados, periodo e Price historicos e hash
+  imutavel. Refund/dispute sao estado atual observado, nao movimentos datados
+  artificialmente. Sem payload, PII, cartao ou segredo. Referencias independentes
+  evitam cascade que apagaria fatos financeiros ao excluir outra entidade.
+- `billing_financial_reconciliation`: trabalho/cobertura por contrato/conta/modo,
+  cursor, lease, revisoes solicitada/processada e flags distintas de cobertura de
+  recebimentos/periodos/ajustes. Pagina parcial nao e cobertura completa; ajustes
+  historicos continuam nao cobertos nesta fundacao. Nao habilita metricas/SendNF
+  ou cobrancas automaticamente.
+
+Migrations `20261109204337_stripe_billing_foundation`,
+`20261109213330_stripe_request_fingerprint` e
+`20261110003545_stripe_financial_receipts` aplicadas somente em PostgreSQL local
+isolado via `db:migrate`. Preflight live permanece estrito; sandbox nao exige
+capabilities live para simular pagamentos. Setup/trial/cortesia nunca sao
+recebimento pago. Usuario decidiu somente credito: guard exige funding credit
+antes de atribuicao local; Radar sandbox bloqueou debito/pre-pago pre-cobranca
+em API real. Setup do provider pode autoatribuir cartao apesar da recusa local;
+operacao permanece em revisao, sem nova chave. Setup/cortesia, renovacao e E2E
+continuam gates antes de liberar vendas. Nenhum novo schema autoriza emissao
+SendNF automaticamente.
+
+---
+
 ## Feedback privado (TASK-273)
 
 user_feedbacks armazena relato autenticado, autor, chave de idempotencia, fingerprint,
@@ -1362,3 +1416,14 @@ PostDetailDTO.has_psychologist_video_reply?: boolean deriva de respostas ativas 
 - Exclusao remove texto/referencias de midia atomicamente; ancestrais necessarios para respostas de terceiros recebem marcador neutro. Limpeza externa apos commit, idempotente e restrita ao namespace validado; sem backfill.
 - Assinatura Mercado Pago cancelada conserva `current_period_end`; entitlement somente ate esse instante. Cancelamentos de planos pendentes/inadimplentes nao criam periodo pago.
 - Cadastro novo aceita IDs de documentos de forma aditiva e grava `legal_acceptance` na transacao de criacao. Clientes antigos nao geram aceite presumido. Data exibida corresponde ao documento exato, nunca a criacao da conta.
+
+
+## 2026-11-10 - Datas independentes de recebimentos Stripe (TASK-320 / ADR-0684)
+
+`billing_financial_receipt.paid_at` registra a transicao paga da InvoicePayment;
+`invoice_paid_at` registra a transicao paga da invoice. Sao fatos distintos, ambos
+preservados exatamente e cobertos pelo hash imutavel. Nao exigir ordem relativa:
+ensaio real de retry retornou alocacao posterior a invoice paga. Cada timestamp
+continua obrigatorio, valido e comparado individualmente ao cutoff/now. Periodo
+continua com fim maior que inicio. Nova migration troca apenas o CHECK de periodo,
+sem reescrever registros nem editar a migration aplicada da fundacao financeira.

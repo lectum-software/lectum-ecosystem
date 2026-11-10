@@ -14,7 +14,10 @@ export const hasSubscriptionBenefits = (
   const end = subscription.current_period_end;
   if (subscription.status === "ativa") return !end || Date.parse(end) > now;
   if (subscription.status === "cancelada") {
-    return subscription.source === "mercadopago" && Boolean(end && Date.parse(end) > now);
+    return (
+      (subscription.source === "mercadopago" || subscription.source === "stripe") &&
+      Boolean(end && Date.parse(end) > now)
+    );
   }
   return (
     subscription.status === "inadimplente" &&

@@ -1,8 +1,12 @@
 import { sanitizePaymentGatewayError } from "./error-log";
 import { MercadoPagoAdapter } from "./MercadoPagoAdapter";
 import type { PaymentGateway } from "./PaymentGateway";
+import { StripeAdapter } from "./StripeAdapter";
+import type { PaymentGatewayName } from "./stripe-config";
+import { StripeGatewayError } from "./stripe-error";
 
 let gateway: PaymentGateway | null = null;
+let stripeGateway: StripeAdapter | null = null;
 
 const PAYMENT_GATEWAY_CONFIGURATION_ERROR_CODES = [
   "MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED",
@@ -15,7 +19,14 @@ const PAYMENT_GATEWAY_CONFIGURATION_ERROR_CODES = [
   "MERCADO_PAGO_PREAPPROVAL_PLAN_INCOMPATIBLE",
 ] as const;
 
-export const getPaymentGateway = (): PaymentGateway => {
+export const getStripeGateway = (): StripeAdapter => {
+  stripeGateway ??= new StripeAdapter();
+  return stripeGateway;
+};
+
+export const getPaymentGateway = (provider: PaymentGatewayName = "mercadopago"): PaymentGateway => {
+  if (provider === "stripe") return getStripeGateway();
+  if (provider !== "mercadopago") throw new StripeGatewayError("configuration_invalid");
   if (!gateway) {
     gateway = new MercadoPagoAdapter();
   }
@@ -24,6 +35,11 @@ export const getPaymentGateway = (): PaymentGateway => {
 };
 
 export const isPaymentGatewayConfigurationError = (err: unknown) => {
+  if (
+    err instanceof StripeGatewayError &&
+    ["configuration_invalid", "account_mismatch", "account_not_ready"].includes(err.kind)
+  )
+    return true;
   const message = err instanceof Error ? err.message : "";
 
   if (PAYMENT_GATEWAY_CONFIGURATION_ERROR_CODES.some((code) => message.includes(code))) {
@@ -52,3 +68,6 @@ export type {
   VerifyWebhookSignatureInput,
 } from "./PaymentGateway";
 export { resolvePaymentGatewayPublicError } from "./public-error";
+export type { PaymentGatewayName } from "./stripe-config";
+export { getNewSubscriptionGatewayName } from "./stripe-config";
+export type * from "./stripe-types";

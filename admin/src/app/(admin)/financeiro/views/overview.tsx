@@ -90,7 +90,11 @@ export const FinanceOverview = ({
             dashboard={dashboard}
             onToggleMetric={onToggleMetric}
           />
-          <FinanceChart points={dashboard.series.points} visibleMetricKeys={activeMetricKeys} />
+          <FinanceChart
+            unavailableMetricKeys={dashboard.series.unavailable_metrics}
+            points={dashboard.series.points}
+            visibleMetricKeys={activeMetricKeys}
+          />
         </>
       ) : null}
     </CardShell>

@@ -55,3 +55,16 @@ test("authorization without an available PDF retains a pending availability mess
   assert.match(html, /Nota fiscal aguardando disponibilização/);
   assert.doesNotMatch(html, /<button|Nota fiscal autorizada/);
 });
+
+test("simulated and unverified documents never offer a fiscal PDF, even with stale download flags", () => {
+  for (const mode of ["test", "live"]) {
+    for (const downloadable of [true, false]) {
+      const simulated = render({ status: "simulated", mode, downloadable });
+      assert.match(simulated, /Documento simulado — não emitido pelo governo/);
+      assert.doesNotMatch(simulated, /<button|Baixar nota fiscal/);
+      const unverified = render({ status: "authorization_unverified", mode, downloadable });
+      assert.match(unverified, /Autorização fiscal ainda não verificada/);
+      assert.doesNotMatch(unverified, /<button|Baixar nota fiscal/);
+    }
+  }
+});

@@ -3,6 +3,7 @@ import type { professional_subscription, psychologist_profile } from "@/interfac
 import { resolveCancellationState } from "@/modules/billing/cancellation-period";
 import type { BillingDunningUpdate } from "@/modules/billing/dunning";
 import { restoreFreePlanAfterProfessionalCancellation } from "@/modules/billing/free-subscription";
+import { subscriptionGatewayName } from "@/modules/billing/subscription-provider";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import type { ISyncRepository } from "./interfaces/ISyncRepository";
 
@@ -35,7 +36,7 @@ export class SyncRepository implements ISyncRepository {
     return this.subscriptionRepository.findFirst({
       where: {
         psychologist_id: psychologistId,
-        gateway: "mercadopago",
+        gateway: { in: ["mercadopago", "stripe"] },
         gateway_subscription_id: {
           not: null,
         },
@@ -62,6 +63,11 @@ export class SyncRepository implements ISyncRepository {
         where: { id: data.subscriptionId },
       });
       if (!current || current.deleted) return null;
+      if (
+        subscriptionGatewayName(current) !== "mercadopago" ||
+        current.gateway_subscription_id !== data.gatewaySubscriptionId
+      )
+        throw new Error("BILLING_SUBSCRIPTION_GATEWAY_UNAVAILABLE");
       const next = resolveCancellationState(current, data);
       const updated = await tx.professional_subscription.update({
         where: {

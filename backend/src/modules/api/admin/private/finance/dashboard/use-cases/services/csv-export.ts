@@ -40,7 +40,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
         "",
         card.available ? card.value : "indisponivel",
         financeSourceLabel(card.source),
-        `unit=${card.unit};previous=${card.previous_value};change_percent=${card.change_percent ?? "n/a"};rate_percent=${card.rate_percent ?? "n/a"};reason=${card.unavailable_reason ?? ""}`,
+        `unit=${card.unit};previous=${card.available ? card.previous_value : "indisponivel"};change_percent=${card.change_percent ?? "n/a"};rate_percent=${card.rate_percent ?? "n/a"};reason=${card.unavailable_reason ?? ""}`,
       ]),
     );
   }
@@ -51,7 +51,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
       "mrr",
       "Receita recorrente mensal (MRR)",
       "",
-      dashboard.mrr.value_cents,
+      dashboard.mrr.available === false ? "indisponivel" : dashboard.mrr.value_cents,
       financeSourceLabel(dashboard.mrr.source),
       dashboard.mrr.description,
     ]),
@@ -95,18 +95,21 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
       "cancellations",
     ]),
   );
+  const unavailable = new Set(dashboard.series.unavailable_metrics ?? []);
   for (const point of dashboard.series.points) {
     rows.push(
       csvRow([
         "serie_agregada",
         point.start_date,
         point.end_date,
-        point.revenue_cents,
-        point.confirmed_payments,
-        point.new_subscriptions,
-        point.new_subscriptions_revenue_cents,
-        point.active_subscriptions,
-        point.cancellations,
+        unavailable.has("revenue_total") ? "indisponivel" : point.revenue_cents,
+        unavailable.has("revenue_total") ? "indisponivel" : point.confirmed_payments,
+        unavailable.has("new_subscriptions") ? "indisponivel" : point.new_subscriptions,
+        unavailable.has("new_subscriptions_revenue")
+          ? "indisponivel"
+          : point.new_subscriptions_revenue_cents,
+        unavailable.has("active_subscriptions") ? "indisponivel" : point.active_subscriptions,
+        unavailable.has("cancellations") ? "indisponivel" : point.cancellations,
       ]),
     );
   }
@@ -170,7 +173,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
         item.psychologist.email,
         item.plan.name,
         item.plan.interval,
-        item.plan.price_cents,
+        item.plan.price_cents ?? "indisponivel",
         item.status_label,
         subscriptionOriginLabel(item),
       ]),

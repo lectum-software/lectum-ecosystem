@@ -1,5 +1,16 @@
+import { mapPaymentMethod } from "./payment-method";
+
+export { mapPaymentMethod } from "./payment-method";
+
 import { paymentStatus } from "@/modules/billing/payment-event-values";
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
+import {
+  type FinancialContract,
+  financialContractValue,
+  isStripeFinancialContract,
+  monthlyContractValue,
+  sumFinancialValues,
+} from "@/modules/billing/subscription-financial-values";
 import { startOfDate } from "@/utils/date-range";
 import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
@@ -8,7 +19,6 @@ import type {
   AdminFinancePaymentHistory,
   AdminFinancePaymentHistoryItem,
   AdminFinancePaymentHistoryStatus,
-  AdminFinancePaymentMethod,
   AdminFinanceSubscriptionItem,
 } from "../../DTOs/IAdminFinanceDashboardDTO";
 import type { AdminFinanceDashboardRepository } from "../../repositories/AdminFinanceDashboardRepository";
@@ -56,17 +66,13 @@ export type SubscriptionReferenceRecord = {
   id: string;
 };
 
-export const monthlyPriceCents = (subscription: Pick<SubscriptionRecord, "plan">) => {
-  const interval = subscription.plan.interval.toLowerCase();
-  if (interval.includes("year") || interval.includes("ano") || interval.includes("annual")) {
-    return Math.round(subscription.plan.price_cents / 12);
-  }
-
-  return subscription.plan.price_cents;
-};
+export const monthlyPriceCents = (subscription: FinancialContract) =>
+  monthlyContractValue(subscription);
 
 export const sumSubscriptionPlanRevenueCents = (subscriptions: NewSubscriptionValueRecord[]) =>
-  subscriptions.reduce((sum, subscription) => sum + subscription.plan.price_cents, 0);
+  sumFinancialValues(
+    subscriptions.map((subscription) => financialContractValue(subscription).amountCents),
+  );
 
 export const calculateChurnRatePercent = (cancellations: number, openingBase: number) => {
   if (openingBase === 0) return null;
@@ -85,31 +91,6 @@ export const formatStatusLabel = (status: string) => {
   return labels[status] ?? status;
 };
 
-export const mapPaymentMethod = (
-  subscription: FinanceSubscriptionRecord,
-): AdminFinancePaymentMethod | null => {
-  const methods = subscription.psychologist.user.payment_methods;
-  const matchedMethod =
-    methods.find(
-      (method) =>
-        Boolean(subscription.gateway_subscription_id) &&
-        method.gateway_token === subscription.gateway_subscription_id,
-    ) ?? null;
-  const method = matchedMethod ?? methods[0] ?? null;
-
-  if (!method) return null;
-
-  return {
-    brand: method.brand ?? null,
-    exp_month: method.exp_month ?? null,
-    exp_year: method.exp_year ?? null,
-    gateway: method.gateway,
-    last4: method.last4 ?? null,
-    matches_subscription: Boolean(matchedMethod),
-    saved_at: method.updatedAt?.toISOString() ?? null,
-  };
-};
-
 export const subscriptionReferenceValues = (subscription: SubscriptionReferenceRecord) =>
   [subscription.id, subscription.gateway_subscription_id].filter((reference): reference is string =>
     Boolean(reference && reference.length > 3),
@@ -119,8 +100,10 @@ export const findSubscriptionForPayment = (
   event: PaymentEventRecord,
   subscriptions: PaymentReferenceSubscriptionRecord[],
 ) => {
-  const matches = subscriptions.filter((subscription) =>
-    payloadContainsAnyReference(event.payload, subscriptionReferenceValues(subscription)),
+  const matches = subscriptions.filter(
+    (subscription) =>
+      !isStripeFinancialContract(subscription) &&
+      payloadContainsAnyReference(event.payload, subscriptionReferenceValues(subscription)),
   );
 
   return matches.length === 1 ? matches[0] : null;
@@ -224,7 +207,8 @@ export const mapGatewaySummaryPaymentHistoryItem = (
   subscription: FinanceSubscriptionRecord,
   summary?: GatewaySubscriptionPaymentSummary | null,
 ): AdminFinancePaymentHistoryItem | null => {
-  if (!summary || summary.charged_quantity <= 0) return null;
+  if (isStripeFinancialContract(subscription) || !summary || summary.charged_quantity <= 0)
+    return null;
 
   const occurredAt = toDateOrNull(summary.last_charged_at);
   if (!occurredAt) return null;
@@ -276,6 +260,7 @@ export const paymentHistoryForSubscription = (
   paymentEvents?: PaymentEventRecord[],
   gatewaySummary?: GatewaySubscriptionPaymentSummary | null,
 ) => {
+  if (isStripeFinancialContract(subscription)) return [];
   const gatewayItem = mapGatewaySummaryPaymentHistoryItem(subscription, gatewaySummary);
 
   if (!paymentEvents || paymentEvents.length === 0) {
@@ -505,7 +490,9 @@ export const mapSubscription = (
   paymentEvents?: PaymentEventRecord[],
   gatewaySummaries?: GatewaySummaryBySubscriptionId,
 ): AdminFinanceSubscriptionItem => {
-  const latestPayment = findLatestConfirmedPaymentForSubscription(subscription, paymentEvents);
+  const latestPayment = isStripeFinancialContract(subscription)
+    ? null
+    : findLatestConfirmedPaymentForSubscription(subscription, paymentEvents);
   const gatewaySummary = gatewaySummaries?.get(subscription.id) ?? null;
   const latestGatewayPayment = mapGatewaySummaryPaymentHistoryItem(subscription, gatewaySummary);
   const latestLocalPaymentAt = latestPayment?.createdAt ?? null;
@@ -528,13 +515,19 @@ export const mapSubscription = (
     last_charge_at: latestPaymentAt?.toISOString() ?? null,
     next_charge_at: subscription.current_period_end?.toISOString() ?? null,
     payment_health: paymentInsights.health,
-    payment_history: paymentInsights.history,
+    payment_history: isStripeFinancialContract(subscription)
+      ? {
+          ...paymentInsights.history,
+          available: false,
+          reason: "Histórico financeiro Stripe ainda não conciliado neste painel.",
+        }
+      : paymentInsights.history,
     payment_method: mapPaymentMethod(subscription),
     plan: {
       id: subscription.plan.id,
-      interval: subscription.plan.interval,
+      interval: financialContractValue(subscription).interval,
       name: subscription.plan.name,
-      price_cents: subscription.plan.price_cents,
+      price_cents: financialContractValue(subscription).amountCents,
       slug: subscription.plan.slug,
     },
     psychologist: {

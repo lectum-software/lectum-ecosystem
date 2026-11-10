@@ -90,6 +90,50 @@ describe("sanitizeSensitiveData", () => {
     );
   });
 
+  it("redige valores Stripe e SendNF em mensagens, listas e URLs sem depender do nome do campo", () => {
+    const secrets = [
+      "sk_test_exampleonly",
+      "sk_live_exampleonly",
+      "rk_test_exampleonly",
+      "rk_live_exampleonly",
+      "whsec_exampleonly",
+      "pi_exampleonly_secret_exampleonly",
+      "seti_exampleonly_secret_exampleonly",
+      "nt_test_exampleonly",
+      "nt_live_exampleonly",
+    ];
+    for (const secret of secrets) {
+      assert.deepEqual(
+        sanitizeSensitiveData(
+          {
+            description: `context ${secret} context`,
+            items: [secret],
+            url: `https://example.invalid/return?value=${secret}`,
+            nested: { diagnostic: secret },
+          },
+          { removeAuthTokens: true },
+        ),
+        {
+          description: "[REDACTED]",
+          items: ["[REDACTED]"],
+          url: "[REDACTED]",
+          nested: { diagnostic: "[REDACTED]" },
+        },
+      );
+    }
+  });
+
+  it("preserva chave publicavel e referencias sem segredo", () => {
+    const data = {
+      publishable_key: "pk_test_exampleonly",
+      nested: { publishable_key: "pk_live_exampleonly" },
+      payment_id: "pi_exampleonly",
+      setup_id: "seti_exampleonly",
+      state: "setup_intent.succeeded",
+    };
+    assert.deepEqual(sanitizeSensitiveData(data, { removeAuthTokens: true }), data);
+  });
+
   it("preserva URL de intencao curta quando a resposta autoriza tokens", () => {
     const url =
       "https://homolog-api.lectum.com.br/api/public/google/login/device_identifier_123456?intent=delete_account&delete_token=eyJhbGciOiJIUzI1NiJ9.payload.signature";
@@ -118,6 +162,13 @@ describe("sanitizeSensitiveData", () => {
         { allowSignedMediaUrls: true, removeAuthTokens: true },
       ),
       { arbitrary_url: "[REDACTED]", hls_url: "[REDACTED]" },
+    );
+    assert.deepEqual(
+      sanitizeSensitiveData(
+        { hls_url: `${hlsUrl}?value=whsec_exampleonly` },
+        { allowSignedMediaUrls: true, removeAuthTokens: true },
+      ),
+      { hls_url: "[REDACTED]" },
     );
   });
 

@@ -1,3 +1,8 @@
+import {
+  type FinancialContract,
+  financialContractValue,
+  isStripeFinancialContract,
+} from "@/modules/billing/subscription-financial-values";
 export const MS_PER_DAY = 86_400_000;
 
 export const FREE_PLAN_SLUG = "gratuito";
@@ -8,7 +13,7 @@ export const PAID_STATUSES = new Set(["ativa", "cancelada"]);
 
 export const DURATION_RELIABILITY_THRESHOLD = 0.5;
 
-export type AdminPsychologistAnalyticsSubscription = {
+export type AdminPsychologistAnalyticsSubscription = Omit<FinancialContract, "plan"> & {
   createdAt: Date;
   current_period_end?: Date | null;
   gateway?: string | null;
@@ -16,7 +21,7 @@ export type AdminPsychologistAnalyticsSubscription = {
   has_gateway_subscription_id?: boolean;
   grant_started_at?: Date | null;
   plan: {
-    price_cents: number;
+    price_cents: number | null;
     slug: string;
   };
   source: string | null;
@@ -202,6 +207,18 @@ export const signupMethodLabel = (method: "email_password" | "google" | "unknown
 export const isPaidProfessionalSubscription = (
   subscription: AdminPsychologistAnalyticsSubscription,
 ) => {
+  if (isStripeFinancialContract(subscription)) {
+    return (
+      subscription.gateway === "stripe" &&
+      subscription.source === "stripe" &&
+      financialContractValue(subscription).amountCents !== null &&
+      subscription.plan.slug !== FREE_PLAN_SLUG &&
+      PAID_STATUSES.has(subscription.status) &&
+      subscription.current_period_end instanceof Date &&
+      Number.isFinite(subscription.current_period_end.getTime()) &&
+      subscription.current_period_end > subscription.createdAt
+    );
+  }
   const source = (subscription.source ?? "").toLowerCase();
   const gateway = (subscription.gateway ?? "").toLowerCase();
   const hasMercadoPagoOrigin =
@@ -213,7 +230,7 @@ export const isPaidProfessionalSubscription = (
   return (
     hasMercadoPagoOrigin &&
     subscription.plan.slug !== FREE_PLAN_SLUG &&
-    subscription.plan.price_cents > 0 &&
+    (subscription.plan.price_cents ?? 0) > 0 &&
     PAID_STATUSES.has(subscription.status)
   );
 };
@@ -222,7 +239,11 @@ export const firstPaidProfessionalSubscription = <T extends AdminPsychologistAna
   subscriptions: T[],
 ): T | null => {
   const paid = subscriptions
-    .filter(isPaidProfessionalSubscription)
+    // A reservation timestamp is not the first Stripe payment timestamp.
+    .filter(
+      (subscription) =>
+        !isStripeFinancialContract(subscription) && isPaidProfessionalSubscription(subscription),
+    )
     .toSorted((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
 
   return paid[0] ?? null;
@@ -244,6 +265,15 @@ export const timeToFirstPaidSubscription = (params: {
     };
   }
 
+  if (subscriptions.some(isStripeFinancialContract)) {
+    return {
+      days: null,
+      first_paid_subscription_at: null,
+      label: "Data do primeiro pagamento indisponível",
+      registered_at: registeredAt,
+      status: "unavailable" as const,
+    };
+  }
   const firstPaid = firstPaidProfessionalSubscription(subscriptions);
   if (firstPaid) {
     const days = daysBetweenDates(registeredAt, firstPaid.createdAt);
@@ -319,6 +349,10 @@ export const conversionBuckets = [
 ] as const;
 
 export const summarizeConversionCohort = (profiles: AdminPsychologistAnalyticsProfile[]) => {
+  const unknownCount = profiles.filter((profile) =>
+    profile.subscriptions.some(isStripeFinancialContract),
+  ).length;
+  const available = unknownCount === 0;
   const converted = profiles.flatMap((profile) => {
     const firstPaid = firstPaidProfessionalSubscription(profile.subscriptions);
     if (!firstPaid) return [];
@@ -339,25 +373,32 @@ export const summarizeConversionCohort = (profiles: AdminPsychologistAnalyticsPr
   const convertedCount = converted.length;
 
   return {
-    average_days: average(converted),
-    buckets: conversionBuckets.map((bucket) => ({
-      count: bucketCounts.get(bucket.id) ?? 0,
-      id: bucket.id,
-      label: bucket.label,
-      percentage:
-        registeredCount > 0
-          ? roundOneDecimal(((bucketCounts.get(bucket.id) ?? 0) / registeredCount) * 100)
-          : 0,
-    })),
+    available,
+    unknown_count: unknownCount,
+    average_days: available ? average(converted) : null,
+    buckets: available
+      ? conversionBuckets.map((bucket) => ({
+          count: bucketCounts.get(bucket.id) ?? 0,
+          id: bucket.id,
+          label: bucket.label,
+          percentage:
+            registeredCount > 0
+              ? roundOneDecimal(((bucketCounts.get(bucket.id) ?? 0) / registeredCount) * 100)
+              : 0,
+        }))
+      : [],
     conversion_rate:
-      registeredCount > 0 ? roundOneDecimal((convertedCount / registeredCount) * 100) : null,
+      available && registeredCount > 0
+        ? roundOneDecimal((convertedCount / registeredCount) * 100)
+        : null,
     converted_paid_count: convertedCount,
-    median_days: percentile(converted, 50),
-    p75_days: percentile(converted, 75),
-    p90_days: percentile(converted, 90),
+    median_days: available ? percentile(converted, 50) : null,
+    p75_days: available ? percentile(converted, 75) : null,
+    p90_days: available ? percentile(converted, 90) : null,
     registered_count: registeredCount,
-    unavailable_reason:
-      registeredCount === 0
+    unavailable_reason: !available
+      ? "Há contratos Stripe sem data do primeiro pagamento persistida; conversão histórica indisponível."
+      : registeredCount === 0
         ? "Sem psicólogos cadastrados na coorte selecionada."
         : convertedCount === 0
           ? "Nenhum psicólogo do grupo realizou uma assinatura paga."

@@ -96,7 +96,10 @@ export const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard 
         <h2 className="text-xl font-black text-foreground">Últimas cobranças realizadas</h2>
         <p className="mt-1 text-sm text-muted">
           Mostrando {numberFormatter.format(dashboard.latest_charges.items.length)} de{" "}
-          {numberFormatter.format(dashboard.latest_charges.total)} cobranças confirmadas no período.
+          {numberFormatter.format(dashboard.latest_charges.total)}{" "}
+          {dashboard.latest_charges.coverage_complete === false
+            ? "evidências disponíveis; recebimentos Stripe ainda não conciliados."
+            : "cobranças confirmadas no período."}
         </p>
       </div>
       <Link

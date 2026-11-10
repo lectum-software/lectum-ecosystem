@@ -30,6 +30,7 @@ export type ProfessionalSubscriptionStatus = "inativa" | "ativa" | "inadimplente
 export type ProfessionalSubscriptionSource =
   | "free_signup"
   | "mercadopago"
+  | "stripe"
   | "admin_grant"
   | "legacy";
 

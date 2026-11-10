@@ -1,3 +1,5 @@
+import { isStripeFinancialContract } from "@/modules/billing/subscription-financial-values";
+
 type Observation = { id: bigint; observed_at: Date; observation: string };
 
 export type PlanHistorySnapshot = Observation & {
@@ -30,7 +32,19 @@ export type ProfessionalPlanHistory = {
 };
 
 export const isPlanHistoryKnownAt = (history: ProfessionalPlanHistory | undefined, date: Date) =>
-  Boolean(history?.coverage_started_at && history.coverage_started_at <= date);
+  Boolean(
+    history?.coverage_started_at &&
+      history.coverage_started_at <= date &&
+      ![...latestAt(history.subscriptions, date, (row) => row.subscription_id).values()].some(
+        (row) =>
+          !row.deleted &&
+          isStripeFinancialContract(row) &&
+          (row.status === "ativa" ||
+            (row.status === "cancelada" &&
+              row.current_period_end &&
+              row.current_period_end > date)),
+      ),
+  );
 
 const latestAt = <T extends Observation>(rows: T[], date: Date, key: (row: T) => string) => {
   const latest = new Map<string, T>();
@@ -67,7 +81,11 @@ export const professionalSubscriptionsAt = (
         has_gateway_subscription_id: row.has_gateway_subscription_id,
         grant_started_at: row.grant_started_at,
         id: row.subscription_id,
-        plan: { name: plan.name, price_cents: plan.price_cents, slug: plan.slug },
+        plan: {
+          name: plan.name,
+          price_cents: isStripeFinancialContract(row) ? null : plan.price_cents,
+          slug: plan.slug,
+        },
         source: row.source,
         status: row.status,
         updatedAt: row.observed_at,
@@ -77,4 +95,4 @@ export const professionalSubscriptionsAt = (
 };
 
 export const PLAN_HISTORY_UNAVAILABLE_REASON =
-  "O plano nessa data é desconhecido: o histórico observado ainda não cobria esse período.";
+  "O plano nessa data é desconhecido: falta cobertura observada do período ou snapshot contratado Stripe.";

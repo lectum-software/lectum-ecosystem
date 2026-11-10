@@ -1,5 +1,6 @@
 import { error, msg } from "@/helpers/translate";
 import {
+  getNewSubscriptionGatewayName,
   getPaymentGateway,
   isPaymentGatewayConfigurationError,
   resolvePaymentGatewayPublicError,
@@ -268,6 +269,16 @@ const resolvePaymentMethodDisplay = (body: ICheckoutDTO["b"]) => ({
 });
 
 export default async (data: ICheckoutDTO) => {
+  // Legacy clients cannot create another-gateway contract after the cutover.
+  // Fail closed before any local mutation or external request, including invalid config.
+  try {
+    if (getNewSubscriptionGatewayName() !== "mercadopago") {
+      return { status: 503, ...error("billing_checkout_disabled", {}) };
+    }
+  } catch {
+    return { status: 503, ...error("billing_checkout_disabled", {}) };
+  }
+
   if (data.auth.role !== "psicologo") {
     return {
       status: 403,
@@ -365,7 +376,7 @@ export default async (data: ICheckoutDTO) => {
 
   try {
     gatewayReturnUrl = resolveGatewayBackUrl();
-    gateway = getPaymentGateway();
+    gateway = getPaymentGateway("mercadopago");
     gatewayPlanId = await resolveGatewayPlanId({
       gateway,
       plan: professionalPlan,

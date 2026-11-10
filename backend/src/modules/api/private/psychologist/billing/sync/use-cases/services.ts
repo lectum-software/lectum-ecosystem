@@ -3,7 +3,13 @@ import {
   isPaymentGatewayConfigurationError,
   sanitizePaymentGatewayError,
 } from "@/modules/billing/payment-gateway";
+import { syncStripeSubscription } from "@/modules/billing/stripe/sync";
+import {
+  getStoredSubscriptionGateway,
+  subscriptionGatewayName,
+} from "@/modules/billing/subscription-provider";
 import { syncMercadoPagoSubscriptionRecord } from "@/modules/billing/sync-mercado-pago-subscription";
+import { SubscriptionRepository } from "../../subscription/repositories/SubscriptionRepository";
 import type { ISyncDTO } from "../DTOs/ISyncDTO";
 import { SyncRepository } from "../repositories/SyncRepository";
 
@@ -35,6 +41,22 @@ export default async (data: ISyncDTO) => {
   }
 
   try {
+    getStoredSubscriptionGateway(localSubscription);
+    if (subscriptionGatewayName(localSubscription) === "stripe") {
+      const synced = await syncStripeSubscription(
+        localSubscription.gateway_subscription_id,
+        localSubscription.id,
+      );
+      return {
+        status: 200,
+        ...msg("billing_subscription_synced", {}),
+        data: {
+          current: await new SubscriptionRepository().showSubscription(profile.id!),
+          gateway_status: synced.remote.gatewayStatus,
+          synced: true,
+        },
+      };
+    }
     const synced = await syncMercadoPagoSubscriptionRecord({
       localSubscription,
       repository,

@@ -1,3 +1,7 @@
+import {
+  isStripeFinancialContract,
+  stripePaidPeriodAt,
+} from "@/modules/billing/subscription-financial-values";
 import { ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG } from "@/utils/admin-profile-conversion";
 import { ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SOURCE } from "@/utils/admin-profile-received-engagement";
 import { crpExperienceYears } from "@/utils/professional-experience";
@@ -199,6 +203,7 @@ export const subscriptionActiveAt = (
   subscription: AdminPsychologistListSubscriptionRecord,
   date: Date,
 ) => {
+  if (isStripeFinancialContract(subscription)) return stripePaidPeriodAt(subscription, date);
   if (subscription.status !== STATUS_ACTIVE) return false;
   if (subscription.createdAt > date) return false;
 

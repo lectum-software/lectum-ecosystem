@@ -1,8 +1,9 @@
-import { randomUUID } from "node:crypto";
-import type { Prisma } from "@/external/generated/prisma/client";
+import { createHash, randomUUID } from "node:crypto";
+import { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import type { GatewayWebhookEvent } from "../payment-gateway/PaymentGateway";
 import { InvoiceError, type InvoiceMode } from "./config";
+import { type InvoiceGatewayScope, invoiceGatewayScopes, invoiceScopeWhere } from "./gateway-scope";
 
 const leaseAvailable = (now: Date) => ({
   OR: [{ lease_until: null }, { lease_until: { lt: now } }],
@@ -36,8 +37,52 @@ export class InvoiceRepository {
     });
   }
 
-  async claimJob(now = new Date()) {
-    const where = { completed_at: null, next_attempt_at: { lte: now }, ...leaseAvailable(now) };
+  async enqueueStripe(input: {
+    invoiceId: string;
+    eventId: string;
+    accountId: string;
+    mode: InvoiceMode;
+  }) {
+    if (
+      !/^in_[A-Za-z0-9]{1,100}$/.test(input.invoiceId) ||
+      !/^evt_[A-Za-z0-9]{1,100}$/.test(input.eventId) ||
+      !/^acct_[A-Za-z0-9]{1,100}$/.test(input.accountId)
+    )
+      throw new InvoiceError("resource_invalid");
+    const resourceId = createHash("sha256")
+      .update(`stripe:${input.mode}:${input.accountId}:${input.invoiceId}`)
+      .digest("hex");
+    const key = { resource_type: "invoice", resource_id: resourceId };
+    const change = { completed_at: null, next_attempt_at: new Date(), event_id: input.eventId };
+    try {
+      await prisma.billing_invoice_job.upsert({
+        where: { resource_type_resource_id: key },
+        create: {
+          ...key,
+          ...change,
+          gateway: "stripe",
+          mode: input.mode,
+          account_id: input.accountId,
+          provider_resource_id: input.invoiceId,
+        },
+        update: change,
+      });
+    } catch (error) {
+      if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002")
+        throw error;
+      await prisma.billing_invoice_job.update({
+        where: { resource_type_resource_id: key },
+        data: change,
+      });
+    }
+  }
+
+  async claimJob(scopes: InvoiceGatewayScope[], now = new Date()) {
+    const where = {
+      completed_at: null,
+      next_attempt_at: { lte: now },
+      AND: [invoiceScopeWhere(scopes, true), leaseAvailable(now)],
+    };
     const candidate = await prisma.billing_invoice_job.findFirst({
       where,
       orderBy: { next_attempt_at: "asc" },
@@ -63,10 +108,13 @@ export class InvoiceRepository {
     });
   }
 
-  async subscription(gatewayId: string) {
+  async subscription(gatewayId: string, scope: InvoiceGatewayScope) {
     const rows = await prisma.professional_subscription.findMany({
       where: {
-        gateway: "mercadopago",
+        gateway: scope.gateway,
+        ...(scope.gateway === "stripe"
+          ? { gateway_mode: scope.mode, gateway_account_id: scope.accountId }
+          : {}),
         gateway_subscription_id: gatewayId,
         deleted: false,
         psychologist: { deleted: false, user: { deleted: false } },
@@ -99,6 +147,9 @@ export class InvoiceRepository {
       update: {},
     });
     if (
+      invoice.account_id !== (data.account_id ?? null) ||
+      invoice.currency !== data.currency ||
+      invoice.reference !== data.reference ||
       invoice.user_id !== data.user_id ||
       invoice.company_id !== data.company_id ||
       invoice.amount_cents !== data.amount_cents ||
@@ -109,13 +160,27 @@ export class InvoiceRepository {
     return invoice;
   }
 
-  async claimInvoice(companyId: string, now = new Date(), mode: InvoiceMode = "test") {
+  async claimInvoice(
+    companyId: string,
+    scopes: InvoiceGatewayScope[],
+    now = new Date(),
+    mode: InvoiceMode = "test",
+  ) {
     const where = {
       company_id: companyId,
       mode,
       status: { notIn: ["manual_review", "cancelled", "rejected"] },
       next_attempt_at: { lte: now },
-      ...leaseAvailable(now),
+      AND: [
+        {
+          OR: scopes.map((scope) => ({
+            gateway: scope.gateway,
+            account_id: scope.accountId,
+            mode: scope.mode,
+          })),
+        },
+        leaseAvailable(now),
+      ],
     };
     const candidate = await prisma.billing_invoice.findFirst({
       where,
@@ -143,7 +208,15 @@ export class InvoiceRepository {
 
   listForUser(userId: string, companyId: string, mode: InvoiceMode = "test") {
     return prisma.billing_invoice.findMany({
-      where: { user_id: userId, company_id: companyId, mode },
+      where: {
+        user_id: userId,
+        company_id: companyId,
+        mode,
+        OR: invoiceGatewayScopes(mode).map((scope) => ({
+          gateway: scope.gateway,
+          account_id: scope.accountId,
+        })),
+      },
       orderBy: { paid_at: "desc" },
       take: 100,
     });

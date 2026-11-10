@@ -1,4 +1,5 @@
 type SanitizeOptions = {
+  allowBillingIntentSecret?: boolean;
   allowSignedMediaUrls?: boolean;
   removeAuthTokens?: boolean;
   removePii?: boolean;
@@ -107,6 +108,14 @@ const AUTH_TOKEN_VALUE_PATTERNS = [
   /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^\s]+/i,
 ] as const;
 
+// Signed media may carry its own JWT, never unrelated payment/fiscal credentials.
+const BILLING_CREDENTIAL_VALUE_PATTERNS = [
+  /\b(?:sk|rk)_(?:test|live)_[A-Za-z0-9_]+\b/,
+  /\bwhsec_[A-Za-z0-9_]+\b/,
+  /\b(?:pi|seti)_[A-Za-z0-9]+_secret_[A-Za-z0-9]+\b/,
+  /\bnt_(?:test|live)_[A-Za-z0-9_-]+\b/,
+] as const;
+
 const PII_VALUE_PATTERNS = [
   /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
   /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/,
@@ -160,14 +169,40 @@ const shouldRemoveKey = (key: string, value: unknown, options: SanitizeOptions) 
   );
 };
 
+const isAllowedBillingIntentSecret = (
+  path: readonly string[],
+  key: string,
+  value: unknown,
+  parent: Record<string, unknown>,
+  options: SanitizeOptions,
+) => {
+  if (
+    !options.allowBillingIntentSecret ||
+    path.length !== 2 ||
+    path[0] !== "operation" ||
+    path[1] !== "confirmation" ||
+    key !== "client_secret" ||
+    typeof value !== "string" ||
+    value.length > 512 ||
+    /[^A-Za-z0-9_]/.test(value)
+  )
+    return false;
+  return (
+    (parent.type === "payment" && /^pi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+$/.test(value)) ||
+    (parent.type === "setup" && /^seti_[A-Za-z0-9]+_secret_[A-Za-z0-9]+$/.test(value))
+  );
+};
+
 export const sanitizeSensitiveData = <T = unknown>(value: T, options: SanitizeOptions = {}): T => {
   const stack = new WeakSet<object>();
 
-  const visit = (entry: unknown, key?: string): unknown => {
+  const visit = (entry: unknown, key?: string, path: readonly string[] = []): unknown => {
     if (entry === null || entry === undefined) return entry;
     if (entry instanceof Date || entry instanceof Buffer) return entry;
 
     if (typeof entry === "string") {
+      if (options.removeAuthTokens && containsPattern(entry, BILLING_CREDENTIAL_VALUE_PATTERNS))
+        return "[REDACTED]";
       if (
         options.removeAuthTokens &&
         containsPattern(entry, AUTH_TOKEN_VALUE_PATTERNS) &&
@@ -184,12 +219,26 @@ export const sanitizeSensitiveData = <T = unknown>(value: T, options: SanitizeOp
     stack.add(entry);
 
     try {
-      if (Array.isArray(entry)) return entry.map((item) => visit(item));
+      if (Array.isArray(entry))
+        return entry.map((item, index) => visit(item, undefined, [...path, String(index)]));
 
       const sanitized: Record<string, unknown> = {};
       for (const [key, entryValue] of Object.entries(entry)) {
+        if (
+          isAllowedBillingIntentSecret(
+            path,
+            key,
+            entryValue,
+            entry as Record<string, unknown>,
+            options,
+          )
+        ) {
+          // Only this already-validated DTO leaf may bypass credential-value redaction.
+          sanitized[key] = entryValue;
+          continue;
+        }
         if (shouldRemoveKey(key, entryValue, options)) continue;
-        sanitized[key] = visit(entryValue, key);
+        sanitized[key] = visit(entryValue, key, [...path, key]);
       }
 
       return sanitized;

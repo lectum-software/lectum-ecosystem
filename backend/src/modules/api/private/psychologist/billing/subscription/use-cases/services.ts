@@ -1,10 +1,17 @@
 import { error, msg } from "@/helpers/translate";
 import { withInvoiceHistory } from "@/modules/billing/invoices/history";
 import {
-  getPaymentGateway,
+  getStripeGateway,
   isPaymentGatewayConfigurationError,
 } from "@/modules/billing/payment-gateway";
 import { prepareCancellation } from "@/modules/billing/prepare-cancellation";
+import { syncStripeSubscription } from "@/modules/billing/stripe/sync";
+import { assertStripeUserCancellationConfirmed } from "@/modules/billing/stripe/user-cancellation-policy";
+import {
+  getStoredSubscriptionGateway,
+  subscriptionGatewayName,
+  withContractedPlan,
+} from "@/modules/billing/subscription-provider";
 import type { ISubscriptionDTO } from "../DTOs/ISubscriptionDTO";
 import { SubscriptionRepository } from "../repositories/SubscriptionRepository";
 
@@ -35,15 +42,18 @@ export const showSubscription = async (data: ISubscriptionDTO) => {
       : null;
   const paymentMethodSubscription = scheduledGatewaySubscription ?? subscription;
   const shouldExposePaymentMethod = Boolean(
-    paymentMethodSubscription?.source === "mercadopago" &&
-      paymentMethodSubscription.gateway === "mercadopago" &&
-      paymentMethodSubscription.gateway_subscription_id &&
-      paymentMethodSubscription.status !== "cancelada",
+    subscriptionGatewayName(paymentMethodSubscription) &&
+      paymentMethodSubscription?.gateway_subscription_id &&
+      paymentMethodSubscription?.status !== "cancelada",
   );
   const paymentMethodGatewayToken = paymentMethodSubscription?.gateway_subscription_id ?? null;
   const [paymentMethod, paymentHistory] = await Promise.all([
     shouldExposePaymentMethod
-      ? repository.showPaymentMethod(data.auth.id!, paymentMethodGatewayToken)
+      ? repository.showPaymentMethod(
+          data.auth.id!,
+          paymentMethodGatewayToken,
+          paymentMethodSubscription,
+        )
       : Promise.resolve(null),
     repository.showPaymentHistory(subscription),
   ]);
@@ -88,17 +98,36 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
   }
 
   try {
-    const gateway = getPaymentGateway();
-    await prepareCancellation(subscription, gateway);
+    const gateway = getStoredSubscriptionGateway(subscription);
+    if (subscriptionGatewayName(subscription) === "mercadopago")
+      await prepareCancellation(subscription, gateway);
     const gatewayResult = await gateway.cancelSubscription({
       gatewaySubscriptionId: subscription.gateway_subscription_id,
     });
 
-    if (gatewayResult.status !== "cancelada") {
+    if (
+      gatewayResult.status !== "cancelada" ||
+      gatewayResult.gateway_subscription_id !== subscription.gateway_subscription_id
+    ) {
       return {
         status: 502,
         ...error("billing_gateway_cancel_failed", {}),
       };
+    }
+
+    if (subscriptionGatewayName(subscription) === "stripe") {
+      // Payment can finish between the provider preflight and its cancellation mutation.
+      // Read verified post-mutation facts before making a previously empty local period sticky.
+      // A read/scope/CAS failure leaves reconciliation pending, not an irreversible null paid period.
+      const synchronized = await syncStripeSubscription(
+        subscription.gateway_subscription_id,
+        subscription.id!,
+      );
+      assertStripeUserCancellationConfirmed(synchronized.remote, {
+        subscriptionId: subscription.gateway_subscription_id,
+        localSubscriptionId: subscription.id!,
+        identity: getStripeGateway().identity,
+      });
     }
 
     const cancellation = await repository.cancelSubscription({
@@ -110,8 +139,8 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
       status: 200,
       ...msg("billing_subscription_cancelled", {}),
       data: {
-        current: cancellation.current,
-        subscription: cancellation.cancelled,
+        current: withContractedPlan(cancellation.current),
+        subscription: withContractedPlan(cancellation.cancelled),
         gateway_status: gatewayResult.gateway_status,
         canceled: true,
       },

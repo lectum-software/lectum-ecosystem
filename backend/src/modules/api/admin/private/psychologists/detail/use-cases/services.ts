@@ -1,6 +1,9 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
-import { timeToFirstPaidSubscription } from "@/utils/admin-psychologist-analytics";
+import {
+  isStripeFinancialContract,
+  stripePaidPeriodAt,
+} from "@/modules/billing/subscription-financial-values";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import {
   buildProfessionalFullDisplayName,
@@ -22,6 +25,7 @@ import {
   type AdminPsychologistDetailRecord,
   AdminPsychologistDetailRepository,
 } from "../repositories/AdminPsychologistDetailRepository";
+import { buildAdminDetailSubscription } from "./subscription-projection";
 
 const STATUS_ACTIVE = "ativa";
 const FREE_PLAN_SLUG = "gratuito";
@@ -65,6 +69,7 @@ const subscriptionActiveAt = (
   subscription: AdminPsychologistDetailRecord["subscriptions"][number],
   date: Date,
 ) => {
+  if (isStripeFinancialContract(subscription)) return stripePaidPeriodAt(subscription, date);
   if (subscription.status !== STATUS_ACTIVE) return false;
   if (subscription.createdAt > date) return false;
 
@@ -177,52 +182,6 @@ const latestAccessAt = (profile: AdminPsychologistDetailRecord) => {
   return token.updatedAt > token.createdAt ? token.updatedAt : token.createdAt;
 };
 
-const gatewayLabel = (
-  subscription: AdminPsychologistDetailRecord["subscriptions"][number] | null,
-) => {
-  const value = (subscription?.gateway || subscription?.source || "").toLowerCase();
-  if (value.includes("mercadopago") || value.includes("mercado_pago")) return "Mercado Pago";
-
-  return subscription?.gateway || null;
-};
-
-const subscriptionSourceDate = (
-  subscription: AdminPsychologistDetailRecord["subscriptions"][number] | null,
-) => subscription?.grant_started_at ?? subscription?.createdAt ?? null;
-
-const buildSubscription = (profile: AdminPsychologistDetailRecord, date: Date) => {
-  const subscription = pickCurrentPlan(profile, date);
-  const paymentMethod = profile.user.payment_methods[0] ?? null;
-
-  return {
-    current_period_end: subscription?.current_period_end ?? null,
-    gateway: subscription?.gateway ?? null,
-    gateway_label: gatewayLabel(subscription),
-    id: subscription?.id ?? null,
-    interval: subscription?.plan.interval ?? null,
-    payment_method: paymentMethod
-      ? {
-          brand: paymentMethod.brand,
-          exp_month: paymentMethod.exp_month,
-          exp_year: paymentMethod.exp_year,
-          gateway: paymentMethod.gateway,
-          last4: paymentMethod.last4,
-        }
-      : null,
-    plan_name: subscription?.plan.name ?? null,
-    plan_slug: subscription?.plan.slug ?? null,
-    price_cents: subscription?.plan.price_cents ?? null,
-    source: subscription?.source ?? null,
-    started_at: subscriptionSourceDate(subscription),
-    status: subscription?.status ?? null,
-    time_to_first_paid_subscription: timeToFirstPaidSubscription({
-      currentSubscription: subscription,
-      registeredAt: profile.user.createdAt,
-      subscriptions: profile.subscriptions,
-    }),
-  } satisfies AdminPsychologistDetailDTO["general"]["subscription"];
-};
-
 const buildAccountHistory = (
   profile: AdminPsychologistDetailRecord,
   subscription: AdminPsychologistDetailDTO["general"]["subscription"],
@@ -310,11 +269,16 @@ const buildIntegrations = (
   subscription: AdminPsychologistDetailDTO["general"]["subscription"],
 ): AdminPsychologistIntegrationStatus[] => {
   const registryCheck = profile.registry_checks[0] ?? null;
-  const hasSubscription = Boolean(subscription.id && subscription.status === STATUS_ACTIVE);
+  const hasSubscription = Boolean(
+    subscription.id &&
+      (subscription.status === STATUS_ACTIVE ||
+        (subscription.gateway === "stripe" && subscription.status === "cancelada")),
+  );
   const hasManualActivation =
     profile.crp_status !== "rejeitado" && hasSubscription && subscription.source === "admin_grant";
-  const hasMercadoPago = Boolean(
-    subscription.gateway_label === "Mercado Pago" ||
+  const hasPaymentGateway = Boolean(
+    subscription.gateway_label === "Stripe" ||
+      subscription.gateway_label === "Mercado Pago" ||
       subscription.payment_method?.gateway === "mercadopago",
   );
 
@@ -366,11 +330,11 @@ const buildIntegrations = (
     },
     {
       checked_at: subscription.started_at,
-      id: "mercado_pago",
-      label: "Mercado Pago",
+      id: subscription.gateway === "stripe" ? "stripe" : "mercado_pago",
+      label: subscription.gateway === "stripe" ? "Stripe" : "Mercado Pago",
       source: "professional_subscription.gateway/payment_method.gateway",
-      status: hasMercadoPago ? "synced" : "unavailable",
-      status_label: hasMercadoPago ? "Sincronizado" : "Sem vínculo ativo",
+      status: hasPaymentGateway ? "synced" : "unavailable",
+      status_label: hasPaymentGateway ? "Sincronizado" : "Sem vínculo ativo",
     },
     {
       checked_at: profile.user.confirmed_date,
@@ -433,7 +397,7 @@ const buildDetail = async (
 ): Promise<AdminPsychologistDetailDTO> => {
   const now = new Date();
   const userId = profile.user.id;
-  const currentSubscription = buildSubscription(profile, now);
+  const currentSubscription = buildAdminDetailSubscription(profile, pickCurrentPlan(profile, now));
   const [favorites, whatsappClicks, profileViews, rankingCandidates, activityFeed] =
     await Promise.all([
       repository.countFavorites(userId),

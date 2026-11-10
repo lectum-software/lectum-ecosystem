@@ -12,7 +12,7 @@ export const activeSubscriptionPeriodWhere = (): Prisma.professional_subscriptio
       },
       {
         status: "cancelada",
-        source: "mercadopago",
+        source: { in: ["mercadopago", "stripe"] },
         current_period_end: { gt: now },
       },
       {
@@ -48,7 +48,7 @@ export const activeFreeSubscriptionWhere = (): Prisma.professional_subscriptionW
 export const actionableProfessionalGatewaySubscriptionWhere =
   (): Prisma.professional_subscriptionWhereInput => ({
     deleted: false,
-    status: "inativa",
+    OR: [{ status: "inativa" }, { status: "inadimplente", gateway: "stripe" }],
     gateway_subscription_id: {
       not: null,
     },

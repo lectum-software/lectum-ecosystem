@@ -484,10 +484,10 @@ export class MercadoPagoAdapter implements PaymentGateway {
   }
 
   async getInvoicePayment(
-    resourceType: "payment" | "subscription_authorized_payment",
+    resourceType: "payment" | "subscription_authorized_payment" | "invoice",
     resourceId: string,
   ) {
-    if (!/^[A-Za-z0-9_-]{1,100}$/.test(resourceId))
+    if (resourceType === "invoice" || !/^[A-Za-z0-9_-]{1,100}$/.test(resourceId))
       throw new Error("MERCADO_PAGO_RESOURCE_INVALID");
     return this.runGatewayOperation("invoice_payment", async () => {
       const read = async (path: string): Promise<unknown> => {

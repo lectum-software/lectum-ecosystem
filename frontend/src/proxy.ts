@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { isAuthEntryPath } from "@/utils/auth-entry";
 import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+import { cleanStripeBillingReturnSearch, STRIPE_BILLING_RETURN_PATH } from "@/utils/stripe-billing";
 
 const AUTH_PREFIX = "/auth";
 const APP_PATH = "/app";
@@ -171,6 +172,18 @@ const resolvePatientWelcomeRedirect = (req: NextRequest) => {
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  // Remove provider callback secrets before rendering, analytics or auth redirects.
+  if (pathname === STRIPE_BILLING_RETURN_PATH) {
+    const search = cleanStripeBillingReturnSearch(req.nextUrl.search);
+    if (search !== req.nextUrl.search) {
+      const url = req.nextUrl.clone();
+      url.search = search;
+      const response = NextResponse.redirect(url, 307);
+      response.headers.set("Cache-Control", "no-store");
+      response.headers.set("Referrer-Policy", "no-referrer");
+      return response;
+    }
+  }
   const currentPathWithSearch = `${pathname}${req.nextUrl.search}`;
   const legacyPrivateRedirect = resolveLegacyPrivateRedirect(pathname);
 

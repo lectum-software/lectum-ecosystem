@@ -1,13 +1,14 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import type { FinancialContract } from "@/modules/billing/subscription-financial-values";
 
-export type AdminPsychologistListSubscriptionRecord = {
+export type AdminPsychologistListSubscriptionRecord = Omit<FinancialContract, "plan"> & {
   createdAt: Date;
   current_period_end: Date | null;
   grant_started_at: Date | null;
   id: string;
   plan: {
     name: string;
-    price_cents: number;
+    price_cents: number | null;
     slug: string;
   };
   source: string;

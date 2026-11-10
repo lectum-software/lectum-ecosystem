@@ -224,12 +224,14 @@ export const buildConversionBySignupMethod = (profiles: AdminPsychologistProfile
       ];
     });
     const conversion = summarizeConversionCohort(methodProfiles);
-    const sampleSufficient = methodProfiles.length >= 3 && convertedDays.length > 0;
+    const sampleSufficient =
+      conversion.available && methodProfiles.length >= 3 && convertedDays.length > 0;
 
     return {
+      available: conversion.available,
       average_days: sampleSufficient ? conversion.average_days : null,
       conversion_rate:
-        methodProfiles.length > 0
+        conversion.available && methodProfiles.length > 0
           ? roundOneDecimal((convertedDays.length / methodProfiles.length) * 100)
           : null,
       converted_paid_count: convertedDays.length,
@@ -238,10 +240,12 @@ export const buildConversionBySignupMethod = (profiles: AdminPsychologistProfile
       median_days: sampleSufficient ? conversion.median_days : null,
       registered_count: methodProfiles.length,
       sample_sufficient: sampleSufficient,
-      unavailable_reason: sampleSufficient
-        ? null
-        : methodProfiles.length === 0
-          ? "Sem psicólogos cadastrados por esta via na coorte."
-          : "Amostra insuficiente para comparar prazo por modo de cadastro.",
+      unavailable_reason: !conversion.available
+        ? conversion.unavailable_reason
+        : sampleSufficient
+          ? null
+          : methodProfiles.length === 0
+            ? "Sem psicólogos cadastrados por esta via na coorte."
+            : "Amostra insuficiente para comparar prazo por modo de cadastro.",
     };
   });

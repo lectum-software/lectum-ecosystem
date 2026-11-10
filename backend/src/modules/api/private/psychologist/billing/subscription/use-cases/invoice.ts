@@ -7,7 +7,12 @@ import {
   invoiceRequestSchema,
   parseProvider,
 } from "@/modules/billing/invoices/contracts";
+import { invoiceDocumentStatus } from "@/modules/billing/invoices/document-authorization";
 import { invoicePdfFilename } from "@/modules/billing/invoices/filename";
+import {
+  invoiceGatewayScopes,
+  invoiceScopeMatches,
+} from "@/modules/billing/invoices/gateway-scope";
 import { InvoiceRepository } from "@/modules/billing/invoices/repository";
 import { SendNfAdapter } from "@/modules/billing/invoices/SendNfAdapter";
 import type { ISubscriptionDTO } from "../DTOs/ISubscriptionDTO";
@@ -18,7 +23,12 @@ export async function invoicePdf(data: ISubscriptionDTO & { params: { id: string
   const config = getInvoiceConfig();
   if (!config) return { status: 503, ...error("billing_invoice_unavailable", {}) };
   const invoice = await new InvoiceRepository().findOwned(data.params.id, data.auth.id);
-  if (!invoice || invoice.mode !== config.mode || invoice.company_id !== config.companyId) {
+  if (
+    !invoice ||
+    invoice.mode !== config.mode ||
+    invoice.company_id !== config.companyId ||
+    !invoiceScopeMatches(invoiceGatewayScopes(config.mode), invoice)
+  ) {
     return { status: 404, ...error("billing_invoice_unavailable", {}) };
   }
   if (!invoice.document_id || invoice.status !== "authorized")
@@ -31,7 +41,8 @@ export async function invoicePdf(data: ISubscriptionDTO & { params: { id: string
     parseProvider(invoiceRequestSchema, invoice.request_snapshot),
     config.mode,
   );
-  if (document.status !== "authorized")
+  // Recheck the current response even when an older worker cached "authorized".
+  if (invoiceDocumentStatus(document) !== "authorized")
     return { status: 409, ...error("billing_invoice_unavailable", {}) };
   return {
     status: 200,

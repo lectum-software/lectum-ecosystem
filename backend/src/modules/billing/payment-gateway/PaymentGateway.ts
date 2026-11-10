@@ -93,7 +93,7 @@ export type VerifyWebhookSignatureInput = {
 
 export interface PaymentGateway {
   getInvoicePayment(
-    resourceType: "payment" | "subscription_authorized_payment",
+    resourceType: "payment" | "subscription_authorized_payment" | "invoice",
     resourceId: string,
   ): Promise<GatewayInvoicePayment>;
   createSubscriptionPlan(
@@ -123,5 +123,8 @@ export type GatewayInvoicePayment = {
   currency: string;
   status: string;
   liveMode: boolean;
+  /** Canonical payment receipt time, not observation time. Stripe uses InvoicePayment.paid_at. */
   paidAt: Date | null;
+  /** Independent invoice transition time when the provider exposes one. */
+  invoicePaidAt?: Date | null;
 };

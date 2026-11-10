@@ -1,4 +1,5 @@
 import prisma from "@/infra/database/prisma";
+import { financialContractSelection } from "@/modules/billing/subscription-financial-values";
 import type { AdminDashboardDateRange } from "../DTOs/IAdminDashboardSummaryDTO";
 import type {
   DashboardCommunityAuthorRole,
@@ -184,21 +185,7 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
     });
   }
 
-  async listPaidSubscriptionsUntil(end: Date): Promise<
-    Array<{
-      createdAt: Date;
-      current_period_end: Date | null;
-      id: string;
-      source: string;
-      status: string;
-      plan: {
-        interval: string;
-        name: string;
-        price_cents: number;
-        slug: string;
-      };
-    }>
-  > {
+  async listPaidSubscriptionsUntil(end: Date) {
     return prisma.professional_subscription.findMany({
       where: {
         createdAt: {
@@ -208,15 +195,13 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
         plan: {
           active: true,
           deleted: false,
-          price_cents: {
-            gt: 0,
-          },
           slug: {
             not: "gratuito",
           },
         },
       },
       select: {
+        ...financialContractSelection,
         createdAt: true,
         current_period_end: true,
         id: true,

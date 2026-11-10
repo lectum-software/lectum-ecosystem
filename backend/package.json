@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.799",
+  "version": "0.1.800",
   "packageManager": "pnpm@10.33.0",
   "private": true,
   "prisma": {
@@ -72,6 +72,7 @@
     "prisma": "^7.9.1",
     "sharp": "0.35.5",
     "socket.io": "^4.8.3",
+    "stripe": "23.1.0",
     "swagger-ui-express": "^5.0.1",
     "twilio": "^6.0.2",
     "uuid": "^14.0.0",
@@ -111,7 +112,7 @@
       "form-data": "4.0.6",
       "engine.io": "6.6.10",
       "esbuild": "0.28.1",
-      "follow-redirects": "1.16.1",
+      "follow-redirects": "1.16.3",
       "handlebars": "4.7.10",
       "proxy-addr": "2.0.8",
       "hono": "4.12.34",
@@ -120,7 +121,8 @@
       "qs": "6.16.1",
       "socket.io-parser": "4.2.7",
       "valibot": "1.4.2",
-      "ws": "8.21.0"
+      "ws": "8.21.0",
+      "express-handlebars": "9.0.4"
     }
   }
 }

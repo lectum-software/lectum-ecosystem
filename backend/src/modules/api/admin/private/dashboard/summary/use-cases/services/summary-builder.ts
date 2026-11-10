@@ -123,7 +123,11 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
           "MRR estimado pelas assinaturas profissionais ativas. Não representa receita já confirmada pelo provedor de pagamento.",
         id: "revenue",
         label: "MRR estimado",
-        previous: previousFinancial.mrrCents,
+        previous: previousFinancial.mrrCents ?? 0,
+        unavailable: !financial.mrr_available || previousFinancial.mrrCents === null,
+        ...(!financial.mrr_available || previousFinancial.mrrCents === null
+          ? { unavailableReason: "Preço contratado ou períodos pagos conciliados indisponíveis." }
+          : {}),
         source: financial.source,
         unit: "currency_cents",
       }),
@@ -153,6 +157,7 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
       confirmed_revenue_available: financial.confirmed_revenue_available,
       daily: financial.daily,
       label: financial.label,
+      mrr_available: financial.mrr_available,
       mrr_cents: financial.mrr_cents,
       period_estimate_cents: financial.period_estimate_cents,
       source: financial.source,

@@ -1,3 +1,10 @@
+import {
+  financialContractValue,
+  monthlyContractValue,
+  stripeFinancialCoverage,
+  stripeFinancialScopeAvailable,
+  sumFinancialValues,
+} from "@/modules/billing/subscription-financial-values";
 import { endOfDate, parseDateOnly, startOfDate } from "@/utils/date-range";
 import type {
   AdminDashboardDateRange,
@@ -262,7 +269,8 @@ export const buildLocations = (locations: Array<{ country: string | null }>) => 
 export const isBillableSubscription = (subscription: SubscriptionRecord) =>
   subscription.status === "ativa" &&
   subscription.source !== "admin_grant" &&
-  subscription.plan.price_cents > 0 &&
+  (financialContractValue(subscription).amountCents === null ||
+    Number(financialContractValue(subscription).amountCents) > 0) &&
   subscription.plan.slug !== "gratuito";
 
 export const isActiveAt = (subscription: SubscriptionRecord, day: Date) => {
@@ -278,10 +286,10 @@ export const estimateMrrAt = (subscriptions: SubscriptionRecord[], day: Date) =>
   const activeSubscriptions = subscriptions.filter(
     (subscription) => isBillableSubscription(subscription) && isActiveAt(subscription, day),
   );
-  const mrrCents = activeSubscriptions.reduce(
-    (sum, subscription) => sum + subscription.plan.price_cents,
-    0,
-  );
+  const mrrCents =
+    stripeFinancialCoverage(subscriptions) && stripeFinancialScopeAvailable(activeSubscriptions)
+      ? sumFinancialValues(activeSubscriptions.map(monthlyContractValue))
+      : null;
 
   return {
     activeSubscriptions: activeSubscriptions.length,
@@ -300,9 +308,10 @@ export const buildFinancial = (
     const estimate = estimateMrrAt(subscriptions, day);
 
     return {
+      available: estimate.mrrCents !== null,
       active_subscriptions: estimate.activeSubscriptions,
       date: label,
-      value_cents: estimate.mrrCents,
+      value_cents: estimate.mrrCents ?? 0,
     };
   });
   const currentEstimate = estimateMrrAt(subscriptions, periodEnd);
@@ -312,10 +321,12 @@ export const buildFinancial = (
     daily,
     label:
       "MRR estimado por assinaturas profissionais ativas, excluindo cortesias administrativas.",
-    mrr_cents: currentEstimate.mrrCents,
-    period_estimate_cents: Math.round((currentEstimate.mrrCents / 30) * days),
+    mrr_available: currentEstimate.mrrCents !== null,
+    mrr_cents: currentEstimate.mrrCents ?? 0,
+    period_estimate_cents: Math.round(((currentEstimate.mrrCents ?? 0) / 30) * days),
     source: "active_subscription_estimate" as const,
-    unavailable_reason:
-      "Eventos de pagamento não possuem campo monetário normalizado; por isso o Dashboard exibe estimativa de assinatura ativa, não receita confirmada.",
+    unavailable_reason: !stripeFinancialCoverage(subscriptions)
+      ? "Os períodos pagos Stripe ainda não estão conciliados; a data da reserva não comprova a base ativa nem o MRR na data selecionada."
+      : "Eventos de pagamento não possuem campo monetário normalizado; por isso o Dashboard exibe estimativa de assinatura ativa, não receita confirmada.",
   };
 };

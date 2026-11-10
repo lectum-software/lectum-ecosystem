@@ -100,6 +100,42 @@ test("CSV financeiro não exporta proveniência técnica nem IDs do gateway", ()
   } as unknown as AdminFinanceDashboard;
 
   const csv = buildCsv(dashboard);
+  const incomplete = structuredClone(dashboard);
+  incomplete.cards.revenue_total.available = false;
+  incomplete.cards.revenue_total.previous_value = 12345;
+  incomplete.mrr.available = false;
+  incomplete.mrr.value_cents = 0;
+  incomplete.series = {
+    ...incomplete.series,
+    unavailable_metrics: [
+      "revenue_total",
+      "active_subscriptions",
+      "new_subscriptions",
+      "new_subscriptions_revenue",
+      "cancellations",
+    ],
+    points: [
+      {
+        start_date: "2026-08-01",
+        end_date: "2026-08-31",
+        revenue_cents: 0,
+        confirmed_payments: 0,
+        new_subscriptions: 0,
+        new_subscriptions_revenue_cents: 0,
+        active_subscriptions: 1,
+        cancellations: 0,
+      },
+    ],
+  };
+  const unavailableCsv = buildCsv(incomplete);
+  assert.match(unavailableCsv, /previous=indisponivel/);
+  assert.doesNotMatch(unavailableCsv, /previous=12345/);
+  const seriesLine = unavailableCsv.split("\n").find((line) => line.includes("serie_agregada"))!;
+  assert.equal(seriesLine.match(/indisponivel/g)?.length, 6);
+  const mrrLine = unavailableCsv
+    .split("\n")
+    .find((line) => line.includes("Receita recorrente mensal"))!;
+  assert.match(mrrLine, /indisponivel/);
 
   assert.match(csv, /Cobrança externa|Pagamentos|Plataforma/);
   assert.doesNotMatch(

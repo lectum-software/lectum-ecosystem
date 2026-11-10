@@ -25,7 +25,7 @@ import type {
   IAccountOnboardingTipsDTO,
   IAccountPasswordDTO,
 } from "../DTOs/IAccountDTO";
-import { AccountRepository } from "../repositories/AccountRepository";
+import { AccountBillingConflictError, AccountRepository } from "../repositories/AccountRepository";
 import {
   resolveAuthenticatedLogoutDeviceId,
   runBestEffortLogoutSubscriptionCleanup,
@@ -401,7 +401,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
     const repository = new AccountRepository();
     const blockingSubscription = await repository.findBlockingSubscription(current.id);
 
-    if (blockingSubscription) {
+    if (blockingSubscription || (await repository.hasOpenBillingOperation(current.id))) {
       return {
         status: 409,
         ...error("account_delete_active_subscription", {}),
@@ -498,7 +498,7 @@ export const destroy = async (data: IAccountDeleteDTO) => {
   if (current.role === "psicologo") {
     const blockingSubscription = await repository.findBlockingSubscription(current.id);
 
-    if (blockingSubscription) {
+    if (blockingSubscription || (await repository.hasOpenBillingOperation(current.id))) {
       return {
         status: 409,
         ...error("account_delete_active_subscription", {}),
@@ -506,7 +506,13 @@ export const destroy = async (data: IAccountDeleteDTO) => {
     }
   }
 
-  await repository.deleteOwnAccount(current);
+  try {
+    await repository.deleteOwnAccount(current);
+  } catch (failure) {
+    if (failure instanceof AccountBillingConflictError)
+      return { status: 409, ...error("account_delete_active_subscription", {}) };
+    throw failure;
+  }
 
   return {
     status: 200,

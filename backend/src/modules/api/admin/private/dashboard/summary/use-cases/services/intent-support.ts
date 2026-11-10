@@ -215,7 +215,7 @@ export const metric = (params: {
   unavailable?: boolean;
   unavailableReason?: string;
 }): AdminDashboardMetric => {
-  const change = percentageChange(params.current, params.previous);
+  const change = params.unavailable ? null : percentageChange(params.current, params.previous);
 
   return {
     change_percent: change,

@@ -68,6 +68,7 @@ server.use((req, res, next) => {
     "/api/public/user",
     "/api/public/video-assets/",
     "/api/public/video-stream/",
+    "/api/public/billing/stripe/",
   ];
 
   if (sensitivePrefixes.some((prefix) => req.path.startsWith(prefix))) {
@@ -97,6 +98,16 @@ server.use(
 );
 
 server.use(createApiCors());
+
+// Stripe signatures require the exact byte sequence, independently bounded from general JSON limits.
+server.use(
+  "/api/public/billing/stripe/webhook",
+  express.raw({ type: "application/json", limit: "256kb" }),
+  (req, _res, next) => {
+    if (Buffer.isBuffer(req.body)) req.rawBody = Buffer.from(req.body);
+    next();
+  },
+);
 
 const bodyLimit = getBodyLimit();
 server.use(

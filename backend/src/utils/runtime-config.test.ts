@@ -95,3 +95,21 @@ describe("trust proxy", () => {
     withTrustProxy("-1", () => assert.equal(getTrustProxySetting(), false));
   });
 });
+
+describe("explicit missing runtime versus process default", () => {
+  it("reads process only with no argument and never inherits it for undefined input", () => {
+    const original = process.env.NODE_ENV;
+    try {
+      for (const runtime of ["production", "test"]) {
+        process.env.NODE_ENV = runtime;
+        assert.equal(isPublishedRuntime(), runtime === "production");
+        assert.equal(isDisposableRuntime(), runtime === "test");
+        assert.equal(isPublishedRuntime(undefined), false);
+        assert.equal(isDisposableRuntime(undefined), false);
+      }
+    } finally {
+      if (original === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = original;
+    }
+  });
+});

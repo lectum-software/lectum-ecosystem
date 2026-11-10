@@ -160,6 +160,11 @@ export const AdminFinanceChargesClient = () => {
         </div>
       </header>
 
+      {summary?.coverage_complete === false ? (
+        <p className="rounded-xl border border-border bg-surface-muted p-4 text-sm text-muted">
+          {summary.coverage_note}
+        </p>
+      ) : null}
       <CardShell className="overflow-hidden">
         <div className="space-y-4 border-b border-border px-4 py-4">
           <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -170,7 +175,10 @@ export const AdminFinanceChargesClient = () => {
                 value={query.q}
               />
               <p className="mt-2 pl-1 text-sm font-semibold text-foreground">
-                {summary ? numberFormatter.format(summary.count) : "—"} cobranças encontradas
+                {summary ? numberFormatter.format(summary.count) : "—"}{" "}
+                {summary?.coverage_complete === false
+                  ? "evidências disponíveis (lista parcial)"
+                  : "cobranças encontradas"}
               </p>
             </div>
             <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end xl:flex-1 xl:justify-end">
