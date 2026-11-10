@@ -46,12 +46,13 @@ vendas bloqueadas; ativacao posterior exige ambos compativeis.
 
 Nova flag opcional backend BILLING_STRIPE_COLLECTION_ENABLED=false. Sem ela nao
 iniciar novas cobrancas controladas; consultas, cancelamento e historico continuam.
-Permissoes Payment Intents/Invoices write serao exigidas na ativacao; somente
-sandbox foi autorizado agora. Na chave test Payment Intents ja tinha escrita;
+Permissoes Payment Intents/Invoices write sao exigidas na ativacao; no checkpoint
+de implementacao somente sandbox estava autorizado. Na chave test Payment Intents ja tinha escrita;
 apenas Invoices passou de read para write. Nao usar chave irrestrita como atalho.
-Nenhuma permissao, configuracao, venda, deploy ou cobranca live foi alterada.
+Nesse checkpoint nenhuma permissao, configuracao, venda, deploy ou cobranca live
+foi alterada. Preparacao live posterior autorizada registrada abaixo.
 
-Para preparar a chave live futura, revisar cinco areas de escrita: Customers,
+Para preparar a chave live, revisar cinco areas de escrita: Customers,
 Subscriptions, Setup Intents, Payment Intents e Invoices. Leituras de conta,
 catalogo, metodos, pagamentos, Invoice Payments e disputas continuam necessarias;
 dependencias da UI precisam de conferencia, sem chave irrestrita ou permissoes
@@ -87,6 +88,26 @@ Uma recusa definitiva exige acao explicita; nao reproduzimos Smart Retries/grace
 automaticamente. Confirmacao HTTP separa confirm_payment=true (acao explicita)
 de consultas/montagem/polling (false). Worker possui escopo opcional limitado por
 IDs de contratos para operacao/piloto, usando os mesmos guards e sem alterar tempo.
+
+## Checkpoint operacional live inativo — 10/11/2026
+
+Apos autorizacao especifica para criacao e armazenamento e autenticacao feita pelo
+usuario, criada chave live restrita. Revisao persistida confirmou 11 permissoes:
+escrita em Customers, Subscriptions, Setup Intents, Payment Intents e Invoices;
+leitura em Accounts, Charges and Refunds, Payment Disputes, Payment Methods,
+Prices e Products. Nenhuma permissao de CLI ou chave irrestrita adotada.
+
+Segredo salvo somente em STRIPE_SECRET_KEY no Environment do backend no Dokploy.
+Releitura apos reload confirmou 126 variaveis e preservacao exata das 125 anteriores,
+incluindo checkout disabled, collection/reconciliation/ledger false e gates fiscais
+Stripe false. MP/SendNF globais existentes preservados. Sem segredo em arquivo ou
+Git; evidencias retidas apenas como booleans e imagem das permissoes.
+
+Nenhum deploy/restart, uso da chave em API, venda, cobranca, emissao ou mudanca de
+Radar. Webhook segue apenas em formulario, sem destino/segredo; oferta versionada
+e runtime ainda exigem rollout autorizado. Preparacao do Environment nao atualiza
+o processo em execucao e nao autoriza tentativa real. Nao reiniciar versao antiga
+com esse fluxo nem ativar webhook/worker antes do codigo compativel.
 
 ## Fontes
 

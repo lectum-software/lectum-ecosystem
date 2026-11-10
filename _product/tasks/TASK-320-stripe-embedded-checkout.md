@@ -21,12 +21,15 @@ Dependencias funcionais: TASK-02, TASK-31/32/33, TASK-56, TASK-142, TASK-313/314
   retencao de faturas sem cobranca automatica e confirmacao financeira controlada
   pelo servidor. Nao devolver o segredo de um PaymentIntent automatico como atalho
   para 3DS; se a API nao suportar o desenho, registrar o bloqueio antes de implementar.
-- Autorizadas somente permissoes de escrita Payment Intents/Invoices na chave sandbox.
+- Na rodada de implementacao 0.1.804, autorizadas somente permissoes de escrita
+  Payment Intents/Invoices na chave sandbox.
   Inspecao confirmou Payment Intents ja em escrita; apenas Invoices mudou de leitura
-  para escrita, com persistencia conferida no painel. Chave live intocada.
+  para escrita, com persistencia conferida no painel. Chave live intocada nessa rodada;
+  preparacao live posterior autorizada consta no checkpoint 0.1.806 ao final.
 - Impacto previsto: fluxo financeiro novo exige backend/frontend compativeis e
-  reconciliacao duravel, sem reutilizar contratos antigos de forma silenciosa. Rollout,
-  permissoes live e automacao produtiva exigem autorizacao posterior. Sem package novo.
+  reconciliacao duravel, sem reutilizar contratos antigos de forma silenciosa. Rollout
+  e automacao produtiva exigem autorizacao separada da preparacao das permissoes live.
+  Sem package novo.
 
 Criterios adicionais (nao substituem as evidencias historicas):
 
@@ -1431,10 +1434,13 @@ Resultados desta rodada:
   contrato, URL/api/public/billing/stripe/webhook. Nenhum destino foi criado:
   UI nao ofereceu criacao inicialmente desativada. Nao criar ativo para tentar
   desativar logo depois. STRIPE_WEBHOOK_SECRET continua pendente, sem valor ficticio.
-- [ ] Chave restrita live criada e salva: formulario revisado com Customers,
-  Subscriptions, Setup Intents, Payment Intents e Invoices em write; demais seis
-  em read. E-mail de verificacao avancou; autenticador do usuario ainda necessario.
-  Nao marcar criada/salva nem validar API live com chave alternativa.
+- [x] Chave restrita live criada e salva apos o usuario concluir email/autenticador.
+  Revisao das permissoes persistidas confirmou Customers, Subscriptions, Setup
+  Intents, Payment Intents e Invoices em write; Accounts, Charges and Refunds,
+  Payment Disputes, Payment Methods, Prices e Products em read (11 no total).
+  Valor guardado somente em STRIPE_SECRET_KEY no Environment do backend produtivo
+  do Dokploy, sem arquivo local/Git. Releitura apos reload confirmou a chave exata,
+  126 variaveis e preservacao das 125 anteriores. Nenhuma chamada API com a chave.
 - [x] Runbook/ADR corrigidos: collector independente explicito, cinco areas write,
   confirmacao financeira exclusivamente backend; nenhuma dependencia de Radar Plus.
 - Evidencias UI locais mascaradas: live-disabled-environment-20261110.jpg,
@@ -1445,3 +1451,17 @@ Resultados desta rodada:
   aprovados; sem mudanca de codigo funcional/migration, sem repetir cobrancas
   sandbox para esta preparacao. Bump unico nos cinco manifests. Commit local
   registra explicitamente o bloqueio2FA, nao a conclusao de toda configuracao live.
+- Complemento documental 0.1.806: bloqueio 2FA acima resolvido pelo usuario; chave
+  persistida e permissoes revisadas. Evidencias privadas sem segredo:
+  live-key-persisted-review-20261110.jpg e live-key-storage-evidence-20261110.json.
+  Clipboard limpo/restaurado e valores temporarios descartados. Abas Stripe,
+  Environment mascarado e rascunho do webhook mantidas para continuacao.
+- Checkout disabled, collection/reconciliation/ledger false e gates fiscais
+  Stripe false permanecem salvos; MP/SendNF globais existentes nao foram alterados.
+  Nenhum deploy/restart, push, merge, cobranca, nota ou mudanca de Radar. Nao
+  reiniciar backend antigo nem ativar webhook/worker antes do rollout compativel.
+  Segredo do webhook, vinculo da oferta e validacao do runtime ficam pendentes
+  para publicacao separada autorizada; nao liberar tentativa real nesta etapa.
+- Validacao documental 0.1.806: tasks, ADRs, encoding, diff e check:version aprovados;
+  bump unico nos cinco manifests. Nenhuma mudanca funcional, migration ou dependencia;
+  builds/E2E nao repetidos neste registro operacional. Commit somente local em homolog.

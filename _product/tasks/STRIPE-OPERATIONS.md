@@ -16,9 +16,20 @@ confirmacao/reconfirmacao financeira depende do backend e de validacao fresca.
 Nao expor o segredo do PI automatico da fatura nem retomar a coleta automatica.
 
 `BILLING_STRIPE_COLLECTION_ENABLED=false` e opt-in independente, inclusive da
-conciliacao/ledger. Precisa de Payment Intents e Invoices write; somente a chave
-sandbox foi ampliada (Invoicesread para write, PI ja tinha write). Configuracao
-live/chaves/publicacao permanecem pendentes e intocadas nesta execucao.
+conciliacao/ledger. Precisa de Payment Intents e Invoices write; no sandbox foi
+ampliada somente Invoices de read para write, pois PI ja tinha write. Na preparacao
+live autorizada posterior, em 10/11, foi criada a chave restrita com as cinco areas
+write e seis read, salva somente em STRIPE_SECRET_KEY do Environment do backend
+no Dokploy. Releitura confirmou preservacao das 125 variaveis anteriores. Chave
+nao foi usada em chamada API; nenhum deploy/restart ou ativacao ocorreu.
+
+Estado preparado: checkout disabled, collection/reconciliation/ledger false e
+gates fiscais Stripe false. MP/SendNF globais anteriores permanecem inalterados.
+Webhook live continua apenas em formulario, sem destino criado ou segredo salvo;
+oferta versionada e validacao do runtime aguardam rollout separado autorizado.
+Salvar Environment nao atualiza o processo: nao reiniciar backend antigo nem
+ativar webhook/worker antes de publicar a implementacao compativel. Ter a chave
+salva nao comprova o fluxo live nem libera novas tentativas de assinatura.
 
 Renovacoes usam worker retomavel. Uma recusa definitiva nao inicia Smart Retries:
 fica aguardando cartao atualizado ou autenticacao/confirmacao explicita. Trocar
