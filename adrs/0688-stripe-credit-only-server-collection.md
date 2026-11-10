@@ -1,7 +1,7 @@
 # ADR-0688 - Stripe credito-only sem regras pagas do Radar
 
 Data: 2026-11-10
-Status: Aceita; backend/frontend/admin 0.1.808 publicados inativos; entrega positiva do webhook e ativacao financeira/fiscal pendentes
+Status: Aceita; backend/frontend/admin 0.1.808 publicados inativos; transporte webhook assinado comprovado; E2E e ativacao financeira/fiscal separados
 Task: [TASK-323](../_product/tasks/TASK-323-stripe-embedded-checkout.md)
 
 ## Contexto
@@ -166,14 +166,17 @@ Webhook live criado com os 16 eventos e API `2026-10-28.endive`; segredo somente
 no Dokploy, preservadas as 126 variaveis anteriores, total 127. Oferta vinculada
 por CLI e auditoria, revisao 1, BRL2990/month e checkout false. Nenhuma assinatura
 ou cobranca criada. POST sem assinatura recusado com HTTP 400; inventario posterior
-com zero contratos Stripe e inbox, destino com zero entregas/falhas. Entrega
-assinada positiva continua nao comprovada por ausencia de evento elegivel; nao
-habilitar reconciliacao nem realizar cobranca para mascarar esse limite.
+com zero contratos Stripe e inbox, destino entao com zero entregas/falhas. A
+entrega assinada positiva permanecia pendente nesse checkpoint; foi superada
+somente no nivel de transporte pela prova posterior registrada abaixo. Isso nao
+habilita reconciliacao nem autoriza cobranca para gerar evidencia financeira.
 
-Uma tentativa de reenvio de evento real `product.updated` da mesma conta live e
-versao foi recusada pelo Workbench oficial como comando nao suportado antes de
-enviar. Nao houve evento duplicado/sintetico, topico novo ou ampliacao de permissao;
-nao contabilizar isso como prova de entrega dos eventos financeiros suportados.
+No historico anterior a prova abaixo, tentativa de reenvio de `product.updated`
+real via interface WebMCP do Workbench foi recusada pelo parser como comando nao
+suportado, antes do envio. Naquela etapa nao houve entrega, evento sintetico,
+topico novo ou ampliacao de permissao. O limite da interface foi contornado
+posteriormente pelo console visual oficial, nao por API privada ou evento criado;
+nenhum desses eventos equivale a processamento dos tipos financeiros suportados.
 
 Identidade Vercel verificada; builds frontend/admin de `main@4bc6aa7` Ready em
 4m16s e 3m03s, respectivamente `ErUrL9gy8MKyQHLXksWzNEDMjfZo` e
@@ -185,10 +188,41 @@ Video sem mudanca funcional e sem redeploy neste lote.
 
 As verificacoes de nota MP existente e responsavel da oferta foram concluidas
 antes; nao equivalem a emissao fiscal Stripe. Publicacao compativel inativa dos
-tres apps concluida, nao integracao E2E ativa: entrega positiva de webhook ainda
-pendente. Nenhuma venda, cobranca real, emissao Stripe ou mudanca de Radar
+tres apps concluida, nao integracao E2E ativa. A entrega positiva entao pendente
+foi comprovada posteriormente apenas para transporte. Nenhuma venda, cobranca
+real, emissao Stripe ou mudanca de Radar
 executada neste rollout. Checkpoint documental local 0.1.809 nao altera a release
 produtiva 0.1.808 nem demanda republicacao automatica.
+
+## Transporte assinado comprovado sem processamento financeiro — 10/11/2026
+
+As 20:18:05 BRT, apos autorizacao explicita, um evento real existente
+`product.updated` foi reenviado uma unica vez pelo console visual oficial Stripe
+Shell. Somente esse topico foi temporariamente inscrito no destino live
+(16 → 17); URL, nome, descricao, versao de API, conta, status e segredo foram
+preservados. Antes da inscricao, o console recusou `not_subscribed`, sem entrega.
+Nao houve criacao de evento, fixture sintetica ou operacao financeira.
+
+A entrega foi observada como Delivered HTTP 200, API `2026-10-28.endive`, com
+resposta `{"status":200,"success":true,"data":{"processed":false}}`.
+A assinatura foi aceita e o topico, fora da allowlist financeira, ignorado.
+Esse e o limite exato da prova: transporte publico/assinatura, nao inbox de evento
+financeiro, conciliacao, beneficios, cobranca, renovacao ou emissao fiscal.
+
+O topico temporario foi removido e salvo; leitura final confirmou os 16 topicos
+originais exatos e demais campos preservados. Inventarios READ ONLY antes/depois
+mantiveram zero nas oito contagens: inbox do replay, operacoes, assinaturas Stripe,
+recibos financeiros, jobs do ledger, jobs fiscais, documentos fiscais e ofertas
+habilitadas. Checkout disabled, cinco flags false (collection, reconciliation,
+ledger, emissao e automacao fiscal Stripe), piloto fiscal vazio e oferta revisao 1,
+2990 BRL/month/checkout false preservados. Backend `/health`, `/ready`, `/ping`
+continuam HTTP 200/0.1.808. Nenhuma chave, permissao, gate ou Radar alterado.
+
+A pendencia de transporte assinado esta encerrada; E2E financeiro live segue
+nao testado e nao autorizado. Evidencias privadas nao sao copiadas com IDs,
+segredos ou PII para o repositorio. Registro local 0.1.810 sem codigo/schema ou
+novo deploy; artefatos produtivos permanecem 0.1.808. Nao foi criada cobranca real,
+nota, assinatura ou operacao financeira.
 
 ## Fontes
 

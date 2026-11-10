@@ -192,6 +192,27 @@ Eventos consumidos:
 - `setup_intent.succeeded`, `.setup_failed`, `.canceled`;
 - `charge.refunded`, `charge.dispute.created`, `.updated`, `.closed`.
 
+### Smoke assinado sem operacao financeira: escopo e limites
+
+A prova de 10/11/2026, 20:18:05 BRT, usou reenvio de `product.updated` real ja
+existente na propria conta live, pelo console visual oficial Stripe Shell, sob
+permitida inscricao temporaria desse unico topico. Nao criar evento sintetico,
+produto, assinatura, pagamento ou nota para produzir uma prova.
+
+Se repetir, exige autorizacao explicita para alterar temporariamente os topicos.
+Inventariar antes URL/nome/descricao/API/conta/status e os 16 eventos originais,
+sem exportar segredo. Preservar todos os gates financeiros/fiscais OFF e oferta
+pausada. Reenviar somente o evento real conferido e verificar Delivered/HTTP 200,
+resposta `processed:false`; o topico fora da allowlist financeira deve ser ignorado
+sem inbox ou operacao financeira. Restaurar imediatamente os 16 topicos originais
+e conferir a leitura salva, sem alterar permissao, chave ou Radar. Conferir
+inventario READ ONLY antes/depois e saude/runtime; registrar somente agregados.
+
+Essa prova fecha transporte/assinatura, **nao** conciliacao, recebimento de evento
+financeiro suportado ou E2E live. Para os tipos financeiros, HTTP 200 tambem nao
+prova conclusao do worker. Preservar essa separacao ao planejar ativacao posterior.
+Nao ampliar topicos permanentemente nem fazer replay financeiro sob esta rotina.
+
 ### Preparacao sem deploy: limite confirmado em 10/11/2026
 
 O `/ping` produtivo retornou HTTP 200, no-store e versao `0.1.791`. A revisao do
