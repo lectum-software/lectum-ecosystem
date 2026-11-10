@@ -1,7 +1,7 @@
 # TASK-323 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
 
 Data: 2026-11-09
-Status: Complemento credito-only validado local/sandbox; deploy inativo autorizado e ainda nao executado; ativacao financeira/fiscal separada
+Status: Backend/frontend/admin 0.1.808 publicados inativos; entrega webhook positiva pendente; ativacao financeira/fiscal separada
 Decisao: [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md)
 Operacao: [Runbook Stripe](STRIPE-OPERATIONS.md)
 Base auditada: `homolog` em `820077ccd`, versao `0.1.799`
@@ -1480,11 +1480,10 @@ Resultados desta rodada:
 - [x] UI/WebMCP e referencias oficiais V1/V2 consultadas nao oferecem criacao
   inicialmente desativada; criar inicia entrega. Runbook registra ordem segura
   e inventario READ ONLY, distinguindo dry-run sem escrita de transacao com lock.
-- [ ] Vinculo live persistido: depende do codigo/schema compativeis publicados,
-  admin responsavel identificado e revisao atual conferida; aplicar com vendas
-  explicitamente desativadas. Nenhuma revisao/identidade foi inventada.
-- [ ] Destino/segredo de webhook: aguarda rollout coordenado autorizado. Nao
-  usar segredo ficticio, URL alternativa ou janela ativa seguida de desativacao.
+- Naquele checkpoint, vinculo live dependia do codigo/schema compativeis publicados,
+  admin responsavel e revisao conferidos; destino/segredo aguardavam rollout
+  coordenado. Ambos foram preparados posteriormente no checkpoint de publicacao
+  inativa 0.1.808 abaixo, sem liberar vendas nem inventar revisao/identidade.
 - Evidencias privadas: live-offer-reference-20261110.jpg,
   live-webhook-prepared-20261110.jpg e live-webhook-offer-preparation-20261110.json.
   Sem chave/OTP ou dados pessoais. Nenhuma nova alteracao de Environment, permissao,
@@ -1538,6 +1537,62 @@ Resultados desta rodada:
   sem PII/ID no registro. Tabelas `billing_offers` e `billing_price_versions` ainda
   nao existem nesse banco; nenhuma revisao ou registro de oferta foi inventado.
   Migration produtiva e vinculo pausado continuam pendentes; nao houve apply.
-- [ ] Concluir commit de integracao, push autorizado, PR/checks/merge revisado,
-  deploy e smoke produtivo. Nao houve push, merge concluido ou deploy ate este
-  checkpoint; webhook/segredo e oferta live ainda nao estao concluidos.
+- Na pre-publicacao acima ainda nao havia push, merge concluido ou deploy.
+  As etapas posteriores sao separadas no checkpoint seguinte; nao usar um aceite
+  agregado para presumir frontend/admin ou entrega assinada de webhook concluida.
+
+
+### Publicacao compativel inativa concluida — 0.1.808
+
+- [x] Integracao local `6555b8619`, push e PR #174 concluidos; merge revisado em
+  `main@4bc6aa7`. Branch `homolog` preservada. Registro atual nao autoriza ativacao
+  financeira ou fiscal nem altera a separacao entre as quatro aplicacoes.
+- [x] Backend publicado com codigo compativel e atualizado apos armazenamento do
+  segredo de webhook. Smoke final `/health`, `/ready` e `/ping`: HTTP 200,
+  no-store, versao 0.1.808. Cinco migrations Stripe completadas, zero falhas.
+- [x] Gates conferidos no runtime: checkout disabled; collection, reconciliation,
+  ledger, emissao e automacao fiscal Stripe false; piloto fiscal Stripe vazio;
+  segredo de webhook presente. Nenhuma configuracao do Radar foi alterada.
+- [x] Destino webhook live criado para a propria conta, API `2026-10-28.endive`,
+  16 eventos do contrato. Segredo salvo somente no Environment do Dokploy:
+  126 variaveis anteriores preservadas e uma acrescentada, total 127. Nenhum
+  segredo, OTP ou payload integral registrado em Git ou artefatos de evidencia.
+- [x] Vinculo da oferta aplicado pela CLI auditada com responsavel real previamente
+  identificado, sem registrar PII/ID: revisao 1, 2990 centavos BRL, month,
+  `checkout_enabled=false`, auditoria confirmada. Nao criou assinatura/cobranca
+  nem alterou produto/preco remoto ou beneficios existentes.
+- [x] POST sem assinatura, corpo vazio JSON, recusado com HTTP 400 e codigo de
+  assinatura invalida. Inventario posterior: zero contratos Stripe e zero inbox.
+  Painel do destino mostrou zero entregas e zero falhas.
+- [ ] Comprovar entrega positiva assinada do webhook live: nao ha evento elegivel
+  disponivel neste checkpoint. Destino/segredo e rejeicao de requisicao invalida
+  nao equivalem a entrega valida, conciliacao ou E2E financeiro. Nao fabricar
+  prova nem efetuar cobranca real para gerar evento; reconciliador permanece OFF.
+- Uma tentativa de reenvio de `product.updated` real da mesma conta live e
+  versao de API foi feita no Workbench oficial. O comando `events resend` foi
+  recusado como nao suportado antes do envio; nao conta como entrega. Nenhum
+  evento foi duplicado/fabricado, topico acrescentado ou permissao ampliada.
+  Esse evento nao substitui evento financeiro suportado no contrato de 16 tipos.
+- [x] Identidade Vercel verificada e builds da origem `main@4bc6aa7` concluidos:
+  frontend `ErUrL9gy8MKyQHLXksWzNEDMjfZo`, Ready em 4m16s;
+  admin `BZqyMmpy92Murx3eJqFPraZtNAya`, Ready em 3m03s.
+- [x] Artefatos promovidos e conferidos como producao corrente nos dominios
+  `www.lectum.com.br` e `admin.lectum.com.br`, respectivamente. Ambos `/version`
+  HTTP 200, versao 0.1.808, `Cache-Control: no-store, max-age=0` e
+  `X-Robots-Tag: noindex, nofollow, noarchive`.
+- [x] Browser de producao renderizou os logins frontend/admin; rota protegida do
+  frontend redirecionou corretamente ao login. Sem sessao protegida nesta prova,
+  sem clicar/operar checkout ou preencher/enviar cartao. Smoke de publicacao
+  inativa nao equivale a validacao autenticada integral ou E2E financeiro live.
+- Video nao teve mudanca funcional neste lote e nao foi redeployado. A versao
+  de cada aplicacao deve ser reportada separadamente, sem presumir sincronismo.
+- Leitura fiscal MP legada e identidade do responsavel pela oferta ja foram
+  comprovadas nos checkpoints anteriores; nao reabrir esses gates nem marcar
+  como validada uma nova emissao Stripe. Suportes historicos continuam como
+  historico; Radar SetupIntents nao e requisito deste desenho.
+- Vendas, cobrancas reais, emissao Stripe e Radar permanecem desativados/intocados.
+  MP/SendNF legados preservados. Publicacao inativa dos tres apps concluida;
+  integracao E2E ativa nao declarada, com entrega positiva do webhook pendente.
+- Checkpoint documental local 0.1.809: bump unico executado pelo agente principal;
+  nao repeti-lo. Sem mudanca funcional, nova migration ou novo deploy para esse
+  registro. Artefatos produtivos backend/frontend/admin permanecem em 0.1.808.

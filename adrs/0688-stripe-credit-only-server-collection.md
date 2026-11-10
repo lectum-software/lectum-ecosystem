@@ -1,7 +1,7 @@
 # ADR-0688 - Stripe credito-only sem regras pagas do Radar
 
 Data: 2026-11-10
-Status: Aceita; validada local/sandbox; deploy inativo autorizado, ainda nao executado; ativacao financeira/fiscal separada
+Status: Aceita; backend/frontend/admin 0.1.808 publicados inativos; entrega positiva do webhook e ativacao financeira/fiscal pendentes
 Task: [TASK-323](../_product/tasks/TASK-323-stripe-embedded-checkout.md)
 
 ## Contexto
@@ -153,6 +153,42 @@ inexistentes no banco publicado: migrations e vinculo pausado permanecem pendent
 assim como commit/PR/deploy, webhook e smoke produtivo. Neste checkpoint ainda
 nao houve push, merge concluido, deploy, cobranca ou nota. O estado fiscal MP
 existente permanece preservado, distinto do opt-in Stripe OFF.
+
+## Publicacao compativel inativa concluida — 0.1.808
+
+PR #174 integrado em `main@4bc6aa7`, apos integracao local `6555b8619`, mantendo
+`homolog`. Backend compativel publicado e atualizado apos carregar o segredo;
+`/health`, `/ready` e `/ping` HTTP 200/no-store/0.1.808. Cinco migrations Stripe
+concluidas sem falha. Runtime confirma checkout disabled, collection/reconciliation/
+ledger e fiscal Stripe false, piloto vazio e segredo presente.
+
+Webhook live criado com os 16 eventos e API `2026-10-28.endive`; segredo somente
+no Dokploy, preservadas as 126 variaveis anteriores, total 127. Oferta vinculada
+por CLI e auditoria, revisao 1, BRL2990/month e checkout false. Nenhuma assinatura
+ou cobranca criada. POST sem assinatura recusado com HTTP 400; inventario posterior
+com zero contratos Stripe e inbox, destino com zero entregas/falhas. Entrega
+assinada positiva continua nao comprovada por ausencia de evento elegivel; nao
+habilitar reconciliacao nem realizar cobranca para mascarar esse limite.
+
+Uma tentativa de reenvio de evento real `product.updated` da mesma conta live e
+versao foi recusada pelo Workbench oficial como comando nao suportado antes de
+enviar. Nao houve evento duplicado/sintetico, topico novo ou ampliacao de permissao;
+nao contabilizar isso como prova de entrega dos eventos financeiros suportados.
+
+Identidade Vercel verificada; builds frontend/admin de `main@4bc6aa7` Ready em
+4m16s e 3m03s, respectivamente `ErUrL9gy8MKyQHLXksWzNEDMjfZo` e
+`BZqyMmpy92Murx3eJqFPraZtNAya`. Promovidos a producao corrente em
+`www.lectum.com.br` e `admin.lectum.com.br`; ambos `/version` HTTP 200/0.1.808,
+no-store/max-age=0 e noindex/nofollow/noarchive. Browser renderizou os logins;
+rota protegida redirecionou ao login, sem sessao autenticada nem checkout operado.
+Video sem mudanca funcional e sem redeploy neste lote.
+
+As verificacoes de nota MP existente e responsavel da oferta foram concluidas
+antes; nao equivalem a emissao fiscal Stripe. Publicacao compativel inativa dos
+tres apps concluida, nao integracao E2E ativa: entrega positiva de webhook ainda
+pendente. Nenhuma venda, cobranca real, emissao Stripe ou mudanca de Radar
+executada neste rollout. Checkpoint documental local 0.1.809 nao altera a release
+produtiva 0.1.808 nem demanda republicacao automatica.
 
 ## Fontes
 
