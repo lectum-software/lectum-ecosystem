@@ -17,21 +17,28 @@ export const operationConfirmationKind = (
       : operation.provider_setup_intent_id || operation.intent_kind === "setup"
         ? ("setup" as const)
         : null;
+export const operationPublicSummary = (
+  operation: Pick<billing_operation, "id" | "kind" | "state"> & Partial<billing_operation>,
+  state?: OperationState,
+) => ({
+  id: operation.id,
+  kind: operation.kind === "collection" ? "checkout" : operation.kind,
+  state: state ?? publicOperationState(operation.state),
+  confirmation_kind: operationConfirmationKind(operation),
+  payment_pending: operation.kind === "collection" || operation.intent_kind === "payment",
+  ...(operation.last_error_code === "card_credit_required"
+    ? { error_code: "billing_payment_method_credit_card_only" }
+    : operation.last_error_code === "payment_method_required"
+      ? { error_code: "billing_payment_method_update_required" }
+      : {}),
+});
 export const operationResponse = (
   operation: Pick<billing_operation, "id" | "kind" | "state"> & Partial<billing_operation>,
   confirmation: IntentConfirmation | null = null,
   state?: OperationState,
 ) => ({
   operation: {
-    id: operation.id,
-    kind: operation.kind === "collection" ? "checkout" : operation.kind,
-    state: state ?? publicOperationState(operation.state),
-    confirmation_kind: operationConfirmationKind(operation),
-    ...(operation.last_error_code === "card_credit_required"
-      ? { error_code: "billing_payment_method_credit_card_only" }
-      : operation.last_error_code === "payment_method_required"
-        ? { error_code: "billing_payment_method_update_required" }
-        : {}),
+    ...operationPublicSummary(operation, state),
     confirmation,
   },
 });

@@ -67,6 +67,8 @@ test("real isolated PostgreSQL retains scoped card maintenance and pending opera
       id: operation.id,
       kind: "payment_method",
       state: "processing",
+      confirmation_kind: null,
+      payment_pending: false,
     });
     assert.equal(await repository.customerForUser("another-user", identity), null);
     assert.equal(await repository.customerForUser(user.id, { ...identity, mode: "live" }), null);

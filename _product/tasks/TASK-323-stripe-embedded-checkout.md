@@ -1,13 +1,47 @@
 # TASK-323 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
 
 Data: 2026-11-09
-Status: Complemento credito-only validado local/sandbox; deploy inativo autorizado e ainda nao executado; ativacao financeira/fiscal separada
+Status: Auditoria final e correcoes em homolog; ativacao produtiva autorizada somente apos validacao, primeira cobranca real executada pelo usuario
 Decisao: [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md)
 Operacao: [Runbook Stripe](STRIPE-OPERATIONS.md)
 Base auditada: `homolog` em `820077ccd`, versao `0.1.799`
 Dependencias funcionais: TASK-02, TASK-31/32/33, TASK-56, TASK-142, TASK-313/314/315/317.
 
 ## Pedido e limite desta etapa
+
+### Liberacao integral solicitada em 10/11, apos o smoke assinado
+
+O usuario autorizou concluir implementacao, revisao, testes, publicacao e configuracao
+para que uma conta real possa assinar e receber NFS-e, sem novas confirmacoes de
+rotina. Esta autorizacao supera os limites de manter checkout/emissao Stripe OFF
+dos checkpoints historicos abaixo, mas nao autoriza o agente a efetuar a primeira
+cobranca real. A ativacao ocorre somente depois dos gates locais/sandbox e da
+conferencia do inventario live. Radar, permissoes da chave e fiscal MP legado
+permanecem preservados. Nenhuma nota live sera emitida antes de pagamento real.
+
+- [x] Branch homolog e base remota conferidas; check integral inicial aprovado.
+- [x] Fechar crash/race antes do primeiro debito e recuperacao transitoria sem
+  cobrar por polling; leituras nao consomem limite de replay de mutacoes.
+- [x] Fechar retomada, troca de cartao, 3DS e cancelamento em inadimplencia e
+  cortesia com contrato agendado; DTOs aditivos e UX mobile-first.
+- [x] Enviar simulation never somente em teste, classificar faturas fiscalmente
+  inelegiveis, adicionar diagnostico seguro e recuperacao auditada sem duplicacao.
+- [x] Revalidar credito/debito/prepago, cortesia, recusa, 3DS, renovacao, cancelamento,
+  concorrencia e eventos reais no sandbox existente; sem mocks como prova final.
+- [x] Validar passagem pagamento/ledger/fiscal test e recusa governamental explicita;
+  nao declarar autorizacao governamental nem entrega de email sem evidencia.
+- [x] Checks/builds, browser local, revisao cruzada e ADR; commit versionado deste fechamento.
+- [ ] PR homolog para main, deploys separados, preflight live somente leitura,
+  ativacao ordenada e smoke autenticado sem envio de cartao.
+- [ ] Entregar ao usuario o fluxo pronto para a primeira tentativa real, com
+  observacao de pagamento unico, nota, PDF e email apos a transacao dele.
+
+Impacto previsto: contratos aditivos, nenhum pacote novo; migrations somente se
+necessarias e expansivas. Implantar backend compativel antes do frontend; ativar
+reconciliacao/ledger/collector e fiscal Stripe apenas com inventario conferido,
+oferta habilitada por operacao auditada ao final. Rollback operacional suspende
+novas vendas sem apagar historico ou desligar conciliacao de pagamentos existentes.
+Uma validacao ampla reduz risco, mas nao prova ausencia absoluta de falhas.
 
 ### Complemento autorizado em 10/11: credito-only sem Radar Plus
 
@@ -1480,11 +1514,10 @@ Resultados desta rodada:
 - [x] UI/WebMCP e referencias oficiais V1/V2 consultadas nao oferecem criacao
   inicialmente desativada; criar inicia entrega. Runbook registra ordem segura
   e inventario READ ONLY, distinguindo dry-run sem escrita de transacao com lock.
-- [ ] Vinculo live persistido: depende do codigo/schema compativeis publicados,
-  admin responsavel identificado e revisao atual conferida; aplicar com vendas
-  explicitamente desativadas. Nenhuma revisao/identidade foi inventada.
-- [ ] Destino/segredo de webhook: aguarda rollout coordenado autorizado. Nao
-  usar segredo ficticio, URL alternativa ou janela ativa seguida de desativacao.
+- Naquele checkpoint, vinculo live dependia do codigo/schema compativeis publicados,
+  admin responsavel e revisao conferidos; destino/segredo aguardavam rollout
+  coordenado. Ambos foram preparados posteriormente no checkpoint de publicacao
+  inativa 0.1.808 abaixo, sem liberar vendas nem inventar revisao/identidade.
 - Evidencias privadas: live-offer-reference-20261110.jpg,
   live-webhook-prepared-20261110.jpg e live-webhook-offer-preparation-20261110.json.
   Sem chave/OTP ou dados pessoais. Nenhuma nova alteracao de Environment, permissao,
@@ -1538,6 +1571,133 @@ Resultados desta rodada:
   sem PII/ID no registro. Tabelas `billing_offers` e `billing_price_versions` ainda
   nao existem nesse banco; nenhuma revisao ou registro de oferta foi inventado.
   Migration produtiva e vinculo pausado continuam pendentes; nao houve apply.
-- [ ] Concluir commit de integracao, push autorizado, PR/checks/merge revisado,
-  deploy e smoke produtivo. Nao houve push, merge concluido ou deploy ate este
-  checkpoint; webhook/segredo e oferta live ainda nao estao concluidos.
+- Na pre-publicacao acima ainda nao havia push, merge concluido ou deploy.
+  As etapas posteriores sao separadas no checkpoint seguinte; nao usar um aceite
+  agregado para presumir frontend/admin ou entrega assinada de webhook concluida.
+
+
+### Publicacao compativel inativa concluida — 0.1.808
+
+- [x] Integracao local `6555b8619`, push e PR #174 concluidos; merge revisado em
+  `main@4bc6aa7`. Branch `homolog` preservada. Registro atual nao autoriza ativacao
+  financeira ou fiscal nem altera a separacao entre as quatro aplicacoes.
+- [x] Backend publicado com codigo compativel e atualizado apos armazenamento do
+  segredo de webhook. Smoke final `/health`, `/ready` e `/ping`: HTTP 200,
+  no-store, versao 0.1.808. Cinco migrations Stripe completadas, zero falhas.
+- [x] Gates conferidos no runtime: checkout disabled; collection, reconciliation,
+  ledger, emissao e automacao fiscal Stripe false; piloto fiscal Stripe vazio;
+  segredo de webhook presente. Nenhuma configuracao do Radar foi alterada.
+- [x] Destino webhook live criado para a propria conta, API `2026-10-28.endive`,
+  16 eventos do contrato. Segredo salvo somente no Environment do Dokploy:
+  126 variaveis anteriores preservadas e uma acrescentada, total 127. Nenhum
+  segredo, OTP ou payload integral registrado em Git ou artefatos de evidencia.
+- [x] Vinculo da oferta aplicado pela CLI auditada com responsavel real previamente
+  identificado, sem registrar PII/ID: revisao 1, 2990 centavos BRL, month,
+  `checkout_enabled=false`, auditoria confirmada. Nao criou assinatura/cobranca
+  nem alterou produto/preco remoto ou beneficios existentes.
+- [x] POST sem assinatura, corpo vazio JSON, recusado com HTTP 400 e codigo de
+  assinatura invalida. Inventario posterior: zero contratos Stripe e zero inbox.
+  Naquele checkpoint, painel do destino mostrou zero entregas e zero falhas;
+  leitura historica anterior a prova assinada positiva registrada abaixo.
+- [x] Comprovar entrega positiva assinada do webhook live: pendencia deste
+  checkpoint superada pela prova de transporte de 10/11/2026, 20:18:05 BRT,
+  registrada abaixo. Nao equivale a conciliacao ou E2E financeiro; reconciliador OFF.
+- Historico anterior a essa prova: tentativa de `events resend` de
+  `product.updated` real pela interface WebMCP do Workbench foi recusada pelo
+  parser como comando nao suportado antes do envio. Naquela etapa nao houve
+  entrega, evento fabricado, topico acrescentado ou permissao ampliada.
+  Esse limite da interface nao se aplica ao console visual usado posteriormente;
+  `product.updated` nao substitui evento financeiro suportado no contrato.
+- [x] Identidade Vercel verificada e builds da origem `main@4bc6aa7` concluidos:
+  frontend `ErUrL9gy8MKyQHLXksWzNEDMjfZo`, Ready em 4m16s;
+  admin `BZqyMmpy92Murx3eJqFPraZtNAya`, Ready em 3m03s.
+- [x] Artefatos promovidos e conferidos como producao corrente nos dominios
+  `www.lectum.com.br` e `admin.lectum.com.br`, respectivamente. Ambos `/version`
+  HTTP 200, versao 0.1.808, `Cache-Control: no-store, max-age=0` e
+  `X-Robots-Tag: noindex, nofollow, noarchive`.
+- [x] Browser de producao renderizou os logins frontend/admin; rota protegida do
+  frontend redirecionou corretamente ao login. Sem sessao protegida nesta prova,
+  sem clicar/operar checkout ou preencher/enviar cartao. Smoke de publicacao
+  inativa nao equivale a validacao autenticada integral ou E2E financeiro live.
+- Video nao teve mudanca funcional neste lote e nao foi redeployado. A versao
+  de cada aplicacao deve ser reportada separadamente, sem presumir sincronismo.
+- Leitura fiscal MP legada e identidade do responsavel pela oferta ja foram
+  comprovadas nos checkpoints anteriores; nao reabrir esses gates nem marcar
+  como validada uma nova emissao Stripe. Suportes historicos continuam como
+  historico; Radar SetupIntents nao e requisito deste desenho.
+- Vendas, cobrancas reais, emissao Stripe e Radar permanecem desativados/intocados.
+  MP/SendNF legados preservados. Publicacao inativa dos tres apps concluida;
+  integracao E2E ativa nao declarada. A entrega positiva entao pendente foi
+  comprovada posteriormente apenas para transporte, conforme checkpoint abaixo.
+- Checkpoint documental local 0.1.809: bump unico executado pelo agente principal;
+  nao repeti-lo. Sem mudanca funcional, nova migration ou novo deploy para esse
+  registro. Artefatos produtivos backend/frontend/admin permanecem em 0.1.808.
+
+
+### Transporte webhook assinado sem operacao financeira — 10/11/2026, 20:18:05 BRT
+
+- [x] Sob autorizacao explicita, somente `product.updated` foi acrescentado
+  temporariamente ao destino live (16 → 17 eventos), preservando URL, nome,
+  descricao, API, conta, status e segredo. Antes dessa adicao, o console visual
+  recusou reenvio com `not_subscribed`, sem entrega; a recusa anterior do parser
+  WebMCP tambem nao havia enviado evento.
+- [x] Console visual oficial Stripe Shell reenviou uma vez um evento real
+  `product.updated` ja existente, sem criar evento, usar fixture sintetica ou
+  gerar operacao financeira. Painel Event deliveries: Delivered HTTP 200,
+  API `2026-10-28.endive`, resposta exata
+  `{"status":200,"success":true,"data":{"processed":false}}`.
+  Assinatura/transporte aceitos; topico fora da allowlist financeira ignorado,
+  como esperado. Evidencias visuais/operacionais privadas, sem IDs ou segredos
+  neste registro.
+- [x] `product.updated` removido e configuracao salva. Leitura final do servidor
+  confirmou exatamente os 16 topicos originais e demais campos preservados.
+  Nenhuma permissao, chave, configuracao de Radar ou gate foi alterada.
+- [x] Inventarios READ ONLY antes/depois mantiveram oito contagens em zero:
+  inbox do evento reenviado, operacoes, assinaturas Stripe, recibos financeiros,
+  jobs do ledger, jobs fiscais, documentos fiscais e ofertas habilitadas.
+- [x] Runtime posterior: checkout disabled; collection, reconciliation, ledger,
+  emissao e automacao fiscal Stripe false; piloto fiscal vazio. Oferta revisao 1,
+  2990 centavos BRL/month, checkout false. Backend `/health`, `/ready` e `/ping`
+  HTTP 200/0.1.808 apos a prova.
+- [ ] Recebimento e processamento de eventos financeiros, conciliacao e E2E live
+  continuam nao testados e nao autorizados. O HTTP 200/processed false fecha
+  somente o gate de transporte assinado, sem habilitar vendas, cobrancas,
+  renovacoes, beneficios ou emissao fiscal.
+- Checkpoint documental local 0.1.810, bump unico do agente principal. Nenhuma
+  mudanca de codigo/schema ou novo deploy foi necessaria; producao permanece
+  0.1.808. Nenhuma cobranca real, nota, assinatura ou operacao financeira criada.
+
+
+### Evidencias finais de liberacao 0.1.811 (antes da promocao)
+
+- Check raiz aprovado em0.1.811: frontend1252pass/16opt-inskips,
+  backend1370pass/19opt-inskips, admin264pass e video100pass/16opt-inskips;
+  suites opt-in relevantes PG executadas separadamente com sucesso, sem usar skip
+  como criterio. Builds backend/admin/frontend aprovados; frontend compilado /version200
+  0.1.811/no-store/noindex, login200 e billing anonimo307; servidores QA encerrados.
+- Browser local real320/390/1440: cortesia com contrato futuro pode cancelar a
+  cobranca sem perder beneficio; cartao substituido apos recusa gera zero captura;
+  CTA explicito retoma a mesma assinatura e captura uma vez; SetupIntent e PI com
+  desafios3DS reais test concluidos; dois pagamentos sandbox confirmados, nao live.
+- Historico de contrato cancelado/expirado aparece no plano gratuito. Endereco
+  fiscal editado e salvo pela UI retorna ao plano gratuito, sem nova assinatura,
+  acesso profissional ou nota; refetch autoritativo evita redirect por cache antigo.
+- Falhas429 preservam CORS para origens permitidas e continuam limitadas, incluindo
+  OPTIONS; HTTP real cobre origem negada/429 legivel/preflight. Limites produtivos
+  nao foram alterados. QA multiploIPloopback precisou quota local existente1000.
+- Readiness live somente leitura: conta Stripe habilitada sem pendencias,
+  produto/preco ativo2990BRLmensal; SendNFready/liveReady, emailenabled,
+  approval_requiredfalse. Fiscal010501/ISS201 e descricao anterior preservados.
+- Teste fiscal real com chave test: preview2990, pagamento/ledger/auditoria/recovery,
+  uma unica criacao SendNF com simulationnever, recusa governamentalE0207 por CPF
+  oficial de exemplo nao cadastrado. simulationfalse/accesskeynull; replay nao cria
+  outra nota. Isso valida recusa/recuperacao, NAO autorizacao governamental/email.
+- Nao houve schema novo, pacote, mock de provider, cobranca ou NFS-e live. Autenticacao
+  QA temporaria restaurada e recorrencias criadas encerradas, preservando historico.
+  Primeira transacao real, PDF autorizado e entrega de email permanecem evidencia
+  a coletar apos acao do usuario; nao se afirma ausencia absoluta de falhas.
+
+Fechamento CORS: backend check final1393total/1374pass/19opt-in skips/zerofalhas e build
+aprovados;9testesHTTP reais do contratoCORS/limiter passaram. Preflight esgotado
+continua falhando fechado; nao se promete leitura de429 quando o proprio OPTIONS
+e bloqueado. Limite live1000 foi observado por headerpublico, sem alteracao.

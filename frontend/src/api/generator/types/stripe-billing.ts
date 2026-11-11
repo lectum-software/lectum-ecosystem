@@ -28,6 +28,8 @@ export type StripeBillingOperationSummary = {
   /** Non-secret phase, including on reload; never a PaymentIntent confirmation permission. */
   confirmation_kind?: StripeBillingConfirmationKind | null;
   error_code?: StripeBillingOperationErrorCode | null;
+  /** Non-secret financial phase, including processing and review, never permission to charge. */
+  payment_pending?: boolean;
 };
 
 export type StripeBillingConfig = {

@@ -15,7 +15,7 @@ import { socket } from "@/main/socket";
 import { getTrustProxySetting } from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
-import { createApiCors } from "./cors";
+import { createApiCors, finishApiPreflight } from "./cors";
 import swagger from "./documents";
 import i18next from "./i18n";
 import routes from "./routes";
@@ -85,7 +85,10 @@ server.use((req, res, next) => {
   next();
 });
 
+// Allowed browser clients must read a rate-limit response instead of a CORS/network error.
+server.use(createApiCors({ preflightContinue: true }));
 server.use(getLimiter({}));
+server.use(finishApiPreflight);
 server.use(swagger);
 server.use(express.static(path.resolve(process.cwd(), "public")));
 server.use(cookieParser());
@@ -96,8 +99,6 @@ server.use(
     ignoreRoutes: ["/swagger-ui", "/files"],
   }),
 );
-
-server.use(createApiCors());
 
 // Stripe signatures require the exact byte sequence, independently bounded from general JSON limits.
 server.use(

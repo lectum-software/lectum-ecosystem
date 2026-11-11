@@ -27,9 +27,18 @@ export const stripeBillingOperationErrorCode = (
 /** Only the scoped pending operation returned by the server bypasses the active-checkout redirect. */
 export const isStripeBillingActionPending = (operation?: StripeBillingOperationSummary | null) =>
   operation?.kind === "checkout" &&
-  operation.confirmation_kind === "action" &&
+  (operation.payment_pending === true || operation.confirmation_kind === "action") &&
   operation.state !== "complete" &&
   operation.state !== "failed";
+
+/** Only a final card rejection unlocks replacement during a checkout; the server rechecks the lease. */
+export const canReplaceStripePendingCard = (operation?: StripeBillingOperationSummary | null) =>
+  !operation ||
+  operation.kind === "payment_method" ||
+  (operation.state === "requires_confirmation" &&
+    isStripeBillingActionPending(operation) &&
+    (operation.error_code === "billing_payment_method_update_required" ||
+      operation.error_code === "billing_payment_method_credit_card_only"));
 
 /** Financial confirmation belongs to the server. This client can only set up or authenticate. */
 export const readStripeBillingConfirmation = (result: StripeBillingOperationResponse | null) => {

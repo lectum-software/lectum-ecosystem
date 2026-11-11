@@ -52,7 +52,8 @@ const PaymentForm = ({ config, kind, onComplete }: Props) => {
   const actionOnly = operation.operation?.confirmation_kind === "action";
   const retryable = canRetryStripeBillingOperation(state);
   const needsCardUpdate =
-    operation.operation?.error_code === "billing_payment_method_update_required";
+    operation.operation?.error_code === "billing_payment_method_update_required" ||
+    operation.operation?.error_code === "billing_payment_method_credit_card_only";
   const busy = submitting || operation.busy;
   const courtesy = kind === "checkout" && config.quote?.intent === "courtesy_renewal";
 
@@ -213,6 +214,12 @@ const PaymentForm = ({ config, kind, onComplete }: Props) => {
           </Button>
         </>
       )}
+      {kind === "checkout" ? (
+        <p className="text-sm leading-6 text-muted">
+          Após o pagamento, confirme seus dados fiscais e endereço para emissão da nota. Acompanhe a
+          emissão em Minha assinatura.
+        </p>
+      ) : null}
       <div className="min-h-6" aria-live="polite">
         {elementError || operation.error ? (
           <InlineAlert variant="error">{elementError || operation.error}</InlineAlert>

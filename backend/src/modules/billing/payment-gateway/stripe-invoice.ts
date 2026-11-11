@@ -12,6 +12,29 @@ import {
 } from "./stripe-projection";
 import type { StripeIdentity } from "./stripe-types";
 
+/** Closed fiscal disposition; financial consumers still see payment_not_eligible. */
+export class StripeInvoicePaymentError extends StripeGatewayError {
+  constructor(
+    readonly disposition:
+      | "awaiting_payment"
+      | "zero_invoice"
+      | "void_invoice"
+      | "uncollectible_invoice",
+  ) {
+    super("payment_not_eligible");
+  }
+}
+
+export const assertStripeInvoicePaymentPending = (invoice: Stripe.Invoice) => {
+  if (invoice.amount_paid !== 0) return;
+  if (invoice.status === "paid") throw new StripeInvoicePaymentError("zero_invoice");
+  if (invoice.status === "void") throw new StripeInvoicePaymentError("void_invoice");
+  if (invoice.status === "uncollectible")
+    throw new StripeInvoicePaymentError("uncollectible_invoice");
+  if (invoice.status === "draft" || invoice.status === "open")
+    throw new StripeInvoicePaymentError("awaiting_payment");
+};
+
 export type StripePaidInvoice = StripeInvoiceEvidence & {
   payment: GatewayInvoicePayment;
   financialFacts: {
@@ -56,6 +79,7 @@ export const readStripePaidInvoice = async (
   const invoiceId = requireStripeId(invoice.id, "in");
   const subscriptionId = invoiceSubscriptionId(invoice);
   const customerId = requireStripeId(invoice.customer, "cus");
+  assertStripeInvoicePaymentPending(invoice);
   const paidAt = stripeDate(invoice.status_transitions.paid_at);
   if (
     !subscriptionId ||

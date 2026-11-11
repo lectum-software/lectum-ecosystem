@@ -84,21 +84,24 @@ export class StripeCollectionRepository {
         AND status IN ('ativa', 'inativa', 'inadimplente')
         AND collection_policy = ${CREDIT_COLLECTION_POLICY} FOR UPDATE`;
       if (locked.length !== 1) throw new StripeBillingError("billing_collection_unavailable");
-      const parents = input.initialInvoice
-        ? await tx.billing_operation.findMany({
-            where: {
-              user_id: target.userId,
-              subscription_id: target.local.id,
-              provider_subscription_id: target.provider.subscriptionId,
-              ...scope(identity),
-              kind: "checkout",
-              intent: "subscription",
-              state: { not: "failed" },
-            },
-            take: 2,
-          })
-        : [];
-      const parent = parents.length === 1 ? parents[0] : null;
+      const parents = await tx.billing_operation.findMany({
+        where: {
+          user_id: target.userId,
+          subscription_id: target.local.id,
+          provider_subscription_id: target.provider.subscriptionId,
+          ...scope(identity),
+          kind: "checkout",
+          intent: input.initialInvoice
+            ? "subscription"
+            : { in: ["subscription", "courtesy_renewal"] },
+          state: input.initialInvoice ? { not: "failed" } : "complete",
+        },
+        take: 2,
+      });
+      // Renewals require a durably completed paid checkout or explicitly scheduled courtesy.
+      // A default assigned before a crashed enrollment is never authorization to start billing.
+      if (parents.length !== 1) throw new StripeBillingError("billing_operation_pending");
+      const parent = input.initialInvoice ? parents[0] : null;
       if (
         (input.initialInvoice && !parent) ||
         (input.parentOperationId && parent?.id !== input.parentOperationId)
@@ -285,9 +288,21 @@ export class StripeCollectionRepository {
   }
 
   finish(id: string, token: string, data: Prisma.billing_operationUpdateManyMutationInput) {
+    const recovered =
+      data.last_error_code === null ||
+      ["payment_method_required", "authentication_required", "card_credit_required"].includes(
+        typeof data.last_error_code === "string" ? data.last_error_code : "",
+      );
     return prisma.billing_operation.updateMany({
       where: { id, lease_token: token },
-      data: { ...data, lease_token: null, lease_until: null },
+      // Successful polling/SCA reads do not consume the consecutive failure budget.
+      // Ambiguous confirmation proof and unresolved transport errors never reset it.
+      data: {
+        ...data,
+        ...(recovered ? { attempts: 0 } : {}),
+        lease_token: null,
+        lease_until: null,
+      },
     });
   }
 

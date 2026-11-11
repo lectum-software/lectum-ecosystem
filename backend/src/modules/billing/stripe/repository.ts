@@ -13,7 +13,7 @@ import {
   StripeBillingError,
 } from "./policy";
 
-import { TERMINAL_OPERATION_STATES } from "./recovery-policy";
+import { STRIPE_MAX_CREATE_ATTEMPTS, TERMINAL_OPERATION_STATES } from "./recovery-policy";
 
 const scope = (identity: StripeIdentity) => ({
   gateway: "stripe",
@@ -68,7 +68,7 @@ export class StripeBillingRepository {
         user_id: userId,
         ...scope(identity),
         kind: "collection",
-        state: "requires_confirmation",
+        state: { in: OPEN_OPERATION_STATES },
         intent_kind: "payment",
       },
       orderBy: { created_at: "asc" },
@@ -312,9 +312,9 @@ export class StripeBillingRepository {
         state: { notIn: TERMINAL_OPERATION_STATES },
         ...availableLease(now),
       },
-      data: { ...token, attempts: { increment: 1 } },
+      data: token,
     });
-    return result.count ? { ...operation, ...token, attempts: operation.attempts + 1 } : null;
+    return result.count ? { ...operation, ...token } : null;
   }
 
   checkpointRequest(operation: billing_operation, token: string, fingerprint: string) {
@@ -322,13 +322,15 @@ export class StripeBillingRepository {
       where: {
         id: operation.id,
         lease_token: token,
+        lease_until: { gt: new Date() },
+        attempts: { lt: STRIPE_MAX_CREATE_ATTEMPTS },
         state: { notIn: TERMINAL_OPERATION_STATES },
         OR: [
           { request_fingerprint: fingerprint },
           { state: "reserved", request_fingerprint: null },
         ],
       },
-      data: { request_fingerprint: fingerprint, state: "creating" },
+      data: { request_fingerprint: fingerprint, state: "creating", attempts: { increment: 1 } },
     });
   }
 

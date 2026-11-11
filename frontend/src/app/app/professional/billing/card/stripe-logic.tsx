@@ -11,6 +11,8 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { billingMaintenanceSubscription } from "@/utils/billing-management";
+import { canReplaceStripePendingCard } from "@/utils/stripe-billing";
 import { BillingProviderState } from "../components/provider-state";
 import { StripePaymentForm } from "../components/stripe-payment-form";
 
@@ -18,8 +20,7 @@ export const StripeCardLogic = ({ config }: { config: StripeBillingConfig }) => 
   const billing = usePsychologistBilling();
   const queryClient = useQueryClient();
   const [complete, setComplete] = useState(false);
-  const subscription =
-    billing.subscription.data?.subscription ?? billing.subscription.data?.current;
+  const subscription = billingMaintenanceSubscription(billing.subscription.data);
   const paymentMethod = billing.subscription.data?.payment_method;
   const confirm = async () => {
     const fresh = await getPsychologistBillingSubscription();
@@ -62,10 +63,12 @@ export const StripeCardLogic = ({ config }: { config: StripeBillingConfig }) => 
           ) : (
             <>
               <h2 className="text-xl font-bold">Novo cartão</h2>
-              {config.pending_operation && config.pending_operation.kind !== "payment_method" ? (
+              {!canReplaceStripePendingCard(config.pending_operation) ? (
                 <InlineAlert>
-                  Existe uma assinatura em confirmação. Confira seu status antes de alterar o
-                  cartão.
+                  Existe uma tentativa em confirmação. Confira seu status antes de alterar o cartão.
+                  <Button asChild className="mt-3 w-full" variant="outline">
+                    <Link href="/app/profissional/assinatura/pagamento">Conferir tentativa</Link>
+                  </Button>
                 </InlineAlert>
               ) : (
                 <StripePaymentForm config={config} kind="payment_method" onComplete={confirm} />

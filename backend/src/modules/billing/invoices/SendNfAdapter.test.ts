@@ -182,12 +182,14 @@ test("live creation verifies company and preview then sends explicit ISS and sta
       }),
     },
   };
-  await adapter().create(addressedRequest, "010501");
+  await adapter().create({ ...addressedRequest, simulation: "never" }, "010501");
   assert.deepEqual(
     calls.map((c) => c.path),
     ["/v1/go-live", `/v1/companies/${companyId}`, "/v1/nfse/preview", "/v1/nfse"],
   );
   assert.equal(JSON.parse(String(calls[3].init?.body)).iss_rate, 201);
+  assert.equal(JSON.parse(String(calls[3].init?.body)).simulation, undefined);
+  assert.equal(JSON.parse(String(calls[2].init?.body)).simulation, undefined);
   assert.deepEqual(
     JSON.parse(String(calls[3].init?.body)).taker.address,
     addressedRequest.taker.address,

@@ -1,4 +1,5 @@
 import { getNewSubscriptionGatewayName, getStripeGateway } from "../payment-gateway";
+import { stripeFailureObservation } from "../payment-gateway/stripe-error";
 import { unresolvedTerminalCheckoutUpdate } from "./checkout-completion";
 import { recoverCreditEnrollment, recoverCreditSubscription } from "./checkout-enrollment";
 import { collectStripeInvoice } from "./collection-service";
@@ -186,6 +187,8 @@ export const confirmStripeCheckout = async (
       console.warn("[BILLING_STRIPE] Operação aguardando conciliação.", {
         operation_ref: stripeOperationReference(claim.id),
         kind: "checkout",
+        stage: "checkout_enrollment",
+        ...stripeFailureObservation(failure),
       });
     return currentOperationResponse(operation, repository);
   }

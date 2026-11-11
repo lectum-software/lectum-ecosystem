@@ -153,3 +153,20 @@ test("payment and authorized installment events share the actual payment identit
   assert.equal(items[0].payment_id, "payment-1");
   assert.equal(mergeInvoicePaymentHistory([payment()], items).length, 1);
 });
+
+test("sandbox invoice joins only its scoped ledger receipt and retains adjustment status", () => {
+  const invoice = payment({ mode: "test" });
+  invoice.invoice!.mode = "test";
+  const receipt = payment({
+    invoice: undefined,
+    mode: "test",
+    status: "processado",
+    status_label: "Estornado",
+  });
+  const liveReceipt = payment({ id: "live-other", invoice: undefined, mode: "live" });
+  const rows = mergeInvoicePaymentHistory([invoice], [receipt, liveReceipt]);
+  assert.equal(rows.length, 2);
+  const joined = rows.find((item) => item.invoice);
+  assert.equal(joined?.status_label, "Estornado");
+  assert.equal(joined?.invoice?.status, "awaiting_activation");
+});

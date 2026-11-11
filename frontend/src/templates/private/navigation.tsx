@@ -233,10 +233,8 @@ export const canStayDuringPaidOnboarding = (pathname: string, requiredPath: stri
   if (pathname === PSYCHOLOGIST_ONBOARDING_PATHS.completion) return true;
   if (isPathOrDescendant(pathname, requiredPath)) return true;
 
-  if (requiredPath === PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress) {
-    return isPathOrDescendant(pathname, PSYCHOLOGIST_ONBOARDING_PATHS.checkout);
-  }
-
+  // Missing fiscal/profile data must not block cancellation or bank authentication.
+  // These management routes do not grant benefits or complete onboarding by themselves.
   return PAID_ONBOARDING_MANAGEMENT_PATHS.has(pathname);
 };
 
@@ -276,6 +274,9 @@ export const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
 export const PAID_ONBOARDING_MANAGEMENT_PATHS = new Set([
   "/app/profissional/assinatura",
   "/app/profissional/assinatura/cartao",
+  "/app/profissional/assinatura/endereco",
+  "/app/profissional/assinatura/pagamento",
+  "/app/profissional/assinatura/retorno",
   "/app/profissional/assinatura/planos",
   "/app/profissional/assinatura/gerenciar",
   "/app/configuracoes/conta",

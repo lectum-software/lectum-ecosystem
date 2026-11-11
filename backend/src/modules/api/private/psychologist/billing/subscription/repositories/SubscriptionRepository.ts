@@ -1,5 +1,9 @@
 import prisma, { type ORM } from "@/infra/database/prisma";
-import type { payment_method, professional_subscription } from "@/interfaces/objects";
+import type {
+  payment_event,
+  payment_method,
+  professional_subscription,
+} from "@/interfaces/objects";
 import { resolveCancellationState } from "@/modules/billing/cancellation-period";
 import { resolveEffectiveBillingSubscription } from "@/modules/billing/effective-subscription";
 import {
@@ -11,6 +15,7 @@ import {
   buildPaymentHistoryItemsForSubscription,
   mergeGatewaySummaryPaymentHistory,
 } from "@/modules/billing/payment-history";
+import { ownedStripePaymentHistory } from "@/modules/billing/stripe/payment-history";
 import {
   getStoredSubscriptionGateway,
   subscriptionGatewayName,
@@ -274,15 +279,57 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     });
   }
 
+  async showOwnedPaymentHistory(psychologistId: string): Promise<BillingPaymentHistoryItem[]> {
+    const subscriptions = await this.subscriptionRepository.findMany({
+      where: { psychologist_id: psychologistId, deleted: false, plan: { slug: "profissional" } },
+      include: { plan: true },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    });
+    const stripe = await ownedStripePaymentHistory(psychologistId, subscriptions);
+    const legacy: BillingPaymentHistoryItem[] = [];
+    const mpContracts = subscriptions.filter(
+      (item) => subscriptionGatewayName(item) === "mercadopago",
+    );
+    const events = mpContracts.length
+      ? await this.paymentEventRepository.findMany({
+          where: { gateway: "mercadopago", deleted: false },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          take: MAX_PAYMENT_EVENTS_TO_SCAN,
+        })
+      : [];
+    for (const [index, subscription] of mpContracts.entries()) {
+      // Historical local facts survive; one remote fallback prevents N network calls after retries.
+      legacy.push(
+        ...(await this.showPaymentHistory(subscription, { events, remote: index === 0 })),
+      );
+    }
+    const unique = new Map<string, BillingPaymentHistoryItem>();
+    for (const item of [...stripe, ...legacy]) {
+      const key = item.payment_id
+        ? JSON.stringify([item.gateway, item.mode ?? "live", item.payment_id])
+        : item.id;
+      if (!unique.has(key)) unique.set(key, item);
+    }
+    return [...unique.values()]
+      .sort(
+        (a, b) =>
+          (b.occurred_at?.getTime() ?? 0) - (a.occurred_at?.getTime() ?? 0) ||
+          b.id.localeCompare(a.id),
+      )
+      .slice(0, 100);
+  }
+
   async showPaymentHistory(
     subscription: professional_subscription | null,
+    options?: { events: payment_event[]; remote: boolean },
   ): Promise<BillingPaymentHistoryItem[]> {
     if (!subscription) return [];
 
     const provider = subscriptionGatewayName(subscription);
     if (!provider) return [];
     const events =
-      provider === "mercadopago"
+      options?.events ??
+      (provider === "mercadopago"
         ? await this.paymentEventRepository.findMany({
             where: {
               gateway: subscription.gateway || "mercadopago",
@@ -293,11 +340,11 @@ export class SubscriptionRepository implements ISubscriptionRepository {
             },
             take: MAX_PAYMENT_EVENTS_TO_SCAN,
           })
-        : [];
+        : []);
 
     const localItems = buildPaymentHistoryItemsForSubscription(events, subscription);
 
-    if (subscription.gateway_subscription_id) {
+    if (subscription.gateway_subscription_id && options?.remote !== false) {
       try {
         const gateway = getStoredSubscriptionGateway(subscription);
         const summary = await gateway.getSubscriptionPaymentSummary(

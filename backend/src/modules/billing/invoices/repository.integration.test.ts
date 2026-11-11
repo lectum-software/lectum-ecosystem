@@ -32,7 +32,15 @@ test("real isolated PostgreSQL scopes fiscal deduplication, claim and immutable 
       3,
     );
     const scope = { gateway: "stripe" as const, accountId, mode: "test" as const };
-    const [a, b] = await Promise.all([repository.claimJob([scope]), repository.claimJob([scope])]);
+    assert.equal(await repository.claimJob([scope], new Date(), []), null);
+    assert.equal(await repository.claimJob([scope], new Date(), ["unrelated-job"]), null);
+    const scopedJob = await prisma.billing_invoice_job.findFirstOrThrow({
+      where: { gateway: "stripe", account_id: accountId, mode: "test" },
+    });
+    const [a, b] = await Promise.all([
+      repository.claimJob([scope], new Date(), [scopedJob.id]),
+      repository.claimJob([scope]),
+    ]);
     assert.equal([a, b].filter(Boolean).length, 1);
     const claimed = (a ?? b)!;
     assert.equal(claimed.account_id, accountId);
@@ -67,7 +75,12 @@ test("real isolated PostgreSQL scopes fiscal deduplication, claim and immutable 
       await repository.claimInvoice(company, [{ ...scope, accountId: otherAccountId }]),
       null,
     );
-    const owned = await repository.claimInvoice(company, [scope]);
+    assert.equal(await repository.claimInvoice(company, [scope], new Date(), "test", []), null);
+    assert.equal(
+      await repository.claimInvoice(company, [scope], new Date(), "test", ["unrelated-invoice"]),
+      null,
+    );
+    const owned = await repository.claimInvoice(company, [scope], new Date(), "test", [saved.id]);
     assert.equal(owned?.id, saved.id);
   } finally {
     await prisma.billing_invoice.deleteMany({ where: { company_id: company } });

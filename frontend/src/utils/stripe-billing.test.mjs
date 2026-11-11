@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  billingAddressAccess,
+  billingMaintenanceSubscription,
+  canManageBillingContract,
+  shouldExplainStripeInvoice,
+} from "./billing-management.ts";
+import {
   buildStripeBillingReturnUrl,
+  canReplaceStripePendingCard,
   canRetryStripeBillingOperation,
   cleanStripeBillingReturnSearch,
   getStripeElementErrorMessage,
@@ -391,5 +398,206 @@ test("operação concluída não inventa benefício: retorno e checkout distingu
   assert.match(
     source("../app/app/professional/billing/components/use-stripe-operation.ts"),
     /if \(!completed && mountedRef.current\)/,
+  );
+});
+
+test("financial phases remain reachable through processing/review without granting payment permission", () => {
+  for (const state of ["requires_confirmation", "processing", "review_required"]) {
+    assert.equal(
+      isStripeBillingActionPending({
+        id,
+        kind: "checkout",
+        state,
+        payment_pending: true,
+        confirmation_kind: null,
+      }),
+      true,
+    );
+  }
+  for (const state of ["complete", "failed"])
+    assert.equal(
+      isStripeBillingActionPending({ id, kind: "checkout", state, payment_pending: true }),
+      false,
+    );
+  const recovery = source("../app/app/professional/billing/components/stripe-recovery-action.tsx");
+  assert.match(recovery, /useStripeBillingConfig/);
+  assert.match(recovery, /Continuar pagamento/);
+  assert.doesNotMatch(recovery, /mutate|confirmStripeBilling|verify\(true/);
+});
+
+test("only a definitive card rejection allows replacement alongside a pending checkout", () => {
+  const pending = { id, kind: "checkout", state: "requires_confirmation", payment_pending: true };
+  assert.equal(canReplaceStripePendingCard(null), true);
+  assert.equal(canReplaceStripePendingCard({ ...pending, kind: "payment_method" }), true);
+  for (const error_code of [
+    "billing_payment_method_update_required",
+    "billing_payment_method_credit_card_only",
+  ])
+    assert.equal(canReplaceStripePendingCard({ ...pending, error_code }), true);
+  for (const state of ["processing", "review_required"])
+    assert.equal(
+      canReplaceStripePendingCard({
+        ...pending,
+        state,
+        error_code: "billing_payment_method_update_required",
+      }),
+      false,
+    );
+  assert.equal(canReplaceStripePendingCard(pending), false);
+  assert.equal(
+    canReplaceStripePendingCard({
+      ...pending,
+      payment_pending: false,
+      confirmation_kind: "setup",
+      error_code: "billing_payment_method_update_required",
+    }),
+    false,
+  );
+  const card = source("../app/app/professional/billing/card/stripe-logic.tsx");
+  assert.match(card, /canReplaceStripePendingCard\(config.pending_operation\)/);
+});
+
+test("courtesy benefits do not hide the scheduled contract for card maintenance and cancellation", () => {
+  const courtesy = {
+    id: "courtesy",
+    source: "admin_grant",
+    status: "ativa",
+    plan: { slug: "profissional" },
+  };
+  const scheduled = {
+    id: "scheduled",
+    source: "stripe",
+    gateway: "stripe",
+    status: "inativa",
+    gateway_subscription_id: "sub_scheduled",
+    plan: { slug: "profissional" },
+  };
+  const response = {
+    current: courtesy,
+    subscription: courtesy,
+    payment_method: null,
+    maintenance_subscription: scheduled,
+  };
+  assert.equal(billingMaintenanceSubscription(response), scheduled);
+  assert.equal(response.current, courtesy);
+  assert.equal(canManageBillingContract(courtesy), false);
+  for (const status of ["ativa", "inativa", "inadimplente"])
+    assert.equal(canManageBillingContract({ ...scheduled, status }), true);
+  assert.equal(canManageBillingContract({ ...scheduled, status: "cancelada" }), false);
+  assert.equal(
+    billingMaintenanceSubscription({ ...response, maintenance_subscription: null }),
+    null,
+  );
+  assert.equal(
+    billingMaintenanceSubscription({ ...response, maintenance_subscription: undefined }),
+    null,
+  );
+  const legacy = { ...scheduled, source: "mercadopago", gateway: "mercadopago" };
+  assert.equal(
+    billingMaintenanceSubscription({ subscription: legacy, current: legacy, payment_method: null }),
+    legacy,
+  );
+  const page = source("../app/app/professional/billing/logic.tsx");
+  assert.match(page, /const canCancelSubscription = Boolean\(maintenance\)/);
+  assert.match(page, /const paymentActionHref = canManageCard/);
+  assert.match(page, /StripeRecoveryAction/);
+  assert.match(
+    source("../app/app/professional/billing/card/stripe-logic.tsx"),
+    /billingMaintenanceSubscription/,
+  );
+});
+
+test("incomplete fiscal onboarding does not hide cancellation or bank authentication", () => {
+  const navigation = source("../templates/private/navigation.tsx");
+  const guard = navigation.slice(
+    navigation.indexOf("export const canStayDuringPaidOnboarding"),
+    navigation.indexOf("export const getNavigationContextPathname"),
+  );
+  assert.match(guard, /PAID_ONBOARDING_MANAGEMENT_PATHS.has\(pathname\)/);
+  assert.doesNotMatch(guard, /requiredPath === PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress/);
+  const paths = navigation.slice(
+    navigation.indexOf("export const PAID_ONBOARDING_MANAGEMENT_PATHS"),
+    navigation.indexOf("export const isPrimaryDesktopNavigationPath"),
+  );
+  for (const route of [
+    "/app/profissional/assinatura",
+    "/app/profissional/assinatura/cartao",
+    "/app/profissional/assinatura/pagamento",
+    "/app/profissional/assinatura/retorno",
+  ])
+    assert.ok(paths.includes(`"${route}"`));
+});
+
+test("fiscal maintenance capability survives cancellation/courtesy without implying benefits", () => {
+  assert.deepEqual(billingAddressAccess(undefined, true, false), {
+    editable: true,
+    maintenanceOnly: false,
+  });
+  assert.deepEqual(billingAddressAccess(undefined, false, false), {
+    editable: false,
+    maintenanceOnly: false,
+  });
+  assert.deepEqual(billingAddressAccess(undefined, true, true), {
+    editable: false,
+    maintenanceOnly: false,
+  });
+  for (const active of [true, false])
+    assert.deepEqual(
+      billingAddressAccess(
+        { billing_address_editable: true, billing_address_maintenance_only: true },
+        active,
+        active,
+      ),
+      { editable: true, maintenanceOnly: true },
+    );
+  assert.equal(
+    billingAddressAccess({ billing_address_editable: false }, true, false).editable,
+    false,
+  );
+  assert.deepEqual(
+    billingAddressAccess(
+      { billing_address_editable: true, billing_address_maintenance_only: false },
+      true,
+      true,
+    ),
+    { editable: true, maintenanceOnly: true },
+  );
+  const address = source("../app/app/professional/billing/address/logic.tsx");
+  assert.match(
+    address,
+    /billingAddressAccess\(\s*billing.current.data,\s*activeProfessional,\s*activeCourtesy,?\s*\)/,
+  );
+  assert.match(address, /if \(isLoading \|\| currentIsError \|\| editable\) return/);
+  assert.match(address, /Salvar endereço fiscal/);
+  assert.match(
+    address,
+    /const isLoading = billing.current.isPending \|\| billing.current.isFetching/,
+  );
+  assert.match(
+    source("../templates/private/navigation.tsx"),
+    /"\/app\/profissional\/assinatura\/endereco"/,
+  );
+});
+
+test("fiscal hint only describes actual paid positive Stripe history without a document", () => {
+  const paid = { gateway: "stripe", status: "pago", amount_cents: 2990 };
+  assert.equal(shouldExplainStripeInvoice(paid), true);
+  for (const change of [
+    { gateway: "mercadopago" },
+    { amount_cents: 0 },
+    { amount_cents: -1 },
+    { status: "processado" },
+    { status: "recusado" },
+    { status: "pendente" },
+    { invoice: { status: "authorized" } },
+  ])
+    assert.equal(shouldExplainStripeInvoice({ ...paid, ...change }), false);
+  assert.match(
+    source("../app/app/professional/billing/components/stripe-payment-form.tsx"),
+    /Após o pagamento, confirme seus dados fiscais e endereço/,
+  );
+  assert.match(
+    source("../app/app/professional/billing/components/payment-history-card.tsx"),
+    /canReviewAddress/,
   );
 });

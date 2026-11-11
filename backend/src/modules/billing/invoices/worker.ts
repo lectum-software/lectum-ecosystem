@@ -6,7 +6,6 @@ import {
   getInvoiceConfig,
   type InvoiceConfig,
   InvoiceError,
-  invoiceErrorCode,
   retryDate,
 } from "./config";
 import {
@@ -16,6 +15,7 @@ import {
   parseProvider,
   storedInvoiceSchema,
 } from "./contracts";
+import { invoiceFailure, logInvoiceOutcome, safeInvoiceDiagnostic } from "./diagnostics";
 import { invoiceDocumentNextAttempt, invoiceDocumentStatus } from "./document-authorization";
 import { getFiscalIdentity } from "./fiscal-identity";
 import { invoiceGatewayScopes, invoiceScopeMatches } from "./gateway-scope";
@@ -81,8 +81,8 @@ export async function deferInvoiceIssuance(
   return true;
 }
 
-async function processJob(config: InvoiceConfig, repository: InvoiceRepository) {
-  const job = await repository.claimJob(invoiceGatewayScopes(config.mode));
+async function processJob(config: InvoiceConfig, repository: InvoiceRepository, ids?: string[]) {
+  const job = await repository.claimJob(invoiceGatewayScopes(config.mode), new Date(), ids);
   if (!job) return false;
   try {
     const { gateway, scope } = scopedGateway(job, config, true);
@@ -117,7 +117,7 @@ async function processJob(config: InvoiceConfig, repository: InvoiceRepository) 
     const snapshot = invoiceRequestSchema.safeParse({
       company_id: config.companyId,
       reference,
-      ...(config.mode === "live" ? { iss_rate: config.issRate } : {}),
+      ...(config.mode === "live" ? { iss_rate: config.issRate } : { simulation: "never" }),
       taker: {
         address: toSendNfAddress(billingAddress),
         name: fiscalIdentity?.full_name,
@@ -154,17 +154,36 @@ async function processJob(config: InvoiceConfig, repository: InvoiceRepository) 
       },
       job.event_id,
     );
+    logInvoiceOutcome({
+      id: job.id,
+      stage: "payment_verification",
+      outcome: "snapshot_ready",
+      attempts: job.attempts,
+    });
   } catch (error) {
-    const terminal = error instanceof InvoiceError && !error.retryable;
+    const failure = invoiceFailure(error, job.gateway, job.attempts);
     await repository.finishJob(
       job.id,
       job.lease_token,
       {
-        ...(terminal ? { completed_at: new Date() } : { next_attempt_at: retryDate(job.attempts) }),
-        last_error_code: invoiceErrorCode(error),
+        ...(failure.terminal
+          ? { completed_at: new Date() }
+          : { next_attempt_at: retryDate(job.attempts) }),
+        last_error_code: failure.code,
       },
       job.event_id,
     );
+    logInvoiceOutcome({
+      id: job.id,
+      stage: "payment_verification",
+      outcome: failure.terminal
+        ? ["zero_invoice", "void_invoice", "uncollectible_invoice"].includes(failure.code)
+          ? "excluded"
+          : "review_required"
+        : "retry",
+      code: failure.code,
+      attempts: job.attempts,
+    });
   }
   return true;
 }
@@ -173,12 +192,14 @@ async function processInvoice(
   config: InvoiceConfig,
   repository: InvoiceRepository,
   provider: SendNfAdapter,
+  ids?: string[],
 ) {
   const invoice = await repository.claimInvoice(
     config.companyId,
     invoiceGatewayScopes(config.mode),
     new Date(),
     config.mode,
+    ids,
   );
   if (!invoice) return false;
   try {
@@ -212,13 +233,28 @@ async function processInvoice(
       // Do not silently issue legacy snapshots without billing evidence.
       if (!stored.billing_address || !request.taker.address)
         throw new InvoiceError("billing_address_snapshot_missing");
-      if (await deferInvoiceIssuance(config, repository, invoice)) return true;
+      if (await deferInvoiceIssuance(config, repository, invoice)) {
+        logInvoiceOutcome({
+          id: invoice.id,
+          stage: "document",
+          outcome: "deferred",
+          attempts: invoice.attempts,
+        });
+        return true;
+      }
       const readiness = await provider.readiness();
       if (!readiness.ready) {
         await repository.finishInvoice(invoice.id, invoice.lease_token, {
           status: "awaiting_configuration",
           last_error_code: "company_not_ready",
           next_attempt_at: retryDate(6),
+        });
+        logInvoiceOutcome({
+          id: invoice.id,
+          stage: "document",
+          outcome: "deferred",
+          code: "company_not_ready",
+          attempts: invoice.attempts,
         });
         return true;
       }
@@ -232,27 +268,63 @@ async function processInvoice(
       document_id: document.id,
       status,
       number: document.nfse_number,
-      last_error_code: null,
+      last_error_code: document.failure_code ? safeInvoiceDiagnostic(document.failure_code) : null,
       next_attempt_at: invoiceDocumentNextAttempt(status),
     });
+    logInvoiceOutcome({
+      id: invoice.id,
+      stage: "document",
+      outcome: "observed",
+      documentStatus: status,
+      code: document.failure_code,
+      attempts: invoice.attempts,
+    });
   } catch (error) {
-    const terminal = error instanceof InvoiceError && !error.retryable;
+    // Document attempts also count successful polls and deferred activation, not consecutive failures.
+    const failure = invoiceFailure(error, invoice.gateway, invoice.attempts, false);
     await repository.finishInvoice(invoice.id, invoice.lease_token, {
-      ...(terminal ? { status: "manual_review" } : {}),
-      last_error_code: invoiceErrorCode(error),
+      ...(failure.terminal ? { status: "manual_review" } : {}),
+      last_error_code: failure.code,
       next_attempt_at: retryDate(invoice.attempts),
+    });
+    logInvoiceOutcome({
+      id: invoice.id,
+      stage: "document",
+      outcome: failure.terminal ? "review_required" : "retry",
+      code: failure.code,
+      attempts: invoice.attempts,
     });
   }
   return true;
 }
 
-export async function processInvoiceQueue() {
+export type InvoiceQueueSelection = { jobIds?: string[]; invoiceIds?: string[] };
+export const invoiceQueueSelection = (selection?: InvoiceQueueSelection) => {
+  if (selection === undefined) return { jobIds: undefined, invoiceIds: undefined };
+  const ids = (values: string[] | undefined) => {
+    if (values === undefined) return [];
+    if (
+      !Array.isArray(values) ||
+      values.length > 5 ||
+      values.some((id) => typeof id !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) ||
+      new Set(values).size !== values.length
+    )
+      throw new InvoiceError("resource_invalid");
+    return values;
+  };
+  // A selected run never falls back to all rows when one side is omitted.
+  return { jobIds: ids(selection.jobIds), invoiceIds: ids(selection.invoiceIds) };
+};
+
+export async function processInvoiceQueue(selection?: InvoiceQueueSelection) {
+  const selected = invoiceQueueSelection(selection);
   const config = getInvoiceConfig();
   if (!config) return;
   const repository = new InvoiceRepository();
   const provider = new SendNfAdapter(config.apiKey, config.companyId, config.mode);
   await provider.verifyIdentity();
   // Bounded batches keep fiscal work independent from the payment callback and entitlement.
-  for (let i = 0; i < 5; i++) if (!(await processJob(config, repository))) break;
-  for (let i = 0; i < 5; i++) if (!(await processInvoice(config, repository, provider))) break;
+  for (let i = 0; i < 5; i++) if (!(await processJob(config, repository, selected.jobIds))) break;
+  for (let i = 0; i < 5; i++)
+    if (!(await processInvoice(config, repository, provider, selected.invoiceIds))) break;
 }

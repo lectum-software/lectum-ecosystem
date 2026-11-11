@@ -284,3 +284,33 @@ test("financial SCA recovery uses only the provider authentication-required enum
       false,
     );
 });
+
+test("an unconfirmed manual PI is not proof of a declined confirmation", () => {
+  for (const last_payment_error of [
+    null,
+    { code: "card_declined" },
+    { code: "card_declined", payment_method: { id: "pm_other" } },
+  ])
+    assert.equal(
+      projectCreditIntent(
+        intent({ status: "requires_payment_method", last_payment_error }),
+        identity,
+        input,
+      ).paymentFailureObserved,
+      false,
+    );
+  assert.equal(
+    projectCreditIntent(
+      intent({
+        status: "requires_payment_method",
+        last_payment_error: {
+          code: "card_declined",
+          payment_method: { id: input.paymentMethodId },
+        },
+      }),
+      identity,
+      input,
+    ).paymentFailureObserved,
+    true,
+  );
+});

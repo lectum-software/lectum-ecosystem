@@ -16,6 +16,7 @@ export type BillingPaymentHistoryItem = {
   status_label: string;
   occurred_at: Date | null;
   gateway: string;
+  mode?: "test" | "live";
   external_id: string;
   subscription_id?: string;
   payment_id?: string;
@@ -47,6 +48,7 @@ export interface ISubscriptionRepository {
     gatewayToken?: string | null,
     subscription?: professional_subscription | null,
   ): Promise<payment_method | null>;
+  showOwnedPaymentHistory(psychologistId: string): Promise<BillingPaymentHistoryItem[]>;
   showPaymentHistory(
     subscription: professional_subscription | null,
   ): Promise<BillingPaymentHistoryItem[]>;

@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { billingAddressAccess } from "@/modules/billing/invoices/address-access";
 import {
   isPaymentGatewayConfigurationError,
   sanitizePaymentGatewayError,
@@ -61,9 +62,10 @@ export default async (data: IAddressDTO) => {
     };
   }
 
+  const addressAccess = await billingAddressAccess(data.auth.id!);
   let activeProfessional = await repository.findActiveProfessionalSubscription(profile.id!);
 
-  if (!activeProfessional) {
+  if (!activeProfessional && !addressAccess.maintenanceOnly) {
     try {
       activeProfessional = await refreshActiveProfessionalSubscription({
         profileId: profile.id!,
@@ -82,7 +84,7 @@ export default async (data: IAddressDTO) => {
     }
   }
 
-  if (!activeProfessional) {
+  if (!activeProfessional && !addressAccess.maintenanceOnly) {
     return {
       status: 409,
       ...error("billing_address_subscription_required", {}),
@@ -96,7 +98,9 @@ export default async (data: IAddressDTO) => {
     ...msg("billing_address_saved", {}),
     data: {
       address,
-      next_path: "/app/profissional/whatsapp/verificar",
+      next_path: addressAccess.maintenanceOnly
+        ? "/app/profissional/assinatura"
+        : "/app/profissional/whatsapp/verificar",
     },
   };
 };
