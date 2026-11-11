@@ -94,9 +94,15 @@ export const parseFinanceDate = (value?: string | null) => {
   }
 
   const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  date.setUTCHours(12, 0, 0, 0);
 
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
     return null;
   }
 
@@ -146,6 +152,7 @@ export const formatDate = (value: string) => {
   if (!date) return "—";
 
   return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     day: "2-digit",
     month: "short",
   }).format(date);
@@ -157,6 +164,7 @@ export const formatDateTime = (value: string) => {
   if (!date) return "—";
 
   return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     dateStyle: "short",
     timeStyle: "short",
   }).format(date);
@@ -169,6 +177,9 @@ export const formatMaybeMoney = (cents: number | null) =>
   cents === null ? "Indisponível" : formatMoney(cents);
 
 export const formatNullableDate = (value: string | null) => (value ? formatDate(value) : "—");
+
+export const formatStartDate = (item: FinanceSubscriptionItem) =>
+  item.started_at_available === false ? "Indisponível" : formatDate(item.started_at);
 
 export const isCancelledSubscription = (item: FinanceSubscriptionItem) =>
   item.status === "cancelada";

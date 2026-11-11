@@ -37,7 +37,7 @@ export type AdminFinancePeriod = {
   max_days: number;
   previous_from: string;
   previous_to: string;
-  timezone: "server-local";
+  timezone: "America/Sao_Paulo";
   to: string;
 };
 
@@ -53,6 +53,7 @@ export type AdminFinanceMetric = {
     | "revenue_total";
   label: string;
   previous_value: number;
+  previous_available?: boolean;
   rate_percent: number | null;
   source: string;
   trend: "down" | "flat" | "unavailable" | "up";
@@ -87,16 +88,18 @@ export type AdminFinancePaymentHistoryItem = {
   event_id: string;
   event_type: string;
   external_id: string;
-  gateway: "mercadopago";
+  gateway: "mercadopago" | "stripe";
   internal_id: number;
   internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
-  source: "gateway_subscription_summary" | "payment_event";
+  source: "gateway_subscription_summary" | "payment_event" | "stripe_receipt";
   status: AdminFinancePaymentHistoryStatus;
   status_detail: string | null;
   status_label: string;
   title: string;
+  financial_status?: string;
+  refunded_cents?: number;
   unavailable_reason: string | null;
 };
 
@@ -106,7 +109,8 @@ export type AdminFinancePaymentHistory = {
   reason: string | null;
   source:
     | "payment_event.filtered_by_subscription_reference"
-    | "payment_event+gateway_subscription_summary";
+    | "payment_event+gateway_subscription_summary"
+    | "stripe_receipt";
   total: number;
 };
 
@@ -169,6 +173,7 @@ export type AdminFinanceSubscriptionItem = {
   payment_method: AdminFinancePaymentMethod | null;
   source: string;
   started_at: string;
+  started_at_available?: boolean;
   status: string;
   status_label: string;
   updated_at: string;
@@ -181,14 +186,16 @@ export type AdminFinanceChargeItem = {
   event_id: string;
   event_type: string;
   external_id: string;
-  gateway: "mercadopago";
+  gateway: "mercadopago" | "stripe";
   internal_id: number;
   internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
-  source: "gateway_subscription_summary" | "payment_event";
+  source: "gateway_subscription_summary" | "payment_event" | "stripe_receipt";
   status: "confirmed";
-  status_label: "Confirmada";
+  status_label: string;
+  financial_status?: string;
+  refunded_cents?: number;
   subscription: AdminFinanceSubscriptionItem | null;
   unavailable_reason: string | null;
 };
@@ -213,12 +220,26 @@ export type AdminFinanceUnavailableMetric = {
 };
 
 export type AdminFinanceDashboard = {
+  financial_basis?: {
+    kind: "local_gross_receipts";
+    available: boolean;
+    observed_at: string;
+    provider_coverage: "not_checked";
+    gross_receipts_cents: number;
+    refund_snapshot_cents: number;
+    refund_snapshot_scope: "stripe_receipts";
+    fees_available: false;
+    net_cash_flow_available: false;
+    note: string;
+  };
   average_ltv: {
     available: boolean;
     description: string;
     linked_confirmed_payments: number;
     paid_psychologist_count: number;
-    source: "payment_event+gateway_subscription_summary_linked_to_paid_psychologists";
+    source:
+      | "payment_event+gateway_subscription_summary_linked_to_paid_psychologists"
+      | "local_verified_gross_receipts";
     unavailable_reason: string | null;
     value_cents: number;
   };
@@ -226,7 +247,7 @@ export type AdminFinanceDashboard = {
     available: boolean;
     cancelled_subscription_count: number;
     description: string;
-    source: "cancelled_paid_subscriptions";
+    source: "cancelled_paid_subscriptions" | "observed_paid_receipts+subscription_history";
     unavailable_reason: string | null;
     value_days: number;
     value_months: number;
@@ -246,7 +267,7 @@ export type AdminFinanceDashboard = {
   mrr: {
     available?: boolean;
     description: string;
-    source: "active_paid_subscriptions";
+    source: "active_paid_subscriptions" | "local_observed_paid_periods";
     value_cents: number;
   };
   latest_charges: {

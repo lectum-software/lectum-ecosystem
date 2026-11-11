@@ -10,6 +10,10 @@ import type {
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
 import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
+import {
+  financialStatusClass,
+  financialStatusLabel,
+} from "@/components/finance-history/presentation";
 import { formatFinanceChargeCode } from "@/lib/finance-operational-code";
 import { cn } from "@/lib/utils";
 
@@ -94,10 +98,14 @@ export const PaymentHistoryStatusBadge = ({ item }: { item: FinancePaymentHistor
   <span
     className={cn(
       "inline-flex rounded-full border px-2 py-1 text-xs font-black",
-      paymentHistoryStatusClassName[item.status],
+      item.gateway === "stripe" && item.financial_status
+        ? financialStatusClass(item.financial_status)
+        : paymentHistoryStatusClassName[item.status],
     )}
   >
-    {item.status_label}
+    {item.gateway === "stripe" && item.financial_status
+      ? financialStatusLabel(item.financial_status)
+      : item.status_label}
   </span>
 );
 
@@ -199,7 +207,9 @@ export const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem })
     </div>
     {item.unavailable_reason ? (
       <p className="mt-3 rounded-2xl border border-warning-border bg-warning-soft px-3 py-2 text-xs font-semibold text-warning">
-        Pagamento confirmado, mas sem valor informado pelo provedor.
+        {item.amount_available
+          ? "Valor original recebido; situação posterior observada. Não representa fluxo líquido nem nova cobrança."
+          : "Pagamento confirmado, mas sem valor informado pelo provedor."}
       </p>
     ) : null}
   </li>
@@ -207,6 +217,8 @@ export const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem })
 
 export const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
   const { payment_health: health, payment_history: history } = item;
+  const attemptCount = (value: number) =>
+    item.gateway === "stripe" ? "Não apurado" : numberFormatter.format(value);
   const visibleHealthNotes = health.notes.filter(
     (note) => !hiddenHealthNotePrefixes.some((prefix) => note.startsWith(prefix)),
   );
@@ -220,7 +232,9 @@ export const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }
           </p>
           <h3 className="mt-1 text-lg font-black text-foreground">{health.summary}</h3>
           <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-muted">
-            A confiabilidade do pagamento resume a estabilidade das cobranças da assinatura.
+            {item.gateway === "stripe"
+              ? "O histórico Stripe mostra recebimentos registrados, não todas as tentativas e recusas. Ele não permite concluir uma taxa de sucesso ou garantir o resultado da próxima cobrança."
+              : "A confiabilidade do pagamento resume a estabilidade das cobranças da assinatura."}
           </p>
         </div>
 
@@ -229,30 +243,35 @@ export const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }
         <dl className="grid gap-3 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-4">
           <HealthMetric
             label="Taxa de sucesso"
-            value={formatPercent(health.success_rate_percent)}
+            value={
+              item.gateway === "stripe" ? "Não apurada" : formatPercent(health.success_rate_percent)
+            }
           />
-          <HealthMetric
-            label="Tentativas finais"
-            value={numberFormatter.format(health.final_attempts)}
-          />
+          <HealthMetric label="Tentativas finais" value={attemptCount(health.final_attempts)} />
           <HealthMetric
             label="Falhas consecutivas"
-            value={numberFormatter.format(health.consecutive_failures)}
+            value={attemptCount(health.consecutive_failures)}
           />
           <HealthMetric
             label="Dias em atraso"
-            value={health.days_overdue === null ? "—" : numberFormatter.format(health.days_overdue)}
+            value={
+              item.gateway === "stripe"
+                ? "Não apurado"
+                : health.days_overdue === null
+                  ? "—"
+                  : numberFormatter.format(health.days_overdue)
+            }
           />
           <HealthMetric
             label="Pagamentos aprovados"
-            value={numberFormatter.format(health.successful_payments)}
+            value={attemptCount(health.successful_payments)}
           />
+          <HealthMetric label="Pagamentos recusados" value={attemptCount(health.failed_payments)} />
+          <HealthMetric label="Pendentes" value={attemptCount(health.pending_payments)} />
           <HealthMetric
-            label="Pagamentos recusados"
-            value={numberFormatter.format(health.failed_payments)}
+            label={item.gateway === "stripe" ? "Último recebimento" : "Último sucesso"}
+            value={formatNullableDate(health.last_success_at)}
           />
-          <HealthMetric label="Pendentes" value={numberFormatter.format(health.pending_payments)} />
-          <HealthMetric label="Último sucesso" value={formatNullableDate(health.last_success_at)} />
           <HealthMetric label="Última falha" value={formatNullableDate(health.last_failure_at)} />
           {shouldShowCancellationMetric(item) ? (
             <HealthMetric label="Cancelamento" value={formatCancellationDate(item)} />

@@ -1,13 +1,13 @@
 "use client";
 import type { FocusEvent } from "react";
 import type { AdminFinanceDashboard } from "@/api/req/finance";
+import { FinancialBasisPanel } from "../components/financial-basis";
 import {
   CardsGrid,
   FinanceChart,
   FinancePeriodControls,
   RevenuePanel,
 } from "../components/header-chart";
-
 import { CardShell, LoadingGrid } from "../components/metrics";
 import { LatestCharges, SubscriptionRelation } from "../components/subscription-lists";
 import {
@@ -103,6 +103,7 @@ export const FinanceOverview = ({
 
 export const DashboardContent = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   <div className="space-y-6">
+    <FinancialBasisPanel dashboard={dashboard} />
     <RevenuePanel dashboard={dashboard} />
     <LatestCharges dashboard={dashboard} />
     <SubscriptionRelation dashboard={dashboard} />

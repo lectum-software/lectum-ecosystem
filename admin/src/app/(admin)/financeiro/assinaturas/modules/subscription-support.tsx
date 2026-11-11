@@ -119,11 +119,13 @@ export const parseQuery = (params: URLSearchParams): FinanceListQuery => {
 export const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
+    timeZone: "America/Sao_Paulo",
   }).format(new Date(value));
 
 export const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
+    timeZone: "America/Sao_Paulo",
     timeStyle: "short",
   }).format(new Date(value));
 
@@ -138,8 +140,15 @@ export const shouldShowCancellationMetric = (item: FinanceSubscriptionItem) =>
 export const formatNextChargeDate = (item: FinanceSubscriptionItem) =>
   isCancelledSubscription(item) ? "—" : formatNullableDate(item.next_charge_at);
 
+export const formatStartDate = (item: FinanceSubscriptionItem) =>
+  item.started_at_available === false ? "Indisponível" : formatDate(item.started_at);
+
 export const formatCancellationDate = (item: FinanceSubscriptionItem) =>
-  formatNullableDate(item.cancelled_at ?? item.updated_at);
+  item.gateway === "stripe"
+    ? item.cancelled_at
+      ? formatDate(item.cancelled_at)
+      : "Indisponível"
+    : formatNullableDate(item.cancelled_at ?? item.updated_at);
 
 export const formatMoney = (cents: number | null) =>
   cents === null ? "Indisponível" : moneyFormatter.format(cents / 100);

@@ -1,5 +1,5 @@
 import type { Resolve } from "@/helpers/return";
-import { msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 import { csvPublicProvenance, csvRow } from "@/utils/csv";
 import type {
   AdminFinanceDashboard,
@@ -40,7 +40,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
         "",
         card.available ? card.value : "indisponivel",
         financeSourceLabel(card.source),
-        `unit=${card.unit};previous=${card.available ? card.previous_value : "indisponivel"};change_percent=${card.change_percent ?? "n/a"};rate_percent=${card.rate_percent ?? "n/a"};reason=${card.unavailable_reason ?? ""}`,
+        `unit=${card.unit};previous=${card.available && card.previous_available !== false ? card.previous_value : "indisponivel"};change_percent=${card.change_percent ?? "n/a"};rate_percent=${card.rate_percent ?? "n/a"};reason=${card.unavailable_reason ?? ""}`,
       ]),
     );
   }
@@ -60,7 +60,9 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
     csvRow([
       "resumo_financeiro",
       "average_ltv",
-      "LTV medio dos psicologos",
+      dashboard.financial_basis
+        ? "Recebimento bruto medio registrado por psicologo"
+        : "LTV medio dos psicologos",
       "",
       dashboard.average_ltv.available ? dashboard.average_ltv.value_cents : "indisponivel",
       financeSourceLabel(dashboard.average_ltv.source),
@@ -167,7 +169,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
         item.cancelled_at ?? "",
         item.created_at,
         item.updated_at,
-        item.started_at,
+        item.started_at_available === false ? "indisponivel" : item.started_at,
         item.current_period_end ?? "",
         item.psychologist.name,
         item.psychologist.email,
@@ -194,12 +196,42 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
     );
   }
 
+  if (dashboard.financial_basis) {
+    const basis = dashboard.financial_basis;
+    rows.push("");
+    rows.push(
+      csvRow([
+        "base_financeira",
+        "recebimentos_brutos_registrados",
+        basis.available ? basis.gross_receipts_cents : "indisponivel",
+        "estornos_snapshot_stripe",
+        basis.available ? basis.refund_snapshot_cents : "indisponivel",
+        "consulta_local",
+        basis.observed_at,
+      ]),
+    );
+    rows.push(
+      csvRow([
+        "cobertura",
+        basis.note,
+        "tarifas",
+        "indisponiveis",
+        "fluxo_liquido",
+        "indisponivel",
+      ]),
+    );
+  }
   rows.push("");
   rows.push(csvRow(["observacoes"]));
   for (const note of dashboard.coverage_notes) rows.push(csvRow([note]));
 
   return rows.join("\r\n");
 };
+
+export const isFinanceExportComplete = (dashboard: AdminFinanceDashboard) =>
+  dashboard.latest_charges.total <= dashboard.latest_charges.items.length &&
+  dashboard.new_subscriptions.total <= dashboard.new_subscriptions.items.length &&
+  dashboard.subscription_relation.total <= dashboard.subscription_relation.items.length;
 
 export const exportAdminFinanceDashboardCsv = async (
   query: AdminFinanceQuery,
@@ -214,6 +246,10 @@ export const exportAdminFinanceDashboardCsv = async (
   if (!resolve.success || !isAdminFinanceDashboard(resolve.data)) return resolve;
 
   const dashboard = resolve.data;
+  if (!isFinanceExportComplete(dashboard)) {
+    return { status: 503, ...error("finance_history_filter_required", {}) };
+  }
+
   return {
     status: 200,
     ...msg("index", {}),

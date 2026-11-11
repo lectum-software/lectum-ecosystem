@@ -1,5 +1,11 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import {
+  FinanceLedgerFilterRequiredError,
+  readAdminFinanceStripeLedger,
+} from "@/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceStripeLedgerRepository";
+import { parseFinanceDateOnly } from "@/modules/api/admin/private/finance/dashboard/use-cases/services/periods";
+import { projectFinanceStripeLedger } from "@/modules/api/admin/private/finance/dashboard/use-cases/services/stripe-ledger-projection";
 import type {
   AdminDashboardQuery,
   AdminDashboardSummary,
@@ -29,6 +35,10 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
   }
 
   const { current, days, labels, period, previous } = resolvedPeriod.period;
+  // Other analytics keep their existing calendar; financial cutoffs use the displayed civil keys in BRT.
+  const financialEnd = parseFinanceDateOnly(period.to, "end")!;
+  const previousFinancialEnd = parseFinanceDateOnly(period.previous_to, "end")!;
+
   const publishedPsychologistProfiles = await repository.listPublishedPsychologistProfiles();
   const publishedPsychologistIds = publishedPsychologistProfiles.map((profile) => profile.user_id);
 
@@ -68,7 +78,7 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
     repository.listPostReplyDates(current, "psicologo"),
     repository.listVisitorLocations(current),
     repository.listVisitorSessions(current),
-    repository.listPaidSubscriptionsUntil(current.end),
+    repository.listPaidSubscriptionsUntil(financialEnd),
     repository.listPendingReports(current),
     repository.listIntentConversionSignals(current),
     repository.listPsychologistConversionEvents(current),
@@ -76,8 +86,16 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
     repository.listWhatsappClickCountsByPsychologist(current, publishedPsychologistIds),
   ]);
 
-  const financial = buildFinancial(paidSubscriptions, labels, current.end, days);
-  const previousFinancial = estimateMrrAt(paidSubscriptions, previous.end);
+  let ledger: ReturnType<typeof projectFinanceStripeLedger>;
+  try {
+    ledger = projectFinanceStripeLedger(await readAdminFinanceStripeLedger());
+  } catch (cause) {
+    if (cause instanceof FinanceLedgerFilterRequiredError)
+      return { status: 503, ...error("finance_history_filter_required", {}) };
+    throw cause;
+  }
+  const financial = buildFinancial(paidSubscriptions, labels, financialEnd, days, ledger);
+  const previousFinancial = estimateMrrAt(paidSubscriptions, previousFinancialEnd, ledger);
   const devices = buildDevices(visitorSessions);
   const locations = buildLocations(visitorLocations);
   const intentConversionFlow = buildIntentConversionFlow({
@@ -120,12 +138,12 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
       revenue: metric({
         current: financial.mrr_cents,
         description:
-          "MRR estimado pelas assinaturas profissionais ativas. Não representa receita já confirmada pelo provedor de pagamento.",
+          "MRR por estado observado e período pago Stripe, com corte no dia civil de America/Sao_Paulo. Não representa caixa líquido nem tarifas.",
         id: "revenue",
         label: "MRR estimado",
         previous: previousFinancial.mrrCents ?? 0,
-        unavailable: !financial.mrr_available || previousFinancial.mrrCents === null,
-        ...(!financial.mrr_available || previousFinancial.mrrCents === null
+        unavailable: !financial.mrr_available,
+        ...(!financial.mrr_available
           ? { unavailableReason: "Preço contratado ou períodos pagos conciliados indisponíveis." }
           : {}),
         source: financial.source,
@@ -182,6 +200,13 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
     whatsapp_click_distribution: whatsappClickDistribution,
   };
 
+  if (previousFinancial.mrrCents === null) {
+    summary.cards.revenue.previous_value_available = false;
+    summary.cards.revenue.change_percent = null;
+    summary.cards.revenue.trend = "unavailable";
+    summary.cards.revenue.description +=
+      " Comparação anterior indisponível por lacuna histórica observada.";
+  }
   return {
     status: 200,
     ...msg("index", {}),

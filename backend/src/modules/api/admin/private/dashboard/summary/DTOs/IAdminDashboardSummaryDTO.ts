@@ -40,6 +40,7 @@ export type AdminDashboardMetric = {
   id: string;
   label: string;
   previous_value: number;
+  previous_value_available?: boolean;
   source: string;
   trend: AdminDashboardTrend;
   unit: "count" | "currency_cents";

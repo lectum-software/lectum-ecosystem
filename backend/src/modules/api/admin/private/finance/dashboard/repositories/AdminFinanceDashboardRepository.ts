@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { invoiceGatewayScopes } from "@/modules/billing/invoices/gateway-scope";
 import { financialContractSelection } from "@/modules/billing/subscription-financial-values";
 import type { AdminFinanceDateRange } from "../DTOs/IAdminFinanceDashboardDTO";
 
@@ -19,7 +20,7 @@ const paidPlanWhere = {
   },
 };
 
-const paidGatewaySubscriptionWhere = {
+export const paidGatewaySubscriptionWhere = {
   deleted: false,
   gateway_subscription_id: { not: null },
   AND: [
@@ -104,7 +105,7 @@ const paidSubscriptionRelationWhere = (
   };
 };
 
-const subscriptionSelect = {
+export const subscriptionSelect = {
   ...financialContractSelection,
   createdAt: true,
   current_period_end: true,
@@ -161,8 +162,18 @@ const subscriptionSelect = {
 } satisfies Prisma.professional_subscriptionSelect;
 
 export class AdminFinanceDashboardRepository {
+  constructor(private readonly legacyMetricsOnly = false) {}
+
+  private get metricSubscriptionWhere(): Prisma.professional_subscriptionWhereInput {
+    return this.legacyMetricsOnly
+      ? { ...paidGatewaySubscriptionWhere, gateway: "mercadopago", source: "mercadopago" }
+      : paidGatewaySubscriptionWhere;
+  }
   async findFinanceStartDate(): Promise<Date | null> {
-    const [firstPaymentEvent, firstSubscription] = await Promise.all([
+    const scopes = [...invoiceGatewayScopes("test"), ...invoiceGatewayScopes("live")].filter(
+      (scope) => scope.gateway === "stripe",
+    );
+    const [firstPaymentEvent, firstSubscription, firstStripeReceipt] = await Promise.all([
       prisma.payment_event.findFirst({
         orderBy: {
           createdAt: "asc",
@@ -184,11 +195,24 @@ export class AdminFinanceDashboardRepository {
           createdAt: true,
         },
       }),
+      prisma.billing_financial_receipt.findFirst({
+        where: {
+          OR: scopes.map((scope) => ({
+            gateway: scope.gateway,
+            account_id: scope.accountId,
+            mode: scope.mode,
+          })),
+        },
+        orderBy: [{ paid_at: "asc" }, { id: "asc" }],
+        select: { paid_at: true },
+      }),
     ]);
 
-    const dates = [firstPaymentEvent?.createdAt, firstSubscription?.createdAt].filter(
-      (date): date is Date => Boolean(date),
-    );
+    const dates = [
+      firstPaymentEvent?.createdAt,
+      firstSubscription?.createdAt,
+      firstStripeReceipt?.paid_at,
+    ].filter((date): date is Date => Boolean(date));
     if (dates.length === 0) return null;
 
     return dates.reduce((earliest, date) => (date < earliest ? date : earliest), dates[0]);
@@ -197,7 +221,7 @@ export class AdminFinanceDashboardRepository {
   async countActivePaidSubscriptionsAt(at: Date): Promise<number> {
     return prisma.professional_subscription.count({
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         createdAt: {
           lte: at,
         },
@@ -217,7 +241,7 @@ export class AdminFinanceDashboardRepository {
   async countCancelledPaidSubscriptions(range: AdminFinanceDateRange): Promise<number> {
     return prisma.professional_subscription.count({
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         status: "cancelada",
         updatedAt: dateRangeWhere(range),
       },
@@ -227,7 +251,7 @@ export class AdminFinanceDashboardRepository {
   async countNewPaidSubscriptions(range: AdminFinanceDateRange): Promise<number> {
     return prisma.professional_subscription.count({
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         createdAt: dateRangeWhere(range),
         status: {
           in: ["ativa", "cancelada", "inadimplente"],
@@ -239,7 +263,7 @@ export class AdminFinanceDashboardRepository {
   async countPaidSubscriptionsInOpeningBaseAt(at: Date): Promise<number> {
     return prisma.professional_subscription.count({
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         createdAt: {
           lte: at,
         },
@@ -267,7 +291,7 @@ export class AdminFinanceDashboardRepository {
   async listActivePaidSubscriptionsAt(at: Date) {
     return prisma.professional_subscription.findMany({
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         createdAt: {
           lte: at,
         },
@@ -291,7 +315,7 @@ export class AdminFinanceDashboardRepository {
         createdAt: "asc",
       },
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         createdAt: dateRangeWhere(range),
         status: {
           in: ["ativa", "cancelada", "inadimplente"],
@@ -312,12 +336,10 @@ export class AdminFinanceDashboardRepository {
 
   async listNewPaidSubscriptions(range: AdminFinanceDateRange, take = 50) {
     return prisma.professional_subscription.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take,
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         createdAt: dateRangeWhere(range),
         status: {
           in: ["ativa", "cancelada", "inadimplente"],
@@ -349,6 +371,7 @@ export class AdminFinanceDashboardRepository {
         {
           createdAt: "desc",
         },
+        { id: "desc" },
       ],
       skip,
       take,
@@ -363,7 +386,7 @@ export class AdminFinanceDashboardRepository {
         createdAt: "desc",
       },
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         createdAt: {
           lte: at,
         },
@@ -378,7 +401,7 @@ export class AdminFinanceDashboardRepository {
   async listPaidSubscriptionsForLifetime() {
     return prisma.professional_subscription.findMany({
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         status: {
           in: ["ativa", "cancelada", "inadimplente"],
         },
@@ -396,7 +419,7 @@ export class AdminFinanceDashboardRepository {
   async listCancelledPaidSubscriptionsForLifetime() {
     return prisma.professional_subscription.findMany({
       where: {
-        ...paidGatewaySubscriptionWhere,
+        ...this.metricSubscriptionWhere,
         status: "cancelada",
       },
       select: {
