@@ -1,16 +1,20 @@
 # TASK-325 - Historico financeiro administrativo e NFS-e
 
 Data: 2026-11-11
-Status: Implementacao local validada; task parcial por prova positiva PDF elegivel pendente
+Status: Concluida; backend/Admin 0.1.816 publicados e download administrativo real validado
 Dependencias funcionais: TASK-324, TASK-323, TASK-56, TASK-62, TASK-315/317
 Decisao: [ADR-0690](../../adrs/0690-admin-financial-history-invoices.md)
 
 ## Pedido e limites
 
-Usuario autorizou historico financeiro completo no Admin, incluindo status e download
-da NFS-e, validacao local e commit em homolog. Sem push/deploy, novas cobrancas,
-emissao, recuperacao/replay fiscal, alteracao contratual ou Radar. Nao substituir
-a sessao do cliente; verificacao owner-scoped de producao permanece pendente.
+Autorizacao inicial: historico financeiro completo no Admin, incluindo status e
+download da NFS-e, validacao local e commit em homolog, sem publicacao nessa etapa.
+Depois, o usuario autorizou publicar o lote via PR homolog -> main e validar uma
+NFS-e ja existente pelo Admin de producao, sem cobrar nem emitir. Essa publicacao
+e a prova positiva foram concluidas em 11/11/2026, conforme evidencias abaixo.
+Sem recuperacao/replay fiscal, alteracao contratual ou Radar. Nao substituir a
+sessao do cliente: verificacao owner-scoped e recebimento na caixa de entrada do
+titular continuam fora desta prova administrativa.
 
 ## Escopo
 
@@ -42,7 +46,7 @@ a sessao do cliente; verificacao owner-scoped de producao permanece pendente.
 ## Decisoes de arquitetura e rollout
 
 Sem novo package, schema/migration ou env obrigatoria. Apps independentes, DTOs
-aditivos, backend antes do Admin quando futuramente autorizado. Admin novo diante
+aditivos, com rollout backend antes do Admin. Admin novo diante
 de backend antigo mostra indisponibilidade explicita, sem chamar endpoint do dono
 ou fabricar NF. Rollback somente codigo; auditoria de leitura permanece preservada.
 Builder/Quick Copy indisponivel; exports Plano e pagamentos e Financeiro em
@@ -55,17 +59,18 @@ Builder/Quick Copy indisponivel; exports Plano e pagamentos e Financeiro em
 - [x] Estados fiscais e limite de download Admin protegido/auditado implementados e testados em politica/PG, sem emissao; entrega real coberta pelo criterio separado abaixo.
 - [x] Perfil e Financeiro com componentes mobile-first, sem regressao do legado.
 - [x] Testes de politica/HTTP/PG e QA com recibos reais locais, sem efeitos financeiros.
-- [ ] Prova positiva E2E de PDF governamental elegivel pelo novo endpoint Admin.
+- [x] Prova positiva E2E de PDF governamental elegivel pelo novo endpoint Admin, com download real no browser em producao autorizada, sem nova emissao.
 - [x] Check raiz, check/build backend/Admin, ADR/modelo e bump unico sincronizado.
 
-## Pendencia externa conhecida antes da implementacao
+## Limite do QA no checkpoint local (historico)
 
 Inventario READ ONLY do QA e 11 backups existentes: 3 recibos Stripe test/4 contratos,
 zero billing_invoices/jobs. Documento SendNF test antigo e simulated; teste recente
 `simulation: never` foi rejected. Nenhuma NF governamental elegivel com contexto local
 recuperavel. Nao copiar dados/segredos de producao, emitir ou inventar vinculo para
-fechar a prova positiva. Essa validacao fica parada/pendente; demais criterios
-locais podem avancar sem afirmar task integralmente concluida. Evidencia privada:
+fechar a prova positiva. A validacao permaneceu pendente nesse checkpoint; os
+demais criterios locais avancaram sem declarar conclusao integral. A prova foi
+obtida depois, em producao autorizada, sobre documento existente. Evidencia privada:
 `admin-invoice-history-0325-readonly-inventory.json`.
 
 ## Evidencias locais de 11/11/2026
@@ -100,9 +105,47 @@ locais podem avancar sem afirmar task integralmente concluida. Evidencia privada
 - Sessao temporaria de QA removida, credencial anterior restaurada e baseline das
   14 tabelas/auditoria confirmado novamente apos os testes PG. Nao restou token
   temporario nem nota/recibo de teste de repositorio no banco.
-- Commit solicitado somente em homolog; nenhum push/deploy integra esta entrega.
+- O checkpoint local original foi commitado somente em homolog, sem push/deploy
+  naquela etapa. A publicacao autorizada posterior esta registrada abaixo.
 - Artefatos privados em `/Users/rezende/.codex/lectum-stripe-qa/`: logs
   `task325-*`, `admin-history-http-evidence-0325.json` e capturas de tela.
+
+## Publicacao e prova positiva administrativa em 11/11/2026
+
+- Lote publicado por PR #177 (`homolog` -> `main`), merge `ca7683f4b`.
+  Backend e Admin 0.1.816 publicados, com deploy concluido as 11:23 BRT.
+  Frontend 0.1.813 preservado e compativel; video fora do escopo de publicacao.
+  Nenhum novo schema/migration, env, worker ou gate de ativacao foi introduzido.
+- Smoke publico: `/health`, `/ready`, `/ping` e `/version` do Admin e frontend
+  responderam HTTP 200. Versoes conferidas: backend/Admin 0.1.816 e frontend
+  0.1.813, com no-store; rotas de versao tambem noindex.
+- Historico financeiro do Admin exibiu o pagamento como Pago e a NFS-e numero 3
+  como Autorizada. Clique real em Baixar NFS-e concluiu o download no browser as
+  11:24:21 BRT, pelo novo fluxo administrativo autenticado: 63.405 bytes,
+  assinatura `%PDF-` e marcador EOF validos, SHA-256 registrado somente na
+  evidencia privada. Nenhum conteudo sensivel foi extraido ou anexado ao repo.
+- Inventarios READ ONLY as 11:16:13 e 11:24:50 BRT confirmaram os sete
+  fingerprints financeiros/fiscais exatamente iguais: operacoes, recibos,
+  contratos, jobs fiscais, notas fiscais, inbox e conciliacao financeira.
+  Permaneceram duas operacoes completas, um recibo Stripe integro de R$29,90
+  BRL, um pagamento/uma fatura, nenhum reembolso e duas NFS-e/documentos.
+  Nao houve nova cobranca, emissao, contrato ou operacao financeira na janela.
+- A unica alteracao observada foi a auditoria de PDF administrativo preparado,
+  de zero para um registro. O download foi confirmado separadamente pelo browser;
+  auditoria isolada nao provaria salvamento. Todos os gates preexistentes foram
+  preservados, sem reconfigurar vendas, workers, emissao ou Radar.
+- Essa evidencia encerra o criterio positivo do Admin, nao comprova login,
+  abertura/download pelo titular nem recebimento na sua caixa de entrada.
+  Tambem nao representa nova conciliacao externa completa ou ausencia de backlog
+  remoto: o inventario explicita `remote_backlog_checked: false`.
+- Evidencias privadas: `task325-production-before.json`,
+  `task325-production-after.json`, `task325-production-admin-pdf.json` e
+  `task325-production-public-smoke.json` e `task325-production-comparison.json`,
+  no diretorio privado de QA ja indicado. A captura segura
+  `task325-production-history.png` documenta somente o cabecalho do historico;
+  a prova do PDF e o download concluido e sua evidencia binaria, nao essa imagem.
+- Fechamento documental local separado da release produtiva: checkpoint 0.1.817
+  somente em homolog, com bump sincronizado; sem push e sem novo deploy.
 
 ## Limites deliberados
 
