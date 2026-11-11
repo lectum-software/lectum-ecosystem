@@ -1,7 +1,7 @@
 # ADR-0691 - Conciliar documento fiscal existente independentemente de estorno
 
 Data: 2026-11-11
-Status: Aceita; validacao local concluida, publicacao autorizada em preparacao
+Status: Aceita; publicada e validada em producao, backend 0.1.818
 Task: [TASK-326](../_product/tasks/TASK-326-existing-fiscal-document-sync.md)
 
 ## Contexto
@@ -51,3 +51,28 @@ SendNF; a confirmacao canonica live usa somente documento ja existente apos PR.
 Sem UI nova: rotulos Cancelada e Estornado existentes, mobile-first preservado.
 Nenhum novo package, migration ou env. Backend-only evita redeploy desnecessario
 de frontend/Admin/video; estados locais passam a ser verdadeiros apos nova consulta.
+
+## Resultado produtivo e limite operacional
+
+PR **#178**, merge `0e8eb37d3` em **11/11/2026, 14:26 BRT**, com revisao,
+checks locais e hooks aprovados. Nao havia checks remotos GitHub configurados;
+nao se atribui resultado de CI remoto inexistente. Backend **0.1.818** saudavel
+apos publicacao, com HTTP 200 em health/ready/ping e versao sem cache. Admin
+0.1.816 e frontend 0.1.813 preservados, compativeis com o novo estado fiscal.
+
+O comando compilado fez dry-run canonico e, as **14:49:30 BRT**, aplicou somente
+a observacao local da NFS-e 4 ja cancelada. Admin e historico do titular, apos
+reload, passaram a exibir Cancelada/Nota fiscal cancelada, sem download; o
+financeiro preservou Estornado/R$29,90 e a conta afetada permaneceu Free.
+Inventario final manteve tres documentos e dois recibos integros, sem nova
+transacao ou emissao. Digests imutaveis da nota, fatos financeiros, contratos,
+trabalhos fiscais, conciliacao, auditorias e gates foram preservados. Prova live GET-only,
+nao baseada em fixture nem em nova nota. Evidencia privada fora do Git.
+
+O primeiro build falhou por disco cheio sem interromper a versao anterior.
+Limpeza autorizada exclusivamente de cache de build nao utilizado liberou
+5,388GB antes da repeticao e 3,671GB depois; fingerprints de containers, volumes
+e imagens foram preservados nas duas etapas. O deploy terminou, mas a VPS
+permaneceu em **93% de uso**, com cerca de 4,4GB livres: capacidade e retencao de
+cache seguem risco operacional, nao resolvido permanentemente por esta task.
+Checkpoint documental 0.1.819 somente local, sem nova publicacao de codigo.

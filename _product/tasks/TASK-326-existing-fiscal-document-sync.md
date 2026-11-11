@@ -1,7 +1,7 @@
 # TASK-326 - Sincronizacao de documentos fiscais existentes apos estorno
 
 Data: 2026-11-11
-Status: Validada localmente em 0.1.818; publicacao autorizada em preparacao
+Status: Concluida e publicada; backend 0.1.818 validado em 11/11/2026
 Dependencias: TASK-323, TASK-325
 Decisao: [ADR-0691](../../adrs/0691-existing-fiscal-document-sync.md)
 
@@ -50,15 +50,15 @@ sincronizacao pode alterar apenas a projecao fiscal e diagnosticos seguros.
 - [x] Recuperacao bounded de documento em manual_review e idempotente.
 - [x] Regressao de historico preserva Estornado financeiro e Cancelada fiscal.
 - [x] Testes de contrato/PG real, checks e build locais aprovados; sem mocks para prova E2E.
-- [ ] Bump unico, cinco manifests, ADR, commit homolog e PR revisado com checks.
-- [ ] Producao saudavel e NFS-e 4 Cancelada no Lectum, sem nova cobranca/emissao.
+- [x] Bump unico, cinco manifests, ADR, commit homolog e PR revisado; checks locais/hooks aprovados, sem checks remotos configurados.
+- [x] Producao saudavel e NFS-e 4 Cancelada no Lectum, sem nova cobranca/emissao.
 
 ## Evidencias
 
 Banco local de QA isolado em loopback; backend/.env aponta
 para ambiente remoto e nao pode ser usado nos testes. Chave local SendNF e test;
 nao copiar chave live para local nem criar documento para fabricar prova positiva.
-Validacao real final sera GET do documento existente, no ambiente autorizado.
+Validacao real final realizada por GET do documento existente, no ambiente autorizado.
 
 Em 11/11: 29 arquivos fiscais/financeiros, 153 testes aprovados, zero falhas/skips,
 incluindo PostgreSQL real isolado. Fixtures efemeras servem exclusivamente para
@@ -98,3 +98,41 @@ Bump unico realizado para0.1.818 e cinco manifests sincronizados. Autodeploys
 homolog backend/video e previews backend OFF; schedules vazios; Vercel frontend
 /Admin com Ignored Build Step `exit 0`. Backend/video produtivos sem autodeploy.
 Nenhuma configuracao foi alterada para atingir esses resultados.
+
+## Publicacao e verificacao final em 11/11/2026
+
+Codigo no commit `d0ef73933`, promovido pelo PR **#178** de homolog para main,
+merge `0e8eb37d3` as **14:26 BRT**. Nao havia checks GitHub remotos configurados;
+checks/builds locais, revisao e hooks aprovados, sem ignorar gate com falha.
+Backend **0.1.818** confirmado apos deploy, por volta de **14:45 BRT**. `/health`,
+`/ready` e `/ping` retornaram HTTP 200; `/ping` confirmou versao e no-store.
+Admin **0.1.816** e frontend **0.1.813** permaneceram publicados, sem redeploy.
+
+O primeiro build remoto falhou por falta de disco, mantendo o backend anterior
+0.1.816 saudavel. Sob autorizacao explicita, foi removido somente cache de build
+nao utilizado do builder default: 5,388GB antes da repeticao do build e 3,671GB
+apos sua conclusao. Fingerprints de containers, volumes e imagens permaneceram
+identicos antes/depois de cada limpeza. Nenhum servico, dado ou imagem foi
+excluido para liberar espaco. Estado final: cerca de 4,4GB livres, **93% de uso**.
+A publicacao concluiu, mas a capacidade da VPS ainda exige acompanhamento;
+esta limpeza nao resolve definitivamente a pressao de disco.
+
+Dry-run do comando compilado confirmou `cancelled` no SendNF. Aplicacao pontual
+GET-only as **14:49:30 BRT** sincronizou somente a projecao local da NFS-e 4,
+de `authorized` para `cancelled`. Digest dos campos imutaveis da nota e recibo
+estornado permaneceram iguais. Nao houve chamada de emissao, cancelamento,
+cobranca ou estorno, nem execucao de fila para forcar a atualizacao.
+
+Apos reload, o Admin exibiu **Cancelada** e o historico do titular **Nota fiscal
+cancelada**, sem controle de download dessa nota. O financeiro continuou
+**Estornado / R$29,90** e a conta afetada no plano Free. Inventario READ ONLY
+final as **14:50:21 BRT**: tres documentos antes/depois (dois autorizados e um
+cancelado), dois recibos integros (um pago, um estornado integralmente).
+Fingerprints de operacoes, recibos, contratos, trabalhos fiscais, conciliacao
+financeira e auditorias de download permaneceram iguais; gates tambem inalterados.
+Nao houve nova cobranca, nota, cancelamento, refund ou alteracao de Radar.
+
+Evidencia comparativa privada `task326-production-comparison.json` mantida fora
+do Git; documentos publicos registram apenas resultados agregados, sem IDs de
+clientes/documentos, PII ou segredos. Checkpoint documental **0.1.819** separado
+da release, somente local em homolog, sem novo push/deploy.
