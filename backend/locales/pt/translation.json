@@ -1,5 +1,13 @@
 {
   "error": {
+    "catalog_invalid_input": "Revise o valor e a confirmação da operação. Somente novas adesões serão afetadas.",
+    "catalog_not_configured": "A gestão de preços ainda não está configurada para este ambiente.",
+    "catalog_conflict": "A oferta ou a operação foi alterada. Recarregue os dados antes de tentar novamente.",
+    "catalog_operation_not_found": "Operação de catálogo não encontrada neste acesso.",
+    "catalog_actor_invalid": "Este acesso administrativo não pode alterar o catálogo.",
+    "catalog_publication_blocked": "A oferta não foi publicada. Confira a configuração, o preço e as condições para novas adesões.",
+    "catalog_access_denied": "A credencial atual não permite esta operação de catálogo. A oferta existente não foi alterada.",
+    "catalog_provider_unavailable": "Não foi possível validar o catálogo agora. A oferta existente não foi alterada.",
     "feedback_image": "Envie até 3 capturas JPEG, PNG ou WebP de até 5 MB cada. Verifique se os arquivos são imagens válidas.",
     "feedback_limit": "Você atingiu o limite de feedbacks nas últimas 24 horas. Tente novamente mais tarde.",
     "feedback_busy": "Há um envio em andamento. Aguarde um instante e tente novamente.",

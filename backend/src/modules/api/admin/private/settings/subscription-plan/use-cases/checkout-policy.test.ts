@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { AdminSettingsSubscriptionRecords } from "../repositories/interfaces/IAdminSettingsSubscriptionPlanRepository";
-import { projectAdminCheckout, readAdminCheckoutContext } from "./checkout-policy";
+import {
+  projectAdminCatalog,
+  projectAdminCheckout,
+  readAdminCheckoutContext,
+} from "./checkout-policy";
 
 const date = new Date("2026-11-11T12:00:00.000Z");
 const env = {
@@ -75,7 +79,8 @@ test("missing offer never borrows legacy amount; missing or unsupported immutabl
   assert.equal(project(env, { ...records, offer: null, price: null }).price, null);
   for (const price of [
     null,
-    { ...records.price!, amount_cents: 9990 },
+    { ...records.price!, amount_cents: 49 },
+    { ...records.price!, amount_cents: 100000000 },
     { ...records.price!, currency: "USD" },
     { ...records.price!, interval: "year" },
     { ...records.price!, interval_count: 2 },
@@ -170,4 +175,38 @@ test("public projection allowlists fields; secrets and operational identifiers c
   ])
     assert.equal(serialized.includes(forbidden), false);
   assert.equal(Object.hasOwn(result, "webhookConfigured"), false);
+});
+
+test("versioned offer can publish another supported positive amount without borrowing legacy price", () => {
+  const result = project(env, {
+    ...records,
+    price: { ...records.price!, id: "version-new", amount_cents: 3990 },
+  });
+  assert.equal(result.status, "configured");
+  assert.equal(result.price?.amount_cents, 3990);
+  assert.equal(result.price?.version_id, "version-new");
+  assert.equal(records.plan?.price_cents, 9990);
+});
+
+test("catalog maintenance remains observable with checkout disabled and no Stripe secret, including corrupted-price offline pause metadata", () => {
+  const disabled = readAdminCheckoutContext({
+    ...env,
+    BILLING_CHECKOUT_GATEWAY: "disabled",
+    STRIPE_SECRET_KEY: "",
+  });
+  assert.equal(disabled.checkout.gateway, "disabled");
+  assert.equal(disabled.identity, null);
+  const catalog = projectAdminCatalog(
+    { mode: "test", accountId: "acct_policy" },
+    { ...records, offer: { ...records.offer!, price_version_id: "version-current" } },
+  );
+  assert.equal(catalog?.offer?.revision, 2);
+  assert.equal(catalog?.offer?.price_version_id, "version-current");
+  assert.equal(catalog?.offer?.amount_cents, 2990);
+  const invalid = projectAdminCatalog(
+    { mode: "test", accountId: "acct_policy" },
+    { ...records, offer: { ...records.offer!, price_version_id: "version-current" }, price: null },
+  );
+  assert.equal(invalid?.offer?.revision, 2);
+  assert.equal(invalid?.offer?.amount_cents, null);
 });

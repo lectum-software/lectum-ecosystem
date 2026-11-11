@@ -472,6 +472,9 @@ export const adminSettingsKeys = {
   catalogs: () => [...adminSettingsKeys.all, "catalogs"] as const,
   seo: () => [...adminSettingsKeys.all, "seo"] as const,
   subscriptionPlan: () => [...adminSettingsKeys.all, "subscription-plan"] as const,
+  subscriptionPriceVersions: () => [...adminSettingsKeys.subscriptionPlan(), "prices"] as const,
+  subscriptionPriceOperations: () =>
+    [...adminSettingsKeys.subscriptionPlan(), "price-operations"] as const,
 };
 
 export const adminLegalKeys = {

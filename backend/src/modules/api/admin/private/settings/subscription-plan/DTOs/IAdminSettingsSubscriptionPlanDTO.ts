@@ -15,6 +15,18 @@ export type AdminSettingsSubscriptionPlanDTO = {
 export type AdminSettingsSubscriptionPlanResponseDTO = {
   plan: AdminSettingsSubscriptionPlanDTO;
   checkout: AdminSettingsSubscriptionCheckoutDTO;
+  capabilities?: { price_management: true };
+  catalog?: {
+    gateway: "stripe";
+    mode: "test" | "live";
+    remote_readiness: "not_checked";
+    offer: {
+      revision: number;
+      checkout_enabled: boolean;
+      price_version_id: string | null;
+      amount_cents: number | null;
+    } | null;
+  };
 };
 
 export type AdminSettingsSubscriptionCheckoutDTO = {
@@ -31,6 +43,7 @@ export type AdminSettingsSubscriptionCheckoutDTO = {
     updated_at: string;
   } | null;
   price: {
+    version_id?: string;
     source: "billing_price_version" | "subscription_plan";
     amount_cents: number;
     currency: string;

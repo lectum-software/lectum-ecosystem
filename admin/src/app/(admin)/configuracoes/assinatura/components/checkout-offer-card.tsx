@@ -97,11 +97,13 @@ export const CheckoutOfferCard = ({
               <Detail label="Gateway selecionado">{gateway}</Detail>
               <Detail label="Ambiente">{mode}</Detail>
               <Detail label="Situação da oferta">
-                {checkout.offer
-                  ? checkout.offer.checkout_enabled
-                    ? "Habilitada no cadastro"
-                    : "Pausada no cadastro"
-                  : "Sem oferta vinculada"}
+                {checkout.gateway === "disabled"
+                  ? "Novas adesões desativadas globalmente"
+                  : checkout.offer
+                    ? checkout.offer.checkout_enabled
+                      ? "Habilitada no cadastro"
+                      : "Pausada no cadastro"
+                    : "Sem oferta vinculada"}
               </Detail>
               {checkout.offer ? (
                 <Detail label="Revisão da oferta">{checkout.offer.revision}</Detail>

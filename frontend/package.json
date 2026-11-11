@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.821",
+  "version": "0.1.822",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",

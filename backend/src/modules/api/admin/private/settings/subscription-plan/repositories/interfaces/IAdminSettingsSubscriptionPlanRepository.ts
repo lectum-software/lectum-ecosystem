@@ -18,12 +18,14 @@ export interface IAdminSettingsSubscriptionPlanRepository {
 import type { StripeIdentity } from "@/modules/billing/payment-gateway/stripe-types";
 
 export type AdminSettingsSubscriptionOfferRecord = {
+  price_version_id?: string;
   revision: number;
   checkout_enabled: boolean;
   updated_at: Date;
 };
 
 export type AdminSettingsSubscriptionPriceRecord = {
+  id?: string;
   amount_cents: number;
   currency: string;
   interval: string;

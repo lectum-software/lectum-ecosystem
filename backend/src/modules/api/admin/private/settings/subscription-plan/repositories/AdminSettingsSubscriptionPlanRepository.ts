@@ -66,6 +66,7 @@ export async function readScopedCatalog(
   const price = await tx.billing_price_version.findFirst({
     where: { id: offer.price_version_id, ...scope },
     select: {
+      id: true,
       amount_cents: true,
       currency: true,
       interval: true,
@@ -75,6 +76,7 @@ export async function readScopedCatalog(
   });
   return {
     offer: {
+      price_version_id: offer.price_version_id,
       revision: offer.revision,
       checkout_enabled: offer.checkout_enabled,
       updated_at: offer.updated_at,

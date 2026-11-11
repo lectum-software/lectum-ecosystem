@@ -1990,3 +1990,36 @@ model billing_financial_reconciliation {
   @@index([gateway, mode, account_id, provider_subscription_id], map: "financial_reconciliation_provider_idx")
   @@map("billing_financial_reconciliations")
 }
+
+// Catalog mutations are not checkout/payment operations; no payer data or secret payloads.
+model billing_catalog_operation {
+  id                       String    @id @default(cuid())
+  gateway                  String
+  mode                     String
+  account_id               String
+  plan_id                  String
+  product_id               String
+  actor_admin_id           String
+  request_key              String
+  fingerprint              String
+  amount_cents             Int
+  currency                 String    @default("BRL")
+  interval                 String    @default("month")
+  interval_count           Int       @default(1)
+  lookup_key               String    @unique
+  provider_idempotency_key String    @unique
+  status                   String    @default("pending")
+  version_id               String?
+  external_price_id        String?
+  attempts                 Int       @default(0)
+  first_attempt_at         DateTime?
+  lease_token              String?
+  lease_until              DateTime?
+  last_error_code          String?
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @default(now()) @updatedAt
+
+  @@unique([actor_admin_id, request_key], map: "billing_catalog_actor_request_key")
+  @@index([gateway, mode, account_id, plan_id, created_at, id], map: "billing_catalog_scope_created_idx")
+  @@map("billing_catalog_operations")
+}

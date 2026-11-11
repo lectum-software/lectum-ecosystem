@@ -21,6 +21,7 @@ import {
   type StripeSubscriptionCardInput,
   type StripeSubscriptionSetupInput,
 } from "./stripe-card";
+import { stripeCatalogApi } from "./stripe-catalog";
 import { initialPaidCheckoutIntent, initialUnpaidCheckoutIntent } from "./stripe-checkout-proof";
 import { readStripeConfiguration, STRIPE_API_VERSION } from "./stripe-config";
 import { stripeCreditApi } from "./stripe-credit-api";
@@ -34,7 +35,6 @@ import type { StripeFinancialTarget } from "./stripe-financial-types";
 import { readStripePaidInvoice } from "./stripe-invoice";
 import {
   assertStripeMode,
-  parseStripePlan,
   projectStripeSetup,
   projectStripeSubscription,
   requireLocalReference,
@@ -171,14 +171,14 @@ export class StripeAdapter implements PaymentGateway {
     return projectStripeSubscription(subscription, this.identity, evidence);
   }
 
-  getStripePlan(id: string) {
-    return this.run(async () => {
-      const expected = requireStripeId(id, "price");
-      const price = await this.client.prices.retrieve(expected, { expand: ["product"] });
-      if (price.id !== expected) throw new StripeGatewayError("resource_mismatch");
-      return parseStripePlan(price, this.identity);
-    });
-  }
+  private readonly catalog = stripeCatalogApi(
+    this.client,
+    () => this.identity,
+    (action) => this.run(action),
+  );
+  getStripePlan = this.catalog.getStripePlan;
+  createStripeCatalogPrice = this.catalog.createStripeCatalogPrice;
+  findStripeCatalogPrice = this.catalog.findStripeCatalogPrice;
 
   createCustomer(input: { userId: string; email: string; idempotencyKey: string }) {
     return this.run(async () => {

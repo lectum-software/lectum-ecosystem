@@ -1,3 +1,5 @@
+Validada localmente em **11/11/2026, 0.1.822**: [TASK-329 - Gestao de precos versionados](TASK-329-admin-versioned-price-management.md), [ADR-0694](../../adrs/0694-admin-versioned-price-management.md). Criacao/historico/recuperacao reais no sandbox, vinculo pausado, publicacao explicita/CAS e pausa sem segredo. Contratos preservados; vitrine/cotacao coerentes. Check integral e builds backend/Admin/frontend aprovados, browser390/1440. Commit local em homolog, sem push/deploy ou alteracao live. Despesas operacionais seguem tarefa posterior.
+
 Validada localmente em **11/11/2026, 0.1.821**: [TASK-328 - Fechamento financeiro Stripe no Admin](TASK-328-admin-stripe-finance-closure.md), [ADR-0693](../../adrs/0693-admin-stripe-finance-closure.md). Resumo/MRR, assinaturas, recebimentos e CSV consomem fatos Stripe verificados, com bruto/estornos/cobertura separados, calendario BRT e indisponibilidade honesta. API/PG/browser390/1440 reais conferiram tres recibos existentes do sandbox (R$89,70); PDF3 produtivo existente conferido, sem emissao/cobranca. Check integral e builds aprovados, QA auth restaurada. Commit local em homolog, sem push/deploy. Precos versionados, despesas e caminho persistente de logs seguem etapas separadas do pedido abrangente.
 
 Validada localmente em **11/11/2026, 0.1.820**: [TASK-327 - Imagem backend enxuta e rotacao de logs](TASK-327-container-footprint-log-rotation.md), [ADR-0692](../../adrs/0692-container-footprint-log-rotation.md). Imagens Linux amd64 medidas antes/depois: Size Docker local **2,12GB -> 1,19GB (-44,03%)**, assets identicos, native/Prisma/Corepack e smoke real QA aprovados. Politica json-file **20m x5/compress** preparada e rotacao Docker local comprovada; sem aplicacao remota. Backend Dokploy ainda exige caminho LogDriver persistente suportado antes de futura ativacao. Commit local em homolog, sem push/deploy, limpeza ou interrupcao produtiva.
@@ -823,6 +825,7 @@ ou cortesia manual.
 | 326 | [TASK-326 - Sincronizacao de documentos fiscais existentes](TASK-326-existing-fiscal-document-sync.md) | Done | 323, 325 |
 | 327 | [TASK-327 - Imagem backend enxuta e rotacao de logs](TASK-327-container-footprint-log-rotation.md) | Done | 326 |
 | 328 | [TASK-328 - Fechamento financeiro Stripe no Admin](TASK-328-admin-stripe-finance-closure.md) | Done | 323, 325, 326 |
+| 329 | [TASK-329 - Gestao de precos versionados](TASK-329-admin-versioned-price-management.md) | Done | 323, 328 |
 
 ## Ordem operacional recomendada sem bloqueios
 

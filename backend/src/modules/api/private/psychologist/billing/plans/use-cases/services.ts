@@ -1,6 +1,7 @@
 import { error, msg } from "@/helpers/translate";
 import type { IPlansDTO } from "../DTOs/IPlansDTO";
 import { PlansRepository } from "../repositories/PlansRepository";
+import { projectPlanAdmissionOffer, readPlanAdmissionContext } from "./admission-offer";
 
 export default async (data: IPlansDTO) => {
   if (data.auth.role !== "psicologo") {
@@ -11,7 +12,13 @@ export default async (data: IPlansDTO) => {
   }
 
   const repository = new PlansRepository();
-  const plans = await repository.index();
+  const context = readPlanAdmissionContext();
+  const catalog = await repository.index(context.identity);
+  const plans = catalog.plans.map((plan) =>
+    plan.slug === "profissional"
+      ? { ...plan, admission_offer: projectPlanAdmissionOffer(plan, context, catalog) }
+      : plan,
+  );
 
   return {
     status: 200,

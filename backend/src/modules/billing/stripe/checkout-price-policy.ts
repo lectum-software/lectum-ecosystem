@@ -7,7 +7,9 @@ export type StripeCheckoutPriceSnapshot = {
 
 /** Product policy only; does not attest provider availability or a payment. */
 export const isSupportedStripeCheckoutPrice = (price: StripeCheckoutPriceSnapshot) =>
-  price.amount_cents === 2990 &&
+  Number.isSafeInteger(price.amount_cents) &&
+  price.amount_cents >= 50 &&
+  price.amount_cents <= 99999999 &&
   price.currency === "BRL" &&
   price.interval === "month" &&
   price.interval_count === 1;

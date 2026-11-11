@@ -6,6 +6,7 @@ import { resolveApiError } from "@/api/handle";
 import { cn } from "@/lib/utils";
 import { CheckoutOfferCard } from "./components/checkout-offer-card";
 import { PlanDefinitionCard } from "./components/plan-definition-card";
+import { PriceManagement } from "./components/price-management";
 
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
@@ -21,8 +22,8 @@ const SettingsHeader = () => (
           Assinatura
         </h1>
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
-          Consulte a oferta para novas adesões e o cadastro do Plano Profissional. Esta tela é
-          somente leitura; a edição comercial será tratada em uma etapa separada.
+          Consulte a oferta, gerencie preços versionados para novas adesões e preserve os valores já
+          contratados. O cadastro legado do Plano Profissional é mostrado separadamente.
         </p>
       </div>
       <div className="rounded-[1.35rem] border border-primary/15 bg-primary-soft p-4 text-sm text-primary lg:max-w-sm">
@@ -85,6 +86,17 @@ export const AdminSubscriptionSettingsClient = () => {
       {subscriptionPlanQuery.data?.plan ? (
         <>
           <CheckoutOfferCard checkout={subscriptionPlanQuery.data.checkout} />
+          {subscriptionPlanQuery.data.capabilities?.price_management === true ? (
+            <PriceManagement
+              key={`${subscriptionPlanQuery.data.plan.id}:${subscriptionPlanQuery.data.catalog?.mode ?? subscriptionPlanQuery.data.checkout?.mode}`}
+              settings={subscriptionPlanQuery.data}
+            />
+          ) : (
+            <p className="rounded-2xl border border-border p-4 text-sm leading-6 text-muted">
+              Esta versão do serviço disponibiliza apenas a consulta da oferta. Nenhum preço pode
+              ser alterado por esta tela.
+            </p>
+          )}
           <PlanDefinitionCard plan={subscriptionPlanQuery.data.plan} />
         </>
       ) : null}

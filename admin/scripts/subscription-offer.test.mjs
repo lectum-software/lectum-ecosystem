@@ -152,8 +152,16 @@ test("configuração ausente ou desativada tem apresentação conservadora", () 
     }),
   );
   assert.match(html, /Novas adesões desativadas/);
-  assert.match(html, /Sem oferta vinculada/);
+  assert.match(html, /Novas adesões desativadas globalmente/);
   assert.doesNotMatch(html, /29,90|Habilitado localmente/);
+});
+
+test("gateway desativado não afirma ausência de oferta local quando checkout omite seu vínculo", () => {
+  const html = renderOffer(
+    checkout({ gateway: "disabled", mode: null, status: "paused", offer: null, price: null }),
+  );
+  assert.match(html, /Novas adesões desativadas globalmente/);
+  assert.doesNotMatch(html, /Sem oferta vinculada/);
 });
 
 test("Stripe nunca apresenta preço legado nem identidade externa da resposta", () => {

@@ -50,7 +50,7 @@ export const usePsychologistBilling = ({ callbacks }: UsePsychologistBillingProp
   const plans = useQuery({
     queryKey: keys.psychologistBilling.plans(),
     queryFn: () => api.getPsychologistBillingPlans(),
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     retry: false,
   });
 
