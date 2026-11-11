@@ -8,6 +8,7 @@ export const sourceRoot = new URL("../src/", import.meta.url);
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === "next/image") return nextResolve("next/image.js", context);
+    if (specifier === "next/link") return nextResolve("next/link.js", context);
     if (specifier.startsWith("@/") || specifier.startsWith(".")) {
       const base = specifier.startsWith("@/") ? sourceRoot : context.parentURL;
       const path = specifier.startsWith("@/") ? specifier.slice(2) : specifier;

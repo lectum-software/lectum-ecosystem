@@ -142,6 +142,10 @@ test("real PostgreSQL fiscal recovery audits once, preserves issued document and
       expectedInvoiceAttempts: 4,
       reason: "provider_recovered" as const,
     };
+    await prisma.billing_invoice_job.update({
+      where: { id: job.id },
+      data: { verification_failures: 10 },
+    });
     await prisma.admin.update({ where: { id: admin.id }, data: { need_reset: true } });
     await assert.rejects(applyVerifiedFiscalRecovery(recovery, proof));
     await prisma.admin.update({ where: { id: admin.id }, data: { need_reset: false } });
@@ -155,6 +159,11 @@ test("real PostgreSQL fiscal recovery audits once, preserves issued document and
       data: { lease_token: null, lease_until: null },
     });
     assert.equal((await applyVerifiedFiscalRecovery(recovery, proof)).document_preserved, true);
+    assert.equal(
+      (await prisma.billing_invoice_job.findUniqueOrThrow({ where: { id: job.id } }))
+        .verification_failures,
+      0,
+    );
     const after = await prisma.billing_invoice.findUniqueOrThrow({ where: { id: invoice.id } });
     assert.equal(after.document_id, invoice.document_id);
     assert.equal(after.reference, invoice.reference);

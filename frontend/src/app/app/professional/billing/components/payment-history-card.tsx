@@ -1,19 +1,24 @@
 "use client";
 
 import { CheckCircle2, ReceiptText } from "lucide-react";
-import Link from "next/link";
-import type { BillingPaymentHistoryItem } from "@/api/generator/types/billing";
+import type {
+  BillingFiscalRequirements,
+  BillingPaymentHistoryItem,
+} from "@/api/generator/types/billing";
 import { cn } from "@/lib/utils";
 import { shouldExplainStripeInvoice } from "@/utils/billing-management";
 import { formatPaymentDate, formatPrice } from "./billing-format";
+import { FiscalRequirementsMessage } from "./fiscal-requirements-message";
 import { InvoiceAction } from "./invoice-action";
 
 export const PaymentHistoryCard = ({
   items,
   canReviewAddress = false,
+  fiscalRequirements,
 }: {
   items: BillingPaymentHistoryItem[];
   canReviewAddress?: boolean;
+  fiscalRequirements?: BillingFiscalRequirements;
 }) => (
   <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
     <div className="flex gap-3">
@@ -55,22 +60,11 @@ export const PaymentHistoryCard = ({
                 <p className="mt-1 text-xs font-semibold text-muted">{item.status_label}</p>
               ) : null}
               {shouldExplainStripeInvoice(item) ? (
-                <p className="mt-2 text-xs leading-5 text-muted">
-                  {item.mode === "test"
-                    ? "Documento fiscal de teste ainda não disponível."
-                    : "Nota fiscal em preparação. Acompanhe por aqui."}
-                  {canReviewAddress ? (
-                    <>
-                      {" "}
-                      <Link
-                        className="font-semibold text-primary underline"
-                        href="/app/profissional/assinatura/endereco"
-                      >
-                        Conferir endereço fiscal
-                      </Link>
-                    </>
-                  ) : null}
-                </p>
+                <FiscalRequirementsMessage
+                  requirements={fiscalRequirements}
+                  testMode={item.mode === "test"}
+                  canReviewAddress={canReviewAddress}
+                />
               ) : null}
               {item.invoice &&
               !(item.invoice.status === "authorized" && item.invoice.downloadable) ? (

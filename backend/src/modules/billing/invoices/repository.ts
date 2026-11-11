@@ -100,7 +100,12 @@ export class InvoiceRepository {
   async finishJob(
     id: string,
     token: string,
-    data: { completed_at?: Date; next_attempt_at?: Date; last_error_code: string | null },
+    data: {
+      completed_at?: Date;
+      next_attempt_at?: Date;
+      last_error_code: string | null;
+      verification_failures?: number;
+    },
     eventId?: string,
   ) {
     await prisma.billing_invoice_job.updateMany({

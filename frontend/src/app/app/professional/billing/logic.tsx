@@ -246,6 +246,7 @@ export const ProfessionalBillingLogic = () => {
           paymentHistory.length ? (
             <PaymentHistoryCard
               items={paymentHistory}
+              fiscalRequirements={subscriptionQuery.data?.fiscal_requirements}
               canReviewAddress={billing.current.data?.billing_address_editable === true}
             />
           ) : null
@@ -376,6 +377,7 @@ export const ProfessionalBillingLogic = () => {
               <aside className="grid gap-4">
                 <PaymentHistoryCard
                   items={paymentHistory}
+                  fiscalRequirements={subscriptionQuery.data?.fiscal_requirements}
                   canReviewAddress={billing.current.data?.billing_address_editable === true}
                 />
 

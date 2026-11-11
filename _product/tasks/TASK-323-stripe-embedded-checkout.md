@@ -1,7 +1,7 @@
 # TASK-323 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
 
 Data: 2026-11-09
-Status: Auditoria final e correcoes em homolog; ativacao produtiva autorizada somente apos validacao, primeira cobranca real executada pelo usuario
+Status: Producao ativa 0.1.811; primeira compra real confirmada, NFS-e aguarda identidade fiscal do titular; hardening de recuperacao em homolog
 Decisao: [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md)
 Operacao: [Runbook Stripe](STRIPE-OPERATIONS.md)
 Base auditada: `homolog` em `820077ccd`, versao `0.1.799`
@@ -31,7 +31,7 @@ permanecem preservados. Nenhuma nota live sera emitida antes de pagamento real.
 - [x] Validar passagem pagamento/ledger/fiscal test e recusa governamental explicita;
   nao declarar autorizacao governamental nem entrega de email sem evidencia.
 - [x] Checks/builds, browser local, revisao cruzada e ADR; commit versionado deste fechamento.
-- [ ] PR homolog para main, deploys separados, preflight live somente leitura,
+- [x] PR homolog para main, deploys separados, preflight live somente leitura,
   ativacao ordenada e smoke autenticado sem envio de cartao.
 - [ ] Entregar ao usuario o fluxo pronto para a primeira tentativa real, com
   observacao de pagamento unico, nota, PDF e email apos a transacao dele.
@@ -1744,11 +1744,13 @@ live concluido antes dessa transacao.
   explicita do usuario, com inventario Stripe vazio. Nao foi executada a sequencia
   conservadora piloto fiscal individual → auto do runbook: registrar essa diferenca,
   sem apresentar emissao piloto como prova. Abertura e global, nao ha allowlist de usuario.
-- [ ] Usuario acessar a conta real e iniciar sua primeira assinatura com cartao
-  de credito; confirmar nome fiscal auditado/endereco individuais se faltarem.
+- [x] Usuario acessar a conta real e iniciar sua primeira assinatura com cartao
+  de credito (10/11, 22:23 BRT; confirmacao somente leitura no checkpoint abaixo).
+- [ ] Confirmar CPF/nome fiscal auditado individuais faltantes; endereco ja valido.
   Nao reabrir codigo/ISS/descricao ja aprovados pela contabilidade.
-- [ ] Apos a acao do usuario, comprovar uma cadeia financeira sem duplicacao,
-  eventos conciliados, recibo e periodo/beneficio corretos, NFS-e autorizada
+- [x] Apos a acao do usuario, comprovar uma cadeia financeira sem duplicacao,
+  eventos invoice/subscription conciliados, recibo e periodo/contrato corretos.
+- [ ] Apos dados reais completos, comprovar NFS-e autorizada
   (simulation false/chave de 50 digitos/public_query), PDF do proprietario e email
   recebido. Sem sucesso financeiro/NF/email alegado antes da evidencia.
 
@@ -1764,3 +1766,96 @@ os artefatos produtivos 0.1.811. Rollback continua por gates/oferta, sem apagar 
 Checkpoint documental local 0.1.812: bump unico e cinco manifests sincronizados,
 sem alteracao funcional, novo push ou deploy. A evidencia operacional da ativacao
 esta em [liberacao live](file:///Users/rezende/.codex/lectum-stripe-qa/live-activation-0811.json).
+
+### Primeira compra real e acompanhamento — 10/11/2026, 22:23 BRT
+
+O usuario executou o pagamento. Consultas READ ONLY no banco e GETs canonicos na
+Stripe confirmaram uma unica captura de 2990 centavos BRL, funding credit, sem
+estorno ou disputa. InvoicePayment, invoice, PaymentIntent, charge, contrato e
+recibo local coincidem; hash imutavel valido. Plano profissional ativo e efetivo,
+periodo ate 11/12/2026 01:23:17 UTC. Operacoes checkout/collection completas e
+eventos invoice/subscription conciliados. Nenhuma nova cobranca foi gerada pelo agente.
+
+- [x] Captura real unica, recibo integro, vinculos e periodo/contrato ativo conferidos.
+- [x] Causa da pendencia fiscal identificada sem expor dados: endereco valido,
+  CPF e nome fiscal auditado ausentes. `recipient_incomplete`, job aberto, nenhum
+  documento fiscal criado. Verificacao profissional desta conta ainda nao concluida.
+- [ ] Titular concluir dados reais pelo onboarding; se conta administrativa, operador
+  autorizado preencher CPF real auditado e nome fiscal no admin, sem forjar aprovacao CFP.
+- [ ] Observar retomada, autorizacao governamental, PDF e entrega de email depois
+  dos dados completos. Nao refazer assinatura nem cobrar outra vez.
+
+Uma inbox `setup_intent.succeeded` permanece sem vinculo local, com diagnostico
+`setup_operation_unresolved` e backoff. Nao afirmar que todos os eventos terminaram
+nem descartar esse evento por suposicao; a guarda nao atribui cartao/beneficio nem
+cobra nesse ramo. `adjustments_complete=false` no ledger e intencional nesta versao:
+recebimentos/periodos estao completos ate o cutoff, ajustes historicos liquidos nao.
+Consulta de origem do SetupIntent residual interrompida no GET Event por HTTP 403
+da chave restrita; nenhuma permissao ampliada, evento descartado ou reprocessado.
+O comportamento autonomo ja visto no sandbox e hipotese, nao origem live comprovada.
+
+Evidencia sanitizada privada:
+[primeiro pagamento live](file:///Users/rezende/.codex/lectum-stripe-qa/first-live-payment-0811.json).
+Producao permanece 0.1.811; pendencia documental nao autoriza fabricar identidade.
+
+### Recuperacao apos espera prolongada pelos dados fiscais — complemento local
+
+Auditoria encontrou erro reproduzivel de politica: `attempts` inclui espera por
+CPF/nome/endereco; apos dez passagens, um unico timeout de verificacao Stripe
+poderia concluir o job como terminal. Isso ainda nao foi observado no caso live.
+Corrigir separando falhas consecutivas de verificacao do total auditado de tentativas.
+
+- [x] Contador persistido expansivo com default zero; preservar attempts/backoff.
+- [x] Falhas consecutivas de verificacao mantem limite dez; leitura canonica valida
+  seguida de espera de dados ou snapshot reinicia apenas o contador de falhas.
+- [x] Erros de acesso/escopo/contrato e pagamentos inelegiveis continuam fechados;
+  recuperacao auditada reinicia budget somente apos sua prova canonica existente.
+- [x] Regressao pura e PostgreSQL real isolado: espera prolongada, falha transitoria,
+  concorrencia/CAS, sucesso e ausencia de pagamento/documento extra.
+- [x] Migration local, check/build, revisao cruzada, ADR e commit versionado.
+- [x] DTO fiscal aditivo somente leitura e orientacao precisa no historico do titular:
+  distinguir endereco/identidade incompletos de documento ainda indisponivel, sem
+  expor valores ou alegar autorizacao. CTA respeita etapas WhatsApp/CFP e nao obriga
+  perfil ja aprovado/cortesia/rejeitado a refazer verificacao; orientar suporte.
+- [x] Validar contrato/ownership, backend antigo e frontend antigo, sem chamar
+  providers; browser local real mobile-first e builds dos apps alterados.
+
+Impacto previsto: coluna aditiva com default zero, sem backfill destrutivo, pacote,
+env nova ou alteracao de parametros fiscais. Migration antes do backend novo;
+backend antigo ignora a coluna. Nao reabrir jobs terminais automaticamente. Nao
+alterar coleta financeira, gates, Radar, identidade, aprovacao ou documentos existentes.
+Rollback permite backend anterior com coluna preservada. Implementar/validar localmente;
+nao apresentar essa correcao como solucao da ausencia real de CPF/nome fiscal.
+
+A melhoria visual reutiliza o historico/fluxo existentes; nao cria formulario fiscal
+paralelo nem permite autodeclarar aprovacao. Necessidade constatada: a mensagem
+generica "Nota fiscal em preparacao" nao explica falta de identidade e sugere somente
+endereco. Projecao aditiva usa validacao fiscal ja existente e nunca trata dados
+completos como autorizacao governamental. Nao se amplia acesso do onboarding.
+
+
+Validacao local 0.1.813: migration aplicada no PostgreSQL de QA sem reset; Prisma
+validate/status aprovados. Oito testes de politica/repositorio/recovery com PG real,
+quatro testes de projecao fiscal/backend e 39 focais frontend aprovados. Check
+integral da raiz, builds backend/frontend, smoke compilado `/version` 0.1.813,
+login 200 e assinatura anonima protegida aprovados. Revisao cruzada final sem
+bloqueadores. Bump unico sincronizado nos cinco manifests; commit deste fechamento.
+
+QA visual mobile-first: tres contas locais com recibos reais previos do sandbox,
+320/390/1440 (nove capturas), sem overflow. Endereco, cadastro e suporte corretamente
+separados; destinos reais de endereco/cadastro abriram, sem enviar formulario.
+O clique de Link pela automacao nao confirmou navegacao; os destinos observados
+foram validados por navegacao direta, sem atribuir essa limitacao a falha do app.
+Builder/Quick Copy indisponivel; inventario/proto local como referencia. Autenticacao
+temporaria restaurada, sessoes extras removidas, servidores encerrados e contagens
+financeiras/fiscais preservadas. Providers, chaves e envs live ausentes do runtime QA.
+Nenhuma cobranca ou nota foi produzida por esses testes.
+
+Preflight de publicacao em 11/11/2026 02:01 UTC: Dokploy homolog backend/video com
+Autodeploy OFF e zero schedules; preview backend OFF. Vercel frontend/admin com
+Ignored Build `exit 0` e auto-assign de dominios OFF. Conferencia feita nos provedores,
+nao por alteracao documental. Publicacao ainda pendente neste commit; nao modificar
+gates, oferta, Radar ou identidade do titular. Evidencias privadas sanitizadas:
+`post-payment-0813-final-check.log`, `fiscal-retry-budget-local-20261111.log`,
+`fiscal-guidance-visual-0813.json`, `fiscal-guidance-http-evidence.json` e
+`release-guards-0813.json`, em `/Users/rezende/.codex/lectum-stripe-qa/`.

@@ -869,6 +869,7 @@ model billing_invoice_job {
   resource_id          String
   event_id             String
   attempts             Int       @default(0)
+  verification_failures Int      @default(0)
   next_attempt_at      DateTime  @default(now())
   lease_token          String?
   lease_until          DateTime?

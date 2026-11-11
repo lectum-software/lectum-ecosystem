@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { fiscalRequirementsForHistory } from "@/modules/billing/invoices/fiscal-requirements";
 import { withInvoiceHistory } from "@/modules/billing/invoices/history";
 import {
   getStripeGateway,
@@ -62,6 +63,8 @@ export const showSubscription = async (data: ISubscriptionDTO) => {
       : Promise.resolve(null),
     repository.showOwnedPaymentHistory(profile.id!),
   ]);
+  const history = await withInvoiceHistory(data.auth.id!, paymentHistory);
+  const fiscalRequirements = await fiscalRequirementsForHistory(data.auth.id!, history);
 
   return {
     status: 200,
@@ -75,7 +78,8 @@ export const showSubscription = async (data: ISubscriptionDTO) => {
           ? withContractedPlan(paymentMethodSubscription)
           : null,
       payment_method: paymentMethod,
-      payment_history: await withInvoiceHistory(data.auth.id!, paymentHistory),
+      payment_history: history,
+      ...(fiscalRequirements ? { fiscal_requirements: fiscalRequirements } : {}),
     },
   };
 };

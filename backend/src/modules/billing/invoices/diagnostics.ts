@@ -46,13 +46,14 @@ export const safeInvoiceDiagnostic = (code: unknown): string => {
 export const invoiceFailure = (
   error: unknown,
   gateway: string,
-  attempts: number,
+  verificationFailures: number,
   boundedRetries = true,
 ) => {
   if (error instanceof StripeInvoicePaymentError)
     return {
       code: error.disposition,
-      terminal: error.disposition !== "awaiting_payment" || (boundedRetries && attempts >= 10),
+      terminal:
+        error.disposition !== "awaiting_payment" || (boundedRetries && verificationFailures >= 10),
     };
   if (gateway === "stripe" && error instanceof StripeGatewayError) {
     const accessDenied = error.details.status === 401 || error.details.status === 403;
@@ -69,7 +70,7 @@ export const invoiceFailure = (
         : invalid
           ? "payment_not_eligible"
           : "provider_unavailable",
-      terminal: accessDenied || invalid || (boundedRetries && attempts >= 10),
+      terminal: accessDenied || invalid || (boundedRetries && verificationFailures >= 10),
     };
   }
   return {
@@ -79,9 +80,33 @@ export const invoiceFailure = (
       (gateway === "stripe" &&
         !(error instanceof InvoiceError) &&
         boundedRetries &&
-        attempts >= 10),
+        verificationFailures >= 10),
   };
 };
+
+export const invoiceJobFailure = (
+  error: unknown,
+  gateway: string,
+  previousVerificationFailures: number,
+  paymentVerified: boolean,
+) => {
+  const awaitingRecipient =
+    paymentVerified &&
+    error instanceof InvoiceError &&
+    error.retryable &&
+    ["billing_address_incomplete", "recipient_incomplete"].includes(error.code);
+  const verificationFailures = awaitingRecipient
+    ? 0
+    : Math.min(10, previousVerificationFailures + 1);
+  return { ...invoiceFailure(error, gateway, verificationFailures), verificationFailures };
+};
+
+/** Only call after canonical paid evidence passes eligibility, never from an event callback. */
+export const invoiceVerificationFailuresAfterPayment = (
+  previousVerificationFailures: number,
+  lastErrorCode: string | null,
+) => (lastErrorCode === "awaiting_payment" ? 0 : previousVerificationFailures);
+
 export const invoiceOperationReference = (id: string) =>
   createHash("sha256").update(`lectum.fiscal.v1:${id}`).digest("hex").slice(0, 24);
 

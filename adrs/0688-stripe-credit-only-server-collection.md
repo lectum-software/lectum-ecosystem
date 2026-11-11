@@ -349,3 +349,41 @@ Detalhes, criterios separados e referencias privadas de QA/smoke estao no
 Registro documental posterior nao muda a versao produtiva 0.1.811 e nao requer
 redeploy. A pendencia de evidenciar a primeira compra nao e permissao para o
 agente preencher/enviar cartao ou fabricar pagamento, identidade ou nota fiscal.
+
+## Acompanhamento da primeira compra e budget fiscal separado — 10/11/2026 BRT
+
+A primeira acao do usuario produziu captura unica de R$29,90, recibo integro e
+contrato ativo, confirmados por leituras canonicas. A NFS-e nao foi enviada:
+endereco valido, mas CPF e nome fiscal auditado ausentes. Preservar onboarding
+verdadeiro e alternativa administrativa auditada; nao substituir identidade fiscal
+por nome de exibicao, dados de cartao ou aprovacao profissional fabricada.
+
+O contador total de tentativas fiscais inclui espera por dados. Reutiliza-lo como
+budget de falhas de verificacao torna um erro transitorio terminal depois de longa
+espera. Decisao: contador separado persistido, default zero, atualizado sob a mesma
+lease/evento CAS. A verificacao canonica concluida reinicia esse contador; espera
+por dados nao consome budget. Preservar total auditado/backoff e limite de falhas
+consecutivas, recusas terminais de seguranca e recuperacao manual auditada.
+
+Alternativas rejeitadas: zerar attempts perderia historico e alteraria backoff;
+repetir GETs indefinidamente retiraria o limite operacional; inventar dados ou
+reabrir todos os jobs terminais violaria os limites de seguranca. Migration aditiva
+precede backend novo, sem alterar esquema existente ou exigir env. Backend anterior
+tolera a coluna; rollback nao a remove. Validacao local/PG real nao sera apresentada
+como emissao governamental ou cobranca live. A primeira nota/PDF/email continua
+dependente dos dados reais do titular, sem nova tentativa financeira.
+
+O historico do pagador deve distinguir falta de endereco/identidade de documento
+indisponivel. Projecao aditiva privada, derivada do banco e validadores fiscais
+existentes, sem valores pessoais nem chamada ao gateway. Navegacao respeita o
+onboarding vigente; perfil ja aprovado/cortesia/rejeitado recebe orientacao de
+suporte, nao um desvio para nova aprovacao. Backend antigo preserva fallback seguro;
+frontend antigo ignora o campo. Dados completos nao equivalem a nota autorizada.
+
+
+Evidencias do complemento 0.1.813: migration local sem reset, 8 testes de recuperacao
+com PostgreSQL real, 4 backend de projecao e 39 focais frontend; check integral e
+builds backend/frontend aprovados. Nove capturas 320/390/1440 com historicos sandbox
+existentes, sem provider/nova transacao. Autenticacao de QA restaurada. Revisao
+independente conferiu CAS, ownership, gates e compatibilidade. Autodeploys externos
+de homolog reconferidos desligados; publicar por PR, sem promover por push direto.
