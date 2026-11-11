@@ -760,3 +760,5 @@ Formato recomendado:
 - [ADR-0693 — Admin financeiro consome fatos Stripe verificados](0693-admin-stripe-finance-closure.md)
 
 - [ADR-0694 — Gestao de precos para novas adesoes, sem reprecificar contratos](0694-admin-versioned-price-management.md)
+
+- [ADR-0695 — Custos operacionais manuais, sem falsa conciliacao financeira](0695-admin-operating-expenses.md)

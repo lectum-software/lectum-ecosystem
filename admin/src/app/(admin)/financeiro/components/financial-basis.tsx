@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { AdminFinanceDashboard } from "@/api/req/finance";
 import { formatMoney } from "../modules/finance-support";
 import {
@@ -37,6 +38,12 @@ export const FinancialBasisPanel = ({ dashboard }: { dashboard: AdminFinanceDash
         Tarifas e fluxo de caixa líquido não apurados. Esta consulta não verifica o saldo do gateway
         nem representa lucro ou valor disponível para saque.
       </p>
+      <Link
+        className="inline-flex min-h-11 items-center text-sm font-bold text-primary underline underline-offset-4"
+        href="/financeiro/despesas"
+      >
+        Consultar despesas operacionais manuais, separadamente
+      </Link>
     </section>
   );
 };

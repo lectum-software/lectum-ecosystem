@@ -257,7 +257,7 @@ export function applyStripeFinanceDashboard(
     refund_snapshot_scope: "stripe_receipts",
     fees_available: false,
     net_cash_flow_available: false,
-    note: "Recebimentos brutos registrados, sem cobertura externa presumida. Estornos: apenas recibos Stripe pagos no período, em seu estado atual; não são ajustes datados nem fluxo líquido. Tarifas e despesas não estão disponíveis.",
+    note: "Recebimentos brutos registrados, sem cobertura externa presumida. Estornos: apenas recibos Stripe pagos no período, em seu estado atual; não são ajustes datados nem fluxo líquido. Tarifas não estão disponíveis; despesas manuais não estão incluídas neste resumo.",
   };
   dashboard.coverage_notes = dashboard.coverage_notes.filter(
     (note) =>

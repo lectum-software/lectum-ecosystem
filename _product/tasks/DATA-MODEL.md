@@ -1483,3 +1483,18 @@ documento, referencia, valor/moeda, status/numero, updated_at e lease_token.
 Cancelamento confirmado nao regride; falha de consulta preserva o estado anterior.
 manual_review com document_id pode retomar GET; sem documento mantem gates de
 emissao. Recibos, pagamentos, assinatura e snapshot original nao sao reescritos.
+
+## Custos operacionais administrativos (TASK-330 / ADR-0695)
+
+`admin_operating_expense` / `admin_operating_expenses`: id cuid, timestamps e
+soft-delete padrao; currency BRL, amount_cents Int1..99999999; category String
+infrastructure/software/accounting/marketing/people/taxes/other; description
+3..140; competence_date DateTime @db.Date e paid_date DateTime? @db.Date. Datas
+civis, nao instantes. status active|voided, revision Int default1,
+created_by_admin_id/request_key UUIDv4/fingerprint inicial imutaveis (unique
+ator+request_key), updated_by_admin_id, correction_reason?, void_reason?,
+voided_at?, voided_by_admin_id?. Anulacao preserva valor/documentacao original.
+Auditoria admin_activity_log atomica, valores controlados e hashes de texto.
+Indices para competencia/status/categoria e ordenacao. Sem cascade apagando
+lancamentos por exclusao administrativa; IDs de ator preservados para auditoria.
+Totais somente lancamentos manuais filtrados, nao custos completos nem lucro.

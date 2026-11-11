@@ -72,6 +72,7 @@ export const adminNavItems = [
       { label: "Visão geral", href: "/financeiro" },
       { label: "Cobranças", href: "/financeiro/cobrancas" },
       { label: "Assinaturas", href: "/financeiro/assinaturas" },
+      { label: "Despesas operacionais", href: "/financeiro/despesas" },
     ],
   },
   { label: "Notificações", href: "/notificacoes", icon: Bell },

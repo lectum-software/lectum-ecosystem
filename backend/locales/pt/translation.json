@@ -1,5 +1,11 @@
 {
   "error": {
+    "expense_invalid_input": "Revise os dados da despesa. Informe valores inteiros, datas válidas e o motivo quando solicitado.",
+    "expense_conflict": "Este lançamento foi alterado. Atualize os dados e revise antes de salvar novamente.",
+    "expense_replay_conflict": "Este envio já está associado a outros dados. Atualize a lista antes de iniciar um novo lançamento.",
+    "expense_not_found": "Lançamento não encontrado.",
+    "expense_actor_invalid": "Este acesso administrativo não pode gerenciar despesas.",
+    "expense_voided": "Este lançamento foi anulado e não pode ser alterado ou restaurado.",
     "catalog_invalid_input": "Revise o valor e a confirmação da operação. Somente novas adesões serão afetadas.",
     "catalog_not_configured": "A gestão de preços ainda não está configurada para este ambiente.",
     "catalog_conflict": "A oferta ou a operação foi alterada. Recarregue os dados antes de tentar novamente.",

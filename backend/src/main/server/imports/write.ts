@@ -9,6 +9,7 @@ import apiAdminPrivateDashboardExport from "@/modules/api/admin/private/dashboar
 import apiAdminPrivateDashboardSummary from "@/modules/api/admin/private/dashboard/summary";
 import apiAdminFeedback from "@/modules/api/admin/private/feedback";
 import apiAdminPrivateFinanceDashboard from "@/modules/api/admin/private/finance/dashboard";
+import apiAdminPrivateFinanceExpenses from "@/modules/api/admin/private/finance/expenses";
 import apiAdminPrivateFinanceHistory from "@/modules/api/admin/private/finance/history";
 import apiAdminPrivateFinanceInvoices from "@/modules/api/admin/private/finance/invoices";
 import apiAdminPrivateFinanceLists from "@/modules/api/admin/private/finance/lists";
@@ -220,6 +221,7 @@ mountRoute("/api/admin/private/dashboard/summary", apiAdminPrivateDashboardSumma
 mountRoute("/api/admin/private/dashboard/export", apiAdminPrivateDashboardExport);
 mountRoute("/api/admin/private/finance/dashboard", apiAdminPrivateFinanceDashboard);
 mountRoute("/api/admin/private/finance/history", apiAdminPrivateFinanceHistory);
+mountRoute("/api/admin/private/finance/expenses", apiAdminPrivateFinanceExpenses);
 mountRoute("/api/admin/private/finance/invoices", apiAdminPrivateFinanceInvoices);
 mountRoute("/api/admin/private/finance", apiAdminPrivateFinanceLists);
 mountRoute("/api/admin/private/moderation", apiAdminPrivateModeration);
