@@ -4,6 +4,60 @@ TASK-327 / ADR-0692. Esta preparacao versionada nao altera a VPS, o Docker daemo
 os containers existentes nem a retencao de uploads/arquivos do GlitchTip. Nao ha
 autorizacao de deploy, restart, limpeza, emissao fiscal ou cobranca nesta task.
 
+## Estado operacional — auditoria somente leitura em 11/11/2026
+
+O codigo compativel e a imagem otimizada foram publicados no lote do PR#179;
+backend, frontend e Admin estao em **0.1.824**. Isso **nao ativou a rotacao**.
+A configuracao abaixo continua sendo preparacao. Esta pendencia de infraestrutura
+e independente do fechamento funcional Stripe/SendNF e nao exige nova transacao.
+
+Observacao da VPS as20:14BRT: Docker29.7.1, driver padrao json-file, sem limites
+no daemon ou nos containers backend/prod, backend/homolog e GlitchTip. Backend
+prod tinha14.574bytes de log; worker GlitchTip tinha2.874.070.607bytes. O volume
+de uploads do GlitchTip ocupava23.459.192.832bytes alocados, incluindo23.342
+file_blobs. Esses arquivos pertencem a aplicacao, nao sao logs Docker: rotacao
+de stdout/stderr nao limita seu crescimento nem autoriza exclusao/maintenance.
+
+### Backend: persistencia e disponibilidade antes do rollout
+
+- Dokployv0.29.13 reconstrui TaskTemplate sem LogDriver e preserva somente
+  ForceUpdate da definicao anterior ao atualizar o servico. Um service update
+  avulso seria perdido no proximo deploy. Patches de codigo nao mudam esse contrato.
+  Escolher primeiro suporte persistente no provedor ou migracao declarativa
+  controlada; nao executar nenhuma dessas mudancas implicitamente.
+- O servico real ja usa **uma replica / start-first**, sem healthcheck Docker.
+  Isso nao comprova substituicao sem indisponibilidade. Nao escalar para duas
+  replicas apenas para aplicar logging: digests possuem guardas locais e envio
+  anterior a persistencia; Socket.IO/registro de clientes e rate limit tambem
+  possuem estado por processo. Sobreposicao exige validacao distribuida propria.
+- log-driver/log-opts nao sao recarregaveis via SIGHUP. Restart global do daemon
+  nao e alternativa autorizada nem garantia de zero downtime para Swarm.
+
+### GlitchTip: preservar a stack real e seus dados
+
+- Stack real6.1.0 em Compose: web/worker compartilham uploads; postgres16 possui
+  volume proprio; valkey9 esta sem mount persistente. Servicos sem healthcheck
+  e sem grace period explicito; existe tambem servico one-shot migrate.
+- As abas Backups e Volume Backups dessa stack no Dokploy nao possuem backups
+  configurados. Isso nao exclui backup externo: localizar e comprovar restauracao
+  consistente de banco+uploads antes de qualquer rollout que possa afetar dados.
+  Backup do banco do Dokploy nao prova backup do GlitchTip.
+- Mesclar logging no Compose canonico preserva a politica em deploys futuros,
+  mas exige substituicao de containers. Nao redeployar toda a stack, recriar
+  postgres/valkey, rodar migrate/init/maintenance ou mudar retencao para esse fim.
+- Rollout paralelo de web/worker exige provar capacidade, proxy/readiness,
+  mounts compartilhados, lock efetivo do scheduler e drenagem das tarefas.
+  Compose up, sozinho, nao comprova rolling update sem interrupcao.
+- A rotacao expira logs operacionais antigos. Definir preservacao/retencao antes
+  de ativar; nao interpretar a proibicao de apagar dados como autorizacao para
+  truncar arquivos ou remover containers antigos e seus logs.
+
+Auditoria encerrada sem escrita remota, restart, deploy, prune, emissao fiscal,
+cobranca ou mudanca de Radar. As20:18BRT, GlitchTip /_health/ e backend /health,
+/ready e /ping responderam200; frontend/Admin /version200, todos os tres apps
+Lectum em0.1.824. Evidencia sanitizada privada fora do Git. Ativacao permanece
+pendente dos gates acima; nao declarar esta auditoria como rotacao aplicada.
+
 ## Politica
 
 - Driver `json-file`, `max-size: "20m"`, `max-file: "5"`, `compress: "true"`.
@@ -146,3 +200,10 @@ nem elimina a necessidade de capacidade adequada para imagens novas e anteriores
 - [Docker Engine API ServiceSpec](https://docs.docker.com/reference/api/engine/)
 - [Dokploy Advanced](https://docs.dokploy.com/docs/core/applications/advanced)
 - [Dokploy v0.29.13 Application schema](https://github.com/Dokploy/dokploy/blob/v0.29.13/packages/server/src/db/schema/application.ts)
+- [Dokploy v0.29.13 criacao/atualizacao do TaskTemplate](https://github.com/Dokploy/dokploy/blob/v0.29.13/packages/server/src/utils/builders/index.ts#L129-L189)
+- [Docker: configuracao recarregavel](https://docs.docker.com/reference/cli/dockerd/#configuration-reload-behavior)
+- [Docker: live-restore e Swarm](https://docs.docker.com/engine/daemon/live-restore/#live-restore-and-swarm-mode)
+- [Socket.IO em multiplos nos](https://socket.io/docs/v4/using-multiple-nodes/)
+- [GlitchTip: armazenamento de arquivos](https://glitchtip.com/documentation/install/#file-storage)
+- [GlitchTip 6.1.0: manutencao de arquivos](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.1.0/apps/files/maintenance.py)
+- [django-vtasks 2.0.0: scheduler](https://gitlab.com/glitchtip/django-vtasks/-/blob/v2.0.0/django_vtasks/scheduler.py)

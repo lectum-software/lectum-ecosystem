@@ -1,10 +1,56 @@
 # TASK-331 - Tarifas Stripe observadas por recebimento no Admin
 
 Data: 2026-11-11
-Status: Concluida localmente — 0.1.824, 11/11/2026
+Status: Concluida e publicada — 0.1.824, PR#179, 11/11/2026; encerramento documental posterior somente local
 Dependencias: TASK-328, TASK-330
 Decisao: [ADR-0696](../../adrs/0696-stripe-observed-fees.md)
 Modelo: DATA-MODEL.md, secao Tarifas Stripe observadas.
+
+## Fechamento da publicacao e do ciclo financeiro/fiscal — 11/11/2026
+
+O escopo local descrito nas secoes seguintes e historico. A publicacao posterior
+autorizada ocorreu pelo PR#179, merge2523e1a7e, fonteaa3db0376. Backend/Admin e
+frontend estao em0.1.824; tres migrations aplicadas. Checks/builds locais de
+backend/Admin/frontend e smoke produtivo health/ready/versoes aprovados.
+Permissoes live adicionais autorizadas: somente Balance Read e Prices Write,
+sem rotacionar credencial ou criar catalogo pela validacao.
+
+- [x] Historico financeiro, resumo, assinaturas e CSV produtivos conferidos.
+  CSV real5.923bytes, dois recebimentos e duas assinaturas; sem PII no Git.
+- [x] Dois recibos existentes preservados; observacao canonica GET-only de duas
+  capturas e um estorno. Taxas de captura316centavos, nao custo total/lucro.
+- [x] Oferta comercial revisao2 preservada; novas operacoes de catalogo0, OPEX0.
+  Telas e fluxos de preco/OPEX validados antes no local/sandbox, nao por criar
+  preco/despesa ficticia em producao.
+- [x] NFS-e3 existente autorizada: download administrativo real de63.405bytes,
+  assinatura PDF conferida. NFS-e4cancelada no Lectum, sem download elegivel.
+- [x] Cadeia de pagamento/plano/fiscal anterior comprovada; nenhuma nova cobranca,
+  emissao, cancelamento, estorno ou alteracao de Radar nesta publicacao/validacao.
+
+Evidencias privadas sanitizadas em `/Users/rezende/.codex/lectum-admin-closure-qa/`:
+`release-0824-completion.json`, `production-0824-final-public-smoke.json`,
+`release-existing-nf3-download.json` e `release-csv-proof.json`.
+
+### Acompanhamentos que nao devem ser declarados como provas concluidas
+
+- [ ] Primeiro cliente confirmar plano/historico/download pela propria sessao e
+  recebimento do email. A comprovacao administrativa nao substitui seu acesso.
+- [ ] Observar a primeira renovacao mensal natural live e sua NFS-e. O mecanismo
+  foi validado no sandbox; nao antecipar cobranca para encerrar checklist.
+- [ ] Triagem operacional do evento SetupIntent auxiliar: origem correlacionada
+  no Workbench, mas sem prova posterior de processamento/vinculo ou encerramento.
+  A release824 nao auditou esse residual. Nao afirmar inbox integralmente limpa,
+  ACK/replay efetuado ou atribuir esse evento a nova tentativa do cliente. Ele
+  nao invalida pagamento/plano/NFS-e comprovados; preservar revisao conservadora.
+- [ ] Prova externa de disputa real: ausente, sem fabricar disputa/transacao;
+  estados sem cobertura permanecem explicitos, sem afetar a leitura de capturas.
+- [ ] Confirmar continuidade comercial SendNF antes do prazo02/12 indicado pelo
+  painel na TASK-323, se ainda nao resolvida pelo responsavel; nao contratar plano
+  ou presumir limites/custos por conta propria.
+
+Infraestrutura (rotacao/capacidade/backups) tem gates proprios na TASK-327 e nao
+e implementacao faltante desta integracao. A atualizacao documental posterior
+fica somente em homolog, sem novo push/deploy ou transacao para encerrar o registro.
 
 ## Objetivo / escopo
 
