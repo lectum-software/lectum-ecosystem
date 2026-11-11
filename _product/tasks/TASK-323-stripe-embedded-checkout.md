@@ -1701,3 +1701,66 @@ Fechamento CORS: backend check final1393total/1374pass/19opt-in skips/zerofalhas
 aprovados;9testesHTTP reais do contratoCORS/limiter passaram. Preflight esgotado
 continua falhando fechado; nao se promete leitura de429 quando o proprio OPTIONS
 e bloqueado. Limite live1000 foi observado por headerpublico, sem alteracao.
+
+### Publicacao e liberacao ativa 0.1.811 — 10/11/2026 BRT
+
+Este checkpoint supera o estado produtivo inativo dos registros anteriores.
+O usuario autorizou o fechamento integral e a ativacao Stripe/SendNF, mantendo
+a primeira cobranca real sob sua propria acao. Nao se declara E2E financeiro
+live concluido antes dessa transacao.
+
+- [x] Commit validado `3e27a435b` promovido por PR #175, merge revisado
+  `main@e3af0ef`; branch homolog preservada. Backend/frontend/admin publicados
+  separadamente em 0.1.811. Video sem alteracao funcional ou novo deploy.
+- [x] Backend iniciou apos migrations concluidas, sem marcador de falha observado.
+  Smoke publico final em 10/11, 21:44 BRT: `/health` e `/ready` HTTP 200/no-store;
+  `/ping` HTTP 200/0.1.811/no-store/noindex/nofollow/noarchive.
+- [x] Identidade Vercel confirmada pelo usuario. Frontend e admin concluidos e
+  promovidos aos dominios correntes: ambos `/version` HTTP 200/0.1.811,
+  no-store/max-age=0/noindex/nofollow/noarchive. GET publico do login administrativo
+  retornou HTML 200/noindex; essa leitura nao substitui sessao autenticada.
+- [x] POST unico `{}` sem Stripe-Signature foi recusado com HTTP 400 e codigo
+  controlado de assinatura invalida. GETs anonimos de configuracao Stripe,
+  assinatura/historico e current retornaram 401 sem dados. OPTIONS com origem
+  www permitida retornou 204; GET 401 preservou CORS, private/no-store e no-cache.
+  Nenhum evento financeiro foi fabricado ou reenviado por esse smoke.
+- [x] Runtime conferido com `BILLING_CHECKOUT_GATEWAY=stripe` e cinco gates true:
+  reconciliation, collection, ledger, emissao fiscal Stripe e automacao fiscal
+  Stripe. Segredos/publishable key/conta/modo/webhook conferidos sem registrar
+  valores; chave publica do painel coincide com a configurada e a API identifica
+  a conta da chave restrita. Frontend recebe publishable key do backend autenticado,
+  nao de uma variavel compilada NEXT_PUBLIC_STRIPE.
+- [x] SendNF live identity/readiness/go-live/envio ao tomador/aprovacao automatica
+  conferidos por leitura. Codigo 010501, ISS explicito 201 (2,01%) e descricao
+  contabil anterior preservados. Default ISS remoto null e aceito pelo contrato:
+  o snapshot envia 201 integralmente ao preview e a criacao, sem alterar cadastro.
+- [x] Oferta habilitada pela CLI auditada, com responsavel real e inventario exato:
+  revisao 1 → 2, checkout true, 2990 centavos BRL/month, applied true. Releitura do
+  banco confirmou oferta/auditoria, sem criar ou alterar preco/produto remoto.
+- [x] Inventario posterior: zero contratos, inbox, operacoes, recibos, jobs ledger,
+  jobs fiscais e documentos fiscais Stripe; uma oferta habilitada. MP/SendNF legados,
+  permissao das chaves e Radar preservados. Nao houve cobranca ou nota live do agente.
+- [x] Automacao fiscal integral foi habilitada conforme a ultima autorizacao
+  explicita do usuario, com inventario Stripe vazio. Nao foi executada a sequencia
+  conservadora piloto fiscal individual → auto do runbook: registrar essa diferenca,
+  sem apresentar emissao piloto como prova. Abertura e global, nao ha allowlist de usuario.
+- [ ] Usuario acessar a conta real e iniciar sua primeira assinatura com cartao
+  de credito; confirmar nome fiscal auditado/endereco individuais se faltarem.
+  Nao reabrir codigo/ISS/descricao ja aprovados pela contabilidade.
+- [ ] Apos a acao do usuario, comprovar uma cadeia financeira sem duplicacao,
+  eventos conciliados, recibo e periodo/beneficio corretos, NFS-e autorizada
+  (simulation false/chave de 50 digitos/public_query), PDF do proprietario e email
+  recebido. Sem sucesso financeiro/NF/email alegado antes da evidencia.
+
+Evidencias privadas, fora do Git e sem valores sensiveis neste registro:
+[gates locais](file:///Users/rezende/.codex/lectum-stripe-qa/final-gates-0.1.811-evidence.json),
+[UI local](file:///Users/rezende/.codex/lectum-stripe-qa/ui-release-0811-evidence.json),
+[E2E fiscal sandbox](file:///Users/rezende/.codex/lectum-stripe-qa/final-fiscal-1794354530230-evidence.json)
+e [smoke publico final](file:///Users/rezende/.codex/lectum-stripe-qa/public-release-smoke-20261111.json).
+O ensaio SendNF test terminou rejeitado, nao autorizado; os registros anteriores
+explicam seus limites. Este checkpoint documental nao exige novo deploy nem altera
+os artefatos produtivos 0.1.811. Rollback continua por gates/oferta, sem apagar dados.
+
+Checkpoint documental local 0.1.812: bump unico e cinco manifests sincronizados,
+sem alteracao funcional, novo push ou deploy. A evidencia operacional da ativacao
+esta em [liberacao live](file:///Users/rezende/.codex/lectum-stripe-qa/live-activation-0811.json).
