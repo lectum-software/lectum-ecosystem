@@ -73,6 +73,7 @@ export const adminNavItems = [
       { label: "Cobranças", href: "/financeiro/cobrancas" },
       { label: "Assinaturas", href: "/financeiro/assinaturas" },
       { label: "Despesas operacionais", href: "/financeiro/despesas" },
+      { label: "Tarifas Stripe", href: "/financeiro/tarifas" },
     ],
   },
   { label: "Notificações", href: "/notificacoes", icon: Bell },

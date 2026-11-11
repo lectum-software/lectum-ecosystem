@@ -1498,3 +1498,19 @@ Auditoria admin_activity_log atomica, valores controlados e hashes de texto.
 Indices para competencia/status/categoria e ordenacao. Sem cascade apagando
 lancamentos por exclusao administrativa; IDs de ator preservados para auditoria.
 Totais somente lancamentos manuais filtrados, nao custos completos nem lucro.
+
+## Tarifas Stripe observadas (TASK-331 / ADR-0696)
+
+`billing_stripe_balance_fact`: id cuid, gateway/mode/account_id, receipt_id e
+receipt_immutable_hash, provider_transaction_id unique por scope, kind
+capture|refund|refund_reversal|dispute, source_id/charge_id, currency BRL;
+amount_cents/fee_cents/net_cents BigInt assinados, net=amount-fee;
+provider_created_at, status pending|available, available_on, immutable_hash e
+observed_at/timestamps. Sem payload/PII/texto de provider. Hash exclui campos de
+disponibilidade mutaveis e liga scope/recibo/origem/valores/datas de criacao.
+
+`billing_stripe_fee_observation`: id cuid, unico receipt_id+scope, receipt_hash,
+state/revision/lease_token/lease_until/cutoff, capture_verified, refunds_cursor/
+disputes_cursor, flags de paginas completas, last_error_code fechado e observed_at
+/timestamps. Sem cascade removendo fatos/recibos existentes, sem afetar filas
+financeiras/fiscais. Cobertura point-in-time/parcial, nao custo completo da conta.

@@ -35,14 +35,20 @@ export const FinancialBasisPanel = ({ dashboard }: { dashboard: AdminFinanceDash
       </dl>
       <p className="text-sm leading-6 text-muted">{basis.note}</p>
       <p className="text-xs font-semibold leading-5 text-muted">
-        Tarifas e fluxo de caixa líquido não apurados. Esta consulta não verifica o saldo do gateway
-        nem representa lucro ou valor disponível para saque.
+        Tarifas e fluxo de caixa líquido não estão incluídos neste resumo. Esta consulta não
+        verifica o saldo do gateway nem representa lucro ou valor disponível para saque.
       </p>
       <Link
         className="inline-flex min-h-11 items-center text-sm font-bold text-primary underline underline-offset-4"
         href="/financeiro/despesas"
       >
         Consultar despesas operacionais manuais, separadamente
+      </Link>
+      <Link
+        className="flex min-h-11 items-center text-sm font-bold text-primary underline underline-offset-4"
+        href="/financeiro/tarifas"
+      >
+        Consultar tarifas Stripe observadas, separadamente
       </Link>
     </section>
   );

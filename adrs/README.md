@@ -762,3 +762,5 @@ Formato recomendado:
 - [ADR-0694 — Gestao de precos para novas adesoes, sem reprecificar contratos](0694-admin-versioned-price-management.md)
 
 - [ADR-0695 — Custos operacionais manuais, sem falsa conciliacao financeira](0695-admin-operating-expenses.md)
+
+- [ADR-0696 — Tarifas canonicas separadas da captura e dos custos completos](0696-stripe-observed-fees.md)

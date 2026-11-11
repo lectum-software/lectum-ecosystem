@@ -121,7 +121,9 @@ test("local gross and Stripe-only accumulated refund are not rendered as profit 
   assert.match(markup, /Estornos observados · Stripe/);
   assert.match(markup, /59,80/);
   assert.match(markup, /29,90/);
-  assert.match(markup, /Tarifas e fluxo de caixa líquido não apurados/);
+  assert.match(markup, /Tarifas e fluxo de caixa líquido não estão incluídos neste resumo/);
+  assert.match(markup, /href="\/financeiro\/tarifas"/);
+  assert.match(markup, /href="\/financeiro\/despesas"/);
   assert.match(markup, /não verifica o saldo/);
   assert.match(markup, /nem representa lucro/);
 });

@@ -2055,3 +2055,63 @@ model admin_operating_expense {
   @@index([category, competence_date], map: "operating_expense_category_competence_idx")
   @@map("admin_operating_expenses")
 }
+
+
+// Canonical read-only Stripe balance observations, independent of billing/fiscal activation.
+model billing_stripe_balance_fact {
+  id                       String   @id @default(cuid())
+  gateway                  String
+  mode                     String
+  account_id               String
+  receipt_id               String
+  receipt_immutable_hash   String
+  provider_transaction_id  String
+  kind                     String
+  source_id                String
+  charge_id                String
+  currency                 String
+  amount_cents             BigInt
+  fee_cents                BigInt
+  net_cents                BigInt
+  provider_created_at      DateTime
+  status                   String
+  available_on             DateTime
+  immutable_hash           String
+  observed_at              DateTime
+  created_at               DateTime @default(now())
+  updated_at               DateTime @default(now()) @updatedAt
+
+  @@unique([gateway, mode, account_id, provider_transaction_id], map: "stripe_balance_fact_transaction_scope_key")
+  @@index([receipt_id, gateway, mode, account_id, provider_created_at], map: "stripe_balance_fact_receipt_idx")
+  @@map("billing_stripe_balance_facts")
+}
+
+model billing_stripe_fee_observation {
+  id                  String    @id @default(cuid())
+  gateway             String
+  mode                String
+  account_id          String
+  receipt_id          String
+  receipt_hash        String
+  state               String    @default("not_observed")
+  stage               String    @default("capture")
+  revision            Int       @default(1)
+  lease_token         String?
+  lease_until         DateTime?
+  cutoff              DateTime
+  capture_verified    Boolean   @default(false)
+  refunds_cursor      String?
+  disputes_cursor     String?
+  refunds_scanned     Boolean   @default(false)
+  disputes_scanned    Boolean   @default(false)
+  refunds_gap         Boolean   @default(false)
+  disputes_gap        Boolean   @default(false)
+  last_error_code     String?
+  observed_at         DateTime?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @default(now()) @updatedAt
+
+  @@unique([gateway, mode, account_id, receipt_id], map: "stripe_fee_observation_receipt_scope_key")
+  @@index([receipt_id], map: "stripe_fee_observation_receipt_idx")
+  @@map("billing_stripe_fee_observations")
+}

@@ -1,3 +1,5 @@
+Validada localmente em **11/11/2026, 0.1.824**: [TASK-331 - Tarifas Stripe observadas](TASK-331-admin-stripe-observed-fees.md), [ADR-0696](../../adrs/0696-stripe-observed-fees.md). Observador GET-only explicito, fatos/leases/hashes e Admin com cobertura honesta. Tres capturas existentes do sandbox: bruto89,70/taxas4,74/netcaptura84,96 antes de ajustes;44GET/zeroescritaStripe,22conjuntos preservados. PG/API/browser390/1440, keylessGET, check integral e builds backend/Admin aprovados; QA auth restaurada. Commit local em homolog, sem push/deploy/live. Refund/dispute externos ausentes documentados; novas permissoes live e rollout seguem separados.
+
 Validada localmente em **11/11/2026, 0.1.823**: [TASK-330 - Custos operacionais no Admin](TASK-330-admin-operating-expenses.md), [ADR-0695](../../adrs/0695-admin-operating-expenses.md). Lancamentos BRL por competencia, criacao idempotente, correcao/anulacao auditadas, CAS e totais filtrados. HTTP/PG/browser390/1440 reais aprovados, QA descartavel/auth restaurados, check integral e builds backend/Admin aprovados. Commit local em homolog, sem push/deploy, desembolso, nota ou alteracao produtiva. Tarifas Stripe reais seguem etapa separada.
 
 Validada localmente em **11/11/2026, 0.1.822**: [TASK-329 - Gestao de precos versionados](TASK-329-admin-versioned-price-management.md), [ADR-0694](../../adrs/0694-admin-versioned-price-management.md). Criacao/historico/recuperacao reais no sandbox, vinculo pausado, publicacao explicita/CAS e pausa sem segredo. Contratos preservados; vitrine/cotacao coerentes. Check integral e builds backend/Admin/frontend aprovados, browser390/1440. Commit local em homolog, sem push/deploy ou alteracao live. Despesas operacionais seguem tarefa posterior.
@@ -829,6 +831,7 @@ ou cortesia manual.
 | 328 | [TASK-328 - Fechamento financeiro Stripe no Admin](TASK-328-admin-stripe-finance-closure.md) | Done | 323, 325, 326 |
 | 329 | [TASK-329 - Gestao de precos versionados](TASK-329-admin-versioned-price-management.md) | Done | 323, 328 |
 | 330 | [TASK-330 - Custos operacionais no Admin](TASK-330-admin-operating-expenses.md) | Done | 328, 329 |
+| 331 | [TASK-331 - Tarifas Stripe observadas](TASK-331-admin-stripe-observed-fees.md) | Done | 328, 330 |
 
 ## Ordem operacional recomendada sem bloqueios
 
