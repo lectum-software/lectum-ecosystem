@@ -1473,3 +1473,13 @@ Download finance/invoices/:id/pdf exige Admin autenticado e user_id associado, r
 contrato/empresa/modo/conta e revalida SendNF por GET. admin_activity_log registra ator,
 alvo local e resultado controlado de acesso, sem documento/URL/chave/dados fiscais.
 Nao reutiliza identidade do cliente, nao emite, cobra ou reabre filas.
+
+## Conciliacao de documento fiscal existente (TASK-326)
+
+Sem mudanca de schema. billing_invoice guarda a ultima observacao canonica do
+documento SendNF mesmo depois de estorno/encerramento do contrato. CAS compara
+snapshot, proprietario, contrato, empresa, ambiente, gateway/conta, pagamento,
+documento, referencia, valor/moeda, status/numero, updated_at e lease_token.
+Cancelamento confirmado nao regride; falha de consulta preserva o estado anterior.
+manual_review com document_id pode retomar GET; sem documento mantem gates de
+emissao. Recibos, pagamentos, assinatura e snapshot original nao sao reescritos.

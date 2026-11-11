@@ -216,6 +216,27 @@ test("fiscal status never overrides refund/dispute and associates every payment 
   assert.ok(result.items.every((item) => item.amount_cents === 2990));
 });
 
+test("a refunded receipt keeps one financial row when its existing fiscal document is cancelled", () => {
+  // Pure presentation contract: no refund, cancellation or provider authorization is performed.
+  const result = projectAdminHistory(
+    rows({
+      receipts: [receipt({ current_state: "refunded", refunded_cents: 2990 })],
+      invoices: [invoice({ status: "cancelled" })],
+    }),
+    {},
+    context,
+  );
+  assert.equal(result.pagination.total, 1);
+  const [item] = result.items;
+  assert.equal(item.financial_status, "refunded");
+  assert.equal(item.status_label, "Estornado");
+  assert.equal(item.amount_cents, 2990);
+  assert.equal(item.source, "stripe_receipt");
+  assert.equal(item.invoice?.id, "invoice-local");
+  assert.equal(item.invoice?.status, "cancelled");
+  assert.equal(item.invoice?.downloadable, false);
+});
+
 test("fiscal-only, simulated, rejected and invalid snapshots cannot fabricate financial payment", () => {
   for (const status of [
     "authorized",
@@ -225,6 +246,8 @@ test("fiscal-only, simulated, rejected and invalid snapshots cannot fabricate fi
     "awaiting_activation",
     "awaiting_configuration",
     "manual_review",
+    "cancel_requested",
+    "cancelled",
   ]) {
     const result = projectAdminHistory(rows({ invoices: [invoice({ status })] }), {}, context);
     assert.equal(result.items[0].financial_status, "processed");

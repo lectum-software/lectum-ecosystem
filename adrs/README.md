@@ -753,3 +753,4 @@ Formato recomendado:
 - [ADR-0689 — Oferta vigente somente leitura no Admin](0689-admin-current-billing-offer.md)
 
 - [ADR-0690 — Historico financeiro e NFS-e no Admin](0690-admin-financial-history-invoices.md)
+- [ADR-0691 — Conciliacao de documento fiscal existente apos estorno](0691-existing-fiscal-document-sync.md)

@@ -3,6 +3,7 @@ import { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import type { GatewayWebhookEvent } from "../payment-gateway/PaymentGateway";
 import { InvoiceError, type InvoiceMode } from "./config";
+import type { ExistingInvoiceRecord } from "./existing-document";
 import { type InvoiceGatewayScope, invoiceGatewayScopes, invoiceScopeWhere } from "./gateway-scope";
 
 const leaseAvailable = (now: Date) => ({
@@ -12,6 +13,39 @@ const leaseData = (now: Date) => ({
   lease_token: randomUUID(),
   lease_until: new Date(now.getTime() + 5 * 60_000),
 });
+
+const observationWhere = (invoice: ExistingInvoiceRecord): Prisma.billing_invoiceWhereInput => ({
+  id: invoice.id,
+  user_id: invoice.user_id,
+  subscription_id: invoice.subscription_id,
+  company_id: invoice.company_id,
+  mode: invoice.mode,
+  gateway: invoice.gateway,
+  account_id: invoice.account_id,
+  payment_id: invoice.payment_id,
+  document_id: invoice.document_id,
+  reference: invoice.reference,
+  amount_cents: invoice.amount_cents,
+  currency: invoice.currency,
+  updated_at: invoice.updated_at,
+  lease_token: invoice.lease_token,
+  status: invoice.status,
+  number: invoice.number,
+  request_snapshot: { equals: invoice.request_snapshot as Prisma.InputJsonValue },
+});
+
+const documentStatuses = new Set([
+  "pending",
+  "processing",
+  "authorized",
+  "rejected",
+  "blocked",
+  "failed",
+  "cancel_requested",
+  "cancelled",
+  "simulated",
+  "authorization_unverified",
+]);
 
 export class InvoiceRepository {
   async enqueue(event: GatewayWebhookEvent) {
@@ -177,9 +211,15 @@ export class InvoiceRepository {
       ...(ids === undefined ? {} : { id: { in: ids } }),
       company_id: companyId,
       mode,
-      status: { notIn: ["manual_review", "cancelled", "rejected"] },
       next_attempt_at: { lte: now },
       AND: [
+        {
+          OR: [
+            { status: { notIn: ["manual_review", "cancelled", "rejected"] } },
+            // An existing document is observed only. Financial/refund eligibility cannot strand it.
+            { status: "manual_review", document_id: { not: null } },
+          ],
+        },
         {
           OR: scopes.map((scope) => ({
             gateway: scope.gateway,
@@ -200,18 +240,79 @@ export class InvoiceRepository {
       where: { id: candidate.id, ...where },
       data: { ...lease, attempts: { increment: 1 } },
     });
-    return result.count ? { ...candidate, ...lease, attempts: candidate.attempts + 1 } : null;
+    if (!result.count) return null;
+    // Claiming changes @updatedAt; consumers need the post-claim version for compare-and-set.
+    const claimed = await prisma.billing_invoice.findFirst({
+      where: { id: candidate.id, lease_token: lease.lease_token },
+    });
+    return claimed ? { ...claimed, ...lease } : null;
   }
 
   async finishInvoice(
     id: string,
     token: string,
     data: Prisma.billing_invoiceUpdateManyMutationInput,
+    expectedUpdatedAt?: Date,
   ) {
-    await prisma.billing_invoice.updateMany({
-      where: { id, lease_token: token },
+    const result = await prisma.billing_invoice.updateMany({
+      where: {
+        id,
+        lease_token: token,
+        ...(expectedUpdatedAt ? { updated_at: expectedUpdatedAt } : {}),
+        ...(data.status === undefined || data.status === "cancelled"
+          ? {}
+          : { status: { not: "cancelled" } }),
+      },
       data: { ...data, lease_token: null, lease_until: null },
     });
+    return result.count === 1;
+  }
+
+  /** Persist only a bound canonical observation. Preserve leases and never resurrect cancellation. */
+  async observeDocument(
+    invoice: ExistingInvoiceRecord,
+    observation: {
+      status: string;
+      number: string | null;
+      last_error_code: string | null;
+      next_attempt_at: Date;
+    },
+  ) {
+    if (
+      !invoice.document_id ||
+      !documentStatuses.has(observation.status) ||
+      (observation.number !== null && !/^[A-Za-z0-9/._-]{1,100}$/.test(observation.number)) ||
+      (invoice.status === "cancelled" && observation.status !== "cancelled")
+    )
+      return null;
+    const where = observationWhere(invoice);
+    // An identical read must not invalidate the admin PDF audit's version check.
+    if (invoice.status === observation.status && invoice.number === observation.number)
+      return prisma.billing_invoice.findFirst({ where });
+    return prisma.$transaction(async (tx) => {
+      const changed = await tx.billing_invoice.updateMany({
+        where,
+        data: {
+          ...observation,
+          updated_at: new Date(Math.max(Date.now(), invoice.updated_at.getTime() + 1)),
+        },
+      });
+      if (changed.count !== 1) return null;
+      return tx.billing_invoice.findUnique({ where: { id: invoice.id } });
+    });
+  }
+
+  async isDocumentCurrent(invoice: ExistingInvoiceRecord) {
+    return Boolean(
+      await prisma.billing_invoice.findFirst({
+        where: observationWhere(invoice),
+        select: { id: true },
+      }),
+    );
+  }
+
+  findExistingDocument(id: string) {
+    return prisma.billing_invoice.findFirst({ where: { id, document_id: { not: null } } });
   }
 
   listForUser(userId: string, companyId: string, mode: InvoiceMode = "test") {

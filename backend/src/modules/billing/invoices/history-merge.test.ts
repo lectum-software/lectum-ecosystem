@@ -58,6 +58,29 @@ test("joins exact payment ID without relying on date or title", () => {
   );
   assert.equal(rows.length, 1);
 });
+
+test("owner history preserves refund and cancelled invoice without duplicating the payment", () => {
+  // Contract fixtures only; this is not a real refund or fiscal cancellation.
+  const invoice = payment({ gateway: "stripe", mode: "live" });
+  invoice.invoice = { ...invoice.invoice!, status: "cancelled", downloadable: false };
+  const receipt = payment({
+    id: "receipt:1",
+    gateway: "stripe",
+    mode: "live",
+    invoice: undefined,
+    status: "processado",
+    status_label: "Estornado",
+    description: "Estornado",
+  });
+  const result = mergeInvoicePaymentHistory([invoice], [receipt]);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].status, "processado");
+  assert.equal(result[0].status_label, "Estornado");
+  assert.equal(result[0].description, "Estornado");
+  assert.equal(result[0].amount_cents, 2990);
+  assert.equal(result[0].invoice?.status, "cancelled");
+  assert.equal(result[0].invoice?.downloadable, false);
+});
 test("keeps distinct payments with identical date and amount", () => {
   assert.equal(
     mergeInvoicePaymentHistory(
