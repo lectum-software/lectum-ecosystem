@@ -387,3 +387,23 @@ builds backend/frontend aprovados. Nove capturas 320/390/1440 com historicos san
 existentes, sem provider/nova transacao. Autenticacao de QA restaurada. Revisao
 independente conferiu CAS, ownership, gates e compatibilidade. Autodeploys externos
 de homolog reconferidos desligados; publicar por PR, sem promover por push direto.
+
+
+## Resultado produtivo e limites de observacao — 10/11/2026,23:36 BRT
+
+PR#176 publicou backend813 com migration expansiva; frontend813 ficou retido na
+verificacao de identidade Vercel, sem contornar autenticacao. Frontend/admin811
+continuam compativeis. O checkpoint documental814 nao e novo artefato produtivo.
+
+A primeira cadeia live foi concluida pela automacao normal: captura unica2990BRL,
+plano ativo, identidade fiscal posteriormente completa, uma NFS-e autorizada real,
+PDF valido e envio de email registrado no SendNF. Nenhum pagamento adicional,
+identidade fabricada, aprovacao administrativa ou nota manual foi executado pelo
+agente. Prova de envio nao sera chamada de recebimento/leitura na caixa do usuario;
+GET de PDF do provider nao sera chamado de download autenticado pela sessao do titular.
+
+A origem do SetupIntent auxiliar foi correlacionada por evento→log no Workbench,
+com idempotency key da atribuicao credit-card e hashes coincidentes na inbox. Essa
+consulta autenticada nao ampliou a chave runtime. Ausencia de pin continua exigindo
+politica conservadora/revisao; nao fazer ACK ou fabricar vinculo apenas para limpar
+um indicador operacional. Efeito financeiro/fiscal comprovado nao depende desse ACK.

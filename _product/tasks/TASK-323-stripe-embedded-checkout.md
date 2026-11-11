@@ -1,7 +1,7 @@
 # TASK-323 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
 
 Data: 2026-11-09
-Status: Producao ativa 0.1.811; primeira compra real confirmada, NFS-e aguarda identidade fiscal do titular; hardening de recuperacao em homolog
+Status: Primeira compra live com plano ativo/NFS-e autorizada/PDF/envio email comprovados; backend 0.1.813 publicado, frontend visual aguarda autenticacao Vercel
 Decisao: [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md)
 Operacao: [Runbook Stripe](STRIPE-OPERATIONS.md)
 Base auditada: `homolog` em `820077ccd`, versao `0.1.799`
@@ -33,8 +33,10 @@ permanecem preservados. Nenhuma nota live sera emitida antes de pagamento real.
 - [x] Checks/builds, browser local, revisao cruzada e ADR; commit versionado deste fechamento.
 - [x] PR homolog para main, deploys separados, preflight live somente leitura,
   ativacao ordenada e smoke autenticado sem envio de cartao.
-- [ ] Entregar ao usuario o fluxo pronto para a primeira tentativa real, com
-  observacao de pagamento unico, nota, PDF e email apos a transacao dele.
+- [x] Entregar o fluxo real e observar pagamento unico, plano ativo, NFS-e autorizada,
+  PDF valido e envio de email pelo provider apos a transacao do usuario.
+- [ ] Titular confirmar recebimento na propria caixa de entrada e abrir o PDF pelo app;
+  nao confundir envio registrado pelo provider com leitura/recebimento pessoal.
 
 Impacto previsto: contratos aditivos, nenhum pacote novo; migrations somente se
 necessarias e expansivas. Implantar backend compativel antes do frontend; ativar
@@ -1746,13 +1748,16 @@ live concluido antes dessa transacao.
   sem apresentar emissao piloto como prova. Abertura e global, nao ha allowlist de usuario.
 - [x] Usuario acessar a conta real e iniciar sua primeira assinatura com cartao
   de credito (10/11, 22:23 BRT; confirmacao somente leitura no checkpoint abaixo).
-- [ ] Confirmar CPF/nome fiscal auditado individuais faltantes; endereco ja valido.
+- [x] Confirmar CPF/nome fiscal auditado individuais: releitura23:13 BRT encontrou
+  dados completos e registro aprovado, sem preenchimento/aprovacao pelo agente.
   Nao reabrir codigo/ISS/descricao ja aprovados pela contabilidade.
 - [x] Apos a acao do usuario, comprovar uma cadeia financeira sem duplicacao,
   eventos invoice/subscription conciliados, recibo e periodo/contrato corretos.
-- [ ] Apos dados reais completos, comprovar NFS-e autorizada
-  (simulation false/chave de 50 digitos/public_query), PDF do proprietario e email
-  recebido. Sem sucesso financeiro/NF/email alegado antes da evidencia.
+- [x] Apos dados completos, comprovar NFS-e autorizada
+  (simulation false/chave de 50 digitos/public_query), PDF valido pelo provider e
+  disponibilidade no historico owner-scoped; envio de email registrado pelo SendNF.
+- [ ] Confirmacao do titular sobre recebimento na caixa de entrada e abertura do PDF
+  autenticado no app; nao alegar essas etapas a partir da prova do provider.
 
 Evidencias privadas, fora do Git e sem valores sensiveis neste registro:
 [gates locais](file:///Users/rezende/.codex/lectum-stripe-qa/final-gates-0.1.811-evidence.json),
@@ -1780,10 +1785,11 @@ eventos invoice/subscription conciliados. Nenhuma nova cobranca foi gerada pelo 
 - [x] Causa da pendencia fiscal identificada sem expor dados: endereco valido,
   CPF e nome fiscal auditado ausentes. `recipient_incomplete`, job aberto, nenhum
   documento fiscal criado. Verificacao profissional desta conta ainda nao concluida.
-- [ ] Titular concluir dados reais pelo onboarding; se conta administrativa, operador
-  autorizado preencher CPF real auditado e nome fiscal no admin, sem forjar aprovacao CFP.
-- [ ] Observar retomada, autorizacao governamental, PDF e entrega de email depois
-  dos dados completos. Nao refazer assinatura nem cobrar outra vez.
+- [x] Releitura posterior encontrou identidade fiscal completa e aprovacao profissional;
+  nao foi feita escrita de identidade/aprovacao pelo agente.
+- [x] Retomada automatica, autorizacao governamental, PDF e envio de email pelo SendNF
+  observados depois dos dados completos. Sem refazer assinatura ou cobrar outra vez.
+- [ ] Recebimento pessoal do email e abertura do PDF pelo titular ainda nao observados.
 
 Uma inbox `setup_intent.succeeded` permanece sem vinculo local, com diagnostico
 `setup_operation_unresolved` e backoff. Nao afirmar que todos os eventos terminaram
@@ -1859,3 +1865,66 @@ gates, oferta, Radar ou identidade do titular. Evidencias privadas sanitizadas:
 `post-payment-0813-final-check.log`, `fiscal-retry-budget-local-20261111.log`,
 `fiscal-guidance-visual-0813.json`, `fiscal-guidance-http-evidence.json` e
 `release-guards-0813.json`, em `/Users/rezende/.codex/lectum-stripe-qa/`.
+
+
+### Publicacao parcial 0.1.813 e conclusao financeira/fiscal — 10/11/2026, 23:36 BRT
+
+- [x] Commit `7ee5ca322` em homolog, hooks completos e push autorizado. PR#176 revisado,
+  merge normal `411b1aafe7451d0fb4fee1a07302c6bdd8fb951c`, sem excluir homolog ou
+  usar override de protecao. GitHub nao reportou checks remotos para o PR; validacoes
+  locais/hooks nao foram substituidas por deploy remoto.
+- [x] Backend publicado manualmente no Dokploy apos merge, sem builds de homolog/video.
+  `/ping`0.1.813, `/health` e `/ready`200; rota privada sem token401. Migration aditiva
+  presente/aplicada; cinco gates e gateway Stripe preservados. Sem mudanca de env,
+  oferta, Radar, credenciais ou parametros fiscais.
+- [ ] Frontend813: artefato do commit exato encontrado, build automatico cancelado
+  conforme Ignored Build. Redeploy manual sem cache/Ignore Build Step parou no desafio
+  **Verify Your Identity** da Vercel. Aba aberta, sem burlar desafio ou enviar codigos
+  repetidamente. Retomar verificacao, build e promocao do mesmo commit quando o usuario
+  voltar. Frontend/admin atuais811 seguem saudaveis e compativeis; admin/video sem
+  mudanca funcional, sem necessidade de redeploy por este complemento.
+- [x] Leitura READ ONLY apos deploy: uma operacao checkout e uma collection completas,
+  um recibo pago2990BRLcentavos com hash valido, um invoice remoto, plano profissional
+  ativo e beneficio efetivo. Nenhuma nova cobranca iniciada pelo agente.
+- [x] Em23:13 BRT, identidade fiscal e registro profissional ja estavam completos.
+  O agente nao alterou CPF/nome/registro. O job anterior aguardava ate23:27:17 e
+  retomou pelo scheduler normal; nao houve antecipacao manual ou reenvio financeiro.
+- [x] Em23:28, SendNF criou/autorizou uma unica nota dessa compra (numero3). GET
+  autenticado confirmou escopo/snapshot/valor, `simulation=false`, chave50digitos,
+  consulta publica HTTPS e PDF com MIME/magic validos. PDF apenas em memoria, descartado,
+  sem gravar/expor documento, CPF, destinatario, chave fiscal ou URLs privadas.
+- [x] Timeline oficial SendNF registra **Enviada por e-mail ao cliente** em23:28.
+  Isso comprova envio, nao recebimento/leitura na caixa do titular. Configuracao
+  emailEnabled tambem confirmada; nenhuma acao manual de reenviar email foi feita.
+- [x] Em23:36 BRT, banco/app convergiram para `authorized`, um snapshot/documento,
+  `history_downloadable_count=1`, job concluido sem erro, attempts6 e
+  verification_failures0. Sem segundo pagamento, documento ou recuperacao forçada.
+- [ ] Titular confirmar email recebido e abrir PDF pela sessao propria. Leitura do
+  provider e projecao owner-scoped nao equivalem a download HTTP autenticado pelo titular.
+
+O SetupIntent auxiliar foi correlacionado por caminho somente leitura alternativo:
+Workbench oficial → evento exato → Source/View logs mostrou POST de atribuicao de
+`default_payment_method` ao contrato, HTTP200 e idempotency key igual a funcao
+`credit-card` do codigo. Hashes de evento/recurso foram comparados com a inbox
+local; mesmo cliente/cartao, sem metadata ou pin de operacao. Isso supera a incerteza
+sobre a origem anotada no checkpoint anterior, sem ampliar Events Read da chave.
+A politica conservadora continua `setup_operation_unresolved`, attempts7 na ultima
+leitura; nao descartar, fabricar vinculo, ACK ou reenfileirar. Nao e uma cobranca extra
+nem impede ledger, beneficio ou nota. O estado correto apos esgotar retries e revisao,
+conforme runbook, nao conclusao financeira artificial.
+
+A conexao interativa do monitor ocioso perdeu atualizacao visual; leituras pontuais
+READ ONLY em nova conexao comprovaram os resultados, sem alegar vigilancia continua.
+Terminais de diagnostico foram fechados; nenhum keepalive/reminder foi criado para
+simular execucao continua por20h. Abas Vercel/SendNF/estado produtivo preservadas.
+
+Evidencias sanitizadas privadas em `/Users/rezende/.codex/lectum-stripe-qa/`:
+`post-deploy-0813-public-smoke.json`, `post-deploy-0813-read-only.json`,
+`final-first-live-chain-0813.json`, `sendnf-first-live-proof-0813.json`,
+`sendnf-email-timeline-0813.json/.png` e `setup-origin-workbench-0813.json`.
+O painel SendNF avisa escolha de plano para continuidade apos02/12; registrar
+pendencia comercial futura, sem contratar plano ou afirmar custo/limite novo.
+
+Checkpoint documental local0.1.814: bump unico/cinco manifests sincronizados,
+checks documentais/versionamento e commit proprio. Nao publicar/reimplantar somente
+por este registro. Release produtiva continua backend813/frontend-admin811.
