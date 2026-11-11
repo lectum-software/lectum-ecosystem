@@ -43,6 +43,12 @@ COPY locales ./locales
 
 RUN pnpm build
 
+FROM deps AS production-deps
+
+# Prune before copying into the final image: deleting files in a later runner
+# layer would retain the original development dependencies in its lower layer.
+RUN pnpm prune --prod
+
 FROM base AS runner
 
 # Build-time default used for Docker image metadata. Runtime can override PORT
@@ -57,22 +63,20 @@ ENV SWAGGER=false
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates openssl \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && chown node:node /app \
+  && install -d -o node -g node /app/scripts
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY prisma.config.ts ./prisma.config.ts
-COPY --from=deps /app/node_modules ./node_modules
-RUN pnpm prune --prod
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --chown=node:node prisma.config.ts ./prisma.config.ts
+COPY --from=production-deps --chown=node:node /app/node_modules ./node_modules
 
-COPY --from=builder /app/dist ./dist
-COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
-COPY locales ./locales
-COPY prisma ./prisma
-COPY public ./public
-COPY templates ./templates
-
-RUN chmod +x ./scripts/docker-entrypoint.sh \
-  && chown -R node:node /app
+COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --chown=node:node --chmod=755 scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
+COPY --chown=node:node locales ./locales
+COPY --chown=node:node prisma ./prisma
+COPY --chown=node:node public ./public
+COPY --chown=node:node templates ./templates
 
 USER node
 

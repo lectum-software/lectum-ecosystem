@@ -754,3 +754,5 @@ Formato recomendado:
 
 - [ADR-0690 — Historico financeiro e NFS-e no Admin](0690-admin-financial-history-invoices.md)
 - [ADR-0691 — Conciliacao de documento fiscal existente apos estorno](0691-existing-fiscal-document-sync.md)
+
+- [ADR-0692 — Camadas enxutas e logs Docker limitados por servico](0692-container-footprint-log-rotation.md)
