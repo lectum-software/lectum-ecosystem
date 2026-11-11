@@ -9,6 +9,8 @@ import apiAdminPrivateDashboardExport from "@/modules/api/admin/private/dashboar
 import apiAdminPrivateDashboardSummary from "@/modules/api/admin/private/dashboard/summary";
 import apiAdminFeedback from "@/modules/api/admin/private/feedback";
 import apiAdminPrivateFinanceDashboard from "@/modules/api/admin/private/finance/dashboard";
+import apiAdminPrivateFinanceHistory from "@/modules/api/admin/private/finance/history";
+import apiAdminPrivateFinanceInvoices from "@/modules/api/admin/private/finance/invoices";
 import apiAdminPrivateFinanceLists from "@/modules/api/admin/private/finance/lists";
 import apiAdminPrivateModeration from "@/modules/api/admin/private/moderation";
 import apiAdminPrivateNotifications from "@/modules/api/admin/private/notifications";
@@ -217,6 +219,8 @@ mountRoute("/api/admin/private/communities", apiAdminPrivateCommunitiesManage);
 mountRoute("/api/admin/private/dashboard/summary", apiAdminPrivateDashboardSummary);
 mountRoute("/api/admin/private/dashboard/export", apiAdminPrivateDashboardExport);
 mountRoute("/api/admin/private/finance/dashboard", apiAdminPrivateFinanceDashboard);
+mountRoute("/api/admin/private/finance/history", apiAdminPrivateFinanceHistory);
+mountRoute("/api/admin/private/finance/invoices", apiAdminPrivateFinanceInvoices);
 mountRoute("/api/admin/private/finance", apiAdminPrivateFinanceLists);
 mountRoute("/api/admin/private/moderation", apiAdminPrivateModeration);
 mountRoute("/api/admin/private/feedback", apiAdminFeedback);

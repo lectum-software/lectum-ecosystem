@@ -4,6 +4,7 @@ import type {
   professional_subscription,
 } from "@/external/generated/prisma/client";
 import type { StripeIdentity, StripePlan } from "../payment-gateway/stripe-types";
+import { isSupportedStripeCheckoutPrice } from "./checkout-price-policy";
 import { operationPublicSummary } from "./operation-response";
 import { OPEN_OPERATION_STATES } from "./policy";
 
@@ -28,10 +29,7 @@ export const isStripeCheckoutPriceAvailable = (
   remote.currency === price.currency &&
   remote.interval === price.interval &&
   remote.intervalCount === price.interval_count &&
-  price.amount_cents === 2990 &&
-  price.currency === "BRL" &&
-  price.interval === "month" &&
-  price.interval_count === 1;
+  isSupportedStripeCheckoutPrice(price);
 
 type MaintenanceContract = Pick<
   professional_subscription,

@@ -25,15 +25,22 @@ anteriores e nao houve uso da chave, deploy/restart ou ativacao. A publicacao
 compativel inativa posterior esta registrada na TASK-323, nao deve ser confundida
 com aquele estado historico de preparacao.
 
-Ultimo estado produtivo comprovado: backend/frontend/admin 0.1.811, gateway Stripe,
-oferta revisao 2 habilitada, R$29,90/mes e cinco gates financeiros/fiscais Stripe
-ativos conforme autorizacao integral registrada na TASK-323. MP/Radar preservados.
-Em 10/11/2026, 22:23 BRT, o usuario iniciou a primeira compra real: uma captura
-confirmada, recibo integro e contrato ativo. A NFS-e aguarda CPF/nome fiscal reais
-do titular; endereco valido. Nao existe documento SendNF dessa compra e nao se
-comprovou PDF/email. Um evento SetupIntent sem vinculo segue a revisao conservadora;
-eventos invoice/subscription e recebimento foram conciliados. Salvar Environment
-nao atualiza o processo. Configuracao pronta nunca substitui prova financeira/fiscal.
+Ultimo estado produtivo comprovado (10/11/2026,23:36 BRT): backend0.1.813,
+frontend/admin0.1.811 compativeis. Melhoria visual813 aguarda desafio de identidade
+Vercel, sem alterar os dominios antes de build/promocao. Gateway Stripe, oferta
+revisao2/R$29,90 e cinco gates preservados. Primeira compra real do usuario tem uma
+captura, recibo integro, contrato/beneficio ativos e uma NFS-e autorizada pelo governo:
+simulationfalse/chave50digitos/consultaHTTPS/PDF valido. Historico local authorized
+com download disponivel; SendNF registra envio de email23:28. Recebimento pessoal
+e abertura autenticada do PDF pelo titular ainda nao observados. Nao cobrar novamente.
+
+A identidade fiscal antes incompleta apareceu valida em releitura posterior; nao
+foi preenchida pelo agente. A fila normal retomou sem reemissao/manual recover.
+SetupIntent auxiliar teve origem vinculada a atribuicao de cartao pelo Workbench
+oficial, mas segue sem pin local sob politica conservadora; nao forcar ACK/replay.
+Salvar Environment nao atualiza o processo; configuracao nao substitui evidencia.
+O painel SendNF avisa continuidade comercial apos02/12; tratar fora deste deploy,
+sem contratar ou ativar plano automaticamente.
 
 Renovacoes usam worker retomavel. Uma recusa definitiva nao inicia Smart Retries:
 fica aguardando cartao atualizado ou autenticacao/confirmacao explicita. Trocar

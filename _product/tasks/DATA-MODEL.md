@@ -1033,6 +1033,18 @@ vigente. O contrato retorna apenas dados operacionais seguros de `subscription_p
 `updated_at`. A tela não edita preço, não cria auditoria de alteração e não faz fallback frontend
 com valor hardcoded; ausência do plano deve retornar erro honesto.
 
+Complemento TASK-324 (2026-11-11): o mesmo GET preserva `plan` legado e acrescenta
+`checkout`, projeção somente leitura de configuração local para novas adesões.
+Para Stripe, oferta e preço imutável precisam pertencer ao mesmo plano/gateway/
+conta/modo; oferta pausada continua visível. O bloco informa gateway/modo, estado,
+flags locais de collection/reconciliation, revisão/data/habilitação da oferta e
+valor/moeda/intervalo/count/data do preço, sem IDs externos, chaves ou PII.
+`remote_readiness="not_checked"` impede interpretar a configuração como prova de
+disponibilidade do gateway. Ausência/inconsistência não usa preço legado como
+oferta Stripe; `plan.active` não equivale à habilitação de novas vendas.
+O admin aceita backend antigo sem `checkout` e rotula `plan` como cadastro legado.
+Sem mudança de schema, nova consulta de provider, mutação ou efeito financeiro.
+
 `professional_subscription` (TASK-31/32/33):
 
 | Campo | Tipo | Notas |
@@ -1449,3 +1461,15 @@ sem reescrever registros nem editar a migration aplicada da fundacao financeira.
 - Expansao aditiva, sem alterar dados anteriores; IDs nao sao segredos. Nao armazenar
   client_secret, PAN, CVV, payload ou dados pessoais de cartao. Operacoes internas
   nao aparecem como novas vendas ou operacoes de usuario no contrato legado.
+
+## Historico administrativo financeiro/fiscal (TASK-325)
+
+Novo GET paginado finance/history projeta registros locais de billing_financial_receipt,
+payment_event MP e billing_invoice, preservando APIs antigas. Filtro opcional user_id
+e todos contratos, inclusive cancelados. DTO minimo separa status financeiro de fiscal,
+sem payload/CPF/email/IDs externos; conta/modo/proprietario usados apenas na autorizacao.
+Cobertura local nao comprova completude no provider. Nenhuma mudanca de schema.
+Download finance/invoices/:id/pdf exige Admin autenticado e user_id associado, resolve
+contrato/empresa/modo/conta e revalida SendNF por GET. admin_activity_log registra ator,
+alvo local e resultado controlado de acesso, sem documento/URL/chave/dados fiscais.
+Nao reutiliza identidade do cliente, nao emite, cobra ou reabre filas.

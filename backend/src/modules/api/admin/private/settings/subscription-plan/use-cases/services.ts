@@ -3,6 +3,7 @@ import { error, msg } from "@/helpers/translate";
 import type { AdminSettingsSubscriptionPlanDTO } from "../DTOs/IAdminSettingsSubscriptionPlanDTO";
 import { AdminSettingsSubscriptionPlanRepository } from "../repositories/AdminSettingsSubscriptionPlanRepository";
 import type { AdminSettingsSubscriptionPlanRecord } from "../repositories/interfaces/IAdminSettingsSubscriptionPlanRepository";
+import { projectAdminCheckout, readAdminCheckoutContext } from "./checkout-policy";
 
 const toPlanDTO = (
   plan: AdminSettingsSubscriptionPlanRecord,
@@ -22,7 +23,9 @@ const toPlanDTO = (
 
 export const show = async (): Promise<Resolve> => {
   const repository = new AdminSettingsSubscriptionPlanRepository();
-  const plan = await repository.findProfessionalPlan();
+  const checkoutContext = readAdminCheckoutContext();
+  const records = await repository.findSettings(checkoutContext.identity);
+  const { plan } = records;
 
   if (!plan) {
     return {
@@ -36,6 +39,7 @@ export const show = async (): Promise<Resolve> => {
     ...msg("show", {}),
     data: {
       plan: toPlanDTO(plan),
+      checkout: projectAdminCheckout(checkoutContext, records),
     },
   };
 };

@@ -11,6 +11,7 @@ import type {
 import type { AdminGlobalContentQuery } from "@/api/req/communities/global-content";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { FinanceDashboardQuery, FinanceListQuery } from "@/api/req/finance";
+import type { FinancialHistoryQuery } from "@/api/req/finance/history";
 import type {
   AdminCommunitySuggestionsQuery,
   AdminModerationEventsQuery,
@@ -359,6 +360,20 @@ export const adminCommunitiesKeys = {
 
 export const adminFinanceKeys = {
   all: ["admin", "finance"] as const,
+  history: (input: FinancialHistoryQuery) =>
+    [
+      ...adminFinanceKeys.all,
+      "history",
+      {
+        user_id: input.user_id || "all",
+        page: input.page || 1,
+        limit: input.limit || 20,
+        status: input.status || "all",
+        q: input.q || "",
+        from: input.from || "",
+        to: input.to || "",
+      },
+    ] as const,
   charges: (input: FinanceListQuery) =>
     [...adminFinanceKeys.all, "charges", normalizeFinanceList(input)] as const,
   dashboard: (input: FinanceDashboardQuery) =>

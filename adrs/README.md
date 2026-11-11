@@ -750,3 +750,6 @@ Formato recomendado:
 - [ADR-0686 — Video presentation and scroll cost](0686-video-presentation-and-scroll-cost.md)
 - [ADR-0687 — Stripe incorporado, contratos por gateway e preco versionado](0687-stripe-embedded-checkout.md)
 - [ADR-0688 — Stripe credito-only com cobranca controlada no servidor](0688-stripe-credit-only-server-collection.md)
+- [ADR-0689 — Oferta vigente somente leitura no Admin](0689-admin-current-billing-offer.md)
+
+- [ADR-0690 — Historico financeiro e NFS-e no Admin](0690-admin-financial-history-invoices.md)

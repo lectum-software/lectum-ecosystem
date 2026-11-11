@@ -35,7 +35,14 @@ export const validPeriods = new Set<FinancePeriodValue>([
 
 export const statusFilterOptions = [
   { label: "Todos os status", value: "all" },
-  { label: "Confirmadas", value: "confirmed" },
+  { label: "Pagos", value: "paid" },
+  { label: "Pendentes", value: "pending" },
+  { label: "Não concluídos", value: "failed" },
+  { label: "Cancelados", value: "canceled" },
+  { label: "Estornados", value: "refunded" },
+  { label: "Estornados parcialmente", value: "partially_refunded" },
+  { label: "Em disputa", value: "disputed" },
+  { label: "Eventos processados", value: "processed" },
 ] as const;
 
 export const validChargeStatuses = new Set<string>(
@@ -70,7 +77,7 @@ export const isCompleteFinanceFilterDate = (value?: string | null): value is str
 export const parseQuery = (params: URLSearchParams): FinanceListQuery => {
   const period = params.get("period") as FinancePeriodValue | null;
   const q = params.get("q");
-  const status = params.get("status");
+  const status = params.get("status") === "confirmed" ? "paid" : params.get("status");
   const from = params.get("from");
   const to = params.get("to");
   const validFrom = isCompleteFinanceFilterDate(from) ? from : undefined;

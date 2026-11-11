@@ -142,6 +142,8 @@
     "billing_courtesy_unavailable": "Não foi possível preparar a renovação da cortesia. Confira a vigência da sua assinatura.",
     "billing_gateway_config_error": "Serviço de pagamento indisponível no momento.",
     "billing_invoice_unavailable": "Nota fiscal indisponível no momento. Tente novamente mais tarde.",
+    "finance_history_filter_required": "Há muitos registros para esta consulta. Selecione um profissional ou reduza o período e tente novamente.",
+    "finance_history_invalid_period": "Informe uma data final igual ou posterior à data inicial.",
     "billing_gateway_checkout_failed": "Não foi possível concluir a assinatura agora. Verifique o status da assinatura e se houve cobrança antes de tentar novamente.",
     "billing_gateway_card_authorization": "O banco recusou a cobrança. Autorize a compra com o banco ou use outro cartão.",
     "billing_gateway_card_data": "Revise os dados do cartão e tente novamente.",
