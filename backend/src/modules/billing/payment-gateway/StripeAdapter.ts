@@ -9,6 +9,7 @@ import type {
   PaymentGateway,
   VerifyWebhookSignatureInput,
 } from "./PaymentGateway";
+import { stripeBalanceApi } from "./stripe-balance";
 import {
   isStripeTerminalSubscriptionStatus,
   stripeCancellationMutation,
@@ -21,20 +22,15 @@ import {
   type StripeSubscriptionCardInput,
   type StripeSubscriptionSetupInput,
 } from "./stripe-card";
+import { stripeCatalogApi } from "./stripe-catalog";
 import { initialPaidCheckoutIntent, initialUnpaidCheckoutIntent } from "./stripe-checkout-proof";
 import { readStripeConfiguration, STRIPE_API_VERSION } from "./stripe-config";
 import { stripeCreditApi } from "./stripe-credit-api";
 import { StripeGatewayError, stripeFailure } from "./stripe-error";
-import {
-  listStripeFinancialInvoices,
-  projectStripeFinancialContract,
-  readStripeFinancialInvoice,
-} from "./stripe-financial";
-import type { StripeFinancialTarget } from "./stripe-financial-types";
+import { stripeFinancialApi } from "./stripe-financial-api";
 import { readStripePaidInvoice } from "./stripe-invoice";
 import {
   assertStripeMode,
-  parseStripePlan,
   projectStripeSetup,
   projectStripeSubscription,
   requireLocalReference,
@@ -171,14 +167,14 @@ export class StripeAdapter implements PaymentGateway {
     return projectStripeSubscription(subscription, this.identity, evidence);
   }
 
-  getStripePlan(id: string) {
-    return this.run(async () => {
-      const expected = requireStripeId(id, "price");
-      const price = await this.client.prices.retrieve(expected, { expand: ["product"] });
-      if (price.id !== expected) throw new StripeGatewayError("resource_mismatch");
-      return parseStripePlan(price, this.identity);
-    });
-  }
+  private readonly catalog = stripeCatalogApi(
+    this.client,
+    () => this.identity,
+    (action) => this.run(action),
+  );
+  getStripePlan = this.catalog.getStripePlan;
+  createStripeCatalogPrice = this.catalog.createStripeCatalogPrice;
+  findStripeCatalogPrice = this.catalog.findStripeCatalogPrice;
 
   createCustomer(input: { userId: string; email: string; idempotencyKey: string }) {
     return this.run(async () => {
@@ -558,28 +554,20 @@ export class StripeAdapter implements PaymentGateway {
     return this.run(() => resolveStripeWebhookSubscription(this.client, this.identity, reference));
   }
 
-  getFinancialContract(target: StripeFinancialTarget) {
-    return this.run(async () =>
-      projectStripeFinancialContract(
-        await this.client.subscriptions.retrieve(requireStripeId(target.subscriptionId, "sub")),
-        this.identity,
-        target,
-      ),
-    );
-  }
-
-  listFinancialInvoices(
-    target: StripeFinancialTarget,
-    input: { cursor?: string | null; cutoff: Date; limit: number },
-  ) {
-    return this.run(() => listStripeFinancialInvoices(this.client, this.identity, target, input));
-  }
-
-  getFinancialInvoice(target: StripeFinancialTarget, invoiceId: string, cutoff: Date) {
-    return this.run(() =>
-      readStripeFinancialInvoice(this.client, this.identity, target, invoiceId, cutoff),
-    );
-  }
+  private readonly financial = stripeFinancialApi(
+    this.client,
+    () => this.identity,
+    (action) => this.run(action),
+  );
+  getFinancialContract = this.financial.getFinancialContract;
+  listFinancialInvoices = this.financial.listFinancialInvoices;
+  getFinancialInvoice = this.financial.getFinancialInvoice;
+  private readonly balance = stripeBalanceApi(
+    this.client,
+    () => this.identity,
+    (action) => this.run(action),
+  );
+  observeStripeBalanceStage = this.balance.observeStripeBalanceStage;
 
   verifyWebhookSignature(_input: VerifyWebhookSignatureInput): boolean {
     return false;

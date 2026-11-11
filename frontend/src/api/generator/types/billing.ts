@@ -13,6 +13,16 @@ export type SubscriptionPlanFeatures = {
   priority_support?: boolean;
 };
 
+/** Local catalog for new admissions, separate from existing contracted prices. */
+export type PlanAdmissionOffer = {
+  status: "available" | "paused" | "unavailable";
+  source: "versioned_offer" | "legacy_plan" | "none";
+  amount_cents: number | null;
+  currency: "BRL";
+  interval: "month";
+  revision: string | null;
+};
+
 export type SubscriptionPlan = {
   id: string;
   slug: SubscriptionPlanSlug | string;
@@ -24,6 +34,8 @@ export type SubscriptionPlan = {
   gateway_plan_id?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  /** Absent on older backends; never infer a paid offer from price_cents. */
+  admission_offer?: PlanAdmissionOffer | null;
 };
 
 export type ProfessionalSubscriptionStatus = "inativa" | "ativa" | "inadimplente" | "cancelada";

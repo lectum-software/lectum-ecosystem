@@ -17,6 +17,7 @@ import {
   formatMoney,
   numberFormatter,
 } from "../modules/finance-support";
+import { hasLocalFinancialBasis } from "../modules/financial-basis";
 import { AnalysisPeriodNote, CardShell, LifetimeValue, LtvValue, MetricCard } from "./metrics";
 
 export const FinanceHeader = ({
@@ -363,7 +364,7 @@ export const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }
         </div>
         <div className="min-w-0">
           <h2 className="text-xl font-black text-foreground">Receita recorrente mensal (MRR)</h2>
-          <AnalysisPeriodNote>Todo o período</AnalysisPeriodNote>
+          <AnalysisPeriodNote>{dashboard.mrr.description}</AnalysisPeriodNote>
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">
@@ -379,8 +380,12 @@ export const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }
           <BadgeDollarSign aria-hidden className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-xl font-black text-foreground">LTV médio dos psicólogos</h2>
-          <AnalysisPeriodNote>Todo o período</AnalysisPeriodNote>
+          <h2 className="text-xl font-black text-foreground">
+            {hasLocalFinancialBasis(dashboard.financial_basis)
+              ? "Recebimento bruto médio por psicólogo"
+              : "LTV médio dos psicólogos"}
+          </h2>
+          <AnalysisPeriodNote>{dashboard.average_ltv.description}</AnalysisPeriodNote>
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">

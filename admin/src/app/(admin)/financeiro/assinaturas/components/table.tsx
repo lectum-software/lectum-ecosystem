@@ -6,7 +6,11 @@ import { Fragment, useState } from "react";
 import type { FinanceSubscriptionItem } from "@/api/req/finance";
 import { formatFinanceSubscriptionCode } from "@/lib/finance-operational-code";
 import { cn } from "@/lib/utils";
-import { formatDate, formatMoney, formatNextChargeDate } from "../modules/subscription-support";
+import {
+  formatMoney,
+  formatNextChargeDate,
+  formatStartDate,
+} from "../modules/subscription-support";
 import {
   IdentifierLine,
   InitialsAvatar,
@@ -73,9 +77,7 @@ export const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[]
                     </div>
                     <div>
                       <dt className="font-semibold text-muted">Início</dt>
-                      <dd className="mt-1 font-bold text-foreground">
-                        {formatDate(item.started_at)}
-                      </dd>
+                      <dd className="mt-1 font-bold text-foreground">{formatStartDate(item)}</dd>
                     </div>
                     <div>
                       <dt className="font-semibold text-muted">Próxima</dt>
@@ -173,7 +175,7 @@ export const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[]
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 text-muted">
-                      {formatDate(item.started_at)}
+                      {formatStartDate(item)}
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 text-muted">
                       {formatNextChargeDate(item)}

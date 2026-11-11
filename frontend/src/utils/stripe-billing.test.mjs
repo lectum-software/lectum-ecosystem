@@ -7,6 +7,7 @@ import {
   canManageBillingContract,
   shouldExplainStripeInvoice,
 } from "./billing-management.ts";
+import "./billing-plan-offer.test.mjs";
 import {
   buildStripeBillingReturnUrl,
   canReplaceStripePendingCard,

@@ -1,3 +1,12 @@
+# Per-container logging; applies only when a future authorized rollout creates
+# containers. This does not rotate/truncate logs of existing containers.
+x-container-logging: &container-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+    compress: "true"
+
 x-video-environment: &video-environment
   NODE_ENV: ${NODE_ENV:-production}
   HOST: ${HOST:-0.0.0.0}
@@ -33,6 +42,7 @@ x-video-environment: &video-environment
 services:
   redis:
     image: redis:8.2-alpine
+    logging: *container-logging
     command:
       - redis-server
       - --appendonly
@@ -59,6 +69,7 @@ services:
       - video-redis:/data
 
   api:
+    logging: *container-logging
     build:
       context: .
       dockerfile: Dockerfile
@@ -96,6 +107,7 @@ services:
       retries: 10
 
   worker:
+    logging: *container-logging
     build:
       context: .
       dockerfile: Dockerfile

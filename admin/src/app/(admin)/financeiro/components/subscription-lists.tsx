@@ -8,16 +8,21 @@ import type {
   FinancePaymentHealth,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
+import {
+  financialStatusClass,
+  financialStatusLabel,
+} from "@/components/finance-history/presentation";
 import { cn } from "@/lib/utils";
 import {
   detailsHref,
-  formatDate,
   formatDateTime,
   formatMaybeMoney,
   formatMoney,
   formatNextChargeDate,
+  formatStartDate,
   numberFormatter,
 } from "../modules/finance-support";
+import { hasLocalFinancialBasis } from "../modules/financial-basis";
 import { CardShell } from "./metrics";
 
 export const StatusBadge = ({ item }: { item: FinanceSubscriptionItem }) => (
@@ -75,10 +80,16 @@ export const ChargeStatusBadge = ({ item }: { item: FinanceChargeItem }) => (
   <span
     className={cn(
       "inline-flex rounded-full px-2 py-1 text-xs font-black",
-      item.amount_available ? "bg-success-soft text-success" : "bg-warning-soft text-warning",
+      item.gateway === "stripe" && item.financial_status
+        ? financialStatusClass(item.financial_status)
+        : item.amount_available
+          ? "bg-success-soft text-success"
+          : "bg-warning-soft text-warning",
     )}
   >
-    {item.status_label}
+    {item.gateway === "stripe" && item.financial_status
+      ? financialStatusLabel(item.financial_status)
+      : item.status_label}
   </span>
 );
 
@@ -93,12 +104,16 @@ export const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard 
   <CardShell className="overflow-hidden">
     <div className="flex flex-col gap-2 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-xl font-black text-foreground">Últimas cobranças realizadas</h2>
+        <h2 className="text-xl font-black text-foreground">
+          {hasLocalFinancialBasis(dashboard.financial_basis)
+            ? "Últimos recebimentos registrados"
+            : "Últimas cobranças realizadas"}
+        </h2>
         <p className="mt-1 text-sm text-muted">
           Mostrando {numberFormatter.format(dashboard.latest_charges.items.length)} de{" "}
           {numberFormatter.format(dashboard.latest_charges.total)}{" "}
           {dashboard.latest_charges.coverage_complete === false
-            ? "evidências disponíveis; recebimentos Stripe ainda não conciliados."
+            ? "registros locais; cobertura externa não verificada."
             : "cobranças confirmadas no período."}
         </p>
       </div>
@@ -139,14 +154,17 @@ export const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard 
       ))}
       {dashboard.latest_charges.items.length === 0 ? (
         <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhuma cobrança confirmada foi registrada neste período.
+          Nenhum recebimento local foi registrado neste período. Isso não comprova ausência de
+          pagamentos no gateway.
         </p>
       ) : null}
     </div>
 
     <div className="hidden overflow-x-auto lg:block">
       <table className="w-full min-w-[820px] text-left text-sm">
-        <caption className="sr-only">Últimas cobranças confirmadas no período</caption>
+        <caption className="sr-only">
+          Recebimentos registrados no período e situação financeira observada
+        </caption>
         <thead className="text-xs text-muted">
           <tr>
             <th className="px-5 py-3 font-black">Data</th>
@@ -191,7 +209,8 @@ export const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard 
       </table>
       {dashboard.latest_charges.items.length === 0 ? (
         <p className="p-5 text-sm text-muted">
-          Nenhuma cobrança confirmada foi registrada neste período.
+          Nenhum recebimento local foi registrado neste período. Isso não comprova ausência de
+          pagamentos no gateway.
         </p>
       ) : null}
     </div>
@@ -236,7 +255,7 @@ export const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDas
                 <PaymentHealthBadge health={item.payment_health} />
               </div>
               <p className="text-xs text-muted">
-                Início {formatDate(item.started_at)} · Próxima {formatNextChargeDate(item)}
+                Início {formatStartDate(item)} · Próxima {formatNextChargeDate(item)}
               </p>
             </div>
           </div>
@@ -274,7 +293,7 @@ export const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDas
                   </div>
                 </div>
               </td>
-              <td className="px-5 py-4 text-muted">{formatDate(item.started_at)}</td>
+              <td className="px-5 py-4 text-muted">{formatStartDate(item)}</td>
               <td className="px-5 py-4 text-muted">{formatNextChargeDate(item)}</td>
               <td className="px-5 py-4 font-black text-foreground">
                 {formatMoney(item.plan.price_cents)}

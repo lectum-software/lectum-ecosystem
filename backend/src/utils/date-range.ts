@@ -97,7 +97,32 @@ type CalendarPeriodPreset =
   | "week"
   | "year";
 
+export type CalendarOperations = {
+  addDays: typeof addDays;
+  daysBetweenInclusive: typeof daysBetweenInclusive;
+  endOfDate: typeof endOfDate;
+  parseDateOnly: typeof parseDateOnly;
+  startOfDate: typeof startOfDate;
+  startOfMonth: typeof startOfMonth;
+  startOfWeek: typeof startOfWeek;
+  startOfYear: typeof startOfYear;
+  toDateKey: typeof toDateKey;
+};
+
+const localCalendar: CalendarOperations = {
+  addDays,
+  daysBetweenInclusive,
+  endOfDate,
+  parseDateOnly,
+  startOfDate,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+  toDateKey,
+};
+
 type ResolveCalendarPeriodOptions = {
+  calendar?: CalendarOperations;
   allPeriodStartDate?: Date | null;
   clampFutureAllStart?: boolean;
   defaultDays: number;
@@ -128,6 +153,16 @@ export const resolveCalendarPeriod = (
   query: CalendarPeriodQuery = {},
   options: ResolveCalendarPeriodOptions,
 ): ResolvedCalendarPeriod | null => {
+  const {
+    addDays,
+    daysBetweenInclusive,
+    endOfDate,
+    parseDateOnly,
+    startOfDate,
+    startOfMonth,
+    startOfWeek,
+    startOfYear,
+  } = options.calendar ?? localCalendar;
   const hasCustomFrom = Boolean(query.from);
   const hasCustomTo = Boolean(query.to);
   const rawPreset =

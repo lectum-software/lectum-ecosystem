@@ -6,30 +6,14 @@ import {
 } from "@/modules/billing/payment-event-values";
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
 import { stripeFinancialCoverage } from "@/modules/billing/subscription-financial-values";
-import {
-  addDays,
-  endOfDate,
-  resolveCalendarPeriod,
-  startOfDate,
-  startOfMonth,
-  toDateKey,
-} from "@/utils/date-range";
 import type {
   AdminFinanceChargeItem,
-  AdminFinanceDateRange,
-  AdminFinanceGroupBy,
   AdminFinanceMetric,
   AdminFinancePaymentHealth,
-  AdminFinancePeriod,
-  AdminFinanceQuery,
 } from "../../DTOs/IAdminFinanceDashboardDTO";
 import type { AdminFinanceDashboardRepository } from "../../repositories/AdminFinanceDashboardRepository";
 
 export { findPayloadValue, isConfirmedPaymentStatus, payloadContainsAnyReference, toAmountCents };
-
-export const DEFAULT_PERIOD_DAYS = 30;
-
-export const MAX_PERIOD_DAYS = 3660;
 
 export const DEFAULT_SUBSCRIPTION_TAKE = 50;
 
@@ -57,118 +41,19 @@ export const PAYMENT_HEALTH_FILTERS = new Set<AdminFinancePaymentHealth["status"
   "risk",
 ]);
 
-export const resolveGroupBy = (
-  value: AdminFinanceQuery["groupBy"],
-  days: number,
-): AdminFinanceGroupBy => {
-  if (value === "month" || value === "week") return value;
-  if (days > 180) return "month";
-  if (days > 62) return "week";
-
-  return "day";
-};
-
-export type FinancePeriodResolution = {
-  current: AdminFinanceDateRange;
-  days: number;
-  groupBy: AdminFinanceGroupBy;
-  period: AdminFinancePeriod;
-  previous: AdminFinanceDateRange;
-};
-
-export type PeriodResult =
-  | {
-      period: FinancePeriodResolution;
-      success: true;
-    }
-  | {
-      code: string;
-      success: false;
-    };
-
-export const resolveAdminFinancePeriod = (
-  query: AdminFinanceQuery,
-  allPeriodStartDate?: Date | null,
-): PeriodResult => {
-  const resolved = resolveCalendarPeriod(query, {
-    allPeriodStartDate,
-    clampFutureAllStart: true,
-    defaultDays: DEFAULT_PERIOD_DAYS,
-    maxDays: MAX_PERIOD_DAYS,
-  });
-  if (!resolved) return { code: "invalid_analytics_date_range", success: false };
-
-  const { days, end, label, previousEnd, previousStart, start } = resolved;
-  const groupBy = resolveGroupBy(query.groupBy, days);
-  return {
-    period: {
-      current: { end, start },
-      days,
-      groupBy,
-      period: {
-        days,
-        from: toDateKey(start),
-        group_by: groupBy,
-        label,
-        max_days: MAX_PERIOD_DAYS,
-        previous_from: toDateKey(previousStart),
-        previous_to: toDateKey(previousEnd),
-        timezone: "server-local",
-        to: toDateKey(end),
-      },
-      previous: { end: previousEnd, start: previousStart },
-    },
-    success: true,
-  };
-};
-
-export type Bucket = {
-  end: Date;
-  end_date: string;
-  start: Date;
-  start_date: string;
-};
-
-export const endOfMonth = (date: Date) =>
-  new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
-
-export const minDate = (left: Date, right: Date) => (left < right ? left : right);
-
-export const maxDate = (left: Date, right: Date) => (left > right ? left : right);
-
-export const buildBuckets = (
-  range: AdminFinanceDateRange,
-  groupBy: AdminFinanceGroupBy,
-): Bucket[] => {
-  const buckets: Bucket[] = [];
-  let cursor = startOfDate(range.start);
-
-  while (cursor <= range.end) {
-    let bucketStart = cursor;
-    let bucketEnd: Date;
-
-    if (groupBy === "week") {
-      bucketEnd = endOfDate(addDays(bucketStart, 6));
-    } else if (groupBy === "month") {
-      bucketStart = maxDate(startOfMonth(cursor), startOfDate(range.start));
-      bucketEnd = endOfMonth(cursor);
-    } else {
-      bucketEnd = endOfDate(cursor);
-    }
-
-    const clippedEnd = minDate(bucketEnd, range.end);
-    buckets.push({
-      end: clippedEnd,
-      end_date: toDateKey(clippedEnd),
-      start: bucketStart,
-      start_date: toDateKey(bucketStart),
-    });
-
-    cursor = startOfDate(addDays(clippedEnd, 1));
-  }
-
-  return buckets;
-};
+export {
+  type Bucket,
+  buildBuckets,
+  DEFAULT_PERIOD_DAYS,
+  endOfMonth,
+  type FinancePeriodResolution,
+  MAX_PERIOD_DAYS,
+  maxDate,
+  minDate,
+  type PeriodResult,
+  resolveAdminFinancePeriod,
+  resolveGroupBy,
+} from "./periods";
 
 export const roundPercent = (value: number) => Math.round(value * 10) / 10;
 
@@ -379,6 +264,7 @@ export const summarizeAverageLtv = (
 
   return {
     available,
+    totalRevenueCents,
     linkedConfirmedPayments: linkedConfirmedPayments + gatewayLinkedConfirmedPayments,
     paidPsychologistCount,
     unavailableReason: available

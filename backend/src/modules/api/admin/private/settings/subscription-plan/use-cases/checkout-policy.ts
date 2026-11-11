@@ -88,6 +88,7 @@ export function projectAdminCheckout(
     offer: projectedOffer,
     price: {
       source: "billing_price_version",
+      ...(price.id ? { version_id: price.id } : {}),
       amount_cents: price.amount_cents,
       currency: price.currency,
       interval: price.interval,
@@ -102,5 +103,27 @@ export function projectAdminCheckout(
           checkout.reconciliation_enabled
         ? "configured"
         : "paused",
+  };
+}
+
+/** Catalog maintenance is independent of checkout selection, provider connectivity and secret availability. */
+export function projectAdminCatalog(
+  identity: StripeIdentity | null,
+  records: AdminSettingsSubscriptionRecords,
+) {
+  if (!identity) return undefined;
+  const { offer, price } = records;
+  return {
+    gateway: "stripe" as const,
+    mode: identity.mode,
+    remote_readiness: "not_checked" as const,
+    offer: offer
+      ? {
+          revision: offer.revision,
+          checkout_enabled: offer.checkout_enabled,
+          price_version_id: offer.price_version_id ?? price?.id ?? null,
+          amount_cents: price && isSupportedStripeCheckoutPrice(price) ? price.amount_cents : null,
+        }
+      : null,
   };
 }

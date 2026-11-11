@@ -183,14 +183,14 @@ export const AdminFinanceSubscriptionsClient = () => {
                 onBlur={handleDateFiltersBlur}
               >
                 <DateFilterField
-                  label="Início de"
+                  label="Contrato criado de"
                   max={isCompleteFinanceFilterDate(dateDraft.to) ? dateDraft.to : undefined}
                   onChange={(value) => handleStartDateDraftChange("from", value)}
                   onCommit={commitStartDateFilters}
                   value={dateDraft.from}
                 />
                 <DateFilterField
-                  label="Início até"
+                  label="Contrato criado até"
                   min={isCompleteFinanceFilterDate(dateDraft.from) ? dateDraft.from : undefined}
                   onChange={(value) => handleStartDateDraftChange("to", value)}
                   onCommit={commitStartDateFilters}
@@ -218,6 +218,10 @@ export const AdminFinanceSubscriptionsClient = () => {
               ) : null}
             </div>
           </div>
+          <p className="text-xs leading-5 text-muted">
+            O filtro usa a criação do contrato. Para Stripe, o início exibido exige o primeiro
+            recebimento registrado e pode estar indisponível.
+          </p>
         </div>
         {subscriptionsQuery.isLoading ? <LoadingState /> : null}
         {subscriptionsQuery.isError && queryError ? (

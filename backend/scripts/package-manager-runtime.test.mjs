@@ -38,27 +38,52 @@ describe("backend container package manager", () => {
       name,
     }));
 
-    assert.equal(stages.length, 4);
+    assert.equal(stages.length, 5);
     assert.equal(stages[0].name, "base");
     assert.deepEqual(stages.slice(1), [
       { source: "base", name: "deps" },
       { source: "deps", name: "builder" },
+      { source: "deps", name: "production-deps" },
       { source: "base", name: "runner" },
     ]);
 
     const deps = dockerfile.split("FROM base AS deps")[1].split("FROM deps AS builder")[0];
-    const builder = dockerfile.split("FROM deps AS builder")[1].split("FROM base AS runner")[0];
+    const builder = dockerfile
+      .split("FROM deps AS builder")[1]
+      .split("FROM deps AS production-deps")[0];
+    const productionDeps = dockerfile
+      .split("FROM deps AS production-deps")[1]
+      .split("FROM base AS runner")[0];
     const runner = dockerfile.split("FROM base AS runner")[1];
 
     assert.match(deps, /pnpm install --frozen-lockfile/);
     assert.match(builder, /^RUN pnpm build$/m);
     assert.match(runner, /apt-get install[^\n]*\bopenssl\b/);
-    assert.match(runner, /^COPY --from=deps \/app\/node_modules \.\/node_modules$/m);
-    assert.match(runner, /^RUN pnpm prune --prod$/m);
-    assert.match(runner, /^COPY --from=builder \/app\/dist \.\/dist$/m);
-    assert.ok(runner.indexOf("RUN pnpm prune --prod") < runner.indexOf("USER node"));
+    assert.match(productionDeps, /^RUN pnpm prune --prod$/m);
+    assert.match(
+      runner,
+      /^COPY --from=production-deps --chown=node:node \/app\/node_modules \.\/node_modules$/m,
+    );
+    assert.doesNotMatch(runner, /pnpm (?:install|prune)/);
+    assert.match(runner, /^COPY --from=builder --chown=node:node \/app\/dist \.\/dist$/m);
     assert.match(runner, /^USER node$/m);
     assert.match(runner, /^CMD \["\.\/scripts\/docker-entrypoint\.sh"\]$/m);
+  });
+
+  it("define ownership na copia sem duplicar os arquivos em chown tardio", async () => {
+    const dockerfile = await read("Dockerfile");
+    const runner = dockerfile.split("FROM base AS runner")[1];
+    assert.doesNotMatch(runner, /chown\s+-R/);
+    const copies = runner.split("\n").filter((line) => line.startsWith("COPY "));
+    assert.equal(copies.length, 9);
+    for (const line of copies) assert.match(line, /--chown=node:node/);
+    assert.match(runner, /COPY --chown=node:node --chmod=755 scripts\/docker-entrypoint\.sh/);
+    assert.match(runner, /chown node:node \/app/);
+    assert.match(runner, /install -d -o node -g node \/app\/scripts/);
+    for (const asset of ["locales", "prisma", "public", "templates"]) {
+      assert.ok(copies.includes(`COPY --chown=node:node ${asset} ./${asset}`));
+    }
+    assert.ok(copies.includes("COPY --chown=node:node prisma.config.ts ./prisma.config.ts"));
   });
 
   it("exige observação de corpo antes do teste loopback real no runtime não privilegiado", async () => {
@@ -75,7 +100,13 @@ describe("backend container package manager", () => {
     );
     const precedingUsers = [...runner.slice(0, gate.index).matchAll(/^USER (\S+)$/gm)];
     assert.equal(precedingUsers.at(-1)?.[1], "node");
-    assert.ok(runner.indexOf("COPY --from=builder /app/dist ./dist") < gate.index);
-    assert.ok(runner.indexOf("RUN pnpm prune --prod") < gate.index);
+    assert.ok(
+      runner.indexOf("COPY --from=builder --chown=node:node /app/dist ./dist") < gate.index,
+    );
+    assert.ok(
+      runner.indexOf(
+        "COPY --from=production-deps --chown=node:node /app/node_modules ./node_modules",
+      ) < gate.index,
+    );
   });
 });

@@ -11,6 +11,8 @@ import type {
 import type { AdminGlobalContentQuery } from "@/api/req/communities/global-content";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { FinanceDashboardQuery, FinanceListQuery } from "@/api/req/finance";
+import type { ExpenseQuery } from "@/api/req/finance/expenses";
+import type { FeeQuery } from "@/api/req/finance/fees";
 import type { FinancialHistoryQuery } from "@/api/req/finance/history";
 import type {
   AdminCommunitySuggestionsQuery,
@@ -360,6 +362,31 @@ export const adminCommunitiesKeys = {
 
 export const adminFinanceKeys = {
   all: ["admin", "finance"] as const,
+  stripeFeesAll: () => [...adminFinanceKeys.all, "stripe-fees"] as const,
+  stripeFees: (input: FeeQuery) =>
+    [
+      ...adminFinanceKeys.stripeFeesAll(),
+      {
+        from: input.from ?? "",
+        to: input.to ?? "",
+        page: input.page ?? 1,
+        limit: input.limit ?? 20,
+      },
+    ] as const,
+  expenses: (input: ExpenseQuery) =>
+    [
+      ...adminFinanceKeys.all,
+      "expenses",
+      {
+        competence_from: input.competence_from ?? "",
+        competence_to: input.competence_to ?? "",
+        category: input.category ?? "all",
+        status: input.status ?? "active",
+        search: input.search ?? "",
+        page: input.page ?? 1,
+        limit: input.limit ?? 20,
+      },
+    ] as const,
   history: (input: FinancialHistoryQuery) =>
     [
       ...adminFinanceKeys.all,
@@ -472,6 +499,9 @@ export const adminSettingsKeys = {
   catalogs: () => [...adminSettingsKeys.all, "catalogs"] as const,
   seo: () => [...adminSettingsKeys.all, "seo"] as const,
   subscriptionPlan: () => [...adminSettingsKeys.all, "subscription-plan"] as const,
+  subscriptionPriceVersions: () => [...adminSettingsKeys.subscriptionPlan(), "prices"] as const,
+  subscriptionPriceOperations: () =>
+    [...adminSettingsKeys.subscriptionPlan(), "price-operations"] as const,
 };
 
 export const adminLegalKeys = {

@@ -1990,3 +1990,128 @@ model billing_financial_reconciliation {
   @@index([gateway, mode, account_id, provider_subscription_id], map: "financial_reconciliation_provider_idx")
   @@map("billing_financial_reconciliations")
 }
+
+// Catalog mutations are not checkout/payment operations; no payer data or secret payloads.
+model billing_catalog_operation {
+  id                       String    @id @default(cuid())
+  gateway                  String
+  mode                     String
+  account_id               String
+  plan_id                  String
+  product_id               String
+  actor_admin_id           String
+  request_key              String
+  fingerprint              String
+  amount_cents             Int
+  currency                 String    @default("BRL")
+  interval                 String    @default("month")
+  interval_count           Int       @default(1)
+  lookup_key               String    @unique
+  provider_idempotency_key String    @unique
+  status                   String    @default("pending")
+  version_id               String?
+  external_price_id        String?
+  attempts                 Int       @default(0)
+  first_attempt_at         DateTime?
+  lease_token              String?
+  lease_until              DateTime?
+  last_error_code          String?
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @default(now()) @updatedAt
+
+  @@unique([actor_admin_id, request_key], map: "billing_catalog_actor_request_key")
+  @@index([gateway, mode, account_id, plan_id, created_at, id], map: "billing_catalog_scope_created_idx")
+  @@map("billing_catalog_operations")
+}
+
+
+// Manual operational records only; no payment, provider, invoice or bank reconciliation.
+model admin_operating_expense {
+  id                      String    @id @default(cuid())
+  deleted                 Boolean   @default(false)
+  deletedAt               DateTime? @map("deleted_at")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @default(now()) @updatedAt @map("updated_at")
+  currency                String    @default("BRL")
+  amount_cents            Int
+  category                String
+  description             String
+  competence_date         DateTime  @db.Date
+  paid_date               DateTime? @db.Date
+  status                  String    @default("active")
+  revision                Int       @default(1)
+  created_by_admin_id     String
+  updated_by_admin_id     String
+  request_key             String
+  creation_fingerprint    String
+  correction_reason       String?
+  void_reason             String?
+  voided_at               DateTime?
+  voided_by_admin_id       String?
+
+  @@unique([created_by_admin_id, request_key], map: "operating_expense_actor_request_key")
+  @@index([competence_date, createdAt, id], map: "operating_expense_competence_order_idx")
+  @@index([status, competence_date], map: "operating_expense_status_competence_idx")
+  @@index([category, competence_date], map: "operating_expense_category_competence_idx")
+  @@map("admin_operating_expenses")
+}
+
+
+// Canonical read-only Stripe balance observations, independent of billing/fiscal activation.
+model billing_stripe_balance_fact {
+  id                       String   @id @default(cuid())
+  gateway                  String
+  mode                     String
+  account_id               String
+  receipt_id               String
+  receipt_immutable_hash   String
+  provider_transaction_id  String
+  kind                     String
+  source_id                String
+  charge_id                String
+  currency                 String
+  amount_cents             BigInt
+  fee_cents                BigInt
+  net_cents                BigInt
+  provider_created_at      DateTime
+  status                   String
+  available_on             DateTime
+  immutable_hash           String
+  observed_at              DateTime
+  created_at               DateTime @default(now())
+  updated_at               DateTime @default(now()) @updatedAt
+
+  @@unique([gateway, mode, account_id, provider_transaction_id], map: "stripe_balance_fact_transaction_scope_key")
+  @@index([receipt_id, gateway, mode, account_id, provider_created_at], map: "stripe_balance_fact_receipt_idx")
+  @@map("billing_stripe_balance_facts")
+}
+
+model billing_stripe_fee_observation {
+  id                  String    @id @default(cuid())
+  gateway             String
+  mode                String
+  account_id          String
+  receipt_id          String
+  receipt_hash        String
+  state               String    @default("not_observed")
+  stage               String    @default("capture")
+  revision            Int       @default(1)
+  lease_token         String?
+  lease_until         DateTime?
+  cutoff              DateTime
+  capture_verified    Boolean   @default(false)
+  refunds_cursor      String?
+  disputes_cursor     String?
+  refunds_scanned     Boolean   @default(false)
+  disputes_scanned    Boolean   @default(false)
+  refunds_gap         Boolean   @default(false)
+  disputes_gap        Boolean   @default(false)
+  last_error_code     String?
+  observed_at         DateTime?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @default(now()) @updatedAt
+
+  @@unique([gateway, mode, account_id, receipt_id], map: "stripe_fee_observation_receipt_scope_key")
+  @@index([receipt_id], map: "stripe_fee_observation_receipt_idx")
+  @@map("billing_stripe_fee_observations")
+}

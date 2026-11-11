@@ -57,6 +57,10 @@ descrevem entregas passadas, nao autorizam novos deploys intermediarios.
 6. Evitar builds simultaneos na VPS, verificar quais apps precisam mudar
    e observar CPU/memoria/disco. O bump comum dos manifests pode acionar
    mais apps; nao afirmar que deploy por app ja foi configurado.
+   Para rotacao de logs preparada na TASK-327, seguir [CONTAINER-LOGGING.md](CONTAINER-LOGGING.md).
+   O artefato LogDriver do backend nao e aplicado automaticamente pelo Dokploy;
+   exigir caminho persistente suportado e rollout autorizado, sem restart global
+   do Docker ou truncamento de logs existentes para forcar a configuracao.
 7. Acompanhar deploy, versoes, `/health`, `/ready` e fluxos afetados. Registrar
    falha e executar rollback revisado quando necessario; nao alterar dados.
 

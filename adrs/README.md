@@ -754,3 +754,13 @@ Formato recomendado:
 
 - [ADR-0690 — Historico financeiro e NFS-e no Admin](0690-admin-financial-history-invoices.md)
 - [ADR-0691 — Conciliacao de documento fiscal existente apos estorno](0691-existing-fiscal-document-sync.md)
+
+- [ADR-0692 — Camadas enxutas e logs Docker limitados por servico](0692-container-footprint-log-rotation.md)
+
+- [ADR-0693 — Admin financeiro consome fatos Stripe verificados](0693-admin-stripe-finance-closure.md)
+
+- [ADR-0694 — Gestao de precos para novas adesoes, sem reprecificar contratos](0694-admin-versioned-price-management.md)
+
+- [ADR-0695 — Custos operacionais manuais, sem falsa conciliacao financeira](0695-admin-operating-expenses.md)
+
+- [ADR-0696 — Tarifas canonicas separadas da captura e dos custos completos](0696-stripe-observed-fees.md)

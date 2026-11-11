@@ -8,17 +8,20 @@ import { useId, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import { getSafeApiErrorMessage } from "@/api/errors";
-import type { SubscriptionPlan } from "@/api/generator/types/billing";
+import type { ProfessionalSubscription, SubscriptionPlan } from "@/api/generator/types/billing";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { canManageBillingContract } from "@/utils/billing-management";
+import { billingPlanAdmission, formatBillingPlanPrice } from "@/utils/billing-plan-offer";
 import {
   getAfterPlanSelectionPath,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
+import { PlanAdmissionPrice } from "./price";
 
 type FeatureRow = {
   description?: string;
@@ -52,17 +55,6 @@ const planTones: Record<string, { eyebrow: string; popular?: boolean }> = {
     eyebrow: "Profissional",
     popular: true,
   },
-};
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const formatPrice = (priceCents: number) => {
-  return currencyFormatter.format(priceCents / 100);
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -198,11 +190,13 @@ const FeatureWithInfo = ({ feature }: { feature: FeatureRow }) => {
 
 const PlanCard = ({
   currentSlug,
+  currentSubscription,
   isSelectingFree,
   onSelectFree,
   plan,
 }: {
   currentSlug?: string | null;
+  currentSubscription?: ProfessionalSubscription | null;
   isSelectingFree?: boolean;
   onSelectFree: () => void;
   plan: SubscriptionPlan;
@@ -212,6 +206,13 @@ const PlanCard = ({
   const isFree = plan.slug === "gratuito";
   const isCurrent = currentSlug === plan.slug;
   const features = getFeatureRows(plan);
+  const admission = billingPlanAdmission(plan);
+  const existingContract = isCurrent && canManageBillingContract(currentSubscription);
+  const contractedAmount = currentSubscription?.plan?.price_cents;
+  const contractedAmountAvailable =
+    typeof contractedAmount === "number" &&
+    Number.isSafeInteger(contractedAmount) &&
+    contractedAmount > 0;
 
   return (
     <article
@@ -241,12 +242,14 @@ const PlanCard = ({
         ) : null}
       </div>
 
-      <div className="mt-7 flex items-end gap-2">
-        <strong className="text-4xl font-bold leading-none text-foreground">
-          {formatPrice(plan.price_cents)}
-        </strong>
-        <span className="pb-1 text-sm font-medium text-muted">/mês</span>
-      </div>
+      <PlanAdmissionPrice plan={plan} />
+      {existingContract ? (
+        <p className="mt-3 rounded-xl border border-border bg-surface-muted p-3 text-sm leading-6 text-muted">
+          {contractedAmountAvailable
+            ? `Seu contrato existente mantém ${formatBillingPlanPrice(contractedAmount)} por mês. A oferta para novas assinaturas não altera esse valor.`
+            : "Seu contrato existente não é alterado pela oferta para novas assinaturas. Confira os detalhes em Minha assinatura."}
+        </p>
+      ) : null}
 
       <ul className="mt-8 grid gap-4">
         {features.map((feature) => {
@@ -260,12 +263,41 @@ const PlanCard = ({
       </ul>
 
       {isProfessional ? (
-        <Button asChild className="mt-8 w-full">
-          <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}>
-            {isCurrent ? "Continuar assinatura" : "Assinar agora"}
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        </Button>
+        existingContract ? (
+          <Button asChild className="mt-8 w-full">
+            <Link href="/app/profissional/assinatura">
+              Ver minha assinatura
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </Button>
+        ) : admission.canContinue ? (
+          <Button asChild className="mt-8 w-full">
+            <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}>
+              {admission.status === "unknown"
+                ? "Consultar disponibilidade"
+                : isCurrent
+                  ? "Continuar assinatura"
+                  : "Assinar agora"}
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </Button>
+        ) : (
+          <div className="mt-8 space-y-3">
+            <Button className="w-full" disabled type="button">
+              {admission.status === "paused"
+                ? "Novas assinaturas pausadas"
+                : "Assinatura indisponível"}
+            </Button>
+            {isCurrent ? (
+              <Link
+                className="block text-center text-sm font-semibold text-primary underline"
+                href="/app/profissional/assinatura"
+              >
+                Ver minha assinatura
+              </Link>
+            ) : null}
+          </div>
+        )
       ) : null}
 
       {isFree ? (
@@ -348,6 +380,7 @@ export const PsychologistBillingPlansLogic = () => {
             {planList.map((plan) => (
               <PlanCard
                 currentSlug={currentSlug}
+                currentSubscription={current.data?.current}
                 isSelectingFree={selectFree.isPending && plan.slug === "gratuito"}
                 key={plan.id}
                 onSelectFree={() => {

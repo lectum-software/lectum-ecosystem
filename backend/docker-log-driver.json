@@ -1,0 +1,8 @@
+{
+  "Name": "json-file",
+  "Options": {
+    "max-size": "20m",
+    "max-file": "5",
+    "compress": "true"
+  }
+}

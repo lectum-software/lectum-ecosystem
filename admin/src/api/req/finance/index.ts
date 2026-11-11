@@ -47,6 +47,7 @@ export type FinanceMetric = {
     | "new_subscriptions_revenue"
     | "revenue_total";
   label: string;
+  previous_available?: boolean;
   previous_value: number;
   rate_percent: number | null;
   source: string;
@@ -64,7 +65,7 @@ export type FinancePeriod = {
   max_days: number;
   previous_from: string;
   previous_to: string;
-  timezone: "server-local";
+  timezone: "server-local" | "America/Sao_Paulo";
   to: string;
 };
 
@@ -94,12 +95,14 @@ export type FinancePaymentHistoryItem = {
   event_id: string;
   event_type: string;
   external_id: string;
-  gateway: "mercadopago";
+  gateway: "mercadopago" | "stripe";
+  financial_status?: string;
+  refunded_cents?: number;
   internal_id: number;
   internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
-  source: "gateway_subscription_summary" | "payment_event";
+  source: AdminPublicSource<"gateway_subscription_summary" | "payment_event" | "stripe_receipt">;
   status: FinancePaymentHistoryStatus;
   status_detail: string | null;
   status_label: string;
@@ -114,6 +117,7 @@ export type FinancePaymentHistory = {
   source: AdminPublicSource<
     | "payment_event.filtered_by_subscription_reference"
     | "payment_event+gateway_subscription_summary"
+    | "stripe_receipt"
   >;
   total: number;
 };
@@ -177,6 +181,7 @@ export type FinanceSubscriptionItem = {
   };
   source: string;
   started_at: string;
+  started_at_available?: boolean;
   status: string;
   status_label: string;
   updated_at: string;
@@ -189,14 +194,16 @@ export type FinanceChargeItem = {
   event_id: string;
   event_type: string;
   external_id: string;
-  gateway: "mercadopago";
+  gateway: "mercadopago" | "stripe";
+  financial_status?: string;
+  refunded_cents?: number;
   internal_id: number;
   internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
-  source: "gateway_subscription_summary" | "payment_event";
+  source: AdminPublicSource<"gateway_subscription_summary" | "payment_event" | "stripe_receipt">;
   status: "confirmed";
-  status_label: "Confirmada";
+  status_label: string;
   subscription: FinanceSubscriptionItem | null;
   unavailable_reason: string | null;
 };
@@ -213,7 +220,21 @@ export type FinanceListResponse<TItem, TSource extends string> = {
   source: TSource;
 };
 
+export type FinanceFinancialBasis = {
+  kind: "local_gross_receipts";
+  available: boolean;
+  observed_at: string;
+  provider_coverage: "not_checked";
+  gross_receipts_cents: number;
+  refund_snapshot_cents: number;
+  refund_snapshot_scope: "stripe_receipts";
+  fees_available: false;
+  net_cash_flow_available: false;
+  note: string;
+};
+
 export type AdminFinanceDashboard = {
+  financial_basis?: FinanceFinancialBasis;
   average_ltv: {
     available: boolean;
     description: string;

@@ -1,9 +1,15 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { catalogScope } from "@/modules/billing/catalog/policy";
+import type { StripeIdentity } from "@/modules/billing/payment-gateway/stripe-types";
 import type { AdminSettingsSubscriptionPlanDTO } from "../DTOs/IAdminSettingsSubscriptionPlanDTO";
 import { AdminSettingsSubscriptionPlanRepository } from "../repositories/AdminSettingsSubscriptionPlanRepository";
 import type { AdminSettingsSubscriptionPlanRecord } from "../repositories/interfaces/IAdminSettingsSubscriptionPlanRepository";
-import { projectAdminCheckout, readAdminCheckoutContext } from "./checkout-policy";
+import {
+  projectAdminCatalog,
+  projectAdminCheckout,
+  readAdminCheckoutContext,
+} from "./checkout-policy";
 
 const toPlanDTO = (
   plan: AdminSettingsSubscriptionPlanRecord,
@@ -24,7 +30,14 @@ const toPlanDTO = (
 export const show = async (): Promise<Resolve> => {
   const repository = new AdminSettingsSubscriptionPlanRepository();
   const checkoutContext = readAdminCheckoutContext();
-  const records = await repository.findSettings(checkoutContext.identity);
+  let catalogIdentity: StripeIdentity | null = null;
+  try {
+    const scope = catalogScope();
+    catalogIdentity = { accountId: scope.account_id, mode: scope.mode };
+  } catch {
+    /* Catalog remains unavailable without an explicit safe runtime scope. */
+  }
+  const records = await repository.findSettings(catalogIdentity ?? checkoutContext.identity);
   const { plan } = records;
 
   if (!plan) {
@@ -38,6 +51,8 @@ export const show = async (): Promise<Resolve> => {
     status: 200,
     ...msg("show", {}),
     data: {
+      capabilities: { price_management: true },
+      catalog: projectAdminCatalog(catalogIdentity, records),
       plan: toPlanDTO(plan),
       checkout: projectAdminCheckout(checkoutContext, records),
     },

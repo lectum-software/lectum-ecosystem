@@ -15,7 +15,7 @@ Uso: pnpm --dir backend exec tsx src/operations/billing/stripe-offer.ts
 Sem --apply, somente consulta e exibe o plano da alteracao.
 Sem --enable-sales, uma oferta nova ou preco substituido fica desabilitado.
 Plano profissional deve existir; este comando nao faz seed nem muda beneficios.
-Somente BRL 29,90/mes autorizado nesta etapa. Chaves nunca vao nos argumentos.
+Somente BRL mensal, de 50 a 99999999 centavos (limites defensivos Lectum). Chaves nunca vao nos argumentos.
 Live exige runtime produtivo canonico e autorizacao operacional previa.
 Habilitar vendas exige segredo de webhook configurado e reconciliador habilitado.
 Essas presencas NAO comprovam entrega real de eventos: valide E2E antes de habilitar.

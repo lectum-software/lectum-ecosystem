@@ -166,7 +166,7 @@ test("fresh checkout requires the active exact immutable price and authorized mo
       ...remote,
       amountCents: 3990,
     }),
-    false,
+    true,
   );
   assert.equal(
     isStripeCheckoutPriceAvailable({ ...price, interval_count: 2 }, identity, remote),

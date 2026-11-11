@@ -1,5 +1,11 @@
+import { parseFinanceDateOnly } from "@/modules/api/admin/private/finance/dashboard/use-cases/services/periods";
+import {
+  type FinanceStripeLedger,
+  stripeEntitlementsAt,
+} from "@/modules/api/admin/private/finance/dashboard/use-cases/services/stripe-ledger-projection";
 import {
   financialContractValue,
+  isStripeFinancialContract,
   monthlyContractValue,
   stripeFinancialCoverage,
   stripeFinancialScopeAvailable,
@@ -282,7 +288,23 @@ export const isActiveAt = (subscription: SubscriptionRecord, day: Date) => {
   );
 };
 
-export const estimateMrrAt = (subscriptions: SubscriptionRecord[], day: Date) => {
+export const estimateMrrAt = (
+  subscriptions: SubscriptionRecord[],
+  day: Date,
+  ledger?: FinanceStripeLedger,
+) => {
+  if (ledger) {
+    const legacyActive = subscriptions.filter(
+      (row) =>
+        !isStripeFinancialContract(row) && isBillableSubscription(row) && isActiveAt(row, day),
+    );
+    const legacyMrr = sumFinancialValues(legacyActive.map(monthlyContractValue));
+    const stripe = stripeEntitlementsAt(ledger, day);
+    return {
+      activeSubscriptions: legacyActive.length + stripe.active.length,
+      mrrCents: stripe.available && legacyMrr !== null ? legacyMrr + stripe.mrrCents : null,
+    };
+  }
   const activeSubscriptions = subscriptions.filter(
     (subscription) => isBillableSubscription(subscription) && isActiveAt(subscription, day),
   );
@@ -302,10 +324,11 @@ export const buildFinancial = (
   labels: string[],
   periodEnd: Date,
   days: number,
+  ledger?: FinanceStripeLedger,
 ) => {
   const daily: AdminDashboardFinancialPoint[] = labels.map((label) => {
-    const day = parseDateOnly(label, "end")!;
-    const estimate = estimateMrrAt(subscriptions, day);
+    const day = ledger ? parseFinanceDateOnly(label, "end")! : parseDateOnly(label, "end")!;
+    const estimate = estimateMrrAt(subscriptions, day, ledger);
 
     return {
       available: estimate.mrrCents !== null,
@@ -314,19 +337,24 @@ export const buildFinancial = (
       value_cents: estimate.mrrCents ?? 0,
     };
   });
-  const currentEstimate = estimateMrrAt(subscriptions, periodEnd);
+  const currentEstimate = estimateMrrAt(subscriptions, periodEnd, ledger);
 
   return {
     confirmed_revenue_available: false,
     daily,
-    label:
-      "MRR estimado por assinaturas profissionais ativas, excluindo cortesias administrativas.",
+    label: ledger
+      ? "MRR local por estado observado e períodos pagos; dias financeiros em America/Sao_Paulo. Exclui cortesias e não representa caixa líquido."
+      : "MRR estimado por assinaturas profissionais ativas, excluindo cortesias administrativas.",
     mrr_available: currentEstimate.mrrCents !== null,
     mrr_cents: currentEstimate.mrrCents ?? 0,
     period_estimate_cents: Math.round(((currentEstimate.mrrCents ?? 0) / 30) * days),
     source: "active_subscription_estimate" as const,
-    unavailable_reason: !stripeFinancialCoverage(subscriptions)
-      ? "Os períodos pagos Stripe ainda não estão conciliados; a data da reserva não comprova a base ativa nem o MRR na data selecionada."
-      : "Eventos de pagamento não possuem campo monetário normalizado; por isso o Dashboard exibe estimativa de assinatura ativa, não receita confirmada.",
+    unavailable_reason: ledger
+      ? currentEstimate.mrrCents === null
+        ? "Falta prova local de escopo, preço versionado ou estado histórico observado. Nenhuma data de reserva foi tratada como pagamento."
+        : "MRR local por estado observado e período pago Stripe verificado; não comprova caixa líquido nem tarifas e não consulta o provedor."
+      : !stripeFinancialCoverage(subscriptions)
+        ? "Os períodos pagos Stripe ainda não estão conciliados; a data da reserva não comprova a base ativa nem o MRR na data selecionada."
+        : "Eventos de pagamento não possuem campo monetário normalizado; por isso o Dashboard exibe estimativa de assinatura ativa, não receita confirmada.",
   };
 };

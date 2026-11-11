@@ -2,6 +2,7 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import {
   financialContractValue,
+  isStripeFinancialContract,
   stripeFinancialCoverage,
   stripeFinancialScopeAvailable,
   sumFinancialValues,
@@ -13,6 +14,10 @@ import type {
   AdminFinanceSeriesPoint,
 } from "../../DTOs/IAdminFinanceDashboardDTO";
 import { AdminFinanceDashboardRepository } from "../../repositories/AdminFinanceDashboardRepository";
+import {
+  FinanceLedgerFilterRequiredError,
+  readAdminFinanceStripeLedger,
+} from "../../repositories/AdminFinanceStripeLedgerRepository";
 import { buildChargeItems, fetchGatewayPaymentSummaries } from "./charges-lists";
 import { applyFinancialCoverage } from "./financial-coverage";
 import {
@@ -27,6 +32,8 @@ import {
   summarizeAverageSubscriptionLifetime,
   summarizeChargeItemsRevenue,
 } from "./period-revenue";
+import { applyStripeFinanceDashboard } from "./stripe-dashboard-projection";
+import { projectFinanceStripeLedger } from "./stripe-ledger-projection";
 import {
   calculateChurnRatePercent,
   mapSubscription,
@@ -99,7 +106,7 @@ export const buildAdminFinanceDashboard = async (
   options: { subscriptionTake?: number; tableTake?: number } = {},
 ): Promise<Resolve> => {
   const normalizedQuery = query ?? {};
-  const repository = new AdminFinanceDashboardRepository();
+  const repository = new AdminFinanceDashboardRepository(true);
   const allPeriodStartDate =
     normalizedQuery.period === "all" ? await repository.findFinanceStartDate() : null;
   const resolvedPeriod = resolveAdminFinancePeriod(normalizedQuery, allPeriodStartDate);
@@ -111,6 +118,15 @@ export const buildAdminFinanceDashboard = async (
   }
 
   const { current, groupBy, period, previous } = resolvedPeriod.period;
+  let stripeLedger: ReturnType<typeof projectFinanceStripeLedger>;
+  try {
+    stripeLedger = projectFinanceStripeLedger(await readAdminFinanceStripeLedger());
+  } catch (cause) {
+    if (cause instanceof FinanceLedgerFilterRequiredError)
+      return { status: 503, ...error("finance_history_filter_required", {}) };
+    throw cause;
+  }
+
   const subscriptionTake = options.subscriptionTake ?? DEFAULT_SUBSCRIPTION_TAKE;
   const tableTake = options.tableTake ?? DASHBOARD_TABLE_PREVIEW_TAKE;
 
@@ -362,6 +378,29 @@ export const buildAdminFinanceDashboard = async (
       mrrCents !== null &&
       currentNewSubscriptionRevenueCents !== null &&
       previousNewSubscriptionRevenueCents !== null,
+  });
+  applyStripeFinanceDashboard(dashboard, stripeLedger, {
+    current,
+    previous,
+    currentCharges,
+    activeSubscriptions,
+    currentNewValues: currentNewSubscriptionValues,
+    previousNewValues: previousNewSubscriptionValues,
+    legacyLtv: summarizeAverageLtv(
+      lifetimeSubscriptions.filter((row) => !isStripeFinancialContract(row)),
+      lifetimePaymentEvents,
+      lifetimeGatewaySummaries,
+    ),
+    legacyLtvPeople: lifetimeSubscriptions
+      .filter((row) => !isStripeFinancialContract(row))
+      .map((row) => row.psychologist_id),
+    legacyLifetime: summarizeAverageSubscriptionLifetime(
+      cancelledLifetimeSubscriptions.filter(
+        (row) => !stripeLedger.contracts.some((contract) => contract.id === row.id),
+      ),
+    ),
+    tableTake,
+    subscriptionTake,
   });
   return {
     status: 200,

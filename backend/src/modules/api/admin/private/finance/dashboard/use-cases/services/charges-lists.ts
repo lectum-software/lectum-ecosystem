@@ -1,7 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { getPaymentGateway } from "@/modules/billing/payment-gateway";
-import { stripeFinancialCoverage } from "@/modules/billing/subscription-financial-values";
 import type {
   AdminFinanceChargeItem,
   AdminFinanceDateRange,
@@ -9,7 +8,10 @@ import type {
   AdminFinanceQuery,
 } from "../../DTOs/IAdminFinanceDashboardDTO";
 import { AdminFinanceDashboardRepository } from "../../repositories/AdminFinanceDashboardRepository";
-
+import {
+  FinanceLedgerFilterRequiredError,
+  readAdminFinanceStripeLedger,
+} from "../../repositories/AdminFinanceStripeLedgerRepository";
 import {
   CHARGE_STATUS_FILTERS,
   DEFAULT_LIST_LIMIT,
@@ -22,6 +24,8 @@ import {
   resolveAdminFinancePeriod,
   SUBSCRIPTION_STATUS_FILTERS,
 } from "./period-revenue";
+import { stripeFinanceChargeItems } from "./stripe-charge-projection";
+import { projectFinanceStripeLedger, stripeSubscriptionInsight } from "./stripe-ledger-projection";
 
 import {
   mapCharge,
@@ -292,7 +296,7 @@ export const resolveFinanceListPeriod = async (
 };
 
 export const listAdminFinanceCharges = async (query: AdminFinanceQuery): Promise<Resolve> => {
-  const repository = new AdminFinanceDashboardRepository();
+  const repository = new AdminFinanceDashboardRepository(true);
   const resolvedPeriod = await resolveFinanceListPeriod(query ?? {}, repository);
 
   if (!resolvedPeriod.success) {
@@ -310,11 +314,24 @@ export const listAdminFinanceCharges = async (query: AdminFinanceQuery): Promise
   const gatewaySummaries = await fetchGatewayPaymentSummaries(paymentReferenceSubscriptions);
   const pagination = normalizeFinancePagination(query ?? {});
   const filters = normalizeChargeFilters(query ?? {});
+  let ledger: ReturnType<typeof projectFinanceStripeLedger>;
+  try {
+    ledger = projectFinanceStripeLedger(await readAdminFinanceStripeLedger());
+  } catch (cause) {
+    if (cause instanceof FinanceLedgerFilterRequiredError)
+      return { status: 503, ...error("finance_history_filter_required", {}) };
+    throw cause;
+  }
   const charges = filterChargeItems(
-    buildChargeItems(paymentEvents, paymentReferenceSubscriptions, {
-      gatewaySummaries,
-      range: current,
-    }),
+    [
+      ...buildChargeItems(paymentEvents, paymentReferenceSubscriptions, {
+        gatewaySummaries,
+        range: current,
+      }),
+      ...stripeFinanceChargeItems(ledger, current),
+    ].sort(
+      (a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.event_id.localeCompare(a.event_id),
+    ),
     filters,
   );
   const page = paginateItems(charges, pagination.page, pagination.limit);
@@ -324,13 +341,10 @@ export const listAdminFinanceCharges = async (query: AdminFinanceQuery): Promise
     ...msg("index", {}),
     data: {
       ...page,
-      coverage_complete: stripeFinancialCoverage(paymentReferenceSubscriptions),
-      ...(!stripeFinancialCoverage(paymentReferenceSubscriptions)
-        ? {
-            coverage_note:
-              "Lista parcial: recebimentos Stripe ainda não conciliados. Os valores exibidos não representam o total recebido.",
-          }
-        : {}),
+      coverage_complete: false,
+      coverage_note: ledger.invalid
+        ? "Há divergência de integridade ou escopo no histórico local. Valores não são um total completo."
+        : "Recebimentos originais registrados localmente e situação posterior atual; não representam caixa líquido nem cobertura completa do provedor.",
       period,
       source: "payment_event+gateway_subscription_summary+professional_subscription",
     },
@@ -352,6 +366,14 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
   const filters = normalizeSubscriptionRelationFilters(query ?? {});
   const { paymentHealth, ...databaseFilters } = filters;
   const baseCount = await repository.countPaidSubscriptionsForRelation(current, databaseFilters);
+  if (paymentHealth && baseCount > 10_000)
+    return { status: 503, ...error("finance_history_filter_required", {}) };
+  const readLedger = (items: SubscriptionRelationRecord[]) =>
+    readAdminFinanceStripeLedger(
+      items
+        .filter((row) => row.gateway === "stripe" && row.source === "stripe")
+        .map((row) => row.id),
+    ).then(projectFinanceStripeLedger);
 
   if (paymentHealth) {
     const pagination = normalizeFinancePagination(query ?? {});
@@ -367,9 +389,22 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
         : Promise.resolve([] as SubscriptionRelationRecord[]),
       repository.listPaymentEventsForLifetime(),
     ]);
+    let ledger: ReturnType<typeof projectFinanceStripeLedger>;
+    try {
+      ledger = await readLedger(subscriptions);
+    } catch (cause) {
+      if (cause instanceof FinanceLedgerFilterRequiredError)
+        return { status: 503, ...error("finance_history_filter_required", {}) };
+      throw cause;
+    }
     const gatewaySummaries = await fetchGatewayPaymentSummaries(subscriptions);
     const filteredItems = subscriptions
-      .map((subscription) => mapSubscription(subscription, lifetimePaymentEvents, gatewaySummaries))
+      .map((subscription) =>
+        stripeSubscriptionInsight(
+          mapSubscription(subscription, lifetimePaymentEvents, gatewaySummaries),
+          ledger,
+        ),
+      )
       .filter((subscription) => subscription.payment_health.status === paymentHealth);
     const page = paginateItems(filteredItems, pagination.page, pagination.limit);
 
@@ -397,6 +432,14 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
     ),
     repository.listPaymentEventsForLifetime(),
   ]);
+  let ledger: ReturnType<typeof projectFinanceStripeLedger>;
+  try {
+    ledger = await readLedger(subscriptions);
+  } catch (cause) {
+    if (cause instanceof FinanceLedgerFilterRequiredError)
+      return { status: 503, ...error("finance_history_filter_required", {}) };
+    throw cause;
+  }
   const gatewaySummaries = await fetchGatewayPaymentSummaries(subscriptions);
 
   return {
@@ -405,7 +448,10 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
     data: {
       count,
       data: subscriptions.map((subscription) =>
-        mapSubscription(subscription, lifetimePaymentEvents, gatewaySummaries),
+        stripeSubscriptionInsight(
+          mapSubscription(subscription, lifetimePaymentEvents, gatewaySummaries),
+          ledger,
+        ),
       ),
       page: pagination.page,
       pages: pagination.pages,

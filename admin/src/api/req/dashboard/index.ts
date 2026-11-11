@@ -9,6 +9,7 @@ export type DashboardMetric = {
   description: string;
   id: string;
   label: string;
+  previous_value_available?: boolean;
   previous_value: number;
   source: string;
   trend: "down" | "flat" | "unavailable" | "up";
