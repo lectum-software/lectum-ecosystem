@@ -1,7 +1,7 @@
 # TASK-323 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
 
 Data: 2026-11-09
-Status: Primeira compra live com plano ativo/NFS-e autorizada/PDF/envio email comprovados; backend 0.1.813 publicado, frontend visual aguarda autenticacao Vercel
+Status: Primeira compra live com plano ativo/NFS-e autorizada/PDF/envio email comprovados; backend/frontend 0.1.813 publicados, verificacao pela sessao do titular pendente
 Decisao: [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md)
 Operacao: [Runbook Stripe](STRIPE-OPERATIONS.md)
 Base auditada: `homolog` em `820077ccd`, versao `0.1.799`
@@ -1928,3 +1928,19 @@ pendencia comercial futura, sem contratar plano ou afirmar custo/limite novo.
 Checkpoint documental local0.1.814: bump unico/cinco manifests sincronizados,
 checks documentais/versionamento e commit proprio. Nao publicar/reimplantar somente
 por este registro. Release produtiva continua backend813/frontend-admin811.
+
+### Conclusao da publicacao frontend — 11/11/2026, 09:59 BRT
+
+- [x] Verificacao Vercel concluida pelo usuario; build de `main@411b1aaf`
+  finalizado e promovido ao dominio www, sem novo pagamento ou mudanca de env.
+  Deploy `3j6PjEKspf9gQGgL2zvrVrJ28TNZ`, duracao4m6s, PR#176.
+- [x] Frontend `/version`0.1.813, publico/sem cache/noindex; backend813 e admin811
+  saudaveis. Login publico e recusa de acesso privado anonimo conferidos.
+- [ ] Validacao autenticada do plano/NFS-e pelo titular: usuario sem acesso a
+  conta neste momento. Nao substituir sessao, criar pagamento nem afirmar download
+  pelo app com base somente na comprovacao anterior do PDF no provider.
+
+Evidencias privadas: `frontend-production-0813-public-smoke-20261111.json` e
+`vercel-frontend-promoted-0813-20261111.png`, no diretorio de QA fora do Git.
+O checklist de frontend pendente do checkpoint anterior e historico; foi superado
+por esta publicacao. Usuario priorizou a TASK-324 local enquanto aguarda a conta.
