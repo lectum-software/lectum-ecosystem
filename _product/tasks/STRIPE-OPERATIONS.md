@@ -25,14 +25,15 @@ anteriores e nao houve uso da chave, deploy/restart ou ativacao. A publicacao
 compativel inativa posterior esta registrada na TASK-323, nao deve ser confundida
 com aquele estado historico de preparacao.
 
-Ultimo estado produtivo comprovado neste registro: backend/frontend/admin
-0.1.808, checkout disabled, collection/reconciliation/ledger false e gates fiscais
-Stripe false. MP/SendNF globais preservados. Webhook criado, segredo carregado e
-transporte assinado comprovado; oferta vinculada na revisao 1, 2990 BRL/month,
-checkout false. Os ajustes finais locais de recuperacao, collector e fiscal
-ainda exigem publicacao e conferencia do runtime antes da ativacao autorizada.
-Salvar Environment nao atualiza o processo. Ter chave ou webhook validos nao
-comprova conciliacao financeira, cobranca, NF ou entrega de email live.
+Ultimo estado produtivo comprovado: backend/frontend/admin 0.1.811, gateway Stripe,
+oferta revisao 2 habilitada, R$29,90/mes e cinco gates financeiros/fiscais Stripe
+ativos conforme autorizacao integral registrada na TASK-323. MP/Radar preservados.
+Em 10/11/2026, 22:23 BRT, o usuario iniciou a primeira compra real: uma captura
+confirmada, recibo integro e contrato ativo. A NFS-e aguarda CPF/nome fiscal reais
+do titular; endereco valido. Nao existe documento SendNF dessa compra e nao se
+comprovou PDF/email. Um evento SetupIntent sem vinculo segue a revisao conservadora;
+eventos invoice/subscription e recebimento foram conciliados. Salvar Environment
+nao atualiza o processo. Configuracao pronta nunca substitui prova financeira/fiscal.
 
 Renovacoes usam worker retomavel. Uma recusa definitiva nao inicia Smart Retries:
 fica aguardando cartao atualizado ou autenticacao/confirmacao explicita. Trocar
@@ -418,6 +419,12 @@ de pagamento pode reabrir o mesmo job, que le prova fresca antes do snapshot.
 nao reenfileirar indefinidamente nem tratar indisponibilidade como valor zero.
 Endereco ou identidade fiscal incompletos permanecem pendentes, sem emissao,
 com nova leitura no scheduler (backoff maximo 1h), pois dependem de dados do usuario.
+No complemento local posterior a 0.1.811, `verification_failures` separa o limite
+de falhas consecutivas do total `attempts`; esperas por dados apos prova canonica
+nao gastam esse budget. Migration expansiva com default zero precede o backend
+novo; nao reabre jobs terminais. Recuperacao CLI auditada preserva attempts e
+reinicia somente o budget apos sua prova canonica. Conferir a versao implantada
+antes de assumir essa semantica; o checkpoint da task registra a publicacao.
 O contador do documento inclui polls bem-sucedidos; nao e usado como limite de
 falhas consecutivas. Documento ja criado e reconciliado por GET, nao recriado.
 
@@ -439,12 +446,21 @@ administrativo auditado; nao preencher CFP artificialmente para passar o gate.
 
 - O usuario completa o endereco na tela prevista, sem enviar dados pessoais pelo
   chat. Quando o endereco do perfil e valido, o fluxo pode reaproveita-lo.
-- Se faltar identidade fiscal, operador autorizado confirma o nome no painel
-  administrativo existente; nao inventar nome nem editar diretamente o banco.
+- Se o onboarding profissional verdadeiro estiver pendente, o titular retoma
+  `/app/profissional/assinatura/concluir`, conclui WhatsApp se necessario e informa
+  seu CPF na etapa CFP, confirmando apenas registro real. Nao enviar dados pelo chat.
+- Se for manutencao de conta ja aprovada ou conta administrativa sem registro
+  profissional, usar o caminho auditado existente: Admin > Psicologos > perfil >
+  Dados pessoais para CPF real, com motivo e confirmacao; depois Registro profissional
+  > Nome completo para emissao fiscal. Esse caminho nao aprova CRP nem concede plano.
+  Nao inventar identidade, reaproveitar dados de outro pagador ou editar banco.
 - O pagamento pode chegar antes do endereco: job aguarda, nao emite com dados
   incompletos, e retoma apos correcao. Ate criar snapshot, historico pode mostrar
   apenas pagamento confirmado, ainda sem cartao de status da NF. Para o piloto,
   conferir os dados antes evita essa espera e torna o resultado observavel.
+- Pagamento confirmado e pendencia de identidade nao justificam nova assinatura,
+  novo PaymentIntent, nova captura ou nova nota manual. Apos dados legitimos, observar
+  a mesma fila/recibo; so declarar sucesso fiscal apos autorizacao, PDF e email verificados.
 - Cancelamento/fim do periodo pago ou cortesia nao devem bloquear essa correcao:
   `current` informa capacidades aditivas `billing_address_editable` e
   `billing_address_maintenance_only`. Historico Stripe integro ou documento fiscal

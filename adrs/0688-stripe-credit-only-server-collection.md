@@ -312,3 +312,78 @@ Preflight bloqueado continua retornando 429 e o navegador pode reporta-lo como
 falha de rede, pois exige resposta 2xx para OPTIONS. A correcao torna legiveis as
 respostas efetivas; nao contorna o bloqueio nem promete eliminar toda falha de
 preflight. O limite menor encontrado em QA nao altera o limite de producao.
+
+## Checkpoint de liberacao ativa — 0.1.811, 10/11/2026 BRT
+
+O estado inativo descrito nos checkpoints anteriores foi superado pela autorizacao
+integral do usuario e pela promocao do commit `3e27a435b`, PR #175,
+`main@e3af0ef`. Backend, frontend e admin estao publicados em 0.1.811; video
+permaneceu fora deste deploy. Checks/builds, suites reais local/sandbox e revisao
+cruzada foram registrados na TASK-323; nao sao substituidos pelo smoke publico.
+
+- Backend health/ready/ping HTTP 200, versao 0.1.811; frontend/admin version
+  HTTP 200/0.1.811. Rotas de versao sem cache e nao indexaveis. APIs privadas
+  recusam anonimo; webhook recusa falta de assinatura; CORS da origem permitida
+  permanece legivel inclusive no 401. Nenhum pagamento criado por esse smoke.
+- Runtime live usa gateway Stripe, reconciliation/collection/ledger habilitados
+  e opt-ins fiscais Stripe habilitados. Chave restrita/conta, chave publicavel
+  comparada com o painel e segredo de webhook conferidos, sem publicar valores.
+- A oferta foi habilitada pela operacao auditada, revisao 1 → 2, checkout true,
+  2990 BRL/month. Releitura confirmou auditoria e uma oferta habilitada; inventario
+  financeiro/fiscal Stripe permaneceu vazio apos a ativacao. Nao existe allowlist:
+  novas adesoes foram abertas globalmente, sem agente executar a primeira cobranca.
+- Automacao fiscal Stripe integral foi autorizada no ultimo pedido e ativada
+  com inventario vazio. E uma decisao operacional diferente da sequencia piloto
+  individual → automacao sugerida no runbook; nao alegar que aquele piloto foi
+  realizado. MP/SendNF legados, parametros contabeis, chaves e Radar preservados.
+- SendNF identity/readiness/go-live/envio ao tomador validos nao comprovam entrega
+  fiscal. ISS default null e compativel com override explicito 201 enviado no
+  snapshot/preview/POST, mantendo codigo 010501 e descricao contabil aprovada.
+- A primeira acao financeira live cabe ao usuario. Permanecem sem prova a captura
+  live, conciliacao de seu evento financeiro, beneficio/recibo, autorizacao fiscal,
+  PDF e email. Se houver ambiguidade, consultar os mesmos recursos e referencias;
+  nao criar outra cobranca/nota para obter uma resposta mais conveniente.
+
+Detalhes, criterios separados e referencias privadas de QA/smoke estao no
+[checkpoint ativo da TASK-323](../_product/tasks/TASK-323-stripe-embedded-checkout.md#publicacao-e-liberacao-ativa-01811--10112026-brt).
+Registro documental posterior nao muda a versao produtiva 0.1.811 e nao requer
+redeploy. A pendencia de evidenciar a primeira compra nao e permissao para o
+agente preencher/enviar cartao ou fabricar pagamento, identidade ou nota fiscal.
+
+## Acompanhamento da primeira compra e budget fiscal separado — 10/11/2026 BRT
+
+A primeira acao do usuario produziu captura unica de R$29,90, recibo integro e
+contrato ativo, confirmados por leituras canonicas. A NFS-e nao foi enviada:
+endereco valido, mas CPF e nome fiscal auditado ausentes. Preservar onboarding
+verdadeiro e alternativa administrativa auditada; nao substituir identidade fiscal
+por nome de exibicao, dados de cartao ou aprovacao profissional fabricada.
+
+O contador total de tentativas fiscais inclui espera por dados. Reutiliza-lo como
+budget de falhas de verificacao torna um erro transitorio terminal depois de longa
+espera. Decisao: contador separado persistido, default zero, atualizado sob a mesma
+lease/evento CAS. A verificacao canonica concluida reinicia esse contador; espera
+por dados nao consome budget. Preservar total auditado/backoff e limite de falhas
+consecutivas, recusas terminais de seguranca e recuperacao manual auditada.
+
+Alternativas rejeitadas: zerar attempts perderia historico e alteraria backoff;
+repetir GETs indefinidamente retiraria o limite operacional; inventar dados ou
+reabrir todos os jobs terminais violaria os limites de seguranca. Migration aditiva
+precede backend novo, sem alterar esquema existente ou exigir env. Backend anterior
+tolera a coluna; rollback nao a remove. Validacao local/PG real nao sera apresentada
+como emissao governamental ou cobranca live. A primeira nota/PDF/email continua
+dependente dos dados reais do titular, sem nova tentativa financeira.
+
+O historico do pagador deve distinguir falta de endereco/identidade de documento
+indisponivel. Projecao aditiva privada, derivada do banco e validadores fiscais
+existentes, sem valores pessoais nem chamada ao gateway. Navegacao respeita o
+onboarding vigente; perfil ja aprovado/cortesia/rejeitado recebe orientacao de
+suporte, nao um desvio para nova aprovacao. Backend antigo preserva fallback seguro;
+frontend antigo ignora o campo. Dados completos nao equivalem a nota autorizada.
+
+
+Evidencias do complemento 0.1.813: migration local sem reset, 8 testes de recuperacao
+com PostgreSQL real, 4 backend de projecao e 39 focais frontend; check integral e
+builds backend/frontend aprovados. Nove capturas 320/390/1440 com historicos sandbox
+existentes, sem provider/nova transacao. Autenticacao de QA restaurada. Revisao
+independente conferiu CAS, ownership, gates e compatibilidade. Autodeploys externos
+de homolog reconferidos desligados; publicar por PR, sem promover por push direto.

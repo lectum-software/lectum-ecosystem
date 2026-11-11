@@ -157,7 +157,12 @@ export const applyVerifiedFiscalRecovery = async (
           lease_token: null,
           lease_until: null,
         },
-        data: { completed_at: null, next_attempt_at: now, event_id: eventId },
+        data: {
+          completed_at: null,
+          next_attempt_at: now,
+          event_id: eventId,
+          verification_failures: 0,
+        },
       });
       if (changed.count !== 1) throw new FiscalRecoveryError();
     } else {
@@ -198,16 +203,23 @@ export const applyVerifiedFiscalRecovery = async (
         action: "stripe_fiscal_recovery_queued",
         source: "operator_cli",
         reason: args.reason,
-        changed_fields: ["completed_at", "next_attempt_at", ...(invoice ? ["status"] : [])],
+        changed_fields: [
+          "completed_at",
+          "next_attempt_at",
+          "verification_failures",
+          ...(invoice ? ["status"] : []),
+        ],
         safe_before: {
           job_present: Boolean(job),
           invoice_present: Boolean(invoice),
           document_present: Boolean(invoice?.document_id),
           job_attempts: job?.attempts ?? null,
+          job_verification_failures: job?.verification_failures ?? null,
           invoice_attempts: invoice?.attempts ?? null,
         },
         safe_after: {
           queued: true,
+          verification_failures: 0,
           snapshot_preserved: Boolean(invoice),
           document_preserved: Boolean(invoice?.document_id),
         },

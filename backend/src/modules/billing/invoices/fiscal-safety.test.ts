@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type Stripe from "stripe";
-import { StripeGatewayError } from "../payment-gateway/stripe-error";
+import { StripeGatewayError, stripeFailure } from "../payment-gateway/stripe-error";
 import {
   assertStripeInvoicePaymentPending,
   StripeInvoicePaymentError,
@@ -10,7 +10,9 @@ import { InvoiceError } from "./config";
 import { documentSchema, invoiceRequestSchema } from "./contracts";
 import {
   invoiceFailure,
+  invoiceJobFailure,
   invoiceOperationReference,
+  invoiceVerificationFailuresAfterPayment,
   logInvoiceOutcome,
   safeInvoiceDiagnostic,
 } from "./diagnostics";
@@ -128,6 +130,69 @@ test("zero and terminal invoices stop fiscal jobs; pending invoices have a bound
     invoiceFailure(new InvoiceError("sendnf_unavailable", true), "mercadopago", 100).terminal,
     false,
   );
+});
+
+test("recipient waits never consume the consecutive fiscal verification budget", () => {
+  let failures = 0;
+  for (let attempt = 1; attempt <= 25; attempt++) {
+    const waiting = invoiceJobFailure(
+      new InvoiceError("recipient_incomplete", true),
+      "stripe",
+      failures,
+      true,
+    );
+    assert.equal(waiting.terminal, false);
+    assert.equal(waiting.verificationFailures, 0);
+    failures = waiting.verificationFailures;
+  }
+  for (const failure of [
+    stripeFailure({ code: "ETIMEDOUT" }),
+    stripeFailure({ type: "StripeConnectionError" }),
+    stripeFailure({ statusCode: 429 }),
+    stripeFailure({ statusCode: 503 }),
+    new StripeGatewayError("provider_unavailable"),
+    new Error("unclassified persistence failure"),
+    new StripeInvoicePaymentError("awaiting_payment"),
+  ]) {
+    assert.equal(invoiceJobFailure(failure, "stripe", 0, false).terminal, false);
+    assert.equal(invoiceJobFailure(failure, "stripe", 8, false).terminal, false);
+    assert.equal(invoiceJobFailure(failure, "stripe", 9, false).terminal, true);
+    assert.equal(invoiceJobFailure(failure, "stripe", 100, false).verificationFailures, 10);
+  }
+  for (const code of ["recipient_incomplete", "billing_address_incomplete"]) {
+    const failure = new InvoiceError(code, true);
+    assert.equal(invoiceJobFailure(failure, "stripe", 9, true).verificationFailures, 0);
+    assert.equal(invoiceJobFailure(failure, "stripe", 9, false).verificationFailures, 10);
+  }
+  // A later local persistence failure is not a successful data wait and must stay bounded.
+  assert.equal(invoiceJobFailure(new Error("unknown"), "stripe", 9, true).terminal, true);
+  for (const failure of [
+    stripeFailure({ statusCode: 401 }),
+    stripeFailure({ statusCode: 403 }),
+    new StripeGatewayError("resource_mismatch"),
+    new StripeGatewayError("contract_invalid"),
+    new StripeGatewayError("payment_not_eligible"),
+    new StripeInvoicePaymentError("zero_invoice"),
+    new StripeInvoicePaymentError("void_invoice"),
+    new StripeInvoicePaymentError("uncollectible_invoice"),
+  ])
+    assert.equal(invoiceJobFailure(failure, "stripe", 0, false).terminal, true);
+});
+
+test("a canonical newly paid invoice resets only the exhausted awaiting-payment stage", () => {
+  const timeout = stripeFailure({ code: "ETIMEDOUT" });
+  // An event or failed first GET is not paid evidence and cannot reset the stored budget.
+  assert.equal(invoiceJobFailure(timeout, "stripe", 10, false).terminal, true);
+  const newBudget = invoiceVerificationFailuresAfterPayment(10, "awaiting_payment");
+  assert.equal(newBudget, 0);
+  assert.equal(invoiceJobFailure(timeout, "stripe", newBudget, false).terminal, false);
+  assert.equal(
+    invoiceJobFailure(new StripeGatewayError("resource_mismatch"), "stripe", newBudget, false)
+      .terminal,
+    true,
+  );
+  for (const previousCode of [null, "provider_unavailable", "operation_unavailable"])
+    assert.equal(invoiceVerificationFailuresAfterPayment(10, previousCode), 10);
 });
 
 test("fiscal outcome never exposes identifiers or arbitrary diagnostic values", (t) => {

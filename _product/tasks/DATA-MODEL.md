@@ -1138,6 +1138,11 @@ Ver [TASK-323](TASK-323-stripe-embedded-checkout.md) e ADR-0687.
 - `billing_invoice_job`: gateway com default MP, modo/conta/recurso remoto opcionais;
   jobs Stripe usam invoice canonica e chave de dedupe isolada por conta/modo.
   `billing_invoice.account_id` e opcional; referencias MP historicas nao mudam.
+  Complemento local apos a primeira compra: `verification_failures` com default
+  zero separa falhas consecutivas de verificacao do total `attempts`. Espera por
+  dados apos verificacao canonica bem-sucedida nao consome esse budget; updates
+  usam a lease/evento existentes. Migration aditiva, sem reabrir jobs terminais,
+  sem alterar backoff, snapshots ou emitir documento automaticamente pela migration.
 - `billing_financial_receipt`: fato financeiro separado da nota fiscal, por
   gateway/conta/modo/invoice/InvoicePayment, com referencias locais/remotas, valor,
   moeda, paid_at e invoice_paid_at comprovados, periodo e Price historicos e hash

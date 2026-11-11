@@ -198,3 +198,215 @@ test("real PostgreSQL defers only new Stripe live issuance and preserves MP and 
     await prisma.$disconnect();
   }
 });
+
+test("real PostgreSQL preserves the paid fiscal job after 25 recipient waits and bounds only consecutive verification failures", {
+  skip: !enabled,
+}, async () => {
+  const url = new URL(process.env.DATABASE_URL ?? "");
+  assert.ok(["127.0.0.1", "localhost"].includes(url.hostname));
+  assert.equal(url.pathname, "/lectum_stripe_test");
+  const { default: prisma } = await import("@/infra/database/prisma");
+  const { InvoiceRepository } = await import("./repository");
+  const { invoiceJobFailure } = await import("./diagnostics");
+  const { InvoiceError, retryDate } = await import("./config");
+  const { stripeFailure } = await import("../payment-gateway/stripe-error");
+  const suffix = randomUUID().replaceAll("-", "");
+  const accountId = `acct_${suffix}`;
+  const input = {
+    invoiceId: `in_${suffix}`,
+    eventId: `evt_${suffix}`,
+    accountId,
+    mode: "test" as const,
+  };
+  const scope = { gateway: "stripe" as const, accountId, mode: "test" as const };
+  const repository = new InvoiceRepository();
+  let now = new Date(Date.now() + 1000);
+  let jobId: string | undefined;
+  try {
+    await repository.enqueueStripe(input);
+    const created = await prisma.billing_invoice_job.findFirstOrThrow({
+      where: { account_id: accountId },
+    });
+    jobId = created.id;
+    assert.equal(created.verification_failures, 0); // Expand migration's default for old writers.
+    const step = async (error: unknown, paymentVerified: boolean) => {
+      const job = await repository.claimJob([scope], now, [created.id]);
+      assert.equal(job?.id, created.id);
+      assert.ok(job);
+      const failure = invoiceJobFailure(
+        error,
+        job.gateway,
+        job.verification_failures,
+        paymentVerified,
+      );
+      const next = retryDate(job.attempts, now.getTime());
+      if (job.attempts === 26) {
+        for (const [token, eventId] of [
+          ["wrong-lease", job.event_id],
+          [job.lease_token, "wrong-event"],
+        ]) {
+          await repository.finishJob(
+            job.id,
+            token,
+            { last_error_code: "provider_unavailable", verification_failures: 9 },
+            eventId,
+          );
+          const unchanged: typeof created = await prisma.billing_invoice_job.findUniqueOrThrow({
+            where: { id: job.id },
+          });
+          assert.equal(unchanged.verification_failures, 0);
+          assert.equal(unchanged.lease_token, job.lease_token);
+          assert.equal(unchanged.completed_at, null);
+        }
+      }
+      // Exercise the same persistence boundary as processJob; never execute a provider/worker.
+      await repository.finishJob(
+        job.id,
+        job.lease_token,
+        {
+          ...(failure.terminal ? { completed_at: now } : { next_attempt_at: next }),
+          last_error_code: failure.code,
+          verification_failures: failure.verificationFailures,
+        },
+        job.event_id,
+      );
+      now = new Date(next.getTime() + 1);
+      const stored = await prisma.billing_invoice_job.findUniqueOrThrow({
+        where: { id: created.id },
+      });
+      assert.equal(stored.attempts, job.attempts);
+      assert.equal(stored.lease_token, null);
+      assert.equal(stored.lease_until, null);
+      return stored;
+    };
+    for (let attempt = 1; attempt <= 25; attempt++) {
+      const stored = await step(new InvoiceError("recipient_incomplete", true), true);
+      assert.equal(stored.attempts, attempt);
+      assert.equal(stored.verification_failures, 0);
+      assert.equal(stored.completed_at, null);
+    }
+    for (const [index, failure] of [
+      stripeFailure({ code: "ETIMEDOUT" }),
+      stripeFailure({ statusCode: 503 }),
+      stripeFailure({ statusCode: 429 }),
+    ].entries()) {
+      const stored = await step(failure, false);
+      assert.equal(stored.attempts, 26 + index);
+      assert.equal(stored.verification_failures, index + 1);
+      assert.equal(stored.completed_at, null);
+    }
+    const recovered = await step(new InvoiceError("recipient_incomplete", true), true);
+    assert.equal(recovered.attempts, 29);
+    assert.equal(recovered.verification_failures, 0);
+    for (let failureCount = 1; failureCount <= 10; failureCount++) {
+      const stored = await step(stripeFailure({ code: "ETIMEDOUT" }), false);
+      assert.equal(stored.attempts, 29 + failureCount);
+      assert.equal(stored.verification_failures, failureCount);
+      assert.equal(Boolean(stored.completed_at), failureCount === 10);
+    }
+    assert.equal(await repository.claimJob([scope], now, [created.id]), null);
+    assert.equal(await prisma.billing_invoice_job.count({ where: { account_id: accountId } }), 1);
+    assert.equal(await prisma.billing_invoice.count({ where: { account_id: accountId } }), 0);
+    assert.equal(await prisma.billing_operation.count({ where: { account_id: accountId } }), 0);
+    assert.equal(
+      await prisma.billing_financial_receipt.count({ where: { account_id: accountId } }),
+      0,
+    );
+  } finally {
+    if (jobId) await prisma.billing_invoice_job.delete({ where: { id: jobId } });
+    await prisma.$disconnect();
+  }
+});
+
+test("real PostgreSQL does not reset verification budget on an event but persists a proven payment-stage transition under lease", {
+  skip: !enabled,
+}, async () => {
+  const url = new URL(process.env.DATABASE_URL ?? "");
+  assert.ok(["127.0.0.1", "localhost"].includes(url.hostname));
+  assert.equal(url.pathname, "/lectum_stripe_test");
+  const { default: prisma } = await import("@/infra/database/prisma");
+  const { InvoiceRepository } = await import("./repository");
+  const { invoiceJobFailure, invoiceVerificationFailuresAfterPayment } = await import(
+    "./diagnostics"
+  );
+  const { StripeInvoicePaymentError } = await import("../payment-gateway/stripe-invoice");
+  const { stripeFailure } = await import("../payment-gateway/stripe-error");
+  const suffix = randomUUID().replaceAll("-", "");
+  const input = {
+    invoiceId: `in_${suffix}`,
+    eventId: `evt_${suffix}`,
+    accountId: `acct_${suffix}`,
+    mode: "test" as const,
+  };
+  const repository = new InvoiceRepository();
+  const scope = { gateway: "stripe" as const, accountId: input.accountId, mode: "test" as const };
+  let now = new Date(Date.now() + 1000);
+  try {
+    await repository.enqueueStripe(input);
+    for (let count = 1; count <= 10; count++) {
+      const job = await repository.claimJob([scope], now);
+      assert.ok(job);
+      const failure = invoiceJobFailure(
+        new StripeInvoicePaymentError("awaiting_payment"),
+        "stripe",
+        job.verification_failures,
+        false,
+      );
+      await repository.finishJob(
+        job.id,
+        job.lease_token,
+        {
+          ...(failure.terminal ? { completed_at: now } : { next_attempt_at: now }),
+          last_error_code: failure.code,
+          verification_failures: failure.verificationFailures,
+        },
+        job.event_id,
+      );
+      now = new Date(now.getTime() + 1);
+    }
+    assert.equal(await repository.claimJob([scope], now), null);
+    await repository.enqueueStripe({ ...input, eventId: `evt_new${suffix}` });
+    const reopened = await repository.claimJob([scope], now);
+    assert.ok(reopened);
+    assert.equal(reopened.attempts, 11);
+    assert.equal(reopened.verification_failures, 10);
+    assert.equal(reopened.last_error_code, "awaiting_payment");
+    const failure = stripeFailure({ statusCode: 503 });
+    assert.equal(invoiceJobFailure(failure, "stripe", 10, false).terminal, true);
+    // The worker calls this only AFTER canonical eligibility; this is its persistence boundary,
+    // not a fabricated remote payment and never an execution of the fiscal worker/provider.
+    const verifiedBudget = invoiceVerificationFailuresAfterPayment(
+      reopened.verification_failures,
+      reopened.last_error_code,
+    );
+    const pending = invoiceJobFailure(failure, "stripe", verifiedBudget, false);
+    assert.equal(pending.terminal, false);
+    assert.equal(
+      (await prisma.billing_invoice_job.findUniqueOrThrow({ where: { id: reopened.id } }))
+        .verification_failures,
+      10,
+    );
+    await repository.finishJob(
+      reopened.id,
+      reopened.lease_token,
+      {
+        next_attempt_at: now,
+        last_error_code: pending.code,
+        verification_failures: pending.verificationFailures,
+      },
+      reopened.event_id,
+    );
+    const resumed = await repository.claimJob([scope], now);
+    assert.equal(resumed?.id, reopened.id);
+    assert.equal(resumed?.verification_failures, 1);
+    assert.equal(resumed?.completed_at, null);
+    assert.equal(await prisma.billing_invoice.count({ where: { account_id: input.accountId } }), 0);
+    assert.equal(
+      await prisma.billing_operation.count({ where: { account_id: input.accountId } }),
+      0,
+    );
+  } finally {
+    await prisma.billing_invoice_job.deleteMany({ where: { account_id: input.accountId } });
+    await prisma.$disconnect();
+  }
+});

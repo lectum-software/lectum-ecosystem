@@ -118,6 +118,19 @@ export type BillingSubscriptionResponse = {
   payment_history?: BillingPaymentHistoryItem[];
   /** Billable contract, separate from an active administrative courtesy. Absent on older backends. */
   maintenance_subscription?: ProfessionalSubscription | null;
+  /** Read-only readiness for a confirmed payment without a fiscal snapshot; not an authorization. */
+  fiscal_requirements?: BillingFiscalRequirements;
+};
+
+export type BillingFiscalRequirements = {
+  address_complete: boolean;
+  identity_complete: boolean;
+  next_action:
+    | "billing_address"
+    | "registry_verification"
+    | "complete_registration"
+    | "support"
+    | "none";
 };
 
 export type BillingSelectFreeResponse = {

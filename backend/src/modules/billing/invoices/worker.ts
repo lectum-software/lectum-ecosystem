@@ -15,7 +15,13 @@ import {
   parseProvider,
   storedInvoiceSchema,
 } from "./contracts";
-import { invoiceFailure, logInvoiceOutcome, safeInvoiceDiagnostic } from "./diagnostics";
+import {
+  invoiceFailure,
+  invoiceJobFailure,
+  invoiceVerificationFailuresAfterPayment,
+  logInvoiceOutcome,
+  safeInvoiceDiagnostic,
+} from "./diagnostics";
 import { invoiceDocumentNextAttempt, invoiceDocumentStatus } from "./document-authorization";
 import { getFiscalIdentity } from "./fiscal-identity";
 import { invoiceGatewayScopes, invoiceScopeMatches } from "./gateway-scope";
@@ -84,6 +90,8 @@ export async function deferInvoiceIssuance(
 async function processJob(config: InvoiceConfig, repository: InvoiceRepository, ids?: string[]) {
   const job = await repository.claimJob(invoiceGatewayScopes(config.mode), new Date(), ids);
   if (!job) return false;
+  let paymentVerified = false;
+  let verificationFailures = job.verification_failures;
   try {
     const { gateway, scope } = scopedGateway(job, config, true);
     const resourceType = scope.gateway === "stripe" ? "invoice" : job.resource_type;
@@ -98,6 +106,10 @@ async function processJob(config: InvoiceConfig, repository: InvoiceRepository, 
       job.provider_resource_id ?? job.resource_id,
     );
     assertEligiblePayment(payment, config);
+    verificationFailures = invoiceVerificationFailuresAfterPayment(
+      verificationFailures,
+      job.last_error_code,
+    );
     const subscription = await repository.subscription(payment.subscriptionId, scope);
     const remote = await gateway.getSubscription(payment.subscriptionId);
     if (
@@ -105,6 +117,7 @@ async function processJob(config: InvoiceConfig, repository: InvoiceRepository, 
       (payment.externalReference && payment.externalReference !== subscription.id)
     )
       throw new InvoiceError("subscription_reference_mismatch");
+    paymentVerified = true;
     const user = subscription.psychologist.user;
     const billingAddress = requireInvoiceBillingAddress(await repository.billingAddress(user.id));
     const fiscalIdentity = await getFiscalIdentity(subscription.psychologist);
@@ -151,6 +164,7 @@ async function processJob(config: InvoiceConfig, repository: InvoiceRepository, 
       {
         completed_at: new Date(),
         last_error_code: null,
+        verification_failures: 0,
       },
       job.event_id,
     );
@@ -161,7 +175,9 @@ async function processJob(config: InvoiceConfig, repository: InvoiceRepository, 
       attempts: job.attempts,
     });
   } catch (error) {
-    const failure = invoiceFailure(error, job.gateway, job.attempts);
+    // Missing recipient data can keep a paid job pending for days. Only consecutive
+    // failed verifications consume the read-recovery budget, never those waits.
+    const failure = invoiceJobFailure(error, job.gateway, verificationFailures, paymentVerified);
     await repository.finishJob(
       job.id,
       job.lease_token,
@@ -170,6 +186,7 @@ async function processJob(config: InvoiceConfig, repository: InvoiceRepository, 
           ? { completed_at: new Date() }
           : { next_attempt_at: retryDate(job.attempts) }),
         last_error_code: failure.code,
+        verification_failures: failure.verificationFailures,
       },
       job.event_id,
     );
