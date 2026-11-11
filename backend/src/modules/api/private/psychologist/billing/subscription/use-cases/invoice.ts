@@ -1,20 +1,13 @@
 import type { Request, Response } from "express";
 import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
-import { getInvoiceConfig } from "@/modules/billing/invoices/config";
-import {
-  assertDocumentMatches,
-  invoiceRequestSchema,
-  parseProvider,
-} from "@/modules/billing/invoices/contracts";
-import { invoiceDocumentStatus } from "@/modules/billing/invoices/document-authorization";
-import { invoicePdfFilename } from "@/modules/billing/invoices/filename";
+import { getInvoiceConfig, InvoiceError } from "@/modules/billing/invoices/config";
 import {
   invoiceGatewayScopes,
   invoiceScopeMatches,
 } from "@/modules/billing/invoices/gateway-scope";
+import { readAuthorizedInvoicePdf } from "@/modules/billing/invoices/read-pdf";
 import { InvoiceRepository } from "@/modules/billing/invoices/repository";
-import { SendNfAdapter } from "@/modules/billing/invoices/SendNfAdapter";
 import type { ISubscriptionDTO } from "../DTOs/ISubscriptionDTO";
 
 export async function invoicePdf(data: ISubscriptionDTO & { params: { id: string } }) {
@@ -33,28 +26,13 @@ export async function invoicePdf(data: ISubscriptionDTO & { params: { id: string
   }
   if (!invoice.document_id || invoice.status !== "authorized")
     return { status: 409, ...error("billing_invoice_unavailable", {}) };
-  const provider = new SendNfAdapter(config.apiKey, config.companyId, config.mode);
-  await provider.verifyIdentity();
-  const document = await provider.getDocument(invoice.document_id);
-  assertDocumentMatches(
-    document,
-    parseProvider(invoiceRequestSchema, invoice.request_snapshot),
-    config.mode,
-  );
-  // Recheck the current response even when an older worker cached "authorized".
-  if (invoiceDocumentStatus(document) !== "authorized")
-    return { status: 409, ...error("billing_invoice_unavailable", {}) };
-  return {
-    status: 200,
-    pdf: await provider.pdf(invoice.document_id),
-    mode: config.mode,
-    filename: invoicePdfFilename({
-      mode: config.mode,
-      number: document.nfse_number ?? invoice.number,
-      paymentId: invoice.payment_id,
-      authorizedAt: document.authorized_at,
-    }),
-  };
+  try {
+    return { status: 200, ...(await readAuthorizedInvoicePdf(invoice, config)) };
+  } catch (caught) {
+    if (caught instanceof InvoiceError && caught.code === "document_not_authorized")
+      return { status: 409, ...error("billing_invoice_unavailable", {}) };
+    throw caught;
+  }
 }
 
 export async function downloadInvoice(req: Request, res: Response) {

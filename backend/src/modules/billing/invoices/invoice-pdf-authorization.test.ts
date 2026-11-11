@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { billing_invoice } from "@/external/generated/prisma/client";
 import { invoicePdf } from "@/modules/api/private/psychologist/billing/subscription/use-cases/invoice";
-import { documentSchema, parseProvider } from "./contracts";
+import { documentSchema, invoiceReference, parseProvider } from "./contracts";
 import { InvoiceRepository } from "./repository";
 import { SendNfAdapter } from "./SendNfAdapter";
 
@@ -23,6 +23,7 @@ test("PDF refuses simulated or unknown current responses even when legacy cache 
   t.after(() => {
     process.env = before;
   });
+  const reference = invoiceReference("company-unit", "payment-unit", "test");
   const cached = {
     id: "invoice-unit",
     user_id: "owner-unit",
@@ -33,10 +34,13 @@ test("PDF refuses simulated or unknown current responses even when legacy cache 
     status: "authorized",
     document_id: "document-unit",
     payment_id: "payment-unit",
+    reference,
+    amount_cents: 2990,
+    currency: "BRL",
     number: "42",
     request_snapshot: {
       company_id: "company-unit",
-      reference: "reference-unit",
+      reference,
       taker: {
         document: "529.982.247-25",
         name: "Teste Unitario",
@@ -56,7 +60,7 @@ test("PDF refuses simulated or unknown current responses even when legacy cache 
     mode: "test",
     status: "authorized",
     company_id: "company-unit",
-    reference: "reference-unit",
+    reference,
     total: 2990,
     nfse_number: "42",
   };

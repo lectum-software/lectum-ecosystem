@@ -14,6 +14,7 @@ import { resolveApiError } from "@/api/handle";
 import type { AdminPsychologistBilling, AdminPsychologistDetail } from "@/api/req/psychologists";
 import type { FiscalIdentityInput } from "@/api/req/psychologists/fiscal-identity";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { PsychologistFinancialHistory } from "@/components/finance-history";
 import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { CardShell, ErrorState, IconCircle } from "../../components/shared";
 import {
@@ -41,7 +42,6 @@ import {
   CurrentPlanCard,
   isCurrentCourtesyPlan,
   isCurrentFreePlan,
-  PaymentHistoryCard,
   PaymentMethodCard,
 } from "./cards";
 
@@ -413,8 +413,8 @@ export const PlanBillingTab = ({ detail, id }: { detail: AdminPsychologistDetail
           <PaymentMethodCard billing={query.data} />
         )}
         {!showCourtesyBesidePlan ? <CourtesyActionCard billing={query.data} id={id} /> : null}
-        <PaymentHistoryCard billing={query.data} />
       </div>
+      <PsychologistFinancialHistory key={detail.header.id} userId={detail.header.id} />
     </div>
   );
 };

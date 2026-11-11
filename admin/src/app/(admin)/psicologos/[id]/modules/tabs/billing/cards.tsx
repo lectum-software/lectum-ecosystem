@@ -30,25 +30,6 @@ import type { SubscriptionCancelFormValues } from "../../support/schemas";
 import { subscriptionCancelSchema } from "../../support/schemas";
 import { FieldRow } from "../general/index";
 
-const PaymentHistoryBadge = ({
-  status,
-  label,
-}: {
-  label: string;
-  status: AdminPsychologistBilling["payment_history"]["items"][number]["status"];
-}) => {
-  const className =
-    status === "pago"
-      ? "bg-success-soft text-success"
-      : status === "recusado" || status === "cancelado"
-        ? "bg-danger-soft text-danger"
-        : status === "pendente"
-          ? "bg-warning-soft text-warning"
-          : "bg-surface-muted text-muted";
-
-  return <Badge className={className}>{label}</Badge>;
-};
-
 export const BillingLoadingState = () => (
   <div className="grid gap-5 xl:grid-cols-2" data-psychologist-billing-loading="true">
     <div className={cn(CARD, "h-72 animate-pulse bg-surface-muted")} />
@@ -445,48 +426,5 @@ export const PaymentMethodCard = ({ billing }: { billing: AdminPsychologistBilli
     <p className="mt-4 text-xs font-bold text-subtle">
       Credenciais de pagamento e dados sensíveis do cartão não são exibidos.
     </p>
-  </CardShell>
-);
-
-export const PaymentHistoryCard = ({ billing }: { billing: AdminPsychologistBilling }) => (
-  <CardShell className="p-5 xl:col-span-2">
-    <h2 className="text-xl font-bold text-foreground">Histórico de pagamentos</h2>
-
-    {!billing.payment_history.available ? (
-      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-        {billing.payment_history.reason ||
-          "Histórico financeiro indisponível para este psicólogo no momento."}
-      </div>
-    ) : (
-      <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-[680px] text-left text-sm">
-          <thead className="border-b border-border text-xs text-muted">
-            <tr>
-              <th className="py-3 pr-3 font-black">Data</th>
-              <th className="px-3 py-3 font-black">Descrição</th>
-              <th className="px-3 py-3 font-black">Valor</th>
-              <th className="px-3 py-3 font-black">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {billing.payment_history.items.map((item) => (
-              <tr key={item.id}>
-                <td className="py-3 pr-3 font-bold text-muted">{formatDate(item.occurred_at)}</td>
-                <td className="px-3 py-3">
-                  <p className="font-black text-foreground">{item.title}</p>
-                  <p className="text-xs font-bold text-muted">{item.description}</p>
-                </td>
-                <td className="px-3 py-3 font-black text-foreground">
-                  {formatMoney(item.amount_cents)}
-                </td>
-                <td className="px-3 py-3">
-                  <PaymentHistoryBadge label={item.status_label} status={item.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
   </CardShell>
 );

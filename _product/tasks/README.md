@@ -1,3 +1,5 @@
+Implementacao local validada em **11/11/2026**, task parcial: [TASK-325 - Historico financeiro administrativo e NFS-e](TASK-325-admin-financial-history-invoices.md). Leitura paginada e download administrativo protegido, versao 0.1.816; sem push/deploy, cobrancas ou emissao. Prova positiva PDF elegivel pendente por ausencia de documento real no sandbox/QA; nao simular.
+
 Validada localmente em **0.1.815**, em **11/11/2026**: [TASK-324 - Oferta vigente de assinatura no Admin](TASK-324-admin-current-billing-offer.md). Leitura Stripe versionada e cadastro legado separados; estados locais honestos, sem SDK/rede ou mutacao. Check integral, builds backend/Admin, PG real e QA320/390/1440 aprovados. Commit local, sem push/deploy. Historico/NFS-e administrativo e editor comercial sao proximas tasks separadas. Frontend0.1.813 publicado as09:59BRT (PR176); backend813/admin811 saudaveis. Verificacao do plano/NFS-e pelo titular pendente por falta de acesso a conta, sem nova transacao.
 
 Fechamento observado em **10/11/2026, 23:36 BRT** — [TASK-323](TASK-323-stripe-embedded-checkout.md): **um pagamento real de R$29,90, plano ativo e uma NFS-e autorizada**, sem simulacao, PDF valido e envio por email registrado pelo SendNF as23:28. A identidade fiscal antes ausente apareceu completa na releitura; o agente nao preencheu CPF/nome nem aprovou registro. A fila normal retomou sozinha, sem nova cobranca/nota manual. Backend **0.1.813** publicado pelo PR#176, migration aplicada e smoke aprovado; frontend/admin permanecem **0.1.811**, compativeis. A melhoria visual813 aguarda **Verify Your Identity da Vercel**, deixado aberto; nao contornar nem repetir envio de codigos enquanto o usuario estiver ausente. Download no historico owner-scoped disponivel; recebimento na caixa de entrada e abertura pelo titular ainda dependem de confirmacao dele. Evento SetupIntent auxiliar teve origem correlacionada pelo Workbench oficial, mas permanece sem vinculo de operacao sob politica conservadora (sem ACK/replay). Checkpoint documental local0.1.814 nao exige deploy. Registros abaixo sao historicos, nao pendencias reabertas.
@@ -809,6 +811,7 @@ ou cortesia manual.
 | 322 | [TASK-322 - Video presentation and scroll cost](TASK-322-video-presentation-and-scroll-cost.md) | In Progress | 321 |
 | 323 | [TASK-323 - Checkout Stripe dentro da Lectum](TASK-323-stripe-embedded-checkout.md) | In Progress | 31, 32, 33, 56, 142, 313-317 |
 | 324 | [TASK-324 - Oferta vigente de assinatura no Admin](TASK-324-admin-current-billing-offer.md) | Done | 142, 323 |
+| 325 | [TASK-325 - Historico financeiro administrativo e NFS-e](TASK-325-admin-financial-history-invoices.md) | In Progress | 56, 62, 315, 317, 323, 324 |
 
 ## Ordem operacional recomendada sem bloqueios
 
