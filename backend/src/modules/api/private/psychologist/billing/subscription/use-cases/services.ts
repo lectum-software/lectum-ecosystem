@@ -60,7 +60,7 @@ export const showSubscription = async (data: ISubscriptionDTO) => {
           paymentMethodSubscription,
         )
       : Promise.resolve(null),
-    repository.showPaymentHistory(subscription),
+    repository.showOwnedPaymentHistory(profile.id!),
   ]);
 
   return {
@@ -69,6 +69,11 @@ export const showSubscription = async (data: ISubscriptionDTO) => {
     data: {
       current: subscription,
       subscription,
+      // A scheduled contract can be maintained/cancelled without replacing courtesy benefits.
+      maintenance_subscription:
+        shouldExposePaymentMethod && paymentMethodSubscription
+          ? withContractedPlan(paymentMethodSubscription)
+          : null,
       payment_method: paymentMethod,
       payment_history: await withInvoiceHistory(data.auth.id!, paymentHistory),
     },

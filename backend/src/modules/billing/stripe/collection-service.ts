@@ -1,10 +1,11 @@
 import type { billing_operation } from "@/external/generated/prisma/client";
 import { getStripeGateway } from "../payment-gateway";
 import type { CreditIntentInput } from "../payment-gateway/stripe-credit-types";
-import { StripeGatewayError } from "../payment-gateway/stripe-error";
+import { StripeGatewayError, stripeFailureObservation } from "../payment-gateway/stripe-error";
 import {
   collectionConfirmationDecision,
   collectionConfirmationFingerprint,
+  collectionFailureDisposition,
 } from "./collection-policy";
 import { StripeCollectionRepository } from "./collection-repository";
 import { StripeBillingError, stripeOperationReference } from "./policy";
@@ -69,6 +70,7 @@ export const collectStripeInvoice = async (input: {
   if (["complete", "failed"].includes(operation.state)) return resultFor(operation);
   if (!input.userId && ["review_required", "requires_confirmation"].includes(operation.state))
     return resultFor(operation);
+  if (!input.userId && operation.next_attempt_at > new Date()) return resultFor(operation);
   const claim = await repository.claim(operation);
   if (!claim) return resultFor(operation);
   let current = claim;
@@ -232,6 +234,8 @@ export const collectStripeInvoice = async (input: {
       ownerPresent: Boolean(input.userId),
       paymentMethodChanged: replacement,
       authenticationRequired: intent.authenticationRequired,
+      initialInvoice: invoice.billingReason === "subscription_create",
+      initialOwnerConfirmation: current.intent === "on_session",
     });
     if (decision === "review") return finish("review_required", "confirmation_unresolved");
     if (decision === "wait")
@@ -239,7 +243,7 @@ export const collectStripeInvoice = async (input: {
         "requires_confirmation",
         current.last_error_code === "confirmation_pending"
           ? "confirmation_pending"
-          : intent.status === "requires_payment_method"
+          : intent.status === "requires_payment_method" && current.confirmation_sequence > 0
             ? intent.authenticationRequired
               ? "authentication_required"
               : "payment_method_required"
@@ -277,6 +281,8 @@ export const collectStripeInvoice = async (input: {
     });
     if (intent.status === "requires_action")
       return finish("requires_confirmation", null, intent.clientSecret);
+    if (intent.status === "requires_payment_method" && !intent.paymentFailureObserved)
+      return finish("processing", "confirmation_pending");
     if (intent.status === "requires_payment_method")
       return finish(
         "requires_confirmation",
@@ -302,7 +308,7 @@ export const collectStripeInvoice = async (input: {
           paymentMethodId: latest.provider_payment_method_id,
           intentId: latest.provider_intent_id,
         });
-        if (observed.status === "requires_payment_method")
+        if (observed.status === "requires_payment_method" && observed.paymentFailureObserved)
           return finish(
             "requires_confirmation",
             observed.authenticationRequired ? "authentication_required" : "payment_method_required",
@@ -324,24 +330,21 @@ export const collectStripeInvoice = async (input: {
         // An ambiguous response retains the exact pending fingerprint for bounded replay.
       }
     }
-    const code =
-      error instanceof StripeGatewayError && error.kind === "card_credit_required"
-        ? "card_credit_required"
-        : pending
-          ? "confirmation_pending"
-          : "collection_unresolved";
+    const failure = collectionFailureDisposition({
+      kind: error instanceof StripeGatewayError ? error.kind : null,
+      httpStatus: error instanceof StripeGatewayError ? error.details.status : undefined,
+      diagnostic: error instanceof StripeGatewayError ? error.details.diagnostic : undefined,
+      pending,
+      attempts: latest?.attempts ?? current.attempts,
+    });
     console.warn("[BILLING_STRIPE] Cobrança aguardando conciliação segura.", {
       operation_ref: stripeOperationReference(operation.id),
-      diagnostic: code,
+      stage: "collection",
+      diagnostic: failure.code,
+      retry_scheduled: failure.state === "processing",
+      ...stripeFailureObservation(error),
     });
-    return finish(
-      code === "confirmation_pending"
-        ? "processing"
-        : code === "card_credit_required"
-          ? "requires_confirmation"
-          : "review_required",
-      code,
-    );
+    return finish(failure.state, failure.code);
   }
 };
 
@@ -369,14 +372,30 @@ export const processStripeCollections = async (options: { subscriptionIds?: stri
         invoiceId: operation.provider_invoice_id,
         allowConfirmation: true,
       });
-    } catch {
+    } catch (error) {
       // Eligibility/configuration errors never grant permission to perform a financial operation.
       const claim = await repository.claim(operation);
-      if (claim)
-        await repository.finish(operation.id, claim.lease_token, {
-          state: "review_required",
-          last_error_code: "collection_eligibility_required",
+      if (claim) {
+        const failure = collectionFailureDisposition({
+          kind: error instanceof StripeGatewayError ? error.kind : null,
+          httpStatus: error instanceof StripeGatewayError ? error.details.status : undefined,
+          diagnostic: error instanceof StripeGatewayError ? error.details.diagnostic : undefined,
+          pending: operation.last_error_code === "confirmation_pending",
+          attempts: claim.attempts,
         });
+        await repository.finish(operation.id, claim.lease_token, {
+          state: failure.state,
+          last_error_code: failure.code,
+          next_attempt_at: new Date(Date.now() + 15 * 60_000),
+        });
+        console.warn("[BILLING_STRIPE] Cobrança aguardando conciliação segura.", {
+          operation_ref: stripeOperationReference(operation.id),
+          stage: "collection_preflight",
+          diagnostic: failure.code,
+          retry_scheduled: failure.state === "processing",
+          ...stripeFailureObservation(error),
+        });
+      }
     }
   }
   const contracts = await repository.contracts(
@@ -403,9 +422,11 @@ export const processStripeCollections = async (options: { subscriptionIds?: stri
           allowConfirmation: true,
         });
       }
-    } catch {
+    } catch (error) {
       console.warn("[BILLING_STRIPE] Agenda de cobrança aguardando conciliação.", {
         subscription_ref: stripeOperationReference(contract.id),
+        stage: "collection_discovery",
+        ...stripeFailureObservation(error),
       });
     }
   }

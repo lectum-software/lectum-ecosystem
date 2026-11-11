@@ -15,6 +15,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { billingAddressAccess } from "@/utils/billing-management";
 import {
   getPsychologistRegistrationRequirementPath,
   isAdministrativeCourtesySubscription,
@@ -84,7 +85,7 @@ const shouldLeavePaidAddressStep = (subscription?: ProfessionalSubscription | nu
   (subscription.status === "cancelada" && !hasSubscriptionBenefits(subscription)) ||
   (subscription.status === "ativa" && subscription.plan?.slug === "gratuito");
 
-const AddressHeader = () => (
+const AddressHeader = ({ maintenanceOnly }: { maintenanceOnly: boolean }) => (
   <header className="text-center">
     <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary">
       <MapPin className="h-10 w-10" aria-hidden="true" />
@@ -93,10 +94,12 @@ const AddressHeader = () => (
       Endereço de faturamento
     </p>
     <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground md:text-3xl">
-      Complete os dados da sua assinatura
+      {maintenanceOnly ? "Atualize seu endereço fiscal" : "Complete os dados da sua assinatura"}
     </h1>
     <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-muted">
-      Informe seu endereço comercial para faturamento.
+      {maintenanceOnly
+        ? "Atualize os dados usados nas notas de pagamentos anteriores. Isso não reativa a assinatura nem concede benefícios."
+        : "Informe seu endereço comercial para faturamento."}
     </p>
   </header>
 );
@@ -123,9 +126,13 @@ export const ProfessionalBillingAddressLogic = () => {
   const billing = usePsychologistBilling({
     callbacks: {
       address: {
-        onSuccess: () => {
+        onSuccess: (data) => {
           toast.success("Endereço de faturamento salvo");
-          router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.completion);
+          router.replace(
+            maintenanceOnly || data.next_path === "/app/profissional/assinatura"
+              ? "/app/profissional/assinatura"
+              : PSYCHOLOGIST_ONBOARDING_PATHS.completion,
+          );
         },
         onError: (error) => toast.error(resolveApiError(error)),
       },
@@ -135,6 +142,11 @@ export const ProfessionalBillingAddressLogic = () => {
   const current = billing.current.data?.current ?? null;
   const activeProfessional = isActiveProfessional(current);
   const activeCourtesy = isAdministrativeCourtesySubscription(current);
+  const { editable, maintenanceOnly } = billingAddressAccess(
+    billing.current.data,
+    activeProfessional,
+    activeCourtesy,
+  );
   const currentIsError = billing.current.isError;
   const userWithCurrentSubscription =
     user && current && hasSubscriptionBenefits(current) && user.psychologist_profile
@@ -153,20 +165,22 @@ export const ProfessionalBillingAddressLogic = () => {
     ? (getPsychologistRegistrationRequirementPath(userWithCurrentSubscription) ??
       "/app/profissional/assinatura")
     : PSYCHOLOGIST_ONBOARDING_PATHS.plans;
-  const isLoading = billing.current.isLoading;
+  // A stale cache entry may predate the maintenance capability. Wait for the
+  // authoritative response before redirecting a canceled/free subscriber away.
+  const isLoading = billing.current.isPending || billing.current.isFetching;
 
   useEffect(() => {
-    if (!activeCourtesy || !courtesyRedirectPath) return;
+    if (isLoading || currentIsError || !activeCourtesy || editable || !courtesyRedirectPath) return;
 
     router.replace(courtesyRedirectPath);
-  }, [activeCourtesy, courtesyRedirectPath, router]);
+  }, [activeCourtesy, editable, courtesyRedirectPath, currentIsError, isLoading, router]);
 
   useEffect(() => {
-    if (isLoading || currentIsError || activeProfessional) return;
+    if (isLoading || currentIsError || editable) return;
     if (!shouldLeavePaidAddressStep(current)) return;
 
     router.replace(freeFallbackRedirectPath);
-  }, [activeProfessional, current, currentIsError, freeFallbackRedirectPath, isLoading, router]);
+  }, [editable, current, currentIsError, freeFallbackRedirectPath, isLoading, router]);
 
   useEffect(() => {
     const currentState = typeof state === "string" ? state : "";
@@ -257,7 +271,7 @@ export const ProfessionalBillingAddressLogic = () => {
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)] md:px-8">
-          <AddressHeader />
+          <AddressHeader maintenanceOnly={maintenanceOnly} />
 
           {isLoading ? (
             <div className="mt-8">
@@ -275,10 +289,7 @@ export const ProfessionalBillingAddressLogic = () => {
             </InlineAlert>
           ) : null}
 
-          {!isLoading &&
-          !currentIsError &&
-          !activeProfessional &&
-          !shouldLeavePaidAddressStep(current) ? (
+          {!isLoading && !currentIsError && !editable && !shouldLeavePaidAddressStep(current) ? (
             <div className="mt-8">
               <EmptyState
                 description="A assinatura profissional ainda não está ativa. Conclua o checkout e aguarde a confirmação do pagamento antes de salvar o endereço."
@@ -306,8 +317,8 @@ export const ProfessionalBillingAddressLogic = () => {
             </div>
           ) : null}
 
-          {!isLoading && !currentIsError && activeProfessional ? (
-            activeCourtesy ? (
+          {!isLoading && !currentIsError && editable ? (
+            activeCourtesy && !maintenanceOnly ? (
               <div className="mt-8">
                 <LoadingState label="Redirecionando para sua próxima etapa" />
               </div>
@@ -322,7 +333,7 @@ export const ProfessionalBillingAddressLogic = () => {
                   disabled={billing.address.isPending}
                   type="submit"
                 >
-                  Salvar e continuar
+                  {maintenanceOnly ? "Salvar endereço fiscal" : "Salvar e continuar"}
                   {billing.address.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   ) : (

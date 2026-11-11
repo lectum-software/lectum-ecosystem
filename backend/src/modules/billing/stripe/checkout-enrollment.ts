@@ -54,6 +54,7 @@ export const recoverCreditEnrollment = async (
     });
   if (
     canReplay &&
+    !operation.provider_setup_intent_id &&
     !(await repository.checkpointRequest(operation, operation.lease_token, fingerprint)).count
   )
     throw new StripeBillingError("billing_operation_pending");
@@ -139,6 +140,12 @@ export const recoverCreditSubscription = async (
   if (!remote) {
     if (!enrollment.canReplay) throw new StripeBillingError("billing_operation_review_required");
     await assertStripePrice(enrollment.price, gateway.identity);
+    if (
+      !(
+        await repository.checkpointRequest(operation, operation.lease_token, enrollment.fingerprint)
+      ).count
+    )
+      throw new StripeBillingError("billing_operation_pending");
     remote = await gateway.createCreditSubscription(enrollment.subscriptionInput);
   }
   if (!(await repository.bindSubscription(operation, remote.subscriptionId)).count)

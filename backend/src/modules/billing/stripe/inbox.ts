@@ -3,7 +3,7 @@ import { invoiceGatewayScopes } from "../invoices/gateway-scope";
 import { InvoiceRepository } from "../invoices/repository";
 import { getStripeGateway } from "../payment-gateway";
 import { STRIPE_API_VERSION } from "../payment-gateway/stripe-config";
-import { StripeGatewayError } from "../payment-gateway/stripe-error";
+import { StripeGatewayError, stripeFailureObservation } from "../payment-gateway/stripe-error";
 import { confirmStripeCardUpdate } from "./card-service";
 import { confirmStripeCheckout } from "./checkout-service";
 import {
@@ -155,7 +155,7 @@ export const processStripeInbox = async () => {
         processed_at: new Date(),
         last_error_code: null,
       });
-    } catch {
+    } catch (failure) {
       await repository.finish(job.id, job.lease_token, {
         state: job.attempts >= 10 ? "review_required" : "pending",
         next_attempt_at: nextInboxAttempt(job.attempts),
@@ -164,6 +164,8 @@ export const processStripeInbox = async () => {
       console.warn("[BILLING_STRIPE] Conciliação aguardando nova leitura.", {
         event_ref: stripeOperationReference(job.id),
         review_required: job.attempts >= 10,
+        stage: "inbox_reconciliation",
+        ...stripeFailureObservation(failure),
       });
     }
   }
@@ -180,9 +182,11 @@ export const processStripeInbox = async () => {
           allowAssignment: false,
         });
       // Periodic recovery is GET-only at the provider; setup assignment needs a signed event or explicit owner request.
-    } catch {
+    } catch (failure) {
       console.warn("[BILLING_STRIPE] Operação aguarda revisão.", {
         operation_ref: stripeOperationReference(operation.id),
+        stage: "operation_recovery",
+        ...stripeFailureObservation(failure),
       });
     }
     await repository.deferOperation(operation.id, new Date(Date.now() + 15 * 60_000));

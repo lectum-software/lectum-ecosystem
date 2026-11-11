@@ -66,6 +66,7 @@ export const useStripeOperation = ({
         state,
         confirmation_kind: stripeBillingConfirmationKind(result.operation.confirmation_kind),
         error_code: stripeBillingOperationErrorCode(result.operation.error_code),
+        payment_pending: result.operation.payment_pending === true,
       };
       operationRef.current = summary;
       setOperation(summary);

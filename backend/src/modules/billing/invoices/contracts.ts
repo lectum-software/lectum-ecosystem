@@ -13,6 +13,7 @@ export const invoiceRequestSchema = z.object({
   company_id: providerId,
   reference: z.string().min(1).max(100),
   iss_rate: z.number().int().min(0).max(500).optional(),
+  simulation: z.literal("never").optional(),
   taker: z.object({
     document: z
       .string()
@@ -83,6 +84,17 @@ export const documentSchema = z.object({
   // New provider evidence is optional and fail-closed. Malformed evidence must not
   // discard the document identity/reference of an issuance that already happened.
   simulation: z.boolean().optional().catch(undefined),
+  simulation_policy: z.enum(["allow", "never"]).optional().catch(undefined),
+  failure_code: z
+    .enum([
+      "cnc_missing_in_test",
+      "municipality_missing_in_test",
+      "registry_missing_in_test",
+      "government_test_rejected",
+    ])
+    .nullable()
+    .optional()
+    .catch(null),
   access_key: z.string().max(256).nullable().optional().catch(null),
   urls: z
     .object({

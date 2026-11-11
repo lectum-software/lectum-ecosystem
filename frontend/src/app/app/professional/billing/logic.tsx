@@ -1,24 +1,12 @@
 "use client";
 
-import {
-  AlertTriangle,
-  BadgeCheck,
-  CalendarClock,
-  CheckCircle2,
-  CreditCard,
-  ReceiptText,
-  XCircle,
-} from "lucide-react";
+import { AlertTriangle, BadgeCheck, CalendarClock, CreditCard } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import { getSafeApiErrorMessage } from "@/api/errors";
-import type {
-  BillingPaymentHistoryItem,
-  BillingPaymentMethod,
-  ProfessionalSubscription,
-} from "@/api/generator/types/billing";
+import type { BillingPaymentMethod, ProfessionalSubscription } from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -26,39 +14,15 @@ import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { billingMaintenanceSubscription } from "@/utils/billing-management";
 import { stripeInactiveBillingCopy } from "@/utils/stripe-billing";
-import { InvoiceAction } from "./components/invoice-action";
+import { formatDate, formatPrice } from "./components/billing-format";
+import { CancelSubscriptionAction } from "./components/cancel-subscription";
+import { PaymentHistoryCard } from "./components/payment-history-card";
+import { StripeRecoveryAction } from "./components/stripe-recovery-action";
 import { ProfessionalBillingSubscriptionView } from "./subscription/logic";
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-});
-
 const COURTESY_CARD_HREF = "/app/profissional/assinatura/pagamento?intent=courtesy-renewal";
-
-const formatPrice = (priceCents?: number | null) => {
-  if (!priceCents) return "R$ 0,00";
-
-  return currencyFormatter.format(priceCents / 100);
-};
-
-const formatDate = (value?: string | null) => {
-  if (!value) return "Aguardando confirmação";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Data indisponível";
-
-  return dateFormatter.format(date);
-};
 
 const isFutureDate = (value?: string | null) => {
   if (!value) return false;
@@ -67,15 +31,6 @@ const isFutureDate = (value?: string | null) => {
   if (Number.isNaN(date.getTime())) return false;
 
   return date.getTime() > Date.now();
-};
-
-const formatPaymentDate = (value?: string | null) => {
-  if (!value) return "Data indisponível";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Data indisponível";
-
-  return dateFormatter.format(date);
 };
 
 const formatCardBrand = (brand?: string | null) => {
@@ -118,7 +73,7 @@ const getPlanDescription = (subscription?: ProfessionalSubscription | null) => {
     subscription?.status === "ativa" &&
     subscription?.plan?.slug === "profissional"
   ) {
-    return "Cortesia administrativa com os benefícios profissionais liberados, sem cobrança recorrente vinculada.";
+    return "Cortesia administrativa com os benefícios profissionais liberados durante o período informado.";
   }
 
   if (subscription?.plan?.slug === "profissional") {
@@ -200,68 +155,11 @@ const StatusBadge = ({ label, status }: { label?: string; status?: string | null
   );
 };
 
-const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) => (
-  <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-    <div className="flex gap-3">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <ReceiptText className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <div>
-        <h2 className="text-base font-extrabold text-foreground">Histórico de pagamentos</h2>
-        <p className="mt-1 text-sm leading-6 text-muted">Cobranças confirmadas.</p>
-      </div>
-    </div>
-
-    {items.length > 0 ? (
-      <ol className="mt-4 divide-y divide-border">
-        {items.map((item) => (
-          <li className="flex items-center gap-3 py-4 first:pt-0 last:pb-0" key={item.id}>
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-success/10 text-success">
-              <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="break-words text-sm font-extrabold text-foreground">
-                {item.title || "Assinatura mensal"}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-muted">
-                {formatPaymentDate(item.occurred_at)}
-              </p>
-              {item.invoice &&
-              !(item.invoice.status === "authorized" && item.invoice.downloadable) ? (
-                <InvoiceAction invoice={item.invoice} />
-              ) : null}
-            </div>
-            <div className="shrink-0 text-right">
-              {item.amount_cents ? (
-                <p className="text-sm font-extrabold text-foreground">
-                  {formatPrice(item.amount_cents)}
-                </p>
-              ) : null}
-              {item.invoice?.status === "authorized" && item.invoice.downloadable ? (
-                <InvoiceAction invoice={item.invoice} />
-              ) : null}
-            </div>
-          </li>
-        ))}
-      </ol>
-    ) : (
-      <div className="mt-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
-        <p className="text-sm font-extrabold text-foreground">Nenhum pagamento registrado ainda</p>
-        <p className="mt-1 text-sm leading-6 text-muted">
-          Quando cobranças forem confirmadas, elas aparecerão aqui.
-        </p>
-      </div>
-    )}
-  </article>
-);
-
 export const ProfessionalBillingLogic = () => {
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const billing = usePsychologistBilling({
     callbacks: {
       cancelSubscription: {
         onSuccess: () => {
-          setShowCancelConfirm(false);
           toast.success("Renovação da assinatura cancelada");
         },
       },
@@ -272,6 +170,7 @@ export const ProfessionalBillingLogic = () => {
     subscriptionQuery.data?.subscription ?? subscriptionQuery.data?.current ?? null;
   const inactiveCopy = stripeInactiveBillingCopy(subscription);
   const paymentMethod = subscriptionQuery.data?.payment_method ?? null;
+  const maintenance = billingMaintenanceSubscription(subscriptionQuery.data);
   const paymentHistory = subscriptionQuery.data?.payment_history ?? [];
   const isPaidPlan = subscription?.plan?.slug === "profissional";
   const isFreePlan = subscription?.plan?.slug === "gratuito";
@@ -294,8 +193,9 @@ export const ProfessionalBillingLogic = () => {
   const planName = isCourtesy
     ? "Plano Profissional de Cortesia"
     : subscription?.plan?.name || "Plano não encontrado";
-  const canManageCard = Boolean(hasGatewayBilling && subscription?.status !== "cancelada");
-  const canCancelSubscription = Boolean(hasGatewayBilling && subscription?.status === "ativa");
+  const canManageCard = Boolean(maintenance);
+  const canCancelSubscription = Boolean(maintenance);
+  const scheduled = Boolean(isCourtesy && maintenance);
   const isCanceledWithBenefits = Boolean(
     subscription?.status === "cancelada" &&
       subscription.current_period_end &&
@@ -343,7 +243,12 @@ export const ProfessionalBillingLogic = () => {
         isLoading={subscriptionQuery.isLoading}
         subscription={subscription}
         paymentHistory={
-          paymentHistory.length ? <PaymentHistoryCard items={paymentHistory} /> : null
+          paymentHistory.length ? (
+            <PaymentHistoryCard
+              items={paymentHistory}
+              canReviewAddress={billing.current.data?.billing_address_editable === true}
+            />
+          ) : null
         }
       />
     );
@@ -467,65 +372,31 @@ export const ProfessionalBillingLogic = () => {
               </div>
             </article>
 
-            {!isCourtesy || paymentHistory.length > 0 ? (
+            {!isCourtesy || paymentHistory.length > 0 || maintenance ? (
               <aside className="grid gap-4">
-                <PaymentHistoryCard items={paymentHistory} />
+                <PaymentHistoryCard
+                  items={paymentHistory}
+                  canReviewAddress={billing.current.data?.billing_address_editable === true}
+                />
+
+                {maintenance?.gateway === "stripe" ? <StripeRecoveryAction /> : null}
+
+                {scheduled ? (
+                  <InlineAlert title="Cobrança futura cadastrada">
+                    A mensalidade de {formatPrice(maintenance?.plan?.price_cents)} será cobrada após
+                    a cortesia, a partir de {formatDate(subscription.current_period_end)}. Você pode
+                    alterar o cartão ou cancelar essa cobrança sem perder a cortesia atual.
+                  </InlineAlert>
+                ) : null}
 
                 {canCancelSubscription ? (
-                  !showCancelConfirm ? (
-                    <div className="flex justify-center py-2">
-                      <button
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-muted/75 transition hover:text-danger"
-                        onClick={() => setShowCancelConfirm(true)}
-                        type="button"
-                      >
-                        <XCircle className="h-4 w-4" aria-hidden="true" />
-                        Cancelar assinatura
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-4 shadow-[var(--lectum-shadow-soft)]">
-                      <div className="grid gap-3">
-                        <div>
-                          <p className="text-sm font-extrabold text-foreground">
-                            Cancelar assinatura agora?
-                          </p>
-                          <p className="mt-1 text-xs leading-5 text-muted">
-                            A renovação será cancelada. Os benefícios do Plano Profissional
-                            permanecem até {formatDate(subscription.current_period_end)}.
-                          </p>
-                        </div>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <Button
-                            className="h-10 rounded-full text-xs font-extrabold"
-                            disabled={billing.cancelSubscription.isPending}
-                            onClick={() => setShowCancelConfirm(false)}
-                            type="button"
-                            variant="outline"
-                          >
-                            Manter
-                          </Button>
-                          <Button
-                            className="h-10 rounded-full text-xs font-extrabold"
-                            disabled={billing.cancelSubscription.isPending}
-                            onClick={() => billing.cancelSubscription.mutate()}
-                            type="button"
-                            variant="destructive"
-                          >
-                            {billing.cancelSubscription.isPending ? "Cancelando..." : "Confirmar"}
-                          </Button>
-                        </div>
-                      </div>
-
-                      {billing.cancelSubscription.isError ? (
-                        <div className="mt-3">
-                          <InlineAlert title="Não foi possível cancelar" variant="error">
-                            {getErrorMessage(billing.cancelSubscription.error)}
-                          </InlineAlert>
-                        </div>
-                      ) : null}
-                    </div>
-                  )
+                  <CancelSubscriptionAction
+                    benefits={subscription}
+                    scheduled={scheduled}
+                    pending={billing.cancelSubscription.isPending}
+                    error={billing.cancelSubscription.error}
+                    onConfirm={() => billing.cancelSubscription.mutate()}
+                  />
                 ) : null}
 
                 {!canManageCard && subscription.status !== "cancelada" ? (
@@ -573,7 +444,7 @@ export const ProfessionalBillingLogic = () => {
                   </InlineAlert>
                 ) : null}
 
-                {!subscription.gateway_subscription_id && isPaidPlan ? (
+                {!subscription.gateway_subscription_id && !maintenance && isPaidPlan ? (
                   <InlineAlert title="Pagamento não vinculado" variant="warning">
                     <span className="inline-flex items-start gap-2">
                       <AlertTriangle className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />

@@ -63,6 +63,8 @@ export type BillingPlansResponse = {
 export type BillingCurrentResponse = {
   current: ProfessionalSubscription | null;
   billing_address_complete?: boolean;
+  billing_address_editable?: boolean;
+  billing_address_maintenance_only?: boolean;
   capabilities?: {
     device_session_id?: boolean;
     device_session_id_dotted?: boolean;
@@ -98,6 +100,7 @@ export type BillingPaymentHistoryItem = {
   status_label: string;
   occurred_at?: string | null;
   gateway: string;
+  mode?: "test" | "live";
   external_id: string;
   invoice?: {
     id: string;
@@ -113,6 +116,8 @@ export type BillingSubscriptionResponse = {
   subscription: ProfessionalSubscription | null;
   payment_method: BillingPaymentMethod | null;
   payment_history?: BillingPaymentHistoryItem[];
+  /** Billable contract, separate from an active administrative courtesy. Absent on older backends. */
+  maintenance_subscription?: ProfessionalSubscription | null;
 };
 
 export type BillingSelectFreeResponse = {

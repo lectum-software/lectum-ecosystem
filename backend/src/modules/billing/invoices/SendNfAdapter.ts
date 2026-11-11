@@ -179,6 +179,11 @@ export class SendNfAdapter {
   }
 
   async create(request: InvoiceRequest, expectedServiceCode?: string) {
+    // Test must fail explicitly rather than silently producing a simulated authorization.
+    // Strip the test-only policy on live, including historical/operator supplied snapshots.
+    const { simulation: _simulation, ...original } = request;
+    const issuanceRequest: InvoiceRequest =
+      this.mode === "test" ? { ...original, simulation: "never" } : original;
     if (request.company_id !== this.companyId) throw new InvoiceError("company_mismatch");
     if (this.mode === "live") {
       if (!isInvoiceLiveRuntime()) throw new InvoiceError("live_runtime_required");
@@ -192,11 +197,11 @@ export class SendNfAdapter {
         !settings.emailEnabled
       )
         throw new InvoiceError("fiscal_settings_mismatch", true);
-      await this.preview(request);
+      await this.preview(issuanceRequest);
     }
     const document = parseProvider(
       documentSchema,
-      await this.json("/v1/nfse", request, request.reference),
+      await this.json("/v1/nfse", issuanceRequest, request.reference),
     );
     if (document.mode !== this.mode) throw new InvoiceError("document_mismatch");
     return document;

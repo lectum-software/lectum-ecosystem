@@ -134,16 +134,6 @@ export class AddressRepository implements IAddressRepository {
     psychologistProfileId: string,
     data: IAddressDTO["b"],
   ): Promise<billing_address> {
-    const current = await this.addressRepository.findFirst({
-      where: {
-        user_id: userId,
-        deleted: false,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
     const payload = {
       zip: data.zip,
       street: data.street,
@@ -164,11 +154,21 @@ export class AddressRepository implements IAddressRepository {
       professional_address_state: data.state,
     };
 
-    return prisma.$transaction(async (tx) => {
+    return withSerializableTransaction(async (tx) => {
+      await tx.psychologist_profile.findFirstOrThrow({
+        where: { id: psychologistProfileId, user_id: userId, deleted: false },
+        select: { id: true },
+      });
+      const current = await tx.billing_address.findFirst({
+        where: { user_id: userId, deleted: false },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      });
       const address = current?.id
         ? await tx.billing_address.update({
             where: {
               id: current.id,
+              user_id: userId,
+              deleted: false,
             },
             data: payload,
           })
@@ -182,6 +182,8 @@ export class AddressRepository implements IAddressRepository {
       await tx.psychologist_profile.update({
         where: {
           id: psychologistProfileId,
+          user_id: userId,
+          deleted: false,
         },
         data: profilePayload,
       });

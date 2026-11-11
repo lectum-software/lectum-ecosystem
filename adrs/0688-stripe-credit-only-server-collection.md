@@ -232,3 +232,83 @@ nota, assinatura ou operacao financeira.
 - https://docs.stripe.com/api/setup_intents
 - https://docs.stripe.com/api/webhook_endpoints/create
 - https://docs.stripe.com/api/v2/core/event-destinations/create
+
+## Revisao final para ativacao autorizada — 10/11/2026
+
+O pedido posterior do usuario autoriza concluir o fluxo e liberar vendas/fiscal
+Stripe apos validacao e publicacao, deixando somente a primeira transacao real
+para ele. Os checkpoints de rollout inativo permanecem historicos; nao sao
+permissao para cobrar sem acao do pagador. Radar e permissoes permanecem iguais.
+
+Correcoes decorrentes da auditoria, sem nova dependencia ou migration:
+
+- Primeiro debito: a janela entre associar o contrato e reservar o collector nao
+  pode ser interpretada pelo worker como consentimento. A confirmacao inicial
+  precisa de acao autenticada; somente o mesmo checkpoint duravel permite replay.
+  Renovacao automatica precisa de checkout/cortesia efetivamente concluido.
+- Leitura/polling nao consome orcamento de mutacoes nem de falhas consecutivas.
+  Timeout/429/5xx sao distintos de recusa, conflito, permissao e excecao interna.
+  Checkpoint ambiguo preserva PI, sequencia, modo e fingerprint; nunca criar uma
+  segunda tentativa para esconder resultado desconhecido.
+- Beneficio atual e contrato financeiro de manutencao sao conceitos separados.
+  DTO aditivo permite cancelar/trocar cartao/retomar confirmacao durante cortesia,
+  inadimplencia e processamento, sem cobrar por montagem de pagina. Historico
+  pago e NFS-e devem continuar acessiveis apos cancelamento ou retorno ao gratuito.
+- Fiscal test envia obrigatoriamente simulation never; live preserva o payload
+  anterior. Autorizacao governamental continua exigindo provas estritas. Faturas
+  zero/anuladas/incobraveis sao excluidas; aberta aguarda pagamento com recuperacao
+  por evento posterior. Backfill/requeue fiscal passa por GET canonico pago,
+  identidade administrativa, CAS e auditoria, preservando documento/snapshot.
+- Logs usam referencias hash, etapa, status HTTP e diagnosticos fechados. Nao
+  conservam SDK error, mensagem livre, payload, email, documento, cartao ou chave.
+  Referencia de request e hash; nao substitui o ID privado no painel do provider.
+
+Evidencias novas (artefatos privados; nao registrar IDs pessoais ou segredos):
+
+- Preflight live somente leitura: identidade Stripe confere, charges/payouts
+  habilitados, card_payments ativo, zero exigencias cadastrais; produto/preco
+  ativos BRL2990/month. Nenhum customer/contrato/PI/invoice live existente.
+- SendNF live: chave restrita confere empresa/modo; readiness e go-live positivos;
+  codigo010501, ISS201 por override confirmado e envio ao tomador habilitado.
+  Nao mudou certificado, cadastro, MP ou parametros fiscais.
+- E2E fiscal com pagamento Stripe real de sandbox ja confirmado: um receipt,
+  recuperacao auditada de job ausente, snapshot, preview e um POST SendNF test.
+  Resultado rejected, simulation false, policy never, government_test_rejected.
+  Leitura posterior identificou E0207: o CPF de exemplo da documentacao, usado
+  exclusivamente como tomador de QA, nao existe no cadastro. Nao foi CNC nesse
+  ensaio e nao foi autorizacao governamental. O fluxo preservou o documento e
+  fez somente GET no replay; nenhuma duplicacao, nota live ou email real alegado.
+  Identidade fiscal QA manual_admin auditada, sem fingir verificacao CFP.
+- Baseline check integral e db:migrate local isolado passaram. Validacoes finais,
+  QA visual, revisao cruzada e publicacao ainda devem ser registradas com os
+  resultados efetivos; nao inferir aprovacao por este texto de decisao.
+
+Referencias de contrato consultadas nesta revisao:
+[Confirmacao manual de PaymentIntent](https://docs.stripe.com/api/payment_intents/confirm),
+[pagamento associado a invoice](https://docs.stripe.com/api/invoices/attach_payment),
+[pausa de coleta](https://docs.stripe.com/billing/subscriptions/pause-payment) e
+[SendNF — API NFS-e e simulation never](https://sendnf.com/desenvolvedores/api/).
+
+
+Complemento de manutencao fiscal nesta revisao: endereco de faturamento permanece
+editavel para o titular de um pagamento historico proprio comprovado, mesmo apos
+cancelamento, gratuidade ou cortesia. Capability aditiva nao concede beneficios,
+nao sincroniza gateway, nao muda CPF/CFP e nao reescreve snapshot fiscal imutavel.
+Receipts Stripe exigem integridade e escopo exato; notas legadas exigem owner,
+empresa/ambiente/contrato. Historico sem documento informa preparacao da nota,
+sem tratar estorno, analise ou valor zero como emissao pendente. Checkout explica
+a conclusao dos dados fiscais apos pagamento. PG real cobre cross-owner/account,
+mode, hash adulterado, periodo futuro e manutencao sem billing operation.
+
+
+Complemento de erro HTTP nesta revisao: CORS da allowlist configurada precede o
+limiter global, para o navegador conseguir ler o status 429 e mostrar a mensagem
+publica de limite em vez de erro de conexao. O preflight so termina depois do
+limiter: OPTIONS continua consumindo o mesmo orcamento. Nenhum limite, origem,
+header permitido, autenticacao ou parametro de producao foi ampliado. HTTP local
+real cobre 429 legivel na origem permitida, ausencia de Allow-Origin na origem
+nao permitida e preflight sujeito ao mesmo limite.
+Preflight bloqueado continua retornando 429 e o navegador pode reporta-lo como
+falha de rede, pois exige resposta 2xx para OPTIONS. A correcao torna legiveis as
+respostas efetivas; nao contorna o bloqueio nem promete eliminar toda falha de
+preflight. O limite menor encontrado em QA nao altera o limite de producao.

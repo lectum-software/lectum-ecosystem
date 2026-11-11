@@ -80,6 +80,7 @@ test("maintenance and pending setup survive an archived checkout price, which re
     kind: "payment_method",
     state: "requires_confirmation",
     confirmation_kind: null,
+    payment_pending: false,
   });
   for (const state of ["reserved", "creating", "processing", "review_required"]) {
     assert.ok(
@@ -102,6 +103,7 @@ test("pending summaries distinguish standalone setup and server-controlled colle
       kind: "checkout",
       state: "requires_confirmation",
       confirmation_kind: "setup",
+      payment_pending: false,
     },
   );
   for (const provider_intent_id of [null, "pi_manual"]) {
@@ -116,6 +118,7 @@ test("pending summaries distinguish standalone setup and server-controlled colle
       kind: "checkout",
       state: "requires_confirmation",
       confirmation_kind: "action",
+      payment_pending: true,
     });
     assert.equal(Object.hasOwn(summary ?? {}, "confirmation"), false);
     assert.equal(Object.hasOwn(summary ?? {}, "client_secret"), false);
@@ -169,4 +172,25 @@ test("fresh checkout requires the active exact immutable price and authorized mo
     isStripeCheckoutPriceAvailable({ ...price, interval_count: 2 }, identity, remote),
     false,
   );
+});
+
+test("financial processing/review remain resumable without publishing secrets or provider messages", () => {
+  for (const state of ["processing", "review_required", "requires_confirmation"]) {
+    const summary = stripeConfigPendingOperation({
+      ...pending,
+      kind: "collection",
+      state,
+      intent_kind: "payment",
+      last_error_code: "payment_method_required",
+    });
+    assert.equal(summary?.payment_pending, true);
+    assert.equal(summary?.error_code, "billing_payment_method_update_required");
+    assert.equal(summary?.confirmation_kind, state === "requires_confirmation" ? "action" : null);
+    assert.equal(Object.hasOwn(summary ?? {}, "client_secret"), false);
+  }
+  const summary = stripeConfigPendingOperation({
+    ...pending,
+    last_error_code: "provider_private_data",
+  });
+  assert.equal(Object.hasOwn(summary ?? {}, "error_code"), false);
 });

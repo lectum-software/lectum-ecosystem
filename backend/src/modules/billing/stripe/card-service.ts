@@ -1,5 +1,6 @@
 import prisma from "@/infra/database/prisma";
 import { getStripeGateway } from "../payment-gateway";
+import { stripeFailureObservation } from "../payment-gateway/stripe-error";
 import {
   cardProjectionWhere,
   persistStripeCardProjection,
@@ -11,6 +12,7 @@ import {
   preserveStripeCardPolicyRejection,
   StripeBillingError,
   stripeCardPolicyPublicError,
+  stripeOperationReference,
 } from "./policy";
 import { TERMINAL_OPERATION_STATES } from "./recovery-policy";
 import { StripeBillingRepository } from "./repository";
@@ -133,6 +135,12 @@ export const confirmStripeCardUpdate = async (
       ),
     });
     const response = await currentOperationResponse(operation, repository);
+    if (!cardPolicyError)
+      console.warn("[BILLING_STRIPE] Atualização do cartão aguardando conciliação segura.", {
+        operation_ref: stripeOperationReference(operation.id),
+        stage: "payment_method_update",
+        ...stripeFailureObservation(failure),
+      });
     return response;
   }
 };

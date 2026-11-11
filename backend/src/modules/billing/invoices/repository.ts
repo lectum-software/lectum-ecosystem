@@ -77,8 +77,9 @@ export class InvoiceRepository {
     }
   }
 
-  async claimJob(scopes: InvoiceGatewayScope[], now = new Date()) {
+  async claimJob(scopes: InvoiceGatewayScope[], now = new Date(), ids?: string[]) {
     const where = {
+      ...(ids === undefined ? {} : { id: { in: ids } }),
       completed_at: null,
       next_attempt_at: { lte: now },
       AND: [invoiceScopeWhere(scopes, true), leaseAvailable(now)],
@@ -165,8 +166,10 @@ export class InvoiceRepository {
     scopes: InvoiceGatewayScope[],
     now = new Date(),
     mode: InvoiceMode = "test",
+    ids?: string[],
   ) {
     const where = {
+      ...(ids === undefined ? {} : { id: { in: ids } }),
       company_id: companyId,
       mode,
       status: { notIn: ["manual_review", "cancelled", "rejected"] },

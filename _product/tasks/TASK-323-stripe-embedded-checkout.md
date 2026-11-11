@@ -1,13 +1,47 @@
 # TASK-323 - Checkout Stripe dentro da Lectum e coexistencia segura de gateways
 
 Data: 2026-11-09
-Status: Backend/frontend/admin 0.1.808 publicados inativos; transporte webhook assinado comprovado; E2E e ativacao financeira/fiscal separados
+Status: Auditoria final e correcoes em homolog; ativacao produtiva autorizada somente apos validacao, primeira cobranca real executada pelo usuario
 Decisao: [ADR-0687](../../adrs/0687-stripe-embedded-checkout.md)
 Operacao: [Runbook Stripe](STRIPE-OPERATIONS.md)
 Base auditada: `homolog` em `820077ccd`, versao `0.1.799`
 Dependencias funcionais: TASK-02, TASK-31/32/33, TASK-56, TASK-142, TASK-313/314/315/317.
 
 ## Pedido e limite desta etapa
+
+### Liberacao integral solicitada em 10/11, apos o smoke assinado
+
+O usuario autorizou concluir implementacao, revisao, testes, publicacao e configuracao
+para que uma conta real possa assinar e receber NFS-e, sem novas confirmacoes de
+rotina. Esta autorizacao supera os limites de manter checkout/emissao Stripe OFF
+dos checkpoints historicos abaixo, mas nao autoriza o agente a efetuar a primeira
+cobranca real. A ativacao ocorre somente depois dos gates locais/sandbox e da
+conferencia do inventario live. Radar, permissoes da chave e fiscal MP legado
+permanecem preservados. Nenhuma nota live sera emitida antes de pagamento real.
+
+- [x] Branch homolog e base remota conferidas; check integral inicial aprovado.
+- [x] Fechar crash/race antes do primeiro debito e recuperacao transitoria sem
+  cobrar por polling; leituras nao consomem limite de replay de mutacoes.
+- [x] Fechar retomada, troca de cartao, 3DS e cancelamento em inadimplencia e
+  cortesia com contrato agendado; DTOs aditivos e UX mobile-first.
+- [x] Enviar simulation never somente em teste, classificar faturas fiscalmente
+  inelegiveis, adicionar diagnostico seguro e recuperacao auditada sem duplicacao.
+- [x] Revalidar credito/debito/prepago, cortesia, recusa, 3DS, renovacao, cancelamento,
+  concorrencia e eventos reais no sandbox existente; sem mocks como prova final.
+- [x] Validar passagem pagamento/ledger/fiscal test e recusa governamental explicita;
+  nao declarar autorizacao governamental nem entrega de email sem evidencia.
+- [x] Checks/builds, browser local, revisao cruzada e ADR; commit versionado deste fechamento.
+- [ ] PR homolog para main, deploys separados, preflight live somente leitura,
+  ativacao ordenada e smoke autenticado sem envio de cartao.
+- [ ] Entregar ao usuario o fluxo pronto para a primeira tentativa real, com
+  observacao de pagamento unico, nota, PDF e email apos a transacao dele.
+
+Impacto previsto: contratos aditivos, nenhum pacote novo; migrations somente se
+necessarias e expansivas. Implantar backend compativel antes do frontend; ativar
+reconciliacao/ledger/collector e fiscal Stripe apenas com inventario conferido,
+oferta habilitada por operacao auditada ao final. Rollback operacional suspende
+novas vendas sem apagar historico ou desligar conciliacao de pagamentos existentes.
+Uma validacao ampla reduz risco, mas nao prova ausencia absoluta de falhas.
 
 ### Complemento autorizado em 10/11: credito-only sem Radar Plus
 
@@ -1632,3 +1666,38 @@ Resultados desta rodada:
 - Checkpoint documental local 0.1.810, bump unico do agente principal. Nenhuma
   mudanca de codigo/schema ou novo deploy foi necessaria; producao permanece
   0.1.808. Nenhuma cobranca real, nota, assinatura ou operacao financeira criada.
+
+
+### Evidencias finais de liberacao 0.1.811 (antes da promocao)
+
+- Check raiz aprovado em0.1.811: frontend1252pass/16opt-inskips,
+  backend1370pass/19opt-inskips, admin264pass e video100pass/16opt-inskips;
+  suites opt-in relevantes PG executadas separadamente com sucesso, sem usar skip
+  como criterio. Builds backend/admin/frontend aprovados; frontend compilado /version200
+  0.1.811/no-store/noindex, login200 e billing anonimo307; servidores QA encerrados.
+- Browser local real320/390/1440: cortesia com contrato futuro pode cancelar a
+  cobranca sem perder beneficio; cartao substituido apos recusa gera zero captura;
+  CTA explicito retoma a mesma assinatura e captura uma vez; SetupIntent e PI com
+  desafios3DS reais test concluidos; dois pagamentos sandbox confirmados, nao live.
+- Historico de contrato cancelado/expirado aparece no plano gratuito. Endereco
+  fiscal editado e salvo pela UI retorna ao plano gratuito, sem nova assinatura,
+  acesso profissional ou nota; refetch autoritativo evita redirect por cache antigo.
+- Falhas429 preservam CORS para origens permitidas e continuam limitadas, incluindo
+  OPTIONS; HTTP real cobre origem negada/429 legivel/preflight. Limites produtivos
+  nao foram alterados. QA multiploIPloopback precisou quota local existente1000.
+- Readiness live somente leitura: conta Stripe habilitada sem pendencias,
+  produto/preco ativo2990BRLmensal; SendNFready/liveReady, emailenabled,
+  approval_requiredfalse. Fiscal010501/ISS201 e descricao anterior preservados.
+- Teste fiscal real com chave test: preview2990, pagamento/ledger/auditoria/recovery,
+  uma unica criacao SendNF com simulationnever, recusa governamentalE0207 por CPF
+  oficial de exemplo nao cadastrado. simulationfalse/accesskeynull; replay nao cria
+  outra nota. Isso valida recusa/recuperacao, NAO autorizacao governamental/email.
+- Nao houve schema novo, pacote, mock de provider, cobranca ou NFS-e live. Autenticacao
+  QA temporaria restaurada e recorrencias criadas encerradas, preservando historico.
+  Primeira transacao real, PDF autorizado e entrega de email permanecem evidencia
+  a coletar apos acao do usuario; nao se afirma ausencia absoluta de falhas.
+
+Fechamento CORS: backend check final1393total/1374pass/19opt-in skips/zerofalhas e build
+aprovados;9testesHTTP reais do contratoCORS/limiter passaram. Preflight esgotado
+continua falhando fechado; nao se promete leitura de429 quando o proprio OPTIONS
+e bloqueado. Limite live1000 foi observado por headerpublico, sem alteracao.

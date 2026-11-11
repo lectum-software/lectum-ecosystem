@@ -25,6 +25,7 @@ export async function withInvoiceHistory(
     status_label: config.mode === "test" ? "Teste" : "Sucesso",
     occurred_at: invoice.paid_at,
     gateway: invoice.gateway,
+    mode: config.mode,
     external_id: invoice.payment_id,
     payment_id: invoice.payment_id,
     subscription_id: invoice.subscription_id,

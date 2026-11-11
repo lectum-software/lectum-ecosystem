@@ -10,6 +10,7 @@ test("real isolated PostgreSQL fences collection by owner, invoice, lease and co
   assert.equal(url.pathname, "/lectum_stripe_test");
   const { default: prisma } = await import("@/infra/database/prisma");
   const { StripeCollectionRepository } = await import("./collection-repository");
+  const { StripeBillingRepository } = await import("./repository");
   const { collectionConfirmationFingerprint } = await import("./collection-policy");
   const { prepareStripeCreditCancellation, CREDIT_CANCELLATION_REQUESTED } = await import(
     "./collection-cancellation"
@@ -87,6 +88,55 @@ test("real isolated PostgreSQL fences collection by owner, invoice, lease and co
       },
     });
     const repository = new StripeCollectionRepository();
+    const billingRepository = new StripeBillingRepository();
+    const polling = await prisma.billing_operation.create({
+      data: {
+        user_id: user.id,
+        psychologist_id: profile.id,
+        subscription_id: local.id,
+        customer_id: customer.id,
+        price_version_id: price.id,
+        gateway: "stripe",
+        mode: "test",
+        account_id: identity.accountId,
+        kind: "payment_method",
+        request_key: randomUUID(),
+      },
+    });
+    let pollingRow = polling;
+    const setupClaim = (await billingRepository.claimOperation(pollingRow))!;
+    assert.equal(setupClaim.attempts, 0);
+    assert.equal(
+      (await billingRepository.checkpointRequest(setupClaim, setupClaim.lease_token, "setup-proof"))
+        .count,
+      1,
+    );
+    await billingRepository.finishOperation(polling.id, setupClaim.lease_token, {
+      state: "requires_confirmation",
+    });
+    for (let reload = 0; reload < 8; reload++) {
+      pollingRow = (await billingRepository.operation(polling.id, user.id, identity))!;
+      const readClaim = (await billingRepository.claimOperation(pollingRow))!;
+      assert.equal(readClaim.attempts, 1, "read/reload does not spend a provider mutation attempt");
+      await billingRepository.finishOperation(polling.id, readClaim.lease_token, {});
+    }
+    pollingRow = (await billingRepository.operation(polling.id, user.id, identity))!;
+    const explicitClaim = (await billingRepository.claimOperation(pollingRow))!;
+    assert.equal(
+      (
+        await billingRepository.checkpointRequest(
+          explicitClaim,
+          explicitClaim.lease_token,
+          "setup-proof",
+        )
+      ).count,
+      1,
+      "a later explicit mutation remains available after repeated reads",
+    );
+    await billingRepository.finishOperation(polling.id, explicitClaim.lease_token, {
+      state: "complete",
+    });
+    assert.equal((await billingRepository.operation(polling.id, user.id, identity))!.attempts, 2);
     const target = await repository.target(local.id, identity, user.id);
     await assert.rejects(repository.target(local.id, identity, "other-owner"));
     await assert.rejects(repository.target(local.id, { ...identity, accountId: "acct_other" }));
@@ -207,16 +257,51 @@ test("real isolated PostgreSQL fences collection by owner, invoice, lease and co
       last_error_code: "payment_method_required",
     });
     assert.equal(
+      (await billingRepository.pendingCollection(user.id, identity))?.id,
+      claim.id,
+      "an operational review remains visible for safe owner reconciliation",
+    );
+    assert.equal(
       (await repository.due(identity)).some((row) => row.id === claim.id),
       false,
       "decline is never background retried",
     );
-    const other = await repository.reserve({
+    // Successful SCA/polling reads cannot exhaust the next real outage retry budget.
+    for (let poll = 0; poll < 9; poll += 1) {
+      const current = (await repository.read(claim.id))!;
+      const readLease = (await repository.claim(current))!;
+      assert.ok(readLease);
+      await repository.finish(current.id, readLease.lease_token, {
+        state: "requires_confirmation",
+        last_error_code: null,
+      });
+      assert.equal((await repository.read(current.id))!.attempts, 0);
+    }
+    for (let failure = 1; failure <= 2; failure += 1) {
+      const current = (await repository.read(claim.id))!;
+      const failedLease = (await repository.claim(current))!;
+      await repository.finish(current.id, failedLease.lease_token, {
+        state: "processing",
+        last_error_code: "confirmation_pending",
+      });
+      assert.equal((await repository.read(current.id))!.attempts, failure);
+      assert.equal((await repository.read(current.id))!.confirmation_fingerprint, fingerprint);
+    }
+    const renewalInput = {
       ...input,
       invoiceId: `in_renewal${suffix}`,
       parentOperationId: undefined,
       initialInvoice: false,
+    };
+    await assert.rejects(
+      repository.reserve(renewalInput),
+      "an unfinished enrollment cannot authorize a renewal after a crash",
+    );
+    await prisma.billing_operation.update({
+      where: { id: parent.id },
+      data: { state: "complete" },
     });
+    const other = await repository.reserve(renewalInput);
     assert.notEqual(other.id, first.id);
     assert.equal(other.parent_operation_id, null);
     await assert.rejects(

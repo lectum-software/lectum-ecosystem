@@ -39,6 +39,8 @@ export type CreditCollectionIntent = {
   status: Stripe.PaymentIntent.Status;
   confirmationMethod: "manual";
   authenticationRequired: boolean;
+  /** Canonical failed confirmation for the exact selected PM, not merely an unconfirmed PI. */
+  paymentFailureObserved: boolean;
   paymentMethodId: string | null;
   amountCents: number;
   customerId: string;

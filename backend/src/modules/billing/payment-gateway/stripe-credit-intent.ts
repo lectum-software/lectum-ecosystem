@@ -58,6 +58,9 @@ export const projectCreditIntent = (
       "authentication_required",
       "payment_intent_authentication_failure",
     ].includes(intent.last_payment_error?.code ?? ""),
+    paymentFailureObserved:
+      !!intent.last_payment_error &&
+      stripeId(intent.last_payment_error.payment_method, "pm") === input.paymentMethodId,
     paymentMethodId: stripeId(intent.payment_method, "pm"),
     amountCents: intent.amount,
     customerId: input.customerId,
