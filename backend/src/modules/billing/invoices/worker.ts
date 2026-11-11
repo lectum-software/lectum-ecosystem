@@ -23,6 +23,7 @@ import {
   safeInvoiceDiagnostic,
 } from "./diagnostics";
 import { invoiceDocumentNextAttempt, invoiceDocumentStatus } from "./document-authorization";
+import { reconcileExistingInvoiceDocument } from "./existing-document";
 import { getFiscalIdentity } from "./fiscal-identity";
 import { invoiceGatewayScopes, invoiceScopeMatches } from "./gateway-scope";
 import { InvoiceRepository } from "./repository";
@@ -219,7 +220,31 @@ async function processInvoice(
     ids,
   );
   if (!invoice) return false;
+  let observedVersion = invoice.updated_at;
   try {
+    if (invoice.document_id) {
+      // A refund/closed subscription never prevents observing a document already issued.
+      // This boundary performs SendNF GETs only and cannot create/cancel a fiscal document.
+      const observed = await reconcileExistingInvoiceDocument(
+        invoice,
+        config,
+        provider,
+        repository,
+      );
+      observedVersion = observed.invoice.updated_at;
+      await repository.finishInvoice(
+        invoice.id,
+        invoice.lease_token,
+        {
+          last_error_code: observed.document.failure_code
+            ? safeInvoiceDiagnostic(observed.document.failure_code)
+            : null,
+          next_attempt_at: invoiceDocumentNextAttempt(invoiceDocumentStatus(observed.document)),
+        },
+        observedVersion,
+      );
+      return true;
+    }
     const request = parseProvider(invoiceRequestSchema, invoice.request_snapshot);
     const stored = parseProvider(storedInvoiceSchema, invoice.request_snapshot);
     if (
@@ -276,9 +301,7 @@ async function processInvoice(
         return true;
       }
     }
-    const document = invoice.document_id
-      ? await provider.getDocument(invoice.document_id)
-      : await provider.create(request, stored.fiscal_service_code);
+    const document = await provider.create(request, stored.fiscal_service_code);
     assertDocumentMatches(document, request, config.mode);
     const status = invoiceDocumentStatus(document);
     await repository.finishInvoice(invoice.id, invoice.lease_token, {
@@ -299,11 +322,17 @@ async function processInvoice(
   } catch (error) {
     // Document attempts also count successful polls and deferred activation, not consecutive failures.
     const failure = invoiceFailure(error, invoice.gateway, invoice.attempts, false);
-    await repository.finishInvoice(invoice.id, invoice.lease_token, {
-      ...(failure.terminal ? { status: "manual_review" } : {}),
-      last_error_code: failure.code,
-      next_attempt_at: retryDate(invoice.attempts),
-    });
+    await repository.finishInvoice(
+      invoice.id,
+      invoice.lease_token,
+      {
+        // A technical read failure is not a fiscal state. Preserve the last canonical observation.
+        ...(failure.terminal && !invoice.document_id ? { status: "manual_review" } : {}),
+        last_error_code: failure.code,
+        next_attempt_at: retryDate(invoice.attempts),
+      },
+      observedVersion,
+    );
     logInvoiceOutcome({
       id: invoice.id,
       stage: "document",

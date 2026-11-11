@@ -7,7 +7,7 @@ import { InvoiceRepository } from "./repository";
 import { SendNfAdapter } from "./SendNfAdapter";
 
 // Unit boundary tests only: repository/provider calls are intercepted, never external fiscal proof.
-test("PDF refuses simulated or unknown current responses even when legacy cache says authorized", async (t) => {
+test("PDF observes cancelled, simulated or unknown responses without releasing stale authorized bytes", async (t) => {
   const before = { ...process.env };
   Object.assign(process.env, {
     SENDNF_TEST_ENABLED: "true",
@@ -27,6 +27,9 @@ test("PDF refuses simulated or unknown current responses even when legacy cache 
   const cached = {
     id: "invoice-unit",
     user_id: "owner-unit",
+    subscription_id: "subscription-unit",
+    updated_at: new Date("2026-11-10T12:00:00Z"),
+    lease_token: null,
     company_id: "company-unit",
     gateway: "mercadopago",
     account_id: null,
@@ -50,6 +53,19 @@ test("PDF refuses simulated or unknown current responses even when legacy cache 
     },
   } as unknown as billing_invoice;
   t.mock.method(InvoiceRepository.prototype, "findOwned", async () => cached);
+  const observe = t.mock.method(
+    InvoiceRepository.prototype,
+    "observeDocument",
+    async (
+      _invoice: Parameters<InvoiceRepository["observeDocument"]>[0],
+      observation: Parameters<InvoiceRepository["observeDocument"]>[1],
+    ) => ({ ...cached, ...observation }),
+  );
+  const currentVersion = t.mock.method(
+    InvoiceRepository.prototype,
+    "isDocumentCurrent",
+    async () => true,
+  );
   t.mock.method(SendNfAdapter.prototype, "verifyIdentity", async () => ({
     mode: "test" as const,
     restricted: true,
@@ -79,6 +95,7 @@ test("PDF refuses simulated or unknown current responses even when legacy cache 
     { simulation: "false" },
     { simulation: false, nfse_number: "SIM-9" },
     { simulation: false, access_key: "1".repeat(50), urls: { public_query: null } },
+    { status: "cancelled", simulation: false },
   ]) {
     evidence = patch;
     const result = await invoicePdf(input);
@@ -86,8 +103,11 @@ test("PDF refuses simulated or unknown current responses even when legacy cache 
     assert.ok(!("pdf" in result));
     assert.ok(!JSON.stringify(result).includes("private provider notice"));
   }
-  assert.equal(getDocument.mock.callCount(), 5);
+  assert.equal(getDocument.mock.callCount(), 6);
+  assert.equal(observe.mock.callCount(), 6);
+  assert.equal(observe.mock.calls.at(-1)?.arguments[1].status, "cancelled");
   assert.equal(pdf.mock.callCount(), 0);
+  assert.equal(currentVersion.mock.callCount(), 0);
   evidence = {
     simulation: false,
     access_key: "1".repeat(50),
@@ -96,4 +116,9 @@ test("PDF refuses simulated or unknown current responses even when legacy cache 
   const allowed = await invoicePdf(input);
   assert.equal(allowed.status, 200);
   assert.equal(pdf.mock.callCount(), 1);
+  currentVersion.mock.mockImplementation(async () => false);
+  const superseded = await invoicePdf(input);
+  assert.equal(superseded.status, 409);
+  assert.ok(!("pdf" in superseded));
+  assert.equal(pdf.mock.callCount(), 2);
 });

@@ -11,6 +11,7 @@ const CODES = new Set([
   "company_not_ready",
   "configuration_invalid",
   "document_mismatch",
+  "document_observation_conflict",
   "fiscal_preview_invalid",
   "fiscal_settings_mismatch",
   "live_runtime_required",

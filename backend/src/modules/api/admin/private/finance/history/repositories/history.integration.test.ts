@@ -336,9 +336,61 @@ test("real isolated PG admin history includes canceled contracts, paginates beyo
       before,
     );
     assert.equal(await prisma.billing_invoice.count({ where: { user_id: { in: users } } }), 0);
+
+    // Persisted contract only: a document cancellation is independent from the
+    // existing refunded receipt. This never performs a refund or provider request.
+    const { invoiceReference } = await import("@/modules/billing/invoices/contracts");
+    const companyId = `history-company-${tag}`;
+    const reference = invoiceReference(companyId, `in_history${tag}`, "test", account);
+    const fiscal = await prisma.billing_invoice.create({
+      data: {
+        gateway: "stripe",
+        account_id: account,
+        mode: "test",
+        payment_id: `in_history${tag}`,
+        subscription_id: contracts[0],
+        user_id: users[0],
+        company_id: companyId,
+        amount_cents: 2990,
+        currency: "BRL",
+        paid_at: day,
+        reference,
+        status: "cancelled",
+        number: "4",
+        document_id: `document-history-${tag}`,
+        request_snapshot: {
+          company_id: companyId,
+          reference,
+          taker: {
+            document: "529.982.247-25",
+            name: "Historico de persistencia isolada",
+            email: "history@example.invalid",
+          },
+          items: [{ description: "Assinatura de contrato local", unit_amount: 2990 }],
+        },
+      },
+    });
+    const fiscalContext = { ...context, fiscal: { companyId, mode: "test" as const } };
+    const observed = projectAdminHistory(
+      await repo.read({ user_id: users[0] }, fiscalContext),
+      { status: "refunded" },
+      fiscalContext,
+    );
+    assert.equal(observed.pagination.total, 1);
+    assert.equal(observed.items[0].financial_status, "refunded");
+    assert.equal(observed.items[0].status_label, "Estornado");
+    assert.equal(observed.items[0].amount_cents, 2990);
+    assert.equal(observed.items[0].invoice?.id, fiscal.id);
+    assert.equal(observed.items[0].invoice?.status, "cancelled");
+    assert.equal(observed.items[0].invoice?.downloadable, false);
+    assert.equal(
+      await prisma.billing_operation.count({ where: { user_id: { in: users } } }),
+      before,
+    );
     assertHistoryScanSize(10_000);
     assert.throws(() => assertHistoryScanSize(10_001), HistoryFilterRequiredError);
   } finally {
+    await prisma.billing_invoice.deleteMany({ where: { user_id: { in: users } } });
     await prisma.payment_event.deleteMany({ where: { id: { in: events } } });
     await prisma.billing_financial_receipt.deleteMany({
       where: { account_id: { startsWith: account } },

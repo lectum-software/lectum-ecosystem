@@ -1,3 +1,7 @@
+Validada localmente em **11/11/2026, 0.1.818**: [TASK-326 - Sincronizacao fiscal apos estorno](TASK-326-existing-fiscal-document-sync.md), [ADR-0691](../../adrs/0691-existing-fiscal-document-sync.md). GET de documento existente separado da elegibilidade de emissao, CAS e PDF seguros; check integral, build backend,153 testes fiscais/financeiros e smokeHTTP8/8 aprovados. Publicacao via PR autorizada em preparacao; nenhuma nova cobranca/nota.
+
+Concluida e publicada em **11/11/2026, 11:23 BRT**: [TASK-325 - Historico financeiro administrativo e NFS-e](TASK-325-admin-financial-history-invoices.md), [ADR-0690](../../adrs/0690-admin-financial-history-invoices.md), PR **#177** / merge `ca7683f4b`. Backend/Admin **0.1.816** e frontend **0.1.813** preservado, smoke HTTP 200/no-store aprovado. Historico Admin mostrou **Pago / NFS-e 3 Autorizada**; download real concluido as **11:24 BRT**, PDF valido de **63.405 bytes**. Sete fingerprints financeiros/fiscais antes/depois identicos; somente auditoria administrativa de download **0 -> 1**, sem nova cobranca/emissao nem alteracao de gates/Radar. Prova positiva pendente encerrada no Admin; login/download pelo titular e caixa de entrada continuam sem confirmacao. Checkpoint documental local **0.1.817**, separado da release, somente em homolog e sem push/novo deploy. Etapas anteriores abaixo sao historicas, nao pendencias reabertas.
+
 Implementacao local validada em **11/11/2026**, task parcial: [TASK-325 - Historico financeiro administrativo e NFS-e](TASK-325-admin-financial-history-invoices.md). Leitura paginada e download administrativo protegido, versao 0.1.816; sem push/deploy, cobrancas ou emissao. Prova positiva PDF elegivel pendente por ausencia de documento real no sandbox/QA; nao simular.
 
 Validada localmente em **0.1.815**, em **11/11/2026**: [TASK-324 - Oferta vigente de assinatura no Admin](TASK-324-admin-current-billing-offer.md). Leitura Stripe versionada e cadastro legado separados; estados locais honestos, sem SDK/rede ou mutacao. Check integral, builds backend/Admin, PG real e QA320/390/1440 aprovados. Commit local, sem push/deploy. Historico/NFS-e administrativo e editor comercial sao proximas tasks separadas. Frontend0.1.813 publicado as09:59BRT (PR176); backend813/admin811 saudaveis. Verificacao do plano/NFS-e pelo titular pendente por falta de acesso a conta, sem nova transacao.
@@ -811,7 +815,8 @@ ou cortesia manual.
 | 322 | [TASK-322 - Video presentation and scroll cost](TASK-322-video-presentation-and-scroll-cost.md) | In Progress | 321 |
 | 323 | [TASK-323 - Checkout Stripe dentro da Lectum](TASK-323-stripe-embedded-checkout.md) | In Progress | 31, 32, 33, 56, 142, 313-317 |
 | 324 | [TASK-324 - Oferta vigente de assinatura no Admin](TASK-324-admin-current-billing-offer.md) | Done | 142, 323 |
-| 325 | [TASK-325 - Historico financeiro administrativo e NFS-e](TASK-325-admin-financial-history-invoices.md) | In Progress | 56, 62, 315, 317, 323, 324 |
+| 325 | [TASK-325 - Historico financeiro administrativo e NFS-e](TASK-325-admin-financial-history-invoices.md) | Done | 56, 62, 315, 317, 323, 324 |
+| 326 | [TASK-326 - Sincronizacao de documentos fiscais existentes](TASK-326-existing-fiscal-document-sync.md) | In Progress | 323, 325 |
 
 ## Ordem operacional recomendada sem bloqueios
 

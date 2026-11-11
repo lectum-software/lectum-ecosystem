@@ -23,7 +23,7 @@ export async function adminInvoicePdf(data: IAdminInvoiceDTO) {
     adminId: data.admin.id,
     invoiceId: record.invoice.id,
     userId: data.q.user_id,
-    updatedAt: record.invoice.updated_at,
+    updatedAt: result.invoiceUpdatedAt,
     subscriptionUpdatedAt: record.subscription.updatedAt,
     mode: config.mode,
   });
