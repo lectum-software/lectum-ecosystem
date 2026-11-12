@@ -481,9 +481,11 @@ test("webhook projection returns only closed reference fields and checks API/acc
       "created",
       "resourceId",
       "subscriptionId",
+      "requestKeyHash",
     ].sort(),
   );
   assert.equal(result.subscriptionId, "sub_unit");
+  assert.equal(result.requestKeyHash, null);
   assert.equal(JSON.stringify(result).includes("customer"), true); // Only event type, never customer details.
   assert.equal("data" in result, false);
   assert.equal("raw" in result, false);

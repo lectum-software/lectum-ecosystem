@@ -12,6 +12,7 @@ import {
 } from "./financial-ledger/service";
 import { StripeInboxRepository } from "./inbox-repository";
 import { nextInboxAttempt, StripeBillingError, stripeOperationReference } from "./policy";
+import { acknowledgeAuxiliaryStripeSetupEvent } from "./setup-auxiliary-event";
 import { classifyStripeSetupEvent, unresolvedStripeSetupEvent } from "./setup-event-policy";
 import { syncStripeSubscription } from "./sync";
 
@@ -55,19 +56,33 @@ export const processStripeInbox = async () => {
         throw new StripeBillingError("billing_operation_conflict");
       if (job.type.startsWith("setup_intent.")) {
         const setup = await gateway.retrieveSetup(job.resource_id);
+        const candidates = await repository.setupCandidates(
+          job.resource_id,
+          gateway.identity,
+          setup.attemptId,
+        );
         const decision = classifyStripeSetupEvent({
           setup,
           resourceId: job.resource_id,
           subscriptionHint: job.provider_subscription_id,
           identity: gateway.identity,
-          candidates: await repository.setupCandidates(
-            job.resource_id,
-            gateway.identity,
-            setup.attemptId,
-          ),
+          candidates,
         });
+        let auxiliaryConflict = false;
+        if (decision.action === "unresolved" && candidates.length === 0) {
+          const auxiliary = await acknowledgeAuxiliaryStripeSetupEvent(
+            job,
+            setup,
+            gateway.identity,
+          );
+          if (auxiliary === "complete") continue;
+          auxiliaryConflict = auxiliary === "conflict";
+        }
         if (decision.action === "unresolved" || decision.action === "conflict") {
-          const deferred = unresolvedStripeSetupEvent(job.attempts, decision.action === "conflict");
+          const deferred = unresolvedStripeSetupEvent(
+            job.attempts,
+            decision.action === "conflict" || auxiliaryConflict,
+          );
           await repository.finish(job.id, job.lease_token, {
             ...deferred,
             next_attempt_at: nextInboxAttempt(job.attempts),

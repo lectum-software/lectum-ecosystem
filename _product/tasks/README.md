@@ -836,6 +836,7 @@ ou cortesia manual.
 | 329 | [TASK-329 - Gestao de precos versionados](TASK-329-admin-versioned-price-management.md) | Done | 323, 328 |
 | 330 | [TASK-330 - Custos operacionais no Admin](TASK-330-admin-operating-expenses.md) | Done | 328, 329 |
 | 331 | [TASK-331 - Tarifas Stripe observadas](TASK-331-admin-stripe-observed-fees.md) | Done | 328, 330 |
+| 332 | [TASK-332 - Correlacao segura do SetupIntent auxiliar Stripe](TASK-332-stripe-auxiliary-setup-resolution.md) | In Progress | 323, 331 |
 
 ## Ordem operacional recomendada sem bloqueios
 

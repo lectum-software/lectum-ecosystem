@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { STRIPE_API_VERSION } from "./stripe-config";
 import { StripeGatewayError } from "./stripe-error";
+import { projectStripeCreditCardRequestHash } from "./stripe-idempotency";
 import {
   assertStripeMode,
   requireStripeDisputeId,
@@ -64,5 +65,6 @@ export const projectStripeWebhook = (
     created,
     resourceId,
     subscriptionId,
+    requestKeyHash: projectStripeCreditCardRequestHash(event.request?.idempotency_key),
   };
 };
