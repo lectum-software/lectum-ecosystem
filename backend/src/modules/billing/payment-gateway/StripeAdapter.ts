@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import Stripe from "stripe";
 import type {
   GatewayCancelSubscriptionInput,
@@ -9,6 +8,10 @@ import type {
   PaymentGateway,
   VerifyWebhookSignatureInput,
 } from "./PaymentGateway";
+import {
+  readStripeAuxiliarySetupProof,
+  type StripeAuxiliarySetupScope,
+} from "./stripe-auxiliary-setup";
 import { stripeBalanceApi } from "./stripe-balance";
 import {
   isStripeTerminalSubscriptionStatus,
@@ -28,6 +31,7 @@ import { readStripeConfiguration, STRIPE_API_VERSION } from "./stripe-config";
 import { stripeCreditApi } from "./stripe-credit-api";
 import { StripeGatewayError, stripeFailure } from "./stripe-error";
 import { stripeFinancialApi } from "./stripe-financial-api";
+import { stripeIdempotencyKey } from "./stripe-idempotency";
 import { readStripePaidInvoice } from "./stripe-invoice";
 import {
   assertStripeMode,
@@ -101,7 +105,11 @@ export class StripeAdapter implements PaymentGateway {
   }
 
   private key(operation: string, reference: string) {
-    return `lectum-${operation}-${createHash("sha256").update(`${this.config.accountId}:${this.config.mode}:${reference}`).digest("hex")}`;
+    return stripeIdempotencyKey(this.identity, operation, reference);
+  }
+
+  readAuxiliarySetupProof(input: StripeAuxiliarySetupScope) {
+    return this.run(() => readStripeAuxiliarySetupProof(this.client, this.identity, input));
   }
 
   async verifyIdentity(): Promise<void> {

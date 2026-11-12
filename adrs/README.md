@@ -764,3 +764,4 @@ Formato recomendado:
 - [ADR-0695 — Custos operacionais manuais, sem falsa conciliacao financeira](0695-admin-operating-expenses.md)
 
 - [ADR-0696 — Tarifas canonicas separadas da captura e dos custos completos](0696-stripe-observed-fees.md)
+- [ADR-0697 — Proveniencia assinada para SetupIntent auxiliar](0697-stripe-auxiliary-setup-provenance.md)

@@ -1895,6 +1895,7 @@ model billing_operation {
 // Signed event receipt and resumable processing are deliberately separate from payment_event legacy.
 model billing_gateway_event {
   id                       String    @id @default(cuid())
+  request_idempotency_key_hash String?
   gateway                  String
   mode                     String
   account_id               String

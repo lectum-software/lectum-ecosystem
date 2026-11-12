@@ -1145,6 +1145,10 @@ Ver [TASK-323](TASK-323-stripe-embedded-checkout.md) e ADR-0687.
   checkouts/cartoes abertos equivalentes. Estados terminais nao sao rebaixados.
 - `billing_gateway_event`: inbox minima Stripe por gateway/modo/conta/evento, tipo,
   recurso/assinatura/API version/data, lease/estado/tentativas. Sem payload bruto.
+  TASK-332 acrescenta `request_idempotency_key_hash` nullable: SHA256 da key
+  credit-card estrita de webhook assinado, para reconhecer SetupIntent auxiliar
+  historico sem efeitos financeiros/fiscais. Redelivery enriquece null via CAS,
+  sem sobrescrever hash conflitante nem mudar estado/tentativas/lease.
 - `payment_method`: conta/modo opcionais; para Stripe, token e referencia do contrato
   e os demais campos sao somente exibicao. Dados reais do cartao ficam na Stripe.
 - `billing_invoice_job`: gateway com default MP, modo/conta/recurso remoto opcionais;

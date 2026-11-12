@@ -1,7 +1,7 @@
 # TASK-327 - Imagem backend enxuta e rotacao de logs preparada
 
 Data: 2026-11-11
-Status: Validada localmente em 0.1.820; commit homolog, sem push/deploy
+Status: Preparacao validada em 0.1.820 e publicada no lote 0.1.824; ativacao remota pendente, auditoria somente leitura concluida
 Dependencias: TASK-326
 Decisao: [ADR-0692](../../adrs/0692-container-footprint-log-rotation.md)
 
@@ -102,5 +102,36 @@ aplicam a esta task de infraestrutura. Cinco manifests sincronizados em0.1.820.
   builds concorrentes. Cache de instalacao ainda pode invalidar com manifesto;
   CI/registry e estrategia de cache sao melhorias separadas.
 
-Releitura HTTP publica confirmou backend produtivo0.1.818 com health/ready/ping200,
-sem executar comandos na VPS ou modificar servicos/configuracoes publicados.
+Releitura HTTP publica da etapa original confirmou backend produtivo0.1.818 com
+health/ready/ping200, sem executar comandos na VPS ou modificar servicos publicados.
+
+## Auditoria de ativacao e encerramento de escopo — 11/11/2026
+
+O historico acima descreve a entrega local original. O PR#179 publicou depois a
+imagem/codigo preparado no lote0.1.824, **nao a politica de logs remota**. Consulta
+somente leitura da VPS/Dokploy confirmou json-file sem limites no backend e no
+GlitchTip. Worker:2.874.070.607bytes de log; uploads:23.459.192.832bytes alocados,
+separados dos logs. Estado/gates e fontes exatas estao em
+[CONTAINER-LOGGING.md](CONTAINER-LOGGING.md#estado-operacional--auditoria-somente-leitura-em-11112026).
+
+- [x] Confirmar configuracao efetiva sem expor secrets ou editar arquivos ativos.
+- [x] Confirmar no codigo Dokployv0.29.13 que update avulso nao e persistente.
+- [x] Conferir stack GlitchTip, mounts, backups no painel e riscos de recriacao.
+- [x] Separar uploads/artefatos de logs e registrar gates de disponibilidade.
+- [x] Smoke publico: GlitchTip saudavel; backend health/ready/ping e versoes dos
+  tres apps HTTP200, Lectum0.1.824. Nenhuma escrita remota nesta auditoria.
+- [ ] Escolher/validar caminho persistente do backend e estrategia de substituicao.
+- [ ] Comprovar backup/restauracao e preservacao de logs; validar rollout GlitchTip.
+- [ ] Aplicar politica autorizada, inspecionar containers novos e repetir smoke.
+
+Nao houve restart, deploy adicional, cleanup, mudanca de retencao, cobranca ou
+emissao nesta auditoria. Rotacao e capacidade ficam como pendencia propria de
+infraestrutura, nao como bloqueio reaberto da integracao Stripe/SendNF. Sem UI,
+package/env/schema novo. Registro documental local; sem push/novo deploy.
+
+Registro final validado em0.1.825: check integral da raiz e check:version
+aprovados em Node24.22.1/pnpm10.33.0 com env local isolado. Cinco manifests
+sincronizados por bump unico; revisao independente dos registros sem bloqueios.
+Nenhuma alteracao de runtime/UI: sem novo build, migration ou ensaio remoto.
+Suites opt-in puladas no check nao sao prova E2E; evidencias produtivas citadas
+acima sao as consultas reais ja executadas. Commit local, producao continua824.

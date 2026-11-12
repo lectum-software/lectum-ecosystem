@@ -1,18 +1,41 @@
 import { randomUUID } from "node:crypto";
-import { Prisma } from "@/external/generated/prisma/client";
+import { type billing_gateway_event, Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { StripeGatewayError } from "../payment-gateway/stripe-error";
 import type { StripeIdentity, StripeWebhookReference } from "../payment-gateway/stripe-types";
+
+const assertSameWebhook = (row: billing_gateway_event, event: StripeWebhookReference) => {
+  if (
+    row.gateway !== "stripe" ||
+    row.mode !== event.mode ||
+    row.account_id !== event.accountId ||
+    row.external_id !== event.eventId ||
+    row.type !== event.type ||
+    row.resource_id !== event.resourceId ||
+    row.provider_subscription_id !== event.subscriptionId ||
+    row.api_version !== event.apiVersion ||
+    row.gateway_created_at.getTime() !== event.created.getTime()
+  )
+    throw new StripeGatewayError("resource_mismatch");
+};
 
 export class StripeInboxRepository {
   async enqueue(event: StripeWebhookReference) {
+    const proof = event.requestKeyHash ?? null;
+    if (
+      proof !== null &&
+      (typeof proof !== "string" || proof.length !== 64 || !/^[a-f0-9]{64}$/.test(proof))
+    )
+      throw new StripeGatewayError("resource_invalid");
     const key = {
       gateway: "stripe",
       mode: event.mode,
       account_id: event.accountId,
       external_id: event.eventId,
     };
+    let existing: billing_gateway_event;
     try {
-      return await prisma.billing_gateway_event.upsert({
+      existing = await prisma.billing_gateway_event.upsert({
         where: { gateway_mode_account_id_external_id: key },
         create: {
           ...key,
@@ -21,6 +44,7 @@ export class StripeInboxRepository {
           provider_subscription_id: event.subscriptionId,
           api_version: event.apiVersion,
           gateway_created_at: event.created,
+          request_idempotency_key_hash: proof,
         },
         update: {},
       });
@@ -28,12 +52,40 @@ export class StripeInboxRepository {
       // Prisma may emulate upsert; a simultaneous signed delivery can win the unique key.
       if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002")
         throw error;
-      const existing = await prisma.billing_gateway_event.findUnique({
+      const winner = await prisma.billing_gateway_event.findUnique({
         where: { gateway_mode_account_id_external_id: key },
       });
-      if (!existing) throw error;
+      if (!winner) throw error;
+      existing = winner;
+    }
+    assertSameWebhook(existing, event);
+    if (proof === null) return existing;
+    if (existing.request_idempotency_key_hash !== null) {
+      if (existing.request_idempotency_key_hash !== proof)
+        throw new StripeGatewayError("resource_mismatch");
       return existing;
     }
+    // Signed redelivery may enrich a legacy NULL proof, never reopen or otherwise rewrite the job.
+    await prisma.billing_gateway_event.updateMany({
+      where: {
+        id: existing.id,
+        ...key,
+        type: event.type,
+        resource_id: event.resourceId,
+        provider_subscription_id: event.subscriptionId,
+        api_version: event.apiVersion,
+        gateway_created_at: event.created,
+        request_idempotency_key_hash: null,
+      },
+      data: { request_idempotency_key_hash: proof },
+    });
+    const enriched = await prisma.billing_gateway_event.findUniqueOrThrow({
+      where: { id: existing.id },
+    });
+    assertSameWebhook(enriched, event);
+    if (enriched.request_idempotency_key_hash !== proof)
+      throw new StripeGatewayError("resource_mismatch");
+    return enriched;
   }
 
   async claim(identity: StripeIdentity, now = new Date()) {

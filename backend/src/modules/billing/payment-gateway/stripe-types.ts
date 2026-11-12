@@ -97,4 +97,6 @@ export type StripeWebhookReference = StripeIdentity & {
   created: Date;
   resourceId: string;
   subscriptionId: string | null;
+  /** Digest of the exact known card-assignment key from a signature-verified event only. */
+  requestKeyHash?: string | null;
 };

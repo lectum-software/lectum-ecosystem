@@ -1,7 +1,7 @@
 # ADR-0692 - Camadas enxutas e logs Docker limitados por servico
 
 Data: 2026-11-11
-Status: Aceita; validada localmente em 0.1.820, sem publicacao
+Status: Aceita; preparacao validada em 0.1.820 e publicada no lote 0.1.824, rotacao remota nao aplicada
 Task: [TASK-327](../_product/tasks/TASK-327-container-footprint-log-rotation.md)
 
 ## Contexto
@@ -68,3 +68,29 @@ ad hoc que possa ser sobrescrito pelo provedor. Compose GlitchTip real e externo
 runbook contem somente fragmento, sem inventar stack ou alterar retencao de uploads.
 Nenhuma mudanca publicada, nenhum dado remoto alterado; capacidade continua gate
 operacional, e builds CI/cache sao melhorias separadas.
+
+## Complemento operacional — 11/11/2026
+
+O lote do PR#179 publicou o codigo/imagem preparado em0.1.824. As afirmacoes de
+nao publicacao acima pertencem a etapa original; nao significam que logging foi
+ativado. A auditoria posterior somente leitura confirmou ausencia de limites.
+
+Mantemos a decisao de nao usar update Swarm avulso nem reinicio global: o builder
+do Dokployv0.29.13 recria TaskTemplate sem LogDriver, conservando somente
+ForceUpdate. Exigir caminho persistente suportado antes de aplicar a politica.
+Backend real ja usa1replica/start-first, sem healthcheck Docker. Replica adicional
+nao e contorno de infraestrutura: digests/Socket.IO/rate limit possuem estado
+por processo e precisam de validacao propria antes de sobreposicao segura.
+
+GlitchTip6.1.0 aceita logging no Compose canonico, mas nao sem substituir seus
+containers. Stack possui banco/valkey unicos e servico migrate; nao redeployar
+indiscriminadamente. Nao ha backups configurados nas abas dessa stack no Dokploy;
+eventual backup externo deve ser localizado e ter restauracao comprovada. Volume
+uploads de23,46GB e distinto do log do worker de2,87GB: rotacao nao elimina
+artefatos nem autoriza maintenance/retencao destrutiva. Politica de preservacao,
+backup, capacidade e rollout sao gates; nao prometer zero interrupcao agora.
+
+Pendencia de infraestrutura separada do fechamento financeiro/fiscal. Nenhum
+servico, dado, gate financeiro ou retencao alterado nesta auditoria. Runbook e
+evidencia sanitizada descritos na TASK-327; backend/Admin/frontend0.1.824 e
+GlitchTip saudaveis ao encerrar. Atualizacao documental local, sem push/deploy.

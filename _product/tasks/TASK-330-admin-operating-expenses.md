@@ -1,7 +1,7 @@
 # TASK-330 - Custos operacionais registrados no Admin
 
 Data: 2026-11-11
-Status: Concluida localmente — 0.1.823, 11/11/2026
+Status: Concluida localmente em 0.1.823 e publicada no lote 0.1.824, PR#179, 11/11/2026
 Dependencias: TASK-328, TASK-329
 Decisao: [ADR-0695](../../adrs/0695-admin-operating-expenses.md)
 Modelo: DATA-MODEL.md, secao Custos operacionais administrativos.
