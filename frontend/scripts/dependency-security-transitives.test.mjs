@@ -19,6 +19,37 @@ const globConsumers = [
   ["Sentry current plugin", bundleRequire],
 ];
 
+// Exercise the installed Next matcher without compiling user input as a glob.
+test("Next remote-image matching keeps URL input separate from configured patterns", () => {
+  const { hasRemoteMatch } = require("next/dist/shared/lib/match-remote-pattern.js");
+  const patterns = [
+    { protocol: "https", hostname: "assets.example.invalid", pathname: "/images/**" },
+  ];
+  const snapshot = JSON.stringify(patterns);
+  assert.equal(
+    hasRemoteMatch([], patterns, new URL("https://assets.example.invalid/images/photo.png")),
+    true,
+  );
+  for (const url of [
+    "https://other.example.invalid/images/photo.png",
+    "https://assets.example.invalid.attacker.invalid/images/photo.png",
+    "https://assets.example.invalid/+(*a)/photo.png",
+    "http://assets.example.invalid/images/photo.png",
+  ])
+    assert.equal(hasRemoteMatch([], patterns, new URL(url)), false);
+  assert.equal(JSON.stringify(patterns), snapshot);
+});
+
+test("Sentry Rollup filter uses fixed build patterns rather than candidate filenames", () => {
+  const commonjsRequire = createRequire(sentryRequire.resolve("@rollup/plugin-commonjs"));
+  const { createFilter } = commonjsRequire("@rollup/pluginutils");
+  const filter = createFilter(["**/*.js"], ["**/ignored/**"], { resolve: false });
+  assert.equal(filter("src/page.js"), true);
+  assert.equal(filter("src/ignored/page.js"), false);
+  assert.equal(filter("src/page.css"), false);
+  assert.equal(filter("src/+(*a).js"), true);
+});
+
 // Actual installed transport and two real loopback servers; no gateway or credential is involved.
 test("follow-redirects strips cross-realm custom credentials across origins", {
   timeout: 5000,

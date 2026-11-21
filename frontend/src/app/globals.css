@@ -23,6 +23,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  --lectum-cookie-surface: #202020;
   --background: #f6f7f8;
   --foreground: #0f172a;
   --lectum-primary: #308ce8;
@@ -289,6 +290,7 @@ span:empty + [data-original-post-community] {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--lectum-primary);
+  --color-cookie-surface: var(--lectum-cookie-surface);
   --color-primary-strong: var(--lectum-primary-strong);
   --color-primary-foreground: var(--lectum-primary-foreground);
   --color-primary-hover: var(--lectum-primary-hover);

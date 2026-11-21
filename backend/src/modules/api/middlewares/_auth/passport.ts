@@ -388,6 +388,7 @@ if (isGoogleOAuthConfigured()) {
 
             try {
               user = await repo.store({
+                googleMarketingConsent: state?.marketingConsent,
                 b: {
                   name: googleNameForRole(role),
                   professional_first_name:

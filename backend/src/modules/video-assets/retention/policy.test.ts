@@ -81,7 +81,15 @@ describe("retenção conservadora de vídeos", () => {
       /DeleteObject|PutObject|CopyObject|AbortMultipart|deleteVideo|fetch\(/,
     );
     const bootstrap = readFileSync("src/main/server/bootstrap.ts", "utf8");
-    assert.doesNotMatch(bootstrap, /PostShareArtifactCleanup|retention|catalogLegacyR2/);
+    // Marketing consent expiry is not provider media cleanup.
+    const automaticMediaRetention =
+      /PostShareArtifactCleanup|video-assets\/retention|operations\/video-assets\/video-retention|catalogLegacyR2/;
+    assert.doesNotMatch(bootstrap, automaticMediaRetention);
+    assert.match('import cleanup from "@/modules/video-assets/retention"', automaticMediaRetention);
+    assert.doesNotMatch(
+      'import cleanup from "@/modules/marketing/attribution-retention"',
+      automaticMediaRetention,
+    );
     const retired = readFileSync("src/modules/video-assets/lifecycle.ts", "utf8");
     assert.doesNotMatch(retired, /deleteVideo|deleteRetiredProviderVideos/);
   });

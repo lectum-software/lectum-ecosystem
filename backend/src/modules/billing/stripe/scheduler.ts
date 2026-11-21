@@ -1,3 +1,4 @@
+import { recoverMarketingSubscriptions } from "@/modules/marketing/recovery";
 import { processStripeCollections, stripeCollectionsEnabled } from "./collection-service";
 import { processStripeFinancialReconciliations } from "./financial-ledger/service";
 import { processStripeInbox } from "./inbox";
@@ -20,6 +21,7 @@ const tick = async () => {
     } catch {
       console.warn("[BILLING_STRIPE] Agenda de cobrança indisponível.");
     }
+    await recoverMarketingSubscriptions();
     if (!stopped) timer = setTimeout(tick, 60_000);
   }
 };

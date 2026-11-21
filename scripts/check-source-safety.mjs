@@ -190,7 +190,8 @@ for (const relativePath of files) {
       isTestSource(relativePath) &&
       (/^\s*t\.mock\.timers\.(?:enable|tick|reset)\(/u.test(line) ||
         /^\s*t\.mock\.method\(performance, ["']now["'],/u.test(line));
-    if (uiMockPattern.test(line) && !isTestClockControl) {
+    // Test doubles belong in test files, never in shipped UI modules.
+    if (uiMockPattern.test(line) && !isTestClockControl && !isTestSource(relativePath)) {
       failures.push(`${relativePath}:${index + 1}: mock ou dado artificial em código de produto`);
     }
 

@@ -307,6 +307,9 @@ export const profileListValidator = validator(profileListSchema);
 export const contactValidator = validator(contactSchema);
 export const contactClickValidator = validator({
   ...profileShowSchema,
-  body: [{ key: "visitor_id", method: "string", max: 120, optional: true }],
+  body: [
+    { key: "visitor_id", method: "string", max: 120, optional: true },
+    { key: "measurement_allowed", method: "boolean", optional: true },
+  ],
 });
 export const profileVideoWatchValidator = validator(profileVideoWatchSchema);

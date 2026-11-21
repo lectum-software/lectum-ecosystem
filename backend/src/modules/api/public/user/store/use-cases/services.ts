@@ -90,6 +90,7 @@ export default async (data: IStoreDTO) => {
         role,
       },
       device_id: device.id,
+      headers: data.headers,
     });
   } catch (storeError) {
     if (storeError instanceof LegalError)

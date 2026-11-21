@@ -11,6 +11,8 @@ datasource db {
 }
 
 model user {
+  marketing_delivery_jobs marketing_delivery_job[]
+  marketing_consent marketing_consent?
   testimonial_batches testimonial_invitation_batch[]
   testimonial_invitations testimonial_invitation_member[] @relation("testimonial_professional")
   testimonial_requests testimonial_invitation_member[] @relation("testimonial_patient")
@@ -1894,6 +1896,7 @@ model billing_operation {
 
 // Signed event receipt and resumable processing are deliberately separate from payment_event legacy.
 model billing_gateway_event {
+  marketing_job marketing_subscribe_job?
   id                       String    @id @default(cuid())
   request_idempotency_key_hash String?
   gateway                  String
@@ -1917,6 +1920,140 @@ model billing_gateway_event {
   @@unique([gateway, mode, account_id, external_id])
   @@index([state, next_attempt_at, lease_until])
   @@map("billing_gateway_events")
+}
+
+// Optional measurement consent and internal recovery, independent from external delivery.
+model marketing_consent {
+  user_id String @id
+  revision Int @default(0)
+  document_version String?
+  granted_at DateTime?
+  expires_at DateTime?
+  revoked_at DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  events marketing_consent_event[]
+  attribution marketing_attribution?
+  browser_identifiers marketing_browser_identifier[]
+  @@map("marketing_consents")
+}
+
+model marketing_consent_event {
+  id String @id @default(cuid())
+  user_id String
+  revision Int
+  action String
+  document_version String?
+  created_at DateTime @default(now())
+  consent marketing_consent @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  @@unique([user_id, revision])
+  @@map("marketing_consent_events")
+}
+
+model marketing_browser_identifier {
+  checkout_contexts marketing_checkout_context[]
+  token_hash String @id
+  user_id String
+  consent_revision Int
+  fbp String
+  captured_at DateTime
+  expires_at DateTime
+  consent marketing_consent @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  @@index([user_id])
+  @@index([expires_at])
+  @@map("marketing_browser_identifiers")
+}
+
+model marketing_checkout_context {
+  operation_id String @id
+  token_hash String
+  document_version String
+  source_url String
+  client_user_agent String
+  captured_at DateTime
+  expires_at DateTime
+  browser marketing_browser_identifier @relation(fields: [token_hash], references: [token_hash], onDelete: Cascade)
+  @@index([token_hash])
+  @@index([expires_at])
+  @@map("marketing_checkout_contexts")
+}
+
+model marketing_attribution {
+  user_id String @id
+  consent_revision Int
+  campaigns Json
+  captured_at DateTime @default(now())
+  last_campaigns Json?
+  last_captured_at DateTime?
+  expires_at DateTime?
+  source_consent_at DateTime?
+  source_token_hash String? @unique
+  consent marketing_consent @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  @@map("marketing_attributions")
+}
+
+model marketing_guest_attribution {
+  token_hash String @id
+  browser_fbp String?
+  browser_captured_at DateTime?
+  document_version String
+  first_campaigns Json
+  last_campaigns Json
+  granted_at DateTime
+  first_at DateTime
+  last_at DateTime
+  expires_at DateTime
+  claimed Boolean @default(false)
+  revoked Boolean @default(false)
+  @@index([expires_at])
+  @@map("marketing_guest_attributions")
+}
+
+model marketing_subscribe_job {
+  id String @id @default(cuid())
+  source_event_id String @unique
+  state String @default("pending")
+  attempts Int @default(0)
+  next_attempt_at DateTime @default(now())
+  lease_token String?
+  lease_until DateTime?
+  last_error_code String?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  source_event billing_gateway_event @relation(fields: [source_event_id], references: [id], onDelete: Cascade)
+  @@index([state, next_attempt_at, lease_until])
+  @@map("marketing_subscribe_jobs")
+}
+
+// Delivery metadata only. Fresh consent and payload are resolved from server facts.
+model marketing_delivery_job {
+  client_ip_address String?
+  client_user_agent String?
+  id String @id @default(cuid())
+  source_url String?
+  user_id String?
+  consent_revision Int?
+  user user? @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  event_id String @unique
+  conversion String
+  source_ref String
+  occurred_at DateTime
+  expires_at DateTime
+  state String @default("pending")
+  attempts Int @default(0)
+  next_attempt_at DateTime @default(now())
+  lease_token String?
+  lease_until DateTime?
+  last_error_code String?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@unique([conversion, source_ref])
+  @@index([user_id])
+  @@index([state, next_attempt_at, lease_until])
+  @@index([expires_at])
+  @@map("marketing_delivery_jobs")
 }
 
 // Independent financial facts: never a fiscal document, card secret or provider payload.

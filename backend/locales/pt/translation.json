@@ -300,6 +300,9 @@
     "video_upload_not_allowed": "Seu perfil não pode enviar este vídeo.",
     "video_asset_attached": "Remova o vídeo do conteúdo antes de cancelar o envio.",
     "video_webhook_invalid": "Notificação de vídeo inválida.",
+    "marketing_consent_unavailable": "A autorização de mensuração ainda não está disponível.",
+    "marketing_consent_conflict": "Suas preferências mudaram. Atualize a página antes de continuar.",
+    "marketing_consent_invalid": "Não foi possível registrar essa autorização.",
     "legal_not_found": "Documento não encontrado.",
     "legal_conflict": "Este documento foi alterado. Atualize a página antes de continuar.",
     "legal_review_required": "Confirme a revisão jurídica antes de publicar.",
@@ -451,6 +454,7 @@
     "video_upload_canceled": "Envio de vídeo cancelado.",
     "video_playback_authorized": "Vídeo pronto para reprodução.",
     "video_webhook_processed": "Notificação de vídeo processada.",
+    "marketing_consent_saved": "Preferências de mensuração processadas com sucesso.",
     "legal_saved": "Atualização registrada com sucesso.",
     "legal_loaded": "Documentos consultados com sucesso."
   },

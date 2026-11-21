@@ -28,6 +28,14 @@ export const schema: IValidatorRequest = {
 
   body: [
     {
+      key: "marketing_guest_token",
+      custom: z
+        .string()
+        .regex(/^[a-f0-9]{64}$/)
+        .optional(),
+    },
+    { key: "measurement_allowed", method: "boolean", optional: true },
+    {
       key: "legal_document_ids",
       custom: z
         .array(z.string().regex(/^[a-zA-Z0-9_-]{1,160}$/))

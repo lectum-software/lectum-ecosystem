@@ -16,6 +16,8 @@ import {
   AdultDeclarationModal,
 } from "@/components/legal/adult-declaration-modal";
 import { hasCompleteLegalSet, legalSetKey } from "@/components/legal/policy";
+import { authorizedGuestTransferToken } from "@/components/privacy/attribution-client";
+import { hasInternalMeasurementConsent } from "@/components/privacy/internal-measurement";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
@@ -83,13 +85,17 @@ export const RegisterPatientLogic = () => {
     const birthdate = toBirthdateIso(data.birthdate);
     if (!birthdate) return;
     setApiError(null);
-    const analyticsIdentity = getOrCreateAnalyticsIdentity();
+    const measurementAllowed = hasInternalMeasurementConsent();
+    const analyticsIdentity = measurementAllowed ? getOrCreateAnalyticsIdentity() : null;
+    const marketingGuestToken = authorizedGuestTransferToken();
     registerPatient.mutate({
+      ...(marketingGuestToken ? { marketing_guest_token: marketingGuestToken } : {}),
       name: data.name.trim(),
       email: data.email,
       password: data.password,
       password_confirm: data.password_confirm,
       role: "paciente",
+      measurement_allowed: measurementAllowed,
       terms_accepted: true,
       legal_document_ids: documents.map((document) => document.id),
       privacy_acknowledged: data.legal_accepted,
@@ -130,17 +136,15 @@ export const RegisterPatientLogic = () => {
         terms_version: LEGACY_TERMS_VERSION,
         adult_confirmed: "true",
       });
-      const analyticsIdentity = getOrCreateAnalyticsIdentity();
-      if (analyticsIdentity) {
-        query.set("analytics_visitor_id", analyticsIdentity.visitorId);
-        query.set("analytics_session_id", analyticsIdentity.sessionId);
-      }
+      // OAuth may outlive the local choice; do not carry patient analytics into it.
       if (redirectTo) {
         query.set("redirectTo", redirectTo);
       }
 
+      const marketingGuestToken = authorizedGuestTransferToken();
       const { state } = await prepareGoogleRegistration(currentDeviceId, {
         ...Object.fromEntries(query),
+        ...(marketingGuestToken ? { marketing_guest_token: marketingGuestToken } : {}),
         birthdate,
       });
       window.location.href = buildTrustedGoogleLoginUrl(

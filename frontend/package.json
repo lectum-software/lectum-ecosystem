@@ -1,9 +1,10 @@
 {
   "name": "frontend",
-  "version": "0.1.827",
+  "version": "0.1.828",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "test:privacy": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/components/privacy/policy.test.mjs src/components/privacy/campaign-attribution.test.mjs src/components/analytics/meta-pixel-policy.test.mjs",
     "dev:turbo": "next dev --turbo",
     "build": "next build --webpack && node scripts/remove-production-source-maps.mjs",
     "start": "next start",
@@ -47,7 +48,7 @@
     "hls.js": "1.7.2",
     "js-cookie": "^3.0.8",
     "lucide-react": "^1.17.0",
-    "next": "16.4.1",
+    "next": "16.4.5",
     "next-themes": "^0.4.6",
     "nprogress": "^0.2.0",
     "react": "19.2.4",
@@ -69,7 +70,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.1",
+    "eslint-config-next": "16.4.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

@@ -43,3 +43,53 @@
 - [x] Logica compartilhada para comentarios de pacientes coberta por teste.
 
 final result: passed
+
+# Privacy notice visual QA - 2026-11-12
+
+## Reference and scope
+
+Reference: C:/Users/tulio/Downloads/WhatsApp Image 2026-11-12 at 14.44.30.jpeg.
+Target is only its floating privacy notice, not the event-site background.
+Reviewed reference and rendered mobile/desktop screenshots directly. Existing
+Lectum Manrope, primary blue #308ce8, Modal, switches and form foundation reused.
+
+## Rendered evidence
+
+- .tmp/privacy-qa/mobile-notice.png: 390 x 844.
+- .tmp/privacy-qa/desktop-notice.png: 1440 x 1000.
+- .tmp/privacy-qa/mobile-preferences.png and desktop-preferences.png: same viewports.
+- Actual local Next app at http://127.0.0.1:3140. Browser-only empty-feed fixtures
+  supplied by frontend/scripts/privacy-browser-smoke.mjs; not production content.
+  External network requests blocked; isolated Edge/Playwright context, no personal session.
+- Dark #202020 floating surface, white paragraph, highlighted blue policy link,
+  Lectum blue main action, centered Preferences, small mobile side margins.
+- Compared with reference: hierarchy and compact rounded surface preserved.
+  Initial actions are Aceitar cookies and Preferences; refusal remains in Preferences.
+  Button label is dark for contrast on official blue, consistent with reference's
+  dark primary-action label. Desktop stays compact at bottom-right, not a full-width wall.
+- Mobile bottom navigation remains visible and clickable, with 12px separation.
+  Safe-area CSS is included; a physical iPhone safe-area/keyboard run is still pending.
+- Preferences panel uses the existing light modal language; no crowded or overlapping
+  text at inspected sizes. Necessary is visibly on/locked, measurement starts off.
+
+## Checks
+
+Browser smoke checks bounds/no horizontal overflow, navigation separation, default
+choices, modal priority, refusal through Preferences, reload persistence, policy-page
+reopening, save/revoke and storage-quota failure. Login is excluded. No Meta requests.
+The initial legal-page click test exposed hydration timing; its SSR trigger is now
+disabled until hydrated. No layout changes or production substitutes were introduced
+to make the screenshots pass.
+
+10 focused frontend tests and 36 backend tests passed, including two real PostgreSQL
+consent tests. Scoped lint and frontend/backend types passed. Full frontend tests
+still fail in two pre-existing Sentry/Glob Windows tests; no related dependency edits.
+Node 24.16.0 is below required >=24.22.1; rerun release checks on supported runtime.
+
+## Approval and limitations
+
+Visual approval pending. No deploy, no Meta activation, no credential reads/changes.
+Browser tests cover guest UI and test-only API fixtures; authenticated consent persistence
+is tested separately against isolated PostgreSQL. Authenticated end-to-end UI, actual
+mobile Safari, published policy/legal approval and Meta restrictions remain release gates.
+The local dev server has no live backend connection; screenshots use isolated fixtures.

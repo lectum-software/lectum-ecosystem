@@ -12,6 +12,7 @@ import { getApiErrorStatus } from "@/api/errors";
 import type { DisplayMode, ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { hasInternalMeasurementConsent } from "@/components/privacy/internal-measurement";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
 import { cn } from "@/lib/utils";
@@ -295,7 +296,7 @@ export const PsychologistWhatsAppRedirectModal = ({
             Abrindo conversa no WhatsApp
           </p>
           <p className="mt-1 text-xs leading-5 text-muted">
-            Registrando o contato com segurança antes de sair da Lectum.
+            Preparando a abertura do WhatsApp para você continuar o contato.
           </p>
         </div>
 
@@ -388,11 +389,28 @@ export const PsychologistWhatsAppRedirectButton = ({
     setIsTransitionOpen(true);
 
     const startedAt = performance.now();
-    const analyticsIdentity = getOrCreateAnalyticsIdentity();
+    const allowedAtStart = hasInternalMeasurementConsent();
+    let nextUrl: string;
+    try {
+      const data = await tracking.mutateAsync();
+      nextUrl = preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url, psychologist);
+    } catch (error) {
+      setIsTransitionOpen(false);
+      const status = getApiErrorStatus(error);
+      toast.error(
+        status === 403 || status === 404
+          ? "Este profissional não está disponível para contato no momento."
+          : "Não foi possível verificar a disponibilidade. Tente novamente.",
+      );
+      return;
+    }
+    const measurementAllowed = allowedAtStart && hasInternalMeasurementConsent();
+    const analyticsIdentity = measurementAllowed ? getOrCreateAnalyticsIdentity() : null;
     if (analyticsIdentity) {
       void importantActionTracking
         .mutateAsync({
           event_id: crypto.randomUUID(),
+          measurement_allowed: measurementAllowed,
           action_type: importantActionType,
           display_mode: getDisplayMode(),
           occurred_at: new Date().toISOString(),
@@ -410,20 +428,6 @@ export const PsychologistWhatsAppRedirectButton = ({
         });
     }
 
-    let nextUrl: string;
-    try {
-      const data = await tracking.mutateAsync();
-      nextUrl = preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url, psychologist);
-    } catch (error) {
-      setIsTransitionOpen(false);
-      const status = getApiErrorStatus(error);
-      toast.error(
-        status === 403 || status === 404
-          ? "Este profissional não está disponível para contato no momento."
-          : "Não foi possível verificar a disponibilidade. Tente novamente.",
-      );
-      return;
-    }
     setTimer(() => setManualFallbackVisible(true), WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS);
 
     setRedirectUrl(nextUrl);

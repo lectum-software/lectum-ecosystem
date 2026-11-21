@@ -3,6 +3,7 @@ import type { FullPublishedDoc, LegalKind } from "@/api/req/legal/types";
 import { LegalAcceptanceStatus } from "@/components/legal/acceptance-status";
 import { LegalDocumentBody } from "@/components/legal/document-body";
 import { LEGAL_PATHS, LEGAL_TITLES } from "@/components/legal/policy";
+import { PrivacyPreferencesTrigger } from "@/components/privacy/trigger";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { PublicTemplate } from "@/templates/public";
 
@@ -22,6 +23,7 @@ export const LegalTemplate = ({
           {document?.title ?? LEGAL_TITLES[kind]}
         </h1>
         {document ? <LegalAcceptanceStatus document={document} /> : null}
+        {kind === "privacy" ? <PrivacyPreferencesTrigger /> : null}
         {document ? (
           <>
             <p className="mt-3 text-sm text-muted">

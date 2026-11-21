@@ -8,7 +8,9 @@ import {
   sendPageViewDurationBeacon,
   updatePageViewDuration,
 } from "@/api/req/analytics";
+import { hasLocalCampaignConsent } from "@/components/privacy/use-choice";
 import { useAppSelector } from "@/hooks/redux";
+import { store } from "@/store";
 import { isAdminViewAsActive } from "@/utils/admin-view-as";
 import { ANALYTICS_ATTRIBUTION_KEY, ANALYTICS_REFERRER_SENT_KEY } from "@/utils/analytics-session";
 import { getBrowserStorage } from "@/utils/browser-storage";
@@ -148,6 +150,10 @@ export const PageViewTracker = () => {
   const lastInactiveAtRef = useRef<number | null>(null);
 
   const flushCurrentDuration = useCallback((keepalive: boolean, finalize: boolean) => {
+    if (!hasLocalCampaignConsent(store.getState().user?.id || null)) {
+      currentRef.current = null;
+      return;
+    }
     const current = currentRef.current;
     if (!current) return;
 

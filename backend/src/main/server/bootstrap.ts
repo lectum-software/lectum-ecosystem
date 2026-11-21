@@ -20,6 +20,14 @@ import {
   stopStripeBillingScheduler,
 } from "@/modules/billing/stripe/scheduler";
 import {
+  startAttributionRetention,
+  stopAttributionRetention,
+} from "@/modules/marketing/attribution-retention";
+import {
+  startMetaDeliveryScheduler,
+  stopMetaDeliveryScheduler,
+} from "@/modules/marketing/delivery-scheduler";
+import {
   startAutomaticCaptions,
   stopAutomaticCaptions,
 } from "@/modules/video-assets/captions/scheduler";
@@ -36,6 +44,8 @@ const server = app.listen(env.PORT, () => {
   startInvoiceScheduler();
   startAccountMediaCleanup();
   startAutomaticCaptions();
+  startAttributionRetention();
+  startMetaDeliveryScheduler();
 });
 
 let shuttingDown = false;
@@ -51,6 +61,8 @@ const shutdown = async () => {
   stopInvoiceScheduler();
   stopAccountMediaCleanup();
   stopAutomaticCaptions();
+  await stopAttributionRetention();
+  await stopMetaDeliveryScheduler();
   soc?.disconnectSockets(true);
 
   const forceCloseTimer = setTimeout(() => {

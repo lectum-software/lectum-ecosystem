@@ -12,6 +12,7 @@ import { setupSentryExpressErrorHandler } from "@/infra/observability/sentry";
 import { getVideoStreamConfig, isVideoStreamEnabled } from "@/infra/video-stream";
 import { errorHandler, errorRoute } from "@/main/server/error";
 import { socket } from "@/main/socket";
+import { marketingRequestContext } from "@/modules/marketing/request-context";
 import { getTrustProxySetting } from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
@@ -131,6 +132,7 @@ server.use((req, _res, next) => {
   return next();
 });
 
+server.use(marketingRequestContext);
 server.use(routes);
 filesRoute(server);
 server.use(errorRoute);

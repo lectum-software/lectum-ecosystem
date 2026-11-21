@@ -20,7 +20,7 @@ export interface IContactDTO {
 }
 
 export interface IContactClickDTO {
-  b?: { visitor_id?: string };
+  b?: { visitor_id?: string; measurement_allowed?: boolean };
   p: {
     id: string;
   };

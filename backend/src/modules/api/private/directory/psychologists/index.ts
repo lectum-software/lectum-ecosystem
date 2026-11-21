@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { guardMeasurementIdentity } from "@/modules/marketing/internal-measurement";
 import optionalAuth from "../../../middlewares/optional-auth";
 import {
   contact,
@@ -32,7 +33,13 @@ routes.get(
   index,
 );
 routes.post("/:id/contact", optionalAuth, contactValidator, contact);
-routes.post("/:id/contact-click", optionalAuth, contactClickValidator, contactClick);
+routes.post(
+  "/:id/contact-click",
+  optionalAuth,
+  guardMeasurementIdentity,
+  contactClickValidator,
+  contactClick,
+);
 routes.post("/:id/view", optionalAuth, profileShowValidator, view);
 routes.post("/:id/search-impression", optionalAuth, searchImpressionValidator, searchImpression);
 routes.post("/:id/video-watch", optionalAuth, profileVideoWatchValidator, videoWatch);

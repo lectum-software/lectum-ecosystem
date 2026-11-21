@@ -106,6 +106,7 @@ export const createPost = async (req: Request, res: Response) => {
   try {
     const resolve = await createPostService(
       req as unknown as Parameters<typeof createPostService>[0],
+      () => req.get("referer"),
     );
 
     return send(res, resolve);

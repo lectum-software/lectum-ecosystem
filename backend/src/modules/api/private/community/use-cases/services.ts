@@ -2,6 +2,7 @@ import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
 import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { notifyNewCommunityPost } from "@/main/notification/domain-events";
+import { userActionCommitted } from "@/modules/marketing/user-events";
 import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
 import { videoStreamUploadRequired } from "@/modules/video-assets/upload-policy";
 import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
@@ -228,7 +229,7 @@ export const posts = async (data: ICommunityPostsDTO) => {
   };
 };
 
-export const createPost = async (data: ICommunityCreatePostDTO) => {
+export const createPost = async (data: ICommunityCreatePostDTO, observedSource?: () => unknown) => {
   const isAllowedRole = data.auth.role === "paciente" || data.auth.role === "psicologo";
 
   if (!data.auth.id || !isAllowedRole) {
@@ -409,6 +410,14 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
         model: "community",
       }),
     };
+  }
+
+  if (data.auth.role === "paciente") {
+    void userActionCommitted("patient_community_post", () => ({
+      sourceRef: res.id,
+      userId: data.auth.id!,
+      sourceUrl: observedSource?.(),
+    }));
   }
 
   if (moderation?.decision === "allow_sensitive") {

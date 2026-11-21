@@ -13,6 +13,8 @@ import {
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
 import { acceptRegistrationLegal, assertAdultRegistration } from "@/modules/legal/registration";
+import { registrationCommitted } from "@/modules/marketing/conversion-hooks";
+import { claimUserOAuthConsent } from "@/modules/marketing/user-oauth-consent";
 //
 import { loginInclude } from "@/query/login";
 import { withInvalidatedRecovery } from "@/utils/account-credentials";
@@ -152,14 +154,18 @@ export class LoginRepository implements ILoginRepository {
         terms_version,
         analytics_session_id,
         analytics_visitor_id,
+        measurement_allowed,
         ...userData
       } = data.b;
       const role = userData.role || "paciente";
       const dateOfBirth = registrationBirthdate(birthdate);
       await assertAdultRegistration(adult_confirmed, tx);
+      // OAuth can outlive the browser choice; patient attribution is not carried over.
       const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
         analytics_session_id,
         analytics_visitor_id,
+        measurement_allowed: role === "paciente" ? false : measurement_allowed,
+        role,
       });
 
       const user = await tx.user.create({
@@ -263,6 +269,9 @@ export class LoginRepository implements ILoginRepository {
         });
       }
 
+      if (data.googleMarketingConsent) {
+        await claimUserOAuthConsent(tx, user.id, data.googleMarketingConsent);
+      }
       await tx.log__user.create({
         data: {
           action: log.store,
@@ -280,6 +289,7 @@ export class LoginRepository implements ILoginRepository {
       return user;
     });
 
+    void registrationCommitted(res.role, () => res.id);
     return res;
   }
 

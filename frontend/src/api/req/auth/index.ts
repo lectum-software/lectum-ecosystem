@@ -17,6 +17,8 @@ export type ResetPasswordPayload = {
 };
 
 export type RegisterPatientPayload = {
+  marketing_guest_token?: string;
+  measurement_allowed?: boolean;
   legal_document_ids: string[];
   privacy_acknowledged: boolean;
   birthdate: string;

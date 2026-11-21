@@ -73,3 +73,7 @@ e capacidade separadamente; mover builds para CI requer uma mudanca propria.
 
 Referencias: [Dokploy Auto Deploy](https://docs.dokploy.com/docs/core/auto-deploy)
 e [Vercel Git](https://vercel.com/docs/git).
+
+## Confirmação de 21/11/2026
+
+O proprietário confirmou nesta conversa que os autodeploys de homologação/preview do frontend e do admin na Vercel já estão desativados. Esta confirmação substitui a pendência histórica acima; não representa alteração executada pelo agente nos provedores.

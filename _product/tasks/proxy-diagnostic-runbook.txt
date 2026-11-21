@@ -1,5 +1,5 @@
 TASK-333 — diagnóstico administrativo de proxy
-Preparado em 21/11/2026. Ainda não implantado.
+Implantado em 21/11/2026 pelo PR #181, backend 0.1.827.
 
 GET /api/admin/private/settings/proxy-diagnostics
 
@@ -36,3 +36,5 @@ Interpretação:
 Antes de ativar IP: confrontar a requisição controlada com a origem conhecida do operador; verificar regras de entrada no servidor e se acesso direto à origem pode aceitar cabeçalhos forjados; revisar a cadeia efetiva e repetir com IPv4/IPv6 quando disponíveis. Não aumentar o número de proxies apenas para obter um resultado true. Guardar somente o resultado sanitizado da validação.
 
 Estado: Traefik recarregado pelo proprietário após configuração de trustedIPs; saúde pública verificada. TRUST_PROXY=1 confirmado no contêiner; META_CLIENT_IP_VERIFIED ausente. Nenhuma conclusão sobre IP real de produção foi obtida ainda.
+
+Atualizacao 21/11/2026: TRUST_PROXY=2 confirmado no diagnostico autenticado; dois saltos e IP resolvido igual ao header Cloudflare. Router da API restrito a sourceRange Cloudflare, sem ipStrategy. Acesso IPv4 direto com Host da API retorna403, mesmo com headers forjados. IPv6 inconclusivo por indisponibilidade de conexao no executor; META_CLIENT_IP_VERIFIED continua desligado. Ver registro detalhado na TASK-333.
