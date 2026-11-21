@@ -35,6 +35,7 @@ import apiAdminPrivatePsychologistsProfileEdit from "@/modules/api/admin/private
 import apiAdminPrivatePsychologistsRegistryVerification from "@/modules/api/admin/private/psychologists/registry-verification";
 import apiAdminPrivateSettingsCatalogs from "@/modules/api/admin/private/settings/catalogs";
 import apiAdminPrivateSettingsLegal from "@/modules/api/admin/private/settings/legal";
+import apiAdminPrivateSettingsProxyDiagnostics from "@/modules/api/admin/private/settings/proxy-diagnostics";
 import apiAdminPrivateSettingsSeo from "@/modules/api/admin/private/settings/seo";
 import apiAdminPrivateSettingsSubscriptionPlan from "@/modules/api/admin/private/settings/subscription-plan";
 import apiAdminPrivateTrafficExport from "@/modules/api/admin/private/traffic/export";
@@ -249,6 +250,10 @@ mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsFeedb
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsActivities);
 mountRoute("/api/admin/private/settings/catalogs", apiAdminPrivateSettingsCatalogs);
 mountRoute("/api/admin/private/settings/legal", apiAdminPrivateSettingsLegal);
+mountRoute(
+  "/api/admin/private/settings/proxy-diagnostics",
+  apiAdminPrivateSettingsProxyDiagnostics,
+);
 mountRoute("/api/admin/private/settings/seo", apiAdminPrivateSettingsSeo);
 mountRoute(
   "/api/admin/private/settings/subscription-plan",
