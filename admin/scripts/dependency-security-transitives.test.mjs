@@ -89,12 +89,17 @@ for (const [consumer, resolve] of globConsumers) {
     await mkdir(chunks, { recursive: true });
     for (const name of ["page.js", "page.js.map", "ignored.js.map", "style.css", "ação.js"])
       await writeFile(path.join(chunks, name), "local regression fixture");
-    const maps = await glob.glob(path.join(directory, ".next/static/**/*.map"), {
+    // Glob syntax uses forward slashes independently of the filesystem platform.
+    const patternDirectory = directory.split(path.sep).join("/");
+    const maps = await glob.glob(`${patternDirectory}/.next/static/**/*.map`, {
       absolute: true,
       nodir: true,
-      ignore: [path.join(directory, "**/ignored*")],
+      ignore: [`${patternDirectory}/**/ignored*`],
     });
-    assert.deepEqual(maps, [path.join(chunks, "page.js.map")]);
+    assert.deepEqual(
+      maps.map((file) => path.normalize(file)),
+      [path.join(chunks, "page.js.map")],
+    );
     const rooted = await glob.glob("/.next/static/**/*.{js,map}", {
       root: directory,
       absolute: true,
@@ -102,7 +107,7 @@ for (const [consumer, resolve] of globConsumers) {
       ignore: ["/.next/static/**/ignored*"],
     });
     assert.deepEqual(
-      rooted.sort(),
+      rooted.map((file) => path.normalize(file)).sort(),
       ["ação.js", "page.js", "page.js.map"].map((name) => path.join(chunks, name)).sort(),
     );
     assert.equal(

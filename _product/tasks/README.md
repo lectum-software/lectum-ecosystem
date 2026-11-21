@@ -2890,3 +2890,5 @@ Refinamento local de 05/11: [TASK-318 - Convites de avaliacao](TASK-318-evaluati
 Experimento local de 09/11: [TASK-319 - Pool de players no diretorio](TASK-319-directory-player-pool.md).
 
 Ajustes locais de legendas de 09/11: [TASK-320 - Interface de legendas](TASK-320-caption-interface-refinements.md).
+
+| 334 | [TASK-334 - Diagnostico privado da cadeia de proxies](TASK-334-private-proxy-diagnostic.md) | Em andamento |
