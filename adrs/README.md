@@ -767,3 +767,4 @@ Formato recomendado:
 - [ADR-0697 — Proveniencia assinada para SetupIntent auxiliar](0697-stripe-auxiliary-setup-provenance.md)
 
 - [ADR-0699 — Diagnostico administrativo de proxies sem dados pessoais](0699-private-proxy-diagnostic.md)
+- [ADR-0698 — Meta marketing compliance gate](0698-meta-marketing-compliance-gate.md)

@@ -15,6 +15,7 @@ import type {
   DirectoryPsychologistVideoWatchResponse,
 } from "@/api/generator/types/directory";
 import { handleReq } from "@/api/handle";
+import { hasInternalMeasurementConsent } from "@/components/privacy/internal-measurement";
 import { getProfileViewNavigationOrigin } from "@/utils/navigation-history";
 
 export const getDirectoryPsychologists = async (query: DirectoryPsychologistsQuery = {}) => {
@@ -80,10 +81,14 @@ export const createDirectoryPsychologistContact = async (
 };
 
 export const createDirectoryPsychologistContactClick = async (id: string) => {
+  const allowed = hasInternalMeasurementConsent();
   const handle = callEndpoint({
     route: "/api/private/directory/psychologists/:id/contact-click",
     method: "POST",
-    body: { visitor_id: getOrCreateAnalyticsIdentity()?.visitorId },
+    body: {
+      measurement_allowed: allowed,
+      ...(allowed ? { visitor_id: getOrCreateAnalyticsIdentity()?.visitorId } : {}),
+    },
     params: { id },
   });
 

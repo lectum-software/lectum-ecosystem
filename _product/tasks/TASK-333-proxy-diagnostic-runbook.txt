@@ -1,0 +1,40 @@
+TASK-333 — diagnóstico administrativo de proxy
+Implantado em 21/11/2026 pelo PR #181, backend 0.1.827.
+
+GET /api/admin/private/settings/proxy-diagnostics
+
+A rota usa a autenticação administrativa existente (cookie HttpOnly, marcador de requisição administrativa e dispositivo). Não criar endpoint público nem copiar cookies/tokens para o chat. O middleware de captura de marketing exclui rotas administrativas.
+
+O relatório retorna somente a configuração de trust proxy, contagem de endereços encaminhados, validade e comparações booleanas. Não devolve IP, User-Agent, cookies, hashes identificadores ou conteúdo completo de cabeçalhos. Resposta privada/no-store. Não grava no banco e não chama a Meta.
+
+Após implantação revisada, abrir o admin de produção e autenticar-se normalmente. No Console do navegador dessa mesma página, executar:
+
+(async () => {
+  if (location.origin !== 'https://admin.lectum.com.br') throw new Error('Abra o admin de produção');
+  const device = localStorage.getItem('lectum.admin.device');
+  if (!device) throw new Error('Entre novamente no admin para registrar o dispositivo');
+  const response = await fetch('https://api.lectum.com.br/api/admin/private/settings/proxy-diagnostics', {
+    credentials: 'include',
+    cache: 'no-store',
+    headers: {
+      'x-device': device,
+      'X-Requested-With': 'Lectum-Admin-Cookie-Auth',
+      'Accept-Language': 'pt-BR'
+    }
+  });
+  if (!response.ok) throw new Error('Diagnóstico indisponível: HTTP ' + response.status);
+  console.table(await response.json());
+})();
+
+Interpretação:
+- resolved_matches_cloudflare_header=false: o IP escolhido pelo Express difere do cabeçalho da Cloudflare. Não ativar o envio de IP.
+- true: os campos coincidem nesta requisição, mas isso NÃO prova a autenticidade do cabeçalho nem segurança de caminhos alternativos.
+- null: não há dois IPs válidos para comparar.
+- forwarded_hops conta as entradas no cabeçalho; não determina sozinho o valor correto de TRUST_PROXY.
+- verification permanece requires_controlled_external_probe. O diagnóstico não altera TRUST_PROXY nem META_CLIENT_IP_VERIFIED.
+
+Antes de ativar IP: confrontar a requisição controlada com a origem conhecida do operador; verificar regras de entrada no servidor e se acesso direto à origem pode aceitar cabeçalhos forjados; revisar a cadeia efetiva e repetir com IPv4/IPv6 quando disponíveis. Não aumentar o número de proxies apenas para obter um resultado true. Guardar somente o resultado sanitizado da validação.
+
+Estado: Traefik recarregado pelo proprietário após configuração de trustedIPs; saúde pública verificada. TRUST_PROXY=1 confirmado no contêiner; META_CLIENT_IP_VERIFIED ausente. Nenhuma conclusão sobre IP real de produção foi obtida ainda.
+
+Atualizacao 21/11/2026: TRUST_PROXY=2 confirmado no diagnostico autenticado; dois saltos e IP resolvido igual ao header Cloudflare. Router da API restrito a sourceRange Cloudflare, sem ipStrategy. Acesso IPv4 direto com Host da API retorna403, mesmo com headers forjados. IPv6 inconclusivo por indisponibilidade de conexao no executor; META_CLIENT_IP_VERIFIED continua desligado. Ver registro detalhado na TASK-333.

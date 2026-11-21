@@ -9,6 +9,8 @@ import { LocationCapture } from "@/components/analytics/location-capture";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
 import { MobileZoomGuard } from "@/components/mobile-zoom-guard";
+import { PrivacyMeasurementBoundary } from "@/components/privacy/measurement-boundary";
+import { PrivacyNotice } from "@/components/privacy/notice";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { VideoDiagnostics } from "@/components/video-diagnostics";
@@ -130,14 +132,18 @@ export default function RootLayout({
             <Query>
               <PullToRefresh />
               <AdminViewAsBanner />
-              <LocationCapture />
-              <Suspense fallback={null}>
-                <PageViewTracker />
-              </Suspense>
+              <PrivacyMeasurementBoundary>
+                <LocationCapture />
+                <Suspense fallback={null}>
+                  <PageViewTracker />
+                </Suspense>
+              </PrivacyMeasurementBoundary>
               <ProgressiveConversionBoundary>
                 {children}
                 <Socket />
                 <PwaInstallPrompt />
+                <PrivacyNotice />
+                <AttributionCapture />
                 <Toaster
                   containerAriaLabel="Notificações"
                   position="top-right"
@@ -152,3 +158,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+import { AttributionCapture } from "@/components/privacy/attribution-capture";

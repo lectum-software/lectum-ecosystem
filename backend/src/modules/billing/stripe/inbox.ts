@@ -45,11 +45,11 @@ export const acceptStripeWebhook = async (
   return { processed: false, received: true };
 };
 
-export const processStripeInbox = async () => {
+export const processStripeInbox = async (eventId?: string) => {
   const gateway = getStripeGateway();
   const repository = new StripeInboxRepository();
   for (let index = 0; index < 10; index += 1) {
-    const job = await repository.claim(gateway.identity);
+    const job = await repository.claim(gateway.identity, new Date(), eventId);
     if (!job) break;
     try {
       if (job.api_version !== STRIPE_API_VERSION)
@@ -184,6 +184,8 @@ export const processStripeInbox = async () => {
       });
     }
   }
+  // Targeted repair must not run the account-wide operation recovery sweep.
+  if (eventId !== undefined) return;
   for (const operation of await repository.recoverableOperations(gateway.identity)) {
     try {
       if (operation.kind === "checkout")

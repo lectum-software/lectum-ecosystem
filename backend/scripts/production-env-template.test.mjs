@@ -129,6 +129,10 @@ test("todas as envs canonicas estao cobertas ou excluidas com justificativa expl
     "ANALYTICS_SESSION_INTEGRATION",
     "PROFILE_WATCH_LOCAL_INTEGRATION",
     "LECTUM_STRIPE_DB_TESTS",
+    "WHATSAPP_CONSENT_DB_TEST",
+    "LECTUM_ATTRIBUTION_BROWSER_TESTS",
+    // Local browser harness dependency path, never a production setting.
+    "PLAYWRIGHT_MODULE",
     // Orquestrador exclusivamente local.
     "FRONTEND_PORT",
     "DEV_ADMIN_ENABLED",

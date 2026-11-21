@@ -8,6 +8,8 @@ import type {
   StripeBillingOperationSummary,
   StripeBillingQuote,
 } from "@/api/generator/types/stripe-billing";
+import { capturePrivacyCheckout } from "@/api/req/privacy";
+import { useAppSelector } from "@/hooks/redux";
 import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
 import {
   getBillingMutationErrorMessage,
@@ -31,6 +33,7 @@ export const useStripeOperation = ({
   onComplete: () => Promise<boolean>;
 }) => {
   const requests = useStripeBillingOperations();
+  const userId = useAppSelector((state) => state.user?.id ?? null);
   const requestsRef = useRef(requests);
   const completionRef = useRef(onComplete);
   const requestKeyRef = useRef<string | null>(null);
@@ -60,6 +63,9 @@ export const useStripeOperation = ({
       if (!mountedRef.current) return;
       const { id, kind: resultKind, state } = result.operation;
       if (resultKind !== kind) throw new Error("Invalid billing operation");
+      if (resultKind === "checkout" && state === "requires_confirmation")
+        await capturePrivacyCheckout(userId, id);
+      if (!mountedRef.current) return;
       const summary = {
         id,
         kind: resultKind,
@@ -80,7 +86,7 @@ export const useStripeOperation = ({
         }
       }
     },
-    [kind],
+    [kind, userId],
   );
 
   const verify = useCallback(

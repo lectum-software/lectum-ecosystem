@@ -3,8 +3,11 @@ import { Router } from "express";
 import { getLimiter } from "@/external/limiter";
 import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
+import prisma from "@/infra/database/prisma";
 //Middlewares
 import passport from "@/modules/api/middlewares/_auth/passport";
+import type { OAuthConsentReference } from "@/modules/marketing/oauth-consent-reference";
+import { prepareUserOAuthConsent } from "@/modules/marketing/user-oauth-consent";
 import { adultBirthdateSchema } from "@/utils/adult-birthdate";
 import { isGoogleOAuthConfigured } from "../utils/config";
 import {
@@ -41,7 +44,7 @@ routes.get("/", limiter, (_req, res) =>
 );
 
 // Keep birthdates out of navigation URLs and provider-visible OAuth parameters.
-routes.post("/:id/registration", limiter, (req, res) => {
+routes.post("/:id/registration", limiter, async (req, res) => {
   const deviceId = typeof req.params.id === "string" ? req.params.id : "";
   const birthdate = adultBirthdateSchema.safeParse(req.body?.birthdate);
   if (
@@ -51,12 +54,25 @@ routes.post("/:id/registration", limiter, (req, res) => {
   ) {
     return send(res, { status: 400, ...error("invalid_birthdate", {}) });
   }
-  const { nonce, state } = createGoogleOAuthState(deviceId, {
-    ...req.body,
-    birthdate: birthdate.data,
-    adult_confirmed: "true",
-    intent: "register",
-  });
+  const marketingConsent =
+    req.body.role === "paciente"
+      ? await prepareUserOAuthConsent(
+          prisma,
+          req.body.marketing_guest_token,
+          new Date(),
+          req.get("referer"),
+        )
+      : null;
+  const { nonce, state } = createGoogleOAuthState(
+    deviceId,
+    {
+      ...req.body,
+      birthdate: birthdate.data,
+      adult_confirmed: "true",
+      intent: "register",
+    },
+    marketingConsent,
+  );
   res.cookie(GOOGLE_REGISTRATION_COOKIE, nonce, googleRegistrationCookieOptions());
   res.setHeader("Cache-Control", "no-store");
   return send(res, { status: 200, success: true, data: { state } });
@@ -73,6 +89,7 @@ routes.get("/:id", limiter, (req, res, next) => {
   }
 
   let query = { ...req.query };
+  let marketingConsent: OAuthConsentReference | undefined;
   // A date is accepted only from the encrypted, browser-bound preparation step.
   delete query.birthdate;
   if (req.query.registration_state !== undefined) {
@@ -84,10 +101,11 @@ routes.get("/:id", limiter, (req, res, next) => {
       return send(res, { status: 400, ...error("invalid_structure", {}) });
     }
     query = prepared.query;
+    marketingConsent = prepared.marketingConsent;
     const { maxAge: _maxAge, ...cookieOptions } = googleRegistrationCookieOptions();
     res.clearCookie(GOOGLE_REGISTRATION_COOKIE, cookieOptions);
   }
-  const { nonce, state } = createGoogleOAuthState(deviceId, query);
+  const { nonce, state } = createGoogleOAuthState(deviceId, query, marketingConsent);
   const deleteReauthCookie = createGoogleDeleteReauthStateCookie(deviceId, req.query);
   res.cookie(GOOGLE_OAUTH_STATE_COOKIE, nonce, googleOAuthStateCookieOptions());
   if (deleteReauthCookie) {

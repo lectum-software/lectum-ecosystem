@@ -837,6 +837,7 @@ ou cortesia manual.
 | 330 | [TASK-330 - Custos operacionais no Admin](TASK-330-admin-operating-expenses.md) | Done | 328, 329 |
 | 331 | [TASK-331 - Tarifas Stripe observadas](TASK-331-admin-stripe-observed-fees.md) | Done | 328, 330 |
 | 332 | [TASK-332 - Correlacao segura do SetupIntent auxiliar Stripe](TASK-332-stripe-auxiliary-setup-resolution.md) | In Progress | 323, 331 |
+| 333 | [TASK-333 - Conversoes Meta e bloqueio de conformidade](TASK-333-meta-marketing-conversions.md) | In Progress | 323 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -2891,4 +2892,5 @@ Experimento local de 09/11: [TASK-319 - Pool de players no diretorio](TASK-319-d
 
 Ajustes locais de legendas de 09/11: [TASK-320 - Interface de legendas](TASK-320-caption-interface-refinements.md).
 
-| 334 | [TASK-334 - Diagnostico privado da cadeia de proxies](TASK-334-private-proxy-diagnostic.md) | Em andamento |
+| 334 | [TASK-334 - Diagnostico privado da cadeia de proxies](TASK-334-private-proxy-diagnostic.md) | Concluida |
+Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidade](TASK-333-meta-marketing-conversions.md). Stripe Subscribe preparado e desativado; persistencia real, consentimento e retries pendentes. Nenhuma ativacao externa.

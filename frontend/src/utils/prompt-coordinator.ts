@@ -5,7 +5,7 @@ import {
   writeStorageItem,
 } from "@/utils/browser-storage";
 
-export type ActivePromptOwner = "notification-permission" | "pwa-install";
+export type ActivePromptOwner = "notification-permission" | "pwa-install" | "privacy";
 
 const ACTIVE_PROMPT_KEY = "lectum.activePrompt";
 let activePromptInMemory: ActivePromptOwner | null = null;

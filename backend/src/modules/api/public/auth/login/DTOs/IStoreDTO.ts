@@ -1,4 +1,6 @@
+import type { OAuthConsentReference } from "@/modules/marketing/oauth-consent-reference";
 export interface IStoreDTO {
+  googleMarketingConsent?: OAuthConsentReference;
   b: {
     name: string;
     professional_first_name?: string | null;
@@ -15,6 +17,7 @@ export interface IStoreDTO {
     birthdate?: string;
     terms_version?: string;
     analytics_visitor_id?: string;
+    measurement_allowed?: boolean;
     analytics_session_id?: string;
   };
 }

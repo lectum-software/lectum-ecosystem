@@ -88,8 +88,10 @@ export class StripeInboxRepository {
     return enriched;
   }
 
-  async claim(identity: StripeIdentity, now = new Date()) {
+  async claim(identity: StripeIdentity, now = new Date(), eventId?: string) {
+    if (eventId !== undefined && (typeof eventId !== "string" || !eventId.trim())) return null;
     const where = {
+      ...(eventId !== undefined ? { id: eventId } : {}),
       gateway: "stripe",
       mode: identity.mode,
       account_id: identity.accountId,

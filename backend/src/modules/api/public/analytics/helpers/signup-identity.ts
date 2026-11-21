@@ -10,6 +10,8 @@ type SignupAnalyticsIdentitySource =
   | "psychologist_registration";
 
 export type SignupAnalyticsIdentityInput = {
+  role?: string;
+  measurement_allowed?: boolean;
   analytics_session_id?: string | null;
   analytics_visitor_id?: string | null;
 };
@@ -32,6 +34,7 @@ const normalizeAnalyticsId = (value: unknown) => {
 export const resolveSignupAnalyticsIdentity = (
   input: SignupAnalyticsIdentityInput,
 ): SignupAnalyticsIdentity | null => {
+  if (input.role === "paciente" && input.measurement_allowed !== true) return null;
   const visitorId = normalizeAnalyticsId(input.analytics_visitor_id);
   const sessionId = normalizeAnalyticsId(input.analytics_session_id);
 

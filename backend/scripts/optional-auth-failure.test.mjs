@@ -41,6 +41,7 @@ test("autenticação opcional distingue visitante de falha real do banco", async
       const express = require(${JSON.stringify(require.resolve("express"))});
       const root = ${JSON.stringify(backendRoot)};
       const optionalAuth = require(root + '/src/modules/api/middlewares/optional-auth/index.ts').default;
+      const { guardMeasurementIdentity, allowsInternalMeasurement } = require(root + '/src/modules/marketing/internal-measurement.ts');
       const privateAuth = require(root + '/src/modules/api/middlewares/_auth/index.ts').default;
       const { generateToken } = require(root + '/src/modules/api/middlewares/_auth/utils/generateToken.ts');
       const { prisma } = require(root + '/src/external/prisma/client.ts');
@@ -48,6 +49,11 @@ test("autenticação opcional distingue visitante de falha real do banco", async
       (async () => {
         if (!i18n.isInitialized) await new Promise(resolve => i18n.on('initialized', resolve));
         const app = express();
+        app.use(express.json());
+        app.use('/actions', require(root + '/src/modules/api/public/analytics/action/index.ts').default);
+        app.post('/measurement', optionalAuth, guardMeasurementIdentity, async (req, res) => {
+          res.json({allowed: await allowsInternalMeasurement(req.body.measurement_allowed, req.auth?.id)});
+        });
         app.get('/optional', optionalAuth, (_req, res) => res.sendStatus(204));
         app.get('/private', privateAuth, (_req, res) => res.sendStatus(204));
         const server = app.listen(0, '127.0.0.1');
@@ -55,6 +61,41 @@ test("autenticação opcional distingue visitante de falha real do banco", async
         const base = 'http://127.0.0.1:' + server.address().port;
         const token = generateToken({id:'audit-account', email:'audit@example.invalid'}, 'user', 'audit-device');
         try {
+          const expired = generateToken({id:'audit-account', email:'audit@example.invalid'}, 'user', 'audit-device', {expiresIn:-60});
+          const cases = [
+            [{}, true],
+            [{Cookie:'unrelated=present'}, true],
+            [{Authorization:'Basic invalid'}, false],
+            [{Authorization:'Bearer invalid'}, false],
+            [{Authorization:'Bearer invalid', 'x-device':'audit-device'}, false],
+            [{Authorization:'Bearer ' + expired, 'x-device':'audit-device'}, false],
+            [{Cookie:'lectum_user_session=invalid'}, false],
+            [{Cookie:'lectum_user_session='}, false],
+            [{Cookie:'lectum_user_session=%ZZ'}, false],
+            [{Cookie:'lectum_user_session=invalid', 'x-requested-with':'Lectum-User-Cookie-Auth', 'x-device':'audit-device'}, false],
+            [{Cookie:'lectum_user_session=' + expired, 'x-requested-with':'Lectum-User-Cookie-Auth', 'x-device':'audit-device'}, false],
+          ];
+          for (const [credentials, allowed] of cases) {
+            const response = await fetch(base + '/measurement', {
+              method:'POST', headers:{'Content-Type':'application/json', ...credentials},
+              body:JSON.stringify({measurement_allowed:true}), signal:AbortSignal.timeout(5000)
+            });
+            assert.equal(response.status, 200);
+            assert.deepEqual(await response.json(), {allowed});
+            if (!allowed) {
+              for (const action_type of ['whatsapp_click', 'psychologist_video_whatsapp_click']) {
+                const action = await fetch(base + '/actions', {
+                  method:'POST', headers:{'Content-Type':'application/json', ...credentials},
+                  body:JSON.stringify({measurement_allowed:true, action_type,
+                    visitor_id:'audit-visitor', session_id:'audit-session'}),
+                  signal:AbortSignal.timeout(5000)
+                });
+                assert.equal(action.status, 200);
+                assert.equal((await action.json()).data.tracked, false);
+              }
+            }
+          }
+          console.log('MEASUREMENT_AUTH_BOUNDARY_OK', cases.length);
           for (const headers of [{}, {'Authorization':'Bearer invalid', 'x-device':'audit-device'}]) {
             const response = await fetch(base + '/optional', {headers, signal: AbortSignal.timeout(5000)});
             assert.equal(response.status, 204);
@@ -105,6 +146,7 @@ test("autenticação opcional distingue visitante de falha real do banco", async
       `Middleware deve responder sem falha: ${result.error?.code ?? "exit"}; ${observedStatuses.join(", ")}`,
     );
     assert.match(result.stdout, /OPTIONAL_AUTH_FAILURE_OK/);
+    assert.match(result.stdout, /MEASUREMENT_AUTH_BOUNDARY_OK 11/);
     assert.doesNotMatch(
       result.stdout + result.stderr,
       /audit@example|audit-device|isolated-auth-test|PrismaClient|postgresql:|missing-postgres|node_modules/,

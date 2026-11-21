@@ -11,6 +11,11 @@ import {
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
 import { acceptRegistrationLegal, assertAdultRegistration } from "@/modules/legal/registration";
+import { registrationCommitted } from "@/modules/marketing/conversion-hooks";
+import {
+  claimUserEmailConsent,
+  prepareUserOAuthConsent,
+} from "@/modules/marketing/user-oauth-consent";
 import { registrationBirthdate } from "@/utils/adult-birthdate";
 
 //Utils
@@ -44,6 +49,16 @@ export class StoreRepository implements IStoreRepository {
     if (props.select) read.select = props.select;
     else if (props.include) read.include = props.include;
 
+    // Resolve existing guest evidence before account creation; never infer consent from terms.
+    const marketingConsent =
+      (props.b.role || "paciente") === "paciente"
+        ? await prepareUserOAuthConsent(
+            prisma,
+            props.b.marketing_guest_token,
+            new Date(),
+            props.headers?.referer,
+          )
+        : null;
     const created = await prisma.$transaction(async (tx) => {
       const {
         professional_first_name,
@@ -58,15 +73,20 @@ export class StoreRepository implements IStoreRepository {
         terms_version,
         analytics_session_id,
         analytics_visitor_id,
+        measurement_allowed,
+        marketing_guest_token: _marketingGuestToken,
         ...userData
       } = props.b;
       void _passwordConfirm;
+      void _marketingGuestToken;
       const role = userData.role || "paciente";
       const dateOfBirth = registrationBirthdate(birthdate);
       await assertAdultRegistration(adult_confirmed, tx);
       const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
         analytics_session_id,
         analytics_visitor_id,
+        measurement_allowed: measurement_allowed,
+        role,
       });
 
       const item = await tx.user.create({
@@ -177,9 +197,13 @@ export class StoreRepository implements IStoreRepository {
         },
       });
 
+      if (role === "paciente" && marketingConsent) {
+        await claimUserEmailConsent(tx, item.id, marketingConsent);
+      }
       return item;
     });
 
+    void registrationCommitted(created.role, () => created.id);
     return created as user;
   }
 }

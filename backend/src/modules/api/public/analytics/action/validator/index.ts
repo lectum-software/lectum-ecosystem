@@ -34,6 +34,7 @@ export const schema: IValidatorRequest = {
   params: [],
   query: [],
   body: [
+    { key: "measurement_allowed", method: "boolean", optional: true },
     {
       key: "event_id",
       method: "string",

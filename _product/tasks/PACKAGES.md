@@ -8,6 +8,28 @@ padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
 
+### Isolated marketing identifier dependency 2026-11-17 (TASK-333 / ADR-0698)
+
+Backend pins capi-param-builder-nodejs 1.3.2 after isolated source/browser audit.
+Installed with scripts disabled; no transitive runtime dependencies. The SDK is
+used only with explicit minimal inputs behind the disabled browser-capture gate,
+never the framework request extractor. Its processRequest API is deprecated
+upstream; pin/review upgrades before use. The isolated package audit reported no
+known advisories; this does not supersede the repository security findings below.
+No frontend SDK or automatic PII normalization was added.
+
+### Frontend security follow-up 2026-11-17 (TASK-333)
+
+Frontend Next and eslint-config-next are pinned to 16.4.5, the minimum patched
+release for GHSA-mfr8-8qww-v76h and GHSA-vc7v-qv4w-wrv8. Registry engines and
+React peers were checked before installation; React/Sentry/Stripe stay unchanged.
+The frontend lockfile remains independent. This does not update the admin app.
+Post-install frontend production audit no longer reports the two Next advisories.
+It still reports high GHSA-fc5q-39xc-vjpf through Sentry / Rollup commonjs /
+picomatch; the advisory currently lists no patched version. No suppression or
+unverified override was added. The historical zero-advisory baseline above is
+not the current security status. See TASK-333 for validation and release gates.
+
 ### Remediacao focal 2026-11-09 (TASK-323 / ADR-0687)
 
 Antes da instalacao, foram revisados registry, changelogs, engines e consumidores
@@ -347,3 +369,15 @@ Adicionar esses pacotes somente em task de qualidade/testes ou quando uma task e
 - Nao instalar `infosimples-sdk` por padrao. A integracao CFP/CRP deve usar HTTP nativo do backend em adapter isolado, apos confirmar o endpoint/payload na documentacao autenticada da InfoSimples.
 - `DOCUMENT_TOKEN` e segredo backend-only; nunca expor ao frontend, logs ou commits.
 - Qualquer adocao futura de SDK da InfoSimples exige nova validacao deste arquivo e ADR especifico.
+
+### Auditoria de preparacao produtiva — 21/11/2026
+Admin alinhado a Next/eslint-config-next16.4.5, ja usado no frontend, eliminando os sete advisories Next do lock16.4.1. Auditoria --prod do Admin corrigido: zero avisos conhecidos. Backend: preparar overrides effect3.22.1 (GHSA-7589-6fvf-x4pw) e fast-xml-parser5.12.0 (GHSA-474x-hrwr-fgx4); patches confirmados no registry e advisories oficiais. Instalacao isolada sem scripts, mantendo dependencias do checkout original intactas. Raiz, frontend e video passaram auditoria --prod. A auditoria do backend corrigido e checks/builds seguem pendentes; nao usar o baseline historico como conclusao atual.
+
+## Validação final da entrega 0.1.828 — 2026-11-21
+
+- Política de privacidade v2 publicada pelo responsável e corpo conferido com o texto preparado.
+- `pnpm check` completo passou; builds atuais de backend e frontend passaram. Builds de admin e video passaram sem alterações posteriores nesses aplicativos.
+- 41 testes focados de cadastro profissional/bloqueios e 25 testes de privacidade passaram. Integrações de consentimento usam PostgreSQL local real; nenhum envio de conversão à Meta foi realizado nesta validação.
+- Auditoria dos cinco escopos de dependências sem vulnerabilidades reportadas; nove migrações aditivas aplicadas localmente sem reset.
+- Origem observada no navegador: `https://www.lectum.com.br/`. URLs detalhadas não são liberadas. Consentimento exige a versão atual; recuperação histórica permanece desativada.
+- CAPI e IP verificado continuam com fallback desligado. Publicação de código não comprova recebimento externo nem conclui a TASK-333.

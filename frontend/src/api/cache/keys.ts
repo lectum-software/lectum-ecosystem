@@ -1,4 +1,5 @@
 const keys = {
+  privacy: { status: (userId: string) => ["privacy_consent", userId] },
   whatsappReports: {
     root: (userId: string) => ["whatsapp_reports", userId],
     history: (userId: string) => ["whatsapp_reports", userId, "history"],

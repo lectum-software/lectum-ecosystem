@@ -7,6 +7,10 @@ import {
 } from "node:crypto";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import {
+  type OAuthConsentReference,
+  readOAuthConsentReference,
+} from "@/modules/marketing/oauth-consent-reference";
 import { isPublishedRuntime } from "@/utils/runtime-config";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "lectum_google_oauth_nonce";
@@ -40,6 +44,7 @@ const ALLOWED_QUERY_KEYS = new Set([
 ]);
 
 type GoogleOAuthStatePayload = {
+  marketingConsent?: OAuthConsentReference;
   device_id: string;
   expires_at: number;
   nonce: string;
@@ -151,6 +156,7 @@ const normalizeStatePayload = (
   payload: unknown,
   cookieNonce: string,
   expiresAt: unknown,
+  allowPrivateConsent = false,
 ): GoogleOAuthStatePayload | null => {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
 
@@ -173,7 +179,15 @@ const normalizeStatePayload = (
     return null;
   }
 
+  const marketingConsent =
+    allowPrivateConsent &&
+    record.query &&
+    (record.query as Record<string, unknown>).intent === "register" &&
+    (record.query as Record<string, unknown>).role === "paciente"
+      ? readOAuthConsentReference(record.marketingConsent)
+      : null;
   return {
+    ...(marketingConsent ? { marketingConsent } : {}),
     device_id: deviceId,
     expires_at: expiration,
     nonce,
@@ -230,7 +244,7 @@ const decryptGoogleOAuthState = (state: string, cookieNonce: string) => {
       ? (payload as Record<string, unknown>).expires_at
       : undefined;
 
-  return normalizeStatePayload(payload, cookieNonce, expiresAt);
+  return normalizeStatePayload(payload, cookieNonce, expiresAt, true);
 };
 
 const verifyLegacyGoogleOAuthState = (state: string, cookieNonce: string) => {
@@ -244,9 +258,18 @@ const verifyLegacyGoogleOAuthState = (state: string, cookieNonce: string) => {
   return normalizeStatePayload(payload, cookieNonce, expiresAt);
 };
 
-export const createGoogleOAuthState = (deviceId: string, query: Record<string, unknown>) => {
+export const createGoogleOAuthState = (
+  deviceId: string,
+  query: Record<string, unknown>,
+  privateConsent?: OAuthConsentReference | null,
+) => {
   const nonce = randomBytes(32).toString("base64url");
+  const marketingConsent =
+    query.intent === "register" && query.role === "paciente"
+      ? readOAuthConsentReference(privateConsent)
+      : null;
   const state = encryptGoogleOAuthState({
+    ...(marketingConsent ? { marketingConsent } : {}),
     device_id: deviceId,
     expires_at: Date.now() + GOOGLE_OAUTH_STATE_TTL_MS,
     nonce,

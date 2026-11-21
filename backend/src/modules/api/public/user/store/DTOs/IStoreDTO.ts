@@ -26,6 +26,8 @@ export interface IStoreDTO {
     birthdate?: string;
     terms_version?: string;
     analytics_visitor_id?: string;
+    measurement_allowed?: boolean;
+    marketing_guest_token?: string;
     analytics_session_id?: string;
   };
   device_id?: string;

@@ -1,5 +1,6 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import prisma from "@/infra/database/prisma";
+import { allowsInternalMeasurement } from "@/modules/marketing/internal-measurement";
 import { hashWhatsappVisitor } from "@/modules/whatsapp-reports/policy";
 import {
   buildProfessionalFullDisplayName,
@@ -141,7 +142,10 @@ export class ContactRepository implements IContactRepository {
 
     const actorId = data.auth?.id ?? null;
 
-    if (isSelfProfessionalAction(actorId, psychologist.id)) {
+    if (
+      isSelfProfessionalAction(actorId, psychologist.id) ||
+      !(await allowsInternalMeasurement(data.b?.measurement_allowed, actorId))
+    ) {
       return {
         ok: true,
         data: toContactResponse(psychologist, psychologistPhone, null),
