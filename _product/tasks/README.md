@@ -2904,3 +2904,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 338 | [TASK-338 - Prioridade de cookies](TASK-338-privacy-overlay-priority.md) | Concluida |
 
 | 339 | [TASK-339 - Medição de posts anônimos](TASK-339-anonymous-post-measurement.md) | Concluida |
+
+| 340 | [TASK-340 - Preparação de checkout](TASK-340-checkout-delivery.md) | Concluida |

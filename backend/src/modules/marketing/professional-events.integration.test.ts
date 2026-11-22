@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { test } from "node:test";
 
 test("PostgreSQL: canonical checkout reference, no late registration consent, rollback and replay", {
   skip: process.env.LECTUM_STRIPE_DB_TESTS !== "true",
-}, async () => {
+}, async (t) => {
+  t.mock.method(globalThis, "fetch", async () => {
+    throw new Error("unexpected_external_request");
+  });
   const url = new URL(process.env.DATABASE_URL ?? "");
   assert.ok(["localhost", "127.0.0.1"].includes(url.hostname));
   assert.equal(url.pathname, "/lectum_stripe_test");
@@ -91,6 +94,125 @@ test("PostgreSQL: canonical checkout reference, no late registration consent, ro
     assert.equal(rows[0].occurred_at.getTime(), operation.created_at.getTime());
     assert.equal(rows[0].source_ref, operation.id);
     assert.equal(rows[0].consent_revision, 1);
+    const { resolveCheckoutDeliveryEvidence, CHECKOUT_DELIVERY_POLICY } = await import(
+      "./checkout-delivery"
+    );
+    const { captureCheckoutContext } = await import("./checkout-context");
+    const { buildConsentedMetaCapiPayload } = await import("./meta-capi");
+    const policy = {
+      documentVersion: MARKETING_CONSENT_POLICY.documentVersion!,
+      sourceUrls: ["https://example.test/checkout"],
+      accountId: operation.account_id,
+    };
+    assert.equal(await resolveCheckoutDeliveryEvidence(db, rows[0]), null);
+    assert.equal(await resolveCheckoutDeliveryEvidence(db, rows[0], policy, now), null);
+    const token = randomBytes(32).toString("hex");
+    const capturedAt = new Date(now.getTime() - 20_000);
+    await db.marketing_browser_identifier.create({
+      data: {
+        token_hash: createHash("sha256").update(token).digest("hex"),
+        user_id: user.id,
+        consent_revision: 1,
+        fbp: `fb.1.${capturedAt.getTime()}.123456`,
+        captured_at: capturedAt,
+        expires_at: new Date(now.getTime() + 86400000),
+      },
+    });
+    assert.equal(
+      await captureCheckoutContext(
+        user.id,
+        token,
+        "Local test browser",
+        { operationId: operation.id, revision: 1, documentVersion: policy.documentVersion },
+        {
+          enabled: true,
+          sandboxAccountId: null,
+          sourceUrl: policy.sourceUrls[0]!,
+          liveReview: { accountId: policy.accountId, documentVersion: policy.documentVersion },
+        },
+        new Date(now.getTime() - 5_000),
+      ),
+      true,
+    );
+    const evidence = await resolveCheckoutDeliveryEvidence(db, rows[0], policy, now);
+    assert.ok(evidence);
+    const { resolveDelivery } = await import("./delivery-scheduler");
+    const originalPolicy = { ...CHECKOUT_DELIVERY_POLICY };
+    try {
+      Object.assign(CHECKOUT_DELIVERY_POLICY, policy);
+      assert.equal((await resolveDelivery(rows[0]))?.candidate.conversion, "professional_checkout");
+    } finally {
+      Object.assign(CHECKOUT_DELIVERY_POLICY, originalPolicy);
+    }
+
+    const payload = buildConsentedMetaCapiPayload(
+      evidence,
+      policy.sourceUrls,
+      policy.documentVersion,
+      now.getTime(),
+    );
+    assert.ok(payload);
+    assert.equal(payload.data[0].event_name, "InitiateCheckout");
+    assert.equal(payload.data[0].event_id, rows[0].event_id);
+    assert.equal(evidence.occurredAtMs, operation.created_at.getTime());
+    assert.equal("custom_data" in payload.data[0], false);
+    assert.deepEqual(Object.keys(payload.data[0].user_data), ["fbp"]);
+    for (const override of [
+      { accountId: "wrong" },
+      { documentVersion: "old" },
+      { sourceUrls: [] },
+    ]) {
+      assert.equal(
+        await resolveCheckoutDeliveryEvidence(db, rows[0], { ...policy, ...override }, now),
+        null,
+      );
+    }
+    assert.equal(
+      await resolveCheckoutDeliveryEvidence(db, { ...rows[0], user_id: tag }, policy, now),
+      null,
+    );
+    assert.equal(
+      await resolveCheckoutDeliveryEvidence(db, { ...rows[0], consent_revision: 2 }, policy, now),
+      null,
+    );
+    assert.equal(
+      await resolveCheckoutDeliveryEvidence(
+        db,
+        { ...rows[0], conversion: "professional_subscription" },
+        policy,
+        now,
+      ),
+      null,
+    );
+    assert.equal(
+      await resolveCheckoutDeliveryEvidence(
+        db,
+        rows[0],
+        policy,
+        new Date(now.getTime() + 86400000),
+      ),
+      null,
+    );
+    const context = await db.marketing_checkout_context.findUniqueOrThrow({
+      where: { operation_id: operation.id },
+    });
+    for (const captured_at of [
+      new Date(operation.created_at.getTime() - 1),
+      new Date(now.getTime() + 1),
+    ]) {
+      await db.marketing_checkout_context.update({
+        where: { operation_id: operation.id },
+        data: { captured_at },
+      });
+      assert.equal(await resolveCheckoutDeliveryEvidence(db, rows[0], policy, now), null);
+    }
+    await db.marketing_checkout_context.update({
+      where: { operation_id: operation.id },
+      data: { captured_at: context.captured_at },
+    });
+    await db.marketing_consent.update({ where: { user_id: user.id }, data: { revoked_at: now } });
+    assert.equal(await resolveCheckoutDeliveryEvidence(db, rows[0], policy, now), null);
+    await db.marketing_consent.update({ where: { user_id: user.id }, data: { revoked_at: null } });
     const { recoverProfessionalPage, recoverProfessionalEvents } = await import(
       "./professional-recovery"
     );

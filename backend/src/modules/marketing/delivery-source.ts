@@ -67,7 +67,11 @@ export async function resolveDeliverySource(
       },
     });
     return operation && operation.created_at.getTime() === job.occurred_at.getTime()
-      ? { occurredAt: operation.created_at }
+      ? {
+          occurredAt: operation.created_at,
+          operationId: operation.id,
+          accountId: operation.account_id,
+        }
       : null;
   }
   if (job.conversion !== "professional_subscription") return null;
