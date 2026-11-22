@@ -33,5 +33,5 @@ test("checkout configuration uses only the production payment identity and canon
   }
   assert.equal(reviewedCheckoutPolicy({}).enabled, false);
   assert.equal(metaTransmissionDecision("professional_checkout").allowed, true);
-  assert.equal(metaTransmissionDecision("professional_subscription").allowed, false);
+  assert.equal(metaTransmissionDecision("professional_subscription").allowed, true);
 });

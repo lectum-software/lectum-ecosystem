@@ -6,6 +6,8 @@ import { MARKETING_CONSENT_POLICY } from "./consent-policy";
 import { consentedAcquisition } from "./consent-repository";
 import { enqueueMetaDeliveryInTransaction } from "./delivery-jobs";
 import { firstPaidSubscriptionCandidate } from "./first-paid-subscription";
+import { subscriptionCheckoutConsent } from "./subscription-consent";
+import { SUBSCRIBE_ACTIVATION_TIME } from "./subscription-policy";
 
 // Internal evidence only. This namespace is not consumed by either payment gateway.
 export const SUBSCRIBE_RECORD_GATEWAY = "marketing_stripe_subscribe";
@@ -38,8 +40,24 @@ export async function recordStripeSubscribe(
     // Include cancelled/deleted contracts. Missing or legacy history is not proof of acquisition.
     const history = await tx.professional_subscription.findMany({
       where: { psychologist_id: subscription.psychologist_id },
+      include: { plan: true },
     });
     for (const contract of history) {
+      // A canonical free signup has no financial history to reconcile. Unknown/legacy contracts still block.
+      if (
+        contract.source === "free_signup" &&
+        contract.plan.slug === "gratuito" &&
+        contract.plan.price_cents === 0 &&
+        !contract.contracted_amount_cents &&
+        !contract.gateway &&
+        !contract.gateway_subscription_id &&
+        !contract.gateway_mode &&
+        !contract.gateway_account_id &&
+        !contract.granted_by &&
+        !contract.grant_reason &&
+        !(await tx.billing_financial_receipt.count({ where: { subscription_id: contract.id } }))
+      )
+        continue;
       if (
         contract.source !== "stripe" ||
         contract.gateway !== "stripe" ||
@@ -144,21 +162,30 @@ export async function recordStripeSubscribe(
       },
     });
     if (!candidate) return "excluded";
-    const acquisition = await consentedAcquisition(
+    const checkoutConsent = await subscriptionCheckoutConsent(
       tx,
       operation.user_id,
+      operation.id,
       candidate.paidAt,
-      new Date(),
-      acquisitionPolicy,
     );
-    // Event and future approved delivery reference commit together; policy remains blocked.
+    const acquisition =
+      checkoutConsent ??
+      (await consentedAcquisition(
+        tx,
+        operation.user_id,
+        candidate.paidAt,
+        new Date(),
+        acquisitionPolicy,
+      ));
+    // Historical receipts remain internal; only new verified payments can be delivered.
+    const approvedPayment = candidate.paidAt >= SUBSCRIBE_ACTIVATION_TIME;
     const eventId = randomBytes(32).toString("hex");
     const stored = await tx.payment_event.upsert({
       where: { gateway_external_id: key },
       update: {},
       create: {
         ...key,
-        type: "Subscribe.blocked",
+        type: approvedPayment ? "Subscribe.verified" : "Subscribe.blocked",
         payload: {
           version: 1,
           event_name: candidate.eventName,
@@ -173,7 +200,7 @@ export async function recordStripeSubscribe(
           amount_paid_cents: candidate.amountCents,
           currency: candidate.currency,
           paid_at: candidate.paidAt.toISOString(),
-          transmission: "blocked_compliance",
+          transmission: approvedPayment ? "consent_required" : "blocked_compliance",
           // No raw campaign snapshot: revocation must invalidate future resolution.
           ...(acquisition
             ? { acquisition_user_id: operation.user_id, consent_revision: acquisition.revision }
@@ -182,7 +209,7 @@ export async function recordStripeSubscribe(
         },
       },
     });
-    if (acquisition)
+    if (acquisition && approvedPayment)
       await enqueueMetaDeliveryInTransaction(tx, {
         conversion: "professional_subscription",
         eventId,
@@ -191,6 +218,6 @@ export async function recordStripeSubscribe(
         userId: operation.user_id,
         consentRevision: acquisition.revision,
       });
-    return "recorded_blocked";
+    return approvedPayment ? "recorded" : "recorded_blocked";
   });
 }

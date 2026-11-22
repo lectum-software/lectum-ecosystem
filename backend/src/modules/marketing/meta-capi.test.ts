@@ -94,7 +94,7 @@ test("disabled configuration prevents identifier reads and network calls", async
         assert.fail("blocked events must not resolve consent, identifiers or stored events");
       },
     });
-    const status = conversion !== "professional_subscription" ? "disabled" : "blocked";
+    const status = "disabled";
     assert.equal(result.status, status);
     assert.equal((await confirmedMarketingAction(conversion)).status, status);
   }
@@ -152,7 +152,7 @@ test("delivery requires reviewed consent both at the persisted event and at send
   assert.equal(retried?.data[0].event_time, candidate.occurredAt);
 });
 
-test("adding credentials or enablement cannot override compliance policy", async (t) => {
+test("enablement without complete configuration does not resolve subscription evidence", async (t) => {
   const original = process.env.META_CAPI_ENABLED;
   process.env.META_CAPI_ENABLED = "true";
   t.after(() => {
@@ -168,7 +168,7 @@ test("adding credentials or enablement cannot override compliance policy", async
         },
       })
     ).status,
-    "blocked",
+    "disabled",
   );
 });
 

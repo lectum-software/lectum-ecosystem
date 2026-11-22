@@ -135,7 +135,7 @@ type DeliveryInput = {
   resolve: () => Promise<DeliveryEvidence | null>;
 };
 
-// Reviewed professional registration and billing origins. Subscribe remains blocked.
+// Reviewed professional registration and billing origins, including first paid subscription.
 const REVIEWED_SOURCE_URLS: readonly string[] = ["https://www.lectum.com.br/", CHECKOUT_SOURCE_URL];
 const REVIEWED_CONSENT_DOCUMENT_VERSION: string | null =
   "lectum-meta-measurement-2026-11-21-network-context";

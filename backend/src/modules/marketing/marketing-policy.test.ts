@@ -20,12 +20,9 @@ const consent: AdvertisingConsent = {
   revokedAt: null,
 };
 
-test("checkout, registrations and user actions are eligible; subscription stays blocked", () => {
+test("reviewed conversions are eligible; subscription still requires first verified payment", () => {
   for (const conversion of META_CONVERSIONS) {
-    assert.equal(
-      metaTransmissionDecision(conversion).allowed,
-      conversion !== "professional_subscription",
-    );
+    assert.equal(metaTransmissionDecision(conversion).allowed, true);
   }
   assert.equal(META_EVENT_POLICY.patient_community_post.confirmation, "post_committed");
   assert.equal(META_EVENT_POLICY.professional_subscription.confirmation, "first_payment_verified");

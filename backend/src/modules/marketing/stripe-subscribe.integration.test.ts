@@ -52,6 +52,20 @@ test("PostgreSQL: verified-event evidence, out-of-order recovery, leases and per
       contracted_amount_cents: 2990,
     },
   });
+  const existingFreePlan = await db.subscription_plan.findUnique({ where: { slug: "gratuito" } });
+  const freePlan =
+    existingFreePlan ??
+    (await db.subscription_plan.create({
+      data: { slug: "gratuito", name: "Free test", price_cents: 0 },
+    }));
+  const freeHistory = await db.professional_subscription.create({
+    data: {
+      psychologist_id: profile.id,
+      plan_id: freePlan.id,
+      source: "free_signup",
+      status: "cancelada",
+    },
+  });
   try {
     if (guest)
       await new MarketingConsentRepository(acquisitionPolicy).grant(
@@ -272,16 +286,59 @@ test("PostgreSQL: verified-event evidence, out-of-order recovery, leases and per
           token_hash: tokenHash,
           document_version: policy.documentVersion,
           source_url: policy.sourceUrls[0]!,
-          client_user_agent: "Test agent never exported",
+          client_user_agent: "Consented checkout test agent",
           captured_at: capturedAt,
           expires_at: expiresAt,
         },
+      });
+      const { subscriptionCheckoutConsent } = await import("./subscription-consent");
+      const organicConsent = () =>
+        subscriptionCheckoutConsent(
+          db,
+          user.id,
+          source.operationId!,
+          receipt.paid_at,
+          now,
+          policy.documentVersion,
+          policy.sourceUrls[0]!,
+        );
+      assert.equal(await db.marketing_attribution.count({ where: { user_id: user.id } }), 0);
+      assert.equal((await organicConsent())?.revision, 1);
+      assert.equal(
+        await subscriptionCheckoutConsent(
+          db,
+          user.id,
+          source.operationId!,
+          receipt.paid_at,
+          now,
+          "wrong",
+          policy.sourceUrls[0]!,
+        ),
+        null,
+      );
+      await db.marketing_checkout_context.update({
+        where: { operation_id: source.operationId },
+        data: { captured_at: new Date(receipt.paid_at.getTime() + 1) },
+      });
+      assert.equal(await organicConsent(), null);
+      await db.marketing_checkout_context.update({
+        where: { operation_id: source.operationId },
+        data: { captured_at: capturedAt },
       });
       const evidence = await resolveSubscriptionDeliveryEvidence(db, reference, policy, now);
       assert.equal(evidence?.candidate.eventId, reference.event_id);
       assert.equal(evidence?.candidate.amountCents, 2990);
       assert.equal(evidence?.occurredAtMs, receipt.paid_at.getTime());
-      assert.equal("clientUserAgent" in evidence!.candidate, false);
+      assert.equal(evidence?.candidate.clientUserAgent, "Consented checkout test agent");
+      assert.equal(
+        await resolveSubscriptionDeliveryEvidence(
+          db,
+          reference,
+          { ...policy, activatedAt: new Date(receipt.paid_at.getTime() + 1) },
+          now,
+        ),
+        null,
+      );
       assert.equal(await resolveSubscriptionDeliveryEvidence(db, reference), null);
       assert.equal(
         await resolveSubscriptionDeliveryEvidence(
@@ -312,6 +369,7 @@ test("PostgreSQL: verified-event evidence, out-of-order recovery, leases and per
       );
       await db.marketing_consent.update({ where: { user_id: user.id }, data: { revoked_at: now } });
       assert.equal(await resolveSubscriptionDeliveryEvidence(db, reference, policy, now), null);
+      assert.equal(await organicConsent(), null);
       await db.marketing_consent.update({
         where: { user_id: user.id },
         data: { revoked_at: null, granted_at: new Date(receipt.paid_at.getTime() + 1) },
@@ -383,7 +441,109 @@ test("PostgreSQL: verified-event evidence, out-of-order recovery, leases and per
     assert.equal(await restarted.claim(identity, new Date(now.getTime() + 86400000)), null);
     assert.deepEqual((await db.payment_event.findFirstOrThrow({ where })).payload, stored.payload);
     assert.equal(await restarted.discover(identity, since), 0);
+    if (!guest) {
+      const { MARKETING_CONSENT_POLICY } = await import("./consent-policy");
+      const { CHECKOUT_SOURCE_URL } = await import("./checkout-policy");
+      const { storedFinancialReceiptHash } = await import(
+        "@/modules/billing/stripe/financial-ledger/policy"
+      );
+      const paidAt = new Date(Date.now() - 1000);
+      const capturedAt = new Date(paidAt.getTime() - 1000);
+      const grantedAt = new Date(capturedAt.getTime() - 1000);
+      const expiresAt = new Date(Date.now() + 86400000);
+      await db.billing_financial_receipt.delete({ where: { id: renewal.id } });
+      const updatedReceipt = { ...receipt, paid_at: paidAt, invoice_paid_at: paidAt };
+      await db.billing_financial_receipt.update({
+        where: { id: receipt.id },
+        data: {
+          paid_at: paidAt,
+          invoice_paid_at: paidAt,
+          immutable_hash: storedFinancialReceiptHash(updatedReceipt),
+        },
+      });
+      const operation = await db.billing_operation.findFirstOrThrow({
+        where: { ...scope, kind: "checkout", subscription_id: subscription.id },
+      });
+      await db.marketing_consent.create({
+        data: {
+          user_id: user.id,
+          revision: 1,
+          document_version: MARKETING_CONSENT_POLICY.documentVersion,
+          granted_at: grantedAt,
+          expires_at: expiresAt,
+        },
+      });
+      const tokenHash = tag.replaceAll("-", "").padEnd(64, "c");
+      await db.marketing_browser_identifier.create({
+        data: {
+          token_hash: tokenHash,
+          user_id: user.id,
+          consent_revision: 1,
+          fbp: `fb.1.${capturedAt.getTime()}.123456`,
+          captured_at: capturedAt,
+          expires_at: expiresAt,
+        },
+      });
+      await db.marketing_checkout_context.create({
+        data: {
+          operation_id: operation.id,
+          token_hash: tokenHash,
+          document_version: MARKETING_CONSENT_POLICY.documentVersion!,
+          source_url: CHECKOUT_SOURCE_URL,
+          client_user_agent: "Consented local test agent",
+          captured_at: capturedAt,
+          expires_at: expiresAt,
+        },
+      });
+      await db.payment_event.delete({ where: { id: stored.id } });
+      const config = {
+        META_CAPI_ENABLED: "true",
+        META_DATASET_ID: "1234567",
+        META_GRAPH_API_VERSION: "v24.0",
+        META_CAPI_ACCESS_TOKEN: "local-test-no-network",
+      };
+      const previous = Object.fromEntries(
+        Object.keys(config).map((key) => [key, process.env[key]]),
+      );
+      Object.assign(process.env, config);
+      try {
+        assert.equal(await recordStripeSubscribe(subscription.id, identity), "recorded");
+        assert.equal(await recordStripeSubscribe(subscription.id, identity), "duplicate");
+        const delivery = await db.marketing_delivery_job.findFirstOrThrow({
+          where: { user_id: user.id, conversion: "professional_subscription" },
+        });
+        assert.equal(
+          await db.marketing_delivery_job.count({
+            where: { user_id: user.id, conversion: "professional_subscription" },
+          }),
+          1,
+        );
+        assert.equal(delivery.state, "pending");
+        assert.equal(
+          (await db.payment_event.findFirstOrThrow({ where })).type,
+          "Subscribe.verified",
+        );
+        const { resolveSubscriptionDeliveryEvidence } = await import("./subscription-delivery");
+        const evidence = await resolveSubscriptionDeliveryEvidence(db, delivery, {
+          accountId: identity.accountId,
+          documentVersion: MARKETING_CONSENT_POLICY.documentVersion,
+          sourceUrls: [CHECKOUT_SOURCE_URL],
+        });
+        assert.equal(evidence?.candidate.amountCents, 2990);
+        assert.equal(evidence?.candidate.clientUserAgent, "Consented local test agent");
+        assert.equal(evidence?.candidate.eventId, delivery.event_id);
+      } finally {
+        for (const [key, value] of Object.entries(previous)) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+      }
+    }
   } finally {
+    await db.marketing_delivery_job.deleteMany({ where: { user_id: user.id } });
+    await db.marketing_checkout_context.deleteMany({ where: { browser: { user_id: user.id } } });
+    await db.marketing_browser_identifier.deleteMany({ where: { user_id: user.id } });
+    await db.marketing_consent.deleteMany({ where: { user_id: user.id } });
     await db.payment_event.deleteMany({
       where: { gateway: SUBSCRIBE_RECORD_GATEWAY, external_id: profile.id },
     });
@@ -391,7 +551,9 @@ test("PostgreSQL: verified-event evidence, out-of-order recovery, leases and per
     await db.billing_operation.deleteMany({ where: scope });
     await db.billing_financial_receipt.deleteMany({ where: scope });
     await db.billing_financial_reconciliation.deleteMany({ where: scope });
+    await db.professional_subscription.delete({ where: { id: freeHistory.id } });
     await db.professional_subscription.delete({ where: { id: subscription.id } });
+    if (!existingFreePlan) await db.subscription_plan.delete({ where: { id: freePlan.id } });
     await db.psychologist_profile.delete({ where: { id: profile.id } });
     await db.user.delete({ where: { id: user.id } });
     if (guest)

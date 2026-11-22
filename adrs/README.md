@@ -790,3 +790,5 @@ Formato recomendado:
 - [ADR-0709 — Consentimento profissional Google](0709-professional-google-consent.md)
 
 - [ADR-0710 — Entrada no checkout](0710-checkout-entry-measurement.md)
+
+- [ADR-0711 — Primeira assinatura paga](0711-subscribe-activation.md)

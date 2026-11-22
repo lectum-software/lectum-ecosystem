@@ -58,7 +58,7 @@ export const META_EVENT_POLICY: Readonly<Record<MetaConversion, EventPolicy>> = 
   },
   professional_subscription: {
     eventName: "Subscribe",
-    externalStatus: "pending_compliance_review",
+    externalStatus: "eligible",
     confirmation: "first_payment_verified",
   },
 };
