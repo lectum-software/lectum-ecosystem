@@ -2902,3 +2902,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 337 | [TASK-337 - Contact de visitantes](TASK-337-guest-whatsapp-conversions.md) | Concluida |
 
 | 338 | [TASK-338 - Prioridade de cookies](TASK-338-privacy-overlay-priority.md) | Concluida |
+
+| 339 | [TASK-339 - Medição de posts anônimos](TASK-339-anonymous-post-measurement.md) | Concluida |

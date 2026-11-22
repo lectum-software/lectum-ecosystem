@@ -776,3 +776,5 @@ Formato recomendado:
 - [ADR-0702 — Contact sem login e com consentimento anterior](0702-guest-whatsapp-conversions.md)
 
 - [ADR-0703 — Prioridade de cookies](0703-privacy-overlay-priority.md)
+
+- [ADR-0704 — Medição de posts anônimos](0704-anonymous-post-measurement.md)

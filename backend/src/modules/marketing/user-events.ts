@@ -72,7 +72,6 @@ export async function resolveUserActionSource(
       author_id: userId,
       deleted: false,
       status: "publicado",
-      anonymous: false,
     },
     select: { createdAt: true },
   });

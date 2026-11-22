@@ -54,7 +54,7 @@ test("PostgreSQL: local user queue preserves canonical identity and consent boun
         author_id: userId,
         title: "Disposable test",
         content: "Synthetic local fixture",
-        anonymous: false,
+        anonymous: true,
         status: "publicado",
         createdAt: occurredAt,
       },
@@ -114,8 +114,8 @@ test("PostgreSQL: local user queue preserves canonical identity and consent boun
       assert.deepEqual(await resolveDeliverySource(db, rows[0]), { occurredAt });
     }
     assert.equal((await persist("patient_registration", randomUUID())).status, "ineligible");
-    await db.community_post.update({ where: { id: postId }, data: { anonymous: true } });
-    assert.equal((await persist("patient_community_post", postId)).status, "ineligible");
+    await db.community_post.update({ where: { id: postId }, data: { anonymous: false } });
+    assert.equal((await persist("patient_community_post", postId)).status, "queued");
     await db.community_post.update({
       where: { id: postId },
       data: { anonymous: false, status: "bloqueado" },

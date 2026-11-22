@@ -213,7 +213,7 @@ export const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
 
 export const anonymousTipText =
-  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido.";
+  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\nPara preservar sua privacidade, você pode utilizar apenas seu primeiro nome ou um apelido.\nPublicar anonimamente oculta sua identificação pública, mas não desativa a medição da Meta que você autorizou nas Preferências. O conteúdo do post não é enviado à Meta.";
 
 export const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 
