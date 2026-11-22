@@ -99,6 +99,9 @@ export class BrowserAttribution {
     const value = this.read();
     return value && !value.pendingRevocation && !value.claimed ? value.token : null;
   }
+  tokenForMeasurement(choice: AttributionChoice | null) {
+    return this.read()?.captured === true ? this.tokenForTransfer(choice) : null;
+  }
   forget() {
     try {
       if (this.options.enabled) this.options.storage()?.removeItem(ATTRIBUTION_STORAGE_KEY);

@@ -165,6 +165,7 @@ export class AttributionRepository {
           revoked: true,
         },
       });
+      await tx.marketing_delivery_job.deleteMany({ where: { guest_token_hash: token_hash } });
       // A user OAuth claim is the same grant, so guest revocation must also revoke its account copy.
       const linkedUserConsents = await tx.marketing_consent.findMany({
         where: {

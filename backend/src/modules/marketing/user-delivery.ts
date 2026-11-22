@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import type { DeliveryJob } from "./delivery-jobs";
 import { resolveDeliverySource } from "./delivery-source";
+import { resolveGuestDeliveryEvidence } from "./guest-contact";
 import { browserIdWithinConsent } from "./meta-browser-id";
 import { buildConsentedMetaCapiPayload } from "./meta-capi";
 import { isUserConversion, reviewedUserSourceUrl, USER_DELIVERY_POLICY } from "./user-events";
@@ -10,6 +11,7 @@ export async function resolveUserDeliveryEvidence(
   job: DeliveryJob,
   now = new Date(),
 ) {
+  if (job.guest_token_hash) return resolveGuestDeliveryEvidence(tx, job, now);
   const documentVersion = USER_DELIVERY_POLICY.documentVersion;
   if (
     !documentVersion ||

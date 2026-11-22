@@ -1,6 +1,7 @@
 import type { Request } from "express";
 import { msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
+import { guestContactCommitted } from "@/modules/marketing/guest-contact";
 import { allowsInternalMeasurement } from "@/modules/marketing/internal-measurement";
 import { userActionCommitted } from "@/modules/marketing/user-events";
 import { sanitizeAnalyticsPathWithTrafficQuery } from "@/utils/analytics-traffic-path";
@@ -15,6 +16,7 @@ import { ImportantActionRepository } from "../repositories/ImportantActionReposi
 type AuthenticatedRequest = Request & { auth?: user };
 
 export const store = async (req: Request) => {
+  const requestStartedAt = new Date();
   const data = req as Request & IImportantActionDTO;
   const auth = (req as AuthenticatedRequest).auth;
   const repository = new ImportantActionRepository();
@@ -75,6 +77,17 @@ export const store = async (req: Request) => {
     displayMode: normalizeDisplayMode(data.b.display_mode),
     occurredAt: normalizeOccurredAt(data.b.occurred_at),
   });
+
+  if (!userId && whatsapp && data.b.guest_token && typeof action.id === "string") {
+    await guestContactCommitted({
+      token: data.b.guest_token,
+      sourceRef: action.id,
+      visitorId,
+      sessionId,
+      sourceUrl: req.get("referer"),
+      requestStartedAt,
+    });
+  }
 
   const result: ImportantActionResult = {
     tracked: true,
