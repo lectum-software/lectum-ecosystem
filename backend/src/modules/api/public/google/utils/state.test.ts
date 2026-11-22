@@ -13,45 +13,51 @@ before(() => {
 });
 
 describe("Google OAuth state", () => {
-  it("keeps server consent outside callback query and binds it to the original deadline", () => {
-    const now = Date.now();
-    const ref = {
-      tokenHash: "a".repeat(64),
-      documentVersion: "synthetic-user-notice",
-      preparedAt: now,
-      expiresAt: now + 60_000,
-    };
-    const query = { intent: "register", role: "paciente", marketing_guest_token: "b".repeat(64) };
-    const prepared = createGoogleOAuthState("device_identifier_123", query, ref);
-    const decoded = verifyGoogleOAuthState(prepared.state, prepared.nonce)!;
-    assert.deepEqual(decoded.marketingConsent, ref);
-    assert.deepEqual(decoded.query, { intent: "register", role: "paciente" });
-    assert.equal(prepared.state.includes(ref.tokenHash), false);
-    assert.equal(verifyGoogleOAuthState(prepared.state, "another-browser"), null);
-    const next = createGoogleOAuthState(decoded.device_id, decoded.query, decoded.marketingConsent);
-    assert.deepEqual(verifyGoogleOAuthState(next.state, next.nonce)?.marketingConsent, ref);
-    const untrusted = createGoogleOAuthState("device_identifier_123", {
-      ...query,
-      marketingConsent: ref,
+  for (const role of ["paciente", "psicologo"]) {
+    it("keeps server consent outside callback query and binds it to the original deadline", () => {
+      const now = Date.now();
+      const ref = {
+        tokenHash: "a".repeat(64),
+        documentVersion: "synthetic-user-notice",
+        preparedAt: now,
+        expiresAt: now + 60_000,
+      };
+      const query = { intent: "register", role, marketing_guest_token: "b".repeat(64) };
+      const prepared = createGoogleOAuthState("device_identifier_123", query, ref);
+      const decoded = verifyGoogleOAuthState(prepared.state, prepared.nonce)!;
+      assert.deepEqual(decoded.marketingConsent, ref);
+      assert.deepEqual(decoded.query, { intent: "register", role });
+      assert.equal(prepared.state.includes(ref.tokenHash), false);
+      assert.equal(verifyGoogleOAuthState(prepared.state, "another-browser"), null);
+      const next = createGoogleOAuthState(
+        decoded.device_id,
+        decoded.query,
+        decoded.marketingConsent,
+      );
+      assert.deepEqual(verifyGoogleOAuthState(next.state, next.nonce)?.marketingConsent, ref);
+      const untrusted = createGoogleOAuthState("device_identifier_123", {
+        ...query,
+        marketingConsent: ref,
+      });
+      assert.equal(
+        verifyGoogleOAuthState(untrusted.state, untrusted.nonce)?.marketingConsent,
+        undefined,
+      );
+      for (const invalid of [
+        { ...ref, expiresAt: now - 1 },
+        { ...ref, expiresAt: now + 11 * 60_000 },
+      ]) {
+        const state = createGoogleOAuthState("device_identifier_123", query, invalid);
+        assert.equal(verifyGoogleOAuthState(state.state, state.nonce)?.marketingConsent, undefined);
+      }
+      const login = createGoogleOAuthState(
+        "device_identifier_123",
+        { intent: "login", role: "paciente" },
+        ref,
+      );
+      assert.equal(verifyGoogleOAuthState(login.state, login.nonce)?.marketingConsent, undefined);
     });
-    assert.equal(
-      verifyGoogleOAuthState(untrusted.state, untrusted.nonce)?.marketingConsent,
-      undefined,
-    );
-    for (const invalid of [
-      { ...ref, expiresAt: now - 1 },
-      { ...ref, expiresAt: now + 11 * 60_000 },
-    ]) {
-      const state = createGoogleOAuthState("device_identifier_123", query, invalid);
-      assert.equal(verifyGoogleOAuthState(state.state, state.nonce)?.marketingConsent, undefined);
-    }
-    const login = createGoogleOAuthState(
-      "device_identifier_123",
-      { intent: "login", role: "paciente" },
-      ref,
-    );
-    assert.equal(verifyGoogleOAuthState(login.state, login.nonce)?.marketingConsent, undefined);
-  });
+  }
   it("preserva autorizacao explicita sem presumir autorizacao ausente", () => {
     for (const promotional of [undefined, "false", "true"]) {
       const { nonce, state } = createGoogleOAuthState("device_identifier_123", {

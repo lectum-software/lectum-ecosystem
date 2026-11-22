@@ -183,7 +183,7 @@ const normalizeStatePayload = (
     allowPrivateConsent &&
     record.query &&
     (record.query as Record<string, unknown>).intent === "register" &&
-    (record.query as Record<string, unknown>).role === "paciente"
+    ["paciente", "psicologo"].includes(String((record.query as Record<string, unknown>).role))
       ? readOAuthConsentReference(record.marketingConsent)
       : null;
   return {
@@ -265,7 +265,7 @@ export const createGoogleOAuthState = (
 ) => {
   const nonce = randomBytes(32).toString("base64url");
   const marketingConsent =
-    query.intent === "register" && query.role === "paciente"
+    query.intent === "register" && ["paciente", "psicologo"].includes(String(query.role))
       ? readOAuthConsentReference(privateConsent)
       : null;
   const state = encryptGoogleOAuthState({

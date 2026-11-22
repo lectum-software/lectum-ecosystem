@@ -80,7 +80,7 @@ for (const provider of ["google", "manual"] as const) {
             now,
           ),
         );
-      await db.user.update({ where: { id: users[0] }, data: { role: "psicologo" } });
+      await db.user.update({ where: { id: users[0] }, data: { role: "admin" } });
       assert.equal(await claim(users[0]), false);
       await db.user.update({ where: { id: users[0] }, data: { role: "paciente" } });
       assert.equal(await claim(users[0], { ...ref, expiresAt: now.getTime() }), false);

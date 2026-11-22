@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import type { Prisma } from "@/external/generated/prisma/client";
 import { browserIdWithinConsent } from "./meta-browser-id";
 import { type OAuthConsentReference, readOAuthConsentReference } from "./oauth-consent-reference";
+import { registrationConsentLinked } from "./professional-events";
+import { REGISTRATION_DELIVERY_POLICY } from "./registration-delivery";
 import { persistUserEvent, reviewedUserSourceUrl, USER_DELIVERY_POLICY } from "./user-events";
 
 export async function prepareUserOAuthConsent(
@@ -56,7 +58,9 @@ async function claimUserRegistrationConsent(
   if (
     !user?.active ||
     user.deleted ||
-    user.role !== "paciente" ||
+    (user.role !== "paciente" && !(provider === "google" && user.role === "psicologo")) ||
+    (user.role === "psicologo" &&
+      ref.documentVersion !== REGISTRATION_DELIVERY_POLICY.documentVersion) ||
     user.provider !== provider ||
     user.createdAt.getTime() < ref.preparedAt ||
     user.createdAt > now
@@ -144,7 +148,9 @@ async function claimUserRegistrationConsent(
       },
     });
   }
-  if (ref.sourceUrl && reviewedUserSourceUrl("patient_registration", ref.sourceUrl)) {
+  if (user.role === "psicologo") {
+    await registrationConsentLinked(tx, userId, now);
+  } else if (ref.sourceUrl && reviewedUserSourceUrl("patient_registration", ref.sourceUrl)) {
     await persistUserEvent(tx, "patient_registration", userId, userId, now, ref.sourceUrl);
   }
   return true;

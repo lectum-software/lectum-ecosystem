@@ -54,15 +54,12 @@ routes.post("/:id/registration", limiter, async (req, res) => {
   ) {
     return send(res, { status: 400, ...error("invalid_birthdate", {}) });
   }
-  const marketingConsent =
-    req.body.role === "paciente"
-      ? await prepareUserOAuthConsent(
-          prisma,
-          req.body.marketing_guest_token,
-          new Date(),
-          req.get("referer"),
-        )
-      : null;
+  const marketingConsent = await prepareUserOAuthConsent(
+    prisma,
+    req.body.marketing_guest_token,
+    new Date(),
+    req.get("referer"),
+  );
   const { nonce, state } = createGoogleOAuthState(
     deviceId,
     {
