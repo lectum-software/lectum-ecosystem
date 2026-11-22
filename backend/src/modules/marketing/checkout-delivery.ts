@@ -36,10 +36,17 @@ export async function resolveCheckoutDeliveryEvidence(
   )
     return null;
   const source = await resolveDeliverySource(tx, job);
-  if (!source?.operationId || source.accountId !== policy.accountId) return null;
-  const context = await tx.marketing_checkout_context.findUnique({
-    where: { operation_id: source.operationId },
-  });
+  if (!source || source.accountId !== policy.accountId) return null;
+  const entry = source.checkoutEntryId
+    ? await tx.marketing_checkout_entry.findUnique({ where: { id: source.checkoutEntryId } })
+    : null;
+  const context = entry
+    ? { ...entry, captured_at: entry.created_at }
+    : source.operationId
+      ? await tx.marketing_checkout_context.findUnique({
+          where: { operation_id: source.operationId },
+        })
+      : null;
   if (
     !context ||
     context.document_version !== policy.documentVersion ||

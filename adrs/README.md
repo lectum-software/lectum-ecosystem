@@ -788,3 +788,5 @@ Formato recomendado:
 - [ADR-0708 — Preferências em Ajuda e feedback](0708-cookie-preferences-entry.md)
 
 - [ADR-0709 — Consentimento profissional Google](0709-professional-google-consent.md)
+
+- [ADR-0710 — Entrada no checkout](0710-checkout-entry-measurement.md)

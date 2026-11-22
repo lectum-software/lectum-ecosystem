@@ -6,7 +6,9 @@ import { useEffect } from "react";
 import keys from "@/api/cache/keys";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import type { StripeBillingConfig } from "@/api/generator/types/stripe-billing";
+import { capturePrivacyCheckoutEntry } from "@/api/req/privacy";
 import { getPsychologistBillingCurrent } from "@/api/req/psychologist-billing";
+import { usePrivacyChoice } from "@/components/privacy/use-choice";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -32,6 +34,7 @@ export const StripeCheckoutLogic = ({ config }: { config: StripeBillingConfig })
   const queryClient = useQueryClient();
   const user = useAppSelector((state) => state.user);
   const billing = usePsychologistBilling();
+  const privacyChoice = usePrivacyChoice(user?.id);
   const current = billing.current.data?.current;
   const currentLoading = billing.current.isPending;
   const currentError = billing.current.isError;
@@ -41,6 +44,32 @@ export const StripeCheckoutLogic = ({ config }: { config: StripeBillingConfig })
     isProfessionalSubscriptionActive(current) && current?.source !== "admin_grant";
   const resumingAction = isStripeBillingActionPending(config.pending_operation);
   const redirectActive = alreadyActive && !resumingAction;
+  useEffect(() => {
+    if (
+      !privacyChoice?.campaigns ||
+      privacyChoice.pendingRevocation ||
+      !user?.id ||
+      currentLoading ||
+      currentError ||
+      alreadyActive ||
+      courtesy ||
+      !config.enabled ||
+      !isStripeBillingQuoteValid(quote) ||
+      (config.pending_operation && config.pending_operation.kind !== "checkout")
+    )
+      return;
+    void capturePrivacyCheckoutEntry(user.id);
+  }, [
+    user?.id,
+    currentLoading,
+    currentError,
+    alreadyActive,
+    courtesy,
+    config.enabled,
+    config.pending_operation,
+    quote,
+    privacyChoice,
+  ]);
 
   useEffect(() => {
     if (redirectActive) router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.completion);

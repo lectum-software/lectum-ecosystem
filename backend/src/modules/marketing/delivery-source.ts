@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Prisma } from "@/external/generated/prisma/client";
 import { storedFinancialReceiptHash } from "@/modules/billing/stripe/financial-ledger/policy";
+import { CHECKOUT_ENTRY_PREFIX } from "./checkout-entry";
 import type { DeliveryJob } from "./delivery-jobs";
 import { resolveGuestContactSource } from "./guest-contact";
 import { isUserConversion, resolveUserActionSource } from "./user-events";
@@ -35,6 +36,7 @@ export async function resolveDeliverySource(
   occurredAt: Date;
   amountCents?: number;
   operationId?: string;
+  checkoutEntryId?: string;
   accountId?: string;
 } | null> {
   if (job.guest_token_hash) return resolveGuestContactSource(tx, job);
@@ -54,6 +56,17 @@ export async function resolveDeliverySource(
       : null;
   }
   if (job.conversion === "professional_checkout") {
+    if (job.source_ref.startsWith(CHECKOUT_ENTRY_PREFIX)) {
+      const entry = await tx.marketing_checkout_entry.findUnique({
+        where: { id: job.source_ref.slice(CHECKOUT_ENTRY_PREFIX.length) },
+      });
+      return entry &&
+        entry.user_id === user.id &&
+        entry.consent_revision === job.consent_revision &&
+        entry.created_at.getTime() === job.occurred_at.getTime()
+        ? { occurredAt: entry.created_at, checkoutEntryId: entry.id, accountId: entry.account_id }
+        : null;
+    }
     const operation = await tx.billing_operation.findFirst({
       where: {
         id: job.source_ref,

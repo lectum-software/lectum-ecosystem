@@ -37,6 +37,7 @@ function approved(input: Record<string, unknown>, policy: MarketingConsentPolicy
 }
 export async function purgeExpiredAttribution(now = new Date()) {
   await prisma.$transaction([
+    prisma.marketing_checkout_entry.deleteMany({ where: { expires_at: { lte: now } } }),
     prisma.marketing_checkout_context.deleteMany({ where: { expires_at: { lte: now } } }),
     prisma.marketing_browser_identifier.deleteMany({
       where: {
