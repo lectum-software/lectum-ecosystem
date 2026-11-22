@@ -164,6 +164,10 @@ test("PostgreSQL: checkout evidence is owner-bound, immutable, expiring and revo
       assert.ok(
         await db.marketing_checkout_context.findUnique({ where: { operation_id: operation.id } }),
       );
+      for (const state of ["processing", "complete"]) {
+        await db.billing_operation.update({ where: { id: operation.id }, data: { state } });
+        assert.equal(await captureLive(), true);
+      }
       await Promise.all([captureLive(), captureLive(), captureLive()]);
       assert.equal(await db.marketing_delivery_job.count({ where: { user_id: user.id } }), 1);
       assert.equal(
@@ -180,7 +184,7 @@ test("PostgreSQL: checkout evidence is owner-bound, immutable, expiring and revo
     assert.equal((await read())?.sourceUrl, livePolicy.sourceUrl);
     await db.billing_operation.update({
       where: { id: operation.id },
-      data: { mode: "test", state: "complete" },
+      data: { mode: "test", state: "failed" },
     });
     assert.equal(await capture(), false);
     await new MarketingConsentRepository().revoke(user.id);

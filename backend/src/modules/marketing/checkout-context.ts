@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Prisma } from "@/external/generated/prisma/client";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { readBrowserIdentifier } from "./browser-identifier-repository";
+import { reviewedCheckoutPolicy } from "./checkout-policy";
 import { readMetaConfig } from "./meta-config";
 import { metaTransmissionDecision } from "./meta-policy";
 import { persistProfessionalEvent } from "./professional-events";
@@ -15,10 +16,19 @@ export type CheckoutContextPolicy = {
     documentVersion: string;
   };
 };
+const reviewed = reviewedCheckoutPolicy();
 export const CHECKOUT_CONTEXT_POLICY: CheckoutContextPolicy = {
-  enabled: false,
+  enabled: reviewed.enabled,
   sandboxAccountId: null,
-  sourceUrl: null,
+  sourceUrl: reviewed.sourceUrl,
+  ...(reviewed.accountId && reviewed.documentVersion
+    ? {
+        liveReview: {
+          accountId: reviewed.accountId,
+          documentVersion: reviewed.documentVersion,
+        },
+      }
+    : {}),
 };
 const inputSchema = z
   .object({
@@ -34,7 +44,7 @@ const agentSchema = z
   .regex(/^[\x20-\x7E]+$/)
   .refine((value) => value.trim().length > 0);
 
-// Live capture requires a separate explicit review; default policy remains disabled.
+// Live capture requires the configured production Stripe identity.
 // The caller obtains identity/cookie/UA from the authenticated request,
 // while URL and account are reviewed server configuration, never client fields.
 export async function captureCheckoutContext(
@@ -83,7 +93,7 @@ export async function captureCheckoutContext(
         account_id: accountId,
         kind: "checkout",
         intent: "subscription",
-        state: "requires_confirmation",
+        state: { in: ["requires_confirmation", "processing", "complete"] },
       },
     });
     if (!operation || operation.created_at > now) return false;

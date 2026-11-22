@@ -30,7 +30,7 @@ test("disabled scheduler and professional hooks do not start delivery", async (t
           throw new Error("unexpected_identity");
         })
       ).status,
-      conversion === "professional_registration" ? "disabled" : "blocked",
+      "disabled",
     );
   await stopMetaDeliveryScheduler();
   assert.equal(interval.mock.callCount(), 0);

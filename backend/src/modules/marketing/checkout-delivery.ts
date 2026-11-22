@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { readStoredBrowserIdentifier } from "./browser-identifier-repository";
+import { reviewedCheckoutPolicy } from "./checkout-policy";
 import type { DeliveryJob } from "./delivery-jobs";
 import { resolveDeliverySource } from "./delivery-source";
 import { buildConsentedMetaCapiPayload } from "./meta-capi";
@@ -11,11 +12,12 @@ export type CheckoutDeliveryPolicy = {
   accountId: string | null;
 };
 
-// Independent of internal campaign consent. No production review has been granted.
+const reviewed = reviewedCheckoutPolicy();
+// Checkout is separate from Subscribe and requires the configured live account.
 export const CHECKOUT_DELIVERY_POLICY: CheckoutDeliveryPolicy = {
-  documentVersion: null,
-  sourceUrls: [],
-  accountId: null,
+  documentVersion: reviewed.documentVersion,
+  sourceUrls: reviewed.sourceUrl ? [reviewed.sourceUrl] : [],
+  accountId: reviewed.accountId,
 };
 
 export async function resolveCheckoutDeliveryEvidence(
@@ -79,6 +81,7 @@ export async function resolveCheckoutDeliveryEvidence(
       occurredAt: Math.floor(source.occurredAt.getTime() / 1000),
       sourceUrl: context.source_url,
       fbp: browser.fbp,
+      clientUserAgent: context.client_user_agent,
     },
     occurredAtMs: source.occurredAt.getTime(),
   };

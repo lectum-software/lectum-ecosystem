@@ -2908,3 +2908,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 340 | [TASK-340 - Preparação de checkout](TASK-340-checkout-delivery.md) | Concluida |
 
 | 341 | [TASK-341 - Ordem da fila de checkout](TASK-341-checkout-queue-order.md) | Concluida |
+
+| 342 | [TASK-342 - Configuração de InitiateCheckout](TASK-342-checkout-activation.md) | Concluida |

@@ -782,3 +782,5 @@ Formato recomendado:
 - [ADR-0705 — Resolver separado de checkout](0705-checkout-delivery.md)
 
 - [ADR-0706 — Contexto antes da fila](0706-checkout-queue-order.md)
+
+- [ADR-0707 — Configuração de InitiateCheckout](0707-checkout-activation.md)

@@ -68,7 +68,7 @@ test("PostgreSQL: canonical checkout reference, no late registration consent, ro
           throw new Error("blocked_identity");
         })
       ).status,
-      "blocked",
+      "disabled",
     );
     assert.equal(await db.marketing_delivery_job.count({ where: { user_id: user.id } }), 0);
     assert.equal(
@@ -84,9 +84,10 @@ test("PostgreSQL: canonical checkout reference, no late registration consent, ro
     );
     const { captureCheckoutContext } = await import("./checkout-context");
     const { buildConsentedMetaCapiPayload } = await import("./meta-capi");
+    const { CHECKOUT_SOURCE_URL } = await import("./checkout-policy");
     const policy = {
       documentVersion: MARKETING_CONSENT_POLICY.documentVersion!,
-      sourceUrls: ["https://example.test/checkout"],
+      sourceUrls: [CHECKOUT_SOURCE_URL],
       accountId: operation.account_id,
     };
     const token = randomBytes(32).toString("hex");
@@ -163,7 +164,7 @@ test("PostgreSQL: canonical checkout reference, no late registration consent, ro
     assert.equal(payload.data[0].event_id, rows[0].event_id);
     assert.equal(evidence.occurredAtMs, operation.created_at.getTime());
     assert.equal("custom_data" in payload.data[0], false);
-    assert.deepEqual(Object.keys(payload.data[0].user_data), ["fbp"]);
+    assert.deepEqual(Object.keys(payload.data[0].user_data), ["client_user_agent", "fbp"]);
     for (const override of [
       { accountId: "wrong" },
       { documentVersion: "old" },

@@ -20,11 +20,11 @@ const consent: AdvertisingConsent = {
   revokedAt: null,
 };
 
-test("registrations and user actions are eligible while checkout and subscription stay blocked", () => {
+test("checkout, registrations and user actions are eligible; subscription stays blocked", () => {
   for (const conversion of META_CONVERSIONS) {
     assert.equal(
       metaTransmissionDecision(conversion).allowed,
-      conversion.startsWith("patient_") || conversion === "professional_registration",
+      conversion !== "professional_subscription",
     );
   }
   assert.equal(META_EVENT_POLICY.patient_community_post.confirmation, "post_committed");
