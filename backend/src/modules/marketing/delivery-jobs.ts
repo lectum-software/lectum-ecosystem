@@ -5,6 +5,7 @@ import prisma from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { MARKETING_CONSENT_POLICY } from "./consent-policy";
 import { resolveDeliverySource } from "./delivery-source";
+import { currentGuestContactEvidence } from "./guest-contact";
 import { deliverMetaConversion } from "./meta-capi";
 import { readMetaConfig } from "./meta-config";
 import { metaTransmissionDecision } from "./meta-policy";
@@ -179,6 +180,7 @@ export class MarketingDeliveryJobs {
   async expireAndPurge(now = new Date()) {
     await prisma.marketing_delivery_job.deleteMany({
       where: {
+        guest_token_hash: null,
         OR: [
           { user_id: null },
           { consent_revision: null },
@@ -195,6 +197,21 @@ export class MarketingDeliveryJobs {
           { user: { is: { marketing_consent: { is: null } } } },
           { user: { is: { marketing_consent: { is: { revoked_at: { not: null } } } } } },
           { user: { is: { marketing_consent: { is: { expires_at: { lte: now } } } } } },
+        ],
+      },
+    });
+    await prisma.marketing_delivery_job.deleteMany({
+      where: {
+        guest_token_hash: { not: null },
+        OR: [
+          { guest: { is: { revoked: true } } },
+          { guest: { is: { claimed: true } } },
+          { guest: { is: { expires_at: { lte: now } } } },
+          {
+            guest: {
+              is: { document_version: { not: USER_DELIVERY_POLICY.documentVersion ?? "" } },
+            },
+          },
         ],
       },
     });
@@ -232,9 +249,11 @@ async function currentDeliveryConsent(
   job: Pick<
     DeliveryJob,
     "user_id" | "consent_revision" | "occurred_at" | "conversion" | "source_ref"
-  >,
+  > & { guest_token_hash?: string | null },
   now: Date,
 ) {
+  if (job.guest_token_hash)
+    return (await currentGuestContactEvidence(tx, job, now))?.consent ?? null;
   const userEvent = isUserConversion(job.conversion);
   const documentVersion = userEvent
     ? USER_DELIVERY_POLICY.documentVersion

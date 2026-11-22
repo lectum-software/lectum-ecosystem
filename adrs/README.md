@@ -772,3 +772,5 @@ Formato recomendado:
 - [ADR-0700 — Consentimento antes de medir conteudo](0700-content-measurement-consent.md)
 
 - [ADR-0701 — Preselecao das preferencias sem consentimento implicito](0701-privacy-preselected-options.md)
+
+- [ADR-0702 — Contact sem login e com consentimento anterior](0702-guest-whatsapp-conversions.md)

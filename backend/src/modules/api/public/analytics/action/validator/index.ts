@@ -34,6 +34,12 @@ export const schema: IValidatorRequest = {
   params: [],
   query: [],
   body: [
+    {
+      key: "guest_token",
+      method: "string",
+      optional: true,
+      custom: z.string().regex(/^[a-f0-9]{64}$/),
+    },
     { key: "measurement_allowed", method: "boolean", optional: true },
     {
       key: "event_id",

@@ -30,6 +30,12 @@ export function guestTransferToken() {
   );
   return browserAttribution.tokenForTransfer(choice);
 }
+export function guestMeasurementToken() {
+  const choice = parsePrivacyChoice(
+    readStorageItem(getBrowserStorage("localStorage"), privacyStorageKey(null)),
+  );
+  return browserAttribution.tokenForMeasurement(choice);
+}
 export function clearGuestAcquisition() {
   if (!CAMPAIGN_ATTRIBUTION_ENABLED) return;
   browserAttribution.markTransferred();

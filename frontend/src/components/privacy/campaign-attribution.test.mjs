@@ -207,3 +207,36 @@ test("direct visit retries failed persistence with the same consent token", asyn
   assert.equal(attempts, 2);
   assert.equal(tokens[0], tokens[1]);
 });
+test("measurement requires confirmed capture and ignores account association choice", async () => {
+  const f = fixture();
+  const choice = { ...f.choice, authorizeTransfer: false };
+  assert.equal(f.client.tokenForMeasurement(choice), null);
+  await f.client.capture(choice, {});
+  assert.equal(f.client.tokenForMeasurement(choice), "a".repeat(64));
+  assert.equal(f.client.tokenForMeasurement({ ...choice, campaigns: false }), null);
+  assert.equal(f.client.tokenForMeasurement({ ...choice, pendingRevocation: true }), null);
+  f.client.markTransferred();
+  assert.equal(f.client.tokenForMeasurement(choice), null);
+});
+
+test("pending capture cannot authorize a click and revocation defeats completion", async () => {
+  let complete;
+  const f = fixture({
+    transport: {
+      capture: () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        }),
+      revoke: async () => {},
+    },
+  });
+  const capture = f.client.capture(f.choice, {});
+  assert.equal(f.client.tokenForMeasurement(f.choice), null);
+  await f.client.revoke();
+  complete({
+    enabled: true,
+    expires_at: new Date(100_000 + PRE_SIGNUP_RETENTION_MS).toISOString(),
+  });
+  await capture;
+  assert.equal(f.client.tokenForMeasurement(f.choice), null);
+});

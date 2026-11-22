@@ -2898,3 +2898,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 335 | [TASK-335 - Consentimento antes de medir conteudo](TASK-335-content-measurement-consent.md) | Em andamento |
 
 | 336 | [TASK-336 - Opcoes iniciais de preferencias](TASK-336-privacy-preselected-options.md) | Concluida |
+
+| 337 | [TASK-337 - Contact de visitantes](TASK-337-guest-whatsapp-conversions.md) | Concluida |

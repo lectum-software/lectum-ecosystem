@@ -70,6 +70,7 @@ export type PageViewDurationResponse = {
 
 export type ImportantActionTrackingRequest = {
   measurement_allowed?: boolean;
+  guest_token?: string;
   event_id?: string;
   visitor_id: string;
   session_id: string;

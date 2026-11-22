@@ -12,6 +12,7 @@ import { getApiErrorStatus } from "@/api/errors";
 import type { DisplayMode, ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { guestMeasurementToken } from "@/components/privacy/attribution-client";
 import { hasInternalMeasurementConsent } from "@/components/privacy/internal-measurement";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useModalPortalHost } from "@/hooks/use-modal-portal-host";
@@ -390,6 +391,7 @@ export const PsychologistWhatsAppRedirectButton = ({
 
     const startedAt = performance.now();
     const allowedAtStart = hasInternalMeasurementConsent();
+    const guestTokenAtStart = allowedAtStart ? guestMeasurementToken() : null;
     let nextUrl: string;
     try {
       const data = await tracking.mutateAsync();
@@ -411,6 +413,9 @@ export const PsychologistWhatsAppRedirectButton = ({
         .mutateAsync({
           event_id: crypto.randomUUID(),
           measurement_allowed: measurementAllowed,
+          ...(guestTokenAtStart && guestTokenAtStart === guestMeasurementToken()
+            ? { guest_token: guestTokenAtStart }
+            : {}),
           action_type: importantActionType,
           display_mode: getDisplayMode(),
           occurred_at: new Date().toISOString(),

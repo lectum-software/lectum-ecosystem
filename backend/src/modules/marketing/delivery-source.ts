@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Prisma } from "@/external/generated/prisma/client";
 import { storedFinancialReceiptHash } from "@/modules/billing/stripe/financial-ledger/policy";
 import type { DeliveryJob } from "./delivery-jobs";
+import { resolveGuestContactSource } from "./guest-contact";
 import { isUserConversion, resolveUserActionSource } from "./user-events";
 
 const subscriptionEvidence = z.object({
@@ -29,13 +30,14 @@ export async function resolveDeliverySource(
   job: Pick<
     DeliveryJob,
     "user_id" | "consent_revision" | "conversion" | "source_ref" | "event_id" | "occurred_at"
-  >,
+  > & { guest_token_hash?: string | null },
 ): Promise<{
   occurredAt: Date;
   amountCents?: number;
   operationId?: string;
   accountId?: string;
 } | null> {
+  if (job.guest_token_hash) return resolveGuestContactSource(tx, job);
   if (!job.user_id || !job.consent_revision) return null;
   if (isUserConversion(job.conversion)) {
     const source = await resolveUserActionSource(tx, job.conversion, job.source_ref, job.user_id);

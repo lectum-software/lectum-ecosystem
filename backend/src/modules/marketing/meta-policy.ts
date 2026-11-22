@@ -26,7 +26,8 @@ type EventPolicy = {
     | "first_payment_verified";
 };
 
-// Legacy patient_* keys describe user accounts, not an established clinical relationship.
+// Legacy patient_* keys do not imply a clinical relationship.
+// patient_contact also covers consented guests (TASK-337).
 // User event eligibility was authorized by the owner on 2026-11-20.
 // Delivery still requires configured URLs, consent evidence and explicit enablement.
 export const META_EVENT_POLICY: Readonly<Record<MetaConversion, EventPolicy>> = {

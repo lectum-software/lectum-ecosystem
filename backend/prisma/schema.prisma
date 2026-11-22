@@ -1994,6 +1994,8 @@ model marketing_attribution {
 }
 
 model marketing_guest_attribution {
+  delivery_jobs marketing_delivery_job[]
+
   token_hash String @id
   browser_fbp String?
   browser_captured_at DateTime?
@@ -2028,6 +2030,9 @@ model marketing_subscribe_job {
 
 // Delivery metadata only. Fresh consent and payload are resolved from server facts.
 model marketing_delivery_job {
+  guest_token_hash String?
+  guest marketing_guest_attribution? @relation(fields: [guest_token_hash], references: [token_hash], onDelete: Cascade)
+
   client_ip_address String?
   client_user_agent String?
   id String @id @default(cuid())
@@ -2053,6 +2058,7 @@ model marketing_delivery_job {
   @@index([user_id])
   @@index([state, next_attempt_at, lease_until])
   @@index([expires_at])
+  @@index([guest_token_hash])
   @@map("marketing_delivery_jobs")
 }
 
