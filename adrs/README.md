@@ -784,3 +784,7 @@ Formato recomendado:
 - [ADR-0706 — Contexto antes da fila](0706-checkout-queue-order.md)
 
 - [ADR-0707 — Configuração de InitiateCheckout](0707-checkout-activation.md)
+
+- [ADR-0708 — Preferências em Ajuda e feedback](0708-cookie-preferences-entry.md)
+
+- [ADR-0709 — Consentimento profissional Google](0709-professional-google-consent.md)

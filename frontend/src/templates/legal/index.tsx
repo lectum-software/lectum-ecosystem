@@ -23,7 +23,6 @@ export const LegalTemplate = ({
           {document?.title ?? LEGAL_TITLES[kind]}
         </h1>
         {document ? <LegalAcceptanceStatus document={document} /> : null}
-        {kind === "privacy" ? <PrivacyPreferencesTrigger /> : null}
         {document ? (
           <>
             <p className="mt-3 text-sm text-muted">
@@ -61,7 +60,10 @@ export const LegalTemplate = ({
               </section>
             ) : null}
             <div className="mt-6">
-              <LegalDocumentBody body={document.body} />
+              <LegalDocumentBody
+                body={document.body}
+                cookiesPreferences={kind === "privacy" ? <PrivacyPreferencesTrigger /> : undefined}
+              />
             </div>
           </>
         ) : (

@@ -16,6 +16,7 @@ import {
   AdultDeclarationModal,
 } from "@/components/legal/adult-declaration-modal";
 import { hasCompleteLegalSet, legalSetKey } from "@/components/legal/policy";
+import { authorizedGuestTransferToken } from "@/components/privacy/attribution-client";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
@@ -147,8 +148,10 @@ export const RegisterPsychologistLogic = () => {
         query.set("redirectTo", redirectTo);
       }
 
+      const marketingGuestToken = authorizedGuestTransferToken();
       const { state } = await prepareGoogleRegistration(currentDeviceId, {
         ...Object.fromEntries(query),
+        ...(marketingGuestToken ? { marketing_guest_token: marketingGuestToken } : {}),
         birthdate,
       });
       window.location.href = buildTrustedGoogleLoginUrl(
