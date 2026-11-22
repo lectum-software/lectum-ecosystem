@@ -137,7 +137,7 @@ test("comunidades ativam autoplay mudo sem remover controles existentes", () => 
   assert.match(postContentSource, /<CommunityMediaBlock[\s\S]*?enableCommunityAutoplay/);
   assert.match(replyCardSource, /enableCommunityAutoplay=\{enableCommunityAutoplay\}/);
   assert.match(modalMediaSuspensionSource, /lectum:modal-media-suspension-change/);
-  assert.match(modalSource, /useModalMediaSuspension\(open, dialogRef\)/);
+  assert.match(modalSource, /useModalMediaSuspension\(visible, dialogRef\)/);
   // Full-page/profile-return routes render a feed behind the same sheet, too.
   assert.match(createPostSource, /useModalMediaSuspension\(true, overlayRef\)/);
   assert.doesNotMatch(createPostSource, /useModalMediaSuspension\(asModalSlot/);

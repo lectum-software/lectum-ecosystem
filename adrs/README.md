@@ -774,3 +774,5 @@ Formato recomendado:
 - [ADR-0701 — Preselecao das preferencias sem consentimento implicito](0701-privacy-preselected-options.md)
 
 - [ADR-0702 — Contact sem login e com consentimento anterior](0702-guest-whatsapp-conversions.md)
+
+- [ADR-0703 — Prioridade de cookies](0703-privacy-overlay-priority.md)

@@ -1,7 +1,7 @@
 "use client";
 
 const MODAL_LAYER_SELECTOR =
-  '[aria-modal="true"], [role="dialog"][data-create-post-sheet-state="open"]';
+  'dialog[open], [data-privacy-notice], [data-privacy-panel], [aria-modal="true"], [role="dialog"][data-create-post-sheet-state="open"]';
 
 export const hasVisibleModalLayer = () => {
   if (typeof document === "undefined") return false;
