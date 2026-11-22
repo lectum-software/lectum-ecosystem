@@ -12,3 +12,5 @@ Validação: 3 integrações PostgreSQL local (fila, payload e revogação) e 24
 Checks de versão, segurança de fontes, tamanho, segredos, encoding, índices e ciclos aprovados. A limitação anterior da suíte frontend video-contact (TASK-338) permanece fora do escopo; não afirmar check global frontend aprovado.
 
 Check completo backend aprovado: 1533 testes aprovados, 58 ignorados, zero falhas. As três integrações afetadas foram executadas separadamente e aprovadas no PostgreSQL local.
+
+Revisão solicitada pelo usuário: removido o complemento sobre Meta da dica de anonimato, restaurando integralmente o texto anterior. A regra de medição consentida permanece inalterada. Versão 0.1.834.
