@@ -2894,3 +2894,5 @@ Ajustes locais de legendas de 09/11: [TASK-320 - Interface de legendas](TASK-320
 
 | 334 | [TASK-334 - Diagnostico privado da cadeia de proxies](TASK-334-private-proxy-diagnostic.md) | Concluida |
 Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidade](TASK-333-meta-marketing-conversions.md). Stripe Subscribe preparado e desativado; persistencia real, consentimento e retries pendentes. Nenhuma ativacao externa.
+
+| 335 | [TASK-335 - Consentimento antes de medir conteudo](TASK-335-content-measurement-consent.md) | Em andamento |

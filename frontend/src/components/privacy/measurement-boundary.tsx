@@ -5,7 +5,7 @@ import { usePrivacyChoice } from "./use-choice";
 import { usePrivacyIdentity } from "./use-identity";
 
 // This gates existing first-party measurement only. There is no Meta SDK here.
-export function PrivacyMeasurementBoundary({ children }: { children: ReactNode }) {
+export function useMeasurementScope() {
   const { user, hasToken } = usePrivacyIdentity();
   const userId = user?.id || null;
   const choice = usePrivacyChoice(userId);
@@ -14,5 +14,9 @@ export function PrivacyMeasurementBoundary({ children }: { children: ReactNode }
     choice?.campaigns === true &&
     !choice.pendingRevocation &&
     (!hasToken || Boolean(userId && status.data?.granted && !status.isError));
-  return allowed ? children : null;
+  return allowed && choice ? `${userId || "guest"}:${choice.savedAt}` : null;
+}
+
+export function PrivacyMeasurementBoundary({ children }: { children: ReactNode }) {
+  return useMeasurementScope() ? children : null;
 }

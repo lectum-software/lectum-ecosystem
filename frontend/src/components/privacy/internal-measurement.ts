@@ -1,10 +1,11 @@
 import { getToken } from "@/hooks/cookies/token";
 import { store } from "@/store";
-import { hasLocalCampaignConsent } from "./use-choice";
+import { localCampaignConsentScope } from "./use-choice";
 
-export function hasInternalMeasurementConsent() {
+export function hasInternalMeasurementConsent(expectedScope?: string | null) {
   const authenticated = Boolean(getToken());
   const userId = authenticated ? store.getState().user?.id || null : null;
   if (authenticated && !userId) return false;
-  return hasLocalCampaignConsent(userId);
+  const scope = localCampaignConsentScope(userId);
+  return scope !== null && (expectedScope === undefined || scope === expectedScope);
 }

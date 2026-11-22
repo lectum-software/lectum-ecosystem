@@ -67,10 +67,15 @@ export function persistPrivacyChoice(
   window.dispatchEvent(new Event(PRIVACY_CHANGED));
   return saved;
 }
-export function hasLocalCampaignConsent(userId: string | null) {
-  if (deniedInMemory.has(privacyStorageKey(userId))) return false;
+export function localCampaignConsentScope(userId: string | null) {
+  if (deniedInMemory.has(privacyStorageKey(userId))) return null;
   const choice = parsePrivacyChoice(
     readStorageItem(getBrowserStorage("localStorage"), privacyStorageKey(userId)),
   );
-  return choice?.campaigns === true && !choice.pendingRevocation;
+  return choice?.campaigns === true && !choice.pendingRevocation
+    ? `${userId || "guest"}:${choice.savedAt}`
+    : null;
+}
+export function hasLocalCampaignConsent(userId: string | null) {
+  return localCampaignConsentScope(userId) !== null;
 }

@@ -768,3 +768,5 @@ Formato recomendado:
 
 - [ADR-0699 — Diagnostico administrativo de proxies sem dados pessoais](0699-private-proxy-diagnostic.md)
 - [ADR-0698 — Meta marketing compliance gate](0698-meta-marketing-compliance-gate.md)
+
+- [ADR-0700 — Consentimento antes de medir conteudo](0700-content-measurement-consent.md)
