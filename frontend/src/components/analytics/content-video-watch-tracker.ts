@@ -9,6 +9,8 @@ import {
 } from "@/api/req/analytics";
 import { documentHasUserAttention } from "@/components/analytics/attention";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
+import { hasInternalMeasurementConsent } from "@/components/privacy/internal-measurement";
+import { useMeasurementScope } from "@/components/privacy/measurement-boundary";
 
 const CONTENT_VIDEO_RETENTION_BUCKETS = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
 const HEARTBEAT_INTERVAL_MS = 15_000;
@@ -52,6 +54,7 @@ const readableDuration = (video: HTMLVideoElement | null) =>
 export const useContentVideoWatchTracking = (
   target?: ContentVideoWatchTrackingTarget | null,
 ): ((video: HTMLVideoElement | null) => void) => {
+  const consentScope = useMeasurementScope();
   const cleanupTrackingRef = useRef<(() => void) | null>(null);
   const completedRef = useRef(false);
   const hasStartedRef = useRef(false);
@@ -61,31 +64,15 @@ export const useContentVideoWatchTracking = (
   const replayCountRef = useRef(0);
   const retentionBucketsRef = useRef<Set<number>>(new Set());
   const watchedSecondsRef = useRef<Set<number>>(new Set());
-  const targetId = target?.targetId ?? null;
+  const targetId = consentScope ? (target?.targetId ?? null) : null;
   const targetType = target?.targetType ?? null;
   const targetVideoUrl = target?.videoUrl ?? null;
-  const targetKeyRef = useRef<string | null>(null);
-  const targetKey =
-    targetId && targetType ? `${targetType}:${targetId}:${targetVideoUrl ?? ""}` : "disabled";
-
-  useEffect(() => {
-    targetKeyRef.current = targetKey;
-    completedRef.current = false;
-    hasStartedRef.current = false;
-    lastPlaybackPositionRef.current = 0;
-    lastSentAtRef.current = 0;
-    maxPositionRef.current = 0;
-    replayCountRef.current = 0;
-    retentionBucketsRef.current = new Set();
-    watchedSecondsRef.current = new Set();
-  }, [targetKey]);
-
   const buildPayload = useCallback(
     (
       video: HTMLVideoElement | null,
       completed: boolean,
     ): ContentVideoWatchTrackingRequest | null => {
-      if (!targetId || !targetType) return null;
+      if (!targetId || !targetType || !hasInternalMeasurementConsent(consentScope)) return null;
 
       const identity = getOrCreateAnalyticsIdentity();
       if (!identity) return null;
@@ -115,7 +102,7 @@ export const useContentVideoWatchTracking = (
         watched_seconds: watchedSeconds || null,
       };
     },
-    [targetId, targetType, targetVideoUrl],
+    [targetId, targetType, targetVideoUrl, consentScope],
   );
 
   const flushVideoAnalytics = useCallback(
@@ -149,10 +136,20 @@ export const useContentVideoWatchTracking = (
 
   const setVideoElement = useCallback(
     (video: HTMLVideoElement | null) => {
+      // A new account/consent starts a fresh interval even if both grants are affirmative.
       cleanupTrackingRef.current?.();
       cleanupTrackingRef.current = null;
 
-      if (!video || !targetId || !targetType) return;
+      completedRef.current = false;
+      hasStartedRef.current = false;
+      lastPlaybackPositionRef.current = video?.currentTime ?? 0;
+      lastSentAtRef.current = 0;
+      maxPositionRef.current = 0;
+      replayCountRef.current = 0;
+      retentionBucketsRef.current = new Set();
+      watchedSecondsRef.current = new Set();
+      if (!video || !targetId || !targetType || !hasInternalMeasurementConsent(consentScope))
+        return;
 
       const updateRetentionBuckets = () => {
         if (!Number.isFinite(video.duration) || video.duration <= 0) return false;
@@ -177,7 +174,7 @@ export const useContentVideoWatchTracking = (
         to: number,
         options: { allowPaused?: boolean } = {},
       ) => {
-        if (!documentHasUserAttention()) return;
+        if (!hasInternalMeasurementConsent(consentScope) || !documentHasUserAttention()) return;
         if (video.paused && !options.allowPaused) return;
 
         const start = Math.max(0, Math.floor(Math.min(from, to)));
@@ -201,7 +198,7 @@ export const useContentVideoWatchTracking = (
       };
 
       const handleTimeUpdate = () => {
-        if (!documentHasUserAttention()) {
+        if (!hasInternalMeasurementConsent(consentScope) || !documentHasUserAttention()) {
           lastPlaybackPositionRef.current = video.currentTime || lastPlaybackPositionRef.current;
           return;
         }
@@ -228,6 +225,7 @@ export const useContentVideoWatchTracking = (
       };
 
       const handleSeeked = () => {
+        if (!hasInternalMeasurementConsent(consentScope)) return;
         const currentTime = video.currentTime || 0;
         const previousTime = lastPlaybackPositionRef.current || 0;
 
@@ -240,6 +238,7 @@ export const useContentVideoWatchTracking = (
       };
 
       const handleEnded = () => {
+        if (!hasInternalMeasurementConsent(consentScope)) return;
         if (Number.isFinite(video.duration) && video.duration > 0) {
           addWatchedRange(lastPlaybackPositionRef.current, video.duration, { allowPaused: true });
           maxPositionRef.current = Math.max(maxPositionRef.current, video.duration);
@@ -301,7 +300,7 @@ export const useContentVideoWatchTracking = (
         window.removeEventListener("pagehide", handlePageHide);
       };
     },
-    [flushVideoAnalytics, targetId, targetType],
+    [flushVideoAnalytics, targetId, targetType, consentScope],
   );
 
   useEffect(() => {

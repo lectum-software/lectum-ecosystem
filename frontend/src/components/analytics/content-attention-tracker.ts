@@ -9,6 +9,8 @@ import {
 } from "@/api/req/analytics";
 import { documentHasUserAttention } from "@/components/analytics/attention";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
+import { hasInternalMeasurementConsent } from "@/components/privacy/internal-measurement";
+import { useMeasurementScope } from "@/components/privacy/measurement-boundary";
 import { getCurrentAnalyticsPath } from "@/utils/analytics-path";
 
 export const CONTENT_ATTENTION_MIN_VISIBLE_RATIO = 0.35;
@@ -40,7 +42,8 @@ const clampSecond = (value: number) => {
 };
 
 const storageKeyForTarget = (target?: ContentAttentionTrackingTarget | null) => {
-  if (!target?.targetId || typeof window === "undefined") return null;
+  if (!target?.targetId || typeof window === "undefined" || !hasInternalMeasurementConsent())
+    return null;
 
   const identity = getOrCreateAnalyticsIdentity();
   if (!identity) return null;
@@ -101,25 +104,25 @@ const entryHasEnoughVisibleArea = (entry: IntersectionObserverEntry) => {
 export const useContentAttentionTracking = (
   target?: ContentAttentionTrackingTarget | null,
 ): ((element: HTMLElement | null) => void) => {
+  const consentScope = useMeasurementScope();
+  const activeTarget = consentScope ? target : null;
   const cleanupElementRef = useRef<(() => void) | null>(null);
   const elementRef = useRef<HTMLElement | null>(null);
-  const stateRef = useRef<AttentionState>(createInitialState(target));
-  const targetRef = useRef<ContentAttentionTrackingTarget | null>(target ?? null);
-  const targetId = target?.targetId ?? null;
+  const stateRef = useRef<AttentionState>(createInitialState(activeTarget));
+  const targetRef = useRef<ContentAttentionTrackingTarget | null>(activeTarget ?? null);
+  const targetId = activeTarget?.targetId ?? null;
   const targetType = target?.targetType ?? null;
-
-  useEffect(() => {
-    targetRef.current = targetId && targetType ? { targetId, targetType } : null;
-    stateRef.current = createInitialState(targetRef.current);
-  }, [targetId, targetType]);
 
   const shouldBeActive = useCallback(() => {
     const currentTarget = targetRef.current;
 
     return Boolean(
-      currentTarget?.targetId && stateRef.current.isVisibleEnough && documentHasUserAttention(),
+      currentTarget?.targetId &&
+        hasInternalMeasurementConsent(consentScope) &&
+        stateRef.current.isVisibleEnough &&
+        documentHasUserAttention(),
     );
-  }, []);
+  }, [consentScope]);
 
   const syncActiveState = useCallback(() => {
     const state = stateRef.current;
@@ -140,7 +143,7 @@ export const useContentAttentionTracking = (
   const flushAttention = useCallback(
     (mode: FlushMode = "normal", force = false) => {
       const currentTarget = targetRef.current;
-      if (!currentTarget?.targetId) return;
+      if (!currentTarget?.targetId || !hasInternalMeasurementConsent(consentScope)) return;
 
       syncActiveState();
 
@@ -177,18 +180,22 @@ export const useContentAttentionTracking = (
         // Analytics must fail silently.
       });
     },
-    [syncActiveState],
+    [syncActiveState, consentScope],
   );
 
   const setElement = useCallback(
     (element: HTMLElement | null) => {
+      // Reattach observers when the account or affirmative decision changes.
       cleanupElementRef.current?.();
       cleanupElementRef.current = null;
       elementRef.current = element;
       stateRef.current.isVisibleEnough = false;
       syncActiveState();
 
-      if (!element || !targetRef.current?.targetId) return;
+      targetRef.current = targetId && targetType ? { targetId, targetType } : null;
+      stateRef.current = createInitialState(targetRef.current);
+      if (!element || !targetRef.current?.targetId || !hasInternalMeasurementConsent(consentScope))
+        return;
 
       if (typeof IntersectionObserver === "undefined") {
         stateRef.current.isVisibleEnough = true;
@@ -221,7 +228,7 @@ export const useContentAttentionTracking = (
         syncActiveState();
       };
     },
-    [flushAttention, syncActiveState],
+    [flushAttention, syncActiveState, targetId, targetType, consentScope],
   );
 
   useEffect(() => {
@@ -247,10 +254,16 @@ export const useContentAttentionTracking = (
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("pagehide", handlePageHide);
       flushAttention("keepalive", true);
-      cleanupElementRef.current?.();
-      cleanupElementRef.current = null;
     };
   }, [flushAttention, syncActiveState]);
+
+  useEffect(
+    () => () => {
+      cleanupElementRef.current?.();
+      cleanupElementRef.current = null;
+    },
+    [],
+  );
 
   return setElement;
 };
