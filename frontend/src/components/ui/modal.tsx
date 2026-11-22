@@ -1,9 +1,29 @@
 "use client";
 
-import { type ReactNode, type RefObject, useLayoutEffect, useRef } from "react";
+import {
+  type ReactNode,
+  type RefObject,
+  useLayoutEffect,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { useModalScrollLock } from "@/hooks/use-modal-scroll-lock";
 import { cn } from "@/lib/utils";
+
+const privacySelector = "dialog[data-privacy-modal][open]";
+const privacyOpen = () => Boolean(document.querySelector(privacySelector));
+const serverPrivacyOpen = () => false;
+const subscribePrivacy = (notify: () => void) => {
+  const observer = new MutationObserver(notify);
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["open", "data-privacy-modal"],
+  });
+  return () => observer.disconnect();
+};
 
 type ModalSession = { href: string; returnTarget: HTMLElement | null };
 
@@ -17,7 +37,9 @@ export const Modal = ({
   onClose,
   open,
   returnFocusRef,
+  privacy = false,
 }: {
+  privacy?: boolean;
   children: ReactNode;
   className?: string;
   dismissOnBackdrop?: boolean;
@@ -31,14 +53,16 @@ export const Modal = ({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const sessionRef = useRef<ModalSession | null>(null);
   const closeRequestedRef = useRef(false);
-  useModalScrollLock(open);
-  useModalMediaSuspension(open, dialogRef);
+  const privacyBlocking = useSyncExternalStore(subscribePrivacy, privacyOpen, serverPrivacyOpen);
+  const visible = open && (privacy || !privacyBlocking);
+  useModalScrollLock(visible);
+  useModalMediaSuspension(visible, dialogRef);
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog?.isConnected) return;
 
-    if (open) {
+    if (visible && (privacy || !privacyOpen())) {
       // Replayed effects and rerenders must not refocus an already open dialog.
       if (dialog.open) return;
       sessionRef.current = {
@@ -73,7 +97,7 @@ export const Modal = ({
     }
     // No close/focus cleanup: native removal dismisses the dialog on unmount.
     // Calling close() there would also restore focus during route changes/StrictMode.
-  }, [initialFocusRef, open, returnFocusRef]);
+  }, [initialFocusRef, visible, privacy, returnFocusRef]);
 
   const requestClose = () => {
     if (!open || !dismissible || closeRequestedRef.current) return;
@@ -83,6 +107,7 @@ export const Modal = ({
 
   return (
     <dialog
+      data-privacy-modal={privacy || undefined}
       aria-labelledby={labelledBy}
       className={cn(
         "fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto overscroll-contain border-0 bg-transparent px-4 py-6 text-foreground backdrop:bg-foreground/55 backdrop:backdrop-blur-md open:grid open:place-items-center",
@@ -97,7 +122,7 @@ export const Modal = ({
       onKeyDown={(event) => event.stopPropagation()}
       onClose={(event) => {
         // A queued close from the previous opening must not close a reopened dialog.
-        if (!event.currentTarget.open) requestClose();
+        if (!event.currentTarget.open && visible) requestClose();
       }}
       onMouseDown={(event) => {
         if (dismissOnBackdrop && event.target === event.currentTarget) requestClose();

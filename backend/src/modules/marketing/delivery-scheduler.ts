@@ -4,7 +4,7 @@ import { metaTransmissionDecision } from "./meta-policy";
 import { isUserConversion, USER_CONVERSIONS } from "./user-events";
 
 type Resolver = Parameters<typeof processNextMetaDelivery>[0];
-const resolveDelivery: Resolver = async (job) => {
+export const resolveDelivery: Resolver = async (job) => {
   if (isUserConversion(job.conversion)) {
     const resolver = await import("./user-delivery");
     return resolver.resolveUserDelivery(job);
@@ -12,6 +12,10 @@ const resolveDelivery: Resolver = async (job) => {
   if (job.conversion === "professional_registration") {
     const resolver = await import("./registration-delivery");
     return resolver.resolveRegistrationDelivery(job);
+  }
+  if (job.conversion === "professional_checkout") {
+    const resolver = await import("./checkout-delivery");
+    return resolver.resolveCheckoutDelivery(job);
   }
   const resolver = await import("./subscription-delivery");
   return resolver.resolveSubscriptionDelivery(job);

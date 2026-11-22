@@ -2900,3 +2900,13 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 336 | [TASK-336 - Opcoes iniciais de preferencias](TASK-336-privacy-preselected-options.md) | Concluida |
 
 | 337 | [TASK-337 - Contact de visitantes](TASK-337-guest-whatsapp-conversions.md) | Concluida |
+
+| 338 | [TASK-338 - Prioridade de cookies](TASK-338-privacy-overlay-priority.md) | Concluida |
+
+| 339 | [TASK-339 - Medição de posts anônimos](TASK-339-anonymous-post-measurement.md) | Concluida |
+
+| 340 | [TASK-340 - Preparação de checkout](TASK-340-checkout-delivery.md) | Concluida |
+
+| 341 | [TASK-341 - Ordem da fila de checkout](TASK-341-checkout-queue-order.md) | Concluida |
+
+| 342 | [TASK-342 - Configuração de InitiateCheckout](TASK-342-checkout-activation.md) | Concluida |

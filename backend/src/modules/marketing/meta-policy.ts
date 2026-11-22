@@ -53,7 +53,7 @@ export const META_EVENT_POLICY: Readonly<Record<MetaConversion, EventPolicy>> = 
   },
   professional_checkout: {
     eventName: "InitiateCheckout",
-    externalStatus: "pending_compliance_review",
+    externalStatus: "eligible",
     confirmation: "checkout_started",
   },
   professional_subscription: {

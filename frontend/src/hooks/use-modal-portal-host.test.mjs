@@ -69,7 +69,7 @@ test("media upgrade owns a native top layer instead of sharing the reels stackin
   assert.match(upgrade, /initialFocusRef=\{titleRef\}/);
   assert.match(modal, /dialog.showModal\(\)/);
   assert.match(modal, /onKeyDown=\{\(event\) => event.stopPropagation\(\)\}/);
-  assert.match(modal, /useModalMediaSuspension\(open, dialogRef\)/);
+  assert.match(modal, /useModalMediaSuspension\(visible, dialogRef\)/);
 });
 
 test("delete confirmation keeps focus and Escape in the native host and blocks pending dismissal", () => {

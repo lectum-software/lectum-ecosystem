@@ -203,7 +203,18 @@ for (const provider of ["google", "manual"] as const) {
           conversion_source_ref: { conversion: "patient_community_post", source_ref: postId },
         },
       });
-      assert.equal(await resolveUserDeliveryEvidence(db, postJob, now), null);
+      const anonymousEvidence = await resolveUserDeliveryEvidence(db, postJob, now);
+      assert.ok(anonymousEvidence);
+      const anonymousPayload = buildConsentedMetaCapiPayload(
+        anonymousEvidence,
+        [sourceUrl],
+        version,
+        now.getTime(),
+        USER_DELIVERY_POLICY.sourceUrls,
+      );
+      assert.ok(anonymousPayload);
+      assert.equal(anonymousPayload.data[0].event_name, "forum_post");
+      assert.equal(JSON.stringify(anonymousPayload).includes("Not exported"), false);
       assert.equal(
         await db.marketing_browser_identifier.count({
           where: { token_hash: tokenHash, user_id: owner },
@@ -217,6 +228,7 @@ for (const provider of ["google", "manual"] as const) {
         where: { conversion_source_ref: { conversion: "patient_registration", source_ref: owner } },
       });
       assert.equal(await resolveUserDeliveryEvidence(db, registrationJob, now), null);
+      assert.equal(await resolveUserDeliveryEvidence(db, postJob, now), null);
       assert.ok(
         (await db.marketing_consent.findUniqueOrThrow({ where: { user_id: owner } })).revoked_at,
       );

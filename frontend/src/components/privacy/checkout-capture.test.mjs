@@ -112,8 +112,8 @@ test("timeouts abort evidence without delaying payment indefinitely or posting l
     }),
   );
 });
-test("production gate stays off and optional requests cannot sign users out", () => {
+test("reviewed checkout gate is enabled and optional requests cannot sign users out", () => {
   const api = readFileSync(new URL("../../api/req/privacy/index.ts", import.meta.url), "utf8");
-  assert.match(api, /CHECKOUT_CONTEXT_CAPTURE_ENABLED = false/);
+  assert.match(api, /CHECKOUT_CONTEXT_CAPTURE_ENABLED = true/);
   assert.match(api, /signOutOnUnauthorized: false/);
 });

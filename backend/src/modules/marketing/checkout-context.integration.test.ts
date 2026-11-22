@@ -13,6 +13,7 @@ test("PostgreSQL: checkout evidence is owner-bound, immutable, expiring and revo
   const { captureCheckoutContext, readCheckoutContext } = await import("./checkout-context");
   const { captureBrowserIdentifier } = await import("./browser-identifier-repository");
   const { MarketingConsentRepository } = await import("./consent-repository");
+  const { MARKETING_CONSENT_POLICY } = await import("./consent-policy");
   const tag = randomUUID();
   const user = await db.user.create({
     data: {
@@ -41,7 +42,11 @@ test("PostgreSQL: checkout evidence is owner-bound, immutable, expiring and revo
       state: "requires_confirmation",
     },
   });
-  const input = { operationId: operation.id, revision: 1, documentVersion: "local-checkout-test" };
+  const input = {
+    operationId: operation.id,
+    revision: 1,
+    documentVersion: MARKETING_CONSENT_POLICY.documentVersion!,
+  };
   try {
     assert.equal(await captureCheckoutContext(user.id, undefined, undefined, {}), false);
     await db.marketing_consent.create({
@@ -129,11 +134,57 @@ test("PostgreSQL: checkout evidence is owner-bound, immutable, expiring and revo
     assert.equal(await captureLive({ sandboxAccountId: policy.sandboxAccountId }), false);
     assert.equal(await captureLive({ sourceUrl: "https://other.test/checkout" }), false);
     await db.marketing_checkout_context.delete({ where: { operation_id: operation.id } });
-    assert.equal(await captureLive(), true);
+    const { META_EVENT_POLICY } = await import("./meta-policy");
+    const eventPolicy = META_EVENT_POLICY.professional_checkout;
+    const priorStatus = eventPolicy.externalStatus;
+    const config = {
+      META_CAPI_ENABLED: "true",
+      META_DATASET_ID: "123456789",
+      META_GRAPH_API_VERSION: "v25.0",
+      META_CAPI_ACCESS_TOKEN: "local-disposable-test",
+    };
+    const priorEnv = Object.fromEntries(Object.keys(config).map((key) => [key, process.env[key]]));
+    await db.billing_operation.update({
+      where: { id: operation.id },
+      data: { provider_setup_intent_id: "seti_local" },
+    });
+    try {
+      Object.assign(process.env, config);
+      eventPolicy.externalStatus = "eligible";
+      assert.equal(
+        await captureLive({ liveReview: { ...livePolicy.liveReview, accountId: "wrong" } }),
+        false,
+      );
+      assert.equal(await db.marketing_delivery_job.count({ where: { user_id: user.id } }), 0);
+      assert.equal(await captureLive(), true);
+      const job = await db.marketing_delivery_job.findFirstOrThrow({ where: { user_id: user.id } });
+      assert.equal(job.source_ref, operation.id);
+      assert.equal(job.state, "pending");
+      assert.equal(job.attempts, 0);
+      assert.ok(
+        await db.marketing_checkout_context.findUnique({ where: { operation_id: operation.id } }),
+      );
+      for (const state of ["processing", "complete"]) {
+        await db.billing_operation.update({ where: { id: operation.id }, data: { state } });
+        assert.equal(await captureLive(), true);
+      }
+      await Promise.all([captureLive(), captureLive(), captureLive()]);
+      assert.equal(await db.marketing_delivery_job.count({ where: { user_id: user.id } }), 1);
+      assert.equal(
+        (await db.marketing_delivery_job.findUniqueOrThrow({ where: { id: job.id } })).event_id,
+        job.event_id,
+      );
+    } finally {
+      eventPolicy.externalStatus = priorStatus;
+      for (const [key, value] of Object.entries(priorEnv)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
     assert.equal((await read())?.sourceUrl, livePolicy.sourceUrl);
     await db.billing_operation.update({
       where: { id: operation.id },
-      data: { mode: "test", state: "complete" },
+      data: { mode: "test", state: "failed" },
     });
     assert.equal(await capture(), false);
     await new MarketingConsentRepository().revoke(user.id);

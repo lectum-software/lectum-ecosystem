@@ -53,7 +53,7 @@ describe("native Modal close veto in Chrome", {
             const initialFocusRef = useRef(null);
             const returnFocusRef = useRef(document.getElementById('opener'));
             window.setOpen = value => flushSync(() => setOpen(value));
-            return <Modal {...options} open={open} labelledBy="title"
+            return <><Modal {...options} open={open} labelledBy="title"
               initialFocusRef={initialFocusRef} returnFocusRef={returnFocusRef}
               onClose={() => {
                 window.closeRequests++;
@@ -63,7 +63,10 @@ describe("native Modal close veto in Chrome", {
               <section><h2 id="title">Draft</h2>
                 <textarea id="editor" ref={initialFocusRef} defaultValue="Unsaved draft"/>
               </section>
-            </Modal>;
+            </Modal>{options.showPrivacy && <Modal privacy open dismissible={false}
+              labelledBy="privacy-title" initialFocusRef={{current:null}} returnFocusRef={{current:null}}
+              onClose={() => false}><section><h2 id="privacy-title">Cookies</h2>
+              <button id="privacy-choice">Preferences</button></section></Modal>}</>;
           }
           const root = createRoot(document.getElementById('root'));
           window.update = patch => {
@@ -148,6 +151,24 @@ describe("native Modal close veto in Chrome", {
       assert.equal(await page.locator("dialog").evaluate((dialog) => dialog.open), true);
     });
   }
+
+  test("privacy suspends other dialogs without dismissing drafts and resumes after closing", async () => {
+    await page.locator("#editor").fill("Preserved while cookies are open");
+    await page.evaluate(() => window.update({ showPrivacy: true }));
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("dialog[open]").length === 1 &&
+        document.querySelector("dialog[data-privacy-modal][open]"),
+    );
+    await page.locator("#privacy-choice").click();
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator("dialog[data-privacy-modal][open]").count(), 1);
+    assert.equal(await requests(), 0);
+    await page.evaluate(() => window.update({ showPrivacy: false }));
+    await page.waitForFunction(() => document.querySelector("#editor").closest("dialog").open);
+    assert.equal(await page.locator("#editor").inputValue(), "Preserved while cookies are open");
+    assert.equal(await requests(), 0);
+  });
 
   test("legacy void close stays deduplicated through the native close event", async () => {
     await page.evaluate(() => {

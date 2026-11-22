@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { type AdvertisingConsent, hasAdvertisingConsent } from "./acquisition-policy";
+import { CHECKOUT_SOURCE_URL } from "./checkout-policy";
 import { metaBrowserIdSchema } from "./meta-browser-id";
 import { readMetaConfig } from "./meta-config";
 import { META_EVENT_POLICY, type MetaConversion, metaTransmissionDecision } from "./meta-policy";
@@ -134,9 +135,8 @@ type DeliveryInput = {
   resolve: () => Promise<DeliveryEvidence | null>;
 };
 
-// Registration only: approved policy v2 and observed origin-only browser Referer.
-// Checkout/Subscribe remain blocked by their independent event policies.
-const REVIEWED_SOURCE_URLS: readonly string[] = ["https://www.lectum.com.br/"];
+// Reviewed professional registration and billing origins. Subscribe remains blocked.
+const REVIEWED_SOURCE_URLS: readonly string[] = ["https://www.lectum.com.br/", CHECKOUT_SOURCE_URL];
 const REVIEWED_CONSENT_DOCUMENT_VERSION: string | null =
   "lectum-meta-measurement-2026-11-21-network-context";
 

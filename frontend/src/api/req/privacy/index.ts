@@ -30,7 +30,7 @@ async function request(action: "status" | "grant" | "revoke", body?: object) {
   );
 }
 export const privacyStatus = () => request("status");
-export const CHECKOUT_CONTEXT_CAPTURE_ENABLED = false;
+export const CHECKOUT_CONTEXT_CAPTURE_ENABLED = true;
 export async function capturePrivacyCheckout(userId: string | null, operationId: string) {
   if (!CHECKOUT_CONTEXT_CAPTURE_ENABLED || !userId) return;
   await captureOptionalCheckout({
@@ -57,7 +57,7 @@ export async function capturePrivacyCheckout(userId: string | null, operationId:
   });
 }
 export const revokePrivacy = () => request("revoke");
-export const BROWSER_IDENTIFIER_CAPTURE_ENABLED = false;
+export const BROWSER_IDENTIFIER_CAPTURE_ENABLED = true;
 export async function capturePrivacyBrowser(expected_revision: number, document_version: string) {
   if (!BROWSER_IDENTIFIER_CAPTURE_ENABLED) return;
   await handleReq<unknown>({
@@ -67,6 +67,7 @@ export async function capturePrivacyBrowser(expected_revision: number, document_
       body: { expected_revision, document_version },
     }),
     hideError: true,
+    signOutOnUnauthorized: false,
   });
 }
 export const grantPrivacy = (body: {

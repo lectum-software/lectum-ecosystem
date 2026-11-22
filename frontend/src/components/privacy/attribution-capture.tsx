@@ -25,7 +25,13 @@ function Capture() {
         if (choice && !choice.campaigns) await browserAttribution.revoke();
         return;
       }
-      if (user?.id && status.data?.granted && status.data.document_version && !status.isError)
+      if (
+        user?.id &&
+        user.role === "psicologo" &&
+        status.data?.granted &&
+        status.data.document_version &&
+        !status.isError
+      )
         await capturePrivacyBrowser(status.data.revision, status.data.document_version).catch(
           () => {},
         );
@@ -50,7 +56,7 @@ function Capture() {
       window.removeEventListener("online", run);
       window.removeEventListener("focus", run);
     };
-  }, [choice, path, searchParams, hasToken, user?.id, status.data, status.isError]);
+  }, [choice, path, searchParams, hasToken, user?.id, user?.role, status.data, status.isError]);
   return null;
 }
 export function AttributionCapture() {

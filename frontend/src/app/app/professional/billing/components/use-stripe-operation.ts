@@ -63,7 +63,10 @@ export const useStripeOperation = ({
       if (!mountedRef.current) return;
       const { id, kind: resultKind, state } = result.operation;
       if (resultKind !== kind) throw new Error("Invalid billing operation");
-      if (resultKind === "checkout" && state === "requires_confirmation")
+      if (
+        resultKind === "checkout" &&
+        ["requires_confirmation", "processing", "complete"].includes(state)
+      )
         await capturePrivacyCheckout(userId, id);
       if (!mountedRef.current) return;
       const summary = {

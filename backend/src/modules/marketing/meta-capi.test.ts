@@ -94,10 +94,7 @@ test("disabled configuration prevents identifier reads and network calls", async
         assert.fail("blocked events must not resolve consent, identifiers or stored events");
       },
     });
-    const status =
-      conversion.startsWith("patient_") || conversion === "professional_registration"
-        ? "disabled"
-        : "blocked";
+    const status = conversion !== "professional_subscription" ? "disabled" : "blocked";
     assert.equal(result.status, status);
     assert.equal((await confirmedMarketingAction(conversion)).status, status);
   }
@@ -165,7 +162,7 @@ test("adding credentials or enablement cannot override compliance policy", async
   assert.equal(
     (
       await deliverMetaConversion({
-        conversion: "professional_checkout",
+        conversion: "professional_subscription",
         resolve: async () => {
           assert.fail("credentials must not approve a conversion");
         },

@@ -774,3 +774,13 @@ Formato recomendado:
 - [ADR-0701 — Preselecao das preferencias sem consentimento implicito](0701-privacy-preselected-options.md)
 
 - [ADR-0702 — Contact sem login e com consentimento anterior](0702-guest-whatsapp-conversions.md)
+
+- [ADR-0703 — Prioridade de cookies](0703-privacy-overlay-priority.md)
+
+- [ADR-0704 — Medição de posts anônimos](0704-anonymous-post-measurement.md)
+
+- [ADR-0705 — Resolver separado de checkout](0705-checkout-delivery.md)
+
+- [ADR-0706 — Contexto antes da fila](0706-checkout-queue-order.md)
+
+- [ADR-0707 — Configuração de InitiateCheckout](0707-checkout-activation.md)

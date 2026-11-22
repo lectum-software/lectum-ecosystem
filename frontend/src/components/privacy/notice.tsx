@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { usePrivacyStatus, useSavePrivacy } from "@/api/callers/privacy";
+import { Modal } from "@/components/ui/modal";
 import { hasCompletedRegistrationForPrompts } from "@/utils/prompt-cooldown";
 import { releaseActivePrompt, reserveActivePrompt } from "@/utils/prompt-coordinator";
 import { authorizedGuestTransferToken, guestTransferToken } from "./attribution-client";
@@ -61,6 +62,9 @@ function NoticeSession({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const lock = useRef(false);
+  const noticeFocus = useRef<HTMLButtonElement>(null);
+  const noticeReturnFocus = useRef<HTMLElement>(null);
+  const noticeVisible = useRef(false);
   const status = usePrivacyStatus(userId || "", ready);
   const saveMutation = useSavePrivacy(userId || "", status.data?.revision);
   const recoveryAttempted = useRef(false);
@@ -168,6 +172,8 @@ function NoticeSession({
           ? Math.max(12, window.innerHeight - navigation.getBoundingClientRect().top + 12)
           : 12,
       );
+      // Once visible, cookies retain priority until a choice or navigation.
+      if (noticeVisible.current) return;
       if (
         !canInvite ||
         document.visibilityState !== "visible" ||
@@ -178,7 +184,8 @@ function NoticeSession({
         releaseActivePrompt("privacy");
         return;
       }
-      setShown(reserveActivePrompt("privacy"));
+      noticeVisible.current = reserveActivePrompt("privacy");
+      setShown(noticeVisible.current);
     };
     const interact = (event: Event) => {
       if ((event.target as Element | null)?.closest?.("[data-privacy-notice]")) return;
@@ -200,6 +207,7 @@ function NoticeSession({
     sync();
     return () => {
       disposed = true;
+      noticeVisible.current = false;
       observer.disconnect();
       clearInterval(timer);
       document.removeEventListener("focusin", sync);
@@ -259,46 +267,61 @@ function NoticeSession({
   return (
     <>
       {canInvite && shown && !panel && (
-        <aside
-          aria-label="Privacidade e cookies"
-          data-privacy-notice
-          className="fixed inset-x-3 z-50 mx-auto max-w-[440px] rounded-[var(--lectum-auth-radius)] border border-primary-foreground/15 bg-cookie-surface p-4 text-primary-foreground shadow-xl sm:inset-x-auto sm:right-6 sm:p-6"
-          style={{
-            bottom: `max(${bottom}px, calc(12px + env(safe-area-inset-bottom, 0px)))`,
-            maxHeight: `calc(100dvh - ${bottom + 24}px)`,
-            overflowY: "auto",
-          }}
+        <Modal
+          open
+          privacy
+          dismissible={false}
+          labelledBy="privacy-notice-title"
+          initialFocusRef={noticeFocus}
+          returnFocusRef={noticeReturnFocus}
+          onClose={() => false}
+          className="backdrop:bg-transparent backdrop:backdrop-blur-none"
         >
-          <p className="text-[15px] leading-6 sm:text-base sm:leading-7">
-            Usamos cookies para medir audiência e campanhas. Saiba mais em Preferências.
-          </p>
-          {error && (
-            <p role="alert" className="mt-3 text-sm text-primary-foreground">
-              {error}
+          <aside
+            aria-label="Privacidade e cookies"
+            data-privacy-notice
+            className="fixed inset-x-3 z-50 mx-auto max-w-[440px] rounded-[var(--lectum-auth-radius)] border border-primary-foreground/15 bg-cookie-surface p-4 text-primary-foreground shadow-xl sm:inset-x-auto sm:right-6 sm:p-6"
+            style={{
+              bottom: `max(${bottom}px, calc(12px + env(safe-area-inset-bottom, 0px)))`,
+              maxHeight: `calc(100dvh - ${bottom + 24}px)`,
+              overflowY: "auto",
+            }}
+          >
+            <p
+              id="privacy-notice-title"
+              className="text-[15px] leading-6 sm:text-base sm:leading-7"
+            >
+              Usamos cookies para medir audiência e campanhas. Saiba mais em Preferências.
             </p>
-          )}
-          <div className="mt-4 grid gap-2">
-            <button
-              className="min-h-12 rounded-full bg-primary px-4 py-3 text-sm! font-extrabold! text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground disabled:opacity-60"
-              disabled={saving}
-              onClick={() => void save(true, !userId || transferEligible)}
-              type="button"
-            >
-              ACEITAR COOKIES
-            </button>
-            <button
-              className="min-h-11 text-sm text-primary-foreground/80 underline underline-offset-4 hover:text-primary-foreground"
-              disabled={saving}
-              onClick={() => {
-                setPanel(true);
-                setError(null);
-              }}
-              type="button"
-            >
-              Preferências
-            </button>
-          </div>
-        </aside>
+            {error && (
+              <p role="alert" className="mt-3 text-sm text-primary-foreground">
+                {error}
+              </p>
+            )}
+            <div className="mt-4 grid gap-2">
+              <button
+                className="min-h-12 rounded-full bg-primary px-4 py-3 text-sm! font-extrabold! text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground disabled:opacity-60"
+                disabled={saving}
+                ref={noticeFocus}
+                onClick={() => void save(true, !userId || transferEligible)}
+                type="button"
+              >
+                ACEITAR COOKIES
+              </button>
+              <button
+                className="min-h-11 text-sm text-primary-foreground/80 underline underline-offset-4 hover:text-primary-foreground"
+                disabled={saving}
+                onClick={() => {
+                  setPanel(true);
+                  setError(null);
+                }}
+                type="button"
+              >
+                Preferências
+              </button>
+            </div>
+          </aside>
+        </Modal>
       )}
       {panel && (
         <PrivacyPreferences
