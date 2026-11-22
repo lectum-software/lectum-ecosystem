@@ -31,11 +31,16 @@ async function request(action: "status" | "grant" | "revoke", body?: object) {
 }
 export const privacyStatus = () => request("status");
 export const CHECKOUT_CONTEXT_CAPTURE_ENABLED = true;
-export async function capturePrivacyCheckout(userId: string | null, operationId: string) {
+export async function capturePrivacyCheckout(
+  userId: string | null,
+  operationId: string,
+  entry = false,
+) {
   if (!CHECKOUT_CONTEXT_CAPTURE_ENABLED || !userId) return;
   await captureOptionalCheckout({
     enabled: true,
     operationId,
+    timeoutMs: entry ? 5000 : 1000,
     documentVersion: PRIVACY_NOTICE_VERSION,
     hasConsent: () => hasLocalCampaignConsent(userId),
     status: async (signal) =>
@@ -47,18 +52,33 @@ export async function capturePrivacyCheckout(userId: string | null, operationId:
           signOutOnUnauthorized: false,
         }),
       ),
-    capture: (body, signal) =>
-      handleReq<unknown>({
-        ...callEndpoint({ route: "/api/private/marketing/consent/checkout", method: "POST", body }),
+    capture: async (body, signal) => {
+      if (entry) await capturePrivacyBrowser(body.revision, body.documentVersion, signal);
+      if (signal.aborted || !hasLocalCampaignConsent(userId)) return;
+      return handleReq<unknown>({
+        ...callEndpoint({
+          route: entry
+            ? "/api/private/marketing/consent/checkout-entry"
+            : "/api/private/marketing/consent/checkout",
+          method: "POST",
+          body: entry ? { revision: body.revision, documentVersion: body.documentVersion } : body,
+        }),
         config: { signal },
         hideError: true,
         signOutOnUnauthorized: false,
-      }),
+      });
+    },
   });
 }
+export const capturePrivacyCheckoutEntry = (userId: string | null) =>
+  capturePrivacyCheckout(userId, "entry", true);
 export const revokePrivacy = () => request("revoke");
 export const BROWSER_IDENTIFIER_CAPTURE_ENABLED = true;
-export async function capturePrivacyBrowser(expected_revision: number, document_version: string) {
+export async function capturePrivacyBrowser(
+  expected_revision: number,
+  document_version: string,
+  signal?: AbortSignal,
+) {
   if (!BROWSER_IDENTIFIER_CAPTURE_ENABLED) return;
   await handleReq<unknown>({
     ...callEndpoint({
@@ -66,6 +86,7 @@ export async function capturePrivacyBrowser(expected_revision: number, document_
       method: "POST",
       body: { expected_revision, document_version },
     }),
+    config: { signal },
     hideError: true,
     signOutOnUnauthorized: false,
   });

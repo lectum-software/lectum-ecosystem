@@ -3,7 +3,7 @@ import { z } from "zod";
 import { campaignSchema } from "@/modules/api/public/marketing/attribution";
 import { validator } from "@/utils/validator";
 import { captureBrowser } from "./use-cases/browser";
-import { captureCheckout } from "./use-cases/checkout";
+import { captureCheckout, captureEntry } from "./use-cases/checkout";
 import * as actions from "./use-cases/controller";
 import * as v from "./validator";
 
@@ -18,6 +18,7 @@ routes.post("/revoke", v.statusValidator, actions.revoke);
 // Handler checks its feature gate before strictly validating its small payload.
 routes.post("/browser", captureBrowser);
 routes.post("/checkout", captureCheckout);
+routes.post("/checkout-entry", captureEntry);
 routes.post(
   "/touch",
   validator({

@@ -70,6 +70,19 @@ export async function persistProfessionalEvent(
     consent.expires_at <= now
   )
     return { status: "ineligible" as const };
+  // Page arrival is the canonical checkout signal. Keep legacy operation capture during rollout only.
+  if (
+    conversion === "professional_checkout" &&
+    (await tx.marketing_checkout_entry.findFirst({
+      where: {
+        user_id: userId,
+        consent_revision: consent.revision,
+        created_at: { lte: now },
+        expires_at: { gt: now },
+      },
+    }))
+  )
+    return { status: "ineligible" as const };
   const existing = await tx.marketing_delivery_job.findUnique({
     where: { conversion_source_ref: { conversion, source_ref: sourceId } },
   });

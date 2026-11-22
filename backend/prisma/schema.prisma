@@ -1952,6 +1952,7 @@ model marketing_consent_event {
 }
 
 model marketing_browser_identifier {
+  checkout_entries marketing_checkout_entry[]
   checkout_contexts marketing_checkout_context[]
   token_hash String @id
   user_id String
@@ -2258,4 +2259,22 @@ model billing_stripe_fee_observation {
   @@unique([gateway, mode, account_id, receipt_id], map: "stripe_fee_observation_receipt_scope_key")
   @@index([receipt_id], map: "stripe_fee_observation_receipt_idx")
   @@map("billing_stripe_fee_observations")
+}
+
+// A consented arrival at checkout, independent from payment operations.
+model marketing_checkout_entry {
+  id String @id @default(cuid())
+  user_id String
+  consent_revision Int
+  account_id String
+  token_hash String
+  document_version String
+  source_url String
+  client_user_agent String
+  created_at DateTime @default(now())
+  expires_at DateTime
+  browser marketing_browser_identifier @relation(fields: [token_hash], references: [token_hash], onDelete: Cascade)
+  @@index([user_id, consent_revision, created_at])
+  @@index([expires_at])
+  @@map("marketing_checkout_entries")
 }

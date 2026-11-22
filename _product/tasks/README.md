@@ -2914,3 +2914,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 343 | [TASK-343 - Acesso às preferências de cookies](TASK-343-cookie-preferences-entry.md) | Concluida |
 
 | 344 | [TASK-344 - Consentimento profissional Google](TASK-344-professional-google-consent.md) | Em andamento |
+
+| 345 | [TASK-345 - Entrada no checkout](TASK-345-checkout-entry.md) | Concluida |
