@@ -303,8 +303,8 @@ function NoticeSession({
       {panel && (
         <PrivacyPreferences
           canTransfer={!userId || transferEligible}
-          transfer={choice?.authorizeTransfer ?? false}
-          campaigns={choice?.campaigns ?? (status.data?.decided ? status.data.granted : false)}
+          transfer={choice?.authorizeTransfer ?? !status.data?.decided}
+          campaigns={choice?.campaigns ?? (status.data?.decided ? status.data.granted : true)}
           busy={saving}
           error={error}
           onSave={save}
