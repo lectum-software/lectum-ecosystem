@@ -89,7 +89,11 @@ export async function resolveDeliverySource(
   }
   if (job.conversion !== "professional_subscription") return null;
   const event = await tx.payment_event.findFirst({
-    where: { id: job.source_ref, gateway: "marketing_stripe_subscribe", type: "Subscribe.blocked" },
+    where: {
+      id: job.source_ref,
+      gateway: "marketing_stripe_subscribe",
+      type: { in: ["Subscribe.blocked", "Subscribe.verified"] },
+    },
   });
   const parsed = subscriptionEvidence.safeParse(event?.payload);
   if (!event || !parsed.success) return null;

@@ -1,21 +1,26 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { readStoredBrowserIdentifier } from "./browser-identifier-repository";
+import { reviewedCheckoutPolicy } from "./checkout-policy";
 import type { DeliveryJob } from "./delivery-jobs";
 import { resolveDeliverySource } from "./delivery-source";
 import { buildConsentedMetaCapiPayload } from "./meta-capi";
+import { SUBSCRIBE_ACTIVATION_TIME } from "./subscription-policy";
 
 export type SubscriptionDeliveryPolicy = {
   documentVersion: string | null;
   sourceUrls: readonly string[];
   accountId: string | null;
+  activatedAt?: Date;
 };
 
-// Independent of internal campaign consent. No production review has been granted.
+// Owner confirmed Meta clearance on 2026-11-22. Runtime remains scoped to live Stripe.
+const reviewed = reviewedCheckoutPolicy();
 export const SUBSCRIPTION_DELIVERY_POLICY: SubscriptionDeliveryPolicy = {
-  documentVersion: null,
-  sourceUrls: [],
-  accountId: null,
+  documentVersion: reviewed.documentVersion,
+  sourceUrls: reviewed.sourceUrl ? [reviewed.sourceUrl] : [],
+  accountId: reviewed.accountId,
+  activatedAt: SUBSCRIBE_ACTIVATION_TIME,
 };
 
 export async function resolveSubscriptionDeliveryEvidence(
@@ -25,6 +30,7 @@ export async function resolveSubscriptionDeliveryEvidence(
   now = new Date(),
 ) {
   if (
+    (policy.activatedAt && job.occurred_at < policy.activatedAt) ||
     !policy.documentVersion ||
     !policy.accountId ||
     !policy.sourceUrls.length ||
@@ -78,6 +84,7 @@ export async function resolveSubscriptionDeliveryEvidence(
       occurredAt: Math.floor(source.occurredAt.getTime() / 1000),
       sourceUrl: context.source_url,
       fbp: browser.fbp,
+      clientUserAgent: context.client_user_agent,
       amountCents: source.amountCents,
     },
     occurredAtMs: source.occurredAt.getTime(),

@@ -2916,3 +2916,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 344 | [TASK-344 - Consentimento profissional Google](TASK-344-professional-google-consent.md) | Em andamento |
 
 | 345 | [TASK-345 - Entrada no checkout](TASK-345-checkout-entry.md) | Concluida |
+
+| 346 | [TASK-346 - Primeira assinatura paga](TASK-346-subscribe-activation.md) | Concluida |
