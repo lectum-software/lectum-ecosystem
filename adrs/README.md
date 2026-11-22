@@ -770,3 +770,5 @@ Formato recomendado:
 - [ADR-0698 — Meta marketing compliance gate](0698-meta-marketing-compliance-gate.md)
 
 - [ADR-0700 — Consentimento antes de medir conteudo](0700-content-measurement-consent.md)
+
+- [ADR-0701 — Preselecao das preferencias sem consentimento implicito](0701-privacy-preselected-options.md)
