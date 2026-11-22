@@ -36,6 +36,16 @@ export async function persistProfessionalEvent(
       },
     });
     if (!operation) return { status: "ineligible" as const };
+    const context = await tx.marketing_checkout_context.findUnique({
+      where: { operation_id: operation.id },
+    });
+    if (
+      !context ||
+      context.expires_at <= now ||
+      context.captured_at < operation.created_at ||
+      context.captured_at > now
+    )
+      return { status: "ineligible" as const };
     userId = operation.user_id;
     occurredAt = operation.created_at;
   }

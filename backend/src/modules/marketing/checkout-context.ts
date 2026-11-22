@@ -2,6 +2,9 @@ import { z } from "zod";
 import type { Prisma } from "@/external/generated/prisma/client";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { readBrowserIdentifier } from "./browser-identifier-repository";
+import { readMetaConfig } from "./meta-config";
+import { metaTransmissionDecision } from "./meta-policy";
+import { persistProfessionalEvent } from "./professional-events";
 
 export type CheckoutContextPolicy = {
   enabled: boolean;
@@ -88,13 +91,15 @@ export async function captureCheckoutContext(
       where: { operation_id: operationId },
     });
     // A retry cannot replace evidence, change browser or extend retention.
-    if (existing)
-      return (
+    if (existing) {
+      const valid =
         existing.token_hash === browser.token_hash &&
         existing.document_version === documentVersion &&
         existing.source_url === policy.sourceUrl &&
-        existing.expires_at > now
-      );
+        existing.expires_at > now;
+      if (valid) await enqueueCapturedCheckout(tx, operationId, mode, now);
+      return valid;
+    }
     const consent = await tx.marketing_consent.findUniqueOrThrow({ where: { user_id: userId } });
     const expiresAt = new Date(
       Math.min(
@@ -114,6 +119,7 @@ export async function captureCheckoutContext(
         expires_at: expiresAt,
       },
     });
+    await enqueueCapturedCheckout(tx, operationId, mode, now);
     return true;
   });
 }
@@ -148,4 +154,16 @@ export async function readCheckoutContext(
     sourceUrl: context.source_url,
     clientUserAgent: context.client_user_agent,
   };
+}
+
+async function enqueueCapturedCheckout(
+  tx: Prisma.TransactionClient,
+  operationId: string,
+  mode: string,
+  now: Date,
+) {
+  if (mode !== "live" || !metaTransmissionDecision("professional_checkout").allowed) return;
+  const config = readMetaConfig();
+  if (!config.enabled || !config.datasetId || !config.apiVersion || !config.token) return;
+  await persistProfessionalEvent(tx, "professional_checkout", operationId, now);
 }

@@ -2906,3 +2906,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 339 | [TASK-339 - Medição de posts anônimos](TASK-339-anonymous-post-measurement.md) | Concluida |
 
 | 340 | [TASK-340 - Preparação de checkout](TASK-340-checkout-delivery.md) | Concluida |
+
+| 341 | [TASK-341 - Ordem da fila de checkout](TASK-341-checkout-queue-order.md) | Concluida |

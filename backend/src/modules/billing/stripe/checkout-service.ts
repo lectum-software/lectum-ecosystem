@@ -1,4 +1,3 @@
-import { professionalActionCommitted } from "@/modules/marketing/professional-events";
 import { getNewSubscriptionGatewayName, getStripeGateway } from "../payment-gateway";
 import { stripeFailureObservation } from "../payment-gateway/stripe-error";
 import { unresolvedTerminalCheckoutUpdate } from "./checkout-completion";
@@ -33,7 +32,6 @@ export const beginStripeCheckout = async (input: {
   const repository = new StripeBillingRepository();
   const operation = await repository.reserveCheckout({ ...input, identity: gateway.identity });
   const result = await confirmStripeCheckout(input.userId, operation.id);
-  void professionalActionCommitted("professional_checkout", () => operation.id);
   return result;
 };
 

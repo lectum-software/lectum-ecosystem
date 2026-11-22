@@ -71,29 +71,14 @@ test("PostgreSQL: canonical checkout reference, no late registration consent, ro
       "blocked",
     );
     assert.equal(await db.marketing_delivery_job.count({ where: { user_id: user.id } }), 0);
-    await assert.rejects(
-      db.$transaction(async (tx) => {
-        assert.equal(
-          (await persistProfessionalEvent(tx, "professional_checkout", operation.id, now)).status,
-          "queued",
-        );
-        throw new Error("rollback_fixture");
-      }),
-      /rollback_fixture/,
-    );
-    assert.equal(await db.marketing_delivery_job.count({ where: { user_id: user.id } }), 0);
-    await Promise.all(
-      Array.from({ length: 4 }, () =>
-        withSerializableTransaction((tx) =>
+    assert.equal(
+      (
+        await db.$transaction((tx) =>
           persistProfessionalEvent(tx, "professional_checkout", operation.id, now),
-        ),
-      ),
+        )
+      ).status,
+      "ineligible",
     );
-    const rows = await db.marketing_delivery_job.findMany({ where: { user_id: user.id } });
-    assert.equal(rows.length, 1);
-    assert.equal(rows[0].occurred_at.getTime(), operation.created_at.getTime());
-    assert.equal(rows[0].source_ref, operation.id);
-    assert.equal(rows[0].consent_revision, 1);
     const { resolveCheckoutDeliveryEvidence, CHECKOUT_DELIVERY_POLICY } = await import(
       "./checkout-delivery"
     );
@@ -104,8 +89,6 @@ test("PostgreSQL: canonical checkout reference, no late registration consent, ro
       sourceUrls: ["https://example.test/checkout"],
       accountId: operation.account_id,
     };
-    assert.equal(await resolveCheckoutDeliveryEvidence(db, rows[0]), null);
-    assert.equal(await resolveCheckoutDeliveryEvidence(db, rows[0], policy, now), null);
     const token = randomBytes(32).toString("hex");
     const capturedAt = new Date(now.getTime() - 20_000);
     await db.marketing_browser_identifier.create({
@@ -134,6 +117,30 @@ test("PostgreSQL: canonical checkout reference, no late registration consent, ro
       ),
       true,
     );
+    await assert.rejects(
+      db.$transaction(async (tx) => {
+        assert.equal(
+          (await persistProfessionalEvent(tx, "professional_checkout", operation.id, now)).status,
+          "queued",
+        );
+        throw new Error("rollback_fixture");
+      }),
+      /rollback_fixture/,
+    );
+    assert.equal(await db.marketing_delivery_job.count({ where: { user_id: user.id } }), 0);
+    await Promise.all(
+      Array.from({ length: 4 }, () =>
+        withSerializableTransaction((tx) =>
+          persistProfessionalEvent(tx, "professional_checkout", operation.id, now),
+        ),
+      ),
+    );
+    const rows = await db.marketing_delivery_job.findMany({ where: { user_id: user.id } });
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].occurred_at.getTime(), operation.created_at.getTime());
+    assert.equal(rows[0].source_ref, operation.id);
+    assert.equal(rows[0].consent_revision, 1);
+    assert.equal(await resolveCheckoutDeliveryEvidence(db, rows[0]), null);
     const evidence = await resolveCheckoutDeliveryEvidence(db, rows[0], policy, now);
     assert.ok(evidence);
     const { resolveDelivery } = await import("./delivery-scheduler");
