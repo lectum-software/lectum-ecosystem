@@ -1,3 +1,5 @@
+import { Fragment, type ReactNode } from "react";
+
 // Only headings and paragraphs are interpreted. HTML, links and all inline Markdown stay text.
 export const parseLegalText = (body: string) => {
   const blocks: { key: number; text: string; heading: number | null }[] = [];
@@ -23,25 +25,54 @@ export const parseLegalText = (body: string) => {
   return blocks;
 };
 
-export const LegalDocumentBody = ({ body }: { body: string }) => (
-  <div className="grid min-w-0 gap-4 break-words [overflow-wrap:anywhere]">
-    {parseLegalText(body).map((block) => {
-      if (block.heading) {
-        const Heading = `h${block.heading}` as "h2" | "h3" | "h4" | "h5" | "h6";
-        return (
-          <Heading className="mt-3 text-lg font-bold leading-7 text-foreground" key={block.key}>
-            {block.text}
-          </Heading>
+export const LegalDocumentBody = ({
+  body,
+  cookiesPreferences,
+}: {
+  body: string;
+  cookiesPreferences?: ReactNode;
+}) => {
+  const blocks = parseLegalText(body);
+  const section = blocks.findIndex(
+    (block) => block.heading && /^4[.)]\s+Cookies\b/i.test(block.text),
+  );
+  const nextSection =
+    section < 0
+      ? -1
+      : blocks.findIndex(
+          (block, index) =>
+            index > section &&
+            block.heading !== null &&
+            block.heading <= (blocks[section].heading ?? 6),
         );
-      }
-      return (
-        <p
-          className="whitespace-pre-wrap text-sm leading-7 text-foreground sm:text-base"
-          key={block.key}
-        >
-          {block.text}
-        </p>
-      );
-    })}
-  </div>
-);
+  const insertAfter = section < 0 ? -1 : (nextSection < 0 ? blocks.length : nextSection) - 1;
+  return (
+    <div className="grid min-w-0 gap-4 break-words [overflow-wrap:anywhere]">
+      {blocks.map((block, index) => {
+        const preferences = index === insertAfter ? cookiesPreferences : null;
+        if (block.heading) {
+          const Heading = `h${block.heading}` as "h2" | "h3" | "h4" | "h5" | "h6";
+          return (
+            <Fragment key={block.key}>
+              <Heading className="mt-3 text-lg font-bold leading-7 text-foreground" key={block.key}>
+                {block.text}
+              </Heading>
+              {preferences}
+            </Fragment>
+          );
+        }
+        return (
+          <Fragment key={block.key}>
+            <p
+              className="whitespace-pre-wrap text-sm leading-7 text-foreground sm:text-base"
+              key={block.key}
+            >
+              {block.text}
+            </p>
+            {preferences}
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+};

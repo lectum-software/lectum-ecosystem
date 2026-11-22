@@ -9,8 +9,6 @@ import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { ProfessionalSubscription, SubscriptionPlan } from "@/api/generator/types/billing";
-import { CAMPAIGN_ATTRIBUTION_ENABLED } from "@/components/privacy/campaign-attribution";
-import { PrivacyPreferencesTrigger } from "@/components/privacy/trigger";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -362,7 +360,6 @@ export const PsychologistBillingPlansLogic = () => {
         </div>
 
         {isLoading ? <LoadingState label="Carregando planos profissionais" /> : null}
-        {CAMPAIGN_ATTRIBUTION_ENABLED ? <PrivacyPreferencesTrigger /> : null}
 
         {hasError ? (
           <InlineAlert variant="error" title="Não foi possível carregar os planos">
