@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { useAppSelector } from "@/hooks/redux";
+import { prepareReelsSoundOnOpen } from "@/lib/video-sound-preference";
 import {
   ContentVideoLaunchContext,
   ContentVideoOpenContext,
@@ -64,6 +65,7 @@ export const ContentVideoHost = ({
   return (
     <ContentVideoLaunchContext.Provider
       value={(next) => {
+        prepareReelsSoundOnOpen();
         clearContentVideoHistory();
         window.history.pushState(
           { ...window.history.state, lectumReelScope: scope },

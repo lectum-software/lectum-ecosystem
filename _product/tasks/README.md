@@ -2924,3 +2924,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 349 | [TASK-349 - Reels compartilhado](TASK-349-shared-reel-experience.md) | Em andamento |
 | 350 | [TASK-350 - Capa da comunidade](TASK-350-community-cover-clean.md) | Em andamento |
 | 351 | [TASK-351 - Cards e final da publicacao](TASK-351-community-cards-post-footer.md) | Concluida localmente |
+| 352 | [TASK-352 - Teclado iOS e audio](TASK-352-reels-ios-audio.md) | Em andamento |
+| 353 | [TASK-353 - Downloads de video no admin](TASK-353-admin-video-downloads.md) | Em andamento |

@@ -1,6 +1,6 @@
 {
   "name": "admin",
-  "version": "0.1.852",
+  "version": "0.1.854",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack --port 3002",
@@ -12,7 +12,7 @@
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
     "test:community-create": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/community-avatar-color.test.mjs",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:community-create && node --test scripts/whatsapp-week.test.mjs"
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:community-create && node --test scripts/whatsapp-week.test.mjs scripts/video-download-options.test.mjs"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",

@@ -16,8 +16,12 @@ import {
   type ShareRenderTarget,
   startResolvedShareRenderArtifactJob,
 } from "@/modules/api/private/posts/use-cases/services/share-render";
-import { selectSharePostVideoMediaUrl } from "@/modules/api/private/posts/use-cases/services/share-render-media";
+import {
+  selectSharePostVideoMediaUrl,
+  shareRenderCaptionOptions,
+} from "@/modules/api/private/posts/use-cases/services/share-render-media";
 import { resolveLegacyPostMediaSourceUrlForRender } from "@/modules/api/private/posts/use-cases/services/share-render-source";
+import { readCaptions } from "@/modules/video-assets/captions/service";
 import { authorizeAdminVideoAssetOriginalDownload } from "@/modules/video-assets/service";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type {
@@ -28,6 +32,7 @@ import { AdminCommunityManageRepository } from "../../repositories/AdminCommunit
 import { findCommunityOrNotFound, notFound } from "./detail-summary";
 
 type AdminCommunityContentVideoDownloadDTO = {
+  b?: { overlayMode?: string };
   p: {
     id: string;
     jobId?: string;
@@ -259,9 +264,19 @@ const resolveAdminShareRenderTarget = async (
 export const startContentVideoArtRenderJob = async (
   data: AdminCommunityContentVideoDownloadDTO,
 ): Promise<Resolve> => {
+  const options = shareRenderCaptionOptions.safeParse(data.b ?? {});
+  if (!options.success || options.data.overlayMode === "none")
+    return invalidAdminContentTarget(400);
   const resolved = await resolveAdminShareRenderTarget(data);
   if (isResolve(resolved)) return resolved;
 
+  resolved.target.overlayMode = options.data.overlayMode;
+  if (options.data.overlayMode === "captions") {
+    const assetId = videoAssetIdFromReference(resolved.target.mediaUrl);
+    const caption = assetId ? await readCaptions(assetId) : null;
+    if (!caption) return invalidShareVideo();
+    resolved.target.captionCues = caption.cues;
+  }
   return startResolvedShareRenderArtifactJob(resolved);
 };
 

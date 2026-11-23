@@ -29,6 +29,10 @@
   /* Avoid native focus zoom on iOS. */
   font-size: 16px;
 }
+.composerSlot [role="textbox"]:empty::before {
+  font-size: 14px;
+  font-weight: 400;
+}
 .composerSlot:has([data-reels-composer-expanded]) [data-content-video-inline-composer] {
   position: absolute;
   left: 0;

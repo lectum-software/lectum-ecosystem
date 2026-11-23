@@ -88,11 +88,13 @@ export const startAdminCommunityContentVideoArtRenderJob = async (
   id: string,
   targetType: AdminCommunityVideoDownloadTargetType,
   targetId: string,
+  overlayMode: "captions" | "identification" = "identification",
 ) => {
   const response = await adminApi.post<ApiResponse<AdminCommunityContentVideoArtRenderJob>>(
     `/api/admin/private/communities/${encodeURIComponent(id)}/content/${encodeURIComponent(
       targetType,
     )}/${encodeURIComponent(targetId)}/video-downloads/art/render-jobs`,
+    { overlayMode },
   );
 
   return resolveApiData(response.data);
