@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { PostDetailLogic } from "@/app/app/community/[slug]/post/[id]/logic";
+import { PublicReelLinks } from "@/components/community/public-reel-links";
+import { PublicReelPage } from "@/components/community/public-reel-page";
 import { PublicTranscript } from "@/components/video-captions/public-transcript";
+import { getPublicReel, type ReelQuery, reelMetadata } from "@/lib/reel-seo";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";
 import {
@@ -14,9 +17,11 @@ type PostDetailPageProps = {
     id: string;
     slug: string;
   }>;
-  searchParams: Promise<{
-    focusReplyId?: string | string[];
-  }>;
+  searchParams: Promise<
+    ReelQuery & {
+      focusReplyId?: string | string[];
+    }
+  >;
 };
 
 export const generateMetadata = async ({
@@ -25,6 +30,7 @@ export const generateMetadata = async ({
 }: PostDetailPageProps): Promise<Metadata> => {
   const { id, slug } = await params;
   const query = await searchParams;
+  if (query.reel !== undefined) return reelMetadata(await getPublicReel(slug, id, query));
   const focusReplyId = normalizePublicCommunityFocusReplyId(query.focusReplyId);
   const focusedSharePath = focusReplyId
     ? publicCommunityPostFocusedReplyHref(slug, id, focusReplyId)
@@ -45,11 +51,14 @@ export const generateMetadata = async ({
   });
 };
 
-export default async function PostDetailPage({ params }: PostDetailPageProps) {
+export default async function PostDetailPage({ params, searchParams }: PostDetailPageProps) {
   const { id, slug } = await params;
+  const query = await searchParams;
+  if (query.reel !== undefined) return <PublicReelPage slug={slug} id={id} query={query} />;
   return (
     <>
       <PostDetailLogic forceBackToFeed />
+      <PublicReelLinks id={id} slug={slug} />
       <PublicTranscript id={id} slug={slug} />
     </>
   );

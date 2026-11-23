@@ -62,7 +62,7 @@ export const LegalAcceptanceModal = ({
             </li>
           ))}
         </ul>
-        <LegalLinks className="mb-5 justify-start" documents={documents} newTab />
+        <LegalLinks className="mb-5 justify-start" documents={documents} newTab onlyProvided />
         <Form
           className="grid gap-2"
           fields={formProps.fields.map((field) => ({

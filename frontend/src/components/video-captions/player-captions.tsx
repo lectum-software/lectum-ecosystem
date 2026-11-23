@@ -7,6 +7,7 @@ import {
   setDirectoryCaptionPreference,
   useDirectoryCaptionPreference,
 } from "./directory-preference";
+import { setReelsCaptionPreference, useReelsCaptionPreference } from "./reels-preference";
 import type { VideoCaptions } from "./types";
 
 export function PlayerCaptions({
@@ -14,6 +15,7 @@ export function PlayerCaptions({
   videoRef,
   version = 0,
   directory = false,
+  reels = false,
   controlTarget = null,
   controlHidden = false,
   hideToggle = false,
@@ -22,13 +24,15 @@ export function PlayerCaptions({
   videoRef: RefObject<HTMLVideoElement | null>;
   version?: number;
   directory?: boolean;
+  reels?: boolean;
   controlTarget?: HTMLElement | null;
   controlHidden?: boolean;
   hideToggle?: boolean;
 }) {
   const [localEnabled, setEnabled] = useState(true);
   const preference = useDirectoryCaptionPreference();
-  const enabled = directory ? (preference ?? true) : localEnabled;
+  const reelsPreference = useReelsCaptionPreference();
+  const enabled = directory ? (preference ?? true) : reels ? reelsPreference : localEnabled;
   const [text, setText] = useState("");
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
   const [position, setPosition] = useState({ bottom: 64, right: 12, top: 12, iconSize: 26 });
@@ -229,6 +233,7 @@ export function PlayerCaptions({
       onClick={(event) => {
         event.stopPropagation();
         if (directory) setDirectoryCaptionPreference(!enabled);
+        else if (reels) setReelsCaptionPreference(!enabled);
         else setEnabled((value) => !value);
       }}
     >

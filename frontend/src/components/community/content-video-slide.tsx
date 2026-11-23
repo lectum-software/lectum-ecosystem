@@ -35,6 +35,7 @@ import {
   useContentVideoInteractionSync,
 } from "./content-video-interaction-refresh";
 import { ContentVideoInteractionStatus } from "./content-video-interaction-status";
+import { contentVideoHref } from "./content-video-link";
 import { ContentVideoPlayer } from "./content-video-player";
 import { ReadingText } from "./content-video-reading-text";
 import styles from "./content-video-viewer.module.css";
@@ -378,7 +379,7 @@ export const ContentVideoSlide = ({
         ) : null}
         {!panel ? (
           <>
-            <div className={styles.rail}>
+            <div className={styles.rail} data-reels-overlay>
               <button
                 className={styles.action}
                 aria-label="Marcar como útil"
@@ -471,7 +472,11 @@ export const ContentVideoSlide = ({
                     kind: "link",
                     postId: item.post_id,
                     replyId: item.reply_id,
-                    shareUrl: `${window.location.origin}${href}`,
+                    shareUrl: `${window.location.origin}${contentVideoHref(href, {
+                      postId: item.post_id,
+                      replyId: item.reply_id,
+                      videoId: item.id,
+                    })}`,
                     title: `${getCommunityAuthorDisplayName(item.author)} na Lectum`,
                     text: null,
                   });
@@ -498,7 +503,11 @@ export const ContentVideoSlide = ({
                 </PsychologistWhatsAppRedirectButton>
               ) : null}
             </div>
-            <div className={styles.identity} data-lectum-video-bottom-overlay="true">
+            <div
+              className={styles.identity}
+              data-lectum-video-bottom-overlay="true"
+              data-reels-overlay
+            >
               {author}
               {item.content ? (
                 <button

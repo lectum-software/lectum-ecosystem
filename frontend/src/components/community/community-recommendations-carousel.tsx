@@ -46,10 +46,11 @@ export const CommunityRecommendationsCarousel = ({
           {/* Reserve 28px plus the 4px edge padding for the next card at every snap point. */}
           <ul className="flex gap-[12px] [--visible-cards:1] @min-[320px]/recommendations:[--visible-cards:2] @min-[480px]/recommendations:[--visible-cards:3] @min-[640px]/recommendations:[--visible-cards:4] @min-[800px]/recommendations:[--visible-cards:5] @min-[960px]/recommendations:[--visible-cards:6]">
             {communities.map((community) => {
+              const postsCount = community.posts_count ?? 0;
               return (
                 <li
                   key={community.slug}
-                  className="flex h-[208px] w-[calc((100%_-_28px)/var(--visible-cards)_-_12px)] shrink-0 snap-start flex-col gap-2 rounded-[22px] border border-border bg-surface p-3 shadow-lectum-soft"
+                  className="flex h-[232px] w-[calc((100%_-_28px)/var(--visible-cards)_-_12px)] shrink-0 snap-start flex-col gap-2 rounded-[22px] border border-border bg-surface p-3 shadow-lectum-soft"
                 >
                   <Link
                     href={`/comunidades/${community.slug}`}
@@ -67,6 +68,9 @@ export const CommunityRecommendationsCarousel = ({
                         {community.name}
                       </h3>
                     </div>
+                    <p className="shrink-0 text-xs leading-4 text-muted-foreground">
+                      {`${postsCount.toLocaleString("pt-BR")} ${postsCount === 1 ? "post" : "posts"}`}
+                    </p>
                   </Link>
                   <div className="shrink-0">
                     <CommunityFollowToggle

@@ -12,6 +12,7 @@ import {
   type ContentVideoSourceEntry,
   useContentVideoSource,
 } from "./content-video-context";
+import controls from "./content-video-controls.module.css";
 import { ContentVideoCreatePost } from "./content-video-create-post";
 import { useContentVideoDiscussionChanges } from "./content-video-interaction-refresh";
 import { ContentVideoPlayerProvider } from "./content-video-player";
@@ -23,13 +24,17 @@ import { useContentVideoScroll } from "./use-content-video-scroll";
 export const ContentVideoViewer = ({
   initial,
   initialTime = 0,
+  watchedVideoKeys,
   onClose,
   onNavigate,
+  onActiveVideo,
 }: {
   initial: ContentVideoSourceEntry;
   initialTime?: number;
+  watchedVideoKeys?: string[];
   onClose: () => void;
   onNavigate: (request: ContentVideoRequest) => void;
+  onActiveVideo: (entry: ContentVideoSourceEntry & { videoId: string }) => void;
 }) => {
   const source = useContentVideoSource();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -37,7 +42,7 @@ export const ContentVideoViewer = ({
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [endedVideoKey, setEndedVideoKey] = useState<string | null>(null);
   const conversion = useProgressiveConversion();
-  const queue = useContentVideoQueue(initial, source);
+  const queue = useContentVideoQueue(initial, source, watchedVideoKeys);
   useContentVideoDiscussionChanges(queue.invalidateDiscussion);
   const root = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
@@ -73,6 +78,19 @@ export const ContentVideoViewer = ({
     };
   }, []);
   const item = queue.items[queue.index];
+  const activeVideoCallback = useRef(onActiveVideo);
+  useEffect(() => {
+    activeVideoCallback.current = onActiveVideo;
+  }, [onActiveVideo]);
+  useEffect(() => {
+    if (item)
+      activeVideoCallback.current({
+        postId: item.post_id,
+        communitySlug: item.community.slug,
+        replyId: item.reply_id,
+        videoId: item.id,
+      });
+  }, [item]);
   const focusPageKey = item ? contentVideoKey(item) : `loading:${queue.index}`;
   const reachedEnd = endedVideoKey === focusPageKey;
   const [previousPostId, setPreviousPostId] = useState<string | null>(null);
@@ -108,6 +126,7 @@ export const ContentVideoViewer = ({
       nextSource={resolvePublicMediaUrl(queue.items[queue.index + 1]?.media_url) ?? undefined}
       nextAfterSource={resolvePublicMediaUrl(item?.media_url) ?? undefined}
     >
+      <div className={controls.backdrop} aria-hidden="true" />
       <div
         ref={root}
         className={styles.dialog}
@@ -200,10 +219,13 @@ export const ContentVideoViewer = ({
                     onNavigate({
                       initial: {
                         postId: video.post_id,
+                        videoId: video.id,
+                        communitySlug: video.community.slug,
                         replyId: video.reply_id,
                         mediaUrl: video.media_url,
                       },
                       initialTime: time,
+                      watchedVideoKeys: queue.getWatchedVideoKeys(contentVideoKey(video)),
                     })
                   }
                   createPostOpen={createPostOpen}

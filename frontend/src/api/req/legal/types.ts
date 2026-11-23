@@ -32,7 +32,7 @@ export type CurrentLegal = z.infer<typeof currentLegalSchema>;
 export type LegalStatus = z.infer<typeof legalStatusSchema>;
 export type AcceptLegalPayload = {
   document_ids: string[];
-  terms_accepted: true;
-  privacy_acknowledged: true;
+  terms_accepted: boolean;
+  privacy_acknowledged: boolean;
   adult_confirmed: true;
 };

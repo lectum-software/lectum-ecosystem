@@ -7,10 +7,12 @@ export const LegalLinks = ({
   className,
   documents = [],
   newTab = false,
+  onlyProvided = false,
 }: {
   className?: string;
   documents?: FullPublishedDoc[];
   newTab?: boolean;
+  onlyProvided?: boolean;
 }) => (
   <nav
     aria-label="Termos e privacidade"
@@ -18,6 +20,7 @@ export const LegalLinks = ({
   >
     {(["terms", "privacy"] as const).map((kind) => {
       const document = documents.find((entry) => entry.kind === kind);
+      if (onlyProvided && !document) return null;
       return (
         <Link
           className="rounded text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

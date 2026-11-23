@@ -39,7 +39,10 @@ export const readContentVideoHistory = (
     typeof request.initial?.postId !== "string" ||
     !request.initial.postId ||
     !Number.isFinite(request.initialTime) ||
-    request.initialTime < 0
+    request.initialTime < 0 ||
+    (request.watchedVideoKeys !== undefined &&
+      (!Array.isArray(request.watchedVideoKeys) ||
+        !request.watchedVideoKeys.every((value: unknown) => typeof value === "string")))
   )
     return null;
   return request;

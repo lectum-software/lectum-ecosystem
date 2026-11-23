@@ -180,6 +180,7 @@ function PersistentMedia({
         <PlayerCaptions
           key={props.src}
           captions={playback.captions}
+          reels={props.surface !== "directory"}
           videoRef={videoRef}
           version={revision}
         />

@@ -30,7 +30,7 @@ export const WhatsAppCta = ({
         "inline-flex h-[44px] shrink-0 items-center justify-center rounded-full text-primary-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-whatsapp-contact focus-visible:ring-offset-2",
         compact
           ? "relative isolate gap-1.5 bg-transparent px-3 before:pointer-events-none before:absolute before:inset-x-0 before:inset-y-[5px] before:-z-10 before:rounded-full before:bg-whatsapp-contact before:content-[''] hover:before:bg-whatsapp-contact/90"
-          : "w-full min-w-0 gap-2 bg-whatsapp-contact px-3 hover:bg-whatsapp-contact/90",
+          : "relative isolate w-full min-w-0 gap-2 bg-transparent px-3 before:pointer-events-none before:absolute before:inset-x-0 before:inset-y-[2px] before:-z-10 before:rounded-full before:bg-whatsapp-contact before:content-[''] hover:before:bg-whatsapp-contact/90",
       )}
       psychologist={whatsappIdentity}
       title={label}
@@ -53,7 +53,7 @@ export const WhatsAppCta = ({
         <PsychologistWhatsAppButtonContent
           iconClassName="h-[18px] w-[18px]"
           label="Chamar no WhatsApp"
-          labelClassName="py-[2px] text-[14px] font-semibold leading-[22px]"
+          labelClassName="py-[2px] text-[14px] font-bold leading-[22px]"
         />
       )}
     </PsychologistWhatsAppRedirectButton>
