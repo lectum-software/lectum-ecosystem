@@ -8,6 +8,8 @@ Referencia: imagens e previa aprovadas no chat. Inventario consultado; Builder i
 
 ## Aceite
 
+Preparacao de release: atualizar tambem o teste legado de post-reply-composer-layout, que ainda exigia pb-36. Mantida a verificacao da arvore de respostas, fora do escopo deste ajuste.
+
 - [x] Cards compactos com botoes e contagens alinhados.
 - [x] Sem secao Videos desta publicacao; videos e transcricoes preservados.
 - [x] Remover padding inferior duplicado e reduzir reserva mobile.
