@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PostDetailLogic } from "@/app/app/community/[slug]/post/[id]/logic";
+import { ContentVideoHost } from "@/components/community/content-video-host";
 import { PublicReelLinks } from "@/components/community/public-reel-links";
 import { PublicReelPage } from "@/components/community/public-reel-page";
 import { PublicTranscript } from "@/components/video-captions/public-transcript";
@@ -54,7 +55,12 @@ export const generateMetadata = async ({
 export default async function PostDetailPage({ params, searchParams }: PostDetailPageProps) {
   const { id, slug } = await params;
   const query = await searchParams;
-  if (query.reel !== undefined) return <PublicReelPage slug={slug} id={id} query={query} />;
+  if (query.reel !== undefined)
+    return (
+      <ContentVideoHost>
+        <PublicReelPage slug={slug} id={id} query={query} />
+      </ContentVideoHost>
+    );
   return (
     <>
       <PostDetailLogic forceBackToFeed />

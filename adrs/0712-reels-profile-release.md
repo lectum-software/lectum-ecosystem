@@ -13,3 +13,7 @@ aceite parcial, portanto aguarda confirmacao da versao do backend.
 Nao ha nova migration ou variavel obrigatoria. Nao enviar eventos Meta nem
 cobrar pagamentos para verificar o rollout. As previsualizacoes de componentes
 nao substituem o smoke integrado dos fluxos de autenticacao e midia.
+
+As rotas publicas de reel montam explicitamente ContentVideoHost ao redor do
+fallback SSR. Elas nao passam pelo PrivateTemplate que fornece esse host nas
+paginas internas. Validar o dialogo interativo apos hidratacao, alem do HTML.

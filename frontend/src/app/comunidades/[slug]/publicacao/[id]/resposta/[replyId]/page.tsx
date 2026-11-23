@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PostReplyThreadLogic } from "@/app/app/community/[slug]/post/[id]/logic";
+import { ContentVideoHost } from "@/components/community/content-video-host";
 import { PublicReelPage } from "@/components/community/public-reel-page";
 import { PublicTranscript } from "@/components/video-captions/public-transcript";
 import { getPublicReel, type ReelQuery, reelMetadata } from "@/lib/reel-seo";
@@ -42,7 +43,12 @@ export default async function PostReplyThreadPage({
 }: PostReplyThreadPageProps) {
   const { id, slug, replyId } = await params;
   const query = await searchParams;
-  if (query.reel !== undefined) return <PublicReelPage slug={slug} id={id} query={query} />;
+  if (query.reel !== undefined)
+    return (
+      <ContentVideoHost>
+        <PublicReelPage slug={slug} id={id} query={query} />
+      </ContentVideoHost>
+    );
   return (
     <>
       <PostReplyThreadLogic forceBackToFeed />
