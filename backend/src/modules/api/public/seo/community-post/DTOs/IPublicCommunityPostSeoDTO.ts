@@ -1,6 +1,7 @@
 export type PublicCommunityPostSeoSource = "community_post" | "post_reply";
 
 export type PublicCommunityPostSeoDTO = {
+  transcripts?: import("../use-cases/transcripts").PublicPostTranscript[];
   captions?: Awaited<
     ReturnType<typeof import("@/modules/video-assets/captions/service").readPublicCaptions>
   >;

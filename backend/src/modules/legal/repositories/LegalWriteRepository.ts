@@ -67,18 +67,34 @@ export const acceptLegalInTransaction = async (
   input: LegalAccept,
 ) => {
   if (input.adult_confirmed !== true) throw new LegalError("adult_declaration_required", 422);
-  if (input.terms_accepted !== true || input.privacy_acknowledged !== true)
-    throw new LegalError("legal_acceptance_required", 422);
   await lockLegalDocuments(tx);
   const documents = await currentDocuments(tx);
-  if (!isCurrentDocumentSet(input.document_ids, documents))
+  const selected = documents.filter((doc) => input.document_ids.includes(doc.id));
+  if (!selected.length || selected.length !== input.document_ids.length)
     throw new LegalError("legal_documents_changed");
+  const prior = await tx.legal_acceptance.findMany({
+    where: { user_id: userId, document_id: { in: documents.map((doc) => doc.id) } },
+    select: { document_id: true },
+  });
+  if (
+    !isCurrentDocumentSet(
+      [...new Set([...input.document_ids, ...prior.map((row) => row.document_id)])],
+      documents,
+    )
+  )
+    throw new LegalError("legal_documents_changed");
+  if (
+    selected.some((doc) =>
+      doc.kind === "terms" ? input.terms_accepted !== true : input.privacy_acknowledged !== true,
+    )
+  )
+    throw new LegalError("legal_acceptance_required", 422);
   if (input.promotional_authorized === true) {
     const user = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true } });
     if (user.role !== "psicologo") throw new LegalError("legal_acceptance_required", 422);
   }
   await tx.legal_acceptance.createMany({
-    data: documents.map((doc) => ({
+    data: selected.map((doc) => ({
       user_id: userId,
       document_id: doc.id,
       document_hash: doc.content_hash,
