@@ -2,9 +2,17 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   contentVideoHref,
+  contentVideoShareHref,
   readContentVideoLink,
   withoutContentVideoLink,
 } from "./content-video-link.ts";
+
+test("sharing uses the public Reel URL without post focus or feed state", () => {
+  assert.equal(
+    contentVideoShareHref({ communitySlug: "geral", postId: "p", replyId: "r", videoId: "v" }),
+    "/comunidades/geral/publicacao/p?reel=v&reelPost=p&reelReply=r",
+  );
+});
 
 test("public watch navigation keeps the current video and its owning post together", () => {
   const href = contentVideoHref("/comunidades/old/publicacao/p", {

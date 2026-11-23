@@ -57,7 +57,7 @@ export default async function PostDetailPage({ params, searchParams }: PostDetai
   const query = await searchParams;
   if (query.reel !== undefined)
     return (
-      <ContentVideoHost>
+      <ContentVideoHost directLink>
         <PublicReelPage slug={slug} id={id} query={query} />
       </ContentVideoHost>
     );

@@ -25,7 +25,10 @@ test("both public reel entry routes mount the interactive host around the server
       new URL(`../app/comunidades/[slug]/publicacao/[id]/${suffix}`, import.meta.url),
       "utf8",
     );
-    assert.match(source, /<ContentVideoHost>\s*<PublicReelPage[^>]+\/>\s*<\/ContentVideoHost>/);
+    assert.match(
+      source,
+      /<ContentVideoHost directLink>\s*<PublicReelPage[^>]+\/>\s*<\/ContentVideoHost>/,
+    );
   }
 });
 
@@ -142,6 +145,8 @@ test("SSR includes video and escaped structured context without a second present
   });
   const html = renderToStaticMarkup(element);
   assert.match(html, /<video[^>]+src="https:\/\/api.lectum.com.br\/public\/files\/video.mp4"/);
+  assert.doesNotMatch(html, /<video[^>]*\bcontrols\b/);
+  assert.match(html, /role="status"/);
   assert.doesNotMatch(html, /<h[12]|<section|<p[ >]|Abrir Reels|Transcrição automática/);
   assert.match(html, /Voltar à publicação/);
   assert.match(html, /application\/ld\+json/);

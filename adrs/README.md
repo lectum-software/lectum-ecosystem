@@ -795,3 +795,4 @@ Formato recomendado:
 
 - [ADR-0712 — Publicacao de reels e perfil](0712-reels-profile-release.md)
 - [ADR-0713 — Comentario sobreposto sem redimensionar reels](0713-reels-keyboard-overlay.md)
+- [ADR-0714 — Entrada publica de Reels](0714-shared-reel-experience.md)

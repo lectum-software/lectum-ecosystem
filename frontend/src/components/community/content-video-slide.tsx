@@ -35,7 +35,7 @@ import {
   useContentVideoInteractionSync,
 } from "./content-video-interaction-refresh";
 import { ContentVideoInteractionStatus } from "./content-video-interaction-status";
-import { contentVideoHref } from "./content-video-link";
+import { contentVideoShareHref } from "./content-video-link";
 import { ContentVideoPlayer } from "./content-video-player";
 import { ReadingText } from "./content-video-reading-text";
 import styles from "./content-video-viewer.module.css";
@@ -472,7 +472,8 @@ export const ContentVideoSlide = ({
                     kind: "link",
                     postId: item.post_id,
                     replyId: item.reply_id,
-                    shareUrl: `${window.location.origin}${contentVideoHref(href, {
+                    shareUrl: `${window.location.origin}${contentVideoShareHref({
+                      communitySlug: item.community.slug,
                       postId: item.post_id,
                       replyId: item.reply_id,
                       videoId: item.id,

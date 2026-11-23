@@ -45,7 +45,7 @@ export default async function PostReplyThreadPage({
   const query = await searchParams;
   if (query.reel !== undefined)
     return (
-      <ContentVideoHost>
+      <ContentVideoHost directLink>
         <PublicReelPage slug={slug} id={id} query={query} />
       </ContentVideoHost>
     );

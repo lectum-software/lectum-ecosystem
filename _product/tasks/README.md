@@ -2921,3 +2921,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 
 | 347 | [TASK-347 - Reels, perfis e aceite parcial](TASK-347-reels-profile-release.md) | Em andamento |
 | 348 | [TASK-348 - Comentario sobreposto e perfil](TASK-348-reels-overlay-profile-preview.md) | Em andamento |
+| 349 | [TASK-349 - Reels compartilhado](TASK-349-shared-reel-experience.md) | Em andamento |

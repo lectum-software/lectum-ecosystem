@@ -28,7 +28,13 @@ const ContentVideoViewer = dynamic(
   { ssr: false },
 );
 
-export const ContentVideoHost = ({ children }: { children: ReactNode }) => {
+export const ContentVideoHost = ({
+  children,
+  directLink = false,
+}: {
+  children: ReactNode;
+  directLink?: boolean;
+}) => {
   const [request, setRequest] = useState<ContentVideoRequest | null>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -40,7 +46,11 @@ export const ContentVideoHost = ({ children }: { children: ReactNode }) => {
       const initial = readContentVideoLink(window.location.href);
       const owner = window.history.state?.lectumReelScope ?? "root";
       setRequest(
-        initial ? (owner === scope ? { initial } : null) : readContentVideoHistory(scope, userId),
+        initial
+          ? directLink || owner === scope
+            ? { initial }
+            : null
+          : readContentVideoHistory(scope, userId),
       );
     };
     restore();
@@ -50,7 +60,7 @@ export const ContentVideoHost = ({ children }: { children: ReactNode }) => {
       window.removeEventListener("popstate", restore);
       window.removeEventListener("pageshow", restore);
     };
-  }, [pathname, scope, userId]);
+  }, [pathname, scope, userId, directLink]);
   return (
     <ContentVideoLaunchContext.Provider
       value={(next) => {
