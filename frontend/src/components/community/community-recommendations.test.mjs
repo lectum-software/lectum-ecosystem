@@ -200,7 +200,10 @@ test("compact carousel uses avatars, measured desktop controls and independent f
   assert.match(html, /Avatar da comunidade Comunidade ansiedade-em-equilibrio/);
   assert.match(html, /h-\[76px\] w-\[76px\]/);
   assert.match(html, /rounded-\[18px\] border-\[4px\] border-media-foreground/);
-  assert.match(html, /h-\[232px\]/);
+  assert.match(html, /h-\[204px\]/);
+  assert.match(html, /h-\[56px\]/);
+  assert.match(html, /h-9 shrink-0 items-center justify-center/);
+  assert.match(html, /text-xs font-medium leading-4/);
   assert.ok(html.includes("w-[calc((100%_-_28px)/var(--visible-cards)_-_12px)]"));
   assert.match(html, /@container\/recommendations/);
   assert.match(html, /gap-\[12px\]/);

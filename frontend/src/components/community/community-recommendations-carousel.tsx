@@ -50,7 +50,7 @@ export const CommunityRecommendationsCarousel = ({
               return (
                 <li
                   key={community.slug}
-                  className="flex h-[232px] w-[calc((100%_-_28px)/var(--visible-cards)_-_12px)] shrink-0 snap-start flex-col gap-2 rounded-[22px] border border-border bg-surface p-3 shadow-lectum-soft"
+                  className="flex h-[204px] w-[calc((100%_-_28px)/var(--visible-cards)_-_12px)] shrink-0 snap-start flex-col gap-2 rounded-[22px] border border-border bg-surface p-3 shadow-lectum-soft"
                 >
                   <Link
                     href={`/comunidades/${community.slug}`}
@@ -63,14 +63,14 @@ export const CommunityRecommendationsCarousel = ({
                       name={community.name}
                       sizes="76px"
                     />
-                    <div className="grid h-[54px] w-full shrink-0 place-items-center">
-                      <h3 className="line-clamp-3 text-[14px] font-semibold leading-[18px] text-foreground [overflow-wrap:anywhere]">
-                        {community.name}
+                    <div className="flex h-[56px] w-full shrink-0 flex-col justify-end gap-1">
+                      <h3 className="flex h-9 shrink-0 items-center justify-center text-[14px] font-semibold leading-[18px] text-foreground [overflow-wrap:anywhere]">
+                        <span className="line-clamp-2">{community.name}</span>
                       </h3>
+                      <p className="shrink-0 text-xs font-medium leading-4 text-[#788391] dark:text-muted-foreground">
+                        {`${postsCount.toLocaleString("pt-BR")} ${postsCount === 1 ? "post" : "posts"}`}
+                      </p>
                     </div>
-                    <p className="shrink-0 text-xs leading-4 text-muted-foreground">
-                      {`${postsCount.toLocaleString("pt-BR")} ${postsCount === 1 ? "post" : "posts"}`}
-                    </p>
                   </Link>
                   <div className="shrink-0">
                     <CommunityFollowToggle
