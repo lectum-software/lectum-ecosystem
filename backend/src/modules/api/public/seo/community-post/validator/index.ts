@@ -30,3 +30,7 @@ const replyParams = [
 
 export const showPostValidator = validator({ params: postParams });
 export const showReplyValidator = validator({ params: replyParams });
+
+export const showReelValidator = validator({
+  params: [...postParams, { key: "videoId", coerse: "string", method: "string", min: 1, max: 120 }],
+});

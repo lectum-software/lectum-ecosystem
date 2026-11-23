@@ -4,6 +4,7 @@ import prisma from "@/infra/database/prisma";
 import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type { PublicCommunityPostSeoDTO } from "../DTOs/IPublicCommunityPostSeoDTO";
+import { readPostTranscripts } from "./transcripts";
 
 type PostSeoParams = {
   id: string;
@@ -194,6 +195,7 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
       media_items: {
         orderBy: [{ position: "asc" }, { createdAt: "asc" }],
         select: {
+          id: true,
           media_type: true,
           media_url: true,
           thumbnail_url: true,
@@ -229,6 +231,7 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
     og_video_url: mediaPreview.ogVideoUrl,
     published_at: post.createdAt,
     source: "community_post",
+    transcripts: await readPostTranscripts(id, slug, post),
     captions: await readPublicCaptions(firstPostMedia(post)?.media_url).catch(() => null),
     title: `${title} | Lectum`,
     updated_at: post.edited_at ?? post.updatedAt ?? null,

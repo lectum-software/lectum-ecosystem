@@ -7,7 +7,8 @@ export const acceptValidator = validator({
       key: "document_ids",
       custom: z
         .array(z.string().min(1).max(160))
-        .length(2, { message: "Selecione os documentos atuais." }),
+        .min(1, { message: "Selecione os documentos pendentes." })
+        .max(2),
     },
     { key: "terms_accepted", custom: z.boolean() },
     { key: "privacy_acknowledged", custom: z.boolean() },

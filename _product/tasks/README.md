@@ -2918,3 +2918,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 345 | [TASK-345 - Entrada no checkout](TASK-345-checkout-entry.md) | Concluida |
 
 | 346 | [TASK-346 - Primeira assinatura paga](TASK-346-subscribe-activation.md) | Concluida |
+
+| 347 | [TASK-347 - Reels, perfis e aceite parcial](TASK-347-reels-profile-release.md) | Em andamento |
