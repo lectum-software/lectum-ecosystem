@@ -794,3 +794,4 @@ Formato recomendado:
 - [ADR-0711 — Primeira assinatura paga](0711-subscribe-activation.md)
 
 - [ADR-0712 — Publicacao de reels e perfil](0712-reels-profile-release.md)
+- [ADR-0713 — Comentario sobreposto sem redimensionar reels](0713-reels-keyboard-overlay.md)

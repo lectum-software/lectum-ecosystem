@@ -1,0 +1,18 @@
+# ADR-0713 - Comentario sobreposto sem redimensionar reels
+
+Status: aceito para validacao local.
+
+O teclado reduzia o visualViewport e o compositor crescia no fluxo flex,
+alterando duas vezes a geometria do video. O reels agora conserva o frame
+anterior ao foco e calcula separadamente o deslocamento do compositor.
+Rotacao e redimensionamento normal continuam atualizando o frame.
+
+O slot inferior reserva espaco constante. O compositor expandido e absoluto
+e usa os componentes escuros da Lectum, sem reorganizacao visual inspirada
+no TikTok. A referencia solicitada era somente de comportamento.
+
+A capa perde a sobreposicao e o avatar cresce sem deslocar o nome: aumento
+de 12px combinado com reducao de 12px no espacamento seguinte.
+
+Sem publicacao ate aprovacao das capturas do codigo local. Teclado iOS real
+continua exigindo verificacao em dispositivo, alem dos testes geometricos.

@@ -57,6 +57,16 @@ const props = {
 const render = (Component, overrides = {}) =>
   renderRelations({ children: createElement(Component, { ...props, ...overrides }) });
 
+test("hero keeps its compact cover, larger circular avatar and no image overlay", () => {
+  const html = render(ProfileHero, {
+    profile: { ...profile, cover_image_url: "https://example.com/cover.jpg" },
+  });
+  assert.match(html, /h-\[100px\]/);
+  assert.match(html, /h-\[88px\] w-\[88px\] rounded-full/);
+  assert.match(html, /mt-1 grid gap-2/);
+  assert.doesNotMatch(html, /psychologist-cover-overlay/);
+});
+
 const descendants = (element) =>
   isValidElement(element)
     ? [element, ...Children.toArray(element.props.children).flatMap(descendants)]
