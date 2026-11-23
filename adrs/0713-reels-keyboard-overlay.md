@@ -14,5 +14,7 @@ no TikTok. A referencia solicitada era somente de comportamento.
 A capa perde a sobreposicao e o avatar cresce sem deslocar o nome: aumento
 de 12px combinado com reducao de 12px no espacamento seguinte.
 
+Na TASK-350, a mesma limpeza visual foi aplicada a comunidade: removidos o brilho radial e a sobreposicao luminosa, mantendo o degrade da paleta e a altura de 100px. Os controles circulares preservam seus estilos; a barra nativa do navegador nao e modificada.
+
 Sem publicacao ate aprovacao das capturas do codigo local. Teclado iOS real
 continua exigindo verificacao em dispositivo, alem dos testes geometricos.

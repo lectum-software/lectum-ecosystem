@@ -379,6 +379,16 @@ test("follow-only feed hides followed communities without changing ordinary unfo
   assert.match(render({ initialFollowing: true }), />Seguindo<\/button>/);
 });
 
+test("community cover has no light veil and keeps its compact height", () => {
+  const source = readFileSync(
+    new URL("../../app/app/community/[slug]/components/community-header.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /community-header-highlight|radial-gradient/);
+  assert.match(source, /h-\[100px\]/);
+  assert.match(source, /linear-gradient\(145deg/);
+});
+
 test("community header changes Seguir into a persistent accessible circular check", () => {
   const render = (following) =>
     renderToStaticMarkup(
