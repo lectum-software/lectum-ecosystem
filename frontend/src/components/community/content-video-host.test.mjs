@@ -42,6 +42,10 @@ for (const name of [
     },
   ).outputText;
 }
+modules["@/lib/video-sound-preference"] = ts.transpileModule(
+  readFileSync(new URL("../../lib/video-sound-preference.ts", import.meta.url), "utf8"),
+  { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
+).outputText;
 const factories = Object.entries(modules)
   .map(
     ([name, code]) =>

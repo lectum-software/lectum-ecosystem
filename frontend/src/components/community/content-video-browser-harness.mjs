@@ -25,6 +25,7 @@ const modules = {
   "@/lib/video-playback": source("../../lib/video-playback.ts"),
   "@/components/ui/use-feed-video-playback": source("../ui/use-feed-video-playback.ts"),
   "@/lib/video-sound-preference": source("../../lib/video-sound-preference.ts"),
+  "./content-video-link": source("./content-video-link.ts"),
   "@/components/analytics/attention":
     "exports.documentHasUserAttention = () => window.attention; exports.subscribeDocumentAttention = () => () => {};",
   "@/lib/modal-media-scope": "exports.isVideoBlockedByModal = () => window.blocked;",
@@ -109,6 +110,7 @@ export function createHarness(persistent = false, realMedia = false) {
         ),
         "./caption-icon": source("../video-captions/caption-icon.tsx"),
         "./directory-preference": source("../video-captions/directory-preference.ts"),
+        "./reels-preference": source("../video-captions/reels-preference.ts"),
         "@/components/ui/vertical-video-player-stream":
           "exports.VerticalVideoStreamStatus = () => null;",
         "@/components/ui/video-startup-cover": source("../ui/video-startup-cover.tsx"),
@@ -124,7 +126,7 @@ export function createHarness(persistent = false, realMedia = false) {
       });
       const failed = source && window.playbackFailure === source;
       return {
-        data:source && !failed ? {hls_url:'/stream.m3u8',thumbnail_url:'/prepared.jpg',expires_at:'2099-01-01T00:00:00Z'} : undefined,
+        data:source && !failed ? {hls_url:'/stream.m3u8',thumbnail_url:'/prepared.jpg',expires_at:new Date(Date.now()+3600000).toISOString()} : undefined,
         error:failed ? new Error('metadata unavailable') : null,
         refetch:()=>{ window.playbackRetries=(window.playbackRetries||0)+1; window.playbackFailure=null; render(); }
       };

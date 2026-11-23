@@ -797,3 +797,4 @@ Formato recomendado:
 - [ADR-0713 — Comentario sobreposto sem redimensionar reels](0713-reels-keyboard-overlay.md)
 - [ADR-0714 — Entrada publica de Reels](0714-shared-reel-experience.md)
 - [ADR-0715 — Cards compactos e rodape do post](0715-community-cards-post-footer.md)
+- [ADR-0716 — Teclado iOS e audio](0716-reels-ios-audio.md)

@@ -238,7 +238,7 @@ test("feed de psicologos separa volume explicito de tap e protege retomadas", ()
   assert.match(read(`${base}view/components/slide-video-props.ts`), /autoPlay: false/);
   const preference = read("../../lib/video-sound-preference.ts");
   assert.match(preference, /let soundEnabled = false/);
-  assert.doesNotMatch(preference, /localStorage|sessionStorage/);
+  assert.match(preference, /localStorage/);
   const playback = read("../../lib/video-playback.ts");
   assert.match(
     playback,
@@ -574,7 +574,7 @@ test("feed preserves explicit sound and scopes browser denial to the current act
   assert.equal(storage.get("lectum:video-sound:explicit:v1"), "enabled");
   setCommunityFeedVideoSoundEnabled(true);
   const freshDocument = await import("../../lib/video-sound-preference.ts?document=new");
-  assert.equal(freshDocument.getVideoSoundEnabled(), false, "another document starts muted");
+  assert.equal(freshDocument.getVideoSoundEnabled(), true, "another document restores sound");
   assert.equal(getVideoSoundEnabled(), true, "a new document does not change the current choice");
   const freshNotifications = [];
   const unsubscribeFresh = freshDocument.subscribeVideoSoundPreference((enabled) =>
@@ -583,7 +583,7 @@ test("feed preserves explicit sound and scopes browser denial to the current act
   freshDocument.setVideoSoundEnabledByUser(true);
   assert.equal(freshDocument.getVideoSoundEnabled(), true);
   freshDocument.setVideoSoundEnabledByUser(false);
-  assert.deepEqual(freshNotifications, [false, true, false]);
+  assert.deepEqual(freshNotifications, [true, true, false]);
   assert.equal(getVideoSoundEnabled(), true, "mute in another document stays isolated");
   unsubscribeFresh();
   setCommunityFeedVideoSoundEnabled(false);

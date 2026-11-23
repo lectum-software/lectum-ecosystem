@@ -17,13 +17,11 @@ export const resolveReelsViewport = (
     (editing || (previous.keyboardOffset > 0 && previous.height - visual.height >= 100));
   const frame = keepFrame ? previous : visual;
   return {
-    top: frame.top,
-    left: frame.left,
+    top: visual.top,
+    left: visual.left,
     width: frame.width,
     height: frame.height,
-    keyboardOffset: keepFrame
-      ? Math.max(0, frame.top + frame.height - visual.top - visual.height)
-      : 0,
+    keyboardOffset: keepFrame ? Math.max(0, frame.height - visual.height) : 0,
   };
 };
 
