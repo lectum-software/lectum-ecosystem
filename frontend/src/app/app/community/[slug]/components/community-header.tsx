@@ -210,7 +210,7 @@ export const CommunityHeader = ({
       style={communityPaletteStyle}
     >
       <div
-        className="relative min-h-[132px] px-5 pt-4 text-primary-foreground"
+        className="relative h-[100px] px-5 pt-4 text-primary-foreground"
         style={{
           background:
             "radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--lectum-media-foreground) 50%, transparent) 0%, color-mix(in srgb, var(--lectum-media-foreground) 18%, transparent) 38%, transparent 62%), linear-gradient(145deg, var(--community-cover-start) 0%, color-mix(in srgb, var(--community-cover-depth) 88%, var(--community-primary-color) 12%) 56%, color-mix(in srgb, var(--community-cover-end) 78%, var(--community-primary-dark) 22%) 100%)",
@@ -285,7 +285,7 @@ export const CommunityHeader = ({
             href={`/comunidades/top-mentores?community=${community.slug}`}
           >
             <Award className="h-3.5 w-3.5" aria-hidden="true" />
-            Ver Top 5 mentores da comunidade
+            Top 5 Mentores da comunidade
           </Link>
         </div>
       </div>

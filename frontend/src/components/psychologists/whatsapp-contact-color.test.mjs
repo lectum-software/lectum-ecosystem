@@ -17,8 +17,8 @@ const surfaces = [
   [
     "shared profile hero and sticky contact",
     "../../app/app/psychologist/[id]/components/whatsapp-cta.tsx",
-    "bg-whatsapp-contact",
-    1,
+    "before:bg-whatsapp-contact",
+    2,
   ],
   [
     "directory mobile",

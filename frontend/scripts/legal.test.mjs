@@ -151,7 +151,33 @@ test("cada declaração jurídica exige true independente", () => {
   }
 });
 
-test("payload real envia conjunto completo, nunca somente pendentes ou versão legada", () => {
+test("reaceite apresenta apenas o documento pendente, sem checkbox ou link do outro", () => {
+  for (const document of documents) {
+    const pending = pendingLegalSet({ ...current, pending_document_ids: [document.id] });
+    const html = renderToStaticMarkup(
+      createElement(LegalAcceptanceModal, {
+        documents: pending.documents,
+        adultPreviouslyConfirmed: true,
+        onClose() {},
+        async onSubmit() {},
+      }),
+    );
+    const expected = document.kind === "terms" ? "terms_accepted" : "privacy_acknowledged";
+    const other = document.kind === "terms" ? "privacy_acknowledged" : "terms_accepted";
+    assert.match(html, new RegExp(expected));
+    assert.doesNotMatch(html, new RegExp(other));
+    assert.equal((html.match(/type="checkbox"/g) ?? []).length, 1);
+    assert.doesNotMatch(html, new RegExp(documents.find((doc) => doc.id !== document.id).id));
+    const values = { terms_accepted: false, privacy_acknowledged: false, adult_confirmed: true };
+    assert.throws(() => toLegalAcceptancePayload(values, pending.documents));
+    assert.deepEqual(
+      toLegalAcceptancePayload({ ...values, [expected]: true }, pending.documents).document_ids,
+      [document.id],
+    );
+  }
+});
+
+test("payload envia somente os documentos apresentados, sem aceitar implicitamente os demais", () => {
   assert.deepEqual(toLegalAcceptancePayload(confirmations, documents), {
     document_ids: documents.map((document) => document.id),
     ...confirmations,
@@ -159,7 +185,16 @@ test("payload real envia conjunto completo, nunca somente pendentes ou versão l
   assert.throws(() =>
     toLegalAcceptancePayload({ ...confirmations, adult_confirmed: false }, documents),
   );
-  assert.throws(() => toLegalAcceptancePayload(confirmations, documents.slice(0, 1)));
+  assert.deepEqual(
+    toLegalAcceptancePayload({ ...confirmations, terms_accepted: false }, [documents[1]]),
+    {
+      document_ids: [documents[1].id],
+      terms_accepted: false,
+      privacy_acknowledged: true,
+      adult_confirmed: true,
+    },
+  );
+  assert.throws(() => toLegalAcceptancePayload(confirmations, []));
   assert.match(patientLegacy, /pending-legal-copy/);
   assert.match(psychologistLegacy, /pending-legal-copy/);
 });
@@ -183,7 +218,7 @@ test("modal só tem conjunto pendente quando ambos publicados e configured", () 
       .adult_previously_confirmed,
     true,
   );
-  assert.deepEqual(pendingLegalSet(status)?.documents, documents);
+  assert.deepEqual(pendingLegalSet(status)?.documents, [documents[0]]);
   for (const input of [
     null,
     { ...status, configured: false },

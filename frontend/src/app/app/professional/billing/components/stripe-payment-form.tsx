@@ -144,6 +144,7 @@ const PaymentForm = ({ config, kind, onComplete }: Props) => {
                 options={{
                   layout: "tabs",
                   readOnly: busy,
+                  terms: { card: "never" },
                   wallets: { applePay: "never", googlePay: "never", link: "never" },
                 }}
                 onReady={() => setReady(true)}
@@ -214,12 +215,6 @@ const PaymentForm = ({ config, kind, onComplete }: Props) => {
           </Button>
         </>
       )}
-      {kind === "checkout" ? (
-        <p className="text-sm leading-6 text-muted">
-          Após o pagamento, confirme seus dados fiscais e endereço para emissão da nota. Acompanhe a
-          emissão em Minha assinatura.
-        </p>
-      ) : null}
       <div className="min-h-6" aria-live="polite">
         {elementError || operation.error ? (
           <InlineAlert variant="error">{elementError || operation.error}</InlineAlert>

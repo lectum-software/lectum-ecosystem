@@ -181,6 +181,8 @@ test("compact carousel uses avatars, measured desktop controls and independent f
                 avatar_url: "/community/icons/tdah.png",
               }),
               community("sem-avatar"),
+              community("vazia", { posts_count: 0 }),
+              community("muitos-posts", { posts_count: 1234 }),
             ],
           }),
         ),
@@ -198,7 +200,7 @@ test("compact carousel uses avatars, measured desktop controls and independent f
   assert.match(html, /Avatar da comunidade Comunidade ansiedade-em-equilibrio/);
   assert.match(html, /h-\[76px\] w-\[76px\]/);
   assert.match(html, /rounded-\[18px\] border-\[4px\] border-media-foreground/);
-  assert.match(html, /h-\[208px\]/);
+  assert.match(html, /h-\[232px\]/);
   assert.ok(html.includes("w-[calc((100%_-_28px)/var(--visible-cards)_-_12px)]"));
   assert.match(html, /@container\/recommendations/);
   assert.match(html, /gap-\[12px\]/);
@@ -209,7 +211,11 @@ test("compact carousel uses avatars, measured desktop controls and independent f
   assert.match(html, /\[&amp;::-webkit-scrollbar\]:hidden/);
   assert.match(html, /tabindex="0"/);
   assert.match(html, />CS<\/span>/);
-  assert.doesNotMatch(html, /\b\d+ posts?\b|Comunidades para você/);
+  assert.match(html, />1 post<\/p>/);
+  assert.match(html, />2 posts<\/p>/);
+  assert.match(html, />0 posts<\/p>/);
+  assert.match(html, />1\.234 posts<\/p>/);
+  assert.doesNotMatch(html, /Comunidades para você/);
   assert.match(html, /Seguir Comunidade ansiedade-em-equilibrio/);
   assert.doesNotMatch(html, /<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<button\b/);
   assert.match(html, /snap-x snap-mandatory/);

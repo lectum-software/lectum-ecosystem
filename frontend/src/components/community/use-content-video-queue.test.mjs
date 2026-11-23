@@ -1,118 +1,11 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import path from "node:path";
 import { after, afterEach, before, beforeEach, describe, test } from "node:test";
-import ts from "typescript";
 import { registerCommunityContinuationCases } from "./content-video-community-continuation-cases.mjs";
+import { harness } from "./content-video-queue-harness.mjs";
 import { registerQueueInteractionCases } from "./content-video-queue-interaction-cases.mjs";
 
 const require = createRequire(import.meta.url);
-const domRequire = createRequire(require.resolve("react-dom/client"));
-const productionModule = (name, file, resolver = require) =>
-  readFileSync(path.join(path.dirname(resolver.resolve(name)), "cjs", file), "utf8");
-const modules = {
-  react: productionModule("react", "react.production.js"),
-  "react-dom": productionModule("react-dom", "react-dom.production.js"),
-  "react-dom/client": productionModule("react-dom", "react-dom-client.production.js"),
-  scheduler: productionModule("scheduler", "scheduler.production.js", domRequire),
-  "@/api/req/posts": "exports.getPostContentVideos = (...args) => window.requestVideos(...args);",
-  "@/api/req/community": `
-    exports.getCommunities = (...args) => window.requestCommunities(...args);
-    exports.getCommunityPosts = (...args) => window.requestCommunityPosts(...args);
-  `,
-  "./content-video-community-continuation": ts.transpileModule(
-    readFileSync(new URL("./content-video-community-continuation.ts", import.meta.url), "utf8"),
-    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
-  ).outputText,
-  "./content-video-queue-interactions": ts.transpileModule(
-    readFileSync(new URL("./content-video-queue-interactions.ts", import.meta.url), "utf8"),
-    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
-  ).outputText,
-  "@/api/errors": ts.transpileModule(
-    readFileSync(new URL("../../api/errors.ts", import.meta.url), "utf8"),
-    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
-  ).outputText,
-  queue: ts.transpileModule(
-    readFileSync(new URL("./use-content-video-queue.ts", import.meta.url), "utf8"),
-    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
-  ).outputText,
-};
-
-// Emit static CommonJS factories as browser script source, not runtime string compilation.
-const moduleFactories = Object.entries(modules)
-  .map(
-    ([name, source]) =>
-      `${JSON.stringify(name)}: function(require, module, exports) {\n${source}\n}`,
-  )
-  .join(",\n");
-
-// Real React/ReactDOM mount and effects. Only the network boundary is replaced by controlled data.
-const harness = `
-  const factories = { ${moduleFactories} };
-  const cache = {};
-  function require(name) {
-    if (cache[name]) return cache[name].exports;
-    const module = cache[name] = { exports: {} };
-    factories[name](require, module, module.exports);
-    return module.exports;
-  }
-  const React = require('react');
-  const { createRoot } = require('react-dom/client');
-  const { flushSync } = require('react-dom');
-  const { useContentVideoQueue, contentVideoKey } = require('queue');
-  let root;
-  let initial;
-  window.calls = [];
-  window.communityCalls = [];
-  window.communityResponses = {};
-  window.requestCommunities = async query => {
-    communityCalls.push({ kind: 'catalog', ...query });
-    return communityResponses['catalog:' + query.page] ?? { data: [], page: query.page, pages: 0 };
-  };
-  window.requestCommunityPosts = async (slug, query) => {
-    communityCalls.push({ kind: 'posts', slug, ...query });
-    const result = communityResponses[slug + ':' + query.page];
-    if (!result) throw new Error('Unexpected community request: ' + slug);
-    return result;
-  };
-  window.responses = {};
-  window.requestVideos = async (id, query) => {
-    window.calls.push({ id, ...query });
-    if ('page' in query) throw new Error('Offset pagination is forbidden');
-    const position = query.cursor ?? 1;
-    const response = window.responses[id + ':' + position];
-    if (!response) throw new Error('Unexpected API request: ' + id + ':' + position);
-    return response;
-  };
-  window.video = (post, id, reply = null, media = id) => ({
-    id, post_id: post, reply_id: reply, media_item_id: reply ? null : media,
-    media_url: '/video/' + id, title: null, content: '', thumbnail_url: null,
-    author: {}, community: {}, responding_to: null,
-    current_user_vote: null, upvotes_count: 0, saved: false, replies_count: 0,
-  });
-  window.response = (data, page = 1, pages = 1) => ({
-    data, page, pages, count: data.length, next_cursor: page < pages ? String(page + 1) : null,
-  });
-  function Harness({ source }) {
-    window.queue = useContentVideoQueue(initial, source);
-    return React.createElement('output', null, window.queue.items.map(contentVideoKey).join(','));
-  }
-  window.mount = (entry, source = null) => {
-    initial = entry;
-    root = createRoot(document.getElementById('root'));
-    window.setSource(source);
-  };
-  window.setSource = source => flushSync(() => root.render(React.createElement(Harness, { source })));
-  window.action = (name, ...args) => flushSync(() => window.queue[name](...args));
-  window.snapshot = () => ({
-    items: window.queue.items, index: window.queue.index, ended: window.queue.ended,
-    error: window.queue.error, expired: window.queue.expired, loading: window.queue.loading,
-    staleInteractions: window.queue.staleInteractions,
-  });
-  window.unmount = () => flushSync(() => root.unmount());
-  window.key = contentVideoKey;
-`;
 
 const snapshot = () => window.snapshot();
 
@@ -141,6 +34,64 @@ describe("content video queue mounted in React", {
   const wait = (predicate) => page.waitForFunction(predicate, undefined, { timeout: 5000 });
   registerQueueInteractionCases({ getPage: () => page, wait, snapshot });
   registerCommunityContinuationCases({ getPage: () => page, wait, snapshot });
+
+  test("profile return skips watched videos but retains prefetched videos and fresh launches", async () => {
+    await page.evaluate(() => {
+      responses["p:1"] = response(["a", "b", "c", "d", "e"].map((id) => video("p", id)));
+      mount({ postId: "p", videoId: "a" });
+    });
+    await wait(() => queue.items.length === 5);
+    await page.evaluate(() => action("select", 1));
+    await page.evaluate(() => action("select", 2));
+    await page.evaluate(() => {
+      const watched = queue.getWatchedVideoKeys(key(queue.items[queue.index]));
+      unmount();
+      mount({ postId: "p", videoId: "c" }, null, watched);
+    });
+    await wait(() => queue.items.length === 3);
+    assert.deepEqual(
+      (await page.evaluate(snapshot)).items.map((item) => item.id),
+      ["c", "d", "e"],
+    );
+    await page.evaluate(() => action("select", 1));
+    await page.evaluate(() => {
+      const watched = queue.getWatchedVideoKeys(key(queue.items[queue.index]));
+      unmount();
+      mount({ postId: "p", videoId: "d" }, null, watched);
+    });
+    await wait(() => queue.items.length === 2);
+    assert.deepEqual(
+      (await page.evaluate(snapshot)).items.map((item) => item.id),
+      ["d", "e"],
+    );
+    await page.evaluate(() => {
+      unmount();
+      mount({ postId: "p", videoId: "a" });
+    });
+    await wait(() => queue.items.length === 5);
+    assert.deepEqual(
+      (await page.evaluate(snapshot)).items.map((item) => item.id),
+      ["a", "b", "c", "d", "e"],
+    );
+  });
+
+  test("shared video ID opens the exact media even without a media URL", async () => {
+    await page.evaluate(() => {
+      responses["p:1"] = response([video("p", "a"), video("p", "b")]);
+      mount({ postId: "p", videoId: "b" });
+    });
+    await wait(() => queue.items.length === 2);
+    assert.equal(await page.evaluate(() => queue.items[queue.index].id), "b");
+  });
+
+  test("missing shared video does not silently play a different video", async () => {
+    await page.evaluate(() => {
+      responses["p:1"] = response([video("p", "a")]);
+      mount({ postId: "p", videoId: "removed" });
+    });
+    await wait(() => queue.error);
+    assert.equal(await page.evaluate(() => queue.items.length), 0);
+  });
 
   test("keeps distinct post media, falls back to id and deduplicates across pages", async () => {
     await page.evaluate(() => {

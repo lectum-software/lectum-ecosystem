@@ -38,7 +38,7 @@ export const ProfileAvatar = ({
         "relative grid shrink-0 place-items-center overflow-hidden border-media-foreground bg-surface-muted font-extrabold text-primary shadow-lectum-soft dark:border-background",
         compact
           ? "h-9 w-9 rounded-full border-2 text-xs"
-          : "h-[76px] w-[76px] rounded-[18px] border-[4px] text-2xl",
+          : "h-[76px] w-[76px] rounded-full border-[4px] text-2xl",
       )}
       data-profile-avatar="true"
     >
@@ -69,7 +69,7 @@ export const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistPr
   if (!coverImageSrc || coverImageFailed) {
     return (
       <div
-        className="relative h-[132px] overflow-hidden bg-primary-soft"
+        className="relative h-[100px] overflow-hidden bg-primary-soft"
         data-profile-default-cover="psychologist"
       >
         <Image
@@ -84,7 +84,7 @@ export const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistPr
   }
 
   return (
-    <div className="relative h-[132px] overflow-hidden bg-media-background">
+    <div className="relative h-[100px] overflow-hidden bg-media-background">
       <Image
         alt={`Imagem de capa de ${displayName}`}
         className="h-full w-full object-cover object-center"

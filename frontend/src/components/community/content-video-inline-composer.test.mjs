@@ -171,6 +171,98 @@ test("free professional camera has visible computed contrast at mobile and deskt
   }
 });
 
+test("expanded mobile composer sits at viewport bottom with media and send below the input", async (t) => {
+  if (!process.env.PLAYWRIGHT_MODULE) return t.skip("Chrome harness not configured");
+  assert.match(composer, /data-reels-composer-expanded=\{isReels && composerActive/);
+  const require = createRequire(import.meta.url);
+  const { chromium } = require(process.env.PLAYWRIGHT_MODULE);
+  const postcss = createRequire(require.resolve("@tailwindcss/postcss"));
+  const { compile } = postcss("@tailwindcss/node");
+  const { Scanner } = postcss("@tailwindcss/oxide");
+  const globals = new URL("../../app/globals.css", import.meta.url);
+  const html = renderComposer();
+  const compiler = await compile(readFileSync(globals, "utf8"), {
+    base: path.dirname(fileURLToPath(globals)),
+    onDependency() {},
+  });
+  const css = compiler.build(
+    new Scanner({ sources: [] }).scanFiles([
+      { content: html, extension: "html" },
+      { content: composer, extension: "tsx" },
+    ]),
+  );
+  const controls = source("./content-video-controls.module.css");
+  const viewerCss = source("./content-video-viewer.module.css");
+  const clip = readFileSync(
+    new URL("../../../public/videos/verification-v1.mp4", import.meta.url),
+  ).toString("base64");
+  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  try {
+    for (const width of [320, 390, 430, 1440]) {
+      const page = await browser.newPage({ viewport: { width, height: 844 } });
+      await page.setContent(`<style>${css}\n${viewerCss}\n${controls}
+        body{margin:0} .test-viewport{position:fixed;top:0;left:0;right:0;height:460px}
+        .test-stage{display:flex;flex-direction:column;max-width:520px;height:100%;margin:auto;background:black}
+        video{height:100%;width:100%;object-fit:cover}
+        </style><div class="backdrop"></div><div class="dialog test-viewport"><div class="test-stage">
+        <div class="videoViewport"><video muted playsinline src="data:video/mp4;base64,${clip}"></video></div>
+        <div class="composerSlot">${html}</div></div></div>`);
+      const input = page.getByRole("textbox");
+      await input.focus();
+      assert.equal(await input.evaluate((el) => getComputedStyle(el).fontSize), "16px");
+      // This is a CSS geometry test of real server-rendered markup, not an iOS keyboard simulation.
+      await page.locator("[data-reply-composer-appearance]").evaluate((el) => {
+        el.setAttribute("data-reels-composer-expanded", "true");
+      });
+      const field = await input.boundingBox();
+      const colors = await page.locator("[data-reply-composer-field]").evaluate((el) => {
+        const probe = document.createElement("span");
+        probe.style.backgroundColor = "var(--lectum-surface-muted)";
+        el.append(probe);
+        const expected = getComputedStyle(probe).backgroundColor;
+        probe.remove();
+        return {
+          background: getComputedStyle(el).backgroundColor,
+          expected,
+          image: getComputedStyle(el).backgroundImage,
+        };
+      });
+      assert.equal(colors.background, colors.expected, JSON.stringify(colors));
+      const camera = await page.locator("[data-reply-media-trigger]").boundingBox();
+      const send = await page.getByRole("button", { name: "Enviar resposta" }).boundingBox();
+      const sheet = await page.locator(".composerSlot").boundingBox();
+      assert.equal(sheet.y + sheet.height, 460);
+      assert.ok(field.height >= 64);
+      assert.ok(camera.y >= field.y + field.height, "camera is below the text area");
+      assert.ok(send.y >= field.y + field.height, "send is below the text area");
+      assert.ok(camera.x + camera.width <= send.x, "actions do not overlap");
+      assert.ok(send.y + send.height <= 460);
+      assert.equal(await page.locator(".composerSlot p").isVisible(), false);
+      assert.equal(
+        await page.evaluate(() => document.elementFromPoint(10, 600).className),
+        "backdrop",
+      );
+      if (process.env.LECTUM_QA_SCREENSHOTS)
+        await page.screenshot({
+          path: path.join(
+            process.env.LECTUM_QA_SCREENSHOTS,
+            `reels-composer-expanded-${width}.png`,
+          ),
+        });
+      await page.locator("[data-reply-composer-appearance]").evaluate((el) => {
+        el.removeAttribute("data-reels-composer-expanded");
+      });
+      assert.ok(
+        (await input.boundingBox()).height < field.height,
+        "closing restores compact input",
+      );
+      await page.close();
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
 test("pending reels disables editing, native picker, media trigger and send", () => {
   const html = renderComposer({ disabled: true });
   assert.match(html, /contentEditable="false"/i);

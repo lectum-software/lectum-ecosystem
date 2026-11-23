@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { PostReplyThreadLogic } from "@/app/app/community/[slug]/post/[id]/logic";
+import { PublicReelPage } from "@/components/community/public-reel-page";
 import { PublicTranscript } from "@/components/video-captions/public-transcript";
+import { getPublicReel, type ReelQuery, reelMetadata } from "@/lib/reel-seo";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";
 import { publicCommunityReplyThreadHref } from "@/utils/public-routes";
 
 type PostReplyThreadPageProps = {
+  searchParams: Promise<ReelQuery>;
   params: Promise<{
     id: string;
     replyId: string;
@@ -13,8 +16,13 @@ type PostReplyThreadPageProps = {
   }>;
 };
 
-export const generateMetadata = async ({ params }: PostReplyThreadPageProps): Promise<Metadata> => {
+export const generateMetadata = async ({
+  params,
+  searchParams,
+}: PostReplyThreadPageProps): Promise<Metadata> => {
   const { id, replyId, slug } = await params;
+  const query = await searchParams;
+  if (query.reel !== undefined) return reelMetadata(await getPublicReel(slug, id, query));
 
   return resolveCommunityPostSeoMetadata({
     fallback: {
@@ -28,8 +36,13 @@ export const generateMetadata = async ({ params }: PostReplyThreadPageProps): Pr
   });
 };
 
-export default async function PostReplyThreadPage({ params }: PostReplyThreadPageProps) {
+export default async function PostReplyThreadPage({
+  params,
+  searchParams,
+}: PostReplyThreadPageProps) {
   const { id, slug, replyId } = await params;
+  const query = await searchParams;
+  if (query.reel !== undefined) return <PublicReelPage slug={slug} id={id} query={query} />;
   return (
     <>
       <PostReplyThreadLogic forceBackToFeed />

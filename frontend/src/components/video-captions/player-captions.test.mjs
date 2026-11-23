@@ -54,6 +54,7 @@ const modules = {
   scheduler: production("scheduler", "scheduler.production.js", domRequire),
   "./caption-icon": source("./caption-icon.tsx"),
   "./directory-preference": source("./directory-preference.ts"),
+  "./reels-preference": source("./reels-preference.ts"),
   player: source("./player-captions.tsx"),
 };
 const bundle = `
@@ -156,6 +157,65 @@ before(async () => {
   browser = await chromium.launch({ channel: "msedge", headless: true });
 });
 after(async () => browser?.close());
+
+test("Reels caption choice survives video changes and reload without changing inline captions", {
+  skip: !process.env.PLAYWRIGHT_MODULE && "Set PLAYWRIGHT_MODULE",
+}, async () => {
+  const page = await browser.newPage();
+  try {
+    await page.route("http://caption.test/**", (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: '<video></video><div id="root"></div>',
+      }),
+    );
+    const mountReel = async (key) => {
+      await page.evaluate((key) => mount({ reels: true, key }), key);
+    };
+    const off = page.getByRole("button", { name: "Ativar legendas", exact: true });
+    const on = page.getByRole("button", { name: "Desativar legendas", exact: true });
+    await page.goto("http://caption.test/");
+    await page.addScriptTag({ content: bundle });
+    await mountReel("first");
+    await on.click();
+    await off.waitFor();
+    assert.equal(
+      await page.evaluate(() => localStorage.getItem("lectum:reels-captions:v1")),
+      "false",
+    );
+    await mountReel("next");
+    await off.waitFor();
+    await page.reload();
+    await page.addScriptTag({ content: bundle });
+    await mountReel("reopened");
+    await off.waitFor();
+    assert.equal(await page.locator("[data-lectum-captions]").count(), 0);
+    await page.evaluate(() => mount({ key: "inline" }));
+    await on.waitFor();
+    await mountReel("again");
+    await off.click();
+    await on.waitFor();
+    await page.reload();
+    await page.addScriptTag({ content: bundle });
+    await mountReel("enabled-again");
+    await on.waitFor();
+    // A denied storage API must not break the toggle or reset the next Reel.
+    await page.evaluate(() => {
+      Storage.prototype.getItem = () => {
+        throw new Error("Storage denied");
+      };
+      Storage.prototype.setItem = () => {
+        throw new Error("Storage denied");
+      };
+    });
+    await on.click();
+    await off.waitFor();
+    await mountReel("no-storage-next");
+    await off.waitFor();
+  } finally {
+    await page.close();
+  }
+});
 
 for (const width of [390, 1440]) {
   test(`single caption renderer and CC placement at ${width}px`, {

@@ -33,7 +33,10 @@ const waitForSourceTick = (signal: AbortSignal) =>
 export const useContentVideoQueue = (
   initial: ContentVideoSourceEntry,
   source: ContentVideoSource | null,
+  watchedVideoKeys: string[] = [],
 ) => {
+  const excluded = useRef(new Set(watchedVideoKeys));
+  const watched = useRef(new Set(watchedVideoKeys));
   const sourceRef = useRef(source);
   useEffect(() => {
     sourceRef.current = source;
@@ -49,6 +52,10 @@ export const useContentVideoQueue = (
     interactionStateRef.current = interactionState;
   }, [interactionState]);
   const [index, setIndex] = useState(0);
+  useLayoutEffect(() => {
+    const active = items[index];
+    if (active) watched.current.add(contentVideoKey(active));
+  }, [items, index]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [expired, setExpired] = useState(false);
@@ -193,9 +200,22 @@ export const useContentVideoQueue = (
           : result.data;
       // Post media fit in page one; prioritize the clicked media only for the initial entry.
       const focusedMediaIndex =
-        state.page === 1 && state.visited.size === 0 && state.entry.mediaUrl
-          ? candidates.findIndex((item) => item.media_url === state.entry.mediaUrl)
+        state.page === 1 &&
+        state.visited.size === 0 &&
+        (state.entry.videoId || state.entry.mediaUrl)
+          ? candidates.findIndex((item) =>
+              state.entry.videoId
+                ? item.id === state.entry.videoId
+                : item.media_url === state.entry.mediaUrl,
+            )
           : -1;
+      if (
+        state.page === 1 &&
+        state.visited.size === 0 &&
+        state.entry.videoId &&
+        focusedMediaIndex < 0
+      )
+        throw new Error("Requested video unavailable");
       const orderedCandidates =
         focusedMediaIndex > 0
           ? [
@@ -206,6 +226,7 @@ export const useContentVideoQueue = (
           : candidates;
       const added = orderedCandidates.filter((item) => {
         const key = contentVideoKey(item);
+        if (excluded.current.has(key)) return false;
         if (state.seen.has(key)) return false;
         state.seen.add(key);
         return true;
@@ -265,6 +286,8 @@ export const useContentVideoQueue = (
   ]);
 
   return {
+    getWatchedVideoKeys: (currentKey: string) =>
+      Array.from(watched.current).filter((key) => key !== currentKey),
     items,
     staleInteractions,
     invalidateDiscussion: (postId: string) =>

@@ -593,9 +593,13 @@ test("fiscal hint only describes actual paid positive Stripe history without a d
     { invoice: { status: "authorized" } },
   ])
     assert.equal(shouldExplainStripeInvoice({ ...paid, ...change }), false);
-  assert.match(
+  assert.doesNotMatch(
     source("../app/app/professional/billing/components/stripe-payment-form.tsx"),
     /Após o pagamento, confirme seus dados fiscais e endereço/,
+  );
+  assert.match(
+    source("../app/app/professional/billing/components/stripe-payment-form.tsx"),
+    /terms: \{ card: "never" \}/,
   );
   assert.match(
     source("../app/app/professional/billing/components/payment-history-card.tsx"),

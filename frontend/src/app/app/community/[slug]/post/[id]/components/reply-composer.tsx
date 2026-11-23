@@ -538,6 +538,7 @@ export const ReplyComposer = ({
             "group/reels rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none dark:bg-transparent",
         )}
         data-reply-composer-appearance={appearance}
+        data-reels-composer-expanded={isReels && composerActive ? true : undefined}
         onBlur={(event) => {
           const nextTarget = event.relatedTarget;
           if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
@@ -588,8 +589,9 @@ export const ReplyComposer = ({
           </p>
         ) : null}
 
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2" data-reply-composer-row>
           <div
+            data-reply-composer-field
             className={cn(
               "relative grid min-w-0 flex-1 rounded-[24px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface",
               isReels &&
@@ -612,7 +614,9 @@ export const ReplyComposer = ({
                 selectedMedia={selectedMedia}
               />
             ) : null}
-            <FieldComponent control={hook.control} {...composerContentField} />
+            <div data-reply-composer-input>
+              <FieldComponent control={hook.control} {...composerContentField} />
+            </div>
             {selectedMedia ? (
               <ReplyMediaAttachmentControl
                 className="px-3.5 pb-3 pt-0"

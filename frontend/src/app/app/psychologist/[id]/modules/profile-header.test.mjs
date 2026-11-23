@@ -195,7 +195,8 @@ test("hero contact label has 14px text, 22px line height and 2px vertical paddin
   const hero = render(WhatsAppCta);
   const labelClasses = hero.match(/<span class="([^"]+)">Chamar no WhatsApp<\/span>/)?.[1];
   assert.ok(labelClasses);
-  assert.match(labelClasses, /text-\[14px\] font-semibold leading-\[22px\]/);
+  assert.match(labelClasses, /text-\[14px\] font-bold leading-\[22px\]/);
+  assert.match(hero, /before:inset-y-\[2px\]/);
   assert.match(labelClasses, /py-\[2px\]/);
 });
 

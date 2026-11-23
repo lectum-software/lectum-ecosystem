@@ -22,7 +22,8 @@ export const pendingLegalSet = (status?: LegalStatus | null) => {
   if (!hasCompleteLegalSet(status) || !status?.pending_document_ids.length) return null;
   const ids = new Set(status.documents.map((document) => document.id));
   if (!status.pending_document_ids.every((id) => ids.has(id))) return null;
-  return { documents: status.documents, key: legalSetKey(status.documents) };
+  const documents = status.documents.filter((doc) => status.pending_document_ids.includes(doc.id));
+  return { documents, key: legalSetKey(documents) };
 };
 
 export const selectLegalDocument = (

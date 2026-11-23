@@ -93,6 +93,14 @@ type SeoMetadataOverrides = {
 type CommunityPostSeoShareTarget = "default" | "whatsapp";
 
 type PublicCommunityPostSeo = {
+  transcripts?: {
+    video_id: string;
+    url: string;
+    title: string;
+    text: string;
+    language: string;
+    reviewed: boolean;
+  }[];
   captions?:
     | (import("@/components/video-captions/types").VideoCaptions & {
         professional: { name: string; crp: string | null; profile_url: string } | null;
