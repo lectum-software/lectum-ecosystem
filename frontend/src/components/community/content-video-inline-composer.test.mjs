@@ -171,7 +171,7 @@ test("free professional camera has visible computed contrast at mobile and deskt
   }
 });
 
-test("expanded mobile composer sits at viewport bottom with media and send below the input", async (t) => {
+test("Lectum composer overlays a stable video with camera and send beside the input", async (t) => {
   if (!process.env.PLAYWRIGHT_MODULE) return t.skip("Chrome harness not configured");
   assert.match(composer, /data-reels-composer-expanded=\{isReels && composerActive/);
   const require = createRequire(import.meta.url);
@@ -201,23 +201,33 @@ test("expanded mobile composer sits at viewport bottom with media and send below
     for (const width of [320, 390, 430, 1440]) {
       const page = await browser.newPage({ viewport: { width, height: 844 } });
       await page.setContent(`<style>${css}\n${viewerCss}\n${controls}
-        body{margin:0} .test-viewport{position:fixed;top:0;left:0;right:0;height:460px}
+        body{margin:0} .test-viewport{position:fixed;top:0;left:0;right:0;height:844px}
         .test-stage{display:flex;flex-direction:column;max-width:520px;height:100%;margin:auto;background:black}
         video{height:100%;width:100%;object-fit:cover}
         </style><div class="backdrop"></div><div class="dialog test-viewport"><div class="test-stage">
         <div class="videoViewport"><video muted playsinline src="data:video/mp4;base64,${clip}"></video></div>
-        <div class="composerSlot">${html}</div></div></div>`);
+        <div class="composerSlot"><div data-content-video-inline-composer>${html}</div></div></div>`);
       const input = page.getByRole("textbox");
+      const before = await page.locator("video").boundingBox();
       await input.focus();
       assert.equal(await input.evaluate((el) => getComputedStyle(el).fontSize), "16px");
       // This is a CSS geometry test of real server-rendered markup, not an iOS keyboard simulation.
       await page.locator("[data-reply-composer-appearance]").evaluate((el) => {
         el.setAttribute("data-reels-composer-expanded", "true");
       });
+      await page
+        .locator(".dialog")
+        .evaluate((el) => el.style.setProperty("--reels-keyboard-offset", "384px"));
+      assert.deepEqual(
+        await page.locator("video").boundingBox(),
+        before,
+        "keyboard cannot resize or move media",
+      );
       const field = await input.boundingBox();
       const colors = await page.locator("[data-reply-composer-field]").evaluate((el) => {
         const probe = document.createElement("span");
-        probe.style.backgroundColor = "var(--lectum-surface-muted)";
+        probe.style.backgroundColor =
+          "color-mix(in oklab, var(--lectum-media-control) 92%, transparent)";
         el.append(probe);
         const expected = getComputedStyle(probe).backgroundColor;
         probe.remove();
@@ -230,18 +240,14 @@ test("expanded mobile composer sits at viewport bottom with media and send below
       assert.equal(colors.background, colors.expected, JSON.stringify(colors));
       const camera = await page.locator("[data-reply-media-trigger]").boundingBox();
       const send = await page.getByRole("button", { name: "Enviar resposta" }).boundingBox();
-      const sheet = await page.locator(".composerSlot").boundingBox();
+      const sheet = await page.locator("[data-content-video-inline-composer]").boundingBox();
       assert.equal(sheet.y + sheet.height, 460);
-      assert.ok(field.height >= 64);
-      assert.ok(camera.y >= field.y + field.height, "camera is below the text area");
-      assert.ok(send.y >= field.y + field.height, "send is below the text area");
+      assert.ok(field.height >= 24);
+      assert.ok(camera.y < field.y + field.height, "camera stays beside text");
+      assert.ok(send.y < field.y + field.height, "send stays beside text");
       assert.ok(camera.x + camera.width <= send.x, "actions do not overlap");
       assert.ok(send.y + send.height <= 460);
-      assert.equal(await page.locator(".composerSlot p").isVisible(), false);
-      assert.equal(
-        await page.evaluate(() => document.elementFromPoint(10, 600).className),
-        "backdrop",
-      );
+      assert.equal(await page.locator(".composerSlot p").isVisible(), true);
       if (process.env.LECTUM_QA_SCREENSHOTS)
         await page.screenshot({
           path: path.join(
@@ -252,9 +258,10 @@ test("expanded mobile composer sits at viewport bottom with media and send below
       await page.locator("[data-reply-composer-appearance]").evaluate((el) => {
         el.removeAttribute("data-reels-composer-expanded");
       });
-      assert.ok(
-        (await input.boundingBox()).height < field.height,
-        "closing restores compact input",
+      assert.deepEqual(
+        await page.locator("video").boundingBox(),
+        before,
+        "dismiss keeps media frame",
       );
       await page.close();
     }

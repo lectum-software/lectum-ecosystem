@@ -3,6 +3,7 @@ import { Readable } from "node:stream";
 import { after, before, describe, it } from "node:test";
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import express from "express";
+import { prisma } from "@/external/prisma/client";
 import { videoStreamImportSourceToken } from "@/utils/video-stream-import-source";
 import { filesRoute } from "./filesRoute";
 import { S3 } from "./s3";
@@ -13,10 +14,12 @@ describe("public source for Cloudflare Stream import", () => {
     send: (command: unknown) => Promise<unknown>;
   };
   const originalSend = mutableS3.send.bind(S3);
+  const originalFindDeletion = prisma.account_media_deletion.findUnique;
   let baseUrl = "";
   let server: ReturnType<typeof app.listen>;
 
   before(async () => {
+    prisma.account_media_deletion.findUnique = (async () => null) as typeof originalFindDeletion;
     mutableS3.send = async (command) => {
       if (command instanceof HeadObjectCommand) {
         return {
@@ -60,6 +63,7 @@ describe("public source for Cloudflare Stream import", () => {
   });
 
   after(async () => {
+    prisma.account_media_deletion.findUnique = originalFindDeletion;
     mutableS3.send = originalSend;
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));

@@ -2920,3 +2920,7 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 346 | [TASK-346 - Primeira assinatura paga](TASK-346-subscribe-activation.md) | Concluida |
 
 | 347 | [TASK-347 - Reels, perfis e aceite parcial](TASK-347-reels-profile-release.md) | Em andamento |
+| 348 | [TASK-348 - Comentario sobreposto e perfil](TASK-348-reels-overlay-profile-preview.md) | Em andamento |
+| 349 | [TASK-349 - Reels compartilhado](TASK-349-shared-reel-experience.md) | Em andamento |
+| 350 | [TASK-350 - Capa da comunidade](TASK-350-community-cover-clean.md) | Em andamento |
+| 351 | [TASK-351 - Cards e final da publicacao](TASK-351-community-cards-post-footer.md) | Concluida localmente |

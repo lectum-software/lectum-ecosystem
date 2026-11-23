@@ -38,7 +38,7 @@ export const ProfileAvatar = ({
         "relative grid shrink-0 place-items-center overflow-hidden border-media-foreground bg-surface-muted font-extrabold text-primary shadow-lectum-soft dark:border-background",
         compact
           ? "h-9 w-9 rounded-full border-2 text-xs"
-          : "h-[76px] w-[76px] rounded-full border-[4px] text-2xl",
+          : "h-[88px] w-[88px] rounded-full border-[4px] text-2xl",
       )}
       data-profile-avatar="true"
     >
@@ -48,7 +48,7 @@ export const ProfileAvatar = ({
           className="object-cover"
           fill
           priority
-          sizes={compact ? "36px" : "76px"}
+          sizes={compact ? "36px" : "88px"}
           src={avatarSrc}
           unoptimized={avatarIsPublicMedia}
         />
@@ -95,7 +95,6 @@ export const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistPr
         unoptimized={coverImageIsPublicMedia}
         onError={() => setFailedCoverImageUrl(coverImageSrc)}
       />
-      <div className="psychologist-cover-overlay absolute inset-0" />
     </div>
   );
 };
@@ -188,7 +187,7 @@ export const ProfileHero = ({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2">
+        <div className="mt-1 grid gap-2">
           <h1 className="min-w-0 break-words text-[1.55rem] font-black leading-[1.4] tracking-normal text-foreground dark:text-foreground">
             {profile.verified ? (
               <>

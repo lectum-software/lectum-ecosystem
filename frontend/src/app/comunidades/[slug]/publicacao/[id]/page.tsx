@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { PostDetailLogic } from "@/app/app/community/[slug]/post/[id]/logic";
 import { ContentVideoHost } from "@/components/community/content-video-host";
-import { PublicReelLinks } from "@/components/community/public-reel-links";
 import { PublicReelPage } from "@/components/community/public-reel-page";
 import { PublicTranscript } from "@/components/video-captions/public-transcript";
 import { getPublicReel, type ReelQuery, reelMetadata } from "@/lib/reel-seo";
@@ -57,14 +56,13 @@ export default async function PostDetailPage({ params, searchParams }: PostDetai
   const query = await searchParams;
   if (query.reel !== undefined)
     return (
-      <ContentVideoHost>
+      <ContentVideoHost directLink>
         <PublicReelPage slug={slug} id={id} query={query} />
       </ContentVideoHost>
     );
   return (
     <>
       <PostDetailLogic forceBackToFeed />
-      <PublicReelLinks id={id} slug={slug} />
       <PublicTranscript id={id} slug={slug} />
     </>
   );

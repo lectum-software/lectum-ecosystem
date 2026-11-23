@@ -298,7 +298,7 @@ export const PostDetailLogic = ({
       navigationTheme="solidWhite"
       showHeader
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-6 text-foreground dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background text-foreground dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
         {postQuery.isLoading || postQuery.isPending ? (
           <div className="grid min-h-[70vh] place-items-center px-5">
             <LoadingState label="Carregando post" />
@@ -359,7 +359,7 @@ export const PostDetailLogic = ({
               />
             </article>
 
-            <div className="grid gap-4 px-5 pt-4 pb-36 sm:px-0 sm:pb-6">
+            <div className="grid gap-4 px-5 pt-4 pb-[calc(104px_+_var(--lectum-safe-area-bottom))] sm:px-0 sm:pb-6">
               {shareFeedback ? (
                 <InlineAlert title="Link preparado" variant="success">
                   Link copiado ou enviado para compartilhamento.

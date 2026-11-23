@@ -18,6 +18,15 @@ export function contentVideoHref(
   return url.pathname + url.search;
 }
 
+export function contentVideoShareHref(
+  entry: ContentVideoSourceEntry & { videoId: string; communitySlug: string },
+) {
+  return contentVideoHref(
+    `/comunidades/${encodeURIComponent(entry.communitySlug)}/publicacao/${encodeURIComponent(entry.postId)}`,
+    entry,
+  );
+}
+
 export function readContentVideoLink(href: string): ContentVideoSourceEntry | null {
   const url = new URL(href, "https://lectum.invalid");
   const videoId = url.searchParams.get("reel");

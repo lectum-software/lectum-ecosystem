@@ -40,6 +40,7 @@
   --lectum-border: #e2e8f0;
   --lectum-border-strong: #cbd5e1;
   --lectum-muted: #64748b;
+  --lectum-community-count: #788391;
   --lectum-subtle: #94a3b8;
   --lectum-danger: #dc2626;
   --lectum-danger-border: #fecaca;
@@ -104,6 +105,7 @@
   --lectum-border: #273349;
   --lectum-border-strong: #3a4a63;
   --lectum-muted: #94a3b8;
+  --lectum-community-count: var(--lectum-muted);
   --lectum-subtle: #6b7a90;
   --lectum-danger: #f87171;
   --lectum-danger-border: #7f1d1d;
@@ -300,6 +302,7 @@ span:empty + [data-original-post-community] {
   --color-border: var(--lectum-border);
   --color-border-strong: var(--lectum-border-strong);
   --color-muted: var(--lectum-muted);
+  --color-community-count: var(--lectum-community-count);
   --color-subtle: var(--lectum-subtle);
   --color-danger: var(--lectum-danger);
   --color-danger-border: var(--lectum-danger-border);

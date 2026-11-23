@@ -23,7 +23,6 @@ export function PublicReelPlayer({
     <video
       ref={videoRef}
       className="h-full w-full object-contain"
-      controls
       playsInline
       preload="metadata"
       src={open ? undefined : src}

@@ -37,7 +37,10 @@ test("detalhe e arvore reservam espaco inferior para o composer fixo", () => {
   const detailSource = readSource("../app/app/community/[slug]/post/[id]/views/post-detail.tsx");
   const threadSource = readSource("../app/app/community/[slug]/post/[id]/views/reply-thread.tsx");
 
-  assert.match(detailSource, /pb-36 sm:px-0 sm:pb-6/);
+  assert.match(
+    detailSource,
+    /pb-\[calc\(104px_\+_var\(--lectum-safe-area-bottom\)\)\] sm:px-0 sm:pb-6/,
+  );
   assert.match(threadSource, /pb-36 sm:px-0 sm:pb-6/);
 });
 

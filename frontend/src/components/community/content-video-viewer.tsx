@@ -3,7 +3,6 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { useExpandedVideoViewport } from "@/components/ui/vertical-video-player-content-expansion";
 import { useModalMediaSuspension } from "@/hooks/use-modal-media-suspension";
 import { useModalScrollLock } from "@/hooks/use-modal-scroll-lock";
 import { resolvePublicMediaUrl } from "@/utils/media";
@@ -20,6 +19,7 @@ import { ContentVideoSlide } from "./content-video-slide";
 import styles from "./content-video-viewer.module.css";
 import { contentVideoKey, useContentVideoQueue } from "./use-content-video-queue";
 import { useContentVideoScroll } from "./use-content-video-scroll";
+import { useReelsViewport } from "./use-reels-viewport";
 
 export const ContentVideoViewer = ({
   initial,
@@ -47,7 +47,7 @@ export const ContentVideoViewer = ({
   const root = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
-  const viewport = useExpandedVideoViewport(true);
+  const viewport = useReelsViewport();
   const { feedRef, onScroll, scrollTo } = useContentVideoScroll({
     index: queue.index,
     count: Math.max(1, queue.items.length + (queue.ended ? 0 : 1)),
@@ -137,6 +137,7 @@ export const ContentVideoViewer = ({
         style={
           {
             "--viewer-height": viewport ? `${viewport.height}px` : "100dvh",
+            "--reels-keyboard-offset": `${viewport?.keyboardOffset ?? 0}px`,
             ...(viewport
               ? {
                   top: viewport.top,

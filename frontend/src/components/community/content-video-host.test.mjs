@@ -64,7 +64,8 @@ const harness = `
     return React.createElement('button', {onClick: () => launch({initial:{postId:'p', videoId:'b'}})}, 'Open');
   }
   createRoot(document.getElementById('root')).render(
-    React.createElement(ContentVideoHost, null,
+    React.createElement(ContentVideoHost, {directLink: location.pathname === '/shared'},
+      location.pathname === '/shared' ? React.createElement(Launch) :
       React.createElement(ContentVideoScope, {mode:'feed', entries:[]}, React.createElement(Launch)))
   );
 `;
@@ -132,6 +133,15 @@ test("host restores external links, refresh, back/forward and closes without los
       "/comunidades/geral/publicacao/p",
     );
     assert.deepEqual(errors, []);
+    await page.goto("https://reels.test/shared?reel=b&reelPost=p");
+    await page.waitForSelector("output");
+    await page.evaluate(() =>
+      history.replaceState({ ...history.state, lectumReelScope: "feed" }, "", location.href),
+    );
+    await page.reload();
+    await page.waitForSelector("output");
+    assert.equal(await page.locator("output").count(), 1);
+    assert.equal(await page.locator("output").textContent(), "b");
   } finally {
     await browser.close();
   }

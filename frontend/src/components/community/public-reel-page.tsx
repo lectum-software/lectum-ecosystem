@@ -49,6 +49,9 @@ export async function PublicReelPage({
           }
         />
       </div>
+      <span role="status" className="absolute bottom-8 text-media-foreground">
+        Abrindo Reels...
+      </span>
       <Link
         href={data.post_path}
         aria-label="Voltar à publicação"
