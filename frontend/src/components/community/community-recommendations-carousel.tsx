@@ -67,7 +67,7 @@ export const CommunityRecommendationsCarousel = ({
                       <h3 className="flex h-9 shrink-0 items-center justify-center text-[14px] font-semibold leading-[18px] text-foreground [overflow-wrap:anywhere]">
                         <span className="line-clamp-2">{community.name}</span>
                       </h3>
-                      <p className="shrink-0 text-xs font-medium leading-4 text-[#788391] dark:text-muted-foreground">
+                      <p className="shrink-0 text-xs font-medium leading-4 text-community-count">
                         {`${postsCount.toLocaleString("pt-BR")} ${postsCount === 1 ? "post" : "posts"}`}
                       </p>
                     </div>
