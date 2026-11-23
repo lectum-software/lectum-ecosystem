@@ -297,7 +297,9 @@ test("global content puts question above media and reply text beside its communi
         }
         if (excerpt) assert.ok(html.indexOf(excerpt) > media && html.indexOf(excerpt) < community);
         assert.match(html, /grid-cols-\[88px_minmax\(0,1fr\)\]/);
-        assert.equal((html.match(/lucide-download/g) ?? []).length, 2);
+        assert.match(html, /Opções de download/);
+        assert.match(html, /Legenda/);
+        assert.match(html, /lucide-id-card/);
         assert.doesNotMatch(html, /lucide-image-down/);
       }
     }

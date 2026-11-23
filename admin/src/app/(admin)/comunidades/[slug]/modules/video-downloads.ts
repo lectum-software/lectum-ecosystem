@@ -26,7 +26,7 @@ export type ContentVideoDownloadTarget = {
   targetType: AdminCommunityVideoDownloadTargetType;
 };
 
-type DownloadAction = "art" | "original";
+type DownloadAction = "art" | "captions" | "original";
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -106,6 +106,7 @@ const resolveOriginalVideoDownload = async (
 
 const resolveShareRenderJob = async (
   target: ContentVideoDownloadTarget,
+  overlayMode: "captions" | "identification",
 ): Promise<AdminCommunityContentVideoArtRenderJob> => {
   const startedAt = Date.now();
   let delay = SHARE_VIDEO_RENDER_INITIAL_DELAY_MS;
@@ -113,11 +114,12 @@ const resolveShareRenderJob = async (
     target.communityId,
     target.targetType,
     target.targetId,
+    overlayMode,
   );
 
   while (job.status === "queued" || job.status === "processing") {
     if (Date.now() - startedAt > SHARE_VIDEO_RENDER_TIMEOUT_MS) {
-      throw new Error("O vídeo com arte ainda está sendo preparado. Tente novamente em instantes.");
+      throw new Error("O vídeo ainda está sendo preparado. Tente novamente em instantes.");
     }
 
     await wait(delay);
@@ -131,7 +133,7 @@ const resolveShareRenderJob = async (
   }
 
   if (job.status !== "completed") {
-    throw new Error("Não foi possível preparar o vídeo com arte agora. Tente novamente.");
+    throw new Error("Não foi possível preparar o vídeo agora. Tente novamente.");
   }
 
   return job;
@@ -162,31 +164,40 @@ export const useContentVideoDownloads = () => {
     }
   }, []);
 
-  const downloadWithArt = useCallback(async (target: ContentVideoDownloadTarget) => {
-    const key = targetKey(target, "art");
-    const toastId = toast.loading("Preparando vídeo com a arte Lectum...");
-    setPendingKey(key);
+  const downloadRendered = useCallback(
+    async (target: ContentVideoDownloadTarget, action: "art" | "captions") => {
+      const key = targetKey(target, action);
+      const description = action === "captions" ? "com legenda" : "com identificação Lectum";
+      const toastId = toast.loading(`Preparando vídeo ${description}...`);
+      setPendingKey(key);
 
-    try {
-      const job = await resolveShareRenderJob(target);
-      const file = await downloadAdminCommunityContentVideoArtRenderJobFile(
-        target.communityId,
-        target.targetType,
-        target.targetId,
-        job.job_id,
-      );
-      downloadFileBlob(file.blob, file.file_name, ".mp4");
-      toast.success("Download do vídeo com arte iniciado.", { id: toastId });
-    } catch (error) {
-      toast.error(resolveDownloadError(error), { id: toastId });
-    } finally {
-      setPendingKey((current) => (current === key ? null : current));
-    }
-  }, []);
+      try {
+        const job = await resolveShareRenderJob(
+          target,
+          action === "captions" ? "captions" : "identification",
+        );
+        const file = await downloadAdminCommunityContentVideoArtRenderJobFile(
+          target.communityId,
+          target.targetType,
+          target.targetId,
+          job.job_id,
+        );
+        downloadFileBlob(file.blob, file.file_name, ".mp4");
+        toast.success(`Download do vídeo ${description} iniciado.`, { id: toastId });
+      } catch (error) {
+        toast.error(resolveDownloadError(error), { id: toastId });
+      } finally {
+        setPendingKey((current) => (current === key ? null : current));
+      }
+    },
+    [],
+  );
 
   return {
     downloadOriginal,
-    downloadWithArt,
+    downloadWithArt: (target: ContentVideoDownloadTarget) => downloadRendered(target, "art"),
+    downloadWithCaptions: (target: ContentVideoDownloadTarget) =>
+      downloadRendered(target, "captions"),
     isPending,
   };
 };

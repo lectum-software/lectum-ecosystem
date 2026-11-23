@@ -8,6 +8,20 @@ const shareRenderServiceSource = () =>
   readFile("src/modules/api/private/posts/use-cases/services/share-render.ts", "utf8");
 
 describe("post share render media selection", () => {
+  it("admin usa legendas persistidas e o mesmo render autorizado sem fallback", async () => {
+    const source = await readFile(
+      "src/modules/api/admin/private/communities/manage/use-cases/services/content-video-downloads.ts",
+      "utf8",
+    );
+    assert.match(source, /shareRenderCaptionOptions.safeParse\(data.b \?\? \{\}\)/);
+    assert.match(source, /resolveAdminShareRenderTarget\(data\)/);
+    assert.match(source, /videoAssetIdFromReference\(resolved.target.mediaUrl\)/);
+    assert.match(source, /await readCaptions\(assetId\)/);
+    assert.match(source, /if \(!caption\) return invalidShareVideo\(\)/);
+    assert.match(source, /resolved.target.captionCues = caption.cues/);
+    assert.match(source, /startResolvedShareRenderArtifactJob\(resolved\)/);
+    assert.doesNotMatch(source, /data.b\?\.captionCues/);
+  });
   it("usa o primeiro item de midia do post quando ele e video", () => {
     assert.equal(
       selectSharePostVideoMediaUrl({

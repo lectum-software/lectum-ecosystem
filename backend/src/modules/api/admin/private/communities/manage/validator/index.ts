@@ -385,6 +385,7 @@ export const contentDetailSchema: IValidatorRequest = {
 
 export const contentVideoDownloadSchema: IValidatorRequest = {
   params: [communityParam, targetTypeParam, targetIdParam],
+  body: [{ key: "overlayMode", method: "string", optional: true, max: 20 }],
 };
 
 export const contentVideoDownloadJobSchema: IValidatorRequest = {
