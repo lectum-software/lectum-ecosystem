@@ -15,7 +15,7 @@ antigo. A numeracao deste checkout preserva as tasks de marketing ja publicadas.
 - [x] Remover textos solicitados no checkout e aceitar documentos pendentes.
 - [x] Checks e builds completos do lote atualizado.
 - [x] Smoke local com dependencias reais isoladas.
-- [ ] PR revisado e backend publicado antes do frontend.
+- [x] PR revisado e backend publicado antes do frontend.
 - [ ] Smoke e versoes de producao confirmados.
 
 Producao inicial: backend0.1.841, frontend0.1.840, health/ready HTTP200.
@@ -33,3 +33,9 @@ local4140 validaram aceite inicial/parcial, preservacao do aceite anterior,
 listagem/detalhe de video publico e bloqueio apos exclusao. Registros de teste
 removidos; documentos legais do teste revertidos por transacao. Nenhum envio
 Meta, pagamento ou mutacao de dados produtivos durante as validacoes.
+
+PR190 publicou backend0.1.842, confirmado por ping/health/ready. PR191 publicou
+frontend0.1.843. Smoke confirmou HTML, transcricao e reproducao, mas revelou
+ausencia do host interativo nas rotas publicas de reel. Correcao complementar
+monta ContentVideoHost nas duas entradas e mantem o fallback SSR indexavel.
+O smoke final exige o dialogo de reels, nao apenas um elemento video visivel.

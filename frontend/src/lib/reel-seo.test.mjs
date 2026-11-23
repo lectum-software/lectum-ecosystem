@@ -19,6 +19,16 @@ const { getPublicReel, reelMetadata, reelVideoObject, reelPlaybackUrl } = await 
 const { PublicReelPage } = await import("../components/community/public-reel-page.tsx");
 const { PublicTranscript } = await import("../components/video-captions/public-transcript.tsx");
 
+test("both public reel entry routes mount the interactive host around the server fallback", () => {
+  for (const suffix of ["page.tsx", "resposta/[replyId]/page.tsx"]) {
+    const source = readFileSync(
+      new URL(`../app/comunidades/[slug]/publicacao/[id]/${suffix}`, import.meta.url),
+      "utf8",
+    );
+    assert.match(source, /<ContentVideoHost>\s*<PublicReelPage[^>]+\/>\s*<\/ContentVideoHost>/);
+  }
+});
+
 test("post SSR includes every public transcript in JSON-LD without new visible text", async (t) => {
   const transcripts = Array.from({ length: 103 }, (_, index) => ({
     video_id: `v${index}`,
