@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PostReplyThreadLogic } from "@/app/app/community/[slug]/post/[id]/logic";
 import { ContentVideoHost } from "@/components/community/content-video-host";
+import { PublicPostHydration } from "@/components/community/public-post-hydration";
 import { PublicReelPage } from "@/components/community/public-reel-page";
 import { PublicTranscript } from "@/components/video-captions/public-transcript";
 import { getPublicReel, type ReelQuery, reelMetadata } from "@/lib/reel-seo";
@@ -51,7 +52,9 @@ export default async function PostReplyThreadPage({
     );
   return (
     <>
-      <PostReplyThreadLogic forceBackToFeed />
+      <PublicPostHydration id={id} slug={slug} replyId={replyId}>
+        <PostReplyThreadLogic forceBackToFeed />
+      </PublicPostHydration>
       <PublicTranscript id={id} slug={slug} replyId={replyId} />
     </>
   );

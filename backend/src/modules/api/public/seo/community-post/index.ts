@@ -6,6 +6,7 @@ import { showPostValidator, showReelValidator, showReplyValidator } from "./vali
 const routes = Router();
 
 routes.get("/:slug/:id/videos/:videoId/thumbnail", showReelValidator, showReel);
+routes.get("/:slug/:id/videos/:videoId/content", showReelValidator, showReel);
 routes.get("/:slug/:id/videos/:videoId", showReelValidator, showReel);
 routes.get("/:slug/:id/videos", showPostValidator, listReels);
 

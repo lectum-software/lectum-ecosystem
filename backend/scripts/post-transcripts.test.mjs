@@ -7,6 +7,12 @@ function service(pages, unavailable = new Set(), broken = false) {
   const queries = [],
     reads = [];
   const dependencies = {
+    "@/infra/video-stream/reference": { videoAssetIdFromReference: () => null },
+    "@/modules/video-assets/service": {
+      authorizePublicVideoAssetPlayback: async () => {
+        throw new Error("Unexpected stream read");
+      },
+    },
     "@/infra/database/prisma": {
       default: {
         post_reply: {
@@ -46,8 +52,19 @@ function service(pages, unavailable = new Set(), broken = false) {
   }, exports);
   return { ...exports, queries, reads };
 }
-const video = (id) => ({ id, title: id, media_type: "video", media_url: `asset:${id}` });
+const video = (id) => ({
+  id,
+  title: id,
+  media_type: "video",
+  media_url: `asset:${id}`,
+  createdAt: new Date("2026-11-20T12:00:00Z"),
+  content: `Reply ${id}`,
+  thumbnail_url: "https://cdn.test/poster.jpg",
+});
 const post = {
+  createdAt: new Date("2026-11-19T12:00:00Z"),
+  content: "Full original post",
+  thumbnail_url: "https://cdn.test/poster.jpg",
   title: "Original post",
   media_type: "video",
   media_url: "asset:legacy",
@@ -59,6 +76,10 @@ test("all media and all reply pages are included, with no 30-item truncation", a
   const data = await api.readPostTranscripts("post", "general", post);
   assert.equal(data.length, 103);
   assert.equal(data.at(-1).text, "Transcript asset:nested");
+  assert.equal(data.at(-1).published_at, "2026-11-20T12:00:00.000Z");
+  assert.equal(data.at(-1).description, "Reply nested");
+  assert.match(data.at(-1).thumbnail_path, /videos\/nested\/thumbnail$/);
+  assert.match(data.at(-1).content_path, /videos\/nested\/content$/);
   assert.equal(data.at(-1).url, "/comunidades/general/publicacao/post/resposta/nested");
   assert.equal(api.queries[1].cursor.id, "r99");
   assert.equal(api.queries[1].skip, 1);

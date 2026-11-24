@@ -2928,3 +2928,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 353 | [TASK-353 - Downloads de video no admin](TASK-353-admin-video-downloads.md) | Em andamento |
 | 354 | [TASK-354 - Analise de experiencia](TASK-354-clarity-local.md) | Em andamento |
 | 355 | [TASK-355 - Email de nova resposta](TASK-355-reply-email.md) | Concluida localmente |
+| 356 | [TASK-356 - Conteudo publico no HTML](TASK-356-public-post-seo.md) | Em andamento |

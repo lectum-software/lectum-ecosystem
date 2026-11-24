@@ -40,14 +40,25 @@ test("post SSR includes every public transcript in JSON-LD without new visible t
     text: index === 102 ? "</script><script>unsafe</script>" : `Transcript ${index}`,
     language: "pt",
     reviewed: false,
+    published_at: "2026-11-20T12:00:00Z",
+    description: `Reply ${index}`,
+    thumbnail_path: `/api/public/seo/community-post/general/post/videos/v${index}/thumbnail`,
+    content_path: `/api/public/seo/community-post/general/post/videos/v${index}/content`,
   }));
   setup(t, { captions: null, transcripts });
   const html = renderToStaticMarkup(await PublicTranscript({ id: "post", slug: "general" }));
   const data = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
   assert.equal(data["@graph"].length, 103);
+  assert.equal(data["@graph"][0].uploadDate, transcripts[0].published_at);
+  assert.match(data["@graph"][0].thumbnailUrl[0], /^https:\/\/api.lectum.com.br\//);
+  assert.match(data["@graph"][0].contentUrl, /\/content$/);
   assert.equal(data["@graph"][102].transcript, transcripts[102].text);
   assert.match(data["@graph"][102].url, /resposta\/r102$/);
   assert.doesNotMatch(html, /<p|<section|<details|<script>unsafe/);
+});
+test("incomplete video metadata from an older backend never emits invalid VideoObject", async (t) => {
+  setup(t, { transcripts: [{ video_id: "v", text: "Transcript", title: "Video" }] });
+  assert.equal(renderToStaticMarkup(await PublicTranscript({ id: "post", slug: "general" })), "");
 });
 test("post SSR preserves existing first-video disclosure with an older backend", async (t) => {
   setup(t, { captions: { reviewed: false, cues: [{ text: "Existing transcript" }] } });

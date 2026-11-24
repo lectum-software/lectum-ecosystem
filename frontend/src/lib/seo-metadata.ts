@@ -100,6 +100,10 @@ type PublicCommunityPostSeo = {
     text: string;
     language: string;
     reviewed: boolean;
+    published_at?: string;
+    description?: string;
+    thumbnail_path?: string | null;
+    content_path?: string;
   }[];
   captions?:
     | (import("@/components/video-captions/types").VideoCaptions & {

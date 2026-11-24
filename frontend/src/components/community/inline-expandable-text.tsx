@@ -132,6 +132,7 @@ export const InlineExpandableText = ({
   const textContent = (
     <p className={cn("whitespace-pre-line", className)}>
       {visibleText}
+      {!expanded && truncated ? <span hidden>{text.slice(preview.length)}</span> : null}
       {truncated ? (
         <>
           {" "}

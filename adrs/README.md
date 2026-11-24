@@ -801,3 +801,4 @@ Formato recomendado:
 - [ADR-0717 — Downloads administrativos com legenda](0717-admin-video-caption-download.md)
 - [ADR-0718 — Clarity com liberacao explicita](0718-clarity-local-gates.md)
 - [ADR-0719 — Email para respostas diretas](0719-reply-email.md)
+- [ADR-0720 — Hidratar a interface publica de publicacoes](0720-public-post-ssr.md)

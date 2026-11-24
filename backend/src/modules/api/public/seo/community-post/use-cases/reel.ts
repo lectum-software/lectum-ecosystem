@@ -64,6 +64,7 @@ export async function readPublicReel(slug: string, postId: string, videoId: stri
     published_at: (reply?.createdAt ?? post.createdAt).toISOString(),
     hls_url: playbackUrl,
     content_url: assetId ? null : video.media_url,
+    content_path: `/api/public/seo/community-post/${encodeURIComponent(slug)}/${encodeURIComponent(postId)}/videos/${encodeURIComponent(videoId)}/content`,
     thumbnail_url: thumbnailUrl,
     thumbnail_path: thumbnailUrl
       ? `/api/public/seo/community-post/${encodeURIComponent(slug)}/${encodeURIComponent(postId)}/videos/${encodeURIComponent(videoId)}/thumbnail`
@@ -81,6 +82,7 @@ export async function showReel(req: Request, res: Response) {
       String(req.params.videoId),
     );
     if (!data) return send(res, { status: 404, ...error("not_found", { gender: "a" }) });
+    if (req.path.endsWith("/content")) return res.redirect(302, data.hls_url);
     if (req.path.endsWith("/thumbnail")) {
       if (!data.thumbnail_url)
         return send(res, { status: 404, ...error("not_found", { gender: "a" }) });
