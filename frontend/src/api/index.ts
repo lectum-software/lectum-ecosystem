@@ -1,7 +1,7 @@
 import axios, { AxiosHeaders } from "axios";
-
+import { isAnonymousFeedRead } from "@/api/anonymous-feed-read";
 import { applyStoredBearerFallback, USER_COOKIE_AUTH_HEADERS } from "@/api/auth-cookie";
-import { getBearerToken } from "@/hooks/cookies/token";
+import { getBearerToken, getToken } from "@/hooks/cookies/token";
 import { fingerprint } from "@/utils/fingerprint";
 import { getPublicApiSource } from "@/utils/public-asset-sources";
 
@@ -32,7 +32,14 @@ const api = axios.create({
 api.interceptors.request.use(async (config) => {
   const headers = AxiosHeaders.from(config.headers);
   const token = getBearerToken();
-  const device = await fingerprint();
+  const anonymousFeedRead = isAnonymousFeedRead({
+    method: config.method,
+    url: config.url,
+    hasSession: Boolean(getToken() || headers.has("Authorization") || config.auth),
+  });
+  // Do not accidentally send an HttpOnly session without its device binding.
+  if (anonymousFeedRead) config.withCredentials = false;
+  const device = anonymousFeedRead ? null : await fingerprint();
 
   if (device) headers.set("x-device", device);
   applyStoredBearerFallback(headers, token);

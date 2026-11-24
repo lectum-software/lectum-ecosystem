@@ -53,3 +53,4 @@ test("diagnóstico distingue HTTP real do fallback público sem resposta", () =>
   for (const status of [null, "503", 0, -1, 600, Infinity])
     assert.equal(getApiErrorHttpStatus({ response: { status } }), 0);
 });
+import "./anonymous-feed-read.test.mjs";

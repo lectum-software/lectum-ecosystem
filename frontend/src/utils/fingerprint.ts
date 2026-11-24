@@ -1,7 +1,4 @@
-import FingerprintJS, {
-  type GetResult,
-  type UnknownComponents,
-} from "@fingerprintjs/fingerprintjs";
+import type { GetResult, UnknownComponents } from "@fingerprintjs/fingerprintjs";
 
 const STABLE_COMPONENT_KEYS: (keyof GetResult["components"])[] = [
   "platform",
@@ -42,7 +39,10 @@ const resolveFingerprint = async (): Promise<string | null> => {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
   try {
-    const fingerprintResult = FingerprintJS.load().then((agent) => agent.get());
+    const fingerprintModule = import("@fingerprintjs/fingerprintjs");
+    const fingerprintResult = fingerprintModule.then(({ default: FingerprintJS }) =>
+      FingerprintJS.load().then((agent) => agent.get()),
+    );
     const timeoutResult = new Promise<never>((_, reject) => {
       timeout = setTimeout(() => reject(new Error("Fingerprint timeout")), FINGERPRINT_TIMEOUT_MS);
     });
@@ -57,6 +57,7 @@ const resolveFingerprint = async (): Promise<string | null> => {
       return acc;
     }, {});
 
+    const { default: FingerprintJS } = await fingerprintModule;
     return FingerprintJS.hashComponents(componentsToHash);
   } catch {
     return fallbackDeviceId();

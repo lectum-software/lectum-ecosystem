@@ -2932,3 +2932,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 357 | [TASK-357 - Sitemaps dinamicos](TASK-357-dynamic-sitemaps.md) | Concluida localmente |
 | 358 | [TASK-358 - Capa real de videos](TASK-358-video-share-thumbnail.md) | Concluida localmente |
 | 359 | [TASK-359 - Transcricao unica no post](TASK-359-single-post-transcript.md) | Concluida localmente |
+| 360 | [TASK-360 - Carregamento inicial do feed](TASK-360-home-loading-performance.md) | Concluida localmente |

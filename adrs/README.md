@@ -805,3 +805,4 @@ Formato recomendado:
 - [ADR-0721 — Catalogo publico paginado para sitemaps](0721-dynamic-sitemaps.md)
 - [ADR-0722 — Capa publica no compartilhamento de videos](0722-video-share-thumbnail.md)
 - [ADR-0723 — Transcricao unica dentro do post](0723-single-post-transcript.md)
+- [ADR-0724 — Carregamento inicial do feed](0724-home-loading-performance.md)

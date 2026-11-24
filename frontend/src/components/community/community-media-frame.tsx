@@ -446,6 +446,7 @@ export const CommunityMediaBlock = ({
         <div className={frameClassName}>
           <div className="relative w-full">
             <VerticalVideoPlayer
+              deferPoster={enableFeedAutoplay}
               bottomOverlay={visibleVideoContact}
               className={cn(
                 "w-full border-border shadow-none",
