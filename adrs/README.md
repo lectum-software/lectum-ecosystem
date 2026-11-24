@@ -802,3 +802,4 @@ Formato recomendado:
 - [ADR-0718 — Clarity com liberacao explicita](0718-clarity-local-gates.md)
 - [ADR-0719 — Email para respostas diretas](0719-reply-email.md)
 - [ADR-0720 — Hidratar a interface publica de publicacoes](0720-public-post-ssr.md)
+- [ADR-0721 — Catalogo publico paginado para sitemaps](0721-dynamic-sitemaps.md)
