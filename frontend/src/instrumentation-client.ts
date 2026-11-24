@@ -1,3 +1,4 @@
+import "./utils/zod-csp";
 import * as Sentry from "@sentry/nextjs";
 import { createSentryOptions } from "./utils/sentry-policy";
 

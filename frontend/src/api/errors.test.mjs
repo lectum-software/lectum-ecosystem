@@ -54,3 +54,4 @@ test("diagnóstico distingue HTTP real do fallback público sem resposta", () =>
     assert.equal(getApiErrorHttpStatus({ response: { status } }), 0);
 });
 import "./anonymous-feed-read.test.mjs";
+import "../../scripts/zod-csp.test.mjs";
