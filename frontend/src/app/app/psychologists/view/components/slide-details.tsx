@@ -10,7 +10,7 @@ import { TestimonialsButton } from "@/components/reviews/testimonials-sheet";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaUrl } from "@/utils/media";
 import { formatDisplayName, formatProfileTitle, getInitials } from "../../modules/profile-format";
 import type { PsychologistsViewModel } from "../types";
 import type { PsychologistSlideView } from "./slide-model";
@@ -241,7 +241,7 @@ export const PsychologistSlideDetails = ({
                     fill
                     sizes={`${metrics.actionAvatarSize}px`}
                     src={resolvePublicMediaUrl(psychologist.avatar) ?? ""}
-                    unoptimized={isPublicMediaUrl(psychologist.avatar)}
+                    unoptimized={resolvePublicMediaUrl(psychologist.avatar)?.startsWith("http:")}
                   />
                 ) : (
                   <span className="grid h-full w-full place-items-center rounded-full bg-surface-muted text-[10px] font-semibold text-muted">

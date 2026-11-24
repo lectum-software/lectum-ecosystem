@@ -9,7 +9,7 @@ import {
 import { TestimonialsButton } from "@/components/reviews/testimonials-sheet";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaUrl } from "@/utils/media";
 import { formatDisplayName, formatProfileTitle, getInitials } from "../../modules/profile-format";
 import type { PsychologistsViewModel } from "../types";
 
@@ -230,7 +230,9 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                     fill
                     sizes="40px"
                     src={resolvePublicMediaUrl(desktopActionPsychologist.avatar) ?? ""}
-                    unoptimized={isPublicMediaUrl(desktopActionPsychologist.avatar)}
+                    unoptimized={resolvePublicMediaUrl(
+                      desktopActionPsychologist.avatar,
+                    )?.startsWith("http:")}
                   />
                 ) : (
                   getInitials(desktopActionDisplayName)

@@ -807,3 +807,4 @@ Formato recomendado:
 - [ADR-0723 — Transcricao unica dentro do post](0723-single-post-transcript.md)
 - [ADR-0724 — Carregamento inicial do feed](0724-home-loading-performance.md)
 - [ADR-0725 — Validacao compativel com CSP e descoberta publica](0725-pagespeed-csp-discovery.md)
+- [ADR-0726 — Cookies e imagens no diretorio](0726-directory-loading.md)

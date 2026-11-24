@@ -55,3 +55,4 @@ test("diagnóstico distingue HTTP real do fallback público sem resposta", () =>
 });
 import "./anonymous-feed-read.test.mjs";
 import "../../scripts/zod-csp.test.mjs";
+import "../../scripts/directory-loading.test.mjs";
