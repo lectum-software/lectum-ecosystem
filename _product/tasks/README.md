@@ -2936,3 +2936,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 361 | [TASK-361 - CSP, descoberta e acessibilidade](TASK-361-pagespeed-security-accessibility.md) | Concluida localmente |
 | 362 | [TASK-362 - Cookies e avatares no diretorio](TASK-362-directory-loading.md) | Concluida localmente |
 | 363 | [TASK-363 - Estabilidade e legibilidade do perfil](TASK-363-profile-performance.md) | Concluida localmente |
+| 364 | [TASK-364 - Isolamento e primeira capa do Reels](TASK-364-reels-isolation.md) | Em andamento |

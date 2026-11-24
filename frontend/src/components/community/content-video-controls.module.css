@@ -1,3 +1,18 @@
+.modal {
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.modal::backdrop {
+  background: var(--lectum-media-background);
+}
+.modal [class~="favorite-toggle"] {
+  min-height: 44px;
+  background: var(--lectum-media-background);
+  text-shadow: none;
+}
 .backdrop {
   position: fixed;
   inset: 0;

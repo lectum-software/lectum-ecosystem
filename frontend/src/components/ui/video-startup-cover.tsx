@@ -150,6 +150,8 @@ export function VideoStartupCover({
       src={poster}
       fill
       unoptimized
+      loading={active ? "eager" : "lazy"}
+      fetchPriority={active ? "high" : "auto"}
       sizes="(min-width: 768px) 430px, 100vw"
       className={`pointer-events-none absolute inset-0 z-0 ${contain ? "object-contain" : "object-cover"}`}
       data-video-startup-cover="true"

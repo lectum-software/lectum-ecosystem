@@ -809,3 +809,4 @@ Formato recomendado:
 - [ADR-0725 — Validacao compativel com CSP e descoberta publica](0725-pagespeed-csp-discovery.md)
 - [ADR-0726 — Cookies e imagens no diretorio](0726-directory-loading.md)
 - [ADR-0727 — Primeiro desenho do perfil](0727-profile-first-paint.md)
+- [ADR-0728 — Isolamento nativo do Reels](0728-reels-native-isolation.md)
