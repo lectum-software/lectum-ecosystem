@@ -9,6 +9,7 @@ import { LocationCapture } from "@/components/analytics/location-capture";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
 import { MobileZoomGuard } from "@/components/mobile-zoom-guard";
+import { ExperienceCapture } from "@/components/privacy/experience-capture";
 import { PrivacyMeasurementBoundary } from "@/components/privacy/measurement-boundary";
 import { PrivacyNotice } from "@/components/privacy/notice";
 import { PullToRefresh } from "@/components/pull-to-refresh";
@@ -143,6 +144,9 @@ export default function RootLayout({
                 <Socket />
                 <PwaInstallPrompt />
                 <PrivacyNotice />
+                <Suspense fallback={null}>
+                  <ExperienceCapture />
+                </Suspense>
                 <AttributionCapture />
                 <Toaster
                   containerAriaLabel="Notificações"

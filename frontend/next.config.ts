@@ -58,6 +58,11 @@ const getApiCspSources = () => {
   return [source.origin, `${socketProtocol}//${source.host}`];
 };
 
+const experiencePreview =
+  process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_EXPERIENCE_PREVIEW === "true";
+const experienceEnabled =
+  process.env.NEXT_PUBLIC_EXPERIENCE_ENABLED !== "false" &&
+  (process.env.NODE_ENV === "production" || experiencePreview);
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -73,7 +78,14 @@ const contentSecurityPolicy = [
   `frame-src ${mercadoPagoCoreCspSources.join(" ")} https://*.mercadolibre.com ${stripeFrameCspSources.join(" ")}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
-].join("; ");
+]
+  .map((directive) => {
+    if (!experienceEnabled) return directive;
+    if (directive.startsWith("script-src ")) return `${directive} https://scripts.clarity.ms`;
+    if (directive.startsWith("connect-src ")) return `${directive} https://b.clarity.ms`;
+    return directive;
+  })
+  .join("; ");
 const securityHeaders = [
   {
     key: "Content-Security-Policy",
@@ -138,6 +150,11 @@ process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",")
   });
 
 const nextConfig: NextConfig = {
+  // Keep the optional privacy preview separate from an already-running dev server.
+  distDir:
+    process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_EXPERIENCE_PREVIEW === "true"
+      ? ".next-experience-preview"
+      : ".next",
   logging: {
     // Stripe may append a client secret during bank authentication. Do not log
     // the incoming callback before the proxy strips its query parameters.

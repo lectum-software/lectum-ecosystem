@@ -1,10 +1,10 @@
 {
   "name": "frontend",
-  "version": "0.1.854",
+  "version": "0.1.855",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "test:privacy": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/components/privacy/policy.test.mjs src/components/privacy/campaign-attribution.test.mjs src/components/analytics/meta-pixel-policy.test.mjs",
+    "test:privacy": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/components/privacy/policy.test.mjs src/components/privacy/campaign-attribution.test.mjs src/components/analytics/meta-pixel-policy.test.mjs src/components/privacy/experience-policy.test.mjs src/components/privacy/experience-controller.test.mjs",
     "dev:turbo": "next dev --turbo",
     "build": "next build --webpack && node scripts/remove-production-source-maps.mjs",
     "start": "next start",
