@@ -26,7 +26,7 @@ const truncate = (value: string, maxLength: number) => {
 const compactDescription = (value?: string | null) =>
   truncate(normalizeSpaces(value), TEXT_MAX_LENGTH);
 
-const publishedPsychologistWhere = (id: string): Prisma.userWhereInput => ({
+export const publishedPsychologistWhere = (id?: string): Prisma.userWhereInput => ({
   id,
   role: "psicologo",
   active: true,
