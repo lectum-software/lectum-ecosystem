@@ -51,6 +51,7 @@
   --lectum-favorite-soft: var(--lectum-danger-soft);
   --lectum-favorite-border: var(--lectum-danger-border);
   --lectum-success: #16a34a;
+  --lectum-success-strong: #15803d;
   --lectum-success-border: #bbf7d0;
   --lectum-success-soft: #e8f8ef;
   --lectum-warning: #d97706;
@@ -113,6 +114,7 @@
   --lectum-danger-border: #7f1d1d;
   --lectum-danger-soft: #2f151b;
   --lectum-success: #4ade80;
+  --lectum-success-strong: #86efac;
   --lectum-success-border: #166534;
   --lectum-success-soft: #102a1b;
   --lectum-warning: #fbbf24;
@@ -315,6 +317,7 @@ span:empty + [data-original-post-community] {
   --color-favorite-soft: var(--lectum-favorite-soft);
   --color-favorite-border: var(--lectum-favorite-border);
   --color-success: var(--lectum-success);
+  --color-success-strong: var(--lectum-success-strong);
   --color-success-border: var(--lectum-success-border);
   --color-success-soft: var(--lectum-success-soft);
   --color-warning: var(--lectum-warning);

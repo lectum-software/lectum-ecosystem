@@ -808,3 +808,4 @@ Formato recomendado:
 - [ADR-0724 — Carregamento inicial do feed](0724-home-loading-performance.md)
 - [ADR-0725 — Validacao compativel com CSP e descoberta publica](0725-pagespeed-csp-discovery.md)
 - [ADR-0726 — Cookies e imagens no diretorio](0726-directory-loading.md)
+- [ADR-0727 — Primeiro desenho do perfil](0727-profile-first-paint.md)

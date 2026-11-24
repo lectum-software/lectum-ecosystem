@@ -25,7 +25,10 @@ export const ProfileTabs = ({
           <button
             aria-controls="profile-content"
             aria-selected={active}
-            className={cn(styles.button, active ? styles.active : styles.inactive)}
+            className={cn(
+              styles.button,
+              active ? styles.active : "text-foreground/80 hover:text-foreground",
+            )}
             id={`profile-tab-${tab.value}`}
             key={tab.value}
             onClick={() => onTabChange(tab.value)}
