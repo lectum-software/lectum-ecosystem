@@ -10,6 +10,11 @@ import { authorizedGuestTransferToken, guestTransferToken } from "./attribution-
 import { canShowPrivacyNotice, PRIVACY_NOTICE_VERSION, PRIVACY_OPEN } from "./policy";
 import { PrivacyPreferences } from "./preferences";
 import { persistPrivacyChoice, usePrivacyChoice } from "./use-choice";
+import {
+  EXPERIENCE_ENABLED,
+  persistExperienceChoice,
+  useExperienceChoice,
+} from "./use-experience-choice";
 import { usePrivacyIdentity } from "./use-identity";
 
 function visible(element: Element) {
@@ -56,6 +61,7 @@ function NoticeSession({
 }) {
   const path = usePathname();
   const choice = usePrivacyChoice(userId);
+  const experienceChoice = useExperienceChoice(userId);
   const [panel, setPanel] = useState(false);
   const [shown, setShown] = useState(false);
   const [bottom, setBottom] = useState(12);
@@ -228,11 +234,12 @@ function NoticeSession({
     }
   }, [path]);
 
-  async function save(campaigns: boolean, authorizeTransfer = false) {
+  async function save(campaigns: boolean, authorizeTransfer = false, experience?: boolean) {
     if (lock.current) return;
     lock.current = true;
     setSaving(true);
     setError(null);
+    if (EXPERIENCE_ENABLED && experience === false) persistExperienceChoice(userId, false);
     try {
       // A refusal closes local permission before attempting a network revocation.
       if (!campaigns) {
@@ -249,10 +256,17 @@ function NoticeSession({
       const expiresAt = campaigns && confirmed ? Date.parse(confirmed.expires_at ?? "") : undefined;
       if (!persistPrivacyChoice(userId, campaigns, false, expiresAt, authorizeTransfer))
         throw new Error("storage_unavailable");
+      if (
+        EXPERIENCE_ENABLED &&
+        experience !== undefined &&
+        !persistExperienceChoice(userId, experience)
+      )
+        throw new Error("storage_unavailable");
       setPanel(false);
       setShown(false);
       releaseActivePrompt("privacy");
     } catch {
+      if (EXPERIENCE_ENABLED && experience !== undefined) persistExperienceChoice(userId, false);
       if (campaigns) persistPrivacyChoice(userId, false, Boolean(userId));
       setPanel(true);
       setError(
@@ -325,6 +339,8 @@ function NoticeSession({
       )}
       {panel && (
         <PrivacyPreferences
+          experienceAvailable={EXPERIENCE_ENABLED}
+          experience={experienceChoice?.allowed ?? true}
           canTransfer={!userId || transferEligible}
           transfer={choice?.authorizeTransfer ?? !status.data?.decided}
           campaigns={choice?.campaigns ?? (status.data?.decided ? status.data.granted : true)}

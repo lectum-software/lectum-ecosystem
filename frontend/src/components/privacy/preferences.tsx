@@ -12,6 +12,7 @@ const schema = z.object({
   necessary: z.literal(true),
   campaigns: z.boolean(),
   transfer: z.boolean(),
+  experience: z.boolean(),
 });
 
 export function PrivacyPreferences({
@@ -22,11 +23,15 @@ export function PrivacyPreferences({
   onClose,
   canTransfer = false,
   transfer = false,
+  experience = true,
+  experienceAvailable = false,
 }: {
   campaigns: boolean;
   busy: boolean;
   error: string | null;
-  onSave: (campaigns: boolean, authorizeTransfer?: boolean) => Promise<void>;
+  onSave: (campaigns: boolean, authorizeTransfer?: boolean, experience?: boolean) => Promise<void>;
+  experience?: boolean;
+  experienceAvailable?: boolean;
   canTransfer?: boolean;
   transfer?: boolean;
   onClose: () => void;
@@ -36,7 +41,12 @@ export function PrivacyPreferences({
   const returnRef = useRef<HTMLElement>(null);
   const { Form, hook, formProps } = useFormList({
     schema,
-    defaultValues: { necessary: true as const, campaigns, transfer: canTransfer && transfer },
+    defaultValues: {
+      necessary: true as const,
+      campaigns,
+      transfer: canTransfer && transfer,
+      experience,
+    },
     fields: [
       {
         name: "necessary",
@@ -54,6 +64,18 @@ export function PrivacyPreferences({
         description:
           "Opcional. Compartilha com a Meta a confirmação de cadastro, clique no WhatsApp, publicação em fórum e primeira assinatura profissional paga, com data, endereço da página, identificador do navegador, endereço IP e informações do navegador e sistema operacional. Não envia nome, e-mail ou telefone. No cadastro, informa se a conta é de usuário comum ou profissional. Valor e moeda são enviados apenas na assinatura paga. Não inclui identidade do profissional contatado, tema ou conteúdo da publicação, informações clínicas ou dados do cartão. Aceite antes da ação; não há medição retroativa. Você pode recusar ou revogar nas preferências; revogar interrompe novos envios, mas não apaga dados já enviados.",
       },
+      ...(experienceAvailable
+        ? [
+            {
+              name: "experience" as const,
+              field: "switch" as const,
+              label: "Análise de experiência",
+              disabled: busy,
+              description:
+                "Opcional. Permite usar ferramentas de análise para entender cliques, rolagens e navegação nas telas públicas habilitadas, com reprodução de visitas e mapas de calor. Textos e campos são mascarados; endereços e títulos de páginas públicas podem integrar os registros. Áreas privadas e pagamentos ficam fora da análise. Sua escolha é independente da medição de campanhas e pode ser revogada aqui. A revogação interrompe novas coletas, mas não apaga dados já enviados.",
+            },
+          ]
+        : []),
       ...(canTransfer
         ? [
             {
@@ -109,7 +131,11 @@ export function PrivacyPreferences({
           className="grid gap-5"
           onSubmit={hook.handleSubmit(async (values) => {
             if (!busy)
-              await onSave(values.campaigns, canTransfer && values.campaigns && values.transfer);
+              await onSave(
+                values.campaigns,
+                canTransfer && values.campaigns && values.transfer,
+                experienceAvailable ? values.experience : undefined,
+              );
           })}
         >
           {error && (
@@ -127,7 +153,7 @@ export function PrivacyPreferences({
                 disabled={busy}
                 variant="outline"
                 type="button"
-                onClick={() => void onSave(false)}
+                onClick={() => void onSave(false, false, experienceAvailable ? false : undefined)}
               >
                 Recusar opcionais
               </Button>
@@ -136,7 +162,9 @@ export function PrivacyPreferences({
                 disabled={busy}
                 variant="outline"
                 type="button"
-                onClick={() => void onSave(true, canTransfer)}
+                onClick={() =>
+                  void onSave(true, canTransfer, experienceAvailable ? true : undefined)
+                }
               >
                 Aceitar cookies
               </Button>

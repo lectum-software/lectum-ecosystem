@@ -799,3 +799,4 @@ Formato recomendado:
 - [ADR-0715 — Cards compactos e rodape do post](0715-community-cards-post-footer.md)
 - [ADR-0716 — Teclado iOS e audio](0716-reels-ios-audio.md)
 - [ADR-0717 — Downloads administrativos com legenda](0717-admin-video-caption-download.md)
+- [ADR-0718 — Clarity com liberacao explicita](0718-clarity-local-gates.md)

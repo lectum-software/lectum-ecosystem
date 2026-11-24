@@ -5,7 +5,14 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceExtensions = new Set([".cjs", ".js", ".mjs", ".sh", ".ts", ".tsx"]);
-const ignoredSegments = new Set([".next", "coverage", "dist", "generated", "node_modules"]);
+const ignoredSegments = new Set([
+  ".next",
+  ".next-experience-preview",
+  "coverage",
+  "dist",
+  "generated",
+  "node_modules",
+]);
 // PATH is supplied by the operating system/container, not an application secret
 // or a deploy setting. Client modules are still checked separately below.
 const platformVariables = new Set(["CI", "NODE_ENV", "PATH"]);
