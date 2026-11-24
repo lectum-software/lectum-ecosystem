@@ -13,6 +13,7 @@ type Send = {
   template: string;
   type?: "transactional" | "marketing";
   messageProps: MessageProps;
+  transportTimeoutMs?: number;
 };
 
 type TemplateContext = Record<string, unknown>;
@@ -107,6 +108,7 @@ const send = async ({
   template,
   type = "transactional",
   messageProps,
+  transportTimeoutMs,
 }: Send): Promise<boolean> => {
   try {
     const user = process.env.EMAIL_API_EMAIL;
@@ -120,6 +122,13 @@ const send = async ({
 
     return await new Promise((resolve, reject) => {
       const transporter = nodemailer.createTransport({
+        ...(transportTimeoutMs
+          ? {
+              connectionTimeout: transportTimeoutMs,
+              greetingTimeout: transportTimeoutMs,
+              socketTimeout: transportTimeoutMs,
+            }
+          : {}),
         host: process.env.EMAIL_API_HOST,
         port: Number(process.env.EMAIL_API_PORT),
         secure: process.env.EMAIL_API_SECURE === "true",
