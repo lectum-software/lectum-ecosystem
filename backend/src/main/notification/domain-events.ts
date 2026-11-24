@@ -10,6 +10,7 @@ import {
   type PendingTestimonialInvitation,
 } from "./pending-testimonial-invitation";
 import { shouldReceiveNewPostNotification } from "./preferences";
+import { sendReplyEmail } from "./reply-email";
 
 type MessageKey =
   | "nova_avaliacao"
@@ -318,6 +319,7 @@ export const notifyNewPostReply = async (params: {
 
   // Triggered only by new replies, never by browsing or a retroactive campaign.
   if (recipientIds.includes(recipientId)) {
+    await sendReplyEmail({ ...params, recipientId, communitySlug });
     await notifyPendingTestimonials({
       actorId: params.actorId,
       patientId: recipientId,

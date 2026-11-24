@@ -1,4 +1,6 @@
 export type MessageProps = {
+  reply_notification?: boolean;
+  notification_footer?: string;
   not_share_code?: string;
   not_share_link?: string;
   not_registered?: string;

@@ -800,3 +800,4 @@ Formato recomendado:
 - [ADR-0716 — Teclado iOS e audio](0716-reels-ios-audio.md)
 - [ADR-0717 — Downloads administrativos com legenda](0717-admin-video-caption-download.md)
 - [ADR-0718 — Clarity com liberacao explicita](0718-clarity-local-gates.md)
+- [ADR-0719 — Email para respostas diretas](0719-reply-email.md)
