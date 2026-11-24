@@ -4,6 +4,7 @@ import prisma from "@/infra/database/prisma";
 import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type { PublicCommunityPostSeoDTO } from "../DTOs/IPublicCommunityPostSeoDTO";
+import { readPublicReel } from "./reel";
 import { readPostTranscripts } from "./transcripts";
 
 type PostSeoParams = {
@@ -16,6 +17,7 @@ type ReplySeoParams = PostSeoParams & {
 };
 
 type MediaCandidate = {
+  id?: string;
   media_type: string | null;
   media_url: string | null;
   thumbnail_url: string | null;
@@ -147,6 +149,23 @@ const firstPostMedia = (post: {
   return null;
 };
 
+const resolvePublicMediaPreview = async (
+  media: MediaCandidate | null,
+  slug: string,
+  postId: string,
+  videoId: string,
+) => {
+  const preview = resolveMediaPreview(media);
+  if (preview.mediaType !== "video") return preview;
+  const reel = await readPublicReel(slug, postId, videoId);
+  return {
+    ...preview,
+    ogImageUrl: reel?.thumbnail_path ?? null,
+    ogImageHeight: null,
+    ogImageWidth: null,
+  };
+};
+
 const notFound = (): Resolve => ({
   status: 404,
   ...error("not_found", { gender: "a" }),
@@ -211,7 +230,8 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
 
   const title = normalizeSpaces(post.title) || "Pergunta da comunidade";
   const description = compactDescription(post.content) || "Discussão pública na comunidade Lectum.";
-  const mediaPreview = resolveMediaPreview(firstPostMedia(post));
+  const media = firstPostMedia(post);
+  const mediaPreview = await resolvePublicMediaPreview(media, slug, id, media?.id ?? id);
   const ogTitle = resolveVideoOpenGraphTitle(mediaPreview.mediaType, post.author, title);
   const ogDescription = resolveVideoOpenGraphDescription(
     mediaPreview.mediaType,
@@ -333,12 +353,11 @@ export const showReply = async ({ id, replyId, slug }: ReplySeoParams): Promise<
   const description =
     compactDescription(reply.content || reply.post.content) ||
     "Discussão pública de uma resposta na comunidade Lectum.";
-  const replyMedia = resolveMediaPreview({
-    media_type: reply.media_type,
-    media_url: reply.media_url,
-    thumbnail_url: reply.thumbnail_url,
-  });
-  const postMedia = resolveMediaPreview(firstPostMedia(reply.post));
+  const replyMedia = await resolvePublicMediaPreview(reply, slug, id, replyId);
+  const postMediaItem = firstPostMedia(reply.post);
+  const postMedia = replyMedia.mediaType
+    ? resolveMediaPreview(null)
+    : await resolvePublicMediaPreview(postMediaItem, slug, id, postMediaItem?.id ?? id);
   const mediaType = replyMedia.mediaType ?? postMedia.mediaType;
   const mediaAuthor =
     replyMedia.mediaType === "video"

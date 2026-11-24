@@ -210,13 +210,21 @@ export const resolveSeoMediaUrl = (value?: string | null) => {
   const raw = normalizeMetadataUrl(value);
   if (!raw) return undefined;
 
-  if (raw.startsWith("/public/files/")) {
+  if (
+    raw.startsWith("/public/files/") ||
+    /^\/api\/public\/seo\/community-post\/[^/]+\/[^/]+\/videos\/[^/]+\/thumbnail$/.test(raw)
+  ) {
     const apiBase = apiBaseUrl();
     if (!apiBase) return undefined;
 
     try {
       const mediaUrl = new URL(raw, apiBase);
-      return mediaUrl.pathname.startsWith("/public/files/") ? mediaUrl.toString() : undefined;
+      const validPath = raw.startsWith("/public/files/")
+        ? mediaUrl.pathname.startsWith("/public/files/")
+        : mediaUrl.pathname === raw;
+      return validPath && mediaUrl.origin === new URL(apiBase).origin
+        ? mediaUrl.toString()
+        : undefined;
     } catch {
       return undefined;
     }
