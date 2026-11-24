@@ -233,11 +233,12 @@
             {{/if}}
 
             {{#if url}}
-            <p align='center'>
+            <p align='center' {{#if reply_notification}}style='margin: 38px 0 0;'{{/if}}>
               <a
                 href='{{url}}'
                 target='_blank'
                 class='button'
+                {{#if reply_notification}}style='background-color: #004df5;'{{/if}}
               >
               <span style="color: #fff !important;">
               {{#if btn_accept_invite}}
@@ -331,11 +332,18 @@
               <tbody>
                 <tr>
                   {{#if send_for}}
-                  <td>
+                  <td {{#if notification_footer}}align='center'{{/if}}>
                     <p style='color: #7e8790; margin: 0'>{{send_for}} {{system}}</p>
                   </td>
                   {{/if}}
                 </tr>
+                {{#if notification_footer}}
+                <tr>
+                  <td align='center' style='padding-top: 12px;'>
+                    <p style="font-family: 'Poppins', Arial, sans-serif; font-size: 11px; line-height: 17px; color: #6b7280; margin: 0; text-align: center;">{{notification_footer}}</p>
+                  </td>
+                </tr>
+                {{/if}}
               </tbody>
             </table>
           </td>

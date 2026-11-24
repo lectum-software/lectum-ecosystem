@@ -54,7 +54,8 @@ export const replyEmailMessage = (params: ReplyEmail, email: string) => {
         : "Sua publicação recebeu uma nova resposta. Acesse a Lectum para continuar a conversa.",
       btn_accept_invite: "Ver resposta",
       url,
-      valid_link:
+      reply_notification: true,
+      notification_footer:
         "Você pode desativar os avisos de novas respostas nas configurações de notificações da Lectum.",
       send_for: "Enviado por",
     },

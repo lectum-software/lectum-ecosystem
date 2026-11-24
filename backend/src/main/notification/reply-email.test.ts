@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { afterEach, mock, test } from "node:test";
 import type prisma from "@/infra/database/prisma";
+import { renderTemplate } from "@/modules/api/config/nodemailer/send";
 import {
   isReplyEmailAllowed,
   replyEmailId,
@@ -110,6 +112,30 @@ test("reply email respects global and legacy email opt-outs independently from p
   ]) {
     assert.equal(isReplyEmailAllowed(prefs), false);
   }
+});
+
+test("reply layout spaces the CTA and renders the small notice after the sender", () => {
+  process.env.WEB_URL = "https://lectum.example";
+  const template = readFileSync("templates/transactional.hbs", "utf8");
+  for (const parentReplyId of [null, "parent"]) {
+    const message = replyEmailMessage({ ...params, parentReplyId }, "preview@example.test");
+    assert.ok(message);
+    assert.equal("valid_link" in message.messageProps, false);
+    const html = renderTemplate(template, { ...message.messageProps, system: "Lectum" });
+    assert.match(html, /margin: 38px 0 0/);
+    assert.match(html, /background-color: #004df5/);
+    assert.match(html, /font-size: 11px; line-height: 17px/);
+    assert.ok(html.indexOf("Enviado por Lectum") < html.indexOf("Você pode desativar"));
+    assert.doesNotMatch(html, /\{\{/);
+  }
+  const otherEmail = renderTemplate(template, {
+    url: "https://lectum.example",
+    valid_link: "Existing link notice",
+  });
+  assert.doesNotMatch(otherEmail, /margin: 38px 0 0/);
+  assert.doesNotMatch(otherEmail, /background-color: #004df5/);
+  assert.doesNotMatch(otherEmail, /font-size: 11px/);
+  assert.match(otherEmail, /Existing link notice/);
 });
 
 test("atomic claim sends once under concurrent and repeated events", async () => {
