@@ -45,7 +45,10 @@ test("post SSR includes every public transcript in JSON-LD without new visible t
     thumbnail_path: `/api/public/seo/community-post/general/post/videos/v${index}/thumbnail`,
     content_path: `/api/public/seo/community-post/general/post/videos/v${index}/content`,
   }));
-  setup(t, { captions: null, transcripts });
+  setup(t, {
+    captions: { reviewed: false, cues: [{ text: "Existing transcript" }] },
+    transcripts,
+  });
   const html = renderToStaticMarkup(await PublicTranscript({ id: "post", slug: "general" }));
   const data = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
   assert.equal(data["@graph"].length, 103);
@@ -60,12 +63,10 @@ test("incomplete video metadata from an older backend never emits invalid VideoO
   setup(t, { transcripts: [{ video_id: "v", text: "Transcript", title: "Video" }] });
   assert.equal(renderToStaticMarkup(await PublicTranscript({ id: "post", slug: "general" })), "");
 });
-test("post SSR preserves existing first-video disclosure with an older backend", async (t) => {
+test("post SSR never adds a duplicate footer disclosure with an older backend", async (t) => {
   setup(t, { captions: { reviewed: false, cues: [{ text: "Existing transcript" }] } });
   const html = renderToStaticMarkup(await PublicTranscript({ id: "post", slug: "general" }));
-  assert.match(html, /Ver transcrição/);
-  assert.match(html, /Existing transcript/);
-  assert.doesNotMatch(html, /application\/ld\+json/);
+  assert.equal(html, "");
 });
 const fixture = {
   canonical_path: "/comunidades/geral/publicacao/post1?reel=video1&reelPost=post1&reelReply=reply1",
