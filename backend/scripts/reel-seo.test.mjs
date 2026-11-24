@@ -114,6 +114,7 @@ test("stream retains guest authorization and never publishes signed playback as 
   assert.deepEqual(api.calls[2], ["asset1"]);
   assert.equal(result.content_url, null);
   assert.match(result.thumbnail_path, /videos\/video1\/thumbnail$/);
+  assert.match(result.content_path, /videos\/video1\/content$/);
   assert.equal(
     await service({ stream: true, playbackStatus: 404 }).readPublicReel("geral", "post1", "video1"),
     null,
@@ -121,4 +122,23 @@ test("stream retains guest authorization and never publishes signed playback as 
   await assert.rejects(
     service({ stream: true, playbackStatus: 503 }).readPublicReel("geral", "post1", "video1"),
   );
+});
+
+test("stable content URL redirects only after public eligibility and playback authorization", async () => {
+  let redirected;
+  const response = {
+    set() {},
+    redirect: (status, url) => {
+      redirected = { status, url };
+    },
+  };
+  const request = {
+    params: { slug: "geral", id: "post1", videoId: "video1" },
+    path: "/geral/post1/videos/video1/content",
+  };
+  await service({ stream: true }).showReel(request, response);
+  assert.deepEqual(redirected, { status: 302, url: "https://stream.test/manifest.m3u8" });
+  redirected = undefined;
+  assert.equal((await service({ missingPost: true }).showReel(request, response)).status, 404);
+  assert.equal(redirected, undefined);
 });

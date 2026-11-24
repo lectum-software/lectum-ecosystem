@@ -130,10 +130,11 @@ export function TranscriptPanel({
     panel.current?.scrollIntoView({ block: "center", behavior: "instant" });
     panel.current?.focus({ preventScroll: true });
   }, [open, caption?.cues.length]);
-  if (!open || !caption?.cues.length) return null;
+  if (!caption?.cues.length) return null;
   return (
     <section
       ref={panel}
+      hidden={!open}
       tabIndex={-1}
       aria-label="Transcrição do vídeo"
       className="mt-3 border-t border-border py-4 text-sm text-foreground outline-none"

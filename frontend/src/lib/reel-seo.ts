@@ -22,6 +22,7 @@ export type PublicReel = {
   published_at: string;
   hls_url: string;
   content_url: string | null;
+  content_path?: string;
   thumbnail_url: string | null;
   thumbnail_path: string | null;
   captions: VideoCaptions | null;
@@ -106,6 +107,7 @@ export async function reelMetadata(data: PublicReel | null): Promise<Metadata> {
 
 export function reelVideoObject(data: PublicReel) {
   const { title, description, thumbnail } = reelSeoContent(data);
+  const api = getPublicApiSource();
   if (!thumbnail || !Number.isFinite(Date.parse(data.published_at))) return null;
   return {
     "@context": "https://schema.org",
@@ -115,7 +117,12 @@ export function reelVideoObject(data: PublicReel) {
     thumbnailUrl: [thumbnail],
     uploadDate: data.published_at,
     url: absoluteUrl(data.canonical_path),
-    contentUrl: data.content_url ? resolveSeoMediaUrl(data.content_url) : undefined,
+    contentUrl:
+      data.content_path && api
+        ? new URL(data.content_path, api.origin).toString()
+        : data.content_url
+          ? resolveSeoMediaUrl(data.content_url)
+          : undefined,
     transcript: data.captions?.cues.map((cue) => cue.text).join(" ") || undefined,
     inLanguage: "pt-BR",
   };
