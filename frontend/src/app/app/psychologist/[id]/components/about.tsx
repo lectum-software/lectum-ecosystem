@@ -144,7 +144,7 @@ export const ExpandableAboutText = ({
             <button
               aria-expanded={expanded}
               className={cn(
-                "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-semibold text-primary-strong [font-size:inherit] [line-height:inherit] hover:underline",
+                "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-semibold text-primary/85 [font-size:inherit] [line-height:inherit] hover:text-primary-hover",
                 moreClassName,
               )}
               onClick={toggleExpanded}
@@ -159,7 +159,7 @@ export const ExpandableAboutText = ({
         <button
           aria-expanded={expanded}
           className={cn(
-            "absolute right-0 bottom-0 cursor-pointer rounded-none border-0 bg-surface py-0 pr-0 pl-1 align-baseline font-semibold text-primary-strong [font-size:inherit] [line-height:inherit] hover:underline dark:bg-surface",
+            "absolute right-0 bottom-0 cursor-pointer rounded-none border-0 bg-surface py-0 pr-0 pl-1 align-baseline font-semibold text-primary/85 [font-size:inherit] [line-height:inherit] hover:text-primary-hover dark:bg-surface",
             moreClassName,
           )}
           onClick={toggleExpanded}

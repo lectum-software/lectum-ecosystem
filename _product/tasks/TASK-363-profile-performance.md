@@ -15,4 +15,7 @@ a ArrowRight/Home, sem overflow horizontal. Observer nao registrou layout shifts
 sem interacao nessas duas execucoes locais, sem throttling. Nao e nota Lighthouse.
 
 LCP e CLS do PageSpeed precisam de nova medicao apos publicacao autorizada.
+Revisao solicitada: azul anterior restaurado em Favoritar e ver mais/menos;
+contraste dessas acoes deixa de ser criterio de aceite, por preferencia visual
+explicita. Demais ajustes preservados.
 Nao atribuir todo o CLS ao video: o artigo identificado pode ser deslocado pelo texto acima.

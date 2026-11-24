@@ -14,7 +14,11 @@ test("profile biography clamps before asynchronous overflow measurement", () => 
   assert.match(text, /WebkitLineClamp: PROFILE_ABOUT_MAX_LINES/);
   assert.match(text, /truncated && !expanded \? \(/);
   assert.match(text, /aria-expanded=\{expanded\}/);
-  assert.doesNotMatch(text, /text-primary\/85/);
+  assert.match(text, /text-primary\/85/);
+  assert.match(
+    source("profile-favorite-button"),
+    /text-primary transition-colors hover:text-primary-hover/,
+  );
 });
 
 test("profile media optimizes HTTPS without removing local HTTP support", () => {
@@ -26,7 +30,7 @@ test("profile media optimizes HTTPS without removing local HTTP support", () => 
   assert.match(text, /text-success-strong/);
 });
 
-test("profile availability and action tokens meet text contrast in both themes", () => {
+test("profile availability token meets text contrast in both themes", () => {
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
   const colors = (name) =>
     [...css.matchAll(new RegExp(`--lectum-${name}: #(\\w{6});`, "g"))].map((match) => match[1]);
@@ -37,7 +41,7 @@ test("profile availability and action tokens meet text contrast in both themes",
     });
     return r * 0.2126 + g * 0.7152 + b * 0.0722;
   };
-  for (const token of ["success-strong", "primary-strong"]) {
+  for (const token of ["success-strong"]) {
     const foreground = colors(token);
     const background = colors("surface");
     assert.equal(foreground.length, 2);

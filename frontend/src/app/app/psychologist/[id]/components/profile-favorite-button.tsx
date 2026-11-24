@@ -34,7 +34,7 @@ export const ProfileFavoriteButton = ({
       aria-label={label}
       aria-pressed={displayedFavorited}
       className={cn(
-        "text-primary-strong transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-100",
+        "text-primary transition-colors hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-60",
         displayedFavorited ? "w-[44px] gap-0" : "w-auto",
       )}
       disabled={favoritePending || !canFavorite}
