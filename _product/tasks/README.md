@@ -2930,3 +2930,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 355 | [TASK-355 - Email de nova resposta](TASK-355-reply-email.md) | Concluida localmente |
 | 356 | [TASK-356 - Conteudo publico no HTML](TASK-356-public-post-seo.md) | Em andamento |
 | 357 | [TASK-357 - Sitemaps dinamicos](TASK-357-dynamic-sitemaps.md) | Concluida localmente |
+| 358 | [TASK-358 - Capa real de videos](TASK-358-video-share-thumbnail.md) | Concluida localmente |

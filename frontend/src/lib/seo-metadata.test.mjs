@@ -3,6 +3,33 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
+test("stable video thumbnail paths resolve against the public API", async (t) => {
+  t.mock.method(globalThis, "fetch", async () =>
+    Response.json({ success: true, data: { settings: [] } }),
+  );
+  const previous = process.env.NEXT_PUBLIC_API_URL;
+  process.env.NEXT_PUBLIC_API_URL = "https://api.lectum.com.br";
+  t.after(() => {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_API_URL;
+    else process.env.NEXT_PUBLIC_API_URL = previous;
+  });
+  const { resolveSeoMediaUrl, resolveSeoMetadata } = await import("./seo-metadata.ts");
+  const path = "/api/public/seo/community-post/general/post1/videos/video1/thumbnail";
+  assert.equal(resolveSeoMediaUrl(path), `https://api.lectum.com.br${path}`);
+  const metadata = await resolveSeoMetadata(
+    "community_post",
+    { title: "Video", description: "Video" },
+    {
+      image: path,
+    },
+  );
+  assert.equal(metadata.openGraph.images[0].url, `https://api.lectum.com.br${path}`);
+  assert.deepEqual(metadata.twitter.images, [`https://api.lectum.com.br${path}`]);
+  assert.equal(metadata.openGraph.images[0].width, undefined);
+  assert.equal(resolveSeoMediaUrl("//untrusted.invalid/image.png"), undefined);
+  assert.equal(resolveSeoMediaUrl("/public/files/../../private/image.png"), undefined);
+});
+
 const { publicCommunityOpenGraphImageHref, publicPsychologistOpenGraphImageHref } = await import(
   "../utils/public-routes.ts"
 );

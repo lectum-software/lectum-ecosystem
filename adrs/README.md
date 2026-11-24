@@ -803,3 +803,4 @@ Formato recomendado:
 - [ADR-0719 — Email para respostas diretas](0719-reply-email.md)
 - [ADR-0720 — Hidratar a interface publica de publicacoes](0720-public-post-ssr.md)
 - [ADR-0721 — Catalogo publico paginado para sitemaps](0721-dynamic-sitemaps.md)
+- [ADR-0722 — Capa publica no compartilhamento de videos](0722-video-share-thumbnail.md)
