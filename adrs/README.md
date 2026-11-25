@@ -812,3 +812,4 @@ Formato recomendado:
 - [ADR-0728 — Isolamento nativo do Reels](0728-reels-native-isolation.md)
 - [ADR-0729 — Primeiro desenho do post](0729-post-first-paint.md)
 - [ADR-0730 — Aviso compartilhado de notificacoes](0730-notification-entry.md)
+- [ADR-0731 — Visibilidade do ver mais](0731-read-more-visibility.md)
