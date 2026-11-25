@@ -42,7 +42,7 @@ import {
   getOriginalPostAuthorDisplayName,
 } from "@/utils/community-display";
 import { createLectumSharePostVideoDownloadTarget } from "@/utils/lectum-share-target";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaUrl } from "@/utils/media";
 import { isReplyTreeInteractiveTarget } from "../modules/reply-support";
 
 export const AuthorAvatar = ({
@@ -86,7 +86,6 @@ export const AuthorAvatar = ({
   }
 
   const avatarSrc = resolvePublicMediaUrl(author.avatar);
-  const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
   const displayName = getCommunityAuthorDisplayName(author);
 
   const avatar = (
@@ -103,7 +102,7 @@ export const AuthorAvatar = ({
           fill
           sizes={imageSize}
           src={avatarSrc}
-          unoptimized={avatarIsPublicMedia}
+          unoptimized={avatarSrc.startsWith("http:")}
         />
       ) : (
         getInitials(displayName)
