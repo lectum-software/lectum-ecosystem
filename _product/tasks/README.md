@@ -2940,3 +2940,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 365 | [TASK-365 - Primeiro desenho do post](TASK-365-post-first-paint.md) | Concluida localmente |
 | 366 | [TASK-366 - Ativacao na central de notificacoes](TASK-366-notification-entry.md) | Concluida localmente |
 | 367 | [TASK-367 - Visibilidade do ver mais](TASK-367-read-more-visibility.md) | Concluida localmente |
+| 368 | [TASK-368 - Manifesto runtime do adapter](TASK-368-adapter-runtime-manifest.md) | Concluida localmente |
