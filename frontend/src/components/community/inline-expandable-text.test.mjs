@@ -34,6 +34,12 @@ test("expanded text has no clamp and retains the original toggle color", () => {
   assert.match(source, /const maxHeight = lineHeightPx\(\) \* maxLines/);
 });
 
+test("measurement releases the CSS clamp so the inline toggle cannot be clipped", () => {
+  const source = readFileSync(new URL("./inline-expandable-text.tsx", import.meta.url), "utf8");
+  assert.match(source, /setMeasuredText\(text\)/);
+  assert.match(source, /expanded \|\| measuredText === text\s*\? undefined/);
+});
+
 test("post and reply avatars optimize HTTPS at their existing responsive sizes", () => {
   const source = readFileSync(
     new URL(

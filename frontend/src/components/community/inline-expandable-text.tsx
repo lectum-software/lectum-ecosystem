@@ -42,6 +42,7 @@ export const InlineExpandableText = ({
   const measureRef = useRef<HTMLParagraphElement>(null);
   const [preview, setPreview] = useState(text);
   const [truncated, setTruncated] = useState(false);
+  const [measuredText, setMeasuredText] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     const containerNode = containerRef.current;
@@ -82,6 +83,7 @@ export const InlineExpandableText = ({
       }
 
       measureNode.style.width = `${availableWidth}px`;
+      setMeasuredText(text);
       const maxHeight = lineHeightPx() * maxLines + HEIGHT_TOLERANCE_PX;
 
       if (fitsWithinMaxLines(normalizedText, maxHeight)) {
@@ -133,15 +135,16 @@ export const InlineExpandableText = ({
   }, [maxLines, moreLabel, text]);
 
   const visibleText = expanded || !truncated ? text : preview;
-  // Clamp the server HTML too, before client-side measurement inserts the toggle.
-  const collapsedTextStyle: CSSProperties | undefined = expanded
-    ? undefined
-    : {
-        display: "-webkit-box",
-        WebkitBoxOrient: "vertical",
-        WebkitLineClamp: maxLines,
-        overflow: "hidden",
-      };
+  // Only clamp before measurement: clipping the measured paragraph can hide its toggle.
+  const collapsedTextStyle: CSSProperties | undefined =
+    expanded || measuredText === text
+      ? undefined
+      : {
+          display: "-webkit-box",
+          WebkitBoxOrient: "vertical",
+          WebkitLineClamp: maxLines,
+          overflow: "hidden",
+        };
   const toggleLabel = expanded ? lessLabel : moreLabel;
   const toggleClassName =
     "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-muted/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80";
