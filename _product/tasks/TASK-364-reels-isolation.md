@@ -7,7 +7,7 @@ Builder indisponivel nesta sessao; manter layout existente e azul aprovado.
 - [x] Usar dialogo nativo e backdrop opaco no Reels.
 - [x] Priorizar somente capas ativas, mantendo vizinhas lazy.
 - [x] Verificar avatar responsivo ja otimizado na TASK-360.
-- [x] Ampliar Favoritar apenas no Reels, preservando azul.
+- [x] Preservar Favoritar original: usuario rejeitou fundo preto e ampliacao na previa.
 - [x] Validar checks, build e navegador local sem mutacoes.
 - [ ] Confirmar teclado em iPhone fisico com o usuario.
 
@@ -22,3 +22,7 @@ Frontend check e build de producao passaram. Teste visual SSR repetido apos o bu
 10/10, incluindo viewport mobile/desktop. Versao local 0.1.867.
 
 Sem push/deploy. Nao prometer nota PageSpeed nem equivalencia entre emulacao e iOS real.
+
+Revisao visual: removido somente o override do Favoritar; tamanho, espacamento,
+fundo e sombra voltam ao estilo anterior. Isolamento e prioridade de capa preservados.
+Revisao 0.1.868: 25 testes direcionados e build de producao aprovados.

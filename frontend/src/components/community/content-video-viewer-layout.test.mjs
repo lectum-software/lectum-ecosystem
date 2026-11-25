@@ -26,7 +26,7 @@ test("reels use the native top layer and an opaque keyboard backdrop", () => {
   assert.match(viewer, /onCancel=\{/);
   assert.match(controls, /\.modal::backdrop\s*\{\s*background: var\(--lectum-media-background\);/);
   assert.match(controls, /max-height: none/);
-  assert.match(controls, /\.modal \[class~="favorite-toggle"\]\s*\{[^}]*min-height: 44px;/s);
+  assert.doesNotMatch(controls, /\.modal \[class~="favorite-toggle"\]/);
   assert.match(viewer, /commentsButton.current\?\.focus\(\{ preventScroll: true \}\)/);
   assert.match(viewer, /restoreCommentsFocus.current && !panel && !syncingInteractions && active/);
   assert.match(viewer, /focused === document.body/);

@@ -16,7 +16,8 @@ Preservar viewport estavel e deslocar somente o compositor quando o teclado abre
 Remover limites nativos de tamanho/margem do dialogo para cobrir a viewport inteira.
 Capas ativas usam eager/high; capas vizinhas seguem lazy/auto. URLs assinadas continuam
 sem proxy de otimizacao. Avatar do feed ja usa sizes e otimizador HTTPS.
-Favoritar mantem azul e ganha alvo de 44px com fundo escuro no Reels, sem mudar o feed.
+Favoritar mantem azul, fundo transparente e dimensoes anteriores. A ampliacao para
+44px com fundo preto foi rejeitada pelo usuario na previa e removida, sem mudar o feed.
 
 ## Consequencias
 
