@@ -21,6 +21,7 @@ import type { ComponentType, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNotification } from "@/api/callers/notification";
 import type { notification as ApiNotification } from "@/api/generator/types";
+import { BrowserPushNotice } from "@/components/notifications/browser-push-notice";
 import { VerificationVideoNotification } from "@/components/notifications/verification-video-notification";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteListLoader } from "@/components/ui/infinite-list-loader";
@@ -538,6 +539,7 @@ export const NotificationsLogic = () => {
           title="Notificações"
         />
 
+        <BrowserPushNotice />
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-sm">
           {!hasAuthToken ? null : index.isLoading ? (
             <LoadingState className="py-10" />

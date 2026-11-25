@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CommunityRouteLogic } from "@/app/app/community/[slug]/logic";
+import { CommunityFeedLogic } from "@/app/app/community/[slug]/views/community-feed";
 import { COMMUNITY_FEED_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 import { resolveSeoMetadata } from "@/lib/seo-metadata";
 
@@ -12,5 +12,5 @@ export const generateMetadata = async (): Promise<Metadata> =>
   });
 
 export default function HomePage() {
-  return <CommunityRouteLogic />;
+  return <CommunityFeedLogic />;
 }

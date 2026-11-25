@@ -55,7 +55,6 @@ export const AuthorAvatar = ({
   }
 
   const avatarSrc = resolvePublicMediaUrl(author.avatar);
-  const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
   const displayName = getCommunityAuthorDisplayName(author);
 
   const avatarNode = (
@@ -72,7 +71,7 @@ export const AuthorAvatar = ({
           fill
           sizes={imageSize}
           src={avatarSrc}
-          unoptimized={avatarIsPublicMedia}
+          unoptimized={avatarSrc.startsWith("http:")}
         />
       ) : (
         getInitials(displayName)

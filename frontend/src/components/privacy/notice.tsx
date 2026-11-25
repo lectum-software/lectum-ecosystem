@@ -169,7 +169,8 @@ function NoticeSession({
       return;
     }
     let disposed = false;
-    let idleAt = Date.now() + 1800;
+    // Show once identity and consent are ready; defer only after user interaction.
+    let idleAt = Date.now();
     const sync = () => {
       if (disposed || panel) return;
       const navigation = document.querySelector("nav[data-fixed-bottom-recovery]");
@@ -314,7 +315,7 @@ function NoticeSession({
             )}
             <div className="mt-4 grid gap-2">
               <button
-                className="min-h-12 rounded-full bg-primary px-4 py-3 text-sm! font-extrabold! text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground disabled:opacity-60"
+                className="min-h-12 rounded-full bg-cookie-action px-4 py-3 text-sm! font-extrabold! text-primary-foreground hover:bg-cookie-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground disabled:opacity-60"
                 disabled={saving}
                 ref={noticeFocus}
                 onClick={() => void save(true, !userId || transferEligible)}

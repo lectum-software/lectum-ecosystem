@@ -24,6 +24,8 @@
 
 :root {
   --lectum-cookie-surface: #202020;
+  --lectum-cookie-action: #1766b5;
+  --lectum-cookie-action-hover: #125596;
   --background: #f6f7f8;
   --foreground: #0f172a;
   --lectum-primary: #308ce8;
@@ -49,6 +51,7 @@
   --lectum-favorite-soft: var(--lectum-danger-soft);
   --lectum-favorite-border: var(--lectum-danger-border);
   --lectum-success: #16a34a;
+  --lectum-success-strong: #15803d;
   --lectum-success-border: #bbf7d0;
   --lectum-success-soft: #e8f8ef;
   --lectum-warning: #d97706;
@@ -111,6 +114,7 @@
   --lectum-danger-border: #7f1d1d;
   --lectum-danger-soft: #2f151b;
   --lectum-success: #4ade80;
+  --lectum-success-strong: #86efac;
   --lectum-success-border: #166534;
   --lectum-success-soft: #102a1b;
   --lectum-warning: #fbbf24;
@@ -293,6 +297,8 @@ span:empty + [data-original-post-community] {
   --color-foreground: var(--foreground);
   --color-primary: var(--lectum-primary);
   --color-cookie-surface: var(--lectum-cookie-surface);
+  --color-cookie-action: var(--lectum-cookie-action);
+  --color-cookie-action-hover: var(--lectum-cookie-action-hover);
   --color-primary-strong: var(--lectum-primary-strong);
   --color-primary-foreground: var(--lectum-primary-foreground);
   --color-primary-hover: var(--lectum-primary-hover);
@@ -311,6 +317,7 @@ span:empty + [data-original-post-community] {
   --color-favorite-soft: var(--lectum-favorite-soft);
   --color-favorite-border: var(--lectum-favorite-border);
   --color-success: var(--lectum-success);
+  --color-success-strong: var(--lectum-success-strong);
   --color-success-border: var(--lectum-success-border);
   --color-success-soft: var(--lectum-success-soft);
   --color-warning: var(--lectum-warning);
@@ -338,7 +345,7 @@ span:empty + [data-original-post-community] {
 html {
   min-height: 100%;
   font-size: 15px;
-  touch-action: pan-x pan-y;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 @media (min-width: 768px) {
@@ -353,7 +360,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
-  touch-action: pan-x pan-y;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 html.lectum-pull-to-refresh-enabled,

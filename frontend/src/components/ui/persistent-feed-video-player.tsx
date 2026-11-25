@@ -330,6 +330,8 @@ export function PersistentFeedVideo(props: PlayerProps) {
           alt=""
           fill
           unoptimized
+          loading={props.active ? "eager" : "lazy"}
+          fetchPriority={props.active ? "high" : "auto"}
           sizes="(min-width: 768px) 430px, 100vw"
           src={playback.poster}
           className="pointer-events-none object-cover"

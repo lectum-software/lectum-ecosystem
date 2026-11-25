@@ -44,7 +44,7 @@ export const ContentVideoViewer = ({
   const conversion = useProgressiveConversion();
   const queue = useContentVideoQueue(initial, source, watchedVideoKeys);
   useContentVideoDiscussionChanges(queue.invalidateDiscussion);
-  const root = useRef<HTMLDivElement | null>(null);
+  const root = useRef<HTMLDialogElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
   const viewport = useReelsViewport();
@@ -69,11 +69,15 @@ export const ContentVideoViewer = ({
   };
   useModalScrollLock(true);
   useModalMediaSuspension(true, root);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const dialog = root.current;
+    if (!dialog) return;
     previousFocus.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    root.current?.focus({ preventScroll: true });
+    dialog.showModal();
+    dialog.focus({ preventScroll: true });
     return () => {
+      dialog.close();
       if (previousFocus.current?.isConnected) previousFocus.current.focus({ preventScroll: true });
     };
   }, []);
@@ -127,10 +131,10 @@ export const ContentVideoViewer = ({
       nextAfterSource={resolvePublicMediaUrl(item?.media_url) ?? undefined}
     >
       <div className={controls.backdrop} aria-hidden="true" />
-      <div
+      <dialog
         ref={root}
-        className={styles.dialog}
-        role="dialog"
+        data-reels-viewer
+        className={`${styles.dialog} ${controls.modal}`}
         aria-modal="true"
         aria-label="Vídeos de conteúdo"
         tabIndex={-1}
@@ -149,6 +153,11 @@ export const ContentVideoViewer = ({
           } as CSSProperties
         }
         onClick={(event) => event.stopPropagation()}
+        onCancel={(event) => {
+          if (event.target !== event.currentTarget || event.defaultPrevented) return;
+          event.preventDefault();
+          closeRef.current?.click();
+        }}
         onKeyDown={(event) => {
           if (createPostOpen) return;
           if (event.defaultPrevented || !root.current?.contains(event.target as Node)) return;
@@ -339,7 +348,7 @@ export const ContentVideoViewer = ({
             }}
           />
         ) : null}
-      </div>
+      </dialog>
     </ContentVideoPlayerProvider>,
     document.body,
   );

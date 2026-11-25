@@ -89,6 +89,8 @@ export const ContentVideoSlide = ({
     };
   }, [active, pauseOwnedVideo]);
   const [panel, setPanel] = useState<Panel>(null);
+  const commentsButton = useRef<HTMLButtonElement | null>(null);
+  const restoreCommentsFocus = useRef(false);
   const panelRef = useRef<Panel>(null);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => !getVideoSoundEnabled());
@@ -182,9 +184,23 @@ export const ContentVideoSlide = ({
     setTime,
   });
 
+  useEffect(() => {
+    if (restoreCommentsFocus.current && !panel && !syncingInteractions && active) {
+      const focused = document.activeElement;
+      if (
+        focused === document.body ||
+        focused === commentsButton.current?.closest("dialog[data-reels-viewer]")
+      ) {
+        commentsButton.current?.focus({ preventScroll: true });
+      }
+      restoreCommentsFocus.current = false;
+    }
+  }, [panel, syncingInteractions, active]);
+
   const changePanel = (next: Panel) => {
     if (syncingInteractions) return;
     const closingComments = panel === "comments" && next !== "comments";
+    if (closingComments) restoreCommentsFocus.current = true;
     panelRef.current = next;
     const video = videoRef.current;
     if (next && !panel) {
@@ -421,6 +437,7 @@ export const ContentVideoSlide = ({
               <button
                 className={styles.action}
                 aria-label="Abrir comentários"
+                ref={commentsButton}
                 disabled={syncingInteractions || unavailable}
                 type="button"
                 onClick={() => changePanel("comments")}

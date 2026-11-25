@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getCommunityInitials as getInitials } from "@/utils/community-display";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaUrl } from "@/utils/media";
 
 export const AuthorAvatar = ({
   anonymous,
@@ -52,7 +52,7 @@ export const AuthorAvatar = ({
           fill
           sizes={imageSize}
           src={avatarSrc}
-          unoptimized={isPublicMediaUrl(avatar)}
+          unoptimized={avatarSrc.startsWith("http:")}
         />
       ) : (
         getInitials(name)

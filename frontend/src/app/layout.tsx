@@ -8,7 +8,6 @@ import { AdminViewAsBanner } from "@/components/admin-view-as-banner";
 import { LocationCapture } from "@/components/analytics/location-capture";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
-import { MobileZoomGuard } from "@/components/mobile-zoom-guard";
 import { ExperienceCapture } from "@/components/privacy/experience-capture";
 import { PrivacyMeasurementBoundary } from "@/components/privacy/measurement-boundary";
 import { PrivacyNotice } from "@/components/privacy/notice";
@@ -21,6 +20,7 @@ import { Provider as Query } from "@/providers/query";
 import { Provider as Redux } from "@/providers/redux";
 import { Provider as Socket } from "@/providers/socket";
 import { Toaster } from "@/registry/new-york-v4/ui/sonner";
+import { getPublicApiSource } from "@/utils/public-asset-sources";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -103,8 +103,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
 };
@@ -116,6 +114,11 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning lang="pt-BR">
+      <head>
+        {getPublicApiSource()?.origin ? (
+          <link rel="preconnect" href={getPublicApiSource()?.origin} crossOrigin="anonymous" />
+        ) : null}
+      </head>
       <body
         className={`${manrope.variable} bg-background text-foreground antialiased`}
         suppressHydrationWarning
@@ -127,7 +130,6 @@ export default function RootLayout({
           enableSystem={false}
         >
           <Progress />
-          <MobileZoomGuard />
           <VideoDiagnostics />
           <Redux>
             <Query>

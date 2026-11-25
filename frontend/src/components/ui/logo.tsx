@@ -37,11 +37,12 @@ export function LogoIcon({ className, priority }: LogoProps) {
     <Image
       alt={APP_NAME}
       className={cn("h-auto w-8", className)}
-      height={1500}
+      height={192}
       loading="eager"
       priority={priority}
-      src="/logo-icon.svg"
-      width={1500}
+      sizes="(min-width: 768px) 48px, 32px"
+      src="/logo-icon-192.webp"
+      width={192}
     />
   );
 }

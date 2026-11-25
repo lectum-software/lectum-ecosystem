@@ -3,6 +3,20 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
+test("llms.txt exposes Markdown links to public resources", async () => {
+  const { GET } = await import("../app/llms.txt/route.ts");
+  const response = GET();
+  const content = await response.text();
+  assert.match(content, /^# Lectum/m);
+  const links = [...content.matchAll(/\[[^\]]+\]\((https?:\/\/[^)]+)\)/g)];
+  assert.equal(links.length, 5);
+  assert.deepEqual(
+    links.map((link) => new URL(link[1]).pathname),
+    ["/", "/psicologos", "/comunidades", "/sitemap.xml", "/robots.txt"],
+  );
+  assert.match(response.headers.get("content-type"), /text\/plain/);
+});
+
 test("stable video thumbnail paths resolve against the public API", async (t) => {
   t.mock.method(globalThis, "fetch", async () =>
     Response.json({ success: true, data: { settings: [] } }),

@@ -25,6 +25,7 @@ export type VerticalVideoElementProps = Omit<
   VideoDataAttributes;
 
 export type VerticalVideoPlayerProps = {
+  deferPoster?: boolean;
   playbackMode?: "visible" | "active" | "standby";
   expandOnClick?: boolean;
   directoryCaptions?: boolean;

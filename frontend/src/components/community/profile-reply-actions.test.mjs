@@ -129,7 +129,7 @@ test("profile reply videos use the text question header instead of a player over
   assert.ok(player.indexOf("{overlay}") < player.indexOf("</VerticalVideoPlayerShell>"));
 });
 
-test("profile question renders the complete title and description without author or navigation", () => {
+test("profile question keeps the complete title and initially clamps its description", () => {
   const title =
     "A complete question title that must remain visible even when it spans several lines";
   const content = "The original question description.";
@@ -143,7 +143,9 @@ test("profile question renders the complete title and description without author
   assert.ok(html.includes(title));
   assert.ok(html.includes(content));
   assert.doesNotMatch(html, /border-b|pb-5/);
-  assert.doesNotMatch(html, /<a\b|href=|line-clamp|Patient identity/);
+  assert.doesNotMatch(html, /<a\b|href=|Patient identity/);
+  assert.match(html, /<h3[^>]*>A complete question title[^<]*<\/h3>/);
+  assert.match(html, /-webkit-line-clamp:2;overflow:hidden/);
 });
 
 test("profile question accepts an empty description without an empty preview", () => {

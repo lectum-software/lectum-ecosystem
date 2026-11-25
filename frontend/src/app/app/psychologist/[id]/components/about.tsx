@@ -122,15 +122,14 @@ export const ExpandableAboutText = ({
     event.stopPropagation();
     setExpanded((previous) => !previous);
   };
-  const collapsedTextStyle =
-    truncated && !expanded
-      ? {
-          WebkitBoxOrient: "vertical" as const,
-          WebkitLineClamp: PROFILE_ABOUT_MAX_LINES,
-          display: "-webkit-box",
-          overflow: "hidden",
-        }
-      : undefined;
+  const collapsedTextStyle = !expanded
+    ? {
+        WebkitBoxOrient: "vertical" as const,
+        WebkitLineClamp: PROFILE_ABOUT_MAX_LINES,
+        display: "-webkit-box",
+        overflow: "hidden",
+      }
+    : undefined;
 
   return (
     <div

@@ -7,7 +7,7 @@ import type { DirectoryPsychologistProfile } from "@/api/generator/types/directo
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { formatCrpLabel } from "@/utils/crp";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaUrl } from "@/utils/media";
 
 import {
   buildBenefitTags,
@@ -29,7 +29,6 @@ export const ProfileAvatar = ({
   compact?: boolean;
 }) => {
   const avatarSrc = resolvePublicMediaUrl(profile.avatar);
-  const avatarIsPublicMedia = isPublicMediaUrl(profile.avatar);
   const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
 
   return (
@@ -50,7 +49,7 @@ export const ProfileAvatar = ({
           priority
           sizes={compact ? "36px" : "88px"}
           src={avatarSrc}
-          unoptimized={avatarIsPublicMedia}
+          unoptimized={avatarSrc.startsWith("http:")}
         />
       ) : (
         getInitials(displayName)
@@ -61,7 +60,6 @@ export const ProfileAvatar = ({
 
 export const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const coverImageSrc = resolvePublicMediaUrl(profile.cover_image_url);
-  const coverImageIsPublicMedia = isPublicMediaUrl(profile.cover_image_url);
   const [failedCoverImageUrl, setFailedCoverImageUrl] = useState<string | null>(null);
   const coverImageFailed = Boolean(coverImageSrc && failedCoverImageUrl === coverImageSrc);
   const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
@@ -89,10 +87,10 @@ export const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistPr
         alt={`Imagem de capa de ${displayName}`}
         className="h-full w-full object-cover object-center"
         fill
-        priority={false}
+        loading="eager"
         sizes="(min-width: 768px) 720px, 100vw"
         src={coverImageSrc}
-        unoptimized={coverImageIsPublicMedia}
+        unoptimized={coverImageSrc.startsWith("http:")}
         onError={() => setFailedCoverImageUrl(coverImageSrc)}
       />
     </div>
@@ -217,7 +215,7 @@ export const ProfileHero = ({
 
             {profile.available_today ? (
               <span
-                className="inline-flex w-fit items-center gap-2 text-[12px] font-black text-success"
+                className="inline-flex w-fit items-center gap-2 text-[12px] font-black text-success-strong"
                 data-availability-badge="true"
               >
                 <span className="relative flex h-2.5 w-2.5" aria-hidden="true">

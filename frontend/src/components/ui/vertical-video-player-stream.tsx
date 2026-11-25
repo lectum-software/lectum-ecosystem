@@ -42,12 +42,14 @@ export function VerticalVideoMediaStatus({
 }
 
 export const useVerticalVideoStream = ({
+  deferPoster = false,
   playbackMode = "visible",
   poster,
   src,
   videoElementVersion = 0,
   videoRef,
 }: {
+  deferPoster?: boolean;
   playbackMode?: "visible" | "active" | "standby";
   poster?: string | null;
   src: string;
@@ -56,6 +58,7 @@ export const useVerticalVideoStream = ({
 }) => {
   const isStreamReference = isVideoAssetReference(src);
   const [activeSource, setActiveSource] = useState<string | null>(null);
+  const [preparedPosterSource, setPreparedPosterSource] = useState<string | null>(null);
   const playback = useVideoPlaybackSource(
     src,
     poster,
@@ -83,16 +86,19 @@ export const useVerticalVideoStream = ({
     // Reobserva o elemento quando o player expandido troca de container via portal.
     void videoElementVersion;
 
-    if (!isStreamReference || playbackMode !== "visible") return;
+    if ((!isStreamReference && !deferPoster) || playbackMode !== "visible") return;
 
     const video = videoRef.current;
     if (!video || typeof IntersectionObserver === "undefined") {
       setActiveSource(src);
+      setPreparedPosterSource(src);
       return;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
+        // Once revealed, keep the cover when scrolling back or expanding the player.
+        if (entry?.isIntersecting) setPreparedPosterSource(src);
         setActiveSource((current) =>
           entry?.isIntersecting ? src : current === src ? null : current,
         );
@@ -101,9 +107,18 @@ export const useVerticalVideoStream = ({
     );
     observer.observe(video);
     return () => observer.disconnect();
-  }, [isStreamReference, src, videoElementVersion, videoRef, playbackMode]);
+  }, [deferPoster, isStreamReference, src, videoElementVersion, videoRef, playbackMode]);
 
-  return { adaptivePlaybackFailed, playback };
+  return {
+    adaptivePlaybackFailed,
+    playback: {
+      ...playback,
+      poster:
+        !deferPoster || playbackMode !== "visible" || preparedPosterSource === src
+          ? playback.poster
+          : null,
+    },
+  };
 };
 
 export const VerticalVideoStreamStatus = ({

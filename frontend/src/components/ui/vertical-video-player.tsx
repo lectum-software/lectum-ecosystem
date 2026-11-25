@@ -40,6 +40,7 @@ import {
 import { VerticalVideoPlayerSurface } from "./vertical-video-player-surface";
 
 export const VerticalVideoPlayer = ({
+  deferPoster = false,
   captions,
   directoryCaptions = false,
   expandOnClick = false,
@@ -91,6 +92,7 @@ export const VerticalVideoPlayer = ({
       videoRef,
     });
   const { adaptivePlaybackFailed, playback } = useVerticalVideoStream({
+    deferPoster,
     playbackMode,
     poster,
     src,

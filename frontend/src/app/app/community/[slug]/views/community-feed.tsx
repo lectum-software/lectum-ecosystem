@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarDays, Plus } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -61,8 +62,11 @@ import {
   PAGE_LIMIT,
   resolveFeedError,
 } from "../modules/feed-support";
-import { CreateCommunityPostLogic } from "../post/new/logic";
 import type { CommunityRouteLogicProps } from "./community-detail";
+
+const CreateCommunityPostLogic = dynamic(() =>
+  import("../post/new/logic").then((module) => module.CreateCommunityPostLogic),
+);
 
 export const CommunityFeedLogic = ({
   suppressPublishOnboarding = false,

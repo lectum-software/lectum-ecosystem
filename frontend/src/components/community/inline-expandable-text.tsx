@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { type MouseEvent as ReactMouseEvent, useLayoutEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_MAX_LINES = 2;
@@ -58,9 +64,9 @@ export const InlineExpandableText = ({
         : FALLBACK_LINE_HEIGHT_PX;
     };
 
-    const fitsWithinMaxLines = (value: string) => {
+    const fitsWithinMaxLines = (value: string, maxHeight: number) => {
       measureNode.textContent = value;
-      return measureNode.scrollHeight <= lineHeightPx() * maxLines + HEIGHT_TOLERANCE_PX;
+      return measureNode.scrollHeight <= maxHeight;
     };
 
     const measure = () => {
@@ -76,8 +82,9 @@ export const InlineExpandableText = ({
       }
 
       measureNode.style.width = `${availableWidth}px`;
+      const maxHeight = lineHeightPx() * maxLines + HEIGHT_TOLERANCE_PX;
 
-      if (fitsWithinMaxLines(normalizedText)) {
+      if (fitsWithinMaxLines(normalizedText, maxHeight)) {
         setPreview(text);
         setTruncated(false);
         return;
@@ -92,7 +99,7 @@ export const InlineExpandableText = ({
         const candidatePreview = normalizedText.slice(0, middle).trimEnd();
         const candidate = `${candidatePreview} ${moreLabel}`;
 
-        if (fitsWithinMaxLines(candidate)) {
+        if (fitsWithinMaxLines(candidate, maxHeight)) {
           bestPreview = candidatePreview;
           low = middle + 1;
         } else {
@@ -126,11 +133,20 @@ export const InlineExpandableText = ({
   }, [maxLines, moreLabel, text]);
 
   const visibleText = expanded || !truncated ? text : preview;
+  // Clamp the server HTML too, before client-side measurement inserts the toggle.
+  const collapsedTextStyle: CSSProperties | undefined = expanded
+    ? undefined
+    : {
+        display: "-webkit-box",
+        WebkitBoxOrient: "vertical",
+        WebkitLineClamp: maxLines,
+        overflow: "hidden",
+      };
   const toggleLabel = expanded ? lessLabel : moreLabel;
   const toggleClassName =
     "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-muted/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80";
   const textContent = (
-    <p className={cn("whitespace-pre-line", className)}>
+    <p className={cn("whitespace-pre-line", className)} style={collapsedTextStyle}>
       {visibleText}
       {!expanded && truncated ? <span hidden>{text.slice(preview.length)}</span> : null}
       {truncated ? (

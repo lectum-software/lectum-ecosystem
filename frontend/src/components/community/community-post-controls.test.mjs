@@ -1,4 +1,5 @@
 import "./mine-whatsapp-metric.test.mjs";
+import "./inline-expandable-text.test.mjs";
 import "./delete-video-policy.test.mjs";
 import "./use-video-contact-reveal.test.mjs";
 import "../../../scripts/register-source-modules.mjs";

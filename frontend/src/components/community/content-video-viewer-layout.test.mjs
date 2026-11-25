@@ -18,6 +18,33 @@ const viewer = [
 const css = read("./content-video-viewer.module.css");
 const tokens = read("../../app/globals.css").match(/:root \{[^}]+\}/s)[0];
 
+test("reels use the native top layer and an opaque keyboard backdrop", () => {
+  const controls = read("./content-video-controls.module.css");
+  assert.match(viewer, /<dialog[\s\S]*?data-reels-viewer/);
+  assert.match(viewer, /dialog\.showModal\(\)/);
+  assert.match(viewer, /dialog\.close\(\)/);
+  assert.match(viewer, /onCancel=\{/);
+  assert.match(controls, /\.modal::backdrop\s*\{\s*background: var\(--lectum-media-background\);/);
+  assert.match(controls, /max-height: none/);
+  assert.doesNotMatch(controls, /\.modal \[class~="favorite-toggle"\]/);
+  assert.match(viewer, /commentsButton.current\?\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(viewer, /restoreCommentsFocus.current && !panel && !syncingInteractions && active/);
+  assert.match(viewer, /focused === document.body/);
+  assert.match(viewer, /event.target !== event.currentTarget \|\| event.defaultPrevented/);
+});
+
+test("only active video covers get eager high-priority loading", () => {
+  const slot = read("../ui/persistent-feed-video-player.tsx");
+  const startup = read("../ui/video-startup-cover.tsx");
+  assert.match(slot, /loading=\{props.active \? "eager" : "lazy"\}/);
+  assert.match(slot, /fetchPriority=\{props.active \? "high" : "auto"\}/);
+  assert.match(startup, /loading=\{active \? "eager" : "lazy"\}/);
+  assert.match(startup, /fetchPriority=\{active \? "high" : "auto"\}/);
+  const avatar = read("./community-post-card-author.tsx");
+  assert.match(avatar, /sizes=\{imageSize\}/);
+  assert.match(avatar, /unoptimized=\{avatarSrc.startsWith\("http:"\)\}/);
+});
+
 test("reel header reuses the real create form and keeps explicit navigation labels", () => {
   const header = read("./content-video-header.tsx");
   const create = read("./content-video-create-post.tsx");
