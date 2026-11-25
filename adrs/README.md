@@ -813,3 +813,4 @@ Formato recomendado:
 - [ADR-0729 — Primeiro desenho do post](0729-post-first-paint.md)
 - [ADR-0730 — Aviso compartilhado de notificacoes](0730-notification-entry.md)
 - [ADR-0731 — Visibilidade do ver mais](0731-read-more-visibility.md)
+- [ADR-0732 — Manifesto runtime do adapter](0732-adapter-runtime-manifest.md)

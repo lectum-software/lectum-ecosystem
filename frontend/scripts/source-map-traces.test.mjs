@@ -85,6 +85,48 @@ test("remove mapas symlink do adapter sem seguir diretorios ou apagar alvo exter
 });
 
 for (const app of ["", "frontend"]) {
+  test(`runtime-only manifest discovers the Next root (${app || "standalone"})`, async () => {
+    const temp = await mkdtemp(join(tmpdir(), "lectum-runtime-root-"));
+    const previousRoot = process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT;
+    delete process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT;
+    try {
+      const appDir = join(temp, app);
+      const root = join(appDir, ".next");
+      await mkdir(root, { recursive: true });
+      await writeFile(join(temp, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+      const buildManifest = join(root, "required-server-files.json");
+      await writeFile(buildManifest, JSON.stringify({ appDir, config: {} }));
+      const manifest = join(root, ".vc-config.json");
+      const map = join(app, ".next/server/chunk.js.map");
+      const runtime = join(app, ".next/server/chunk.js");
+      const original = { filePathMap: { map, runtime }, fileHashes: { map: "m", runtime: "r" } };
+      for (const explicitRoot of [undefined, temp]) {
+        if (explicitRoot) process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT = explicitRoot;
+        await writeFile(manifest, JSON.stringify(original));
+        assert.equal(await pruneRemovedSourceMapsFromFunctions(root, [manifest]), 1);
+        assert.deepEqual(JSON.parse(await readFile(manifest, "utf8")), {
+          filePathMap: { runtime },
+          fileHashes: { runtime: "r" },
+        });
+      }
+      process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT = join(temp, "outside");
+      await assert.rejects(
+        pruneRemovedSourceMapsFromFunctions(root, [manifest]),
+        /does not contain/,
+      );
+      await writeFile(buildManifest, JSON.stringify({ appDir: join(temp, "wrong"), config: {} }));
+      await assert.rejects(pruneRemovedSourceMapsFromFunctions(root, [manifest]), /does not match/);
+      await writeFile(buildManifest, JSON.stringify({ config: {} }));
+      await assert.rejects(
+        pruneRemovedSourceMapsFromFunctions(root, [manifest]),
+        /Invalid production adapter app/,
+      );
+    } finally {
+      if (previousRoot === undefined) delete process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT;
+      else process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT = previousRoot;
+      await rm(temp, { recursive: true, force: true });
+    }
+  });
   test(`limpa filePathMap do adapter (${app || "standalone"}) e seus hashes sem alterar runtime`, async () => {
     const temp = await mkdtemp(join(tmpdir(), "lectum-adapter-map-"));
     try {
