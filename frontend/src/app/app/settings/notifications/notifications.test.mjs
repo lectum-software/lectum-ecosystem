@@ -14,6 +14,82 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createFormControl } from "react-hook-form";
 import { sourceRoot } from "../../../../../scripts/register-source-modules.mjs";
 
+const { getPushNoticeState, needsHomeScreen, isDismissiblePushNotice, pushNoticeDismissalKey } =
+  await import("@/components/notifications/push-notice-state");
+const { PushNoticeView } = await import("@/components/notifications/push-notice-view");
+
+test("push notice resolves approved states without claiming permission alone is active", () => {
+  const base = {
+    confirmed: true,
+    mounted: true,
+    homeScreenRequired: false,
+    supported: true,
+    checking: false,
+    requesting: false,
+    hasKey: true,
+    permission: "default",
+    subscriptionStatus: "idle",
+  };
+  for (const [override, expected] of [
+    [{}, "invite"],
+    [{ confirmed: false }, "hidden"],
+    [{ mounted: false }, "checking"],
+    [{ homeScreenRequired: true, supported: false }, "iphone"],
+    [{ supported: false }, "unsupported"],
+    [{ hasKey: false }, "unavailable"],
+    [{ permission: "denied" }, "denied"],
+    [{ requesting: true, checking: true }, "requesting"],
+    [{ subscriptionStatus: "error" }, "error"],
+    [{ permission: "granted" }, "checking"],
+    [{ permission: "granted", subscriptionStatus: "active" }, "active"],
+  ])
+    assert.equal(getPushNoticeState({ ...base, ...override }), expected);
+});
+
+test("only unavailable notices can close; settings always retain status", () => {
+  for (const state of [
+    "checking",
+    "iphone",
+    "unsupported",
+    "unavailable",
+    "denied",
+    "active",
+    "error",
+    "requesting",
+    "invite",
+    "hidden",
+  ]) {
+    const props = { state, onRequest() {}, onDismiss() {} };
+    const html = renderToStaticMarkup(createElement(PushNoticeView, props));
+    assert.equal(html.includes("Fechar aviso"), ["unsupported", "unavailable"].includes(state));
+    assert.equal(isDismissiblePushNotice(state), ["unsupported", "unavailable"].includes(state));
+    const settings = renderToStaticMarkup(
+      createElement(PushNoticeView, { ...props, settings: true }),
+    );
+    assert.equal(settings.includes("Fechar aviso"), false);
+    if (state === "active") {
+      assert.equal(html, "");
+      assert.match(settings, /notificações da Lectum/i);
+    }
+    if (state === "requesting") assert.match(html, /disabled/);
+  }
+});
+
+test("home-screen detection and dismissal keys respect device and account", () => {
+  assert.equal(needsHomeScreen("iPhone", 5, false), true);
+  assert.equal(needsHomeScreen("Macintosh", 5, false), true);
+  assert.equal(needsHomeScreen("iPhone", 5, true), false);
+  assert.equal(needsHomeScreen("Android", 5, false), false);
+  assert.notEqual(
+    pushNoticeDismissalKey("a", "unsupported"),
+    pushNoticeDismissalKey("b", "unsupported"),
+  );
+  assert.notEqual(
+    pushNoticeDismissalKey("a", "unsupported"),
+    pushNoticeDismissalKey("a", "unavailable"),
+  );
+});
+
 const {
   NotificationPreferencesForm,
   fromFormValues,
@@ -197,7 +273,7 @@ test("guard de configuração lista ambos os aliases antes da exclusão do promp
   const source = readFileSync(new URL("hooks/notification/index.tsx", sourceRoot), "utf8");
   assert.match(
     source,
-    /const isNotificationsSettingsRoute =\s*pathname === "\/app\/configuracoes\/notificacoes" \|\| pathname === "\/app\/settings\/notifications";/,
+    /const isNotificationsSettingsRoute =\s*pathname === "\/app\/configuracoes\/notificacoes" \|\|\s*pathname === "\/app\/settings\/notifications" \|\|\s*pathname === "\/app\/notificacoes" \|\|\s*pathname === "\/app\/notifications";/,
   );
   assert.match(source, /if \(\s*!isPrivateAppRoute \|\|\s*isNotificationsSettingsRoute \|\|/);
 });

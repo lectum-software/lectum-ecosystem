@@ -2938,3 +2938,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 363 | [TASK-363 - Estabilidade e legibilidade do perfil](TASK-363-profile-performance.md) | Concluida localmente |
 | 364 | [TASK-364 - Isolamento e primeira capa do Reels](TASK-364-reels-isolation.md) | Em andamento |
 | 365 | [TASK-365 - Primeiro desenho do post](TASK-365-post-first-paint.md) | Concluida localmente |
+| 366 | [TASK-366 - Ativacao na central de notificacoes](TASK-366-notification-entry.md) | Concluida localmente |

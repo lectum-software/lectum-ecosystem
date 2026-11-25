@@ -811,3 +811,4 @@ Formato recomendado:
 - [ADR-0727 — Primeiro desenho do perfil](0727-profile-first-paint.md)
 - [ADR-0728 — Isolamento nativo do Reels](0728-reels-native-isolation.md)
 - [ADR-0729 — Primeiro desenho do post](0729-post-first-paint.md)
+- [ADR-0730 — Aviso compartilhado de notificacoes](0730-notification-entry.md)

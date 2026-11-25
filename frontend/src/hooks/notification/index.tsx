@@ -126,6 +126,7 @@ const registerNotificationServiceWorker = async () => {
  */
 export const useNotificationPushPermission = () => {
   const user = useAppSelector((state) => state.user);
+  const userId = user?.id;
   const { key: keyMutation, store: storeMutation } = useNotificationSubscription();
   const keyMutateAsyncRef = useRef(keyMutation.mutateAsync);
   const storeMutateAsyncRef = useRef(storeMutation.mutateAsync);
@@ -137,8 +138,25 @@ export const useNotificationPushPermission = () => {
     return window.Notification.permission;
   });
   const [vapidPublicKey, setVapidPublicKey] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<{
+    userId: string;
+    status: "checking" | "active" | "error" | "idle";
+  } | null>(null);
+  const subscriptionStatus =
+    subscription && subscription.userId === user?.id ? subscription.status : "checking";
   const bootSignatureRef = useRef<string | null>(null);
   const vapidLoadGenerationRef = useRef(0);
+  const accountGenerationRef = useRef({ userId, generation: 0 });
+
+  useEffect(() => {
+    accountGenerationRef.current = {
+      userId,
+      generation: accountGenerationRef.current.generation + 1,
+    };
+    return () => {
+      accountGenerationRef.current.generation += 1;
+    };
+  }, [userId]);
 
   const isConfirmedUser = Boolean(user?.id && user.confirmed);
   // Um boot cancelado ao trocar/sair da conta nao deve manter loading visivel
@@ -157,7 +175,7 @@ export const useNotificationPushPermission = () => {
     const generation = vapidLoadGenerationRef.current + 1;
     vapidLoadGenerationRef.current = generation;
 
-    if (!isConfirmedUser || !supportsPushNotifications()) {
+    if (!isConfirmedUser || !userId || !supportsPushNotifications()) {
       if (vapidLoadGenerationRef.current === generation) setVapidPublicKey(null);
       return null;
     }
@@ -174,7 +192,7 @@ export const useNotificationPushPermission = () => {
 
       return null;
     }
-  }, [isConfirmedUser]);
+  }, [isConfirmedUser, userId]);
 
   const ensurePushSubscription = useCallback(async (publicKey: string) => {
     if (!supportsPushNotifications()) return false;
@@ -208,7 +226,7 @@ export const useNotificationPushPermission = () => {
   }, []);
 
   useEffect(() => {
-    if (!isConfirmedUser) {
+    if (!isConfirmedUser || !userId) {
       bootSignatureRef.current = null;
       vapidLoadGenerationRef.current += 1;
       return;
@@ -220,7 +238,7 @@ export const useNotificationPushPermission = () => {
       return;
     }
 
-    const bootSignature = `${user?.id}:${user?.confirmed}`;
+    const bootSignature = `${userId}:${user?.confirmed}`;
     if (bootSignatureRef.current === bootSignature) {
       return;
     }
@@ -230,6 +248,7 @@ export const useNotificationPushPermission = () => {
 
     const boot = async () => {
       setIsChecking(true);
+      setSubscription({ userId, status: "checking" });
       setIsSupported(true);
 
       try {
@@ -244,9 +263,13 @@ export const useNotificationPushPermission = () => {
         if (cancelled) return;
 
         if (currentPermission === "granted" && publicKey) {
-          await ensurePushSubscription(publicKey);
+          const subscribed = await ensurePushSubscription(publicKey);
+          if (!cancelled) setSubscription({ userId, status: subscribed ? "active" : "error" });
+        } else if (!cancelled) {
+          setSubscription({ userId, status: "idle" });
         }
       } catch (error) {
+        if (!cancelled) setSubscription({ userId, status: "error" });
         reportClientFailure("notification-push-subscription", error);
       } finally {
         if (!cancelled) setIsChecking(false);
@@ -261,23 +284,34 @@ export const useNotificationPushPermission = () => {
         bootSignatureRef.current = null;
       }
     };
-  }, [ensurePushSubscription, isConfirmedUser, loadVapidKey, user?.confirmed, user?.id]);
+  }, [ensurePushSubscription, isConfirmedUser, loadVapidKey, user?.confirmed, userId]);
 
   const requestPermissionAndSubscribe = useCallback(async (): Promise<PermissionRequestResult> => {
-    if (!isConfirmedUser || !supportsPushNotifications()) {
+    if (!isConfirmedUser || !userId || !supportsPushNotifications()) {
       setPermission("unsupported");
       return "unsupported";
     }
 
+    const generation = accountGenerationRef.current.generation;
+    const isCurrent = () =>
+      generation === accountGenerationRef.current.generation &&
+      userId === accountGenerationRef.current.userId;
+
     setIsSupported(true);
     setIsChecking(true);
+    setSubscription({ userId, status: "checking" });
 
     try {
       const publicKey = vapidPublicKey ?? (await loadVapidKey());
-      if (!publicKey) return "vapid-unavailable";
+      if (!isCurrent()) return "unsupported";
+      if (!publicKey) {
+        setSubscription({ userId, status: "idle" });
+        return "vapid-unavailable";
+      }
 
       const currentPermission = window.Notification.permission;
       if (currentPermission === "denied") {
+        setSubscription({ userId, status: "idle" });
         setPermission("denied");
         return "denied";
       }
@@ -285,31 +319,39 @@ export const useNotificationPushPermission = () => {
       if (currentPermission === "granted") {
         setPermission("granted");
         const subscribed = await ensurePushSubscription(publicKey);
+        if (!isCurrent()) return "unsupported";
+        setSubscription({ userId, status: subscribed ? "active" : "error" });
         return subscribed ? "granted" : "subscription-unavailable";
       }
 
       const nextPermission = await window.Notification.requestPermission();
+      if (!isCurrent()) return "unsupported";
       setPermission(nextPermission);
 
       if (nextPermission === "granted") {
         const subscribed = await ensurePushSubscription(publicKey);
+        if (!isCurrent()) return "unsupported";
+        setSubscription({ userId, status: subscribed ? "active" : "error" });
         if (!subscribed) return "subscription-unavailable";
 
         clearPromptCooldown();
         return "granted";
       }
 
+      setSubscription({ userId, status: "idle" });
       return nextPermission;
     } catch (error) {
+      if (!isCurrent()) return "unsupported";
       reportClientFailure("notification-permission-subscription", error);
+      setSubscription({ userId, status: "error" });
 
       const currentPermission = window.Notification.permission;
       setPermission(currentPermission);
       return currentPermission === "granted" ? "subscription-unavailable" : currentPermission;
     } finally {
-      setIsChecking(false);
+      if (isCurrent()) setIsChecking(false);
     }
-  }, [ensurePushSubscription, isConfirmedUser, loadVapidKey, vapidPublicKey]);
+  }, [ensurePushSubscription, isConfirmedUser, loadVapidKey, vapidPublicKey, userId]);
 
   return useMemo(
     () => ({
@@ -328,6 +370,7 @@ export const useNotificationPushPermission = () => {
       isSupported,
       permission,
       requestPermissionAndSubscribe,
+      subscriptionStatus,
     }),
     [
       isCheckingForCurrentUser,
@@ -338,6 +381,7 @@ export const useNotificationPushPermission = () => {
       requestPermissionAndSubscribe,
       storeMutation.isPending,
       vapidPublicKey,
+      subscriptionStatus,
     ],
   );
 };
@@ -383,7 +427,10 @@ export const NotificationManager = () => {
 
     const isPrivateAppRoute = isPrivateAppPath(pathname);
     const isNotificationsSettingsRoute =
-      pathname === "/app/configuracoes/notificacoes" || pathname === "/app/settings/notifications";
+      pathname === "/app/configuracoes/notificacoes" ||
+      pathname === "/app/settings/notifications" ||
+      pathname === "/app/notificacoes" ||
+      pathname === "/app/notifications";
 
     if (
       !isPrivateAppRoute ||
