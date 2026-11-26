@@ -2946,3 +2946,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 370 | [TASK-370 - Preferencias de campanhas unificadas](TASK-370-unified-campaign-preferences.md) | Concluida localmente |
 
 | 371 | [TASK-371 - Medicao da entrada no checkout Google](TASK-371-google-checkout-entry.md) | Concluida localmente |
+| 372 | [TASK-372 - Manifesto runtime do adapter no admin](TASK-372-admin-adapter-runtime.md) | Concluida localmente |

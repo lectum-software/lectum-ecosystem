@@ -818,3 +818,4 @@ Formato recomendado:
 - [ADR-0734 — Escolha unica de campanhas no painel](0734-unified-campaign-preferences.md)
 
 - [ADR-0735 — begin_checkout na entrada elegivel](0735-google-checkout-entry.md)
+- [ADR-0736 — Descoberta da raiz do adapter no admin](0736-admin-adapter-runtime.md)

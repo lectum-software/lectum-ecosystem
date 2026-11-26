@@ -1,5 +1,6 @@
 import { readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { findRootDirAndLockFiles } from "next/dist/lib/find-root.js";
 
 // O empacotador Vercel consome estes manifests após o postbuild. Mapas já
 // removidos não são dependências runtime e não podem permanecer nos traces.
@@ -36,9 +37,24 @@ export const pruneRemovedSourceMapsFromFunctions = async (buildRoot, buildFiles)
   if (manifests.length === 0) return 0;
   const root = resolve(buildRoot);
   const build = JSON.parse(await readFile(join(root, "required-server-files.json"), "utf8"));
-  const repoRoot = build.config?.repoRoot;
+  let repoRoot = build.config?.repoRoot;
+  // Runtime-only manifests omit repoRoot. Match Next's build-time discovery.
+  if (repoRoot === undefined) {
+    if (typeof build.appDir !== "string" || !isAbsolute(build.appDir)) {
+      throw new Error("Invalid production adapter app directory.");
+    }
+    if (resolve(build.appDir) !== dirname(root)) {
+      throw new Error("Production adapter app directory does not match build output.");
+    }
+    repoRoot =
+      process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT || findRootDirAndLockFiles(build.appDir).rootDir;
+  }
   if (typeof repoRoot !== "string" || !isAbsolute(repoRoot)) {
     throw new Error("Invalid production adapter root.");
+  }
+  const buildRelative = relative(repoRoot, root);
+  if (isAbsolute(buildRelative) || buildRelative === ".." || buildRelative.startsWith(`..${sep}`)) {
+    throw new Error("Production adapter root does not contain build output.");
   }
   let removed = 0;
   for (const manifest of manifests) {
