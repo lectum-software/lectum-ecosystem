@@ -2944,3 +2944,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 369 | [TASK-369 - Medicao Google com consentimento independente](TASK-369-google-measurement.md) | Implementada localmente; ativacao pendente |
 
 | 370 | [TASK-370 - Preferencias de campanhas unificadas](TASK-370-unified-campaign-preferences.md) | Concluida localmente |
+
+| 371 | [TASK-371 - Medicao da entrada no checkout Google](TASK-371-google-checkout-entry.md) | Concluida localmente |

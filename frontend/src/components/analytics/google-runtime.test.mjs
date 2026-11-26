@@ -215,3 +215,168 @@ test("subscription confirmation rejects historical, invalid and revoked proof an
   assert.equal(events.length, 1);
   assert.equal(exports.pendingGoogleCheckout(), null);
 });
+
+function checkoutEntry(f) {
+  const exports = {};
+  vm.runInNewContext(
+    ts.transpileModule(
+      readFileSync(new URL("./google-checkout-entry.ts", import.meta.url), "utf8"),
+      {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+      },
+    ).outputText,
+    { exports, require: () => f.api },
+  );
+  return exports.createGoogleCheckoutEntry();
+}
+
+test("checkout entry sends before payment and only once across effect replay/refetch", async () => {
+  const f = browser();
+  const enter = checkoutEntry(f);
+  await enter(false);
+  assert.equal(f.scripts.length, 0);
+  const first = enter(true);
+  const replay = enter(true);
+  f.load();
+  await Promise.all([first, replay]);
+  await enter(true);
+  const events = f.commands().filter((v) => v[0] === "event");
+  assert.equal(events.length, 1);
+  assert.equal(events[0][1], "begin_checkout");
+  assert.doesNotMatch(JSON.stringify(events), /private-topic|private@example|card|operation/);
+});
+
+test("checkout never replays an entry without prior consent or after revocation", async () => {
+  const denied = browser({ scope: null });
+  const enter = checkoutEntry(denied);
+  denied.setConsent("grant");
+  await enter(true);
+  assert.equal(denied.scripts.length, 0);
+  const revoked = browser();
+  const pending = checkoutEntry(revoked)(true);
+  revoked.setConsent(null);
+  revoked.load();
+  await pending;
+  assert.equal(revoked.commands().filter((v) => v[0] === "event").length, 0);
+});
+
+async function checkoutComponent(
+  f,
+  { upgrade = false, active = false, courtesy = false, pending = false, error = false } = {},
+) {
+  await import("../../../scripts/register-source-modules.mjs");
+  const onboarding = await import("../../utils/psychologist-onboarding.ts");
+  const stripe = await import("../../utils/stripe-billing.ts");
+  let loading = true;
+  const refs = [];
+  let refIndex = 0;
+  const effects = [];
+  const exports = {};
+  const config = {
+    enabled: true,
+    quote: {
+      revision: "v1",
+      amount_cents: 2990,
+      amount_due_now_cents: 2990,
+      currency: "brl",
+      interval: "month",
+      intent: courtesy ? "courtesy_renewal" : "subscription",
+      scheduled_start_at: null,
+    },
+    pending_operation: pending
+      ? { kind: "checkout", state: "processing", payment_pending: true }
+      : null,
+  };
+  const dependencies = {
+    react: {
+      useRef: (value) => {
+        const index = refIndex++;
+        refs[index] ??= { current: value };
+        return refs[index];
+      },
+      useEffect: (effect) => effects.push(effect),
+    },
+    "react/jsx-runtime": { jsx: () => null, jsxs: () => null },
+    "@tanstack/react-query": { useQueryClient: () => ({}) },
+    "next/navigation": {
+      useRouter: () => ({ replace() {} }),
+      useSearchParams: () => new URLSearchParams(upgrade ? "intent=upgrade" : ""),
+    },
+    "@/hooks/redux": { useAppSelector: () => ({ id: "test-user" }) },
+    "@/components/privacy/use-choice": { usePrivacyChoice: () => null },
+    "@/components/analytics/google-checkout-entry": {
+      createGoogleCheckoutEntry: () => checkoutEntry(f),
+    },
+    "@/utils/psychologist-onboarding": onboarding,
+    "@/utils/stripe-billing": stripe,
+    "@/utils/billing-completion-intent": { rememberBillingCompletion() {} },
+    "@/api/callers/psychologist-billing": {
+      usePsychologistBilling: () => ({
+        current: {
+          isPending: loading,
+          isError: error,
+          data: {
+            current: {
+              status: "ativa",
+              plan: { slug: active ? "profissional" : "gratuito", active: true },
+              current_period_end: "2099-01-01T00:00:00Z",
+            },
+          },
+        },
+      }),
+    },
+  };
+  vm.runInNewContext(
+    ts.transpileModule(
+      readFileSync(
+        new URL("../../app/app/professional/billing/checkout/stripe-logic.tsx", import.meta.url),
+        "utf8",
+      ),
+      {
+        compilerOptions: {
+          module: ts.ModuleKind.CommonJS,
+          target: ts.ScriptTarget.ES2022,
+          jsx: ts.JsxEmit.ReactJSX,
+        },
+      },
+    ).outputText,
+    { exports, require: (name) => dependencies[name] ?? {} },
+  );
+  const render = () => {
+    refIndex = 0;
+    effects.length = 0;
+    exports.StripeCheckoutLogic({ config });
+    for (const effect of effects) effect();
+  };
+  render();
+  assert.equal(f.scripts.length, 0);
+  loading = false;
+  render();
+  render();
+  if (f.scripts.length) f.load();
+  await new Promise((resolve) => setImmediate(resolve));
+}
+
+test("checkout component counts initial subscription and free-to-paid upgrade before submit", async () => {
+  for (const upgrade of [false, true]) {
+    const f = browser();
+    await checkoutComponent(f, { upgrade });
+    assert.equal(
+      f.commands().filter((v) => v[0] === "event" && v[1] === "begin_checkout").length,
+      1,
+    );
+  }
+});
+
+test("checkout component excludes active paid plans, courtesy, pending operations and load errors", async () => {
+  for (const options of [
+    { active: true },
+    { courtesy: true },
+    { pending: true },
+    { error: true },
+  ]) {
+    const f = browser();
+    await checkoutComponent(f, options);
+    assert.equal(f.scripts.length, 0);
+  }
+});
