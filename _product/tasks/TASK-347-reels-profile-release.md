@@ -1,6 +1,6 @@
 # TASK-347 - Reels, perfis, comunidades e aceite parcial
 
-Status: validacao local para publicacao autorizada em 23/11/2026.
+Status: publicada e validada em producao em 23/11/2026.
 
 Consolida os ajustes locais antes numerados TASK-334 a TASK-342 no checkout
 antigo. A numeracao deste checkout preserva as tasks de marketing ja publicadas.
@@ -16,7 +16,7 @@ antigo. A numeracao deste checkout preserva as tasks de marketing ja publicadas.
 - [x] Checks e builds completos do lote atualizado.
 - [x] Smoke local com dependencias reais isoladas.
 - [x] PR revisado e backend publicado antes do frontend.
-- [ ] Smoke e versoes de producao confirmados.
+- [x] Smoke e versoes de producao confirmados.
 
 Producao inicial: backend0.1.841, frontend0.1.840, health/ready HTTP200.
 Sem migration nova neste lote. Autodeploys homolog/preview desativados conforme
@@ -39,3 +39,9 @@ frontend0.1.843. Smoke confirmou HTML, transcricao e reproducao, mas revelou
 ausencia do host interativo nas rotas publicas de reel. Correcao complementar
 monta ContentVideoHost nas duas entradas e mantem o fallback SSR indexavel.
 O smoke final exige o dialogo de reels, nao apenas um elemento video visivel.
+
+PR192 publicou frontend0.1.844. Smoke publico final em Chrome390/1440 confirmou
+dialogo interativo, video readyState4, canonical, VideoObject e transcricao,
+sem overflow horizontal. Backend0.1.842 permaneceu health=ok e ready=ready.
+Checks completos do push e build Vercel aprovados. Teclado nativo do iPhone
+ainda depende de conferencia no aparelho; emulacao Chrome nao o reproduz.

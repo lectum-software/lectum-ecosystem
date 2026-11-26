@@ -361,12 +361,14 @@ function NoticeSession({
       {panel && (
         <PrivacyPreferences
           googleAvailable={GOOGLE_ENABLED}
-          google={googleChoice === "granted"}
           experienceAvailable={EXPERIENCE_ENABLED}
           experience={experienceChoice?.allowed ?? true}
           canTransfer={!userId || transferEligible}
           transfer={choice?.authorizeTransfer ?? !status.data?.decided}
-          campaigns={choice?.campaigns ?? (status.data?.decided ? status.data.granted : true)}
+          campaigns={
+            !(GOOGLE_ENABLED && googleChoice === "denied") &&
+            (choice?.campaigns ?? (status.data?.decided ? status.data.granted : true))
+          }
           busy={saving}
           error={error}
           onSave={save}

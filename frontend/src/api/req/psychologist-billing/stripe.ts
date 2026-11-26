@@ -11,7 +11,7 @@ import {
   pendingGoogleCheckout,
   rememberGoogleCheckout,
 } from "@/components/analytics/google-billing";
-import { googleActionScope, trackGoogleEvent } from "@/components/analytics/google-runtime";
+import { googleActionScope } from "@/components/analytics/google-runtime";
 
 const route = "/api/private/psychologist/billing/stripe";
 const flowVersion = "credit_only_v1";
@@ -56,7 +56,6 @@ export const createStripeBillingCheckout = async (body: StripeBillingCheckoutPay
   ) {
     if (pendingGoogleCheckout()?.id !== result.operation.id)
       rememberGoogleCheckout(result.operation.id, scope);
-    void trackGoogleEvent("begin_checkout", scope, result.operation.id);
   }
   return result;
 };

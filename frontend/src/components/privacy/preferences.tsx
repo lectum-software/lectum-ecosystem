@@ -11,14 +11,12 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 const schema = z.object({
   necessary: z.literal(true),
   campaigns: z.boolean(),
-  google: z.boolean(),
   transfer: z.boolean(),
   experience: z.boolean(),
 });
 
 export function PrivacyPreferences({
   campaigns,
-  google = false,
   googleAvailable = false,
   busy,
   error,
@@ -30,7 +28,6 @@ export function PrivacyPreferences({
   experienceAvailable = false,
 }: {
   campaigns: boolean;
-  google?: boolean;
   googleAvailable?: boolean;
   busy: boolean;
   error: string | null;
@@ -54,7 +51,6 @@ export function PrivacyPreferences({
     defaultValues: {
       necessary: true as const,
       campaigns,
-      google,
       transfer: canTransfer && transfer,
       experience,
     },
@@ -64,29 +60,18 @@ export function PrivacyPreferences({
         field: "switch",
         label: "Cookies necessários",
         disabled: true,
-        description:
-          "Sempre ativos. Permitem o acesso à conta, a segurança e o armazenamento das suas preferências.",
+        description: "Sempre ativos para acesso à conta, segurança e suas preferências.",
       },
       {
         name: "campaigns",
         field: "switch",
-        label: "Medição de campanhas com a Meta",
+        label: googleAvailable
+          ? "Medição de campanhas com Google e Meta"
+          : "Medição de campanhas com a Meta",
         disabled: busy,
         description:
-          "Opcional. Compartilha com a Meta a confirmação de cadastro, clique no WhatsApp, publicação em fórum e primeira assinatura profissional paga, com data, endereço da página, identificador do navegador, endereço IP e informações do navegador e sistema operacional. Não envia nome, e-mail ou telefone. No cadastro, informa se a conta é de usuário comum ou profissional. Valor e moeda são enviados apenas na assinatura paga. Não inclui identidade do profissional contatado, tema ou conteúdo da publicação, informações clínicas ou dados do cartão. Aceite antes da ação; não há medição retroativa. Você pode recusar ou revogar nas preferências; revogar interrompe novos envios, mas não apaga dados já enviados.",
+          "Opcional. Mede resultados de campanhas, como cadastros, contatos e assinaturas, usando dados de navegação. Não envia nome, e-mail, telefone, conteúdo de publicações ou dados clínicos. Só começa após seu aceite.",
       },
-      ...(googleAvailable
-        ? [
-            {
-              name: "google" as const,
-              field: "switch" as const,
-              label: "Medição com Google Analytics e Google Ads",
-              disabled: busy,
-              description:
-                "Opcional, neste navegador. Envia ao Google visitas e confirmações de cadastro, publicação no fórum, clique no WhatsApp, início de checkout e assinatura paga, além de identificadores de campanha e navegador. Não envia texto de publicações, tema da comunidade, nome, e-mail, telefone ou identidade do profissional contatado. Sem personalização de anúncios. Só mede ações após seu aceite e interrompe novos envios quando você revoga.",
-            },
-          ]
-        : []),
       ...(experienceAvailable
         ? [
             {
@@ -95,7 +80,7 @@ export function PrivacyPreferences({
               label: "Análise de experiência",
               disabled: busy,
               description:
-                "Opcional. Permite usar ferramentas de análise para entender cliques, rolagens e navegação nas telas públicas habilitadas, com reprodução de visitas e mapas de calor. Textos e campos são mascarados; endereços e títulos de páginas públicas podem integrar os registros. Áreas privadas e pagamentos ficam fora da análise. Sua escolha é independente da medição de campanhas e pode ser revogada aqui. A revogação interrompe novas coletas, mas não apaga dados já enviados.",
+                "Opcional. Analisa cliques e navegação com reprodução de visitas e mapas de calor. Textos e campos são mascarados; áreas privadas e pagamentos ficam de fora.",
             },
           ]
         : []),
@@ -107,7 +92,7 @@ export function PrivacyPreferences({
               label: "Associar a origem das visitas à minha conta",
               disabled: busy,
               description:
-                "Opcional. Autoriza associar a origem das visitas à sua conta por até 90 dias para medir essas ações. Antes do cadastro, a origem é mantida por até 30 dias. Aceitar depois do cadastro não autoriza medir esse cadastro retroativamente.",
+                "Opcional. Vincula a origem das visitas à sua conta por até 90 dias, sem medir ações anteriores ao aceite.",
             },
           ]
         : []),
@@ -142,12 +127,11 @@ export function PrivacyPreferences({
           </button>
         </div>
         <p className="mb-5 mt-2 text-sm leading-6 text-muted">
-          Você pode aceitar, recusar ou alterar sua escolha a qualquer momento na{" "}
+          Escolha o que permitir. Você pode mudar depois. Saiba mais na{" "}
           <Link href="/politica-de-privacidade" prefetch={false} className="underline">
             Política de Privacidade
           </Link>
-          . Aceitar cookies aceita todas as opções apresentadas; Salvar preferências mantém apenas
-          as opções selecionadas.
+          .
         </p>
         <Form
           {...formProps}
@@ -158,7 +142,7 @@ export function PrivacyPreferences({
                 values.campaigns,
                 canTransfer && values.campaigns && values.transfer,
                 experienceAvailable ? values.experience : undefined,
-                googleAvailable ? values.google : undefined,
+                googleAvailable ? values.campaigns : undefined,
               );
           })}
         >

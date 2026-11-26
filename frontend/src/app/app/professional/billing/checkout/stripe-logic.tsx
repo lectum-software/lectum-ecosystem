@@ -2,12 +2,13 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import keys from "@/api/cache/keys";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import type { StripeBillingConfig } from "@/api/generator/types/stripe-billing";
 import { capturePrivacyCheckoutEntry } from "@/api/req/privacy";
 import { getPsychologistBillingCurrent } from "@/api/req/psychologist-billing";
+import { createGoogleCheckoutEntry } from "@/components/analytics/google-checkout-entry";
 import { usePrivacyChoice } from "@/components/privacy/use-choice";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -44,6 +45,21 @@ export const StripeCheckoutLogic = ({ config }: { config: StripeBillingConfig })
     isProfessionalSubscriptionActive(current) && current?.source !== "admin_grant";
   const resumingAction = isStripeBillingActionPending(config.pending_operation);
   const redirectActive = alreadyActive && !resumingAction;
+  const googleEntry = useRef<ReturnType<typeof createGoogleCheckoutEntry> | null>(null);
+  useEffect(() => {
+    // Capture permission on entry, before async billing eligibility resolves.
+    googleEntry.current ??= createGoogleCheckoutEntry();
+    void googleEntry.current(
+      Boolean(user?.id) &&
+        !currentLoading &&
+        !currentError &&
+        !alreadyActive &&
+        !courtesy &&
+        config.enabled &&
+        isStripeBillingQuoteValid(quote) &&
+        !config.pending_operation,
+    );
+  }, [user?.id, currentLoading, currentError, alreadyActive, courtesy, config, quote]);
   useEffect(() => {
     if (
       !privacyChoice?.campaigns ||

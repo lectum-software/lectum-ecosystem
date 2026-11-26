@@ -2942,3 +2942,7 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 367 | [TASK-367 - Visibilidade do ver mais](TASK-367-read-more-visibility.md) | Concluida localmente |
 | 368 | [TASK-368 - Manifesto runtime do adapter](TASK-368-adapter-runtime-manifest.md) | Concluida localmente |
 | 369 | [TASK-369 - Medicao Google com consentimento independente](TASK-369-google-measurement.md) | Implementada localmente; ativacao pendente |
+
+| 370 | [TASK-370 - Preferencias de campanhas unificadas](TASK-370-unified-campaign-preferences.md) | Concluida localmente |
+
+| 371 | [TASK-371 - Medicao da entrada no checkout Google](TASK-371-google-checkout-entry.md) | Concluida localmente |

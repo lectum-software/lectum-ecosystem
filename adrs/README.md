@@ -815,3 +815,6 @@ Formato recomendado:
 - [ADR-0731 — Visibilidade do ver mais](0731-read-more-visibility.md)
 - [ADR-0732 — Manifesto runtime do adapter](0732-adapter-runtime-manifest.md)
 - [ADR-0733 — Google Analytics com consentimento separado](0733-google-consent-measurement.md)
+- [ADR-0734 — Escolha unica de campanhas no painel](0734-unified-campaign-preferences.md)
+
+- [ADR-0735 — begin_checkout na entrada elegivel](0735-google-checkout-entry.md)
