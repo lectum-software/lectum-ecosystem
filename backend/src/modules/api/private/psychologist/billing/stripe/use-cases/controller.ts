@@ -27,3 +27,5 @@ export const checkout = controller(services.checkout, true);
 export const checkoutConfirm = controller(services.checkoutConfirm, true);
 export const paymentMethod = controller(services.paymentMethod, true);
 export const paymentMethodConfirm = controller(services.paymentMethodConfirm, true);
+
+export const measurement = controller(services.measurement);

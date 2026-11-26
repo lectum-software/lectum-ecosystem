@@ -814,3 +814,4 @@ Formato recomendado:
 - [ADR-0730 — Aviso compartilhado de notificacoes](0730-notification-entry.md)
 - [ADR-0731 — Visibilidade do ver mais](0731-read-more-visibility.md)
 - [ADR-0732 — Manifesto runtime do adapter](0732-adapter-runtime-manifest.md)
+- [ADR-0733 — Google Analytics com consentimento separado](0733-google-consent-measurement.md)

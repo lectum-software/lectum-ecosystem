@@ -33,3 +33,5 @@ export const confirmValidator = validator({
   params: [{ key: "id", custom: operationId }],
   body: [flowVersion, { key: "confirm_payment", custom: z.boolean(), optional: true }],
 });
+
+export const measurementValidator = validator({ params: [{ key: "id", custom: operationId }] });

@@ -8,6 +8,7 @@ import {
 } from "@/modules/billing/stripe/checkout-service";
 import { stripeBillingConfig } from "@/modules/billing/stripe/config-service";
 import { StripeBillingError } from "@/modules/billing/stripe/policy";
+import { googleSubscriptionEvidence } from "@/modules/marketing/google-subscription-evidence";
 import type { IStripeBillingDTO } from "../DTOs/IStripeBillingDTO";
 
 const userId = (data: IStripeBillingDTO) => {
@@ -40,3 +41,6 @@ export const paymentMethod = (data: IStripeBillingDTO) =>
   beginStripeCardUpdate(compatibleUser(data), data.b.request_key!);
 export const paymentMethodConfirm = (data: IStripeBillingDTO) =>
   confirmStripeCardUpdate(compatibleUser(data), data.p.id!);
+
+export const measurement = (data: IStripeBillingDTO) =>
+  googleSubscriptionEvidence(userId(data), data.p.id!);

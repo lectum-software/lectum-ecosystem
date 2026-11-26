@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import "@/app/globals.css";
 import { AdminViewAsBanner } from "@/components/admin-view-as-banner";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { LocationCapture } from "@/components/analytics/location-capture";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
@@ -146,6 +147,7 @@ export default function RootLayout({
                 <Socket />
                 <PwaInstallPrompt />
                 <PrivacyNotice />
+                <GoogleAnalytics />
                 <Suspense fallback={null}>
                   <ExperienceCapture />
                 </Suspense>

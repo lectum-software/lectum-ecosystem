@@ -80,7 +80,7 @@ routes.get("", async (req: Request, res: Response) => {
     return send(res, {
       allowAuthTokens: true,
       status: 200,
-      data: result,
+      data: { ...result, registration_created: payload.registration_created === true },
       success: true,
     });
   } catch (_err) {

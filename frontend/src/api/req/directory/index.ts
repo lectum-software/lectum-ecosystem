@@ -15,6 +15,7 @@ import type {
   DirectoryPsychologistVideoWatchResponse,
 } from "@/api/generator/types/directory";
 import { handleReq } from "@/api/handle";
+import { googleActionScope, trackGoogleEvent } from "@/components/analytics/google-runtime";
 import { hasInternalMeasurementConsent } from "@/components/privacy/internal-measurement";
 import { getProfileViewNavigationOrigin } from "@/utils/navigation-history";
 
@@ -81,6 +82,7 @@ export const createDirectoryPsychologistContact = async (
 };
 
 export const createDirectoryPsychologistContactClick = async (id: string) => {
+  const googleScope = googleActionScope();
   const allowed = hasInternalMeasurementConsent();
   const handle = callEndpoint({
     route: "/api/private/directory/psychologists/:id/contact-click",
@@ -92,11 +94,13 @@ export const createDirectoryPsychologistContactClick = async (id: string) => {
     params: { id },
   });
 
-  return handleReq<DirectoryPsychologistContactClickResponse>({
+  const result = await handleReq<DirectoryPsychologistContactClickResponse>({
     ...handle,
     hideError: true,
     signOutOnUnauthorized: false,
   });
+  if (result?.whatsapp_url) void trackGoogleEvent("whatsapp_click", googleScope);
+  return result;
 };
 
 export const trackDirectoryPsychologistProfileView = async (id: string) => {

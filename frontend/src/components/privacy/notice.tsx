@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { usePrivacyStatus, useSavePrivacy } from "@/api/callers/privacy";
+import { persistGoogleChoice, useGoogleChoice } from "@/components/analytics/google-choice";
+import { GOOGLE_ENABLED } from "@/components/analytics/google-runtime";
 import { Modal } from "@/components/ui/modal";
 import { hasCompletedRegistrationForPrompts } from "@/utils/prompt-cooldown";
 import { releaseActivePrompt, reserveActivePrompt } from "@/utils/prompt-coordinator";
@@ -62,6 +64,7 @@ function NoticeSession({
   const path = usePathname();
   const choice = usePrivacyChoice(userId);
   const experienceChoice = useExperienceChoice(userId);
+  const googleChoice = useGoogleChoice();
   const [panel, setPanel] = useState(false);
   const [shown, setShown] = useState(false);
   const [bottom, setBottom] = useState(12);
@@ -235,12 +238,18 @@ function NoticeSession({
     }
   }, [path]);
 
-  async function save(campaigns: boolean, authorizeTransfer = false, experience?: boolean) {
+  async function save(
+    campaigns: boolean,
+    authorizeTransfer = false,
+    experience?: boolean,
+    google?: boolean,
+  ) {
     if (lock.current) return;
     lock.current = true;
     setSaving(true);
     setError(null);
     if (EXPERIENCE_ENABLED && experience === false) persistExperienceChoice(userId, false);
+    if (GOOGLE_ENABLED && google === false) persistGoogleChoice(false);
     try {
       // A refusal closes local permission before attempting a network revocation.
       if (!campaigns) {
@@ -263,10 +272,13 @@ function NoticeSession({
         !persistExperienceChoice(userId, experience)
       )
         throw new Error("storage_unavailable");
+      if (GOOGLE_ENABLED && google !== undefined && !persistGoogleChoice(google))
+        throw new Error("storage_unavailable");
       setPanel(false);
       setShown(false);
       releaseActivePrompt("privacy");
     } catch {
+      if (GOOGLE_ENABLED && google !== undefined) persistGoogleChoice(false);
       if (EXPERIENCE_ENABLED && experience !== undefined) persistExperienceChoice(userId, false);
       if (campaigns) persistPrivacyChoice(userId, false, Boolean(userId));
       setPanel(true);
@@ -306,7 +318,8 @@ function NoticeSession({
               id="privacy-notice-title"
               className="text-[15px] leading-6 sm:text-base sm:leading-7"
             >
-              Usamos cookies para medir audiência e campanhas. Saiba mais em Preferências.
+              Usamos cookies para medir audiência e campanhas
+              {GOOGLE_ENABLED ? " com Meta e Google" : ""}. Saiba mais em Preferências.
             </p>
             {error && (
               <p role="alert" className="mt-3 text-sm text-primary-foreground">
@@ -318,7 +331,14 @@ function NoticeSession({
                 className="min-h-12 rounded-full bg-cookie-action px-4 py-3 text-sm! font-extrabold! text-primary-foreground hover:bg-cookie-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground disabled:opacity-60"
                 disabled={saving}
                 ref={noticeFocus}
-                onClick={() => void save(true, !userId || transferEligible)}
+                onClick={() =>
+                  void save(
+                    true,
+                    !userId || transferEligible,
+                    undefined,
+                    GOOGLE_ENABLED ? true : undefined,
+                  )
+                }
                 type="button"
               >
                 ACEITAR COOKIES
@@ -340,6 +360,8 @@ function NoticeSession({
       )}
       {panel && (
         <PrivacyPreferences
+          googleAvailable={GOOGLE_ENABLED}
+          google={googleChoice === "granted"}
           experienceAvailable={EXPERIENCE_ENABLED}
           experience={experienceChoice?.allowed ?? true}
           canTransfer={!userId || transferEligible}

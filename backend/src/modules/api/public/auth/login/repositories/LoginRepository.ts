@@ -53,8 +53,12 @@ export class LoginRepository implements ILoginRepository {
     };
   }
 
-  async hidrate(data: user, device_id: string): Promise<user> {
-    const token = generateToken({ id: data.id!, email: data.email! }, "user", device_id);
+  async hidrate(data: user, device_id: string, registrationCreated = false): Promise<user> {
+    const token = generateToken(
+      { id: data.id!, email: data.email!, registration_created: registrationCreated },
+      "user",
+      device_id,
+    );
 
     await this.user_token.create({
       data: { user_id: data.id!, device_id, token },

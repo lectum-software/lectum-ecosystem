@@ -1,6 +1,11 @@
 import { callEndpoint } from "@/api/generator";
 import type { user } from "@/api/generator/types";
 import { handleReq } from "@/api/handle";
+import {
+  consumeGoogleRegistration,
+  rememberGoogleRegistration,
+} from "@/components/analytics/google-registration";
+import { googleActionScope, trackGoogleEvent } from "@/components/analytics/google-runtime";
 
 export type LoginPayload = {
   email: string;
@@ -57,8 +62,9 @@ export type VerifyCodePayload = {
   code: string;
 };
 
-export const prepareGoogleRegistration = async (deviceId: string, body: Record<string, string>) =>
-  handleReq<{ state: string }>({
+export const prepareGoogleRegistration = async (deviceId: string, body: Record<string, string>) => {
+  rememberGoogleRegistration();
+  return handleReq<{ state: string }>({
     ...callEndpoint({
       route: "/api/public/google/login/:id/registration",
       params: { id: deviceId },
@@ -68,6 +74,7 @@ export const prepareGoogleRegistration = async (deviceId: string, body: Record<s
     hideError: true,
     signOutOnUnauthorized: false,
   });
+};
 
 export const login = async (body: LoginPayload) => {
   const handle = callEndpoint({
@@ -136,27 +143,33 @@ export const needResetPassword = async (body: ResetPasswordPayload) => {
 };
 
 export const registerPatient = async (body: RegisterPatientPayload) => {
+  const googleScope = googleActionScope();
   const handle = callEndpoint({
     route: "/api/public/user/store",
     body,
   });
 
-  return handleReq<user>({
+  const result = await handleReq<user>({
     ...handle,
     hideError: true,
   });
+  if (result?.id) void trackGoogleEvent("sign_up", googleScope, result.id, "user");
+  return result;
 };
 
 export const registerPsychologist = async (body: RegisterPsychologistPayload) => {
+  const googleScope = googleActionScope();
   const handle = callEndpoint({
     route: "/api/public/user/store",
     body,
   });
 
-  return handleReq<user>({
+  const result = await handleReq<user>({
     ...handle,
     hideError: true,
   });
+  if (result?.id) void trackGoogleEvent("sign_up", googleScope, result.id, "professional");
+  return result;
 };
 
 export const sendConfirmCode = async () => {
@@ -188,9 +201,18 @@ export const googleMe = async () => {
     route: "/api/public/google/me",
   });
 
-  return handleReq<user>({
+  const result = await handleReq<user & { registration_created?: boolean }>({
     ...handle,
     hideError: true,
     signOutOnUnauthorized: false,
   });
+  const scope = consumeGoogleRegistration();
+  if (result?.registration_created && result.id)
+    void trackGoogleEvent(
+      "sign_up",
+      scope,
+      result.id,
+      result.role === "psicologo" ? "professional" : "user",
+    );
+  return result;
 };

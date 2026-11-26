@@ -367,6 +367,7 @@ if (isGoogleOAuthConfigured()) {
           }
 
           let user = await repo.findByEmail({ b: { email } });
+          let registrationCreated = false;
           const isRegistrationIntent = intent === "register" || (Boolean(role) && termsAccepted);
 
           if (!user) {
@@ -410,6 +411,7 @@ if (isGoogleOAuthConfigured()) {
                   analytics_session_id: analyticsSessionId,
                 },
               });
+              registrationCreated = Boolean(user);
             } catch (storeError) {
               if (storeError instanceof LegalError)
                 return done(null, {
@@ -489,7 +491,7 @@ if (isGoogleOAuthConfigured()) {
             return done(null, inactiveUserResponse());
           }
 
-          user = await repo.hidrate(user, device_id);
+          user = await repo.hidrate(user, device_id, registrationCreated);
 
           return done(null, {
             ...msg("login_success", {}),
