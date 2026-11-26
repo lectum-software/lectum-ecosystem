@@ -11,12 +11,15 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 const schema = z.object({
   necessary: z.literal(true),
   campaigns: z.boolean(),
+  google: z.boolean(),
   transfer: z.boolean(),
   experience: z.boolean(),
 });
 
 export function PrivacyPreferences({
   campaigns,
+  google = false,
+  googleAvailable = false,
   busy,
   error,
   onSave,
@@ -27,9 +30,16 @@ export function PrivacyPreferences({
   experienceAvailable = false,
 }: {
   campaigns: boolean;
+  google?: boolean;
+  googleAvailable?: boolean;
   busy: boolean;
   error: string | null;
-  onSave: (campaigns: boolean, authorizeTransfer?: boolean, experience?: boolean) => Promise<void>;
+  onSave: (
+    campaigns: boolean,
+    authorizeTransfer?: boolean,
+    experience?: boolean,
+    google?: boolean,
+  ) => Promise<void>;
   experience?: boolean;
   experienceAvailable?: boolean;
   canTransfer?: boolean;
@@ -44,6 +54,7 @@ export function PrivacyPreferences({
     defaultValues: {
       necessary: true as const,
       campaigns,
+      google,
       transfer: canTransfer && transfer,
       experience,
     },
@@ -64,6 +75,18 @@ export function PrivacyPreferences({
         description:
           "Opcional. Compartilha com a Meta a confirmação de cadastro, clique no WhatsApp, publicação em fórum e primeira assinatura profissional paga, com data, endereço da página, identificador do navegador, endereço IP e informações do navegador e sistema operacional. Não envia nome, e-mail ou telefone. No cadastro, informa se a conta é de usuário comum ou profissional. Valor e moeda são enviados apenas na assinatura paga. Não inclui identidade do profissional contatado, tema ou conteúdo da publicação, informações clínicas ou dados do cartão. Aceite antes da ação; não há medição retroativa. Você pode recusar ou revogar nas preferências; revogar interrompe novos envios, mas não apaga dados já enviados.",
       },
+      ...(googleAvailable
+        ? [
+            {
+              name: "google" as const,
+              field: "switch" as const,
+              label: "Medição com Google Analytics e Google Ads",
+              disabled: busy,
+              description:
+                "Opcional, neste navegador. Envia ao Google visitas e confirmações de cadastro, publicação no fórum, clique no WhatsApp, início de checkout e assinatura paga, além de identificadores de campanha e navegador. Não envia texto de publicações, tema da comunidade, nome, e-mail, telefone ou identidade do profissional contatado. Sem personalização de anúncios. Só mede ações após seu aceite e interrompe novos envios quando você revoga.",
+            },
+          ]
+        : []),
       ...(experienceAvailable
         ? [
             {
@@ -135,6 +158,7 @@ export function PrivacyPreferences({
                 values.campaigns,
                 canTransfer && values.campaigns && values.transfer,
                 experienceAvailable ? values.experience : undefined,
+                googleAvailable ? values.google : undefined,
               );
           })}
         >
@@ -153,7 +177,14 @@ export function PrivacyPreferences({
                 disabled={busy}
                 variant="outline"
                 type="button"
-                onClick={() => void onSave(false, false, experienceAvailable ? false : undefined)}
+                onClick={() =>
+                  void onSave(
+                    false,
+                    false,
+                    experienceAvailable ? false : undefined,
+                    googleAvailable ? false : undefined,
+                  )
+                }
               >
                 Recusar opcionais
               </Button>
@@ -163,7 +194,12 @@ export function PrivacyPreferences({
                 variant="outline"
                 type="button"
                 onClick={() =>
-                  void onSave(true, canTransfer, experienceAvailable ? true : undefined)
+                  void onSave(
+                    true,
+                    canTransfer,
+                    experienceAvailable ? true : undefined,
+                    googleAvailable ? true : undefined,
+                  )
                 }
               >
                 Aceitar cookies

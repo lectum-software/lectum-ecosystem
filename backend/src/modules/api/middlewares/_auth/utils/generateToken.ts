@@ -4,7 +4,7 @@ import { getUserJwtTtlSeconds } from "@/utils/runtime-config";
 import { getJwtSecret, JWT_ALGORITHM } from "./jwt-secret";
 
 export const generateToken = (
-  data: { id: string; email: string },
+  data: { id: string; email: string; registration_created?: boolean },
   type: string,
   device_id: string,
   signOptions?: SignOptions,
@@ -17,6 +17,7 @@ export const generateToken = (
     type,
     randomId,
     device_id,
+    ...(data.registration_created === true ? { registration_created: true } : {}),
   };
 
   return jwt.sign(options, getJwtSecret(), {

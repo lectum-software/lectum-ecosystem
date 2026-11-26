@@ -2941,3 +2941,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 366 | [TASK-366 - Ativacao na central de notificacoes](TASK-366-notification-entry.md) | Concluida localmente |
 | 367 | [TASK-367 - Visibilidade do ver mais](TASK-367-read-more-visibility.md) | Concluida localmente |
 | 368 | [TASK-368 - Manifesto runtime do adapter](TASK-368-adapter-runtime-manifest.md) | Concluida localmente |
+| 369 | [TASK-369 - Medicao Google com consentimento independente](TASK-369-google-measurement.md) | Implementada localmente; ativacao pendente |

@@ -129,6 +129,7 @@ test("todas as envs canonicas estao cobertas ou excluidas com justificativa expl
     "ANALYTICS_SESSION_INTEGRATION",
     "PROFILE_WATCH_LOCAL_INTEGRATION",
     "LECTUM_STRIPE_DB_TESTS",
+    "LECTUM_GOOGLE_DB_TESTS",
     "WHATSAPP_CONSENT_DB_TEST",
     "LECTUM_ATTRIBUTION_BROWSER_TESTS",
     // Local browser harness dependency path, never a production setting.

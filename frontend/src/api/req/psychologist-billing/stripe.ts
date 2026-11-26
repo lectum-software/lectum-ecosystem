@@ -7,6 +7,11 @@ import type {
   StripeBillingOperationResponse,
 } from "@/api/generator/types/stripe-billing";
 import { handleReq } from "@/api/handle";
+import {
+  pendingGoogleCheckout,
+  rememberGoogleCheckout,
+} from "@/components/analytics/google-billing";
+import { googleActionScope, trackGoogleEvent } from "@/components/analytics/google-runtime";
 
 const route = "/api/private/psychologist/billing/stripe";
 const flowVersion = "credit_only_v1";
@@ -33,8 +38,9 @@ export const getStripeBillingConfig = async (courtesyRenewal: boolean) => {
   }
 };
 
-export const createStripeBillingCheckout = (body: StripeBillingCheckoutPayload) =>
-  handleReq<StripeBillingOperationResponse>({
+export const createStripeBillingCheckout = async (body: StripeBillingCheckoutPayload) => {
+  const scope = googleActionScope();
+  const result = await handleReq<StripeBillingOperationResponse>({
     ...callEndpoint({
       route: `${route}/checkout`,
       method: "POST",
@@ -42,6 +48,18 @@ export const createStripeBillingCheckout = (body: StripeBillingCheckoutPayload) 
     }),
     hideError: true,
   });
+
+  if (
+    !body.intent &&
+    result.operation?.id &&
+    ["requires_confirmation", "processing", "complete"].includes(result.operation.state)
+  ) {
+    if (pendingGoogleCheckout()?.id !== result.operation.id)
+      rememberGoogleCheckout(result.operation.id, scope);
+    void trackGoogleEvent("begin_checkout", scope, result.operation.id);
+  }
+  return result;
+};
 
 export const createStripeBillingPaymentMethod = (body: { request_key: string }) =>
   handleReq<StripeBillingOperationResponse>({

@@ -63,6 +63,9 @@ const experiencePreview =
 const experienceEnabled =
   process.env.NEXT_PUBLIC_EXPERIENCE_ENABLED !== "false" &&
   (process.env.NODE_ENV === "production" || experiencePreview);
+const googleEnabled =
+  process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ENABLED === "true" &&
+  /^G-[A-Z0-9]{6,20}$/.test(process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "");
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -80,6 +83,12 @@ const contentSecurityPolicy = [
   "manifest-src 'self'",
 ]
   .map((directive) => {
+    if (googleEnabled) {
+      if (directive.startsWith("script-src ")) directive += " https://www.googletagmanager.com";
+      if (directive.startsWith("connect-src ") || directive.startsWith("img-src "))
+        directive +=
+          " https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com";
+    }
     if (!experienceEnabled) return directive;
     if (directive.startsWith("script-src ")) return `${directive} https://scripts.clarity.ms`;
     if (directive.startsWith("connect-src ")) return `${directive} https://b.clarity.ms`;

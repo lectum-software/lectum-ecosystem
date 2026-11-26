@@ -22,6 +22,7 @@ import type {
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import { handleReq } from "@/api/handle";
+import { googleActionScope, trackGoogleEvent } from "@/components/analytics/google-runtime";
 import {
   COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES,
   COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS,
@@ -171,6 +172,7 @@ export const getCommunityPosts = async (slug: string, query: CommunityPostsQuery
 };
 
 export const createCommunityPost = async (slug: string, body: CreateCommunityPostPayload) => {
+  const googleScope = googleActionScope();
   const handle = callEndpoint({
     route: "/api/private/community/:slug/posts",
     method: "POST",
@@ -178,7 +180,9 @@ export const createCommunityPost = async (slug: string, body: CreateCommunityPos
     body,
   });
 
-  return handleReq<CommunityPost>({ ...handle, hideError: true });
+  const result = await handleReq<CommunityPost>({ ...handle, hideError: true });
+  if (result?.id) void trackGoogleEvent("forum_post", googleScope, result.id);
+  return result;
 };
 
 const uploadCommunityPostMediaSingle = async (

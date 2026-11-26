@@ -1,8 +1,15 @@
 import { Router } from "express";
 import * as controller from "./use-cases/controller";
-import { cardValidator, checkoutValidator, configValidator, confirmValidator } from "./validator";
+import {
+  cardValidator,
+  checkoutValidator,
+  configValidator,
+  confirmValidator,
+  measurementValidator,
+} from "./validator";
 
 const routes = Router();
+routes.get("/checkout/:id/measurement", measurementValidator, controller.measurement);
 routes.get("/config", configValidator, controller.config);
 routes.post("/checkout", checkoutValidator, controller.checkout);
 routes.post("/checkout/:id/confirm", confirmValidator, controller.checkoutConfirm);
