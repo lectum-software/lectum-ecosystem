@@ -14,6 +14,28 @@ registerHooks({
 const { ReviewsLinkCard, PremiumReviewsState } = await import("./reviews-link-card.tsx");
 const link = "https://lectum.test/app/avaliacoes/nova?psychologist_id=owner";
 
+test("current testimonial screens restore the owner-only invitation link", () => {
+  const publicTab = readFileSync(new URL("./public-testimonials.tsx", import.meta.url), "utf8");
+  const managed = readFileSync(new URL("./professional-testimonials.tsx", import.meta.url), "utf8");
+  assert.match(publicTab, /showOwnReviewsLink = false/);
+  assert.match(
+    publicTab,
+    /showOwnReviewsLink \? <OwnReviewsLink profileId=\{profileId\} \/> : null/,
+  );
+  assert.match(
+    managed,
+    /user\?\.role === "psicologo" && user.id \? <OwnReviewsLink profileId=\{user.id\} \/> : null/,
+  );
+  const profile = readFileSync(
+    new URL("../../app/app/psychologist/[id]/psychologist-profile.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(profile, /conversion.isAuthenticated && canEditProfile && !shouldHidePublicReviews/);
+  const recipient = readFileSync(new URL("./new-testimonial-page.tsx", import.meta.url), "utf8");
+  assert.match(recipient, /searchParams.get\("psychologist_id"\)/);
+  assert.match(recipient, /useReviewEligibility\(psychologistId, hasToken && isPatient\)/);
+});
+
 test("exclusao do autor exige confirmacao e invalida os dados relacionados", () => {
   const button = readFileSync(new URL("./delete-review-button.tsx", import.meta.url), "utf8");
   const callers = readFileSync(

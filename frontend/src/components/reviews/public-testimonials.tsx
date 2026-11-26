@@ -2,6 +2,7 @@
 
 import type { ComponentProps } from "react";
 import { useDirectoryPsychologist } from "@/api/callers/directory";
+import { OwnReviewsLink } from "@/app/app/psychologist/[id]/components/own-reviews-link";
 import type { ReviewsTab } from "@/app/app/psychologist/[id]/components/reviews";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -22,6 +23,7 @@ export const PublicTestimonials = ({
   onLoadMore,
   readOnly = false,
   onRetry,
+  showOwnReviewsLink = false,
   professional: suppliedProfessional,
 }: ComponentProps<typeof ReviewsTab> & {
   readOnly?: boolean;
@@ -33,6 +35,7 @@ export const PublicTestimonials = ({
   const isEmpty = !isLoading && !isError && reviews.length === 0;
   return (
     <section className="grid gap-3 bg-background px-4 py-5">
+      {showOwnReviewsLink ? <OwnReviewsLink profileId={profileId} /> : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-base font-semibold">
           Avaliações
