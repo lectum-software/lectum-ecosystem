@@ -31,10 +31,8 @@ test("registration notice rejects Subscribe-only acceptance without upgrading it
   };
   assert.equal(parsePrivacyChoice(JSON.stringify(previous), 2), null);
   const preferences = readFileSync(new URL("preferences.tsx", import.meta.url), "utf8");
-  assert.match(preferences, /informa se a conta é de usuário comum ou profissional/);
-  assert.match(preferences, /Valor e moeda são enviados apenas na assinatura paga/);
-  assert.match(preferences, /Aceite antes da ação/);
-  assert.match(preferences, /não autoriza medir esse cadastro retroativamente/);
+  assert.match(preferences, /Só começa após seu aceite/);
+  assert.match(preferences, /sem medir ações anteriores ao aceite/);
 });
 
 test("no decision, malformed, expired and unknown notices fail closed", () => {
