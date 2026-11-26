@@ -12,6 +12,7 @@ import {
   setReviewVisibility,
 } from "@/api/req/psychologist-reviews";
 import { useReviewResponseForm } from "@/app/app/professional/reviews/use-form";
+import { OwnReviewsLink } from "@/app/app/psychologist/[id]/components/own-reviews-link";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -192,6 +193,7 @@ export const ProfessionalTestimonials = () => {
             </Link>
           </InlineAlert>
         ) : null}
+        {user?.role === "psicologo" && user.id ? <OwnReviewsLink profileId={user.id} /> : null}
         <div className={styles.list} role="tablist" aria-label="Filtrar avaliações">
           {(
             [
