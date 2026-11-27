@@ -29,16 +29,6 @@ export function parseGoogleChoice(raw: string | null, now = Date.now()): GoogleC
 export function googleMeasurementId(value: string | undefined) {
   return value && /^G-[A-Z0-9]{6,20}$/.test(value) ? value : null;
 }
-// Only advertising click identifiers survive; never content, search or private URLs.
-export function googlePageLocation(href: string) {
-  const url = new URL(href);
-  const page = new URL("https://www.lectum.com.br/");
-  for (const key of ["gclid", "gbraid", "wbraid"]) {
-    const value = url.searchParams.get(key);
-    if (value && /^[A-Za-z0-9_-]{1,256}$/.test(value)) page.searchParams.set(key, value);
-  }
-  return page.href;
-}
 export type GoogleEvent =
   | "page_view"
   | "forum_post"

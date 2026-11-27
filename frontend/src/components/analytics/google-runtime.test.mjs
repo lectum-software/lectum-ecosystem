@@ -1,8 +1,10 @@
+import "../../../scripts/register-source-modules.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import * as attribution from "./google-attribution.ts";
 import * as policy from "./google-policy.ts";
 
 function browser({ scope = "grant", hostname = "www.lectum.com.br", enabled = "true" } = {}) {
@@ -22,6 +24,7 @@ function browser({ scope = "grant", hostname = "www.lectum.com.br", enabled = "t
   };
   const exports = {};
   const doc = {
+    referrer: "",
     createElement: () => ({ remove() {} }),
     head: { appendChild: (script) => scripts.push(script) },
   };
@@ -36,7 +39,11 @@ function browser({ scope = "grant", hostname = "www.lectum.com.br", enabled = "t
     {
       exports,
       require: (name) =>
-        name === "./google-choice" ? { googleConsentScope: () => consent } : policy,
+        name === "./google-choice"
+          ? { googleConsentScope: () => consent }
+          : name === "./google-attribution"
+            ? attribution
+            : policy,
       window: host,
       document: doc,
       URL,
@@ -131,7 +138,9 @@ test("old Meta grants, malformed, expired and future choices never authorize Goo
     true,
   );
   assert.equal(
-    policy.googlePageLocation("https://www.lectum.com.br/private/id?q=sensitive&gclid=ABC_123"),
+    attribution.googleAttributionLocation(
+      "https://www.lectum.com.br/private/id?q=sensitive&gclid=ABC_123",
+    ),
     "https://www.lectum.com.br/?gclid=ABC_123",
   );
   assert.equal(policy.googleMeasurementId("GTM-123456"), null);
@@ -378,5 +387,70 @@ test("checkout component excludes active paid plans, courtesy, pending operation
     const f = browser();
     await checkoutComponent(f, options);
     assert.equal(f.scripts.length, 0);
+  }
+});
+
+test("page_view retains approved Meta attribution through delayed SDK and SPA navigation", async () => {
+  const f = browser({ scope: null });
+  const query =
+    "utm_source=meta&utm_medium=paid_social&utm_campaign=comunidades_sp_reconhecimento&utm_content=anuncio_01";
+  f.host.location.href = `https://www.lectum.com.br/comunidades/private-topic?${query}&email=private@example.com`;
+  await f.api.trackGoogleEvent("page_view", null, "document");
+  assert.equal(f.scripts.length, 0);
+  f.setConsent("grant");
+  const pending = f.api.trackGoogleEvent("page_view", "grant", "document");
+  f.host.location.href = "https://www.lectum.com.br/app/private";
+  f.load();
+  await pending;
+  await f.api.trackGoogleEvent("page_view", "grant", "document");
+  await f.api.trackGoogleEvent("sign_up", "grant", "registration");
+  const calls = f.commands().filter((v) => ["config", "event"].includes(v[0]));
+  for (const call of calls)
+    assert.equal(call[2].page_location, `https://www.lectum.com.br/?${query}`);
+  assert.equal(calls.filter((v) => v[1] === "page_view").length, 1);
+  assert.doesNotMatch(JSON.stringify(calls), /private-topic|private@example|app\/private/);
+  f.setConsent(null);
+  f.api.stopGoogleMeasurement();
+  f.setConsent("new-grant");
+  await f.api.trackGoogleEvent("page_view", "new-grant", "document");
+  assert.equal(f.commands().at(-1)[2].page_location, "https://www.lectum.com.br/");
+});
+
+test("Google click IDs survive event overrides while unknown queries and free text are excluded", async () => {
+  for (const key of ["gclid", "gbraid", "wbraid"]) {
+    const f = browser();
+    f.host.location.href = `https://www.lectum.com.br/private?${key}=Abc_123&token=secret&utm_term=clinical&utm_campaign=private_name#secret`;
+    const pending = f.api.trackGoogleEvent("page_view", "grant", "document");
+    f.load();
+    await pending;
+    assert.equal(f.commands().at(-1)[2].page_location, `https://www.lectum.com.br/?${key}=Abc_123`);
+  }
+  assert.equal(attribution.googleAttributionLocation("invalid"), "https://www.lectum.com.br/");
+  assert.equal(
+    attribution.googleAttributionLocation(
+      "https://www.lectum.com.br/?gclid=private%40example.com&utm_source=private_name",
+    ),
+    "https://www.lectum.com.br/",
+  );
+});
+
+test("referrer preserves known search/social origins without queries or paths", () => {
+  assert.equal(
+    attribution.googleAttributionReferrer("https://www.google.com.br/search?q=private#secret"),
+    "https://www.google.com.br/",
+  );
+  assert.equal(
+    attribution.googleAttributionReferrer("https://l.facebook.com/l.php?u=private"),
+    "https://l.facebook.com/",
+  );
+  for (const value of [
+    "",
+    "invalid",
+    "https://www.lectum.com.br/private",
+    "https://google.com.evil.test/private",
+    "https://private.example.com/",
+    "javascript:alert(1)",
+  ]) {
+    assert.equal(attribution.googleAttributionReferrer(value), "");
   }
 });

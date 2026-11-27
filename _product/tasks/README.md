@@ -2948,3 +2948,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 371 | [TASK-371 - Medicao da entrada no checkout Google](TASK-371-google-checkout-entry.md) | Concluida localmente |
 | 372 | [TASK-372 - Manifesto runtime do adapter no admin](TASK-372-admin-adapter-runtime.md) | Concluida localmente |
 | 373 | [TASK-373 - Restaurar link de avaliacoes](TASK-373-review-sharing-restoration.md) | Em validacao |
+| 374 | [TASK-374 - Origem de campanhas no GA4](TASK-374-google-traffic-attribution.md) | Concluida localmente |
