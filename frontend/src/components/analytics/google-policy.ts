@@ -1,6 +1,6 @@
 export const GOOGLE_CHOICE_KEY = "lectum.google-measurement.v1";
 export const GOOGLE_CHOICE_CHANGED = "lectum:google-measurement-changed";
-export const GOOGLE_CHOICE_VERSION = 1;
+export const GOOGLE_CHOICE_VERSION = 2;
 export const GOOGLE_CHOICE_MAX_AGE = 90 * 24 * 60 * 60_000;
 export type GoogleChoice = {
   version: number;
@@ -12,7 +12,7 @@ export function parseGoogleChoice(raw: string | null, now = Date.now()): GoogleC
   try {
     const v = JSON.parse(raw || "null");
     return v &&
-      v.version === GOOGLE_CHOICE_VERSION &&
+      (v.version === GOOGLE_CHOICE_VERSION || (v.version === 1 && v.allowed === false)) &&
       typeof v.allowed === "boolean" &&
       Number.isFinite(v.savedAt) &&
       Number.isFinite(v.expiresAt) &&
@@ -31,6 +31,7 @@ export function googleMeasurementId(value: string | undefined) {
 }
 export type GoogleEvent =
   | "page_view"
+  | "page_leave"
   | "forum_post"
   | "whatsapp_click"
   | "sign_up"
@@ -40,6 +41,7 @@ export function googleEventParams(event: GoogleEvent, accountType?: string) {
   if (
     ![
       "page_view",
+      "page_leave",
       "forum_post",
       "whatsapp_click",
       "sign_up",

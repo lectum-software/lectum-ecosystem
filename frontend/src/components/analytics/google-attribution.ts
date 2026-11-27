@@ -11,6 +11,12 @@ export function googleAttributionLocation(href: string) {
       const value = url.searchParams.get(key);
       if (value && /^[A-Za-z0-9_-]{1,256}$/.test(value)) page.searchParams.set(key, value);
     }
+    // Aggregate campaign identifiers support GA4 attribution when ad_user_data is denied.
+    for (const key of ["gad_source", "gad_campaignid"]) {
+      const values = url.searchParams.getAll(key);
+      if (values.length === 1 && /^[0-9]{1,20}$/.test(values[0]))
+        page.searchParams.set(key, values[0]);
+    }
     for (const [key, allowed] of Object.entries(approvedChannels)) {
       const value = url.searchParams.get(key);
       if (value && allowed.includes(value)) page.searchParams.set(key, value);

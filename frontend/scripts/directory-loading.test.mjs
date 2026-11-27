@@ -23,7 +23,8 @@ test("privacy notice has no initial idle delay but preserves interaction and con
   assert.match(notice, /let idleAt = Date.now\(\);/);
   assert.match(notice, /idleAt = Date.now\(\) \+ 1800;/);
   assert.match(notice, /busySurface\(\) \|\|/);
-  assert.match(notice, /ready && inviteReady && canShowPrivacyNotice\(path\) && !decided/);
+  assert.match(notice, /ready &&\s*inviteReady &&\s*canShowPrivacyNotice\(path\) &&/);
+  assert.match(notice, /!decided \|\| \(GOOGLE_ENABLED && googleChoice === null\)/);
 });
 
 test("directory action avatars use responsive optimization with a local HTTP fallback", () => {

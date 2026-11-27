@@ -147,7 +147,9 @@ export default function RootLayout({
                 <Socket />
                 <PwaInstallPrompt />
                 <PrivacyNotice />
-                <GoogleAnalytics />
+                <Suspense fallback={null}>
+                  <GoogleAnalytics />
+                </Suspense>
                 <Suspense fallback={null}>
                   <ExperienceCapture />
                 </Suspense>
