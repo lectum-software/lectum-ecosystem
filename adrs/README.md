@@ -822,3 +822,4 @@ Formato recomendado:
 - [ADR-0737 — Restaurar convite de avaliacoes](0737-review-sharing-restoration.md)
 - [ADR-0738 — Atribuicao sanitizada no GA4](0738-google-traffic-attribution.md)
 - [ADR-0739 — Identificadores de campanha sem catalogo](0739-dynamic-campaign-labels.md)
+- [ADR-0740 — Paginas publicas e comunidades no GA4](0740-google-community-pages.md)

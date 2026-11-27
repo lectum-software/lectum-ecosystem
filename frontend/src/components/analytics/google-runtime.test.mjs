@@ -5,6 +5,9 @@ import { test } from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
 import * as attribution from "./google-attribution.ts";
+
+const { googlePageContext } = await import("./google-page.ts");
+
 import * as policy from "./google-policy.ts";
 
 function browser({ scope = "grant", hostname = "www.lectum.com.br", enabled = "true" } = {}) {
@@ -14,10 +17,7 @@ function browser({ scope = "grant", hostname = "www.lectum.com.br", enabled = "t
   const host = {
     location: {
       hostname,
-      href:
-        "https://" +
-        hostname +
-        "/comunidades/private-topic?email=private@example.com&gclid=Abc_123",
+      href: `https://${hostname}/private/private-topic?email=private@example.com&gclid=Abc_123`,
     },
     setTimeout,
     clearTimeout,
@@ -25,6 +25,7 @@ function browser({ scope = "grant", hostname = "www.lectum.com.br", enabled = "t
   const exports = {};
   const doc = {
     referrer: "",
+    community: undefined,
     createElement: () => ({ remove() {} }),
     head: { appendChild: (script) => scripts.push(script) },
   };
@@ -43,7 +44,9 @@ function browser({ scope = "grant", hostname = "www.lectum.com.br", enabled = "t
           ? { googleConsentScope: () => consent }
           : name === "./google-attribution"
             ? attribution
-            : policy,
+            : name === "./google-page"
+              ? { readGooglePage: () => googlePageContext(host.location.href, doc.community) }
+              : policy,
       window: host,
       document: doc,
       URL,
@@ -61,6 +64,7 @@ function browser({ scope = "grant", hostname = "www.lectum.com.br", enabled = "t
     api: exports,
     host,
     scripts,
+    doc,
     cookies,
     setConsent: (v) => (consent = v),
     commands: () => (host.dataLayer || []).map((v) => Array.from(v)),
@@ -125,14 +129,29 @@ test("old Meta grants, malformed, expired and future choices never authorize Goo
     null,
     {},
     { campaigns: true },
-    { version: 1, allowed: true, savedAt: now + 1, expiresAt: now + 1000 },
-    { version: 1, allowed: true, savedAt: now - 100, expiresAt: now - 1 },
+    {
+      version: policy.GOOGLE_CHOICE_VERSION,
+      allowed: true,
+      savedAt: now + 1,
+      expiresAt: now + 1000,
+    },
+    {
+      version: policy.GOOGLE_CHOICE_VERSION,
+      allowed: true,
+      savedAt: now - 100,
+      expiresAt: now - 1,
+    },
   ]) {
     assert.equal(policy.parseGoogleChoice(JSON.stringify(choice), now), null);
   }
   assert.equal(
     policy.parseGoogleChoice(
-      JSON.stringify({ version: 1, allowed: true, savedAt: now, expiresAt: now + 1000 }),
+      JSON.stringify({
+        version: policy.GOOGLE_CHOICE_VERSION,
+        allowed: true,
+        savedAt: now,
+        expiresAt: now + 1000,
+      }),
       now,
     )?.allowed,
     true,
@@ -390,30 +409,57 @@ test("checkout component excludes active paid plans, courtesy, pending operation
   }
 });
 
-test("page_view retains Meta attribution through delayed SDK and SPA navigation", async () => {
-  const f = browser({ scope: null });
+test("SPA views preserve entry attribution and update conversion and engagement context", async () => {
+  const f = browser();
   const query =
-    "utm_source=meta&utm_medium=paid_social&utm_campaign=comunidades_sp_reconhecimento&utm_content=anuncio_01";
-  f.host.location.href = `https://www.lectum.com.br/comunidades/private-topic?${query}&email=private@example.com`;
-  await f.api.trackGoogleEvent("page_view", null, "document");
+    "utm_source=meta&utm_medium=paid_social&utm_campaign=comunidades_sp&utm_content=anuncio_01";
+  const community = "https://www.lectum.com.br/comunidades/ansiedade-em-equilibrio";
+  f.host.location.href = `${community}?${query}&email=private@example.com`;
+  assert.equal(await f.api.syncGooglePage(), false, "wait for public metadata");
   assert.equal(f.scripts.length, 0);
-  f.setConsent("grant");
-  const pending = f.api.trackGoogleEvent("page_view", "grant", "document");
-  f.host.location.href = "https://www.lectum.com.br/app/private";
+  f.doc.community = { slug: "ansiedade-em-equilibrio", name: "Ansiedade" };
+  const pending = f.api.syncGooglePage();
+  f.host.location.href = "https://www.lectum.com.br/auth/register/patient";
+  const next = f.api.syncGooglePage();
+  await Promise.resolve();
   f.load();
-  await pending;
-  await f.api.trackGoogleEvent("page_view", "grant", "document");
-  await f.api.trackGoogleEvent("sign_up", "grant", "registration");
-  const calls = f.commands().filter((v) => ["config", "event"].includes(v[0]));
-  for (const call of calls)
-    assert.equal(call[2].page_location, `https://www.lectum.com.br/?${query}`);
-  assert.equal(calls.filter((v) => v[1] === "page_view").length, 1);
-  assert.doesNotMatch(JSON.stringify(calls), /private-topic|private@example|app\/private/);
+  await Promise.all([pending, next]);
+  await f.api.syncGooglePage();
+  await f.api.trackGoogleEvent("sign_up", "grant", "registration", "user");
+  f.host.location.href = community;
+  await f.api.syncGooglePage();
+  await f.api.syncGooglePage();
+  const events = f.commands().filter((v) => v[0] === "event");
+  const views = events.filter((v) => v[1] === "page_view");
+  assert.equal(views.length, 3);
+  assert.equal(views[0][2].page_location, `${community}?${query}`);
+  assert.equal(views[0][2].community_name, "Ansiedade");
+  assert.equal(views[1][2].page_referrer, community);
+  assert.equal(views[1][2].community_name, "");
+  assert.equal(
+    events.find((v) => v[1] === "sign_up")[2].page_location,
+    "https://www.lectum.com.br/auth/register/patient",
+  );
+  const config = f
+    .commands()
+    .filter((v) => v[0] === "config")
+    .at(-1)[2];
+  assert.equal(config.page_location, community);
+  assert.equal(config.page_title, "Comunidade: Ansiedade | Lectum");
+  assert.equal(config.send_page_view, false);
+  assert.equal(config.allow_google_signals, false);
+  assert.equal(config.allow_ad_personalization_signals, false);
+  assert.doesNotMatch(JSON.stringify(f.commands()), /private@example/);
+  const consent = f.commands().find((v) => v[0] === "consent" && v[1] === "update")[2];
+  assert.equal(consent.analytics_storage, "granted");
+  for (const key of ["ad_storage", "ad_user_data", "ad_personalization"])
+    assert.equal(consent[key], "denied");
   f.setConsent(null);
   f.api.stopGoogleMeasurement();
+  assert.equal(await f.api.syncGooglePage(), false);
   f.setConsent("new-grant");
-  await f.api.trackGoogleEvent("page_view", "new-grant", "document");
-  assert.equal(f.commands().at(-1)[2].page_location, "https://www.lectum.com.br/");
+  await f.api.syncGooglePage();
+  assert.equal(f.commands().filter((v) => v[0] === "event" && v[1] === "page_view").length, 4);
 });
 
 test("Google click IDs survive event overrides while unknown queries and free text are excluded", async () => {
@@ -423,7 +469,10 @@ test("Google click IDs survive event overrides while unknown queries and free te
     const pending = f.api.trackGoogleEvent("page_view", "grant", "document");
     f.load();
     await pending;
-    assert.equal(f.commands().at(-1)[2].page_location, `https://www.lectum.com.br/?${key}=Abc_123`);
+    assert.equal(
+      f.commands().at(-1)[2].page_location,
+      `https://www.lectum.com.br/outras-paginas?${key}=Abc_123`,
+    );
   }
   assert.equal(attribution.googleAttributionLocation("invalid"), "https://www.lectum.com.br/");
   assert.equal(
@@ -464,7 +513,7 @@ test("new campaign and ad slugs reach GA4 without a campaign catalog", async () 
     f.load();
     await pending;
     for (const call of f.commands().filter((v) => ["config", "event"].includes(v[0])))
-      assert.equal(call[2].page_location, `https://www.lectum.com.br/?${query}`);
+      assert.equal(call[2].page_location, `https://www.lectum.com.br/outras-paginas?${query}`);
   }
 });
 
@@ -499,4 +548,83 @@ test("campaign labels reject free text, URLs, email, controls and ambiguous dupl
       `https://www.lectum.com.br/?${key}=${boundary}`,
     );
   }
+});
+
+test("old consent is not reused for community-level analytics", () => {
+  const now = Date.now();
+  assert.equal(
+    policy.parseGoogleChoice(
+      JSON.stringify({ version: 1, allowed: true, savedAt: now, expiresAt: now + 1000 }),
+      now,
+    ),
+    null,
+  );
+});
+test("public community names require matching resolved metadata and exclude arbitrary URLs", () => {
+  assert.equal(googlePageContext("https://www.lectum.com.br/comunidades/topic"), null);
+  assert.equal(
+    googlePageContext("https://www.lectum.com.br/comunidades/topic", {
+      slug: "other",
+      name: "Other",
+    }),
+    null,
+  );
+  const post = googlePageContext(
+    "https://www.lectum.com.br/comunidades/topic/publicacao/private-id?email=private@example.com",
+  );
+  assert.equal(post.page_location, "https://www.lectum.com.br/publicacoes");
+  assert.equal(post.community_name, "");
+  assert.equal(
+    googlePageContext("https://www.lectum.com.br/app/profile/secret?token=secret").page_location,
+    "https://www.lectum.com.br/area-restrita",
+  );
+});
+
+test("existing refusals remain refused after a consent version change", () => {
+  const now = Date.now();
+  assert.equal(
+    policy.parseGoogleChoice(
+      JSON.stringify({ version: 1, allowed: false, savedAt: now, expiresAt: now + 1000 }),
+      now,
+    )?.allowed,
+    false,
+  );
+});
+
+test("aggregate Google campaign identifiers survive without enabling advertising consent", () => {
+  const page = googlePageContext(
+    "https://www.lectum.com.br/?gad_source=1&gad_campaignid=1234567890&email=private@example.com",
+  );
+  assert.equal(
+    page.page_location,
+    "https://www.lectum.com.br/?gad_source=1&gad_campaignid=1234567890",
+  );
+  for (const query of [
+    "gad_source=1&gad_source=2",
+    "gad_campaignid=private%40example.com",
+    "gad_source=text",
+  ])
+    assert.equal(
+      googlePageContext(`https://www.lectum.com.br/?${query}`).page_location,
+      "https://www.lectum.com.br/",
+    );
+});
+
+test("queued navigation is cancelled by revocation and cannot replay into a new grant", async () => {
+  const f = browser();
+  f.host.location.href = "https://www.lectum.com.br/";
+  const first = f.api.syncGooglePage();
+  await Promise.resolve();
+  f.host.location.href = "https://www.lectum.com.br/comunidades";
+  const second = f.api.syncGooglePage();
+  f.setConsent(null);
+  f.api.stopGoogleMeasurement();
+  f.load();
+  await Promise.all([first, second]);
+  assert.equal(f.commands().filter((v) => v[0] === "event").length, 0);
+  f.setConsent("new-grant");
+  await f.api.syncGooglePage();
+  const events = f.commands().filter((v) => v[0] === "event");
+  assert.equal(events.length, 1);
+  assert.equal(events[0][2].page_location, "https://www.lectum.com.br/comunidades");
 });

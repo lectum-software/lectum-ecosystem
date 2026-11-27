@@ -1,28 +1,23 @@
 "use client";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { callEndpoint } from "@/api/generator";
 import { handleReq } from "@/api/handle";
 import { pendingGoogleCheckout, sendGoogleSubscription } from "./google-billing";
 import { googleConsentScope } from "./google-choice";
 import { GOOGLE_CHOICE_CHANGED } from "./google-policy";
-import {
-  GOOGLE_ENABLED,
-  stopGoogleMeasurement,
-  syncGoogleMeasurement,
-  trackGoogleEvent,
-} from "./google-runtime";
+import { GOOGLE_ENABLED, stopGoogleMeasurement, syncGooglePage } from "./google-runtime";
 export function GoogleAnalytics() {
+  const pathname = usePathname();
+  useEffect(() => {
+    if (pathname) void syncGooglePage().catch(() => stopGoogleMeasurement());
+  }, [pathname]);
   useEffect(() => {
     if (!GOOGLE_ENABLED) return;
     const sync = () => {
       const scope = googleConsentScope();
       if (!scope) stopGoogleMeasurement();
-      else
-        void syncGoogleMeasurement(scope)
-          .then((ready) => {
-            if (ready) void trackGoogleEvent("page_view", scope, "document");
-          })
-          .catch(() => stopGoogleMeasurement());
+      else void syncGooglePage(scope).catch(() => stopGoogleMeasurement());
     };
     let checking = false;
     let attempts = 0;

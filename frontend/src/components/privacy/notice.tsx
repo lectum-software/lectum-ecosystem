@@ -149,7 +149,11 @@ function NoticeSession({
       });
   }, [userId, ready, saving, choice?.pendingRevocation, recoverRevocation]);
   const decided = choice !== null || status.data?.decided === true;
-  const canInvite = ready && inviteReady && canShowPrivacyNotice(path) && !decided;
+  const canInvite =
+    ready &&
+    inviteReady &&
+    canShowPrivacyNotice(path) &&
+    (!decided || (GOOGLE_ENABLED && googleChoice === null));
 
   useEffect(() => {
     const open = () => {
@@ -319,7 +323,10 @@ function NoticeSession({
               className="text-[15px] leading-6 sm:text-base sm:leading-7"
             >
               Usamos cookies para medir audiência e campanhas
-              {GOOGLE_ENABLED ? " com Meta e Google" : ""}. Saiba mais em Preferências.
+              {GOOGLE_ENABLED
+                ? " com Meta e Google. No Google, isso inclui as páginas e os nomes das comunidades visitadas, sem remarketing"
+                : ""}
+              . Saiba mais em Preferências.
             </p>
             {error && (
               <p role="alert" className="mt-3 text-sm text-primary-foreground">

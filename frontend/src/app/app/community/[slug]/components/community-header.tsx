@@ -259,7 +259,11 @@ export const CommunityHeader = ({
         </div>
 
         <div className="mt-4 grid gap-2">
-          <h1 className="text-[1.55rem] font-black leading-tight tracking-[-0.03em] text-foreground dark:text-foreground">
+          <h1
+            data-google-community-slug={community.slug}
+            data-google-community-name={community.name}
+            className="text-[1.55rem] font-black leading-tight tracking-[-0.03em] text-foreground dark:text-foreground"
+          >
             {community.name}
           </h1>
           <p className="text-sm font-semibold text-muted">

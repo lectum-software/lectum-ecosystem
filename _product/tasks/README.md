@@ -2951,3 +2951,4 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 374 | [TASK-374 - Origem de campanhas no GA4](TASK-374-google-traffic-attribution.md) | Concluida localmente |
 | 375 | [TASK-375 - Campanhas sem catalogo no GA4](TASK-375-dynamic-campaign-labels.md) | Concluida localmente |
 
+| 376 | [TASK-376 - Paginas e comunidades no GA4](TASK-376-google-community-pages.md) | Implementada localmente; configuracao GA4 pendente |
