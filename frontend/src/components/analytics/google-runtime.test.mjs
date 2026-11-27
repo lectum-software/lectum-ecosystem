@@ -390,7 +390,7 @@ test("checkout component excludes active paid plans, courtesy, pending operation
   }
 });
 
-test("page_view retains approved Meta attribution through delayed SDK and SPA navigation", async () => {
+test("page_view retains Meta attribution through delayed SDK and SPA navigation", async () => {
   const f = browser({ scope: null });
   const query =
     "utm_source=meta&utm_medium=paid_social&utm_campaign=comunidades_sp_reconhecimento&utm_content=anuncio_01";
@@ -419,7 +419,7 @@ test("page_view retains approved Meta attribution through delayed SDK and SPA na
 test("Google click IDs survive event overrides while unknown queries and free text are excluded", async () => {
   for (const key of ["gclid", "gbraid", "wbraid"]) {
     const f = browser();
-    f.host.location.href = `https://www.lectum.com.br/private?${key}=Abc_123&token=secret&utm_term=clinical&utm_campaign=private_name#secret`;
+    f.host.location.href = `https://www.lectum.com.br/private?${key}=Abc_123&token=secret&utm_term=clinical&utm_campaign=private%40example.com#secret`;
     const pending = f.api.trackGoogleEvent("page_view", "grant", "document");
     f.load();
     await pending;
@@ -452,5 +452,51 @@ test("referrer preserves known search/social origins without queries or paths", 
     "javascript:alert(1)",
   ]) {
     assert.equal(attribution.googleAttributionReferrer(value), "");
+  }
+});
+
+test("new campaign and ad slugs reach GA4 without a campaign catalog", async () => {
+  for (const source of ["meta", "google"]) {
+    const f = browser();
+    const query = `utm_source=${source}&utm_medium=cpc&utm_campaign=comunidades_rj_2027&utm_content=Video-B_104`;
+    f.host.location.href = `https://www.lectum.com.br/private?${query}`;
+    const pending = f.api.trackGoogleEvent("page_view", "grant", "document");
+    f.load();
+    await pending;
+    for (const call of f.commands().filter((v) => ["config", "event"].includes(v[0])))
+      assert.equal(call[2].page_location, `https://www.lectum.com.br/?${query}`);
+  }
+});
+
+test("campaign labels reject free text, URLs, email, controls and ambiguous duplicates", () => {
+  for (const key of ["utm_campaign", "utm_content"]) {
+    for (const value of [
+      "",
+      "private@example.com",
+      "https://example.com",
+      "nome completo",
+      "a\nb",
+      "a".repeat(101),
+      "{{campaign.name}}",
+      "a%40b",
+    ]) {
+      assert.equal(
+        attribution.googleAttributionLocation(
+          `https://www.lectum.com.br/private?${key}=${encodeURIComponent(value)}&utm_term=private&email=private`,
+        ),
+        "https://www.lectum.com.br/",
+      );
+    }
+    assert.equal(
+      attribution.googleAttributionLocation(
+        `https://www.lectum.com.br/?${key}=comunidades_sp_reconhecimento&${key}=anuncio_01`,
+      ),
+      "https://www.lectum.com.br/",
+    );
+    const boundary = "a".repeat(100);
+    assert.equal(
+      attribution.googleAttributionLocation(`https://www.lectum.com.br/?${key}=${boundary}`),
+      `https://www.lectum.com.br/?${key}=${boundary}`,
+    );
   }
 });
