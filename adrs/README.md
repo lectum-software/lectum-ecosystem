@@ -820,3 +820,4 @@ Formato recomendado:
 - [ADR-0735 — begin_checkout na entrada elegivel](0735-google-checkout-entry.md)
 - [ADR-0736 — Descoberta da raiz do adapter no admin](0736-admin-adapter-runtime.md)
 - [ADR-0737 — Restaurar convite de avaliacoes](0737-review-sharing-restoration.md)
+- [ADR-0738 — Atribuicao sanitizada no GA4](0738-google-traffic-attribution.md)

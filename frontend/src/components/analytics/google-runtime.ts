@@ -1,11 +1,10 @@
 "use client";
-import { googleConsentScope } from "./google-choice";
 import {
-  type GoogleEvent,
-  googleEventParams,
-  googleMeasurementId,
-  googlePageLocation,
-} from "./google-policy";
+  googleAttributionReferrer,
+  googleAttributionLocation as googlePageLocation,
+} from "./google-attribution";
+import { googleConsentScope } from "./google-choice";
+import { type GoogleEvent, googleEventParams, googleMeasurementId } from "./google-policy";
 export const GOOGLE_ID = googleMeasurementId(process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID);
 export const GOOGLE_ENABLED =
   Boolean(GOOGLE_ID) && process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ENABLED === "true";
@@ -16,6 +15,7 @@ type GoogleWindow = Window & {
 };
 let loading: Promise<boolean> | null = null;
 let configured = false;
+let entry: { page_location: string; page_referrer: string } | null = null;
 let activeScope: string | null = null;
 const sent = new Set<string>();
 function permitted(scope: string | null): boolean {
@@ -39,6 +39,7 @@ export function stopGoogleMeasurement() {
   host[`ga-disable-${GOOGLE_ID}`] = true;
   if (activeScope) host.gtag?.("consent", "update", deniedConsent);
   activeScope = null;
+  entry = null;
   if (!googleConsentScope()) {
     for (const cookie of document.cookie.split(";")) {
       const name = cookie.trim().split("=")[0];
@@ -91,6 +92,10 @@ export async function syncGoogleMeasurement(scope = googleConsentScope()) {
     if (!googleConsentScope()) stopGoogleMeasurement();
     return false;
   }
+  entry ??= {
+    page_location: googlePageLocation(window.location.href),
+    page_referrer: googleAttributionReferrer(document.referrer),
+  };
   if (!(await loadGoogle()) || !permitted(scope)) {
     if (!googleConsentScope()) stopGoogleMeasurement();
     return false;
@@ -110,8 +115,7 @@ export async function syncGoogleMeasurement(scope = googleConsentScope()) {
     host.gtag?.("js", new Date());
     host.gtag?.("config", GOOGLE_ID, {
       send_page_view: false,
-      page_location: googlePageLocation(window.location.href),
-      page_referrer: "",
+      ...entry,
       page_title: "Lectum",
       allow_google_signals: false,
       allow_ad_personalization_signals: false,
@@ -140,9 +144,8 @@ export async function trackGoogleEvent(
     (window as unknown as GoogleWindow).gtag?.("event", event, {
       ...params,
       send_to: GOOGLE_ID,
-      page_location: "https://www.lectum.com.br/",
+      ...entry,
       page_title: "Lectum",
-      page_referrer: "",
     });
     return true;
   } catch {
