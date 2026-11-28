@@ -20,3 +20,6 @@ Fechar o navegador ou permanecer em rota privada pode deixar a acao somente na A
 TASK-377. Flags opcionais false em ambos os exemplos. Backend antes do frontend, mesmo META_DATASET_ID da API; frontend precisa rebuild para ativar/desativar. Desligar ambas e rollback simples. Testar confirmacao, consentimento, isolamento de navegador e deduplicacao localmente antes da publicacao autorizada.
 
 Referencia: https://developers.facebook.com/documentation/ads-commerce/conversions-api/deduplicate-pixel-and-server-events
+
+## Evolucao
+ADR-0742 acrescenta PageView explicito por visita consentida. A exclusao de PageView acima descreve a entrega original 0.1.882; os recibos de conversao e sua deduplicacao permanecem iguais.

@@ -7,6 +7,7 @@ const pixelId = "1606598847399888";
 const eventId = "a".repeat(64);
 test("all existing event names preserve server identity and strip unrelated data", () => {
   for (const eventName of [
+    "PageView",
     "CompleteRegistration",
     "Contact",
     "forum_post",
@@ -100,6 +101,15 @@ test("SDK awaits consent, deduplicates concurrent sends, and revokes", async () 
     ["init", pixelId],
   );
   assert.ok(commands.some((x) => x[0] === "set" && x[1] === "autoConfig" && x[2] === false));
+  const view = { eventId: "b".repeat(64), eventName: "PageView", params: {} };
+  await Promise.all([
+    sendPixelReceipt(pixelId, view, () => allowed),
+    sendPixelReceipt(pixelId, view, () => allowed),
+  ]);
+  assert.equal(commands.filter((x) => x[2] === "PageView").length, 1);
+  allowed = false;
+  await sendPixelReceipt(pixelId, { ...view, eventId: "c".repeat(64) }, () => allowed);
+  assert.equal(commands.filter((x) => x[2] === "PageView").length, 1);
   revokeProductionPixel();
   assert.deepEqual(commands.at(-1), ["consent", "revoke"]);
 });

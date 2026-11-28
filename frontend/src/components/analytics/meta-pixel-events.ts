@@ -1,6 +1,12 @@
 export type PixelReceipt = {
   eventId: string;
-  eventName: "CompleteRegistration" | "Contact" | "forum_post" | "InitiateCheckout" | "Subscribe";
+  eventName:
+    | "PageView"
+    | "CompleteRegistration"
+    | "Contact"
+    | "forum_post"
+    | "InitiateCheckout"
+    | "Subscribe";
   params: Record<string, string | number>;
 };
 
@@ -25,6 +31,7 @@ export function pixelCommand(pixelId: string, receipt: PixelReceipt): readonly u
       params.value = receipt.params.value;
       params.currency = "BRL";
       break;
+    case "PageView":
     case "Contact":
     case "InitiateCheckout":
     case "forum_post":
