@@ -131,6 +131,11 @@ export const registerProfessionalReplyPresentationTests = ({
           const html = renderRelations({ children: bar });
           assert.doesNotMatch(bar.props.className, /flex-wrap/);
           assert.match(html, /flex-nowrap/);
+          assert.equal(bar.props.reply.textOnly, true);
+          assert.match(html, /title="Responder"/);
+          assert.match(html, /truncate whitespace-nowrap text-\[14px\] font-medium/);
+          assert.match(html, /font-medium leading-\[20px\] tracking-normal/);
+          assert.doesNotMatch(html, /lucide-message-circle/);
           if (role === "psicologo" && media_url) {
             assert.match(html, /lucide-bookmark/);
             assert.match(html, /aria-label="Compartilhar"/);
@@ -150,7 +155,8 @@ export const registerProfessionalReplyPresentationTests = ({
           if (role === "psicologo" && !media_url) {
             const comment = html.indexOf('aria-label="Responder"');
             const whatsapp = html.indexOf('aria-label="Fale com Professional pelo WhatsApp"');
-            assert.ok(comment >= 0 && whatsapp > comment);
+            const upvote = html.indexOf('aria-label="Marcar resposta como útil"');
+            assert.ok(upvote >= 0 && whatsapp > upvote && comment > whatsapp);
           }
           if (role !== "psicologo" || media_url) assert.doesNotMatch(html, /Fale com/);
         }

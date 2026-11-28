@@ -49,6 +49,7 @@ export type CommunityActionBarProps = {
   endSlotAlignment?: "trailing" | "inline";
   endSlot?: ReactNode;
   beforeSaveSlot?: ReactNode;
+  beforeReplySlot?: ReactNode;
   reply?: {
     iconOnly?: boolean;
     label?: string;
@@ -131,6 +132,7 @@ export const CommunityActionBar = ({
   endSlotAlignment = "trailing",
   endSlot,
   beforeSaveSlot,
+  beforeReplySlot,
   onVote,
   reply,
   save,
@@ -250,6 +252,7 @@ export const CommunityActionBar = ({
         className={cn(
           "flex min-w-0 flex-nowrap items-center sm:flex-none",
           inlineEndSlot ? "flex-1 overflow-hidden sm:flex-none sm:overflow-visible" : "flex-1",
+          reply?.textOnly && "flex-1 sm:flex-1",
           size === "xs" ? (spacing === "relaxed" ? "gap-2" : "gap-1 sm:gap-1.5") : "gap-1.5",
         )}
       >
@@ -310,17 +313,25 @@ export const CommunityActionBar = ({
           )
         ) : null}
 
+        {beforeReplySlot}
+
         {reply?.textOnly ? (
           <button
             aria-label={reply.label ?? "Responder"}
-            className={textOnlyReplyClassName(size)}
+            className={cn(
+              textOnlyReplyClassName(size),
+              "max-w-full shrink overflow-hidden tracking-normal",
+              size === "xs" && "px-1.5",
+            )}
             data-psychologist-tip-target={reply.tipTarget}
             data-reply-open-trigger="true"
             onClick={stopActionPropagation(reply.onClick)}
             title={reply.label ?? "Responder"}
             type="button"
           >
-            <span className={textOnlyReplyTextClassName}>{reply.label ?? "Responder"}</span>
+            <span className="block min-w-0 truncate whitespace-nowrap text-[14px] font-medium leading-[20px] tracking-normal">
+              {reply.label ?? "Responder"}
+            </span>
           </button>
         ) : reply ? (
           <PostActionButton
