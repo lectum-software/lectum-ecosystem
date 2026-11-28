@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
 import { campaignSchema } from "@/modules/api/public/marketing/attribution";
+import { pixelReceipts } from "@/modules/marketing/pixel-controller";
 import { validator } from "@/utils/validator";
+import type { ConsentDTO } from "./DTOs";
 import { captureBrowser } from "./use-cases/browser";
 import { captureCheckout, captureEntry } from "./use-cases/checkout";
 import * as actions from "./use-cases/controller";
@@ -17,6 +19,9 @@ routes.post("/grant", v.grantValidator, actions.grant);
 routes.post("/revoke", v.statusValidator, actions.revoke);
 // Handler checks its feature gate before strictly validating its small payload.
 routes.post("/browser", captureBrowser);
+routes.post("/pixel-events", (req, res) =>
+  pixelReceipts(req, res, (req as unknown as ConsentDTO).auth.id),
+);
 routes.post("/checkout", captureCheckout);
 routes.post("/checkout-entry", captureEntry);
 routes.post(

@@ -83,6 +83,11 @@ const contentSecurityPolicy = [
   "manifest-src 'self'",
 ]
   .map((directive) => {
+    if (process.env.NEXT_PUBLIC_META_PIXEL_ENABLED === "true") {
+      if (directive.startsWith("script-src ")) directive += " https://connect.facebook.net";
+      if (directive.startsWith("connect-src ") || directive.startsWith("img-src "))
+        directive += " https://www.facebook.com https://connect.facebook.net";
+    }
     if (googleEnabled) {
       if (directive.startsWith("script-src ")) directive += " https://www.googletagmanager.com";
       if (directive.startsWith("connect-src ") || directive.startsWith("img-src "))

@@ -17,6 +17,7 @@ import {
   MarketingConsentError,
   type MarketingConsentPolicy,
 } from "@/modules/marketing/consent-policy";
+import { pixelReceipts } from "@/modules/marketing/pixel-controller";
 
 export const campaignSchema = z
   .object({
@@ -43,6 +44,7 @@ export function createAttributionRouter(
   browserPolicy: BrowserIdentifierPolicy = BROWSER_IDENTIFIER_POLICY,
 ) {
   const router = Router();
+  router.post("/pixel-events", (req, res) => pixelReceipts(req, res, null));
   const repo = new AttributionRepository(policy, browserPolicy);
   router.use((_req, res, next) => {
     res.setHeader("Cache-Control", "no-store");

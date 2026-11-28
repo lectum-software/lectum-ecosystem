@@ -823,3 +823,5 @@ Formato recomendado:
 - [ADR-0738 — Atribuicao sanitizada no GA4](0738-google-traffic-attribution.md)
 - [ADR-0739 — Identificadores de campanha sem catalogo](0739-dynamic-campaign-labels.md)
 - [ADR-0740 — Paginas publicas e comunidades no GA4](0740-google-community-pages.md)
+
+- [ADR-0741 — Pixel com recibos confirmados da API](0741-meta-pixel-confirmed-events.md)

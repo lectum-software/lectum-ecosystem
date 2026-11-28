@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Suspense } from "react";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 
 import "@/app/globals.css";
 import { AdminViewAsBanner } from "@/components/admin-view-as-banner";
@@ -149,6 +150,7 @@ export default function RootLayout({
                 <PrivacyNotice />
                 <Suspense fallback={null}>
                   <GoogleAnalytics />
+                  <MetaPixel />
                 </Suspense>
                 <Suspense fallback={null}>
                   <ExperienceCapture />

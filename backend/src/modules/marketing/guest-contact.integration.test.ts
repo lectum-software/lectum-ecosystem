@@ -18,6 +18,7 @@ test("PostgreSQL/HTTP: guest WhatsApp consent, deduplication, payload and revoca
   const { MARKETING_CONSENT_POLICY } = await import("./consent-policy");
   const { marketingRequestContext } = await import("./request-context");
   const { default: actionRouter } = await import("../api/public/analytics/action");
+  const { readPixelReceipts } = await import("./pixel-receipts");
   const { resolveUserDeliveryEvidence } = await import("./user-delivery");
   const { buildConsentedMetaCapiPayload } = await import("./meta-capi");
   const { USER_DELIVERY_POLICY } = await import("./user-events");
@@ -88,6 +89,27 @@ test("PostgreSQL/HTTP: guest WhatsApp consent, deduplication, payload and revoca
     assert.equal((await jobs()).length, 1, "Replays cannot duplicate or rebind the source");
     const evidence = await db.$transaction((tx) => resolveUserDeliveryEvidence(tx, first));
     assert.ok(evidence);
+    const receipts = await db.$transaction((tx) =>
+      readPixelReceipts(tx, { userId: null, token: tokens[0] }),
+    );
+    assert.deepEqual(receipts, [
+      {
+        eventId: first.event_id,
+        occurredAt: first.occurred_at.getTime(),
+        eventName: "Contact",
+        params: {},
+      },
+    ]);
+    assert.deepEqual(
+      await db.$transaction((tx) => readPixelReceipts(tx, { userId: null, token: tokens[1] })),
+      [],
+    );
+    assert.deepEqual(
+      await db.$transaction((tx) =>
+        readPixelReceipts(tx, { userId: randomUUID(), token: tokens[0] }),
+      ),
+      [],
+    );
     const payload = buildConsentedMetaCapiPayload(
       evidence,
       [first.source_url!],
@@ -142,6 +164,10 @@ test("PostgreSQL/HTTP: guest WhatsApp consent, deduplication, payload and revoca
         data: mutation,
       });
       assert.equal(await db.$transaction((tx) => resolveUserDeliveryEvidence(tx, first)), null);
+      assert.deepEqual(
+        await db.$transaction((tx) => readPixelReceipts(tx, { userId: null, token: tokens[0] })),
+        [],
+      );
       await db.marketing_guest_attribution.update({
         where: { token_hash: hashes[0] },
         data: {
