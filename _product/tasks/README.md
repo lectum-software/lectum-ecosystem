@@ -2954,3 +2954,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 376 | [TASK-376 - Paginas e comunidades no GA4](TASK-376-google-community-pages.md) | Implementada localmente; configuracao GA4 pendente |
 
 | 377 | [TASK-377 - Eventos confirmados no Pixel e API da Meta](TASK-377-meta-pixel-events.md) | Concluida |
+
+| 378 | [TASK-378 - Inventario e visitas de pagina no Pixel](TASK-378-meta-pixel-page-views.md) | Concluida |

@@ -825,3 +825,5 @@ Formato recomendado:
 - [ADR-0740 — Paginas publicas e comunidades no GA4](0740-google-community-pages.md)
 
 - [ADR-0741 — Pixel com recibos confirmados da API](0741-meta-pixel-confirmed-events.md)
+
+- [ADR-0742 — PageView explicito com consentimento](0742-meta-pixel-page-views.md)

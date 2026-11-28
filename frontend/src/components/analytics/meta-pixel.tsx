@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { z } from "zod";
 import { callEndpoint } from "@/api/generator";
 import { handleReq } from "@/api/handle";
@@ -17,6 +17,7 @@ import {
   usePixelChoice,
 } from "./meta-pixel-choice";
 import { pixelLocationAllowed } from "./meta-pixel-events";
+import { createPixelNavigation } from "./meta-pixel-navigation";
 import { revokeProductionPixel, sendPixelReceipt } from "./meta-pixel-runtime";
 
 const responseSchema = z.object({
@@ -43,13 +44,32 @@ const responseSchema = z.object({
 });
 
 export function MetaPixel() {
+  const navigation = useRef(
+    createPixelNavigation(() =>
+      [...crypto.getRandomValues(new Uint8Array(32))]
+        .map((v) => v.toString(16).padStart(2, "0"))
+        .join(""),
+    ),
+  );
   const scope = useMeasurementScope();
   const pixelChoice = usePixelChoice();
   const { user } = usePrivacyIdentity();
   const userId = user?.id || null;
   const pathname = usePathname();
+  const search = useSearchParams().toString();
   useEffect(() => {
-    if (!META_PIXEL_ENABLED || !scope || pixelChoice !== "granted") return;
+    if (
+      !META_PIXEL_ENABLED ||
+      !scope ||
+      pixelChoice !== "granted" ||
+      !pixelLocationAllowed(location.href)
+    ) {
+      navigation.current.reset();
+      revokeProductionPixel();
+      return;
+    }
+    const visitId = navigation.current.visit(scope, `${pathname}?${search}`);
+    const href = location.href;
     let stopped = false;
     let busy = false;
     const controller = new AbortController();
@@ -59,6 +79,7 @@ export function MetaPixel() {
       localCampaignConsentScope(userId) === scope &&
       readPixelChoice() === "granted" &&
       location.pathname === pathname &&
+      location.href === href &&
       pixelLocationAllowed(location.href);
     const revoke = () => {
       if (!authorized()) revokeProductionPixel();
@@ -92,6 +113,11 @@ export function MetaPixel() {
           }),
         );
         if (response.pixelId && authorized()) {
+          await sendPixelReceipt(
+            response.pixelId,
+            { eventId: visitId, eventName: "PageView", params: {} },
+            authorized,
+          );
           for (const receipt of response.events) {
             const start = pixelConsentStart();
             if (start !== null && receipt.occurredAt >= start)
@@ -118,6 +144,6 @@ export function MetaPixel() {
       window.removeEventListener("storage", revoke);
       window.removeEventListener("pagehide", revokeProductionPixel);
     };
-  }, [scope, userId, pathname, pixelChoice]);
+  }, [scope, userId, pathname, search, pixelChoice]);
   return null;
 }
