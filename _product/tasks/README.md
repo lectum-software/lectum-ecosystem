@@ -2956,3 +2956,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 377 | [TASK-377 - Eventos confirmados no Pixel e API da Meta](TASK-377-meta-pixel-events.md) | Concluida |
 
 | 378 | [TASK-378 - Inventario e visitas de pagina no Pixel](TASK-378-meta-pixel-page-views.md) | Concluida |
+
+| 379 | [TASK-379 - Simplificar aviso de cookies](TASK-379-simple-cookie-notice.md) | Concluida localmente |
