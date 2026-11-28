@@ -90,7 +90,7 @@ export const ReplyVoteBar = ({
     <CommunityActionBar
       className="mt-3 overflow-x-auto [&>div:last-child:empty]:hidden [&>div:last-child]:sm:ml-auto"
       endSlot={<PostTestimonialInvitation postAuthorId={postAuthorId} reply={reply} />}
-      beforeSaveSlot={
+      beforeReplySlot={
         reply.author.role === "psicologo" && reply.author.whatsapp_url && !reply.media_url ? (
           <CommunityWhatsAppCta
             size="xs"
@@ -108,7 +108,7 @@ export const ReplyVoteBar = ({
       disabled={disabled}
       onVote={onVote}
       reply={{
-        iconOnly: true,
+        textOnly: true,
         label: "Responder",
         onClick: onReply,
       }}
