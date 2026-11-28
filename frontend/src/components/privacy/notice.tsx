@@ -5,6 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { usePrivacyStatus, useSavePrivacy } from "@/api/callers/privacy";
 import { persistGoogleChoice, useGoogleChoice } from "@/components/analytics/google-choice";
 import { GOOGLE_ENABLED } from "@/components/analytics/google-runtime";
+import {
+  META_PIXEL_ENABLED,
+  persistPixelChoice,
+  usePixelChoice,
+} from "@/components/analytics/meta-pixel-choice";
 import { Modal } from "@/components/ui/modal";
 import { hasCompletedRegistrationForPrompts } from "@/utils/prompt-cooldown";
 import { releaseActivePrompt, reserveActivePrompt } from "@/utils/prompt-coordinator";
@@ -65,6 +70,7 @@ function NoticeSession({
   const choice = usePrivacyChoice(userId);
   const experienceChoice = useExperienceChoice(userId);
   const googleChoice = useGoogleChoice();
+  const pixelChoice = usePixelChoice();
   const [panel, setPanel] = useState(false);
   const [shown, setShown] = useState(false);
   const [bottom, setBottom] = useState(12);
@@ -153,7 +159,9 @@ function NoticeSession({
     ready &&
     inviteReady &&
     canShowPrivacyNotice(path) &&
-    (!decided || (GOOGLE_ENABLED && googleChoice === null));
+    (!decided ||
+      (GOOGLE_ENABLED && googleChoice === null) ||
+      (META_PIXEL_ENABLED && pixelChoice === null && choice?.campaigns !== false));
 
   useEffect(() => {
     const open = () => {
@@ -254,6 +262,7 @@ function NoticeSession({
     setError(null);
     if (EXPERIENCE_ENABLED && experience === false) persistExperienceChoice(userId, false);
     if (GOOGLE_ENABLED && google === false) persistGoogleChoice(false);
+    if (META_PIXEL_ENABLED && !campaigns) persistPixelChoice(false);
     try {
       // A refusal closes local permission before attempting a network revocation.
       if (!campaigns) {
@@ -278,10 +287,13 @@ function NoticeSession({
         throw new Error("storage_unavailable");
       if (GOOGLE_ENABLED && google !== undefined && !persistGoogleChoice(google))
         throw new Error("storage_unavailable");
+      if (META_PIXEL_ENABLED && !persistPixelChoice(campaigns))
+        throw new Error("storage_unavailable");
       setPanel(false);
       setShown(false);
       releaseActivePrompt("privacy");
     } catch {
+      if (META_PIXEL_ENABLED) persistPixelChoice(false);
       if (GOOGLE_ENABLED && google !== undefined) persistGoogleChoice(false);
       if (EXPERIENCE_ENABLED && experience !== undefined) persistExperienceChoice(userId, false);
       if (campaigns) persistPrivacyChoice(userId, false, Boolean(userId));
@@ -325,6 +337,9 @@ function NoticeSession({
               Usamos cookies para medir audiência e campanhas
               {GOOGLE_ENABLED
                 ? " com Meta e Google. No Google, isso inclui as páginas e os nomes das comunidades visitadas, sem remarketing"
+                : ""}
+              {META_PIXEL_ENABLED
+                ? ". O Pixel da Meta também recebe as URLs das páginas autorizadas, incluindo comunidades"
                 : ""}
               . Saiba mais em Preferências.
             </p>

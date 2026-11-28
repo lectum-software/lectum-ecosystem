@@ -70,7 +70,7 @@ export function PrivacyPreferences({
           : "Medição de campanhas com a Meta",
         disabled: busy,
         description:
-          "Opcional. Mede resultados de campanhas, como cadastros, contatos e assinaturas, usando dados de navegação. No Google, inclui as páginas e os nomes das comunidades visitadas, sem remarketing. Não envia seu nome, e-mail, telefone nem conteúdo de publicações. Só começa após seu aceite.",
+          "Opcional. Mede resultados de campanhas, como cadastros, contatos e assinaturas, usando dados de navegação. No Google, inclui as páginas e os nomes das comunidades visitadas, sem remarketing. O Pixel da Meta também recebe as URLs das páginas autorizadas, incluindo comunidades. Não envia seu nome, e-mail, telefone nem conteúdo de publicações. Só começa após seu aceite.",
       },
       ...(experienceAvailable
         ? [

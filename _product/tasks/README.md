@@ -2952,3 +2952,5 @@ Preparacao local de 12/11: [TASK-333 - Conversoes Meta e bloqueio de conformidad
 | 375 | [TASK-375 - Campanhas sem catalogo no GA4](TASK-375-dynamic-campaign-labels.md) | Concluida localmente |
 
 | 376 | [TASK-376 - Paginas e comunidades no GA4](TASK-376-google-community-pages.md) | Implementada localmente; configuracao GA4 pendente |
+
+| 377 | [TASK-377 - Eventos confirmados no Pixel e API da Meta](TASK-377-meta-pixel-events.md) | Concluida |
