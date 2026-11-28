@@ -334,14 +334,8 @@ function NoticeSession({
               id="privacy-notice-title"
               className="text-[15px] leading-6 sm:text-base sm:leading-7"
             >
-              Usamos cookies para medir audiência e campanhas
-              {GOOGLE_ENABLED
-                ? " com Meta e Google. No Google, isso inclui as páginas e os nomes das comunidades visitadas, sem remarketing"
-                : ""}
-              {META_PIXEL_ENABLED
-                ? ". O Pixel da Meta também recebe as URLs das páginas autorizadas, incluindo comunidades"
-                : ""}
-              . Saiba mais em Preferências.
+              Usamos cookies para medir audiência e campanhas. Você pode escolher o que permitir em
+              Preferências.
             </p>
             {error && (
               <p role="alert" className="mt-3 text-sm text-primary-foreground">
