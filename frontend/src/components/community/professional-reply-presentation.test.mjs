@@ -133,8 +133,8 @@ export const registerProfessionalReplyPresentationTests = ({
           assert.match(html, /flex-nowrap/);
           assert.equal(bar.props.reply.textOnly, true);
           assert.match(html, /title="Responder"/);
-          assert.match(html, /truncate whitespace-nowrap text-\[14px\] font-medium/);
-          assert.match(html, /font-medium leading-\[20px\] tracking-normal/);
+          assert.match(html, /truncate whitespace-nowrap text-sm font-normal/);
+          assert.match(html, /font-normal leading-\[20px\] tracking-normal/);
           assert.doesNotMatch(html, /lucide-message-circle/);
           if (role === "psicologo" && media_url) {
             assert.match(html, /lucide-bookmark/);

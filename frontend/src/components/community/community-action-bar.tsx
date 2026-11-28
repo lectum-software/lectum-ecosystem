@@ -329,7 +329,7 @@ export const CommunityActionBar = ({
             title={reply.label ?? "Responder"}
             type="button"
           >
-            <span className="block min-w-0 truncate whitespace-nowrap text-[14px] font-medium leading-[20px] tracking-normal">
+            <span className="block min-w-0 truncate whitespace-nowrap text-sm font-normal leading-[20px] tracking-normal">
               {reply.label ?? "Responder"}
             </span>
           </button>

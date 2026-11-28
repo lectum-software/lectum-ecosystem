@@ -2,6 +2,16 @@
 
 Status: Concluida localmente
 
+## Ajuste de tipografia solicitado apos publicacao
+Em 2026-11-28, usuario pediu Responder com o tamanho do conteudo do comentario.
+Usar text-sm e font-normal como o conteudo, em vez de 14px fixos e peso medio.
+Preservar linha de 20px, reticencias, cores e ordem das acoes. No mobile, com
+raiz de 15px, text-sm corresponde a 13.125px; no desktop, a 14px.
+Este ajuste permanece local ate nova autorizacao de publicacao.
+Validacao do ajuste: 57 testes passaram, 1 ignorado; build frontend aprovado.
+Chrome em 320/390/1440px confirmou igualdade de font-size e font-weight com o
+conteudo; reticencias e linha de 20px contida no botao continuam funcionais.
+
 ## Escopo
 Implementar a previa aprovada: substituir o balao por Responder nas respostas,
 com fonte de 14px e cores existentes. Em respostas textuais de psicologos,
